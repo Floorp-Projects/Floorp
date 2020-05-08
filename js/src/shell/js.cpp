@@ -517,6 +517,7 @@ bool shell::enableTestWasmAwaitTier2 = false;
 #ifdef ENABLE_WASM_BIGINT
 bool shell::enableWasmBigInt = true;
 #endif
+bool shell::enableSourcePragmas = true;
 bool shell::enableAsyncStacks = false;
 bool shell::enableStreams = false;
 bool shell::enableReadableByteStreams = false;
@@ -10498,6 +10499,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
+  enableSourcePragmas = !op.getBoolOption("no-source-pragmas");
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
   enableStreams = !op.getBoolOption("no-streams");
   enableReadableByteStreams = op.getBoolOption("enable-readable-byte-streams");
@@ -10536,6 +10538,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_BIGINT
       .setWasmBigIntEnabled(enableWasmBigInt)
 #endif
+      .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks);
 
   if (op.getBoolOption("no-ion-for-main-context")) {
@@ -10911,7 +10914,8 @@ static void SetWorkerContextOptions(JSContext* cx) {
       .setWasmBigIntEnabled(enableWasmBigInt)
 #endif
       .setWasmVerbose(enableWasmVerbose)
-      .setTestWasmAwaitTier2(enableTestWasmAwaitTier2);
+      .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
+      .setSourcePragmas(enableSourcePragmas);
 
   cx->runtime()->setOffthreadIonCompilationEnabled(offthreadCompilation);
   cx->runtime()->profilingScripts =
@@ -11578,6 +11582,8 @@ int main(int argc, char** argv, char** envp) {
 #endif
       !op.addStringOption('\0', "module-load-path", "DIR",
                           "Set directory to load modules from") ||
+      !op.addBoolOption('\0', "no-source-pragmas",
+                        "Disable source(Mapping)URL pragma parsing") ||
       !op.addBoolOption('\0', "no-async-stacks", "Disable async stacks") ||
       !op.addMultiStringOption('\0', "dll", "LIBRARY",
                                "Dynamically load LIBRARY") ||
