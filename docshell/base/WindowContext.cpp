@@ -126,10 +126,14 @@ bool WindowContext::CanSet(FieldIndex<IDX_AllowMixedContent>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
-bool WindowContext::CanSet(
-    FieldIndex<IDX_CookieJarSettings>,
-    const Maybe<mozilla::net::CookieJarSettingsArgs>& aValue,
-    ContentParent* aSource) {
+bool WindowContext::CanSet(FieldIndex<IDX_CookieBehavior>,
+                           const Maybe<uint32_t>& aValue,
+                           ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool WindowContext::CanSet(FieldIndex<IDX_IsOnContentBlockingAllowList>,
+                           const bool& aValue, ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
