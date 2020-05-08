@@ -49,9 +49,6 @@ nsresult nsIFrame::BeginXULLayout(nsBoxLayoutState& aState) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIFrame::DoXULLayout(nsBoxLayoutState& aState) { return NS_OK; }
-
 nsresult nsIFrame::EndXULLayout(nsBoxLayoutState& aState) {
   return SyncXULLayout(aState);
 }
@@ -181,14 +178,16 @@ bool nsIFrame::XULNeedsRecalc(const nsSize& aSize) {
 
 bool nsIFrame::XULNeedsRecalc(nscoord aCoord) { return (aCoord == -1); }
 
-nsSize nsIFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) {
+nsSize nsIFrame::GetUncachedXULPrefSize(nsBoxLayoutState& aBoxLayoutState) {
   NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
                "must have rendering context");
 
   nsSize pref(0, 0);
   DISPLAY_PREF_SIZE(this, pref);
 
-  if (IsXULCollapsed()) return pref;
+  if (IsXULCollapsed()) {
+    return pref;
+  }
 
   AddXULBorderAndPadding(pref);
   bool widthSet, heightSet;
@@ -199,14 +198,16 @@ nsSize nsIFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) {
   return XULBoundsCheck(minSize, pref, maxSize);
 }
 
-nsSize nsIFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) {
+nsSize nsIFrame::GetUncachedXULMinSize(nsBoxLayoutState& aBoxLayoutState) {
   NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
                "must have rendering context");
 
   nsSize min(0, 0);
   DISPLAY_MIN_SIZE(this, min);
 
-  if (IsXULCollapsed()) return min;
+  if (IsXULCollapsed()) {
+    return min;
+  }
 
   AddXULBorderAndPadding(min);
   bool widthSet, heightSet;
@@ -218,33 +219,21 @@ nsSize nsIFrame::GetXULMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) {
   return nsSize(0, 0);
 }
 
-nsSize nsIFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) {
+nsSize nsIFrame::GetUncachedXULMaxSize(nsBoxLayoutState& aBoxLayoutState) {
   NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
                "must have rendering context");
 
   nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   DISPLAY_MAX_SIZE(this, maxSize);
 
-  if (IsXULCollapsed()) return maxSize;
+  if (IsXULCollapsed()) {
+    return maxSize;
+  }
 
   AddXULBorderAndPadding(maxSize);
   bool widthSet, heightSet;
   nsIFrame::AddXULMaxSize(this, maxSize, widthSet, heightSet);
   return maxSize;
-}
-
-nscoord nsIFrame::GetXULFlex() {
-  nscoord flex = 0;
-
-  nsIFrame::AddXULFlex(this, flex);
-
-  return flex;
-}
-
-nscoord nsIFrame::GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState) {
-  if (IsXULCollapsed()) return 0;
-
-  return GetXULPrefSize(aBoxLayoutState).height;
 }
 
 bool nsIFrame::IsXULCollapsed() {

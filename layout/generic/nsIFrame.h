@@ -4056,9 +4056,32 @@ class nsIFrame : public nsQueryFrame {
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState);
   nsresult EndXULLayout(nsBoxLayoutState& aState);
 
+  nsSize GetUncachedXULMinSize(nsBoxLayoutState& aBoxLayoutState);
+  nsSize GetUncachedXULPrefSize(nsBoxLayoutState& aBoxLayoutState);
+  nsSize GetUncachedXULMaxSize(nsBoxLayoutState& aBoxLayoutState);
+
   // END OF BOX LAYOUT METHODS
   // The above methods have been migrated from nsIBox and are in the process of
   // being refactored. DO NOT USE OUTSIDE OF XUL.
+
+  /**
+   * NOTE: aStatus is assumed to be already-initialized. The reflow statuses of
+   * any reflowed absolute children will be merged into aStatus; aside from
+   * that, this method won't modify aStatus.
+   */
+  void ReflowAbsoluteFrames(nsPresContext* aPresContext,
+                            ReflowOutput& aDesiredSize,
+                            const ReflowInput& aReflowInput,
+                            nsReflowStatus& aStatus,
+                            bool aConstrainBSize = true);
+
+ private:
+  void BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
+                 ReflowOutput& aDesiredSize, gfxContext* aRenderingContext,
+                 nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                 bool aMoveFrame = true);
+
+  NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
  public:
   /**
