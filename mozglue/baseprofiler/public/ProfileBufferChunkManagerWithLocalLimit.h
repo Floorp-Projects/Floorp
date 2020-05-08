@@ -98,19 +98,19 @@ class ProfileBufferChunkManagerWithLocalLimit final
     size_t bytes = 0;
     for (const ProfileBufferChunk* chunk = aChunks.get(); chunk;
          chunk = chunk->GetNext()) {
-      bytes += chunk->ChunkBytes();
+      bytes += chunk->BufferBytes();
     }
     // Transfer the chunks size from the unreleased bucket to the released one.
-    mUnreleasedBytes -= bytes;
+    mUnreleasedBufferBytes -= bytes;
     if (!mReleasedChunks) {
       // No other released chunks at the moment, we're starting the list.
-      MOZ_ASSERT(mReleasedBytes == 0);
-      mReleasedBytes = bytes;
+      MOZ_ASSERT(mReleasedBufferBytes == 0);
+      mReleasedBufferBytes = bytes;
       mReleasedChunks = std::move(aChunks);
     } else {
       // Add to the end of the released chunks list (oldest first, most recent
       // last.)
-      mReleasedBytes += bytes;
+      mReleasedBufferBytes += bytes;
       mReleasedChunks->SetLast(std::move(aChunks));
     }
   }
@@ -126,14 +126,14 @@ class ProfileBufferChunkManagerWithLocalLimit final
   [[nodiscard]] UniquePtr<ProfileBufferChunk> GetExtantReleasedChunks() final {
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     MOZ_ASSERT(mUser, "Not registered yet");
-    mReleasedBytes = 0;
+    mReleasedBufferBytes = 0;
     return std::move(mReleasedChunks);
   }
 
   void ForgetUnreleasedChunks() final {
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     MOZ_ASSERT(mUser, "Not registered yet");
-    mUnreleasedBytes = 0;
+    mUnreleasedBufferBytes = 0;
   }
 
   [[nodiscard]] size_t SizeOfExcludingThis(
@@ -172,16 +172,17 @@ class ProfileBufferChunkManagerWithLocalLimit final
     // If this total is higher than the local limit, we'll want to destroy
     // the oldest released chunks until we're under the limit; if any, we'll
     // recycle one of them to avoid a deallocation followed by an allocation.
-    while (mReleasedBytes + mUnreleasedBytes + mChunkMinBufferBytes >=
+    while (mReleasedBufferBytes + mUnreleasedBufferBytes +
+                   mChunkMinBufferBytes >=
                mMaxTotalBytes &&
-           mReleasedBytes != 0) {
+           mReleasedBufferBytes != 0) {
       MOZ_ASSERT(!!mReleasedChunks);
       // We have reached the local limit, extract the oldest released chunk,
       // which is the first one at `mReleasedChunks`.
       UniquePtr<ProfileBufferChunk> oldest =
           std::exchange(mReleasedChunks, mReleasedChunks->ReleaseNext());
       // Subtract its size from the "released" number of bytes.
-      mReleasedBytes -= oldest->ChunkBytes();
+      mReleasedBufferBytes -= oldest->BufferBytes();
       if (mChunkDestroyedCallback) {
         // Inform the user that we're going to destroy or recycle this chunk.
         mChunkDestroyedCallback(*oldest);
@@ -203,7 +204,7 @@ class ProfileBufferChunkManagerWithLocalLimit final
 
     if (chunk) {
       // We do have a chunk (recycled or new), record its size as "unreleased".
-      mUnreleasedBytes += chunk->ChunkBytes();
+      mUnreleasedBufferBytes += chunk->BufferBytes();
     }
 
     return chunk;
@@ -232,11 +233,11 @@ class ProfileBufferChunkManagerWithLocalLimit final
 
   // Number of bytes currently held in chunks that have been given away (through
   // `GetChunk` or `RequestChunk`) and not released yet.
-  size_t mUnreleasedBytes = 0;
+  size_t mUnreleasedBufferBytes = 0;
 
   // Number of bytes currently held in chunks that have been released and stored
   // in `mReleasedChunks` below.
-  size_t mReleasedBytes = 0;
+  size_t mReleasedBufferBytes = 0;
 
   // List of all released chunks. The oldest one should be at the start of the
   // list, and may be destroyed or recycled when the memory limit is reached.
