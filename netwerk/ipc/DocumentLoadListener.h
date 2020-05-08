@@ -203,12 +203,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              uint32_t aLoadFlags,
                              dom::ContentParent* aParent) const;
 
-  const nsTArray<DocumentChannelRedirect>& Redirects() const {
-    return mRedirects;
-  }
-
-  net::LastVisitInfo LastVisitInfo() const;
-
  protected:
   DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
                        base::ProcessId aPendingBridgeProcess);
@@ -267,6 +261,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   dom::CanonicalBrowsingContext* GetBrowsingContext();
 
+  void AddURIVisit(nsIChannel* aChannel, uint32_t aLoadFlags);
   bool HasCrossOriginOpenerPolicyMismatch() const;
   void ApplyPendingFunctions(nsISupports* aChannel) const;
 
@@ -395,7 +390,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // switch occurs.
   RefPtr<nsDOMNavigationTiming> mTiming;
 
-  nsTArray<DocumentChannelRedirect> mRedirects;
+  // Used to identify an internal redirect in redirect chain.
+  // True when we have seen at least one non-interal redirect.
+  bool mHaveVisibleRedirect = false;
 
   nsTArray<StreamFilterRequest> mStreamFilterRequests;
 
