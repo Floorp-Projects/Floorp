@@ -10,7 +10,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
-#include "mozilla/net/NeckoChannelParams.h"
 
 namespace mozilla {
 namespace dom {
@@ -18,8 +17,8 @@ namespace dom {
 class WindowGlobalParent;
 
 #define MOZ_EACH_WC_FIELD(FIELD)                                       \
-  FIELD(OuterWindowId, uint64_t)                                       \
-  FIELD(CookieJarSettings, Maybe<mozilla::net::CookieJarSettingsArgs>) \
+  FIELD(CookieBehavior, Maybe<uint32_t>)                               \
+  FIELD(IsOnContentBlockingAllowList, bool)                            \
   /* Whether the given window hierarchy is third party. See            \
    * ThirdPartyUtil::IsThirdPartyWindow for details */                 \
   FIELD(IsThirdPartyWindow, bool)                                      \
@@ -116,9 +115,12 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_AllowMixedContent>, const bool& aAllowMixedContent,
               ContentParent* aSource);
 
-  bool CanSet(FieldIndex<IDX_CookieJarSettings>,
-              const Maybe<mozilla::net::CookieJarSettingsArgs>& aValue,
+  bool CanSet(FieldIndex<IDX_CookieBehavior>, const Maybe<uint32_t>& aValue,
               ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_IsOnContentBlockingAllowList>, const bool& aValue,
+              ContentParent* aSource);
+
   bool CanSet(FieldIndex<IDX_IsThirdPartyWindow>,
               const bool& IsThirdPartyWindow, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
