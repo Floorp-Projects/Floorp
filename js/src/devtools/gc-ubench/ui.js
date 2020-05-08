@@ -431,16 +431,19 @@ function handler(timestamp) {
     return;
   }
 
-  if (testState === "running" && timestamp - testStart > testDuration) {
-    end_test(timestamp);
+  const events = gLoadMgr.tick(timestamp);
+  if (events & gLoadMgr.LOAD_ENDED) {
+    end_test(timestamp, gLoadMgr.lastActive);
+    if (!gLoadMgr.cycleStopped()) {
+      start_test();
+    }
   }
 
   if (testState == "running") {
     document.getElementById("test-progress").textContent =
-      ((testDuration - (timestamp - testStart)) / 1000).toFixed(1) + " sec";
+      (gLoadMgr.cycleCurrentLoadRemaining(timestamp) / 1000).toFixed(1) +
+      " sec";
   }
-
-  gLoadMgr.tick();
 
   const delay = gFrameTimer.on_frame_finished(timestamp);
 
@@ -592,15 +595,9 @@ function run_all_tests() {
 
 function start_test_cycle(tests_to_run) {
   // Convert from an iterable to an array for pop.
-  testQueue = [];
-  for (var key of tests_to_run) {
-    testQueue.push(key);
-  }
+  gLoadMgr.startCycle(tests_to_run);
   testState = "running";
-  testStart = performance.now();
   gHistogram.clear();
-
-  start_test(testQueue.shift());
   reset_draw_state();
 }
 
@@ -615,24 +612,19 @@ function update_load_state_indicator() {
   document.getElementById("load-running").textContent = loadState;
 }
 
-function start_test(testName) {
-  change_load(testName);
-  console.log(`Running test: ${testName}`);
-  document.getElementById("test-selection").value = testName;
+function start_test() {
+  console.log(`Running test: ${gLoadMgr.activeLoad().name}`);
+  document.getElementById("test-selection").value = gLoadMgr.activeLoad().name;
   update_load_state_indicator();
 }
 
-function end_test(timestamp) {
+function end_test(timestamp, load) {
   document.getElementById("test-progress").textContent = "(not running)";
-  report_test_result(gLoadMgr.activeLoad(), gHistogram);
+  report_test_result(load, gHistogram);
   gHistogram.clear();
-  console.log(`Ending test ${gLoadMgr.activeLoad().name}`);
-  if (testQueue.length) {
-    start_test(testQueue.shift());
-    testStart = timestamp;
-  } else {
+  console.log(`Ending test ${load.name}`);
+  if (gLoadMgr.cycleStopped()) {
     testState = "idle";
-    testStart = 0;
   }
   reset_draw_state();
 }
@@ -699,8 +691,10 @@ function change_load(new_load_name) {
 
 function duration_changed() {
   var durationInput = document.getElementById("test-duration");
-  testDuration = parseInt(durationInput.value) * 1000;
-  console.log(`Updated test duration to: ${testDuration / 1000} seconds`);
+  gLoadMgr.testDurationMS = parseInt(durationInput.value) * 1000;
+  console.log(
+    `Updated test duration to: ${gLoadMgr.testDurationMS / 1000} seconds`
+  );
 }
 
 function onLoadChange() {
