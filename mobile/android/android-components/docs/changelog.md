@@ -13,8 +13,11 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
 * **feature-tabs**
-  * Fixed issue [#6907](https://github.com/mozilla-mobile/android-components/issues/6907). Dispatches tabsTray update when MediaState changes.
-  
+  * Fixed issue [#6907](https://github.com/mozilla-mobile/android-components/issues/6907). Uses MediaState when mapping BrowserState to tabs.
+
+* **concept-tabstray**
+  * For issue [#6907](https://github.com/mozilla-mobile/android-components/issues/6907). Adds `Media.State` to `Tab`
+
 * **feature-session**
   * ⚠️ **This is a breaking change**: Added optional `crashReporting` param to [PictureInPictureFeature] so we can record caught exceptions.
 

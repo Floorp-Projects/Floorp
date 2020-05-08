@@ -28,6 +28,7 @@ android {
 
 dependencies {
     api project(':concept-tabstray')
+
     implementation project(':ui-icons')
     implementation project(':ui-colors')
     implementation project(':support-base')

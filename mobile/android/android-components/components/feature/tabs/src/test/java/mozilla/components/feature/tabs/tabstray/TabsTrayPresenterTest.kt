@@ -21,6 +21,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.ext.toTabs
+import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.After
@@ -239,10 +240,15 @@ class TabsTrayPresenterTest {
         presenter.start()
         testDispatcher.advanceUntilIdle()
 
-        store.dispatch(MediaAction.UpdateMediaAggregateAction(store.state.media.aggregate.copy(state = MediaState.State.PLAYING))).joinBlocking()
+        store.dispatch(
+                MediaAction.UpdateMediaAggregateAction(
+                        store.state.media.aggregate.copy(activeTabId = "a", state = MediaState.State.PLAYING)
+                )
+        ).joinBlocking()
+
         testDispatcher.advanceUntilIdle()
 
-        verify(tabsTray, times(3)).updateTabs(store.state.toTabs())
+        verify(tabsTray, times(2)).updateTabs(any())
     }
 
     @Test

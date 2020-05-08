@@ -22,8 +22,9 @@ android {
 }
 
 dependencies {
-    implementation project(':support-base')
+    api project(':concept-engine')
 
+    implementation project(':support-base')
     implementation Dependencies.kotlin_stdlib
 }
 

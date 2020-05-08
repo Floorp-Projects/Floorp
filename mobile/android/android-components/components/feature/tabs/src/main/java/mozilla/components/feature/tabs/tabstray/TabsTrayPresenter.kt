@@ -31,25 +31,21 @@ class TabsTrayPresenter(
     private val closeTabsTray: () -> Unit
 ) {
     private var tabs: Tabs? = null
-    private var mediaScope: CoroutineScope? = null
     private var tabScope: CoroutineScope? = null
 
     fun start() {
         tabScope = store.flowScoped { flow -> collect(flow) }
-        mediaScope = store.flowScoped {
-            it
-                .ifChanged { state -> state.media.aggregate }
-                .collect { this.tabs?.also(tabsTray::updateTabs) }
-        }
     }
 
     fun stop() {
         tabScope?.cancel()
-        mediaScope?.cancel()
     }
 
     private suspend fun collect(flow: Flow<BrowserState>) {
-        flow.map { state -> state.toTabs(tabsFilter) }
+        flow.map { state ->
+            val tabs = state.toTabs(tabsFilter)
+            tabs
+        }
             .ifChanged()
             .collect { tabs ->
 
