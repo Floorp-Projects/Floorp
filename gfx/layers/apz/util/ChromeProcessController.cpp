@@ -6,7 +6,7 @@
 
 #include "ChromeProcessController.h"
 
-#include "MainThreadUtils.h"    // for NS_IsMainThread()
+#include "MainThreadUtils.h"  // for NS_IsMainThread()
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/layers/CompositorBridgeParent.h"

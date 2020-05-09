@@ -21,7 +21,7 @@
 #include "nsIconDecoder.h"
 #include "nsWebPDecoder.h"
 #ifdef MOZ_AV1
-#include "nsAVIFDecoder.h"
+#  include "nsAVIFDecoder.h"
 #endif
 
 namespace mozilla {
@@ -84,7 +84,7 @@ DecoderType DecoderFactory::GetDecoderType(const char* aMimeType) {
   }
 #ifdef MOZ_AV1
   else if (!strcmp(aMimeType, IMAGE_AVIF) &&
-             StaticPrefs::image_avif_enabled()) {
+           StaticPrefs::image_avif_enabled()) {
     type = DecoderType::AVIF;
   }
 #endif

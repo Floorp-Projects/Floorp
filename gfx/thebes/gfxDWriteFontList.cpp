@@ -1054,9 +1054,8 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
     if (key.EqualsLiteral("gill sans") && allFacesUltraBold(family)) {
       visibility = FontVisibility::Hidden;
     } else {
-      visibility = aCollection == mSystemFonts
-                       ? GetVisibilityForFamily(name)
-                       : FontVisibility::Base;
+      visibility = aCollection == mSystemFonts ? GetVisibilityForFamily(name)
+                                               : FontVisibility::Base;
     }
     aFamilies.AppendElement(fontlist::Family::InitData(
         key, name, i, visibility, aCollection != mSystemFonts, bad, classic));

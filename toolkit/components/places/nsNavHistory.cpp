@@ -897,8 +897,7 @@ nsNavHistory::CanAddURI(nsIURI* aURI, bool* canAdd) {
 //    Helper for nsNavHistory::CanAddURI to be callable from a child process
 
 // static
-nsresult
-nsNavHistory::CanAddURIToHistory(nsIURI* aURI, bool* aCanAdd) {
+nsresult nsNavHistory::CanAddURIToHistory(nsIURI* aURI, bool* aCanAdd) {
   // Default to false.
   *aCanAdd = false;
 

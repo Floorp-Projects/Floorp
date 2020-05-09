@@ -114,7 +114,7 @@ void JSActorService::LoadJSActorInfos(nsTArray<JSProcessActorInfo>& aProcess,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsContentProcess());
 
-  for (auto& info: aProcess) {
+  for (auto& info : aProcess) {
     // Create our JSProcessActorProtocol, register it in
     // mProcessActorDescriptors.
     auto name = info.name();
@@ -126,15 +126,15 @@ void JSActorService::LoadJSActorInfos(nsTArray<JSProcessActorInfo>& aProcess,
     proto->AddObservers();
   }
 
-  for (auto& info: aWindow) {
+  for (auto& info : aWindow) {
     auto name = info.name();
     RefPtr<JSWindowActorProtocol> proto =
-    JSWindowActorProtocol::FromIPC(std::move(info));
+        JSWindowActorProtocol::FromIPC(std::move(info));
     mWindowActorDescriptors.Put(std::move(name), RefPtr{proto});
 
     // Register listeners for each chrome target.
     for (EventTarget* target : mChromeEventTargets) {
-        proto->RegisterListenersFor(target);
+      proto->RegisterListenersFor(target);
     }
 
     // Add observers for each actor.

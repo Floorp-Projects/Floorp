@@ -1805,12 +1805,11 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         "FEATURE_ROLLOUT_BATTERY_S_SCRN_NV_RECENT");
 
     APPEND_TO_DRIVER_BLOCKLIST2_EXT(
-        OperatingSystem::Windows, ScreenSizeStatus::Small,
-        BatteryStatus::None, DesktopEnvironment::All, WindowProtocol::All,
-        DriverVendor::All, DeviceFamily::IntelRolloutWebRender,
-        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
-        DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
-        "FEATURE_ROLLOUT_DESKTOP_INTEL_S_SCRN");
+        OperatingSystem::Windows, ScreenSizeStatus::Small, BatteryStatus::None,
+        DesktopEnvironment::All, WindowProtocol::All, DriverVendor::All,
+        DeviceFamily::IntelRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_DESKTOP_INTEL_S_SCRN");
 
     APPEND_TO_DRIVER_BLOCKLIST2_EXT(
         OperatingSystem::RecentWindows10, ScreenSizeStatus::Small,

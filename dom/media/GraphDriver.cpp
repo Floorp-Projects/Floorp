@@ -1090,22 +1090,17 @@ void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive) {
     return;
   }
 
-  int major,minor;
+  int major, minor;
   for (uint32_t i = 0; i < length; i++) {
     // skip the model name
     if (isalpha(name[i])) {
       continue;
     }
-    sscanf(name+i, "%d,%d", &major, &minor);
+    sscanf(name + i, "%d,%d", &major, &minor);
     break;
   }
 
-  enum MacbookModel {
-    MacBook,
-    MacBookPro,
-    MacBookAir,
-    NotAMacbook
-  };
+  enum MacbookModel { MacBook, MacBookPro, MacBookAir, NotAMacbook };
 
   MacbookModel model;
 

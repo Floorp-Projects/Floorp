@@ -43,10 +43,10 @@ void gfxConfigManager::Init() {
       StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup() > 0;
 #ifdef XP_WIN
   mWrForceAngle = StaticPrefs::gfx_webrender_force_angle_AtStartup();
-#ifdef NIGHTLY_BUILD
+#  ifdef NIGHTLY_BUILD
   mWrForceAngleNoGPUProcess = StaticPrefs::
       gfx_webrender_enabled_no_gpu_process_with_angle_win_AtStartup();
-#endif
+#  endif
   mWrDCompWinEnabled =
       Preferences::GetBool("gfx.webrender.dcomp-win.enabled", false);
 #endif
