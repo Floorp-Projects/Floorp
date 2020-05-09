@@ -102,6 +102,9 @@ class CookieCommons final {
       std::function<bool(const nsACString&, const OriginAttributes&)>&&
           aHasExistingCookiesLambda,
       nsIURI** aDocumentURI, nsACString& aBaseDomain, OriginAttributes& aAttrs);
+
+  static already_AddRefed<nsICookieJarSettings> GetCookieJarSettings(
+      nsIChannel* aChannel);
 };
 
 }  // namespace net
