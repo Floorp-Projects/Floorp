@@ -2940,11 +2940,12 @@ dependencies = [
 [[package]]
 name = "mp4parse"
 version = "0.11.4"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=0dc3e6e7c5371fe21f69b847f61c65fe6d6dc317#0dc3e6e7c5371fe21f69b847f61c65fe6d6dc317"
 dependencies = [
  "bitreader",
  "byteorder",
+ "hashbrown",
  "log",
- "mp4parse_fallible",
  "num-traits",
  "static_assertions",
 ]
@@ -2955,19 +2956,14 @@ version = "0.1.0"
 
 [[package]]
 name = "mp4parse_capi"
-version = "0.11.2"
+version = "0.11.4"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=0dc3e6e7c5371fe21f69b847f61c65fe6d6dc317#0dc3e6e7c5371fe21f69b847f61c65fe6d6dc317"
 dependencies = [
  "byteorder",
  "log",
  "mp4parse",
  "num-traits",
 ]
-
-[[package]]
-name = "mp4parse_fallible"
-version = "0.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "704f773471ac3e7110427b6bdf93184932b19319c9b7717688da5424e519b10a"
 
 [[package]]
 name = "msdos_time"
