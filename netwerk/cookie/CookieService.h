@@ -12,6 +12,7 @@
 #include "nsWeakReference.h"
 
 #include "Cookie.h"
+#include "CookieCommons.h"
 
 #include "nsString.h"
 #include "nsIMemoryReporter.h"
@@ -31,18 +32,6 @@ namespace net {
 class CookiePersistentStorage;
 class CookiePrivateStorage;
 class CookieStorage;
-
-// these constants represent a decision about a cookie based on user prefs.
-enum CookieStatus {
-  STATUS_ACCEPTED,
-  STATUS_ACCEPT_SESSION,
-  STATUS_REJECTED,
-  // STATUS_REJECTED_WITH_ERROR indicates the cookie should be rejected because
-  // of an error (rather than something the user can control). this is used for
-  // notification purposes, since we only want to notify of rejections where
-  // the user can do something about it (e.g. whitelist the site).
-  STATUS_REJECTED_WITH_ERROR
-};
 
 /******************************************************************************
  * CookieService:

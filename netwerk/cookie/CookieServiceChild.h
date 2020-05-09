@@ -57,7 +57,7 @@ class CookieServiceChild final : public PCookieServiceChild,
 
   void RecordDocumentCookie(Cookie* aCookie, const OriginAttributes& aAttrs);
 
-  uint32_t CountCookiesFromHashTable(const nsCString& aBaseDomain,
+  uint32_t CountCookiesFromHashTable(const nsACString& aBaseDomain,
                                      const OriginAttributes& aOriginAttrs);
 
   void PrefChanged(nsIPrefBranch* aPrefBranch);

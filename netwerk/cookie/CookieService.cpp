@@ -266,13 +266,7 @@ CookieService::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
   CookieStorage* storage = PickStorage(aPrincipal->OriginAttributesRef());
 
   nsAutoCString baseDomain;
-  // for historical reasons we use ascii host for file:// URLs.
-  if (aPrincipal->SchemeIs("file")) {
-    rv = aPrincipal->GetAsciiHost(baseDomain);
-  } else {
-    rv = aPrincipal->GetBaseDomain(baseDomain);
-  }
-
+  rv = CookieCommons::GetBaseDomain(aPrincipal, baseDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
@@ -421,6 +415,43 @@ CookieService::SetCookieString(nsIURI* aHostURI,
                                nsIChannel* aChannel) {
   NS_ENSURE_ARG(aHostURI);
   return SetCookieStringCommon(aHostURI, aCookieHeader, aChannel, false);
+}
+
+NS_IMETHODIMP
+CookieService::SetCookieStringFromDocument(Document* aDocument,
+                                           const nsACString& aCookieString) {
+  NS_ENSURE_ARG(aDocument);
+
+  if (!IsInitialized()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> documentURI;
+  nsAutoCString baseDomain;
+  OriginAttributes attrs;
+
+  int64_t currentTimeInUsec = PR_Now();
+
+  // This function is executed in this context, I don't need to keep objects
+  // alive.
+  auto hasExistingCookiesLambda = [&](const nsACString& aBaseDomain,
+                                      const OriginAttributes& aAttrs) {
+    CookieStorage* storage = PickStorage(aAttrs);
+    return !!storage->CountCookiesFromHost(aBaseDomain,
+                                           aAttrs.mPrivateBrowsingId);
+  };
+
+  RefPtr<Cookie> cookie = CookieCommons::CreateCookieFromDocument(
+      aDocument, aCookieString, currentTimeInUsec, mTLDService, mThirdPartyUtil,
+      hasExistingCookiesLambda, getter_AddRefs(documentURI), baseDomain, attrs);
+  if (!cookie) {
+    return NS_OK;
+  }
+
+  // add the cookie to the list. AddCookie() takes care of logging.
+  PickStorage(attrs)->AddCookie(baseDomain, attrs, cookie, currentTimeInUsec,
+                                documentURI, aCookieString, false);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1077,8 +1108,6 @@ bool CookieService::SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
       Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
   // add the cookie to the list. AddCookie() takes care of logging.
-  // we get the current time again here, since it may have changed during
-  // prompting
   aStorage->AddCookie(aBaseDomain, aOriginAttributes, cookie, currentTimeInUsec,
                       aHostURI, savedCookieHeader, aFromHttp);
   return newCookie;

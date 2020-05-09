@@ -7,18 +7,38 @@
 #define mozilla_net_CookieCommons_h
 
 #include <cstdint>
+#include <functional>
 #include "prtime.h"
 #include "nsString.h"
 
 class nsIChannel;
+class nsICookieJarSettings;
 class nsIEffectiveTLDService;
+class nsIPrincipal;
 class nsIURI;
 
 namespace mozilla {
+
+namespace dom {
+class Document;
+}
+
 namespace net {
 
 // these constants represent an operation being performed on cookies
 enum CookieOperation { OPERATION_READ, OPERATION_WRITE };
+
+// these constants represent a decision about a cookie based on user prefs.
+enum CookieStatus {
+  STATUS_ACCEPTED,
+  STATUS_ACCEPT_SESSION,
+  STATUS_REJECTED,
+  // STATUS_REJECTED_WITH_ERROR indicates the cookie should be rejected because
+  // of an error (rather than something the user can control). this is used for
+  // notification purposes, since we only want to notify of rejections where
+  // the user can do something about it (e.g. whitelist the site).
+  STATUS_REJECTED_WITH_ERROR
+};
 
 class Cookie;
 
@@ -46,8 +66,11 @@ class CookieCommons final {
   static bool PathMatches(Cookie* aCookie, const nsACString& aPath);
 
   static nsresult GetBaseDomain(nsIEffectiveTLDService* aTLDService,
-                                nsIURI* aHostURI, nsCString& aBaseDomain,
+                                nsIURI* aHostURI, nsACString& aBaseDomain,
                                 bool& aRequireHostMatch);
+
+  static nsresult GetBaseDomain(nsIPrincipal* aPrincipal,
+                                nsACString& aBaseDomain);
 
   static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService* aTLDService,
                                         const nsACString& aHost,
@@ -67,6 +90,18 @@ class CookieCommons final {
 
   static bool CheckCookiePermission(nsIChannel* aChannel,
                                     CookieStruct& aCookieData);
+
+  static bool CheckCookiePermission(nsIPrincipal* aPrincipal,
+                                    nsICookieJarSettings* aCookieJarSettings,
+                                    CookieStruct& aCookieData);
+
+  static already_AddRefed<Cookie> CreateCookieFromDocument(
+      dom::Document* aDocument, const nsACString& aCookieString,
+      int64_t aCurrentTimeInUsec, nsIEffectiveTLDService* aTLDService,
+      mozIThirdPartyUtil* aThirdPartyUtil,
+      std::function<bool(const nsACString&, const OriginAttributes&)>&&
+          aHasExistingCookiesLambda,
+      nsIURI** aDocumentURI, nsACString& aBaseDomain, OriginAttributes& aAttrs);
 };
 
 }  // namespace net

@@ -13,12 +13,10 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StoragePrincipalHelper.h"
-#include "nsContentUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
@@ -225,7 +223,7 @@ void CookieServiceChild::PrefChanged(nsIPrefBranch* aPrefBranch) {
 }
 
 uint32_t CookieServiceChild::CountCookiesFromHashTable(
-    const nsCString& aBaseDomain, const OriginAttributes& aOriginAttrs) {
+    const nsACString& aBaseDomain, const OriginAttributes& aOriginAttrs) {
   CookiesList* cookiesList = nullptr;
 
   nsCString baseDomain;
@@ -469,18 +467,10 @@ CookieServiceChild::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
                                                 nsACString& aCookieString) {
   NS_ENSURE_ARG(aPrincipal);
 
-  nsresult rv;
-
   aCookieString.Truncate();
 
   nsAutoCString baseDomain;
-  // for historical reasons we use ascii host for file:// URLs.
-  if (aPrincipal->SchemeIs("file")) {
-    rv = aPrincipal->GetAsciiHost(baseDomain);
-  } else {
-    rv = aPrincipal->GetBaseDomain(baseDomain);
-  }
-
+  nsresult rv = CookieCommons::GetBaseDomain(aPrincipal, baseDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
@@ -562,6 +552,62 @@ CookieServiceChild::SetCookieString(nsIURI* aHostURI,
                                     nsIChannel* aChannel) {
   NS_ENSURE_ARG(aHostURI);
   return SetCookieStringInternal(aHostURI, aChannel, aCookieString, false);
+}
+
+NS_IMETHODIMP
+CookieServiceChild::SetCookieStringFromDocument(
+    Document* aDocument, const nsACString& aCookieString) {
+  NS_ENSURE_ARG(aDocument);
+
+  nsCOMPtr<nsIURI> documentURI;
+  nsAutoCString baseDomain;
+  OriginAttributes attrs;
+
+  // This function is executed in this context, I don't need to keep objects
+  // alive.
+  auto hasExistingCookiesLambda = [&](const nsACString& aBaseDomain,
+                                      const OriginAttributes& aAttrs) {
+    return !!CountCookiesFromHashTable(aBaseDomain, aAttrs);
+  };
+
+  RefPtr<Cookie> cookie = CookieCommons::CreateCookieFromDocument(
+      aDocument, aCookieString, PR_Now(), mTLDService, mThirdPartyUtil,
+      hasExistingCookiesLambda, getter_AddRefs(documentURI), baseDomain, attrs);
+  if (!cookie) {
+    return NS_OK;
+  }
+
+  CookieKey key(baseDomain, attrs);
+  CookiesList* cookies = mCookiesMap.Get(key);
+
+  if (cookies) {
+    // We need to see if the cookie we're setting would overwrite an httponly
+    // one. This would not affect anything we send over the net (those come
+    // from the parent, which already checks this), but script could see an
+    // inconsistent view of things.
+    for (uint32_t i = 0; i < cookies->Length(); ++i) {
+      RefPtr<Cookie> existingCookie = cookies->ElementAt(i);
+      if (existingCookie->Name().Equals(cookie->Name()) &&
+          existingCookie->Host().Equals(cookie->Host()) &&
+          existingCookie->Path().Equals(cookie->Path()) &&
+          existingCookie->IsHttpOnly()) {
+        // Can't overwrite an httponly cookie from a script context.
+        return NS_OK;
+      }
+    }
+  }
+
+  RecordDocumentCookie(cookie, attrs);
+
+  if (CanSend()) {
+    nsTArray<CookieStruct> cookiesToSend;
+    cookiesToSend.AppendElement(cookie->ToIPC());
+
+    // Asynchronously call the parent.
+    SendSetCookies(baseDomain, attrs, documentURI, false, cookiesToSend);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
