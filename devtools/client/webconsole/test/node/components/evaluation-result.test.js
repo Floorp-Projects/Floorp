@@ -51,7 +51,7 @@ describe("EvaluationResult component:", () => {
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
 
     expect(wrapper.find(".message-body").text()).toBe(
-      "ReferenceError: asdf is not defined[Learn More]"
+      "Uncaught ReferenceError: asdf is not defined[Learn More]"
     );
 
     expect(wrapper.hasClass("message")).toBe(true);
@@ -63,7 +63,7 @@ describe("EvaluationResult component:", () => {
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
 
     const text = wrapper.find(".message-body").text();
-    expect(text.startsWith("Error: Long error Long error")).toBe(true);
+    expect(text.startsWith("Uncaught Error: Long error Long error")).toBe(true);
     expect(wrapper.hasClass("message")).toBe(true);
     expect(wrapper.hasClass("error")).toBe(true);
   });
@@ -72,7 +72,7 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get(`eval throw ""`);
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe("Error");
+    expect(text).toBe("Uncaught <empty string>");
     expect(wrapper.hasClass("error")).toBe(true);
   });
 
@@ -80,7 +80,80 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get(`eval throw "tomato"`);
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe("Error: tomato");
+    expect(text).toBe("Uncaught tomato");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Boolean", () => {
+    const message = stubPreparedMessages.get(`eval throw false`);
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("Uncaught false");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Number", () => {
+    const message = stubPreparedMessages.get(`eval throw 0`);
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("Uncaught 0");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown null", () => {
+    const message = stubPreparedMessages.get(`eval throw null`);
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("Uncaught null");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown undefined", () => {
+    const message = stubPreparedMessages.get(`eval throw undefined`);
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("Uncaught undefined");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Symbol", () => {
+    const message = stubPreparedMessages.get(`eval throw Symbol`);
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("Uncaught Symbol(potato)");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Object", () => {
+    const message = stubPreparedMessages.get(`eval throw Object`);
+    // We need to wrap the EvaluationResult in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(
+      Provider(
+        { store: setupStore() },
+        EvaluationResult({ message, serviceContainer })
+      )
+    );
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe(`Uncaught Object { vegetable: "cucumber" }`);
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error Object", () => {
+    const message = stubPreparedMessages.get(`eval throw Error Object`);
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("Uncaught Error: pumpkin");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown ErrorObject with custom name", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with custom name`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("Uncaught JuicyError: pineapple");
     expect(wrapper.hasClass("error")).toBe(true);
   });
 
