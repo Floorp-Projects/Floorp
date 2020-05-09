@@ -24,8 +24,8 @@ If you have any network connection issues and cannot clone with command, try :re
 
 :ref:`More information <Mercurial Overview>`
 
-Install dependencies
---------------------
+Install dependencies (non-Windows)
+----------------------------------
 
 Firefox provides a mechanism to install all dependencies; in the source tree:
 
