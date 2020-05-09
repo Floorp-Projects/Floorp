@@ -9,7 +9,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/CookiePersistentStorage.h"
 #include "mozilla/net/CookiePrivateStorage.h"
 #include "mozilla/net/CookieService.h"
@@ -390,25 +389,6 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
   return NS_OK;
 }
 
-// static
-already_AddRefed<nsICookieJarSettings> CookieService::GetCookieJarSettings(
-    nsIChannel* aChannel) {
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  if (aChannel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-    nsresult rv =
-        loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      cookieJarSettings = CookieJarSettings::GetBlockingAll();
-    }
-  } else {
-    cookieJarSettings = CookieJarSettings::Create();
-  }
-
-  MOZ_ASSERT(cookieJarSettings);
-  return cookieJarSettings.forget();
-}
-
 NS_IMETHODIMP
 CookieService::SetCookieStringFromDocument(Document* aDocument,
                                            const nsACString& aCookieString) {
@@ -481,7 +461,7 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
   }
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-      GetCookieJarSettings(aChannel);
+      CookieCommons::GetCookieJarSettings(aChannel);
 
   nsAutoCString hostFromURI;
   aHostURI->GetHost(hostFromURI);
@@ -807,7 +787,7 @@ void CookieService::GetCookiesForURI(
   }
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-      GetCookieJarSettings(aChannel);
+      CookieCommons::GetCookieJarSettings(aChannel);
 
   nsAutoCString normalizedHostFromURI(hostFromURI);
   rv = NormalizeHost(normalizedHostFromURI);
@@ -1627,7 +1607,8 @@ bool CookieService::CheckDomain(CookieStruct& aCookieData, nsIURI* aHostURI,
   return true;
 }
 
-nsAutoCString CookieService::GetPathFromURI(nsIURI* aHostURI) {
+namespace {
+nsAutoCString GetPathFromURI(nsIURI* aHostURI) {
   // strip down everything after the last slash to get the path,
   // ignoring slashes in the query string part.
   // if we can QI to nsIURL, that'll take care of the query string portion.
@@ -1655,6 +1636,8 @@ nsAutoCString CookieService::GetPathFromURI(nsIURI* aHostURI) {
 
   return path;
 }
+
+}  // namespace
 
 bool CookieService::CheckPath(CookieStruct& aCookieData,
                               nsIConsoleReportCollector* aCRC,
