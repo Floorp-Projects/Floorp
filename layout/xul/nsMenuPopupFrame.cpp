@@ -257,6 +257,12 @@ nsPopupLevel nsMenuPopupFrame::PopupLevel(bool aIsNoAutoHide) const {
 void nsMenuPopupFrame::EnsureWidget(bool aRecreate) {
   nsView* ourView = GetView();
   if (aRecreate) {
+    auto* widget = GetWidget();
+    if (widget) {
+      // Widget's WebRender resources needs to be cleared before creating new
+      // widget.
+      widget->ClearCachedWebrenderResources();
+    }
     ourView->DestroyWidget();
   }
   if (!ourView->HasWidget()) {
