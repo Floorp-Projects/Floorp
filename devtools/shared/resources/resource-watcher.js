@@ -33,11 +33,6 @@ class ResourceWatcher {
     this._destroyedListeners = new EventEmitter();
 
     this._listenerCount = new Map();
-
-    // This set is only used to know which resources have been watched and then
-    // unwatched, since the ResourceWatcher doesn't support calling
-    // watch, unwatch and watch again.
-    this._previouslyListenedTypes = new Set();
   }
 
   get contentToolboxFissionPrefValue() {
@@ -226,42 +221,12 @@ class ResourceWatcher {
    *        to be listened.
    */
   async _startListening(resourceType) {
-    const isDocumentEvent =
-      resourceType === ResourceWatcher.TYPES.DOCUMENT_EVENTS;
-
     let listeners = this._listenerCount.get(resourceType) || 0;
     listeners++;
     this._listenerCount.set(resourceType, listeners);
-
     if (listeners > 1) {
-      // If there are several calls to watch, only the first caller receives
-      // "existing" resources. Throw to avoid inconsistent behaviors
-      if (isDocumentEvent) {
-        // For DOCUMENT_EVENTS, return without throwing because this is already
-        // used by several callsites in the netmonitor.
-        // This should be reviewed in Bug 1625909.
-        return;
-      }
-
-      throw new Error(
-        `The ResourceWatcher is already listening to "${resourceType}", ` +
-          "the client should call `watch` only once per resource type."
-      );
+      return;
     }
-
-    const wasListening = this._previouslyListenedTypes.has(resourceType);
-    if (wasListening && !isDocumentEvent) {
-      // We already called watch/unwatch for this resource.
-      // This can lead to the onAvailable callback being called twice because we
-      // don't perform any cleanup in _unwatchResourcesForTarget.
-      throw new Error(
-        `The ResourceWatcher previously watched "${resourceType}" ` +
-          "and doesn't support watching again on a previous resource."
-      );
-    }
-
-    this._previouslyListenedTypes.add(resourceType);
-
     // If this is the first listener for this type of resource,
     // we should go through all the existing targets as onTargetAvailable
     // has already been called for these existing targets.
@@ -318,7 +283,6 @@ class ResourceWatcher {
     if (listeners > 0) {
       return;
     }
-
     // If this was the last listener, we should stop watching these events from the actors
     // and the actors should stop watching things from the platform
     for (const targetType of this.targetList.ALL_TYPES) {
@@ -351,7 +315,6 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   ERROR_MESSAGES: "error-messages",
   PLATFORM_MESSAGES: "platform-messages",
   DOCUMENT_EVENTS: "document-events",
-  ROOT_NODE: "root-node",
 };
 module.exports = { ResourceWatcher };
 
@@ -381,6 +344,4 @@ const LegacyListeners = {
     webConsoleFront.on("documentEvent", onAvailable);
     await webConsoleFront.startListeners(["DocumentEvents"]);
   },
-  [ResourceWatcher.TYPES
-    .ROOT_NODE]: require("devtools/shared/resources/legacy-listeners/root-node"),
 };
