@@ -101,6 +101,10 @@ class HTMLTrackElement final : public nsGenericHTMLElement {
 
   void CancelChannelAndListener();
 
+  // This method would be called by the WebVTTListener when it finishes loading
+  // and return the loading result to us in order to update the ready state.
+  void LoadResourceEnd(nsresult aStatus);
+
   // Only load resource for the non-disabled track with media parent.
   void MaybeDispatchLoadResource();
 
@@ -126,7 +130,7 @@ class HTMLTrackElement final : public nsGenericHTMLElement {
   // Open a new channel to the HTMLTrackElement's src attribute and call
   // mListener's LoadResource().
   void LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener);
-  bool mLoadResourceDispatched;
+  bool mIsLoadingResource;
 
   void MaybeClearAllCues();
 
