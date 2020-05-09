@@ -52,6 +52,7 @@ jobs:
                 python3.exe condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver.exe
                 --firefox ${MOZ_FETCHES_DIR}/firefox/firefox.exe
+                --scenario settled
                 ../../archive
         worker:
             artifacts:
@@ -81,6 +82,7 @@ jobs:
                 bin/python3.7 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --firefox ${MOZ_FETCHES_DIR}/firefox/firefox-bin
+                --scenario settled
                 ../../archive
         worker:
             docker-image: {in-tree: condprof}
@@ -112,6 +114,7 @@ jobs:
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --firefox ${MOZ_FETCHES_DIR}/target.dmg
+                --scenario settled
                 ../../archive
         worker:
             artifacts:
@@ -145,6 +148,7 @@ jobs:
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
                 --firefox org.mozilla.geckoview_example
+                --scenario settled
                 ../../archive
         worker:
             artifacts:
@@ -178,6 +182,7 @@ jobs:
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
                 --firefox org.mozilla.fenix.nightly
+                --scenario settled
                 ../../archive
         worker:
             artifacts:
@@ -210,6 +215,7 @@ jobs:
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
                 --firefox org.mozilla.firefox
+                --scenario settled
                 ../../archive
         worker:
             artifacts:
@@ -243,6 +249,7 @@ jobs:
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
                 --firefox org.mozilla.fenix.nightly
+                --scenario settled
                 ../../archive
         worker:
             artifacts:
@@ -276,6 +283,7 @@ jobs:
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
                 --firefox org.mozilla.geckoview_example
+                --scenario settled
                 ../../archive
         worker:
             artifacts:
@@ -309,6 +317,7 @@ jobs:
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
                 --firefox org.mozilla.firefox
+                --scenario settled
                 ../../archive
         worker:
             artifacts:
