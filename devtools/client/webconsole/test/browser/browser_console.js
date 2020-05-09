@@ -126,9 +126,6 @@ async function testMessages(hud) {
 
 async function checkMessageExists(hud, msg) {
   info(`Checking "${msg}" was logged`);
-  const message = await waitFor(
-    () => findMessage(hud, msg),
-    `Couldn't find "${msg}"`
-  );
+  const message = await waitFor(() => findMessage(hud, msg));
   ok(message, `"${msg}" was logged`);
 }

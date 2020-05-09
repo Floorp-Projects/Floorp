@@ -51,7 +51,7 @@ describe("PageError component:", () => {
     );
 
     expect(wrapper.find(".message-body").text()).toBe(
-      "Uncaught ReferenceError: asdf is not defined[Learn More]"
+      "ReferenceError: asdf is not defined[Learn More]"
     );
 
     // The stacktrace should be closed by default.
@@ -85,172 +85,26 @@ describe("PageError component:", () => {
     const wrapper = render(PageError({ message, serviceContainer }));
 
     const text = wrapper.find(".message-body").text();
-    expect(text.startsWith("Uncaught Error: Long error Long error")).toBe(true);
+    expect(text.startsWith("Error: Long error Long error")).toBe(true);
   });
 
   it("renders thrown empty string", () => {
     const message = stubPreparedMessages.get(`throw ""`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe("Uncaught <empty string>");
+    expect(text).toBe("uncaught exception: ");
   });
 
   it("renders thrown string", () => {
     const message = stubPreparedMessages.get(`throw "tomato"`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught tomato`);
-  });
-
-  it("renders thrown boolean", () => {
-    const message = stubPreparedMessages.get(`throw false`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught false`);
-  });
-
-  it("renders thrown number ", () => {
-    const message = stubPreparedMessages.get(`throw 0`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught 0`);
-  });
-
-  it("renders thrown null", () => {
-    const message = stubPreparedMessages.get(`throw null`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught null`);
-  });
-
-  it("renders thrown undefined", () => {
-    const message = stubPreparedMessages.get(`throw undefined`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught undefined`);
-  });
-
-  it("renders thrown Symbol", () => {
-    const message = stubPreparedMessages.get(`throw Symbol`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Symbol(potato)`);
-  });
-
-  it("renders thrown object", () => {
-    const message = stubPreparedMessages.get(`throw Object`);
-
-    // We need to wrap the PageError in a Provider in order for the
-    // ObjectInspector to work.
-    const wrapper = render(
-      Provider(
-        { store: setupStore() },
-        PageError({ message, serviceContainer })
-      )
-    );
-
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Object { vegetable: "cucumber" }`);
-  });
-
-  it("renders thrown error", () => {
-    const message = stubPreparedMessages.get(`throw Error Object`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Error: pumpkin`);
-  });
-
-  it("renders thrown Error with custom name", () => {
-    const message = stubPreparedMessages.get(
-      `throw Error Object with custom name`
-    );
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught JuicyError: pineapple`);
-  });
-
-  it("renders uncaught rejected Promise with empty string", () => {
-    const message = stubPreparedMessages.get(`Promise reject ""`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe("Uncaught <empty string>");
-  });
-
-  it("renders uncaught rejected Promise with string", () => {
-    const message = stubPreparedMessages.get(`Promise reject "tomato"`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught tomato`);
-  });
-
-  it("renders uncaught rejected Promise with boolean", () => {
-    const message = stubPreparedMessages.get(`Promise reject false`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught false`);
-  });
-
-  it("renders uncaught rejected Promise with number ", () => {
-    const message = stubPreparedMessages.get(`Promise reject 0`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught 0`);
-  });
-
-  it("renders uncaught rejected Promise with null", () => {
-    const message = stubPreparedMessages.get(`Promise reject null`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught null`);
-  });
-
-  it("renders uncaught rejected Promise with undefined", () => {
-    const message = stubPreparedMessages.get(`Promise reject undefined`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught undefined`);
-  });
-
-  it("renders uncaught rejected Promise with Symbol", () => {
-    const message = stubPreparedMessages.get(`Promise reject Symbol`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Symbol(potato)`);
-  });
-
-  it("renders uncaught rejected Promise with object", () => {
-    const message = stubPreparedMessages.get(`Promise reject Object`);
-    // We need to wrap the PageError in a Provider in order for the
-    // ObjectInspector to work.
-    const wrapper = render(
-      Provider(
-        { store: setupStore() },
-        PageError({ message, serviceContainer })
-      )
-    );
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Object { vegetable: "cucumber" }`);
-  });
-
-  it("renders uncaught rejected Promise with error", () => {
-    const message = stubPreparedMessages.get(`Promise reject Error Object`);
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Error: pumpkin`);
-  });
-
-  it("renders uncaught rejected Promise with Error with custom name", () => {
-    const message = stubPreparedMessages.get(
-      `Promise reject Error Object with custom name`
-    );
-    const wrapper = render(PageError({ message, serviceContainer }));
-    const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught JuicyError: pineapple`);
+    expect(text).toBe(`uncaught exception: tomato`);
   });
 
   it("renders URLs in message as actual, cropped, links", () => {
     // Let's replace the packet data in order to mimick a pageError.
-    const packet = stubPackets.get("throw string with URL");
+    const packet = stubPackets.get("ReferenceError: asdf is not defined");
 
     const evilDomain = `https://evil.com/?`;
     const badDomain = `https://not-so-evil.com/?`;
@@ -259,6 +113,8 @@ describe("PageError component:", () => {
 
     const evilURL = `${evilDomain}${longParam}`;
     const badURL = `${badDomain}${longParam}`;
+
+    packet.pageError.errorMessage = `“${evilURL}“ is evil and “${badURL}“ is not good either`;
 
     // We remove the exceptionDocURL to not have the "learn more" link.
     packet.pageError.exceptionDocURL = null;
@@ -277,7 +133,7 @@ describe("PageError component:", () => {
 
     const text = wrapper.find(".message-body").text();
     expect(text).toBe(
-      `Uncaught “${croppedEvil}“ is evil and “${croppedbad}“ is not good either`
+      `“${croppedEvil}“ is evil and “${croppedbad}“ is not good either`
     );
 
     // There should be 2 links.
