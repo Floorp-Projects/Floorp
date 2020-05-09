@@ -414,6 +414,11 @@ class ExecutionContext {
         result.subtype = "typedarray";
       } else if (Node.isInstance(rawObj)) {
         result.subtype = "node";
+        result.className = ChromeUtils.getClassName(rawObj);
+        result.description = rawObj.localName || rawObj.nodeName;
+        if (rawObj.id) {
+          result.description += `#${rawObj.id}`;
+        }
       }
       return result;
     }
