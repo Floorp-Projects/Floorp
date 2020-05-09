@@ -64,10 +64,6 @@ class InstallationPing(private val context: Context) {
             }
 
             CoroutineScope(Dispatchers.IO).launch {
-                MetricsUtils.getHashedIdentifier(context)?.let {
-                    Installation.identifier.set(it)
-                }
-
                 Pings.installation.submit()
                 markAsTriggered()
             }

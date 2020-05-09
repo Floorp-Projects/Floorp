@@ -2073,19 +2073,6 @@ installation:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
-  identifier:
-    send_in_pings:
-      - installation
-    type: string
-    description: |
-      The hashed and salted GAID. Used for a short term installation validation test.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/10426
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/10446#issuecomment-624816258
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2020-05-10"
 
 browser.search:
     with_ads:
