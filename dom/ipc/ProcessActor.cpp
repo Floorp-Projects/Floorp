@@ -100,8 +100,7 @@ void ProcessActor::ConstructActor(const nsACString& aName,
   ctorName.Append(actorType == JSActor::Type::Parent
                       ? NS_LITERAL_CSTRING("Parent")
                       : NS_LITERAL_CSTRING("Child"));
-  if (!JS_GetProperty(cx, exports, ctorName.get(),
-                        &ctor)) {
+  if (!JS_GetProperty(cx, exports, ctorName.get(), &ctor)) {
     aRv.NoteJSContextException(cx);
     return;
   }

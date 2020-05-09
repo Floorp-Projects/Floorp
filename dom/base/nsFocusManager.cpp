@@ -2596,8 +2596,7 @@ void nsFocusManager::FireFocusOrBlurEvent(EventMessage aEventMessage,
     EventMessage focusInOrOutMessage =
         aEventMessage == eFocus ? eFocusIn : eFocusOut;
     FireFocusInOrOutEvent(focusInOrOutMessage, aPresShell, aTarget,
-                          currentWindow, currentFocusedContent,
-                          aRelatedTarget);
+                          currentWindow, currentFocusedContent, aRelatedTarget);
   }
 }
 

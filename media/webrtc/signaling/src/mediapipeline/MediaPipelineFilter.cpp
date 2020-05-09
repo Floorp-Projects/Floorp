@@ -23,7 +23,8 @@ MediaPipelineFilter::MediaPipelineFilter(
     const std::vector<webrtc::RtpExtension>& aExtMap)
     : mExtMap(aExtMap) {}
 
-void MediaPipelineFilter::SetRemoteMediaStreamId(const Maybe<std::string>& aMid) {
+void MediaPipelineFilter::SetRemoteMediaStreamId(
+    const Maybe<std::string>& aMid) {
   if (aMid != mRemoteMid) {
     DEBUG_LOG(("MediaPipelineFilter added new remote RTP MID: '%s'.",
                aMid.valueOr("").c_str()));

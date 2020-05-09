@@ -133,7 +133,8 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
   return viewerPose.forget();
 }
 
-already_AddRefed<XRPose> XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
+already_AddRefed<XRPose> XRFrame::GetPose(const XRSpace& aSpace,
+                                          const XRSpace& aBaseSpace,
                                           ErrorResult& aRv) {
   if (!mActive) {
     aRv.ThrowInvalidStateError(

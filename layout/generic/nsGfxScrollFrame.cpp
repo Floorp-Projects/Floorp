@@ -413,8 +413,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
 
   nsSize vScrollbarPrefSize(0, 0);
   if (mHelper.mVScrollbarBox) {
-    GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox,
-                        nullptr,
+    GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox, nullptr,
                         aAssumeVScroll ? &vScrollbarPrefSize : nullptr);
     nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mVScrollbarBox);
     scrollbar->SetScrollbarMediatorContent(mContent);
@@ -424,8 +423,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
 
   nsSize hScrollbarPrefSize(0, 0);
   if (mHelper.mHScrollbarBox) {
-    GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox,
-                        nullptr,
+    GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox, nullptr,
                         aAssumeHScroll ? &hScrollbarPrefSize : nullptr);
     nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mHScrollbarBox);
     scrollbar->SetScrollbarMediatorContent(mContent);

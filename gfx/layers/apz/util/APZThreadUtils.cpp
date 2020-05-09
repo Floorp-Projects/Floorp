@@ -82,7 +82,7 @@ bool APZThreadUtils::IsControllerThread() {
 
 /*static*/
 void APZThreadUtils::DelayedDispatch(already_AddRefed<Runnable> aRunnable,
-                                int aDelayMs) {
+                                     int aDelayMs) {
   MOZ_ASSERT(!XRE_IsContentProcess(),
              "ContentProcessController should only be used remotely.");
   RefPtr<nsISerialEventTarget> thread;

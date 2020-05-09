@@ -181,7 +181,6 @@ static bool IsDescendant(nsIFrame* aFrame, nsIContent* aAncestor,
 static nsIContent* GetClickableAncestor(
     nsIFrame* aFrame, nsAtom* stopAt = nullptr,
     nsAutoString* aLabelTargetId = nullptr) {
-
   // If the frame is `cursor:pointer` or inherits `cursor:pointer` from an
   // ancestor, treat it as clickable. This is a heuristic to deal with pages
   // where the click event listener is on the <body> or <html> element but it

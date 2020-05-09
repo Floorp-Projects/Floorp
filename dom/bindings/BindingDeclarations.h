@@ -487,7 +487,7 @@ class AutoSequence : public AutoTArray<T, 16> {
   AutoSequence() : AutoTArray<T, 16>() {}
 
   // Allow converting to const sequences as needed
-  operator const Sequence<T> &() const {
+  operator const Sequence<T>&() const {
     return *reinterpret_cast<const Sequence<T>*>(this);
   }
 };

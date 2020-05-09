@@ -377,8 +377,7 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
             nullptr,
             /* prim_flags = */ wr::PrimitiveFlags::IS_BACKFACE_VISIBLE,
             wr::MixBlendMode::Normal,
-            wr::StackingContextFlags { 0 }
-          } {}
+            wr::StackingContextFlags{0}} {}
 
   void SetPreserve3D(bool aPreserve) {
     transform_style =
