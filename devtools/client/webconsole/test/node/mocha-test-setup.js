@@ -136,7 +136,8 @@ requireHacker.global_hook("default", (path, module) => {
     Services: () => `module.exports = require("devtools-services")`,
     "devtools/server/devtools-server": () =>
       `module.exports = {DevToolsServer: {}}`,
-    "devtools/client/shared/components/SmartTrace": () => "{}",
+    "devtools/client/shared/components/SmartTrace": () =>
+      "module.exports = () => null;",
     "devtools/client/netmonitor/src/components/TabboxPanel": () => "{}",
     "devtools/client/webconsole/utils/context-menu": () => "{}",
     "devtools/client/shared/telemetry": () => `module.exports = function() {

@@ -66,18 +66,28 @@ function ErrorRep(props) {
     name = "Error";
   }
 
+  const errorTitle = mode === MODE.TINY ? name : `${name}: `;
   const content = [];
 
-  if (!customFormat) {
-    content.push(span({ className: "objectTitle" }, name));
-  } else if (typeof preview.message !== "string") {
-    content.push(name);
+  if (customFormat) {
+    content.push(errorTitle);
   } else {
-    content.push(`${name}: "${preview.message}"`);
+    content.push(span({ className: "objectTitle", key: "title" }, errorTitle));
   }
 
+  if (mode !== MODE.TINY) {
+    const { Rep } = require("./rep");
+    content.push(
+      Rep({
+        ...props,
+        key: "message",
+        object: preview.message,
+        mode: props.mode || MODE.TINY,
+        useQuotes: false,
+      })
+    );
+  }
   const renderStack = preview.stack && customFormat;
-
   if (renderStack) {
     const stacktrace = props.renderStacktrace
       ? props.renderStacktrace(parseStackString(preview.stack))
