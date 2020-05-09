@@ -1,7 +1,13 @@
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { CookieXPCShellUtils } = ChromeUtils.import(
+  "resource://testing-common/CookieXPCShellUtils.jsm"
+);
 
-function run_test() {
+CookieXPCShellUtils.init(this);
+CookieXPCShellUtils.createServer({ hosts: ["example.net"] });
+
+add_task(async () => {
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
   Services.prefs.setBoolPref(
@@ -25,12 +31,16 @@ function run_test() {
   let actual = cs.getCookieStringFromHttp(uri, channel);
   Assert.equal(actual, expected);
 
-  uri = NetUtil.newURI("http://example.com/");
-  cs.setCookieString(uri, set, null);
+  uri = NetUtil.newURI("http://example.net/");
+
+  const contentPage = await CookieXPCShellUtils.loadContentPage(uri.spec);
+  // eslint-disable-next-line no-undef
+  await contentPage.spawn(set, cookie => (content.document.cookie = cookie));
+  await contentPage.close();
 
   expected = "foo=bar";
   actual = cs.getCookieStringForPrincipal(
     Services.scriptSecurityManager.createContentPrincipal(uri, {})
   );
   Assert.equal(actual, expected);
-}
+});

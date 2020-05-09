@@ -50,7 +50,11 @@ function* do_run_test() {
   });
 
   // Set a cookie for host 1.
-  Services.cookies.setCookieString(uri1, "oh=hai; max-age=1000", null);
+  Services.cookies.setCookieStringFromHttp(
+    uri1,
+    "oh=hai; max-age=1000",
+    make_channel(uri1.spec)
+  );
   Assert.equal(Services.cookiemgr.countCookiesFromHost(uri1.host), 1);
 
   // Enter private browsing mode, set a cookie for host 2, and check the counts.
@@ -62,7 +66,7 @@ function* do_run_test() {
   chan2.QueryInterface(Ci.nsIPrivateBrowsingChannel);
   chan2.setPrivate(true);
 
-  Services.cookies.setCookieString(uri2, "oh=hai; max-age=1000", chan2);
+  Services.cookies.setCookieStringFromHttp(uri2, "oh=hai; max-age=1000", chan2);
   Assert.equal(Services.cookiemgr.getCookieStringForPrincipal(principal1), "");
   Assert.equal(
     Services.cookiemgr.getCookieStringForPrincipal(principal2),
@@ -74,7 +78,7 @@ function* do_run_test() {
   Assert.equal(Services.cookiemgr.getCookieStringForPrincipal(principal1), "");
   Assert.equal(Services.cookiemgr.getCookieStringForPrincipal(principal2), "");
 
-  Services.cookies.setCookieString(uri2, "oh=hai; max-age=1000", chan2);
+  Services.cookies.setCookieStringFromHttp(uri2, "oh=hai; max-age=1000", chan2);
   Assert.equal(
     Services.cookiemgr.getCookieStringForPrincipal(principal2),
     "oh=hai"
@@ -97,7 +101,7 @@ function* do_run_test() {
   // Enter private browsing mode, set a cookie for host 2, and check the counts.
   Assert.equal(Services.cookiemgr.getCookieStringForPrincipal(principal1), "");
   Assert.equal(Services.cookiemgr.getCookieStringForPrincipal(principal2), "");
-  Services.cookies.setCookieString(uri2, "oh=hai; max-age=1000", chan2);
+  Services.cookies.setCookieStringFromHttp(uri2, "oh=hai; max-age=1000", chan2);
   Assert.equal(
     Services.cookiemgr.getCookieStringForPrincipal(principal2),
     "oh=hai"
