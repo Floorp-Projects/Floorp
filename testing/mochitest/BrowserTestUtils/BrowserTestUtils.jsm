@@ -1189,7 +1189,7 @@ var BrowserTestUtils = {
         eventName,
         () => {
           removeEventListener();
-          resolve(eventName);
+          resolve();
         },
         { capture, wantUntrusted },
         checkFn
