@@ -115,23 +115,6 @@ class CookieService final : public nsICookieService,
 
   void EnsureReadComplete(bool aInitDBConn);
   nsresult NormalizeHost(nsCString& aHost);
-  nsresult SetCookieStringCommon(nsIURI* aHostURI,
-                                 const nsACString& aCookieHeader,
-                                 nsIChannel* aChannel, bool aFromHttp);
-  void SetCookieStringInternal(nsIURI* aHostURI, bool aIsForeign,
-                               bool aIsThirdPartyTrackingResource,
-                               bool aIsThirdPartySocialTrackingResource,
-                               bool aFirstPartyStorageAccessGranted,
-                               uint32_t aRejectedReason,
-                               nsCString& aCookieHeader, bool aFromHttp,
-                               const OriginAttributes& aOriginAttrs,
-                               nsIChannel* aChannel);
-  bool SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
-                         const nsACString& aBaseDomain,
-                         const OriginAttributes& aOriginAttributes,
-                         bool aRequireHostMatch, CookieStatus aStatus,
-                         nsCString& aCookieHeader, bool aFromHttp,
-                         nsIChannel* aChannel);
   static bool GetTokenValue(nsACString::const_char_iterator& aIter,
                             nsACString::const_char_iterator& aEndIter,
                             nsDependentCSubstring& aTokenString,
