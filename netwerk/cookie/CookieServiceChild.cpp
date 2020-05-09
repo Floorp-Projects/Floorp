@@ -495,7 +495,7 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
                                requireHostMatch);
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-      CookieService::GetCookieJarSettings(aChannel);
+      CookieCommons::GetCookieJarSettings(aChannel);
 
   CookieStatus cookieStatus = CookieService::CheckPrefs(
       cookieJarSettings, aHostURI,
