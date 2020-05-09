@@ -50,10 +50,6 @@ function* do_run_test() {
 
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
-  Services.prefs.setBoolPref(
-    "network.cookieJarSettings.unblocked_for_testing",
-    true
-  );
 
   // Get the cookie file and the backup file.
   cookieFile = profile.clone();
@@ -174,19 +170,9 @@ function* run_test_1(generator) {
   // Create a garbage database file.
   create_garbage_file(cookieFile);
 
-  let uri = NetUtil.newURI("http://foo.com/");
-  const channel = NetUtil.newChannel({
-    uri,
-    loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
-  });
-
   // Load the profile and populate it.
-  Services.cookies.setCookieStringFromHttp(
-    uri,
-    "oh=hai; max-age=1000",
-    channel
-  );
+  let uri = NetUtil.newURI("http://foo.com/");
+  Services.cookies.setCookieString(uri, "oh=hai; max-age=1000", null);
 
   // Fake a profile change.
   do_close_profile(sub_generator);
@@ -212,16 +198,7 @@ function* run_test_2(generator) {
   // Load the profile and populate it.
   do_load_profile();
   let uri = NetUtil.newURI("http://foo.com/");
-  const channel = NetUtil.newChannel({
-    uri,
-    loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
-  });
-  Services.cookies.setCookieStringFromHttp(
-    uri,
-    "oh=hai; max-age=1000",
-    channel
-  );
+  Services.cookies.setCookieString(uri, "oh=hai; max-age=1000", null);
 
   // Fake a profile change.
   do_close_profile(sub_generator);

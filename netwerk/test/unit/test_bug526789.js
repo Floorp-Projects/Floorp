@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async () => {
+function run_test() {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var expiry = (Date.now() + 1000) * 1000;
@@ -136,10 +136,6 @@ add_task(async () => {
 
   cm.removeAll();
 
-  CookieXPCShellUtils.createServer({
-    hosts: ["baz.com", "192.168.0.1", "localhost", "co.uk", "foo.com"],
-  });
-
   var uri = NetUtil.newURI("http://baz.com/");
   const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
@@ -147,12 +143,7 @@ add_task(async () => {
   );
 
   Assert.equal(uri.asciiHost, "baz.com");
-
-  const contentPage = await CookieXPCShellUtils.loadContentPage(uri.spec);
-  // eslint-disable-next-line no-undef
-  await contentPage.spawn(null, () => (content.document.cookie = "foo=bar"));
-  await contentPage.close();
-
+  cs.setCookieString(uri, "foo=bar", null);
   Assert.equal(cs.getCookieStringForPrincipal(principal), "foo=bar");
 
   Assert.equal(cm.countCookiesFromHost(""), 0);
@@ -182,6 +173,46 @@ add_task(async () => {
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
   do_check_throws(function() {
     cm.getCookiesFromHost("..", {});
+  }, Cr.NS_ERROR_ILLEGAL_VALUE);
+
+  cm.removeAll();
+
+  // test that an empty file:// host works
+  let emptyuri = NetUtil.newURI("file:///");
+  const emptyprincipal = Services.scriptSecurityManager.createContentPrincipal(
+    emptyuri,
+    {}
+  );
+
+  Assert.equal(emptyuri.asciiHost, "");
+  Assert.equal(NetUtil.newURI("file://./").asciiHost, "");
+  Assert.equal(NetUtil.newURI("file://foo.bar/").asciiHost, "");
+  cs.setCookieString(emptyuri, "foo2=bar", null);
+  Assert.equal(getCookieCount(), 1);
+  cs.setCookieString(emptyuri, "foo3=bar; domain=", null);
+  Assert.equal(getCookieCount(), 2);
+  cs.setCookieString(emptyuri, "foo4=bar; domain=.", null);
+  Assert.equal(getCookieCount(), 2);
+  cs.setCookieString(emptyuri, "foo5=bar; domain=bar.com", null);
+  Assert.equal(getCookieCount(), 2);
+
+  Assert.equal(
+    cs.getCookieStringForPrincipal(emptyprincipal),
+    "foo2=bar; foo3=bar"
+  );
+
+  Assert.equal(cm.countCookiesFromHost("baz.com"), 0);
+  Assert.equal(cm.countCookiesFromHost(""), 2);
+  do_check_throws(function() {
+    cm.countCookiesFromHost(".");
+  }, Cr.NS_ERROR_ILLEGAL_VALUE);
+
+  cookies = cm.getCookiesFromHost("baz.com", {});
+  Assert.ok(!cookies.length);
+  cookies = cm.getCookiesFromHost("", {});
+  Assert.equal(cookies.length, 2);
+  do_check_throws(function() {
+    cm.getCookiesFromHost(".", {});
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
   cm.removeAll();
@@ -226,17 +257,17 @@ add_task(async () => {
   // test that the 'domain' attribute accepts a leading dot for IP addresses,
   // aliases such as 'localhost', and eTLD's such as 'co.uk'; but that the
   // resulting cookie is for the exact host only.
-  await testDomainCookie("http://192.168.0.1/", "192.168.0.1");
-  await testDomainCookie("http://localhost/", "localhost");
-  await testDomainCookie("http://co.uk/", "co.uk");
+  testDomainCookie("http://192.168.0.1/", "192.168.0.1");
+  testDomainCookie("http://localhost/", "localhost");
+  testDomainCookie("http://co.uk/", "co.uk");
 
   // Test that trailing dots are treated differently for purposes of the
-  // 'domain' attribute when using setCookieStringFromDocument.
-  await testTrailingDotCookie("http://localhost/", "localhost");
-  await testTrailingDotCookie("http://foo.com/", "foo.com");
+  // 'domain' attribute when using setCookieString.
+  testTrailingDotCookie("http://localhost", "localhost");
+  testTrailingDotCookie("http://foo.com", "foo.com");
 
   cm.removeAll();
-});
+}
 
 function getCookieCount() {
   var count = 0;
@@ -247,53 +278,40 @@ function getCookieCount() {
   return count;
 }
 
-async function testDomainCookie(uriString, domain) {
+function testDomainCookie(uriString, domain) {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 
   cm.removeAll();
 
-  var contentPage = await CookieXPCShellUtils.loadContentPage(uriString);
-  await contentPage.spawn(
-    "foo=bar; domain=" + domain,
-    // eslint-disable-next-line no-undef
-    cookie => (content.document.cookie = cookie)
-  );
-  await contentPage.close();
-
+  var uri = NetUtil.newURI(uriString);
+  cs.setCookieString(uri, "foo=bar; domain=" + domain, null);
   var cookies = cm.getCookiesFromHost(domain, {});
   Assert.ok(cookies.length);
   Assert.equal(cookies[0].host, domain);
   cm.removeAll();
 
-  contentPage = await CookieXPCShellUtils.loadContentPage(uriString);
-  await contentPage.spawn(
-    "foo=bar; domain=." + domain,
-    // eslint-disable-next-line no-undef
-    cookie => (content.document.cookie = cookie)
-  );
-  await contentPage.close();
-
+  cs.setCookieString(uri, "foo=bar; domain=." + domain, null);
   cookies = cm.getCookiesFromHost(domain, {});
   Assert.ok(cookies.length);
   Assert.equal(cookies[0].host, domain);
   cm.removeAll();
 }
 
-async function testTrailingDotCookie(uriString, domain) {
+function testTrailingDotCookie(uriString, domain) {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 
   cm.removeAll();
 
-  var contentPage = await CookieXPCShellUtils.loadContentPage(uriString);
-  await contentPage.spawn(
-    "foo=bar; domain=" + domain + "/",
-    // eslint-disable-next-line no-undef
-    cookie => (content.document.cookie = cookie)
-  );
-  await contentPage.close();
+  var uri = NetUtil.newURI(uriString);
+  cs.setCookieString(uri, "foo=bar; domain=" + domain + ".", null);
+  Assert.equal(cm.countCookiesFromHost(domain), 0);
+  Assert.equal(cm.countCookiesFromHost(domain + "."), 0);
+  cm.removeAll();
 
+  uri = NetUtil.newURI(uriString + ".");
+  cs.setCookieString(uri, "foo=bar; domain=" + domain, null);
   Assert.equal(cm.countCookiesFromHost(domain), 0);
   Assert.equal(cm.countCookiesFromHost(domain + "."), 0);
   cm.removeAll();
