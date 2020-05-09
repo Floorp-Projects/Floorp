@@ -3,8 +3,6 @@
 
 "use strict";
 
-const TEST_DOC = toDataURL("default-test-page");
-
 add_task(async function returnAsObjectTypes({ client }) {
   const { Runtime } = client;
 
@@ -23,27 +21,43 @@ add_task(async function returnAsObjectTypes({ client }) {
     { expression: "[1, 2]", type: "object", subtype: "array" },
     { expression: "new Proxy({}, {})", type: "object", subtype: "proxy" },
     { expression: "new Date()", type: "object", subtype: "date" },
-    { expression: "document", type: "object", subtype: "node" },
-    { expression: "document.documentElement", type: "object", subtype: "node" },
     {
-      expression: "document.createElement('div')",
+      expression: "document",
       type: "object",
       subtype: "node",
+      className: "HTMLDocument",
+      description: "#document",
+    },
+    {
+      expression: `{{
+        const div = document.createElement('div');
+        div.id = "foo";
+        return div;
+      }}`,
+      type: "object",
+      subtype: "node",
+      className: "HTMLDivElement",
+      description: "div#foo",
     },
   ];
 
-  for (const { expression, type, subtype } of expressions) {
+  for (const entry of expressions) {
+    const { expression, type, subtype, className, description } = entry;
+
     const { result } = await Runtime.callFunctionOn({
       functionDeclaration: `() => ${expression}`,
       executionContextId,
     });
-    is(
-      result.subtype,
-      subtype,
-      `Evaluating '${expression}' has the expected subtype`
-    );
+
     is(result.type, type, "The type is correct");
+    is(result.subtype, subtype, "The subtype is correct");
     ok(!!result.objectId, "Got an object id");
+    if (className) {
+      is(result.className, className, "The className is correct");
+    }
+    if (description) {
+      is(result.description, description, "The description is correct");
+    }
   }
 });
 
