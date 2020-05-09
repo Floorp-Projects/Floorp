@@ -10,22 +10,18 @@ Bugzilla are expected to follow the following process.
 What is a Triaged Bug
 ---------------------
 
-The new definition of Triaged will be Firefox-related bugs of all types
-(``defect``, ``task``, ``enhancement``) where the component is not
-``UNTRIAGED``, which has one or more current (Nightly, Beta, Release,
-ESR) ``status_firefoxNN`` flags set to a non-default value,
-and a non-default value of Severity.
+The new definition of Triaged will be Firefox-related bugs of type
+``defect`` where the component is not
+``UNTRIAGED``, and a non-default value not equal to ``--`` or ``N/A``.
 
-Bugs of type Task or Enhancement may have a severity of N/A,
+Bugs of type Task or Enhancement may have a severity of ``N/A``,
 but defects must have a severity that is neither ``--`` or
 ``N/A``.
-
-*No bug with a severity of ``--`` is considered triaged.*
 
 Why Triage
 ----------
 
-We want to make sure that we looked at every defect and a priority has
+We want to make sure that we looked at every defect and a severity has
 been defined. This way, we make sure that we did not miss any critical
 issues during the development and stabilization cycles.
 
@@ -41,12 +37,12 @@ Staying on top of the bugs in your component means:
 
    -  Members of your team do not see the bug queue and get the
       ‘wiggins’
-
+      
 Who Triages
 -----------
 
 Engineering managers and directors are responsible for naming the
-individuals responsible for triaging `all types of bugs <bug-types>`__ in a component.
+individuals responsible for triaging :ref:`all types of bugs <Bug Types>` in a component.
 
 We use Bugzilla to manage this. See the `list of triage
 owners <https://bugzilla.mozilla.org/page.cgi?id=triage_owners.html>`__.
@@ -86,8 +82,7 @@ As a triage owner the queries you should be following for your component
 are:
 
 -  All open bugs, in your components without a pending ``needinfo`` flag
-   which do not have a severity field set or do not have at least one
-   release status flag ``status_firefoxNN`` set
+   which do not have a valid value of severity set
 -  All bugs with active review requests in your component which have not
    been modified in five days
 -  All bugs with reviewed, but unlanded patches in your components
@@ -109,11 +104,8 @@ code can be risky.
 Weekly or More Frequently (depending on the component) find un-triaged
 bugs in the components you triage.
 
-For each bug decide `severity </guides/severity>`__ (you can override
-what’s already been set, as a triage lead, you are the decider.)
-
-You must also set at least one `release status flag </guides/status-flags>`__
-for the bug, unless it is an ``enhancement`` or ``task``.
+Decide the :ref:`Severity <Defect Severity>`  for each untriaged bug
+(you can override what’s already been set.)
 
 These bugs are reviewed in the weekly Regression Triage meeting
 
@@ -141,6 +133,14 @@ and
 `P2 <https://bugzilla.mozilla.org/buglist.cgi?priority=P2&f1=triage_owner&o1=equals&resolution=---&v1=%25user%25>`__
 bugs frequently.
 
+Assumptions
+~~~~~~~~~~~
+
+If a bug's release status in Firefox version N was ``affected`` or ``wontfix``,
+its Severity is ``S3`` or ``S4`` and its Priority is ``P3`` or lower (backlog,)
+then its release status in Firefox version N+1, if the bug is still open,
+is considered to be ``wontfix``.
+
 Questions and Edge Cases
 ------------------------
 
@@ -158,8 +158,8 @@ Set the bug’s type to ``task``, and state to ``NEW``. Set the bug's
 Severity to ``N/A``. This bug will be excluded from future triage queries.
 
 
-If you are not sure of a bug’s type, check `our rules for bug
-types </guides/bug-types>`__.
+If you are not sure of a bug’s type, check :ref:`our rules for bug
+types <Bug Types>`.
 
 This bug’s state is ``UNCONFIRMED``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -215,7 +215,7 @@ We cannot lose track of a high severity bug because it is in the wrong component
 My project is on GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-We have `a guide for GitHub projects to follow </guide/labels>`__ when
+We have :ref:`a guide for GitHub projects to follow <GitHub Metadata Recommendations>` when
 triaging. (Note: this guide needs updating.)
 
 Summary
@@ -231,13 +231,10 @@ need of triage.
 For each untriaged bug:
 
 -  Assign a Severity
--  If the bug is of type ``defect``, set the
-   ``status_firefoxNN`` flag for at least one of:
-   Nightly, Beta, Release, or ESR
 -  **Do not** assign a ``defect`` a Severity of
    ``N/A``
 
-You can, but are not required to set the bug's `Priority </guides/priority>`__.
+You can, but are not required to set the bug's :ref:`Priority <Priority Definitions>`.
 
 Watch open needinfo flags
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -256,11 +253,6 @@ End of Iteration/Release Cycle
 Any open ``S1`` or ``S2`` bugs at the end of the release cycle
 will require review by engineering and release management. A
 policy on this is forthcoming.
-
-Open bugs with Severity of ``S3`` or ``S4``, and considered
-part of the team's backlog (i.e. ``P3``) should have their
-release status fields (i.e. ``status_firefoxNN``) set
-to ``wontfix``.
 
 Optional
 ^^^^^^^^
