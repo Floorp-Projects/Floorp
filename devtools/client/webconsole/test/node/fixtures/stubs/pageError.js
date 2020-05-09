@@ -82,7 +82,29 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": ""
+    "cssSelectors": "",
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn4.child2/obj25",
+        "class": "Error",
+        "ownPropertyLength": 4,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "preview": {
+          "kind": "Error",
+          "name": "ReferenceError",
+          "message": "asdf is not defined",
+          "stack": "bar@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:5\nfoo@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:6:5\n@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:9:3\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 3,
+          "columnNumber": 5
+        }
+      },
+      "actorID": "server0.conn4.child2/obj25"
+    },
+    "hasException": true
   },
   "type": "pageError"
 });
@@ -140,7 +162,29 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
       }
     ],
     "chromeContext": false,
-    "cssSelectors": ""
+    "cssSelectors": "",
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn4.child2/obj26",
+        "class": "Error",
+        "ownPropertyLength": 4,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "preview": {
+          "kind": "Error",
+          "name": "SyntaxError",
+          "message": "redeclaration of let a",
+          "stack": "",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 2,
+          "columnNumber": 9
+        }
+      },
+      "actorID": "server0.conn4.child2/obj26"
+    },
+    "hasException": true
   },
   "type": "pageError"
 });
@@ -202,7 +246,93 @@ rawPackets.set(`TypeError longString message`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": ""
+    "cssSelectors": "",
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn4.child2/obj29",
+        "class": "Error",
+        "ownPropertyLength": 4,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": {
+            "_grip": {
+              "type": "longString",
+              "actor": "server0.conn4.child2/longstractor30",
+              "length": 110000,
+              "initial": "Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error"
+            },
+            "actorID": "server0.conn4.child2/longstractor30"
+          },
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 1,
+          "columnNumber": 7
+        }
+      },
+      "actorID": "server0.conn4.child2/obj29"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`throw string with URL`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: “https://evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is evil and “https://not-so-evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is not good either",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn0.child2/source31",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 1,
+    "category": "content javascript",
+    "innerWindowID": 10737418241,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn0.child2/source31",
+        "lineNumber": 1,
+        "columnNumber": 1,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": "“https://evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is evil and “https://not-so-evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is not good either",
+    "hasException": true
   },
   "type": "pageError"
 });
@@ -256,7 +386,9 @@ rawPackets.set(`throw ""`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": ""
+    "cssSelectors": "",
+    "exception": "",
+    "hasException": true
   },
   "type": "pageError"
 });
@@ -310,7 +442,865 @@ rawPackets.set(`throw "tomato"`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": ""
+    "cssSelectors": "",
+    "exception": "tomato",
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`throw false`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: false",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source31",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 1,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn4.child2/source31",
+        "lineNumber": 1,
+        "columnNumber": 1,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": false,
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`throw 0`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: 0",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source31",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 1,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn4.child2/source31",
+        "lineNumber": 1,
+        "columnNumber": 1,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": 0,
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`throw null`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: null",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source31",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 1,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn4.child2/source31",
+        "lineNumber": 1,
+        "columnNumber": 1,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "type": "null"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`throw undefined`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: undefined",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source31",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 1,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn4.child2/source31",
+        "lineNumber": 1,
+        "columnNumber": 1,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "type": "undefined"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`throw Symbol`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: Symbol(potato)",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source27",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 7,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn4.child2/source27",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "type": "symbol",
+      "actor": "server0.conn4.child2/symbol38",
+      "name": "potato"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`throw Object`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: [object Object]",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source31",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 1,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn4.child2/source31",
+        "lineNumber": 1,
+        "columnNumber": 1,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn4.child2/obj40",
+        "class": "Object",
+        "ownPropertyLength": 1,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "preview": {
+          "kind": "Object",
+          "ownProperties": {
+            "vegetable": {
+              "configurable": true,
+              "enumerable": true,
+              "writable": true,
+              "value": "cucumber"
+            }
+          },
+          "ownSymbols": [],
+          "ownPropertiesLength": 1,
+          "ownSymbolsLength": 0,
+          "safeGetterValues": {}
+        }
+      },
+      "actorID": "server0.conn4.child2/obj40"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`throw Error Object`, {
+  "pageError": {
+    "errorMessage": "Error: pumpkin",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source41",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 7,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn4.child2/source27",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn4.child2/obj42",
+        "class": "Error",
+        "ownPropertyLength": 4,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "pumpkin",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 1,
+          "columnNumber": 7
+        }
+      },
+      "actorID": "server0.conn4.child2/obj42"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`throw Error Object with custom name`, {
+  "pageError": {
+    "errorMessage": "JuicyError: pineapple",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source43",
+    "lineText": "",
+    "lineNumber": 2,
+    "columnNumber": 15,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn4.child2/source43",
+        "lineNumber": 2,
+        "columnNumber": 15,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn4.child2/obj44",
+        "class": "Error",
+        "ownPropertyLength": 6,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "preview": {
+          "kind": "Error",
+          "name": "JuicyError",
+          "message": "pineapple",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:15\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 2,
+          "columnNumber": 15
+        }
+      },
+      "actorID": "server0.conn4.child2/obj44"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject ""`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: ",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "sourceId": null,
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": "",
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject "tomato"`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: tomato",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "sourceId": null,
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": "tomato",
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject false`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: false",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "sourceId": null,
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": false,
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject 0`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: 0",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "sourceId": null,
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": 0,
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject null`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: null",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "sourceId": null,
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "type": "null"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject undefined`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: undefined",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "sourceId": null,
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "type": "undefined"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject Symbol`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: Symbol(potato)",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "sourceId": null,
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "type": "symbol",
+      "actor": "server0.conn4.child2/symbol52",
+      "name": "potato"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject Object`, {
+  "pageError": {
+    "errorMessage": "uncaught exception: Object",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "sourceId": null,
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn4.child2/obj54",
+        "class": "Object",
+        "ownPropertyLength": 1,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "preview": {
+          "kind": "Object",
+          "ownProperties": {
+            "vegetable": {
+              "configurable": true,
+              "enumerable": true,
+              "writable": true,
+              "value": "cucumber"
+            }
+          },
+          "ownSymbols": [],
+          "ownPropertiesLength": 1,
+          "ownSymbolsLength": 0,
+          "safeGetterValues": {}
+        }
+      },
+      "actorID": "server0.conn4.child2/obj54"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject Error Object`, {
+  "pageError": {
+    "errorMessage": "Error: pumpkin",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source55",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 16,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn4.child2/obj56",
+        "class": "Error",
+        "ownPropertyLength": 4,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "pumpkin",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:16\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 1,
+          "columnNumber": 16
+        }
+      },
+      "actorID": "server0.conn4.child2/obj56"
+    },
+    "hasException": true
+  },
+  "type": "pageError"
+});
+
+rawPackets.set(`Promise reject Error Object with custom name`, {
+  "pageError": {
+    "errorMessage": "JuicyError: pineapple",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn4.child2/source57",
+    "lineText": "",
+    "lineNumber": 2,
+    "columnNumber": 15,
+    "category": "content javascript",
+    "innerWindowID": 6442450946,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null,
+    "chromeContext": false,
+    "cssSelectors": "",
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn4.child2/obj58",
+        "class": "Error",
+        "ownPropertyLength": 6,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "preview": {
+          "kind": "Error",
+          "name": "JuicyError",
+          "message": "pineapple",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:15\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 2,
+          "columnNumber": 15
+        }
+      },
+      "actorID": "server0.conn4.child2/obj58"
+    },
+    "hasException": true
   },
   "type": "pageError"
 });
