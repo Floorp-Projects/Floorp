@@ -66,19 +66,19 @@ Severities (Required)
 ---------------------
 
 The triage process for Firefox bugs in Bugzilla requires a non default
-value of a bug's `Severity (definitions) </guides/severity>`__.
+value of a bug's :ref:`Severity (definitions) <Defect Severity>`.
 
-Release Status Flags (Required)
+Release Status Flags
 -------------------------------
 
-Open Firefox bugs should also have at least `one status flag </guides/status-flags>`__
+Open Firefox bugs may also have :ref:`status flags <Release Status Flags>`
 (``status_firefoxNN``) set for Nightly, Beta, Release, or ESR.
 
 Priorities
 ----------
 
-Firefox projects in Bugzilla can use the `priority field </guides/priority>`__ to indicate when and
-if a bug will be worked on.
+Firefox projects in Bugzilla can use the :ref:`priority field <Priority Definitions>`
+to indicate when a bug will be worked on.
 
 Keywords
 --------
@@ -132,17 +132,17 @@ To represent Bugzilla fields, use labels following this scheme.
       ``regression-internal``
 
 
--  `Severity </guides/severity>`__ (required)
+-  :ref:`Severity <Defect Severity>` (required)
 
    -  ``S1``, ``S2``, ``S3``, ``S4``, ``N/A`` (reserved for bugs
       of type ``task`` or ``enhancement``)
 
--  `Status flags </guides/status-flags>`__ (required)
+-  :ref:`Status flags <Firefox Status Flags>`
 
    -  ``status_firefoxNN:<status>``
       (example ``status_firefox77:affected``)
 
--  `Priority </guides/priority>`__
+-  :ref:`Priority <Priority Definitions>`
 
    -  ``P1``, ``P2``, ``P3``, ``P5``
 

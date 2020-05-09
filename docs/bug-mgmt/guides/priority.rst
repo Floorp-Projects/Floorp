@@ -1,4 +1,4 @@
-Priority definitions
+Priority Definitions
 ====================
 
 We use these definitions across all components:

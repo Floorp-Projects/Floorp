@@ -1,4 +1,4 @@
-Defect severity
+Defect Severity
 ===============
 
 Definition

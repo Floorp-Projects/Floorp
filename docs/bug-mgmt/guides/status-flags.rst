@@ -1,5 +1,5 @@
-Release Status (``status_firefoxNN``) Flags
-===========================================
+Release Status Flags
+====================
 
 The flag ``status_firefoxNN`` has many values, here’s a cheat sheet.
 
@@ -31,4 +31,3 @@ the states reachable from the column headings.
    with this bug
 -  ``fix-optional`` - we would take a fix for the current release but
    don’t consider it as important/blocking for the release
-   
