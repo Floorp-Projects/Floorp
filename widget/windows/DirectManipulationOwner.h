@@ -6,8 +6,8 @@
 #ifndef DirectManipulationOwner_h__
 #define DirectManipulationOwner_h__
 
+#include <windows.h>
 #include "Units.h"
-#include "WinDef.h"
 
 class nsWindow;
 class IDirectManipulationManager;
@@ -35,11 +35,13 @@ class DirectManipulationOwner {
 
  private:
   nsWindow* mWindow;
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
   DWORD mDmViewportHandlerCookie;
   RefPtr<IDirectManipulationManager> mDmManager;
   RefPtr<IDirectManipulationUpdateManager> mDmUpdateManager;
   RefPtr<IDirectManipulationViewport> mDmViewport;
   RefPtr<DManipEventHandler> mDmHandler;
+#endif
 };
 
 }  // namespace widget
