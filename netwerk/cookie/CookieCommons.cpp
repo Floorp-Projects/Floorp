@@ -10,9 +10,9 @@
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
-#include "nsICookieJarSettings.h"
 #include "nsICookiePermission.h"
 #include "nsICookieService.h"
 #include "nsIEffectiveTLDService.h"
@@ -425,6 +425,25 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
   principalURI.forget(aDocumentURI);
 
   return cookie.forget();
+}
+
+// static
+already_AddRefed<nsICookieJarSettings> CookieCommons::GetCookieJarSettings(
+    nsIChannel* aChannel) {
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  if (aChannel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    nsresult rv =
+        loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      cookieJarSettings = CookieJarSettings::GetBlockingAll();
+    }
+  } else {
+    cookieJarSettings = CookieJarSettings::Create();
+  }
+
+  MOZ_ASSERT(cookieJarSettings);
+  return cookieJarSettings.forget();
 }
 
 }  // namespace net
