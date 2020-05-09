@@ -129,7 +129,7 @@ class LogModule {
   /**
    * Sets the log module's level.
    */
-  void SetLevel(LogLevel level) { mLevel = level; }
+  void SetLevel(LogLevel level);
 
   /**
    * Print a log message for this module.

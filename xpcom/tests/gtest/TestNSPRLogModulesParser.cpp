@@ -138,3 +138,29 @@ TEST(NSPRLogModulesParser, RawArg)
   mozilla::NSPRLogModulesParser("Foo:1000", callback);
   EXPECT_TRUE(callbackInvoked);
 }
+
+TEST(NSPRLogModulesParser, RustModules)
+{
+  std::pair<const char*, mozilla::LogLevel> expected[] = {
+      {"timestamp", mozilla::LogLevel::Error},
+      {"crate::mod::file1", mozilla::LogLevel::Error},
+      {"crate::mod::file2", mozilla::LogLevel::Verbose},
+  };
+
+  const size_t kExpectedCount = MOZ_ARRAY_LENGTH(expected);
+
+  auto* currTest = expected;
+
+  size_t count = 0;
+  mozilla::NSPRLogModulesParser(
+      "timestamp,crate::mod::file1, crate::mod::file2:5",
+      [&](const char* aName, mozilla::LogLevel aLevel, int32_t) mutable {
+        ASSERT_LT(count, kExpectedCount);
+        EXPECT_STREQ(currTest->first, aName);
+        EXPECT_EQ(currTest->second, aLevel);
+        currTest++;
+        count++;
+      });
+
+  EXPECT_EQ(kExpectedCount, count);
+}

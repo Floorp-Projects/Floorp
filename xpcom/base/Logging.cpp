@@ -612,6 +612,22 @@ void LogModule::SetIsSync(bool aIsSync) {
   sLogModuleManager->SetIsSync(aIsSync);
 }
 
+// This function is defined in gecko_logger/src/lib.rs
+// We mirror the level in rust code so we don't get forwarded all of the
+// rust logging and have to create an LogModule for each rust component.
+extern "C" void set_rust_log_level(const char* name, uint8_t level);
+
+void LogModule::SetLevel(LogLevel level) {
+  mLevel = level;
+
+  // If the log module contains `::` it is likely a rust module, so we
+  // pass the level into the rust code so it will know to forward the logging
+  // to Gecko.
+  if (strstr(mName, "::")) {
+    set_rust_log_level(mName, static_cast<uint8_t>(level));
+  }
+}
+
 void LogModule::Init(int argc, char* argv[]) {
   // NB: This method is not threadsafe; it is expected to be called very early
   //     in startup prior to any other threads being run.
@@ -649,3 +665,21 @@ void LogModule::Printv(LogLevel aLevel, const TimeStamp* aStart,
 }
 
 }  // namespace mozilla
+
+extern "C" {
+
+// This function is called by external code (rust) to log to one of our
+// log modules.
+void ExternMozLog(const char* aModule, mozilla::LogLevel aLevel,
+                  const char* aMsg) {
+  MOZ_ASSERT(sLogModuleManager != nullptr);
+
+  LogModule* m = sLogModuleManager->CreateOrGetModule(aModule);
+  if (MOZ_LOG_TEST(m, aLevel)) {
+    va_list va;
+    empty_va(&va);
+    m->Printv(aLevel, aMsg, va);
+  }
+}
+
+}  // extern "C"
