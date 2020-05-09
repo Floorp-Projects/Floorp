@@ -7,21 +7,7 @@
 
 "use strict";
 
-var test_generator = do_run_test();
-
-function run_test() {
-  do_test_pending();
-  test_generator.next();
-}
-
-function finish_test() {
-  executeSoon(function() {
-    test_generator.return();
-    do_test_finished();
-  });
-}
-
-function* do_run_test() {
+add_task(async () => {
   // Set up a profile.
   let profile = do_get_profile();
 
@@ -30,6 +16,10 @@ function* do_run_test() {
     "network.cookieJarSettings.unblocked_for_testing",
     true
   );
+
+  CookieXPCShellUtils.createServer({
+    hosts: ["foo.com", "bar.com", "third.com"],
+  });
 
   // Create URIs and channels pointing to foo.com and bar.com.
   // We will use these to put foo.com into first and third party contexts.
@@ -56,28 +46,26 @@ function* do_run_test() {
   // test with cookies enabled, and third party cookies persistent.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
   Services.prefs.setBoolPref("network.cookie.thirdparty.sessionOnly", false);
-  do_set_cookies(uri1, channel2, false, [1, 2, 3]);
-  do_set_cookies(uri2, channel1, true, [1, 2, 3]);
+  await do_set_cookies(uri1, channel2, false, [1, 2]);
+  await do_set_cookies(uri2, channel1, true, [1, 2]);
 
   // fake a profile change
-  do_close_profile(test_generator);
-  yield;
+  await promise_close_profile();
+
   do_load_profile();
-  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 3);
+  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 2);
   Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
   // test with third party cookies for session only.
   Services.prefs.setBoolPref("network.cookie.thirdparty.sessionOnly", true);
   Services.cookies.removeAll();
-  do_set_cookies(uri1, channel2, false, [1, 2, 3]);
-  do_set_cookies(uri2, channel1, true, [1, 2, 3]);
+  await do_set_cookies(uri1, channel2, false, [1, 2]);
+  await do_set_cookies(uri2, channel1, true, [1, 2]);
 
   // fake a profile change
-  do_close_profile(test_generator);
-  yield;
+  await promise_close_profile();
+
   do_load_profile();
   Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 0);
   Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
-
-  finish_test();
-}
+});

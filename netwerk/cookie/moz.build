@@ -64,6 +64,10 @@ LOCAL_INCLUDES += [
     '/netwerk/protocol/http',
 ]
 
+TESTING_JS_MODULES += [
+    'CookieXPCShellUtils.jsm',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

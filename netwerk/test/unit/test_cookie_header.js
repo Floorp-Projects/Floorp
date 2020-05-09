@@ -49,9 +49,9 @@ var listener = {
     throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: async function test_onStopR(request, status) {
     if (this._iteration == 1) {
-      run_test_continued();
+      await run_test_continued();
     } else {
       do_test_pending();
       httpserv.stop(do_test_finished);
@@ -93,14 +93,23 @@ function run_test() {
   do_test_pending();
 }
 
-function run_test_continued() {
+async function run_test_continued() {
   var chan = makeChan();
 
   var cookServ = Cc["@mozilla.org/cookieService;1"].getService(
     Ci.nsICookieService
   );
+
   var cookie2 = "C2=V2";
-  cookServ.setCookieString(chan.URI, cookie2, chan);
+
+  const contentPage = await CookieXPCShellUtils.loadContentPage(chan.URI.spec);
+  await contentPage.spawn(
+    cookie2,
+    // eslint-disable-next-line no-undef
+    cookie => (content.document.cookie = cookie)
+  );
+  await contentPage.close();
+
   chan.setRequestHeader("Cookie", cookieVal, false);
 
   // We expect that the setRequestHeader overrides the
