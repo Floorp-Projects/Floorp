@@ -69,8 +69,8 @@ async function test_cookie_settings({
     Ci.nsIHttpChannelInternal
   ).forceAllowThirdPartyCookie = true;
   Services.cookies.removeAll();
-  Services.cookies.setCookieString(firstPartyURI, "key=value", channel);
-  Services.cookies.setCookieString(thirdPartyURI, "key=value", channel);
+  Services.cookies.setCookieStringFromHttp(firstPartyURI, "key=value", channel);
+  Services.cookies.setCookieStringFromHttp(thirdPartyURI, "key=value", channel);
 
   let expectedFirstPartyCookies = 1;
   let expectedThirdPartyCookies = 1;
@@ -94,7 +94,7 @@ async function test_cookie_settings({
   // Add a cookie so we can check if it persists past the end of the session
   // but, first remove existing cookies set by this host to put us in a known state
   Services.cookies.removeAll();
-  Services.cookies.setCookieString(
+  Services.cookies.setCookieStringFromHttp(
     firstPartyURI,
     "key=value; max-age=1000",
     channel
