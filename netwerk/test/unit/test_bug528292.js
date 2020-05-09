@@ -42,7 +42,7 @@ function inChildProcess() {
   );
 }
 
-add_task(async () => {
+function run_test() {
   // Start the HTTP server.
   httpServer = new HttpServer();
   httpServer.registerPathHandler(preRedirectPath, preRedirectHandler);
@@ -64,7 +64,9 @@ add_task(async () => {
   );
 
   // Set up a channel with forceAllowThirdPartyCookie set to true.  We'll use
-  // the channel both to set a cookie and then to load the pre-redirect URI.
+  // the channel both to set a cookie (since nsICookieService::setCookieString
+  // requires such a channel in order to successfully set a cookie) and then
+  // to load the pre-redirect URI.
   var chan = NetUtil.newChannel({
     uri: preRedirectURL,
     loadUsingSystemPrincipal: true,
@@ -77,22 +79,16 @@ add_task(async () => {
   // they're both from the same host, which is enough for the cookie service
   // to send the cookie with both requests.
   var postRedirectURI = ioService.newURI(postRedirectURL);
-
-  const contentPage = await CookieXPCShellUtils.loadContentPage(
-    postRedirectURI.spec
-  );
-  await contentPage.spawn(
-    sentCookieVal,
-    // eslint-disable-next-line no-undef
-    cookie => (content.document.cookie = cookie)
-  );
-  await contentPage.close();
+  Cc["@mozilla.org/cookieService;1"]
+    .getService(Ci.nsICookieService)
+    .setCookieString(postRedirectURI, sentCookieVal, chan);
 
   // Load the pre-redirect URI.
-  await new Promise(resolve => {
-    chan.asyncOpen(new ChannelListener(resolve, null));
-  });
+  chan.asyncOpen(new ChannelListener(finish_test, null));
+  do_test_pending();
+}
 
+function finish_test(event) {
   Assert.equal(receivedCookieVal, sentCookieVal);
   httpServer.stop(do_test_finished);
-});
+}
