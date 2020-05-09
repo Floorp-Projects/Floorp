@@ -20,7 +20,6 @@ const {
 const rawPackets = new Map();
 rawPackets.set(`new Date(0)`, {
   "resultID": "1573832025018-0",
-  "hasException": false,
   "input": "new Date(0)",
   "result": {
     "_grip": {
@@ -76,7 +75,6 @@ rawPackets.set(`asdf()`, {
       "functionName": null
     }
   ],
-  "hasException": true,
   "frame": {
     "source": "debugger eval code",
     "line": 1,
@@ -116,7 +114,6 @@ rawPackets.set(`1 + @`, {
   },
   "exceptionMessage": "SyntaxError: illegal character",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-  "hasException": true,
   "frame": {
     "source": "debugger eval code",
     "line": 1,
@@ -132,7 +129,6 @@ rawPackets.set(`1 + @`, {
 
 rawPackets.set(`inspect({a: 1})`, {
   "resultID": "1573832025122-3",
-  "hasException": false,
   "helperResult": {
     "type": "inspectObject",
     "input": "inspect({a: 1})",
@@ -175,7 +171,6 @@ rawPackets.set(`inspect({a: 1})`, {
 
 rawPackets.set(`cd(document)`, {
   "resultID": "1573832025125-4",
-  "hasException": false,
   "helperResult": {
     "type": "error",
     "message": "cdFunctionInvalidArgument"
@@ -190,7 +185,6 @@ rawPackets.set(`cd(document)`, {
 
 rawPackets.set(`undefined`, {
   "resultID": "1573832025127-5",
-  "hasException": false,
   "input": "undefined",
   "result": {
     "type": "undefined"
@@ -248,7 +242,6 @@ rawPackets.set(`longString message Error`, {
       "functionName": null
     }
   ],
-  "hasException": true,
   "frame": {
     "source": "debugger eval code",
     "sourceId": "server0.conn0.child1/source31",
@@ -276,7 +269,6 @@ rawPackets.set(`eval throw ""`, {
       "functionName": null
     }
   ],
-  "hasException": true,
   "frame": {
     "source": "debugger eval code",
     "sourceId": "server0.conn0.child1/source24",
@@ -304,7 +296,6 @@ rawPackets.set(`eval throw "tomato"`, {
       "functionName": null
     }
   ],
-  "hasException": true,
   "frame": {
     "source": "debugger eval code",
     "sourceId": "server0.conn0.child1/source24",
@@ -312,304 +303,6 @@ rawPackets.set(`eval throw "tomato"`, {
     "column": 1
   },
   "input": "throw \"tomato\"",
-  "result": {
-    "type": "undefined"
-  },
-  "startTime": 1572867483805,
-  "timestamp": 1572867483805
-});
-
-rawPackets.set(`eval throw false`, {
-  "resultID": "1588154002962-9",
-  "exception": false,
-  "exceptionMessage": "false",
-  "exceptionStack": [
-    {
-      "filename": "debugger eval code",
-      "sourceId": "server0.conn2.child2/source26",
-      "lineNumber": 1,
-      "columnNumber": 1,
-      "functionName": null
-    }
-  ],
-  "hasException": true,
-  "frame": {
-    "source": "debugger eval code",
-    "sourceId": "server0.conn2.child2/source26",
-    "line": 1,
-    "column": 1
-  },
-  "input": "throw false",
-  "result": {
-    "type": "undefined"
-  },
-  "startTime": 1572867483805,
-  "timestamp": 1572867483805
-});
-
-rawPackets.set(`eval throw 0`, {
-  "resultID": "1588154002979-10",
-  "exception": 0,
-  "exceptionMessage": "0",
-  "exceptionStack": [
-    {
-      "filename": "debugger eval code",
-      "sourceId": "server0.conn2.child2/source26",
-      "lineNumber": 1,
-      "columnNumber": 1,
-      "functionName": null
-    }
-  ],
-  "hasException": true,
-  "frame": {
-    "source": "debugger eval code",
-    "sourceId": "server0.conn2.child2/source26",
-    "line": 1,
-    "column": 1
-  },
-  "input": "throw 0",
-  "result": {
-    "type": "undefined"
-  },
-  "startTime": 1572867483805,
-  "timestamp": 1572867483805
-});
-
-rawPackets.set(`eval throw null`, {
-  "resultID": "1588154003064-11",
-  "exception": {
-    "type": "null"
-  },
-  "exceptionMessage": "null",
-  "exceptionStack": [
-    {
-      "filename": "debugger eval code",
-      "sourceId": "server0.conn2.child2/source26",
-      "lineNumber": 1,
-      "columnNumber": 1,
-      "functionName": null
-    }
-  ],
-  "hasException": true,
-  "frame": {
-    "source": "debugger eval code",
-    "sourceId": "server0.conn2.child2/source26",
-    "line": 1,
-    "column": 1
-  },
-  "input": "throw null",
-  "result": {
-    "type": "undefined"
-  },
-  "startTime": 1572867483805,
-  "timestamp": 1572867483805
-});
-
-rawPackets.set(`eval throw undefined`, {
-  "resultID": "1588154003073-12",
-  "exception": {
-    "type": "undefined"
-  },
-  "exceptionMessage": "undefined",
-  "exceptionStack": [
-    {
-      "filename": "debugger eval code",
-      "sourceId": "server0.conn2.child2/source26",
-      "lineNumber": 1,
-      "columnNumber": 1,
-      "functionName": null
-    }
-  ],
-  "hasException": true,
-  "frame": {
-    "source": "debugger eval code",
-    "sourceId": "server0.conn2.child2/source26",
-    "line": 1,
-    "column": 1
-  },
-  "input": "throw undefined",
-  "result": {
-    "type": "undefined"
-  },
-  "startTime": 1572867483805,
-  "timestamp": 1572867483805
-});
-
-rawPackets.set(`eval throw Symbol`, {
-  "resultID": "1588154003077-13",
-  "exception": {
-    "type": "symbol",
-    "actor": "server0.conn2.child2/symbol44",
-    "name": "potato"
-  },
-  "exceptionMessage": "Symbol(potato)",
-  "exceptionStack": [
-    {
-      "filename": "debugger eval code",
-      "sourceId": "server0.conn2.child2/source33",
-      "lineNumber": 1,
-      "columnNumber": 7,
-      "functionName": null
-    }
-  ],
-  "hasException": true,
-  "frame": {
-    "source": "debugger eval code",
-    "sourceId": "server0.conn2.child2/source33",
-    "line": 1,
-    "column": 7
-  },
-  "input": "throw Symbol(\"potato\")",
-  "result": {
-    "type": "undefined"
-  },
-  "startTime": 1572867483805,
-  "timestamp": 1572867483805
-});
-
-rawPackets.set(`eval throw Object`, {
-  "resultID": "1588154003082-14",
-  "exception": {
-    "_grip": {
-      "type": "object",
-      "actor": "server0.conn2.child2/obj46",
-      "class": "Object",
-      "ownPropertyLength": 1,
-      "extensible": true,
-      "frozen": false,
-      "sealed": false,
-      "preview": {
-        "kind": "Object",
-        "ownProperties": {
-          "vegetable": {
-            "configurable": true,
-            "enumerable": true,
-            "writable": true,
-            "value": "cucumber"
-          }
-        },
-        "ownSymbols": [],
-        "ownPropertiesLength": 1,
-        "ownSymbolsLength": 0,
-        "safeGetterValues": {}
-      }
-    },
-    "actorID": "server0.conn2.child2/obj46"
-  },
-  "exceptionMessage": "[object Object]",
-  "exceptionStack": [
-    {
-      "filename": "debugger eval code",
-      "sourceId": "server0.conn2.child2/source26",
-      "lineNumber": 1,
-      "columnNumber": 1,
-      "functionName": null
-    }
-  ],
-  "hasException": true,
-  "frame": {
-    "source": "debugger eval code",
-    "sourceId": "server0.conn2.child2/source26",
-    "line": 1,
-    "column": 1
-  },
-  "input": "throw {vegetable: \"cucumber\"}",
-  "result": {
-    "type": "undefined"
-  },
-  "startTime": 1572867483805,
-  "timestamp": 1572867483805
-});
-
-rawPackets.set(`eval throw Error Object`, {
-  "resultID": "1588154003093-15",
-  "exception": {
-    "_grip": {
-      "type": "object",
-      "actor": "server0.conn2.child2/obj48",
-      "class": "Error",
-      "ownPropertyLength": 4,
-      "extensible": true,
-      "frozen": false,
-      "sealed": false,
-      "preview": {
-        "kind": "Error",
-        "name": "Error",
-        "message": "pumpkin",
-        "stack": "@debugger eval code:1:7\n",
-        "fileName": "debugger eval code",
-        "lineNumber": 1,
-        "columnNumber": 7
-      }
-    },
-    "actorID": "server0.conn2.child2/obj48"
-  },
-  "exceptionMessage": "Error: pumpkin",
-  "exceptionStack": [
-    {
-      "filename": "debugger eval code",
-      "sourceId": "server0.conn2.child2/source33",
-      "lineNumber": 1,
-      "columnNumber": 7,
-      "functionName": null
-    }
-  ],
-  "hasException": true,
-  "frame": {
-    "source": "debugger eval code",
-    "sourceId": "server0.conn2.child2/source33",
-    "line": 1,
-    "column": 7
-  },
-  "input": "throw new Error(\"pumpkin\")",
-  "result": {
-    "type": "undefined"
-  },
-  "startTime": 1572867483805,
-  "timestamp": 1572867483805
-});
-
-rawPackets.set(`eval throw Error Object with custom name`, {
-  "resultID": "1588154003097-16",
-  "exception": {
-    "_grip": {
-      "type": "object",
-      "actor": "server0.conn2.child2/obj50",
-      "class": "Error",
-      "ownPropertyLength": 6,
-      "extensible": true,
-      "frozen": false,
-      "sealed": false,
-      "preview": {
-        "kind": "Error",
-        "name": "JuicyError",
-        "message": "pineapple",
-        "stack": "@debugger eval code:2:15\n",
-        "fileName": "debugger eval code",
-        "lineNumber": 2,
-        "columnNumber": 15
-      }
-    },
-    "actorID": "server0.conn2.child2/obj50"
-  },
-  "exceptionMessage": "JuicyError: pineapple",
-  "exceptionStack": [
-    {
-      "filename": "debugger eval code",
-      "sourceId": "server0.conn2.child2/source49",
-      "lineNumber": 5,
-      "columnNumber": 5,
-      "functionName": null
-    }
-  ],
-  "hasException": true,
-  "frame": {
-    "source": "debugger eval code",
-    "sourceId": "server0.conn2.child2/source49",
-    "line": 5,
-    "column": 5
-  },
-  "input": "\n    var err = new Error(\"pineapple\");\n    err.name = \"JuicyError\";\n    err.flavor = \"delicious\";\n    throw err;\n  ",
   "result": {
     "type": "undefined"
   },

@@ -5,12 +5,7 @@ exports[`Error - Error with V8-like stack renders with expected text 1`] = `
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1020"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    BOOM
-  </span>
+  Error: "BOOM"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -40,12 +35,7 @@ exports[`Error - Error with invalid stack renders with expected text 1`] = `
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1020"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    bad stack
-  </span>
+  Error: "bad stack"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -58,12 +48,7 @@ exports[`Error - Error with undefined-grip message renders with expected text 1`
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server0.conn0.child1/obj88"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-undefined"
-  >
-    undefined
-  </span>
+  Error
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -95,7 +80,6 @@ exports[`Error - Error with undefined-grip message renders with expected text 2`
 >
   <span
     className="objectTitle"
-    key="title"
   >
     Error
   </span>
@@ -107,12 +91,7 @@ exports[`Error - Error with undefined-grip name renders with expected text 1`] =
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server0.conn0.child1/obj88"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    too much recursion
-  </span>
+  Error: "too much recursion"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -144,7 +123,6 @@ exports[`Error - Error with undefined-grip name renders with expected text 2`] =
 >
   <span
     className="objectTitle"
-    key="title"
   >
     Error
   </span>
@@ -156,12 +134,7 @@ exports[`Error - Error with undefined-grip stack renders with expected text 1`] 
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server0.conn0.child1/obj88"
 >
-  InternalError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    too much recursion
-  </span>
+  InternalError: "too much recursion"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -174,12 +147,7 @@ exports[`Error - Eval error renders with expected text for an EvalError 1`] = `
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1022"
 >
-  EvalError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    EvalError message
-  </span>
+  EvalError: "EvalError message"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -209,12 +177,7 @@ exports[`Error - Internal error renders with expected text for an InternalError 
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1023"
 >
-  InternalError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    InternalError message
-  </span>
+  InternalError: "InternalError message"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -244,12 +207,7 @@ exports[`Error - Multi line stack error renders with expected text for Error obj
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1021"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    bar
-  </span>
+  Error: "bar"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -311,12 +269,7 @@ exports[`Error - Range error renders with expected text for RangeError 1`] = `
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1024"
 >
-  RangeError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    RangeError message
-  </span>
+  RangeError: "RangeError message"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -346,12 +299,7 @@ exports[`Error - Reference error renders with expected text for ReferenceError 1
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1025"
 >
-  ReferenceError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    ReferenceError message
-  </span>
+  ReferenceError: "ReferenceError message"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -381,12 +329,7 @@ exports[`Error - Simple error renders with error type and preview message when i
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1021"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    bar
-  </span>
+  Error: "bar"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -450,14 +393,8 @@ exports[`Error - Simple error renders with error type only when customFormat pro
 >
   <span
     className="objectTitle"
-    key="title"
   >
-    Error: 
-  </span>
-  <span
-    className="objectBox objectBox-string"
-  >
-    bar
+    Error
   </span>
 </span>
 `;
@@ -469,14 +406,8 @@ exports[`Error - Simple error renders with error type only when depth is > 0 1`]
 >
   <span
     className="objectTitle"
-    key="title"
   >
-    Error: 
-  </span>
-  <span
-    className="objectBox objectBox-string"
-  >
-    bar
+    Error
   </span>
 </span>
 `;
@@ -486,12 +417,7 @@ exports[`Error - Simple error renders with expected text for simple error 1`] = 
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1020"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    Error message
-  </span>
+  Error: "Error message"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -521,12 +447,7 @@ exports[`Error - Syntax error renders with expected text for SyntaxError 1`] = `
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1026"
 >
-  SyntaxError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    SyntaxError message
-  </span>
+  SyntaxError: "SyntaxError message"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -556,12 +477,7 @@ exports[`Error - Type error renders with expected text for TypeError 1`] = `
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1027"
 >
-  TypeError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    TypeError message
-  </span>
+  TypeError: "TypeError message"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -591,12 +507,7 @@ exports[`Error - URI error renders with expected text for URIError 1`] = `
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1028"
 >
-  URIError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    URIError message
-  </span>
+  URIError: "URIError message"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -628,7 +539,6 @@ exports[`Error - base-loader.js renders as expected in tiny mode 1`] = `
 >
   <span
     className="objectTitle"
-    key="title"
   >
     Error
   </span>
@@ -640,12 +550,7 @@ exports[`Error - base-loader.js renders as expected without mode 1`] = `
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1020"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    Error message
-  </span>
+  Error: "Error message"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -723,12 +628,7 @@ exports[`Error - longString stacktrace - cut-off location renders as expected 1`
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj33"
 >
-  InternalError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    too much recursion
-  </span>
+  InternalError: "too much recursion"
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -854,10 +754,7 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn2.child1/obj33"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-string"
-  />
+  Error: ""
   <span
     className="objectBox-stackTrace-grid"
     key="stack"
@@ -1031,12 +928,7 @@ exports[`Error - renderStacktrace prop uses renderStacktrace prop when provided 
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1021"
 >
-  Error: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    bar
-  </span>
+  Error: "bar"
   <li
     className="frame"
   >
@@ -1063,12 +955,7 @@ exports[`Error - renderStacktrace prop uses renderStacktrace with longString err
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj33"
 >
-  InternalError: 
-  <span
-    className="objectBox objectBox-string"
-  >
-    too much recursion
-  </span>
+  InternalError: "too much recursion"
   <li
     className="frame"
   >
