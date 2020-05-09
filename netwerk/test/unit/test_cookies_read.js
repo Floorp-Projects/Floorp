@@ -5,28 +5,18 @@
 
 "use strict";
 
-var test_generator = do_run_test();
-
 var CMAX = 1000; // # of cookies to create
 
-function run_test() {
-  do_test_pending();
-  test_generator.next();
-}
-
-function finish_test() {
-  executeSoon(function() {
-    test_generator.return();
-    do_test_finished();
-  });
-}
-
-function* do_run_test() {
+add_task(async () => {
   // Set up a profile.
   let profile = do_get_profile();
 
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+  Services.prefs.setBoolPref(
+    "network.cookieJarSettings.unblocked_for_testing",
+    true
+  );
 
   // Start the cookieservice, to force creation of a database.
   // Get the sessionCookies to join the initialization in cookie thread
@@ -38,19 +28,26 @@ function* do_run_test() {
   Assert.ok(do_get_cookie_file(profile).exists());
   let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 11);
 
+  let uri = NetUtil.newURI("http://foo.com/");
+  let channel = NetUtil.newChannel({
+    uri,
+    loadUsingSystemPrincipal: true,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
+  });
   for (let i = 0; i < CMAX; ++i) {
     let uri = NetUtil.newURI("http://" + i + ".com/");
-    Services.cookies.setCookieString(uri, "oh=hai; max-age=1000", null);
+    Services.cookies.setCookieStringFromHttp(
+      uri,
+      "oh=hai; max-age=1000",
+      channel
+    );
   }
 
   Assert.equal(do_count_cookies(), CMAX);
 
   // Wait until all CMAX cookies have been written out to the database.
   while (do_count_cookies_in_db(db.db) < CMAX) {
-    executeSoon(function() {
-      do_run_generator(test_generator);
-    });
-    yield;
+    await new Promise(resolve => executeSoon(resolve));
   }
 
   // Check the WAL file size. We set it to 16 pages of 32k, which means it
@@ -61,8 +58,7 @@ function* do_run_test() {
   db.close();
 
   // fake a profile change
-  do_close_profile(test_generator);
-  yield;
+  await promise_close_profile();
   do_load_profile();
 
   // test a few random cookies
@@ -82,8 +78,7 @@ function* do_run_test() {
   }
 
   // reload again, to make sure the additions were written correctly
-  do_close_profile(test_generator);
-  yield;
+  await promise_close_profile();
   do_load_profile();
 
   // remove some of the cookies, in both reverse and forward order
@@ -100,18 +95,15 @@ function* do_run_test() {
   Assert.equal(do_count_cookies(), CMAX - 200);
 
   // reload again, to make sure the removals were written correctly
-  do_close_profile(test_generator);
-  yield;
+  await promise_close_profile();
   do_load_profile();
 
   // check the count
   Assert.equal(do_count_cookies(), CMAX - 200);
 
   // reload again, but wait for async read completion
-  do_close_profile(test_generator);
-  yield;
-  do_load_profile(test_generator);
-  yield;
+  await promise_close_profile();
+  await promise_load_profile();
 
   // check that everything's precisely correct
   Assert.equal(do_count_cookies(), CMAX - 200);
@@ -119,6 +111,4 @@ function* do_run_test() {
     let host = i.toString() + ".com";
     Assert.equal(Services.cookiemgr.countCookiesFromHost(host), 1);
   }
-
-  finish_test();
-}
+});
