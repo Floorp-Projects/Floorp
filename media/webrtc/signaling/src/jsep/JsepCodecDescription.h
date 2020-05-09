@@ -109,7 +109,9 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         mMaxPlaybackRate(0),
         mForceMono(false),
         mFECEnabled(false),
-        mDtmfEnabled(false) {}
+        mDtmfEnabled(false),
+        mMaxAverageBitrate(0),
+        mDTXEnabled(false) {}
 
   JSEP_CODEC_CLONE(JsepAudioCodecDescription)
 
@@ -154,11 +156,13 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       if (mMaxPlaybackRate) {
         opusParams.maxplaybackrate = mMaxPlaybackRate;
       }
+      opusParams.maxaveragebitrate = mMaxAverageBitrate;
       if (mChannels == 2 && !mForceMono) {
         // We prefer to receive stereo, if available.
         opusParams.stereo = 1;
       }
       opusParams.useInBandFec = mFECEnabled ? 1 : 0;
+      opusParams.useDTX = mDTXEnabled;
       msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, opusParams));
     } else if (mName == "telephone-event") {
       // add the default dtmf tones
@@ -181,6 +185,11 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       // at the received side is declarative and can be negotiated
       // separately for either media direction.
       mFECEnabled = opusParams.useInBandFec;
+      if ((opusParams.maxaveragebitrate >= 6000) &&
+          (opusParams.maxaveragebitrate <= 510000)) {
+        mMaxAverageBitrate = opusParams.maxaveragebitrate;
+      }
+      mDTXEnabled = opusParams.useDTX;
     }
 
     return true;
@@ -190,6 +199,8 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   bool mForceMono;
   bool mFECEnabled;
   bool mDtmfEnabled;
+  uint32_t mMaxAverageBitrate;
+  bool mDTXEnabled;
 };
 
 class JsepVideoCodecDescription : public JsepCodecDescription {
