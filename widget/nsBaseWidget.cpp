@@ -1382,6 +1382,13 @@ CompositorBridgeChild* nsBaseWidget::GetRemoteRenderer() {
   return mCompositorBridgeChild;
 }
 
+void nsBaseWidget::ClearCachedWebrenderResources() {
+  if (!mLayerManager || !mLayerManager->AsWebRenderLayerManager()) {
+    return;
+  }
+  mLayerManager->ClearCachedResources();
+}
+
 already_AddRefed<gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing() {
   return nullptr;
 }

@@ -578,6 +578,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   virtual CompositorBridgeChild* GetRemoteRenderer() override;
 
+  virtual void ClearCachedWebrenderResources() override;
+
   /**
    * Notify the widget that this window is being used with OMTC.
    */

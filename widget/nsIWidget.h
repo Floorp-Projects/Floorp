@@ -2039,6 +2039,11 @@ class nsIWidget : public nsISupports {
   virtual CompositorBridgeChild* GetRemoteRenderer() { return nullptr; }
 
   /**
+   * Clear WebRender resources
+   */
+  virtual void ClearCachedWebrenderResources() {}
+
+  /**
    * If this widget has its own vsync source, return it, otherwise return
    * nullptr. An example of such local source would be Wayland frame callbacks.
    */
