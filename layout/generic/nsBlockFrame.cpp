@@ -3039,9 +3039,9 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
           fm, aState.mMinLineHeight, wm.IsLineInverted());
       nscoord minDescent = aState.mMinLineHeight - minAscent;
 
-      aState.mBCoord += std::max(minAscent, metrics.BlockStartAscent()) +
-                        std::max(minDescent, metrics.BSize(wm) -
-                                                 metrics.BlockStartAscent());
+      aState.mBCoord +=
+          std::max(minAscent, metrics.BlockStartAscent()) +
+          std::max(minDescent, metrics.BSize(wm) - metrics.BlockStartAscent());
 
       nscoord offset = minAscent - metrics.BlockStartAscent();
       if (offset > 0) {

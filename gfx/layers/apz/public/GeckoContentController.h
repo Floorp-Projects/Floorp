@@ -7,13 +7,13 @@
 #ifndef mozilla_layers_GeckoContentController_h
 #define mozilla_layers_GeckoContentController_h
 
-#include "InputData.h"                           // for PinchGestureInput
-#include "LayersTypes.h"                         // for ScrollDirection
-#include "Units.h"                               // for CSSPoint, CSSRect, etc
-#include "mozilla/Assertions.h"                  // for MOZ_ASSERT_HELPER2
-#include "mozilla/Attributes.h"                  // for MOZ_CAN_RUN_SCRIPT
-#include "mozilla/DefineEnum.h"                  // for MOZ_DEFINE_ENUM
-#include "mozilla/EventForwards.h"               // for Modifiers
+#include "InputData.h"              // for PinchGestureInput
+#include "LayersTypes.h"            // for ScrollDirection
+#include "Units.h"                  // for CSSPoint, CSSRect, etc
+#include "mozilla/Assertions.h"     // for MOZ_ASSERT_HELPER2
+#include "mozilla/Attributes.h"     // for MOZ_CAN_RUN_SCRIPT
+#include "mozilla/DefineEnum.h"     // for MOZ_DEFINE_ENUM
+#include "mozilla/EventForwards.h"  // for Modifiers
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/MatrixMessage.h"        // for MatrixMessage
 #include "mozilla/layers/RepaintRequest.h"       // for RepaintRequest
