@@ -51,7 +51,11 @@ impl CascadeFilter {
     fn set_filter_data(&self, data: &ThinVec<u8>) -> Result<(), nsresult> {
         let filter = rentals::CascadeWithOwnedData::try_new_or_drop(
             Vec::from(data.as_slice()).into_boxed_slice(),
-            |data| Cascade::from_bytes(data).unwrap_or(None).ok_or(NS_ERROR_INVALID_ARG)
+            |data| {
+                Cascade::from_bytes(data)
+                    .unwrap_or(None)
+                    .ok_or(NS_ERROR_INVALID_ARG)
+            },
         )?;
         self.filter.borrow_mut().replace(filter);
         Ok(())
