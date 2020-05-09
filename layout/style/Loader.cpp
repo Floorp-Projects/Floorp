@@ -1856,6 +1856,10 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
           // We need to clone the sheet on insertion to the cache because
           // if the original sheet has a cyclic reference this can cause
           // leaks until shutdown since the global cache is not cycle-collected
+
+          // NOTE: If we stop cloning sheets before insertion, we need to change
+          // nsXULPrototypeCache::CollectMemoryReports() to stop using
+          // SizeOfIncludingThis() because it will no longer own the sheets.
           cache->PutStyleSheet(CloneSheet(*sheet));
         }
       }
