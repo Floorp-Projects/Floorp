@@ -2491,10 +2491,7 @@ pub extern "C" fn wr_dp_define_rounded_rect_clip_with_parent_clip_chain(
     let clip_id = state
         .frame_builder
         .dl_builder
-        .define_clip_rounded_rect(
-            &parent.to_webrender(state.pipeline_id),
-            complex,
-        );
+        .define_clip_rounded_rect(&parent.to_webrender(state.pipeline_id), complex);
     WrClipId::from_webrender(clip_id)
 }
 
@@ -2509,10 +2506,7 @@ pub extern "C" fn wr_dp_define_rect_clip_with_parent_clip_chain(
     let clip_id = state
         .frame_builder
         .dl_builder
-        .define_clip_rect(
-            &parent.to_webrender(state.pipeline_id),
-            clip_rect,
-        );
+        .define_clip_rect(&parent.to_webrender(state.pipeline_id), clip_rect);
     WrClipId::from_webrender(clip_id)
 }
 
