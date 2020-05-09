@@ -1585,6 +1585,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "gecko_logger"
+version = "0.1.0"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "geckodriver"
 version = "0.26.0"
 dependencies = [
@@ -1839,6 +1846,7 @@ dependencies = [
  "fluent-langneg",
  "fluent-langneg-ffi",
  "fog",
+ "gecko_logger",
  "geckoservo",
  "gkrust_utils",
  "jsrust_shared",

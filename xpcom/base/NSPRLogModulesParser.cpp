@@ -23,8 +23,27 @@ void NSPRLogModulesParser(
   Tokenizer parser(aLogModules, kDelimiters, kAdditionalWordChars);
   nsAutoCString moduleName;
 
-  // Format: LOG_MODULES="Foo:2,Bar, Baz:5"
-  while (parser.ReadWord(moduleName)) {
+  Tokenizer::Token rustModSep =
+      parser.AddCustomToken("::", Tokenizer::CASE_SENSITIVE);
+
+  auto readModuleName = [&](nsAutoCString& moduleName) -> bool {
+    moduleName.Truncate();
+    nsDependentCSubstring sub;
+    parser.Record();
+    // If the name doesn't include at least one word, we've reached the end.
+    if (!parser.ReadWord(sub)) {
+      return false;
+    }
+    // We will exit this loop if when any of the condition fails
+    while (parser.Check(rustModSep) && parser.ReadWord(sub)) {
+    }
+    // Claim will include characters of the last sucessfully read item
+    parser.Claim(moduleName, Tokenizer::INCLUDE_LAST);
+    return true;
+  };
+
+  // Format: LOG_MODULES="Foo:2,Bar, Baz:5,rust_crate::mod::file:5"
+  while (readModuleName(moduleName)) {
     // Next should be :<level>, default to Error if not provided.
     LogLevel logLevel = LogLevel::Error;
     int32_t levelValue = 0;
