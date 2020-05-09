@@ -20,6 +20,7 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
 #include "mozIThirdPartyUtil.h"
+#include "nsIConsoleReportCollector.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIIDNService.h"
 #include "nsIScriptError.h"
@@ -887,13 +888,11 @@ void CookieService::GetCookiesForURI(
 
 // processes a single cookie, and returns true if there are more cookies
 // to be processed
-bool CookieService::CanSetCookie(nsIURI* aHostURI,
-                                 const nsACString& aBaseDomain,
-                                 CookieStruct& aCookieData,
-                                 bool aRequireHostMatch, CookieStatus aStatus,
-                                 nsCString& aCookieHeader, bool aFromHttp,
-                                 nsIChannel* aChannel, bool& aSetCookie,
-                                 mozIThirdPartyUtil* aThirdPartyUtil) {
+bool CookieService::CanSetCookie(
+    nsIURI* aHostURI, const nsACString& aBaseDomain, CookieStruct& aCookieData,
+    bool aRequireHostMatch, CookieStatus aStatus, nsCString& aCookieHeader,
+    bool aFromHttp, bool aIsForeignAndNotAddon, nsIConsoleReportCollector* aCRC,
+    bool& aSetCookie) {
   NS_ASSERTION(aHostURI, "null host!");
 
   aSetCookie = false;
@@ -910,9 +909,8 @@ bool CookieService::CanSetCookie(nsIURI* aHostURI,
   nsAutoCString expires;
   nsAutoCString maxage;
   bool acceptedByParser = false;
-  bool newCookie =
-      ParseAttributes(aChannel, aHostURI, aCookieHeader, aCookieData, expires,
-                      maxage, acceptedByParser);
+  bool newCookie = ParseAttributes(aCRC, aHostURI, aCookieHeader, aCookieData,
+                                   expires, maxage, acceptedByParser);
   if (!acceptedByParser) {
     return newCookie;
   }
@@ -951,7 +949,7 @@ bool CookieService::CanSetCookie(nsIURI* aHostURI,
     size.AppendInt(kMaxBytesPerCookie);
     params.AppendElement(size);
 
-    LogMessageToConsole(aChannel, aHostURI, nsIScriptError::warningFlag,
+    LogMessageToConsole(aCRC, aHostURI, nsIScriptError::warningFlag,
                         CONSOLE_OVERSIZE_CATEGORY,
                         NS_LITERAL_CSTRING("CookieOversize"), params);
     return newCookie;
@@ -970,7 +968,7 @@ bool CookieService::CanSetCookie(nsIURI* aHostURI,
     return newCookie;
   }
 
-  if (!CheckPath(aCookieData, aChannel, aHostURI)) {
+  if (!CheckPath(aCookieData, aCRC, aHostURI)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "failed the path tests");
     return newCookie;
@@ -1007,27 +1005,11 @@ bool CookieService::CanSetCookie(nsIURI* aHostURI,
 
   // If the new cookie is same-site but in a cross site context,
   // browser must ignore the cookie.
-  if ((aCookieData.sameSite() != nsICookie::SAMESITE_NONE) && aThirdPartyUtil) {
-    // Do not treat loads triggered by web extensions as foreign
-    bool addonAllowsLoad = false;
-    if (aChannel) {
-      nsCOMPtr<nsIURI> channelURI;
-      NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
-      nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-      addonAllowsLoad = BasePrincipal::Cast(loadInfo->TriggeringPrincipal())
-                            ->AddonAllowsLoad(channelURI);
-    }
-
-    if (!addonAllowsLoad) {
-      bool isThirdParty = false;
-      nsresult rv = aThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI,
-                                                         &isThirdParty);
-      if (NS_FAILED(rv) || isThirdParty) {
-        COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
-                          "failed the samesite tests");
-        return newCookie;
-      }
-    }
+  if ((aCookieData.sameSite() != nsICookie::SAMESITE_NONE) &&
+      aIsForeignAndNotAddon) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
+                      "failed the samesite tests");
+    return newCookie;
   }
 
   aSetCookie = true;
@@ -1044,12 +1026,31 @@ bool CookieService::SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
                                       nsCString& aCookieHeader, bool aFromHttp,
                                       nsIChannel* aChannel) {
   NS_ASSERTION(aHostURI, "null host!");
-  bool canSetCookie = false;
   nsCString savedCookieHeader(aCookieHeader);
+
+  bool addonAllowsLoad = false;
+  if (aChannel) {
+    nsCOMPtr<nsIURI> channelURI;
+    NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    addonAllowsLoad = BasePrincipal::Cast(loadInfo->TriggeringPrincipal())
+                          ->AddonAllowsLoad(channelURI);
+  }
+
+  bool isForeignAndNotAddon = false;
+  if (!addonAllowsLoad) {
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI,
+                                         &isForeignAndNotAddon);
+  }
+
   CookieStruct cookieData;
+  bool canSetCookie = false;
+
+  nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
+
   bool newCookie = CanSetCookie(
       aHostURI, aBaseDomain, cookieData, aRequireHostMatch, aStatus,
-      aCookieHeader, aFromHttp, aChannel, canSetCookie, mThirdPartyUtil);
+      aCookieHeader, aFromHttp, isForeignAndNotAddon, crc, canSetCookie);
 
   if (!canSetCookie) {
     return newCookie;
@@ -1240,8 +1241,8 @@ bool CookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
 // Parses attributes from cookie header. expires/max-age attributes aren't
 // folded into the cookie struct here, because we don't know which one to use
 // until we've parsed the header.
-bool CookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
-                                    nsCString& aCookieHeader,
+bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
+                                    nsIURI* aHostURI, nsCString& aCookieHeader,
                                     CookieStruct& aCookieData,
                                     nsACString& aExpires, nsACString& aMaxage,
                                     bool& aAcceptedByParser) {
@@ -1341,8 +1342,7 @@ bool CookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
         sameSiteSet = true;
       } else {
         LogMessageToConsole(
-            aChannel, aHostURI, nsIScriptError::infoFlag,
-            CONSOLE_SAMESITE_CATEGORY,
+            aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
             NS_LITERAL_CSTRING("CookieSameSiteValueInvalid"),
             AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
       }
@@ -1362,8 +1362,7 @@ bool CookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
     if (laxByDefault &&
         StaticPrefs::network_cookie_sameSite_noneRequiresSecure()) {
       LogMessageToConsole(
-          aChannel, aHostURI, nsIScriptError::infoFlag,
-          CONSOLE_SAMESITE_CATEGORY,
+          aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
           NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecure"),
           AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
       return newCookie;
@@ -1371,8 +1370,7 @@ bool CookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
 
     // if sameSite=lax by default is disabled, we want to warn the user.
     LogMessageToConsole(
-        aChannel, aHostURI, nsIScriptError::warningFlag,
-        CONSOLE_SAMESITE_CATEGORY,
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_SAMESITE_CATEGORY,
         NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecureForBeta"),
         AutoTArray<nsString, 2>{NS_ConvertUTF8toUTF16(aCookieData.name()),
                                 SAMESITE_MDN_URL});
@@ -1382,12 +1380,12 @@ bool CookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
       aCookieData.sameSite() == nsICookie::SAMESITE_LAX) {
     if (laxByDefault) {
       LogMessageToConsole(
-          aChannel, aHostURI, nsIScriptError::infoFlag,
-          CONSOLE_SAMESITE_CATEGORY, NS_LITERAL_CSTRING("CookieLaxForced"),
+          aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
+          NS_LITERAL_CSTRING("CookieLaxForced"),
           AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
     } else {
       LogMessageToConsole(
-          aChannel, aHostURI, nsIScriptError::warningFlag,
+          aCRC, aHostURI, nsIScriptError::warningFlag,
           CONSOLE_SAMESITE_CATEGORY,
           NS_LITERAL_CSTRING("CookieLaxForcedForBeta"),
           AutoTArray<nsString, 2>{NS_ConvertUTF8toUTF16(aCookieData.name()),
@@ -1403,15 +1401,14 @@ bool CookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
 }
 
 // static
-void CookieService::LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
-                                        uint32_t aErrorFlags,
+void CookieService::LogMessageToConsole(nsIConsoleReportCollector* aCRC,
+                                        nsIURI* aURI, uint32_t aErrorFlags,
                                         const nsACString& aCategory,
                                         const nsACString& aMsg,
                                         const nsTArray<nsString>& aParams) {
   MOZ_ASSERT(aURI);
 
-  nsCOMPtr<HttpBaseChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel) {
+  if (!aCRC) {
     return;
   }
 
@@ -1421,9 +1418,9 @@ void CookieService::LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
     return;
   }
 
-  httpChannel->AddConsoleReport(aErrorFlags, aCategory,
-                                nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0,
-                                aMsg, aParams);
+  aCRC->AddConsoleReport(aErrorFlags, aCategory,
+                         nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0, aMsg,
+                         aParams);
 }
 
 /******************************************************************************
@@ -1681,7 +1678,8 @@ nsAutoCString CookieService::GetPathFromURI(nsIURI* aHostURI) {
   return path;
 }
 
-bool CookieService::CheckPath(CookieStruct& aCookieData, nsIChannel* aChannel,
+bool CookieService::CheckPath(CookieStruct& aCookieData,
+                              nsIConsoleReportCollector* aCRC,
                               nsIURI* aHostURI) {
   // if a path is given, check the host has permission
   if (aCookieData.path().IsEmpty() || aCookieData.path().First() != '/') {
@@ -1712,7 +1710,7 @@ bool CookieService::CheckPath(CookieStruct& aCookieData, nsIChannel* aChannel,
     size.AppendInt(kMaxBytesPerPath);
     params.AppendElement(size);
 
-    LogMessageToConsole(aChannel, aHostURI, nsIScriptError::warningFlag,
+    LogMessageToConsole(aCRC, aHostURI, nsIScriptError::warningFlag,
                         CONSOLE_OVERSIZE_CATEGORY,
                         NS_LITERAL_CSTRING("CookiePathOversize"), params);
     return false;

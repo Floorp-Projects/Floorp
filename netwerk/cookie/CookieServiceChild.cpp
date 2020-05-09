@@ -362,13 +362,30 @@ nsresult CookieServiceChild::SetCookieStringInternal(
 
   int64_t currentTimeInUsec = PR_Now();
 
+  bool addonAllowsLoad = false;
+  if (aChannel) {
+    nsCOMPtr<nsIURI> channelURI;
+    NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    addonAllowsLoad = BasePrincipal::Cast(loadInfo->TriggeringPrincipal())
+                          ->AddonAllowsLoad(channelURI);
+  }
+
+  bool isForeignAndNotAddon = false;
+  if (!addonAllowsLoad) {
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI,
+                                         &isForeignAndNotAddon);
+  }
+
+  nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
+
   bool moreCookies;
   do {
     CookieStruct cookieData;
     bool canSetCookie = false;
     moreCookies = CookieService::CanSetCookie(
         aHostURI, baseDomain, cookieData, requireHostMatch, cookieStatus,
-        cookieString, aFromHttp, aChannel, canSetCookie, mThirdPartyUtil);
+        cookieString, aFromHttp, isForeignAndNotAddon, crc, canSetCookie);
 
     // We need to see if the cookie we're setting would overwrite an httponly
     // one. This would not affect anything we send over the net (those come from

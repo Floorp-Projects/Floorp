@@ -17,6 +17,7 @@
 #include "nsIMemoryReporter.h"
 #include "mozilla/MemoryReporting.h"
 
+class nsIConsoleReportCollector;
 class nsICookieJarSettings;
 class nsIEffectiveTLDService;
 class nsIIDNService;
@@ -79,9 +80,8 @@ class CookieService final : public nsICookieService,
   static bool CanSetCookie(nsIURI* aHostURI, const nsACString& aBaseDomain,
                            CookieStruct& aCookieData, bool aRequireHostMatch,
                            CookieStatus aStatus, nsCString& aCookieHeader,
-                           bool aFromHttp, nsIChannel* aChannel,
-                           bool& aSetCookie,
-                           mozIThirdPartyUtil* aThirdPartyUtil);
+                           bool aFromHttp, bool aIsForeignAndNotAddon,
+                           nsIConsoleReportCollector* aCRC, bool& aSetCookie);
   static CookieStatus CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
                                  nsIURI* aHostURI, bool aIsForeign,
                                  bool aIsThirdPartyTrackingResource,
@@ -148,7 +148,7 @@ class CookieService final : public nsICookieService,
                             nsDependentCSubstring& aTokenString,
                             nsDependentCSubstring& aTokenValue,
                             bool& aEqualsFound);
-  static bool ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
+  static bool ParseAttributes(nsIConsoleReportCollector* aCRC, nsIURI* aHostURI,
                               nsCString& aCookieHeader,
                               CookieStruct& aCookieData, nsACString& aExpires,
                               nsACString& aMaxage, bool& aAcceptedByParser);
@@ -156,8 +156,8 @@ class CookieService final : public nsICookieService,
   static bool CheckDomain(CookieStruct& aCookieData, nsIURI* aHostURI,
                           const nsACString& aBaseDomain,
                           bool aRequireHostMatch);
-  static bool CheckPath(CookieStruct& aCookieData, nsIChannel* aChannel,
-                        nsIURI* aHostURI);
+  static bool CheckPath(CookieStruct& aCookieData,
+                        nsIConsoleReportCollector* aCRC, nsIURI* aHostURI);
   static bool CheckPrefixes(CookieStruct& aCookieData, bool aSecureRequest);
   static bool GetExpiry(CookieStruct& aCookieData, const nsACString& aExpires,
                         const nsACString& aMaxage, int64_t aCurrentTime,
@@ -177,7 +177,7 @@ class CookieService final : public nsICookieService,
   nsresult RemoveCookiesFromExactHost(const nsACString& aHost,
                                       const OriginAttributesPattern& aPattern);
 
-  static void LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
+  static void LogMessageToConsole(nsIConsoleReportCollector* aCRC, nsIURI* aURI,
                                   uint32_t aErrorFlags,
                                   const nsACString& aCategory,
                                   const nsACString& aMsg,
