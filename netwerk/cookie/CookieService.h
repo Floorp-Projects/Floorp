@@ -65,7 +65,7 @@ class CookieService final : public nsICookieService,
    * (thus instantiating it, if necessary) and clear all the cookies for that
    * app.
    */
-  static nsAutoCString GetPathFromURI(nsIURI* aHostURI);
+
   static bool CanSetCookie(nsIURI* aHostURI, const nsACString& aBaseDomain,
                            CookieStruct& aCookieData, bool aRequireHostMatch,
                            CookieStatus aStatus, nsCString& aCookieHeader,
@@ -80,9 +80,6 @@ class CookieService final : public nsICookieService,
                                  const int aNumOfCookies,
                                  const OriginAttributes& aOriginAttrs,
                                  uint32_t* aRejectedReason);
-
-  static already_AddRefed<nsICookieJarSettings> GetCookieJarSettings(
-      nsIChannel* aChannel);
 
   void GetCookiesForURI(nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,
                         bool aIsThirdPartyTrackingResource,
@@ -124,7 +121,6 @@ class CookieService final : public nsICookieService,
                               nsCString& aCookieHeader,
                               CookieStruct& aCookieData, nsACString& aExpires,
                               nsACString& aMaxage, bool& aAcceptedByParser);
-  bool RequireThirdPartyCheck();
   static bool CheckDomain(CookieStruct& aCookieData, nsIURI* aHostURI,
                           const nsACString& aBaseDomain,
                           bool aRequireHostMatch);
