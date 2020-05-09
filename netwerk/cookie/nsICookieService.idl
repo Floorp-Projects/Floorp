@@ -8,6 +8,7 @@
 interface nsIURI;
 interface nsIChannel;
 interface nsIPrincipal;
+webidl Document;
 
 /**
  * @see nsICookieService::runInTransaction
@@ -120,6 +121,18 @@ interface nsICookieService : nsISupports
    * @return the resulting cookie string
    */
   ACString getCookieStringFromHttp(in nsIURI aURI, in nsIChannel aChannel);
+
+  /*
+   * Set the cookie string associated with a Document. This method is meant to
+   * be used for `document.cookie` only. Any security check about
+   * storage-access permission and cookie behavior must be done by the caller.
+   *
+   * @param aDocument
+   *        The document.
+   * @param aCookie
+   *        the cookie string to set.
+   */
+  void setCookieStringFromDocument(in Document aDocument, in ACString aCookie);
 
   /*
    * Set the cookie string associated with the URI.
