@@ -504,7 +504,13 @@ void nsXULPrototypeCache::CollectMemoryReports(
   // TODO Report content in mPrototypeTable?
 
   other += sInstance->mStyleSheetTable.ShallowSizeOfExcludingThis(mallocSizeOf);
-  // TODO Report content inside mStyleSheetTable?
+  for (auto iter = sInstance->mStyleSheetTable.ConstIter(); !iter.Done();
+       iter.Next()) {
+    // NOTE: If Loader::DoSheetComplete() is ever modified to stop clongin
+    // sheets before inserting into this cache, we will need to stop using
+    // SizeOfIncludingThis()
+    other += iter.Data()->SizeOfIncludingThis(mallocSizeOf);
+  }
 
   other += sInstance->mScriptTable.ShallowSizeOfExcludingThis(mallocSizeOf);
   // TODO Report content inside mScriptTable?
