@@ -1635,6 +1635,9 @@ nsresult nsCocoaWindow::DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransi
     // to be called from the OS. We will call EnteredFullScreen from those methods,
     // where mInFullScreenMode will be set and a sizemode event will be dispatched.
     [mWindow toggleFullScreen:nil];
+    // Invoke orderFront to make the window go full screen immediately without
+    // the transition.
+    [mWindow orderFront:nil];
   } else {
     NSDisableScreenUpdates();
     // The order here matters. When we exit full screen mode, we need to show the
@@ -2579,20 +2582,6 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   }
 
   mGeckoWindow->ReportMoveEvent();
-}
-
-- (NSArray<NSWindow*>*)customWindowsToEnterFullScreenForWindow:(NSWindow*)window {
-  return AlwaysUsesNativeFullScreen() ? @[ window ] : nil;
-}
-
-- (void)window:(NSWindow*)window
-    startCustomAnimationToEnterFullScreenOnScreen:(NSScreen*)screen
-                                     withDuration:(NSTimeInterval)duration {
-  // Immediately switch to cover full screen, so we don't show the default
-  // transition effect which stops video from playing.
-  // XXX Is it possible to simulate the native transition effect without
-  //     triggering content size change?
-  [window setFrame:[screen frame] display:YES];
 }
 
 - (void)windowWillEnterFullScreen:(NSNotification*)notification {
