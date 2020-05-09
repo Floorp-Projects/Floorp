@@ -3,6 +3,16 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 use std::fmt;
 
+// To ensure we don't use stdlib allocating types by accident
+#[allow(dead_code)]
+struct Vec;
+#[allow(dead_code)]
+struct Box;
+#[allow(dead_code)]
+struct HashMap;
+#[allow(dead_code)]
+struct String;
+
 macro_rules! box_database {
     ($($boxenum:ident $boxtype:expr),*,) => {
         #[derive(Clone, Copy, PartialEq)]
@@ -42,24 +52,14 @@ macro_rules! box_database {
 
 #[derive(Default, PartialEq, Clone)]
 pub struct FourCC {
-    pub value: String,
+    pub value: [u8; 4],
 }
 
 impl From<u32> for FourCC {
     fn from(number: u32) -> FourCC {
-        let mut box_chars = Vec::new();
-        for x in 0..4 {
-            let c = (number >> (x * 8) & 0x0000_00FF) as u8;
-            box_chars.push(c);
+        FourCC {
+            value: number.to_be_bytes(),
         }
-        box_chars.reverse();
-
-        let box_string = match String::from_utf8(box_chars) {
-            Ok(t) => t,
-            _ => String::from("null"), // error to retrieve fourcc
-        };
-
-        FourCC { value: box_string }
     }
 }
 
@@ -70,23 +70,27 @@ impl From<BoxType> for FourCC {
     }
 }
 
-impl<'a> From<&'a str> for FourCC {
-    fn from(v: &'a str) -> FourCC {
-        FourCC {
-            value: v.to_owned(),
-        }
+impl From<[u8; 4]> for FourCC {
+    fn from(v: [u8; 4]) -> FourCC {
+        FourCC { value: v }
     }
 }
 
 impl fmt::Debug for FourCC {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.value)
+        match std::str::from_utf8(&self.value) {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => self.value.fmt(f),
+        }
     }
 }
 
 impl fmt::Display for FourCC {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.value)
+        match std::str::from_utf8(&self.value) {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => write!(f, "null"),
+        }
     }
 }
 
