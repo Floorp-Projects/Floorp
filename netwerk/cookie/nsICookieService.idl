@@ -8,7 +8,6 @@
 interface nsIURI;
 interface nsIChannel;
 interface nsIPrincipal;
-webidl Document;
 
 /**
  * @see nsICookieService::runInTransaction
@@ -123,16 +122,24 @@ interface nsICookieService : nsISupports
   ACString getCookieStringFromHttp(in nsIURI aURI, in nsIChannel aChannel);
 
   /*
-   * Set the cookie string associated with a Document. This method is meant to
-   * be used for `document.cookie` only. Any security check about
-   * storage-access permission and cookie behavior must be done by the caller.
+   * Set the cookie string associated with the URI.
    *
-   * @param aDocument
-   *        The document.
+   * @param aURI
+   *        The URI of the document for which cookies are being queried.
+   *        file:// URIs (i.e. with an empty host) are allowed, but any other
+   *        scheme must have a non-empty host. A trailing dot in the host
+   *        is acceptable, and will be stripped. This argument must not be null.
    * @param aCookie
    *        the cookie string to set.
+   * @param aChannel
+   *        the channel used to load the document.  this parameter should not
+   *        be null, otherwise the cookies will not be set if third-party
+   *        cookies have been disabled by the user. (the channel is used
+   *        to determine the originating URI of the document; if it is not
+   *        provided, the cookies will be assumed third-party.)
    */
-  void setCookieStringFromDocument(in Document aDocument, in ACString aCookie);
+  void setCookieString(in nsIURI aURI, in ACString aCookie,
+                       in nsIChannel aChannel);
 
   /*
    * Set the cookie string and expires associated with the URI.

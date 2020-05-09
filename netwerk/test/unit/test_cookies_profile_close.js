@@ -5,7 +5,21 @@
 
 "use strict";
 
-add_task(async () => {
+var test_generator = do_run_test();
+
+function run_test() {
+  do_test_pending();
+  test_generator.next();
+}
+
+function finish_test() {
+  executeSoon(function() {
+    test_generator.return();
+    do_test_finished();
+  });
+}
+
+function* do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
 
@@ -18,8 +32,6 @@ add_task(async () => {
 
   // Start the cookieservice.
   Services.cookies;
-
-  CookieXPCShellUtils.createServer({ hosts: ["foo.com"] });
 
   // Set a cookie.
   let uri = NetUtil.newURI("http://foo.com");
@@ -34,14 +46,7 @@ add_task(async () => {
     {}
   );
 
-  let contentPage = await CookieXPCShellUtils.loadContentPage(uri.spec);
-  await contentPage.spawn(
-    null,
-    // eslint-disable-next-line no-undef
-    () => (content.document.cookie = "oh=hai; max-age=1000")
-  );
-  await contentPage.close();
-
+  Services.cookies.setCookieString(uri, "oh=hai; max-age=1000", null);
   let cookies = Services.cookiemgr.cookies;
   Assert.ok(cookies.length == 1);
   let cookie = cookies[0];
@@ -49,17 +54,10 @@ add_task(async () => {
   // Fire 'profile-before-change'.
   do_close_profile();
 
-  let promise = new _promise_observer("cookie-db-closed");
-
   // Check that the APIs behave appropriately.
   Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
   Assert.equal(Services.cookies.getCookieStringFromHttp(uri, channel), "");
-
-  contentPage = await CookieXPCShellUtils.loadContentPage(uri.spec);
-  // eslint-disable-next-line no-undef
-  await contentPage.spawn(null, () => (content.document.cookie = "oh2=hai"));
-  await contentPage.close();
-
+  Services.cookies.setCookieString(uri, "oh2=hai", null);
   Services.cookies.setCookieStringFromHttp(uri, "oh3=hai", channel);
   Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
 
@@ -103,11 +101,14 @@ add_task(async () => {
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   // Wait for the database to finish closing.
-  await promise;
+  new _observer(test_generator, "cookie-db-closed");
+  yield;
 
   // Load the profile and check that the API is available.
   do_load_profile();
   Assert.ok(
     Services.cookiemgr.cookieExists(cookie.host, cookie.path, cookie.name, {})
   );
-});
+
+  finish_test();
+}

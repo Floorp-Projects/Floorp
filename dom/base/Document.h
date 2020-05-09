@@ -4202,6 +4202,10 @@ class Document : public nsINode,
   MOZ_MUST_USE RefPtr<AutomaticStorageAccessGrantPromise>
   AutomaticStorageAccessCanBeGranted();
 
+  // This should *ONLY* be used in GetCookie/SetCookie.
+  already_AddRefed<nsIChannel> CreateDummyChannelForCookies(
+      nsIURI* aContentURI);
+
   static void AddToplevelLoadingDocument(Document* aDoc);
   static void RemoveToplevelLoadingDocument(Document* aDoc);
   static AutoTArray<Document*, 8>* sLoadingForegroundTopLevelContentDocument;

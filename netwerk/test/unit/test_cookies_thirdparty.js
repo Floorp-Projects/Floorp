@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async () => {
+function run_test() {
   Services.prefs.setBoolPref(
     "network.cookieJarSettings.unblocked_for_testing",
     true
@@ -17,10 +17,6 @@ add_task(async () => {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
-
-  CookieXPCShellUtils.createServer({
-    hosts: ["foo.com", "bar.com", "third.com"],
-  });
 
   // Create URIs and channels pointing to foo.com and bar.com.
   // We will use these to put foo.com into first and third party contexts.
@@ -45,9 +41,9 @@ add_task(async () => {
       loadUsingSystemPrincipal: true,
     });
 
-    await do_set_cookies(uri1, channel1, true, [1, 2]);
+    do_set_cookies(uri1, channel1, true, [1, 2, 3]);
     Services.cookies.removeAll();
-    await do_set_cookies(uri1, channel2, true, [1, 2]);
+    do_set_cookies(uri1, channel2, true, [1, 2, 3]);
     Services.cookies.removeAll();
   }
 
@@ -67,9 +63,9 @@ add_task(async () => {
       loadUsingSystemPrincipal: true,
     });
 
-    await do_set_cookies(uri1, channel1, true, [0, 0]);
+    do_set_cookies(uri1, channel1, true, [0, 0, 0]);
     Services.cookies.removeAll();
-    await do_set_cookies(uri1, channel2, true, [0, 0]);
+    do_set_cookies(uri1, channel2, true, [0, 0, 0]);
     Services.cookies.removeAll();
   }
 
@@ -98,9 +94,9 @@ add_task(async () => {
     let httpchannel2 = channel2.QueryInterface(Ci.nsIHttpChannelInternal);
     httpchannel2.forceAllowThirdPartyCookie = true;
 
-    await do_set_cookies(uri1, channel1, true, [1, 2]);
+    do_set_cookies(uri1, channel1, true, [1, 2, 3]);
     Services.cookies.removeAll();
-    await do_set_cookies(uri1, channel2, true, [1, 2]);
+    do_set_cookies(uri1, channel2, true, [1, 2, 3]);
     Services.cookies.removeAll();
   }
 
@@ -125,9 +121,9 @@ add_task(async () => {
     let httpchannel2 = channel2.QueryInterface(Ci.nsIHttpChannelInternal);
     httpchannel2.forceAllowThirdPartyCookie = true;
 
-    await do_set_cookies(uri1, channel1, true, [0, 1]);
+    do_set_cookies(uri1, channel1, true, [0, 1, 2]);
     Services.cookies.removeAll();
-    await do_set_cookies(uri1, channel2, true, [0, 0]);
+    do_set_cookies(uri1, channel2, true, [0, 0, 0]);
     Services.cookies.removeAll();
   }
 
@@ -152,12 +148,12 @@ add_task(async () => {
     let httpchannel2 = channel2.QueryInterface(Ci.nsIHttpChannelInternal);
     httpchannel2.forceAllowThirdPartyCookie = true;
 
-    await do_set_cookies(uri1, channel1, true, [0, 1]);
+    do_set_cookies(uri1, channel1, true, [0, 1, 2]);
     Services.cookies.removeAll();
-    await do_set_cookies(uri1, channel2, true, [0, 0]);
+    do_set_cookies(uri1, channel2, true, [0, 0, 0]);
     Services.cookies.removeAll();
     do_set_single_http_cookie(uri1, channel1, 1);
-    await do_set_cookies(uri1, channel2, true, [1, 2]);
+    do_set_cookies(uri1, channel2, true, [2, 3, 4]);
     Services.cookies.removeAll();
   }
-});
+}
