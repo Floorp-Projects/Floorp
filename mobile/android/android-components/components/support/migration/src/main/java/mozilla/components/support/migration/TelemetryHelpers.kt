@@ -113,6 +113,10 @@ internal enum class FailureReasonTelemetryCodes(val code: Int) {
 
     PINNED_SITES_MISSING_DB_PATH(34),
     PINNED_SITES_READ_FAILURE(35),
+
+    GECKO_FAILED_TO_DELETE_PREFS(36),
+    GECKO_FAILED_TO_WRITE_BACKUP(37),
+    GECKO_FAILED_TO_WRITE_PREFS(38)
 }
 
 @SuppressWarnings("MagicNumber")
@@ -147,4 +151,9 @@ internal enum class SuccessReasonTelemetryCodes(val code: Int) {
 
     PINNED_SITES_NONE(19),
     PINNED_SITES_MIGRATED(20),
+
+    GECKO_MIGRATED_NO_PREFS_JS_FILE(21),
+    GECKO_MIGRATED_PREFS_REMOVED_NO_PREFS(22),
+    GECKO_MIGRATED_PREFS_REMOVED_INVALID_PREFS(23),
+    GECKO_MIGRATED_PREFS_JS_MIGRATED(24),
 }

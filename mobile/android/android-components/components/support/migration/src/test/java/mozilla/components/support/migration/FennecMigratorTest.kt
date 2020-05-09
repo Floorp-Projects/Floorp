@@ -1065,4 +1065,84 @@ class FennecMigratorTest {
         assertEquals(FennecMigratorException.MigrateAddonsException::class, captor.value::class)
         assertEquals(IllegalArgumentException::class, captor.value.cause!!::class)
     }
+
+    @Test
+    fun `gecko migration - no prefs_js`() = runBlocking {
+        val crashReporter: CrashReporting = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateGecko()
+            .setCoroutineContext(this.coroutineContext)
+            .setProfile(FennecProfile(
+                "test", getTestPath("empty").absolutePath, true)
+            )
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
+            .build()
+
+        with(migrator.migrateAsync(mock()).await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Gecko))
+            assertTrue(this.getValue(Migration.Gecko).success)
+        }
+        verifyZeroInteractions(crashReporter)
+    }
+
+    @Test
+    fun `gecko migration - invalid prefs_js removed`() = runBlocking {
+        val crashReporter: CrashReporting = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateGecko()
+            .setCoroutineContext(this.coroutineContext)
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("prefs"), "invalid_fennec_migrator").absolutePath, true)
+            )
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
+            .build()
+
+        with(migrator.migrateAsync(mock()).await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Gecko))
+            assertTrue(this.getValue(Migration.Gecko).success)
+        }
+        verifyZeroInteractions(crashReporter)
+    }
+
+    @Test
+    fun `gecko migration - prefs_js migrated`() = runBlocking {
+        val crashReporter: CrashReporting = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateGecko()
+            .setCoroutineContext(this.coroutineContext)
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("prefs"), "migrate_fennec_migrator").absolutePath, true)
+            )
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
+            .build()
+
+        with(migrator.migrateAsync(mock()).await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Gecko))
+            assertTrue(this.getValue(Migration.Gecko).success)
+        }
+        verifyZeroInteractions(crashReporter)
+    }
+
+    @Test
+    fun `gecko migration - prefs_js no prefs to migrate`() = runBlocking {
+        val crashReporter: CrashReporting = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateGecko()
+            .setCoroutineContext(this.coroutineContext)
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("prefs"), "noaddons_fennec_migrator").absolutePath, true)
+            )
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
+            .build()
+
+        with(migrator.migrateAsync(mock()).await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Gecko))
+            assertTrue(this.getValue(Migration.Gecko).success)
+        }
+        verifyZeroInteractions(crashReporter)
+    }
 }
