@@ -1356,19 +1356,27 @@ class SdpFmtpAttributeList : public SdpAttribute {
     enum {
       kDefaultMaxPlaybackRate = 48000,
       kDefaultStereo = 0,
-      kDefaultUseInBandFec = 0
+      kDefaultUseInBandFec = 0,
+      kDefaultMaxAverageBitrate = 0,
+      kDefaultUseDTX = 0
     };
     OpusParameters()
         : Parameters(SdpRtpmapAttributeList::kOpus),
           maxplaybackrate(kDefaultMaxPlaybackRate),
           stereo(kDefaultStereo),
-          useInBandFec(kDefaultUseInBandFec) {}
+          useInBandFec(kDefaultUseInBandFec),
+          maxaveragebitrate(kDefaultMaxAverageBitrate),
+          useDTX(kDefaultUseDTX) {}
 
     Parameters* Clone() const override { return new OpusParameters(*this); }
 
     void Serialize(std::ostream& os) const override {
       os << "maxplaybackrate=" << maxplaybackrate << ";stereo=" << stereo
-         << ";useinbandfec=" << useInBandFec;
+         << ";useinbandfec=" << useInBandFec << ";usedtx=" << useDTX;
+
+      if (maxaveragebitrate) {
+        os << ";maxaveragebitrate=" << maxaveragebitrate;
+      }
     }
 
     virtual bool CompareEq(const Parameters& other) const override {
@@ -1384,12 +1392,16 @@ class SdpFmtpAttributeList : public SdpAttribute {
       }
 
       return maxplaybackrateIsEq && stereo == otherOpus.stereo &&
-             useInBandFec == otherOpus.useInBandFec;
+             useInBandFec == otherOpus.useInBandFec &&
+             maxaveragebitrate == otherOpus.maxaveragebitrate &&
+             useDTX == otherOpus.useDTX;
     }
 
     unsigned int maxplaybackrate;
     unsigned int stereo;
     unsigned int useInBandFec;
+    uint32_t maxaveragebitrate;
+    bool useDTX;
   };
 
   class TelephoneEventParameters : public Parameters {

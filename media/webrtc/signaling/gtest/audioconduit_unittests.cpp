@@ -102,6 +102,8 @@ TEST_F(AudioConduitTest, TestConfigureSendMediaCodec) {
     ASSERT_EQ(f.parameters.at("stereo"), "1");
     ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
     ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
   }
 
   // null codec
@@ -141,6 +143,8 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMono) {
     ASSERT_EQ(f.parameters.find("stereo"), f.parameters.end());
     ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
     ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
   }
 }
 
@@ -163,6 +167,8 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusFEC) {
     ASSERT_NE(f.parameters.find("useinbandfec"), f.parameters.end());
     ASSERT_EQ(f.parameters.at("useinbandfec"), "1");
     ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
   }
 }
 
@@ -185,6 +191,56 @@ TEST_F(AudioConduitTest, TestConfigureSendMaxPlaybackRate) {
     ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
     ASSERT_NE(f.parameters.find("maxplaybackrate"), f.parameters.end());
     ASSERT_EQ(f.parameters.at("maxplaybackrate"), "1234");
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
+  }
+}
+
+TEST_F(AudioConduitTest, TestConfigureSendMaxAverageBitrate) {
+  MediaConduitErrorCode ec;
+
+  AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
+  codecConfig.mMaxAverageBitrate = 12345;
+  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  mAudioConduit->StartTransmitting();
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioSendConfig.send_codec_spec->format;
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 2UL);
+    ASSERT_NE(f.parameters.find("stereo"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_NE(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("maxaveragebitrate"), "12345");
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
+  }
+}
+
+TEST_F(AudioConduitTest, TestConfigureSendDtx) {
+  MediaConduitErrorCode ec;
+
+  AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
+  codecConfig.mDTXEnabled = true;
+  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  mAudioConduit->StartTransmitting();
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioSendConfig.send_codec_spec->format;
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 2UL);
+    ASSERT_NE(f.parameters.find("stereo"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_NE(f.parameters.find("usedtx"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("usedtx"), "1");
   }
 }
 
@@ -207,6 +263,8 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
     ASSERT_EQ(f.parameters.at("stereo"), "1");
     ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
     ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
   }
 
   // multiple codecs
@@ -288,6 +346,35 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMono) {
     ASSERT_EQ(f.parameters.find("stereo"), f.parameters.end());
     ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
     ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
+  }
+}
+
+TEST_F(AudioConduitTest, TestConfigureReceiveOpusDtx) {
+  MediaConduitErrorCode ec;
+
+  // opus mono
+  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
+  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
+  codecs[0]->mDTXEnabled = true;
+  ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  ASSERT_EQ(mCall->mAudioReceiveConfig.sync_group, "");
+  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioReceiveConfig.decoder_map.at(114);
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 2UL);
+    ASSERT_NE(f.parameters.find("stereo"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_NE(f.parameters.find("usedtx"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("usedtx"), "1");
   }
 }
 
@@ -312,6 +399,8 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusFEC) {
     ASSERT_NE(f.parameters.find("useinbandfec"), f.parameters.end());
     ASSERT_EQ(f.parameters.at("useinbandfec"), "1");
     ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
   }
 }
 
@@ -333,6 +422,8 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMaxPlaybackRate) {
     ASSERT_EQ(f.num_channels, 2UL);
     ASSERT_EQ(f.parameters.at("stereo"), "1");
     ASSERT_EQ(f.parameters.count("maxplaybackrate"), 0U);
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
   }
 
   codecs[0]->mMaxPlaybackRate = 8000;
@@ -347,6 +438,47 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMaxPlaybackRate) {
     ASSERT_EQ(f.num_channels, 2UL);
     ASSERT_EQ(f.parameters.at("stereo"), "1");
     ASSERT_EQ(f.parameters.at("maxplaybackrate"), "8000");
+    ASSERT_EQ(f.parameters.find("maxaveragebitrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
+  }
+}
+
+TEST_F(AudioConduitTest, TestConfigureReceiveMaxAverageBitrate) {
+  MediaConduitErrorCode ec;
+
+  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
+  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
+
+  codecs[0]->mMaxAverageBitrate = 0;
+  ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioReceiveConfig.decoder_map.at(114);
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 2UL);
+    ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.count("maxaveragebitrate"), 0U);
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
+  }
+
+  codecs[0]->mMaxAverageBitrate = 8000;
+  ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioReceiveConfig.decoder_map.at(114);
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 2UL);
+    ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("maxaveragebitrate"), "8000");
+    ASSERT_EQ(f.parameters.find("usedtx"), f.parameters.end());
   }
 }
 

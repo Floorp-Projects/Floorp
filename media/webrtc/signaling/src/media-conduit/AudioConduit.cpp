@@ -451,12 +451,17 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
         parameters = {{"stereo", "1"}};
       }
       if (codec->mFECEnabled) {
-        parameters["useinbandfec"] = "1";
+        parameters = {{"useinbandfec", "1"}};
+      }
+      if (codec->mDTXEnabled) {
+        parameters = {{"usedtx", "1"}};
       }
       if (codec->mMaxPlaybackRate) {
-        std::ostringstream o;
-        o << codec->mMaxPlaybackRate;
-        parameters["maxplaybackrate"] = o.str();
+        parameters["maxplaybackrate"] = std::to_string(codec->mMaxPlaybackRate);
+      }
+      if (codec->mMaxAverageBitrate) {
+        parameters["maxaveragebitrate"] =
+            std::to_string(codec->mMaxAverageBitrate);
       }
     }
 
@@ -911,15 +916,21 @@ bool WebrtcAudioConduit::CodecConfigToWebRTCCodec(
   webrtc::SdpAudioFormat::Parameters parameters;
   if (codecInfo->mName == "opus") {
     if (codecInfo->mChannels == 2) {
-      parameters["stereo"] = "1";
+      parameters = {{"stereo", "1"}};
     }
     if (codecInfo->mFECEnabled) {
-      parameters["useinbandfec"] = "1";
+      parameters = {{"useinbandfec", "1"}};
+    }
+    if (codecInfo->mDTXEnabled) {
+      parameters = {{"usedtx", "1"}};
     }
     if (codecInfo->mMaxPlaybackRate) {
-      std::ostringstream o;
-      o << codecInfo->mMaxPlaybackRate;
-      parameters["maxplaybackrate"] = o.str();
+      parameters["maxplaybackrate"] =
+          std::to_string(codecInfo->mMaxPlaybackRate);
+    }
+    if (codecInfo->mMaxAverageBitrate) {
+      parameters["maxaveragebitrate"] =
+          std::to_string(codecInfo->mMaxAverageBitrate);
     }
   }
 

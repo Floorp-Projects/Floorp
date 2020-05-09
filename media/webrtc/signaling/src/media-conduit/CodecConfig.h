@@ -30,6 +30,8 @@ struct AudioCodecConfig {
   bool mDtmfEnabled;
 
   // OPUS-specific
+  bool mDTXEnabled;
+  uint32_t mMaxAverageBitrate;
   int mMaxPlaybackRate;
 
   AudioCodecConfig(int type, std::string name, int freq, int channels,
@@ -40,6 +42,8 @@ struct AudioCodecConfig {
         mChannels(channels),
         mFECEnabled(FECEnabled),
         mDtmfEnabled(false),
+        mDTXEnabled(false),
+        mMaxAverageBitrate(0),
         mMaxPlaybackRate(0) {}
 };
 
