@@ -109,33 +109,9 @@ function getCleanedPacket(key, packet) {
     }
   }
 
-  if (res?.exception?.actor && existingPacket.exception.actor) {
-    // Clean actor ids on evaluation exception
-    copyExistingActor(res.exception, existingPacket.exception);
-  }
-
   if (res.result && res.result._grip && existingPacket.result) {
     // Clean actor ids on evaluation result messages.
     copyExistingActor(res.result, existingPacket.result);
-  }
-
-  if (
-    res?.result?._grip?.promiseState?.reason &&
-    existingPacket?.result?._grip?.promiseState?.reason
-  ) {
-    // Clean actor ids on evaluation promise result messages.
-    copyExistingActor(
-      res.result._grip.promiseState.reason,
-      existingPacket.result._grip.promiseState.reason
-    );
-  }
-
-  if (
-    res?.result?._grip?.promiseState?.timeToSettle &&
-    existingPacket?.result?._grip?.promiseState?.timeToSettle
-  ) {
-    res.result._grip.promiseState.timeToSettle =
-      existingPacket.result._grip.promiseState.timeToSettle;
   }
 
   if (res.exception && existingPacket.exception) {
@@ -189,23 +165,6 @@ function getCleanedPacket(key, packet) {
       copyExistingActor(
         res.pageError.errorMessage,
         existingPacket.pageError.errorMessage
-      );
-    }
-
-    if (
-      res.pageError.exception?._grip?.preview?.message?._grip &&
-      existingPacket.pageError.exception?._grip?.preview?.message?._grip
-    ) {
-      copyExistingActor(
-        res.pageError.exception._grip.preview.message,
-        existingPacket.pageError.exception._grip.preview.message
-      );
-    }
-
-    if (res.pageError.exception && existingPacket.pageError.exception) {
-      copyExistingActor(
-        res.pageError.exception,
-        existingPacket.pageError.exception
       );
     }
 
@@ -330,10 +289,6 @@ function cleanTimeStamp(packet) {
     packet.result._grip.preview.timestamp = uniqueTimeStamp;
   }
 
-  if (packet?.result?._grip?.promiseState?.creationTimestamp) {
-    packet.result._grip.promiseState.creationTimestamp = uniqueTimeStamp;
-  }
-
   if (packet?.exception?._grip?.preview?.timestamp) {
     packet.exception._grip.preview.timestamp = uniqueTimeStamp;
   }
@@ -351,21 +306,22 @@ function cleanTimeStamp(packet) {
   }
 }
 
-function copyExistingActor(a, b) {
-  if (!a || !b) {
+function copyExistingActor(front1, front2) {
+  if (!front1 || !front2) {
     return;
   }
 
-  if (a.actorID && b.actorID) {
-    a.actorID = b.actorID;
+  if (front1.actorID && front2.actorID) {
+    front1.actorID = front2.actorID;
   }
 
-  if (a.actor && b.actor) {
-    a.actor = b.actor;
-  }
-
-  if (a._grip && b._grip && a._grip.actor && b._grip.actor) {
-    a._grip.actor = b._grip.actor;
+  if (
+    front1._grip &&
+    front2._grip &&
+    front1._grip.actor &&
+    front2._grip.actor
+  ) {
+    front1._grip.actor = front2._grip.actor;
   }
 }
 
@@ -479,12 +435,7 @@ function parsePacketAndCreateFronts(packet) {
   }
   if (typeof packet === "object") {
     for (const [key, value] of Object.entries(packet)) {
-      if (value?._grip) {
-        // The message of an error grip might be a longString.
-        if (value._grip?.preview?.message?._grip) {
-          value._grip.preview.message = value._grip.preview.message._grip;
-        }
-
+      if (value && value._grip) {
         packet[key] = getAdHocFrontOrPrimitiveGrip(value._grip, {
           conn: {
             poolFor: () => {},

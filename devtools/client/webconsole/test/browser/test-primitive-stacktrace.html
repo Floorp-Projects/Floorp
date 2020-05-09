@@ -1,0 +1,22 @@
+<html>
+<script>
+/* eslint-disable no-throw-literal */
+
+"use strict";
+
+foo();
+
+function foo() {
+  bar();
+}
+
+function bar() {
+  throw "hello";
+}
+</script>
+<script>
+/* eslint-disable no-throw-literal */
+"use strict";
+throw [1, 2, 3];
+</script>
+</html>

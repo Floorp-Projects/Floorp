@@ -44,7 +44,6 @@ function EvaluationResult(props) {
     level,
     id: messageId,
     indent,
-    hasException,
     exceptionDocURL,
     stacktrace,
     frame,
@@ -70,25 +69,18 @@ function EvaluationResult(props) {
       messageBody = `${messageText.initial}…`;
     }
   } else {
-    messageBody = [];
-    if (hasException) {
-      messageBody.push("Uncaught ");
-    }
-    messageBody.push(
-      GripMessageBody({
-        dispatch,
-        messageId,
-        grip: parameters[0],
-        key: "grip",
-        serviceContainer,
-        useQuotes: !hasException,
-        escapeWhitespace: false,
-        type,
-        helperType,
-        maybeScrollToBottom,
-        customFormat: true,
-      })
-    );
+    messageBody = GripMessageBody({
+      dispatch,
+      messageId,
+      grip: parameters[0],
+      serviceContainer,
+      useQuotes: true,
+      escapeWhitespace: false,
+      type,
+      helperType,
+      maybeScrollToBottom,
+      customFormat: true,
+    });
   }
 
   const topLevelClasses = ["cm-s-mozilla"];
