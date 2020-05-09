@@ -17,6 +17,11 @@ git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
 tag = "v0.2.4"
 
+[source."https://github.com/mozilla/mp4parse-rust"]
+git = "https://github.com/mozilla/mp4parse-rust"
+replace-with = "vendored-sources"
+rev = "0dc3e6e7c5371fe21f69b847f61c65fe6d6dc317"
+
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
 replace-with = "vendored-sources"

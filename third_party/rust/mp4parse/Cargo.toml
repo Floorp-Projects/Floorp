@@ -18,6 +18,7 @@ repository = "https://github.com/mozilla/mp4parse-rust"
 # Avoid complaints about trying to package test files.
 exclude = [
   "*.mp4",
+  "av1-avif/*"
 ]
 
 [badges]
@@ -26,11 +27,18 @@ travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 [dependencies]
 byteorder = "1.2.1"
 bitreader = { version = "0.3.2" }
+hashbrown = "0.7.1"
 num-traits = "0.2.0"
-mp4parse_fallible = { version = "0.0.3", optional = true }
 log = "0.4"
 static_assertions = "1.1.0"
 
 [dev-dependencies]
 test-assembler = "0.1.2"
 env_logger = "0.7.1"
+walkdir = "2.3.1"
+
+[features]
+# Enable mp4parse_fallible to use fallible memory allocation rather than
+# panicking on OOM.  Note that this is only safe within Gecko where the system
+# allocator has been globally overridden (see BMO 1457359).
+mp4parse_fallible = []

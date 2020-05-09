@@ -21,7 +21,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ffi_generated = GENERATED_FILES['mp4parse_ffi_generated.h']
     ffi_generated.script = '/build/RunCbindgen.py:generate'
     ffi_generated.inputs = [
-        '/media/mp4parse-rust/mp4parse_capi',
+        '/third_party/rust/mp4parse_capi',
     ]
 
 FINAL_LIBRARY = 'xul'

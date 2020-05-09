@@ -17,8 +17,6 @@ clippy:
         - js/src/rust/shared/
         - js/src/wasm/cranelift/
         - media/audioipc/
-        - media/mp4parse-rust/mp4parse/
-        - media/mp4parse-rust/mp4parse_capi/
         - modules/libpref/init/static_prefs/
         - mozglue/static/rust/
         - netwerk/base/mozurl/
@@ -39,6 +37,8 @@ clippy:
         - testing/mozbase/rust/mozrunner/
         - testing/mozbase/rust/mozversion/
         - testing/webdriver/
+        - third_party/rust/mp4parse/
+        - third_party/rust/mp4parse_capi/
         - toolkit/components/kvstore/
         - toolkit/components/glean/
         - toolkit/components/xulstore/tests/gtest/

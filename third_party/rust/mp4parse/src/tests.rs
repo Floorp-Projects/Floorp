@@ -5,9 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use super::fallible::TryRead as _;
 use super::read_mp4;
 use super::Error;
 use super::MediaContext;
+
 #[cfg(feature = "mp4parse_fallible")]
 use std::convert::TryInto as _;
 use std::io::Cursor;
@@ -179,11 +181,11 @@ fn read_ftyp() {
     assert_eq!(stream.head.name, BoxType::FileTypeBox);
     assert_eq!(stream.head.size, 24);
     let parsed = super::read_ftyp(&mut stream).unwrap();
-    assert_eq!(parsed.major_brand, FourCC::from("mp42")); // mp42
+    assert_eq!(parsed.major_brand, FourCC::from(*b"mp42")); // mp42
     assert_eq!(parsed.minor_version, 0);
     assert_eq!(parsed.compatible_brands.len(), 2);
-    assert_eq!(parsed.compatible_brands[0], FourCC::from("isom")); // isom
-    assert_eq!(parsed.compatible_brands[1], FourCC::from("mp42")); // mp42
+    assert_eq!(parsed.compatible_brands[0], FourCC::from(*b"isom")); // isom
+    assert_eq!(parsed.compatible_brands[1], FourCC::from(*b"mp42")); // mp42
 }
 
 #[test]
@@ -221,11 +223,11 @@ fn read_ftyp_case() {
     assert_eq!(stream.head.name, BoxType::FileTypeBox);
     assert_eq!(stream.head.size, 24);
     let parsed = super::read_ftyp(&mut stream).unwrap();
-    assert_eq!(parsed.major_brand, FourCC::from("MP42"));
+    assert_eq!(parsed.major_brand, FourCC::from(*b"MP42"));
     assert_eq!(parsed.minor_version, 0);
     assert_eq!(parsed.compatible_brands.len(), 2);
-    assert_eq!(parsed.compatible_brands[0], FourCC::from("ISOM")); // ISOM
-    assert_eq!(parsed.compatible_brands[1], FourCC::from("MP42")); // MP42
+    assert_eq!(parsed.compatible_brands[0], FourCC::from(*b"ISOM")); // ISOM
+    assert_eq!(parsed.compatible_brands[1], FourCC::from(*b"MP42")); // MP42
 }
 
 #[test]
@@ -472,7 +474,7 @@ fn read_hdlr() {
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 45);
     let parsed = super::read_hdlr(&mut stream).unwrap();
-    assert_eq!(parsed.handler_type, FourCC::from("vide"));
+    assert_eq!(parsed.handler_type, FourCC::from(*b"vide"));
 }
 
 #[test]
@@ -485,7 +487,7 @@ fn read_hdlr_short_name() {
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 33);
     let parsed = super::read_hdlr(&mut stream).unwrap();
-    assert_eq!(parsed.handler_type, FourCC::from("vide"));
+    assert_eq!(parsed.handler_type, FourCC::from(*b"vide"));
 }
 
 #[test]
@@ -498,7 +500,7 @@ fn read_hdlr_zero_length_name() {
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 32);
     let parsed = super::read_hdlr(&mut stream).unwrap();
-    assert_eq!(parsed.handler_type, FourCC::from("vide"));
+    assert_eq!(parsed.handler_type, FourCC::from(*b"vide"));
 }
 
 fn flac_streaminfo() -> Vec<u8> {
@@ -680,7 +682,7 @@ fn serialize_opus_header() {
         channel_mapping_table: Some(super::ChannelMappingTable {
             stream_count: 4,
             coupled_count: 2,
-            channel_mapping: vec![0, 4, 1, 2, 3, 5],
+            channel_mapping: vec![0, 4, 1, 2, 3, 5].into(),
         }),
     };
     let mut v = Vec::<u8>::new();
@@ -1057,7 +1059,7 @@ fn read_stsd_mp4v() {
             assert_eq!(v.height, 480);
             match v.codec_specific {
                 super::VideoCodecSpecific::ESDSConfig(esds_data) => {
-                    assert_eq!(esds_data, esds_specific_data.to_vec());
+                    assert_eq!(esds_data.as_slice(), esds_specific_data);
                 }
                 _ => panic!("it should be ESDSConfig!"),
             }
@@ -1293,16 +1295,14 @@ fn read_stsd_lpcm() {
 #[test]
 fn read_to_end_() {
     let mut src = b"1234567890".take(5);
-    let mut buf = vec![];
-    let bytes_read = super::read_to_end(&mut src, &mut buf).unwrap();
-    assert_eq!(bytes_read, 5);
-    assert_eq!(buf, b"12345");
+    let buf = src.read_into_try_vec().unwrap();
+    assert_eq!(buf.len(), 5);
+    assert_eq!(buf.into_inner(), b"12345");
 }
 
 #[test]
 #[cfg(feature = "mp4parse_fallible")]
 fn read_to_end_oom() {
     let mut src = b"1234567890".take(std::usize::MAX.try_into().expect("usize < u64"));
-    let mut buf = vec![];
-    assert!(super::read_to_end(&mut src, &mut buf).is_err());
+    assert!(src.read_into_try_vec().is_err());
 }
