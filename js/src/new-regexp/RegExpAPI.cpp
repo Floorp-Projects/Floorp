@@ -334,6 +334,121 @@ static void SampleCharacters(HandleLinearString input,
   }
 }
 
+enum class AssembleResult {
+  Success,
+  TooLarge,
+  OutOfMemory,
+};
+
+static MOZ_MUST_USE AssembleResult Assemble(JSContext* cx,
+                                            RegExpCompiler* compiler,
+                                            RegExpCompileData* data,
+                                            MutableHandleRegExpShared re,
+                                            HandleAtom pattern, Zone* zone,
+                                            bool useNativeCode, bool isLatin1) {
+  // Because we create a StackMacroAssembler, this function is not allowed
+  // to GC. If needed, we allocate and throw errors in the caller.
+  Maybe<jit::JitContext> jctx;
+  Maybe<js::jit::StackMacroAssembler> stack_masm;
+  UniquePtr<RegExpMacroAssembler> masm;
+  if (useNativeCode) {
+    NativeRegExpMacroAssembler::Mode mode =
+        isLatin1 ? NativeRegExpMacroAssembler::LATIN1
+                 : NativeRegExpMacroAssembler::UC16;
+    // If we are compiling native code, we need a macroassembler,
+    // which needs a jit context.
+    jctx.emplace(cx, nullptr);
+    stack_masm.emplace();
+    uint32_t num_capture_registers = re->pairCount() * 2;
+    masm = MakeUnique<SMRegExpMacroAssembler>(cx, stack_masm.ref(), zone, mode,
+                                              num_capture_registers);
+  } else {
+    masm = MakeUnique<RegExpBytecodeGenerator>(cx->isolate, zone);
+  }
+  if (!masm) {
+    return AssembleResult::OutOfMemory;
+  }
+
+  bool isLargePattern =
+      pattern->length() > v8::internal::RegExp::kRegExpTooLargeToOptimize;
+  masm->set_slow_safe(isLargePattern);
+  if (compiler->optimize()) {
+    compiler->set_optimize(!isLargePattern);
+  }
+
+  // When matching a regexp with known maximum length that is anchored
+  // at the end, we may be able to skip the beginning of long input
+  // strings. This decision is made here because it depends on
+  // information in the AST that isn't replicated in the Node
+  // structure used inside the compiler.
+  bool is_start_anchored = data->tree->IsAnchoredAtStart();
+  bool is_end_anchored = data->tree->IsAnchoredAtEnd();
+  int max_length = data->tree->max_match();
+  static const int kMaxBacksearchLimit = 1024;
+  if (is_end_anchored && !is_start_anchored && !re->sticky() &&
+      max_length < kMaxBacksearchLimit) {
+    masm->SetCurrentPositionFromEnd(max_length);
+  }
+
+  if (re->global()) {
+    RegExpMacroAssembler::GlobalMode mode = RegExpMacroAssembler::GLOBAL;
+    if (data->tree->min_match() > 0) {
+      mode = RegExpMacroAssembler::GLOBAL_NO_ZERO_LENGTH_CHECK;
+    } else if (re->unicode()) {
+      mode = RegExpMacroAssembler::GLOBAL_UNICODE;
+    }
+    masm->set_global_mode(mode);
+  }
+
+  // The masm tracer works as a thin wrapper around another macroassembler.
+  RegExpMacroAssembler* masm_ptr = masm.get();
+#ifdef DEBUG
+  UniquePtr<RegExpMacroAssembler> tracer_masm;
+  if (jit::JitOptions.traceRegExpAssembler) {
+    tracer_masm = MakeUnique<RegExpMacroAssemblerTracer>(cx->isolate, masm_ptr);
+    masm_ptr = tracer_masm.get();
+  }
+#endif
+
+  // Compile the regexp.
+  V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
+  RegExpCompiler::CompilationResult result = compiler->Assemble(
+      cx->isolate, masm_ptr, data->node, data->capture_count, wrappedPattern);
+  if (!result.Succeeded()) {
+    MOZ_ASSERT(result.error == RegExpError::kTooLarge);
+    return AssembleResult::TooLarge;
+  }
+  if (result.code->value().isUndefined()) {
+    // SMRegExpMacroAssembler::GetCode returns undefined on OOM.
+    MOZ_ASSERT(useNativeCode);
+    return AssembleResult::OutOfMemory;
+  }
+
+  re->updateMaxRegisters(result.num_registers);
+  if (useNativeCode) {
+    // Transfer ownership of the tables from the macroassembler to the
+    // RegExpShared.
+    SMRegExpMacroAssembler::TableVector& tables =
+        static_cast<SMRegExpMacroAssembler*>(masm.get())->tables();
+    for (uint32_t i = 0; i < tables.length(); i++) {
+      if (!re->addTable(std::move(tables[i]))) {
+        return AssembleResult::OutOfMemory;
+      }
+    }
+    re->setJitCode(v8::internal::Code::cast(*result.code).inner(), isLatin1);
+  } else {
+    // Transfer ownership of the bytecode from the HandleScope to the
+    // RegExpShared.
+    ByteArray bytecode =
+        v8::internal::ByteArray::cast(*result.code).takeOwnership(cx->isolate);
+    uint32_t length = bytecode->length;
+    re->setByteCode(bytecode.release(), isLatin1);
+    js::AddCellMemory(re, length, MemoryUse::RegExpSharedBytecode);
+  }
+
+  return AssembleResult::Success;
+}
+
 bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
                     HandleLinearString input, RegExpShared::CodeKind codeKind) {
   RootedAtom pattern(cx, re->getSource());
@@ -402,108 +517,17 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   bool useNativeCode = codeKind == RegExpShared::CodeKind::Jitcode;
   MOZ_ASSERT_IF(useNativeCode, IsNativeRegExpEnabled());
 
-  Maybe<jit::JitContext> jctx;
-  Maybe<js::jit::StackMacroAssembler> stack_masm;
-  UniquePtr<RegExpMacroAssembler> masm;
-  if (useNativeCode) {
-    NativeRegExpMacroAssembler::Mode mode =
-        isLatin1 ? NativeRegExpMacroAssembler::LATIN1
-                 : NativeRegExpMacroAssembler::UC16;
-    // If we are compiling native code, we need a macroassembler,
-    // which needs a jit context.
-    jctx.emplace(cx, nullptr);
-    stack_masm.emplace();
-    uint32_t num_capture_registers = re->pairCount() * 2;
-    masm = MakeUnique<SMRegExpMacroAssembler>(cx, stack_masm.ref(), &zone, mode,
-                                              num_capture_registers);
-  } else {
-    masm = MakeUnique<RegExpBytecodeGenerator>(cx->isolate, &zone);
+  switch (Assemble(cx, &compiler, &data, re, pattern, &zone, useNativeCode,
+                   isLatin1)) {
+    case AssembleResult::TooLarge:
+      JS_ReportErrorASCII(cx, "regexp too big");
+      return false;
+    case AssembleResult::OutOfMemory:
+      ReportOutOfMemory(cx);
+      return false;
+    case AssembleResult::Success:
+      break;
   }
-  if (!masm) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  bool largePattern =
-      pattern->length() > v8::internal::RegExp::kRegExpTooLargeToOptimize;
-  masm->set_slow_safe(largePattern);
-  if (compiler.optimize()) {
-    compiler.set_optimize(!largePattern);
-  }
-
-  // When matching a regexp with known maximum length that is anchored
-  // at the end, we may be able to skip the beginning of long input
-  // strings. This decision is made here because it depends on
-  // information in the AST that isn't replicated in the Node
-  // structure used inside the compiler.
-  bool is_start_anchored = data.tree->IsAnchoredAtStart();
-  bool is_end_anchored = data.tree->IsAnchoredAtEnd();
-  int max_length = data.tree->max_match();
-  static const int kMaxBacksearchLimit = 1024;
-  if (is_end_anchored && !is_start_anchored && !re->sticky() &&
-      max_length < kMaxBacksearchLimit) {
-    masm->SetCurrentPositionFromEnd(max_length);
-  }
-
-  if (re->global()) {
-    RegExpMacroAssembler::GlobalMode mode = RegExpMacroAssembler::GLOBAL;
-    if (data.tree->min_match() > 0) {
-      mode = RegExpMacroAssembler::GLOBAL_NO_ZERO_LENGTH_CHECK;
-    } else if (re->unicode()) {
-      mode = RegExpMacroAssembler::GLOBAL_UNICODE;
-    }
-    masm->set_global_mode(mode);
-  }
-
-  // The masm tracer works as a thin wrapper around another macroassembler.
-  RegExpMacroAssembler* masm_ptr = masm.get();
-#ifdef DEBUG
-  UniquePtr<RegExpMacroAssembler> tracer_masm;
-  if (jit::JitOptions.traceRegExpAssembler) {
-    tracer_masm = MakeUnique<RegExpMacroAssemblerTracer>(cx->isolate, masm_ptr);
-    masm_ptr = tracer_masm.get();
-  }
-#endif
-
-  // Compile the regexp.
-  V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
-  RegExpCompiler::CompilationResult result = compiler.Assemble(
-      cx->isolate, masm_ptr, data.node, data.capture_count, wrappedPattern);
-  if (result.code->value().isUndefined()) {
-    // SMRegExpMacroAssembler::GetCode returns undefined on OOM.
-    MOZ_ASSERT(useNativeCode);
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  if (!result.Succeeded()) {
-    MOZ_ASSERT(result.error == RegExpError::kTooLarge);
-    JS_ReportErrorASCII(cx, "regexp too big");
-    return false;
-  }
-
-  re->updateMaxRegisters(result.num_registers);
-  if (useNativeCode) {
-    // Transfer ownership of the tables from the macroassembler to the
-    // RegExpShared.
-    SMRegExpMacroAssembler::TableVector& tables =
-        static_cast<SMRegExpMacroAssembler*>(masm.get())->tables();
-    for (uint32_t i = 0; i < tables.length(); i++) {
-      if (!re->addTable(std::move(tables[i]))) {
-        ReportOutOfMemory(cx);
-        return false;
-      }
-    }
-    re->setJitCode(v8::internal::Code::cast(*result.code).inner(), isLatin1);
-  } else {
-    // Transfer ownership of the bytecode from the HandleScope to the
-    // RegExpShared.
-    ByteArray bytecode =
-        v8::internal::ByteArray::cast(*result.code).takeOwnership(cx->isolate);
-    uint32_t length = bytecode->length;
-    re->setByteCode(bytecode.release(), isLatin1);
-    js::AddCellMemory(re, length, MemoryUse::RegExpSharedBytecode);
-  }
-
   return true;
 }
 
