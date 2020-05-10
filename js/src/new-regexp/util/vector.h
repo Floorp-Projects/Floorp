@@ -173,6 +173,11 @@ namespace base {
 template <typename T, size_t kSize>
 class SmallVector {
 public:
+  SmallVector() = default;
+  SmallVector(size_t size) {
+    resize_no_init(size);
+  }
+
   inline bool empty() const { return inner_.empty(); }
   inline const T& back() const { return inner_.back(); }
   inline void pop_back() { inner_.popBack(); };
@@ -185,6 +190,11 @@ public:
   };
   inline size_t size() const { return inner_.length(); }
   inline const T& at(size_t index) const { return inner_[index]; }
+  T* data() { return inner_.begin(); }
+
+  T& operator[](size_t index) { return inner_[index]; }
+  const T& operator[](size_t index) const { return inner_[index]; }
+
 
   void resize_no_init(size_t new_size) {
     js::AutoEnterOOMUnsafeRegion oomUnsafe;
