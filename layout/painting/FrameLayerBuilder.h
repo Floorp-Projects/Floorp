@@ -500,7 +500,7 @@ class FrameLayerBuilder : public layers::LayerUserData {
   static Layer* GetDedicatedLayer(nsIFrame* aFrame,
                                   DisplayItemType aDisplayItemType);
 
-  using AnimationGenerationCallback = std::function<bool(
+  using AnimationGenerationCallback = FunctionRef<bool(
       const Maybe<uint64_t>& aGeneration, DisplayItemType aDisplayItemType)>;
   /**
    * Enumerates layers for the all display item types that correspond to
@@ -512,7 +512,7 @@ class FrameLayerBuilder : public layers::LayerUserData {
    * The enumeration stops if |aCallback| returns false.
    */
   static void EnumerateGenerationForDedicatedLayers(
-      const nsIFrame* aFrame, const AnimationGenerationCallback& aCallback);
+      const nsIFrame* aFrame, AnimationGenerationCallback);
 
   /**
    * This callback must be provided to EndTransaction. The callback data

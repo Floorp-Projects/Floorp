@@ -182,7 +182,7 @@ Maybe<uint64_t> AnimationInfo::GetGenerationFromFrame(
 void AnimationInfo::EnumerateGenerationOnFrame(
     const nsIFrame* aFrame, const nsIContent* aContent,
     const CompositorAnimatableDisplayItemTypes& aDisplayItemTypes,
-    const AnimationGenerationCallback& aCallback) {
+    AnimationGenerationCallback aCallback) {
   if (XRE_IsContentProcess()) {
     if (nsIWidget* widget = nsContentUtils::WidgetForContent(aContent)) {
       // In case of child processes, we might not have yet created the layer
