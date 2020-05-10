@@ -176,7 +176,7 @@ add_task(async function test_form1_menuitems() {
   is(acEvents.length, 1, "One autocomplete event");
   checkACTelemetryEvent(acEvents[0], uname, {
     "hadPrevious": "0",
-    "loginWithOrigin": expectedMenuItems.length + "",
+    "login": expectedMenuItems.length + "",
     "loginsFooter": "1"
   });
 

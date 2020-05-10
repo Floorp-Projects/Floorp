@@ -606,6 +606,12 @@
         LoginHelper.openPasswordManager(this.ownerGlobal, {
           entryPoint: "autocomplete",
         });
+        Services.telemetry.recordEvent(
+          "exp_import",
+          "event",
+          "click",
+          "loginsFooter"
+        );
       }
 
       this.addEventListener("click", handleEvent);
@@ -742,6 +748,8 @@
       );
 
       this.addEventListener("click", event => {
+        const browserId = this.getAttribute("ac-value");
+
         // Handle clicks on the info icon to show support article.
         if (event.target.classList.contains("ac-info-icon")) {
           window.openTrustedLinkIn(
@@ -751,6 +759,12 @@
             {
               relatedToCurrent: true,
             }
+          );
+          Services.telemetry.recordEvent(
+            "exp_import",
+            "event",
+            "info",
+            browserId
           );
           return;
         }
@@ -762,8 +776,14 @@
         // Open the migration wizard pre-selecting the appropriate browser.
         this.MigrationUtils.showMigrationWizard(window, [
           this.MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
-          this.getAttribute("ac-value"),
+          browserId,
         ]);
+        Services.telemetry.recordEvent(
+          "exp_import",
+          "event",
+          "click",
+          browserId
+        );
       });
     }
 

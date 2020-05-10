@@ -88,10 +88,18 @@ this.LoginHelper = {
     this.showAutoCompleteFooter = Services.prefs.getBoolPref(
       "signon.showAutoCompleteFooter"
     );
+
+    // Only enable experiment telemetry for specific pref-controlled branches.
     this.showAutoCompleteImport = Services.prefs.getStringPref(
       "signon.showAutoCompleteImport",
       ""
     );
+    if (["control", "import"].includes(this.showAutoCompleteImport)) {
+      Services.telemetry.setEventRecordingEnabled("exp_import", true);
+    } else {
+      Services.telemetry.setEventRecordingEnabled("exp_import", false);
+    }
+
     this.storeWhenAutocompleteOff = Services.prefs.getBoolPref(
       "signon.storeWhenAutocompleteOff"
     );
