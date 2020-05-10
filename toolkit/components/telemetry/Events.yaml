@@ -276,10 +276,36 @@ addonsManager:
     bug_numbers: [1544927, 1580561, 1590736, 1630596]
     release_channel_collection: opt-out
 
+exp_import:
+  event:
+    objects: ["click", "info", "enter", "delete"]
+    bug_numbers: [1628849]
+    description: >
+      Experimental import logins interface user interactions. Value is the browser suggested.
+    expiry_version: "87"
+    notification_emails: ["edilee@mozilla.com"]
+    products: ["firefox"]
+    record_in_processes: ["main", "content"]
+    release_channel_collection: opt-out
+  impression:
+    objects: ["formfill", "popup"]
+    bug_numbers: [1628849]
+    description: >
+      Experimental import logins potential impressions. Value is number of importable browsers.
+    expiry_version: "87"
+    extra_keys:
+      autofillResult: Value from PWMGR_FORM_AUTOFILL_RESULT
+      loginsCount: Count of logins found
+      searchLength: Length of searched login query
+    notification_emails: ["edilee@mozilla.com"]
+    products: ["firefox"]
+    record_in_processes: ["content"]
+    release_channel_collection: opt-out
+
 form_autocomplete:
   show:
     objects: ["logins"]
-    bug_numbers: [1619498]
+    bug_numbers: [1619498, 1628849]
     description: >-
       An content form autocomplete popup was shown. Details on the timing and context are provided.
       The `value` is the number of milliseconds since the autocomplete search started.
@@ -291,8 +317,8 @@ form_autocomplete:
       hadPrevious: Whether the autocomplete results had cached previous results it could use.
       typeWasPassword: Whether the input `type` was ever "password".
       insecureWarning: The number of insecure login field warning rows shown (should be 0 or 1).
-      login: The number of login rows shown (without the domain line).
-      loginWithOrigin: The number of login rows shown (with the domain line).
+      login: The number of login rows shown (with or without the domain line).
+      importableLogin: The number of import suggestion rows shown.
       loginsFooter: The number of "View Saved Logins" footer row shown.
       stringLength: Length of the text in the field that triggered these results.
     notification_emails: ["passwords-dev@mozilla.org"]
