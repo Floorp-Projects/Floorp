@@ -93,7 +93,7 @@
 //!
 
 use api::{BorderRadius, ClipIntern, ClipMode, ComplexClipRegion, ImageMask};
-use api::{BoxShadowClipMode, ImageKey, ImageRendering};
+use api::{BoxShadowClipMode, ClipId, ImageKey, ImageRendering};
 use api::units::*;
 use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
 use crate::box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
@@ -102,7 +102,8 @@ use crate::ellipse::Ellipse;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use crate::gpu_types::{BoxShadowStretchMode};
 use crate::image::{self, Repetition};
-use crate::intern;
+use crate::intern::{self, ItemUid};
+use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTile};
 use crate::prim_store::{PointKey, SizeKey, RectangleKey};
 use crate::render_task_cache::to_cache_size;
@@ -110,11 +111,176 @@ use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset};
 use euclid::approxeq::ApproxEq;
 use std::{iter, ops, u32};
+use smallvec::SmallVec;
 
 // Type definitions for interning clip nodes.
 
 pub type ClipDataStore = intern::DataStore<ClipIntern>;
 pub type ClipDataHandle = intern::Handle<ClipIntern>;
+
+/// Defines a clip that is positioned by a specific spatial node
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[derive(Copy, Clone)]
+pub struct ClipInstance {
+    /// Handle to the interned clip
+    handle: ClipDataHandle,
+    // TODO(gw): Next part of this patch series will move spatial node from item to here,
+    //           which will avoid invalidations when the shape of the spatial tree changes.
+}
+
+impl ClipInstance {
+    /// Construct a new positioned clip
+    pub fn new(
+        handle: ClipDataHandle,
+    ) -> Self {
+        ClipInstance {
+            handle,
+        }
+    }
+}
+
+/// A clip template defines clips in terms of the public API. Specifically,
+/// this is a parent `ClipId` and some number of clip instances. See the
+/// CLIPPING_AND_POSITIONING.md document in doc/ for more information.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct ClipTemplate {
+    /// Parent of this clip, in terms of the public clip API
+    pub parent: ClipId,
+    /// List of instances that define this clip template
+    pub instances: SmallVec<[ClipInstance; 2]>,
+}
+
+/// A helper used during scene building to construct (internal) clip chains from
+/// the public API definitions (a hierarchy of ClipIds)
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct ClipChainBuilder {
+    /// The built clip chain id for this level of the stack
+    clip_chain_id: ClipChainId,
+    /// A list of parent clips in the current clip chain, to de-duplicate clips as
+    /// we build child chains from this level.
+    // TODO(gw): Switch from ItemUid to ClipInstance once we move spatial node index
+    parent_clips: FastHashSet<ItemUid>,
+    /// A cache used during building child clip chains. Retained here to avoid
+    /// extra memory allocations each time we build a clip.
+    existing_clips_cache: FastHashSet<ItemUid>,
+}
+
+impl ClipChainBuilder {
+    /// Construct a new clip chain builder with specified parent clip chain. If
+    /// the clip_id is Some(..), the clips in that template will be added to the
+    /// clip chain at this level (this functionality isn't currently used, but will
+    /// be in the follow up patches).
+    fn new(
+        parent_clip_chain_id: ClipChainId,
+        clip_id: Option<ClipId>,
+        clip_chain_nodes: &mut Vec<ClipChainNode>,
+        templates: &FastHashMap<ClipId, ClipTemplate>,
+    ) -> Self {
+        let mut parent_clips = FastHashSet::default();
+
+        // Walk the current clip chain ID, building a set of existing clips
+        let mut current_clip_chain_id = parent_clip_chain_id;
+        while current_clip_chain_id != ClipChainId::NONE {
+            let clip_chain_node = &clip_chain_nodes[current_clip_chain_id.0 as usize];
+            parent_clips.insert(clip_chain_node.handle.uid());
+            current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
+        }
+
+        // If specified, add the clips from the supplied template to this builder
+        let clip_chain_id = match clip_id {
+            Some(clip_id) => {
+                ClipChainBuilder::add_new_clips_to_chain(
+                    clip_id,
+                    parent_clip_chain_id,
+                    &mut parent_clips,
+                    clip_chain_nodes,
+                    templates,
+                )
+            }
+            None => {
+                ClipChainId::NONE
+            }
+        };
+
+        ClipChainBuilder {
+            clip_chain_id,
+            existing_clips_cache: parent_clips.clone(),
+            parent_clips,
+        }
+    }
+
+    /// Internal helper function that appends all clip instances from a template
+    /// to a clip-chain (if they don't already exist in this chain).
+    fn add_new_clips_to_chain(
+        clip_id: ClipId,
+        parent_clip_chain_id: ClipChainId,
+        existing_clips: &mut FastHashSet<ItemUid>,
+        clip_chain_nodes: &mut Vec<ClipChainNode>,
+        templates: &FastHashMap<ClipId, ClipTemplate>,
+    ) -> ClipChainId {
+        let template = &templates[&clip_id];
+        let mut clip_chain_id = parent_clip_chain_id;
+
+        for clip in &template.instances {
+            // If this clip chain already has this clip instance, skip it
+            if existing_clips.contains(&clip.handle.uid()) {
+                continue;
+            }
+
+            // Create a new clip-chain entry for this instance
+            let new_clip_chain_id = ClipChainId(clip_chain_nodes.len() as u32);
+
+            existing_clips.insert(clip.handle.uid());
+            clip_chain_nodes.push(ClipChainNode {
+                handle: clip.handle,
+                parent_clip_chain_id: clip_chain_id,
+            });
+            clip_chain_id = new_clip_chain_id;
+        }
+
+        // The ClipId parenting is terminated when we reach the root ClipId
+        if clip_id == template.parent {
+            return clip_chain_id;
+        }
+
+        ClipChainBuilder::add_new_clips_to_chain(
+            template.parent,
+            clip_chain_id,
+            existing_clips,
+            clip_chain_nodes,
+            templates,
+        )
+    }
+
+    /// This is the main method used to get a clip chain for a primitive. Given a
+    /// clip id, it builds a clip-chain for that primitive, parented to the current
+    /// root clip chain hosted in this builder.
+    fn get_or_build_clip_chain_id(
+        &mut self,
+        clip_id: ClipId,
+        clip_chain_nodes: &mut Vec<ClipChainNode>,
+        templates: &FastHashMap<ClipId, ClipTemplate>,
+    ) -> ClipChainId {
+        // Instead of cloning here, do a clear and manual insertions, to
+        // avoid any extra heap allocations each time we build a clip-chain here.
+        // Maybe there is a better way to do this?
+        self.existing_clips_cache.clear();
+        self.existing_clips_cache.reserve(self.parent_clips.len());
+        for clip in &self.parent_clips {
+            self.existing_clips_cache.insert(*clip);
+        }
+
+        let clip_chain_id = ClipChainBuilder::add_new_clips_to_chain(
+            clip_id,
+            self.clip_chain_id,
+            &mut self.existing_clips_cache,
+            clip_chain_nodes,
+            templates,
+        );
+
+        clip_chain_id
+    }
+}
 
 /// Helper to identify simple clips (normal rects) from other kinds of clips,
 /// which can often be handled via fast code paths.
@@ -524,6 +690,19 @@ pub struct ClipStore {
 
     active_clip_node_info: Vec<ClipNodeInfo>,
     active_local_clip_rect: Option<LayoutRect>,
+
+    // No malloc sizeof since it's not implemented for ops::Range, but these
+    // allocations are tiny anyway.
+
+    /// Map of all clip templates defined by the public API to templates
+    #[ignore_malloc_size_of = "range missing"]
+    templates: FastHashMap<ClipId, ClipTemplate>,
+
+    /// A stack of current clip-chain builders. A new clip-chain builder is
+    /// typically created each time a clip root (such as an iframe or stacking
+    /// context) is defined.
+    #[ignore_malloc_size_of = "range missing"]
+    chain_builder_stack: Vec<ClipChainBuilder>,
 }
 
 // A clip chain instance is what gets built for a given clip
@@ -716,10 +895,79 @@ impl ClipStore {
         ClipStore {
             clip_chain_nodes: Vec::new(),
             clip_node_instances: Vec::new(),
-
             active_clip_node_info: Vec::new(),
             active_local_clip_rect: None,
+            templates: FastHashMap::default(),
+            chain_builder_stack: Vec::new(),
         }
+    }
+
+    /// Register a new clip template for the clip_id defined in the display list.
+    pub fn register_clip_template(
+        &mut self,
+        clip_id: ClipId,
+        parent: ClipId,
+        instances: &[ClipInstance],
+    ) {
+        self.templates.insert(clip_id, ClipTemplate {
+            parent,
+            instances: instances.into(),
+        });
+    }
+
+    pub fn get_template(
+        &self,
+        clip_id: ClipId,
+    ) -> &ClipTemplate {
+        &self.templates[&clip_id]
+    }
+
+    /// The main method used to build a clip-chain for a given ClipId on a primitive
+    pub fn get_or_build_clip_chain_id(
+        &mut self,
+        clip_id: ClipId,
+    ) -> ClipChainId {
+        // TODO(gw): If many primitives reference the same ClipId, it might be worth
+        //           maintaining a hash map cache of ClipId -> ClipChainId in each
+        //           ClipChainBuilder
+
+        self.chain_builder_stack
+            .last_mut()
+            .unwrap()
+            .get_or_build_clip_chain_id(
+                clip_id,
+                &mut self.clip_chain_nodes,
+                &self.templates,
+            )
+    }
+
+    /// Push a new clip root. This is used at boundaries of clips (such as iframes
+    /// and stacking contexts). This means that any clips on the existing clip
+    /// chain builder will not be added to clip-chains defined within this level,
+    /// since the clips will be applied by the parent.
+    pub fn push_clip_root(
+        &mut self,
+        clip_id: Option<ClipId>,
+    ) {
+        // TODO(gw): When supporting redundant stacking contexts here, select
+        //           a parent from the chain builder stack.
+        let parent_clip_chain_id = ClipChainId::NONE;
+
+        let builder = ClipChainBuilder::new(
+            parent_clip_chain_id,
+            clip_id,
+            &mut self.clip_chain_nodes,
+            &self.templates,
+        );
+
+        self.chain_builder_stack.push(builder);
+    }
+
+    /// On completion of a stacking context or iframe, pop the current clip root.
+    pub fn pop_clip_root(
+        &mut self,
+    ) {
+        self.chain_builder_stack.pop().unwrap();
     }
 
     pub fn get_clip_chain(&self, clip_chain_id: ClipChainId) -> &ClipChainNode {
