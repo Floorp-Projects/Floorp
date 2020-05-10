@@ -21,6 +21,7 @@ A data class representing a search engine.
 |---|---|
 | [buildSearchUrl](build-search-url.md) | `fun buildSearchUrl(searchTerm: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Builds a URL to search for the given search terms with this search engine. |
 | [buildSuggestionsURL](build-suggestions-u-r-l.md) | `fun buildSuggestionsURL(searchTerm: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Builds a URL to get suggestions from this search engine. |
+| [getSearchTemplate](get-search-template.md) | `fun getSearchTemplate(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Gets the user-entered search url template |
 | [toString](to-string.md) | `fun toString(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Extension Functions
