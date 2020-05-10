@@ -233,6 +233,10 @@ class ImportableLoginsAutocompleteItem extends AutocompleteItem {
     this.label = browserId;
     this.comment = hostname;
   }
+
+  removeFromStorage() {
+    Services.telemetry.recordEvent("exp_import", "event", "delete", this.label);
+  }
 }
 
 class LoginsFooterAutocompleteItem extends AutocompleteItem {
@@ -362,6 +366,18 @@ function LoginAutoCompleteResult(
   if (this.matchCount > 0) {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
     this.defaultIndex = 0;
+    // For experiment telemetry, record how many importable logins were
+    // available when showing the popup and some extra data.
+    Services.telemetry.recordEvent(
+      "exp_import",
+      "impression",
+      "popup",
+      (importable?.browsers?.length ?? 0) + "",
+      {
+        loginsCount: logins.length + "",
+        searchLength: aSearchString.length + "",
+      }
+    );
   } else if (hidingFooterOnPWFieldAutoOpened) {
     // We use a failure result so that the empty results aren't re-used for when
     // the user tries to manually open the popup (we want the footer in that case).
@@ -755,11 +771,23 @@ let gAutoCompleteListener = {
           "PasswordManager:OpenMigrationWizard",
           selectedRowComment
         );
+        Services.telemetry.recordEvent(
+          "exp_import",
+          "event",
+          "enter",
+          selectedRowComment
+        );
         break;
       case "loginsFooter":
         loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
           entryPoint: "autocomplete",
         });
+        Services.telemetry.recordEvent(
+          "exp_import",
+          "event",
+          "enter",
+          "loginsFooter"
+        );
         break;
     }
   },
