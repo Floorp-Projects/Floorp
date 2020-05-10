@@ -1010,20 +1010,27 @@ bool RegExpShared::compileIfNecessary(JSContext* cx,
                                       MutableHandleRegExpShared re,
                                       HandleLinearString input,
                                       RegExpShared::CodeKind codeKind) {
+  if (codeKind == RegExpShared::CodeKind::Any) {
+    // We start by interpreting regexps, then compile them once they are
+    // sufficiently hot. For very long input strings, we tier up eagerly.
+    codeKind = RegExpShared::CodeKind::Bytecode;
+    if (IsNativeRegExpEnabled() &&
+        (re->markedForTierUp() || input->length() > 1000)) {
+      codeKind = RegExpShared::CodeKind::Jitcode;
+    }
+  }
+
   bool needsCompile = false;
   if (re->kind() == RegExpShared::Kind::Unparsed) {
     needsCompile = true;
   }
   if (re->kind() == RegExpShared::Kind::RegExp) {
-    if (codeKind == RegExpShared::CodeKind::Any && re->markedForTierUp()) {
-      codeKind = RegExpShared::CodeKind::Jitcode;
-    }
     if (!re->isCompiled(input->hasLatin1Chars(), codeKind)) {
       needsCompile = true;
     }
   }
   if (needsCompile) {
-    return irregexp::CompilePattern(cx, re, input);
+    return irregexp::CompilePattern(cx, re, input, codeKind);
   }
   return true;
 }
@@ -1126,11 +1133,11 @@ void RegExpShared::tierUpTick() {
   }
 }
 
-bool RegExpShared::markedForTierUp() {
+bool RegExpShared::markedForTierUp() const {
   if (!IsNativeRegExpEnabled()) {
     return false;
   }
-  if (kind() == RegExpShared::Kind::Atom) {
+  if (kind() != RegExpShared::Kind::RegExp) {
     return false;
   }
   return ticks_ == 0;
