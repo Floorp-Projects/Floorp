@@ -13,7 +13,7 @@ use api::{Shadow, SpaceAndClipInfo, SpatialId, StackingContext, StickyFrameDispl
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::units::*;
 use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind};
-use crate::clip::{ClipInternData, ClipDataHandle, ClipNodeKind, ClipInstance};
+use crate::clip::{ClipInternData, ClipNodeKind, ClipInstance};
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_rasterizer::FontInstance;
@@ -228,7 +228,7 @@ struct Slice {
     prim_list: PrimitiveList,
     /// A list of clips that are shared by all primitives in the slice. These can be
     /// filtered out and applied when the tile cache is composited rather than per-item.
-    shared_clips: Option<Vec<ClipDataHandle>>,
+    shared_clips: Option<Vec<ClipInstance>>,
     /// Various flags describing properties of this slice
     pub flags: SliceFlags,
 }
@@ -603,10 +603,11 @@ impl<'a> SceneBuilder<'a> {
                 match slices.last_mut().unwrap().shared_clips {
                     Some(ref mut shared_clips) => {
                         if update_shared_clips {
-                            shared_clips.retain(|h1: &ClipDataHandle| {
-                                let uid = h1.uid();
+                            shared_clips.retain(|h1: &ClipInstance| {
+                                let uid = h1.handle.uid();
                                 prim_clips.iter().any(|h2| {
-                                    uid == h2.uid()
+                                    uid == h2.handle.uid() &&
+                                    h1.spatial_node_index == h2.spatial_node_index
                                 })
                             });
                         }
@@ -1461,6 +1462,7 @@ impl<'a> SceneBuilder<'a> {
     fn build_clip_chain(
         &mut self,
         clip_items: Vec<ClipItemKey>,
+        spatial_node_index: SpatialNodeIndex,
         parent_clip_chain_id: ClipChainId,
     ) -> ClipChainId {
         if clip_items.is_empty() {
@@ -1476,12 +1478,12 @@ impl<'a> SceneBuilder<'a> {
                     .intern(&item, || {
                         ClipInternData {
                             clip_node_kind: item.kind.node_kind(),
-                            spatial_node_index: item.spatial_node_index,
                         }
                     });
 
                 clip_chain_id = self.clip_store.add_clip_chain_node(
                     handle,
+                    spatial_node_index,
                     clip_chain_id,
                 );
             }
@@ -1608,6 +1610,7 @@ impl<'a> SceneBuilder<'a> {
         if prim.is_visible() {
             let clip_chain_id = self.build_clip_chain(
                 clip_items,
+                spatial_node_index,
                 clip_chain_id,
             );
             self.add_prim_to_draw_list(
@@ -1886,7 +1889,6 @@ impl<'a> SceneBuilder<'a> {
                             self.content_slice_count = stacking_context.init_picture_caching(
                                 &self.spatial_tree,
                                 &self.clip_store,
-                                &self.interners,
                                 &self.quality_settings,
                             );
 
@@ -1919,7 +1921,6 @@ impl<'a> SceneBuilder<'a> {
                 self.content_slice_count = stacking_context.init_picture_caching(
                     &self.spatial_tree,
                     &self.clip_store,
-                    &self.interners,
                     &self.quality_settings,
                 );
                 self.picture_caching_initialized = true;
@@ -2244,7 +2245,6 @@ impl<'a> SceneBuilder<'a> {
         let snapped_mask_rect = snap_to_device.snap_rect(&image_mask.rect);
         let item = ClipItemKey {
             kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect),
-            spatial_node_index,
         };
 
         let handle = self
@@ -2253,11 +2253,10 @@ impl<'a> SceneBuilder<'a> {
             .intern(&item, || {
                 ClipInternData {
                     clip_node_kind: ClipNodeKind::Complex,
-                    spatial_node_index,
                 }
             });
 
-        let instance = ClipInstance::new(handle);
+        let instance = ClipInstance::new(handle, spatial_node_index);
 
         self.clip_store.register_clip_template(
             new_node_id,
@@ -2285,7 +2284,6 @@ impl<'a> SceneBuilder<'a> {
 
         let item = ClipItemKey {
             kind: ClipItemKeyKind::rectangle(snapped_clip_rect, ClipMode::Clip),
-            spatial_node_index,
         };
         let handle = self
             .interners
@@ -2293,11 +2291,10 @@ impl<'a> SceneBuilder<'a> {
             .intern(&item, || {
                 ClipInternData {
                     clip_node_kind: ClipNodeKind::Rectangle,
-                    spatial_node_index,
                 }
             });
 
-        let instance = ClipInstance::new(handle);
+        let instance = ClipInstance::new(handle, spatial_node_index);
 
         self.clip_store.register_clip_template(
             new_node_id,
@@ -2328,7 +2325,6 @@ impl<'a> SceneBuilder<'a> {
                 clip.radii,
                 clip.mode,
             ),
-            spatial_node_index,
         };
 
         let handle = self
@@ -2337,11 +2333,10 @@ impl<'a> SceneBuilder<'a> {
             .intern(&item, || {
                 ClipInternData {
                     clip_node_kind: ClipNodeKind::Complex,
-                    spatial_node_index,
                 }
             });
 
-        let instance = ClipInstance::new(handle);
+        let instance = ClipInstance::new(handle, spatial_node_index);
 
         self.clip_store.register_clip_template(
             new_node_id,
@@ -2379,7 +2374,6 @@ impl<'a> SceneBuilder<'a> {
         // Build the clip sources from the supplied region.
         let item = ClipItemKey {
             kind: ClipItemKeyKind::rectangle(snapped_clip_rect, ClipMode::Clip),
-            spatial_node_index,
         };
         let handle = self
             .interners
@@ -2387,10 +2381,9 @@ impl<'a> SceneBuilder<'a> {
             .intern(&item, || {
                 ClipInternData {
                     clip_node_kind: ClipNodeKind::Rectangle,
-                    spatial_node_index,
                 }
             });
-        instances.push(ClipInstance::new(handle));
+        instances.push(ClipInstance::new(handle, spatial_node_index));
 
         for region in clip_region.complex_clips {
             let snapped_region_rect = snap_to_device.snap_rect(&region.rect);
@@ -2400,7 +2393,6 @@ impl<'a> SceneBuilder<'a> {
                     region.radii,
                     region.mode,
                 ),
-                spatial_node_index,
             };
 
             let handle = self
@@ -2409,11 +2401,10 @@ impl<'a> SceneBuilder<'a> {
                 .intern(&item, || {
                     ClipInternData {
                         clip_node_kind: ClipNodeKind::Complex,
-                        spatial_node_index,
                     }
                 });
 
-            instances.push(ClipInstance::new(handle));
+            instances.push(ClipInstance::new(handle, spatial_node_index));
         }
 
         self.clip_store.register_clip_template(
@@ -3709,7 +3700,6 @@ impl FlattenedStackingContext {
         &mut self,
         spatial_tree: &SpatialTree,
         clip_store: &ClipStore,
-        interners: &Interners,
         quality_settings: &QualitySettings,
     ) -> usize {
         struct SliceInfo {
@@ -3774,8 +3764,7 @@ impl FlattenedStackingContext {
                                 while current_clip_chain_id != ClipChainId::NONE {
                                     let clip_chain_node = &clip_store
                                         .clip_chain_nodes[current_clip_chain_id.0 as usize];
-                                    let clip_node_data = &interners.clip[clip_chain_node.handle];
-                                    let spatial_root = spatial_tree.find_scroll_root(clip_node_data.spatial_node_index);
+                                    let spatial_root = spatial_tree.find_scroll_root(clip_chain_node.spatial_node_index);
                                     if spatial_root != ROOT_SPATIAL_NODE_INDEX {
                                         return false;
                                     }
@@ -4105,7 +4094,7 @@ fn create_tile_cache(
     scroll_root: SpatialNodeIndex,
     prim_list: PrimitiveList,
     background_color: Option<ColorF>,
-    shared_clips: Vec<ClipDataHandle>,
+    shared_clips: Vec<ClipInstance>,
     interners: &mut Interners,
     prim_store: &mut PrimitiveStore,
     clip_store: &mut ClipStore,
@@ -4135,14 +4124,14 @@ fn create_tile_cache(
     // also work with any complex clips, such as rounded rects and image masks, by
     // producing a clip mask that is applied to the picture cache tiles.
     let mut parent_clip_chain_id = ClipChainId::NONE;
-    for clip_handle in &shared_clips {
+    for clip_instance in &shared_clips {
         // Add this spatial node to the list to check for complex transforms
         // at the start of a frame build.
-        let clip_node_data = &interners.clip[*clip_handle];
-        picture_cache_spatial_nodes.insert(clip_node_data.spatial_node_index);
+        picture_cache_spatial_nodes.insert(clip_instance.spatial_node_index);
 
         parent_clip_chain_id = clip_store.add_clip_chain_node(
-            *clip_handle,
+            clip_instance.handle,
+            clip_instance.spatial_node_index,
             parent_clip_chain_id,
         );
     }
@@ -4184,7 +4173,7 @@ fn create_tile_cache(
 // Helper fn to collect clip handles from a given clip chain.
 fn add_clips(
     clip_chain_id: ClipChainId,
-    prim_clips: &mut Vec<ClipDataHandle>,
+    prim_clips: &mut Vec<ClipInstance>,
     clip_store: &ClipStore,
     interners: &Interners,
 ) {
@@ -4196,7 +4185,7 @@ fn add_clips(
 
         let clip_node_data = &interners.clip[clip_chain_node.handle];
         if let ClipNodeKind::Rectangle = clip_node_data.clip_node_kind {
-            prim_clips.push(clip_chain_node.handle);
+            prim_clips.push(ClipInstance::new(clip_chain_node.handle, clip_chain_node.spatial_node_index));
         }
 
         current_clip_chain_id = clip_chain_node.parent_clip_chain_id;

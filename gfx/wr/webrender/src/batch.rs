@@ -3212,7 +3212,7 @@ impl ClipBatcher {
             let clip_node = &clip_data_store[clip_instance.handle];
 
             let clip_transform_id = transforms.get_id(
-                clip_node.item.spatial_node_index,
+                clip_instance.spatial_node_index,
                 ROOT_SPATIAL_NODE_INDEX,
                 spatial_tree,
             );
@@ -3336,7 +3336,7 @@ impl ClipBatcher {
                         if !self.add_tiled_clip_mask(
                             actual_rect,
                             rect,
-                            clip_node.item.spatial_node_index,
+                            clip_instance.spatial_node_index,
                             spatial_tree,
                             world_rect,
                             device_pixel_scale,

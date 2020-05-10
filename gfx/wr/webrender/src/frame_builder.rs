@@ -5,7 +5,7 @@
 use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF};
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
-use crate::clip::{ClipStore, ClipChainStack, ClipDataHandle};
+use crate::clip::{ClipStore, ClipChainStack, ClipInstance};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
 use crate::composite::{CompositorKind, CompositeState};
 use crate::debug_render::DebugItem;
@@ -153,7 +153,7 @@ impl<'a> FrameVisibilityState<'a> {
     pub fn push_surface(
         &mut self,
         surface_index: SurfaceIndex,
-        shared_clips: &[ClipDataHandle]
+        shared_clips: &[ClipInstance]
     ) {
         self.surface_stack.push(surface_index);
         self.clip_chain_stack.push_surface(shared_clips);
