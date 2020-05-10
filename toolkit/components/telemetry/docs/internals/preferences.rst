@@ -179,6 +179,10 @@ Preferences
   sending them to the parent process.
   Default is 2000 (milliseconds).
 
+``toolkit.telemetry.pioneerId``
+
+  If a user has opted into the Pioneer program, this will contain their Pioneer ID.
+
 ``toolkit.telemetry.prioping.enabled``
 
   Whether the :doc:`../data/prio-ping` is enabled.
