@@ -31,6 +31,7 @@ else:
 # list in bin/bootstrap.py!
 from mozboot.base import MODERN_RUST_VERSION
 from mozboot.centosfedora import CentOSFedoraBootstrapper
+from mozboot.opensuse import OpenSUSEBootstrapper
 from mozboot.debian import DebianBootstrapper
 from mozboot.freebsd import FreeBSDBootstrapper
 from mozboot.gentoo import GentooBootstrapper
@@ -274,6 +275,8 @@ class Bootstrapper(object):
                 cls = SolusBootstrapper
             elif dist_id in ('arch') or os.path.exists('/etc/arch-release'):
                 cls = ArchlinuxBootstrapper
+            elif os.path.exists('/etc/SUSE-brand'):
+                cls = OpenSUSEBootstrapper
             else:
                 raise NotImplementedError('Bootstrap support for this Linux '
                                           'distro not yet available: ' + dist_id)
