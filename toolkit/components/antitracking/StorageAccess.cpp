@@ -314,6 +314,13 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   }
   bool disabled = StorageDisabledByAntiTrackingInternal(
       aWindow, aChannel, aPrincipal, aURI, cookieJarSettings, aRejectedReason);
+
+  // Don't notify UI when the scheme is chrome, this is a workaround to avoid
+  // creating unnecessaty content blocking events, see Bug 1628732.
+  if (aWindow && aURI && aURI->SchemeIs("chrome")) {
+    return disabled;
+  }
+
   if (aWindow) {
     ContentBlockingNotifier::OnDecision(
         aWindow,
