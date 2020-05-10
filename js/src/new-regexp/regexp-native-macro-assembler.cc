@@ -412,6 +412,9 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
 
   masm_.bind(&success);
 
+  // Drop saved value of current_position_
+  masm_.addToStackPtr(Imm32(sizeof(uintptr_t)));
+
   // current_position_ is a pointer. Convert it back to an offset.
   masm_.subPtr(input_end_pointer_, current_position_);
   if (read_backward) {
@@ -419,9 +422,6 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
     masm_.addPtr(register_location(start_reg), current_position_);
     masm_.subPtr(register_location(start_reg + 1), current_position_);
   }
-
-  // Drop saved value of current_position_
-  masm_.addToStackPtr(Imm32(sizeof(uintptr_t)));
 
   masm_.bind(&fallthrough);
 }
