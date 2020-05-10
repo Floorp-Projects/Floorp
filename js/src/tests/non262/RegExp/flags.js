@@ -12,7 +12,7 @@ assertEq(genericFlags({}), "");
 assertEq(genericFlags({ignoreCase: true}), "i");
 assertEq(genericFlags({sticky:1, unicode:1, global: 0}), "uy");
 assertEq(genericFlags({__proto__: {multiline: true}}), "m");
-assertEq(genericFlags(new Proxy({}, {get(){return true}})), "gimuy");
+assertEq(genericFlags(new Proxy({}, {get(){return true}})), "gimsuy");
 
 assertThrowsInstanceOf(() => genericFlags(), TypeError);
 assertThrowsInstanceOf(() => genericFlags(1), TypeError);
