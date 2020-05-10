@@ -11,6 +11,7 @@
 #include "nsDisplayItemTypes.h"
 #include "mozilla/Array.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/FunctionRef.h"
 #include "mozilla/layers/LayersMessages.h"  // for TransformData
 
 struct RawServoAnimationValue;
@@ -102,7 +103,7 @@ class AnimationInfo final {
   using CompositorAnimatableDisplayItemTypes =
       Array<DisplayItemType,
             nsCSSPropertyIDSet::CompositorAnimatableDisplayItemCount()>;
-  using AnimationGenerationCallback = std::function<bool(
+  using AnimationGenerationCallback = FunctionRef<bool(
       const Maybe<uint64_t>& aGeneration, DisplayItemType aDisplayItemType)>;
   // Enumerates animation generations on |aFrame| for the given display item
   // types and calls |aCallback| with the animation generation.
@@ -111,7 +112,7 @@ class AnimationInfo final {
   static void EnumerateGenerationOnFrame(
       const nsIFrame* aFrame, const nsIContent* aContent,
       const CompositorAnimatableDisplayItemTypes& aDisplayItemTypes,
-      const AnimationGenerationCallback& aCallback);
+      AnimationGenerationCallback);
 
   void AddAnimationsForDisplayItem(nsIFrame* aFrame,
                                    nsDisplayListBuilder* aBuilder,
