@@ -27,6 +27,18 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "jwcrypto",
+  "resource://services-crypto/jwcrypto.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "JsonSchemaValidator",
+  "resource://gre/modules/components-utils/JsonSchemaValidator.jsm"
+);
+
 const PING_FORMAT_VERSION = 4;
 const DELETION_REQUEST_PING_TYPE = "deletion-request";
 const TEST_PING_TYPE = "test-ping-type";
@@ -179,6 +191,7 @@ add_task(async function test_disableDataUpload() {
   let ping = await PingServer.promiseNextPing();
   checkPingFormat(ping, TEST_PING_TYPE, true, false);
   let firstClientId = ping.clientId;
+
   Assert.ok(firstClientId, "Test ping needs a client ID");
   Assert.notEqual(
     TelemetryUtils.knownClientID,
@@ -800,6 +813,252 @@ add_task(async function test_sendNewProfile() {
   // Reset the pref and restart Telemetry.
   Preferences.reset(PREF_NEWPROFILE_ENABLED);
   PingServer.resetPingHandler();
+});
+
+add_task(async function test_encryptedPing() {
+  if (gIsAndroid) {
+    // The underlying jwcrypto module being used here is not currently available on Android.
+    return;
+  }
+  Cu.importGlobalProperties(["crypto"]);
+
+  const ECDH_PARAMS = {
+    name: "ECDH",
+    namedCurve: "P-256",
+  };
+
+  const privateKey = {
+    crv: "P-256",
+    d: "rcs093UlGDG6piwHenmSDoAxbzMIXT43JkQbkt3xEmI",
+    ext: true,
+    key_ops: ["deriveKey"],
+    kty: "EC",
+    x: "h12feyTYBZ__wO_AnM1a5-KTDlko3-YyQ_en19jyrs0",
+    y: "6GSfzo14ehDyH5E-xCOedJDAYlN0AGPMCtIgFbheLko",
+  };
+
+  const publicKey = {
+    crv: "P-256",
+    ext: true,
+    kty: "EC",
+    x: "h12feyTYBZ__wO_AnM1a5-KTDlko3-YyQ_en19jyrs0",
+    y: "6GSfzo14ehDyH5E-xCOedJDAYlN0AGPMCtIgFbheLko",
+  };
+
+  const pioneerId = "12345";
+  const schemaName = "abc";
+  const schemaNamespace = "def";
+  const schemaVersion = 2;
+
+  Services.prefs.setStringPref("toolkit.telemetry.pioneerId", pioneerId);
+
+  // Stop the sending task and then start it again.
+  await TelemetrySend.shutdown();
+  // Reset the controller to spin the ping sending task.
+  await TelemetryController.testReset();
+
+  // Submit a ping with a custom payload, which will be encrypted.
+  let payload = { canary: "test" };
+  let pingPromise = TelemetryController.submitExternalPing(
+    "pioneer-study",
+    payload,
+    {
+      studyName: "pioneer-dev-1@allizom.org",
+      addPioneerId: true,
+      useEncryption: true,
+      encryptionKeyId: "pioneer-dev-20200423",
+      publicKey,
+      schemaName,
+      schemaNamespace,
+      schemaVersion,
+    }
+  );
+
+  // Wait for the ping to be archived.
+  const pingId = await pingPromise;
+
+  let archivedCopy = await TelemetryArchive.promiseArchivedPingById(pingId);
+
+  Assert.notEqual(
+    archivedCopy.payload.encryptedData,
+    payload,
+    "The encrypted payload must not match the plaintext."
+  );
+
+  Assert.equal(
+    archivedCopy.payload.pioneerId,
+    pioneerId,
+    "Pioneer ID in ping must match the pref."
+  );
+
+  // Validate ping against schema.
+  const schema = {
+    $schema: "http://json-schema.org/draft-04/schema#",
+    properties: {
+      application: {
+        additionalProperties: false,
+        properties: {
+          architecture: {
+            type: "string",
+          },
+          buildId: {
+            pattern: "^[0-9]{10}",
+            type: "string",
+          },
+          channel: {
+            type: "string",
+          },
+          displayVersion: {
+            pattern: "^[0-9]{2,3}\\.",
+            type: "string",
+          },
+          name: {
+            type: "string",
+          },
+          platformVersion: {
+            pattern: "^[0-9]{2,3}\\.",
+            type: "string",
+          },
+          vendor: {
+            type: "string",
+          },
+          version: {
+            pattern: "^[0-9]{2,3}\\.",
+            type: "string",
+          },
+          xpcomAbi: {
+            type: "string",
+          },
+        },
+        required: [
+          "architecture",
+          "buildId",
+          "channel",
+          "name",
+          "platformVersion",
+          "version",
+          "vendor",
+          "xpcomAbi",
+        ],
+        type: "object",
+      },
+      creationDate: {
+        pattern:
+          "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+        type: "string",
+      },
+      id: {
+        pattern:
+          "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+        type: "string",
+      },
+      payload: {
+        description: "",
+        properties: {
+          encryptedData: {
+            description: "JOSE/JWE encrypted payload.",
+            type: "string",
+          },
+          encryptionKeyId: {
+            description: "JOSE/JWK key id, e.g. pioneer-20170520.",
+            type: "string",
+          },
+          pioneerId: {
+            description: "Custom pioneer id, must not be Telemetry clientId",
+            pattern:
+              "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            type: "string",
+          },
+          schemaName: {
+            description:
+              "Name of a schema used for validation of the encryptedData",
+            maxLength: 100,
+            minLength: 1,
+            pattern: "^\\S+$",
+            type: "string",
+          },
+          schemaNamespace: {
+            description:
+              "The namespace of the schema used for validation and routing to a dataset.",
+            maxLength: 100,
+            minLength: 1,
+            pattern: "^\\S+$",
+            type: "string",
+          },
+          schemaVersion: {
+            description: "Integer version number of the schema",
+            minimum: 1,
+            type: "integer",
+          },
+          studyName: {
+            description: "Name of a particular study. Usually the addon_id.",
+            maxLength: 100,
+            minLength: 1,
+            pattern: "^\\S+$",
+            type: "string",
+          },
+        },
+        required: [
+          "encryptedData",
+          "encryptionKeyId",
+          "pioneerId",
+          "studyName",
+          "schemaName",
+          "schemaNamespace",
+          "schemaVersion",
+        ],
+        title: "pioneer-study",
+        type: "object",
+      },
+      type: {
+        description: "doc_type, restated",
+        enum: ["pioneer-study"],
+        type: "string",
+      },
+      version: {
+        maximum: 4,
+        minimum: 4,
+        type: "integer",
+      },
+    },
+    required: [
+      "application",
+      "creationDate",
+      "id",
+      "payload",
+      "type",
+      "version",
+    ],
+    title: "pioneer-study",
+    type: "object",
+  };
+
+  const result = JsonSchemaValidator.validate(archivedCopy, schema);
+
+  Assert.ok(
+    result.valid,
+    `Archived ping should validate against schema: ${result.error}`
+  );
+
+  // check that payload can be decrypted.
+  const privateJWK = await crypto.subtle.importKey(
+    "jwk",
+    privateKey,
+    ECDH_PARAMS,
+    false,
+    ["deriveKey"]
+  );
+
+  const decryptedJWE = await jwcrypto.decryptJWE(
+    archivedCopy.payload.encryptedData,
+    privateJWK
+  );
+
+  Assert.deepEqual(
+    JSON.parse(new TextDecoder("utf-8").decode(decryptedJWE)),
+    payload,
+    "decrypted payload should match"
+  );
 });
 
 // Testing shutdown and checking that pings sent afterwards are rejected.
