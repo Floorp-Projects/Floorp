@@ -1998,7 +1998,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       // the insecure form warning.
       if (
         !foundLogins.length &&
-        !importable?.browsers &&
+        !(importable?.state === "import" && importable?.browsers) &&
         (InsecurePasswordUtils.isFormSecure(form) ||
           !LoginHelper.showInsecureFieldWarning)
       ) {
@@ -2275,6 +2275,19 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       Cu.reportError(ex);
       throw ex;
     } finally {
+      // For experiment telemetry, record how many importable logins were
+      // available when filling a login form and some extra data.
+      Services.telemetry.recordEvent(
+        "exp_import",
+        "impression",
+        "formfill",
+        (importable?.browsers?.length ?? 0) + "",
+        {
+          autofillResult: autofillResult + "",
+          loginsCount: foundLogins.length + "",
+        }
+      );
+
       if (autofillResult == -1) {
         // eslint-disable-next-line no-unsafe-finally
         throw new Error("_fillForm: autofillResult must be specified");
