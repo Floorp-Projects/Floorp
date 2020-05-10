@@ -12,6 +12,7 @@
 | [FennecMigrator](-fennec-migrator/index.md) | `class FennecMigrator`<br>Entrypoint for Fennec data migration. See [Builder](-fennec-migrator/-builder/index.md) for public API. |
 | [FennecProfile](-fennec-profile/index.md) | `data class FennecProfile`<br>A profile of "Fennec" (Firefox for Android). |
 | [FxaMigrationResult](-fxa-migration-result/index.md) | `sealed class FxaMigrationResult`<br>Result of an FxA migration. |
+| [GeckoMigrationResult](-gecko-migration-result/index.md) | `sealed class GeckoMigrationResult`<br>Result of a Gecko migration. |
 | [Migration](-migration/index.md) | `sealed class Migration`<br>Supported Fennec migrations and their current versions. |
 | [MigrationFacts](-migration-facts/index.md) | `class MigrationFacts`<br>Facts emitted for telemetry related to migration. |
 | [MigrationIntentProcessor](-migration-intent-processor/index.md) | `class MigrationIntentProcessor : `[`IntentProcessor`](../mozilla.components.feature.intent.processing/-intent-processor/index.md)<br>An [IntentProcessor](../mozilla.components.feature.intent.processing/-intent-processor/index.md) that checks if we're in a migration state. |
@@ -30,6 +31,7 @@
 | [FennecMigratorException](-fennec-migrator-exception/index.md) | `sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)<br>Exceptions related to Fennec migrations. |
 | [FennecProfileException](-fennec-profile-exception/index.md) | `sealed class FennecProfileException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Exceptions related to Fennec profile migrations. |
 | [FxaMigrationException](-fxa-migration-exception/index.md) | `class FxaMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Wraps [FxaMigrationResult](-fxa-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](-result/-failure/index.md). |
+| [GeckoMigrationException](-gecko-migration-exception/index.md) | `class GeckoMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Wraps [GeckoMigrationResult](-gecko-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](-result/-failure/index.md). |
 | [SettingsMigrationException](-settings-migration-exception/index.md) | `class SettingsMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Wraps [SettingsMigrationResult](-settings-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](-result/-failure/index.md). |
 
 ### Type Aliases
