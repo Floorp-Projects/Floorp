@@ -300,7 +300,12 @@ class AutoCompleteParent extends JSWindowActorParent {
     // Add counts by result style to rawExtraData.
     results.reduce((accumulated, r) => {
       // Keys can be a maximum of 15 characters and values must be strings.
-      let truncatedStyle = r.style.substring(0, 15);
+      // Also treat both "loginWithOrigin" and "login" as "login" as extra_keys
+      // is limited to 10.
+      let truncatedStyle = r.style.substring(
+        0,
+        r.style === "loginWithOrigin" ? 5 : 15
+      );
       accumulated[truncatedStyle] = (accumulated[truncatedStyle] || 0) + 1;
       return accumulated;
     }, rawExtraData);
