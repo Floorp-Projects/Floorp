@@ -315,6 +315,7 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   ERROR_MESSAGES: "error-messages",
   PLATFORM_MESSAGES: "platform-messages",
   DOCUMENT_EVENTS: "document-events",
+  ROOT_NODE: "root-node",
 };
 module.exports = { ResourceWatcher };
 
@@ -344,4 +345,6 @@ const LegacyListeners = {
     webConsoleFront.on("documentEvent", onAvailable);
     await webConsoleFront.startListeners(["DocumentEvents"]);
   },
+  [ResourceWatcher.TYPES
+    .ROOT_NODE]: require("devtools/shared/resources/legacy-listeners/root-node"),
 };
