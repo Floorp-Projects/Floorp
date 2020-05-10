@@ -133,7 +133,6 @@ impl<'a> SceneBuilder<'a> {
                             border_radius,
                             ClipMode::ClipOut,
                         ),
-                        spatial_node_index,
                     });
 
                     (shadow_rect, shadow_radius)
@@ -146,7 +145,6 @@ impl<'a> SceneBuilder<'a> {
                                 shadow_radius,
                                 ClipMode::ClipOut,
                             ),
-                            spatial_node_index,
                         });
                     }
 
@@ -160,7 +158,6 @@ impl<'a> SceneBuilder<'a> {
                     clip_radius,
                     ClipMode::Clip,
                 ),
-                spatial_node_index,
             });
 
             self.add_primitive(
@@ -185,7 +182,6 @@ impl<'a> SceneBuilder<'a> {
                     border_radius,
                     prim_clip_mode,
                 ),
-                spatial_node_index,
             });
 
             // Get the local rect of where the shadow will be drawn,
@@ -207,7 +203,6 @@ impl<'a> SceneBuilder<'a> {
                     blur_radius,
                     clip_mode,
                 ),
-                spatial_node_index,
             };
 
             let prim_info = match clip_mode {

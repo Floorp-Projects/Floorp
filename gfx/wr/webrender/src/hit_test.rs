@@ -321,7 +321,7 @@ impl HitTester {
             let clip_node = &clip_data_store[node.handle];
             self.clip_chains.push(HitTestClipChainNode {
                 region: HitTestClipNode::new(clip_node),
-                spatial_node_index: clip_node.item.spatial_node_index,
+                spatial_node_index: node.spatial_node_index,
                 parent_clip_chain_id: HitTestClipChainId(node.parent_clip_chain_id.0),
             });
         }
