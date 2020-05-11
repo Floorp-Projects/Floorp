@@ -68,6 +68,7 @@ class Analytics(
         )
 
         CrashReporter(
+            context = context,
             services = services,
             telemetryServices = listOf(GleanCrashReporterService(context)),
             shouldPrompt = CrashReporter.Prompt.ALWAYS,

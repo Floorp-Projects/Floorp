@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings.about
 sealed class AboutItem {
     data class ExternalLink(val type: AboutItemType, val url: String) : AboutItem()
     object Libraries : AboutItem()
+    object Crashes : AboutItem()
 }
 
 enum class AboutItemType {

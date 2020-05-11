@@ -191,6 +191,10 @@
                 android:exported="false">
         </activity>
 
+        <activity
+            android:name=".crashes.CrashListActivity"
+            android:exported="false" />
+
         <activity android:name=".widget.VoiceSearchActivity" />
 
         <activity

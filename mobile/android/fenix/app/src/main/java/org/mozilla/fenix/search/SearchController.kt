@@ -6,6 +6,7 @@
 package org.mozilla.fenix.search
 
 import android.content.Context
+import android.content.Intent
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -22,6 +23,7 @@ import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPo
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.SUGGESTION
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
+import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.navigateSafe
@@ -52,6 +54,14 @@ class DefaultSearchController(
 ) : SearchController {
 
     override fun handleUrlCommitted(url: String) {
+        if (url == "about:crashes") {
+            // The list of past crashes can be accessed via "settings > about", but desktop and
+            // fennec users may be used to navigating to "about:crashes". So we intercept this here
+            // and open the crash list activity instead.
+            context.startActivity(Intent(context, CrashListActivity::class.java))
+            return
+        }
+
         if (url.isNotBlank()) {
             (context as HomeActivity).openToBrowserAndLoad(
                 searchTermOrURL = url,

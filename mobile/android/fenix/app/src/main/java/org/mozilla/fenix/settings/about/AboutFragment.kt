@@ -20,6 +20,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Do
@@ -153,6 +154,10 @@ class AboutFragment : Fragment(), AboutPageListener {
                 ), getString(R.string.about_support)
             ),
             AboutPageItem.Item(
+                AboutItem.Crashes,
+                getString(R.string.about_crashes)
+            ),
+            AboutPageItem.Item(
                 AboutItem.ExternalLink(
                     PRIVACY_NOTICE,
                     SupportUtils.getPrivacyNoticeUrl()
@@ -214,6 +219,9 @@ class AboutFragment : Fragment(), AboutPageListener {
             is AboutItem.Libraries -> {
                 requireComponents.analytics.metrics.track(Event.LibrariesThatWeUseTapped)
                 openLibrariesPage()
+            }
+            is AboutItem.Crashes -> {
+                startActivity(Intent(requireContext(), CrashListActivity::class.java))
             }
         }
     }
