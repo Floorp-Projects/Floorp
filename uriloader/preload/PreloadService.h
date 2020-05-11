@@ -75,6 +75,9 @@ class PreloadService {
   void PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
                     const nsAString& aImageReferrerPolicy, bool aIsImgSet);
 
+  void PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,
+                   const nsAString& aReferrerPolicy);
+
   void PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
                     const nsAString& aReferrerPolicy);
 

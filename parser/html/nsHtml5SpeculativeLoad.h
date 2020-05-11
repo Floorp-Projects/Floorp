@@ -31,6 +31,7 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadSetDocumentCharset,
   eSpeculativeLoadSetDocumentMode,
   eSpeculativeLoadPreconnect,
+  eSpeculativeLoadFont,
   eSpeculativeLoadFetch
 };
 
@@ -90,6 +91,23 @@ class nsHtml5SpeculativeLoad {
     aSizes.ToString(
         mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
     mIsLinkPreload = aLinkPreload;
+  }
+
+  inline void InitFont(nsHtml5String aUrl, nsHtml5String aCrossOrigin,
+                       nsHtml5String aReferrerPolicy) {
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
+    mOpCode = eSpeculativeLoadFont;
+    aUrl.ToString(mUrlOrSizes);
+    aCrossOrigin.ToString(mCrossOriginOrMedia);
+    nsString
+        referrerPolicy;  // Not Auto, because using it to hold nsStringBuffer*
+    aReferrerPolicy.ToString(referrerPolicy);
+    mReferrerPolicyOrIntegrity.Assign(
+        nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
+            referrerPolicy));
+    // This can be only triggered by <link rel=preload type=font>
+    mIsLinkPreload = true;
   }
 
   inline void InitFetch(nsHtml5String aUrl, nsHtml5String aCrossOrigin,

@@ -313,6 +313,9 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       nsHtml5AttributeName::ATTR_IMAGESIZES);
                   mSpeculativeLoadQueue.AppendElement()->InitImage(
                       url, crossOrigin, referrerPolicy, srcset, sizes, true);
+                } else if (as.LowerCaseEqualsASCII("font")) {
+                  mSpeculativeLoadQueue.AppendElement()->InitFont(
+                      url, crossOrigin, referrerPolicy);
                 } else if (as.LowerCaseEqualsASCII("fetch")) {
                   mSpeculativeLoadQueue.AppendElement()->InitFetch(
                       url, crossOrigin, referrerPolicy);

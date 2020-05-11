@@ -69,8 +69,10 @@ class PreloadHashKey : public nsURIHashKey {
       nsIURI* aURI, const nsAString& aCrossOrigin,
       const dom::ReferrerPolicy& aReferrerPolicy);
 
-  // TODO
-  // static CreateAsFont(...);
+  // Construct key for "font"
+  static PreloadHashKey CreateAsFont(
+      nsIURI* aURI, const CORSMode aCORSMode,
+      const dom::ReferrerPolicy& aReferrerPolicy);
 
   KeyType GetKey() const { return const_cast<PreloadHashKey*>(this); }
   KeyTypePointer GetKeyPointer() const { return this; }

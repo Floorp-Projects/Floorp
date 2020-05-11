@@ -9,6 +9,7 @@
 #include "gfxFontConstants.h"
 #include "gfxFontSrcPrincipal.h"
 #include "gfxFontSrcURI.h"
+#include "FontPreloader.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -37,7 +38,6 @@
 #include "nsContentUtils.h"
 #include "nsDeviceContext.h"
 #include "nsFontFaceLoader.h"
-#include "nsIClassOfService.h"
 #include "nsIConsoleService.h"
 #include "nsIContentPolicy.h"
 #include "nsIDocShell.h"
@@ -45,7 +45,6 @@
 #include "nsILoadContext.h"
 #include "nsINetworkPredictor.h"
 #include "nsIPrincipal.h"
-#include "nsISupportsPriority.h"
 #include "nsIWebNavigation.h"
 #include "nsNetUtil.h"
 #include "nsIInputStream.h"
@@ -573,86 +572,69 @@ nsresult FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   nsresult rv;
 
   nsCOMPtr<nsIStreamLoader> streamLoader;
-  nsCOMPtr<nsILoadGroup> loadGroup(mDocument->GetDocumentLoadGroup());
-  gfxFontSrcPrincipal* principal = aUserFontEntry->GetPrincipal();
+  RefPtr<nsFontFaceLoader> fontLoader;
 
-  uint32_t securityFlags = 0;
-  if (aFontFaceSrc->mURI->get()->SchemeIs("file")) {
-    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
-  } else {
-    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
-  }
+  auto preloadKey = PreloadHashKey::CreateAsFont(
+      aFontFaceSrc->mURI->get(), CORS_ANONYMOUS,
+      aFontFaceSrc->mReferrerInfo->ReferrerPolicy());
+  RefPtr<PreloaderBase> preload =
+      mDocument->Preloads().LookupPreload(&preloadKey);
 
-  nsCOMPtr<nsIChannel> channel;
-  // Note we are calling NS_NewChannelWithTriggeringPrincipal() with both a
-  // node and a principal.  This is because the document where the font is
-  // being loaded might have a different origin from the principal of the
-  // stylesheet that initiated the font load.
-  rv = NS_NewChannelWithTriggeringPrincipal(
-      getter_AddRefs(channel), aFontFaceSrc->mURI->get(), mDocument,
-      principal ? principal->get() : nullptr, securityFlags,
-      nsIContentPolicy::TYPE_FONT,
-      nullptr,  // PerformanceStorage
-      loadGroup);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (preload) {
+    fontLoader = new nsFontFaceLoader(aUserFontEntry, aFontFaceSrc->mURI->get(),
+                                      this, preload->Channel());
 
-  RefPtr<nsFontFaceLoader> fontLoader = new nsFontFaceLoader(
-      aUserFontEntry, aFontFaceSrc->mURI->get(), this, channel);
-  mLoaders.PutEntry(fontLoader);
-
-  if (LOG_ENABLED()) {
-    nsCOMPtr<nsIURI> referrer =
-        aFontFaceSrc->mReferrerInfo
-            ? aFontFaceSrc->mReferrerInfo->GetOriginalReferrer()
-            : nullptr;
-    LOG(
-        ("userfonts (%p) download start - font uri: (%s) "
-         "referrer uri: (%s)\n",
-         fontLoader.get(), aFontFaceSrc->mURI->GetSpecOrDefault().get(),
-         referrer ? referrer->GetSpecOrDefault().get() : ""));
-  }
-
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-  if (httpChannel) {
-    rv = httpChannel->SetReferrerInfo(aFontFaceSrc->mReferrerInfo);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
-
-    rv = httpChannel->SetRequestHeader(
-        NS_LITERAL_CSTRING("Accept"),
-        NS_LITERAL_CSTRING("application/font-woff2;q=1.0,application/"
-                           "font-woff;q=0.9,*/*;q=0.8"),
-        false);
+    rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader,
+                            fontLoader);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // For WOFF and WOFF2, we should tell servers/proxies/etc NOT to try
-    // and apply additional compression at the content-encoding layer
-    if (aFontFaceSrc->mFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF |
-                                      gfxUserFontSet::FLAG_FORMAT_WOFF2)) {
-      rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Encoding"),
-                                         NS_LITERAL_CSTRING("identity"), false);
-      NS_ENSURE_SUCCESS(rv, rv);
+    rv = preload->AsyncConsume(streamLoader);
+
+    // We don't want this to hang around regardless of the result, there will be
+    // no coalescing of later found <link preload> tags for fonts.
+    mDocument->Preloads().DeregisterPreload(&preloadKey);
+  } else {
+    // No preload found, open a channel.
+    rv = NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsILoadGroup> loadGroup(mDocument->GetDocumentLoadGroup());
+  if (NS_FAILED(rv)) {
+    nsCOMPtr<nsIChannel> channel;
+    rv = FontPreloader::BuildChannel(
+        getter_AddRefs(channel), aFontFaceSrc->mURI->get(), CORS_ANONYMOUS,
+        dom::ReferrerPolicy::_empty /* not used */, aUserFontEntry,
+        aFontFaceSrc, mDocument, loadGroup, nullptr, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    fontLoader = new nsFontFaceLoader(aUserFontEntry, aFontFaceSrc->mURI->get(),
+                                      this, channel);
+
+    if (LOG_ENABLED()) {
+      nsCOMPtr<nsIURI> referrer =
+          aFontFaceSrc->mReferrerInfo
+              ? aFontFaceSrc->mReferrerInfo->GetOriginalReferrer()
+              : nullptr;
+      LOG((
+          "userfonts (%p) download start - font uri: (%s) referrer uri: (%s)\n",
+          fontLoader.get(), aFontFaceSrc->mURI->GetSpecOrDefault().get(),
+          referrer ? referrer->GetSpecOrDefault().get() : ""));
+    }
+
+    rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader,
+                            fontLoader);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = channel->AsyncOpen(streamLoader);
+    if (NS_FAILED(rv)) {
+      fontLoader->DropChannel();  // explicitly need to break ref cycle
     }
   }
-  nsCOMPtr<nsISupportsPriority> priorityChannel(do_QueryInterface(channel));
-  if (priorityChannel) {
-    priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGH);
-  }
 
-  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
-  if (cos) {
-    cos->AddClassFlags(nsIClassOfService::TailForbidden);
-  }
-
-  rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader, fontLoader);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mLoaders.PutEntry(fontLoader);
 
   net::PredictorLearn(aFontFaceSrc->mURI->get(), mDocument->GetDocumentURI(),
                       nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, loadGroup);
-
-  rv = channel->AsyncOpen(streamLoader);
-  if (NS_FAILED(rv)) {
-    fontLoader->DropChannel();  // explicitly need to break ref cycle
-  }
 
   if (NS_SUCCEEDED(rv)) {
     fontLoader->StartedLoading(streamLoader);
