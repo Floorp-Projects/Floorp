@@ -31,7 +31,7 @@ interface WebSocket : EventTarget {
 
   readonly attribute unsigned short readyState;
 
-  readonly attribute unsigned long bufferedAmount;
+  readonly attribute unsigned long long bufferedAmount;
 
   // networking
 
