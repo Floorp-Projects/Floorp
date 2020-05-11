@@ -6,7 +6,6 @@
 
 #include "builtin/DataViewObject.h"
 
-#include "mozilla/Alignment.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerTypeTraits.h"
@@ -311,7 +310,7 @@ struct DataViewIO {
       typename mozilla::UnsignedStdintTypeForSize<sizeof(DataType)>::Type;
 
   static constexpr auto alignMask =
-      std::min<size_t>(MOZ_ALIGNOF(void*), sizeof(DataType)) - 1;
+      std::min<size_t>(alignof(void*), sizeof(DataType)) - 1;
 
   static void fromBuffer(DataType* dest, BufferPtrType unalignedBuffer,
                          bool wantSwap) {
