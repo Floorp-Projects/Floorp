@@ -29,6 +29,7 @@ PreloadHashKey::PreloadHashKey(PreloadHashKey&& aToMove)
       mScript = std::move(aToMove.mScript);
       break;
     case ResourceType::STYLE:
+      mStyle = std::move(aToMove.mStyle);
       break;
     case ResourceType::IMAGE:
       break;
@@ -56,6 +57,7 @@ PreloadHashKey& PreloadHashKey::operator=(const PreloadHashKey& aOther) {
       mScript = aOther.mScript;
       break;
     case ResourceType::STYLE:
+      mStyle = aOther.mStyle;
       break;
     case ResourceType::IMAGE:
       break;
@@ -96,6 +98,29 @@ PreloadHashKey PreloadHashKey::CreateAsScript(
   return CreateAsScript(aURI, crossOrigin, scriptKind, aReferrerPolicy);
 }
 
+// static
+PreloadHashKey PreloadHashKey::CreateAsStyle(
+    nsIURI* aURI, nsIPrincipal* aPrincipal, nsIReferrerInfo* aReferrerInfo,
+    CORSMode aCORSMode, css::SheetParsingMode aParsingMode) {
+  PreloadHashKey key(aURI, ResourceType::STYLE);
+  key.mCORSMode = aCORSMode;
+
+  key.mStyle.mPrincipal = aPrincipal;
+  key.mStyle.mParsingMode = aParsingMode;
+  key.mStyle.mReferrerInfo = aReferrerInfo;
+
+  return key;
+}
+
+// static
+PreloadHashKey PreloadHashKey::CreateAsStyle(
+    css::SheetLoadData& aSheetLoadData) {
+  return CreateAsStyle(aSheetLoadData.mURI, aSheetLoadData.mLoaderPrincipal,
+                       aSheetLoadData.ReferrerInfo(),
+                       aSheetLoadData.mSheet->GetCORSMode(),
+                       aSheetLoadData.mSheet->ParsingMode());
+}
+
 bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
   if (mAs != aOther->mAs || mCORSMode != aOther->mCORSMode ||
       mReferrerPolicy != aOther->mReferrerPolicy) {
@@ -113,8 +138,27 @@ bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
         return false;
       }
       break;
-    case ResourceType::STYLE:
+    case ResourceType::STYLE: {
+      if (!mStyle.mPrincipal != !aOther->mStyle.mPrincipal) {
+        // One or the other has a principal, but not both... not equal
+        return false;
+      }
+      if (mStyle.mParsingMode != aOther->mStyle.mParsingMode) {
+        return false;
+      }
+      bool eq;
+      if (NS_FAILED(mStyle.mReferrerInfo->Equals(aOther->mStyle.mReferrerInfo,
+                                                 &eq)) ||
+          !eq) {
+        return false;
+      }
+      if (mStyle.mPrincipal && (NS_FAILED(mStyle.mPrincipal->Equals(
+                                    aOther->mStyle.mPrincipal, &eq)) ||
+                                !eq)) {
+        return false;
+      }
       break;
+    }
     case ResourceType::IMAGE:
       break;
     case ResourceType::FONT:
