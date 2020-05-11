@@ -9,6 +9,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/WrappingOperations.h"
 
 #include <algorithm>
@@ -290,51 +291,6 @@ static inline uint64_t swapBytes(uint64_t x) {
   return (uint64_t(swapBytes(a)) << 32) | swapBytes(b);
 }
 
-template <typename DataType>
-struct DataToRepType {
-  using result = DataType;
-};
-template <>
-struct DataToRepType<int8_t> {
-  using result = uint8_t;
-};
-template <>
-struct DataToRepType<uint8_t> {
-  using result = uint8_t;
-};
-template <>
-struct DataToRepType<int16_t> {
-  using result = uint16_t;
-};
-template <>
-struct DataToRepType<uint16_t> {
-  using result = uint16_t;
-};
-template <>
-struct DataToRepType<int32_t> {
-  using result = uint32_t;
-};
-template <>
-struct DataToRepType<uint32_t> {
-  using result = uint32_t;
-};
-template <>
-struct DataToRepType<int64_t> {
-  using result = uint64_t;
-};
-template <>
-struct DataToRepType<uint64_t> {
-  using result = uint64_t;
-};
-template <>
-struct DataToRepType<float> {
-  using result = uint32_t;
-};
-template <>
-struct DataToRepType<double> {
-  using result = uint64_t;
-};
-
 static inline void Memcpy(uint8_t* dest, uint8_t* src, size_t nbytes) {
   memcpy(dest, src, nbytes);
 }
@@ -351,7 +307,8 @@ static inline void Memcpy(SharedMem<uint8_t*> dest, uint8_t* src,
 
 template <typename DataType, typename BufferPtrType>
 struct DataViewIO {
-  using ReadWriteType = typename DataToRepType<DataType>::result;
+  using ReadWriteType =
+      typename mozilla::UnsignedStdintTypeForSize<sizeof(DataType)>::Type;
 
   static constexpr auto alignMask =
       std::min<size_t>(MOZ_ALIGNOF(void*), sizeof(DataType)) - 1;
