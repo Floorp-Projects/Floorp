@@ -376,9 +376,13 @@ var BrowserTestUtils = {
    *
    * This can be used in conjunction with any synchronous method for starting a
    * load, like the "addTab" method on "tabbrowser", and must be called before
-   * yielding control to the event loop. This is guaranteed to work because the
-   * way we're listening for the load is in the content-utils.js frame script,
-   * and then sending an async message up, so we can't miss the message.
+   * yielding control to the event loop. Note that calling this after multiple
+   * successive load operations can be racy, so a |wantLoad| should be specified
+   * in these cases.
+   *
+   * This function works by listening for custom load events on |browser|. These
+   * are sent by a BrowserTestUtils window actor in response to "load" and
+   * "DOMContentLoaded" content events.
    *
    * @param {xul:browser} browser
    *        A xul:browser.
