@@ -116,22 +116,23 @@ function testPreloadEventSetCrossOrigin(url) {
   });
 }
 
+const IMAGE_PATH = window.location.pathname.replace(/[^/]+$/, "file_mozfiledataurl_img.jpg");
 const SJS_PATH = window.location.pathname.replace(/[^/]+$/, "file_bug1268962.sjs");
-const SAME_ORIGIN = "http://mochi.test:8888" + SJS_PATH;
-const CROSS_ORIGIN = "http://example.com" + SJS_PATH;
+const SAME_ORIGIN = "http://mochi.test:8888";
+const CROSS_ORIGIN = "http://example.com";
 
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv({"set": [["network.preload", true]]})
 
 // Test changing as parameter from a wrong to a correct one.
-.then(() => testPreloadEventAsAttributeChange(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120"))
+.then(() => testPreloadEventAsAttributeChange(SAME_ORIGIN + IMAGE_PATH))
 // Test changing type parameter from a wrong to a correct one for given as parameter.
-.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", "type", "text/vtt", "image/png", false, true))
+.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + IMAGE_PATH, "type", "text/vtt", "image/png", false, true))
 // Test changing media parameter from a wrong to a correct one.
-.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", "media", "foo", "all", false, true))
+.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + IMAGE_PATH, "media", "foo", "all", false, true))
 // Test changing crossorigin parameter.
-.then(() => testPreloadEventSetCrossOrigin(CROSS_ORIGIN + "?statusCode=404&cacheControl=max-age%3D120&allowOrigin=*"))
+.then(() => testPreloadEventSetCrossOrigin(CROSS_ORIGIN + SJS_PATH + "?statusCode=404&cacheControl=max-age%3D120&allowOrigin=*"))
 
 .catch((err) => ok(false, "promise rejected: " + err))
 .then(() => SimpleTest.finish());
