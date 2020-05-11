@@ -354,6 +354,8 @@ class ResponsiveUI {
         (options.reason === "TabClose" ||
           options.reason === "BeforeTabRemotenessChange"));
 
+    let currentTarget;
+
     // Ensure init has finished before starting destroy
     if (!isTabContentDestroying) {
       await this.inited;
@@ -368,6 +370,10 @@ class ResponsiveUI {
         // Hide browser UI to avoid displaying weird intermediate states while closing.
         this.hideBrowserUI();
       }
+
+      // Save reference to tab target before RDM stops listening to it. Will need it if
+      // the tab has to be reloaded to remove the emulated settings created by RDM.
+      currentTarget = this.currentTarget;
 
       this.targetList.unwatchTargets(
         [this.targetList.TYPES.FRAME],
@@ -420,8 +426,8 @@ class ResponsiveUI {
       reloadNeeded |=
         (await this.updateTouchSimulation()) &&
         this.reloadOnChange("touchSimulation");
-      if (reloadNeeded) {
-        this.getViewportBrowser().reload();
+      if (reloadNeeded && currentTarget) {
+        await currentTarget.reload();
       }
     }
 
@@ -609,7 +615,7 @@ class ResponsiveUI {
       (await this.updateTouchSimulation(touch)) &&
       this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
-      this.getViewportBrowser().reload();
+      this.reloadBrowser();
     }
     // Used by tests
     this.emit("device-changed");
@@ -636,7 +642,7 @@ class ResponsiveUI {
       (await this.updateTouchSimulation(enabled)) &&
       this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
-      this.getViewportBrowser().reload();
+      this.reloadBrowser();
     }
     // Used by tests
     this.emit("touch-simulation-changed");
@@ -648,7 +654,7 @@ class ResponsiveUI {
       (await this.updateUserAgent(userAgent)) &&
       this.reloadOnChange("userAgent");
     if (reloadNeeded) {
-      this.getViewportBrowser().reload();
+      this.reloadBrowser();
     }
     this.emit("user-agent-changed");
   }
@@ -675,7 +681,7 @@ class ResponsiveUI {
       (await this.updateTouchSimulation()) &&
       this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
-      this.getViewportBrowser().reload();
+      this.reloadBrowser();
     }
     // Used by tests
     this.emit("device-association-removed");
@@ -942,7 +948,7 @@ class ResponsiveUI {
         this.reloadOnChange("userAgent");
     }
     if (reloadNeeded) {
-      this.getViewportBrowser().reload();
+      this.reloadBrowser();
     }
   }
 
@@ -1221,6 +1227,13 @@ class ResponsiveUI {
         reason: event.type,
       });
     }
+  }
+
+  /**
+   * Reload the current tab.
+   */
+  async reloadBrowser() {
+    await this.currentTarget.reload();
   }
 }
 
