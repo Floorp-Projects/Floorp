@@ -20,7 +20,7 @@ if CONFIG['MOZ_WAYLAND']:
     DIRS += ['wayland', 'mozwayland']
 
 EXPORTS += [
-    'mozcontainer.h',
+    'MozContainer.h',
     'nsGTKToolkit.h',
     'nsIImageToPixbuf.h',
 ]
@@ -31,7 +31,7 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'IMContextWrapper.cpp',
-    'mozcontainer.cpp',
+    'MozContainer.cpp',
     'MPRISServiceHandler.cpp',
     'NativeKeyBindings.cpp',
     'nsAppShell.cpp',
@@ -100,12 +100,14 @@ if CONFIG['MOZ_X11']:
 
 if CONFIG['MOZ_WAYLAND']:
     UNIFIED_SOURCES += [
+        'MozContainerWayland.cpp',
         'nsClipboardWayland.cpp',
         'nsWaylandDisplay.cpp',
         'WaylandDMABufSurface.cpp',
         'WindowSurfaceWayland.cpp',
     ]
     EXPORTS.mozilla.widget += [
+        'MozContainerWayland.h',
         'nsWaylandDisplay.h',
         'WaylandDMABufSurface.h',
     ]
