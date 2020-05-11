@@ -25,35 +25,16 @@ document.addEventListener("DOMContentLoaded", e => {
     "social",
   ];
 
-  let protectionDetails = document.getElementById("protection-details");
   let manageProtections = document.getElementById("manage-protections");
   let protectionDetailsEvtHandler = evt => {
     if (evt.keyCode == evt.DOM_VK_RETURN || evt.type == "click") {
       RPMSendAsyncMessage("OpenContentBlockingPreferences");
     }
   };
-  protectionDetails.addEventListener("click", protectionDetailsEvtHandler);
-  protectionDetails.addEventListener("keypress", protectionDetailsEvtHandler);
   manageProtections.addEventListener("click", protectionDetailsEvtHandler);
   manageProtections.addEventListener("keypress", protectionDetailsEvtHandler);
 
   let cbCategory = RPMGetStringPref("browser.contentblocking.category");
-  if (cbCategory == "custom") {
-    protectionDetails.setAttribute(
-      "data-l10n-id",
-      "protection-report-header-details-custom"
-    );
-  } else if (cbCategory == "strict") {
-    protectionDetails.setAttribute(
-      "data-l10n-id",
-      "protection-report-header-details-strict"
-    );
-  } else {
-    protectionDetails.setAttribute(
-      "data-l10n-id",
-      "protection-report-header-details-standard"
-    );
-  }
 
   let legend = document.getElementById("legend");
   legend.style.gridTemplateAreas =
@@ -109,7 +90,6 @@ document.addEventListener("DOMContentLoaded", e => {
     // But we need to caclulate the actual number of the most cells in a row to give accurate information.
     let maxColumnCount = 0;
     let date = new Date();
-    var hasData = false;
     for (let i = 0; i <= 6; i++) {
       let dateString = date.toISOString().split("T")[0];
       let ariaOwnsString = ""; // Get the row's colummns in order
@@ -120,7 +100,6 @@ document.addEventListener("DOMContentLoaded", e => {
       let innerBar = document.createElement("div");
       innerBar.className = "graph-wrapper-bar";
       if (data[dateString]) {
-        hasData = true;
         let content = data[dateString];
         let count = document.createElement("div");
         count.className = "bar-count";
@@ -247,18 +226,20 @@ document.addEventListener("DOMContentLoaded", e => {
       !socialEnabled;
 
     // User has turned off all blocking, show a different card.
-    if (notBlocking && !hasData) {
+    if (notBlocking) {
       document
         .getElementById("etp-card-content")
         .setAttribute(
           "data-l10n-id",
           "protection-report-etp-card-content-custom-not-blocking"
         );
+      document
+        .querySelector(".etp-card .card-title")
+        .setAttribute("data-l10n-id", "etp-card-title-custom-not-blocking");
       document.querySelector(".etp-card").classList.add("custom-not-blocking");
     } else {
-      // Hide each type of tab if the user has no recorded
-      // trackers of that type blocked and blocking of that type is off.
-      if (weekTypeCounts.tracker == 0 && !tpEnabled) {
+      // Hide each type of tab if blocking of that type is off.
+      if (!tpEnabled) {
         legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
           "tracker",
           ""
@@ -267,7 +248,7 @@ document.addEventListener("DOMContentLoaded", e => {
         radio.setAttribute("disabled", true);
         document.querySelector("#tab-tracker ~ label").style.display = "none";
       }
-      if (weekTypeCounts.social == 0 && !socialEnabled) {
+      if (!socialEnabled) {
         legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
           "social",
           ""
@@ -276,7 +257,7 @@ document.addEventListener("DOMContentLoaded", e => {
         radio.setAttribute("disabled", true);
         document.querySelector("#tab-social ~ label").style.display = "none";
       }
-      if (weekTypeCounts.cookie == 0 && !blockingCookies) {
+      if (!blockingCookies) {
         legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
           "cookie",
           ""
@@ -285,7 +266,7 @@ document.addEventListener("DOMContentLoaded", e => {
         radio.setAttribute("disabled", true);
         document.querySelector("#tab-cookie ~ label").style.display = "none";
       }
-      if (weekTypeCounts.cryptominer == 0 && !cryptominingEnabled) {
+      if (!cryptominingEnabled) {
         legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
           "cryptominer",
           ""
@@ -295,7 +276,7 @@ document.addEventListener("DOMContentLoaded", e => {
         document.querySelector("#tab-cryptominer ~ label").style.display =
           "none";
       }
-      if (weekTypeCounts.fingerprinter == 0 && !fingerprintingEnabled) {
+      if (!fingerprintingEnabled) {
         legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
           "fingerprinter",
           ""

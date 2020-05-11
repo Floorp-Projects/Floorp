@@ -20,21 +20,21 @@
     <script type="module" src="chrome://browser/content/lockwise-card.js"></script>
     <script type="module" src="chrome://browser/content/monitor-card.js"></script>
     <script type="module" src="chrome://browser/content/proxy-card.js"></script>
-    <title data-l10n-id="protection-report-page-title"></title>
+    <title data-l10n-id="protection-report-webpage-title"></title>
   </head>
 
   <body>
     <div id="report-content">
-      <h1 id="report-title" data-l10n-id="protection-report-content-title"></h1>
+      <h1 id="report-title" data-l10n-id="protection-report-page-content-title"></h1>
+      <p id="report-summary" data-l10n-id="protection-report-page-summary"></p>
       <div class="card card-no-hover etp-card">
         <div class="card-header">
           <img class="icon light" src="chrome://browser/content/logos/tracking-protection.svg"/>
           <img class="icon dark" src="chrome://browser/content/logos/tracking-protection-dark-theme.svg"/>
           <div class="wrapper">
             <div>
-              <h2 class="card-title" data-l10n-id="etp-card-title"></h2>
-              <p id="etp-card-content" class="content" data-l10n-id="etp-card-content"></p>
-              <p id="protection-details" role="link" tabindex="0"></p>
+              <h2 class="card-title" data-l10n-id="etp-card-title-always"></h2>
+              <p id="etp-card-content" class="content" data-l10n-id="etp-card-content-summary"></p>
             </div>
             <a target="_blank" id="manage-protections" data-l10n-id="protection-report-manage-protections"></a>
           </div>

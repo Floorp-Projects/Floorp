@@ -507,49 +507,6 @@ add_task(async function test_graph_display() {
   BrowserTestUtils.removeTab(tab);
 });
 
-// Ensure that the string in the ETP card header is changing when we change
-// the category pref.
-add_task(async function test_etp_header_string() {
-  Services.prefs.setStringPref("browser.contentblocking.category", "standard");
-  let tab = await BrowserTestUtils.openNewForegroundTab({
-    url: "about:protections",
-    gBrowser,
-  });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    await ContentTaskUtils.waitForCondition(() => {
-      let l10nID = content.document
-        .querySelector("#protection-details")
-        .getAttribute("data-l10n-id");
-      return l10nID == "protection-report-header-details-standard";
-    }, "The standard string is showing");
-  });
-
-  Services.prefs.setStringPref("browser.contentblocking.category", "strict");
-  await reloadTab(tab);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    await ContentTaskUtils.waitForCondition(() => {
-      let l10nID = content.document
-        .querySelector("#protection-details")
-        .getAttribute("data-l10n-id");
-      return l10nID == "protection-report-header-details-strict";
-    }, "The strict string is showing");
-  });
-
-  Services.prefs.setStringPref("browser.contentblocking.category", "custom");
-  await reloadTab(tab);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    await ContentTaskUtils.waitForCondition(() => {
-      let l10nID = content.document
-        .querySelector("#protection-details")
-        .getAttribute("data-l10n-id");
-      return l10nID == "protection-report-header-details-custom";
-    }, "The custom string is showing");
-  });
-
-  Services.prefs.setStringPref("browser.contentblocking.category", "standard");
-  BrowserTestUtils.removeTab(tab);
-});
-
 // Ensure that each type of tracker is hidden from the graph if there are no recorded
 // trackers of that type and the user has chosen to not block that type.
 add_task(async function test_etp_custom_settings() {
@@ -714,6 +671,11 @@ add_task(async function test_etp_custom_protections_off() {
     gBrowser,
   });
 
+  let aboutPreferencesPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:preferences#privacy"
+  );
+
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       let etpCard = content.document.querySelector(".etp-card");
@@ -728,6 +690,8 @@ add_task(async function test_etp_custom_protections_off() {
       "Button to manage protections is displayed"
     );
   });
+
+  // Custom protection card should show, even if there would otherwise be data on the graph.
   let db = await Sqlite.openConnection({ path: DB_PATH });
   let date = new Date().toISOString();
   await db.execute(SQL.insertCustomTimeEvent, {
@@ -739,9 +703,22 @@ add_task(async function test_etp_custom_protections_off() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       let etpCard = content.document.querySelector(".etp-card");
-      return !etpCard.classList.contains("custom-not-blocking");
-    }, "The regular ETP card is showing");
+      return etpCard.classList.contains("custom-not-blocking");
+    }, "The custom protections warning card is showing");
+
+    let manageProtectionsButton = content.document.getElementById(
+      "manage-protections"
+    );
+    Assert.ok(
+      ContentTaskUtils.is_visible(manageProtectionsButton),
+      "Button to manage protections is displayed"
+    );
+
+    manageProtectionsButton.click();
   });
+  let aboutPreferencesTab = await aboutPreferencesPromise;
+  info("about:preferences#privacy was successfully opened in a new tab");
+  gBrowser.removeTab(aboutPreferencesTab);
 
   Services.prefs.setStringPref("browser.contentblocking.category", "standard");
   // Use the TrackingDBService API to delete the data.
