@@ -48,8 +48,8 @@ var UrlbarUtils = {
   // Defines provider types.
   PROVIDER_TYPE: {
     // Should be executed immediately, because it returns heuristic results
-    // that must be handled to the user asap.
-    IMMEDIATE: 1,
+    // that must be handed to the user asap.
+    HEURISTIC: 1,
     // Can be delayed, contains results coming from the session or the profile.
     PROFILE: 2,
     // Can be delayed, contains results coming from the network.
