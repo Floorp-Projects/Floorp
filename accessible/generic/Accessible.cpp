@@ -1005,31 +1005,8 @@ already_AddRefed<nsIPersistentProperties> Accessible::NativeAttributes() {
   // Get container-foo computed live region properties based on the closest
   // container with the live region attribute. Inner nodes override outer nodes
   // within the same document. The inner nodes can be used to override live
-  // region behavior on more general outer nodes. However, nodes in outer
-  // documents override nodes in inner documents: outer doc author may want to
-  // override properties on a widget they used in an iframe.
-  nsIContent* startContent = mContent;
-  while (startContent) {
-    dom::Document* doc = startContent->GetComposedDoc();
-    if (!doc) break;
-
-    nsAccUtils::SetLiveContainerAttributes(attributes, startContent,
-                                           doc->GetRootElement());
-
-    // Allow ARIA live region markup from outer documents to override
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = doc->GetDocShell();
-    if (!docShellTreeItem) break;
-
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
-    docShellTreeItem->GetInProcessSameTypeParent(
-        getter_AddRefs(sameTypeParent));
-    if (!sameTypeParent || sameTypeParent == docShellTreeItem) break;
-
-    dom::Document* parentDoc = doc->GetInProcessParentDocument();
-    if (!parentDoc) break;
-
-    startContent = parentDoc->FindContentForSubDocument(doc);
-  }
+  // region behavior on more general outer nodes.
+  nsAccUtils::SetLiveContainerAttributes(attributes, mContent);
 
   if (!mContent->IsElement()) return attributes.forget();
 
