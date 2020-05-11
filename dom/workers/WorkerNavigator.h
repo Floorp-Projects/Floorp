@@ -73,7 +73,7 @@ class WorkerNavigator final : public nsWrapperCache {
   }
 
   void GetLanguages(nsTArray<nsString>& aLanguages) const {
-    aLanguages = mProperties.mLanguages;
+    aLanguages = mProperties.mLanguages.Clone();
   }
 
   void GetUserAgent(nsString& aUserAgent, CallerType aCallerType,

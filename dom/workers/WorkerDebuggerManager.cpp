@@ -76,7 +76,7 @@ class WorkerDebuggerEnumerator final : public nsSimpleEnumerator {
  public:
   explicit WorkerDebuggerEnumerator(
       const nsTArray<RefPtr<WorkerDebugger>>& aDebuggers)
-      : mDebuggers(aDebuggers), mIndex(0) {}
+      : mDebuggers(aDebuggers.Clone()), mIndex(0) {}
 
   NS_DECL_NSISIMPLEENUMERATOR
 
@@ -282,7 +282,7 @@ void WorkerDebuggerManager::RegisterDebuggerMainThread(
     {
       MutexAutoLock lock(mMutex);
 
-      listeners = mListeners;
+      listeners = mListeners.Clone();
     }
 
     for (size_t index = 0; index < listeners.Length(); ++index) {
@@ -314,7 +314,7 @@ void WorkerDebuggerManager::UnregisterDebuggerMainThread(
   {
     MutexAutoLock lock(mMutex);
 
-    listeners = mListeners;
+    listeners = mListeners.Clone();
   }
 
   for (size_t index = 0; index < listeners.Length(); ++index) {
