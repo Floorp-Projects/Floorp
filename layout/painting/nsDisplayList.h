@@ -2073,9 +2073,10 @@ class RetainedDisplayList;
 
 template <typename T>
 MOZ_ALWAYS_INLINE T* MakeClone(nsDisplayListBuilder* aBuilder, const T* aItem) {
+  static_assert(std::is_base_of<nsDisplayWrapList, T>::value,
+                "Display item type should be derived from nsDisplayWrapList");
   T* item = new (aBuilder) T(aBuilder, *aItem);
   item->SetType(T::ItemType());
-  item->SetPerFrameIndex(item->CalculatePerFrameKey());
   return item;
 }
 
@@ -2096,7 +2097,7 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,
                                               F* aFrame, const uint16_t aIndex,
                                               Args&&... aArgs) {
   static_assert(std::is_base_of<nsDisplayItem, T>::value,
-                "Display item should be derived from nsDisplayItem");
+                "Display item type should be derived from nsDisplayItem");
   static_assert(std::is_base_of<nsIFrame, F>::value,
                 "Frame type should be derived from nsIFrame");
 
@@ -2285,11 +2286,6 @@ class nsDisplayItemBase : public nsDisplayItemLink {
            (static_cast<uint32_t>(mPerFrameIndex) << TYPE_BITS) |
            static_cast<uint32_t>(mType);
   }
-
-  /**
-   * Returns the initial per frame key for this display item.
-   */
-  virtual uint16_t CalculatePerFrameKey() const { return 0; }
 
   /**
    * Returns true if this item was reused during display list merging.
