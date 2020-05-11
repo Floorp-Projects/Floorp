@@ -17,6 +17,9 @@ NS_IMPL_ISUPPORTS(BackstagePass, nsIXPCScriptable, nsIGlobalObject,
                   nsIClassInfo, nsIScriptObjectPrincipal,
                   nsISupportsWeakReference)
 
+BackstagePass::BackstagePass()
+    : mPrincipal(nsContentUtils::GetSystemPrincipal()), mWrapper(nullptr) {}
+
 // XXX(nika): It appears we don't have support for mayresolve hooks in
 // nsIXPCScriptable, and I don't really want to add it because I'd rather just
 // kill nsIXPCScriptable alltogether, so we don't use it here.
@@ -142,12 +145,5 @@ BackstagePass::PreCreate(nsISupports* nativeObj, JSContext* cx,
   if (jsglobal) {
     *parentObj = jsglobal;
   }
-  return NS_OK;
-}
-
-nsresult NS_NewBackstagePass(BackstagePass** ret) {
-  RefPtr<BackstagePass> bsp =
-      new BackstagePass(nsContentUtils::GetSystemPrincipal());
-  bsp.forget(ret);
   return NS_OK;
 }

@@ -294,10 +294,11 @@ static nsresult ReportOnCallerUTF8(JSCLContextHelper& helper,
 #undef ENSURE_DEP
 
 mozJSComponentLoader::~mozJSComponentLoader() {
+  MOZ_ASSERT(!mInitialized,
+             "UnloadModules() was not explicitly called before cleaning up "
+             "mozJSComponentLoader");
+
   if (mInitialized) {
-    NS_ERROR(
-        "UnloadModules() was not explicitly called before cleaning up "
-        "mozJSComponentLoader");
     UnloadModules();
   }
 
@@ -565,10 +566,7 @@ size_t mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
 void mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
                                               const nsACString& aLocation,
                                               MutableHandleObject aGlobal) {
-  RefPtr<BackstagePass> backstagePass;
-  nsresult rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
-  NS_ENSURE_SUCCESS_VOID(rv);
-
+  auto backstagePass = MakeRefPtr<BackstagePass>();
   RealmOptions options;
 
   options.creationOptions().setNewCompartmentInSystemZone();
@@ -578,7 +576,7 @@ void mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
   // been defined so the JS debugger can tell what module the global is
   // for
   RootedObject global(aCx);
-  rv = xpc::InitClassesWithNewWrappedGlobal(
+  nsresult rv = xpc::InitClassesWithNewWrappedGlobal(
       aCx, static_cast<nsIGlobalObject*>(backstagePass),
       nsContentUtils::GetSystemPrincipal(), xpc::DONT_FIRE_ONNEWGLOBALHOOK,
       options, &global);
