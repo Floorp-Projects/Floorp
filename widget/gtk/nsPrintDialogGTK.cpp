@@ -10,7 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Services.h"
 
-#include "MozContainer.h"
+#include "mozcontainer.h"
 #include "nsIPrintSettings.h"
 #include "nsIWidget.h"
 #include "nsPrintDialogGTK.h"

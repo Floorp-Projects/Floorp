@@ -19,7 +19,7 @@
 #  include "base/thread.h"
 #  include "WaylandVsyncSource.h"
 #endif
-#include "MozContainer.h"
+#include "mozcontainer.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIDragService.h"
