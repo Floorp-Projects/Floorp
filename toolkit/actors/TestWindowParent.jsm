@@ -14,13 +14,6 @@ class TestWindowParent extends JSWindowActorParent {
     this.wrappedJSObject = this;
   }
 
-  actorCreated() {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
-    Services.obs.notifyObservers(null, "test-window-actor-child-created");
-  }
-
   receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "init":
