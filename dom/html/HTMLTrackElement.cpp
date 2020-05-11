@@ -116,7 +116,7 @@ NS_IMPL_ISUPPORTS(WindowDestroyObserver, nsIObserver);
 HTMLTrackElement::HTMLTrackElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)),
-      mIsLoadingResource(false),
+      mLoadResourceDispatched(false),
       mWindowDestroyObserver(nullptr) {
   nsISupports* parentObject = OwnerDoc()->GetParentObject();
   NS_ENSURE_TRUE_VOID(parentObject);
@@ -230,8 +230,6 @@ void HTMLTrackElement::SetSrc(const nsAString& aSrc, ErrorResult& aError) {
     mChannel->Cancel(NS_BINDING_ABORTED);
     mChannel = nullptr;
   }
-  // Reset the flag to ensure we can start a new load.
-  mIsLoadingResource = false;
 
   MaybeDispatchLoadResource();
 }
@@ -251,13 +249,6 @@ void HTMLTrackElement::MaybeClearAllCues() {
 // https://html.spec.whatwg.org/multipage/media.html#start-the-track-processing-model
 void HTMLTrackElement::MaybeDispatchLoadResource() {
   MOZ_ASSERT(mTrack, "Should have already created text track!");
-
-  // step1, if another occurrence of this algorithm is already running for this
-  // text track and its track element, return, letting that other algorithm take
-  // care of this element.
-  if (mIsLoadingResource) {
-    return;
-  }
 
   // step2, if the text track's text track mode is not set to one of hidden or
   // showing, then return.
@@ -279,16 +270,19 @@ void HTMLTrackElement::MaybeDispatchLoadResource() {
   }
 
   // step5, await a stable state and run the rest of steps.
-  RefPtr<WebVTTListener> listener = new WebVTTListener(this);
-  RefPtr<Runnable> r = NewRunnableMethod<RefPtr<WebVTTListener>>(
-      "dom::HTMLTrackElement::LoadResource", this,
-      &HTMLTrackElement::LoadResource, std::move(listener));
-  nsContentUtils::RunInStableState(r.forget());
-  mIsLoadingResource = true;
+  if (!mLoadResourceDispatched) {
+    RefPtr<WebVTTListener> listener = new WebVTTListener(this);
+    RefPtr<Runnable> r = NewRunnableMethod<RefPtr<WebVTTListener>>(
+        "dom::HTMLTrackElement::LoadResource", this,
+        &HTMLTrackElement::LoadResource, std::move(listener));
+    nsContentUtils::RunInStableState(r.forget());
+    mLoadResourceDispatched = true;
+  }
 }
 
 void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   LOG("LoadResource");
+  mLoadResourceDispatched = false;
 
   nsAutoString src;
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::src, src) || src.IsEmpty()) {
@@ -515,21 +509,6 @@ void HTMLTrackElement::DispatchTestEvent(const nsAString& aName) {
     return;
   }
   DispatchTrustedEvent(aName);
-}
-
-void HTMLTrackElement::LoadResourceEnd(nsresult aStatus) {
-  if (NS_FAILED(aStatus)) {
-    LOG("Load failed");
-    return SetReadyState(TextTrackReadyState::FailedToLoad);
-  }
-
-  if (ReadyState() == TextTrackReadyState::FailedToLoad) {
-    return;
-  }
-
-  SetReadyState(TextTrackReadyState::Loaded);
-  CancelChannelAndListener();
-  mIsLoadingResource = false;
 }
 
 }  // namespace dom
