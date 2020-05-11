@@ -266,6 +266,9 @@ class RenderThread final {
   /// Can only be called from the render thread.
   void NotifyAllAndroidSurfaceTexturesDetatched();
 
+  /// Can only be called from the render thread.
+  void HandlePrepareForUse();
+
   size_t RendererCount();
 
   void SetCompositionRecorderForWindow(
@@ -282,7 +285,6 @@ class RenderThread final {
  private:
   explicit RenderThread(base::Thread* aThread);
 
-  void HandlePrepareForUse();
   void DeferredRenderTextureHostDestroy();
   void ShutDownTask(layers::SynchronousTask* aTask);
   void InitDeviceTask();
