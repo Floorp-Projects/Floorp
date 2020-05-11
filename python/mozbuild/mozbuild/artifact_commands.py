@@ -32,6 +32,16 @@ from mozbuild.base import (
 from mozbuild.util import ensureParentDir
 
 
+_COULD_NOT_FIND_ARTIFACTS_TEMPLATE = (
+    'Could not find artifacts for a toolchain build named `{build}`. Local '
+    'commits, dirty/stale files, and other changes in your checkout may cause '
+    'this error. Make sure you are on a fresh, current checkout of '
+    'mozilla-central. If you are already, you may be able to avoid this error '
+    'by running `mach clobber python`. Beware that commands like `mach '
+    'bootstrap` and `mach artifact` are unlikely to work on any versions of '
+    'the code besides recent revisions of mozilla-central.')
+
+
 class SymbolsAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         # If this function is called, it means the --symbols option was given,
@@ -321,11 +331,7 @@ class PackageFrontend(MachCommandBase):
                 artifact_name = task.attributes.get('toolchain-artifact')
                 if task_id in (True, False) or not artifact_name:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
-                             'Could not find artifacts for a toolchain build '
-                             'named `{build}`. Local commits and other changes '
-                             'in your checkout may cause this error. Try '
-                             'updating to a fresh checkout of mozilla-central '
-                             'to use artifact builds.')
+                             _COULD_NOT_FIND_ARTIFACTS_TEMPLATE)
                     return 1
 
                 record = ArtifactRecord(task_id, artifact_name)
