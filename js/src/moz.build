@@ -520,6 +520,7 @@ selfhosted_inputs = [
     'builtin/intl/NumberFormat.js',
     'builtin/intl/PluralRules.js',
     'builtin/intl/RelativeTimeFormat.js',
+    'builtin/intl/SanctionedSimpleUnitIdentifiersGenerated.js',
 ] if CONFIG['JS_HAS_INTL_API'] else [])
 
 # Prepare self-hosted JS code for embedding

@@ -25,6 +25,7 @@
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/LanguageTag.h"
+#include "builtin/intl/MeasureUnitGenerated.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "ds/Sort.h"
@@ -330,77 +331,15 @@ bool js::intl::NumberFormatterSkeleton::currencyDisplay(
   MOZ_CRASH("unexpected currency display type");
 }
 
-struct MeasureUnit {
-  const char* const type;
-  const char* const subtype;
-};
-
-/**
- * The list of currently supported simple unit identifiers.
- *
- * Note: Keep in sync with the measure unit lists in
- * - js/src/builtin/intl/NumberFormat.js
- * - intl/icu/data_filter.json
- *
- * The list must be kept in alphabetical order of the |subtype|.
- */
-static constexpr MeasureUnit simpleMeasureUnits[] = {
-    // clang-format off
-    {"area", "acre"},
-    {"digital", "bit"},
-    {"digital", "byte"},
-    {"temperature", "celsius"},
-    {"length", "centimeter"},
-    {"duration", "day"},
-    {"angle", "degree"},
-    {"temperature", "fahrenheit"},
-    {"volume", "fluid-ounce"},
-    {"length", "foot"},
-    {"volume", "gallon"},
-    {"digital", "gigabit"},
-    {"digital", "gigabyte"},
-    {"mass", "gram"},
-    {"area", "hectare"},
-    {"duration", "hour"},
-    {"length", "inch"},
-    {"digital", "kilobit"},
-    {"digital", "kilobyte"},
-    {"mass", "kilogram"},
-    {"length", "kilometer"},
-    {"volume", "liter"},
-    {"digital", "megabit"},
-    {"digital", "megabyte"},
-    {"length", "meter"},
-    {"length", "mile"},
-    {"length", "mile-scandinavian"},
-    {"volume", "milliliter"},
-    {"length", "millimeter"},
-    {"duration", "millisecond"},
-    {"duration", "minute"},
-    {"duration", "month"},
-    {"mass", "ounce"},
-    {"concentr", "percent"},
-    {"digital", "petabyte"},
-    {"mass", "pound"},
-    {"duration", "second"},
-    {"mass", "stone"},
-    {"digital", "terabit"},
-    {"digital", "terabyte"},
-    {"duration", "week"},
-    {"length", "yard"},
-    {"duration", "year"},
-    // clang-format on
-};
-
-static const MeasureUnit& FindSimpleMeasureUnit(const char* subtype) {
+static const MeasureUnit& FindSimpleMeasureUnit(const char* name) {
   auto measureUnit = std::lower_bound(
-      std::begin(simpleMeasureUnits), std::end(simpleMeasureUnits), subtype,
-      [](const auto& measureUnit, const char* subtype) {
-        return strcmp(measureUnit.subtype, subtype) < 0;
+      std::begin(simpleMeasureUnits), std::end(simpleMeasureUnits), name,
+      [](const auto& measureUnit, const char* name) {
+        return strcmp(measureUnit.name, name) < 0;
       });
   MOZ_ASSERT(measureUnit != std::end(simpleMeasureUnits),
              "unexpected unit identifier: unit not found");
-  MOZ_ASSERT(strcmp(measureUnit->subtype, subtype) == 0,
+  MOZ_ASSERT(strcmp(measureUnit->name, name) == 0,
              "unexpected unit identifier: wrong unit found");
   return *measureUnit;
 }
@@ -410,7 +349,7 @@ static constexpr size_t MaxUnitLength() {
 #if _GLIBCXX_RELEASE >= 7
   size_t length = 0;
   for (const auto& unit : simpleMeasureUnits) {
-    length = std::max(length, std::char_traits<char>::length(unit.subtype));
+    length = std::max(length, std::char_traits<char>::length(unit.name));
   }
   return length * 2 + std::char_traits<char>::length("-per-");
 #else
@@ -426,7 +365,7 @@ bool js::intl::NumberFormatterSkeleton::unit(JSLinearString* unit) {
 
   auto appendUnit = [this](const MeasureUnit& unit) {
     return append(unit.type, strlen(unit.type)) && append('-') &&
-           append(unit.subtype, strlen(unit.subtype));
+           append(unit.name, strlen(unit.name));
   };
 
   // |unit| can be a compound unit identifier, separated by "-per-".
