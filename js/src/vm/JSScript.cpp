@@ -4308,11 +4308,6 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
     }
   }
 
-  // Part of the parse result – the scope containing each inner function – must
-  // be stored in the inner function itself. Do this now that compilation is
-  // complete and can no longer fail.
-  stencil.finishInnerFunctions();
-
 #ifdef JS_STRUCTURED_SPEW
   // We want this to happen after line number initialization to allow filtering
   // to work.

@@ -499,6 +499,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       return nullptr;
     }
 
+    compilationInfo.finishFunctions();
+
     compilationInfo.script = emitter->getResultScript();
     MOZ_ASSERT(compilationInfo.script);
   }
@@ -556,6 +558,8 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   if (!emitter->emitScript(pn->as<ModuleNode>().body())) {
     return nullptr;
   }
+
+  compilationInfo.finishFunctions();
 
   compilationInfo.script = emitter->getResultScript();
   MOZ_ASSERT(compilationInfo.script);
@@ -659,6 +663,8 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 
     funbox->synchronizeArgCount();
 
+    compilationInfo.finishFunctions();
+
     compilationInfo.script = emitter->getResultScript();
     MOZ_ASSERT(compilationInfo.script);
   } else {
@@ -755,6 +761,8 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   if (!bce.emitScript(pn)) {
     return nullptr;
   }
+
+  compilationInfo.finishFunctions();
 
   RootedScript resultScript(cx, bce.getResultScript());
   MOZ_ASSERT(resultScript);
@@ -949,6 +957,8 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
     return false;
   }
 
+  compilationInfo.finishFunctions();
+
   MOZ_ASSERT(lazyFlags == bce.getResultScript()->immutableFlags());
   MOZ_ASSERT(bce.getResultScript()->outermostScope()->hasOnChain(
                  ScopeKind::NonSyntactic) ==
@@ -1022,6 +1032,8 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
   if (!bce.emitFunctionScript(pn, BytecodeEmitter::TopLevelFunction::Yes)) {
     return false;
   }
+
+  compilationInfo.finishFunctions();
 
   // This value *must* not change after the lazy function is first created.
   MOZ_ASSERT(lazyIsLikelyConstructorWrapper ==

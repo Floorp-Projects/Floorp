@@ -5720,6 +5720,10 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       return false;
     }
 
+    // The function will become visible to script. Updates may need to be
+    // applied in FunctionBox::finish.
+    funbox->exposeScript = true;
+
     if (!funbox->emitBytecode) {
       return fe.emitLazy();
       //            [stack] FUN?

@@ -169,9 +169,6 @@ class SmooshScriptStencil : public ScriptStencil {
     return true;
   }
 
- public:
-  virtual void finishInnerFunctions() const override {}
-
  private:
   // Fill `compilationInfo_.scopeCreationData` with scope data, where
   // i-th item corresponds to i-th scope.

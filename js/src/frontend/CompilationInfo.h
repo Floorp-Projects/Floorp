@@ -100,6 +100,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   }
 
   MOZ_MUST_USE bool publishDeferredFunctions();
+  void finishFunctions();
 
   void trace(JSTracer* trc) final;
 
