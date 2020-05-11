@@ -3759,10 +3759,6 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     pn = pn->as<ModuleNode>().body();
   }
 
-  if (!compilationInfo.publishDeferredFunctions()) {
-    return false;
-  }
-
   RootedValue val(cx);
   if (!serialize.program(&pn->as<ListNode>(), &val)) {
     args.rval().setNull();
