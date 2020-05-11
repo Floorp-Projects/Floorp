@@ -1218,8 +1218,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(arm, arm64, mips_shared, x86, x64);
   void branchPtrInNurseryChunk(Condition cond, const Address& address,
                                Register temp, Label* label) DEFINED_ON(x86);
-  void branchValueIsNurseryObject(Condition cond, ValueOperand value,
-                                  Register temp, Label* label) PER_ARCH;
   void branchValueIsNurseryCell(Condition cond, const Address& address,
                                 Register temp, Label* label) PER_ARCH;
   void branchValueIsNurseryCell(Condition cond, ValueOperand value,

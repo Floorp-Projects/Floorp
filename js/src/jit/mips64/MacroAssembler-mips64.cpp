@@ -2002,23 +2002,6 @@ void MacroAssembler::moveValue(const Value& src, const ValueOperand& dest) {
 // ===============================================================
 // Branch functions
 
-void MacroAssembler::branchValueIsNurseryObject(Condition cond,
-                                                ValueOperand value,
-                                                Register temp, Label* label) {
-  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-  Label done;
-  branchTestObject(Assembler::NotEqual, value,
-                   cond == Assembler::Equal ? &done : label);
-
-  unboxObject(value, SecondScratchReg);
-  orPtr(Imm32(gc::ChunkMask), SecondScratchReg);
-  branch32(cond, Address(SecondScratchReg, gc::ChunkLocationOffsetFromLastByte),
-           Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
-
-  bind(&done);
-}
-
 void MacroAssembler::branchValueIsNurseryCell(Condition cond,
                                               const Address& address,
                                               Register temp, Label* label) {
