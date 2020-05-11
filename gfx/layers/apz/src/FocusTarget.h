@@ -11,7 +11,6 @@
 
 #include "mozilla/DefineEnum.h"                  // for MOZ_DEFINE_ENUM
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ViewID
-#include "mozilla/webrender/WebRenderTypes.h"    // for RenderRoot
 #include "mozilla/Variant.h"                     // for Variant
 #include "mozilla/Maybe.h"                       // for Maybe
 
