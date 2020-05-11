@@ -138,7 +138,7 @@ class WebRenderCommandBuilder final {
     RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(
         WebRenderUserDataKey(aItem->GetPerFrameKey(), T::Type()));
     if (!data) {
-      data = new T(GetRenderRootStateManager(aRenderRoot), aItem);
+      data = new T(GetRenderRootStateManager(), aItem);
       mWebRenderUserDatas.PutEntry(data);
       if (aOutIsRecycled) {
         *aOutIsRecycled = false;
@@ -170,7 +170,7 @@ class WebRenderCommandBuilder final {
   WebRenderLayerManager* mManager;
 
  private:
-  RenderRootStateManager* GetRenderRootStateManager(wr::RenderRoot aRenderRoot);
+  RenderRootStateManager* GetRenderRootStateManager();
   void CreateWebRenderCommands(nsDisplayItem* aItem,
                                mozilla::wr::DisplayListBuilder& aBuilder,
                                mozilla::wr::IpcResourceUpdateQueue& aResources,
