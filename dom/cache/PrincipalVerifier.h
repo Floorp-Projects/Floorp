@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_cache_PrincipalVerifier_h
 #define mozilla_dom_cache_PrincipalVerifier_h
 
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
@@ -33,7 +34,8 @@ class PrincipalVerifier final : public Runnable {
   // weak reference.
   class Listener {
    public:
-    virtual void OnPrincipalVerified(nsresult aRv, ManagerId* aManagerId) = 0;
+    virtual void OnPrincipalVerified(
+        nsresult aRv, const SafeRefPtr<ManagerId>& aManagerId) = 0;
   };
 
   static already_AddRefed<PrincipalVerifier> CreateAndDispatch(
@@ -68,7 +70,7 @@ class PrincipalVerifier final : public Runnable {
   const mozilla::ipc::PrincipalInfo mPrincipalInfo;
   nsCOMPtr<nsIEventTarget> mInitiatingEventTarget;
   nsresult mResult;
-  RefPtr<ManagerId> mManagerId;
+  SafeRefPtr<ManagerId> mManagerId;
 
  public:
   NS_DECL_NSIRUNNABLE

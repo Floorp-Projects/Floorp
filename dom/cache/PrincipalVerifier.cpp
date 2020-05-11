@@ -152,11 +152,12 @@ void PrincipalVerifier::VerifyOnMainThread() {
   }
 #endif
 
-  rv = ManagerId::Create(principal, getter_AddRefs(mManagerId));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    DispatchToInitiatingThread(rv);
+  auto managerIdOrErr = ManagerId::Create(principal);
+  if (NS_WARN_IF(managerIdOrErr.isErr())) {
+    DispatchToInitiatingThread(managerIdOrErr.unwrapErr());
     return;
   }
+  mManagerId = managerIdOrErr.unwrap();
 
   DispatchToInitiatingThread(NS_OK);
 }

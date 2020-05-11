@@ -40,13 +40,13 @@ class CacheStorageParent final : public PCacheStorageParent,
   mozilla::ipc::IPCResult RecvTeardown();
 
   // PrincipalVerifier::Listener methods
-  virtual void OnPrincipalVerified(nsresult aRv,
-                                   ManagerId* aManagerId) override;
+  virtual void OnPrincipalVerified(
+      nsresult aRv, const SafeRefPtr<ManagerId>& aManagerId) override;
 
   const Namespace mNamespace;
   RefPtr<PrincipalVerifier> mVerifier;
   nsresult mVerifiedStatus;
-  RefPtr<ManagerId> mManagerId;
+  SafeRefPtr<ManagerId> mManagerId;
 };
 
 }  // namespace cache
