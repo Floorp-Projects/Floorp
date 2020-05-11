@@ -31,6 +31,8 @@ void JSProcessActorParent::Init(const nsACString& aName,
   MOZ_ASSERT(!mManager, "Cannot Init() a JSProcessActorParent twice!");
   SetName(aName);
   mManager = aManager;
+
+  InvokeCallback(CallbackFunction::ActorCreated);
 }
 
 JSProcessActorParent::~JSProcessActorParent() { MOZ_ASSERT(!mManager); }
