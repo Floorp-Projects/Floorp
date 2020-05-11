@@ -57,7 +57,7 @@ for (const name of Object.keys(acceptableValues)) {
     t.add_cleanup(() => pc1.close());
     t.add_cleanup(() => pc2.close());
     pc1.createDataChannel('foo');
-    coupleIceCandidates(pc1, pc2);
+    exchangeIceCandidates(pc1, pc2);
     await doSignalingHandshake(pc1, pc2);
     await waitForState(pc1.sctp.transport, 'connected');
     const statsReport = await pc1.getStats();
@@ -73,7 +73,7 @@ for (const name of Object.keys(acceptableValues)) {
     t.add_cleanup(() => pc2.close());
     const transceiver = pc1.addTransceiver('video');
 
-    coupleIceCandidates(pc1, pc2);
+    exchangeIceCandidates(pc1, pc2);
     await doSignalingHandshake(pc1, pc2);
     await waitForState(transceiver.sender.transport, 'connected');
     const statsReport = await pc1.getStats();
