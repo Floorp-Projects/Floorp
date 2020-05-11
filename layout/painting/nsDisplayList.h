@@ -4609,8 +4609,6 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
 
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  uint16_t CalculatePerFrameKey() const override { return mLayer; }
-
   /**
    * Return the background positioning area.
    * (GetBounds() returns the background painting area.)
@@ -4759,10 +4757,6 @@ class nsDisplayTableBackgroundImage : public nsDisplayBackgroundImage {
 
   NS_DISPLAY_DECL_NAME("TableBackgroundImage", TYPE_TABLE_BACKGROUND_IMAGE)
 
-  uint16_t CalculatePerFrameKey() const override {
-    return CalculateTablePerFrameKey(mLayer, mTableType);
-  }
-
   bool IsInvalid(nsRect& aRect) const override;
 
   nsIFrame* FrameForInvalidation() const override { return mStyleFrame; }
@@ -4777,9 +4771,7 @@ class nsDisplayTableBackgroundImage : public nsDisplayBackgroundImage {
 
  protected:
   nsIFrame* StyleFrame() const override { return mStyleFrame; }
-
   nsIFrame* mStyleFrame;
-  TableType mTableType;
 };
 
 /**
@@ -6297,14 +6289,14 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
         mAnimatedGeometryRootForScrollMetadata(
             aOther.mAnimatedGeometryRootForScrollMetadata),
         mContainerASR(aOther.mContainerASR),
-        mIndex(aOther.mIndex),
         mIsFixedBackground(aOther.mIsFixedBackground) {
     MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   }
 
   static nsDisplayFixedPosition* CreateForFixedBackground(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-      nsDisplayBackgroundImage* aImage, uint16_t aIndex);
+      nsIFrame* aSecondaryFrame, nsDisplayBackgroundImage* aImage,
+      const uint16_t aIndex);
 
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayFixedPosition)
 
@@ -6324,8 +6316,6 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
     return mIsFixedBackground;
   }
 
-  uint16_t CalculatePerFrameKey() const override { return mIndex; }
-
   AnimatedGeometryRoot* AnimatedGeometryRootForScrollMetadata() const override {
     return mAnimatedGeometryRootForScrollMetadata;
   }
@@ -6344,13 +6334,12 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
  protected:
   // For background-attachment:fixed
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                         nsDisplayList* aList, uint16_t aIndex);
+                         nsDisplayList* aList);
   void Init(nsDisplayListBuilder* aBuilder);
   ViewID GetScrollTargetId();
 
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForScrollMetadata;
   RefPtr<const ActiveScrolledRoot> mContainerASR;
-  uint16_t mIndex;
   bool mIsFixedBackground;
 
  private:
@@ -6359,11 +6348,6 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
 
 class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
  public:
-  static nsDisplayTableFixedPosition* CreateForFixedBackground(
-      nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-      nsDisplayBackgroundImage* aImage, uint16_t aIndex,
-      nsIFrame* aAncestorFrame);
-
   NS_DISPLAY_DECL_NAME("TableFixedPosition", TYPE_TABLE_FIXED_POSITION)
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
@@ -6376,20 +6360,14 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
     nsDisplayFixedPosition::RemoveFrame(aFrame);
   }
 
-  uint16_t CalculatePerFrameKey() const override {
-    return CalculateTablePerFrameKey(mIndex, mTableType);
-  }
-
  protected:
   nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                              nsDisplayList* aList, uint16_t aIndex,
-                              nsIFrame* aAncestorFrame);
+                              nsDisplayList* aList, nsIFrame* aAncestorFrame);
 
   nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder,
                               const nsDisplayTableFixedPosition& aOther)
       : nsDisplayFixedPosition(aBuilder, aOther),
-        mAncestorFrame(aOther.mAncestorFrame),
-        mTableType(aOther.mTableType) {}
+        mAncestorFrame(aOther.mAncestorFrame) {}
 
   ~nsDisplayTableFixedPosition() override {
     if (mAncestorFrame) {
@@ -6398,7 +6376,6 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
   }
 
   nsIFrame* mAncestorFrame;
-  TableType mTableType;
 
  private:
   NS_DISPLAY_ALLOW_CLONING()
