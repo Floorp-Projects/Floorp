@@ -6044,8 +6044,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
       const ActiveScrolledRoot* aActiveScrolledRoot,
       nsDisplayOwnLayerFlags aFlags = nsDisplayOwnLayerFlags::None,
       const ScrollbarData& aScrollbarData = ScrollbarData{},
-      bool aForceActive = true, bool aClearClipChain = false,
-      uint16_t aIndex = 0);
+      bool aForceActive = true, bool aClearClipChain = false);
 
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
                     const nsDisplayOwnLayer& aOther)
@@ -6053,8 +6052,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
         mFlags(aOther.mFlags),
         mScrollbarData(aOther.mScrollbarData),
         mForceActive(aOther.mForceActive),
-        mWrAnimationId(aOther.mWrAnimationId),
-        mIndex(aOther.mIndex) {
+        mWrAnimationId(aOther.mWrAnimationId) {
     MOZ_COUNT_CTOR(nsDisplayOwnLayer);
   }
 
@@ -6083,8 +6081,6 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
     return false;
   }
 
-  uint16_t CalculatePerFrameKey() const override { return mIndex; }
-
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
@@ -6112,7 +6108,6 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   ScrollbarData mScrollbarData;
   bool mForceActive;
   uint64_t mWrAnimationId;
-  uint16_t mIndex;
 };
 
 /**
