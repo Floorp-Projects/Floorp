@@ -11,6 +11,7 @@
 #include "jit/JitAllocPolicy.h"
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
+#include "jit/shared/Assembler-shared.h"
 
 namespace js {
 namespace jit {
@@ -58,6 +59,8 @@ class MoveOperand {
       kind_ = REG;
     }
   }
+  explicit MoveOperand(const Address& addr, Kind kind = MEMORY)
+      : MoveOperand(AsRegister(addr.base), addr.offset, kind) {}
   MoveOperand(MacroAssembler& masm, const ABIArg& arg);
   MoveOperand(const MoveOperand& other) = default;
   bool isFloatReg() const { return kind_ == FLOAT_REG; }

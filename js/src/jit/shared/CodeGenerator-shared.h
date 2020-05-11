@@ -42,6 +42,8 @@ class CodeGeneratorShared : public LElementVisitor {
   MacroAssembler& ensureMasm(MacroAssembler* masm);
   mozilla::Maybe<IonHeapMacroAssembler> maybeMasm_;
 
+  bool useWasmStackArgumentAbi_;
+
  public:
   MacroAssembler& masm;
 
@@ -167,8 +169,13 @@ class CodeGeneratorShared : public LElementVisitor {
   inline int32_t ToStackOffset(LAllocation a) const;
   inline int32_t ToStackOffset(const LAllocation* a) const;
 
-  inline Address ToAddress(const LAllocation& a);
-  inline Address ToAddress(const LAllocation* a);
+  inline Address ToAddress(const LAllocation& a) const;
+  inline Address ToAddress(const LAllocation* a) const;
+
+  // Returns the offset from FP to address incoming stack arguments
+  // when we use wasm stack argument abi (useWasmStackArgumentAbi()).
+  inline int32_t ToFramePointerOffset(LAllocation a) const;
+  inline int32_t ToFramePointerOffset(const LAllocation* a) const;
 
   uint32_t frameSize() const {
     return frameClass_ == FrameSizeClass::None() ? frameDepth_
@@ -179,6 +186,10 @@ class CodeGeneratorShared : public LElementVisitor {
   bool addNativeToBytecodeEntry(const BytecodeSite* site);
   void dumpNativeToBytecodeEntries();
   void dumpNativeToBytecodeEntry(uint32_t idx);
+
+  void setUseWasmStackArgumentAbi() { useWasmStackArgumentAbi_ = true; }
+
+  bool useWasmStackArgumentAbi() const { return useWasmStackArgumentAbi_; }
 
  public:
   MIRGenerator& mirGen() const { return *gen; }

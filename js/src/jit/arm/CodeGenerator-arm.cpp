@@ -1065,11 +1065,11 @@ MoveOperand CodeGeneratorARM::toMoveOperand(LAllocation a) const {
   if (a.isFloatReg()) {
     return MoveOperand(ToFloatRegister(a));
   }
-  int32_t offset = ToStackOffset(a);
-  MOZ_ASSERT((offset & 3) == 0);
   MoveOperand::Kind kind =
       a.isStackArea() ? MoveOperand::EFFECTIVE_ADDRESS : MoveOperand::MEMORY;
-  return MoveOperand(StackPointer, offset, kind);
+  Address addr = ToAddress(a);
+  MOZ_ASSERT((addr.offset & 3) == 0);
+  return MoveOperand(addr, kind);
 }
 
 class js::jit::OutOfLineTableSwitch
