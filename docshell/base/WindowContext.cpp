@@ -120,6 +120,11 @@ bool WindowContext::CheckOnlyOwningProcessCanSet(ContentParent* aSource) {
   return false;
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_IsSecure>, const bool& aIsSecure,
+                           ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
 bool WindowContext::CanSet(FieldIndex<IDX_AllowMixedContent>,
                            const bool& aAllowMixedContent,
                            ContentParent* aSource) {
