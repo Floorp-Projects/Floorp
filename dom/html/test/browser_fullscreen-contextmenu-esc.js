@@ -106,8 +106,7 @@ add_task(async function() {
     "fullscreenchange"
   );
   EventUtils.synthesizeKey("KEY_Escape");
-  state = await fullscreenExitPromise;
-  ok(!state, "The content should have exited fullscreen");
+  await fullscreenExitPromise;
   ok(!document.fullscreenElement, "The chrome should have exited fullscreen");
 
   gBrowser.removeTab(tab);
