@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Link.h"
+#include "mozilla/WeakPtr.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStyleLinkElement.h"
 #include "nsDOMTokenList.h"
@@ -185,6 +186,9 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
                      const nsAttrValue* aOldValue);
   void CancelPrefetchOrPreload();
 
+  void StartPreload(nsContentPolicyType policyType);
+  void CancelPreload();
+
   // Returns whether the type attribute specifies the text/css mime type for
   // link elements.
   static bool IsCSSMimeTypeAttributeForLinkElement(
@@ -195,6 +199,11 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
 
   RefPtr<nsDOMTokenList> mRelList;
   RefPtr<nsDOMTokenList> mSizes;
+
+  // A weak reference to our preload is held only to cancel the preload when
+  // this node updates or unbounds from the tree.  We want to prevent cycles,
+  // the preload is held alive by other means.
+  WeakPtr<PreloaderBase> mPreload;
 
   // The "explicitly enabled" flag. This flag is set whenever the `disabled`
   // attribute is explicitly unset, and makes alternate stylesheets not be
