@@ -5,10 +5,12 @@
 
 #include "PreloadService.h"
 
+#include "FetchPreloader.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "nsIReferrerInfo.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -112,6 +114,9 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     preloadKey = PreloadHashKey::CreateAsImage(
         uri, mDocument->NodePrincipal(),
         dom::Element::StringToCORSMode(crossOrigin), referrerPolicy);
+  } else if (as.LowerCaseEqualsASCII("fetch")) {
+    preloadKey = PreloadHashKey::CreateAsFetch(
+        uri, dom::Element::StringToCORSMode(crossOrigin), referrerPolicy);
   } else {
     NotifyNodeEvent(aLinkElement, false);
     return nullptr;
@@ -126,6 +131,8 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
       PreloadStyle(uri, charset, crossOrigin, referrerPolicyAttr, integrity);
     } else if (as.LowerCaseEqualsASCII("image")) {
       PreloadImage(uri, crossOrigin, referrerPolicyAttr, isImgSet);
+    } else if (as.LowerCaseEqualsASCII("fetch")) {
+      PreloadFetch(uri, crossOrigin, referrerPolicyAttr);
     }
 
     preload = LookupPreload(&preloadKey);
@@ -166,6 +173,19 @@ void PreloadService::PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
   mDocument->PreLoadImage(aURI, aCrossOrigin,
                           PreloadReferrerPolicy(aImageReferrerPolicy),
                           aIsImgSet, true);
+}
+
+void PreloadService::PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
+                                  const nsAString& aReferrerPolicy) {
+  CORSMode cors = dom::Element::StringToCORSMode(aCrossOrigin);
+  dom::ReferrerPolicy referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
+  auto key = PreloadHashKey::CreateAsFetch(aURI, cors, referrerPolicy);
+
+  // * Bug 1618549: Depending on where we decide to do the deduplication, we may
+  // want to check if a fetch is already being preloaded here.
+
+  RefPtr<FetchPreloader> preloader = new FetchPreloader();
+  preloader->OpenChannel(&key, aURI, cors, referrerPolicy, mDocument);
 }
 
 // static

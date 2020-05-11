@@ -1031,6 +1031,17 @@ void nsHtml5TreeOpExecutor::PreloadPictureSource(const nsAString& aSrcset,
   mDocument->PreloadPictureImageSource(aSrcset, aSizes, aType, aMedia);
 }
 
+void nsHtml5TreeOpExecutor::PreloadFetch(const nsAString& aURL,
+                                         const nsAString& aCrossOrigin,
+                                         const nsAString& aReferrerPolicy) {
+  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
+  if (!uri) {
+    return;
+  }
+
+  mDocument->Preloads().PreloadFetch(uri, aCrossOrigin, aReferrerPolicy);
+}
+
 void nsHtml5TreeOpExecutor::PreloadOpenPicture() {
   mDocument->PreloadPictureOpened();
 }

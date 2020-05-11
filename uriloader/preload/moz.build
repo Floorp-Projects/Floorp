@@ -7,13 +7,17 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Networking")
 
+TEST_DIRS += ['gtest']
+
 EXPORTS.mozilla += [
+    'FetchPreloader.h',
     'PreloaderBase.h',
     'PreloadHashKey.h',
     'PreloadService.h',
 ]
 
 UNIFIED_SOURCES += [
+    'FetchPreloader.cpp',
     'PreloaderBase.cpp',
     'PreloadHashKey.cpp',
     'PreloadService.cpp',
