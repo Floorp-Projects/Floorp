@@ -10,7 +10,7 @@
   "hidden": true,
   "description": "__MSG_extensionDescription__",
   "icons": {
-    "16": "favicon.ico"
+    "16": "__MSG_extensionIcon__"
   },
   "default_locale": "af",
   "chrome_settings_overrides": {
