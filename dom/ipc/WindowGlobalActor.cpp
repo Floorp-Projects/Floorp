@@ -17,11 +17,34 @@
 namespace mozilla {
 namespace dom {
 
+// CORPP 3.1.3 https://mikewest.github.io/corpp/#integration-html
+static nsILoadInfo::CrossOriginEmbedderPolicy InheritedPolicy(
+    dom::BrowsingContext* aBrowsingContext) {
+  WindowContext* inherit = aBrowsingContext->GetParentWindowContext();
+  if (inherit) {
+    return inherit->GetEmbedderPolicy();
+  }
+
+  RefPtr<dom::BrowsingContext> opener = aBrowsingContext->GetOpener();
+  if (!opener) {
+    return nsILoadInfo::EMBEDDER_POLICY_NULL;
+  }
+  // Bug 1637035: make sure we don't inherit a COEP for non-http,
+  // non-initial-about:blank documents when we shouldn't be.
+  inherit = opener->GetCurrentWindowContext();
+
+  if (!inherit) {
+    return nsILoadInfo::EMBEDDER_POLICY_NULL;
+  }
+
+  return inherit->GetEmbedderPolicy();
+}
+
 // Common WindowGlobalInit creation code used by both `AboutBlankInitializer`
 // and `WindowInitializer`.
-static WindowGlobalInit BaseInitializer(dom::BrowsingContext* aBrowsingContext,
-                                        uint64_t aInnerWindowId,
-                                        uint64_t aOuterWindowId) {
+WindowGlobalInit WindowGlobalActor::BaseInitializer(
+    dom::BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
+    uint64_t aOuterWindowId) {
   MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
 
   WindowGlobalInit init;
@@ -30,8 +53,10 @@ static WindowGlobalInit BaseInitializer(dom::BrowsingContext* aBrowsingContext,
   ctx.mOuterWindowId = aOuterWindowId;
   ctx.mBrowsingContextId = aBrowsingContext->Id();
 
-  // If any synced fields need to be initialized from our BrowsingContxt, we can
-  // initialize them here.
+  // If any synced fields need to be initialized from our BrowsingContext, we
+  // can initialize them here.
+  mozilla::Get<WindowContext::IDX_EmbedderPolicy>(ctx.mFields) =
+      InheritedPolicy(aBrowsingContext);
   return init;
 }
 

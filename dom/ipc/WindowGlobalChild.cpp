@@ -185,6 +185,10 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
       mWindowGlobal, nullptr, nullptr));
   txn.SetIsThirdPartyTrackingResourceWindow(
       nsContentUtils::IsThirdPartyTrackingResourceWindow(mWindowGlobal));
+  auto policy = aDocument->GetEmbedderPolicyFromHTTP();
+  if (policy.isSome()) {
+    txn.SetEmbedderPolicy(policy.ref());
+  }
 
   // Init Mixed Content Fields
   nsCOMPtr<nsIURI> innerDocURI =

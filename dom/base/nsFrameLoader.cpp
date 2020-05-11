@@ -416,11 +416,6 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
   }
   NS_ENSURE_TRUE(context, nullptr);
 
-  // aContext is not preserved, propagate its COEP to the new created.
-  if (aContext && !aPreserveContext) {
-    context->SetEmbedderPolicy(aContext->GetEmbedderPolicy());
-  }
-
   RefPtr<nsFrameLoader> fl =
       new nsFrameLoader(aOwner, context, aRemoteType, aNetworkCreated);
   return fl.forget();
