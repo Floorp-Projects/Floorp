@@ -6868,16 +6868,14 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
    * ferries the underlying frame to the nsDisplayItem constructor.
    */
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                     nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     uint16_t aIndex);
+                     nsDisplayList* aList, const nsRect& aChildrenBuildingRect);
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     uint16_t aIndex, bool aAllowAsyncAnimation);
+                     bool aAllowAsyncAnimation);
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     uint16_t aIndex,
                      ComputeTransformFunction aTransformGetter);
 
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayTransform)
@@ -6942,8 +6940,6 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
       mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
   bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                          nsRegion* aVisibleRegion) override;
-
-  uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
   nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override {
@@ -7206,7 +7202,6 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForScrollMetadata;
   nsRect mChildrenBuildingRect;
   mutable RetainedDisplayList mChildren;
-  uint16_t mIndex;
 
   // The untransformed bounds of |mChildren|.
   nsRect mChildBounds;

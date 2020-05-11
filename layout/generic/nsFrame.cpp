@@ -3038,8 +3038,8 @@ static void WrapSeparatorTransform(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  nsDisplayTransform* item = MakeDisplayItem<nsDisplayTransform>(
-      aBuilder, aFrame, aNonParticipants, aBuilder->GetVisibleRect(), aIndex);
+  nsDisplayTransform* item = MakeDisplayItemWithIndex<nsDisplayTransform>(
+      aBuilder, aFrame, aIndex, aNonParticipants, aBuilder->GetVisibleRect());
 
   if (*aSeparator == nullptr && item) {
     *aSeparator = item;
@@ -3836,7 +3836,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
 
     nsDisplayTransform* transformItem = MakeDisplayItem<nsDisplayTransform>(
-        aBuilder, this, &resultList, visibleRect, 0, allowAsyncAnimation);
+        aBuilder, this, &resultList, visibleRect, allowAsyncAnimation);
     if (transformItem) {
       resultList.AppendToTop(transformItem);
       ct.TrackContainer(transformItem);
