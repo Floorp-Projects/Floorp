@@ -76,6 +76,8 @@ extern crate fluent_ffi;
 
 extern crate rusqlite;
 
+extern crate viaduct;
+
 #[cfg(feature = "remote")]
 extern crate remote;
 

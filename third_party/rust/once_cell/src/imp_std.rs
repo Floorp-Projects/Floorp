@@ -4,10 +4,9 @@
 //   * init function can fail
 
 use std::{
-    cell::UnsafeCell,
+    cell::{Cell, UnsafeCell},
     marker::PhantomData,
     panic::{RefUnwindSafe, UnwindSafe},
-    ptr,
     sync::atomic::{AtomicBool, AtomicUsize, Ordering},
     thread::{self, Thread},
 };
@@ -16,11 +15,11 @@ use std::{
 pub(crate) struct OnceCell<T> {
     // This `state` word is actually an encoded version of just a pointer to a
     // `Waiter`, so we add the `PhantomData` appropriately.
-    state: AtomicUsize,
+    state_and_queue: AtomicUsize,
     _marker: PhantomData<*mut Waiter>,
     // FIXME: switch to `std::mem::MaybeUninit` once we are ready to bump MSRV
     // that far. It was stabilized in 1.36.0, so, if you are reading this and
-    // it's higher than 1.46.0 outside, please send a PR! ;) (and to the same
+    // it's higher than 1.46.0 outside, please send a PR! ;) (and do the same
     // for `Lazy`, while we are at it).
     pub(crate) value: UnsafeCell<Option<T>>,
 }
@@ -47,23 +46,25 @@ const COMPLETE: usize = 0x2;
 const STATE_MASK: usize = 0x3;
 
 // Representation of a node in the linked list of waiters in the RUNNING state.
+#[repr(align(4))] // Ensure the two lower bits are free to use as state bits.
 struct Waiter {
-    thread: Option<Thread>,
+    thread: Cell<Option<Thread>>,
     signaled: AtomicBool,
-    next: *mut Waiter,
+    next: *const Waiter,
 }
 
-// Helper struct used to clean up after a closure call with a `Drop`
-// implementation to also run on panic.
-struct Finish<'a> {
-    failed: bool,
-    my_state: &'a AtomicUsize,
+// Head of a linked list of waiters.
+// Every node is a struct on the stack of a waiting thread.
+// Will wake up the waiters when it gets dropped, i.e. also on panic.
+struct WaiterQueue<'a> {
+    state_and_queue: &'a AtomicUsize,
+    set_state_on_drop_to: usize,
 }
 
 impl<T> OnceCell<T> {
     pub(crate) const fn new() -> OnceCell<T> {
         OnceCell {
-            state: AtomicUsize::new(INCOMPLETE),
+            state_and_queue: AtomicUsize::new(INCOMPLETE),
             _marker: PhantomData,
             value: UnsafeCell::new(None),
         }
@@ -76,7 +77,7 @@ impl<T> OnceCell<T> {
         // operations visible to us, and, this being a fast path, weaker
         // ordering helps with performance. This `Acquire` synchronizes with
         // `SeqCst` operations on the slow path.
-        self.state.load(Ordering::Acquire) == COMPLETE
+        self.state_and_queue.load(Ordering::Acquire) == COMPLETE
     }
 
     /// Safety: synchronizes with store to value via SeqCst read from state,
@@ -90,7 +91,7 @@ impl<T> OnceCell<T> {
         let mut f = Some(f);
         let mut res: Result<(), E> = Ok(());
         let slot = &self.value;
-        initialize_inner(&self.state, &mut || {
+        initialize_inner(&self.state_and_queue, &mut || {
             let f = f.take().unwrap();
             match f() {
                 Ok(value) => {
@@ -107,102 +108,86 @@ impl<T> OnceCell<T> {
     }
 }
 
+// Corresponds to `std::sync::Once::call_inner`
 // Note: this is intentionally monomorphic
-fn initialize_inner(my_state: &AtomicUsize, init: &mut dyn FnMut() -> bool) -> bool {
-    // This cold path uses SeqCst consistently because the
-    // performance difference really does not matter there, and
-    // SeqCst minimizes the chances of something going wrong.
-    let mut state = my_state.load(Ordering::SeqCst);
+fn initialize_inner(my_state_and_queue: &AtomicUsize, init: &mut dyn FnMut() -> bool) -> bool {
+    let mut state_and_queue = my_state_and_queue.load(Ordering::Acquire);
 
-    'outer: loop {
-        match state {
-            // If we're complete, then there's nothing to do, we just
-            // jettison out as we shouldn't run the closure.
+    loop {
+        match state_and_queue {
             COMPLETE => return true,
-
-            // Otherwise if we see an incomplete state we will attempt to
-            // move ourselves into the RUNNING state. If we succeed, then
-            // the queue of waiters starts at null (all 0 bits).
             INCOMPLETE => {
-                let old = my_state.compare_and_swap(state, RUNNING, Ordering::SeqCst);
-                if old != state {
-                    state = old;
+                let old = my_state_and_queue.compare_and_swap(
+                    state_and_queue,
+                    RUNNING,
+                    Ordering::Acquire,
+                );
+                if old != state_and_queue {
+                    state_and_queue = old;
                     continue;
                 }
-
-                // Run the initialization routine, letting it know if we're
-                // poisoned or not. The `Finish` struct is then dropped, and
-                // the `Drop` implementation here is responsible for waking
-                // up other waiters both in the normal return and panicking
-                // case.
-                let mut complete = Finish { failed: true, my_state };
+                let mut waiter_queue = WaiterQueue {
+                    state_and_queue: my_state_and_queue,
+                    set_state_on_drop_to: INCOMPLETE, // Difference, std uses `POISONED`
+                };
                 let success = init();
-                // Difference from std: abort if `init` errored.
-                complete.failed = !success;
+
+                // Difference, std always uses `COMPLETE`
+                waiter_queue.set_state_on_drop_to = if success { COMPLETE } else { INCOMPLETE };
                 return success;
             }
-
-            // All other values we find should correspond to the RUNNING
-            // state with an encoded waiter list in the more significant
-            // bits. We attempt to enqueue ourselves by moving us to the
-            // head of the list and bail out if we ever see a state that's
-            // not RUNNING.
             _ => {
-                assert!(state & STATE_MASK == RUNNING);
-                let mut node = Waiter {
-                    thread: Some(thread::current()),
-                    signaled: AtomicBool::new(false),
-                    next: ptr::null_mut(),
-                };
-                let me = &mut node as *mut Waiter as usize;
-                assert!(me & STATE_MASK == 0);
-
-                while state & STATE_MASK == RUNNING {
-                    node.next = (state & !STATE_MASK) as *mut Waiter;
-                    let old = my_state.compare_and_swap(state, me | RUNNING, Ordering::SeqCst);
-                    if old != state {
-                        state = old;
-                        continue;
-                    }
-
-                    // Once we've enqueued ourselves, wait in a loop.
-                    // Afterwards reload the state and continue with what we
-                    // were doing from before.
-                    while !node.signaled.load(Ordering::SeqCst) {
-                        thread::park();
-                    }
-                    state = my_state.load(Ordering::SeqCst);
-                    continue 'outer;
-                }
+                assert!(state_and_queue & STATE_MASK == RUNNING);
+                wait(&my_state_and_queue, state_and_queue);
+                state_and_queue = my_state_and_queue.load(Ordering::Acquire);
             }
         }
     }
 }
 
-impl Drop for Finish<'_> {
-    fn drop(&mut self) {
-        // Swap out our state with however we finished. We should only ever see
-        // an old state which was RUNNING.
-        let queue = if self.failed {
-            // Difference from std: flip back to INCOMPLETE rather than POISONED.
-            self.my_state.swap(INCOMPLETE, Ordering::SeqCst)
-        } else {
-            self.my_state.swap(COMPLETE, Ordering::SeqCst)
-        };
-        assert_eq!(queue & STATE_MASK, RUNNING);
+// Copy-pasted from std exactly.
+fn wait(state_and_queue: &AtomicUsize, mut current_state: usize) {
+    loop {
+        if current_state & STATE_MASK != RUNNING {
+            return;
+        }
 
-        // Decode the RUNNING to a list of waiters, then walk that entire list
-        // and wake them up. Note that it is crucial that after we store `true`
-        // in the node it can be free'd! As a result we load the `thread` to
-        // signal ahead of time and then unpark it after the store.
+        let node = Waiter {
+            thread: Cell::new(Some(thread::current())),
+            signaled: AtomicBool::new(false),
+            next: (current_state & !STATE_MASK) as *const Waiter,
+        };
+        let me = &node as *const Waiter as usize;
+
+        let old = state_and_queue.compare_and_swap(current_state, me | RUNNING, Ordering::Release);
+        if old != current_state {
+            current_state = old;
+            continue;
+        }
+
+        while !node.signaled.load(Ordering::Acquire) {
+            thread::park();
+        }
+        break;
+    }
+}
+
+// Copy-pasted from std exactly.
+impl Drop for WaiterQueue<'_> {
+    fn drop(&mut self) {
+        let state_and_queue =
+            self.state_and_queue.swap(self.set_state_on_drop_to, Ordering::AcqRel);
+
+        assert_eq!(state_and_queue & STATE_MASK, RUNNING);
+
         unsafe {
-            let mut queue = (queue & !STATE_MASK) as *mut Waiter;
+            let mut queue = (state_and_queue & !STATE_MASK) as *const Waiter;
             while !queue.is_null() {
                 let next = (*queue).next;
-                let thread = (*queue).thread.take().unwrap();
-                (*queue).signaled.store(true, Ordering::SeqCst);
-                thread.unpark();
+                let thread = (*queue).thread.replace(None).unwrap();
+                (*queue).signaled.store(true, Ordering::Release);
                 queue = next;
+                thread.unpark();
             }
         }
     }
@@ -212,7 +197,6 @@ impl Drop for Finish<'_> {
 #[cfg(test)]
 mod tests {
     use std::panic;
-    #[cfg(not(miri))] // miri doesn't support threads
     use std::{sync::mpsc::channel, thread};
 
     use super::OnceCell;
@@ -235,7 +219,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(miri))] // miri doesn't support threads
+    #[cfg_attr(miri, ignore)] // miri doesn't support threads
     fn stampede_once() {
         static O: OnceCell<()> = OnceCell::new();
         static mut RUN: bool = false;
@@ -272,7 +256,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(miri))] // miri doesn't support panics
     fn poison_bad() {
         static O: OnceCell<()> = OnceCell::new();
 
@@ -294,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(miri))] // miri doesn't support panics
+    #[cfg_attr(miri, ignore)] // miri doesn't support threads
     fn wait_for_force_to_finish() {
         static O: OnceCell<()> = OnceCell::new();
 
@@ -329,5 +312,13 @@ mod tests {
 
         assert!(t1.join().is_ok());
         assert!(t2.join().is_ok());
+    }
+
+    #[test]
+    #[cfg(target_pointer_width = "64")]
+    fn test_size() {
+        use std::mem::size_of;
+
+        assert_eq!(size_of::<OnceCell<u32>>(), 4 * size_of::<u32>());
     }
 }
