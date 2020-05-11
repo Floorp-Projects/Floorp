@@ -3474,11 +3474,6 @@ impl TileCacheInstance {
                     generation: resource_cache.get_image_generation(border_data.request.key),
                 });
             }
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain => {
-                // Early exit to ensure this doesn't get added as a dependency on the tile.
-                return None;
-            }
             PrimitiveInstanceKind::TextRun { data_handle, .. } => {
                 // Only do these checks if we haven't already disabled subpx
                 // text rendering for this slice.

@@ -1436,15 +1436,6 @@ pub enum PrimitiveInstanceKind {
     Backdrop {
         data_handle: BackdropDataHandle,
     },
-    /// These are non-visual instances. They are used during the
-    /// visibility pass to allow pushing/popping a clip chain
-    /// without the presence of a stacking context / picture.
-    /// TODO(gw): In some ways this seems like a hack, in some
-    ///           ways it seems reasonable. We should discuss
-    ///           other potential methods for non-visual items
-    ///           without the need for a grouping picture.
-    PushClipChain,
-    PopClipChain,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -1647,10 +1638,6 @@ impl PrimitiveInstance {
             }
             PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
                 data_handle.uid()
-            }
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain => {
-                unreachable!();
             }
         }
     }
@@ -1997,17 +1984,6 @@ impl PrimitiveStore {
                 }
 
                 let (is_passthrough, prim_local_rect, prim_shadowed_rect) = match prim_instance.kind {
-                    PrimitiveInstanceKind::PushClipChain => {
-                        frame_state.clip_chain_stack.push_clip(
-                            prim_instance.clip_chain_id,
-                            frame_state.clip_store,
-                        );
-                        continue;
-                    }
-                    PrimitiveInstanceKind::PopClipChain => {
-                        frame_state.clip_chain_stack.pop_clip();
-                        continue;
-                    }
                     PrimitiveInstanceKind::Picture { pic_index, .. } => {
                         if !self.pictures[pic_index.0].is_visible() {
                             continue;
@@ -2253,8 +2229,6 @@ impl PrimitiveStore {
                     // primitive.
                     if frame_context.debug_flags.contains(::api::DebugFlags::PRIMITIVE_DBG) {
                         let debug_color = match prim_instance.kind {
-                            PrimitiveInstanceKind::PushClipChain |
-                            PrimitiveInstanceKind::PopClipChain |
                             PrimitiveInstanceKind::Picture { .. } => ColorF::TRANSPARENT,
                             PrimitiveInstanceKind::TextRun { .. } => debug_colors::RED,
                             PrimitiveInstanceKind::LineDecoration { .. } => debug_colors::PURPLE,
@@ -2584,8 +2558,6 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
             PrimitiveInstanceKind::ConicGradient { .. } |
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain |
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::Backdrop { .. } => {
                 // These prims don't support opacity collapse
@@ -2728,8 +2700,6 @@ impl PrimitiveStore {
                 PrimitiveInstanceKind::LinearGradient { .. } |
                 PrimitiveInstanceKind::RadialGradient { .. } |
                 PrimitiveInstanceKind::ConicGradient { .. } |
-                PrimitiveInstanceKind::PushClipChain |
-                PrimitiveInstanceKind::PopClipChain |
                 PrimitiveInstanceKind::Clear { .. } |
                 PrimitiveInstanceKind::Backdrop { .. } => {
                     None
@@ -3705,8 +3675,6 @@ impl PrimitiveStore {
                     prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                 }
             }
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain => {}
         };
     }
 }
@@ -3981,8 +3949,6 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
             PrimitiveInstanceKind::ConicGradient { .. } |
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain |
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::Backdrop { .. } => {
                 // These primitives don't support / need segments.
@@ -4061,8 +4027,6 @@ impl PrimitiveInstance {
         let segments = match self.kind {
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::Clear { .. } |
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain |
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::Backdrop { .. } => {
                 return false;

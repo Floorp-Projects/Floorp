@@ -303,10 +303,6 @@ impl DataStores {
                 let pic = &prim_store.pictures[pic_index.0];
                 pic.precise_local_rect
             }
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain => {
-                unreachable!();
-            }
             _ => {
                 self.as_common_data(prim_instance).prim_rect
             }
@@ -323,10 +319,6 @@ impl DataStores {
         match prim_instance.kind {
             PrimitiveInstanceKind::Picture { .. } => {
                 false
-            }
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain => {
-                unreachable!();
             }
             _ => {
                 self.as_common_data(prim_instance).may_need_repetition
@@ -386,10 +378,6 @@ impl DataStores {
             PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
                 let prim_data = &self.backdrop[data_handle];
                 &prim_data.common
-            }
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain => {
-                unreachable!();
             }
         }
     }

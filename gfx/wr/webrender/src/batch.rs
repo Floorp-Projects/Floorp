@@ -875,9 +875,6 @@ impl BatchBuilder {
         }
 
         match prim_instance.kind {
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain => {}
-
             PrimitiveInstanceKind::Clear { data_handle } => {
                 let prim_data = &ctx.data_stores.prim[data_handle];
                 let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
