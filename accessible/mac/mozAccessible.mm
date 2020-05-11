@@ -888,54 +888,32 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   ProxyAccessible* proxy = [self getProxyAccessible];
 
   // Deal with landmarks first
-  nsAtom* landmark = nullptr;
-  if (accWrap)
-    landmark = accWrap->LandmarkRole();
-  else if (proxy)
-    landmark = proxy->LandmarkRole();
-
-  // HTML Elements treated as landmarks, and ARIA landmarks.
-  if (landmark) {
-    if (landmark == nsGkAtoms::application) return @"AXLandmarkApplication";
-    if (landmark == nsGkAtoms::banner) return @"AXLandmarkBanner";
-    if (landmark == nsGkAtoms::complementary) return @"AXLandmarkComplementary";
-    if (landmark == nsGkAtoms::contentinfo) return @"AXLandmarkContentInfo";
-    if (landmark == nsGkAtoms::form) return @"AXLandmarkForm";
-    if (landmark == nsGkAtoms::main) return @"AXLandmarkMain";
-    if (landmark == nsGkAtoms::navigation) return @"AXLandmarkNavigation";
-    if (landmark == nsGkAtoms::search) return @"AXLandmarkSearch";
-  }
-
   // macOS groups the specific landmark types of DPub ARIA into two broad
   // categories with corresponding subroles: Navigation and region/container.
   if (mRole == roles::NAVIGATION) return @"AXLandmarkNavigation";
-  if (mRole == roles::LANDMARK) return @"AXLandmarkRegion";
+  if (mRole == roles::LANDMARK) {
+    nsAtom* landmark = nullptr;
+    if (accWrap) {
+      landmark = accWrap->LandmarkRole();
+    } else if (proxy) {
+      landmark = proxy->LandmarkRole();
+    }
+    // HTML Elements treated as landmarks, and ARIA landmarks.
+    if (landmark) {
+      if (landmark == nsGkAtoms::banner) return @"AXLandmarkBanner";
+      if (landmark == nsGkAtoms::complementary) return @"AXLandmarkComplementary";
+      if (landmark == nsGkAtoms::contentinfo) return @"AXLandmarkContentInfo";
+      if (landmark == nsGkAtoms::main) return @"AXLandmarkMain";
+      if (landmark == nsGkAtoms::navigation) return @"AXLandmarkNavigation";
+      if (landmark == nsGkAtoms::search) return @"AXLandmarkSearch";
+    }
+
+    // None of the above, so assume DPub ARIA.
+    return @"AXLandmarkRegion";
+  }
 
   // Now, deal with widget roles
   nsStaticAtom* roleAtom = nullptr;
-  if (accWrap && accWrap->HasARIARole()) {
-    const nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
-    roleAtom = roleMap->roleAtom;
-  }
-  if (proxy) roleAtom = proxy->ARIARoleAtom();
-
-  if (roleAtom) {
-    if (roleAtom == nsGkAtoms::alert) return @"AXApplicationAlert";
-    if (roleAtom == nsGkAtoms::alertdialog) return @"AXApplicationAlertDialog";
-    if (roleAtom == nsGkAtoms::article) return @"AXDocumentArticle";
-    if (roleAtom == nsGkAtoms::dialog) return @"AXApplicationDialog";
-    if (roleAtom == nsGkAtoms::document) return @"AXDocument";
-    if (roleAtom == nsGkAtoms::log_) return @"AXApplicationLog";
-    if (roleAtom == nsGkAtoms::marquee) return @"AXApplicationMarquee";
-    if (roleAtom == nsGkAtoms::math) return @"AXDocumentMath";
-    if (roleAtom == nsGkAtoms::note_) return @"AXDocumentNote";
-    if (roleAtom == nsGkAtoms::region) return mRole == roles::REGION ? @"AXLandmarkRegion" : nil;
-    if (roleAtom == nsGkAtoms::status) return @"AXApplicationStatus";
-    if (roleAtom == nsGkAtoms::tabpanel) return @"AXTabPanel";
-    if (roleAtom == nsGkAtoms::timer) return @"AXApplicationTimer";
-    if (roleAtom == nsGkAtoms::tooltip) return @"AXUserInterfaceTooltip";
-  }
-
   switch (mRole) {
     case roles::LIST:
       return @"AXContentList";  // 10.6+ NSAccessibilityContentListSubrole;
@@ -1020,8 +998,53 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     case roles::ALERT:
       return @"AXApplicationAlert";
 
+    case roles::DIALOG:
+      if (accWrap && accWrap->HasARIARole()) {
+        const nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
+        roleAtom = roleMap->roleAtom;
+      }
+      if (proxy) roleAtom = proxy->ARIARoleAtom();
+      if (roleAtom) {
+        if (roleAtom == nsGkAtoms::alertdialog) return @"AXApplicationAlertDialog";
+        if (roleAtom == nsGkAtoms::dialog) return @"AXApplicationDialog";
+      }
+      break;
+
+    case roles::APPLICATION:
+      return @"AXLandmarkApplication";
+
+    case roles::FORM:
+      // This only gets exposed as a landmark if the role comes from ARIA.
+      if (accWrap && accWrap->HasARIARole()) {
+        const nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
+        roleAtom = roleMap->roleAtom;
+      }
+      if (proxy) roleAtom = proxy->ARIARoleAtom();
+      if (roleAtom && roleAtom == nsGkAtoms::form) return @"AXLandmarkForm";
+      break;
+
+    case roles::FORM_LANDMARK:
+      // This is a form element that got landmark properties via an accessible
+      // name.
+      return @"AXLandmarkForm";
+
+    case roles::ANIMATION:
+      return @"AXApplicationMarquee";
+
+    case roles::FLAT_EQUATION:
+      return @"AXDocumentMath";
+
+    case roles::REGION:
+      return @"AXLandmarkRegion";
+
+    case roles::STATUSBAR:
+      return @"AXApplicationStatus";
+
     case roles::PROPERTYPAGE:
       return @"AXTabPanel";
+
+    case roles::TOOLTIP:
+      return @"AXUserInterfaceTooltip";
 
     case roles::DETAILS:
       return @"AXDetails";
@@ -1040,14 +1063,6 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
     case roles::NON_NATIVE_DOCUMENT:
       return @"AXDocument";
-
-    // macOS added an AXSubrole value to distinguish generic AXGroup objects
-    // from those which are AXGroups as a result of an explicit ARIA role,
-    // such as the non-landmark, non-listitem text containers in DPub ARIA.
-    case roles::FOOTNOTE:
-    case roles::SECTION:
-      if (roleAtom) return @"AXApplicationGroup";
-      break;
 
     case roles::CONTENT_DELETION:
       return @"AXDeleteStyleGroup";
@@ -1068,6 +1083,24 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
       return @"AXContentSeparator";
 
     default:
+      // These are special. They map to roles::NOTHING
+      // and are instructed by the ARIA map to use the native host role.
+      if (accWrap && accWrap->HasARIARole()) {
+        const nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
+        roleAtom = roleMap->roleAtom;
+      }
+      if (proxy) roleAtom = proxy->ARIARoleAtom();
+
+      if (roleAtom) {
+        if (roleAtom == nsGkAtoms::log_) return @"AXApplicationLog";
+        if (roleAtom == nsGkAtoms::timer) return @"AXApplicationTimer";
+        // macOS added an AXSubrole value to distinguish generic AXGroup objects
+        // from those which are AXGroups as a result of an explicit ARIA role,
+        // such as the non-landmark, non-listitem text containers in DPub ARIA.
+        if (mRole == roles::FOOTNOTE || mRole == roles::SECTION) {
+          return @"AXApplicationGroup";
+        }
+      }
       break;
   }
 
