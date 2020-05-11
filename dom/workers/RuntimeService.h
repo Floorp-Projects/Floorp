@@ -82,7 +82,7 @@ class RuntimeService final : public nsIObserver {
     nsString mAppVersionOverridden;
     nsString mPlatform;
     nsString mPlatformOverridden;
-    nsTArray<nsString> mLanguages;
+    CopyableTArray<nsString> mLanguages;
   };
 
  private:

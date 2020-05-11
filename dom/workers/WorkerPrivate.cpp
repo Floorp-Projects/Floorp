@@ -515,7 +515,7 @@ class ReportErrorToConsoleRunnable final : public WorkerRunnable {
                                const nsTArray<nsString>& aParams)
       : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount),
         mMessage(aMessage),
-        mParams(aParams) {}
+        mParams(aParams.Clone()) {}
 
   virtual void PostDispatch(WorkerPrivate* aWorkerPrivate,
                             bool aDispatchResult) override {
@@ -656,7 +656,7 @@ class UpdateLanguagesRunnable final : public WorkerRunnable {
  public:
   UpdateLanguagesRunnable(WorkerPrivate* aWorkerPrivate,
                           const nsTArray<nsString>& aLanguages)
-      : WorkerRunnable(aWorkerPrivate), mLanguages(aLanguages) {}
+      : WorkerRunnable(aWorkerPrivate), mLanguages(aLanguages.Clone()) {}
 
   virtual bool WorkerRun(JSContext* aCx,
                          WorkerPrivate* aWorkerPrivate) override {

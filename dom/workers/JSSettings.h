@@ -42,7 +42,7 @@ struct JSSettings {
 
   JSContentChromeSettings chrome;
   JSContentChromeSettings content;
-  nsTArray<JSGCSetting> gcSettings;
+  CopyableTArray<JSGCSetting> gcSettings;
   JS::ContextOptions contextOptions;
 
 #ifdef JS_GC_ZEAL
