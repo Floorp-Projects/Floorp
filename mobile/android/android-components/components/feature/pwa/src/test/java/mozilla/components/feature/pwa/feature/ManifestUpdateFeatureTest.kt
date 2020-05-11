@@ -34,6 +34,11 @@ class ManifestUpdateFeatureTest {
     @Mock private lateinit var shortcutManager: WebAppShortcutManager
     @Mock private lateinit var storage: ManifestStorage
     private val sessionId = "external-app-session-id"
+    private val baseManifest = WebAppManifest(
+        name = "Mozilla",
+        startUrl = "https://mozilla.org",
+        scope = "https://mozilla.org"
+    )
 
     @Before
     fun setup() {
@@ -43,8 +48,7 @@ class ManifestUpdateFeatureTest {
 
     @Test
     fun `start and stop controls session observer`() {
-        val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
-        val feature = ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, manifest)
+        val feature = ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, baseManifest)
 
         feature.start()
         verify(session).register(feature)
@@ -55,9 +59,8 @@ class ManifestUpdateFeatureTest {
 
     @Test
     fun `start and stop handle null session`() {
-        val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
         `when`(sessionManager.findSessionById(sessionId)).thenReturn(null)
-        val feature = ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, manifest)
+        val feature = ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, baseManifest)
 
         feature.start()
         verify(session, never()).register(feature)
@@ -68,12 +71,11 @@ class ManifestUpdateFeatureTest {
 
     @Test
     fun `updateStoredManifest is called when the manifest changes`() = runBlockingTest {
-        val initialManifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
-        val feature = spy(ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, initialManifest))
+        val feature = spy(ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, baseManifest))
         doReturn(Unit).`when`(feature).updateStoredManifest(any())
         feature.start()
 
-        val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org", shortName = "Moz")
+        val manifest = baseManifest.copy(shortName = "Moz")
         feature.onWebAppManifestChanged(session, manifest)
 
         verify(feature).updateStoredManifest(manifest)
@@ -81,19 +83,17 @@ class ManifestUpdateFeatureTest {
 
     @Test
     fun `updateStoredManifest is not called when the manifest is the same`() = runBlockingTest {
-        val initialManifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
-        val feature = spy(ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, initialManifest))
+        val feature = spy(ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, baseManifest))
         feature.start()
 
-        feature.onWebAppManifestChanged(session, initialManifest)
+        feature.onWebAppManifestChanged(session, baseManifest)
 
-        verify(feature, never()).updateStoredManifest(initialManifest)
+        verify(feature, never()).updateStoredManifest(baseManifest)
     }
 
     @Test
     fun `updateStoredManifest is not called when the manifest is null`() = runBlockingTest {
-        val initialManifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
-        val feature = spy(ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, initialManifest))
+        val feature = spy(ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, baseManifest))
         feature.start()
 
         feature.onWebAppManifestChanged(session, null)
@@ -103,8 +103,7 @@ class ManifestUpdateFeatureTest {
 
     @Test
     fun `updateStoredManifest is not called when the manifest has a different start URL`() = runBlockingTest {
-        val initialManifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
-        val feature = spy(ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, initialManifest))
+        val feature = spy(ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, baseManifest))
         feature.start()
 
         val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://netscape.com")
@@ -115,10 +114,9 @@ class ManifestUpdateFeatureTest {
 
     @Test
     fun `updateStoredManifest updates storage and shortcut`() = runBlockingTest {
-        val initialManifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
-        val feature = ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, initialManifest)
+        val feature = ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, baseManifest)
 
-        val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org", shortName = "Moz")
+        val manifest = baseManifest.copy(shortName = "Moz")
         feature.updateStoredManifest(manifest)
 
         verify(storage).updateManifest(manifest)
@@ -127,11 +125,10 @@ class ManifestUpdateFeatureTest {
 
     @Test
     fun `start updates last web app usage`() = runBlockingTest {
-        val initialManifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org", scope = "https://mozilla.org")
-        val feature = ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, initialManifest)
+        val feature = ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, baseManifest)
 
         feature.start()
 
-        verify(storage).updateManifestUsedAt(initialManifest)
+        verify(storage).updateManifestUsedAt(baseManifest)
     }
 }
