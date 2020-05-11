@@ -7,6 +7,7 @@
 #include "mozilla/dom/cache/Context.h"
 
 #include "mozilla/AutoRestore.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/cache/Action.h"
 #include "mozilla/dom/cache/FileUtils.h"
 #include "mozilla/dom/cache/Manager.h"
@@ -87,11 +88,12 @@ class Context::Data final : public Action::Data {
 class Context::QuotaInitRunnable final : public nsIRunnable,
                                          public OpenDirectoryListener {
  public:
-  QuotaInitRunnable(Context* aContext, Manager* aManager, Data* aData,
-                    nsISerialEventTarget* aTarget, Action* aInitAction)
+  QuotaInitRunnable(Context* aContext, SafeRefPtr<Manager> aManager,
+                    Data* aData, nsISerialEventTarget* aTarget,
+                    Action* aInitAction)
       : mContext(aContext),
         mThreadsafeHandle(aContext->CreateThreadsafeHandle()),
-        mManager(aManager),
+        mManager(std::move(aManager)),
         mData(aData),
         mTarget(aTarget),
         mInitAction(aInitAction),
@@ -198,7 +200,7 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
 
   RefPtr<Context> mContext;
   RefPtr<ThreadsafeHandle> mThreadsafeHandle;
-  RefPtr<Manager> mManager;
+  SafeRefPtr<Manager> mManager;
   RefPtr<Data> mData;
   nsCOMPtr<nsISerialEventTarget> mTarget;
   RefPtr<Action> mInitAction;
@@ -758,18 +760,19 @@ void Context::ThreadsafeHandle::ContextDestroyed(Context* aContext) {
 }
 
 // static
-already_AddRefed<Context> Context::Create(Manager* aManager,
+already_AddRefed<Context> Context::Create(SafeRefPtr<Manager> aManager,
                                           nsISerialEventTarget* aTarget,
                                           Action* aInitAction,
                                           Context* aOldContext) {
-  RefPtr<Context> context = new Context(aManager, aTarget, aInitAction);
+  RefPtr<Context> context =
+      new Context(std::move(aManager), aTarget, aInitAction);
   context->Init(aOldContext);
   return context.forget();
 }
 
-Context::Context(Manager* aManager, nsISerialEventTarget* aTarget,
+Context::Context(SafeRefPtr<Manager> aManager, nsISerialEventTarget* aTarget,
                  Action* aInitAction)
-    : mManager(aManager),
+    : mManager(std::move(aManager)),
       mTarget(aTarget),
       mData(new Data(aTarget)),
       mState(STATE_CONTEXT_PREINIT),
@@ -912,8 +915,8 @@ void Context::Start() {
   MOZ_DIAGNOSTIC_ASSERT(mState == STATE_CONTEXT_PREINIT);
   MOZ_DIAGNOSTIC_ASSERT(!mInitRunnable);
 
-  mInitRunnable =
-      new QuotaInitRunnable(this, mManager, mData, mTarget, mInitAction);
+  mInitRunnable = new QuotaInitRunnable(this, mManager.clonePtr(), mData,
+                                        mTarget, mInitAction);
   mInitAction = nullptr;
 
   mState = STATE_CONTEXT_INIT;

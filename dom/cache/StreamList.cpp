@@ -15,8 +15,8 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-StreamList::StreamList(Manager* aManager, Context* aContext)
-    : mManager(aManager),
+StreamList::StreamList(SafeRefPtr<Manager> aManager, Context* aContext)
+    : mManager(std::move(aManager)),
       mContext(aContext),
       mCacheId(INVALID_CACHE_ID),
       mStreamControl(nullptr),
@@ -25,9 +25,9 @@ StreamList::StreamList(Manager* aManager, Context* aContext)
   mContext->AddActivity(this);
 }
 
-Manager* StreamList::GetManager() const {
+Manager& StreamList::GetManager() const {
   MOZ_DIAGNOSTIC_ASSERT(mManager);
-  return mManager;
+  return *mManager;
 }
 
 bool StreamList::ShouldOpenStreamFor(const nsID& aId) const {

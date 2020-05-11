@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_cache_Context_h
 #define mozilla_dom_cache_Context_h
 
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/cache/Types.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
@@ -116,7 +117,7 @@ class Context final {
   // Create a Context attached to the given Manager.  The given Action
   // will run on the QuotaManager IO thread.  Note, this Action must
   // be execute synchronously.
-  static already_AddRefed<Context> Create(Manager* aManager,
+  static already_AddRefed<Context> Create(SafeRefPtr<Manager> aManager,
                                           nsISerialEventTarget* aTarget,
                                           Action* aInitAction,
                                           Context* aOldContext);
@@ -177,7 +178,7 @@ class Context final {
     RefPtr<Action> mAction;
   };
 
-  Context(Manager* aManager, nsISerialEventTarget* aTarget,
+  Context(SafeRefPtr<Manager> aManager, nsISerialEventTarget* aTarget,
           Action* aInitAction);
   ~Context();
   void Init(Context* aOldContext);
@@ -192,7 +193,7 @@ class Context final {
 
   void DoomTargetData();
 
-  RefPtr<Manager> mManager;
+  SafeRefPtr<Manager> mManager;
   nsCOMPtr<nsISerialEventTarget> mTarget;
   RefPtr<Data> mData;
   State mState;

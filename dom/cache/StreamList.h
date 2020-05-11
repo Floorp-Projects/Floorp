@@ -7,9 +7,10 @@
 #ifndef mozilla_dom_cache_StreamList_h
 #define mozilla_dom_cache_StreamList_h
 
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/cache/Context.h"
 #include "mozilla/dom/cache/Types.h"
-#include "mozilla/RefPtr.h"
 #include "nsTArray.h"
 
 class nsIInputStream;
@@ -23,9 +24,9 @@ class Manager;
 
 class StreamList final : public Context::Activity {
  public:
-  StreamList(Manager* aManager, Context* aContext);
+  StreamList(SafeRefPtr<Manager> aManager, Context* aContext);
 
-  Manager* GetManager() const;
+  Manager& GetManager() const;
   bool ShouldOpenStreamFor(const nsID& aId) const;
 
   void SetStreamControl(CacheStreamControlParent* aStreamControl);
@@ -54,7 +55,7 @@ class StreamList final : public Context::Activity {
     nsID mId;
     nsCOMPtr<nsIInputStream> mStream;
   };
-  RefPtr<Manager> mManager;
+  SafeRefPtr<Manager> mManager;
   RefPtr<Context> mContext;
   CacheId mCacheId;
   CacheStreamControlParent* mStreamControl;
