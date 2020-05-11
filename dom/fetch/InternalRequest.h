@@ -42,7 +42,7 @@ namespace dom {
  * audioworklet      | TYPE_INTERNAL_AUDIOWORKLET
  * document          | TYPE_DOCUMENT, TYPE_INTERNAL_IFRAME, TYPE_SUBDOCUMENT
  * embed             | TYPE_INTERNAL_EMBED
- * font              | TYPE_FONT
+ * font              | TYPE_FONT, TYPE_INTERNAL_FONT_PRELOAD
  * image             | TYPE_INTERNAL_IMAGE, TYPE_INTERNAL_IMAGE_PRELOAD,
  *                   | TYPE_IMAGE, TYPE_INTERNAL_IMAGE_FAVICON, TYPE_IMAGESET
  * manifest          | TYPE_WEB_MANIFEST
