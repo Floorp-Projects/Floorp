@@ -56,7 +56,7 @@ function install_ended(install, addon) {
     sourceURL: /http:\/\/example.com\/.*\/installtrigger.html/,
   });
 
-  install.cancel();
+  return addon.uninstall();
 }
 
 const finish_test = async function(count) {

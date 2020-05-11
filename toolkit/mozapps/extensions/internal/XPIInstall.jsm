@@ -1385,29 +1385,6 @@ class AddonInstall {
         this._callInstallListeners("onDownloadCancelled");
         this.removeTemporaryFile();
         break;
-      case AddonManager.STATE_INSTALLED:
-        logger.debug("Cancelling install of " + this.addon.id);
-        let xpi = getFile(
-          `${this.addon.id}.xpi`,
-          this.location.installer.getStagingDir()
-        );
-        flushJarCache(xpi);
-        this.location.installer.cleanStagingDir([`${this.addon.id}.xpi`]);
-        this.state = AddonManager.STATE_CANCELLED;
-        this._cleanup();
-
-        if (this.existingAddon) {
-          delete this.existingAddon.pendingUpgrade;
-          this.existingAddon.pendingUpgrade = null;
-        }
-
-        AddonManagerPrivate.callAddonListeners(
-          "onOperationCancelled",
-          this.addon.wrapper
-        );
-
-        this._callInstallListeners("onInstallCancelled");
-        break;
       case AddonManager.STATE_POSTPONED:
         logger.debug(`Cancelling postponed install of ${this.addon.id}`);
         this.state = AddonManager.STATE_CANCELLED;
@@ -1693,21 +1670,6 @@ class AddonInstall {
       return;
     }
 
-    // Find and cancel any pending installs for the same add-on in the same
-    // install location
-    for (let install of XPIInstall.installs) {
-      if (
-        install.state == AddonManager.STATE_INSTALLED &&
-        install.location == this.location &&
-        install.addon.id == this.addon.id
-      ) {
-        logger.debug(
-          `Cancelling previous pending install of ${install.addon.id}`
-        );
-        install.cancel();
-      }
-    }
-
     // Reinstall existing user-disabled addon (of the same installed version).
     // If addon is marked to be uninstalled - don't reinstall it.
     if (
@@ -1722,6 +1684,7 @@ class AddonInstall {
       });
       this.state = AddonManager.STATE_INSTALLED;
       this._callInstallListeners("onInstallEnded", this.existingAddon.wrapper);
+      this._cleanup();
       return;
     }
 
