@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Amiga-specific configuration file (specification only).              */
 /*                                                                         */
-/*  Copyright (C) 2005-2019 by                                             */
+/*  Copyright (C) 2005-2020 by                                             */
 /*  Werner Lemberg and Detlef Würkner.                                     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

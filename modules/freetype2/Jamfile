@@ -1,6 +1,6 @@
 # FreeType 2 top Jamfile.
 #
-# Copyright (C) 2001-2019 by
+# Copyright (C) 2001-2020 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -208,13 +208,14 @@ rule RefDoc
 
 actions RefDoc
 {
-  python -m docwriter
-         --prefix=ft2
-         --title=FreeType-2.10.1
-         --output=$(DOC_DIR)
-         $(FT2_INCLUDE)/freetype/*.h
-         $(FT2_INCLUDE)/freetype/config/*.h
-         $(FT2_INCLUDE)/freetype/cache/*.h
+  python3 -m docwriter
+          --prefix=ft2
+          --title=FreeType-2.10.2
+          --site=reference
+          --output=$(DOC_DIR)
+          $(FT2_INCLUDE)/freetype/*.h
+          $(FT2_INCLUDE)/freetype/config/*.h
+          $(FT2_INCLUDE)/freetype/cache/*.h
 }
 
 RefDoc  refdoc ;
