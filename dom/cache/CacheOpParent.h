@@ -49,9 +49,7 @@ class CacheOpParent final : public PCacheOpParent,
   // Manager::Listener methods
   virtual void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                             CacheId aOpenedCacheId,
-                            const nsTArray<SavedResponse>& aSavedResponseList,
-                            const nsTArray<SavedRequest>& aSavedRequestList,
-                            StreamList* aStreamList) override;
+                            const Maybe<StreamInfo>& aStreamInfo) override;
 
   // utility methods
   already_AddRefed<nsIInputStream> DeserializeCacheStream(

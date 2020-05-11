@@ -547,11 +547,11 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
  public:
   CacheMatchAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                    CacheId aCacheId, const CacheMatchArgs& aArgs,
-                   StreamList* aStreamList)
+                   SafeRefPtr<StreamList> aStreamList)
       : BaseAction(std::move(aManager), aListenerId),
         mCacheId(aCacheId),
         mArgs(aArgs),
-        mStreamList(aStreamList),
+        mStreamList(std::move(aStreamList)),
         mFoundResponse(false) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
@@ -592,7 +592,7 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
     } else {
       mStreamList->Activate(mCacheId);
       aListener->OnOpComplete(std::move(aRv), CacheMatchResult(Nothing()),
-                              mResponse, mStreamList);
+                              mResponse, *mStreamList);
     }
     mStreamList = nullptr;
   }
@@ -604,7 +604,7 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
  private:
   const CacheId mCacheId;
   const CacheMatchArgs mArgs;
-  RefPtr<StreamList> mStreamList;
+  SafeRefPtr<StreamList> mStreamList;
   bool mFoundResponse;
   SavedResponse mResponse;
 };
@@ -615,11 +615,11 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
  public:
   CacheMatchAllAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                       CacheId aCacheId, const CacheMatchAllArgs& aArgs,
-                      StreamList* aStreamList)
+                      SafeRefPtr<StreamList> aStreamList)
       : BaseAction(std::move(aManager), aListenerId),
         mCacheId(aCacheId),
         mArgs(aArgs),
-        mStreamList(aStreamList) {}
+        mStreamList(std::move(aStreamList)) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
@@ -658,7 +658,7 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
   virtual void Complete(Listener* aListener, ErrorResult&& aRv) override {
     mStreamList->Activate(mCacheId);
     aListener->OnOpComplete(std::move(aRv), CacheMatchAllResult(),
-                            mSavedResponses, mStreamList);
+                            mSavedResponses, *mStreamList);
     mStreamList = nullptr;
   }
 
@@ -669,7 +669,7 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
  private:
   const CacheId mCacheId;
   const CacheMatchAllArgs mArgs;
-  RefPtr<StreamList> mStreamList;
+  SafeRefPtr<StreamList> mStreamList;
   nsTArray<SavedResponse> mSavedResponses;
 };
 
@@ -1149,11 +1149,11 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
  public:
   CacheKeysAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                   CacheId aCacheId, const CacheKeysArgs& aArgs,
-                  StreamList* aStreamList)
+                  SafeRefPtr<StreamList> aStreamList)
       : BaseAction(std::move(aManager), aListenerId),
         mCacheId(aCacheId),
         mArgs(aArgs),
-        mStreamList(aStreamList) {}
+        mStreamList(std::move(aStreamList)) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
@@ -1192,7 +1192,7 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
   virtual void Complete(Listener* aListener, ErrorResult&& aRv) override {
     mStreamList->Activate(mCacheId);
     aListener->OnOpComplete(std::move(aRv), CacheKeysResult(), mSavedRequests,
-                            mStreamList);
+                            *mStreamList);
     mStreamList = nullptr;
   }
 
@@ -1203,7 +1203,7 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
  private:
   const CacheId mCacheId;
   const CacheKeysArgs mArgs;
-  RefPtr<StreamList> mStreamList;
+  SafeRefPtr<StreamList> mStreamList;
   nsTArray<SavedRequest> mSavedRequests;
 };
 
@@ -1213,11 +1213,11 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
  public:
   StorageMatchAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                      Namespace aNamespace, const StorageMatchArgs& aArgs,
-                     StreamList* aStreamList)
+                     SafeRefPtr<StreamList> aStreamList)
       : BaseAction(std::move(aManager), aListenerId),
         mNamespace(aNamespace),
         mArgs(aArgs),
-        mStreamList(aStreamList),
+        mStreamList(std::move(aStreamList)),
         mFoundResponse(false) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
@@ -1259,7 +1259,7 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
     } else {
       mStreamList->Activate(mSavedResponse.mCacheId);
       aListener->OnOpComplete(std::move(aRv), StorageMatchResult(Nothing()),
-                              mSavedResponse, mStreamList);
+                              mSavedResponse, *mStreamList);
     }
     mStreamList = nullptr;
   }
@@ -1267,7 +1267,7 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
  private:
   const Namespace mNamespace;
   const StorageMatchArgs mArgs;
-  RefPtr<StreamList> mStreamList;
+  SafeRefPtr<StreamList> mStreamList;
   bool mFoundResponse;
   SavedResponse mSavedResponse;
 };
@@ -1516,40 +1516,41 @@ Manager::ListenerId Manager::sNextListenerId = 0;
 
 void Manager::Listener::OnOpComplete(ErrorResult&& aRv,
                                      const CacheOpResult& aResult) {
-  OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID,
-               nsTArray<SavedResponse>(), nsTArray<SavedRequest>(), nullptr);
+  OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID, Nothing());
 }
 
 void Manager::Listener::OnOpComplete(ErrorResult&& aRv,
                                      const CacheOpResult& aResult,
                                      CacheId aOpenedCacheId) {
-  OnOpComplete(std::move(aRv), aResult, aOpenedCacheId,
-               nsTArray<SavedResponse>(), nsTArray<SavedRequest>(), nullptr);
+  OnOpComplete(std::move(aRv), aResult, aOpenedCacheId, Nothing());
 }
 
 void Manager::Listener::OnOpComplete(ErrorResult&& aRv,
                                      const CacheOpResult& aResult,
                                      const SavedResponse& aSavedResponse,
-                                     StreamList* aStreamList) {
+                                     StreamList& aStreamList) {
   AutoTArray<SavedResponse, 1> responseList;
   responseList.AppendElement(aSavedResponse);
-  OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID, responseList,
-               nsTArray<SavedRequest>(), aStreamList);
+  OnOpComplete(
+      std::move(aRv), aResult, INVALID_CACHE_ID,
+      Some(StreamInfo{responseList, nsTArray<SavedRequest>(), aStreamList}));
 }
 
 void Manager::Listener::OnOpComplete(
     ErrorResult&& aRv, const CacheOpResult& aResult,
     const nsTArray<SavedResponse>& aSavedResponseList,
-    StreamList* aStreamList) {
-  OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID, aSavedResponseList,
-               nsTArray<SavedRequest>(), aStreamList);
+    StreamList& aStreamList) {
+  OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID,
+               Some(StreamInfo{aSavedResponseList, nsTArray<SavedRequest>(),
+                               aStreamList}));
 }
 
 void Manager::Listener::OnOpComplete(
     ErrorResult&& aRv, const CacheOpResult& aResult,
-    const nsTArray<SavedRequest>& aSavedRequestList, StreamList* aStreamList) {
+    const nsTArray<SavedRequest>& aSavedRequestList, StreamList& aStreamList) {
   OnOpComplete(std::move(aRv), aResult, INVALID_CACHE_ID,
-               nsTArray<SavedResponse>(), aSavedRequestList, aStreamList);
+               Some(StreamInfo{nsTArray<SavedResponse>(), aSavedRequestList,
+                               aStreamList}));
 }
 
 // static
@@ -1759,32 +1760,35 @@ void Manager::ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
   const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
   MOZ_DIAGNOSTIC_ASSERT(!pinnedContext->IsCanceled());
 
-  RefPtr<StreamList> streamList =
-      new StreamList(SafeRefPtrFromThis(), pinnedContext.clonePtr());
-  ListenerId listenerId = SaveListener(aListener);
+  const auto action = [this, aListener, aCacheId, &aOpArgs,
+                       &pinnedContext]() -> RefPtr<Action> {
+    const ListenerId listenerId = SaveListener(aListener);
 
-  RefPtr<Action> action;
-  switch (aOpArgs.type()) {
-    case CacheOpArgs::TCacheMatchArgs:
-      action = new CacheMatchAction(SafeRefPtrFromThis(), listenerId, aCacheId,
-                                    aOpArgs.get_CacheMatchArgs(), streamList);
-      break;
-    case CacheOpArgs::TCacheMatchAllArgs:
-      action =
-          new CacheMatchAllAction(SafeRefPtrFromThis(), listenerId, aCacheId,
-                                  aOpArgs.get_CacheMatchAllArgs(), streamList);
-      break;
-    case CacheOpArgs::TCacheDeleteArgs:
-      action = new CacheDeleteAction(SafeRefPtrFromThis(), listenerId, aCacheId,
-                                     aOpArgs.get_CacheDeleteArgs());
-      break;
-    case CacheOpArgs::TCacheKeysArgs:
-      action = new CacheKeysAction(SafeRefPtrFromThis(), listenerId, aCacheId,
-                                   aOpArgs.get_CacheKeysArgs(), streamList);
-      break;
-    default:
-      MOZ_CRASH("Unknown Cache operation!");
-  }
+    if (CacheOpArgs::TCacheDeleteArgs == aOpArgs.type()) {
+      return new CacheDeleteAction(SafeRefPtrFromThis(), listenerId, aCacheId,
+                                   aOpArgs.get_CacheDeleteArgs());
+    }
+
+    auto streamList = MakeSafeRefPtr<StreamList>(SafeRefPtrFromThis(),
+                                                 pinnedContext.clonePtr());
+
+    switch (aOpArgs.type()) {
+      case CacheOpArgs::TCacheMatchArgs:
+        return new CacheMatchAction(SafeRefPtrFromThis(), listenerId, aCacheId,
+                                    aOpArgs.get_CacheMatchArgs(),
+                                    std::move(streamList));
+      case CacheOpArgs::TCacheMatchAllArgs:
+        return new CacheMatchAllAction(
+            SafeRefPtrFromThis(), listenerId, aCacheId,
+            aOpArgs.get_CacheMatchAllArgs(), std::move(streamList));
+      case CacheOpArgs::TCacheKeysArgs:
+        return new CacheKeysAction(SafeRefPtrFromThis(), listenerId, aCacheId,
+                                   aOpArgs.get_CacheKeysArgs(),
+                                   std::move(streamList));
+      default:
+        MOZ_CRASH("Unknown Cache operation!");
+    }
+  }();
 
   pinnedContext->Dispatch(action);
 }
@@ -1802,37 +1806,34 @@ void Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
   const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
   MOZ_DIAGNOSTIC_ASSERT(!pinnedContext->IsCanceled());
 
-  RefPtr<StreamList> streamList =
-      new StreamList(SafeRefPtrFromThis(), pinnedContext.clonePtr());
-  ListenerId listenerId = SaveListener(aListener);
+  const auto action = [this, aListener, aNamespace, &aOpArgs,
+                       &pinnedContext]() -> RefPtr<Action> {
+    const ListenerId listenerId = SaveListener(aListener);
 
-  RefPtr<Action> action;
-  switch (aOpArgs.type()) {
-    case CacheOpArgs::TStorageMatchArgs:
-      action =
-          new StorageMatchAction(SafeRefPtrFromThis(), listenerId, aNamespace,
-                                 aOpArgs.get_StorageMatchArgs(), streamList);
-      break;
-    case CacheOpArgs::TStorageHasArgs:
-      action = new StorageHasAction(SafeRefPtrFromThis(), listenerId,
+    switch (aOpArgs.type()) {
+      case CacheOpArgs::TStorageMatchArgs:
+        return new StorageMatchAction(
+            SafeRefPtrFromThis(), listenerId, aNamespace,
+            aOpArgs.get_StorageMatchArgs(),
+            MakeSafeRefPtr<StreamList>(SafeRefPtrFromThis(),
+                                       pinnedContext.clonePtr()));
+      case CacheOpArgs::TStorageHasArgs:
+        return new StorageHasAction(SafeRefPtrFromThis(), listenerId,
                                     aNamespace, aOpArgs.get_StorageHasArgs());
-      break;
-    case CacheOpArgs::TStorageOpenArgs:
-      action = new StorageOpenAction(SafeRefPtrFromThis(), listenerId,
+      case CacheOpArgs::TStorageOpenArgs:
+        return new StorageOpenAction(SafeRefPtrFromThis(), listenerId,
                                      aNamespace, aOpArgs.get_StorageOpenArgs());
-      break;
-    case CacheOpArgs::TStorageDeleteArgs:
-      action =
-          new StorageDeleteAction(SafeRefPtrFromThis(), listenerId, aNamespace,
-                                  aOpArgs.get_StorageDeleteArgs());
-      break;
-    case CacheOpArgs::TStorageKeysArgs:
-      action =
-          new StorageKeysAction(SafeRefPtrFromThis(), listenerId, aNamespace);
-      break;
-    default:
-      MOZ_CRASH("Unknown CacheStorage operation!");
-  }
+      case CacheOpArgs::TStorageDeleteArgs:
+        return new StorageDeleteAction(SafeRefPtrFromThis(), listenerId,
+                                       aNamespace,
+                                       aOpArgs.get_StorageDeleteArgs());
+      case CacheOpArgs::TStorageKeysArgs:
+        return new StorageKeysAction(SafeRefPtrFromThis(), listenerId,
+                                     aNamespace);
+      default:
+        MOZ_CRASH("Unknown CacheStorage operation!");
+    }
+  }();
 
   pinnedContext->Dispatch(action);
 }

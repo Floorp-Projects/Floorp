@@ -389,7 +389,7 @@ void AutoParentOpResult::Add(CacheId aOpenedCacheId,
 }
 
 void AutoParentOpResult::Add(const SavedResponse& aSavedResponse,
-                             StreamList* aStreamList) {
+                             StreamList& aStreamList) {
   MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
   switch (mOpResult.type()) {
@@ -428,7 +428,7 @@ void AutoParentOpResult::Add(const SavedResponse& aSavedResponse,
 }
 
 void AutoParentOpResult::Add(const SavedRequest& aSavedRequest,
-                             StreamList* aStreamList) {
+                             StreamList& aStreamList) {
   MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
   switch (mOpResult.type()) {
@@ -468,7 +468,7 @@ const CacheOpResult& AutoParentOpResult::SendAsOpResult() {
 }
 
 void AutoParentOpResult::SerializeResponseBody(
-    const SavedResponse& aSavedResponse, StreamList* aStreamList,
+    const SavedResponse& aSavedResponse, StreamList& aStreamList,
     CacheResponse* aResponseOut) {
   MOZ_DIAGNOSTIC_ASSERT(aResponseOut);
 
@@ -483,13 +483,12 @@ void AutoParentOpResult::SerializeResponseBody(
 }
 
 void AutoParentOpResult::SerializeReadStream(const nsID& aId,
-                                             StreamList* aStreamList,
+                                             StreamList& aStreamList,
                                              CacheReadStream* aReadStreamOut) {
-  MOZ_DIAGNOSTIC_ASSERT(aStreamList);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
   MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
-  nsCOMPtr<nsIInputStream> stream = aStreamList->Extract(aId);
+  nsCOMPtr<nsIInputStream> stream = aStreamList.Extract(aId);
 
   if (!mStreamControl) {
     mStreamControl = static_cast<CacheStreamControlParent*>(
@@ -504,7 +503,7 @@ void AutoParentOpResult::SerializeReadStream(const nsID& aId,
     }
   }
 
-  aStreamList->SetStreamControl(mStreamControl);
+  aStreamList.SetStreamControl(mStreamControl);
 
   RefPtr<ReadStream> readStream =
       ReadStream::Create(mStreamControl, aId, stream);
