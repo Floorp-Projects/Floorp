@@ -516,6 +516,8 @@ STATIC_ATOMS = [
     Atom("ignoreuserfocus", "ignoreuserfocus"),
     Atom("image", "image"),
     Atom("imageClickedPoint", "image-clicked-point"),
+    Atom("imagesizes", "imagesizes"),
+    Atom("imagesrcset", "imagesrcset"),
     Atom("img", "img"),
     Atom("implementation", "implementation"),
     Atom("implements", "implements"),

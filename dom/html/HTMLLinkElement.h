@@ -162,6 +162,18 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   void GetReferrerPolicy(nsAString& aReferrer) {
     GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
   }
+  void GetImageSrcset(nsAString& aImageSrcset) {
+    GetHTMLAttr(nsGkAtoms::imagesrcset, aImageSrcset);
+  }
+  void SetImageSrcset(const nsAString& aImageSrcset, ErrorResult& aError) {
+    SetHTMLAttr(nsGkAtoms::imagesrcset, aImageSrcset, aError);
+  }
+  void GetImageSizes(nsAString& aImageSizes) {
+    GetHTMLAttr(nsGkAtoms::imagesizes, aImageSizes);
+  }
+  void SetImageSizes(const nsAString& aImageSizes, ErrorResult& aError) {
+    SetHTMLAttr(nsGkAtoms::imagesizes, aImageSizes, aError);
+  }
 
   CORSMode GetCORSMode() const {
     return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
