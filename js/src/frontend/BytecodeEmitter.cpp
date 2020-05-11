@@ -2433,6 +2433,8 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
+  BCEScriptStencil stencil(*this, std::move(immutableScriptData));
+
   RootedObject functionOrGlobal(cx);
   if (sc->isFunctionBox()) {
     functionOrGlobal = sc->asFunctionBox()->function();
@@ -2442,12 +2444,10 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
 
   RootedScript script(
       cx, JSScript::Create(cx, functionOrGlobal, compilationInfo.sourceObject,
-                           sc->getScriptExtent(), sc->immutableFlags()));
+                           sc->getScriptExtent(), stencil.immutableFlags));
   if (!script) {
     return false;
   }
-
-  BCEScriptStencil stencil(*this, std::move(immutableScriptData));
   if (!JSScript::fullyInitFromStencil(cx, compilationInfo, script, stencil)) {
     return false;
   }
