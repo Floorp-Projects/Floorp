@@ -1638,6 +1638,13 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     splitSignExtTag(value, scratch);
     return testMagic(cond, scratch);
   }
+  Condition testGCThing(Condition cond, const ValueOperand& value) {
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(value.valueReg() != scratch);
+    splitSignExtTag(value, scratch);
+    return testGCThing(cond, scratch);
+  }
   Condition testError(Condition cond, const ValueOperand& value) {
     return testMagic(cond, value);
   }

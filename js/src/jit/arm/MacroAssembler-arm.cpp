@@ -2446,6 +2446,11 @@ Assembler::Condition MacroAssemblerARMCompat::testPrimitive(
   return testPrimitive(cond, value.typeReg());
 }
 
+Assembler::Condition MacroAssemblerARMCompat::testGCThing(
+    Assembler::Condition cond, const ValueOperand& value) {
+  return testGCThing(cond, value.typeReg());
+}
+
 // Register-based tests.
 Assembler::Condition MacroAssemblerARMCompat::testInt32(
     Assembler::Condition cond, Register tag) {
@@ -2515,6 +2520,13 @@ Assembler::Condition MacroAssemblerARMCompat::testPrimitive(
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
   ma_cmp(tag, ImmTag(JS::detail::ValueUpperExclPrimitiveTag));
   return cond == Equal ? Below : AboveOrEqual;
+}
+
+Assembler::Condition MacroAssemblerARMCompat::testGCThing(
+    Assembler::Condition cond, Register tag) {
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  ma_cmp(tag, ImmTag(JS::detail::ValueLowerInclGCThingTag));
+  return cond == Equal ? AboveOrEqual : Below;
 }
 
 Assembler::Condition MacroAssemblerARMCompat::testGCThing(
