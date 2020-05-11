@@ -38,6 +38,7 @@ toolkit.jar:
   skin/classic/global/pictureinpicture/close-pip.svg       (../../shared/pictureinpicture/close-pip.svg)
   skin/classic/global/icons/columnpicker.svg               (../../shared/icons/columnpicker.svg)
   skin/classic/global/icons/delete.svg                     (../../shared/icons/delete.svg)
+  skin/classic/global/icons/document.svg                   (../../shared/icons/document.svg)
   skin/classic/global/icons/error.svg                      (../../shared/icons/error.svg)
   skin/classic/global/icons/find-previous-arrow.svg        (../../shared/icons/find-previous-arrow.svg)
   skin/classic/global/icons/find-next-arrow.svg            (../../shared/icons/find-next-arrow.svg)
