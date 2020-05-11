@@ -78,8 +78,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
          "we end up with the appropriate constructor: " + c);
       is(Cu.unwaiveXrays(Cu.waiveXrays(new iwin[c](...args)).constructor), iwin[c],
          "constructor property is set up right: " + c);
-      let expectedProto = /Opaque/.test(new iwin[c](...args)) ? iwin['Object'].prototype
-                                                     : iwin[c].prototype;
+      let expectedProto = Cu.isOpaqueWrapper(new iwin[c](...args)) ?
+        iwin['Object'].prototype : iwin[c].prototype;
       is(Object.getPrototypeOf(new iwin[c](...args)), expectedProto,
          "prototype is correct: " + c);
       is(global(new iwin[c](...args)), iwin, "Got the right global: " + c);
@@ -148,8 +148,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
          "we end up with the appropriate AggregateError constructor");
       is(Cu.unwaiveXrays(Cu.waiveXrays(new iwin.AggregateError(...args)).constructor), iwin.AggregateError,
          "AggregateError constructor property is set up right");
-      let expectedProto = /Opaque/.test(new iwin.AggregateError(...args)) ? iwin['Object'].prototype
-                                                                          : iwin.AggregateError.prototype;
+      let expectedProto =  Cu.isOpaqueWrapper(new iwin.AggregateError(...args)) ?
+        iwin['Object'].prototype : iwin.AggregateError.prototype;
       is(Object.getPrototypeOf(new iwin.AggregateError(...args)), expectedProto,
          "AggregateError prototype is correct");
       is(global(new iwin.AggregateError(...args)), iwin, "Got the right global for AggregateError");
@@ -383,11 +383,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
         is(method.call(xray) + "", local.call(xray) + "",
            "Xray and local method results stringify identically");
 
-        // If invoking this method returns something non-Xrayable, the
-        // stringification is going to return [object Opaque].
+        // If invoking this method returns something non-Xrayable (opaque), the
+        // stringification is going to return [object Object].
         // This happens for set[@@iterator] and other Iterator objects.
         let callable = lookupCallable(xray.wrappedJSObject);
-        if (!/Opaque/.test(method.call(xray)) && callable) {
+        if (!Cu.isOpaqueWrapper(method.call(xray)) && callable) {
           is(method.call(xray) + "",
              callable.call(xray.wrappedJSObject) + "",
              "Xray and waived method results stringify identically");
