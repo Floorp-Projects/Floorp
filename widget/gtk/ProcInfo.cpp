@@ -102,8 +102,10 @@ class StatReader {
       case 23:
         // Resident Set Size: number of pages the process has
         // in real memory.
-        aInfo.residentSetSize = Get64Value(aToken, &rv);
+        uint64_t pageCount = Get64Value(aToken, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
+        uint64_t pageSize = sysconf(_SC_PAGESIZE);
+        aInfo.residentSetSize = pageCount * pageSize;
         break;
     }
     return rv;
