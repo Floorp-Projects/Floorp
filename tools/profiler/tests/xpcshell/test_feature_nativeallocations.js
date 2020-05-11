@@ -28,7 +28,6 @@ add_task(async () => {
   {
     info("Start the profiler.");
     startProfiler({
-      entries: 1e6,
       // Only instrument the main thread.
       threads: ["GeckoMain"],
       features: ["threads", "leaf", "nativeallocations"],
