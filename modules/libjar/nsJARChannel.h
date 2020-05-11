@@ -104,9 +104,6 @@ class nsJARChannel final : public nsIJARChannel,
   nsCOMPtr<nsIURI> mJarBaseURI;
   nsCString mJarEntry;
   nsCString mInnerJarEntry;
-
-  // use StreamTransportService as background thread
-  nsCOMPtr<nsIEventTarget> mWorker;
 };
 
 #endif  // nsJARChannel_h__
