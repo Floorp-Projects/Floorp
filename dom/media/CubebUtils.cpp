@@ -52,7 +52,6 @@
 #define PREF_CUBEB_LOGGING_LEVEL "media.cubeb.logging_level"
 // Hidden pref used by tests to force failure to obtain cubeb context
 #define PREF_CUBEB_FORCE_NULL_CONTEXT "media.cubeb.force_null_context"
-#define PREF_CUBEB_OUTPUT_VOICE_ROUTING "media.cubeb.output_voice_routing"
 // Hidden pref to disable BMO 1427011 experiment; can be removed once proven.
 #define PREF_CUBEB_DISABLE_DEVICE_SWITCHING \
   "media.cubeb.disable_device_switching"
@@ -101,7 +100,6 @@ bool sCubebMTGLatencyPrefSet = false;
 bool sAudioStreamInitEverSucceeded = false;
 bool sCubebForceNullContext = false;
 bool sCubebDisableDeviceSwitching = true;
-bool sRouteOutputAsVoice = false;
 #ifdef MOZ_CUBEB_REMOTING
 bool sCubebSandbox = false;
 size_t sAudioIPCPoolSize;
@@ -269,13 +267,6 @@ void PrefChanged(const char* aPref, void* aClosure) {
                                               AUDIOIPC_STACK_SIZE_DEFAULT);
   }
 #endif
-  else if (strcmp(aPref, PREF_CUBEB_OUTPUT_VOICE_ROUTING) == 0) {
-    StaticMutexAutoLock lock(sMutex);
-    sRouteOutputAsVoice = Preferences::GetBool(aPref);
-    MOZ_LOG(gCubebLog, LogLevel::Verbose,
-            ("%s: %s", PREF_CUBEB_OUTPUT_VOICE_ROUTING,
-             sRouteOutputAsVoice ? "true" : "false"));
-  }
 }
 
 bool GetFirstStream() {
@@ -684,8 +675,6 @@ cubeb_stream_prefs GetDefaultStreamPrefs() {
 #endif
   return CUBEB_STREAM_PREF_NONE;
 }
-
-bool RouteOutputAsVoice() { return sRouteOutputAsVoice; }
 
 #ifdef MOZ_WIDGET_ANDROID
 uint32_t AndroidGetAudioOutputSampleRate() {
