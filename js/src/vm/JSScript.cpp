@@ -4129,6 +4129,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 /* static */
 bool PrivateScriptData::InitFromStencil(
     JSContext* cx, js::HandleScript script,
+    js::frontend::CompilationInfo& compilationInfo,
     const frontend::ScriptStencil& stencil) {
   uint32_t ngcthings = stencil.gcThings.length();
 
@@ -4141,7 +4142,8 @@ bool PrivateScriptData::InitFromStencil(
 
   js::PrivateScriptData* data = script->data_;
   if (ngcthings) {
-    if (!stencil.finishGCThings(cx, data->gcthings())) {
+    if (!EmitScriptThingsVector(cx, compilationInfo, stencil.gcThings,
+                                data->gcthings())) {
       return false;
     }
   }
@@ -4281,7 +4283,8 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
   script->resetArgsUsageAnalysis();
 
   // Create and initialize PrivateScriptData
-  if (!PrivateScriptData::InitFromStencil(cx, script, stencil)) {
+  if (!PrivateScriptData::InitFromStencil(cx, script, compilationInfo,
+                                          stencil)) {
     return false;
   }
 
