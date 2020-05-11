@@ -107,11 +107,6 @@ class SmooshScriptStencil : public ScriptStencil {
     return true;
   }
 
-  virtual bool finishGCThings(
-      JSContext* cx, mozilla::Span<JS::GCCellPtr> output) const override {
-    return EmitScriptThingsVector(cx, compilationInfo_, gcThings, output);
-  }
-
   virtual void initAtomMap(GCPtrAtom* atoms) const override {
     for (uint32_t i = 0; i < natoms; i++) {
       size_t index = result_.atoms.data[i];

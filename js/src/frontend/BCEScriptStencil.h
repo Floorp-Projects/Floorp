@@ -29,8 +29,6 @@ class BCEScriptStencil : public ScriptStencil {
   BCEScriptStencil(BytecodeEmitter& bce,
                    UniquePtr<ImmutableScriptData> immutableData);
 
-  virtual bool finishGCThings(
-      JSContext* cx, mozilla::Span<JS::GCCellPtr> output) const override;
   virtual void initAtomMap(GCPtrAtom* atoms) const override;
 };
 
