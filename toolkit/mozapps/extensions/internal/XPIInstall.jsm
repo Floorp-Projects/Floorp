@@ -117,11 +117,18 @@ const PREF_SELECTED_LWT = "lightweightThemes.selectedThemeID";
 
 const TOOLKIT_ID = "toolkit@mozilla.org";
 
-/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, XPI_PERMISSION, XPIStates, getURIForResourceInFile, iterDirectory */
+/* globals BOOTSTRAP_REASONS, DIR_STAGE, DIR_TRASH, KEY_APP_PROFILE, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS,
+   KEY_APP_SYSTEM_PROFILE, KEY_PROFILEDIR, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX,
+   XPI_PERMISSION, XPIStates, getURIForResourceInFile, iterDirectory */
 const XPI_INTERNAL_SYMBOLS = [
   "BOOTSTRAP_REASONS",
+  "DIR_STAGE",
+  "DIR_TRASH",
+  "KEY_APP_PROFILE",
   "KEY_APP_SYSTEM_ADDONS",
   "KEY_APP_SYSTEM_DEFAULTS",
+  "KEY_APP_SYSTEM_PROFILE",
+  "KEY_PROFILEDIR",
   "PREF_BRANCH_INSTALLED_ADDON",
   "PREF_SYSTEM_ADDON_SET",
   "TEMPORARY_ADDON_SUFFIX",
@@ -181,13 +188,7 @@ const PREF_XPI_SIGNATURES_DEV_ROOT = "xpinstall.signatures.dev-root";
 const PREF_INSTALL_REQUIREBUILTINCERTS =
   "extensions.install.requireBuiltInCerts";
 
-const KEY_PROFILEDIR = "ProfD";
 const KEY_TEMPDIR = "TmpD";
-
-const KEY_APP_PROFILE = "app-profile";
-
-const DIR_STAGE = "staged";
-const DIR_TRASH = "trash";
 
 // This is a random number array that can be used as "salt" when generating
 // an automatic ID based on the directory path of an add-on. It will prevent
@@ -840,17 +841,27 @@ function getSignedStatus(aRv, aCert, aAddonID) {
 }
 
 function shouldVerifySignedState(aAddon) {
-  // Updated system add-ons should always have their signature checked
-  if (aAddon.location.name == KEY_APP_SYSTEM_ADDONS) {
-    return true;
-  }
+  // TODO when KEY_APP_SYSTEM_DEFAULTS and KEY_APP_SYSTEM_ADDONS locations
+  // are removed, we need to reorganize the logic here.  At that point we
+  // should:
+  //   if builtin or MOZ_UNSIGNED_SCOPES return false
+  //   if system return true
+  //   return SIGNED_TYPES.has(type)
 
   // We don't care about signatures for default system add-ons
   if (aAddon.location.name == KEY_APP_SYSTEM_DEFAULTS) {
     return false;
   }
 
-  if (aAddon.location.scope & AppConstants.MOZ_UNSIGNED_SCOPES) {
+  // Updated system add-ons should always have their signature checked
+  if (aAddon.location.isSystem) {
+    return true;
+  }
+
+  if (
+    aAddon.location.isBuiltin ||
+    aAddon.location.scope & AppConstants.MOZ_UNSIGNED_SCOPES
+  ) {
     return false;
   }
 
@@ -4176,12 +4187,24 @@ var XPIInstall = {
    * @param {Object} [aOptions.telemetryInfo]
    *        An optional object which provides details about the installation source
    *        included in the addon manager telemetry events.
-   * @param {boolean} [options.sendCookies = false]
+   * @param {boolean} [aOptions.sendCookies = false]
    *        Whether cookies should be sent when downloading the add-on.
+   * @param {string} [aOptions.useSystemLocation = false]
+   *        If true installs to the system profile location.
    * @returns {AddonInstall}
    */
   async getInstallForURL(aUrl, aOptions) {
-    let location = XPIStates.getLocation(KEY_APP_PROFILE);
+    let locationName = aOptions.useSystemLocation
+      ? KEY_APP_SYSTEM_PROFILE
+      : KEY_APP_PROFILE;
+    let location = XPIStates.getLocation(locationName);
+    if (!location) {
+      throw Components.Exception(
+        "Invalid location name",
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
+
     let url = Services.io.newURI(aUrl);
 
     if (url instanceof Ci.nsIFileURL) {
@@ -4202,10 +4225,23 @@ var XPIInstall = {
    * @param {Object?} [aInstallTelemetryInfo]
    *        An optional object which provides details about the installation source
    *        included in the addon manager telemetry events.
+   * @param {boolean} [aUseSystemLocation = false]
+   *        If true install to the system profile location.
    * @returns {AddonInstall?}
    */
-  async getInstallForFile(aFile, aInstallTelemetryInfo) {
-    let install = await createLocalInstall(aFile, null, aInstallTelemetryInfo);
+  async getInstallForFile(
+    aFile,
+    aInstallTelemetryInfo,
+    aUseSystemLocation = false
+  ) {
+    let location = XPIStates.getLocation(
+      aUseSystemLocation ? KEY_APP_SYSTEM_PROFILE : KEY_APP_PROFILE
+    );
+    let install = await createLocalInstall(
+      aFile,
+      location,
+      aInstallTelemetryInfo
+    );
     return install ? install.wrapper : null;
   },
 
