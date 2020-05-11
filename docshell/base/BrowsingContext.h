@@ -133,10 +133,7 @@ class WindowProxyHolder;
   FIELD(WatchedByDevtools, bool)                                             \
   FIELD(TextZoom, float)                                                     \
   /* See nsIRequest for possible flags. */                                   \
-  FIELD(DefaultLoadFlags, uint32_t)                                          \
-  /* Mixed-Content: If the corresponding documentURI is https,               \
-   * then this flag is true. */                                              \
-  FIELD(IsSecure, bool)
+  FIELD(DefaultLoadFlags, uint32_t)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -727,8 +724,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               const bool& aAllowContentRetargetingOnChildren,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
-              ContentParent* aSource);
-  bool CanSet(FieldIndex<IDX_IsSecure>, const bool& aIsSecure,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_WatchedByDevtools>, const bool& aWatchedByDevtools,
               ContentParent* aSource);
