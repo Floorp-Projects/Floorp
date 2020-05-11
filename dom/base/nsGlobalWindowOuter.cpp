@@ -5264,15 +5264,6 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
       EnterModalState();
       webBrowserPrint->Print(printSettings, nullptr);
       LeaveModalState();
-
-      bool savePrintSettings =
-          Preferences::GetBool("print.save_print_settings", false);
-      if (savePrintSettings) {
-        printSettingsService->SavePrintSettingsToPrefs(
-            printSettings, true, nsIPrintSettings::kInitSaveAll);
-        printSettingsService->SavePrintSettingsToPrefs(
-            printSettings, false, nsIPrintSettings::kInitSavePrinterName);
-      }
     } else {
       webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
       webBrowserPrint->Print(printSettings, nullptr);
