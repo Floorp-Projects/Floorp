@@ -26,6 +26,11 @@ permalink: /changelog/
 
 * **browser-tabstray**
   * Added optional `itemDecoration` DividerItemDecoration parameter to `BrowserTabsTray` constructor to allow the clients to add their own dividers. This is used to ensure setting divider item decoration after setAdapter() is called.
+
+* **service-glean**
+  * Glean was updated to v29.1.0
+    * ⚠️ **This is a breaking change**: glinter errors found during code generation will now return an error code.
+    * The minimum and maximum values of a timing distribution can now be controlled by the `time_unit` parameter. See [bug 1630997](https://bugzilla.mozilla.org/show_bug.cgi?id=1630997) for more details.
   
 # 40.0.0
 
