@@ -62,7 +62,6 @@
  *
  */
 
-var gSavePrintSettings = false;
 var gFocusedElement = null;
 
 var PrintUtils = {
@@ -90,17 +89,6 @@ var PrintUtils = {
         "@mozilla.org/embedcomp/printingprompt-service;1"
       ].getService(Ci.nsIPrintingPromptService);
       PRINTPROMPTSVC.showPageSetupDialog(window, printSettings, null);
-      if (gSavePrintSettings) {
-        // Page Setup data is a "native" setting on the Mac
-        var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-          Ci.nsIPrintSettingsService
-        );
-        PSSVC.savePrintSettingsToPrefs(
-          printSettings,
-          true,
-          printSettings.kInitSaveNativeData
-        );
-      }
     } catch (e) {
       dump("showPageSetup " + e + "\n");
       return false;
@@ -422,10 +410,6 @@ var PrintUtils = {
   },
 
   getPrintSettings() {
-    gSavePrintSettings = Services.prefs.getBoolPref(
-      "print.save_print_settings"
-    );
-
     var printSettings;
     try {
       var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
