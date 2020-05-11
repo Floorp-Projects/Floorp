@@ -72,19 +72,39 @@ class SmooshScriptStencil : public ScriptStencil {
                          UniquePtr<ImmutableScriptData> immutableData) {
     natoms = result_.atoms.len;
 
+    // A global script is a top-level context.
+    bool isTopLevelContext = true;
+    const JS::ReadOnlyCompileOptions& options = compilationInfo_.options;
+
+    // The "input" flags are derived from options.
+    immutableFlags.setFlag(ImmutableFlags::IsForEval, result_.is_for_eval);
+    immutableFlags.setFlag(ImmutableFlags::IsModule, result_.is_module);
+    immutableFlags.setFlag(ImmutableFlags::IsFunction, false);
+    immutableFlags.setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
+    immutableFlags.setFlag(ImmutableFlags::ForceStrict,
+                           options.forceStrictMode());
+    immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
+                           result_.has_non_syntactic_scope);
+    if (isTopLevelContext) {
+      immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
+                             options.noScriptRval);
+      immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
+    }
+
+    // The parser-generated flags.
     immutableFlags.setFlag(ImmutableFlags::Strict, result_.strict);
+    immutableFlags.setFlag(ImmutableFlags::HasModuleGoal,
+                           result_.has_module_goal);
+    immutableFlags.setFlag(ImmutableFlags::HasInnerFunctions, false);
+    immutableFlags.setFlag(ImmutableFlags::HasDirectEval, false);
     immutableFlags.setFlag(ImmutableFlags::BindingsAccessedDynamically,
                            result_.bindings_accessed_dynamically);
     immutableFlags.setFlag(ImmutableFlags::HasCallSiteObj,
                            result_.has_call_site_obj);
-    immutableFlags.setFlag(ImmutableFlags::IsForEval, result_.is_for_eval);
-    immutableFlags.setFlag(ImmutableFlags::IsModule, result_.is_module);
-    immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
-                           result_.has_non_syntactic_scope);
+
+    // TODO: The parser-generated flags for functions.
     immutableFlags.setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
                            result_.needs_function_environment_objects);
-    immutableFlags.setFlag(ImmutableFlags::HasModuleGoal,
-                           result_.has_module_goal);
 
     immutableScriptData = std::move(immutableData);
 
@@ -371,21 +391,6 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   SmooshCompileOptions compileOptions;
   compileOptions.no_script_rval = options.noScriptRval;
 
-  // A global script is a top-level context.
-  bool isTopLevelContext = true;
-
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-
-  // TODO: These flags should be set by Smoosh.
-  ImmutableScriptFlags isf;
-  isf.setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
-  isf.setFlag(ImmutableFlags::ForceStrict, options.forceStrictMode());
-  isf.setFlag(ImmutableFlags::HasNonSyntacticScope, options.nonSyntacticScope);
-  if (isTopLevelContext) {
-    isf.setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
-    isf.setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
-  }
-
   SmooshResult smoosh = smoosh_run(bytes, length, &compileOptions);
   AutoFreeSmooshResult afsr(&smoosh);
 
@@ -422,7 +427,6 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   }
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(length);
-  RootedScript script(cx, JSScript::Create(cx, cx->global(), sso, extent, isf));
 
   Vector<ScopeNote, 0, SystemAllocPolicy> scopeNotes;
   if (!scopeNotes.resize(smoosh.scope_notes.len)) {
@@ -462,6 +466,11 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
+  RootedScript script(cx, JSScript::Create(cx, cx->global(), sso, extent,
+                                           stencil.immutableFlags));
+  if (!script) {
+    return nullptr;
+  }
   if (!JSScript::fullyInitFromStencil(cx, compilationInfo, script, stencil)) {
     return nullptr;
   }
