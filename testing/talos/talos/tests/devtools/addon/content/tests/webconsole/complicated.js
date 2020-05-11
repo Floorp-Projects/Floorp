@@ -31,16 +31,16 @@ const EXPECTED_MESSAGES = [
     nightlyOnly: true,
   },
   {
-    text: `InvalidStateError: XMLHttpRequest state must be OPENED.`,
+    text: `Uncaught DOMException: XMLHttpRequest state must be OPENED.`,
     visibleWhenFissionEnabled: true,
   },
   {
-    text: `SyntaxError: missing ) after argument list`,
+    text: `Uncaught SyntaxError: missing ) after argument list`,
     count: 2,
     visibleWhenFissionEnabled: false,
   },
   {
-    text: `ReferenceError: Bootloaddisableder is not defined`,
+    text: `Uncaught ReferenceError: Bootloaddisableder is not defined`,
     count: 4,
     visibleWhenFissionEnabled: false,
   },

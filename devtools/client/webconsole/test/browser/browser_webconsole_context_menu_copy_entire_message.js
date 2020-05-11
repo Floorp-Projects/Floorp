@@ -133,7 +133,7 @@ async function testMessagesCopy(hud, timestamp) {
   lines = clipboardText.split(newLineString);
   is(
     lines[0],
-    `${timestamp ? getTimestampText(message) + " " : ""}Error: "error object"`,
+    `${timestamp ? getTimestampText(message) + " " : ""}Error: error object`,
     "Error object first line has expected text"
   );
   if (timestamp) {
@@ -161,7 +161,7 @@ async function testMessagesCopy(hud, timestamp) {
   is(
     lines[0],
     (timestamp ? getTimestampText(message) + " " : "") +
-      "ReferenceError: z is not defined test.js:11:5",
+      "Uncaught ReferenceError: z is not defined",
     "ReferenceError first line has expected text"
   );
   if (timestamp) {
@@ -170,6 +170,11 @@ async function testMessagesCopy(hud, timestamp) {
       "Log line has the right format:\n" + lines[0]
     );
   }
+  is(
+    lines[1],
+    `    <anonymous> ${TEST_URI}test.js:11`,
+    "ReferenceError second line has expected text"
+  );
   ok(
     !!message.querySelector(".learn-more-link"),
     "There is a Learn More link in the ReferenceError message"

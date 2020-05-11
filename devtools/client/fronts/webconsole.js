@@ -290,6 +290,13 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
         this
       );
     }
+
+    if (packet?.pageError?.exception) {
+      packet.pageError.exception = getAdHocFrontOrPrimitiveGrip(
+        packet.pageError.exception,
+        this
+      );
+    }
     return packet;
   }
 
@@ -297,14 +304,20 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     const response = await super.getCachedMessages(messageTypes);
     if (Array.isArray(response.messages)) {
       response.messages = response.messages.map(message => {
-        if (!message || !Array.isArray(message.arguments)) {
-          return message;
+        if (Array.isArray(message?.arguments)) {
+          // We might need to create fronts for each of the message arguments.
+          message.arguments = message.arguments.map(arg =>
+            getAdHocFrontOrPrimitiveGrip(arg, this)
+          );
         }
 
-        // We might need to create fronts for each of the message arguments.
-        message.arguments = message.arguments.map(arg =>
-          getAdHocFrontOrPrimitiveGrip(arg, this)
-        );
+        if (message?.exception) {
+          message.exception = getAdHocFrontOrPrimitiveGrip(
+            message.exception,
+            this
+          );
+        }
+
         return message;
       });
     }

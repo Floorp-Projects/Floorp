@@ -101,7 +101,7 @@ function checkExportedText(text) {
   //   Array [ "b", "c"]
   //   test.js:5:17
   //   -------------------------------------------------------------------
-  //   Error: "error object":
+  //   Error: error object
   //       wrapper test.js:5
   //       logStuff test.js:17
   //   test.js:6:17
@@ -129,7 +129,7 @@ function checkExportedText(text) {
   is(lines[5], `test.js:5:17`);
 
   info("Check logged error object");
-  is(lines[6], `Error: "error object"`);
+  is(lines[6], `Error: error object`);
   is(lines[7], `    wrapper ${TEST_URI}test.js:6`);
   is(lines[8], `    logStuff ${TEST_URI}test.js:10`);
   is(lines[9], `test.js:6:17`);

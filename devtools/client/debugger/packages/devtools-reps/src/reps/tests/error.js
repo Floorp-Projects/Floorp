@@ -135,7 +135,7 @@ describe("Error - Error without stacktrace", () => {
       })
     );
 
-    expect(renderedComponent.text()).toEqual('Error: "Error message"');
+    expect(renderedComponent.text()).toEqual("Error: Error message");
   });
 
   it("renders expected text for error without stacktrace in tiny mode", () => {
@@ -383,7 +383,7 @@ describe("Error - DOMException", () => {
     );
 
     expect(renderedComponent.text()).toEqual(
-      "DOMException: \"'foo;()bar!' is not a valid selector\""
+      "DOMException: 'foo;()bar!' is not a valid selector"
     );
   });
 
