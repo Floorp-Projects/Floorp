@@ -287,7 +287,7 @@ translate-exceptions =
 
 # Variables:
 #    $localeName (string) - Localized name of the locale to be used.
-use-system-locale = 
+use-system-locale =
    .label = Use your operating system settings for “{ $localeName }” to format dates, times, numbers, and measurements.
 
 check-user-spelling =
@@ -938,7 +938,7 @@ forms-master-pw-fips-desc = Password Change Failed
 ## OS Authentication dialog
 
 # This message can be seen by trying to add a Master Password.
-master-password-os-auth-dialog-message = Verify your identity to create a Master Password.
+master-password-os-auth-dialog-message-win = To create a Master Password, enter your Windows login credentials. This helps protect the security of your accounts.
 
 # This message can be seen by trying to add a Master Password.
 # The macOS strings are preceded by the operating system with "Firefox is trying to "
