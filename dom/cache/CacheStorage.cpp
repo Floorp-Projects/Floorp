@@ -63,7 +63,7 @@ struct CacheStorage::Entry final {
   CacheOpArgs mArgs;
   // We cannot add the requests until after the actor is present.  So store
   // the request data separately for now.
-  RefPtr<InternalRequest> mRequest;
+  SafeRefPtr<InternalRequest> mRequest;
 };
 
 namespace {
@@ -319,7 +319,7 @@ already_AddRefed<Promise> CacheStorage::Match(
     return nullptr;
   }
 
-  RefPtr<InternalRequest> request =
+  SafeRefPtr<InternalRequest> request =
       ToInternalRequest(aCx, aRequest, IgnoreBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -336,7 +336,7 @@ already_AddRefed<Promise> CacheStorage::Match(
   auto entry = MakeUnique<Entry>();
   entry->mPromise = promise;
   entry->mArgs = StorageMatchArgs(CacheRequest(), params, GetOpenMode());
-  entry->mRequest = request;
+  entry->mRequest = std::move(request);
 
   RunRequest(std::move(entry));
 
@@ -547,7 +547,7 @@ void CacheStorage::RunRequest(UniquePtr<Entry> aEntry) {
 
   if (aEntry->mRequest) {
     ErrorResult rv;
-    args.Add(aEntry->mRequest, IgnoreBody, IgnoreInvalidScheme, rv);
+    args.Add(*aEntry->mRequest, IgnoreBody, IgnoreInvalidScheme, rv);
     if (NS_WARN_IF(rv.Failed())) {
       aEntry->mPromise->MaybeReject(std::move(rv));
       return;

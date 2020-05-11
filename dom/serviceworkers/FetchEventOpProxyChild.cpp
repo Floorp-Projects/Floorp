@@ -57,7 +57,7 @@ void FetchEventOpProxyChild::Initialize(
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
   MOZ_ASSERT(!mOp);
 
-  mInternalRequest = new InternalRequest(aArgs.internalRequest());
+  mInternalRequest = MakeSafeRefPtr<InternalRequest>(aArgs.internalRequest());
 
   RemoteWorkerChild* manager = static_cast<RemoteWorkerChild*>(Manager());
   MOZ_ASSERT(manager);
@@ -135,11 +135,11 @@ void FetchEventOpProxyChild::Initialize(
   manager->MaybeStartOp(std::move(op));
 }
 
-RefPtr<InternalRequest> FetchEventOpProxyChild::ExtractInternalRequest() {
+SafeRefPtr<InternalRequest> FetchEventOpProxyChild::ExtractInternalRequest() {
   MOZ_ASSERT(IsCurrentThreadRunningWorker());
   MOZ_ASSERT(mInternalRequest);
 
-  return RefPtr<InternalRequest>(std::move(mInternalRequest));
+  return std::move(mInternalRequest);
 }
 
 void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {

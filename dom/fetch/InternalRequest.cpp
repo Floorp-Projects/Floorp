@@ -22,13 +22,13 @@
 namespace mozilla {
 namespace dom {
 // The global is used to extract the principal.
-already_AddRefed<InternalRequest> InternalRequest::GetRequestConstructorCopy(
+SafeRefPtr<InternalRequest> InternalRequest::GetRequestConstructorCopy(
     nsIGlobalObject* aGlobal, ErrorResult& aRv) const {
   MOZ_RELEASE_ASSERT(!mURLList.IsEmpty(),
                      "Internal Request's urlList should not be empty when "
                      "copied from constructor.");
-  RefPtr<InternalRequest> copy =
-      new InternalRequest(mURLList.LastElement(), mFragment);
+  auto copy =
+      MakeSafeRefPtr<InternalRequest>(mURLList.LastElement(), mFragment);
   copy->SetMethod(mMethod);
   copy->mHeaders = new InternalHeaders(*mHeaders);
   copy->SetUnsafeRequest();
@@ -53,14 +53,14 @@ already_AddRefed<InternalRequest> InternalRequest::GetRequestConstructorCopy(
   copy->mContentPolicyTypeOverridden = mContentPolicyTypeOverridden;
 
   copy->mPreferredAlternativeDataType = mPreferredAlternativeDataType;
-  return copy.forget();
+  return copy;
 }
 
-already_AddRefed<InternalRequest> InternalRequest::Clone() {
-  RefPtr<InternalRequest> clone = new InternalRequest(*this);
+SafeRefPtr<InternalRequest> InternalRequest::Clone() {
+  auto clone = MakeSafeRefPtr<InternalRequest>(*this, ConstructorGuard{});
 
   if (!mBodyStream) {
-    return clone.forget();
+    return clone;
   }
 
   nsCOMPtr<nsIInputStream> clonedBody;
@@ -76,7 +76,7 @@ already_AddRefed<InternalRequest> InternalRequest::Clone() {
   if (replacementBody) {
     mBodyStream.swap(replacementBody);
   }
-  return clone.forget();
+  return clone;
 }
 InternalRequest::InternalRequest(const nsACString& aURL,
                                  const nsACString& aFragment)
@@ -116,7 +116,8 @@ InternalRequest::InternalRequest(
   MOZ_ASSERT(!aURL.IsEmpty());
   AddURL(aURL, aFragment);
 }
-InternalRequest::InternalRequest(const InternalRequest& aOther)
+InternalRequest::InternalRequest(const InternalRequest& aOther,
+                                 ConstructorGuard)
     : mMethod(aOther.mMethod),
       mURLList(aOther.mURLList.Clone()),
       mHeaders(new InternalHeaders(*aOther.mHeaders)),

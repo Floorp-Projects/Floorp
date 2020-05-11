@@ -124,8 +124,9 @@ AutoChildOpArgs::~AutoChildOpArgs() {
   mStreamCleanupList.Clear();
 }
 
-void AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,
-                          SchemeAction aSchemeAction, ErrorResult& aRv) {
+void AutoChildOpArgs::Add(const InternalRequest& aRequest,
+                          BodyAction aBodyAction, SchemeAction aSchemeAction,
+                          ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
   switch (mOpArgs.type()) {
@@ -172,10 +173,8 @@ void AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,
 
 namespace {
 
-bool MatchInPutList(InternalRequest* aRequest,
+bool MatchInPutList(const InternalRequest& aRequest,
                     const nsTArray<CacheRequestResponse>& aPutList) {
-  MOZ_DIAGNOSTIC_ASSERT(aRequest);
-
   // This method implements the SW spec QueryCache algorithm against an
   // in memory array of Request/Response objects.  This essentially the
   // same algorithm that is implemented in DBSchema.cpp.  Unfortunately
@@ -186,19 +185,19 @@ bool MatchInPutList(InternalRequest* aRequest,
   // Cache should only call into here with a GET or HEAD.
 #ifdef DEBUG
   nsAutoCString method;
-  aRequest->GetMethod(method);
+  aRequest.GetMethod(method);
   MOZ_ASSERT(method.LowerCaseEqualsLiteral("get") ||
              method.LowerCaseEqualsLiteral("head"));
 #endif
 
-  RefPtr<InternalHeaders> requestHeaders = aRequest->Headers();
+  RefPtr<InternalHeaders> requestHeaders = aRequest.Headers();
 
   for (uint32_t i = 0; i < aPutList.Length(); ++i) {
     const CacheRequest& cachedRequest = aPutList[i].request();
     const CacheResponse& cachedResponse = aPutList[i].response();
 
     nsAutoCString url;
-    aRequest->GetURL(url);
+    aRequest.GetURL(url);
 
     nsAutoCString requestUrl(cachedRequest.urlWithoutQuery());
     requestUrl.Append(cachedRequest.urlQuery());
@@ -263,7 +262,7 @@ bool MatchInPutList(InternalRequest* aRequest,
 
 }  // namespace
 
-void AutoChildOpArgs::Add(JSContext* aCx, InternalRequest* aRequest,
+void AutoChildOpArgs::Add(JSContext* aCx, const InternalRequest& aRequest,
                           BodyAction aBodyAction, SchemeAction aSchemeAction,
                           Response& aResponse, ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(!mSent);

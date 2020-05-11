@@ -354,7 +354,7 @@ class MainThreadFetchRunnable : public Runnable {
   const ClientInfo mClientInfo;
   const Maybe<ServiceWorkerDescriptor> mController;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
-  RefPtr<InternalRequest> mRequest;
+  SafeRefPtr<InternalRequest> mRequest;
   UniquePtr<SerializedStackHolder> mOriginStack;
 
  public:
@@ -362,14 +362,14 @@ class MainThreadFetchRunnable : public Runnable {
                           const ClientInfo& aClientInfo,
                           const Maybe<ServiceWorkerDescriptor>& aController,
                           nsICSPEventListener* aCSPEventListener,
-                          InternalRequest* aRequest,
+                          SafeRefPtr<InternalRequest> aRequest,
                           UniquePtr<SerializedStackHolder>&& aOriginStack)
       : Runnable("dom::MainThreadFetchRunnable"),
         mResolver(aResolver),
         mClientInfo(aClientInfo),
         mController(aController),
         mCSPEventListener(aCSPEventListener),
-        mRequest(aRequest),
+        mRequest(std::move(aRequest)),
         mOriginStack(std::move(aOriginStack)) {
     MOZ_ASSERT(mResolver);
   }
@@ -396,7 +396,7 @@ class MainThreadFetchRunnable : public Runnable {
       MOZ_ASSERT(loadGroup);
       // We don't track if a worker is spawned from a tracking script for now,
       // so pass false as the last argument to FetchDriver().
-      fetch = new FetchDriver(mRequest, principal, loadGroup,
+      fetch = new FetchDriver(mRequest.clonePtr(), principal, loadGroup,
                               workerPrivate->MainThreadEventTarget(),
                               workerPrivate->CookieJarSettings(),
                               workerPrivate->GetPerformanceStorage(), false);
@@ -455,7 +455,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
     return nullptr;
   }
 
-  RefPtr<InternalRequest> r = request->GetInternalRequest();
+  SafeRefPtr<InternalRequest> r = request->GetInternalRequest();
   RefPtr<AbortSignalImpl> signalImpl = request->GetSignalImpl();
 
   if (signalImpl && signalImpl->Aborted()) {
@@ -508,10 +508,11 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
     RefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(
         p, observer, signalImpl, request->MozErrors());
-    RefPtr<FetchDriver> fetch = new FetchDriver(
-        r, principal, loadGroup, aGlobal->EventTargetFor(TaskCategory::Other),
-        cookieJarSettings, nullptr,  // PerformanceStorage
-        isTrackingFetch);
+    RefPtr<FetchDriver> fetch =
+        new FetchDriver(std::move(r), principal, loadGroup,
+                        aGlobal->EventTargetFor(TaskCategory::Other),
+                        cookieJarSettings, nullptr,  // PerformanceStorage
+                        isTrackingFetch);
     fetch->SetDocument(doc);
     resolver->SetLoadGroup(loadGroup);
     aRv = fetch->Fetch(signalImpl, resolver);
@@ -547,7 +548,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
     RefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(
         resolver, clientInfo.ref(), worker->GlobalScope()->GetController(),
-        worker->CSPEventListener(), r, std::move(stack));
+        worker->CSPEventListener(), std::move(r), std::move(stack));
     worker->DispatchToMainThread(run.forget());
   }
 
