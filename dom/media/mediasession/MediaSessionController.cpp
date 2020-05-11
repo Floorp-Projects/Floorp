@@ -176,7 +176,7 @@ nsString MediaSessionController::GetDefaultTitle() const {
     }
     defaultTitle.AppendLiteral(" is playing media");
   } else {
-    globalParent->GetDocumentTitle(defaultTitle);
+    defaultTitle = globalParent->GetDocumentTitle();
   }
   return defaultTitle;
 }
