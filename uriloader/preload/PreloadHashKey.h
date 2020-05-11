@@ -7,6 +7,7 @@
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
+#include "mozilla/dom/ScriptKind.h"
 #include "nsURIHashKey.h"
 
 class nsIPrincipal;
@@ -32,14 +33,21 @@ class PreloadHashKey : public nsURIHashKey {
   typedef const PreloadHashKey* KeyTypePointer;
 
   PreloadHashKey() = default;
+  PreloadHashKey(const nsIURI* aKey, ResourceType aAs);
   explicit PreloadHashKey(const PreloadHashKey* aKey);
   PreloadHashKey(PreloadHashKey&& aToMove);
-  ~PreloadHashKey() = default;
 
   PreloadHashKey& operator=(const PreloadHashKey& aOther);
 
+  static PreloadHashKey CreateAsScript(
+      nsIURI* aURI, const CORSMode& aCORSMode,
+      const dom::ScriptKind& aScriptKind,
+      const dom::ReferrerPolicy& aReferrerPolicy);
+  static PreloadHashKey CreateAsScript(
+      nsIURI* aURI, const nsAString& aCrossOrigin, const nsAString& aType,
+      const dom::ReferrerPolicy& aReferrerPolicy);
+
   // TODO
-  // static CreateAsScript(...);
   // static CreateAsStyle(...);
   // static CreateAsImage(...);
   // static CreateAsFont(...);
@@ -67,6 +75,10 @@ class PreloadHashKey : public nsURIHashKey {
 
   CORSMode mCORSMode = CORS_NONE;
   enum dom::ReferrerPolicy mReferrerPolicy = dom::ReferrerPolicy::_empty;
+
+  struct {
+    dom::ScriptKind mScriptKind = dom::ScriptKind::eClassic;
+  } mScript;
 };
 
 }  // namespace mozilla
