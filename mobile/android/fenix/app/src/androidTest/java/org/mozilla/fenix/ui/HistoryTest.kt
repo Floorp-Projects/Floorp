@@ -71,7 +71,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             verifyHistoryMenuView()
             verifyVisitedTimeTitle()
@@ -88,7 +87,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
         }.openThreeDotMenu {
         }.clickCopy {
@@ -104,7 +102,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
         }.openThreeDotMenu {
         }.clickShare {
@@ -123,7 +120,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
         }.openThreeDotMenu {
         }.clickOpenInNormalTab {
@@ -141,7 +137,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
         }.openThreeDotMenu {
         }.clickOpenInPrivateTab {
@@ -159,7 +154,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
         }.openThreeDotMenu {
         }.clickDelete {
@@ -175,7 +169,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             clickDeleteHistoryButton()
             verifyDeleteConfirmationMessage()
@@ -192,7 +185,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
         }
@@ -237,7 +229,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
@@ -264,7 +255,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(secondWebPage.url) {
             verifyPageContent("Page content: 2")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
             longTapSelectItem(secondWebPage.url)
@@ -288,7 +278,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
         }

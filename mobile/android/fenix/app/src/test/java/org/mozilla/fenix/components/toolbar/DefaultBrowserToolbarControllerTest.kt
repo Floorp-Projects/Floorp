@@ -25,6 +25,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.BrowserState
@@ -287,14 +288,27 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleToolbarLibraryPress() {
-        val item = ToolbarMenu.Item.Library
+    fun handleToolbarBookmarksPress() {
+        val item = ToolbarMenu.Item.Bookmarks
 
         controller.handleToolbarItemInteraction(item)
 
-        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.LIBRARY)) }
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARKS)) }
         verify {
-            val directions = BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
+            val directions = BrowserFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
+            navController.nav(R.id.browserFragment, directions)
+        }
+    }
+
+    @Test
+    fun handleToolbarHistoryPress() {
+        val item = ToolbarMenu.Item.History
+
+        controller.handleToolbarItemInteraction(item)
+
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.HISTORY)) }
+        verify {
+            val directions = BrowserFragmentDirections.actionGlobalHistoryFragment()
             navController.nav(R.id.browserFragment, directions)
         }
     }

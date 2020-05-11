@@ -110,7 +110,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -159,7 +158,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -190,7 +188,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -208,7 +205,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -229,7 +225,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -249,7 +244,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -269,7 +263,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -288,7 +281,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -309,7 +301,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -337,7 +328,6 @@ class BookmarksTest {
         }.openHomeScreen {
             closeTab()
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -361,7 +351,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -387,7 +376,6 @@ class BookmarksTest {
             createBookmark(firstWebPage.url)
             createBookmark(secondWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -414,7 +402,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
@@ -471,7 +458,6 @@ class BookmarksTest {
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))

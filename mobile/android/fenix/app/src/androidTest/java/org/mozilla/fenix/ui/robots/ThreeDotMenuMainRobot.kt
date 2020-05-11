@@ -38,7 +38,6 @@ import org.mozilla.fenix.share.ShareFragment
  */
 class ThreeDotMenuMainRobot {
     fun verifySettingsButton() = assertSettingsButton()
-    fun verifyLibraryButton() = assertLibraryButton()
     fun verifyHistoryButton() = assertHistoryButton()
     fun verifyBookmarksButton() = assertBookmarksButton()
     fun verifyHelpButton() = assertHelpButton()
@@ -98,14 +97,6 @@ class ThreeDotMenuMainRobot {
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
-        }
-
-        fun openLibrary(interact: LibraryRobot.() -> Unit): LibraryRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.text("Library")), waitingTime)
-            libraryButton().click()
-
-            LibraryRobot().interact()
-            return LibraryRobot.Transition()
         }
 
         fun openBookmarks(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
@@ -256,10 +247,6 @@ private fun settingsButton() = onView(allOf(withResourceName("text"), withText(R
 private fun assertSettingsButton() = settingsButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     .check(matches(isCompletelyDisplayed()))
-
-private fun libraryButton() = onView(allOf(withText(R.string.browser_menu_library)))
-private fun assertLibraryButton() = libraryButton()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun historyButton() = onView(allOf(withText(R.string.library_history)))
 private fun assertHistoryButton() = historyButton()
