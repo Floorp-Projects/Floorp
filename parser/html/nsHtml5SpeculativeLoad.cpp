@@ -121,6 +121,10 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
     case eSpeculativeLoadPreconnect:
       aExecutor->Preconnect(mUrlOrSizes, mCrossOriginOrMedia);
       break;
+    case eSpeculativeLoadFont:
+      aExecutor->PreloadFont(mUrlOrSizes, mCrossOriginOrMedia,
+                             mReferrerPolicyOrIntegrity);
+      break;
     case eSpeculativeLoadFetch:
       aExecutor->PreloadFetch(mUrlOrSizes, mCrossOriginOrMedia,
                               mReferrerPolicyOrIntegrity);

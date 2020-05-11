@@ -9,6 +9,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/FontPreloader.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "nsIReferrerInfo.h"
 #include "nsNetUtil.h"
@@ -114,6 +115,9 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     preloadKey = PreloadHashKey::CreateAsImage(
         uri, mDocument->NodePrincipal(),
         dom::Element::StringToCORSMode(crossOrigin), referrerPolicy);
+  } else if (as.LowerCaseEqualsASCII("font")) {
+    preloadKey = PreloadHashKey::CreateAsFont(
+        uri, dom::Element::StringToCORSMode(crossOrigin), referrerPolicy);
   } else if (as.LowerCaseEqualsASCII("fetch")) {
     preloadKey = PreloadHashKey::CreateAsFetch(
         uri, dom::Element::StringToCORSMode(crossOrigin), referrerPolicy);
@@ -131,6 +135,8 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
       PreloadStyle(uri, charset, crossOrigin, referrerPolicyAttr, integrity);
     } else if (as.LowerCaseEqualsASCII("image")) {
       PreloadImage(uri, crossOrigin, referrerPolicyAttr, isImgSet);
+    } else if (as.LowerCaseEqualsASCII("font")) {
+      PreloadFont(uri, crossOrigin, referrerPolicyAttr);
     } else if (as.LowerCaseEqualsASCII("fetch")) {
       PreloadFetch(uri, crossOrigin, referrerPolicyAttr);
     }
@@ -173,6 +179,19 @@ void PreloadService::PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
   mDocument->PreLoadImage(aURI, aCrossOrigin,
                           PreloadReferrerPolicy(aImageReferrerPolicy),
                           aIsImgSet, true);
+}
+
+void PreloadService::PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,
+                                 const nsAString& aReferrerPolicy) {
+  CORSMode cors = dom::Element::StringToCORSMode(aCrossOrigin);
+  dom::ReferrerPolicy referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
+  auto key = PreloadHashKey::CreateAsFont(aURI, cors, referrerPolicy);
+
+  // * Bug 1618549: Depending on where we decide to do the deduplication, we may
+  // want to check if the font is already being preloaded here.
+
+  RefPtr<FontPreloader> preloader = new FontPreloader();
+  preloader->OpenChannel(&key, aURI, cors, referrerPolicy, mDocument);
 }
 
 void PreloadService::PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,

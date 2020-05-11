@@ -10,6 +10,7 @@
 #include "mozilla/ScopeExit.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
+#include "nsISupportsPriority.h"
 
 #include <limits>
 
