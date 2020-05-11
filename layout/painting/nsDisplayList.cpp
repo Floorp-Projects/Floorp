@@ -3380,6 +3380,23 @@ static bool SpecialCutoutRegionCase(nsDisplayListBuilder* aBuilder,
   return true;
 }
 
+static nsDisplayBackgroundImage* CreateBackgroundImage(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* aSecondaryFrame,
+    const nsDisplayBackgroundImage::InitData& aBgData) {
+  const auto index = aBgData.layer;
+
+  if (aSecondaryFrame) {
+    const auto tableType = GetTableTypeFromFrame(aFrame);
+    const uint16_t tableItemIndex = CalculateTablePerFrameKey(index, tableType);
+
+    return MakeDisplayItemWithIndex<nsDisplayTableBackgroundImage>(
+        aBuilder, aSecondaryFrame, tableItemIndex, aBgData, aFrame);
+  }
+
+  return MakeDisplayItemWithIndex<nsDisplayBackgroundImage>(aBuilder, aFrame,
+                                                            index, aBgData);
+}
+
 /*static*/
 bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -3581,42 +3598,26 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
           aBuilder->SetDirtyRect(dirtyRect);
         }
       }
+
       nsDisplayBackgroundImage* bgItem = nullptr;
       {
         // The clip is captured by the nsDisplayFixedPosition, so clear the
         // clip for the nsDisplayBackgroundImage inside.
         DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
         bgImageClip.Clear();
-        if (aSecondaryReferenceFrame) {
-          bgItem = MakeDisplayItem<nsDisplayTableBackgroundImage>(
-              aBuilder, aSecondaryReferenceFrame, bgData, aFrame);
-        } else {
-          bgItem = MakeDisplayItem<nsDisplayBackgroundImage>(aBuilder, aFrame,
-                                                             bgData);
-        }
+        bgItem = CreateBackgroundImage(aBuilder, aFrame,
+                                       aSecondaryReferenceFrame, bgData);
       }
       if (bgItem) {
         bgItem->SetDependentFrame(aBuilder, dependentFrame);
-        if (aSecondaryReferenceFrame) {
-          thisItemList.AppendToTop(
-              nsDisplayTableFixedPosition::CreateForFixedBackground(
-                  aBuilder, aSecondaryReferenceFrame, bgItem, i, aFrame));
-        } else {
-          thisItemList.AppendToTop(
-              nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, aFrame,
-                                                               bgItem, i));
-        }
-      }
 
-    } else {
-      nsDisplayBackgroundImage* bgItem;
-      if (aSecondaryReferenceFrame) {
-        bgItem = MakeDisplayItem<nsDisplayTableBackgroundImage>(
-            aBuilder, aSecondaryReferenceFrame, bgData, aFrame);
-      } else {
-        bgItem =
-            MakeDisplayItem<nsDisplayBackgroundImage>(aBuilder, aFrame, bgData);
+        thisItemList.AppendToTop(
+            nsDisplayFixedPosition::CreateForFixedBackground(
+                aBuilder, aFrame, aSecondaryReferenceFrame, bgItem, i));
       }
+    } else {  // bgData.shouldFixToViewport == false
+      nsDisplayBackgroundImage* bgItem = CreateBackgroundImage(
+          aBuilder, aFrame, aSecondaryReferenceFrame, bgData);
       if (bgItem) {
         bgItem->SetDependentFrame(aBuilder, dependentFrame);
         thisItemList.AppendToTop(bgItem);
@@ -4105,8 +4106,7 @@ nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aData,
     nsIFrame* aCellFrame)
     : nsDisplayBackgroundImage(aBuilder, aFrame, aData, aCellFrame),
-      mStyleFrame(aCellFrame),
-      mTableType(GetTableTypeFromFrame(mStyleFrame)) {
+      mStyleFrame(aCellFrame) {
   if (aBuilder->IsRetainingDisplayList()) {
     mStyleFrame->AddDisplayItem(this);
   }
@@ -6547,13 +6547,30 @@ already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
   return layer.forget();
 }
 
+/* static */
+nsDisplayFixedPosition* nsDisplayFixedPosition::CreateForFixedBackground(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* aSecondaryFrame,
+    nsDisplayBackgroundImage* aImage, const uint16_t aIndex) {
+  nsDisplayList temp;
+  temp.AppendToTop(aImage);
+
+  if (aSecondaryFrame) {
+    auto tableType = GetTableTypeFromFrame(aFrame);
+    const uint16_t index = CalculateTablePerFrameKey(aIndex + 1, tableType);
+    return MakeDisplayItemWithIndex<nsDisplayTableFixedPosition>(
+        aBuilder, aSecondaryFrame, index, &temp, aFrame);
+  }
+
+  return MakeDisplayItemWithIndex<nsDisplayFixedPosition>(aBuilder, aFrame,
+                                                          aIndex + 1, &temp);
+}
+
 nsDisplayFixedPosition::nsDisplayFixedPosition(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot,
     const ActiveScrolledRoot* aContainerASR)
     : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot),
       mContainerASR(aContainerASR),
-      mIndex(0),
       mIsFixedBackground(false) {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   Init(aBuilder);
@@ -6561,12 +6578,10 @@ nsDisplayFixedPosition::nsDisplayFixedPosition(
 
 nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
                                                nsIFrame* aFrame,
-                                               nsDisplayList* aList,
-                                               uint16_t aIndex)
+                                               nsDisplayList* aList)
     : nsDisplayOwnLayer(aBuilder, aFrame, aList,
                         aBuilder->CurrentActiveScrolledRoot()),
       mContainerASR(nullptr),  // XXX maybe this should be something?
-      mIndex(aIndex),
       mIsFixedBackground(true) {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   Init(aBuilder);
@@ -6577,17 +6592,6 @@ void nsDisplayFixedPosition::Init(nsDisplayListBuilder* aBuilder) {
   if (ShouldFixToViewport(aBuilder)) {
     mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
   }
-}
-
-/* static */
-nsDisplayFixedPosition* nsDisplayFixedPosition::CreateForFixedBackground(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    nsDisplayBackgroundImage* aImage, uint16_t aIndex) {
-  nsDisplayList temp;
-  temp.AppendToTop(aImage);
-
-  return MakeDisplayItem<nsDisplayFixedPosition>(aBuilder, aFrame, &temp,
-                                                 aIndex + 1);
 }
 
 already_AddRefed<Layer> nsDisplayFixedPosition::BuildLayer(
@@ -6710,26 +6714,12 @@ TableType GetTableTypeFromFrame(nsIFrame* aFrame) {
 
 nsDisplayTableFixedPosition::nsDisplayTableFixedPosition(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
-    uint16_t aIndex, nsIFrame* aAncestorFrame)
-    : nsDisplayFixedPosition(aBuilder, aFrame, aList, aIndex),
-      mAncestorFrame(aAncestorFrame),
-      mTableType(GetTableTypeFromFrame(aAncestorFrame)) {
+    nsIFrame* aAncestorFrame)
+    : nsDisplayFixedPosition(aBuilder, aFrame, aList),
+      mAncestorFrame(aAncestorFrame) {
   if (aBuilder->IsRetainingDisplayList()) {
     mAncestorFrame->AddDisplayItem(this);
   }
-}
-
-/* static */
-nsDisplayTableFixedPosition*
-nsDisplayTableFixedPosition::CreateForFixedBackground(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    nsDisplayBackgroundImage* aImage, uint16_t aIndex,
-    nsIFrame* aAncestorFrame) {
-  nsDisplayList temp;
-  temp.AppendToTop(aImage);
-
-  return MakeDisplayItem<nsDisplayTableFixedPosition>(
-      aBuilder, aFrame, &temp, aIndex + 1, aAncestorFrame);
 }
 
 nsDisplayStickyPosition::nsDisplayStickyPosition(
