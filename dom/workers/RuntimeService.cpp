@@ -2031,7 +2031,7 @@ void RuntimeService::UpdateAllWorkerLanguages(
     const nsTArray<nsString>& aLanguages) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mNavigatorProperties.mLanguages = aLanguages;
+  mNavigatorProperties.mLanguages = aLanguages.Clone();
   BROADCAST_ALL_WORKERS(UpdateLanguages, aLanguages);
 }
 
