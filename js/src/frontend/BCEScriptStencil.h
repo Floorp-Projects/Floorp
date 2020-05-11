@@ -32,7 +32,6 @@ class BCEScriptStencil : public ScriptStencil {
   virtual bool finishGCThings(
       JSContext* cx, mozilla::Span<JS::GCCellPtr> output) const override;
   virtual void initAtomMap(GCPtrAtom* atoms) const override;
-  virtual void finishInnerFunctions() const override;
 };
 
 } /* namespace js::frontend */

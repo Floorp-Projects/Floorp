@@ -70,7 +70,3 @@ void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {
     atoms[index].init(atom);
   }
 }
-
-void BCEScriptStencil::finishInnerFunctions() const {
-  bce_.perScriptData().gcThingList().finishInnerFunctions();
-}
