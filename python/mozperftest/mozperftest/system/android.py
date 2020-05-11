@@ -46,6 +46,7 @@ class AndroidDevice(Layer):
 
     def __call__(self, metadata):
         self.app_name = self.get_arg("android-app-name")
+        self.android_activity = self.get_arg("android-activity")
         self.metadata = metadata
         try:
             self.device = ADBDevice(verbose=True, timeout=30)
