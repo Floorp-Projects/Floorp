@@ -10,274 +10,21 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
 const CONTENTTOOLBOX_FISSION_ENABLED = "devtools.contenttoolbox.fission";
 
-// Intermediate components which implement the watch + unwatch
-// using existing listFoo methods and fooListChanged events.
-// The plan here is to followup to implement listen and unlisten
-// methods directly on the target fronts. This code would then
-// become the backward compatibility code which we could later remove.
-class LegacyImplementationProcesses {
-  constructor(targetList, onTargetAvailable, onTargetDestroyed) {
-    this.targetList = targetList;
-    this.rootFront = targetList.rootFront;
-    this.target = targetList.targetFront;
-
-    this.onTargetAvailable = onTargetAvailable;
-    this.onTargetDestroyed = onTargetDestroyed;
-
-    this.descriptors = new Set();
-    this._processListChanged = this._processListChanged.bind(this);
-  }
-
-  async _processListChanged() {
-    const processes = await this.rootFront.listProcesses();
-    // Process the new list to detect the ones being destroyed
-    // Force destroyed the descriptor as well as the target
-    for (const descriptor of this.descriptors) {
-      if (!processes.includes(descriptor)) {
-        // Manually call onTargetDestroyed listeners in order to
-        // ensure calling them *before* destroying the descriptor.
-        // Otherwise the descriptor will automatically destroy the target
-        // and may not fire the contentProcessTarget's destroy event.
-        const target = descriptor.getCachedTarget();
-        if (target) {
-          this.onTargetDestroyed(target);
-        }
-
-        descriptor.destroy();
-        this.descriptors.delete(descriptor);
-      }
-    }
-
-    const promises = processes
-      .filter(descriptor => !this.descriptors.has(descriptor))
-      .map(async descriptor => {
-        // Add the new process descriptors to the local list
-        this.descriptors.add(descriptor);
-        const target = await descriptor.getTarget();
-        if (!target) {
-          console.error(
-            "Wasn't able to retrieve the target for",
-            descriptor.actorID
-          );
-          return;
-        }
-        await this.onTargetAvailable(target);
-      });
-
-    await Promise.all(promises);
-  }
-
-  async listen() {
-    this.rootFront.on("processListChanged", this._processListChanged);
-    await this._processListChanged();
-  }
-
-  unlisten() {
-    this.rootFront.off("processListChanged", this._processListChanged);
-  }
-}
-
-// Bug 1593937 made this code only used to support FF76- and can be removed
-// once FF77 reach release channel.
-class LegacyImplementationFrames {
-  constructor(targetList, onTargetAvailable) {
-    this.targetList = targetList;
-    this.rootFront = targetList.rootFront;
-    this.target = targetList.targetFront;
-
-    this.onTargetAvailable = onTargetAvailable;
-  }
-
-  async listen() {
-    // Note that even if we are calling listRemoteFrames on `this.target`, this ends up
-    // being forwarded to the RootFront. So that the Descriptors are managed
-    // by RootFront.
-    // TODO: support frame listening. For now, this only fetches already existing targets
-    const { frames } = await this.target.listRemoteFrames();
-
-    const promises = frames
-      .filter(
-        // As we listen for frameDescriptor's on the RootFront, we get
-        // all the frames and not only the one related to the given `target`.
-        // TODO: support deeply nested frames
-        descriptor =>
-          descriptor.parentID == this.target.browsingContextID ||
-          descriptor.id == this.target.browsingContextID
-      )
-      .map(async descriptor => {
-        const target = await descriptor.getTarget();
-        if (!target) {
-          console.error(
-            "Wasn't able to retrieve the target for",
-            descriptor.actorID
-          );
-          return;
-        }
-        await this.onTargetAvailable(target);
-      });
-
-    await Promise.all(promises);
-  }
-
-  unlisten() {}
-}
-
-class LegacyImplementationWorkers {
-  constructor(targetList, onTargetAvailable, onTargetDestroyed) {
-    this.targetList = targetList;
-    this.rootFront = targetList.rootFront;
-    this.target = targetList.targetFront;
-
-    this.onTargetAvailable = onTargetAvailable;
-    this.onTargetDestroyed = onTargetDestroyed;
-
-    this.targetsByProcess = new WeakMap();
-    this.targetsListeners = new WeakMap();
-
-    this._onProcessAvailable = this._onProcessAvailable.bind(this);
-    this._onProcessDestroyed = this._onProcessDestroyed.bind(this);
-  }
-
-  async _onProcessAvailable({ targetFront }) {
-    this.targetsByProcess.set(targetFront, new Set());
-    // Listen for worker which will be created later
-    const listener = this._workerListChanged.bind(this, targetFront);
-    this.targetsListeners.set(targetFront, listener);
-
-    // If this is the browser toolbox, we have to listen from the RootFront
-    // (see comment in _workerListChanged)
-    const front = targetFront.isParentProcess ? this.rootFront : targetFront;
-    front.on("workerListChanged", listener);
-
-    // We also need to process the already existing workers
-    await this._workerListChanged(targetFront);
-  }
-
-  async _onProcessDestroyed({ targetFront }) {
-    const existingTargets = this.targetsByProcess.get(targetFront);
-
-    // Process the new list to detect the ones being destroyed
-    // Force destroying the targets
-    for (const target of existingTargets) {
-      this.onTargetDestroyed(target);
-
-      target.destroy();
-      existingTargets.delete(target);
-    }
-    this.targetsByProcess.delete(targetFront);
-    this.targetsListeners.delete(targetFront);
-  }
-
-  _supportWorkerTarget(workerTarget) {
-    // subprocess workers are ignored because they take several seconds to
-    // attach to when opening the browser toolbox. See bug 1594597.
-    // When attaching we get the following error:
-    // JavaScript error: resource://devtools/server/startup/worker.js,
-    //   line 37: NetworkError: WorkerDebuggerGlobalScope.loadSubScript: Failed to load worker script at resource://devtools/shared/worker/loader.js (nsresult = 0x805e0006)
-    return (
-      workerTarget.isDedicatedWorker &&
-      !workerTarget.url.startsWith(
-        "resource://gre/modules/subprocess/subprocess_worker"
-      )
-    );
-  }
-
-  async _workerListChanged(targetFront) {
-    // If we're in the Browser Toolbox, query workers from the Root Front instead of the
-    // ParentProcessTarget as the ParentProcess Target filters out the workers to only
-    // show the one from the top level window, whereas we expect the one from all the
-    // windows, and also the window-less ones.
-    // TODO: For Content Toolbox, expose SW of the page, maybe optionally?
-    const front = targetFront.isParentProcess ? this.rootFront : targetFront;
-    const { workers } = await front.listWorkers();
-
-    // Fetch the list of already existing worker targets for this process target front.
-    const existingTargets = this.targetsByProcess.get(targetFront);
-
-    // Process the new list to detect the ones being destroyed
-    // Force destroying the targets
-    for (const target of existingTargets) {
-      if (!workers.includes(target)) {
-        this.onTargetDestroyed(target);
-
-        target.destroy();
-        existingTargets.delete(target);
-      }
-    }
-
-    const promises = [];
-    for (const workerTarget of workers) {
-      if (
-        !this._supportWorkerTarget(workerTarget) ||
-        existingTargets.has(workerTarget)
-      ) {
-        continue;
-      }
-
-      // Add the new worker targets to the local list
-      existingTargets.add(workerTarget);
-      promises.push(this.onTargetAvailable(workerTarget));
-    }
-
-    await Promise.all(promises);
-  }
-
-  async listen() {
-    if (this.target.isParentProcess) {
-      await this.targetList.watchTargets(
-        [TargetList.TYPES.PROCESS],
-        this._onProcessAvailable,
-        this._onProcessDestroyed
-      );
-      // The ParentProcessTarget front is considered to be a FRAME instead of a PROCESS.
-      // So process it manually here.
-      await this._onProcessAvailable({ targetFront: this.target });
-    } else {
-      this.targetsByProcess.set(this.target, new Set());
-      this._workerListChangedListener = this._workerListChanged.bind(
-        this,
-        this.target
-      );
-      this.target.on("workerListChanged", this._workerListChangedListener);
-      await this._workerListChanged(this.target);
-    }
-  }
-
-  unlisten() {
-    if (this.target.isParentProcess) {
-      for (const targetFront of this.targetList.getAllTargets(
-        TargetList.TYPES.PROCESS
-      )) {
-        const listener = this.targetsListeners.get(targetFront);
-        targetFront.off("workerListChanged", listener);
-        this.targetsByProcess.delete(targetFront);
-        this.targetsListeners.delete(targetFront);
-      }
-      this.targetList.unwatchTargets(
-        [TargetList.TYPES.PROCESS],
-        this._onProcessAvailable,
-        this._onProcessDestroyed
-      );
-    } else {
-      this.target.off("workerListChanged", this._workerListChangedListener);
-      delete this._workerListChangedListener;
-      this.targetsByProcess.delete(this.target);
-      this.targetsListeners.delete(this.target);
-    }
-  }
-}
-
-class LegacyImplementationSharedWorkers extends LegacyImplementationWorkers {
-  _supportWorkerTarget(workerTarget) {
-    return workerTarget.isSharedWorker;
-  }
-}
-
-class LegacyImplementationServiceWorkers extends LegacyImplementationWorkers {
-  _supportWorkerTarget(workerTarget) {
-    return workerTarget.isServiceWorker;
-  }
-}
+const {
+  LegacyFramesWatcher,
+} = require("devtools/shared/resources/legacy-target-watchers/legacy-frames-watcher");
+const {
+  LegacyProcessesWatcher,
+} = require("devtools/shared/resources/legacy-target-watchers/legacy-processes-watcher");
+const {
+  LegacyServiceWorkersWatcher,
+} = require("devtools/shared/resources/legacy-target-watchers/legacy-serviceworkers-watcher");
+const {
+  LegacySharedWorkersWatcher,
+} = require("devtools/shared/resources/legacy-target-watchers/legacy-sharedworkers-watcher");
+const {
+  LegacyWorkersWatcher,
+} = require("devtools/shared/resources/legacy-target-watchers/legacy-workers-watcher");
 
 class TargetList {
   /**
@@ -328,27 +75,27 @@ class TargetList {
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
 
     this.legacyImplementation = {
-      process: new LegacyImplementationProcesses(
+      process: new LegacyProcessesWatcher(
         this,
         this._onTargetAvailable,
         this._onTargetDestroyed
       ),
-      frame: new LegacyImplementationFrames(
+      frame: new LegacyFramesWatcher(
         this,
         this._onTargetAvailable,
         this._onTargetDestroyed
       ),
-      worker: new LegacyImplementationWorkers(
+      worker: new LegacyWorkersWatcher(
         this,
         this._onTargetAvailable,
         this._onTargetDestroyed
       ),
-      shared_worker: new LegacyImplementationSharedWorkers(
+      shared_worker: new LegacySharedWorkersWatcher(
         this,
         this._onTargetAvailable,
         this._onTargetDestroyed
       ),
-      service_worker: new LegacyImplementationServiceWorkers(
+      service_worker: new LegacyServiceWorkersWatcher(
         this,
         this._onTargetAvailable,
         this._onTargetDestroyed
