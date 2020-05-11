@@ -145,7 +145,7 @@ const char* const kEventTypes[] = {
     // HTMLInputElement.cpp & radio.js)
     "RadioStateChange", "popupshown", "popuphiding", "DOMMenuInactive",
     "DOMMenuItemActive", "DOMMenuItemInactive", "DOMMenuBarActive",
-    "DOMMenuBarInactive", "scroll", "overflow", "underflow"};
+    "DOMMenuBarInactive", "scroll"};
 
 nsresult RootAccessible::AddEventListeners() {
   // EventTarget interface allows to register event listeners to
@@ -446,19 +446,6 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
                             accessible);
   }
 #endif
-  else if (eventType.EqualsLiteral("overflow") ||
-           eventType.EqualsLiteral("underflow")) {
-    // An overflow or underflow may mean the element's focusable state has
-    // changed.
-    if (accessible->IsContent() && !accessible->GetContent()->IsFocusable()) {
-      // If the element is not focusable for other DOM reasons (input, tabindex,
-      // etc.), dispatch a focusable state change event.
-      RefPtr<AccEvent> event = new AccStateChangeEvent(
-          accessible, states::FOCUSABLE,
-          (accessible->NativeInteractiveState() & states::FOCUSABLE) != 0);
-      targetDocument->FireDelayedEvent(event);
-    }
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
