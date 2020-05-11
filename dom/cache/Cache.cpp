@@ -102,9 +102,9 @@ static bool IsValidPutResponseStatus(Response& aResponse,
 // actor.
 class Cache::FetchHandler final : public PromiseNativeHandler {
  public:
-  FetchHandler(CacheWorkerRef* aWorkerRef, Cache* aCache,
+  FetchHandler(SafeRefPtr<CacheWorkerRef> aWorkerRef, Cache* aCache,
                nsTArray<RefPtr<Request>>&& aRequestList, Promise* aPromise)
-      : mWorkerRef(aWorkerRef),
+      : mWorkerRef(std::move(aWorkerRef)),
         mCache(aCache),
         mRequestList(std::move(aRequestList)),
         mPromise(aPromise) {
@@ -118,8 +118,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
     NS_ASSERT_OWNINGTHREAD(FetchHandler);
 
     // Stop holding the worker alive when we leave this method.
-    RefPtr<CacheWorkerRef> workerRef;
-    workerRef.swap(mWorkerRef);
+    const SafeRefPtr<CacheWorkerRef> workerRef = std::move(mWorkerRef);
 
     // Promise::All() passed an array of fetch() Promises should give us
     // an Array of Response objects.  The following code unwraps these
@@ -216,7 +215,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
 
   void Fail() { mPromise->MaybeRejectWithTypeError<MSG_FETCH_FAILED>(); }
 
-  RefPtr<CacheWorkerRef> mWorkerRef;
+  SafeRefPtr<CacheWorkerRef> mWorkerRef;
   RefPtr<Cache> mCache;
   nsTArray<RefPtr<Request>> mRequestList;
   RefPtr<Promise> mPromise;
@@ -571,8 +570,9 @@ already_AddRefed<Promise> Cache::AddAll(
     return nullptr;
   }
 
-  RefPtr<FetchHandler> handler = new FetchHandler(
-      mActor->GetWorkerRef(), this, std::move(aRequestList), promise);
+  RefPtr<FetchHandler> handler =
+      new FetchHandler(mActor->GetWorkerRefPtr().clonePtr(), this,
+                       std::move(aRequestList), promise);
 
   RefPtr<Promise> fetchPromise =
       Promise::All(aGlobal.Context(), fetchList, aRv);

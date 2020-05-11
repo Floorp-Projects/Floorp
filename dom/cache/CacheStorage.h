@@ -86,7 +86,7 @@ class CacheStorage final : public nsISupports,
  private:
   CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
                const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-               CacheWorkerRef* aWorkerRef);
+               SafeRefPtr<CacheWorkerRef> aWorkerRef);
   explicit CacheStorage(nsresult aFailureResult);
   ~CacheStorage();
 
