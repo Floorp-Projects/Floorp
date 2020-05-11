@@ -294,6 +294,21 @@ pub fn clear(tx: &Transaction<'_>, ext_id: &str) -> Result<StorageChanges> {
     Ok(result)
 }
 
+/// While this API isn't available to extensions, Firefox wants a way to wipe
+/// all data for all addons but not sync the deletions. We also don't report
+/// the changes caused by the deletion.
+/// That means that after doing this, the next sync is likely to drag some data
+/// back in - which is fine.
+/// This is much like what the sync support for other components calls a "wipe",
+/// so we name it similarly.
+pub fn wipe_all(tx: &Transaction<'_>) -> Result<()> {
+    // We assume the meta table is only used by sync.
+    tx.execute_batch(
+        "DELETE FROM storage_sync_data; DELETE FROM storage_sync_mirror; DELETE FROM meta;",
+    )?;
+    Ok(())
+}
+
 // TODO - get_bytes_in_use()
 
 #[cfg(test)]
@@ -527,6 +542,39 @@ mod tests {
             ErrorKind::QuotaError(QuotaReason::ItemBytes) => {}
             _ => panic!("unexpected error type"),
         };
+        Ok(())
+    }
+
+    fn query_count(conn: &Connection, table: &str) -> u32 {
+        conn.query_row_and_then(
+            &format!("SELECT COUNT(*) FROM {};", table),
+            rusqlite::NO_PARAMS,
+            |row| row.get::<_, u32>(0),
+        )
+        .expect("should work")
+    }
+
+    #[test]
+    fn test_wipe() -> Result<()> {
+        use crate::db::put_meta;
+
+        let mut db = new_mem_db();
+        let tx = db.transaction()?;
+        set(&tx, "ext-a", json!({ "x": "y" }))?;
+        set(&tx, "ext-b", json!({ "y": "x" }))?;
+        put_meta(&tx, "meta", &"meta-meta".to_string())?;
+        tx.execute(
+            "INSERT INTO storage_sync_mirror (guid, ext_id, data)
+                    VALUES ('guid', 'ext-a', null)",
+            rusqlite::NO_PARAMS,
+        )?;
+        assert_eq!(query_count(&tx, "storage_sync_data"), 2);
+        assert_eq!(query_count(&tx, "storage_sync_mirror"), 1);
+        assert_eq!(query_count(&tx, "meta"), 1);
+        wipe_all(&tx)?;
+        assert_eq!(query_count(&tx, "storage_sync_data"), 0);
+        assert_eq!(query_count(&tx, "storage_sync_mirror"), 0);
+        assert_eq!(query_count(&tx, "meta"), 0);
         Ok(())
     }
 }

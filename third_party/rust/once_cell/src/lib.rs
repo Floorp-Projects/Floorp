@@ -155,7 +155,7 @@ This macro can be useful to avoid "compile regex on every loop iteration" proble
 |`!Sync` types         | Access Mode            | Drawbacks                                     |
 |----------------------|------------------------|-----------------------------------------------|
 |`Cell<T>`             | `T`                    | requires `T: Copy` for `get`                  |
-|`RefCell<T>`          | `RefMut<T>` / `Ref<T>` | may panic at runtime                          |
+|`RefCel<T>`           | `RefMut<T>` / `Ref<T>` | may panic at runtime                          |
 |`unsync::OnceCell<T>` | `&T`                   | assignable only once                          |
 
 |`Sync` types          | Access Mode            | Drawbacks                                     |
@@ -237,7 +237,7 @@ pub mod unsync {
     use core::{
         cell::{Cell, UnsafeCell},
         fmt,
-        ops::{Deref, DerefMut},
+        ops::Deref,
     };
 
     #[cfg(feature = "std")]
@@ -435,10 +435,6 @@ pub mod unsync {
                 return Ok(val);
             }
             let val = f()?;
-            // Note that *some* forms of reentrant initialization might lead to
-            // UB (see `reentrant_init` test). I believe that just removing this
-            // `assert`, while keeping `set/get` would be sound, but it seems
-            // better to panic, rather than to silently use an old value.
             assert!(self.set(val).is_ok(), "reentrant init");
             Ok(self.get().unwrap())
         }
@@ -494,7 +490,7 @@ pub mod unsync {
     #[cfg(feature = "std")]
     impl<T, F: RefUnwindSafe> RefUnwindSafe for Lazy<T, F> where OnceCell<T>: RefUnwindSafe {}
 
-    impl<T: fmt::Debug, F> fmt::Debug for Lazy<T, F> {
+    impl<T: fmt::Debug, F: fmt::Debug> fmt::Debug for Lazy<T, F> {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             f.debug_struct("Lazy").field("cell", &self.cell).field("init", &"..").finish()
         }
@@ -550,13 +546,6 @@ pub mod unsync {
         }
     }
 
-    impl<T, F: FnOnce() -> T> DerefMut for Lazy<T, F> {
-        fn deref_mut(&mut self) -> &mut T {
-            Lazy::force(self);
-            self.cell.get_mut().unwrap_or_else(|| unreachable!())
-        }
-    }
-
     impl<T: Default> Default for Lazy<T> {
         /// Creates a new lazy value using `Default` as the initializing function.
         fn default() -> Lazy<T> {
@@ -567,25 +556,14 @@ pub mod unsync {
 
 #[cfg(feature = "std")]
 pub mod sync {
-    use std::{
-        cell::Cell,
-        fmt,
-        hint::unreachable_unchecked,
-        ops::{Deref, DerefMut},
-        panic::RefUnwindSafe,
-    };
+    use std::{cell::Cell, fmt, hint::unreachable_unchecked, panic::RefUnwindSafe};
 
     use crate::imp::OnceCell as Imp;
 
     /// A thread-safe cell which can be written to only once.
     ///
-    /// `OnceCell` provides `&` references to the contents without RAII guards.
-    ///
-    /// Reading a non-`None` value out of `OnceCell` establishes a
-    /// happens-before relationship with a corresponding write. For example, if
-    /// thread A initializes the cell with `get_or_init(f)`, and thread B
-    /// subsequently reads the result of this call, B also observes all the side
-    /// effects of `f`.
+    /// Unlike `std::sync::Mutex`, a `OnceCell` provides simple `&` references
+    /// to the contents.
     ///
     /// # Example
     /// ```
@@ -683,8 +661,7 @@ pub mod sync {
         ///
         /// Safety:
         ///
-        /// Caller must ensure that the cell is in initialized state, and that
-        /// the contents are acquired by (synchronized to) this thread.
+        /// Caller must ensure that the cell is in initialized state.
         pub unsafe fn get_unchecked(&self) -> &T {
             debug_assert!(self.0.is_initialized());
             let slot: &Option<T> = &*self.0.value.get();
@@ -866,7 +843,7 @@ pub mod sync {
         init: Cell<Option<F>>,
     }
 
-    impl<T: fmt::Debug, F> fmt::Debug for Lazy<T, F> {
+    impl<T: fmt::Debug, F: fmt::Debug> fmt::Debug for Lazy<T, F> {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             f.debug_struct("Lazy").field("cell", &self.cell).field("init", &"..").finish()
         }
@@ -913,17 +890,10 @@ pub mod sync {
         }
     }
 
-    impl<T, F: FnOnce() -> T> Deref for Lazy<T, F> {
+    impl<T, F: FnOnce() -> T> ::std::ops::Deref for Lazy<T, F> {
         type Target = T;
         fn deref(&self) -> &T {
             Lazy::force(self)
-        }
-    }
-
-    impl<T, F: FnOnce() -> T> DerefMut for Lazy<T, F> {
-        fn deref_mut(&mut self) -> &mut T {
-            Lazy::force(self);
-            self.cell.get_mut().unwrap_or_else(|| unreachable!())
         }
     }
 

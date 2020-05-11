@@ -64,15 +64,6 @@ fn check_finished_with(conn: &Connection, ext_id: &str, val: serde_json::Value) 
     Ok(())
 }
 
-fn get_mirror_guid(conn: &Connection, extid: &str) -> Result<String> {
-    let guid = conn.query_row_and_then(
-        "SELECT m.guid FROM storage_sync_mirror m WHERE m.ext_id = ?;",
-        vec![extid],
-        |row| row.get::<_, String>(0),
-    )?;
-    Ok(guid)
-}
-
 #[derive(Debug, PartialEq)]
 enum DbData {
     NoRow,
@@ -133,23 +124,6 @@ fn test_simple_outgoing_sync() -> Result<()> {
 }
 
 #[test]
-fn test_simple_incoming_sync() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    let data = json!({"key1": "key1-value", "key2": "key2-value"});
-    let payload = Payload::from_record(Record {
-        guid: Guid::from("guid"),
-        ext_id: "ext-id".to_string(),
-        data: Some(data.to_string()),
-    })?;
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 0);
-    let key1_from_api = get(&tx, "ext-id", json!("key1"))?;
-    assert_eq!(key1_from_api, json!({"key1": "key1-value"}));
-    check_finished_with(&tx, "ext-id", data)?;
-    Ok(())
-}
-
-#[test]
 fn test_simple_tombstone() -> Result<()> {
     // Tombstones are only kept when the mirror has that record - so first
     // test that, then arrange for the mirror to have the record.
@@ -180,12 +154,33 @@ fn test_simple_tombstone() -> Result<()> {
 }
 
 #[test]
+fn test_merged() -> Result<()> {
+    let mut db = new_syncable_mem_db();
+    let tx = db.transaction()?;
+    let data = json!({"key1": "key1-value"});
+    set(&tx, "ext-id", data)?;
+    // Incoming payload without 'key1' and conflicting for 'key2'
+    let payload = Payload::from_record(Record {
+        guid: Guid::from("guid"),
+        ext_id: "ext-id".to_string(),
+        data: Some(json!({"key2": "key2-value"}).to_string()),
+    })?;
+    assert_eq!(do_sync(&tx, vec![payload])?.len(), 1);
+    check_finished_with(
+        &tx,
+        "ext-id",
+        json!({"key1": "key1-value", "key2": "key2-value"}),
+    )?;
+    Ok(())
+}
+
+#[test]
 fn test_reconciled() -> Result<()> {
     let mut db = new_syncable_mem_db();
     let tx = db.transaction()?;
     let data = json!({"key1": "key1-value"});
     set(&tx, "ext-id", data)?;
-    // Incoming payload with the same data
+    // Incoming payload without 'key1' and conflicting for 'key2'
     let payload = Payload::from_record(Record {
         guid: Guid::from("guid"),
         ext_id: "ext-id".to_string(),
@@ -197,302 +192,18 @@ fn test_reconciled() -> Result<()> {
     Ok(())
 }
 
-/// Tests that we handle things correctly if we get a payload that is
-/// identical to what is in the mirrored table.
-#[test]
-fn test_reconcile_with_null_payload() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    let data = json!({"key1": "key1-value"});
-    set(&tx, "ext-id", data.clone())?;
-    // We try to push this change on the next sync.
-    assert_eq!(do_sync(&tx, vec![])?.len(), 1);
-    assert_eq!(
-        get_mirror_data(&tx, "ext-id"),
-        DbData::Data(data.to_string())
-    );
-    let guid = get_mirror_guid(&tx, "ext-id")?;
-    // Incoming payload with the same data.
-    // This could happen if, for example, another client changed the
-    // key and then put it back the way it was.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from(guid),
-        ext_id: "ext-id".to_string(),
-        data: Some(data.to_string()),
-    })?;
-    // Should be no outgoing records as we reconciled.
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 0);
-    check_finished_with(&tx, "ext-id", data)?;
-    Ok(())
-}
-
-#[test]
-fn test_accept_incoming_when_local_is_deleted() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    // We only record an extension as deleted locally if it has been
-    // uploaded before being deleted.
-    let data = json!({"key1": "key1-value"});
-    set(&tx, "ext-id", data)?;
-    assert_eq!(do_sync(&tx, vec![])?.len(), 1);
-    let guid = get_mirror_guid(&tx, "ext-id")?;
-    clear(&tx, "ext-id")?;
-    // Incoming payload without 'key1'. Because we previously uploaded
-    // key1, this means another client deleted it.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from(guid),
-        ext_id: "ext-id".to_string(),
-        data: Some(json!({"key2": "key2-value"}).to_string()),
-    })?;
-    // We completely accept the incoming record.
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 0);
-    check_finished_with(&tx, "ext-id", json!({"key2": "key2-value"}))?;
-    Ok(())
-}
-
-#[test]
-fn test_accept_incoming_when_local_is_deleted_no_mirror() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    let data = json!({"key1": "key1-value"});
-    set(&tx, "ext-id", data)?;
-    assert_eq!(do_sync(&tx, vec![])?.len(), 1);
-    clear(&tx, "ext-id")?;
-    let payload = Payload::from_record(Record {
-        // Use a random guid so that we don't find the mirrored data.
-        // This test is somewhat bad because deduping might obviate
-        // the need for it.
-        guid: Guid::from("guid"),
-        ext_id: "ext-id".to_string(),
-        data: Some(json!({"key2": "key2-value"}).to_string()),
-    })?;
-    // We completely accept the incoming record.
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 0);
-    check_finished_with(&tx, "ext-id", json!({"key2": "key2-value"}))?;
-    Ok(())
-}
-
-#[test]
-fn test_accept_deleted_key_mirrored() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    let data = json!({"key1": "key1-value", "key2": "key2-value"});
-    set(&tx, "ext-id", data)?;
-    assert_eq!(do_sync(&tx, vec![])?.len(), 1);
-    let guid = get_mirror_guid(&tx, "ext-id")?;
-    // Incoming payload without 'key1'. Because we previously uploaded
-    // key1, this means another client deleted it.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from(guid),
-        ext_id: "ext-id".to_string(),
-        data: Some(json!({"key2": "key2-value"}).to_string()),
-    })?;
-    // We completely accept the incoming record.
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 0);
-    check_finished_with(&tx, "ext-id", json!({"key2": "key2-value"}))?;
-    Ok(())
-}
-
-#[test]
-fn test_merged_no_mirror() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    let data = json!({"key1": "key1-value"});
-    set(&tx, "ext-id", data)?;
-    // Incoming payload without 'key1' and some data for 'key2'.
-    // Because we never uploaded 'key1', we merge our local values
-    // with the remote.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from("guid"),
-        ext_id: "ext-id".to_string(),
-        data: Some(json!({"key2": "key2-value"}).to_string()),
-    })?;
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 1);
-    check_finished_with(
-        &tx,
-        "ext-id",
-        json!({"key1": "key1-value", "key2": "key2-value"}),
-    )?;
-    Ok(())
-}
-
-#[test]
-fn test_merged_incoming() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    let old_data = json!({"key1": "key1-value", "key2": "key2-value", "doomed_key": "deletable"});
-    set(&tx, "ext-id", old_data)?;
-    assert_eq!(do_sync(&tx, vec![])?.len(), 1);
-    let guid = get_mirror_guid(&tx, "ext-id")?;
-    // We update 'key1' locally.
-    let local_data = json!({"key1": "key1-new", "key2": "key2-value", "doomed_key": "deletable"});
-    set(&tx, "ext-id", local_data)?;
-    // Incoming payload where another client set 'key2' and removed
-    // the 'doomed_key'.
-    // Because we never uploaded our data, we'll merge our
-    // key1 in, but otherwise keep the server's changes.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from(guid),
-        ext_id: "ext-id".to_string(),
-        data: Some(json!({"key1": "key1-value", "key2": "key2-incoming"}).to_string()),
-    })?;
-    // We should send our 'key1'
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 1);
-    check_finished_with(
-        &tx,
-        "ext-id",
-        json!({"key1": "key1-new", "key2": "key2-incoming"}),
-    )?;
-    Ok(())
-}
-
-#[test]
-fn test_merged_with_null_payload() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    let old_data = json!({"key1": "key1-value"});
-    set(&tx, "ext-id", old_data.clone())?;
-    // Push this change remotely.
-    assert_eq!(do_sync(&tx, vec![])?.len(), 1);
-    assert_eq!(
-        get_mirror_data(&tx, "ext-id"),
-        DbData::Data(old_data.to_string())
-    );
-    let guid = get_mirror_guid(&tx, "ext-id")?;
-    let local_data = json!({"key1": "key1-new", "key2": "key2-value"});
-    set(&tx, "ext-id", local_data.clone())?;
-    // Incoming payload with the same old data.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from(guid),
-        ext_id: "ext-id".to_string(),
-        data: Some(old_data.to_string()),
-    })?;
-    // Three-way-merge will not detect any change in key1, so we
-    // should keep our entire new value.
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 1);
-    check_finished_with(&tx, "ext-id", local_data)?;
-    Ok(())
-}
-
-#[test]
-fn test_deleted_mirrored_object_accept() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    let data = json!({"key1": "key1-value", "key2": "key2-value"});
-    set(&tx, "ext-id", data)?;
-    assert_eq!(do_sync(&tx, vec![])?.len(), 1);
-    let guid = get_mirror_guid(&tx, "ext-id")?;
-    // Incoming payload with data deleted.
-    // We synchronize this deletion by deleting the keys we think
-    // were on the server.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from(guid),
-        ext_id: "ext-id".to_string(),
-        data: None,
-    })?;
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 0);
-    assert_eq!(get_local_data(&tx, "ext-id"), DbData::NullRow);
-    assert_eq!(get_mirror_data(&tx, "ext-id"), DbData::NullRow);
-    Ok(())
-}
-
-#[test]
-fn test_deleted_mirrored_object_merged() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    set(&tx, "ext-id", json!({"key1": "key1-value"}))?;
-    assert_eq!(do_sync(&tx, vec![])?.len(), 1);
-    let guid = get_mirror_guid(&tx, "ext-id")?;
-    set(
-        &tx,
-        "ext-id",
-        json!({"key1": "key1-new", "key2": "key2-value"}),
-    )?;
-    // Incoming payload with data deleted.
-    // We synchronize this deletion by deleting the keys we think
-    // were on the server.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from(guid),
-        ext_id: "ext-id".to_string(),
-        data: None,
-    })?;
-    // This overrides the change to 'key1', but we still upload 'key2'.
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 1);
-    check_finished_with(&tx, "ext-id", json!({"key2": "key2-value"}))?;
-    Ok(())
-}
-
-/// Like the above test, but with a mirrored tombstone.
-#[test]
-fn test_deleted_mirrored_tombstone_merged() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    // Sync some data so we can get the guid for this extension.
-    set(&tx, "ext-id", json!({"key1": "key1-value"}))?;
-    assert_eq!(do_sync(&tx, vec![])?.len(), 1);
-    let guid = get_mirror_guid(&tx, "ext-id")?;
-    // Sync a delete for this data so we have a tombstone in the mirror.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from(guid.clone()),
-        ext_id: "ext-id".to_string(),
-        data: None,
-    })?;
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 0);
-    assert_eq!(get_mirror_data(&tx, "ext-id"), DbData::NullRow);
-
-    // Set some data and sync it simultaneously with another incoming delete.
-    set(&tx, "ext-id", json!({"key2": "key2-value"}))?;
-    let payload = Payload::from_record(Record {
-        guid: Guid::from(guid),
-        ext_id: "ext-id".to_string(),
-        data: None,
-    })?;
-    // We cannot delete any matching keys because there are no
-    // matching keys. Instead we push our data.
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 1);
-    check_finished_with(&tx, "ext-id", json!({"key2": "key2-value"}))?;
-    Ok(())
-}
-
-#[test]
-fn test_deleted_not_mirrored_object_merged() -> Result<()> {
-    let mut db = new_syncable_mem_db();
-    let tx = db.transaction()?;
-    let data = json!({"key1": "key1-value", "key2": "key2-value"});
-    set(&tx, "ext-id", data)?;
-    // Incoming payload with data deleted.
-    let payload = Payload::from_record(Record {
-        guid: Guid::from("guid"),
-        ext_id: "ext-id".to_string(),
-        data: None,
-    })?;
-    // We normally delete the keys we think were on the server, but
-    // here we have no information about what was on the server, so we
-    // don't delete anything. We merge in all undeleted keys.
-    assert_eq!(do_sync(&tx, vec![payload])?.len(), 1);
-    check_finished_with(
-        &tx,
-        "ext-id",
-        json!({"key1": "key1-value", "key2": "key2-value"}),
-    )?;
-    Ok(())
-}
-
 #[test]
 fn test_conflicting_incoming() -> Result<()> {
     let mut db = new_syncable_mem_db();
     let tx = db.transaction()?;
     let data = json!({"key1": "key1-value", "key2": "key2-value"});
     set(&tx, "ext-id", data)?;
-    // Incoming payload without 'key1' and conflicting for 'key2'.
-    // Because we never uploaded either of our keys, we'll merge our
-    // key1 in, but the server key2 wins.
+    // Incoming payload without 'key1' and conflicting for 'key2'
     let payload = Payload::from_record(Record {
         guid: Guid::from("guid"),
         ext_id: "ext-id".to_string(),
         data: Some(json!({"key2": "key2-incoming"}).to_string()),
     })?;
-    // We should send our 'key1'
     assert_eq!(do_sync(&tx, vec![payload])?.len(), 1);
     check_finished_with(
         &tx,
@@ -501,3 +212,6 @@ fn test_conflicting_incoming() -> Result<()> {
     )?;
     Ok(())
 }
+
+// There are lots more we could add here, particularly around the resolution of
+// deletion of keys and deletions of the entire value.
