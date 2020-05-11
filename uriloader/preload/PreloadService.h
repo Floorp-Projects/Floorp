@@ -18,6 +18,7 @@ namespace dom {
 
 class HTMLLinkElement;
 class Document;
+enum class ReferrerPolicy : uint8_t;
 
 }  // namespace dom
 
@@ -70,6 +71,9 @@ class PreloadService {
                     const nsAString& aCrossOrigin,
                     const nsAString& aReferrerPolicy,
                     const nsAString& aIntegrity);
+
+  void PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
+                    const nsAString& aImageReferrerPolicy, bool aIsImgSet);
 
   static void NotifyNodeEvent(nsINode* aNode, bool aSuccess);
 
