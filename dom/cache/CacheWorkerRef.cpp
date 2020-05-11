@@ -14,40 +14,70 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+namespace {
+// XXX Move this to mfbt, or do we already have something like this? Or remove
+// the need for that by changing StrongWorkerRef/IPCWorkerRef?
+
+template <class T>
+class FakeCopyable {
+ public:
+  explicit FakeCopyable(T&& aTarget) : mTarget(std::forward<T>(aTarget)) {}
+
+  FakeCopyable(FakeCopyable&&) = default;
+
+  FakeCopyable(const FakeCopyable& aOther)
+      : mTarget(std::move(const_cast<FakeCopyable&>(aOther).mTarget)) {
+    MOZ_CRASH("Do not copy.");
+  }
+
+  template <typename... Args>
+  auto operator()(Args&&... aArgs) {
+    return mTarget(std::forward<Args>(aArgs)...);
+  }
+
+ private:
+  T mTarget;
+};
+
+}  // namespace
+
 // static
-already_AddRefed<CacheWorkerRef> CacheWorkerRef::Create(
-    WorkerPrivate* aWorkerPrivate, Behavior aBehavior) {
+SafeRefPtr<CacheWorkerRef> CacheWorkerRef::Create(WorkerPrivate* aWorkerPrivate,
+                                                  Behavior aBehavior) {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
 
-  RefPtr<CacheWorkerRef> workerRef = new CacheWorkerRef(aBehavior);
+  // XXX This looks as if this could be simplified now by moving into the ctor
+  // of CacheWorkerRef, since we can now use SafeRefPtrFromThis in the ctor
+  auto workerRef =
+      MakeSafeRefPtr<CacheWorkerRef>(aBehavior, ConstructorGuard{});
+  auto notify =
+      FakeCopyable([workerRef = workerRef.clonePtr()] { workerRef->Notify(); });
   if (aBehavior == eStrongWorkerRef) {
-    workerRef->mStrongWorkerRef =
-        StrongWorkerRef::Create(aWorkerPrivate, "CacheWorkerRef-Strong",
-                                [workerRef] { workerRef->Notify(); });
+    workerRef->mStrongWorkerRef = StrongWorkerRef::Create(
+        aWorkerPrivate, "CacheWorkerRef-Strong", std::move(notify));
   } else {
     MOZ_ASSERT(aBehavior == eIPCWorkerRef);
-    workerRef->mIPCWorkerRef =
-        IPCWorkerRef::Create(aWorkerPrivate, "CacheWorkerRef-IPC",
-                             [workerRef] { workerRef->Notify(); });
+    workerRef->mIPCWorkerRef = IPCWorkerRef::Create(
+        aWorkerPrivate, "CacheWorkerRef-IPC", std::move(notify));
   }
 
   if (NS_WARN_IF(!workerRef->mIPCWorkerRef && !workerRef->mStrongWorkerRef)) {
     return nullptr;
   }
 
-  return workerRef.forget();
+  return workerRef;
 }
 
 // static
-already_AddRefed<CacheWorkerRef> CacheWorkerRef::PreferBehavior(
-    CacheWorkerRef* aCurrentRef, Behavior aBehavior) {
+SafeRefPtr<CacheWorkerRef> CacheWorkerRef::PreferBehavior(
+    SafeRefPtr<CacheWorkerRef> aCurrentRef, Behavior aBehavior) {
   if (!aCurrentRef) {
     return nullptr;
   }
 
-  RefPtr<CacheWorkerRef> orig = aCurrentRef;
+  SafeRefPtr<CacheWorkerRef> orig = std::move(aCurrentRef);
   if (orig->mBehavior == aBehavior) {
-    return orig.forget();
+    return orig;
   }
 
   WorkerPrivate* workerPrivate = nullptr;
@@ -60,12 +90,8 @@ already_AddRefed<CacheWorkerRef> CacheWorkerRef::PreferBehavior(
 
   MOZ_ASSERT(workerPrivate);
 
-  RefPtr<CacheWorkerRef> replace = Create(workerPrivate, aBehavior);
-  if (!replace) {
-    return orig.forget();
-  }
-
-  return replace.forget();
+  SafeRefPtr<CacheWorkerRef> replace = Create(workerPrivate, aBehavior);
+  return static_cast<bool>(replace) ? std::move(replace) : std::move(orig);
 }
 
 void CacheWorkerRef::AddActor(ActorChild* aActor) {
@@ -117,7 +143,7 @@ void CacheWorkerRef::Notify() {
   }
 }
 
-CacheWorkerRef::CacheWorkerRef(Behavior aBehavior)
+CacheWorkerRef::CacheWorkerRef(Behavior aBehavior, ConstructorGuard)
     : mBehavior(aBehavior), mNotified(false) {}
 
 CacheWorkerRef::~CacheWorkerRef() {

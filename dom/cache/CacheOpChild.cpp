@@ -23,17 +23,17 @@ using mozilla::ipc::PBackgroundChild;
 namespace {
 
 void AddWorkerRefToStreamChild(const CacheReadStream& aReadStream,
-                               CacheWorkerRef* aWorkerRef) {
+                               const SafeRefPtr<CacheWorkerRef>& aWorkerRef) {
   MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerRef);
   CacheStreamControlChild* cacheControl =
       static_cast<CacheStreamControlChild*>(aReadStream.controlChild());
   if (cacheControl) {
-    cacheControl->SetWorkerRef(aWorkerRef);
+    cacheControl->SetWorkerRef(aWorkerRef.clonePtr());
   }
 }
 
 void AddWorkerRefToStreamChild(const CacheResponse& aResponse,
-                               CacheWorkerRef* aWorkerRef) {
+                               const SafeRefPtr<CacheWorkerRef>& aWorkerRef) {
   MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerRef);
 
   if (aResponse.body().isNothing()) {
@@ -44,7 +44,7 @@ void AddWorkerRefToStreamChild(const CacheResponse& aResponse,
 }
 
 void AddWorkerRefToStreamChild(const CacheRequest& aRequest,
-                               CacheWorkerRef* aWorkerRef) {
+                               const SafeRefPtr<CacheWorkerRef>& aWorkerRef) {
   MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerRef);
 
   if (aRequest.body().isNothing()) {
@@ -56,8 +56,9 @@ void AddWorkerRefToStreamChild(const CacheRequest& aRequest,
 
 }  // namespace
 
-CacheOpChild::CacheOpChild(CacheWorkerRef* aWorkerRef, nsIGlobalObject* aGlobal,
-                           nsISupports* aParent, Promise* aPromise)
+CacheOpChild::CacheOpChild(SafeRefPtr<CacheWorkerRef> aWorkerRef,
+                           nsIGlobalObject* aGlobal, nsISupports* aParent,
+                           Promise* aPromise)
     : mGlobal(aGlobal), mParent(aParent), mPromise(aPromise) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mParent);
@@ -65,10 +66,8 @@ CacheOpChild::CacheOpChild(CacheWorkerRef* aWorkerRef, nsIGlobalObject* aGlobal,
 
   MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerRef);
 
-  RefPtr<CacheWorkerRef> workerRef = CacheWorkerRef::PreferBehavior(
-      aWorkerRef, CacheWorkerRef::eStrongWorkerRef);
-
-  SetWorkerRef(workerRef);
+  SetWorkerRef(CacheWorkerRef::PreferBehavior(
+      std::move(aWorkerRef), CacheWorkerRef::eStrongWorkerRef));
 }
 
 CacheOpChild::~CacheOpChild() {
@@ -142,10 +141,8 @@ mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
         break;
       }
 
-      RefPtr<CacheWorkerRef> workerRef = CacheWorkerRef::PreferBehavior(
-          GetWorkerRef(), CacheWorkerRef::eIPCWorkerRef);
-
-      actor->SetWorkerRef(workerRef);
+      actor->SetWorkerRef(CacheWorkerRef::PreferBehavior(
+          GetWorkerRefPtr().clonePtr(), CacheWorkerRef::eIPCWorkerRef));
       RefPtr<Cache> cache = new Cache(mGlobal, actor, result.ns());
       mPromise->MaybeResolve(cache);
       break;
@@ -194,7 +191,7 @@ void CacheOpChild::HandleResponse(const Maybe<CacheResponse>& aMaybeResponse) {
 
   const CacheResponse& cacheResponse = aMaybeResponse.ref();
 
-  AddWorkerRefToStreamChild(cacheResponse, GetWorkerRef());
+  AddWorkerRefToStreamChild(cacheResponse, GetWorkerRefPtr());
   RefPtr<Response> response = ToResponse(cacheResponse);
 
   mPromise->MaybeResolve(response);
@@ -206,7 +203,7 @@ void CacheOpChild::HandleResponseList(
   responses.SetCapacity(aResponseList.Length());
 
   for (uint32_t i = 0; i < aResponseList.Length(); ++i) {
-    AddWorkerRefToStreamChild(aResponseList[i], GetWorkerRef());
+    AddWorkerRefToStreamChild(aResponseList[i], GetWorkerRefPtr());
     responses.AppendElement(ToResponse(aResponseList[i]));
   }
 
@@ -219,7 +216,7 @@ void CacheOpChild::HandleRequestList(
   requests.SetCapacity(aRequestList.Length());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
-    AddWorkerRefToStreamChild(aRequestList[i], GetWorkerRef());
+    AddWorkerRefToStreamChild(aRequestList[i], GetWorkerRefPtr());
     requests.AppendElement(ToRequest(aRequestList[i]));
   }
 
