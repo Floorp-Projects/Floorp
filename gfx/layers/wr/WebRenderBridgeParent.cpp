@@ -1983,28 +1983,23 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
     return IPC_OK();
   }
 
-  for (auto renderRoot : wr::kRenderRoots) {
-    if (renderRoot == wr::RenderRoot::Default) {
-      if (mRenderRoot) {
-        // Clear resources
-        wr::TransactionBuilder txn;
-        txn.SetLowPriority(true);
-        txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
-        txn.Notify(wr::Checkpoint::SceneBuilt,
-                   MakeUnique<ScheduleObserveLayersUpdate>(
-                       mCompositorBridge, GetLayersId(),
-                       mChildLayersObserverEpoch, false));
-        mApi->SendTransaction(txn);
-      } else {
-        if (RefPtr<WebRenderBridgeParent> root =
-                GetRootWebRenderBridgeParent()) {
-          root->RemoveDeferredPipeline(mPipelineId);
-        }
-      }
+  if (mRenderRoot) {
+    // Clear resources
+    wr::TransactionBuilder txn;
+    txn.SetLowPriority(true);
+    txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
+    txn.Notify(wr::Checkpoint::SceneBuilt,
+               MakeUnique<ScheduleObserveLayersUpdate>(
+                   mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch,
+                   false));
+    mApi->SendTransaction(txn);
+  } else {
+    if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
+      root->RemoveDeferredPipeline(mPipelineId);
     }
   }
-  // Schedule generate frame to clean up Pipeline
 
+  // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();
 
   // Remove animations.
@@ -2082,13 +2077,9 @@ void WebRenderBridgeParent::InvalidateRenderedFrame() {
     return;
   }
 
-  for (auto renderRoot : wr::kRenderRoots) {
-    if (renderRoot == wr::RenderRoot::Default) {
-      wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
-      fastTxn.InvalidateRenderedFrame();
-      mApi->SendTransaction(fastTxn);
-    }
-  }
+  wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
+  fastTxn.InvalidateRenderedFrame();
+  mApi->SendTransaction(fastTxn);
 }
 
 void WebRenderBridgeParent::ScheduleForcedGenerateFrame() {
