@@ -215,17 +215,10 @@ bool WarpCacheIRTranspiler::emitGuardType(ValOperandId inputId,
     case ValueType::Double:
     case ValueType::Boolean:
       return emitGuardTo(inputId, MIRTypeFromValueType(JSValueType(type)));
-    case ValueType::Undefined: {
-      auto* ins =
-          MGuardValue::New(alloc(), getOperand(inputId), UndefinedValue());
-      add(ins);
-      return true;
-    }
-    case ValueType::Null: {
-      auto* ins = MGuardValue::New(alloc(), getOperand(inputId), NullValue());
-      add(ins);
-      return true;
-    }
+    case ValueType::Undefined:
+      return emitGuardIsUndefined(inputId);
+    case ValueType::Null:
+      return emitGuardIsNull(inputId);
     case ValueType::Magic:
     case ValueType::PrivateGCThing:
     case ValueType::Object:
@@ -302,6 +295,28 @@ bool WarpCacheIRTranspiler::emitGuardIsNullOrUndefined(ValOperandId inputId) {
   }
 
   auto* ins = MGuardNullOrUndefined::New(alloc(), input);
+  add(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardIsNull(ValOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+  if (input->type() == MIRType::Null) {
+    return true;
+  }
+
+  auto* ins = MGuardValue::New(alloc(), input, NullValue());
+  add(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardIsUndefined(ValOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+  if (input->type() == MIRType::Undefined) {
+    return true;
+  }
+
+  auto* ins = MGuardValue::New(alloc(), input, UndefinedValue());
   add(ins);
   return true;
 }

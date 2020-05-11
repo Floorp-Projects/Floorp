@@ -70,13 +70,13 @@
 
 - name: GuardIsNull
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: ValId
 
 - name: GuardIsUndefined
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: ValId
 
