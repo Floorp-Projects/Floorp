@@ -21,6 +21,11 @@ if CONFIG['JS_BUILD_BINAST']:
         'testBinASTReader.cpp',
     ]
 
+if CONFIG['ENABLE_NEW_REGEXP']:
+    UNIFIED_SOURCES += [
+        'testRegExp.cpp',
+    ]
+
 DEFINES['EXPORT_JS_API'] = True
 
 LOCAL_INCLUDES += [
