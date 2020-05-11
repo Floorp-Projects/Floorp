@@ -141,7 +141,6 @@ button > hbox > label {
 }
 
 .accessory-button {
-  min-height: 30px;
   min-width: 150px;
   margin: 4px 0;
 }
@@ -945,11 +944,6 @@ image.update-throbber {
   visibility: collapse;
 }
 
-menulist {
-  min-height: 30px;
-  margin-block: 4px;
-}
-
 menulist[indicator=true] > menupopup menuitem:not([image]) > .menu-iconic-left {
   display: -moz-box;
   min-width: auto; /* Override the min-width defined in menu.css */
@@ -1012,14 +1006,20 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   min-width: 20em;
 }
 
-#selectedLocales > richlistitem {
-  padding-inline-start: 13px;
+#availableLanguages,
+#availableLocales {
+  margin-inline-start: 0;
 }
 
 #availableLanguages,
-#availableLocales {
-  margin: 0;
+#availableLocales,
+#activeLanguages,
+#selectedLocales {
   margin-inline-end: 4px;
+}
+
+#selectedLocales > richlistitem {
+  padding-inline-start: 13px;
 }
 
 #warning-message > .message-bar-description {
@@ -1028,12 +1028,6 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 
 #warning-message {
   margin-top: 8px;
-}
-
-.add-web-language,
-.add-browser-language {
-  margin: 0;
-  margin-inline-start: 4px;
 }
 
 .action-button {
