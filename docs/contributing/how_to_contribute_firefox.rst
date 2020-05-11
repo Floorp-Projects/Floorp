@@ -172,6 +172,11 @@ To submit a patch
 -----------------
 
 To submit a patch for review, we use a tool called `moz-phab <https://pypi.org/project/MozPhab/>`__.
+To install it, run:
+
+.. code-block:: shell
+
+     $ ./mach install-moz-phab
 
 .. code-block:: shell
 
