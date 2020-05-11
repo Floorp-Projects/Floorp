@@ -12,15 +12,15 @@ import android.util.Log;
 
 import org.mozilla.geckoview.BuildConfig;
 
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.Format;
-import com.google.android.exoplayer2.decoder.DecoderInputBuffer;
-import com.google.android.exoplayer2.mediacodec.MediaCodecInfo;
-import com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
-import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
-import com.google.android.exoplayer2.RendererCapabilities;
-import com.google.android.exoplayer2.util.MimeTypes;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.C;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.ExoPlaybackException;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.Format;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.decoder.DecoderInputBuffer;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.mediacodec.MediaCodecInfo;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.RendererCapabilities;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.util.MimeTypes;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
