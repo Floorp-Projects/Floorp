@@ -168,6 +168,8 @@ toolkit/components/normandy/vendor/
 toolkit/components/protobuf/
 toolkit/components/url-classifier/chromium/
 toolkit/components/utils/mozjexl.js
+toolkit/components/viaduct/fetch_msg_types.pb.cc
+toolkit/components/viaduct/fetch_msg_types.pb.h
 toolkit/crashreporter/breakpad-client/
 toolkit/crashreporter/google-breakpad/
 tools/fuzzing/libfuzzer/
