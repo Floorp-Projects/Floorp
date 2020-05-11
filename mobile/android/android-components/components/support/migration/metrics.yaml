@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
@@ -124,7 +125,8 @@ migration.history:
   migrated:
     type: labeled_counter
     description: >
-      Counters describing how history migration went; should add-up to 'migration.history.detected'.
+      Counters describing how history migration went;
+      should add-up to 'migration.history.detected'.
     labels:
       - succeeded
       - failed
@@ -229,18 +231,19 @@ migration.bookmarks:
   migrated:
     type: labeled_counter
     description: >
-      Counters describing how bookmark migration went; should add-up to 'migration.bookmarks.detected'.
+      Counters describing how bookmark migration went;
+      should add-up to 'migration.bookmarks.detected'.
     labels:
       - succeeded
       - failed
     send_in_pings:
-    - migration
+      - migration
     bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/5888
+      - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
-    - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
     notification_emails:
-    - fenix-core@mozilla.com
+      - fenix-core@mozilla.com
     expires: 2020-10-01
     lifetime: ping
   detected:

@@ -5,6 +5,7 @@
 # This file defines the metrics that are recorded by glean telemetry. They are
 # automatically converted to Kotlin code at build time using the `glean_parser`
 # PyPI package.
+---
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
@@ -16,7 +17,7 @@ browser.engagement:
     bugs:
       - https://bugzilla.mozilla.org/123456789
     data_reviews:
-      - N/A 
+      - N/A
     notification_emails:
       - CHANGE-ME@example.com
     extra_keys:
@@ -24,8 +25,8 @@ browser.engagement:
         description: "This is key one"
       key2:
         description: "This is key two"
-    expires: 2100-01-01 
-    
+    expires: 2100-01-01
+
   event_no_keys:
     type: event
     description: >
@@ -33,7 +34,7 @@ browser.engagement:
     bugs:
       - https://bugzilla.mozilla.org/123456789
     data_reviews:
-      - N/A 
+      - N/A
     notification_emails:
       - CHANGE-ME@example.com
     expires: 2100-01-01
@@ -46,7 +47,7 @@ basic:
     bugs:
       - https://bugzilla.mozilla.org/123456789
     data_reviews:
-      - N/A 
+      - N/A
     notification_emails:
       - CHANGE-ME@example.com
     expires: 2100-01-01
@@ -62,7 +63,7 @@ test:
     bugs:
       - https://bugzilla.mozilla.org/123456789
     data_reviews:
-      - N/A 
+      - N/A
     notification_emails:
       - CHANGE-ME@example.com
     expires: 2100-01-01
@@ -77,7 +78,7 @@ test:
     bugs:
       - https://bugzilla.mozilla.org/123456789
     data_reviews:
-      - N/A 
+      - N/A
     notification_emails:
       - CHANGE-ME@example.com
     expires: 2100-01-01
@@ -91,7 +92,7 @@ test:
     bugs:
       - https://bugzilla.mozilla.org/1508948
     data_reviews:
-      - N/A 
+      - N/A
     notification_emails:
       - CHANGE-ME@example.com
     expires: 2100-01-01
