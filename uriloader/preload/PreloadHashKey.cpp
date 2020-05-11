@@ -154,6 +154,16 @@ PreloadHashKey PreloadHashKey::CreateAsFetch(
                        aReferrerPolicy);
 }
 
+PreloadHashKey PreloadHashKey::CreateAsFont(
+    nsIURI* aURI, const CORSMode aCORSMode,
+    const dom::ReferrerPolicy& aReferrerPolicy) {
+  PreloadHashKey key(aURI, ResourceType::FONT);
+  key.mReferrerPolicy = aReferrerPolicy;
+  key.mCORSMode = aCORSMode;
+
+  return key;
+}
+
 bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
   if (mAs != aOther->mAs || mCORSMode != aOther->mCORSMode ||
       mReferrerPolicy != aOther->mReferrerPolicy) {

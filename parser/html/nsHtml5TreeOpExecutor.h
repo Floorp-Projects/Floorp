@@ -252,6 +252,9 @@ class nsHtml5TreeOpExecutor final
   void PreloadPictureSource(const nsAString& aSrcset, const nsAString& aSizes,
                             const nsAString& aType, const nsAString& aMedia);
 
+  void PreloadFont(const nsAString& aURL, const nsAString& aCrossOrigin,
+                   const nsAString& aReferrerPolicy);
+
   void PreloadFetch(const nsAString& aURL, const nsAString& aCrossOrigin,
                     const nsAString& aReferrerPolicy);
 
