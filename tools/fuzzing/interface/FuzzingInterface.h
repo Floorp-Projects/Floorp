@@ -12,10 +12,6 @@
 
 #include <fstream>
 
-#ifdef LIBFUZZER
-#  include "FuzzerExtFunctions.h"
-#endif
-
 #include "FuzzerRegistry.h"
 #include "mozilla/Assertions.h"
 
