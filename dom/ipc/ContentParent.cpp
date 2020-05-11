@@ -1411,30 +1411,6 @@ void ContentParent::Init() {
   mScriptableHelper = new ScriptableCPInfo(this);
 }
 
-NS_IMPL_ISUPPORTS(RemoteWindowContext, nsIRemoteWindowContext,
-                  nsIInterfaceRequestor)
-
-RemoteWindowContext::RemoteWindowContext(BrowserParent* aBrowserParent)
-    : mBrowserParent(aBrowserParent) {}
-
-NS_IMETHODIMP
-RemoteWindowContext::GetInterface(const nsIID& aIID, void** aSink) {
-  return QueryInterface(aIID, aSink);
-}
-
-NS_IMETHODIMP
-RemoteWindowContext::OpenURI(nsIURI* aURI) {
-  mBrowserParent->LoadURL(aURI);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-RemoteWindowContext::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing) {
-  nsCOMPtr<nsILoadContext> loadContext = mBrowserParent->GetLoadContext();
-  *aUsePrivateBrowsing = loadContext && loadContext->UsePrivateBrowsing();
-  return NS_OK;
-}
-
 void ContentParent::MaybeAsyncSendShutDownMessage() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!TryToRecycle());
@@ -3750,7 +3726,11 @@ mozilla::ipc::IPCResult ContentParent::RecvAccumulateMixedContentHSTS(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
-    nsIURI* uri, PBrowserParent* windowContext) {
+    nsIURI* uri, const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
   nsCOMPtr<nsIExternalProtocolService> extProtService(
       do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
   if (!extProtService) {
@@ -3761,9 +3741,8 @@ mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<RemoteWindowContext> context =
-      new RemoteWindowContext(static_cast<BrowserParent*>(windowContext));
-  extProtService->LoadURI(uri, context);
+  BrowsingContext* bc = aContext.get();
+  extProtService->LoadURI(uri, bc);
   return IPC_OK();
 }
 

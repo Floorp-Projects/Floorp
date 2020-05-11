@@ -74,7 +74,7 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
   NS_IMETHOD GetProtocolHandlerInfo(const nsACString& aScheme,
                                     nsIHandlerInfo** aHandlerInfo) override;
   NS_IMETHOD LoadURI(nsIURI* aURI,
-                     nsIInterfaceRequestor* aWindowContext) override;
+                     mozilla::dom::BrowsingContext* aBrowsingContext) override;
   NS_IMETHOD SetProtocolHandlerDefaults(nsIHandlerInfo* aHandlerInfo,
                                         bool aOSHandlerExists) override;
 

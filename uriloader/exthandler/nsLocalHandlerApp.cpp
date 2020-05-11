@@ -89,8 +89,8 @@ nsLocalHandlerApp::Equals(nsIHandlerApp* aHandlerApp, bool* _retval) {
 }
 
 NS_IMETHODIMP
-nsLocalHandlerApp::LaunchWithURI(nsIURI* aURI,
-                                 nsIInterfaceRequestor* aWindowContext) {
+nsLocalHandlerApp::LaunchWithURI(
+    nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) {
   // pass the entire URI to the handler.
   nsAutoCString spec;
   aURI->GetAsciiSpec(spec);

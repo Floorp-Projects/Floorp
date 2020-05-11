@@ -307,8 +307,7 @@ nsMIMEInfoBase::LaunchWithFile(nsIFile* aFile) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,
-                              nsIInterfaceRequestor* aWindowContext) {
+nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI, BrowsingContext* aBrowsingContext) {
   // This is only being called with protocol handlers
   NS_ASSERTION(mClass == eProtocolInfo,
                "nsMIMEInfoBase should be a protocol handler");
@@ -353,7 +352,7 @@ nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,
         return NS_ERROR_FILE_NOT_FOUND;
       }
     }
-    return mPreferredApplication->LaunchWithURI(aURI, aWindowContext);
+    return mPreferredApplication->LaunchWithURI(aURI, aBrowsingContext);
   }
 
   return NS_ERROR_INVALID_ARG;

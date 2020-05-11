@@ -44,8 +44,7 @@ ParentChannelListener::ParentChannelListener(
       mShouldIntercept(false),
       mShouldSuspendIntercept(false),
       mInterceptCanceled(false),
-      mBrowsingContext(aBrowsingContext),
-      mUsePrivateBrowsing(aUsePrivateBrowsing) {
+      mBrowsingContext(aBrowsingContext) {
   LOG(("ParentChannelListener::ParentChannelListener [this=%p, next=%p]", this,
        aListener));
 
@@ -72,7 +71,6 @@ NS_INTERFACE_MAP_BEGIN(ParentChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsINetworkInterceptController)
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAuthPromptProvider, mBrowsingContext)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIRemoteWindowContext, mBrowsingContext)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(ParentChannelListener)
 NS_INTERFACE_MAP_END
@@ -158,8 +156,7 @@ ParentChannelListener::OnAfterLastPart(nsresult aStatus) {
 
 NS_IMETHODIMP
 ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
-  if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController)) ||
-      aIID.Equals(NS_GET_IID(nsIRemoteWindowContext))) {
+  if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController))) {
     return QueryInterface(aIID, result);
   }
 
@@ -418,38 +415,6 @@ ParentChannelListener::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
   }
 
   *aResult = prompt.forget().take();
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// ParentChannelListener::nsIRemoteWindowContext
-//
-
-NS_IMETHODIMP
-ParentChannelListener::OpenURI(nsIURI* aURI) {
-  nsCString spec;
-  aURI->GetSpec(spec);
-
-  RefPtr<dom::CanonicalBrowsingContext> bc = mBrowsingContext;
-
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction("ParentChannelListener::OpenURI", [spec, bc]() {
-        dom::LoadURIOptions loadURIOptions;
-        loadURIOptions.mTriggeringPrincipal =
-            nsContentUtils::GetSystemPrincipal();
-        loadURIOptions.mLoadFlags =
-            nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-            nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
-
-        ErrorResult rv;
-        bc->LoadURI(NS_ConvertUTF8toUTF16(spec), loadURIOptions, rv);
-      }));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentChannelListener::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing) {
-  *aUsePrivateBrowsing = mUsePrivateBrowsing;
   return NS_OK;
 }
 
