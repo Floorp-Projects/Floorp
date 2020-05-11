@@ -726,8 +726,6 @@ class nsDisplayNotation final : public nsPaintedDisplayItem {
   }
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayNotation)
 
-  virtual uint16_t CalculatePerFrameKey() const override { return mType; }
-
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLMencloseNotation", TYPE_MATHML_MENCLOSE_NOTATION)
 
@@ -838,6 +836,7 @@ void nsMathMLmencloseFrame::DisplayNotation(nsDisplayListBuilder* aBuilder,
       aThickness <= 0)
     return;
 
-  aLists.Content()->AppendNewToTop<nsDisplayNotation>(aBuilder, aFrame, aRect,
-                                                      aThickness, aType);
+  const uint16_t index = aType;
+  aLists.Content()->AppendNewToTopWithIndex<nsDisplayNotation>(
+      aBuilder, aFrame, index, aRect, aThickness, aType);
 }
