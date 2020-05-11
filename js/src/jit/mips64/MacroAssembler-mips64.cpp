@@ -2032,26 +2032,11 @@ void MacroAssembler::branchValueIsNurseryCell(Condition cond,
                                               Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
-  Label done, checkAddress, checkObjectAddress, checkStringAddress;
-  SecondScratchRegisterScope scratch2(*this);
+  Label done;
+  branchTestGCThing(Assembler::NotEqual, value,
+                    cond == Assembler::Equal ? &done : label);
 
-  splitTag(value, scratch2);
-  branchTestObject(Assembler::Equal, scratch2, &checkObjectAddress);
-  branchTestString(Assembler::Equal, scratch2, &checkStringAddress);
-  branchTestBigInt(Assembler::NotEqual, scratch2,
-                   cond == Assembler::Equal ? &done : label);
-
-  unboxBigInt(value, scratch2);
-  jump(&checkAddress);
-
-  bind(&checkStringAddress);
-  unboxString(value, scratch2);
-  jump(&checkAddress);
-
-  bind(&checkObjectAddress);
-  unboxObject(value, scratch2);
-
-  bind(&checkAddress);
+  unboxGCThingForGCBarrier(value, temp);
   orPtr(Imm32(gc::ChunkMask), scratch2);
   load32(Address(scratch2, gc::ChunkLocationOffsetFromLastByte), scratch2);
   branch32(cond, scratch2, Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
