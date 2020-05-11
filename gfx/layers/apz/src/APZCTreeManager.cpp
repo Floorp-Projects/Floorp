@@ -517,7 +517,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           parent = node;
           next = nullptr;
 
-          // Update the layersId or renderroot if we have a new one
+          // Update the layersId if we have a new one
           if (Maybe<LayersId> newLayersId = aLayerMetrics.GetReferentId()) {
             layersId = *newLayersId;
             seenLayersIds.insert(layersId);
