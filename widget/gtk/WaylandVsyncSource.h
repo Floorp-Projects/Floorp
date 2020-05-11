@@ -9,7 +9,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
-#include "MozContainer.h"
+#include "mozcontainer.h"
 #include "VsyncSource.h"
 #include "base/thread.h"
 #include "nsWaylandDisplay.h"
