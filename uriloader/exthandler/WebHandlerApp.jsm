@@ -75,6 +75,18 @@ nsWebHandlerApp.prototype = {
     let policy = WebExtensionPolicy.getByURI(uriToSend);
     let privateAllowed = !policy || policy.privateBrowsingAllowed;
 
+    // If we're in a frame, check if we're a built-in scheme, in which case,
+    // override the target browsingcontext. It's not a good idea to try to
+    // load mail clients or other apps with potential for logged in data into
+    // iframes, and in any case it's unlikely to work due to framing
+    // restrictions employed by the target site.
+    if (aBrowsingContext && aBrowsingContext != aBrowsingContext.top) {
+      let { scheme } = aURI;
+      if (!scheme.startsWith("web+") && !scheme.startsWith("ext+")) {
+        aBrowsingContext = null;
+      }
+    }
+
     // if we have a context, use the URI loader to load there
     if (aBrowsingContext) {
       if (aBrowsingContext.usePrivateBrowsing && !privateAllowed) {
