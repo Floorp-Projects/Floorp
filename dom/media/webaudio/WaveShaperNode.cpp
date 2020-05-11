@@ -212,10 +212,9 @@ class WaveShaperNodeEngine final : public AudioNodeEngine {
           0.0) {
         *aOutput = aInput;
         return;
-      } else {
-        nullInput = true;
-        channelCount = 1;
       }
+      nullInput = true;
+      channelCount = 1;
     }
 
     aOutput->AllocateChannels(channelCount);
