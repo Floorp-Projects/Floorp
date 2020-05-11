@@ -11,6 +11,8 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIHandlerInfo;
 
+webidl BrowsingContext;
+
 /**
  * The external protocol service is used for finding and launching
  * web handlers (a la registerProtocolHandler in the HTML5 draft) or
@@ -95,8 +97,8 @@ interface nsIExternalProtocolService : nsISupports
    * @param aURI
    *        The URI to load
    *
-   * @param aWindowContext
-   *        The window to parent the dialog against, and, if a web handler
+   * @param aBrowsingContext
+   *        The context to parent the dialog against, and, if a web handler
    *        is chosen, it is loaded in this window as well.  This parameter
    *        may be ultimately passed nsIURILoader.openURI in the case of a
    *        web handler, and aWindowContext is null or not present, web
@@ -108,7 +110,7 @@ interface nsIExternalProtocolService : nsISupports
    *        (bug 394479).
    */
   void loadURI(in nsIURI aURI,
-               [optional] in nsIInterfaceRequestor aWindowContext);
+               in BrowsingContext aBrowsingContext);
 
   /**
    * Gets a human-readable description for the application responsible for

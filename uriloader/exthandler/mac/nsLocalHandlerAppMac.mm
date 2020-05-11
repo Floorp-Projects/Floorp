@@ -30,7 +30,7 @@ NS_IMETHODIMP nsLocalHandlerAppMac::GetName(nsAString& aName) {
  * somewhere more central (see bug 389922).
  */
 NS_IMETHODIMP
-nsLocalHandlerAppMac::LaunchWithURI(nsIURI* aURI, nsIInterfaceRequestor* aWindowContext) {
+nsLocalHandlerAppMac::LaunchWithURI(nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult rv;

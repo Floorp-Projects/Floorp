@@ -67,8 +67,8 @@ nsAndroidHandlerApp::Equals(nsIHandlerApp* aHandlerApp, bool* aRetval) {
 }
 
 NS_IMETHODIMP
-nsAndroidHandlerApp::LaunchWithURI(nsIURI* aURI,
-                                   nsIInterfaceRequestor* aWindowContext) {
+nsAndroidHandlerApp::LaunchWithURI(
+    nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) {
   nsCString uriSpec;
   aURI->GetSpec(uriSpec);
   return java::GeckoAppShell::OpenUriExternal(uriSpec, mMimeType, mPackageName,

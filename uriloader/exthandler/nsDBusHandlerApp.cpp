@@ -77,8 +77,8 @@ nsDBusHandlerApp::Equals(nsIHandlerApp* aHandlerApp, bool* _retval) {
 }
 
 NS_IMETHODIMP
-nsDBusHandlerApp::LaunchWithURI(nsIURI* aURI,
-                                nsIInterfaceRequestor* aWindowContext) {
+nsDBusHandlerApp::LaunchWithURI(
+    nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) {
   nsAutoCString spec;
   nsresult rv = aURI->GetAsciiSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);

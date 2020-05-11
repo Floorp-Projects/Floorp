@@ -35,8 +35,7 @@ interface nsIExternalHelperAppService : nsISupports
    * @param aMimeContentType The content type of the incoming data
    * @param aRequest The request corresponding to the incoming data
    * @param aContentContext Used in processing content document refresh
-   *  headers after target content is downloaded. Note in e10s land
-   *  this is likely a CPOW that points to a window in the child process.
+   *  headers after target content is downloaded.
    * @param aForceSave True to always save this content to disk, regardless of
    *  nsIMIMEInfo and other such influences.
    * @param aWindowContext Used in parenting helper app dialogs, usually
