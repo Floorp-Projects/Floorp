@@ -228,7 +228,7 @@ class WebRenderLayerManager final : public LayerManager {
   nsCString mURL;
   WebRenderCommandBuilder mWebRenderCommandBuilder;
 
-  wr::RenderRootArray<size_t> mLastDisplayListSizes;
+  size_t mLastDisplayListSize;
   wr::RenderRootArray<RenderRootStateManager> mStateManagers;
   DisplayItemCache mDisplayItemCache;
 };

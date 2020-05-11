@@ -39,7 +39,8 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
       mIsFirstPaint(false),
       mTarget(nullptr),
       mPaintSequenceNumber(0),
-      mWebRenderCommandBuilder(this) {
+      mWebRenderCommandBuilder(this),
+      mLastDisplayListSize(0) {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
   for (auto renderRoot : wr::kRenderRoots) {
     mStateManagers[renderRoot].mRenderRoot = renderRoot;
@@ -304,8 +305,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   wr::LayoutSize contentSize{(float)size.width, (float)size.height};
 
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize,
-                                 mLastDisplayListSizes[wr::RenderRoot::Default],
-                                 &mDisplayItemCache);
+                                 mLastDisplayListSize, &mDisplayItemCache);
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
@@ -424,7 +424,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
       auto renderRootDL = renderRootDLs.AppendElement();
       renderRootDL->mRenderRoot = renderRoot;
       builder.Finalize(*renderRootDL);
-      mLastDisplayListSizes[renderRoot] = renderRootDL->mDL->mCapacity;
+      mLastDisplayListSize = renderRootDL->mDL->mCapacity;
       resourceUpdates.SubQueue(renderRoot)
           .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
                  renderRootDL->mLargeShmems);
