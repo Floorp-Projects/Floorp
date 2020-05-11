@@ -17,8 +17,6 @@ use incoming::IncomingAction;
 
 type JsonMap = serde_json::Map<String, serde_json::Value>;
 
-pub const STORAGE_VERSION: usize = 1;
-
 /// For use with `#[serde(skip_serializing_if = )]`
 #[inline]
 pub fn is_default<T: PartialEq + Default>(v: &T) -> bool {
@@ -36,66 +34,58 @@ pub struct Record {
 }
 
 // Perform a 2-way or 3-way merge, where the incoming value wins on confict.
-fn merge(mut other: JsonMap, mut ours: JsonMap, parent: Option<JsonMap>) -> IncomingAction {
+// XXX - this needs more thought, and probably needs significant changes.
+// Main problem is that it doesn't handle deletions - but to do that, we need
+// something other than a simple Option<JsonMap> - we need to differentiate
+// "doesn't exist" from "removed".
+// TODO!
+fn merge(other: JsonMap, mut ours: JsonMap, parent: Option<JsonMap>) -> IncomingAction {
     if other == ours {
         return IncomingAction::Same;
     }
-    let old_incoming = other.clone();
-    if let Some(parent) = parent {
-        // Perform 3-way merge. First, for every key in parent,
-        // compare the parent value with the incoming value to compute
-        // an implicit "diff".
-        for (key, parent_value) in parent.into_iter() {
-            if let Some(incoming_value) = other.remove(&key) {
-                if incoming_value != parent_value {
-                    log::trace!(
-                        "merge: key {} was updated in incoming - copying value locally",
-                        key
-                    );
-                    ours.insert(key, incoming_value);
+    // Server wins. Iterate over incoming - if incoming and the parent are
+    // identical, then we will take our local value.
+    for (key, incoming_value) in other.into_iter() {
+        let our_value = ours.get(&key);
+        match our_value {
+            Some(our_value) => {
+                if *our_value != incoming_value {
+                    // So we have a discrepency between 'ours' and 'other' - use parent
+                    // to resolve.
+                    let can_take_local = match parent {
+                        Some(ref pm) => {
+                            if let Some(pv) = pm.get(&key) {
+                                // parent has a value - we can only take our local
+                                // value if the parent and incoming have the same.
+                                *pv == incoming_value
+                            } else {
+                                // Value doesn't exist in the parent - can't take local
+                                false
+                            }
+                        }
+                        None => {
+                            // 2 way merge because there's no parent. We always
+                            // prefer incoming here.
+                            false
+                        }
+                    };
+                    if can_take_local {
+                        log::trace!("merge: no remote change in key {} - taking local", key);
+                    } else {
+                        log::trace!("merge: conflict in existing key {} - taking remote", key);
+                        ours.insert(key, incoming_value);
+                    }
+                } else {
+                    log::trace!("merge: local and incoming same for key {}", key);
                 }
-            } else {
-                // Key was not present in incoming value.
-                // Another client must have deleted it.
-                log::trace!(
-                    "merge: key {} no longer present in incoming - removing it locally",
-                    key
-                );
-                ours.remove(&key);
+            }
+            None => {
+                log::trace!("merge: incoming new value for key {}", key);
+                ours.insert(key, incoming_value);
             }
         }
-
-        // Then, go through every remaining key in incoming. These are
-        // the ones where a corresponding key does not exist in
-        // parent, so it is a new key, and we need to add it.
-        for (key, incoming_value) in other.into_iter() {
-            log::trace!(
-                "merge: key {} doesn't occur in parent - copying from incoming",
-                key
-            );
-            ours.insert(key, incoming_value);
-        }
-    } else {
-        // No parent. Server wins. Overwrite every key in ours with
-        // the corresponding value in other.
-        log::trace!("merge: no parent - copying all keys from incoming");
-        for (key, incoming_value) in other.into_iter() {
-            ours.insert(key, incoming_value);
-        }
     }
-
-    if ours == old_incoming {
-        IncomingAction::TakeRemote { data: old_incoming }
-    } else {
-        IncomingAction::Merge { data: ours }
-    }
-}
-
-fn remove_matching_keys(mut ours: JsonMap, blacklist: &JsonMap) -> JsonMap {
-    for key in blacklist.keys() {
-        ours.remove(key);
-    }
-    ours
+    IncomingAction::Merge { data: ours }
 }
 
 // Helpers for tests
@@ -168,51 +158,8 @@ mod tests {
                 data: map!({"other_only": "other", "ours_only": "ours", "common": "new_value"})
             }
         );
-        // Field was removed remotely.
-        assert_eq!(
-            merge(
-                map!({"other_only": "other"}),
-                map!({"common": "old_value"}),
-                Some(map!({"common": "old_value"})),
-            ),
-            IncomingAction::TakeRemote {
-                data: map!({"other_only": "other"}),
-            }
-        );
-        // Field was removed remotely but we added another one.
-        assert_eq!(
-            merge(
-                map!({"other_only": "other"}),
-                map!({"common": "old_value", "new_key": "new_value"}),
-                Some(map!({"common": "old_value"})),
-            ),
-            IncomingAction::Merge {
-                data: map!({"other_only": "other", "new_key": "new_value"}),
-            }
-        );
-        // Field was removed both remotely and locally.
-        assert_eq!(
-            merge(
-                map!({}),
-                map!({"new_key": "new_value"}),
-                Some(map!({"common": "old_value"})),
-            ),
-            IncomingAction::Merge {
-                data: map!({"new_key": "new_value"}),
-            }
-        );
         Ok(())
     }
 
-    #[test]
-    fn test_remove_matching_keys() -> Result<()> {
-        assert_eq!(
-            remove_matching_keys(
-                map!({"key1": "value1", "key2": "value2"}),
-                &map!({"key1": "ignored", "key3": "ignored"})
-            ),
-            map!({"key2": "value2"})
-        );
-        Ok(())
-    }
+    // XXX - add `fn test_2way_merging() -> Result<()> {`!!
 }
