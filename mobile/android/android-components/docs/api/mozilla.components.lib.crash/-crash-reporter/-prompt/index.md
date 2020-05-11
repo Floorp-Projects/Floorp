@@ -2,7 +2,7 @@
 
 # Prompt
 
-`enum class Prompt` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L233)
+`enum class Prompt` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L251)
 
 ### Enum Values
 

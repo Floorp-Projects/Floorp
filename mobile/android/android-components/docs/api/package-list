@@ -236,6 +236,7 @@ mozilla.components.lib.crash
 mozilla.components.lib.crash.handler
 mozilla.components.lib.crash.prompt
 mozilla.components.lib.crash.service
+mozilla.components.lib.crash.ui
 mozilla.components.lib.dataprotect
 mozilla.components.lib.fetch.httpurlconnection
 mozilla.components.lib.fetch.okhttp
