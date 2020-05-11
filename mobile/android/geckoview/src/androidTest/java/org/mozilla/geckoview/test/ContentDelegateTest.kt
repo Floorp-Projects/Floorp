@@ -6,12 +6,8 @@ package org.mozilla.geckoview.test
 
 import android.app.ActivityManager
 import android.content.Context
-import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.os.LocaleList
 import android.os.Process
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
@@ -22,13 +18,7 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.annotation.AnyThread
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import android.util.Pair
-import android.util.SparseArray
 import android.view.Surface
-import android.view.View
-import android.view.ViewStructure
-import android.view.autofill.AutofillId
-import android.view.autofill.AutofillValue
 import org.hamcrest.Matchers.*
 import org.json.JSONObject
 import org.junit.Assume.assumeThat
@@ -36,7 +26,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.gecko.GeckoAppShell
 import org.mozilla.geckoview.*
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 
 
@@ -58,14 +47,14 @@ class ContentDelegateTest : BaseSessionTest() {
     @Test fun download() {
         // disable test on pgo for frequently failing Bug 1543355
         assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
+
+        val executor = GeckoWebExecutor(sessionRule.runtime)
         sessionRule.session.loadTestPath(DOWNLOAD_HTML_PATH)
 
         sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
 
             @AssertCalled(count = 2)
-            override fun onLoadRequest(session: GeckoSession,
-                                       request: LoadRequest):
-                                       GeckoResult<AllowOrDeny>? {
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 return null
             }
 
@@ -76,10 +65,15 @@ class ContentDelegateTest : BaseSessionTest() {
 
             @AssertCalled(count = 1)
             override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
-                assertThat("Uri should start with data:", response.uri, startsWith("data:"))
+                assertThat("Uri should start with data:", response.uri, startsWith("blob:"))
                 assertThat("Content type should match", response.contentType, equalTo("text/plain"))
                 assertThat("Content length should be non-zero", response.contentLength, greaterThan(0L))
                 assertThat("Filename should match", response.filename, equalTo("download.txt"))
+
+                val req = WebRequest.Builder(response.uri).addHeader("Accept", "text/plain").build()
+
+                val res = sessionRule.waitForResult(executor.fetch(req))
+                assertThat("We should download the thing", String(res.body?.readBytes()!!), equalTo("Downloaded Data"))
             }
         })
     }
