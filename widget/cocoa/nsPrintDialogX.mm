@@ -184,7 +184,16 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettin
   int button = [pageLayout runModalWithPrintInfo:printInfo];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
-  return button == NSFileHandlingPanelOKButton ? NS_OK : NS_ERROR_ABORT;
+  if (button == NSFileHandlingPanelOKButton) {
+    nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+        do_GetService("@mozilla.org/gfx/printsettings-service;1");
+    if (printSettingsService && Preferences::GetBool("print.save_print_settings", false)) {
+      printSettingsService->SavePrintSettingsToPrefs(aNSSettings, true,
+                                                     nsIPrintSettings::kInitSaveNativeData);
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_ABORT;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
