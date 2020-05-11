@@ -406,38 +406,6 @@ void WebRenderAPI::SendTransaction(TransactionBuilder& aTxn) {
   wr_api_send_transaction(mDocHandle, aTxn.Raw(), aTxn.UseSceneBuilderThread());
 }
 
-/* static */
-void WebRenderAPI::SendTransactions(
-    const RenderRootArray<RefPtr<WebRenderAPI>>& aApis,
-    RenderRootArray<TransactionBuilder*>& aTxns) {
-  if (!aApis[RenderRoot::Default]) {
-    return;
-  }
-
-  AutoTArray<DocumentHandle*, kRenderRootCount> documentHandles;
-  AutoTArray<Transaction*, kRenderRootCount> txns;
-  Maybe<bool> useSceneBuilderThread;
-  for (auto& api : aApis) {
-    if (!api) {
-      continue;
-    }
-    auto& txn = aTxns[api->GetRenderRoot()];
-    if (txn) {
-      documentHandles.AppendElement(api->mDocHandle);
-      txns.AppendElement(txn->Raw());
-      if (useSceneBuilderThread.isSome()) {
-        MOZ_ASSERT(txn->UseSceneBuilderThread() == *useSceneBuilderThread);
-      } else {
-        useSceneBuilderThread.emplace(txn->UseSceneBuilderThread());
-      }
-    }
-  }
-  if (!txns.IsEmpty()) {
-    wr_api_send_transactions(documentHandles.Elements(), txns.Elements(),
-                             txns.Length(), *useSceneBuilderThread);
-  }
-}
-
 enum SideBitsPacked {
   eSideBitsPackedTop = 0x1000,
   eSideBitsPackedRight = 0x2000,

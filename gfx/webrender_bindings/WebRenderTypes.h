@@ -81,30 +81,6 @@ typedef EnumSet<RenderRoot, uint8_t> RenderRootSet;
 // For simple iteration of all render roots
 const Array<RenderRoot, kRenderRootCount> kRenderRoots(RenderRoot::Default);
 
-template <typename T>
-class RenderRootArray : public Array<T, kRenderRootCount> {
-  typedef Array<T, kRenderRootCount> Super;
-
- public:
-  RenderRootArray() {
-    if (IsPod<T>::value) {
-      // Ensure primitive types get initialized to 0/false.
-      PodArrayZero(*this);
-    }  // else C++ will default-initialize the array elements for us
-  }
-
-  T& operator[](wr::RenderRoot aIndex) {
-    return (*(Super*)this)[(size_t)aIndex];
-  }
-
-  const T& operator[](wr::RenderRoot aIndex) const {
-    return (*(Super*)this)[(size_t)aIndex];
-  }
-
-  T& operator[](size_t aIndex) = delete;
-  const T& operator[](size_t aIndex) const = delete;
-};
-
 RenderRoot RenderRootFromId(DocumentId id);
 
 inline DebugFlags NewDebugFlags(uint32_t aFlags) { return {aFlags}; }
