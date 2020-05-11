@@ -17,6 +17,20 @@
 
 namespace mozilla::layers {
 
+class ScheduleHandlePrepareForUse : public wr::NotificationHandler {
+ public:
+  explicit ScheduleHandlePrepareForUse() {}
+
+  virtual void Notify(wr::Checkpoint aCheckpoint) override {
+    if (aCheckpoint == wr::Checkpoint::FrameTexturesUpdated) {
+      MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
+      wr::RenderThread::Get()->HandlePrepareForUse();
+    } else {
+      MOZ_ASSERT(aCheckpoint == wr::Checkpoint::TransactionDropped);
+    }
+  }
+};
+
 WebRenderTextureHost::WebRenderTextureHost(
     const SurfaceDescriptor& aDesc, TextureFlags aFlags, TextureHost* aTexture,
     wr::ExternalImageId& aExternalImageId)
@@ -150,6 +164,16 @@ void WebRenderTextureHost::NotifyNotUsed() {
   }
 #endif
   TextureHost::NotifyNotUsed();
+}
+
+void WebRenderTextureHost::MaybeNofityForUse(wr::TransactionBuilder& aTxn) {
+#if defined(MOZ_WIDGET_ANDROID)
+  if (!mWrappedTextureHost->AsSurfaceTextureHost()) {
+    return;
+  }
+  aTxn.Notify(wr::Checkpoint::FrameTexturesUpdated,
+              MakeUnique<ScheduleHandlePrepareForUse>());
+#endif
 }
 
 void WebRenderTextureHost::PrepareForUse() {
