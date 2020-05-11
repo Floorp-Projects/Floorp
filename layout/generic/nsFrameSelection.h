@@ -940,8 +940,9 @@ class nsFrameSelection final {
      * @return true iff the point (aContent, aOffset) is inside and not at the
      * boundaries of mRange.
      */
-    bool AdjustNormalSelection(const nsIContent* aContent, int32_t aOffset,
-                               mozilla::dom::Selection& aNormalSelection) const;
+    MOZ_CAN_RUN_SCRIPT bool AdjustNormalSelection(
+        const nsIContent* aContent, int32_t aOffset,
+        mozilla::dom::Selection& aNormalSelection) const;
 
     /**
      * @param aScrollViewStop see `nsPeekOffsetStruct::mScrollViewStop`.
