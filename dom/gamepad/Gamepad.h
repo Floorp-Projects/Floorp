@@ -87,25 +87,25 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
   uint32_t HashKey() const { return mHashKey; }
 
   void GetButtons(nsTArray<RefPtr<GamepadButton>>& aButtons) const {
-    aButtons = mButtons;
+    aButtons = mButtons.Clone();
   }
 
-  void GetAxes(nsTArray<double>& aAxes) const { aAxes = mAxes; }
+  void GetAxes(nsTArray<double>& aAxes) const { aAxes = mAxes.Clone(); }
 
   GamepadPose* GetPose() const { return mPose; }
 
   void GetHapticActuators(
       nsTArray<RefPtr<GamepadHapticActuator>>& aHapticActuators) const {
-    aHapticActuators = mHapticActuators;
+    aHapticActuators = mHapticActuators.Clone();
   }
 
   void GetLightIndicators(
       nsTArray<RefPtr<GamepadLightIndicator>>& aLightIndicators) const {
-    aLightIndicators = mLightIndicators;
+    aLightIndicators = mLightIndicators.Clone();
   }
 
   void GetTouchEvents(nsTArray<RefPtr<GamepadTouch>>& aTouchEvents) const {
-    aTouchEvents = mTouchEvents;
+    aTouchEvents = mTouchEvents.Clone();
   }
 
  private:

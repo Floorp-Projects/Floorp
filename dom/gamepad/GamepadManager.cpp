@@ -298,7 +298,7 @@ void GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected) {
 
   // Hold on to listeners in a separate array because firing events
   // can mutate the mListeners array.
-  nsTArray<RefPtr<nsGlobalWindowInner>> listeners(mListeners);
+  nsTArray<RefPtr<nsGlobalWindowInner>> listeners(mListeners.Clone());
 
   if (aConnected) {
     for (uint32_t i = 0; i < listeners.Length(); i++) {
@@ -479,7 +479,7 @@ void GamepadManager::Update(const GamepadChangeEvent& aEvent) {
 
   // Hold on to listeners in a separate array because firing events
   // can mutate the mListeners array.
-  nsTArray<RefPtr<nsGlobalWindowInner>> listeners(mListeners);
+  nsTArray<RefPtr<nsGlobalWindowInner>> listeners(mListeners.Clone());
 
   for (uint32_t i = 0; i < listeners.Length(); i++) {
     // Only send events to non-background windows
