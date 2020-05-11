@@ -816,7 +816,7 @@ class SendPushEventRunnable final
       : ExtendableFunctionalEventWorkerRunnable(aWorkerPrivate, aKeepAliveToken,
                                                 aRegistration),
         mMessageId(aMessageId),
-        mData(aData) {
+        mData(aData ? Some(aData->Clone()) : Nothing()) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
