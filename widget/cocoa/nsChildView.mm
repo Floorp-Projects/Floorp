@@ -2849,10 +2849,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
                           100.0 * (1.0 - [anEvent magnification]),
                           nsCocoaUtils::ModifiersForEvent(anEvent)};
 
-  if (pinchGestureType == PinchGestureInput::PINCHGESTURE_END) {
-    event.mFocusPoint = PinchGestureInput::BothFingersLifted<ScreenPixel>();
-  }
-
   // FIXME: bug 1525793 -- this may need to handle zooming or not on a per-document basis.
   if (StaticPrefs::apz_allow_zooming()) {
     mGeckoChild->DispatchAPZInputEvent(event);
