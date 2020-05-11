@@ -13,8 +13,10 @@
         android:layout_height="wrap_content">
 
         <RelativeLayout
+            android:id="@+id/addon_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:orientation="vertical">
 
             <Switch

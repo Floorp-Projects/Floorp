@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,7 +42,9 @@ class InstalledAddonDetailsFragment : Fragment() {
             addon = AddonDetailsFragmentArgs.fromBundle(requireNotNull(arguments)).addon
         }
 
-        return inflater.inflate(R.layout.fragment_installed_add_on_details, container, false)
+        return inflater.inflate(R.layout.fragment_installed_add_on_details, container, false).also {
+            bindUI(it)
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -63,6 +66,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                                 bindUI(view)
                             }
                             view.add_on_progress_bar.isVisible = false
+                            view.addon_container.isVisible = true
                         }
                     }
                 }
@@ -73,7 +77,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                             view,
                             getString(R.string.mozac_feature_addons_failed_to_query_add_ons)
                         )
-                        view.add_on_progress_bar.isVisible = false
+                        findNavController().popBackStack()
                     }
                 }
             }
