@@ -1620,15 +1620,32 @@ function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
  *        line numbers of the frames expected in the stack
  */
 async function checkMessageStack(hud, text, expectedFrameLines) {
-  const msgNode = await waitFor(() => findMessage(hud, text));
+  info(`Checking message stack for "${text}"`);
+  const msgNode = await waitFor(
+    () => findMessage(hud, text),
+    `Couln't find message including "${text}"`
+  );
   ok(!msgNode.classList.contains("open"), `Error logged not expanded`);
 
-  const button = await waitFor(() => msgNode.querySelector(".collapse-button"));
+  const button = await waitFor(
+    () => msgNode.querySelector(".collapse-button"),
+    `Couldn't find the expand button on "${text}" message`
+  );
   button.click();
 
-  const framesNode = await waitFor(() => msgNode.querySelector(".frames"));
+  const framesNode = await waitFor(
+    () => msgNode.querySelector(".message-body-wrapper > .stacktrace .frames"),
+    `Couldn't find stacktrace frames on "${text}" message`
+  );
   const frameNodes = Array.from(framesNode.querySelectorAll(".frame")).filter(
-    el => el.querySelector(".filename").textContent !== "self-hosted"
+    el => {
+      const fileName = el.querySelector(".filename").textContent;
+      return (
+        fileName !== "self-hosted" &&
+        !fileName.startsWith("chrome:") &&
+        !fileName.startsWith("resource:")
+      );
+    }
   );
 
   for (let i = 0; i < frameNodes.length; i++) {

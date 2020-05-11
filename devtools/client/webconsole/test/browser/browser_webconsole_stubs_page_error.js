@@ -119,7 +119,60 @@ function getCommands() {
     `throw new Error("Long error ".repeat(10000))`
   );
 
+  const evilDomain = `https://evil.com/?`;
+  const badDomain = `https://not-so-evil.com/?`;
+  const paramLength = 200;
+  const longParam = "a".repeat(paramLength);
+
+  const evilURL = `${evilDomain}${longParam}`;
+  const badURL = `${badDomain}${longParam}`;
+
+  pageError.set(
+    `throw string with URL`,
+    `throw "“${evilURL}“ is evil and “${badURL}“ is not good either"`
+  );
+
   pageError.set(`throw ""`, `throw ""`);
   pageError.set(`throw "tomato"`, `throw "tomato"`);
+  pageError.set(`throw false`, `throw false`);
+  pageError.set(`throw 0`, `throw 0`);
+  pageError.set(`throw null`, `throw null`);
+  pageError.set(`throw undefined`, `throw undefined`);
+  pageError.set(`throw Symbol`, `throw Symbol("potato")`);
+  pageError.set(`throw Object`, `throw {vegetable: "cucumber"}`);
+  pageError.set(`throw Error Object`, `throw new Error("pumpkin")`);
+  pageError.set(
+    `throw Error Object with custom name`,
+    `
+    var err = new Error("pineapple");
+    err.name = "JuicyError";
+    err.flavor = "delicious";
+    throw err;
+  `
+  );
+  pageError.set(`Promise reject ""`, `Promise.reject("")`);
+  pageError.set(`Promise reject "tomato"`, `Promise.reject("tomato")`);
+  pageError.set(`Promise reject false`, `Promise.reject(false)`);
+  pageError.set(`Promise reject 0`, `Promise.reject(0)`);
+  pageError.set(`Promise reject null`, `Promise.reject(null)`);
+  pageError.set(`Promise reject undefined`, `Promise.reject(undefined)`);
+  pageError.set(`Promise reject Symbol`, `Promise.reject(Symbol("potato"))`);
+  pageError.set(
+    `Promise reject Object`,
+    `Promise.reject({vegetable: "cucumber"})`
+  );
+  pageError.set(
+    `Promise reject Error Object`,
+    `Promise.reject(new Error("pumpkin"))`
+  );
+  pageError.set(
+    `Promise reject Error Object with custom name`,
+    `
+    var err = new Error("pineapple");
+    err.name = "JuicyError";
+    err.flavor = "delicious";
+    Promise.reject(err);
+  `
+  );
   return pageError;
 }

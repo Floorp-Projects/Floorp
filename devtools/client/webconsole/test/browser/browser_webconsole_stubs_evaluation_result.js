@@ -89,5 +89,22 @@ function getCommands() {
 
   evaluationResult.set(`eval throw ""`, `throw ""`);
   evaluationResult.set(`eval throw "tomato"`, `throw "tomato"`);
+  evaluationResult.set(`eval throw false`, `throw false`);
+  evaluationResult.set(`eval throw 0`, `throw 0`);
+  evaluationResult.set(`eval throw null`, `throw null`);
+  evaluationResult.set(`eval throw undefined`, `throw undefined`);
+  evaluationResult.set(`eval throw Symbol`, `throw Symbol("potato")`);
+  evaluationResult.set(`eval throw Object`, `throw {vegetable: "cucumber"}`);
+  evaluationResult.set(`eval throw Error Object`, `throw new Error("pumpkin")`);
+  evaluationResult.set(
+    `eval throw Error Object with custom name`,
+    `
+    var err = new Error("pineapple");
+    err.name = "JuicyError";
+    err.flavor = "delicious";
+    throw err;
+  `
+  );
+
   return evaluationResult;
 }
