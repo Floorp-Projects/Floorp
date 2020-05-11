@@ -1466,6 +1466,7 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
                     js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
   static bool InitFromStencil(JSContext* cx, js::HandleScript script,
+                              js::frontend::CompilationInfo& compilationInfo,
                               const js::frontend::ScriptStencil& stencil);
 
   void trace(JSTracer* trc);
@@ -2207,6 +2208,7 @@ class JSScript : public js::BaseScript {
 
   friend bool js::PrivateScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
+      js::frontend::CompilationInfo& compilationInfo,
       const js::frontend::ScriptStencil& stencil);
 
  private:

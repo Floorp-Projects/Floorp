@@ -55,11 +55,6 @@ void BCEScriptStencil::init(BytecodeEmitter& bce,
   } /* isFunctionBox */
 }
 
-bool BCEScriptStencil::finishGCThings(
-    JSContext* cx, mozilla::Span<JS::GCCellPtr> output) const {
-  return EmitScriptThingsVector(cx, bce_.compilationInfo, gcThings, output);
-}
-
 void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {
   const AtomIndexMap& indices = *bce_.perScriptData().atomIndices();
 

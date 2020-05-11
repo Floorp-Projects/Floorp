@@ -376,11 +376,6 @@ class ScriptStencil : public ScriptStencilBase {
     return immutableFlags.hasFlag(ImmutableFlags::IsFunction);
   }
 
-  // Store all GC things into `gcthings`.
-  // `gcthings.Length()` is `this.ngcthings`.
-  virtual bool finishGCThings(JSContext* cx,
-                              mozilla::Span<JS::GCCellPtr> output) const = 0;
-
   // Store all atoms into `atoms`
   // `atoms` is the pointer to `this.natoms`-length array of `GCPtrAtom`.
   virtual void initAtomMap(GCPtrAtom* atoms) const = 0;
