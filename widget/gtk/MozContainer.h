@@ -8,12 +8,13 @@
 #ifndef __MOZ_CONTAINER_H__
 #define __MOZ_CONTAINER_H__
 
+#ifdef MOZ_WAYLAND
+#  include "MozContainerWayland.h"
+#endif
+
 #include <gtk/gtk.h>
 #include <functional>
 #include <vector>
-#ifdef MOZ_WAYLAND
-#  include "mozilla/Mutex.h"
-#endif
 
 /*
  * MozContainer
@@ -64,38 +65,13 @@
 typedef struct _MozContainer MozContainer;
 typedef struct _MozContainerClass MozContainerClass;
 
-/* Workaround for bug at wayland-util.h,
- * present in wayland-devel < 1.12
- */
-#ifdef MOZ_WAYLAND
-struct wl_surface;
-struct wl_subsurface;
-#endif
-
 struct _MozContainer {
   GtkContainer container;
   GList* children;
-
-#ifdef MOZ_WAYLAND
-  struct wl_surface* surface;
-  struct wl_subsurface* subsurface;
-  int subsurface_dx, subsurface_dy;
-  struct wl_egl_window* eglwindow;
-  struct wl_callback* frame_callback_handler;
-  int frame_callback_handler_surface_id;
-  gboolean opaque_region_needs_update;
-  gboolean opaque_region_subtract_corners;
-  gboolean opaque_region_fullscreen;
-  gboolean surface_position_needs_update;
-  gboolean surface_needs_clear;
-  gboolean ready_to_draw;
-  std::vector<std::function<void(void)>> initial_draw_cbs;
-  // mozcontainer is used from Compositor and Rendering threads
-  // so we need to control access to mozcontainer where wayland internals
-  // are used directly.
-  mozilla::Mutex* container_lock;
-#endif
   gboolean force_default_visual;
+#ifdef MOZ_WAYLAND
+  MozContainerWayland wl_container;
+#endif
 };
 
 struct _MozContainerClass {
@@ -107,25 +83,5 @@ GtkWidget* moz_container_new(void);
 void moz_container_put(MozContainer* container, GtkWidget* child_widget, gint x,
                        gint y);
 void moz_container_force_default_visual(MozContainer* container);
-
-#ifdef MOZ_WAYLAND
-struct wl_surface* moz_container_get_wl_surface(MozContainer* container);
-struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer* container,
-                                                      int scale);
-
-gboolean moz_container_has_wl_egl_window(MozContainer* container);
-gboolean moz_container_surface_needs_clear(MozContainer* container);
-void moz_container_move_resize(MozContainer* container, int dx, int dy,
-                               int width, int height);
-void moz_container_egl_window_set_size(MozContainer* container, int width,
-                                       int height);
-void moz_container_set_scale_factor(MozContainer* container);
-void moz_container_add_initial_draw_callback(
-    MozContainer* container, const std::function<void(void)>& initial_draw_cb);
-wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
-void moz_container_update_opaque_region(MozContainer* container,
-                                        bool aSubtractCorners,
-                                        bool aFullScreen);
-#endif
 
 #endif /* __MOZ_CONTAINER_H__ */

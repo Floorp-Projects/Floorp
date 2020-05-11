@@ -2258,7 +2258,8 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       }
 #ifdef MOZ_WAYLAND
       if (mContainer) {
-        return moz_container_get_wl_egl_window(mContainer, GdkScaleFactor());
+        return moz_container_wayland_get_egl_window(mContainer,
+                                                    GdkScaleFactor());
       }
 #endif
       return nullptr;
@@ -2586,7 +2587,9 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   // Windows that are not visible will be painted after they become visible.
   if (!mGdkWindow || mIsFullyObscured || !mHasMappedToplevel) return FALSE;
 #ifdef MOZ_WAYLAND
-  if (mContainer && !mContainer->ready_to_draw) return FALSE;
+  if (!moz_container_wayland_can_draw(mContainer)) {
+    return FALSE;
+  }
 #endif
 
   nsIWidgetListener* listener = GetListener();
@@ -3911,8 +3914,8 @@ void nsWindow::OnScaleChanged(GtkAllocation* aAllocation) {
 #ifdef MOZ_WAYLAND
   // We need to update scale and opaque region when scale of egl window
   // is changed.
-  if (mContainer && moz_container_has_wl_egl_window(mContainer)) {
-    moz_container_set_scale_factor(mContainer);
+  if (mContainer && moz_container_wayland_has_egl_window(mContainer)) {
+    moz_container_wayland_set_scale_factor(mContainer);
     LayoutDeviceIntRegion tmpRegion;
     UpdateOpaqueRegion(tmpRegion);
   }
@@ -4359,10 +4362,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       if (!mIsX11Display && mIsAccelerated) {
         mCompositorInitiallyPaused = true;
         RefPtr<nsWindow> self(this);
-        moz_container_add_initial_draw_callback(mContainer, [self]() -> void {
-          self->mNeedsCompositorResume = true;
-          self->MaybeResumeCompositor();
-        });
+        moz_container_wayland_add_initial_draw_callback(
+            mContainer, [self]() -> void {
+              self->mNeedsCompositorResume = true;
+              self->MaybeResumeCompositor();
+            });
       }
 #endif
 
@@ -4833,7 +4837,7 @@ void nsWindow::NativeMoveResize() {
 void nsWindow::PauseRemoteRenderer() {
 #ifdef MOZ_WAYLAND
   if (!mIsDestroyed) {
-    if (mContainer && moz_container_has_wl_egl_window(mContainer)) {
+    if (mContainer && moz_container_wayland_has_egl_window(mContainer)) {
       // Because wl_egl_window is destroyed on moz_container_unmap(),
       // the current compositor cannot use it anymore. To avoid crash,
       // pause the compositor and destroy EGLSurface & resume the compositor
@@ -4844,10 +4848,11 @@ void nsWindow::PauseRemoteRenderer() {
         remoteRenderer->SendPause();
         // Re-request initial draw callback
         RefPtr<nsWindow> self(this);
-        moz_container_add_initial_draw_callback(mContainer, [self]() -> void {
-          self->mNeedsCompositorResume = true;
-          self->MaybeResumeCompositor();
-        });
+        moz_container_wayland_add_initial_draw_callback(
+            mContainer, [self]() -> void {
+              self->mNeedsCompositorResume = true;
+              self->MaybeResumeCompositor();
+            });
       } else {
         DestroyLayerManager();
       }
@@ -4888,7 +4893,7 @@ void nsWindow::WaylandStartVsync() {
   // The widget is going to be shown, so reconfigure the surface
   // of our vsync source.
   RefPtr<nsWindow> self(this);
-  moz_container_add_initial_draw_callback(mContainer, [self]() -> void {
+  moz_container_wayland_add_initial_draw_callback(mContainer, [self]() -> void {
     WaylandVsyncSource::WaylandDisplay& display =
         static_cast<WaylandVsyncSource::WaylandDisplay&>(
             self->mWaylandVsyncSource->GetGlobalDisplay());
@@ -7855,7 +7860,7 @@ void nsWindow::GetCompositorWidgetInitData(
 #ifdef MOZ_WAYLAND
 wl_surface* nsWindow::GetWaylandSurface() {
   if (mContainer) {
-    return moz_container_get_wl_surface(MOZ_CONTAINER(mContainer));
+    return moz_container_wayland_get_surface(MOZ_CONTAINER(mContainer));
   }
 
   NS_WARNING(
@@ -7866,7 +7871,7 @@ wl_surface* nsWindow::GetWaylandSurface() {
 
 bool nsWindow::WaylandSurfaceNeedsClear() {
   if (mContainer) {
-    return moz_container_surface_needs_clear(MOZ_CONTAINER(mContainer));
+    return moz_container_wayland_surface_needs_clear(MOZ_CONTAINER(mContainer));
   }
   return false;
 }
@@ -8167,8 +8172,8 @@ nsresult nsWindow::ResetPrefersReducedMotionOverrideForTest() {
 void nsWindow::SetEGLNativeWindowSize(
     const LayoutDeviceIntSize& aEGLWindowSize) {
   if (mContainer && !mIsX11Display) {
-    moz_container_egl_window_set_size(mContainer, aEGLWindowSize.width,
-                                      aEGLWindowSize.height);
+    moz_container_wayland_egl_window_set_size(mContainer, aEGLWindowSize.width,
+                                              aEGLWindowSize.height);
   }
 }
 
