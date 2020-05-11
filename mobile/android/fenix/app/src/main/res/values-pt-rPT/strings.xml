@@ -381,7 +381,7 @@
     <string name="preference_top_toolbar">Topo</string>
 
     <!-- Preference for using bottom toolbar -->
-    <string name="preference_bottom_toolbar">Fundo</string>
+    <string name="preference_bottom_toolbar">Fim</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -470,6 +470,9 @@
     <string name="collection_open_tabs">Abrir separadores</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Remover</string>
+
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (modo privado)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->

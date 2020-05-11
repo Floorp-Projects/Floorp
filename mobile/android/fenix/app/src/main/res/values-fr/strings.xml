@@ -64,7 +64,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Modifier le marque-page</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Modules</string>
+    <string name="browser_menu_add_ons">Modules complémentaires</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Aucun module ici</string>
     <!-- Browser menu button that sends a user to help articles -->

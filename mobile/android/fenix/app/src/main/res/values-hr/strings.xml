@@ -600,7 +600,7 @@
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Zabilješke izbrisane</string>
     <!-- Bookmark undo button for deletion snackbar action -->
-    <string name="bookmark_undo_deletion">VRATI</string>
+    <string name="bookmark_undo_deletion">PONIŠTI</string>
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
@@ -781,7 +781,7 @@
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Privatne kartice su izbrisane</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
-    <string name="snackbar_deleted_undo">VRATI</string>
+    <string name="snackbar_deleted_undo">PONIŠTI</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">Stranica je uklonjena</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->

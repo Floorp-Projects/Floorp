@@ -956,7 +956,7 @@
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Ta en position</string>
+    <string name="onboarding_toolbar_position_header">Välj en sida</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_position_description">Försök att surfa med en hand med det nedre verktygsfältet eller flytta det till toppen.</string>
     <!-- text for the private browsing onboarding card header -->

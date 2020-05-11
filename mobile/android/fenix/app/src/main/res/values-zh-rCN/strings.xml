@@ -1056,9 +1056,9 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">增强型跟踪保护</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">浏览，免受跟踪</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">自由上网，拒绝跟踪</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">保护好你的数据。%s 可保护您免受大多数常见的跟踪器对您在线活动的窥视。</string>
+    <string name="preference_enhanced_tracking_protection_explanation">你的数据只要由你掌握。%s 可保护您免受大多数常见的跟踪器对您在线活动的窥视。</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">详细了解</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1120,7 +1120,7 @@
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">限制社交网络在网上跟踪您浏览活动的能力。</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title">跨网站跟踪型 Cookie</string>
+    <string name="etp_cookies_title">跨网站跟踪性 Cookie</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">拦截广告网络和分析公司用于跨网站收集浏览数据的 Cookie。</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->

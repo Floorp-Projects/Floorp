@@ -29,7 +29,7 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">¶
- · %1$s squassa e vostre crunulogie di ricerca è di navigazione da l’unghjette private quandu và chjuditele o chitate l’appiecazione. Benchè quessu ùn vi rende micca anonimu nant’à i siti web nè da u vostru furnidore d’accessu à internet, vi permette di cunservà sicreta a vostra attività in linea per tutte l’altre persone chì impiegherianu u vostru apparechju.</string>
+ · %1$s squassa e vostre crunulogie di ricerca è di navigazione da l’unghjette private quandu vò chjuditele o chitate l’appiecazione. Benchè quessu ùn vi rende micca anonimu nant’à i siti web nè da u vostru furnidore d’accessu à internet, vi permette di cunservà sicreta a vostra attività in linea per tutte l’altre persone chì impiegherianu u vostru apparechju.</string>
     <string name="private_browsing_common_myths">¶
        Idee precuncepite apprupositu di a navigazione privata¶
     </string>
@@ -1253,7 +1253,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Prutigite e vostre identificazioni di cunnessione è parolle d’entrata</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Definite un dissegnu di chjuditura, un codice PIN o una parolla d’entrata per prutege e vostre identificazioni di cunnessione è parolle d’entrata arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
+    <string name="logins_warning_dialog_message">Definite un dissegnu di chjusura, un codice PIN o una parolla d’entrata per prutege e vostre identificazioni di cunnessione è parolle d’entrata arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Dopu</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->

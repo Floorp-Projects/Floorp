@@ -469,6 +469,9 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Pašalinti</string>
 
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">„%1$s“ (privačioji veiksena)</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Išvalyti žurnalą</string>
@@ -946,7 +949,7 @@
     <string name="onboarding_toolbar_position_header">Pasirinkite poziciją</string>
 
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Išbandykite naršymą su viena ranka, kai priemonių juosta apačioje, arba perkelkite ją į viršų.</string>
+    <string name="onboarding_toolbar_position_description">Išbandykite naršymą viena ranka, kai priemonių juosta apačioje, arba perkelkite ją į viršų.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Naršykite privačiai</string>
     <!-- text for the private browsing onboarding card description

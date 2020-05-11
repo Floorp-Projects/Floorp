@@ -29,8 +29,7 @@
     <string name="private_browsing_title">Вы находитесь в приватной сессии</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">¶
- · %1$s удаляет историю поиска и просмотра страниц в приватных вкладках, когда вы закрываете их или выходите из приложения. Хотя это не делает вас анонимными для веб-сайтов или вашего Интернет-провайдера, вам будет легче сохранить конфиденциальность ваших действий в Интернете от других людей, которые используют это устройство.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s удаляет историю поиска и просмотра страниц в приватных вкладках, когда вы закрываете их или выходите из приложения. Хотя это не делает вас анонимными для веб-сайтов или вашего Интернет-провайдера, вам будет легче сохранить конфиденциальность ваших действий в Интернете от других людей, которые используют это устройство.</string>
     <string name="private_browsing_common_myths">
        Распространённые мифы о приватном просмотре
     </string>
@@ -1077,7 +1076,7 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Строгая (рекомендуется)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Усиленная защита может вызывать проблемы с некоторыми веб-сайтами и их содержимым.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description">Усиленная защита может вызывать проблемы с некоторыми сайтами и их содержимым.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Что блокируется строгой защитой от отслеживания</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
