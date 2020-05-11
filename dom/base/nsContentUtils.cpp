@@ -7990,7 +7990,8 @@ bool nsContentUtils::IsPreloadType(nsContentPolicyType aType) {
   return (aType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
           aType == nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD ||
           aType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD ||
-          aType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD);
+          aType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD ||
+          aType == nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD);
 }
 
 /* static */

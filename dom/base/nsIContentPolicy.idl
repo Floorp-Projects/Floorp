@@ -394,6 +394,12 @@ interface nsIContentPolicy : nsISupports
    */
   const nsContentPolicyType TYPE_INTERNAL_PAINTWORKLET = 50;
 
+  /**
+   * Same as TYPE_FONT but indicates this is a <link rel=preload as=font>
+   * preload initiated load.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_FONT_PRELOAD = 51;
+
   /* When adding new content types, please update
    * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
    * DoContentSecurityChecks, all nsIContentPolicy implementations, the
