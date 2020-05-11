@@ -75,6 +75,9 @@ class PreloadService {
   void PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
                     const nsAString& aImageReferrerPolicy, bool aIsImgSet);
 
+  void PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
+                    const nsAString& aReferrerPolicy);
+
   static void NotifyNodeEvent(nsINode* aNode, bool aSuccess);
 
  private:

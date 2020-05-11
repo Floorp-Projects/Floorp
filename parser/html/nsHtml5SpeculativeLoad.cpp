@@ -121,6 +121,10 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
     case eSpeculativeLoadPreconnect:
       aExecutor->Preconnect(mUrlOrSizes, mCrossOriginOrMedia);
       break;
+    case eSpeculativeLoadFetch:
+      aExecutor->PreloadFetch(mUrlOrSizes, mCrossOriginOrMedia,
+                              mReferrerPolicyOrIntegrity);
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Bogus speculative load.");
       break;
