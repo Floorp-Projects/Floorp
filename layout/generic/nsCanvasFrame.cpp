@@ -593,9 +593,9 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
       if (layers.mLayers[i].mBlendMode != StyleBlend::Normal) {
         DisplayListClipState::AutoSaveRestore blendClip(aBuilder);
-        thisItemList.AppendNewToTop<nsDisplayBlendMode>(
-            aBuilder, this, &thisItemList, layers.mLayers[i].mBlendMode,
-            thisItemASR, i + 1);
+        thisItemList.AppendNewToTopWithIndex<nsDisplayBlendMode>(
+            aBuilder, this, i + 1, &thisItemList, layers.mLayers[i].mBlendMode,
+            thisItemASR, true);
       }
       aLists.BorderBackground()->AppendToTop(&thisItemList);
     }
@@ -605,7 +605,8 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       DisplayListClipState::AutoSaveRestore blendContainerClip(aBuilder);
       aLists.BorderBackground()->AppendToTop(
           nsDisplayBlendContainer::CreateForBackgroundBlendMode(
-              aBuilder, this, aLists.BorderBackground(), containerASR));
+              aBuilder, this, nullptr, aLists.BorderBackground(),
+              containerASR));
     }
   }
 

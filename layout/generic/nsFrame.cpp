@@ -3921,8 +3921,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   if (useBlendMode) {
     DisplayListClipState::AutoSaveRestore blendModeClipState(aBuilder);
-    resultList.AppendNewToTop<nsDisplayBlendMode>(
-        aBuilder, this, &resultList, effects->mMixBlendMode, containerItemASR);
+    resultList.AppendNewToTop<nsDisplayBlendMode>(aBuilder, this, &resultList,
+                                                  effects->mMixBlendMode,
+                                                  containerItemASR, false);
     ct.TrackContainer(resultList.GetTop());
   }
 
