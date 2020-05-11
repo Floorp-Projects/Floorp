@@ -383,6 +383,11 @@ pub trait BlobImageHandler: Send {
     /// Creates a snapshot of the current state of blob images in the handler.
     fn create_blob_rasterizer(&mut self) -> Box<dyn AsyncBlobImageRasterizer>;
 
+    /// Creates an empty blob handler of the same type.
+    ///
+    /// This is used to allow creating new API endpoints with blob handlers installed on them.
+    fn create_similar(&self) -> Box<dyn BlobImageHandler>;
+
     /// A hook to let the blob image handler update any state related to resources that
     /// are not bundled in the blob recording itself.
     fn prepare_resources(

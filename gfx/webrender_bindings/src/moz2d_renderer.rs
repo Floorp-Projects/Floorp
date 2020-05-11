@@ -656,6 +656,13 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
 }
 
 impl BlobImageHandler for Moz2dBlobImageHandler {
+    fn create_similar(&self) -> Box<dyn BlobImageHandler> {
+        Box::new(Self::new(
+            Arc::clone(&self.workers),
+            Arc::clone(&self.workers_low_priority),
+        ))
+    }
+
     fn add(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, visible_rect: &DeviceIntRect, tile_size: TileSize) {
         {
             let index = BlobReader::new(&data);

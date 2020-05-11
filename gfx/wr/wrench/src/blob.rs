@@ -128,6 +128,10 @@ impl CheckerboardRenderer {
 }
 
 impl BlobImageHandler for CheckerboardRenderer {
+    fn create_similar(&self) -> Box<dyn BlobImageHandler> {
+        Box::new(CheckerboardRenderer::new(Arc::clone(&self.callbacks)))
+    }
+
     fn add(&mut self, key: BlobImageKey, cmds: Arc<BlobImageData>,
            _visible_rect: &DeviceIntRect, tile_size: TileSize) {
         self.image_cmds
