@@ -304,8 +304,7 @@ constexpr bool SpecializableIsCopyConstructibleValue =
 // copy-constructible. nsTArray_Impl never makes use of E's copy assignment
 // operator, so the decision is made solely based on E's copy-constructibility.
 template <typename E, typename Impl, typename Alloc,
-          bool IsCopyConstructible = SpecializableIsCopyConstructibleValue<E>&&
-              std::is_same_v<Alloc, nsTArrayInfallibleAllocator>>
+          bool IsCopyConstructible = false>
 class nsTArray_CopyEnabler;
 
 template <typename E, typename Impl, typename Alloc>
@@ -2961,19 +2960,9 @@ class MOZ_NON_MEMMOVABLE AutoTArray : public nsTArray<E> {
 
   AutoTArray() : mAlign() { Init(); }
 
-  AutoTArray(const self_type& aOther) : nsTArray<E>() {
-    Init();
-    this->AppendElements(aOther);
-  }
-
   AutoTArray(self_type&& aOther) : nsTArray<E>() {
     Init();
     this->SwapElements(aOther);
-  }
-
-  explicit AutoTArray(const base_type& aOther) : mAlign() {
-    Init();
-    this->AppendElements(aOther);
   }
 
   explicit AutoTArray(base_type&& aOther) : mAlign() {
@@ -2992,11 +2981,6 @@ class MOZ_NON_MEMMOVABLE AutoTArray : public nsTArray<E> {
     this->AppendElements(aIL.begin(), aIL.size());
   }
 
-  self_type& operator=(const self_type& aOther) {
-    base_type::operator=(aOther);
-    return *this;
-  }
-
   self_type& operator=(self_type&& aOther) {
     base_type::operator=(std::move(aOther));
     return *this;
@@ -3005,12 +2989,6 @@ class MOZ_NON_MEMMOVABLE AutoTArray : public nsTArray<E> {
   template <typename Allocator>
   self_type& operator=(nsTArray_Impl<elem_type, Allocator>&& aOther) {
     base_type::operator=(std::move(aOther));
-    return *this;
-  }
-
-  template <typename Allocator>
-  self_type& operator=(const nsTArray_Impl<elem_type, Allocator>& aOther) {
-    base_type::operator=(aOther);
     return *this;
   }
 
