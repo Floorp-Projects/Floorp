@@ -29,6 +29,7 @@ class TranslationStub extends TranslationParent {
   constructor(browser) {
     super();
     this._browser = browser;
+    this.actorCreated();
   }
 
   get browser() {
