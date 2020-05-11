@@ -1415,15 +1415,16 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
       // deleted later.
       if (!mManager->SetCacheIdOrphanedIfRefed(mCacheId)) {
         // no outstanding references, delete immediately
-        RefPtr<Context> context = mManager->mContext;
+        const auto pinnedContext =
+            SafeRefPtr{mManager->mContext, AcquireStrongRefFromRawPtr{}};
 
-        if (context->IsCanceled()) {
-          context->NoteOrphanedData();
+        if (pinnedContext->IsCanceled()) {
+          pinnedContext->NoteOrphanedData();
         } else {
-          context->CancelForCacheId(mCacheId);
+          pinnedContext->CancelForCacheId(mCacheId);
           RefPtr<Action> action =
               new DeleteOrphanedCacheAction(mManager.clonePtr(), mCacheId);
-          context->Dispatch(action);
+          pinnedContext->Dispatch(action);
         }
       }
     }
@@ -1587,10 +1588,10 @@ void Manager::RemoveListener(Listener* aListener) {
   MaybeAllowContextToClose();
 }
 
-void Manager::RemoveContext(Context* aContext) {
+void Manager::RemoveContext(Context& aContext) {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_DIAGNOSTIC_ASSERT(mContext);
-  MOZ_DIAGNOSTIC_ASSERT(mContext == aContext);
+  MOZ_DIAGNOSTIC_ASSERT(mContext == &aContext);
 
   // Whether the Context destruction was triggered from the Manager going
   // idle or the underlying storage being invalidated, we should know we
@@ -1602,14 +1603,14 @@ void Manager::RemoveContext(Context* aContext) {
   // orphaned data so it will be cleaned up on the next open.
   for (uint32_t i = 0; i < mCacheIdRefs.Length(); ++i) {
     if (mCacheIdRefs[i].mOrphaned) {
-      aContext->NoteOrphanedData();
+      aContext.NoteOrphanedData();
       break;
     }
   }
 
   for (uint32_t i = 0; i < mBodyIdRefs.Length(); ++i) {
     if (mBodyIdRefs[i].mOrphaned) {
-      aContext->NoteOrphanedData();
+      aContext.NoteOrphanedData();
       break;
     }
   }
@@ -1659,17 +1660,18 @@ void Manager::ReleaseCacheId(CacheId aCacheId) {
       if (mCacheIdRefs[i].mCount == 0) {
         bool orphaned = mCacheIdRefs[i].mOrphaned;
         mCacheIdRefs.RemoveElementAt(i);
-        RefPtr<Context> context = mContext;
+        const auto pinnedContext =
+            SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
         // If the context is already gone, then orphan flag should have been
         // set in RemoveContext().
-        if (orphaned && context) {
-          if (context->IsCanceled()) {
-            context->NoteOrphanedData();
+        if (orphaned && pinnedContext) {
+          if (pinnedContext->IsCanceled()) {
+            pinnedContext->NoteOrphanedData();
           } else {
-            context->CancelForCacheId(aCacheId);
+            pinnedContext->CancelForCacheId(aCacheId);
             RefPtr<Action> action =
                 new DeleteOrphanedCacheAction(SafeRefPtrFromThis(), aCacheId);
-            context->Dispatch(action);
+            pinnedContext->Dispatch(action);
           }
         }
       }
@@ -1706,15 +1708,16 @@ void Manager::ReleaseBodyId(const nsID& aBodyId) {
       if (mBodyIdRefs[i].mCount < 1) {
         bool orphaned = mBodyIdRefs[i].mOrphaned;
         mBodyIdRefs.RemoveElementAt(i);
-        RefPtr<Context> context = mContext;
+        const auto pinnedContext =
+            SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
         // If the context is already gone, then orphan flag should have been
         // set in RemoveContext().
-        if (orphaned && context) {
-          if (context->IsCanceled()) {
-            context->NoteOrphanedData();
+        if (orphaned && pinnedContext) {
+          if (pinnedContext->IsCanceled()) {
+            pinnedContext->NoteOrphanedData();
           } else {
             RefPtr<Action> action = new DeleteOrphanedBodyAction(aBodyId);
-            context->Dispatch(action);
+            pinnedContext->Dispatch(action);
           }
         }
       }
@@ -1753,10 +1756,11 @@ void Manager::ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
     return;
   }
 
-  RefPtr<Context> context = mContext;
-  MOZ_DIAGNOSTIC_ASSERT(!context->IsCanceled());
+  const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+  MOZ_DIAGNOSTIC_ASSERT(!pinnedContext->IsCanceled());
 
-  RefPtr<StreamList> streamList = new StreamList(SafeRefPtrFromThis(), context);
+  RefPtr<StreamList> streamList =
+      new StreamList(SafeRefPtrFromThis(), pinnedContext.clonePtr());
   ListenerId listenerId = SaveListener(aListener);
 
   RefPtr<Action> action;
@@ -1782,7 +1786,7 @@ void Manager::ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
       MOZ_CRASH("Unknown Cache operation!");
   }
 
-  context->Dispatch(action);
+  pinnedContext->Dispatch(action);
 }
 
 void Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
@@ -1795,10 +1799,11 @@ void Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
     return;
   }
 
-  RefPtr<Context> context = mContext;
-  MOZ_DIAGNOSTIC_ASSERT(!context->IsCanceled());
+  const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+  MOZ_DIAGNOSTIC_ASSERT(!pinnedContext->IsCanceled());
 
-  RefPtr<StreamList> streamList = new StreamList(SafeRefPtrFromThis(), context);
+  RefPtr<StreamList> streamList =
+      new StreamList(SafeRefPtrFromThis(), pinnedContext.clonePtr());
   ListenerId listenerId = SaveListener(aListener);
 
   RefPtr<Action> action;
@@ -1829,7 +1834,7 @@ void Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
       MOZ_CRASH("Unknown CacheStorage operation!");
   }
 
-  context->Dispatch(action);
+  pinnedContext->Dispatch(action);
 }
 
 void Manager::ExecuteOpenStream(Listener* aListener,
@@ -1844,8 +1849,8 @@ void Manager::ExecuteOpenStream(Listener* aListener,
     return;
   }
 
-  RefPtr<Context> context = mContext;
-  MOZ_DIAGNOSTIC_ASSERT(!context->IsCanceled());
+  const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+  MOZ_DIAGNOSTIC_ASSERT(!pinnedContext->IsCanceled());
 
   // We save the listener simply to track the existence of the caller here.
   // Our returned value will really be passed to the resolver when the
@@ -1856,7 +1861,7 @@ void Manager::ExecuteOpenStream(Listener* aListener,
   RefPtr<Action> action = new OpenStreamAction(SafeRefPtrFromThis(), listenerId,
                                                std::move(aResolver), aBodyId);
 
-  context->Dispatch(action);
+  pinnedContext->Dispatch(action);
 }
 
 void Manager::ExecutePutAll(
@@ -1872,8 +1877,8 @@ void Manager::ExecutePutAll(
     return;
   }
 
-  RefPtr<Context> context = mContext;
-  MOZ_DIAGNOSTIC_ASSERT(!context->IsCanceled());
+  const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+  MOZ_DIAGNOSTIC_ASSERT(!pinnedContext->IsCanceled());
 
   ListenerId listenerId = SaveListener(aListener);
 
@@ -1881,7 +1886,7 @@ void Manager::ExecutePutAll(
       new CachePutAllAction(SafeRefPtrFromThis(), listenerId, aCacheId,
                             aPutList, aRequestStreamList, aResponseStreamList);
 
-  context->Dispatch(action);
+  pinnedContext->Dispatch(action);
 }
 
 Manager::Manager(ManagerId* aManagerId, nsIThread* aIOThread,
@@ -1912,19 +1917,14 @@ Manager::~Manager() {
 void Manager::Init(Maybe<Manager&> aOldManager) {
   NS_ASSERT_OWNINGTHREAD(Manager);
 
-  RefPtr<Context> oldContext;
-  if (aOldManager) {
-    oldContext = aOldManager->mContext;
-  }
-
   // Create the context immediately.  Since there can at most be one Context
   // per Manager now, this lets us cleanly call Factory::Remove() once the
   // Context goes away.
   RefPtr<Action> setupAction = new SetupAction();
-  RefPtr<Context> ref =
-      Context::Create(SafeRefPtrFromThis(), mIOThread->SerialEventTarget(),
-                      setupAction, oldContext);
-  mContext = ref;
+  SafeRefPtr<Context> ref = Context::Create(
+      SafeRefPtrFromThis(), mIOThread->SerialEventTarget(), setupAction,
+      aOldManager ? SomeRef(*aOldManager->mContext) : Nothing());
+  mContext = ref.unsafeGetRawPtr();
 }
 
 void Manager::Shutdown() {
@@ -1947,8 +1947,9 @@ void Manager::Shutdown() {
   // If there is a context, then cancel and only note that we are done after
   // its cleaned up.
   if (mContext) {
-    RefPtr<Context> context = mContext;
-    context->CancelAll();
+    const auto pinnedContext =
+        SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+    pinnedContext->CancelAll();
     return;
   }
 }
@@ -1963,8 +1964,8 @@ void Manager::Abort() {
   NoteClosing();
 
   // Cancel and only note that we are done after the context is cleaned up.
-  RefPtr<Context> context = mContext;
-  context->CancelAll();
+  const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+  pinnedContext->CancelAll();
 }
 
 Manager::ListenerId Manager::SaveListener(Listener* aListener) {
@@ -2045,11 +2046,12 @@ void Manager::NoteOrphanedBodyIdList(const nsTArray<nsID>& aDeletedBodyIdList) {
 
   // TODO: note that we need to check these bodies for staleness on startup (bug
   // 1110446)
-  RefPtr<Context> context = mContext;
-  if (!deleteNowList.IsEmpty() && context && !context->IsCanceled()) {
+  const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+  if (!deleteNowList.IsEmpty() && pinnedContext &&
+      !pinnedContext->IsCanceled()) {
     RefPtr<Action> action =
         new DeleteOrphanedBodyAction(std::move(deleteNowList));
-    context->Dispatch(action);
+    pinnedContext->Dispatch(action);
   }
 }
 
@@ -2061,15 +2063,15 @@ void Manager::MaybeAllowContextToClose() {
   // Cache state information to complete before doing this.  Once we allow
   // the Context to close we may not reliably get notified of storage
   // invalidation.
-  RefPtr<Context> context = mContext;
-  if (context && mListeners.IsEmpty() && mCacheIdRefs.IsEmpty() &&
+  const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+  if (pinnedContext && mListeners.IsEmpty() && mCacheIdRefs.IsEmpty() &&
       mBodyIdRefs.IsEmpty()) {
     // Mark this Manager as invalid so that it won't get used again.  We don't
     // want to start any new operations once we allow the Context to close since
     // it may race with the underlying storage getting invalidated.
     NoteClosing();
 
-    context->AllowToClose();
+    pinnedContext->AllowToClose();
   }
 }
 

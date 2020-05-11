@@ -63,7 +63,7 @@ class Manager;
 // As an invariant, all Context objects must be destroyed before permitting
 // the "profile-before-change" shutdown event to complete.  This is ensured
 // via the code in ShutdownObserver.cpp.
-class Context final {
+class Context final : public SafeRefCounted<Context> {
   typedef mozilla::dom::quota::DirectoryLock DirectoryLock;
 
  public:
@@ -77,7 +77,7 @@ class Context final {
     void InvalidateAndAllowToClose();
 
    private:
-    explicit ThreadsafeHandle(Context* aContext);
+    explicit ThreadsafeHandle(SafeRefPtr<Context> aContext);
     ~ThreadsafeHandle();
 
     // disallow copying
@@ -87,11 +87,11 @@ class Context final {
     void AllowToCloseOnOwningThread();
     void InvalidateAndAllowToCloseOnOwningThread();
 
-    void ContextDestroyed(Context* aContext);
+    void ContextDestroyed(Context& aContext);
 
     // Cleared to allow the Context to close.  Only safe to access on
     // owning thread.
-    RefPtr<Context> mStrongRef;
+    SafeRefPtr<Context> mStrongRef;
 
     // Used to support cancelation even while the Context is already allowed
     // to close.  Cleared by ~Context() calling ContextDestroyed().  Only
@@ -117,10 +117,10 @@ class Context final {
   // Create a Context attached to the given Manager.  The given Action
   // will run on the QuotaManager IO thread.  Note, this Action must
   // be execute synchronously.
-  static already_AddRefed<Context> Create(SafeRefPtr<Manager> aManager,
-                                          nsISerialEventTarget* aTarget,
-                                          Action* aInitAction,
-                                          Context* aOldContext);
+  static SafeRefPtr<Context> Create(SafeRefPtr<Manager> aManager,
+                                    nsISerialEventTarget* aTarget,
+                                    Action* aInitAction,
+                                    Maybe<Context&> aOldContext);
 
   // Execute given action on the target once the quota manager has been
   // initialized.
@@ -178,10 +178,7 @@ class Context final {
     RefPtr<Action> mAction;
   };
 
-  Context(SafeRefPtr<Manager> aManager, nsISerialEventTarget* aTarget,
-          Action* aInitAction);
-  ~Context();
-  void Init(Context* aOldContext);
+  void Init(Maybe<Context&> aOldContext);
   void Start();
   void DispatchAction(Action* aAction, bool aDoomData = false);
   void OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
@@ -189,7 +186,7 @@ class Context final {
 
   already_AddRefed<ThreadsafeHandle> CreateThreadsafeHandle();
 
-  void SetNextContext(Context* aNextContext);
+  void SetNextContext(SafeRefPtr<Context> aNextContext);
 
   void DoomTargetData();
 
@@ -214,10 +211,16 @@ class Context final {
   RefPtr<ThreadsafeHandle> mThreadsafeHandle;
 
   RefPtr<DirectoryLock> mDirectoryLock;
-  RefPtr<Context> mNextContext;
+  SafeRefPtr<Context> mNextContext;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(cache::Context)
+  // XXX Consider adding a private guard parameter.
+  Context(SafeRefPtr<Manager> aManager, nsISerialEventTarget* aTarget,
+          Action* aInitAction);
+  ~Context();
+
+  NS_DECL_OWNINGTHREAD
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(cache::Context)
 };
 
 }  // namespace cache
