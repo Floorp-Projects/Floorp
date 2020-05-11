@@ -343,7 +343,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(
       mParentLayersObserverEpoch{0},
       mWrEpoch{0},
       mIdNamespace(aApi->GetNamespace()),
-      mRenderRootRectMutex("WebRenderBridgeParent::mRenderRootRectMutex"),
 #if defined(MOZ_WIDGET_ANDROID)
       mScreenPixelsTarget(nullptr),
 #endif
@@ -375,7 +374,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
       mParentLayersObserverEpoch{0},
       mWrEpoch{0},
       mIdNamespace{0},
-      mRenderRootRectMutex("WebRenderBridgeParent::mRenderRootRectMutex"),
       mPaused(false),
       mDestroyed(true),
       mReceivedDisplayList(false),
@@ -1186,9 +1184,6 @@ bool WebRenderBridgeParent::SetDisplayList(
 
   if (aValidTransaction) {
     if (IsRootWebRenderBridgeParent()) {
-      if (aRenderRoot != wr::RenderRoot::Default) {
-        MutexAutoLock lock(mRenderRootRectMutex);
-      }
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
       LayoutDeviceIntRect rect =
           LayoutDeviceIntRect(LayoutDeviceIntPoint(), widgetSize);
