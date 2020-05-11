@@ -24,8 +24,6 @@ class PBrowserBridgeParent;
 class WidgetPointerEvent;
 }  // namespace mozilla
 
-MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::WidgetPointerEvent)
-
 namespace mozilla {
 class WidgetPointerEventHolder final {
  public:
