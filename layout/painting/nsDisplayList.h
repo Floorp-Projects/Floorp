@@ -3377,8 +3377,16 @@ class nsDisplayList {
   template <typename T, typename F, typename... Args>
   void AppendNewToTop(nsDisplayListBuilder* aBuilder, F* aFrame,
                       Args&&... aArgs) {
-    nsDisplayItem* item =
-        MakeDisplayItem<T>(aBuilder, aFrame, std::forward<Args>(aArgs)...);
+    AppendNewToTopWithIndex<T>(aBuilder, aFrame, 0,
+                               std::forward<Args>(aArgs)...);
+  }
+
+  template <typename T, typename F, typename... Args>
+  void AppendNewToTopWithIndex(nsDisplayListBuilder* aBuilder, F* aFrame,
+                               const uint16_t aIndex, Args&&... aArgs) {
+    nsDisplayItem* item = MakeDisplayItemWithIndex<T>(
+        aBuilder, aFrame, aIndex, std::forward<Args>(aArgs)...);
+
     if (item) {
       AppendToTop(item);
     }
@@ -3404,8 +3412,16 @@ class nsDisplayList {
   template <typename T, typename F, typename... Args>
   void AppendNewToBottom(nsDisplayListBuilder* aBuilder, F* aFrame,
                          Args&&... aArgs) {
-    nsDisplayItem* item =
-        MakeDisplayItem<T>(aBuilder, aFrame, std::forward<Args>(aArgs)...);
+    AppendNewToBottomWithIndex<T>(aBuilder, aFrame, 0,
+                                  std::forward<Args>(aArgs)...);
+  }
+
+  template <typename T, typename F, typename... Args>
+  void AppendNewToBottomWithIndex(nsDisplayListBuilder* aBuilder, F* aFrame,
+                                  const uint16_t aIndex, Args&&... aArgs) {
+    nsDisplayItem* item = MakeDisplayItemWithIndex<T>(
+        aBuilder, aFrame, aIndex, std::forward<Args>(aArgs)...);
+
     if (item) {
       AppendToBottom(item);
     }
