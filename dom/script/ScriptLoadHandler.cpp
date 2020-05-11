@@ -94,6 +94,14 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
                                      nsISupports* aContext,
                                      uint32_t aDataLength, const uint8_t* aData,
                                      uint32_t* aConsumedLength) {
+  nsCOMPtr<nsIRequest> channelRequest;
+  aLoader->GetRequest(getter_AddRefs(channelRequest));
+
+  if (!mPreloadStartNotified) {
+    mPreloadStartNotified = true;
+    mRequest->NotifyStart(channelRequest);
+  }
+
   if (mRequest->IsCanceled()) {
     // If request cancelled, ignore any incoming data.
     *aConsumedLength = aDataLength;
@@ -145,8 +153,6 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
     *aConsumedLength = aDataLength;
     rv = MaybeDecodeSRI();
     if (NS_FAILED(rv)) {
-      nsCOMPtr<nsIRequest> channelRequest;
-      aLoader->GetRequest(getter_AddRefs(channelRequest));
       return channelRequest->Cancel(mScriptLoader->RestartLoad(mRequest));
     }
   }
@@ -333,6 +339,14 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
   nsCOMPtr<nsIRequest> channelRequest;
   aLoader->GetRequest(getter_AddRefs(channelRequest));
+
+  if (!mPreloadStartNotified) {
+    mPreloadStartNotified = true;
+    mRequest->NotifyStart(channelRequest);
+  }
+
+  auto notifyStop =
+      MakeScopeExit([&] { mRequest->NotifyStop(channelRequest, rv); });
 
   if (!mRequest->IsCanceled()) {
     if (mRequest->IsUnknownDataType()) {

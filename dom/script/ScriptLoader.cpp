@@ -1225,6 +1225,9 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   aRequest->mScriptBytecode.clearAndFree();
   TRACE_FOR_TEST(aRequest->Element(), "scriptloader_fallback");
 
+  // Notify preload restart so that we can register this preload request again.
+  aRequest->NotifyRestart(mDocument);
+
   // Start a new channel from which we explicitly request to stream the source
   // instead of the bytecode.
   aRequest->mProgress = ScriptLoadRequest::Progress::eLoading_Source;
@@ -1371,20 +1374,17 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   LOG(("ScriptLoadRequest (%p): mode=%u tracking=%d", aRequest,
        unsigned(aRequest->mScriptMode), aRequest->IsTracking()));
 
-  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
-  if (cos) {
-    if (aRequest->IsLinkPreloadScript()) {
-      // This is <link rel="preload" as="script"> initiated speculative load,
-      // put it to the group that is not blocked by leaders and doesn't block
-      // follower at the same time. Giving it a much higher priority will make
-      // this request be processed ahead of other Unblocked requests, but with
-      // the same weight as Leaders.  This will make us behave similar way for
-      // both http2 and http1.
-      cos->AddClassFlags(nsIClassOfService::Unblocked);
-      if (nsCOMPtr<nsISupportsPriority> sp = do_QueryInterface(channel)) {
-        sp->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
-      }
-    } else if (aRequest->mScriptFromHead && aRequest->IsBlockingScript()) {
+  if (aRequest->IsLinkPreloadScript()) {
+    // This is <link rel="preload" as="script"> initiated speculative load,
+    // put it to the group that is not blocked by leaders and doesn't block
+    // follower at the same time. Giving it a much higher priority will make
+    // this request be processed ahead of other Unblocked requests, but with
+    // the same weight as Leaders.  This will make us behave similar way for
+    // both http2 and http1.
+    ScriptLoadRequest::PrioritizeAsPreload(channel);
+    ScriptLoadRequest::AddLoadBackgroundFlag(channel);
+  } else if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel)) {
+    if (aRequest->mScriptFromHead && aRequest->IsBlockingScript()) {
       // synchronous head scripts block loading of most other non js/css
       // content such as images, Leader implicitely disallows tailing
       cos->AddClassFlags(nsIClassOfService::Leader);
@@ -1470,6 +1470,12 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
 
   rv = channel->AsyncOpen(loader);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  auto key = PreloadHashKey::CreateAsScript(
+      aRequest->mURI, aRequest->CORSMode(), aRequest->mKind,
+      aRequest->ReferrerPolicy());
+  aRequest->NotifyOpen(&key, channel, mDocument,
+                       aRequest->IsLinkPreloadScript());
 
   if (aRequest->IsModuleRequest()) {
     // We successfully started fetching a module so put its URL in the module
@@ -1915,6 +1921,10 @@ ScriptLoadRequest* ScriptLoader::LookupPreloadRequest(
 
   // Report any errors that we skipped while preloading.
   ReportPreloadErrorsToConsole(request);
+
+  // This makes sure the pending preload (if exists) for this resource is
+  // properly marked as used and thus not notified in the console as unused.
+  request->NotifyUsage();
 
   return request;
 }

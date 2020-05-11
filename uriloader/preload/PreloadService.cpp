@@ -78,18 +78,27 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   aLinkElement->GetCrossOrigin(crossOrigin);
   aLinkElement->GetIntegrity(integrity);
   aLinkElement->GetReferrerPolicy(referrerPolicyAttr);
+  auto referrerPolicy = PreloadReferrerPolicy(referrerPolicyAttr);
+
   PreloadHashKey preloadKey;
 
-  // * Branch according the "as" value and build the `preloadKey` value.
-  if (true) {
+  if (as.LowerCaseEqualsASCII("script")) {
+    dom::DOMString domType;
+    aLinkElement->GetType(domType);
+    domType.ToString(type);
+    preloadKey =
+        PreloadHashKey::CreateAsScript(uri, crossOrigin, type, referrerPolicy);
+  } else {
     NotifyNodeEvent(aLinkElement, false);
     return nullptr;
   }
 
   RefPtr<PreloaderBase> preload = LookupPreload(&preloadKey);
   if (!preload) {
-    // * Start preload accordint the "as" value and various other per-type
-    // specific attributes.
+    if (as.LowerCaseEqualsASCII("script")) {
+      PreloadScript(uri, type, charset, crossOrigin, referrerPolicyAttr,
+                    integrity, true /* isInHead - TODO */);
+    }
 
     preload = LookupPreload(&preloadKey);
     if (!preload) {
@@ -101,6 +110,17 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   preload->AddLinkPreloadNode(aLinkElement);
 
   return preload.forget();
+}
+
+void PreloadService::PreloadScript(nsIURI* aURI, const nsAString& aType,
+                                   const nsAString& aCharset,
+                                   const nsAString& aCrossOrigin,
+                                   const nsAString& aReferrerPolicy,
+                                   const nsAString& aIntegrity,
+                                   bool aScriptFromHead) {
+  mDocument->ScriptLoader()->PreloadURI(
+      aURI, aCharset, aType, aCrossOrigin, aIntegrity, aScriptFromHead, false,
+      false, false, true, PreloadReferrerPolicy(aReferrerPolicy));
 }
 
 // static

@@ -61,6 +61,11 @@ class PreloadService {
       dom::HTMLLinkElement* aLinkElement, nsContentPolicyType aPolicyType,
       nsIReferrerInfo* aReferrerInfo);
 
+  void PreloadScript(nsIURI* aURI, const nsAString& aType,
+                     const nsAString& aCharset, const nsAString& aCrossOrigin,
+                     const nsAString& aReferrerPolicy,
+                     const nsAString& aIntegrity, bool aScriptFromHead);
+
   static void NotifyNodeEvent(nsINode* aNode, bool aSuccess);
 
  private:
