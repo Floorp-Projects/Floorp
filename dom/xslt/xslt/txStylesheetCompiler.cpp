@@ -878,5 +878,5 @@ txElementContext::txElementContext(const txElementContext& aOther)
       mBaseURI(aOther.mBaseURI),
       mMappings(aOther.mMappings),
       mDepth(0) {
-  mInstructionNamespaces = aOther.mInstructionNamespaces;
+  mInstructionNamespaces = aOther.mInstructionNamespaces.Clone();
 }
