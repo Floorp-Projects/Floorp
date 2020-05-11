@@ -90,8 +90,9 @@ class GeckoContentController {
    * however it wishes. Note that this function is not called if the pinch is
    * prevented by content calling preventDefault() on the touch events, or via
    * use of the touch-action property.
-   * @param aType One of PINCHGESTURE_START, PINCHGESTURE_SCALE, or
-   *        PINCHGESTURE_END, indicating the phase of the pinch.
+   * @param aType One of PINCHGESTURE_START, PINCHGESTURE_SCALE,
+   *        PINCHGESTURE_FINGERLIFTED, or PINCHGESTURE_END, indicating the phase
+   *        of the pinch.
    * @param aGuid The guid of the APZ that is detecting the pinch. This is
    *        generally the root APZC for the layers id.
    * @param aSpanChange For the START or END event, this is always 0.

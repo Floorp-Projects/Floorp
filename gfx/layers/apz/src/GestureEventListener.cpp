@@ -480,16 +480,19 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd() {
     case GESTURE_PINCH:
       if (mTouches.Length() < 2) {
         SetState(GESTURE_NONE);
-        ScreenPoint point = PinchGestureInput::BothFingersLifted<ScreenPixel>();
+        PinchGestureInput::PinchGestureType type =
+            PinchGestureInput::PINCHGESTURE_END;
+        ScreenPoint point;
         if (mTouches.Length() == 1) {
           // As user still keeps one finger down the event's focus point should
           // contain meaningful data.
+          type = PinchGestureInput::PINCHGESTURE_FINGERLIFTED;
           point = mTouches[0].mScreenPoint;
         }
-        PinchGestureInput pinchEvent(
-            PinchGestureInput::PINCHGESTURE_END, mLastTouchInput.mTime,
-            mLastTouchInput.mTimeStamp, mLastTouchInput.mScreenOffset, point,
-            1.0f, 1.0f, mLastTouchInput.modifiers);
+        PinchGestureInput pinchEvent(type, mLastTouchInput.mTime,
+                                     mLastTouchInput.mTimeStamp,
+                                     mLastTouchInput.mScreenOffset, point, 1.0f,
+                                     1.0f, mLastTouchInput.modifiers);
         mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
       }
 
@@ -499,11 +502,10 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd() {
 
     case GESTURE_ONE_TOUCH_PINCH: {
       SetState(GESTURE_NONE);
-      ScreenPoint point = PinchGestureInput::BothFingersLifted<ScreenPixel>();
       PinchGestureInput pinchEvent(
           PinchGestureInput::PINCHGESTURE_END, mLastTouchInput.mTime,
-          mLastTouchInput.mTimeStamp, mLastTouchInput.mScreenOffset, point,
-          1.0f, 1.0f, mLastTouchInput.modifiers);
+          mLastTouchInput.mTimeStamp, mLastTouchInput.mScreenOffset,
+          ScreenPoint(), 1.0f, 1.0f, mLastTouchInput.modifiers);
       mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
 
       rv = nsEventStatus_eConsumeNoDefault;

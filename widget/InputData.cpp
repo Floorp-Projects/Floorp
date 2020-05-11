@@ -554,11 +554,6 @@ PinchGestureInput::PinchGestureInput(
 
 bool PinchGestureInput::TransformToLocal(
     const ScreenToParentLayerMatrix4x4& aTransform) {
-  if (mFocusPoint == BothFingersLifted<ScreenPixel>()) {
-    // Special value, no transform required.
-    mLocalFocusPoint = BothFingersLifted();
-    return true;
-  }
   Maybe<ParentLayerPoint> point = UntransformBy(aTransform, mFocusPoint);
   if (!point) {
     return false;
