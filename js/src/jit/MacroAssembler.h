@@ -1571,6 +1571,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                 Label* label) PER_SHARED_ARCH;
   inline void branchTestGCThing(Condition cond, const BaseIndex& address,
                                 Label* label) PER_SHARED_ARCH;
+  inline void branchTestGCThing(Condition cond, const ValueOperand& value,
+                                Label* label)
+      DEFINED_ON(arm, arm64, x86_shared);
 
   inline void branchTestPrimitive(Condition cond, const ValueOperand& value,
                                   Label* label)
