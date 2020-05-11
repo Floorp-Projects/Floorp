@@ -13,5 +13,8 @@
   },
   "suggestUrl": {
     "message": "https://an.wikipedia.org/w/api.php"
+  },
+  "extensionIcon": {
+    "message": "favicon-an.ico"
   }
 }
