@@ -41,7 +41,13 @@ class ShutdownError extends IndexedDBError {
 // machine and 10-15ms on a slow machine.
 // Every chunk waits for success before starting the next, and
 // the final chunk's completion will fire transaction.oncomplete .
-function bulkOperationHelper(store, reject, operation, list, listIndex = 0) {
+function bulkOperationHelper(
+  store,
+  { reject, completion },
+  operation,
+  list,
+  listIndex = 0
+) {
   try {
     const CHUNK_LENGTH = 250;
     const max = Math.min(listIndex + CHUNK_LENGTH, list.length);
@@ -54,11 +60,13 @@ function bulkOperationHelper(store, reject, operation, list, listIndex = 0) {
       request.onsuccess = bulkOperationHelper.bind(
         null,
         store,
-        reject,
+        { reject, completion },
         operation,
         list,
         listIndex
       );
+    } else if (completion) {
+      completion();
     }
     // otherwise, we're done, and the transaction will complete on its own.
   } catch (e) {
@@ -77,25 +85,28 @@ function bulkOperationHelper(store, reject, operation, list, listIndex = 0) {
  * Helper to wrap some IDBObjectStore operations into a promise.
  *
  * @param {IDBDatabase} db
- * @param {String} storeName
+ * @param {String|String[]} storeNames - either a string or an array of strings.
  * @param {String} mode
  * @param {function} callback
  * @param {String} description of the operation for error handling purposes.
  */
-function executeIDB(db, storeName, mode, callback, desc) {
-  const transaction = db.transaction([storeName], mode);
+function executeIDB(db, storeNames, mode, callback, desc) {
+  if (!Array.isArray(storeNames)) {
+    storeNames = [storeNames];
+  }
+  const transaction = db.transaction(storeNames, mode);
   let promise = new Promise((resolve, reject) => {
-    const store = transaction.objectStore(storeName);
+    let stores = storeNames.map(name => transaction.objectStore(name));
     let result;
     let rejectWrapper = e => {
-      reject(new IndexedDBError(e, desc || "execute()", storeName));
+      reject(new IndexedDBError(e, desc || "execute()", storeNames.join(", ")));
       try {
         transaction.abort();
       } catch (ex) {
         Cu.reportError(ex);
       }
     };
-    // Add all the handlers before using the store.
+    // Add all the handlers before using the stores.
     transaction.onerror = event =>
       reject(new IndexedDBError(event.target.error, desc || "execute()"));
     transaction.onabort = event =>
@@ -106,6 +117,10 @@ function executeIDB(db, storeName, mode, callback, desc) {
         )
       );
     transaction.oncomplete = event => resolve(result);
+    // Simplify access to a single datastore:
+    if (stores.length == 1) {
+      stores = stores[0];
+    }
     try {
       // Although this looks sync, once the callback places requests
       // on the datastore, it can independently keep the transaction alive and
@@ -116,7 +131,7 @@ function executeIDB(db, storeName, mode, callback, desc) {
       // In theory, exceptions thrown from onsuccess handlers should also
       // cause IndexedDB to abort the transaction, so this is a belt-and-braces
       // approach.
-      result = callback(store, rejectWrapper);
+      result = callback(stores, rejectWrapper);
     } catch (e) {
       rejectWrapper(e);
     }

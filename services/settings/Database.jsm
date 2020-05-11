@@ -82,7 +82,9 @@ class Database {
         (store, rejectTransaction) => {
           IDBHelpers.bulkOperationHelper(
             store,
-            rejectTransaction,
+            {
+              reject: rejectTransaction,
+            },
             "put",
             toInsert.map(item => {
               return Object.assign({ _cid }, item);
@@ -104,7 +106,9 @@ class Database {
         (store, rejectTransaction) => {
           IDBHelpers.bulkOperationHelper(
             store,
-            rejectTransaction,
+            {
+              reject: rejectTransaction,
+            },
             "delete",
             toDelete.map(item => {
               return [_cid, item.id];
