@@ -56,9 +56,6 @@ pub enum ErrorKind {
 
     #[fail(display = "{}", _0)]
     IncomingPayloadError(#[fail(cause)] bridged_engine::PayloadError),
-
-    #[fail(display = "This operation isn't implemented yet")]
-    NotImplemented,
 }
 
 error_support::define_error! {
