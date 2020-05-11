@@ -642,7 +642,8 @@ void AudioCallbackDriver::Init() {
   output.layout = static_cast<uint32_t>(channelMap);
   output.prefs = CubebUtils::GetDefaultStreamPrefs();
 #if !defined(XP_WIN)
-  if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE) {
+  if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE &&
+      CubebUtils::RouteOutputAsVoice()) {
     output.prefs |= static_cast<cubeb_stream_prefs>(CUBEB_STREAM_PREF_VOICE);
   }
 #endif
@@ -671,6 +672,10 @@ void AudioCallbackDriver::Init() {
   input = output;
   input.channels = mInputChannelCount;
   input.layout = CUBEB_LAYOUT_UNDEFINED;
+  input.prefs = CubebUtils::GetDefaultStreamPrefs();
+  if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE) {
+    input.prefs |= static_cast<cubeb_stream_prefs>(CUBEB_STREAM_PREF_VOICE);
+  }
 
   cubeb_stream* stream = nullptr;
   bool inputWanted = mInputChannelCount > 0;
