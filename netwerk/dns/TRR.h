@@ -14,6 +14,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
 #include "nsHostResolver.h"
+#include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {
