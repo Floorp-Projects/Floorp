@@ -86,7 +86,7 @@ struct App {
 impl Example for App {
     fn render(
         &mut self,
-        api: &RenderApi,
+        api: &mut RenderApi,
         builder: &mut DisplayListBuilder,
         txn: &mut Transaction,
         _device_size: DeviceIntSize,
@@ -189,7 +189,7 @@ impl Example for App {
     fn on_event(
         &mut self,
         _event: winit::WindowEvent,
-        _api: &RenderApi,
+        _api: &mut RenderApi,
         _document_id: DocumentId,
     ) -> bool {
         false

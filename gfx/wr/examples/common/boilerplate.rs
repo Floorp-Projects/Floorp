@@ -73,7 +73,7 @@ pub trait Example {
 
     fn render(
         &mut self,
-        api: &RenderApi,
+        api: &mut RenderApi,
         builder: &mut DisplayListBuilder,
         txn: &mut Transaction,
         device_size: DeviceIntSize,
@@ -83,7 +83,7 @@ pub trait Example {
     fn on_event(
         &mut self,
         _: winit::WindowEvent,
-        _: &RenderApi,
+        _: &mut RenderApi,
         _: DocumentId,
     ) -> bool {
         false
@@ -185,7 +185,7 @@ pub fn main_wrapper<E: Example>(
         None,
         device_size,
     ).unwrap();
-    let api = sender.create_api();
+    let mut api = sender.create_api();
     let document_id = api.add_document(device_size, 0);
 
     let (external, output) = example.get_image_handlers(&*gl);
@@ -205,7 +205,7 @@ pub fn main_wrapper<E: Example>(
     let mut txn = Transaction::new();
 
     example.render(
-        &api,
+        &mut api,
         &mut builder,
         &mut txn,
         device_size,
@@ -278,14 +278,14 @@ pub fn main_wrapper<E: Example>(
                 _ => {
                     custom_event = example.on_event(
                         win_event,
-                        &api,
+                        &mut api,
                         document_id,
                     )
                 },
             },
             other => custom_event = example.on_event(
                 other,
-                &api,
+                &mut api,
                 document_id,
             ),
         };
@@ -298,7 +298,7 @@ pub fn main_wrapper<E: Example>(
             let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
 
             example.render(
-                &api,
+                &mut api,
                 &mut builder,
                 &mut txn,
                 device_size,
