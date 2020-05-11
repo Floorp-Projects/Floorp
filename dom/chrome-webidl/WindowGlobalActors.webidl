@@ -53,7 +53,6 @@ interface WindowGlobalParent : WindowContext {
   readonly attribute Principal documentPrincipal;
   readonly attribute Principal? contentBlockingAllowListPrincipal;
   readonly attribute URI? documentURI;
-  readonly attribute DOMString documentTitle;
 
   // Bit mask containing content blocking events that are recorded in
   // the document's content blocking log.
