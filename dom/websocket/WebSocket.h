@@ -104,8 +104,8 @@ class WebSocket final : public DOMEventTargetHelper {
   // webIDL: readonly attribute unsigned short readyState;
   uint16_t ReadyState();
 
-  // webIDL: readonly attribute unsigned long bufferedAmount;
-  uint32_t BufferedAmount() const;
+  // webIDL: readonly attribute unsigned long long bufferedAmount;
+  uint64_t BufferedAmount() const;
 
   // webIDL: attribute Function? onopen;
   IMPL_EVENT_HANDLER(open)
@@ -179,7 +179,7 @@ class WebSocket final : public DOMEventTargetHelper {
   bool mKeepingAlive;
   bool mCheckMustKeepAlive;
 
-  CheckedUint32 mOutgoingBufferedAmount;
+  CheckedUint64 mOutgoingBufferedAmount;
 
   // related to the WebSocket constructor steps
   nsString mURI;
