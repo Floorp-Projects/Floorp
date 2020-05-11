@@ -199,7 +199,7 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
   }
 
   SafeRefPtr<Context> mContext;
-  RefPtr<ThreadsafeHandle> mThreadsafeHandle;
+  SafeRefPtr<ThreadsafeHandle> mThreadsafeHandle;
   SafeRefPtr<Manager> mManager;
   RefPtr<Data> mData;
   nsCOMPtr<nsISerialEventTarget> mTarget;
@@ -1010,13 +1010,12 @@ void Context::NoteOrphanedData() {
   mOrphanedData = true;
 }
 
-already_AddRefed<Context::ThreadsafeHandle> Context::CreateThreadsafeHandle() {
+SafeRefPtr<Context::ThreadsafeHandle> Context::CreateThreadsafeHandle() {
   NS_ASSERT_OWNINGTHREAD(Context);
   if (!mThreadsafeHandle) {
-    mThreadsafeHandle = new ThreadsafeHandle(SafeRefPtrFromThis());
+    mThreadsafeHandle = MakeSafeRefPtr<ThreadsafeHandle>(SafeRefPtrFromThis());
   }
-  RefPtr<ThreadsafeHandle> ref = mThreadsafeHandle;
-  return ref.forget();
+  return mThreadsafeHandle.clonePtr();
 }
 
 void Context::SetNextContext(SafeRefPtr<Context> aNextContext) {
