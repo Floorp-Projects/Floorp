@@ -50,6 +50,7 @@ class Pkcs11SeedTest : public ::testing::Test {
   }
 };
 
+#ifndef NSS_DISABLE_DEPRECATED_SEED
 // The intention here is to test the arguments of these functions
 // The resulted content is already tested in EncryptDeriveTests.
 // SEED_CBC needs an IV of 16 bytes.
@@ -76,5 +77,6 @@ TEST_F(Pkcs11SeedTest, ECB_Singleblock) {
 TEST_F(Pkcs11SeedTest, ECB_Multiblock) {
   EncryptDecryptSeed(SECSuccess, 64, 64, CKM_SEED_ECB);
 }
+#endif
 
 }  // namespace nss_test

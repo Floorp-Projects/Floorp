@@ -1175,3 +1175,9 @@ PK11_SymKeysToSameSlot;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.53 { 	# NSS 3.53 release
+;+    global:
+SECMOD_GetSystemFIPSEnabled;
+;+    local:
+;+       *;
+;+};

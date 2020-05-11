@@ -1,22 +1,5 @@
-7 Added functions:
 
-  [A] 'function SECStatus PK11_AEADOp(PK11Context*, CK_GENERATOR_FUNCTION, int, unsigned char*, int, const unsigned char*, int, unsigned char*, int*, int, unsigned char*, int, const unsigned char*, int)'    {PK11_AEADOp@@NSS_3.52}
-  [A] 'function SECStatus PK11_AEADRawOp(PK11Context*, void*, int, const unsigned char*, int, unsigned char*, int*, int, const unsigned char*, int)'    {PK11_AEADRawOp@@NSS_3.52}
-  [A] 'function CK_OBJECT_HANDLE PK11_GetObjectHandle(PK11ObjectType, void*, PK11SlotInfo**)'    {PK11_GetObjectHandle@@NSS_3.52}
-  [A] 'function SECStatus PK11_ReadRawAttributes(PLArenaPool*, PK11ObjectType, void*, CK_ATTRIBUTE*, unsigned int)'    {PK11_ReadRawAttributes@@NSS_3.52}
-  [A] 'function SECStatus PK11_SymKeysToSameSlot(CK_MECHANISM_TYPE, CK_ATTRIBUTE_TYPE, CK_ATTRIBUTE_TYPE, PK11SymKey*, PK11SymKey*, PK11SymKey**, PK11SymKey**)'    {PK11_SymKeysToSameSlot@@NSS_3.52}
-  [A] 'function PRBool _PK11_ContextGetAEADSimulation(PK11Context*)'    {_PK11_ContextGetAEADSimulation@@NSS_3.52}
-  [A] 'function SECStatus _PK11_ContextSetAEADSimulation(PK11Context*)'    {_PK11_ContextSetAEADSimulation@@NSS_3.52}
+1 Added function:
 
-1 function with some indirect sub-type change:
-
-  [C]'function SECStatus PK11_GetModInfo(SECMODModule*, CK_INFO*)' at pk11util.c:613:1 has some indirect sub-type changes:
-    parameter 1 of type 'SECMODModule*' has sub-type changes:
-      in pointed to type 'typedef SECMODModule' at secmodt.h:29:1:
-        underlying type 'struct SECMODModuleStr' at secmodt.h:44:1 changed:
-          type size changed from 1600 to 1664 (in bits)
-          1 data member insertion:
-            'CK_FLAGS SECMODModuleStr::flags', at offset 1600 (in bits) at secmodt.h:76:1
-          no data member change (1 filtered);
-
+  [A] 'function PRBool SECMOD_GetSystemFIPSEnabled()'    {SECMOD_GetSystemFIPSEnabled@@NSS_3.53}
 

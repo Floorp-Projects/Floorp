@@ -115,13 +115,6 @@ PK11SymKey *pk11_TokenKeyGenWithFlagsAndKeyType(PK11SlotInfo *slot,
 CK_MECHANISM_TYPE pk11_GetPBECryptoMechanism(SECAlgorithmID *algid,
                                              SECItem **param, SECItem *pwd, PRBool faulty3DES);
 
-/* Get the state of the system FIPS mode */
-/* NSS uses this to force FIPS mode if the system bit is on. Applications which
- * use the SECMOD_CanDeleteInteral() to check to see if they can switch to or
- * from FIPS mode will automatically be told that they can't swith out of FIPS
- * mode */
-int secmod_GetSystemFIPSEnabled();
-
 extern void pk11sdr_Init(void);
 extern void pk11sdr_Shutdown(void);
 
