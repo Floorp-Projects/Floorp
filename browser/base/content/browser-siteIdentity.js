@@ -714,7 +714,7 @@ var gIdentityHandler = {
           gBrowser.selectedBrowser.documentURI.scheme == "chrome"))
     ) {
       // This is a local resource (and shouldn't be marked insecure).
-      this._identityBox.className = "localResource";
+      this._identityBox.className = "unknownIdentity";
     } else {
       // This is an insecure connection.
       let warnOnInsecure =
