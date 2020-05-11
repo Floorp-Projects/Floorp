@@ -204,12 +204,6 @@ impl CompositeOps {
     }
 }
 
-/// Information about unpaired Push/Pop clip chain instances that need to be fixed up.
-struct ClipChainPairInfo {
-    spatial_node_index: SpatialNodeIndex,
-    clip_chain_id: ClipChainId,
-}
-
 bitflags! {
     /// Slice flags
     pub struct SliceFlags : u8 {
@@ -231,44 +225,6 @@ struct Slice {
     shared_clips: Option<Vec<ClipInstance>>,
     /// Various flags describing properties of this slice
     pub flags: SliceFlags,
-}
-
-impl Slice {
-    // Open clip chain instances at the start of a slice
-    fn push_clip_instances(
-        &mut self,
-        stack: &[ClipChainPairInfo],
-    ) {
-        for clip_chain_instance in stack.iter().rev() {
-            self.prim_list.add_prim_to_start(
-                create_clip_prim_instance(
-                    clip_chain_instance.clip_chain_id,
-                    PrimitiveInstanceKind::PushClipChain,
-                ),
-                LayoutRect::zero(),
-                clip_chain_instance.spatial_node_index,
-                PrimitiveFlags::IS_BACKFACE_VISIBLE,
-            );
-        }
-    }
-
-    // Close clip chain instances at the end of a slice
-    fn pop_clip_instances(
-        &mut self,
-        stack: &[ClipChainPairInfo],
-    ) {
-        for clip_chain_instance in stack {
-            self.prim_list.add_prim(
-                create_clip_prim_instance(
-                    clip_chain_instance.clip_chain_id,
-                    PrimitiveInstanceKind::PopClipChain,
-                ),
-                LayoutRect::zero(),
-                clip_chain_instance.spatial_node_index,
-                PrimitiveFlags::IS_BACKFACE_VISIBLE,
-            );
-        }
-    }
 }
 
 /// A structure that converts a serialized display list into a form that WebRender
@@ -399,6 +355,7 @@ impl<'a> SceneBuilder<'a> {
 
         builder.clip_store.push_clip_root(
             Some(ClipId::root(root_pipeline_id)),
+            false,
         );
 
         builder.push_root(
@@ -425,7 +382,7 @@ impl<'a> SceneBuilder<'a> {
             TransformStyle::Flat,
             /* prim_flags = */ PrimitiveFlags::IS_BACKFACE_VISIBLE,
             ROOT_SPATIAL_NODE_INDEX,
-            ClipChainId::NONE,
+            None,
             RasterSpace::Screen,
             StackingContextFlags::IS_BACKDROP_ROOT,
             device_pixel_scale,
@@ -501,8 +458,6 @@ impl<'a> SceneBuilder<'a> {
 
         // List of slices that have been found
         let mut slices: Vec<Slice> = Vec::new();
-        // Current stack of open clip chain instances that need to be fixed up
-        let mut clip_chain_instance_stack = Vec::new();
         // Tracker for whether a new slice should be created
         let mut create_slice = true;
         // The clips found the last time we traversed a set of clip chains. Stored and cleared
@@ -521,17 +476,12 @@ impl<'a> SceneBuilder<'a> {
             );
 
             if create_slice {
-                // When creating a slice, close off any open clip chains on prev slice.
-                if let Some(prev_slice) = slices.last_mut() {
-                    prev_slice.pop_clip_instances(&clip_chain_instance_stack);
-                }
-
                 let slice_flags = if cluster.flags.contains(ClusterFlags::SCROLLBAR_CONTAINER) {
                     SliceFlags::IS_SCROLLBAR
                 } else {
                     SliceFlags::empty()
                 };
-                let mut slice = Slice {
+                let slice = Slice {
                     cache_scroll_root: cluster.cache_scroll_root,
                     prim_list: PrimitiveList::empty(),
                     shared_clips: None,
@@ -539,41 +489,12 @@ impl<'a> SceneBuilder<'a> {
                 };
 
                 // Open up clip chains on the stack on the new slice
-                slice.push_clip_instances(&clip_chain_instance_stack);
                 slices.push(slice);
                 create_slice = false;
             }
 
             // Step through each prim instance, in order to collect shared clips for the slice.
             for instance in &cluster.prim_instances {
-                // If a Push/Pop clip chain, record that in the clip stack stack.
-                match instance.kind {
-                    PrimitiveInstanceKind::PushClipChain => {
-                        clip_chain_instance_stack.push(ClipChainPairInfo {
-                            spatial_node_index: cluster.spatial_node_index,
-                            clip_chain_id: instance.clip_chain_id,
-                        });
-                        // Invalidate the prim_clips cache - a clip chain was removed.
-                        update_shared_clips = true;
-                        continue;
-                    }
-                    PrimitiveInstanceKind::PopClipChain => {
-                        let clip_chain_instance = clip_chain_instance_stack.pop().unwrap();
-                        debug_assert_eq!(
-                            clip_chain_instance.clip_chain_id,
-                            instance.clip_chain_id,
-                        );
-                        debug_assert_eq!(
-                            clip_chain_instance.spatial_node_index,
-                            cluster.spatial_node_index,
-                        );
-                        // Invalidate the prim_clips cache - a clip chain was removed.
-                        update_shared_clips = true;
-                        continue;
-                    }
-                    _ => {}
-                }
-
                 // If the primitive clip chain is different, then we need to rebuild prim_clips.
                 update_shared_clips |= last_prim_clip_chain_id != instance.clip_chain_id;
                 last_prim_clip_chain_id = instance.clip_chain_id;
@@ -581,14 +502,6 @@ impl<'a> SceneBuilder<'a> {
                 if update_shared_clips {
                     prim_clips.clear();
                     // Update the list of clips that apply to this primitive instance
-                    for clip_instance in &clip_chain_instance_stack {
-                        add_clips(
-                            clip_instance.clip_chain_id,
-                            &mut prim_clips,
-                            &self.clip_store,
-                            &self.interners,
-                        );
-                    }
                     add_clips(
                         instance.clip_chain_id,
                         &mut prim_clips,
@@ -627,11 +540,6 @@ impl<'a> SceneBuilder<'a> {
 
             // Finally, add this cluster to the current slice
             slices.last_mut().unwrap().prim_list.add_cluster(cluster);
-        }
-
-        // Close off any open clip chains on prev slice.
-        if let Some(prev_slice) = slices.last_mut() {
-            prev_slice.pop_clip_instances(&clip_chain_instance_stack);
         }
 
         // Step through the slices, creating picture cache wrapper instances.
@@ -854,22 +762,13 @@ impl<'a> SceneBuilder<'a> {
             )
         };
 
-        let clip_chain_id = match stacking_context.clip_id {
-            Some(clip_id) => {
-                let clip_chain_id = self.clip_store.get_or_build_clip_chain_id(clip_id);
-                self.clip_store.push_clip_root(None);
-                clip_chain_id
-            }
-            None => ClipChainId::NONE,
-        };
-
         self.push_stacking_context(
             pipeline_id,
             composition_operations,
             stacking_context.transform_style,
             prim_flags,
             spatial_node_index,
-            clip_chain_id,
+            stacking_context.clip_id,
             stacking_context.raster_space,
             stacking_context.flags,
             self.sc_stack.last().unwrap().snap_to_device.device_pixel_scale,
@@ -883,10 +782,6 @@ impl<'a> SceneBuilder<'a> {
         self.rf_mapper.pop_offset();
 
         self.pop_stacking_context();
-
-        if stacking_context.clip_id.is_some() {
-            self.clip_store.pop_clip_root();
-        }
     }
 
     fn build_iframe(
@@ -915,6 +810,7 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_store.push_clip_root(
             Some(ClipId::root(iframe_pipeline_id)),
+            false,
         );
 
         let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
@@ -1700,7 +1596,7 @@ impl<'a> SceneBuilder<'a> {
         transform_style: TransformStyle,
         prim_flags: PrimitiveFlags,
         spatial_node_index: SpatialNodeIndex,
-        clip_chain_id: ClipChainId,
+        clip_id: Option<ClipId>,
         requested_raster_space: RasterSpace,
         flags: StackingContextFlags,
         device_pixel_scale: DevicePixelScale,
@@ -1713,6 +1609,11 @@ impl<'a> SceneBuilder<'a> {
             Some(pipeline_id)
         } else {
             None
+        };
+
+        let clip_chain_id = match clip_id {
+            Some(clip_id) => self.clip_store.get_or_build_clip_chain_id(clip_id),
+            None => ClipChainId::NONE,
         };
 
         // Get the transform-style of the parent stacking context,
@@ -1817,6 +1718,37 @@ impl<'a> SceneBuilder<'a> {
             |sc| sc.snap_to_device.clone(),
         );
 
+        let is_redundant = match self.sc_stack.last() {
+            Some(parent) => {
+                FlattenedStackingContext::is_redundant(
+                    &context_3d,
+                    &composite_ops,
+                    prim_flags,
+                    blit_reason,
+                    requested_raster_space,
+                    parent,
+                )
+            }
+            None => {
+                false
+            }
+        };
+
+        if let Some(clip_id) = clip_id {
+            // If this stacking context is redundant (prims will be pushed into
+            // the parent during pop) but it has a valid clip, then we need to
+            // add that clip to the current clip chain builder, so it's correctly
+            // applied to any primitives within this redundant stacking context.
+            // For the normal case, we start a new clip root, knowing that the
+            // clip on this stacking context will be pushed onto the stack during
+            // frame building.
+            if is_redundant {
+                self.clip_store.push_clip_root(Some(clip_id), true);
+            } else {
+                self.clip_store.push_clip_root(None, false);
+            }
+        }
+
         // Push the SC onto the stack, so we know how to handle things in
         // pop_stacking_context.
         self.sc_stack.push(FlattenedStackingContext {
@@ -1825,12 +1757,14 @@ impl<'a> SceneBuilder<'a> {
             prim_flags,
             requested_raster_space,
             spatial_node_index,
+            clip_id,
             clip_chain_id,
             frame_output_pipeline_id,
             composite_ops,
             blit_reason,
             transform_style,
             context_3d,
+            is_redundant,
             is_backdrop_root: flags.contains(StackingContextFlags::IS_BACKDROP_ROOT),
             snap_to_device,
         });
@@ -1838,6 +1772,10 @@ impl<'a> SceneBuilder<'a> {
 
     pub fn pop_stacking_context(&mut self) {
         let mut stacking_context = self.sc_stack.pop().unwrap();
+
+        if stacking_context.clip_id.is_some() {
+            self.clip_store.pop_clip_root();
+        }
 
         // If we encounter a stacking context that is effectively a no-op, then instead
         // of creating a picture, just append the primitive list to the parent stacking
@@ -1850,32 +1788,8 @@ impl<'a> SceneBuilder<'a> {
         //     without having to consider cuts at stacking context boundaries.
         let parent_is_empty = match self.sc_stack.last_mut() {
             Some(parent_sc) => {
-                if stacking_context.is_redundant(parent_sc) {
+                if stacking_context.is_redundant {
                     if !stacking_context.prim_list.is_empty() {
-                        if stacking_context.clip_chain_id != ClipChainId::NONE {
-                            let prim = create_clip_prim_instance(
-                                stacking_context.clip_chain_id,
-                                PrimitiveInstanceKind::PushClipChain,
-                            );
-                            stacking_context.prim_list.add_prim_to_start(
-                                prim,
-                                LayoutRect::zero(),
-                                stacking_context.spatial_node_index,
-                                PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                            );
-
-                            let prim = create_clip_prim_instance(
-                                stacking_context.clip_chain_id,
-                                PrimitiveInstanceKind::PopClipChain,
-                            );
-                            stacking_context.prim_list.add_prim(
-                                prim,
-                                LayoutRect::zero(),
-                                stacking_context.spatial_node_index,
-                                PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                            );
-                        }
-
                         // If popping a redundant stacking context that is from a different pipeline,
                         // we want to insert flags where the picture cache slices should be created
                         // for this iframe. For now, we want to match existing behavior, that is:
@@ -3656,6 +3570,7 @@ struct FlattenedStackingContext {
 
     /// The clip chain for this stacking context
     clip_chain_id: ClipChainId,
+    clip_id: Option<ClipId>,
 
     /// If set, this should be provided to caller
     /// as an output texture.
@@ -3680,6 +3595,9 @@ struct FlattenedStackingContext {
 
     /// True if this stacking context is a backdrop root.
     is_backdrop_root: bool,
+
+    /// True if this stacking context is redundant (i.e. doesn't require a surface)
+    is_redundant: bool,
 
     /// A helper struct to snap local rects in device space. During frame
     /// building we may establish new raster roots, however typically that is in
@@ -3833,48 +3751,52 @@ impl FlattenedStackingContext {
 
     /// Return true if the stacking context isn't needed.
     pub fn is_redundant(
-        &self,
+        context_3d: &Picture3DContext<ExtendedPrimitiveInstance>,
+        composite_ops: &CompositeOps,
+        prim_flags: PrimitiveFlags,
+        blit_reason: BlitReason,
+        requested_raster_space: RasterSpace,
         parent: &FlattenedStackingContext,
     ) -> bool {
         // Any 3d context is required
-        if let Picture3DContext::In { .. } = self.context_3d {
+        if let Picture3DContext::In { .. } = context_3d {
             return false;
         }
 
         // If there are filters / mix-blend-mode
-        if !self.composite_ops.filters.is_empty() {
+        if !composite_ops.filters.is_empty() {
             return false;
         }
 
         // If there are svg filters
-        if !self.composite_ops.filter_primitives.is_empty() {
+        if !composite_ops.filter_primitives.is_empty() {
             return false;
         }
 
         // We can skip mix-blend modes if they are the first primitive in a stacking context,
         // see pop_stacking_context for a full explanation.
-        if self.composite_ops.mix_blend_mode.is_some() &&
+        if composite_ops.mix_blend_mode.is_some() &&
             !parent.prim_list.is_empty() {
             return false;
         }
 
         // If backface visibility is explicitly set.
-        if !self.prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
+        if !prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
             return false;
         }
 
         // If rasterization space is different
-        if self.requested_raster_space != parent.requested_raster_space {
+        if requested_raster_space != parent.requested_raster_space {
             return false;
         }
 
         // If need to isolate in surface due to clipping / mix-blend-mode
-        if !self.blit_reason.is_empty() {
+        if !blit_reason.is_empty() {
             return false;
         }
 
         // If this stacking context is a scrollbar, retain it so it can form a picture cache slice
-        if self.prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER) {
+        if prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER) {
             return false;
         }
 
@@ -4003,18 +3925,6 @@ fn create_prim_instance(
         clip_chain_id,
     )
 }
-
-fn create_clip_prim_instance(
-    clip_chain_id: ClipChainId,
-    kind: PrimitiveInstanceKind,
-) -> PrimitiveInstance {
-    PrimitiveInstance::new(
-        LayoutRect::max_rect(),
-        kind,
-        clip_chain_id,
-    )
-}
-
 
 fn filter_ops_for_compositing(
     input_filters: ItemRange<FilterOp>,
