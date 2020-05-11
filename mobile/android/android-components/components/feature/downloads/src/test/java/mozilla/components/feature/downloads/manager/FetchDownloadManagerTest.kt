@@ -22,15 +22,16 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertEquals
 import org.mockito.Mockito.times
 
 @RunWith(AndroidJUnit4::class)
@@ -134,6 +135,15 @@ class FetchDownloadManagerTest {
         val id = downloadManager.download(invalidDownload)
 
         assertNull(id)
+    }
+
+    @Test
+    fun `trying to download a file with a blob scheme should trigger a download`() {
+        val validBlobDownload = download.copy(url = "blob:https://ipv4.download.thinkbroadband.com/5MB.zip")
+        grantPermissions()
+
+        val id = downloadManager.download(validBlobDownload)!!
+        assertNotNull(id)
     }
 
     @Test
