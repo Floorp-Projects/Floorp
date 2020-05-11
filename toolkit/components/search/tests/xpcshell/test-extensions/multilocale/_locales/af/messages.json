@@ -13,8 +13,5 @@
   },
   "suggestUrl": {
     "message": "https://af.wikipedia.org/w/api.php"
-  },
-  "extensionIcon": {
-    "message": "favicon-af.ico"
   }
 }
