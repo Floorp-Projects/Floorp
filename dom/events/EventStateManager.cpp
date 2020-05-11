@@ -135,6 +135,10 @@ static inline int32_t RoundDown(double aDouble) {
                        : static_cast<int32_t>(ceil(aDouble));
 }
 
+static UniquePtr<WidgetMouseEvent> CreateMouseOrPointerWidgetEvent(
+    WidgetMouseEvent* aMouseEvent, EventMessage aMessage,
+    EventTarget* aRelatedTarget);
+
 /******************************************************************/
 /* mozilla::UITimerCallback                                       */
 /******************************************************************/
@@ -1306,6 +1310,29 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
 
   switch (aEvent->mClass) {
     case eMouseEventClass: {
+      // If a mouse is over a remote target A, and then moves to
+      // remote target B, we'd deliver the event directly to remote target B
+      // after the moving, A would never get notified that the mouse left.
+      // So we generate a exit event to notify A after the move.
+      // XXXedgar, if the synthesized mouse events could deliver to the correct
+      // process directly (see
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1549355), we probably
+      // don't need to check mReason then.
+      BrowserParent* oldRemote = BrowserParent::GetLastMouseRemoteTarget();
+      if (mouseEvent->mReason == WidgetMouseEvent::eReal && oldRemote &&
+          remote != oldRemote) {
+        UniquePtr<WidgetMouseEvent> mouseExitEvent =
+            CreateMouseOrPointerWidgetEvent(mouseEvent, eMouseExitFromWidget,
+                                            mouseEvent->mRelatedTarget);
+        oldRemote->SendRealMouseEvent(*mouseExitEvent);
+
+        if (mouseEvent->mMessage != eMouseExitFromWidget &&
+            mouseEvent->mMessage != eMouseEnterIntoWidget) {
+          // This is to make cursor would be updated correctly.
+          remote->MouseEnterIntoWidget();
+        }
+      }
+
       remote->SendRealMouseEvent(*mouseEvent);
       return;
     }
@@ -4100,7 +4127,7 @@ class MOZ_STACK_CLASS ESMEventCB : public EventDispatchingCallback {
 
 static UniquePtr<WidgetMouseEvent> CreateMouseOrPointerWidgetEvent(
     WidgetMouseEvent* aMouseEvent, EventMessage aMessage,
-    nsIContent* aRelatedContent) {
+    EventTarget* aRelatedTarget) {
   WidgetPointerEvent* sourcePointer = aMouseEvent->AsPointerEvent();
   UniquePtr<WidgetMouseEvent> newEvent;
   if (sourcePointer) {
@@ -4112,15 +4139,14 @@ static UniquePtr<WidgetMouseEvent> CreateMouseOrPointerWidgetEvent(
     newPointerEvent->mWidth = sourcePointer->mWidth;
     newPointerEvent->mHeight = sourcePointer->mHeight;
     newPointerEvent->mInputSource = sourcePointer->mInputSource;
-    newPointerEvent->mRelatedTarget = aRelatedContent;
 
     newEvent = WrapUnique(newPointerEvent);
   } else {
     newEvent = MakeUnique<WidgetMouseEvent>(aMouseEvent->IsTrusted(), aMessage,
                                             aMouseEvent->mWidget,
                                             WidgetMouseEvent::eReal);
-    newEvent->mRelatedTarget = aRelatedContent;
   }
+  newEvent->mRelatedTarget = aRelatedTarget;
   newEvent->mRefPoint = aMouseEvent->mRefPoint;
   newEvent->mModifiers = aMouseEvent->mModifiers;
   newEvent->mButton = aMouseEvent->mButton;

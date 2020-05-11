@@ -151,6 +151,8 @@ LazyLogModule gBrowserFocusLog("BrowserFocus");
 BrowserParent* BrowserParent::sFocus = nullptr;
 /* static */
 BrowserParent* BrowserParent::sTopLevelWebFocus = nullptr;
+/* static */
+BrowserParent* BrowserParent::sLastMouseRemoteTarget = nullptr;
 
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
@@ -233,6 +235,11 @@ void BrowserParent::InitializeStatics() { MOZ_ASSERT(XRE_IsParentProcess()); }
 
 /* static */
 BrowserParent* BrowserParent::GetFocused() { return sFocus; }
+
+/* static */
+BrowserParent* BrowserParent::GetLastMouseRemoteTarget() {
+  return sLastMouseRemoteTarget;
+}
 
 /*static*/
 BrowserParent* BrowserParent::GetFrom(nsFrameLoader* aFrameLoader) {
@@ -588,6 +595,7 @@ void BrowserParent::RemoveWindowListeners() {
 
 void BrowserParent::DestroyInternal() {
   UnsetTopLevelWebFocus(this);
+  UnsetLastMouseRemoteTarget(this);
 
   RemoveWindowListeners();
 
@@ -661,6 +669,7 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   // Even though BrowserParent::Destroy calls this, we need to do it here too in
   // case of a crash.
   BrowserParent::UnsetTopLevelWebFocus(this);
+  BrowserParent::UnsetLastMouseRemoteTarget(this);
 
   if (why == AbnormalShutdown) {
     // dom_reporting_header must also be enabled for the report to be sent.
@@ -1157,6 +1166,7 @@ void BrowserParent::Deactivate(bool aWindowLowering) {
     UnsetTopLevelWebFocus(this);  // Intentionally outside the next "if"
   }
   if (!mIsDestroyed) {
+    BrowserParent::UnsetLastMouseRemoteTarget(this);
     Unused << Manager()->SendDeactivate(this);
   }
 }
@@ -1377,6 +1387,15 @@ void BrowserParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
   if (mIsDestroyed) {
     return;
   }
+
+  // XXXedgar, if the synthesized mouse events could deliver to the correct
+  // process directly (see
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1549355), we probably don't
+  // need to check mReason then.
+  if (aEvent.mReason == WidgetMouseEvent::eReal) {
+    sLastMouseRemoteTarget = this;
+  }
+
   aEvent.mRefPoint = TransformParentToChild(aEvent.mRefPoint);
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -3138,6 +3157,13 @@ BrowserParent* BrowserParent::UpdateFocus() {
 void BrowserParent::UnsetTopLevelWebFocusAll() {
   if (sTopLevelWebFocus) {
     UnsetTopLevelWebFocus(sTopLevelWebFocus);
+  }
+}
+
+/* static */
+void BrowserParent::UnsetLastMouseRemoteTarget(BrowserParent* aBrowserParent) {
+  if (sLastMouseRemoteTarget == aBrowserParent) {
+    sLastMouseRemoteTarget = nullptr;
   }
 }
 
