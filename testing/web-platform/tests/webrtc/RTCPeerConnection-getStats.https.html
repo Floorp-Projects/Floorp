@@ -179,7 +179,7 @@
 
     let [track, mediaStream] = await getTrackFromUserMedia('audio');
     pc.addTrack(track, mediaStream);
-    coupleIceCandidates(pc, pc2);
+    exchangeIceCandidates(pc, pc2);
     await doSignalingHandshake(pc, pc2);
     await listenToIceConnected(pc);
     const stats = await pc.getStats(track);
@@ -202,7 +202,7 @@
 
     let [track, mediaStream] = await getTrackFromUserMedia('audio');
     pc.addTrack(track, mediaStream);
-    coupleIceCandidates(pc, pc2);
+    exchangeIceCandidates(pc, pc2);
     await doSignalingHandshake(pc, pc2);
     // Wait for unmute if the track is not already unmuted.
     // According to spec, it should be muted when being created, but this
@@ -341,7 +341,7 @@
       }));
 
 
-      coupleIceCandidates(pc1, pc2);
+      exchangeIceCandidates(pc1, pc2);
       doSignalingHandshake(pc1, pc2);
     }))
     .catch(t.step_func(err => {
