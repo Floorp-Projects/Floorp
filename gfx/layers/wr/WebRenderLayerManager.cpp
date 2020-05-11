@@ -388,10 +388,9 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   mStateManager.DiscardImagesInTransaction(
       resourceUpdates.SubQueue(wr::RenderRoot::Default));
 
-  for (auto renderRoot : wr::kRenderRoots) {
-    if (resourceUpdates.HasSubQueue(renderRoot)) {
-      WrBridge()->RemoveExpiredFontKeys(resourceUpdates.SubQueue(renderRoot));
-    }
+  if (resourceUpdates.HasSubQueue(wr::RenderRoot::Default)) {
+    WrBridge()->RemoveExpiredFontKeys(
+        resourceUpdates.SubQueue(wr::RenderRoot::Default));
   }
 
   // Skip the synchronization for buffer since we also skip the painting during
@@ -408,18 +407,16 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   {
     AUTO_PROFILER_TRACING_MARKER("Paint", "ForwardDPTransaction", GRAPHICS);
     nsTArray<RenderRootDisplayListData> renderRootDLs;
-    for (auto renderRoot : wr::kRenderRoots) {
-      auto renderRootDL = renderRootDLs.AppendElement();
-      renderRootDL->mRenderRoot = renderRoot;
-      builder.Finalize(*renderRootDL);
-      mLastDisplayListSize = renderRootDL->mDL->mCapacity;
-      resourceUpdates.SubQueue(renderRoot)
-          .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
-                 renderRootDL->mLargeShmems);
-      renderRootDL->mRect =
-          LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
-      renderRootDL->mScrollData.emplace(std::move(mScrollData));
-    }
+    auto renderRootDL = renderRootDLs.AppendElement();
+    renderRootDL->mRenderRoot = wr::RenderRoot::Default;
+    builder.Finalize(*renderRootDL);
+    mLastDisplayListSize = renderRootDL->mDL->mCapacity;
+    resourceUpdates.SubQueue(wr::RenderRoot::Default)
+        .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
+               renderRootDL->mLargeShmems);
+    renderRootDL->mRect =
+        LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
+    renderRootDL->mScrollData.emplace(std::move(mScrollData));
 
     bool ret = WrBridge()->EndTransaction(
         renderRootDLs, mLatestTransactionId, containsSVGGroup,

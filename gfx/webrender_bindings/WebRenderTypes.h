@@ -78,9 +78,6 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
 
 typedef EnumSet<RenderRoot, uint8_t> RenderRootSet;
 
-// For simple iteration of all render roots
-const Array<RenderRoot, kRenderRootCount> kRenderRoots(RenderRoot::Default);
-
 RenderRoot RenderRootFromId(DocumentId id);
 
 inline DebugFlags NewDebugFlags(uint32_t aFlags) { return {aFlags}; }
