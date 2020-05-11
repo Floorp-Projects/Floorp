@@ -42,7 +42,8 @@ class ParentProcessDocumentChannel : public DocumentChannel,
   void DisconnectChildListeners(nsresult aStatus,
                                 nsresult aLoadGroupStatus) override {
     DocumentChannel::DisconnectChildListeners(aStatus, aLoadGroupStatus);
-    DisconnectDocumentLoadListener();
+    RemoveObserver();
+    mDocumentLoadListener = nullptr;
   }
   void Delete() override {}
   void DeleteIPDL() override {
@@ -53,6 +54,7 @@ class ParentProcessDocumentChannel : public DocumentChannel,
  private:
   virtual ~ParentProcessDocumentChannel();
   void DisconnectDocumentLoadListener();
+  void RemoveObserver();
 
   RefPtr<DocumentLoadListener> mDocumentLoadListener;
   nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>
