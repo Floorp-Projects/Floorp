@@ -1265,6 +1265,7 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(
         case PinchGestureInput::PINCHGESTURE_SCALE:
           rv = OnScale(pinchGestureInput);
           break;
+        case PinchGestureInput::PINCHGESTURE_FINGERLIFTED:
         case PinchGestureInput::PINCHGESTURE_END:
           rv = OnScaleEnd(pinchGestureInput);
           break;
@@ -1751,8 +1752,8 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
 
   mPinchEventBuffer.clear();
 
-  // Non-negative focus point would indicate that one finger is still down
-  if (aEvent.mLocalFocusPoint != PinchGestureInput::BothFingersLifted()) {
+  if (aEvent.mType == PinchGestureInput::PINCHGESTURE_FINGERLIFTED) {
+    // One finger is still down, so transition to a TOUCHING state
     if (mZoomConstraints.mAllowZoom) {
       mPanDirRestricted = false;
       StartTouch(aEvent.mLocalFocusPoint, aEvent.mTime);
@@ -1763,7 +1764,7 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
       StartPanning(ToExternalPoint(aEvent.mScreenOffset, aEvent.mFocusPoint));
     }
   } else {
-    // Otherwise, handle the fingers being lifted.
+    // Otherwise, handle the gesture being completely done.
 
     // Some of the code paths below, like ScrollSnap() or HandleEndOfPan(),
     // may start an animation, but otherwise we want to end up in the NOTHING

@@ -882,6 +882,7 @@ void APZCCallbackHelper::NotifyPinchGesture(
     case PinchGestureInput::PINCHGESTURE_SCALE:
       msg = eMagnifyGestureUpdate;
       break;
+    case PinchGestureInput::PINCHGESTURE_FINGERLIFTED:
     case PinchGestureInput::PINCHGESTURE_END:
       msg = eMagnifyGesture;
       break;
