@@ -121,9 +121,8 @@ class AsyncImagePipelineManager final {
     aNotifications->AppendElements(std::move(mImageCompositeNotifications));
   }
 
-  void SetWillGenerateFrameAllRenderRoots();
-  void SetWillGenerateFrame(wr::RenderRoot aRenderRoot);
-  bool GetAndResetWillGenerateFrame(wr::RenderRoot aRenderRoot);
+  void SetWillGenerateFrame();
+  bool GetAndResetWillGenerateFrame();
 
  private:
   void ProcessPipelineRendered(const wr::PipelineId& aPipelineId,
@@ -230,7 +229,7 @@ class AsyncImagePipelineManager final {
       mPipelineTexturesHolders;
   nsClassHashtable<nsUint64HashKey, AsyncImagePipeline> mAsyncImagePipelines;
   wr::Epoch mAsyncImageEpoch;
-  wr::RenderRootArray<bool> mWillGenerateFrame;
+  bool mWillGenerateFrame;
   bool mDestroyed;
 
   // Render time for the current composition.
