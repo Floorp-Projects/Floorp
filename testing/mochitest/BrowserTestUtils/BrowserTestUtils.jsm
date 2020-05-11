@@ -1193,7 +1193,7 @@ var BrowserTestUtils = {
         eventName,
         () => {
           removeEventListener();
-          resolve();
+          resolve(eventName);
         },
         { capture, wantUntrusted },
         checkFn
