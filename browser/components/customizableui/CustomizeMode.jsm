@@ -130,6 +130,8 @@ function CustomizeMode(aWindow) {
   this.browser = aWindow.gBrowser;
   this.areas = new Set();
 
+  this._ensureCustomizationPanels();
+
   let content = this.$("customization-content-container");
   if (!content) {
     this.window.MozXULElement.insertFTLIfNeeded("browser/customizeMode.ftl");
@@ -1723,6 +1725,14 @@ CustomizeMode.prototype = {
     return this.window.TabsInTitlebar.systemSupported;
   },
 
+  _ensureCustomizationPanels() {
+    let template = this.$("customizationPanel");
+    template.replaceWith(template.content);
+
+    let wrapper = this.$("customModeWrapper");
+    wrapper.replaceWith(wrapper.content);
+  },
+
   _updateTitlebarCheckbox() {
     let drawInTitlebar = Services.prefs.getBoolPref(
       kDrawInTitlebarPref,
@@ -2592,7 +2602,6 @@ CustomizeMode.prototype = {
   },
 
   _setupDownloadAutoHideToggle() {
-    this.$(kDownloadAutohidePanelId).removeAttribute("hidden");
     this.window.addEventListener("click", this._checkForDownloadsClick, true);
   },
 
