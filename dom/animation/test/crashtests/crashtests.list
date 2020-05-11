@@ -51,4 +51,4 @@ pref(dom.animations-api.core.enabled,true) load 1612891-1.html
 pref(dom.animations-api.core.enabled,true) load 1612891-2.html
 pref(dom.animations-api.core.enabled,true) load 1612891-3.html
 pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.getAnimations.enabled,true) load 1633442.html
-pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) load 1633486.html
+pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) pref(dom.animations.mainthread-synchronization-with-geometric-animations,true) load 1633486.html
