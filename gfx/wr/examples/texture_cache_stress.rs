@@ -193,7 +193,7 @@ impl Example for App {
         &mut self,
         event: winit::WindowEvent,
         api: &RenderApi,
-        _document_id: DocumentId,
+        document_id: DocumentId,
     ) -> bool {
         match event {
             winit::WindowEvent::KeyboardInput {
@@ -292,7 +292,7 @@ impl Example for App {
                     _ => {}
                 }
 
-                api.update_resources(txn.resource_updates);
+                api.send_transaction(document_id, txn);
                 return true;
             }
             _ => {}
