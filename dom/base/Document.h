@@ -1139,6 +1139,11 @@ class Document : public nsINode,
    */
   uint32_t GetSandboxFlags() const { return mSandboxFlags; }
 
+  Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> GetEmbedderPolicyFromHTTP()
+      const {
+    return mEmbedderPolicyFromHTTP;
+  }
+
   /**
    * Get string representation of sandbox flags (null if no flags are set)
    */
@@ -1529,6 +1534,7 @@ class Document : public nsINode,
   friend class nsUnblockOnloadEvent;
 
   nsresult InitCSP(nsIChannel* aChannel);
+  nsresult InitCOEP(nsIChannel* aChannel);
 
   nsresult InitFeaturePolicy(nsIChannel* aChannel);
 
@@ -4704,6 +4710,9 @@ class Document : public nsINode,
   // These are set at load time and are immutable - see nsSandboxFlags.h for the
   // possible flags.
   uint32_t mSandboxFlags;
+
+  // The embedder policy obtained from parsing the HTTP response header.
+  Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> mEmbedderPolicyFromHTTP;
 
   nsCString mContentLanguage;
 

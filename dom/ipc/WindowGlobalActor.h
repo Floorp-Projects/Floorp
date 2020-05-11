@@ -42,6 +42,10 @@ class WindowGlobalActor : public nsISupports {
   virtual const nsAString& GetRemoteType() = 0;
   virtual JSActor::Type GetSide() = 0;
   virtual dom::BrowsingContext* BrowsingContext() = 0;
+
+  static WindowGlobalInit BaseInitializer(
+      dom::BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
+      uint64_t aOuterWindowId);
 };
 
 }  // namespace dom
