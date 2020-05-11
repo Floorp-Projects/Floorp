@@ -50,7 +50,7 @@ promise_test(async t => {
   pc1.createDataChannel('datachannel');
   pc1IceStates = new IceStateLogger(pc1);
   pc2IceStates = new IceStateLogger(pc1);
-  coupleIceCandidates(pc1, pc2);
+  exchangeIceCandidates(pc1, pc2);
   await doSignalingHandshake(pc1, pc2);
   // Note - it's been claimed that this state sometimes jumps straight
   // to "completed". If so, this test should be flaky.

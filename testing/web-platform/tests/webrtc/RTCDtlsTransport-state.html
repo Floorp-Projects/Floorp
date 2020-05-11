@@ -8,7 +8,7 @@
 'use strict';
 
 // The following helper functions are called from RTCPeerConnection-helper.js:
-//   coupleIceCandidates
+//   exchangeIceCandidates
 //   doSignalingHandshake
 //   trackFactories.audio()
 
@@ -50,7 +50,7 @@ async function setupConnections(t) {
   t.add_cleanup(() => pc2.close());
 
   pc1.addTrack(trackFactories.audio());
-  const channels = coupleIceCandidates(pc1, pc2);
+  const channels = exchangeIceCandidates(pc1, pc2);
   await doSignalingHandshake(pc1, pc2);
   return [pc1, pc2];
 }
