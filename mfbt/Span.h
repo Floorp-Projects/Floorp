@@ -709,6 +709,10 @@ class Span {
     return {First(aSplitPoint), Last(Length() - aSplitPoint)};
   }
 
+  constexpr Span<std::add_const_t<ElementType>, Extent> AsConst() const {
+    return {Elements(), Length()};
+  }
+
  private:
   // this implementation detail class lets us take advantage of the
   // empty base class optimization to pay for only storage of a single
