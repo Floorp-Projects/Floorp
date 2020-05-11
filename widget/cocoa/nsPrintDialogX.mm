@@ -188,8 +188,10 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettin
     nsCOMPtr<nsIPrintSettingsService> printSettingsService =
         do_GetService("@mozilla.org/gfx/printsettings-service;1");
     if (printSettingsService && Preferences::GetBool("print.save_print_settings", false)) {
-      printSettingsService->SavePrintSettingsToPrefs(aNSSettings, true,
-                                                     nsIPrintSettings::kInitSaveNativeData);
+      uint32_t flags = nsIPrintSettings::kInitSaveNativeData |
+                       nsIPrintSettings::kInitSavePaperSize |
+                       nsIPrintSettings::kInitSaveOrientation | nsIPrintSettings::kInitSaveScaling;
+      printSettingsService->SavePrintSettingsToPrefs(aNSSettings, true, flags);
     }
     return NS_OK;
   }
