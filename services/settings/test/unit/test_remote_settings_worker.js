@@ -53,8 +53,16 @@ add_task(async function test_import_json_dump_into_idb() {
 
   await RemoteSettingsWorker.importJSONDump("main", "language-dictionaries");
 
-  const after = await client.get();
+  const after = await client.get({ syncIfEmpty: false });
   Assert.ok(after.length > 0);
+  let lastModifiedStamp = await client.getLastModified();
+
+  Assert.equal(
+    lastModifiedStamp,
+    Math.max(...after.map(record => record.last_modified)),
+    "Should have correct last modified timestamp"
+  );
+
   // Force a DB close for shutdown so we can delete the DB later.
   Database._shutdownHandler();
 });

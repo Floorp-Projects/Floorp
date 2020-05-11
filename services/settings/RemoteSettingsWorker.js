@@ -20,6 +20,8 @@ importScripts(
 const IDB_RECORDS_STORE = "records";
 const IDB_TIMESTAMPS_STORE = "timestamps";
 
+let gShutdown = false;
+
 const Agent = {
   /**
    * Return the canonical JSON serialization of the specified records.
@@ -64,6 +66,9 @@ const Agent = {
    */
   async importJSONDump(bucket, collection) {
     const { data: records } = await loadJSONDump(bucket, collection);
+    if (gShutdown) {
+      throw new Error("Can't import when we've started shutting down.");
+    }
     await importDumpIDB(bucket, collection, records);
     return records.length;
   },
@@ -107,6 +112,25 @@ const Agent = {
     const hashStr = Array.from(hashBytes, toHex).join("");
     return hashStr == hash;
   },
+
+  async prepareShutdown() {
+    gShutdown = true;
+    // Ensure we can iterate and abort (which may delete items) by cloning
+    // the list.
+    let transactions = Array.from(gPendingTransactions);
+    for (let transaction of transactions) {
+      try {
+        transaction.abort();
+      } catch (ex) {
+        // We can hit this case if the transaction has finished but
+        // we haven't heard about it yet.
+      }
+    }
+  },
+
+  _test_only_import(bucket, collection, records) {
+    return importDumpIDB(bucket, collection, records);
+  },
 };
 
 /**
@@ -140,9 +164,14 @@ async function loadJSONDump(bucket, collection) {
     // Return empty dataset if file is missing.
     return { data: [] };
   }
+  if (gShutdown) {
+    throw new Error("Can't import when we've started shutting down.");
+  }
   // Will throw if JSON is invalid.
   return response.json();
 }
+
+let gPendingTransactions = new Set();
 
 /**
  * Import the records into the Remote Settings Chrome IndexedDB.
@@ -158,30 +187,47 @@ async function importDumpIDB(bucket, collection, records) {
   // we already tried to read the timestamp in `remote-settings.js`
   const db = await IDBHelpers.openIDB(false /* do not allow upgrades */);
 
-  // Each entry of the dump will be stored in the records store.
-  // They are indexed by `_cid`.
-  const cid = bucket + "/" + collection;
-  // We can just modify the items in-place, as we got them from loadJSONDump.
-  records.forEach(item => {
-    item._cid = cid;
-  });
-  await IDBHelpers.executeIDB(
-    db,
-    IDB_RECORDS_STORE,
-    "readwrite",
-    (store, rejectTransaction) => {
-      IDBHelpers.bulkOperationHelper(store, rejectTransaction, "put", records);
+  // try...finally to ensure we always close the db.
+  try {
+    if (gShutdown) {
+      throw new Error("Can't import when we've started shutting down.");
     }
-  ).promise;
 
-  // Store the highest timestamp as the collection timestamp (or zero if dump is empty).
-  const timestamp =
-    records.length === 0
-      ? 0
-      : Math.max(...records.map(record => record.last_modified));
-  await IDBHelpers.executeIDB(db, IDB_TIMESTAMPS_STORE, "readwrite", store =>
-    store.put({ cid, value: timestamp })
-  ).promise;
-  // Close now that we're done.
-  db.close();
+    // Each entry of the dump will be stored in the records store.
+    // They are indexed by `_cid`.
+    const cid = bucket + "/" + collection;
+    // We can just modify the items in-place, as we got them from loadJSONDump.
+    records.forEach(item => {
+      item._cid = cid;
+    });
+    // Store the highest timestamp as the collection timestamp (or zero if dump is empty).
+    const timestamp =
+      records.length === 0
+        ? 0
+        : Math.max(...records.map(record => record.last_modified));
+    let { transaction, promise } = IDBHelpers.executeIDB(
+      db,
+      [IDB_RECORDS_STORE, IDB_TIMESTAMPS_STORE],
+      "readwrite",
+      ([recordsStore, timestampStore], rejectTransaction) => {
+        IDBHelpers.bulkOperationHelper(
+          recordsStore,
+          {
+            reject: rejectTransaction,
+            completion() {
+              timestampStore.put({ cid, value: timestamp });
+            },
+          },
+          "put",
+          records
+        );
+      }
+    );
+    gPendingTransactions.add(transaction);
+    promise = promise.finally(() => gPendingTransactions.delete(transaction));
+    await promise;
+  } finally {
+    // Close now that we're done.
+    db.close();
+  }
 }
