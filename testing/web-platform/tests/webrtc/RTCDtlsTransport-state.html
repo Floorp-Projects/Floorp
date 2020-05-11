@@ -9,7 +9,7 @@
 
 // The following helper functions are called from RTCPeerConnection-helper.js:
 //   exchangeIceCandidates
-//   doSignalingHandshake
+//   exchangeOfferAnswer
 //   trackFactories.audio()
 
 /*
@@ -51,7 +51,7 @@ async function setupConnections(t) {
 
   pc1.addTrack(trackFactories.audio());
   const channels = exchangeIceCandidates(pc1, pc2);
-  await doSignalingHandshake(pc1, pc2);
+  await exchangeOfferAnswer(pc1, pc2);
   return [pc1, pc2];
 }
 
