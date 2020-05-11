@@ -939,6 +939,17 @@ PK11_GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey *key);
 
 PRBool SECMOD_HasRootCerts(void);
 
+/**********************************************************************
+ * Other Utilities
+ **********************************************************************/
+/* 
+ * Get the state of the system FIPS mode -
+ *  NSS uses this to force FIPS mode if the system bit is on. This returns
+ *  the system state independent of the database state and can be called
+ *  before NSS initializes.
+ */
+int SECMOD_GetSystemFIPSEnabled();
+
 SEC_END_PROTOS
 
 #endif

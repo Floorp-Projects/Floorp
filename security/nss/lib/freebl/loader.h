@@ -862,3 +862,29 @@ extern FREEBLGetVectorFn FREEBL_GetVector;
 SEC_END_PROTOS
 
 #endif
+
+#ifdef NSS_DISABLE_DEPRECATED_SEED
+typedef SECStatus (*F_SEED_InitContext)(SEEDContext *cx,
+                                        const unsigned char *key,
+                                        unsigned int keylen,
+                                        const unsigned char *iv,
+                                        int mode,
+                                        unsigned int encrypt,
+                                        unsigned int);
+
+typedef SEEDContext *(*F_SEED_AllocateContext)(void);
+
+typedef SEEDContext *(*F_SEED_CreateContext)(const unsigned char *key,
+                                             const unsigned char *iv,
+                                             int mode, PRBool encrypt);
+
+typedef void (*F_SEED_DestroyContext)(SEEDContext *cx, PRBool freeit);
+
+typedef SECStatus (*F_SEED_Encrypt)(SEEDContext *cx, unsigned char *output,
+                                    unsigned int *outputLen, unsigned int maxOutputLen,
+                                    const unsigned char *input, unsigned int inputLen);
+
+typedef SECStatus (*F_SEED_Decrypt)(SEEDContext *cx, unsigned char *output,
+                                    unsigned int *outputLen, unsigned int maxOutputLen,
+                                    const unsigned char *input, unsigned int inputLen);
+#endif

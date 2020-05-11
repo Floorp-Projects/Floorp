@@ -622,21 +622,23 @@ typedef enum {
     bltestAES_GCM,      /* .                     */
     bltestCAMELLIA_ECB, /* .                     */
     bltestCAMELLIA_CBC, /* .                     */
-    bltestSEED_ECB,     /* SEED algorithm      */
-    bltestSEED_CBC,     /* SEED algorithm      */
-    bltestCHACHA20,     /* ChaCha20 + Poly1305   */
-    bltestRSA,          /* Public Key Ciphers    */
-    bltestRSA_OAEP,     /* . (Public Key Enc.)   */
-    bltestRSA_PSS,      /* . (Public Key Sig.)   */
-    bltestECDSA,        /* . (Public Key Sig.)   */
-    bltestDSA,          /* . (Public Key Sig.)   */
-    bltestMD2,          /* Hash algorithms       */
-    bltestMD5,          /* .             */
-    bltestSHA1,         /* .             */
-    bltestSHA224,       /* .             */
-    bltestSHA256,       /* .             */
-    bltestSHA384,       /* .             */
-    bltestSHA512,       /* .             */
+#ifndef NSS_DISABLE_DEPRECATED_SEED
+    bltestSEED_ECB, /* SEED algorithm      */
+    bltestSEED_CBC, /* SEED algorithm      */
+#endif
+    bltestCHACHA20, /* ChaCha20 + Poly1305   */
+    bltestRSA,      /* Public Key Ciphers    */
+    bltestRSA_OAEP, /* . (Public Key Enc.)   */
+    bltestRSA_PSS,  /* . (Public Key Sig.)   */
+    bltestECDSA,    /* . (Public Key Sig.)   */
+    bltestDSA,      /* . (Public Key Sig.)   */
+    bltestMD2,      /* Hash algorithms       */
+    bltestMD5,      /* .             */
+    bltestSHA1,     /* .             */
+    bltestSHA224,   /* .             */
+    bltestSHA256,   /* .             */
+    bltestSHA384,   /* .             */
+    bltestSHA512,   /* .             */
     NUMMODES
 } bltestCipherMode;
 
@@ -660,8 +662,10 @@ static char *mode_strings[] =
       "aes_gcm",
       "camellia_ecb",
       "camellia_cbc",
+#ifndef NSS_DISABLE_DEPRECATED_SEED
       "seed_ecb",
       "seed_cbc",
+#endif
       "chacha20_poly1305",
       "rsa",
       "rsa_oaep",
@@ -792,8 +796,12 @@ struct bltestCipherInfoStr {
 PRBool
 is_symmkeyCipher(bltestCipherMode mode)
 {
-    /* change as needed! */
+/* change as needed! */
+#ifndef NSS_DISABLE_DEPRECATED_SEED
     if (mode >= bltestDES_ECB && mode <= bltestSEED_CBC)
+#else
+    if (mode >= bltestDES_ECB && mode <= bltestCAMELLIA_CBC)
+#endif
         return PR_TRUE;
     return PR_FALSE;
 }
@@ -880,7 +888,9 @@ cipher_requires_IV(bltestCipherMode mode)
         case bltestAES_CTR:
         case bltestAES_GCM:
         case bltestCAMELLIA_CBC:
+#ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_CBC:
+#endif
         case bltestCHACHA20:
             return PR_TRUE;
         default:
@@ -1176,6 +1186,7 @@ camellia_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
                             input, inputLen);
 }
 
+#ifndef NSS_DISABLE_DEPRECATED_SEED
 SECStatus
 seed_Encrypt(void *cx, unsigned char *output, unsigned int *outputLen,
              unsigned int maxOutputLen, const unsigned char *input,
@@ -1193,6 +1204,7 @@ seed_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
     return SEED_Decrypt((SEEDContext *)cx, output, outputLen, maxOutputLen,
                         input, inputLen);
 }
+#endif /* NSS_DISABLE_DEPRECATED_SEED */
 
 SECStatus
 rsa_PublicKeyOp(void *cx, SECItem *output, const SECItem *input)
@@ -1587,6 +1599,7 @@ bltest_camellia_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     return SECSuccess;
 }
 
+#ifndef NSS_DISABLE_DEPRECATED_SEED
 SECStatus
 bltest_seed_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 {
@@ -1630,6 +1643,7 @@ bltest_seed_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 
     return SECSuccess;
 }
+#endif /* NSS_DISABLE_DEPRECATED_SEED */
 
 SECStatus
 bltest_chacha20_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
@@ -2282,12 +2296,14 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
                               cipherInfo->input.pBuf.len);
             return bltest_camellia_init(cipherInfo, encrypt);
             break;
+#ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_ECB:
         case bltestSEED_CBC:
             SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
                               cipherInfo->input.pBuf.len);
             return bltest_seed_init(cipherInfo, encrypt);
             break;
+#endif /* NSS_DISABLE_DEPRECATED_SEED */
         case bltestCHACHA20:
             outlen = cipherInfo->input.pBuf.len + (encrypt ? 16 : 0);
             SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf, outlen);
@@ -2586,10 +2602,12 @@ cipherFinish(bltestCipherInfo *cipherInfo)
         case bltestCAMELLIA_CBC:
             Camellia_DestroyContext((CamelliaContext *)cipherInfo->cx, PR_TRUE);
             break;
+#ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_ECB:
         case bltestSEED_CBC:
             SEED_DestroyContext((SEEDContext *)cipherInfo->cx, PR_TRUE);
             break;
+#endif /* NSS_DISABLE_DEPRECATED_SEED */
         case bltestCHACHA20:
             ChaCha20Poly1305_DestroyContext((ChaCha20Poly1305Context *)
                                                 cipherInfo->cx,
@@ -2747,8 +2765,10 @@ print_td:
         case bltestAES_GCM:
         case bltestCAMELLIA_ECB:
         case bltestCAMELLIA_CBC:
+#ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_ECB:
         case bltestSEED_CBC:
+#endif
         case bltestRC2_ECB:
         case bltestRC2_CBC:
         case bltestRC4:
@@ -2939,19 +2959,23 @@ get_params(PLArenaPool *arena, bltestParams *params,
         case bltestAES_CTS:
         case bltestAES_CTR:
         case bltestCAMELLIA_CBC:
+#ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_CBC:
             sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "iv", j);
             load_file_data(arena, &params->sk.iv, filename, bltestBinary);
+#endif
         case bltestDES_ECB:
         case bltestDES_EDE_ECB:
         case bltestRC2_ECB:
         case bltestRC4:
         case bltestAES_ECB:
         case bltestCAMELLIA_ECB:
+#ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_ECB:
             sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
             load_file_data(arena, &params->sk.key, filename, bltestBinary);
             break;
+#endif
 #ifdef NSS_SOFTOKEN_DOES_RC5
         case bltestRC5_ECB:
         case bltestRC5_CBC:

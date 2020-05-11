@@ -14,18 +14,6 @@
 #include "FStar_UInt_8_16_32_64.h"
 
 static inline uint64_t
-FStar_UInt128___proj__Mkuint128__item__low(FStar_UInt128_uint128 projectee)
-{
-    return projectee.low;
-}
-
-static inline uint64_t
-FStar_UInt128___proj__Mkuint128__item__high(FStar_UInt128_uint128 projectee)
-{
-    return projectee.high;
-}
-
-static inline uint64_t
 FStar_UInt128_constant_time_carry(uint64_t a, uint64_t b)
 {
     return (a ^ ((a ^ b) | ((a - b) ^ b))) >> (uint32_t)63U;

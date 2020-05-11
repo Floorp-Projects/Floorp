@@ -15,6 +15,10 @@
 
 extern Prims_int FStar_UInt64_n;
 
+extern bool FStar_UInt64_uu___is_Mk(uint64_t projectee);
+
+extern Prims_int FStar_UInt64___proj__Mk__item__v(uint64_t projectee);
+
 extern Prims_int FStar_UInt64_v(uint64_t x);
 
 extern uint64_t FStar_UInt64_uint_to_t(Prims_int x);
@@ -47,11 +51,19 @@ FStar_UInt64_gte_mask(uint64_t a, uint64_t b)
     return x_xor_q_ - (uint64_t)1U;
 }
 
-extern Prims_string FStar_UInt64_to_string(uint64_t uu____716);
+extern Prims_string FStar_UInt64_to_string(uint64_t uu____888);
 
-extern uint64_t FStar_UInt64_of_string(Prims_string uu____728);
+extern Prims_string FStar_UInt64_to_string_hex(uint64_t uu____899);
+
+extern Prims_string FStar_UInt64_to_string_hex_pad(uint64_t uu____910);
+
+extern uint64_t FStar_UInt64_of_string(Prims_string uu____921);
 
 extern Prims_int FStar_UInt32_n;
+
+extern bool FStar_UInt32_uu___is_Mk(uint32_t projectee);
+
+extern Prims_int FStar_UInt32___proj__Mk__item__v(uint32_t projectee);
 
 extern Prims_int FStar_UInt32_v(uint32_t x);
 
@@ -85,11 +97,19 @@ FStar_UInt32_gte_mask(uint32_t a, uint32_t b)
     return x_xor_q_ - (uint32_t)1U;
 }
 
-extern Prims_string FStar_UInt32_to_string(uint32_t uu____716);
+extern Prims_string FStar_UInt32_to_string(uint32_t uu____888);
 
-extern uint32_t FStar_UInt32_of_string(Prims_string uu____728);
+extern Prims_string FStar_UInt32_to_string_hex(uint32_t uu____899);
+
+extern Prims_string FStar_UInt32_to_string_hex_pad(uint32_t uu____910);
+
+extern uint32_t FStar_UInt32_of_string(Prims_string uu____921);
 
 extern Prims_int FStar_UInt16_n;
+
+extern bool FStar_UInt16_uu___is_Mk(uint16_t projectee);
+
+extern Prims_int FStar_UInt16___proj__Mk__item__v(uint16_t projectee);
 
 extern Prims_int FStar_UInt16_v(uint16_t x);
 
@@ -123,11 +143,19 @@ FStar_UInt16_gte_mask(uint16_t a, uint16_t b)
     return x_xor_q_ - (uint16_t)1U;
 }
 
-extern Prims_string FStar_UInt16_to_string(uint16_t uu____716);
+extern Prims_string FStar_UInt16_to_string(uint16_t uu____888);
 
-extern uint16_t FStar_UInt16_of_string(Prims_string uu____728);
+extern Prims_string FStar_UInt16_to_string_hex(uint16_t uu____899);
+
+extern Prims_string FStar_UInt16_to_string_hex_pad(uint16_t uu____910);
+
+extern uint16_t FStar_UInt16_of_string(Prims_string uu____921);
 
 extern Prims_int FStar_UInt8_n;
+
+extern bool FStar_UInt8_uu___is_Mk(uint8_t projectee);
+
+extern Prims_int FStar_UInt8___proj__Mk__item__v(uint8_t projectee);
 
 extern Prims_int FStar_UInt8_v(uint8_t x);
 
@@ -161,9 +189,13 @@ FStar_UInt8_gte_mask(uint8_t a, uint8_t b)
     return x_xor_q_ - (uint8_t)1U;
 }
 
-extern Prims_string FStar_UInt8_to_string(uint8_t uu____716);
+extern Prims_string FStar_UInt8_to_string(uint8_t uu____888);
 
-extern uint8_t FStar_UInt8_of_string(Prims_string uu____728);
+extern Prims_string FStar_UInt8_to_string_hex(uint8_t uu____899);
+
+extern Prims_string FStar_UInt8_to_string_hex_pad(uint8_t uu____910);
+
+extern uint8_t FStar_UInt8_of_string(Prims_string uu____921);
 
 typedef uint8_t FStar_UInt8_byte;
 

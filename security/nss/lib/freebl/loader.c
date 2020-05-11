@@ -396,7 +396,11 @@ SEED_CreateContext(const unsigned char *key, const unsigned char *iv,
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
         return NULL;
+#ifndef NSS_DISABLE_DEPRECATED_SEED
     return (vector->p_SEED_CreateContext)(key, iv, mode, encrypt);
+#else
+    return NULL;
+#endif
 }
 
 void
@@ -404,7 +408,11 @@ SEED_DestroyContext(SEEDContext *cx, PRBool freeit)
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
         return;
+#ifndef NSS_DISABLE_DEPRECATED_SEED
     (vector->p_SEED_DestroyContext)(cx, freeit);
+#else
+    return;
+#endif
 }
 
 SECStatus
@@ -414,8 +422,12 @@ SEED_Encrypt(SEEDContext *cx, unsigned char *output, unsigned int *outputLen,
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
         return SECFailure;
+#ifndef NSS_DISABLE_DEPRECATED_SEED
     return (vector->p_SEED_Encrypt)(cx, output, outputLen, maxOutputLen, input,
                                     inputLen);
+#else
+    return SECFailure;
+#endif
 }
 
 SECStatus
@@ -425,8 +437,12 @@ SEED_Decrypt(SEEDContext *cx, unsigned char *output, unsigned int *outputLen,
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
         return SECFailure;
+#ifndef NSS_DISABLE_DEPRECATED_SEED
     return (vector->p_SEED_Decrypt)(cx, output, outputLen, maxOutputLen, input,
                                     inputLen);
+#else
+    return SECFailure;
+#endif
 }
 
 AESContext *
@@ -1341,7 +1357,11 @@ SEED_InitContext(SEEDContext *cx, const unsigned char *key,
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
         return SECFailure;
+#ifndef NSS_DISABLE_DEPRECATED_SEED
     return (vector->p_SEED_InitContext)(cx, key, keylen, iv, mode, encrypt, xtra);
+#else
+    return SECFailure;
+#endif
 }
 
 SECStatus
