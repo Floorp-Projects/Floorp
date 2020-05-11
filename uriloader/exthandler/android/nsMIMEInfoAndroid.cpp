@@ -202,8 +202,9 @@ nsMIMEInfoAndroid::GetDefaultDescription(nsAString& aDesc) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoAndroid::LaunchWithURI(nsIURI* aURI, nsIInterfaceRequestor* req) {
-  return mPrefApp->LaunchWithURI(aURI, req);
+nsMIMEInfoAndroid::LaunchWithURI(
+    nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) {
+  return mPrefApp->LaunchWithURI(aURI, aBrowsingContext);
 }
 
 NS_IMETHODIMP
@@ -408,6 +409,6 @@ nsresult nsMIMEInfoAndroid::SystemChooser::Equals(nsIHandlerApp* aHandlerApp,
 }
 
 nsresult nsMIMEInfoAndroid::SystemChooser::LaunchWithURI(
-    nsIURI* aURI, nsIInterfaceRequestor*) {
+    nsIURI* aURI, mozilla::dom::BrowsingContext*) {
   return mOuter->LoadUriInternal(aURI);
 }

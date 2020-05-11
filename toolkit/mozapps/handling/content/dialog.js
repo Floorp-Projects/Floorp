@@ -79,7 +79,7 @@ var dialog = {
   _URI: null,
   _itemChoose: null,
   _okButton: null,
-  _windowCtxt: null,
+  _browsingContext: null,
   _buttonDisabled: true,
 
   // Methods
@@ -90,25 +90,10 @@ var dialog = {
   initialize: function initialize() {
     this._handlerInfo = window.arguments[7].QueryInterface(Ci.nsIHandlerInfo);
     this._URI = window.arguments[8].QueryInterface(Ci.nsIURI);
-    this._windowCtxt = window.arguments[9];
+    this._browsingContext = window.arguments[9];
     let usePrivateBrowsing = false;
-    if (this._windowCtxt) {
-      // The context should be nsIRemoteWindowContext in OOP, or nsIDOMWindow otherwise.
-      try {
-        usePrivateBrowsing = this._windowCtxt.getInterface(
-          Ci.nsIRemoteWindowContext
-        ).usePrivateBrowsing;
-      } catch (e) {
-        try {
-          let opener = this._windowCtxt.getInterface(Ci.nsIDOMWindow);
-          usePrivateBrowsing = PrivateBrowsingUtils.isContentWindowPrivate(
-            opener
-          );
-        } catch (e) {
-          Cu.reportError(`No interface to determine privateness: ${e}`);
-        }
-      }
-      this._windowCtxt.QueryInterface(Ci.nsIInterfaceRequestor);
+    if (this._browsingContext) {
+      usePrivateBrowsing = this._browsingContext.usePrivateBrowsing;
     }
 
     this.isPrivate =
@@ -348,7 +333,7 @@ var dialog = {
     );
     hs.store(this._handlerInfo);
 
-    this._handlerInfo.launchWithURI(this._URI, this._windowCtxt);
+    this._handlerInfo.launchWithURI(this._URI, this._browsingContext);
     window.close();
   },
 

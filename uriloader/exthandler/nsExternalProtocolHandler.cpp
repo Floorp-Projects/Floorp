@@ -158,14 +158,12 @@ nsresult nsExtProtocolChannel::OpenURL() {
                  "the protocol?");
 #endif
 
-    nsCOMPtr<nsIInterfaceRequestor> aggCallbacks;
-    rv = NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
-                                                getter_AddRefs(aggCallbacks));
+    RefPtr<mozilla::dom::BrowsingContext> ctx;
+    rv = mLoadInfo->GetTargetBrowsingContext(getter_AddRefs(ctx));
     if (NS_FAILED(rv)) {
       goto finish;
     }
-
-    rv = extProtService->LoadURI(mUrl, aggCallbacks);
+    rv = extProtService->LoadURI(mUrl, ctx);
 
     if (NS_SUCCEEDED(rv) && mListener) {
       mStatus = NS_ERROR_NO_CONTENT;

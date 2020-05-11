@@ -82,8 +82,8 @@ nsFlatpakHandlerApp::Equals(nsIHandlerApp* aHandlerApp, bool* _retval) {
 }
 
 NS_IMETHODIMP
-nsFlatpakHandlerApp::LaunchWithURI(nsIURI* aUri,
-                                   nsIInterfaceRequestor* aRequestor) {
+nsFlatpakHandlerApp::LaunchWithURI(
+    nsIURI* aUri, mozilla::dom::BrowsingContext* aBrowsingContext) {
   nsCString spec;
   aUri->GetSpec(spec);
   GError* error = nullptr;
@@ -229,7 +229,8 @@ nsGIOMimeApp::Equals(nsIHandlerApp* aHandlerApp, bool* _retval) {
 }
 
 NS_IMETHODIMP
-nsGIOMimeApp::LaunchWithURI(nsIURI* aUri, nsIInterfaceRequestor* aRequestor) {
+nsGIOMimeApp::LaunchWithURI(nsIURI* aUri,
+                            mozilla::dom::BrowsingContext* aBrowsingContext) {
   GList uris = {0};
   nsCString spec;
   aUri->GetSpec(spec);

@@ -22,7 +22,6 @@ XPIDL_SOURCES += [
     'nsIImageLoadingContent.idl',
     'nsIMessageManager.idl',
     'nsIObjectLoadingContent.idl',
-    'nsIRemoteWindowContext.idl',
     'nsIScriptableContentIterator.idl',
     'nsIScriptChannel.idl',
     'nsISelectionController.idl',

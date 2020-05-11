@@ -921,13 +921,13 @@ static const char kExternalProtocolDefaultPref[] =
 
 NS_IMETHODIMP
 nsExternalHelperAppService::LoadURI(nsIURI* aURI,
-                                    nsIInterfaceRequestor* aWindowContext) {
+                                    BrowsingContext* aBrowsingContext) {
   NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aBrowsingContext);
 
   if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsIBrowserChild> browserChild(do_GetInterface(aWindowContext));
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
-        aURI, static_cast<dom::BrowserChild*>(browserChild.get()));
+        aURI, aBrowsingContext);
     return NS_OK;
   }
 
@@ -977,7 +977,7 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
   // a helper app or the system default, we just launch the URI.
   if (!alwaysAsk && (preferredAction == nsIHandlerInfo::useHelperApp ||
                      preferredAction == nsIHandlerInfo::useSystemDefault)) {
-    rv = handler->LaunchWithURI(uri, aWindowContext);
+    rv = handler->LaunchWithURI(uri, aBrowsingContext);
     // We are not supposed to ask, but when file not found the user most likely
     // uninstalled the application which handles the uri so we will continue
     // by application chooser dialog.
@@ -990,7 +990,7 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
       do_CreateInstance("@mozilla.org/content-dispatch-chooser;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return chooser->Ask(handler, aWindowContext, uri,
+  return chooser->Ask(handler, aBrowsingContext, uri,
                       nsIContentDispatchChooser::REASON_CANNOT_HANDLE);
 }
 

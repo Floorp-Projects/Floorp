@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsIProcess.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 /**
  * UTF8 moz-icon URI string for the default handler application's icon, if
@@ -57,8 +58,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
       nsIMutableArray** aPossibleAppHandlers) override;
   NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription) override;
   NS_IMETHOD LaunchWithFile(nsIFile* aFile) override;
-  NS_IMETHOD LaunchWithURI(nsIURI* aURI,
-                           nsIInterfaceRequestor* aWindowContext) override;
+  NS_IMETHOD LaunchWithURI(
+      nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) override;
   NS_IMETHOD GetPreferredAction(nsHandlerInfoAction* aPreferredAction) override;
   NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction) override;
   NS_IMETHOD GetAlwaysAskBeforeHandling(

@@ -117,7 +117,7 @@ NS_IMETHODIMP RemoteHandlerApp::Equals(nsIHandlerApp* aHandlerApp,
 }
 
 NS_IMETHODIMP RemoteHandlerApp::LaunchWithURI(
-    nsIURI* aURI, nsIInterfaceRequestor* aWindowContext) {
+    nsIURI* aURI, BrowsingContext* aBrowsingContext) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

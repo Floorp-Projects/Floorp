@@ -42,7 +42,6 @@
 #include "nsIRemoteTab.h"
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIDOMGeoPositionErrorCallback.h"
-#include "nsIRemoteWindowContext.h"
 #include "nsRefPtrHashtable.h"
 #include "PermissionMessageUtils.h"
 #include "DriverCrashGuard.h"
@@ -1017,8 +1016,8 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvNotificationEvent(
       const nsString& aType, const NotificationEventData& aData);
 
-  mozilla::ipc::IPCResult RecvLoadURIExternal(nsIURI* uri,
-                                              PBrowserParent* windowContext);
+  mozilla::ipc::IPCResult RecvLoadURIExternal(
+      nsIURI* uri, const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvExtProtocolChannelConnectParent(
       const uint32_t& registrarId);
 
@@ -1511,20 +1510,6 @@ const nsDependentSubstring RemoteTypePrefix(
 bool IsWebRemoteType(const nsAString& aContentProcessType);
 
 bool IsWebCoopCoepRemoteType(const nsAString& aContentProcessType);
-
-class RemoteWindowContext final : public nsIRemoteWindowContext,
-                                  public nsIInterfaceRequestor {
- public:
-  explicit RemoteWindowContext(BrowserParent* aBrowserParent);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSIREMOTEWINDOWCONTEXT
-
- private:
-  ~RemoteWindowContext() = default;
-  RefPtr<BrowserParent> mBrowserParent;
-};
 
 inline nsISupports* ToSupports(mozilla::dom::ContentParent* aContentParent) {
   return static_cast<nsIContentParent*>(aContentParent);
