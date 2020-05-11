@@ -73,7 +73,7 @@ fn tile_node_to_svg(node: &TileNode,
 {
     match &node.kind {
         TileNodeKind::Leaf { .. } => {
-            let rect_world = transform.transform_rect(&node.rect).unwrap();
+            let rect_world = transform.transform_rect(&node.rect.to_rect()).unwrap();
             format!("<rect x=\"{:.2}\" y=\"{:.2}\" width=\"{:.2}\" height=\"{:.2}\" />\n",
                     rect_world.origin.x    * svg_settings.scale + svg_settings.x,
                     rect_world.origin.y    * svg_settings.scale + svg_settings.y,
@@ -204,17 +204,17 @@ fn tile_to_svg(key: TileOffset,
                                 &format!("<b>Content: Descriptor</b> changed for uid {}<br/>",
                                          old.prim_uid.get_uid()));
                             let mut changes = String::new();
-                            if old.prim_clip_rect != new.prim_clip_rect {
-                                changes += &format!("<li><b>prim_clip_rect</b> changed from {}x{} at ({},{})",
-                                                    old.prim_clip_rect.w,
-                                                    old.prim_clip_rect.h,
-                                                    old.prim_clip_rect.x,
-                                                    old.prim_clip_rect.y);
-                                changes += &format!(" to {}x{} at ({},{})</li>",
-                                                    new.prim_clip_rect.w,
-                                                    new.prim_clip_rect.h,
-                                                    new.prim_clip_rect.x,
-                                                    new.prim_clip_rect.y);
+                            if old.prim_clip_box != new.prim_clip_box {
+                                changes += &format!("<li><b>prim_clip_rect</b> changed from {},{} -> {},{}",
+                                                    old.prim_clip_box.min.x,
+                                                    old.prim_clip_box.min.y,
+                                                    old.prim_clip_box.max.x,
+                                                    old.prim_clip_box.max.y);
+                                changes += &format!(" to {},{} -> {},{}</li>",
+                                                    new.prim_clip_box.min.x,
+                                                    new.prim_clip_box.min.y,
+                                                    new.prim_clip_box.max.x,
+                                                    new.prim_clip_box.max.y);
                             }
                             invalidation_report.push_str(
                                 &format!("<ul>{}<li>Item: {}</li></ul>",
@@ -296,20 +296,20 @@ fn tile_to_svg(key: TileOffset,
                   prim_class);
 
     for prim in &tile.current_descriptor.prims {
-        let rect = prim.prim_clip_rect;
+        let rect = prim.prim_clip_box;
 
         // the transform could also be part of the CSS, let the browser do it;
         // might be a bit faster and also enable actual 3D transforms.
         let rect_pixel = Rect {
-            origin: PicturePoint::new(rect.x, rect.y),
-            size: PictureSize::new(rect.w, rect.h),
+            origin: PicturePoint::new(rect.min.x, rect.min.y),
+            size: PictureSize::new(rect.max.x - rect.min.x, rect.max.y - rect.min.y),
         };
         let rect_world = slice.transform.transform_rect(&rect_pixel).unwrap();
 
         let style =
             if let Some(prev_tile) = prev_tile {
                 // when this O(n^2) gets too slow, stop brute-forcing and use a set or something
-                if prev_tile.current_descriptor.prims.iter().find(|&prim| prim.prim_clip_rect == rect).is_some() {
+                if prev_tile.current_descriptor.prims.iter().find(|&prim| prim.prim_clip_box == rect).is_some() {
                     ""
                 } else {
                     "class=\"svg_changed_prim\" "

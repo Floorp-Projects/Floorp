@@ -119,7 +119,7 @@ use crate::gpu_types::{UvRectKind, ZBufferId};
 use plane_split::{Clipper, Polygon, Splitter};
 use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PrimitiveTemplateKind};
 use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
-use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer, RectangleKey};
+use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer};
 use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex};
 use crate::prim_store::{ColorBindingStorage, ColorBindingIndex, PrimitiveVisibilityFlags};
 use crate::print_tree::{PrintTree, PrintTreePrinter};
@@ -638,14 +638,11 @@ struct TilePostUpdateState<'a> {
 
 /// Information about the dependencies of a single primitive instance.
 struct PrimitiveDependencyInfo {
-    /// If true, we should clip the prim rect to the tile boundaries.
-    clip_by_tile: bool,
-
     /// Unique content identifier of the primitive.
     prim_uid: ItemUid,
 
     /// The (conservative) clipped area in picture space this primitive occupies.
-    prim_clip_rect: PictureRect,
+    prim_clip_box: PictureBox2D,
 
     /// Image keys this primitive depends on.
     images: SmallVec<[ImageDependency; 8]>,
@@ -670,15 +667,14 @@ impl PrimitiveDependencyInfo {
     /// Construct dependency info for a new primitive.
     fn new(
         prim_uid: ItemUid,
-        prim_clip_rect: PictureRect,
+        prim_clip_box: PictureBox2D,
     ) -> Self {
         PrimitiveDependencyInfo {
             prim_uid,
             images: SmallVec::new(),
             opacity_bindings: SmallVec::new(),
             color_binding: None,
-            clip_by_tile: false,
-            prim_clip_rect,
+            prim_clip_box,
             clips: SmallVec::new(),
             spatial_nodes: SmallVec::new(),
             is_compositor_surface: false,
@@ -938,6 +934,8 @@ pub struct Tile {
     pub world_tile_rect: WorldRect,
     /// The current local rect of this tile.
     pub local_tile_rect: PictureRect,
+    /// Same as local_tile_rect, but in min/max form as an optimization
+    pub local_tile_box: PictureBox2D,
     /// The picture space dirty rect for this tile.
     local_dirty_rect: PictureRect,
     /// The device space dirty rect for this tile.
@@ -980,10 +978,10 @@ pub struct Tile {
     pub has_compositor_surface: bool,
     /// The local space valid rect for any primitives found prior to the first compositor
     /// surface that affects this tile.
-    bg_local_valid_rect: PictureRect,
+    bg_local_valid_rect: PictureBox2D,
     /// The local space valid rect for any primitives found after the first compositor
     /// surface that affects this tile.
-    fg_local_valid_rect: PictureRect,
+    fg_local_valid_rect: PictureBox2D,
     /// z-buffer id for this tile, which is one of z_id_opaque or z_id_alpha, depending on tile opacity
     pub z_id: ZBufferId,
     /// The last frame this tile had its dependencies updated (dependency updating is
@@ -999,6 +997,7 @@ impl Tile {
         Tile {
             tile_offset,
             local_tile_rect: PictureRect::zero(),
+            local_tile_box: PictureBox2D::zero(),
             world_tile_rect: WorldRect::zero(),
             device_valid_rect: DeviceRect::zero(),
             local_dirty_rect: PictureRect::zero(),
@@ -1015,8 +1014,8 @@ impl Tile {
             background_color: None,
             invalidation_reason: None,
             has_compositor_surface: false,
-            bg_local_valid_rect: PictureRect::zero(),
-            fg_local_valid_rect: PictureRect::zero(),
+            bg_local_valid_rect: PictureBox2D::zero(),
+            fg_local_valid_rect: PictureBox2D::zero(),
             z_id: ZBufferId::invalid(),
             last_updated_frame_id: FrameId::INVALID,
         }
@@ -1050,7 +1049,7 @@ impl Tile {
             ctx.color_bindings,
         );
 
-        let mut dirty_rect = PictureRect::zero();
+        let mut dirty_rect = PictureBox2D::zero();
         self.root.update_dirty_rects(
             &self.prev_descriptor.prims,
             &self.current_descriptor.prims,
@@ -1061,7 +1060,7 @@ impl Tile {
             frame_context,
         );
 
-        dirty_rect
+        dirty_rect.to_rect()
     }
 
     /// Invalidate a tile based on change in content. This
@@ -1137,8 +1136,12 @@ impl Tile {
             ),
             ctx.tile_size,
         );
-        self.bg_local_valid_rect = PictureRect::zero();
-        self.fg_local_valid_rect = PictureRect::zero();
+        self.local_tile_box = PictureBox2D::new(
+            self.local_tile_rect.origin,
+            self.local_tile_rect.bottom_right(),
+        );
+        self.bg_local_valid_rect = PictureBox2D::zero();
+        self.fg_local_valid_rect = PictureBox2D::zero();
         self.invalidation_reason  = None;
         self.has_compositor_surface = false;
 
@@ -1181,7 +1184,7 @@ impl Tile {
             &mut self.prev_descriptor,
         );
         self.current_descriptor.clear();
-        self.root.clear(self.local_tile_rect);
+        self.root.clear(self.local_tile_rect.to_box2d());
 
         // Since this tile is determined to be visible, it will get updated
         // dependencies, so update the frame id we are storing dependencies for.
@@ -1214,9 +1217,9 @@ impl Tile {
             // compositor surface(s) for this tile. If so, we need to draw the tile with alpha
             // blending as an overlay.
             if self.has_compositor_surface {
-                self.fg_local_valid_rect = self.fg_local_valid_rect.union(&info.prim_clip_rect);
+                self.fg_local_valid_rect = self.fg_local_valid_rect.union(&info.prim_clip_box);
             } else {
-                self.bg_local_valid_rect = self.bg_local_valid_rect.union(&info.prim_clip_rect);
+                self.bg_local_valid_rect = self.bg_local_valid_rect.union(&info.prim_clip_box);
             }
         }
 
@@ -1245,33 +1248,32 @@ impl Tile {
                 self.current_descriptor.color_bindings.len(), info.color_binding.unwrap());
         }
 
-        // TODO(gw): The clip rect of background rects produced by APZ changes
-        //           in Gecko during scrolling. Consider investigating this so the
-        //           hack / workaround below is not required.
-        let prim_clip_rect = if info.clip_by_tile {
-            let tile_p0 = self.local_tile_rect.origin;
-            let tile_p1 = self.local_tile_rect.bottom_right();
+        // TODO(gw): The prim_clip_rect can be impacted by the clip rect of the display port,
+        //           which can cause invalidations when a new display list with changed
+        //           display port is received. To work around this, clamp the prim clip rect
+        //           to the tile boundaries - if the clip hasn't affected the tile, then the
+        //           changed clip can't affect the content of the primitive on this tile.
+        //           In future, we could consider supplying the display port clip from Gecko
+        //           in a different way (e.g. as a scroll frame clip) which still provides
+        //           the desired clip for checkerboarding, but doesn't require this extra
+        //           work below.
 
-            let clip_p0 = PicturePoint::new(
-                clampf(info.prim_clip_rect.origin.x, tile_p0.x, tile_p1.x),
-                clampf(info.prim_clip_rect.origin.y, tile_p0.y, tile_p1.y),
-            );
+        // TODO(gw): This is a hot part of the code - we could probably optimize further by:
+        //           - Using min/max instead of clamps below (if we guarantee the rects are well formed)
 
-            let clip_p1 = PicturePoint::new(
-                clampf(info.prim_clip_rect.origin.x + info.prim_clip_rect.size.width, tile_p0.x, tile_p1.x),
-                clampf(info.prim_clip_rect.origin.y + info.prim_clip_rect.size.height, tile_p0.y, tile_p1.y),
-            );
+        let tile_p0 = self.local_tile_box.min;
+        let tile_p1 = self.local_tile_box.max;
 
-            PictureRect::new(
-                clip_p0,
-                PictureSize::new(
-                    clip_p1.x - clip_p0.x,
-                    clip_p1.y - clip_p0.y,
-                ),
-            )
-        } else {
-            info.prim_clip_rect
-        };
+        let prim_clip_box = PictureBox2D::new(
+            PicturePoint::new(
+                clampf(info.prim_clip_box.min.x, tile_p0.x, tile_p1.x),
+                clampf(info.prim_clip_box.min.y, tile_p0.y, tile_p1.y),
+            ),
+            PicturePoint::new(
+                clampf(info.prim_clip_box.max.x, tile_p0.x, tile_p1.x),
+                clampf(info.prim_clip_box.max.y, tile_p0.y, tile_p1.y),
+            ),
+        );
 
         // Update the tile descriptor, used for tile comparison during scene swaps.
         let prim_index = PrimitiveDependencyIndex(self.current_descriptor.prims.len() as u32);
@@ -1285,7 +1287,7 @@ impl Tile {
 
         self.current_descriptor.prims.push(PrimitiveDescriptor {
             prim_uid: info.prim_uid,
-            prim_clip_rect: prim_clip_rect.into(),
+            prim_clip_box,
             transform_dep_count: info.spatial_nodes.len()  as u8,
             clip_dep_count: info.clips.len() as u8,
             image_dep_count: info.images.len() as u8,
@@ -1294,7 +1296,7 @@ impl Tile {
         });
 
         // Add this primitive to the dirty rect quadtree.
-        self.root.add_prim(prim_index, &info.prim_clip_rect);
+        self.root.add_prim(prim_index, &info.prim_clip_box);
     }
 
     /// Called during tile cache instance post_update. Allows invalidation and dirty
@@ -1321,7 +1323,9 @@ impl Tile {
         // Calculate the overall valid rect for this tile, including both the foreground
         // and background local valid rects.
         self.current_descriptor.local_valid_rect =
-            self.bg_local_valid_rect.union(&self.fg_local_valid_rect);
+            self.bg_local_valid_rect
+                .union(&self.fg_local_valid_rect)
+                .to_rect();
 
         // TODO(gw): In theory, the local tile rect should always have an
         //           intersection with the overall picture rect. In practice,
@@ -1384,7 +1388,7 @@ impl Tile {
             // surface, _and_ intersect with any compositor surface, then we will need
             // to draw this tile with alpha blending, as an overlay to the compositor surface.
             let fg_world_valid_rect = ctx.pic_to_world_mapper
-                .map(&self.fg_local_valid_rect)
+                .map(&self.fg_local_valid_rect.to_rect())
                 .expect("bug: map fg local valid rect");
             let fg_device_valid_rect = fg_world_valid_rect * ctx.global_device_pixel_scale;
 
@@ -1548,7 +1552,7 @@ pub struct PrimitiveDescriptor {
     /// The clip rect for this primitive. Included here in
     /// dependencies since there is no entry in the clip chain
     /// dependencies for the local clip rect.
-    pub prim_clip_rect: RectangleKey,
+    pub prim_clip_box: PictureBox2D,
     /// The number of extra dependencies that this primitive has.
     transform_dep_count: u8,
     image_dep_count: u8,
@@ -1565,16 +1569,16 @@ impl PartialEq for PrimitiveDescriptor {
             return false;
         }
 
-        if !self.prim_clip_rect.x.approx_eq_eps(&other.prim_clip_rect.x, &EPSILON) {
+        if !self.prim_clip_box.min.x.approx_eq_eps(&other.prim_clip_box.min.x, &EPSILON) {
             return false;
         }
-        if !self.prim_clip_rect.y.approx_eq_eps(&other.prim_clip_rect.y, &EPSILON) {
+        if !self.prim_clip_box.min.y.approx_eq_eps(&other.prim_clip_box.min.y, &EPSILON) {
             return false;
         }
-        if !self.prim_clip_rect.w.approx_eq_eps(&other.prim_clip_rect.w, &EPSILON) {
+        if !self.prim_clip_box.max.x.approx_eq_eps(&other.prim_clip_box.max.x, &EPSILON) {
             return false;
         }
-        if !self.prim_clip_rect.h.approx_eq_eps(&other.prim_clip_rect.h, &EPSILON) {
+        if !self.prim_clip_box.max.y.approx_eq_eps(&other.prim_clip_box.max.y, &EPSILON) {
             return false;
         }
 
@@ -1717,11 +1721,11 @@ impl TileDescriptor {
         pt.new_level("prims".to_string());
         for prim in &self.prims {
             pt.new_level(format!("prim uid={}", prim.prim_uid.get_uid()));
-            pt.add_item(format!("clip: origin={},{} size={}x{}",
-                prim.prim_clip_rect.x,
-                prim.prim_clip_rect.y,
-                prim.prim_clip_rect.w,
-                prim.prim_clip_rect.h,
+            pt.add_item(format!("clip: p0={},{} p1={},{}",
+                prim.prim_clip_box.min.x,
+                prim.prim_clip_box.min.y,
+                prim.prim_clip_box.max.x,
+                prim.prim_clip_box.max.y,
             ));
             pt.add_item(format!("deps: t={} i={} o={} c={} color={}",
                 prim.transform_dep_count,
@@ -3052,7 +3056,7 @@ impl TileCacheInstance {
             .map(&prim_rect)
             .expect("bug: unable to map the primitive to world space");
         let world_clip_rect = pic_to_world_mapper
-            .map(&prim_info.prim_clip_rect)
+            .map(&prim_info.prim_clip_box.to_rect())
             .expect("bug: unable to map clip to world space");
 
         let is_visible = world_clip_rect.intersects(&frame_context.global_screen_world_rect);
@@ -3138,9 +3142,9 @@ impl TileCacheInstance {
 
         // Each compositor surface allocates a unique z-id
         self.external_surfaces.push(ExternalSurfaceDescriptor {
-            local_rect: prim_info.prim_clip_rect,
+            local_rect: prim_info.prim_clip_box.to_rect(),
             world_rect,
-            local_clip_rect: prim_info.prim_clip_rect,
+            local_clip_rect: prim_info.prim_clip_box.to_rect(),
             dependency,
             image_rendering,
             device_rect,
@@ -3254,7 +3258,7 @@ impl TileCacheInstance {
         // Build the list of resources that this primitive has dependencies on.
         let mut prim_info = PrimitiveDependencyInfo::new(
             prim_instance.uid(),
-            pic_clip_rect,
+            pic_clip_rect.to_box2d(),
         );
 
         // Include the prim spatial node, if differs relative to cache root.
@@ -3327,8 +3331,6 @@ impl TileCacheInstance {
                 if color_binding_index != ColorBindingIndex::INVALID {
                     prim_info.color_binding = Some(color_bindings[color_binding_index].into());
                 }
-
-                prim_info.clip_by_tile = true;
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, ref mut is_compositor_surface, .. } => {
                 let image_key = &data_stores.image[data_handle];
@@ -6679,7 +6681,7 @@ pub struct TileNode {
     /// Leaf or internal node
     pub kind: TileNodeKind,
     /// Rect of this node in the same space as the tile cache picture
-    pub rect: PictureRect,
+    pub rect: PictureBox2D,
 }
 
 impl TileNode {
@@ -6692,7 +6694,7 @@ impl TileNode {
                 dirty_tracker: 0,
                 frames_since_modified: 0,
             },
-            rect: PictureRect::zero(),
+            rect: PictureBox2D::zero(),
         }
     }
 
@@ -6715,7 +6717,7 @@ impl TileNode {
                     debug_colors::YELLOW
                 };
 
-                if let Some(local_rect) = local_valid_rect.intersection(&self.rect) {
+                if let Some(local_rect) = local_valid_rect.intersection(&self.rect.to_rect()) {
                     let world_rect = pic_to_world_mapper
                         .map(&local_rect)
                         .unwrap();
@@ -6746,28 +6748,29 @@ impl TileNode {
 
     /// Calculate the four child rects for a given node
     fn get_child_rects(
-        rect: &PictureRect,
-        result: &mut [PictureRect; 4],
+        rect: &PictureBox2D,
+        result: &mut [PictureBox2D; 4],
     ) {
-        let p0 = rect.origin;
-        let half_size = PictureSize::new(rect.size.width * 0.5, rect.size.height * 0.5);
+        let p0 = rect.min;
+        let p1 = rect.max;
+        let pc = p0 + rect.size() * 0.5;
 
         *result = [
-            PictureRect::new(
-                PicturePoint::new(p0.x, p0.y),
-                half_size,
+            PictureBox2D::new(
+                p0,
+                pc,
             ),
-            PictureRect::new(
-                PicturePoint::new(p0.x + half_size.width, p0.y),
-                half_size,
+            PictureBox2D::new(
+                PicturePoint::new(pc.x, p0.y),
+                PicturePoint::new(p1.x, pc.y),
             ),
-            PictureRect::new(
-                PicturePoint::new(p0.x, p0.y + half_size.height),
-                half_size,
+            PictureBox2D::new(
+                PicturePoint::new(p0.x, pc.y),
+                PicturePoint::new(pc.x, p1.y),
             ),
-            PictureRect::new(
-                PicturePoint::new(p0.x + half_size.width, p0.y + half_size.height),
-                half_size,
+            PictureBox2D::new(
+                pc,
+                p1,
             ),
         ];
     }
@@ -6775,7 +6778,7 @@ impl TileNode {
     /// Called during pre_update, to clear the current dependencies
     fn clear(
         &mut self,
-        rect: PictureRect,
+        rect: PictureBox2D,
     ) {
         self.rect = rect;
 
@@ -6789,7 +6792,7 @@ impl TileNode {
                 *frames_since_modified += 1;
             }
             TileNodeKind::Node { ref mut children, .. } => {
-                let mut child_rects = [PictureRect::zero(); 4];
+                let mut child_rects = [PictureBox2D::zero(); 4];
                 TileNode::get_child_rects(&rect, &mut child_rects);
                 assert_eq!(child_rects.len(), children.len());
 
@@ -6804,7 +6807,7 @@ impl TileNode {
     fn add_prim(
         &mut self,
         index: PrimitiveDependencyIndex,
-        prim_rect: &PictureRect,
+        prim_rect: &PictureBox2D,
     ) {
         match self.kind {
             TileNodeKind::Leaf { ref mut curr_indices, .. } => {
@@ -6902,7 +6905,7 @@ impl TileNode {
                     }
                 };
 
-                let mut child_rects = [PictureRect::zero(); 4];
+                let mut child_rects = [PictureBox2D::zero(); 4];
                 TileNode::get_child_rects(&self.rect, &mut child_rects);
 
                 let mut child_indices = [
@@ -6917,8 +6920,7 @@ impl TileNode {
                 for index in curr_indices {
                     let prim = &curr_prims[index.0 as usize];
                     for (child_rect, indices) in child_rects.iter().zip(child_indices.iter_mut()) {
-                        let child_rect_key: RectangleKey = (*child_rect).into();
-                        if prim.prim_clip_rect.intersects(&child_rect_key) {
+                        if prim.prim_clip_box.intersects(child_rect) {
                             indices.push(index);
                         }
                     }
@@ -6993,7 +6995,7 @@ impl TileNode {
         prev_prims: &[PrimitiveDescriptor],
         curr_prims: &[PrimitiveDescriptor],
         prim_comparer: &mut PrimitiveComparer,
-        dirty_rect: &mut PictureRect,
+        dirty_rect: &mut PictureBox2D,
         compare_cache: &mut FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
         invalidation_reason: &mut Option<InvalidationReason>,
         frame_context: &FrameVisibilityContext,
