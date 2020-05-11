@@ -15,9 +15,10 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-StreamList::StreamList(SafeRefPtr<Manager> aManager, Context* aContext)
+StreamList::StreamList(SafeRefPtr<Manager> aManager,
+                       SafeRefPtr<Context> aContext)
     : mManager(std::move(aManager)),
-      mContext(aContext),
+      mContext(std::move(aContext)),
       mCacheId(INVALID_CACHE_ID),
       mStreamControl(nullptr),
       mActivated(false) {

@@ -130,7 +130,7 @@ class Manager final : public SafeRefCounted<Manager> {
   void RemoveListener(Listener* aListener);
 
   // Must be called by Context objects before they are destroyed.
-  void RemoveContext(Context* aContext);
+  void RemoveContext(Context& aContext);
 
   // Marks the Manager "invalid".  Once the Context completes no new operations
   // will be permitted with this Manager.  New actors will get a new Manager.
