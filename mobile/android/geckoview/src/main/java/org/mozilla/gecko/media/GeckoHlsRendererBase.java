@@ -8,12 +8,12 @@ import android.util.Log;
 
 import org.mozilla.geckoview.BuildConfig;
 
-import com.google.android.exoplayer2.BaseRenderer;
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.decoder.DecoderInputBuffer;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.Format;
-import com.google.android.exoplayer2.FormatHolder;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.BaseRenderer;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.C;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.decoder.DecoderInputBuffer;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.ExoPlaybackException;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.Format;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.FormatHolder;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
