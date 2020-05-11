@@ -92,6 +92,10 @@ nsPrintDialogServiceWin::ShowPageSetup(nsPIDOMWindowOuter* aParent,
     return status == 0 ? NS_ERROR_ABORT : NS_OK;
   }
 
+  // We don't call nsPrintSettingsService::SavePrintSettingsToPrefs here since
+  // it's called for us in printPageSetup.js.  Maybe we should move that call
+  // here for consistency with the other platforms though?
+
   return rv;
 }
 

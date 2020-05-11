@@ -505,6 +505,11 @@ function onAccept() {
     gPrintSettingsInterface.kInitSaveShrinkToFit |
     gPrintSettingsInterface.kInitSaveScaling;
 
+  // Note that this file is Windows only code, so this doesn't handle saving
+  // for other platforms.
+  // XXX Should we do this in nsPrintDialogServiceWin::ShowPageSetup (the code
+  // that invokes us), since ShowPageSetup is where we do the saving for the
+  // other platforms?
   gPrintService.savePrintSettingsToPrefs(gPrintSettings, true, flags);
 }
 
