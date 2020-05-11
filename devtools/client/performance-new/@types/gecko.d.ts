@@ -49,6 +49,8 @@ declare namespace MockedExports {
       typeof import("devtools/client/performance-new/typescript-lazy-load.jsm.js");
     "resource://devtools/client/performance-new/popup/panel.jsm.js":
       typeof import("devtools/client/performance-new/popup/panel.jsm.js");
+    "resource://devtools/client/performance-new/symbolication.jsm.js":
+      typeof import("resource://devtools/client/performance-new/symbolication.jsm.js");
     "resource:///modules/PanelMultiView.jsm":
       typeof import("resource:///modules/PanelMultiView.jsm");
   }
@@ -309,6 +311,11 @@ declare module "resource://gre/modules/WebChannel.jsm" {
 declare module "resource://devtools/client/performance-new/popup/background.jsm.js" {
   import * as Background from "devtools/client/performance-new/popup/background.jsm.js";
   export = Background
+}
+
+declare module "resource://devtools/client/performance-new/symbolication.jsm.js" {
+  import * as PerfSymbolication from "devtools/client/performance-new/symbolication.jsm.js";
+  export = PerfSymbolication
 }
 
 declare module "resource:///modules/CustomizableUI.jsm" {
