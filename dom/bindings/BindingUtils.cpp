@@ -575,7 +575,7 @@ void TErrorResult<CleanupPolicy>::CloneTo(TErrorResult& aRv) const {
     aRv.mUnionState = HasMessage;
 #endif
     Message* message = aRv.InitMessage(new Message());
-    message->mArgs = mExtra.mMessage->mArgs;
+    message->mArgs = mExtra.mMessage->mArgs.Clone();
     message->mErrorNumber = mExtra.mMessage->mErrorNumber;
   } else if (IsDOMException()) {
 #ifdef DEBUG
