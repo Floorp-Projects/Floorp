@@ -1909,12 +1909,10 @@ MediaManager::MediaManager(UniquePtr<base::Thread> aMediaThread)
       webrtc::EchoCancellation::SuppressionLevel::kModerateSuppression;
   mPrefs.mAgc = webrtc::GainControl::Mode::kAdaptiveDigital;
   mPrefs.mNoise = webrtc::NoiseSuppression::Level::kModerate;
-  mPrefs.mRoutingMode = webrtc::EchoControlMobile::RoutingMode::kSpeakerphone;
 #else
   mPrefs.mAec = 0;
   mPrefs.mAgc = 0;
   mPrefs.mNoise = 0;
-  mPrefs.mRoutingMode = 0;
 #endif
   mPrefs.mFullDuplex = false;
   mPrefs.mChannels = 0;  // max channels default
@@ -1929,14 +1927,14 @@ MediaManager::MediaManager(UniquePtr<base::Thread> aMediaThread)
   }
   LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s,"
       "agc: %s, hpf: %s, noise: %s, aec level: %d, agc level: %d, noise level: "
-      "%d, aec mobile routing mode: %d,"
+      "%d,"
       "%sfull_duplex, extended aec %s, delay_agnostic %s "
       "channels %d",
       __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
       mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
       mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAec,
-      mPrefs.mAgc, mPrefs.mNoise, mPrefs.mRoutingMode,
-      mPrefs.mFullDuplex ? "" : "not ", mPrefs.mExtendedFilter ? "on" : "off",
+      mPrefs.mAgc, mPrefs.mNoise, mPrefs.mFullDuplex ? "" : "not ",
+      mPrefs.mExtendedFilter ? "on" : "off",
       mPrefs.mDelayAgnostic ? "on" : "off", mPrefs.mChannels);
 }
 
@@ -3489,8 +3487,6 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPref(aBranch, "media.getusermedia.aec", aData, &mPrefs.mAec);
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
-  GetPref(aBranch, "media.getusermedia.aecm_output_routing", aData,
-          &mPrefs.mRoutingMode);
   GetPrefBool(aBranch, "media.getusermedia.aec_extended_filter", aData,
               &mPrefs.mExtendedFilter);
   GetPrefBool(aBranch, "media.getusermedia.aec_aec_delay_agnostic", aData,
