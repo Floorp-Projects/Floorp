@@ -35,6 +35,10 @@ interface HTMLLinkElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
            attribute DOMString referrerPolicy;
   [PutForwards=value] readonly attribute DOMTokenList sizes;
+  [CEReactions, SetterThrows, Pure]
+           attribute USVString imageSrcset;
+  [CEReactions, SetterThrows, Pure]
+           attribute USVString imageSizes;
 };
 HTMLLinkElement includes LinkStyle;
 
