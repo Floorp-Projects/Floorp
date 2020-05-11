@@ -1,0 +1,53 @@
+# HG changeset patch
+# User Christian Holler <choller@mozilla.com>
+# Date 1586345312 -7200
+#      Wed Apr 08 13:28:32 2020 +0200
+# Node ID 169280b21031865a2fb217af759ad3124dd87ae2
+# Parent  8244be44ec9b52eb81b56e39d04c97a1e4eb13ab
+[libFuzzer] Allow custom mutators to fail
+
+diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
+--- a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
++++ b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
+@@ -659,16 +659,20 @@ void Fuzzer::MutateAndTestOne() {
+     MaybeExitGracefully();
+     size_t NewSize = 0;
+     if (II.HasFocusFunction && !II.DataFlowTraceForFocusFunction.empty() &&
+         Size <= CurrentMaxMutationLen)
+       NewSize = MD.MutateWithMask(CurrentUnitData, Size, Size,
+                                   II.DataFlowTraceForFocusFunction);
+     else
+       NewSize = MD.Mutate(CurrentUnitData, Size, CurrentMaxMutationLen);
++
++    if (!NewSize)
++      continue;
++
+     assert(NewSize > 0 && "Mutator returned empty unit");
+     assert(NewSize <= CurrentMaxMutationLen && "Mutator return oversized unit");
+     Size = NewSize;
+     II.NumExecutedMutations++;
+ 
+     bool FoundUniqFeatures = false;
+     bool NewCov = RunOne(CurrentUnitData, Size, /*MayDeleteFile=*/true, &II,
+                          &FoundUniqFeatures);
+@@ -827,17 +831,19 @@ void Fuzzer::Loop(const Vector<std::stri
+ void Fuzzer::MinimizeCrashLoop(const Unit &U) {
+   if (U.size() <= 1)
+     return;
+   while (!TimedOut() && TotalNumberOfRuns < Options.MaxNumberOfRuns) {
+     MD.StartMutationSequence();
+     memcpy(CurrentUnitData, U.data(), U.size());
+     for (int i = 0; i < Options.MutateDepth; i++) {
+       size_t NewSize = MD.Mutate(CurrentUnitData, U.size(), MaxMutationLen);
+-      assert(NewSize > 0 && NewSize <= MaxMutationLen);
++      assert(NewSize <= MaxMutationLen);
++      if (!NewSize)
++        continue;
+       ExecuteCallback(CurrentUnitData, NewSize);
+       PrintPulseAndReportSlowInput(CurrentUnitData, NewSize);
+       TryDetectingAMemoryLeak(CurrentUnitData, NewSize,
+                               /*DuringInitialCorpusExecution*/ false);
+     }
+   }
+ }
+ 

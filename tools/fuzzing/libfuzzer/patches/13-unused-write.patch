@@ -1,0 +1,80 @@
+diff --git a/tools/fuzzing/libfuzzer/FuzzerIO.cpp b/tools/fuzzing/libfuzzer/FuzzerIO.cpp
+--- a/tools/fuzzing/libfuzzer/FuzzerIO.cpp
++++ b/tools/fuzzing/libfuzzer/FuzzerIO.cpp
+@@ -3,16 +3,17 @@
+ // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+ // See https://llvm.org/LICENSE.txt for license information.
+ // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ //
+ //===----------------------------------------------------------------------===//
+ // IO functions.
+ //===----------------------------------------------------------------------===//
+ 
++#include "mozilla/Unused.h"
+ #include "FuzzerDefs.h"
+ #include "FuzzerExtFunctions.h"
+ #include "FuzzerIO.h"
+ #include "FuzzerUtil.h"
+ #include <algorithm>
+ #include <cstdarg>
+ #include <fstream>
+ #include <iterator>
+@@ -59,17 +60,17 @@ std::string FileToString(const std::stri
+ void CopyFileToErr(const std::string &Path) {
+   Printf("%s", FileToString(Path).c_str());
+ }
+ 
+ void WriteToFile(const Unit &U, const std::string &Path) {
+   // Use raw C interface because this function may be called from a sig handler.
+   FILE *Out = fopen(Path.c_str(), "w");
+   if (!Out) return;
+-  fwrite(U.data(), sizeof(U[0]), U.size(), Out);
++  mozilla::Unused << fwrite(U.data(), sizeof(U[0]), U.size(), Out);
+   fclose(Out);
+ }
+ 
+ void ReadDirToVectorOfUnits(const char *Path, Vector<Unit> *V,
+                             long *Epoch, size_t MaxSize, bool ExitOnError) {
+   long E = Epoch ? *Epoch : 0;
+   Vector<std::string> Files;
+   ListFilesInDirRecursive(Path, Epoch, &Files, /*TopDir*/true);
+diff --git a/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp b/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp
+--- a/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp
++++ b/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp
+@@ -2,16 +2,17 @@
+ //
+ // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+ // See https://llvm.org/LICENSE.txt for license information.
+ // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ //
+ //===----------------------------------------------------------------------===//
+ // IO functions implementation using Posix API.
+ //===----------------------------------------------------------------------===//
++#include "mozilla/Unused.h"
+ #include "FuzzerDefs.h"
+ #if LIBFUZZER_POSIX || LIBFUZZER_FUCHSIA
+ 
+ #include "FuzzerExtFunctions.h"
+ #include "FuzzerIO.h"
+ #include <cstdarg>
+ #include <cstdio>
+ #include <dirent.h>
+@@ -154,17 +155,17 @@ bool IsInterestingCoverageFile(const std
+   if (FileName.find("/usr/include/") != std::string::npos)
+     return false;
+   if (FileName == "<null>")
+     return false;
+   return true;
+ }
+ 
+ void RawPrint(const char *Str) {
+-  write(2, Str, strlen(Str));
++  mozilla::Unused << write(2, Str, strlen(Str));
+ }
+ 
+ void MkDir(const std::string &Path) {
+   mkdir(Path.c_str(), 0700);
+ }
+ 
+ void RmDir(const std::string &Path) {
+   rmdir(Path.c_str());
