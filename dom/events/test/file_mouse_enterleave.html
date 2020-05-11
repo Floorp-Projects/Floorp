@@ -1,0 +1,36 @@
+<html>
+<body>
+<style>
+#target {
+  width: 100%;
+  height: 100%;
+}
+#reflow {
+  width: 100%;
+  height: 10px;
+  background-color: red;
+}
+</style>
+<div id="target"></div>
+<div id="reflow"></div>
+<script>
+function listener(e) {
+  parent.postMessage(e.type, "*");
+}
+
+window.addEventListener("message", function(aEvent) {
+  if (aEvent.data === "reflow") {
+    let reflow = document.getElementById("reflow");
+    reflow.style.display = "none";
+    reflow.getBoundingClientRect();
+    reflow.style.display = "block";
+    reflow.getBoundingClientRect();
+  }
+});
+
+let target = document.getElementById("target");
+target.addEventListener("mouseenter", listener);
+target.addEventListener("mouseleave", listener);
+</script>
+</body>
+</html>
