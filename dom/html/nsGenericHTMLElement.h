@@ -663,6 +663,10 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     return aElement->IsHTMLElement(nsGkAtoms::img) && aElement->HasName();
   }
 
+  virtual inline void ResultForDialogSubmit(nsAString& aResult) {
+    GetAttr(kNameSpaceID_None, nsGkAtoms::value, aResult);
+  }
+
  protected:
   /**
    * Add/remove this element to the documents name cache

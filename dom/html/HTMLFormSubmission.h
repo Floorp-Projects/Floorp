@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/HTMLDialogElement.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Encoding.h"
 #include "nsString.h"
@@ -110,6 +111,8 @@ class HTMLFormSubmission {
    */
   bool IsInitiatedFromUserInput() const { return mInitiatedFromUserInput; }
 
+  virtual DialogFormSubmission* GetAsDialogSubmission() { return nullptr; }
+
  protected:
   /**
    * Can only be constructed by subclasses.
@@ -163,6 +166,49 @@ class EncodingFormSubmission : public HTMLFormSubmission {
    */
   nsresult EncodeVal(const nsAString& aStr, nsCString& aResult,
                      bool aHeaderEncode);
+};
+
+class DialogFormSubmission final : public HTMLFormSubmission {
+ public:
+  DialogFormSubmission(nsAString& aResult, nsIURI* aActionURL,
+                       const nsAString& aTarget,
+                       NotNull<const Encoding*> aEncoding, Element* aSubmitter,
+                       HTMLDialogElement* aDialogElement)
+      : HTMLFormSubmission(aActionURL, aTarget, aEncoding, aSubmitter),
+        mDialogElement(aDialogElement),
+        mReturnValue(aResult) {}
+  nsresult AddNameValuePair(const nsAString& aName,
+                            const nsAString& aValue) override {
+    MOZ_CRASH("This method should not be called");
+    return NS_OK;
+  }
+
+  nsresult AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override {
+    MOZ_CRASH("This method should not be called");
+    return NS_OK;
+  }
+
+  nsresult AddNameDirectoryPair(const nsAString& aName,
+                                Directory* aDirectory) override {
+    MOZ_CRASH("This method should not be called");
+    return NS_OK;
+  }
+
+  nsresult GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
+                                nsCOMPtr<nsIURI>& aOutURI) override {
+    MOZ_CRASH("This method should not be called");
+    return NS_OK;
+  }
+
+  DialogFormSubmission* GetAsDialogSubmission() override { return this; }
+
+  HTMLDialogElement* DialogElement() { return mDialogElement; }
+
+  nsString& ReturnValue() { return mReturnValue; }
+
+ private:
+  const RefPtr<HTMLDialogElement> mDialogElement;
+  nsString mReturnValue;
 };
 
 /**
