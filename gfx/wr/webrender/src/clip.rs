@@ -954,10 +954,13 @@ impl ClipStore {
     pub fn push_clip_root(
         &mut self,
         clip_id: Option<ClipId>,
+        link_to_parent: bool,
     ) {
-        // TODO(gw): When supporting redundant stacking contexts here, select
-        //           a parent from the chain builder stack.
-        let parent_clip_chain_id = ClipChainId::NONE;
+        let parent_clip_chain_id = if link_to_parent {
+            self.chain_builder_stack.last().unwrap().clip_chain_id
+        } else {
+            ClipChainId::NONE
+        };
 
         let builder = ClipChainBuilder::new(
             parent_clip_chain_id,
