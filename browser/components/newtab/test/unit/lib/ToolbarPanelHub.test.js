@@ -318,7 +318,7 @@ describe("ToolbarPanelHub", () => {
       );
     });
     it("should not registerCallback on enableToolbarButton if no messages", async () => {
-      instance.init(waitForInitializedStub, {
+      await instance.init(waitForInitializedStub, {
         getMessages: sandbox.stub().resolves([]),
       });
 
@@ -327,23 +327,25 @@ describe("ToolbarPanelHub", () => {
       assert.notCalled(everyWindowStub.registerCallback);
     });
   });
-  it("should unhide appmenu button on _showAppmenuButton()", async () => {
-    await instance._showAppmenuButton(fakeWindow);
+  describe("Show/Hide functions", () => {
+    it("should unhide appmenu button on _showAppmenuButton()", async () => {
+      await instance._showAppmenuButton(fakeWindow);
 
-    assert.calledWith(fakeElementById.removeAttribute, "hidden");
-  });
-  it("should hide appmenu button on _hideAppmenuButton()", () => {
-    instance._hideAppmenuButton(fakeWindow);
-    assert.calledWith(fakeElementById.setAttribute, "hidden", true);
-  });
-  it("should unhide toolbar button on _showToolbarButton()", async () => {
-    await instance._showToolbarButton(fakeWindow);
+      assert.calledWith(fakeElementById.removeAttribute, "hidden");
+    });
+    it("should hide appmenu button on _hideAppmenuButton()", () => {
+      instance._hideAppmenuButton(fakeWindow);
+      assert.calledWith(fakeElementById.setAttribute, "hidden", true);
+    });
+    it("should unhide toolbar button on _showToolbarButton()", async () => {
+      await instance._showToolbarButton(fakeWindow);
 
-    assert.calledWith(fakeElementById.removeAttribute, "hidden");
-  });
-  it("should hide toolbar button on _hideToolbarButton()", () => {
-    instance._hideToolbarButton(fakeWindow);
-    assert.calledWith(fakeElementById.setAttribute, "hidden", true);
+      assert.calledWith(fakeElementById.removeAttribute, "hidden");
+    });
+    it("should hide toolbar button on _hideToolbarButton()", () => {
+      instance._hideToolbarButton(fakeWindow);
+      assert.calledWith(fakeElementById.setAttribute, "hidden", true);
+    });
   });
   describe("#renderMessages", () => {
     let getMessagesStub;
