@@ -24,6 +24,13 @@ NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsX, nsPrintSettings, nsPrintSettingsX)
 nsPrintSettingsX::nsPrintSettingsX() : mAdjustedPaperWidth{0.0}, mAdjustedPaperHeight{0.0} {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // Note that the app shared `sharedPrintInfo` object is special!  The system
+  // print dialog and print settings dialog update it with the values chosen
+  // by the user.  Using that object here to initialize new nsPrintSettingsX
+  // objects could mask bugs in our code where we fail to save and/or restore
+  // print settings ourselves (e.g., bug 1636725).  On other platforms we only
+  // initialize new nsPrintSettings objects from the settings that we save to
+  // prefs.  Perhaps we should stop using sharedPrintInfo here for consistency?
   mPrintInfo = [[NSPrintInfo sharedPrintInfo] copy];
   mWidthScale = COCOA_PAPER_UNITS_PER_INCH;
   mHeightScale = COCOA_PAPER_UNITS_PER_INCH;
