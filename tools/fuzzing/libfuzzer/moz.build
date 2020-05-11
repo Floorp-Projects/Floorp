@@ -8,17 +8,16 @@ Library('fuzzer')
 
 EXPORTS += [
     'FuzzerDefs.h',
+    'FuzzerExtFunctions.def',
+    'FuzzerExtFunctions.h',
 ]
 
 SOURCES += [
-    'FuzzerClangCounters.cpp',
     'FuzzerCrossOver.cpp',
     'FuzzerDataFlowTrace.cpp',
     'FuzzerDriver.cpp',
     'FuzzerExtFunctionsDlsym.cpp',
-    'FuzzerExtFunctionsDlsymWin.cpp',
     'FuzzerExtFunctionsWeak.cpp',
-    'FuzzerExtFunctionsWeakAlias.cpp',
     'FuzzerExtFunctionsWindows.cpp',
     'FuzzerExtraCounters.cpp',
     'FuzzerFork.cpp',
@@ -29,16 +28,13 @@ SOURCES += [
     'FuzzerMerge.cpp',
     'FuzzerMutate.cpp',
     'FuzzerSHA1.cpp',
-    'FuzzerShmemFuchsia.cpp',
-    'FuzzerShmemPosix.cpp',
-    'FuzzerShmemWindows.cpp',
     'FuzzerTracePC.cpp',
     'FuzzerUtil.cpp',
     'FuzzerUtilDarwin.cpp',
     'FuzzerUtilFuchsia.cpp',
     'FuzzerUtilLinux.cpp',
     'FuzzerUtilPosix.cpp',
-    'FuzzerUtilWindows.cpp'
+    'FuzzerUtilWindows.cpp',
 ]
 
 if CONFIG['CC_TYPE'] == 'clang':
