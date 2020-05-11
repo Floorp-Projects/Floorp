@@ -1332,6 +1332,26 @@ void HTMLInputElement::AfterClearForm(bool aUnbindOrDelete) {
   }
 }
 
+void HTMLInputElement::ResultForDialogSubmit(nsAString& aResult) {
+  if (mType == NS_FORM_INPUT_IMAGE) {
+    // Get a property set by the frame to find out where it was clicked.
+    nsIntPoint* lastClickedPoint =
+        static_cast<nsIntPoint*>(GetProperty(nsGkAtoms::imageClickedPoint));
+    int32_t x, y;
+    if (lastClickedPoint) {
+      x = lastClickedPoint->x;
+      y = lastClickedPoint->y;
+    } else {
+      x = y = 0;
+    }
+    aResult.AppendInt(x);
+    aResult.AppendLiteral(",");
+    aResult.AppendInt(y);
+  } else {
+    GetAttr(kNameSpaceID_None, nsGkAtoms::value, aResult);
+  }
+}
+
 void HTMLInputElement::GetAutocomplete(nsAString& aValue) {
   if (!DoesAutocompleteApply()) {
     return;
@@ -5115,6 +5135,10 @@ bool HTMLInputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       return ParseAlignValue(aValue, aResult);
     }
     if (aAttribute == nsGkAtoms::formmethod) {
+      if (StaticPrefs::dom_dialog_element_enabled()) {
+        return aResult.ParseEnumValue(aValue, kFormMethodTableDialogEnabled,
+                                      false);
+      }
       return aResult.ParseEnumValue(aValue, kFormMethodTable, false);
     }
     if (aAttribute == nsGkAtoms::formenctype) {

@@ -139,6 +139,10 @@ bool HTMLButtonElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (aAttribute == nsGkAtoms::formmethod) {
+      if (StaticPrefs::dom_dialog_element_enabled()) {
+        return aResult.ParseEnumValue(aValue, kFormMethodTableDialogEnabled,
+                                      false);
+      }
       return aResult.ParseEnumValue(aValue, kFormMethodTable, false);
     }
     if (aAttribute == nsGkAtoms::formenctype) {

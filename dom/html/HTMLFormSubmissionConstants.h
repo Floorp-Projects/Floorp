@@ -12,6 +12,12 @@
 static const nsAttrValue::EnumTable kFormMethodTable[] = {
     {"get", NS_FORM_METHOD_GET}, {"post", NS_FORM_METHOD_POST}, {nullptr, 0}};
 
+static const nsAttrValue::EnumTable kFormMethodTableDialogEnabled[] = {
+    {"get", NS_FORM_METHOD_GET},
+    {"post", NS_FORM_METHOD_POST},
+    {"dialog", NS_FORM_METHOD_DIALOG},
+    {nullptr, 0}};
+
 // Default method is 'get'.
 static const nsAttrValue::EnumTable* kFormDefaultMethod = &kFormMethodTable[0];
 
