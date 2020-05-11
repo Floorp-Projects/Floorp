@@ -68,6 +68,12 @@ h2 {
   margin-block-end: 22px;
 }
 
+#report-summary {
+  color: var(--in-content-deemphasized-text);
+  line-height: 26px;
+  font-size: 16px;
+  margin-bottom: 31px;
+}
 #report-content {
   width: 763px;
   margin: 0 auto;
