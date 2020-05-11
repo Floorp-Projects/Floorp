@@ -30,7 +30,7 @@ async function createTabAndLoad(url, inputWindow = null) {
  *         and change its playback state.
  */
 function generateMediaControlKeyEvent(event) {
-  const playbackStateChanged = waitUntilMainMediaControllerPlaybackChanged();
+  const playbackStateChanged = waitUntilDisplayedPlaybackChanged();
   ChromeUtils.generateMediaControlKeysTestEvent(event);
   return playbackStateChanged;
 }
@@ -59,10 +59,7 @@ function playMedia(tab, elementId) {
       return video.play();
     }
   );
-  return Promise.all([
-    playPromise,
-    waitUntilMainMediaControllerPlaybackChanged(),
-  ]);
+  return Promise.all([playPromise, waitUntilDisplayedPlaybackChanged()]);
 }
 
 /**
@@ -90,10 +87,7 @@ function pauseMedia(tab, elementId) {
       video.pause();
     }
   );
-  return Promise.all([
-    pausePromise,
-    waitUntilMainMediaControllerPlaybackChanged(),
-  ]);
+  return Promise.all([pausePromise, waitUntilDisplayedPlaybackChanged()]);
 }
 
 /**
@@ -222,14 +216,14 @@ function isCurrentMetadataEqualTo(metadata) {
 
 /**
  * Wait until the main media controller changes its playback state, we would
- * observe that by listening for `main-media-controller-playback-changed`
+ * observe that by listening for `media-displayed-playback-changed`
  * notification.
  *
  * @return {Promise}
- *         Resolve when observing `main-media-controller-playback-changed`
+ *         Resolve when observing `media-displayed-playback-changed`
  */
-function waitUntilMainMediaControllerPlaybackChanged() {
-  return BrowserUtils.promiseObserved("main-media-controller-playback-changed");
+function waitUntilDisplayedPlaybackChanged() {
+  return BrowserUtils.promiseObserved("media-displayed-playback-changed");
 }
 
 /**
