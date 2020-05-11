@@ -1,2 +1,2 @@
-load 1223734.html
+pref(dom.animations.mainthread-synchronization-with-geometric-animations,true) load 1223734.html
 load 1339930.html
