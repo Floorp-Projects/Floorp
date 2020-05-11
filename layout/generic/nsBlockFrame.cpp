@@ -7002,7 +7002,7 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     uint32_t lineCount = 0;
     nscoord lastY = INT32_MIN;
     nscoord lastYMost = INT32_MIN;
-    nsRect curBackplateArea;
+
     // A frame's display list cannot contain more than one copy of a
     // given display item unless the items are uniquely identifiable.
     // Because backplate occasionally requires multiple
@@ -7010,6 +7010,14 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // uniqueness among them. Note this is a mapping of index to
     // item, and the mapping is stable even if the dirty rect changes.
     uint16_t backplateIndex = 0;
+    nsRect curBackplateArea;
+
+    auto AddBackplate = [&]() {
+      aLists.BorderBackground()->AppendNewToTopWithIndex<nsDisplaySolidColor>(
+          aBuilder, this, backplateIndex, curBackplateArea,
+          backplateColor.value());
+    };
+
     for (LineIterator line = LinesBegin(); line != line_end; ++line) {
       const nsRect lineArea = line->GetVisualOverflowArea();
       const bool lineInLine = line->IsInline();
@@ -7026,11 +7034,8 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         MOZ_ASSERT(backplateColor,
                    "if this master switch is off, curBackplateArea "
                    "must be empty and we shouldn't get here");
-        aLists.BorderBackground()->AppendNewToTop<nsDisplaySolidColor>(
-            aBuilder, this, curBackplateArea, backplateColor.value(),
-            backplateIndex);
+        AddBackplate();
         backplateIndex++;
-
         curBackplateArea = nsRect();
       }
 
@@ -7056,10 +7061,9 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     if (nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
       SetupLineCursor();
     }
+
     if (!curBackplateArea.IsEmpty()) {
-      aLists.BorderBackground()->AppendNewToTop<nsDisplaySolidColor>(
-          aBuilder, this, curBackplateArea, backplateColor.value(),
-          backplateIndex);
+      AddBackplate();
     }
   }
 

@@ -4424,10 +4424,8 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
  public:
   nsDisplaySolidColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       const nsRect& aBounds, nscolor aColor,
-                      uint16_t aIndex = 0, bool aCanBeReused = true)
-      : nsDisplaySolidColorBase(aBuilder, aFrame, aColor),
-        mBounds(aBounds),
-        mIndex(aIndex) {
+                      bool aCanBeReused = true)
+      : nsDisplaySolidColorBase(aBuilder, aFrame, aColor), mBounds(aBounds) {
     NS_ASSERTION(NS_GET_A(aColor) > 0,
                  "Don't create invisible nsDisplaySolidColors!");
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
@@ -4466,18 +4464,10 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
   void SetOverrideZIndex(int32_t aZIndex) {
     mOverrideZIndex = mozilla::Some(aZIndex);
   }
-  /**
-   * If we have multiple SolidColor items in a single frame's
-   * display list, mIndex should be used as their unique
-   * identifier. Note this mapping remains stable even if the
-   * dirty rect changes.
-   */
-  uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
  private:
   nsRect mBounds;
   mozilla::Maybe<int32_t> mOverrideZIndex;
-  const uint16_t mIndex;
 };
 
 /**
