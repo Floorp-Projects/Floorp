@@ -12,9 +12,6 @@ mod schema;
 pub mod store;
 mod sync;
 
-// We publish this constant from a non-public module.
-pub use sync::STORAGE_VERSION;
-
 // This is what we roughly expect the "bridge" used by desktop to do.
 // It's primarily here to avoid dead-code warnings (but I don't want to disable
 // those warning, as stuff that remains after this is suspect!)
@@ -26,5 +23,7 @@ pub fn delme_demo_usage() -> error::Result<()> {
     store.get("ext-id", json!({}))?;
     store.remove("ext-id", json!({}))?;
     store.clear("ext-id")?;
+    // and it might even...
+    store.wipe_all()?;
     Ok(())
 }

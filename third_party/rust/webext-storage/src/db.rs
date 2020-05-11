@@ -172,6 +172,7 @@ pub(crate) mod sql_fns {
 }
 
 // These should be somewhere else...
+#[allow(dead_code)]
 pub fn put_meta(db: &Connection, key: &str, value: &dyn ToSql) -> Result<()> {
     db.conn().execute_named_cached(
         "REPLACE INTO meta (key, value) VALUES (:key, :value)",
@@ -180,6 +181,7 @@ pub fn put_meta(db: &Connection, key: &str, value: &dyn ToSql) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn get_meta<T: FromSql>(db: &Connection, key: &str) -> Result<Option<T>> {
     let res = db.conn().try_query_one(
         "SELECT value FROM meta WHERE key = :key",
@@ -189,6 +191,7 @@ pub fn get_meta<T: FromSql>(db: &Connection, key: &str) -> Result<Option<T>> {
     Ok(res)
 }
 
+#[allow(dead_code)]
 pub fn delete_meta(db: &Connection, key: &str) -> Result<()> {
     db.conn()
         .execute_named_cached("DELETE FROM meta WHERE key = :key", &[(":key", &key)])?;
