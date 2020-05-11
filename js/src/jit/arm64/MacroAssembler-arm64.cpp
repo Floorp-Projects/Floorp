@@ -996,23 +996,11 @@ void MacroAssembler::branchValueIsNurseryCellImpl(Condition cond,
   MOZ_ASSERT(temp != ScratchReg &&
              temp != ScratchReg2);  // Both may be used internally.
 
-  Label done, checkAddress, checkObjectAddress, checkStringAddress;
-  bool testNursery = (cond == Assembler::Equal);
-  branchTestObject(Assembler::Equal, value, &checkObjectAddress);
-  branchTestString(Assembler::Equal, value, &checkStringAddress);
-  branchTestBigInt(Assembler::NotEqual, value, testNursery ? &done : label);
+  Label done;
+  branchTestGCThing(Assembler::NotEqual, value,
+                    cond == Assembler::Equal ? &done : label);
 
-  unboxBigInt(value, temp);
-  jump(&checkAddress);
-
-  bind(&checkStringAddress);
-  unboxString(value, temp);
-  jump(&checkAddress);
-
-  bind(&checkObjectAddress);
-  unboxObject(value, temp);
-
-  bind(&checkAddress);
+  unboxGCThingForGCBarrier(value, temp);
   orPtr(Imm32(gc::ChunkMask), temp);
   branch32(cond, Address(temp, gc::ChunkLocationOffsetFromLastByte),
            Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
