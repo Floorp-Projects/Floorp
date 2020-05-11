@@ -366,6 +366,8 @@ class nsHtml5AttributeName {
   static nsHtml5AttributeName* ATTR_ALIGNMENTSCOPE;
   static nsHtml5AttributeName* ATTR_DRAGGABLE;
   static nsHtml5AttributeName* ATTR_HEIGHT;
+  static nsHtml5AttributeName* ATTR_IMAGESIZES;
+  static nsHtml5AttributeName* ATTR_IMAGESRCSET;
   static nsHtml5AttributeName* ATTR_IMAGE_RENDERING;
   static nsHtml5AttributeName* ATTR_LANGUAGE;
   static nsHtml5AttributeName* ATTR_LANG;
