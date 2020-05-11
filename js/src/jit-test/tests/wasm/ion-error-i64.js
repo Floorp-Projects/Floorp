@@ -32,7 +32,7 @@ var instance = wasmEvalText(`(module
 (function() {
     // In ion-eager mode, make sure we don't try to inline a function that
     // takes or returns i64 arguments.
-    assertErrorMessage(() => instance.add_two_i64(0n, 1n), TypeError, /cannot pass i64 or v128 to or from JS/);
+    assertErrorMessage(() => instance.add_two_i64(0n, 1n), TypeError, /cannot pass i64( or v128)? to or from JS/);
 })();
 
 enableGeckoProfiling();
@@ -69,7 +69,7 @@ function main() {
                 [''] // the jit path wasn't taken (interpreter/baseline only).
             ]);
 
-            assertEq(caught.message, 'cannot pass i64 or v128 to or from JS');
+            assertEq(!!caught.message.match(/cannot pass i64( or v128)? to or from JS/), true);
 
             let stack = caught.stack.split('\n');
 
