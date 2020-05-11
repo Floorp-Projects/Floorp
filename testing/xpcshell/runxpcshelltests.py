@@ -159,9 +159,13 @@ class XPCShellTestThread(Thread):
         self.log = kwargs.get('log')
         self.app_dir_key = kwargs.get('app_dir_key')
         self.interactive = kwargs.get('interactive')
-        self.prefsFile = kwargs.get('prefsFile')
+        self.rootPrefsFile = kwargs.get('rootPrefsFile')
+        self.extraPrefs = kwargs.get('extraPrefs')
         self.verboseIfFails = kwargs.get('verboseIfFails')
         self.headless = kwargs.get('headless')
+
+        # Default the test prefsFile to the rootPrefsFile.
+        self.prefsFile = self.rootPrefsFile
 
         # only one of these will be set to 1. adding them to the totals in
         # the harness
@@ -346,6 +350,39 @@ class XPCShellTestThread(Thread):
         self.log.info("xpcshell return code: %s" % self.getReturnCode(proc))
         self.postCheck(proc)
         self.clean_temp_dirs(self.test_object['path'])
+
+    def updateTestPrefsFile(self):
+        # If the Manifest file has some additiona prefs, merge the
+        # prefs set in the user.js file stored in the _rootTempdir
+        # with the prefs from the manifest and the prefs specified
+        # in the extraPrefs option.
+        if 'prefs' in self.test_object:
+            # Merge the user preferences in a fake profile dir in a
+            # local temporary dir (self.tempDir is the remoteTmpDir
+            # for the RemoteXPCShellTestThread subclass and so we
+            # can't use that tempDir here).
+            localTempDir = mkdtemp(prefix='xpc-other-', dir=self._rootTempDir)
+
+            filename = 'user.js'
+            interpolation = {'server': 'dummyserver'}
+            profile = Profile(profile=localTempDir, restore=False)
+            profile.merge(self._rootTempDir, interpolation=interpolation)
+
+            prefs = self.test_object['prefs'].strip().split()
+            name = self.test_object['id']
+            self.log.info(
+                "%s: Per-test extra prefs will be set:\n  {}".format(
+                    '\n  '.join(prefs)) % name
+            )
+
+            profile.set_preferences(parse_preferences(prefs), filename=filename)
+            # Make sure that the extra prefs form the command line are overriding
+            # any prefs inherited from the shared profile data or the manifest prefs.
+            profile.set_preferences(parse_preferences(self.extraPrefs), filename=filename)
+            return os.path.join(profile.profile, filename)
+
+        # Return the root prefsFile if there is no other prefs to merge.
+        return self.rootPrefsFile
 
     def buildCmdTestFile(self, name):
         """
@@ -653,6 +690,9 @@ class XPCShellTestThread(Thread):
         self.profileDir = self.setupProfileDir()
         self.tempDir = self.setupTempDir()
         self.mozInfoJSPath = self.setupMozinfoJS()
+
+        # Setup per-manifest prefs and write them into the tempdir.
+        self.prefsFile = self.updateTestPrefsFile()
 
         # The order of the command line is important:
         # 1) Arguments for xpcshell itself
@@ -1492,7 +1532,8 @@ class XPCShellTests(object):
             'log': self.log,
             'interactive': self.interactive,
             'app_dir_key': appDirKey,
-            'prefsFile': self.prefsFile,
+            'rootPrefsFile': self.prefsFile,
+            'extraPrefs': options.get('extraPrefs') or [],
             'verboseIfFails': self.verboseIfFails,
             'headless': self.headless,
         }
