@@ -4,7 +4,9 @@
 "use strict";
 
 const initialReducerState = {
+  // Array of targetFront
   targets: [],
+  // The selected targetFront instance
   selected: null,
 };
 
@@ -34,17 +36,17 @@ function targetsReducer(state = initialReducerState, action) {
     case "REGISTER_TARGET": {
       return {
         ...state,
-        targets: [...state.targets, action.target],
+        targets: [...state.targets, action.targetFront],
       };
     }
 
     case "UNREGISTER_TARGET": {
       const targets = state.targets.filter(
-        target => target._targetFront !== action.targetFront
+        target => target !== action.targetFront
       );
 
       let { selected } = state;
-      if (selected?._targetFront === action.targetFront) {
+      if (selected === action.targetFront) {
         selected = null;
       }
 

@@ -673,9 +673,16 @@ Toolbox.prototype = {
   _onToolboxStateChange(state, oldState) {
     if (getSelectedTarget(state) !== getSelectedTarget(oldState)) {
       const dbg = this.getPanel("jsdebugger");
-      dbg?.selectThread(
-        getSelectedTarget(state)?._targetFront.threadFront.actorID
-      );
+      if (!dbg) {
+        return;
+      }
+
+      const threadActorID = getSelectedTarget(state)?.threadFront?.actorID;
+      if (!threadActorID) {
+        return;
+      }
+
+      dbg.selectThread(threadActorID);
     }
   },
 
@@ -732,7 +739,7 @@ Toolbox.prototype = {
     await this._attachTarget({ type, targetFront, isTopLevel });
 
     if (this.hostType !== Toolbox.HostType.PAGE) {
-      await this.store.dispatch(registerTarget(targetFront, this.targetList));
+      await this.store.dispatch(registerTarget(targetFront));
     }
 
     if (isTopLevel) {
