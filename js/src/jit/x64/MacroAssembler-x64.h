@@ -843,13 +843,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     andq(scratch, dest);
   }
 
-  // This should only be used for the pre-barrier trampoline, to unbox a
-  // string/symbol/object Value. It's fine there because we don't depend on
-  // the actual Value type. In almost all other cases, this would be
+  // This should only be used for GC barrier code, to unbox a GC thing Value.
+  // It's fine there because we don't depend on the actual Value type (all Cells
+  // are treated the same way). In almost all other cases this would be
   // Spectre-unsafe - use unboxNonDouble and friends instead.
-  void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
+  void unboxGCThingForGCBarrier(const Address& src, Register dest) {
     movq(ImmWord(JS::detail::ValueGCThingPayloadMask), dest);
     andq(Operand(src), dest);
+  }
+  void unboxGCThingForGCBarrier(const ValueOperand& src, Register dest) {
+    MOZ_ASSERT(src.valueReg() != dest);
+    movq(ImmWord(JS::detail::ValueGCThingPayloadMask), dest);
+    andq(src.valueReg(), dest);
   }
 
   // Extended unboxing API. If the payload is already in a register, returns

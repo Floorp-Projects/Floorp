@@ -379,7 +379,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     ma_dins(dest, zero, Imm32(JSVAL_TAG_SHIFT + 3), Imm32(1));
   }
 
-  void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
+  void unboxGCThingForGCBarrier(const Address& src, Register dest) {
     loadPtr(src, dest);
     ma_dext(dest, dest, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
   }
