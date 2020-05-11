@@ -152,13 +152,11 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
  public:
   nsDisplayTextOverflowMarker(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               const nsRect& aRect, nscoord aAscent,
-                              const StyleTextOverflowSide& aStyle,
-                              uint32_t aLineNumber, uint16_t aIndex)
+                              const StyleTextOverflowSide& aStyle)
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mRect(aRect),
         mStyle(aStyle),
-        mAscent(aAscent),
-        mIndex((aLineNumber << 1) + aIndex) {
+        mAscent(aAscent) {
     MOZ_COUNT_CTOR(nsDisplayTextOverflowMarker);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -189,8 +187,6 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  virtual uint16_t CalculatePerFrameKey() const override { return mIndex; }
-
   void PaintTextToContext(gfxContext* aCtx, nsPoint aOffsetFromRect);
 
   virtual bool CreateWebRenderCommands(
@@ -205,7 +201,6 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
   nsRect mRect;  // in reference frame coordinates
   const StyleTextOverflowSide mStyle;
   nscoord mAscent;  // baseline for the marker text in mRect
-  uint16_t mIndex;
 };
 
 static void PaintTextShadowCallback(gfxContext* aCtx, nsPoint aShadowOffset,
@@ -890,9 +885,10 @@ void TextOverflow::CreateMarkers(const nsLineBox* aLine, bool aCreateIStart,
         markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockSize) + offset;
     ClipMarker(aContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
-    mMarkerList.AppendNewToTop<nsDisplayTextOverflowMarker>(
-        mBuilder, mBlock, markerRect, aLine->GetLogicalAscent(),
-        *mIStart.mStyle, aLineNumber, 0);
+
+    mMarkerList.AppendNewToTopWithIndex<nsDisplayTextOverflowMarker>(
+        mBuilder, mBlock, /* aIndex = */ (aLineNumber << 1) + 0, markerRect,
+        aLine->GetLogicalAscent(), *mIStart.mStyle);
   }
 
   if (aCreateIEnd) {
@@ -906,11 +902,12 @@ void TextOverflow::CreateMarkers(const nsLineBox* aLine, bool aCreateIStart,
         markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockSize) + offset;
     ClipMarker(aContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
-    mMarkerList.AppendNewToTop<nsDisplayTextOverflowMarker>(
-        mBuilder, mBlock, markerRect, aLine->GetLogicalAscent(),
+
+    mMarkerList.AppendNewToTopWithIndex<nsDisplayTextOverflowMarker>(
+        mBuilder, mBlock, /* aIndex = */ (aLineNumber << 1) + 1, markerRect,
+        aLine->GetLogicalAscent(),
         mIEnd.mHasBlockEllipsis ? StyleTextOverflowSide::Ellipsis()
-                                : *mIEnd.mStyle,
-        aLineNumber, 1);
+                                : *mIEnd.mStyle);
   }
 }
 
