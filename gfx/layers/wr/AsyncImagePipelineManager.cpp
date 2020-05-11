@@ -44,7 +44,7 @@ AsyncImagePipelineManager::AsyncImagePipelineManager(
       mUseTripleBuffering(mApi->GetUseTripleBuffering()),
       mResourceId(0),
       mAsyncImageEpoch{0},
-      mWillGenerateFrame{},
+      mWillGenerateFrame(false),
       mDestroyed(false),
       mRenderSubmittedUpdatesLock("SubmittedUpdatesLock"),
       mLastCompletedFrameId(0) {
@@ -62,25 +62,17 @@ void AsyncImagePipelineManager::Destroy() {
   mDestroyed = true;
 }
 
-void AsyncImagePipelineManager::SetWillGenerateFrameAllRenderRoots() {
-  for (auto renderRoot : wr::kRenderRoots) {
-    SetWillGenerateFrame(renderRoot);
-  }
-}
-
-void AsyncImagePipelineManager::SetWillGenerateFrame(
-    wr::RenderRoot aRenderRoot) {
+void AsyncImagePipelineManager::SetWillGenerateFrame() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
-  mWillGenerateFrame[aRenderRoot] = true;
+  mWillGenerateFrame = true;
 }
 
-bool AsyncImagePipelineManager::GetAndResetWillGenerateFrame(
-    wr::RenderRoot aRenderRoot) {
+bool AsyncImagePipelineManager::GetAndResetWillGenerateFrame() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
-  bool ret = mWillGenerateFrame[aRenderRoot];
-  mWillGenerateFrame[aRenderRoot] = false;
+  bool ret = mWillGenerateFrame;
+  mWillGenerateFrame = false;
   return ret;
 }
 

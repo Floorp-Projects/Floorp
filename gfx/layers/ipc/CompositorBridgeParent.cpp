@@ -888,7 +888,7 @@ void CompositorBridgeParent::ScheduleComposition(
   }
 
   if (mWrBridge) {
-    mWrBridge->ScheduleGenerateFrame(aRenderRoots);
+    mWrBridge->ScheduleGenerateFrame();
   } else {
     mCompositorScheduler->ScheduleComposition();
   }

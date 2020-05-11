@@ -467,7 +467,7 @@ bool WebRenderBridgeParent::HandleDeferredPipelineData(
             return false;
           }
           if (scheduleComposite) {
-            ScheduleGenerateFrame(Nothing());
+            ScheduleGenerateFrame();
           }
           wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mSmallShmems);
           wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mLargeShmems);
@@ -1465,7 +1465,7 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
   }
 
   if (*aScheduleComposite) {
-    mAsyncImageManager->SetWillGenerateFrame(aUpdates.mRenderRoot);
+    mAsyncImageManager->SetWillGenerateFrame();
   }
 
   return true;
@@ -1551,7 +1551,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
                            /* aUseForTelemetry */ scheduleAnyComposite);
 
   if (scheduleAnyComposite) {
-    ScheduleGenerateFrame(Nothing());
+    ScheduleGenerateFrame();
   } else if (sendDidComposite) {
     // The only thing in the pending transaction id queue should be the entry
     // we just added, and now we're going to pretend we rendered it
@@ -1709,7 +1709,7 @@ void WebRenderBridgeParent::FlushSceneBuilds() {
   // shouldn't be calling this function all that much in production so this
   // is probably fine. If it becomes an issue we can add more state tracking
   // machinery to optimize it away.
-  ScheduleGenerateFrameAllRenderRoots();
+  ScheduleGenerateFrame();
 }
 
 void WebRenderBridgeParent::FlushFrameGeneration() {
@@ -2010,7 +2010,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   }
   // Schedule generate frame to clean up Pipeline
 
-  ScheduleGenerateFrameAllRenderRoots();
+  ScheduleGenerateFrame();
 
   // Remove animations.
   for (const auto& id : mActiveAnimations) {
@@ -2102,7 +2102,7 @@ void WebRenderBridgeParent::ScheduleForcedGenerateFrame() {
   }
 
   InvalidateRenderedFrame();
-  ScheduleGenerateFrameAllRenderRoots();
+  ScheduleGenerateFrame();
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvCapture() {
@@ -2376,8 +2376,7 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     mCompositorScheduler->ScheduleComposition();
   }
 
-  bool generateFrame = mAsyncImageManager->GetAndResetWillGenerateFrame(
-                           wr::RenderRoot::Default) ||
+  bool generateFrame = mAsyncImageManager->GetAndResetWillGenerateFrame() ||
                        !fastTxn.IsEmpty() || aForceGenerateFrame;
 
   if (!generateFrame) {
@@ -2388,9 +2387,7 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
 
   WrAnimations animations;
   if (SampleAnimations(animations)) {
-    // TODO we should have a better way of assessing whether we need a content
-    // or a chrome frame generation.
-    ScheduleGenerateFrameAllRenderRoots();
+    ScheduleGenerateFrame();
   }
   // We do this even if the arrays are empty, because it will clear out any
   // previous properties store on the WR side, which is desirable.
@@ -2468,9 +2465,7 @@ void WebRenderBridgeParent::NotifyDidSceneBuild(
     return;
   }
 
-  for (auto renderRoot : aRenderRoots) {
-    mAsyncImageManager->SetWillGenerateFrame(renderRoot);
-  }
+  mAsyncImageManager->SetWillGenerateFrame();
 
   // If the scheduler has a composite more recent than our last composite (which
   // we missed), and we're within the threshold ms of the last vsync, then
@@ -2581,32 +2576,9 @@ LayersId WebRenderBridgeParent::GetLayersId() const {
   return wr::AsLayersId(mPipelineId);
 }
 
-void WebRenderBridgeParent::ScheduleGenerateFrameAllRenderRoots() {
+void WebRenderBridgeParent::ScheduleGenerateFrame() {
   if (mCompositorScheduler) {
-    mAsyncImageManager->SetWillGenerateFrameAllRenderRoots();
-    mCompositorScheduler->ScheduleComposition();
-  }
-}
-
-void WebRenderBridgeParent::ScheduleGenerateFrame(
-    const Maybe<wr::RenderRoot>& aRenderRoot) {
-  if (mCompositorScheduler) {
-    if (aRenderRoot.isSome()) {
-      mAsyncImageManager->SetWillGenerateFrame(*aRenderRoot);
-    }
-    mCompositorScheduler->ScheduleComposition();
-  }
-}
-
-void WebRenderBridgeParent::ScheduleGenerateFrame(
-    const wr::RenderRootSet& aRenderRoots) {
-  if (mCompositorScheduler) {
-    if (aRenderRoots.isEmpty()) {
-      mAsyncImageManager->SetWillGenerateFrameAllRenderRoots();
-    }
-    for (auto it = aRenderRoots.begin(); it != aRenderRoots.end(); ++it) {
-      mAsyncImageManager->SetWillGenerateFrame(*it);
-    }
+    mAsyncImageManager->SetWillGenerateFrame();
     mCompositorScheduler->ScheduleComposition();
   }
 }
@@ -2662,7 +2634,7 @@ void WebRenderBridgeParent::ClearResources() {
   wr::Epoch wrEpoch = GetNextWrEpoch();
   mReceivedDisplayList = false;
   // Schedule generate frame to clean up Pipeline
-  ScheduleGenerateFrameAllRenderRoots();
+  ScheduleGenerateFrame();
 
   // WrFontKeys and WrImageKeys are deleted during WebRenderAPI destruction.
   for (const auto& entry : mTextureHosts) {
