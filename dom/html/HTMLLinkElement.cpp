@@ -409,8 +409,7 @@ static const DOMTokenListSupportedToken sSupportedRelValuesWithManifest[] = {
 
 nsDOMTokenList* HTMLLinkElement::RelList() {
   if (!mRelList) {
-    auto preload = Preferences::GetBool("network.preload") ||
-                   StaticPrefs::network_preload_experimental();
+    auto preload = StaticPrefs::network_preload();
     auto manifest = StaticPrefs::dom_manifest_enabled();
     if (manifest && preload) {
       mRelList = new nsDOMTokenList(this, nsGkAtoms::rel,

@@ -59,7 +59,7 @@ already_AddRefed<nsIURI> PreloadService::GetPreloadURI(const nsAString& aURL) {
 already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     dom::HTMLLinkElement* aLinkElement, nsContentPolicyType aPolicyType,
     nsIReferrerInfo* aReferrerInfo) {
-  if (!StaticPrefs::network_preload_experimental()) {
+  if (!StaticPrefs::network_preload()) {
     return nullptr;
   }
 

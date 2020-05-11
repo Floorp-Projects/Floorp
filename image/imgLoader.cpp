@@ -2187,8 +2187,7 @@ nsresult imgLoader::LoadImage(
   }
 
   // Look in the preloaded images of loading document first.
-  if (StaticPrefs::network_preload_experimental() && !aLinkPreload &&
-      aLoadingDocument) {
+  if (StaticPrefs::network_preload() && !aLinkPreload && aLoadingDocument) {
     auto key = PreloadHashKey::CreateAsImage(
         aURI, aTriggeringPrincipal, ConvertToCORSMode(corsmode),
         aReferrerInfo ? aReferrerInfo->ReferrerPolicy()
