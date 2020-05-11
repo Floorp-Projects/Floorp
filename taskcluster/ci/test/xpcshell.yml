@@ -62,6 +62,7 @@ xpcshell:
             windows(7-32|10-64)(-shippable)?/opt: 5400
             .*-ccov/.*: 7200
             .*-tsan/opt: 7200
+            android-em-7.*: 5400
             default: 2700
     allow-software-gl-layers: false
     tier:
