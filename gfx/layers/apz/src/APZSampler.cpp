@@ -67,12 +67,10 @@ void APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId) {
 /*static*/
 void APZSampler::SampleForWebRender(
     const wr::WrWindowId& aWindowId, wr::Transaction* aTransaction,
-    const wr::DocumentId& aRenderRootId,
     const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
   if (RefPtr<APZSampler> sampler = GetSampler(aWindowId)) {
     wr::TransactionWrapper txn(aTransaction);
-    sampler->SampleForWebRender(txn, wr::RenderRootFromId(aRenderRootId),
-                                aEpochsBeingRendered);
+    sampler->SampleForWebRender(txn, aEpochsBeingRendered);
   }
 }
 
@@ -83,7 +81,7 @@ void APZSampler::SetSampleTime(const TimeStamp& aSampleTime) {
 }
 
 void APZSampler::SampleForWebRender(
-    wr::TransactionWrapper& aTxn, wr::RenderRoot aRenderRoot,
+    wr::TransactionWrapper& aTxn,
     const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
   AssertOnSamplerThread();
   TimeStamp sampleTime;
@@ -96,13 +94,13 @@ void APZSampler::SampleForWebRender(
     // anyway, so using Timestamp::Now() should be fine.
     sampleTime = mSampleTime.IsNull() ? TimeStamp::Now() : mSampleTime;
   }
-  mApz->SampleForWebRender(aTxn, sampleTime, aRenderRoot, aEpochsBeingRendered);
+  mApz->SampleForWebRender(aTxn, sampleTime, aEpochsBeingRendered);
 }
 
 bool APZSampler::AdvanceAnimations(const TimeStamp& aSampleTime) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
-  return mApz->AdvanceAnimations(Nothing(), aSampleTime);
+  return mApz->AdvanceAnimations(aSampleTime);
 }
 
 LayerToParentLayerMatrix4x4 APZSampler::ComputeTransformForScrollThumb(
@@ -255,10 +253,9 @@ void apz_register_sampler(mozilla::wr::WrWindowId aWindowId) {
 
 void apz_sample_transforms(
     mozilla::wr::WrWindowId aWindowId, mozilla::wr::Transaction* aTransaction,
-    mozilla::wr::DocumentId aDocumentId,
     const mozilla::wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
-  mozilla::layers::APZSampler::SampleForWebRender(
-      aWindowId, aTransaction, aDocumentId, aEpochsBeingRendered);
+  mozilla::layers::APZSampler::SampleForWebRender(aWindowId, aTransaction,
+                                                  aEpochsBeingRendered);
 }
 
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId) {}
