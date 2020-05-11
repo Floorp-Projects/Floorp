@@ -77,35 +77,35 @@ var FxAccountsConfig = {
   async promiseForceSigninURI(entrypoint, extraParams = {}) {
     return this._buildURL("force_auth", {
       extraParams: { entrypoint, service: SYNC_PARAM, ...extraParams },
-      addEmailAddress: true,
+      addAccountIdentifiers: true,
     });
   },
 
   async promiseManageURI(entrypoint, extraParams = {}) {
     return this._buildURL("settings", {
       extraParams: { entrypoint, ...extraParams },
-      addEmailAddress: true,
+      addAccountIdentifiers: true,
     });
   },
 
   async promiseChangeAvatarURI(entrypoint, extraParams = {}) {
     return this._buildURL("settings/avatar/change", {
       extraParams: { entrypoint, ...extraParams },
-      addEmailAddress: true,
+      addAccountIdentifiers: true,
     });
   },
 
   async promiseManageDevicesURI(entrypoint, extraParams = {}) {
     return this._buildURL("settings/clients", {
       extraParams: { entrypoint, ...extraParams },
-      addEmailAddress: true,
+      addAccountIdentifiers: true,
     });
   },
 
   async promiseConnectDeviceURI(entrypoint, extraParams = {}) {
     return this._buildURL("connect_another_device", {
       extraParams: { entrypoint, service: SYNC_PARAM, ...extraParams },
-      addEmailAddress: true,
+      addAccountIdentifiers: true,
     });
   },
 
@@ -138,13 +138,15 @@ var FxAccountsConfig = {
    * @param path should be parsable by the URL constructor first parameter.
    * @param {bool} [options.includeDefaultParams] If true include the default search params.
    * @param {Object.<string, string>} [options.extraParams] Additionnal search params.
-   * @param {bool} [options.addEmailAddress] If account is available, append the email
-      address to the url. This will throw if param is specified and account is not
-      available.
+   * @param {bool} [options.addAccountIdentifiers] if true we add the current logged-in user uid and email to the search params.
    */
   async _buildURL(
     path,
-    { includeDefaultParams = true, extraParams = {}, addEmailAddress = false }
+    {
+      includeDefaultParams = true,
+      extraParams = {},
+      addAccountIdentifiers = false,
+    }
   ) {
     await this.ensureConfigured();
     const url = new URL(path, ROOT_URL);
@@ -158,12 +160,12 @@ var FxAccountsConfig = {
     for (let [k, v] of Object.entries(params)) {
       url.searchParams.append(k, v);
     }
-    if (addEmailAddress) {
-      // Only append account identifiers if the local account state is available.
+    if (addAccountIdentifiers) {
       const accountData = await this.getSignedInUser();
       if (!accountData) {
-        throw new Error("Unable to append email to url, user is not available");
+        return null;
       }
+      url.searchParams.append("uid", accountData.uid);
       url.searchParams.append("email", accountData.email);
     }
     return url.href;
