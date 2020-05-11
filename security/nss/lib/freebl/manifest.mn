@@ -126,7 +126,7 @@ CSRCS = \
 	alg2268.c \
 	arcfour.c \
 	arcfive.c \
-    crypto_primitives.c \
+	crypto_primitives.c \
 	blake2b.c \
 	desblapi.c \
 	des.c \
@@ -150,7 +150,6 @@ CSRCS = \
 	rsapkcs.c \
 	shvfy.c \
 	tlsprfalg.c \
-	seed.c \
 	jpake.c \
 	$(MPI_SRCS) \
 	$(MPCPU_SRCS) \
