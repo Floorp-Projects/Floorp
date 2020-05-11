@@ -74,7 +74,6 @@ class nsPrefetchService final : public nsIPrefetchService,
   int32_t mStopCount;
   bool mHaveProcessed;
   bool mPrefetchDisabled;
-  bool mPreloadDisabled;
 
   // In usual case prefetch does not start until all normal loads are done.
   // Aggressive mode ignores normal loads and just start prefetch ASAP.

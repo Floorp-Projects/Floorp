@@ -272,7 +272,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 mSpeculativeLoadQueue.AppendElement()->InitPreconnect(
                     url, crossOrigin);
               }
-            } else if (StaticPrefs::network_preload_experimental() &&
+            } else if (StaticPrefs::network_preload() &&
                        rel.LowerCaseEqualsASCII("preload")) {
               nsHtml5String url =
                   aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);

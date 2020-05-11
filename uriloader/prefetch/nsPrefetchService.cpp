@@ -55,7 +55,6 @@ static LazyLogModule gPrefetchLog("nsPrefetch");
 #define LOG_ENABLED() MOZ_LOG_TEST(gPrefetchLog, mozilla::LogLevel::Debug)
 
 #define PREFETCH_PREF "network.prefetch-next"
-#define PRELOAD_PREF "network.preload"
 #define PARALLELISM_PREF "network.prefetch-next.parallelism"
 #define AGGRESSIVE_PREF "network.prefetch-next.aggressive"
 
@@ -325,12 +324,10 @@ nsPrefetchService::nsPrefetchService()
       mStopCount(0),
       mHaveProcessed(false),
       mPrefetchDisabled(true),
-      mPreloadDisabled(true),
       mAggressive(false) {}
 
 nsPrefetchService::~nsPrefetchService() {
   Preferences::RemoveObserver(this, PREFETCH_PREF);
-  Preferences::RemoveObserver(this, PRELOAD_PREF);
   Preferences::RemoveObserver(this, PARALLELISM_PREF);
   Preferences::RemoveObserver(this, AGGRESSIVE_PREF);
   // cannot reach destructor if prefetch in progress (listener owns reference
@@ -344,9 +341,6 @@ nsresult nsPrefetchService::Init() {
   // read prefs and hook up pref observer
   mPrefetchDisabled = !Preferences::GetBool(PREFETCH_PREF, !mPrefetchDisabled);
   Preferences::AddWeakObserver(this, PREFETCH_PREF);
-
-  mPreloadDisabled = !Preferences::GetBool(PRELOAD_PREF, !mPreloadDisabled);
-  Preferences::AddWeakObserver(this, PRELOAD_PREF);
 
   mMaxParallelism = Preferences::GetInt(PARALLELISM_PREF, mMaxParallelism);
   if (mMaxParallelism < 1) {
@@ -365,7 +359,7 @@ nsresult nsPrefetchService::Init() {
   rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mPrefetchDisabled || !mPreloadDisabled) {
+  if (!mPrefetchDisabled) {
     AddProgressListener();
   }
 
@@ -597,71 +591,8 @@ nsresult nsPrefetchService::Preload(nsIURI* aURI,
     LOG(("PreloadURI [%s]\n", aURI->GetSpecOrDefault().get()));
   }
 
-  if (mPreloadDisabled) {
-    LOG(("rejected: preload service is disabled\n"));
-    return NS_ERROR_ABORT;
-  }
-
-  nsresult rv = CheckURIScheme(aURI, aReferrerInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // XXX we might want to either leverage nsIProtocolHandler::protocolFlags
-  // or possibly nsIRequest::loadFlags to determine if this URI should be
-  // prefetched.
-  //
-
-  if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
-    if (aSource && aSource->IsInComposedDoc()) {
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
-          new AsyncEventDispatcher(aSource, NS_LITERAL_STRING("error"),
-                                   CanBubble::eNo, ChromeOnlyDispatch::eNo);
-      asyncDispatcher->RunDOMEventWhenSafe();
-    }
-    return NS_OK;
-  }
-
-  //
-  // Check whether it is being preloaded.
-  //
-  for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
-    bool equals;
-    if ((mCurrentNodes[i]->mPolicyType == aPolicyType) &&
-        NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) && equals) {
-      nsWeakPtr source = do_GetWeakReference(aSource);
-      if (mCurrentNodes[i]->mSources.IndexOf(source) ==
-          mCurrentNodes[i]->mSources.NoIndex) {
-        LOG(
-            ("URL is already being preloaded, add a new reference "
-             "document\n"));
-        mCurrentNodes[i]->mSources.AppendElement(source);
-        return NS_OK;
-      } else {
-        LOG(("URL is already being preloaded by this document"));
-        return NS_ERROR_ABORT;
-      }
-    }
-  }
-
-  LOG(("This is a preload, so start loading immediately.\n"));
-  RefPtr<nsPrefetchNode> enqueuedNode;
-  enqueuedNode =
-      new nsPrefetchNode(this, aURI, aReferrerInfo, aSource, aPolicyType, true);
-
-  NotifyLoadRequested(enqueuedNode);
-  rv = enqueuedNode->OpenChannel();
-  if (NS_SUCCEEDED(rv)) {
-    mCurrentNodes.AppendElement(enqueuedNode);
-  } else {
-    if (aSource && aSource->IsInComposedDoc()) {
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
-          new AsyncEventDispatcher(aSource, NS_LITERAL_STRING("error"),
-                                   CanBubble::eNo, ChromeOnlyDispatch::eNo);
-      asyncDispatcher->RunDOMEventWhenSafe();
-    }
-  }
-  return NS_OK;
+  LOG(("rejected: preload service is deprecated\n"));
+  return NS_ERROR_ABORT;
 }
 
 nsresult nsPrefetchService::Prefetch(nsIURI* aURI,
@@ -912,7 +843,6 @@ nsPrefetchService::Observe(nsISupports* aSubject, const char* aTopic,
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     StopAll();
     mPrefetchDisabled = true;
-    mPreloadDisabled = true;
   } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     const nsCString converted = NS_ConvertUTF16toUTF8(aData);
     const char* pref = converted.get();
@@ -921,37 +851,14 @@ nsPrefetchService::Observe(nsISupports* aSubject, const char* aTopic,
         if (mPrefetchDisabled) {
           LOG(("enabling prefetching\n"));
           mPrefetchDisabled = false;
-          if (mPreloadDisabled) {
-            AddProgressListener();
-          }
+          AddProgressListener();
         }
       } else {
         if (!mPrefetchDisabled) {
           LOG(("disabling prefetching\n"));
           StopCurrentPrefetchsPreloads(false);
           mPrefetchDisabled = true;
-          if (mPreloadDisabled) {
-            RemoveProgressListener();
-          }
-        }
-      }
-    } else if (!strcmp(pref, PRELOAD_PREF)) {
-      if (Preferences::GetBool(PRELOAD_PREF, false)) {
-        if (mPreloadDisabled) {
-          LOG(("enabling preloading\n"));
-          mPreloadDisabled = false;
-          if (mPrefetchDisabled) {
-            AddProgressListener();
-          }
-        }
-      } else {
-        if (!mPreloadDisabled) {
-          LOG(("disabling preloading\n"));
-          StopCurrentPrefetchsPreloads(true);
-          mPreloadDisabled = true;
-          if (mPrefetchDisabled) {
-            RemoveProgressListener();
-          }
+          RemoveProgressListener();
         }
       }
     } else if (!strcmp(pref, PARALLELISM_PREF)) {

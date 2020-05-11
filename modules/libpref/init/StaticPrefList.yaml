@@ -7683,9 +7683,8 @@
   value: false
   mirror: always
 
-# Whether to use the new experimental preload code based on the speculative loader
-# inside the html5 parser.
-- name: network.preload-experimental
+# Enables <link rel="preload"> tag and `Link:` respose header handling.
+- name: network.preload
   type: RelaxedAtomicBool
   value: false
   mirror: always
