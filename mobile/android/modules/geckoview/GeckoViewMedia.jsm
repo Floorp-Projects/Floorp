@@ -93,6 +93,7 @@ const GeckoViewRecordingMedia = {
         const screen = {};
         const window = {};
         const browser = {};
+        const devices = {};
         MediaManagerService.mediaCaptureWindowState(
           win,
           hasCamera,
@@ -100,6 +101,7 @@ const GeckoViewRecordingMedia = {
           screen,
           window,
           browser,
+          devices,
           true
         );
         var cameraStatus = getStatusString(hasCamera.value);
