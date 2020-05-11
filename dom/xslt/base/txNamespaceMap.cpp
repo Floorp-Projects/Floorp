@@ -10,9 +10,8 @@
 txNamespaceMap::txNamespaceMap() = default;
 
 txNamespaceMap::txNamespaceMap(const txNamespaceMap& aOther)
-    : mPrefixes(aOther.mPrefixes) {
-  mNamespaces = aOther.mNamespaces;  // bah! I want a copy-constructor!
-}
+    : mPrefixes(aOther.mPrefixes.Clone()),
+      mNamespaces(aOther.mNamespaces.Clone()) {}
 
 nsresult txNamespaceMap::mapNamespace(nsAtom* aPrefix,
                                       const nsAString& aNamespaceURI) {
