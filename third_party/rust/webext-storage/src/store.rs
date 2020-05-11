@@ -100,15 +100,6 @@ impl Store {
         Ok(result)
     }
 
-    /// Wipe all local data without syncing or returning any information about
-    /// the deletion.
-    pub fn wipe_all(&self) -> Result<()> {
-        let tx = self.db.unchecked_transaction()?;
-        api::wipe_all(&tx)?;
-        tx.commit()?;
-        Ok(())
-    }
-
     /// Returns a bridged sync engine for Desktop for this store.
     pub fn bridged_engine(&self) -> sync::BridgedEngine<'_> {
         sync::BridgedEngine::new(&self.db)
