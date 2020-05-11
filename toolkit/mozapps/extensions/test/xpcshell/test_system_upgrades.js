@@ -79,6 +79,15 @@ async function promiseInstallProfileExtension(id, version, update_url) {
   });
 }
 
+async function promiseInstallSystemProfileAddon(id, version) {
+  let xpi = createWebExtensionFile(id, version);
+  const install = await AddonManager.getInstallForURL(`file://${xpi.path}`, {
+    useSystemLocation: true, // KEY_APP_SYSTEM_PROFILE
+  });
+
+  return install.install();
+}
+
 async function promiseUpdateSystemAddon(id, version, waitForStartup = true) {
   let xpi = createWebExtensionFile(id, version);
   let xml = buildSystemAddonUpdates([
@@ -138,6 +147,8 @@ async function checkAddon(version, reason, startReason = reason) {
  * Upgrade to a system addon in the profile location, "app-system-addons"
  * Upgrade to a temporary addon
  * Uninstalling the temporary addon downgrades to the system addon in "app-system-addons".
+ * Upgrade to a system addon in the "app-system-profile" location.
+ * Uninstalling the "app-system-profile" addon downgrades to the one in "app-system-addons".
  * Upgrade to a user-installed addon
  * Upgrade the addon in "app-system-addons", verify user-install is still active
  * Uninstall the addon in "app-system-addons", verify user-install is active
@@ -167,6 +178,18 @@ async function _test_builtin_addon_override() {
   /////
   // Downgrade back to the system addon
   /////
+  await addon.uninstall();
+  await checkAddon("2.0", BOOTSTRAP_REASONS.ADDON_DOWNGRADE);
+
+  /////
+  // Install then uninstall an system profile addon
+  /////
+  info("Install an System Profile Addon, then uninstall it.");
+  await Promise.all([
+    promiseInstallSystemProfileAddon(ADDON_ID, "2.2"),
+    AddonTestUtils.promiseWebExtensionStartup(ADDON_ID),
+  ]);
+  addon = await checkAddon("2.2", BOOTSTRAP_REASONS.ADDON_UPGRADE);
   await addon.uninstall();
   await checkAddon("2.0", BOOTSTRAP_REASONS.ADDON_DOWNGRADE);
 
