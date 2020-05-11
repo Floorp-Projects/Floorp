@@ -12,6 +12,7 @@
 #include "nsWeakReference.h"
 
 #include "unicode/uidna.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/net/IDNBlocklistUtils.h"
 
 #include "nsString.h"

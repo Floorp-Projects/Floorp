@@ -13,6 +13,8 @@
 #include "nsHashKeys.h"
 #include "nsDataHashtable.h"
 #include "mozilla/RWLock.h"
+#include "nsTArray.h"
+#include "prio.h"
 
 #if defined(XP_WIN)
 #  define DNSQUERY_AVAILABLE 1
