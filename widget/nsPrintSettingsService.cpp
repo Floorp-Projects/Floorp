@@ -423,24 +423,6 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
     if (success) {
       success = (sizeUnit != nsIPrintSettings::kPaperSizeInches) ||
                 (width < 100.0) || (height < 100.0);
-#if defined(XP_WIN)
-      // Work around legacy invalid prefs where the size unit gets set to
-      // millimeters, but the height and width remains as the previous inches
-      // settings. See bug 1276717 and bug 1369386 for details.
-      if (sizeUnit == nsIPrintSettings::kPaperSizeMillimeters && height >= 0L &&
-          height < 25L && width >= 0L && width < 25L) {
-        // As small pages sizes can be valid we only override when the old
-        // (now no longer set) pref print_paper_size_type exists. This will be
-        // removed when we save the prefs below.
-        const char* paperSizeTypePref =
-            GetPrefName("print_paper_size_type", aPrinterName);
-        if (Preferences::HasUserValue(paperSizeTypePref)) {
-          saveSanitizedSizePrefs = true;
-          height = -1L;
-          width = -1L;
-        }
-      }
-#endif
     }
 
     if (success) {
