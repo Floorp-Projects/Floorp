@@ -190,14 +190,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * another composite if there are still active animations.
    * In effect it is the webrender equivalent of (part of) the code in
    * AsyncCompositionManager.
-   * In the WebRender world a single "layer tree" might get split into multiple
-   * render roots; the aRenderRoot argument indicates which render root we are
-   * sampling in this call. The transaction should only be updated with samples
-   * from APZC instances in that render root.
    */
   void SampleForWebRender(wr::TransactionWrapper& aTxn,
                           const TimeStamp& aSampleTime,
-                          wr::RenderRoot aRenderRoot,
                           const wr::WrPipelineIdEpochs* aEpochsBeingRendered);
 
   /**
@@ -205,8 +200,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * advancing to the next frame. The APZCs walked can be restricted to a
    * specific render root by providing that as the first argument.
    */
-  bool AdvanceAnimations(Maybe<wr::RenderRoot> aRenderRoot,
-                         const TimeStamp& aSampleTime);
+  bool AdvanceAnimations(const TimeStamp& aSampleTime);
 
   /**
    * Refer to the documentation of APZInputBridge::ReceiveInputEvent() and
@@ -738,7 +732,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       LayersId aLayersId);
 
   bool AdvanceAnimationsInternal(const MutexAutoLock& aProofOfMapLock,
-                                 Maybe<wr::RenderRoot> aRenderRoot,
                                  const TimeStamp& aSampleTime);
 
   using ClippedCompositionBoundsMap =
