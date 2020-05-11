@@ -83,7 +83,14 @@ void PreloaderBase::AddLoadBackgroundFlag(nsIChannel* aChannel) {
 
 void PreloaderBase::NotifyOpen(PreloadHashKey* aKey, nsIChannel* aChannel,
                                dom::Document* aDocument, bool aIsPreload) {
-  // * Register this preload in document's preload service.
+  if (aDocument && !aDocument->Preloads().RegisterPreload(aKey, this)) {
+    // This means there is already a preload registered under this key in this
+    // document.  We only allow replacement when this is a regular load.
+    // Otherwise, this should never happen and is a suspected misuse of the API.
+    MOZ_ASSERT(!aIsPreload);
+    aDocument->Preloads().DeregisterPreload(aKey);
+    aDocument->Preloads().RegisterPreload(aKey, this);
+  }
 
   mChannel = aChannel;
   mKey = *aKey;
@@ -130,7 +137,7 @@ void PreloaderBase::NotifyUsage() {
 
 void PreloaderBase::NotifyRestart(dom::Document* aDocument,
                                   PreloaderBase* aNewPreloader) {
-  // * Deregister this preload from Document's preloads
+  aDocument->Preloads().DeregisterPreload(&mKey);
   mKey = PreloadHashKey();
 
   if (aNewPreloader) {
@@ -206,7 +213,14 @@ void PreloaderBase::RemoveLinkPreloadNode(nsINode* aNode) {
   mNodes.RemoveElement(node);
 
   if (mNodes.Length() == 0 && !mIsUsed) {
-    // * Deregister this preload from document's preloads
+    // Keep a reference, because the following call may release us.  The caller
+    // may use a WeakPtr to access this.
+    RefPtr<PreloaderBase> self(this);
+
+    dom::Document* doc = aNode->OwnerDoc();
+    if (doc) {
+      doc->Preloads().DeregisterPreload(&mKey);
+    }
 
     if (mChannel) {
       mChannel->Cancel(NS_BINDING_ABORTED);

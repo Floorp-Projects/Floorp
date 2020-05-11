@@ -10486,6 +10486,9 @@ void Document::Destroy() {
   // Manually break cycles via promise's global object pointer.
   mReadyForIdle = nullptr;
   mOrientationPendingPromise = nullptr;
+
+  // To break cycles.
+  mPreloadService.ClearAllPreloads();
 }
 
 void Document::RemovedFromDocShell() {
