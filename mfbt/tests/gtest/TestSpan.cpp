@@ -2220,6 +2220,31 @@ SPAN_TEST(split_at_static) {
   static_assert(splitAt3Result.second.Elements() == s.Elements() + 3);
 }
 
+SPAN_TEST(as_const_dynamic) {
+  static int arr[5] = {1, 2, 3, 4, 5};
+  auto span = Span{arr, 5};
+  auto constSpan = span.AsConst();
+  static_assert(std::is_same_v<Span<const int>, decltype(constSpan)>);
+}
+
+SPAN_TEST(as_const_static) {
+  {
+    static constexpr int constArr[5] = {1, 2, 3, 4, 5};
+    constexpr auto span = Span{constArr};  // is already a Span<const int>
+    constexpr auto constSpan = span.AsConst();
+
+    static_assert(
+        std::is_same_v<const Span<const int, 5>, decltype(constSpan)>);
+  }
+
+  {
+    static int arr[5] = {1, 2, 3, 4, 5};
+    auto span = Span{arr};
+    auto constSpan = span.AsConst();
+    static_assert(std::is_same_v<Span<const int, 5>, decltype(constSpan)>);
+  }
+}
+
 SPAN_TEST(construct_from_iterators_dynamic) {
   const int constArr[5] = {1, 2, 3, 4, 5};
   auto constSpan = Span{constArr};
