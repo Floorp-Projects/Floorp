@@ -252,7 +252,7 @@ already_AddRefed<Promise> Cache::Match(JSContext* aCx,
     return nullptr;
   }
 
-  CacheChild::AutoLock actorLock(mActor);
+  CacheChild::AutoLock actorLock(*mActor);
 
   RefPtr<InternalRequest> ir =
       ToInternalRequest(aCx, aRequest, IgnoreBody, aRv);
@@ -282,7 +282,7 @@ already_AddRefed<Promise> Cache::MatchAll(
     return nullptr;
   }
 
-  CacheChild::AutoLock actorLock(mActor);
+  CacheChild::AutoLock actorLock(*mActor);
 
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
@@ -314,7 +314,7 @@ already_AddRefed<Promise> Cache::Add(JSContext* aContext,
     return nullptr;
   }
 
-  CacheChild::AutoLock actorLock(mActor);
+  CacheChild::AutoLock actorLock(*mActor);
 
   if (!IsValidPutRequestMethod(aRequest, aRv)) {
     return nullptr;
@@ -348,7 +348,7 @@ already_AddRefed<Promise> Cache::AddAll(
     return nullptr;
   }
 
-  CacheChild::AutoLock actorLock(mActor);
+  CacheChild::AutoLock actorLock(*mActor);
 
   GlobalObject global(aContext, mGlobal->GetGlobalJSObject());
   MOZ_DIAGNOSTIC_ASSERT(!global.Failed());
@@ -394,7 +394,7 @@ already_AddRefed<Promise> Cache::Put(JSContext* aCx,
     return nullptr;
   }
 
-  CacheChild::AutoLock actorLock(mActor);
+  CacheChild::AutoLock actorLock(*mActor);
 
   if (NS_WARN_IF(!IsValidPutRequestMethod(aRequest, aRv))) {
     return nullptr;
@@ -428,7 +428,7 @@ already_AddRefed<Promise> Cache::Delete(JSContext* aCx,
     return nullptr;
   }
 
-  CacheChild::AutoLock actorLock(mActor);
+  CacheChild::AutoLock actorLock(*mActor);
 
   RefPtr<InternalRequest> ir =
       ToInternalRequest(aCx, aRequest, IgnoreBody, aRv);
@@ -457,7 +457,7 @@ already_AddRefed<Promise> Cache::Keys(
     return nullptr;
   }
 
-  CacheChild::AutoLock actorLock(mActor);
+  CacheChild::AutoLock actorLock(*mActor);
 
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
@@ -593,7 +593,7 @@ already_AddRefed<Promise> Cache::PutAll(
     return nullptr;
   }
 
-  CacheChild::AutoLock actorLock(mActor);
+  CacheChild::AutoLock actorLock(*mActor);
 
   AutoChildOpArgs args(this, CachePutAllArgs(), aRequestList.Length());
 
