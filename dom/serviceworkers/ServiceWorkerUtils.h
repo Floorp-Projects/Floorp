@@ -26,7 +26,7 @@ typedef MozPromise<ServiceWorkerRegistrationDescriptor, CopyableErrorResult,
                    false>
     ServiceWorkerRegistrationPromise;
 
-typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>,
+typedef MozPromise<CopyableTArray<ServiceWorkerRegistrationDescriptor>,
                    CopyableErrorResult, false>
     ServiceWorkerRegistrationListPromise;
 

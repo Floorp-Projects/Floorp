@@ -1249,7 +1249,7 @@ already_AddRefed<ExtendableMessageEvent> ExtendableMessageEvent::Constructor(
 }
 
 void ExtendableMessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts) {
-  aPorts = mPorts;
+  aPorts = mPorts.Clone();
 }
 
 NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(ExtendableMessageEvent)
