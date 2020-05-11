@@ -4592,16 +4592,12 @@ void MacroAssembler::branchValueIsNurseryCell(Condition cond,
                                               const Address& address,
                                               Register temp, Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-  Label done, checkAddress;
 
-  Register tag = temp;
-  tag = extractTag(address, tag);
-  branchTestObject(Assembler::Equal, tag, &checkAddress);
-  branchTestString(Assembler::Equal, tag, &checkAddress);
-  branchTestBigInt(Assembler::NotEqual, tag,
-                   cond == Assembler::Equal ? &done : label);
+  Label done;
 
-  bind(&checkAddress);
+  branchTestGCThing(Assembler::NotEqual, address,
+                    cond == Assembler::Equal ? &done : label);
+
   loadPtr(ToPayload(address), temp);
   SecondScratchRegisterScope scratch2(*this);
   branchPtrInNurseryChunk(cond, temp, scratch2, label);
@@ -4613,14 +4609,11 @@ void MacroAssembler::branchValueIsNurseryCell(Condition cond,
                                               ValueOperand value, Register temp,
                                               Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-  Label done, checkAddress;
 
-  branchTestObject(Assembler::Equal, value.typeReg(), &checkAddress);
-  branchTestString(Assembler::Equal, value.typeReg(), &checkAddress);
-  branchTestBigInt(Assembler::NotEqual, value.typeReg(),
-                   cond == Assembler::Equal ? &done : label);
+  Label done;
 
-  bind(&checkAddress);
+  branchTestGCThing(Assembler::NotEqual, value,
+                    cond == Assembler::Equal ? &done : label);
   branchPtrInNurseryChunk(cond, value.payloadReg(), temp, label);
 
   bind(&done);
