@@ -444,7 +444,7 @@ void ServiceWorkerRegistrationInfo::UpdateRegistrationState(
 
 void ServiceWorkerRegistrationInfo::NotifyChromeRegistrationListeners() {
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> listeners(
-      mListeners);
+      mListeners.Clone());
   for (size_t index = 0; index < listeners.Length(); ++index) {
     listeners[index]->OnChange();
   }

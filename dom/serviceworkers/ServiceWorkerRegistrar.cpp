@@ -304,7 +304,7 @@ void ServiceWorkerRegistrar::RemoveAll() {
     MOZ_ASSERT(mDataLoaded);
 
     // Let's take a copy in order to inform StorageActivityService.
-    data = mData;
+    data = mData.Clone();
 
     deleted = !mData.IsEmpty();
     mData.Clear();
