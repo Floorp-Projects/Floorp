@@ -312,6 +312,7 @@ nsresult AttrArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet) {
   RefPtr<nsMappedAttributes> mapped =
       GetModifiableMapped(nullptr, nullptr, false);
 
+  mapped->DropStyleSheetReference();
   mapped->SetStyleSheet(aSheet);
 
   return MakeMappedUnique(mapped);

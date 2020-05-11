@@ -10,6 +10,7 @@
  */
 
 #include "nsMappedAttributes.h"
+#include "mozilla/Assertions.h"
 #include "nsHTMLStyleSheet.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/HashFunctions.h"
@@ -215,9 +216,9 @@ PLDHashNumber nsMappedAttributes::HashValue() const {
 }
 
 void nsMappedAttributes::SetStyleSheet(nsHTMLStyleSheet* aSheet) {
-  if (mSheet) {
-    mSheet->DropMappedAttributes(this);
-  }
+  MOZ_ASSERT(!mSheet,
+             "Should either drop the sheet reference manually, "
+             "or drop the mapped attributes");
   mSheet = aSheet;  // not ref counted
 }
 
