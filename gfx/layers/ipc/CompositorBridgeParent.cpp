@@ -677,12 +677,11 @@ void CompositorBridgeParent::ActorDestroy(ActorDestroyReason why) {
                         &CompositorBridgeParent::DeferredDestroy));
 }
 
-void CompositorBridgeParent::ScheduleRenderOnCompositorThread(
-    const wr::RenderRootSet& aRenderRoots) {
+void CompositorBridgeParent::ScheduleRenderOnCompositorThread() {
   MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(NewRunnableMethod<wr::RenderRootSet>(
+  CompositorThread()->Dispatch(NewRunnableMethod(
       "layers::CompositorBridgeParent::ScheduleComposition", this,
-      &CompositorBridgeParent::ScheduleComposition, aRenderRoots));
+      &CompositorBridgeParent::ScheduleComposition));
 }
 
 void CompositorBridgeParent::InvalidateOnCompositorThread() {
@@ -751,7 +750,7 @@ void CompositorBridgeParent::ResumeComposition() {
 void CompositorBridgeParent::ForceComposition() {
   // Cancel the orientation changed state to force composition
   mForceCompositionTask = nullptr;
-  ScheduleRenderOnCompositorThread(wr::RenderRootSet());
+  ScheduleRenderOnCompositorThread();
 }
 
 void CompositorBridgeParent::CancelCurrentCompositeTask() {
@@ -880,8 +879,7 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
   }
 }
 
-void CompositorBridgeParent::ScheduleComposition(
-    const wr::RenderRootSet& aRenderRoots) {
+void CompositorBridgeParent::ScheduleComposition() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;

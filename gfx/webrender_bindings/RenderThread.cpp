@@ -1080,17 +1080,11 @@ void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId,
                                              std::move(evt));
 }
 
-void wr_schedule_render(mozilla::wr::WrWindowId aWindowId,
-                        const mozilla::wr::WrDocumentId* aDocumentIds,
-                        size_t aDocumentIdsCount) {
+void wr_schedule_render(mozilla::wr::WrWindowId aWindowId) {
   RefPtr<mozilla::layers::CompositorBridgeParent> cbp = mozilla::layers::
       CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
   if (cbp) {
-    wr::RenderRootSet renderRoots;
-    for (size_t i = 0; i < aDocumentIdsCount; ++i) {
-      renderRoots += wr::RenderRootFromId(aDocumentIds[i]);
-    }
-    cbp->ScheduleRenderOnCompositorThread(renderRoots);
+    cbp->ScheduleRenderOnCompositorThread();
   }
 }
 

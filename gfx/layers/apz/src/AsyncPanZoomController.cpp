@@ -3807,8 +3807,7 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
 
 void AsyncPanZoomController::ScheduleComposite() {
   if (mCompositorController) {
-    mCompositorController->ScheduleRenderOnCompositorThread(
-        wr::RenderRootSet(mRenderRoot));
+    mCompositorController->ScheduleRenderOnCompositorThread();
   }
 }
 
