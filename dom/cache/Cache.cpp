@@ -103,7 +103,7 @@ static bool IsValidPutResponseStatus(Response& aResponse,
 class Cache::FetchHandler final : public PromiseNativeHandler {
  public:
   FetchHandler(SafeRefPtr<CacheWorkerRef> aWorkerRef, Cache* aCache,
-               nsTArray<RefPtr<Request>>&& aRequestList, Promise* aPromise)
+               nsTArray<SafeRefPtr<Request>>&& aRequestList, Promise* aPromise)
       : mWorkerRef(std::move(aWorkerRef)),
         mCache(aCache),
         mRequestList(std::move(aRequestList)),
@@ -217,7 +217,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
 
   SafeRefPtr<CacheWorkerRef> mWorkerRef;
   RefPtr<Cache> mCache;
-  nsTArray<RefPtr<Request>> mRequestList;
+  nsTArray<SafeRefPtr<Request>> mRequestList;
   RefPtr<Promise> mPromise;
 
   NS_DECL_ISUPPORTS
@@ -322,8 +322,8 @@ already_AddRefed<Promise> Cache::Add(JSContext* aContext,
   GlobalObject global(aContext, mGlobal->GetGlobalJSObject());
   MOZ_DIAGNOSTIC_ASSERT(!global.Failed());
 
-  nsTArray<RefPtr<Request>> requestList(1);
-  RefPtr<Request> request =
+  nsTArray<SafeRefPtr<Request>> requestList(1);
+  SafeRefPtr<Request> request =
       Request::Constructor(global, aRequest, RequestInit(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -352,7 +352,7 @@ already_AddRefed<Promise> Cache::AddAll(
   GlobalObject global(aContext, mGlobal->GetGlobalJSObject());
   MOZ_DIAGNOSTIC_ASSERT(!global.Failed());
 
-  nsTArray<RefPtr<Request>> requestList(aRequestList.Length());
+  nsTArray<SafeRefPtr<Request>> requestList(aRequestList.Length());
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
     RequestOrUSVString requestOrString;
 
@@ -367,7 +367,7 @@ already_AddRefed<Promise> Cache::AddAll(
           aRequestList[i].GetAsUSVString());
     }
 
-    RefPtr<Request> request =
+    SafeRefPtr<Request> request =
         Request::Constructor(global, requestOrString, RequestInit(), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -531,7 +531,7 @@ already_AddRefed<Promise> Cache::ExecuteOp(AutoChildOpArgs& aOpArgs,
 }
 
 already_AddRefed<Promise> Cache::AddAll(
-    const GlobalObject& aGlobal, nsTArray<RefPtr<Request>>&& aRequestList,
+    const GlobalObject& aGlobal, nsTArray<SafeRefPtr<Request>>&& aRequestList,
     CallerType aCallerType, ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(mActor);
 
@@ -555,7 +555,7 @@ already_AddRefed<Promise> Cache::AddAll(
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
     RequestOrUSVString requestOrString;
-    requestOrString.SetAsRequest() = aRequestList[i];
+    requestOrString.SetAsRequest() = aRequestList[i].unsafeGetRawPtr();
     RefPtr<Promise> fetch =
         FetchRequest(mGlobal, requestOrString, RequestInit(), aCallerType, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -585,7 +585,7 @@ already_AddRefed<Promise> Cache::AddAll(
 }
 
 already_AddRefed<Promise> Cache::PutAll(
-    JSContext* aCx, const nsTArray<RefPtr<Request>>& aRequestList,
+    JSContext* aCx, const nsTArray<SafeRefPtr<Request>>& aRequestList,
     const nsTArray<RefPtr<Response>>& aResponseList, ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(aRequestList.Length() == aResponseList.Length());
 

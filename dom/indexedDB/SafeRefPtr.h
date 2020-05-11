@@ -420,6 +420,15 @@ struct CopyablePtr<SafeRefPtr<T>> {
 
 }  // namespace detail
 
+namespace dom {
+/// XXX Move this to BindingUtils.h later on
+template <class T, class S>
+inline RefPtr<T> StrongOrRawPtr(SafeRefPtr<S>&& aPtr) {
+  return AsRefPtr(std::move(aPtr));
+}
+
+}  // namespace dom
+
 }  // namespace mozilla
 
 // Use MOZ_INLINE_DECL_SAFEREFCOUNTING_INHERITED in a 'Class' derived from a

@@ -82,7 +82,7 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(
 
     // Check and set bodyUsed flag immediately because its on Request
     // instead of InternalRequest.
-    CheckAndSetBodyUsed(aCx, &request, aBodyAction, aRv);
+    CheckAndSetBodyUsed(aCx, request, aBodyAction, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
@@ -97,7 +97,7 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(
     JSContext* aCx, const OwningRequestOrUSVString& aIn, BodyAction aBodyAction,
     ErrorResult& aRv) {
   if (aIn.IsRequest()) {
-    RefPtr<Request> request = aIn.GetAsRequest().get();
+    Request& request = aIn.GetAsRequest();
 
     // Check and set bodyUsed flag immediately because its on Request
     // instead of InternalRequest.
@@ -106,7 +106,7 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(
       return nullptr;
     }
 
-    return request->GetInternalRequest();
+    return request.GetInternalRequest();
   }
 
   return ToInternalRequest(aIn.GetAsUSVString(), aRv);
@@ -338,10 +338,9 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(
   return internalRequest;
 }
 
-already_AddRefed<Request> TypeUtils::ToRequest(const CacheRequest& aIn) {
-  RefPtr<Request> request =
-      new Request(GetGlobalObject(), ToInternalRequest(aIn), nullptr);
-  return request.forget();
+SafeRefPtr<Request> TypeUtils::ToRequest(const CacheRequest& aIn) {
+  return MakeSafeRefPtr<Request>(GetGlobalObject(), ToInternalRequest(aIn),
+                                 nullptr);
 }
 
 // static
@@ -418,15 +417,13 @@ void TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
   *aUrlQueryOut = Substring(aUrl, queryPos - 1, queryLen + 1);
 }
 
-void TypeUtils::CheckAndSetBodyUsed(JSContext* aCx, Request* aRequest,
+void TypeUtils::CheckAndSetBodyUsed(JSContext* aCx, Request& aRequest,
                                     BodyAction aBodyAction, ErrorResult& aRv) {
-  MOZ_DIAGNOSTIC_ASSERT(aRequest);
-
   if (aBodyAction == IgnoreBody) {
     return;
   }
 
-  bool bodyUsed = aRequest->GetBodyUsed(aRv);
+  bool bodyUsed = aRequest.GetBodyUsed(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -436,9 +433,9 @@ void TypeUtils::CheckAndSetBodyUsed(JSContext* aCx, Request* aRequest,
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  aRequest->GetBody(getter_AddRefs(stream));
+  aRequest.GetBody(getter_AddRefs(stream));
   if (stream) {
-    aRequest->SetBodyUsed(aCx, aRv);
+    aRequest.SetBodyUsed(aCx, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
@@ -460,7 +457,7 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(const nsAString& aIn,
   GlobalObject global(cx, GetGlobalObject()->GetGlobalJSObject());
   MOZ_DIAGNOSTIC_ASSERT(!global.Failed());
 
-  RefPtr<Request> request =
+  SafeRefPtr<Request> request =
       Request::Constructor(global, requestOrString, RequestInit(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;

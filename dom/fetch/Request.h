@@ -100,20 +100,20 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
 
   const nsAString& BodyLocalPath() const { return mRequest->BodyLocalPath(); }
 
-  static already_AddRefed<Request> Constructor(const GlobalObject& aGlobal,
-                                               const RequestOrUSVString& aInput,
-                                               const RequestInit& aInit,
-                                               ErrorResult& rv);
+  static SafeRefPtr<Request> Constructor(const GlobalObject& aGlobal,
+                                         const RequestOrUSVString& aInput,
+                                         const RequestInit& aInit,
+                                         ErrorResult& rv);
 
-  static already_AddRefed<Request> Constructor(nsIGlobalObject* aGlobal,
-                                               JSContext* aCx,
-                                               const RequestOrUSVString& aInput,
-                                               const RequestInit& aInit,
-                                               ErrorResult& rv);
+  static SafeRefPtr<Request> Constructor(nsIGlobalObject* aGlobal,
+                                         JSContext* aCx,
+                                         const RequestOrUSVString& aInput,
+                                         const RequestInit& aInit,
+                                         ErrorResult& rv);
 
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
-  already_AddRefed<Request> Clone(ErrorResult& aRv);
+  SafeRefPtr<Request> Clone(ErrorResult& aRv);
 
   SafeRefPtr<InternalRequest> GetInternalRequest();
 
