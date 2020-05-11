@@ -42,6 +42,12 @@ TEST_FAIL_STRING = "TEST-UNEXPECTED-FAIL"
 
 SIMPLE_PASSING_TEST = "function run_test() { Assert.ok(true); }"
 SIMPLE_FAILING_TEST = "function run_test() { Assert.ok(false); }"
+SIMPLE_PREFCHECK_TEST = '''
+function run_test() {
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Assert.ok(Services.prefs.getBoolPref("fake.pref.to.test"));
+}
+'''
 
 SIMPLE_UNCAUGHT_REJECTION_TEST = '''
 function run_test() {
@@ -512,13 +518,14 @@ class XPCShellTestsTests(unittest.TestCase):
             f.write(contents)
         return fullpath
 
-    def writeManifest(self, tests):
+    def writeManifest(self, tests, prefs=[]):
         """
         Write an xpcshell.ini in the temp directory and set
         self.manifest to its pathname. |tests| is a list containing
         either strings (for test names), or tuples with a test name
         as the first element and manifest conditions as the following
-        elements.
+        elements. |prefs| is an optional list of prefs in the form of
+        "prefname=prefvalue" strings.
         """
         testlines = []
         for t in tests:
@@ -526,12 +533,17 @@ class XPCShellTestsTests(unittest.TestCase):
                                        else t[0]))
             if isinstance(t, tuple):
                 testlines.extend(t[1:])
+        prefslines = []
+        for p in prefs:
+            # Append prefs lines as indented inside "prefs=" manifest option.
+            prefslines.append("  %s" % p)
+
         self.manifest = self.writeFile("xpcshell.ini", """
 [DEFAULT]
 head =
 tail =
-
-""" + "\n".join(testlines))
+prefs =
+""" + "\n".join(prefslines) + "\n" + "\n".join(testlines))
 
     def assertTestResult(self, expected, shuffle=False, verbose=False, headless=False):
         """
@@ -606,6 +618,24 @@ tail =
         self.assertEquals(0, self.x.todoCount)
         self.assertInLog(TEST_FAIL_STRING)
         self.assertNotInLog(TEST_PASS_STRING)
+
+    def testPrefsInManifest(self):
+        """
+        Check prefs configuration option is supported in xpcshell manifests.
+        """
+        self.writeFile("test_prefs.js", SIMPLE_PREFCHECK_TEST)
+        self.writeManifest(
+            tests=["test_prefs.js"],
+            prefs=["fake.pref.to.test=true"]
+        )
+
+        self.assertTestResult(True)
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertNotInLog(TEST_FAIL_STRING)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertInLog("Per-test extra prefs will be set:")
+        self.assertInLog("fake.pref.to.test=true")
 
     @unittest.skipIf(mozinfo.isWin or not mozinfo.info.get('debug'),
                      'We don\'t have a stack fixer on hand for windows.')
