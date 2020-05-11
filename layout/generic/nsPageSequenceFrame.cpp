@@ -702,7 +702,7 @@ void nsPageSequenceFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   content.AppendNewToTop<nsDisplayTransform>(aBuilder, this, &content,
-                                             content.GetBuildingRect(), 0,
+                                             content.GetBuildingRect(),
                                              ::ComputePageSequenceTransform);
 
   aLists.Content()->AppendToTop(&content);
