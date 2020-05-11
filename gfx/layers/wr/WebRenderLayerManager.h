@@ -176,10 +176,7 @@ class WebRenderLayerManager final : public LayerManager {
   void StopFrameTimeRecording(uint32_t aStartIndex,
                               nsTArray<float>& aFrameIntervals) override;
 
-  RenderRootStateManager* GetRenderRootStateManager(
-      wr::RenderRoot aRenderRoot) {
-    return &mStateManagers[aRenderRoot];
-  }
+  RenderRootStateManager* GetRenderRootStateManager() { return &mStateManager; }
 
   virtual void PayloadPresented() override;
 
@@ -229,7 +226,7 @@ class WebRenderLayerManager final : public LayerManager {
   WebRenderCommandBuilder mWebRenderCommandBuilder;
 
   size_t mLastDisplayListSize;
-  wr::RenderRootArray<RenderRootStateManager> mStateManagers;
+  RenderRootStateManager mStateManager;
   DisplayItemCache mDisplayItemCache;
 };
 
