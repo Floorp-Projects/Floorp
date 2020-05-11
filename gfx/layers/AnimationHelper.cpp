@@ -731,8 +731,7 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
       motion, transformOrigin);
 
   return nsDisplayTransform::GetResultingTransformMatrix(
-      props, refBox, aTransformData.origin(),
-      aTransformData.appUnitsPerDevPixel(), 0);
+      props, refBox, aTransformData.appUnitsPerDevPixel());
 }
 
 }  // namespace layers

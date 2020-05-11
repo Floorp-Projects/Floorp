@@ -7054,7 +7054,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
                                                uint32_t aFlags);
   static Matrix4x4 GetResultingTransformMatrix(
       const FrameTransformProperties& aProperties, TransformReferenceBox&,
-      const nsPoint& aOrigin, float aAppUnitsPerPixel, uint32_t aFlags);
+      float aAppUnitsPerPixel);
 
   struct PrerenderInfo {
     PrerenderDecision mDecision = PrerenderDecision::No;

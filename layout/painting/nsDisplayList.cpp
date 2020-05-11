@@ -101,6 +101,7 @@
 #include "nsFocusManager.h"
 #include "ClientLayerManager.h"
 #include "mozilla/layers/AnimationHelper.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -7563,9 +7564,10 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(
  */
 Matrix4x4 nsDisplayTransform::GetResultingTransformMatrix(
     const FrameTransformProperties& aProperties, TransformReferenceBox& aRefBox,
-    const nsPoint& aOrigin, float aAppUnitsPerPixel, uint32_t aFlags) {
-  return GetResultingTransformMatrixInternal(aProperties, aRefBox, aOrigin,
-                                             aAppUnitsPerPixel, aFlags);
+    float aAppUnitsPerPixel) {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  return GetResultingTransformMatrixInternal(aProperties, aRefBox, nsPoint(),
+                                             aAppUnitsPerPixel, 0);
 }
 
 Matrix4x4 nsDisplayTransform::GetResultingTransformMatrix(
