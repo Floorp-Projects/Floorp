@@ -15,6 +15,7 @@ namespace dom {
 class Element;
 class HTMLFieldSetElement;
 class HTMLFormSubmission;
+class DialogFormSubmission;
 class HTMLFormElement;
 }  // namespace dom
 }  // namespace mozilla

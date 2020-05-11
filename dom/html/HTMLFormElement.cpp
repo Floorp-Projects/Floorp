@@ -338,6 +338,10 @@ bool HTMLFormElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                      nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::method) {
+      if (StaticPrefs::dom_dialog_element_enabled()) {
+        return aResult.ParseEnumValue(aValue, kFormMethodTableDialogEnabled,
+                                      false);
+      }
       return aResult.ParseEnumValue(aValue, kFormMethodTable, false);
     }
     if (aAttribute == nsGkAtoms::enctype) {
@@ -682,6 +686,26 @@ nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
   //
   // perform the submission
   //
+  if (!submission) {
+    mIsSubmitting = false;
+#ifdef DEBUG
+    HTMLDialogElement* dialog = nullptr;
+    for (nsIContent* parent = GetParent(); parent;
+         parent = parent->GetParent()) {
+      dialog = HTMLDialogElement::FromNodeOrNull(parent);
+      if (dialog) {
+        break;
+      }
+    }
+    MOZ_ASSERT(!dialog || !dialog->Open());
+#endif
+    return NS_OK;
+  }
+
+  if (DialogFormSubmission* dialogSubmission =
+          submission->GetAsDialogSubmission()) {
+    return SubmitDialog(dialogSubmission);
+  }
   return SubmitSubmission(submission.get());
 }
 
@@ -726,8 +750,10 @@ nsresult HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
   //
   // Dump the data into the submission object
   //
-  rv = formData->CopySubmissionDataTo(*aFormSubmission);
-  NS_ENSURE_SUBMIT_SUCCESS(rv);
+  if (!(*aFormSubmission)->GetAsDialogSubmission()) {
+    rv = formData->CopySubmissionDataTo(*aFormSubmission);
+    NS_ENSURE_SUBMIT_SUCCESS(rv);
+  }
 
   return NS_OK;
 }
@@ -839,6 +865,22 @@ nsresult HTMLFormElement::SubmitSubmission(
   }
 
   return rv;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#submit-dialog
+nsresult HTMLFormElement::SubmitDialog(DialogFormSubmission* aFormSubmission) {
+  mIsSubmitting = false;
+
+  // Close the dialog subject. If there is a result, let that be the return
+  // value.
+  HTMLDialogElement* dialog = aFormSubmission->DialogElement();
+  MOZ_ASSERT(dialog);
+
+  Optional<nsAString> retValue;
+  retValue = &aFormSubmission->ReturnValue();
+  dialog->Close(retValue);
+
+  return NS_OK;
 }
 
 nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,

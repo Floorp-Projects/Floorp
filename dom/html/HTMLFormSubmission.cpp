@@ -830,6 +830,33 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
     GetEnumAttr(aForm, nsGkAtoms::method, &method);
   }
 
+  if (method == NS_FORM_METHOD_DIALOG) {
+    HTMLDialogElement* dialog = nullptr;
+    for (nsIContent* parent = aForm->GetParent(); parent;
+         parent = parent->GetParent()) {
+      dialog = HTMLDialogElement::FromNodeOrNull(parent);
+      if (dialog) {
+        break;
+      }
+    }
+
+    // If there isn't one, or if it does not have an open attribute, do
+    // nothing.
+    if (!dialog || !dialog->Open()) {
+      return NS_OK;
+    }
+
+    nsAutoString result;
+    if (aSubmitter) {
+      aSubmitter->ResultForDialogSubmit(result);
+    }
+    *aFormSubmission = new DialogFormSubmission(result, actionURL, target,
+                                                aEncoding, aSubmitter, dialog);
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(method != NS_FORM_METHOD_DIALOG);
+
   // Choose encoder
   if (method == NS_FORM_METHOD_POST && enctype == NS_FORM_ENCTYPE_MULTIPART) {
     *aFormSubmission =
