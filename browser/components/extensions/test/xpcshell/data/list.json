@@ -1,0 +1,8 @@
+{
+  "default": {
+    "searchDefault": "test",
+    "visibleDefaultEngines": [
+      "test"
+    ]
+  }
+}
