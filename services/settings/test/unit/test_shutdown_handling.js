@@ -3,9 +3,12 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
 );
+
 const { Database } = ChromeUtils.import(
   "resource://services-settings/Database.jsm"
 );
@@ -96,26 +99,28 @@ add_task(async function test_shutdown_immediate_abort() {
 });
 
 add_task(async function test_shutdown_worker() {
-  // Fallback for android:
-  let importPromise = Promise.resolve();
-  let client;
-  // Android has no dumps, so only run the import if we do have dumps:
-  if (AppConstants.platform != "android") {
-    client = new RemoteSettingsClient("language-dictionaries", {
-      bucketNamePref: "services.settings.default_bucket",
-    });
-    const before = await client.get({ syncIfEmpty: false });
-    Assert.equal(before.length, 0);
+  let client = new RemoteSettingsClient("language-dictionaries", {
+    bucketNamePref: "services.settings.default_bucket",
+  });
+  const before = await client.get({ syncIfEmpty: false });
+  Assert.equal(before.length, 0);
 
-    importPromise = RemoteSettingsWorker.importJSONDump(
-      "main",
-      "language-dictionaries"
-    );
-  }
+  let records = [{}];
+  let importPromise = RemoteSettingsWorker._execute(
+    "_test_only_import",
+    ["main", "language-dictionaries", records],
+    { mustComplete: true }
+  );
   let stringifyPromise = RemoteSettingsWorker.canonicalStringify(
     [],
     [],
     Date.now()
+  );
+  // Change the idle time so we shut the worker down even though we can't
+  // set gShutdown from outside of the worker management code.
+  Services.prefs.setIntPref(
+    "services.settings.worker_idle_max_milliseconds",
+    1
   );
   RemoteSettingsWorker._abortCancelableRequests();
   await Assert.rejects(
@@ -123,9 +128,16 @@ add_task(async function test_shutdown_worker() {
     /Shutdown/,
     "Should have aborted the stringify request at shutdown."
   );
-  await importPromise.catch(e => ok(false, "importing failed!"));
-  if (client) {
-    const after = await client.get();
-    Assert.ok(after.length > 0);
-  }
+  await Assert.rejects(
+    importPromise,
+    /shutting down/,
+    "Ensure imports get aborted during shutdown"
+  );
+  const after = await client.get({ syncIfEmpty: false });
+  Assert.equal(after.length, 0);
+  await TestUtils.waitForCondition(() => !RemoteSettingsWorker.worker);
+  Assert.ok(
+    !RemoteSettingsWorker.worker,
+    "Worker should have been terminated."
+  );
 });

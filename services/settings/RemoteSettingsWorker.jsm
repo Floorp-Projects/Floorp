@@ -56,11 +56,16 @@ class Worker {
   }
 
   async _execute(method, args = [], options = {}) {
-    if (gShutdown) {
+    // Check if we're shutting down.
+    if (gShutdown && method != "prepareShutdown") {
       throw new RemoteSettingsWorkerError("Remote Settings has shut down.");
     }
-    const { mustComplete = false } = options;
+    // Don't instantiate the worker to shut it down.
+    if (method == "prepareShutdown" && !this.worker) {
+      return null;
+    }
 
+    const { mustComplete = false } = options;
     // (Re)instantiate the worker if it was terminated.
     if (!this.worker) {
       this.worker = new ChromeWorker(this.source);
@@ -93,6 +98,11 @@ class Worker {
 
   _onWorkerMessage(event) {
     const { callbackId, result, error } = event.data;
+    // If we're shutting down, we may have already rejected this operation
+    // and removed its callback from our map:
+    if (!this.callbacks.has(callbackId)) {
+      return;
+    }
     const { resolve, reject } = this.callbacks.get(callbackId);
     if (error) {
       reject(new RemoteSettingsWorkerError(error));
@@ -140,6 +150,8 @@ class Worker {
     }
     // If there was something left, we'll stop as soon as we get messages from
     // those tasks, too.
+    // Let's hurry them along a bit:
+    this._execute("prepareShutdown");
   }
 
   stop() {
