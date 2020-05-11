@@ -1852,7 +1852,7 @@ void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
   xevent.xclient.message_type = type;
   xevent.xclient.format = 32;
   xevent.xclient.data.l[0] = value;
-  xevent.xclient.data.l[1] = CurrentTime;
+  xevent.xclient.data.l[1] = X11CurrentTime;
   xevent.xclient.data.l[2] = 0;
   xevent.xclient.data.l[3] = 0;
   xevent.xclient.data.l[4] = 0;

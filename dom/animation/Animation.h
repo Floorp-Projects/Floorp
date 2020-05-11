@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_Animation_h
 #define mozilla_dom_Animation_h
 
+#include "X11UndefineNone.h"
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/AnimationPerformanceWarning.h"
@@ -24,11 +25,6 @@
 #include "mozilla/dom/Promise.h"
 #include "nsCSSPropertyID.h"
 #include "nsIGlobalObject.h"
-
-// X11 has a #define for CurrentTime.
-#ifdef CurrentTime
-#  undef CurrentTime
-#endif
 
 struct JSContext;
 class nsCSSPropertyIDSet;

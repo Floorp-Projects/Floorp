@@ -32,6 +32,11 @@
 #  undef Complex
 #endif
 
+#ifdef CurrentTime
+#  undef CurrentTime
+#  define X11CurrentTime 0L
+#endif
+
 // X11/Xlib.h also defines True and False, get rid of those too for
 // the same reasons as above...
 #ifdef True
