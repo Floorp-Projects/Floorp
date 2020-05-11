@@ -6,10 +6,20 @@
 #ifndef PreloadService_h__
 #define PreloadService_h__
 
+#include "nsIContentPolicy.h"
+#include "nsIReferrerInfo.h"
+#include "nsIURI.h"
 #include "nsRefPtrHashtable.h"
 #include "PreloaderBase.h"
 
 namespace mozilla {
+
+namespace dom {
+
+class HTMLLinkElement;
+class Document;
+
+}  // namespace dom
 
 /**
  * Intended to scope preloads and speculative loads under one roof.  This class
@@ -20,6 +30,8 @@ namespace mozilla {
  */
 class PreloadService {
  public:
+  explicit PreloadService(dom::Document* aDocument) : mDocument(aDocument) {}
+
   // Called by resource loaders to register a running resource load.  This is
   // called for a speculative load when it's started the first time, being it
   // either regular speculative load or a preload.
@@ -42,8 +54,28 @@ class PreloadService {
   // registered under the key.
   already_AddRefed<PreloaderBase> LookupPreload(PreloadHashKey* aKey) const;
 
+  void SetSpeculationBase(nsIURI* aURI) { mSpeculationBaseURI = aURI; }
+  already_AddRefed<nsIURI> GetPreloadURI(const nsAString& aURL);
+
+  already_AddRefed<PreloaderBase> PreloadLinkElement(
+      dom::HTMLLinkElement* aLinkElement, nsContentPolicyType aPolicyType,
+      nsIReferrerInfo* aReferrerInfo);
+
+  static void NotifyNodeEvent(nsINode* aNode, bool aSuccess);
+
+ private:
+  dom::ReferrerPolicy PreloadReferrerPolicy(const nsAString& aReferrerPolicy);
+  bool CheckReferrerURIScheme(nsIReferrerInfo* aReferrerInfo);
+  nsIURI* BaseURIForPreload();
+
  private:
   nsRefPtrHashtable<PreloadHashKey, PreloaderBase> mPreloads;
+
+  // Raw pointer only, we are intended to be a direct member of dom::Document
+  dom::Document* mDocument;
+
+  // Set by `nsHtml5TreeOpExecutor::SetSpeculationBase`.
+  nsCOMPtr<nsIURI> mSpeculationBaseURI;
 };
 
 }  // namespace mozilla
