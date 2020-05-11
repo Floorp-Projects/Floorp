@@ -11,12 +11,7 @@ class TestProcessActorParent extends JSProcessActorParent {
     super();
     this.wrappedJSObject = this;
   }
-  actorCreated() {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
-    Services.obs.notifyObservers(null, "test-process-actor-parent-created");
-  }
+
   receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "init":
