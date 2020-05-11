@@ -67,7 +67,7 @@ public:
   static void StaticFileSizeExceedCallback();
   static void StaticGracefulExitCallback();
 
-  void ExecuteCallback(const uint8_t *Data, size_t Size);
+  int ExecuteCallback(const uint8_t *Data, size_t Size);
   bool RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile = false,
               InputInfo *II = nullptr, bool *FoundUniqFeatures = nullptr);
 

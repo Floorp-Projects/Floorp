@@ -1,0 +1,130 @@
+# HG changeset patch
+# User Christian Holler <choller@mozilla.com>
+# Date 1586345242 -7200
+#      Wed Apr 08 13:27:22 2020 +0200
+# Node ID 142bb91a6f14a721fea81c75d18da92edb6e6ea3
+# Parent  ab10fba76a52a5b205038150ad198dfc4583c566
+[libFuzzer] Change libFuzzer callback contract to allow positive return values
+
+diff --git a/tools/fuzzing/libfuzzer/FuzzerInternal.h b/tools/fuzzing/libfuzzer/FuzzerInternal.h
+--- a/tools/fuzzing/libfuzzer/FuzzerInternal.h
++++ b/tools/fuzzing/libfuzzer/FuzzerInternal.h
+@@ -62,17 +62,17 @@ public:
+ 
+   static void StaticAlarmCallback();
+   static void StaticCrashSignalCallback();
+   static void StaticExitCallback();
+   static void StaticInterruptCallback();
+   static void StaticFileSizeExceedCallback();
+   static void StaticGracefulExitCallback();
+ 
+-  void ExecuteCallback(const uint8_t *Data, size_t Size);
++  int ExecuteCallback(const uint8_t *Data, size_t Size);
+   bool RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile = false,
+               InputInfo *II = nullptr, bool *FoundUniqFeatures = nullptr);
+ 
+   // Merge Corpora[1:] into Corpora[0].
+   void Merge(const Vector<std::string> &Corpora);
+   void CrashResistantMergeInternalStep(const std::string &ControlFilePath);
+   MutationDispatcher &GetMD() { return MD; }
+   void PrintFinalStats();
+diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
+--- a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
++++ b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
+@@ -445,17 +445,19 @@ void Fuzzer::PrintPulseAndReportSlowInpu
+   }
+ }
+ 
+ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
+                     InputInfo *II, bool *FoundUniqFeatures) {
+   if (!Size)
+     return false;
+ 
+-  ExecuteCallback(Data, Size);
++  if (ExecuteCallback(Data, Size) > 0) {
++    return false;
++  }
+ 
+   UniqFeatureSetTmp.clear();
+   size_t FoundUniqFeaturesOfII = 0;
+   size_t NumUpdatesBefore = Corpus.NumFeatureUpdates();
+   TPC.CollectFeatures([&](size_t Feature) {
+     if (Corpus.AddFeature(Feature, Size, Options.Shrink))
+       UniqFeatureSetTmp.push_back(Feature);
+     if (Options.ReduceInputs && II)
+@@ -502,46 +504,47 @@ static bool LooseMemeq(const uint8_t *A,
+   const size_t Limit = 64;
+   if (Size <= 64)
+     return !memcmp(A, B, Size);
+   // Compare first and last Limit/2 bytes.
+   return !memcmp(A, B, Limit / 2) &&
+          !memcmp(A + Size - Limit / 2, B + Size - Limit / 2, Limit / 2);
+ }
+ 
+-void Fuzzer::ExecuteCallback(const uint8_t *Data, size_t Size) {
++int Fuzzer::ExecuteCallback(const uint8_t *Data, size_t Size) {
+   TPC.RecordInitialStack();
+   TotalNumberOfRuns++;
+   assert(InFuzzingThread());
+   // We copy the contents of Unit into a separate heap buffer
+   // so that we reliably find buffer overflows in it.
+   uint8_t *DataCopy = new uint8_t[Size];
+   memcpy(DataCopy, Data, Size);
+   if (EF->__msan_unpoison)
+     EF->__msan_unpoison(DataCopy, Size);
+   if (CurrentUnitData && CurrentUnitData != Data)
+     memcpy(CurrentUnitData, Data, Size);
+   CurrentUnitSize = Size;
++  int Res = 0;
+   {
+     ScopedEnableMsanInterceptorChecks S;
+     AllocTracer.Start(Options.TraceMalloc);
+     UnitStartTime = system_clock::now();
+     TPC.ResetMaps();
+     RunningUserCallback = true;
+-    int Res = CB(DataCopy, Size);
++    Res = CB(DataCopy, Size);
+     RunningUserCallback = false;
+     UnitStopTime = system_clock::now();
+-    (void)Res;
+-    assert(Res == 0);
++    assert(Res >= 0);
+     HasMoreMallocsThanFrees = AllocTracer.Stop();
+   }
+   if (!LooseMemeq(DataCopy, Data, Size))
+     CrashOnOverwrittenData();
+   CurrentUnitSize = 0;
+   delete[] DataCopy;
++  return Res;
+ }
+ 
+ std::string Fuzzer::WriteToOutputCorpus(const Unit &U) {
+   if (Options.OnlyASCII)
+     assert(IsASCII(U));
+   if (Options.OutputCorpus.empty())
+     return "";
+   std::string Path = DirPlusFile(Options.OutputCorpus, Hash(U));
+diff --git a/tools/fuzzing/libfuzzer/FuzzerMerge.cpp b/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
+--- a/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
++++ b/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
+@@ -219,17 +219,19 @@ void Fuzzer::CrashResistantMergeInternal
+       U.shrink_to_fit();
+     }
+     std::ostringstream StartedLine;
+     // Write the pre-run marker.
+     OF << "STARTED " << i << " " << U.size() << "\n";
+     OF.flush();  // Flush is important since Command::Execute may crash.
+     // Run.
+     TPC.ResetMaps();
+-    ExecuteCallback(U.data(), U.size());
++    if (ExecuteCallback(U.data(), U.size()) > 0) {
++      continue;
++    }
+     // Collect coverage. We are iterating over the files in this order:
+     // * First, files in the initial corpus ordered by size, smallest first.
+     // * Then, all other files, smallest first.
+     // So it makes no sense to record all features for all files, instead we
+     // only record features that were not seen before.
+     Set<size_t> UniqFeatures;
+     TPC.CollectFeatures([&](size_t Feature) {
+       if (AllFeatures.insert(Feature).second)
