@@ -10,7 +10,9 @@ function g(N, p) {
         // 1. Regexp too big is raised by the lack of the 64k virtual registers
         // reserved for the regexp evaluation.
         // 2. The stack overflow can occur during the analysis of the regexp
-        assertEq(e.message.includes("regexp too big") || e.message.includes("Stack overflow"), true);
+        assertEq(e.message.includes("regexp too big") ||
+		 e.message.includes("Stack overflow") ||
+		 e.message.includes("too much recursion"), true);
     }
 }
 
