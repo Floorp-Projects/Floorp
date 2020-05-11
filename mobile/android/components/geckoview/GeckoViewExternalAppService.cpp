@@ -104,7 +104,7 @@ NS_IMETHODIMP GeckoViewExternalAppService::CreateListener(
   }
 
   keys.AppendElement(jni::StringParam(NS_LITERAL_STRING("contentLength")));
-  values.AppendElement(java::sdk::Integer::ValueOf(contentLength));
+  values.AppendElement(java::sdk::Long::ValueOf(contentLength));
 
   nsString filename;
   if (NS_SUCCEEDED(channel->GetContentDispositionFilename(filename))) {
