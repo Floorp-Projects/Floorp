@@ -143,14 +143,13 @@ class LegacyImplementationWorkers {
     // Listen for worker which will be created later
     const listener = this._workerListChanged.bind(this, targetFront);
     this.targetsListeners.set(targetFront, listener);
+
     // If this is the browser toolbox, we have to listen from the RootFront
     // (see comment in _workerListChanged)
-    if (targetFront.isParentProcess) {
-      this.rootFront.on("workerListChanged", listener);
-    } else {
-      targetFront.on("workerListChanged", listener);
-    }
-    // But also process the already existing ones
+    const front = targetFront.isParentProcess ? this.rootFront : targetFront;
+    front.on("workerListChanged", listener);
+
+    // We also need to process the already existing workers
     await this._workerListChanged(targetFront);
   }
 
@@ -169,19 +168,28 @@ class LegacyImplementationWorkers {
     this.targetsListeners.delete(targetFront);
   }
 
+  _supportWorkerTarget(workerTarget) {
+    // subprocess workers are ignored because they take several seconds to
+    // attach to when opening the browser toolbox. See bug 1594597.
+    // When attaching we get the following error:
+    // JavaScript error: resource://devtools/server/startup/worker.js,
+    //   line 37: NetworkError: WorkerDebuggerGlobalScope.loadSubScript: Failed to load worker script at resource://devtools/shared/worker/loader.js (nsresult = 0x805e0006)
+    return (
+      workerTarget.isDedicatedWorker &&
+      !workerTarget.url.startsWith(
+        "resource://gre/modules/subprocess/subprocess_worker"
+      )
+    );
+  }
+
   async _workerListChanged(targetFront) {
-    let workers;
-    // Browser Toolbox codepath
-    if (targetFront.isParentProcess) {
-      // Query workers from the Root Front instead of the ParentProcessTarget
-      // as the ParentProcess Target filters out the workers to only show the one from the top level window,
-      // whereas we expect the one from all the windows, and also the window-less ones.
-      ({ workers } = await this.rootFront.listWorkers());
-    } else {
-      // Content Toolbox codepath
-      //TODO: expose SW of the page, maybe optionally?
-      ({ workers } = await targetFront.listWorkers());
-    }
+    // If we're in the Browser Toolbox, query workers from the Root Front instead of the
+    // ParentProcessTarget as the ParentProcess Target filters out the workers to only
+    // show the one from the top level window, whereas we expect the one from all the
+    // windows, and also the window-less ones.
+    // TODO: For Content Toolbox, expose SW of the page, maybe optionally?
+    const front = targetFront.isParentProcess ? this.rootFront : targetFront;
+    const { workers } = await front.listWorkers();
 
     // Fetch the list of already existing worker targets for this process target front.
     const existingTargets = this.targetsByProcess.get(targetFront);
@@ -196,23 +204,20 @@ class LegacyImplementationWorkers {
         existingTargets.delete(target);
       }
     }
-    const promises = workers
-      // subprocess workers are ignored because they take several seconds to
-      // attach to when opening the browser toolbox. See bug 1594597.
-      // When attaching we get the following error:
-      // JavaScript error: resource://devtools/server/startup/worker.js, line 37: NetworkError: WorkerDebuggerGlobalScope.loadSubScript: Failed to load worker script at resource://devtools/shared/worker/loader.js (nsresult = 0x805e0006)
-      .filter(
-        workerTarget =>
-          !workerTarget.url.startsWith(
-            "resource://gre/modules/subprocess/subprocess_worker"
-          )
-      )
-      .filter(workerTarget => !existingTargets.has(workerTarget))
-      .map(async workerTarget => {
-        // Add the new worker targets to the local list
-        existingTargets.add(workerTarget);
-        await this.onTargetAvailable(workerTarget);
-      });
+
+    const promises = [];
+    for (const workerTarget of workers) {
+      if (
+        !this._supportWorkerTarget(workerTarget) ||
+        existingTargets.has(workerTarget)
+      ) {
+        continue;
+      }
+
+      // Add the new worker targets to the local list
+      existingTargets.add(workerTarget);
+      promises.push(this.onTargetAvailable(workerTarget));
+    }
 
     await Promise.all(promises);
   }
@@ -259,6 +264,18 @@ class LegacyImplementationWorkers {
       this.targetsByProcess.delete(this.target);
       this.targetsListeners.delete(this.target);
     }
+  }
+}
+
+class LegacyImplementationSharedWorkers extends LegacyImplementationWorkers {
+  _supportWorkerTarget(workerTarget) {
+    return workerTarget.isSharedWorker;
+  }
+}
+
+class LegacyImplementationServiceWorkers extends LegacyImplementationWorkers {
+  _supportWorkerTarget(workerTarget) {
+    return workerTarget.isServiceWorker;
   }
 }
 
@@ -320,6 +337,16 @@ class TargetList {
         this._onTargetDestroyed
       ),
       worker: new LegacyImplementationWorkers(
+        this,
+        this._onTargetAvailable,
+        this._onTargetDestroyed
+      ),
+      shared_worker: new LegacyImplementationSharedWorkers(
+        this,
+        this._onTargetAvailable,
+        this._onTargetDestroyed
+      ),
+      service_worker: new LegacyImplementationServiceWorkers(
         this,
         this._onTargetAvailable,
         this._onTargetDestroyed
@@ -414,6 +441,18 @@ class TargetList {
     if (this.listenForWorkers && !types.includes(TargetList.TYPES.WORKER)) {
       types.push(TargetList.TYPES.WORKER);
     }
+    if (
+      this.listenForWorkers &&
+      !types.includes(TargetList.TYPES.SHARED_WORKER)
+    ) {
+      types.push(TargetList.TYPES.SHARED_WORKER);
+    }
+    if (
+      this.listenForWorkers &&
+      !types.includes(TargetList.TYPES.SERVICE_WORKER)
+    ) {
+      types.push(TargetList.TYPES.SERVICE_WORKER);
+    }
     // If no pref are set to true, nor is listenForWorkers set to true,
     // we won't listen for any additional target. Only the top level target
     // will be managed. We may still do target-switching.
@@ -474,14 +513,27 @@ class TargetList {
     const { typeName } = target;
     if (typeName == "browsingContextTarget") {
       return TargetList.TYPES.FRAME;
-    } else if (
+    }
+
+    if (
       typeName == "contentProcessTarget" ||
       typeName == "parentProcessTarget"
     ) {
       return TargetList.TYPES.PROCESS;
-    } else if (typeName == "workerTarget") {
+    }
+
+    if (typeName == "workerTarget") {
+      if (target.isSharedWorker) {
+        return TargetList.TYPES.SHARED_WORKER;
+      }
+
+      if (target.isServiceWorker) {
+        return TargetList.TYPES.SERVICE_WORKER;
+      }
+
       return TargetList.TYPES.WORKER;
     }
+
     throw new Error("Unsupported target typeName: " + typeName);
   }
 
@@ -645,6 +697,8 @@ TargetList.TYPES = TargetList.prototype.TYPES = {
   PROCESS: "process",
   FRAME: "frame",
   WORKER: "worker",
+  SHARED_WORKER: "shared_worker",
+  SERVICE_WORKER: "service_worker",
 };
 TargetList.ALL_TYPES = TargetList.prototype.ALL_TYPES = Object.values(
   TargetList.TYPES
