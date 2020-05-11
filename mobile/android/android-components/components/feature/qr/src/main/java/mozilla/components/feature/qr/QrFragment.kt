@@ -41,6 +41,8 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
@@ -48,6 +50,7 @@ import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import mozilla.components.feature.qr.views.AutoFitTextureView
+import mozilla.components.feature.qr.views.CustomViewFinder
 import mozilla.components.support.base.log.logger.Logger
 import java.io.Serializable
 import java.util.ArrayList
@@ -93,6 +96,9 @@ class QrFragment : Fragment() {
     }
 
     internal lateinit var textureView: AutoFitTextureView
+    internal lateinit var customViewFinder: CustomViewFinder
+    @StringRes
+    private var scanMessage: Int? = null
     internal var cameraId: String? = null
     private var captureSession: CameraCaptureSession? = null
     internal var cameraDevice: CameraDevice? = null
@@ -114,6 +120,11 @@ class QrFragment : Fragment() {
                 override fun onScanComplete(result: String) {
                     Handler(Looper.getMainLooper()).apply {
                         post {
+                            context?.let {
+                                customViewFinder.setViewFinderColor(
+                                    getColor(it, R.color.mozac_feature_qr_scan_success_color)
+                                )
+                            }
                             value?.onScanComplete(result)
                         }
                     }
@@ -197,6 +208,10 @@ class QrFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         textureView = view.findViewById<View>(R.id.texture) as AutoFitTextureView
+        customViewFinder = view.findViewById<View>(R.id.view_finder) as CustomViewFinder
+        scanMessage?.let {
+            CustomViewFinder.setMessage(it)
+        }
         qrState = STATE_FIND_QRCODE
     }
 
@@ -471,9 +486,15 @@ class QrFragment : Fragment() {
 
         private const val CAMERA_CLOSE_LOCK_TIMEOUT_MS = 2500L
 
-        fun newInstance(listener: OnScanCompleteListener): QrFragment {
+        /**
+         * Returns a new instance of QR Fragment
+         * @param listener Listener invoked when the QR scan completed successfully.
+         * @param scanMessage (Optional) Scan message to be displayed.
+         */
+        fun newInstance(listener: OnScanCompleteListener, scanMessage: Int? = null): QrFragment {
             return QrFragment().apply {
                 scanCompleteListener = listener
+                this.scanMessage = scanMessage
             }
         }
 
@@ -492,7 +513,7 @@ class QrFragment : Fragment() {
          * @param aspectRatio The aspect ratio
          * @return The optimal `Size`, or an arbitrary one if none were big enough.
          */
-        @Suppress("LongParameterList")
+        @Suppress("LongParameterList", "ComplexMethod")
         internal fun chooseOptimalSize(
             choices: Array<Size>,
             textureViewWidth: Int,
