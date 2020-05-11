@@ -58,7 +58,7 @@ class ProviderUnifiedComplete extends UrlbarProvider {
    * @returns {integer} one of the types from UrlbarUtils.PROVIDER_TYPE.*
    */
   get type() {
-    return UrlbarUtils.PROVIDER_TYPE.IMMEDIATE;
+    return UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
   }
 
   /**
