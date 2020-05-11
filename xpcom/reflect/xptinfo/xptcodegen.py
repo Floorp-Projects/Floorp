@@ -354,7 +354,7 @@ def link_to_cpp(interfaces, fd):
             numparams = len(method['params'])
 
             # Check cache for parameters
-            cachekey = json.dumps(method['params'])
+            cachekey = json.dumps(method['params'], sort_keys=True)
             paramidx = param_cache.get(cachekey)
             if paramidx is None:
                 paramidx = param_cache[cachekey] = len(params)

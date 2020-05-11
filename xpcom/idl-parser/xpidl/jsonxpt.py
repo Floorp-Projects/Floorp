@@ -264,4 +264,4 @@ def link(typelibs):
 
 def write(typelib, fd):
     """Write typelib into fd"""
-    json.dump(typelib, fd, indent=2)
+    json.dump(typelib, fd, indent=2, sort_keys=True)
