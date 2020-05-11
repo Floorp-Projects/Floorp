@@ -15,6 +15,7 @@ DevToolsModules(
     'initializer.js',
     'panel.js',
     'preference-management.js',
+    'symbolication.jsm.js',
     'typescript-lazy-load.jsm.js',
     'utils.js',
 )

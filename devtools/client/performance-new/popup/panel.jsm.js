@@ -281,7 +281,7 @@ function addPopupEventHandlers(state, elements, view) {
   });
 
   addHandler(elements.stopAndCapture, "click", () => {
-    captureProfile();
+    captureProfile("aboutprofiling");
     view.hidePopup();
   });
 
