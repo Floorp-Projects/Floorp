@@ -168,8 +168,7 @@ struct cubeb_stream {
   int64_t lastPosition;
   int64_t lastPositionTimeStamp;
   int64_t lastCompensativePosition;
-  int voice_input;
-  int voice_output;
+  int voice;
 };
 
 /* Forward declaration. */
@@ -960,8 +959,8 @@ opensl_configure_capture(cubeb_stream * stm, cubeb_stream_params * params)
 
     // Voice recognition is the lowest latency, according to the docs. Camcorder
     // uses a microphone that is in the same direction as the camera.
-    SLint32 streamType = stm->voice_input ? SL_ANDROID_RECORDING_PRESET_VOICE_RECOGNITION
-                                          : SL_ANDROID_RECORDING_PRESET_CAMCORDER;
+    SLint32 streamType = stm->voice ? SL_ANDROID_RECORDING_PRESET_VOICE_RECOGNITION
+                                    : SL_ANDROID_RECORDING_PRESET_CAMCORDER;
 
     res = (*recorderConfig)
               ->SetConfiguration(recorderConfig, SL_ANDROID_KEY_RECORDING_PRESET,
@@ -1186,7 +1185,7 @@ opensl_configure_playback(cubeb_stream * stm, cubeb_stream_params * params) {
     }
 
     SLint32 streamType = SL_ANDROID_STREAM_MEDIA;
-    if (stm->voice_output) {
+    if (stm->voice) {
       streamType = SL_ANDROID_STREAM_VOICE;
     }
     res = (*playerConfig)->SetConfiguration(playerConfig,
@@ -1386,11 +1385,10 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   stm->input_enabled = (input_stream_params) ? 1 : 0;
   stm->output_enabled = (output_stream_params) ? 1 : 0;
   stm->shutdown = 1;
-  stm->voice_input = has_pref_set(input_stream_params, NULL, CUBEB_STREAM_PREF_VOICE);
-  stm->voice_output = has_pref_set(NULL, output_stream_params, CUBEB_STREAM_PREF_VOICE);
+  stm->voice = has_pref_set(input_stream_params, output_stream_params, CUBEB_STREAM_PREF_VOICE);
 
-  LOG("cubeb stream prefs: voice_input: %s voice_output: %s", stm->voice_input ? "true" : "false",
-                                                              stm->voice_output ? "true" : "false");
+  LOG("cubeb stream prefs: voice: %s", stm->voice ? "true" : "false");
+
 
 #ifdef DEBUG
   pthread_mutexattr_t attr;

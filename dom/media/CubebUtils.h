@@ -51,10 +51,6 @@ char* GetForcedOutputDevice();
 // to switch to "communication mode", which might change audio routing,
 // bluetooth communication type, etc.
 void SetInCommunication(bool aInCommunication);
-// Returns true if the output streams should be routed like a stream containing
-// voice data, and not generic audio. This can influence audio processing and
-// device selection.
-bool RouteOutputAsVoice();
 
 #  ifdef MOZ_WIDGET_ANDROID
 uint32_t AndroidGetAudioOutputSampleRate();
