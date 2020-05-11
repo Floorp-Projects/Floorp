@@ -38,8 +38,6 @@ class ContentParent;
 
 struct nsDelayedBlurOrFocusEvent;
 
-MOZ_DECLARE_COPY_CONSTRUCTIBLE(nsDelayedBlurOrFocusEvent)
-
 /**
  * The focus manager keeps track of where the focus is, that is, the node
  * which receives key events.
