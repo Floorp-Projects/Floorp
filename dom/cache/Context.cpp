@@ -337,8 +337,7 @@ Context::QuotaInitRunnable::Run() {
         break;
       }
 
-      RefPtr<ManagerId> managerId = mManager->GetManagerId();
-      nsCOMPtr<nsIPrincipal> principal = managerId->Principal();
+      nsCOMPtr<nsIPrincipal> principal = mManager->GetManagerId().Principal();
       nsresult rv = QuotaManager::GetInfoFromPrincipal(
           principal, &mQuotaInfo.mSuffix, &mQuotaInfo.mGroup,
           &mQuotaInfo.mOrigin);

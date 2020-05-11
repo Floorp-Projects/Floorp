@@ -42,7 +42,7 @@ CacheOpParent::CacheOpParent(PBackgroundParent* aIpcManager,
 
 CacheOpParent::~CacheOpParent() { NS_ASSERT_OWNINGTHREAD(CacheOpParent); }
 
-void CacheOpParent::Execute(ManagerId* aManagerId) {
+void CacheOpParent::Execute(const SafeRefPtr<ManagerId>& aManagerId) {
   NS_ASSERT_OWNINGTHREAD(CacheOpParent);
   MOZ_DIAGNOSTIC_ASSERT(!mManager);
   MOZ_DIAGNOSTIC_ASSERT(!mVerifier);
@@ -123,7 +123,8 @@ void CacheOpParent::ActorDestroy(ActorDestroyReason aReason) {
   mIpcManager = nullptr;
 }
 
-void CacheOpParent::OnPrincipalVerified(nsresult aRv, ManagerId* aManagerId) {
+void CacheOpParent::OnPrincipalVerified(
+    nsresult aRv, const SafeRefPtr<ManagerId>& aManagerId) {
   NS_ASSERT_OWNINGTHREAD(CacheOpParent);
 
   mVerifier->RemoveListener(this);
