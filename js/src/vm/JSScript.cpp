@@ -4277,7 +4277,11 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
   /* The counts of indexed things must be checked during code generation. */
   MOZ_ASSERT(stencil.natoms <= INDEX_LIMIT);
 
-  script->addToImmutableFlags(stencil.immutableFlags);
+  // Note: These flags should already be correct when the BaseScript was
+  // allocated, except that lazy BinAST parsing has incomplete set of flags.
+  MOZ_ASSERT_IF(!script->isBinAST(),
+                script->immutableFlags() == stencil.immutableFlags);
+  script->resetImmutableFlags(stencil.immutableFlags);
 
   // Derive initial mutable flags
   script->resetArgsUsageAnalysis();

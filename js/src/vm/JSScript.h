@@ -1881,8 +1881,8 @@ class BaseScript : public gc::TenuredCell {
  public:
   ImmutableScriptFlags immutableFlags() const { return immutableFlags_; }
 
-  void addToImmutableFlags(const ImmutableScriptFlags& flags) {
-    immutableFlags_ |= flags;
+  void resetImmutableFlags(ImmutableScriptFlags flags) {
+    immutableFlags_ = flags;
   }
 
   // ImmutableFlags accessors.

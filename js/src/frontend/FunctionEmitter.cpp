@@ -709,6 +709,8 @@ bool FunctionScriptEmitter::initScript() {
     return false;
   }
 
+  BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
+
   RootedFunction function(bce_->cx, funbox_->function());
   RootedScript script(bce_->cx);
   if (bce_->emitterMode == BytecodeEmitter::LazyFunction) {
@@ -716,13 +718,12 @@ bool FunctionScriptEmitter::initScript() {
   } else {
     script =
         JSScript::Create(bce_->cx, function, bce_->compilationInfo.sourceObject,
-                         funbox_->getScriptExtent(), funbox_->immutableFlags());
+                         funbox_->getScriptExtent(), stencil.immutableFlags);
     if (!script) {
       return false;
     }
   }
 
-  BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
   if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->compilationInfo, script,
                                       stencil)) {
     return false;
