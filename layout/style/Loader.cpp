@@ -16,6 +16,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PreloadHashKey.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/URLPreloader.h"
@@ -1551,9 +1552,8 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
       cos->AddClassFlags(nsIClassOfService::Leader);
     }
     if (aIsPreload == IsPreload::FromLink) {
-      if (nsCOMPtr<nsISupportsPriority> sp = do_QueryInterface(channel)) {
-        sp->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
-      }
+      StreamLoader::PrioritizeAsPreload(channel);
+      StreamLoader::AddLoadBackgroundFlag(channel);
     }
   }
 
@@ -1644,6 +1644,10 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
 
   mSheets->mLoadingDatas.Put(&key, &aLoadData);
   aLoadData.mIsLoading = true;
+
+  auto preloadKey = PreloadHashKey::CreateAsStyle(aLoadData);
+  streamLoader->NotifyOpen(&preloadKey, channel, mDocument,
+                           aIsPreload == IsPreload::FromLink);
 
   return NS_OK;
 }

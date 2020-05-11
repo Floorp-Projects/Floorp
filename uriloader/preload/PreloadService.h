@@ -66,6 +66,11 @@ class PreloadService {
                      const nsAString& aReferrerPolicy,
                      const nsAString& aIntegrity, bool aScriptFromHead);
 
+  void PreloadStyle(nsIURI* aURI, const nsAString& aCharset,
+                    const nsAString& aCrossOrigin,
+                    const nsAString& aReferrerPolicy,
+                    const nsAString& aIntegrity);
+
   static void NotifyNodeEvent(nsINode* aNode, bool aSuccess);
 
  private:

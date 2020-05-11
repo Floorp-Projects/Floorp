@@ -88,6 +88,14 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     domType.ToString(type);
     preloadKey =
         PreloadHashKey::CreateAsScript(uri, crossOrigin, type, referrerPolicy);
+  } else if (as.LowerCaseEqualsASCII("style")) {
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        dom::ReferrerInfo::CreateFromDocumentAndPolicyOverride(mDocument,
+                                                               referrerPolicy);
+    preloadKey = PreloadHashKey::CreateAsStyle(
+        uri, mDocument->NodePrincipal(), referrerInfo,
+        dom::Element::StringToCORSMode(crossOrigin),
+        css::eAuthorSheetFeatures /* see Loader::LoadSheet */);
   } else {
     NotifyNodeEvent(aLinkElement, false);
     return nullptr;
@@ -98,6 +106,8 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     if (as.LowerCaseEqualsASCII("script")) {
       PreloadScript(uri, type, charset, crossOrigin, referrerPolicyAttr,
                     integrity, true /* isInHead - TODO */);
+    } else if (as.LowerCaseEqualsASCII("style")) {
+      PreloadStyle(uri, charset, crossOrigin, referrerPolicyAttr, integrity);
     }
 
     preload = LookupPreload(&preloadKey);
@@ -121,6 +131,15 @@ void PreloadService::PreloadScript(nsIURI* aURI, const nsAString& aType,
   mDocument->ScriptLoader()->PreloadURI(
       aURI, aCharset, aType, aCrossOrigin, aIntegrity, aScriptFromHead, false,
       false, false, true, PreloadReferrerPolicy(aReferrerPolicy));
+}
+
+void PreloadService::PreloadStyle(nsIURI* aURI, const nsAString& aCharset,
+                                  const nsAString& aCrossOrigin,
+                                  const nsAString& aReferrerPolicy,
+                                  const nsAString& aIntegrity) {
+  mDocument->PreloadStyle(aURI, Encoding::ForLabel(aCharset), aCrossOrigin,
+                          PreloadReferrerPolicy(aReferrerPolicy), aIntegrity,
+                          true);
 }
 
 // static
