@@ -3173,6 +3173,9 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   nsresult rv = InitReferrerInfo(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = InitCOEP(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Check CSP navigate-to
   // We need to enforce the CSP of the document that initiated the load,
   // which is the CSP to inherit.
@@ -3559,6 +3562,28 @@ nsresult Document::InitReferrerInfo(nsIChannel* aChannel) {
                       ->CloneWithNewPolicy(policy);
 
   mPreloadReferrerInfo = mReferrerInfo;
+  return NS_OK;
+}
+
+nsresult Document::InitCOEP(nsIChannel* aChannel) {
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  nsresult rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIHttpChannelInternal> intChannel = do_QueryInterface(httpChannel);
+
+  if (!intChannel) {
+    return NS_OK;
+  }
+
+  nsILoadInfo::CrossOriginEmbedderPolicy policy =
+      nsILoadInfo::EMBEDDER_POLICY_NULL;
+  if (NS_SUCCEEDED(intChannel->GetResponseEmbedderPolicy(&policy))) {
+    mEmbedderPolicyFromHTTP = Some(policy);
+  }
+
   return NS_OK;
 }
 

@@ -237,8 +237,6 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
         aParent->WindowID());
   }
 
-  context->mFields.SetWithoutSyncing<IDX_EmbedderPolicy>(
-      nsILoadInfo::EMBEDDER_POLICY_NULL);
   context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE);
   context->mFields.SetWithoutSyncing<IDX_WatchedByDevtools>(false);
@@ -263,10 +261,6 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     context->mUseRemoteTabs = inherit->mUseRemoteTabs;
     context->mUseRemoteSubframes = inherit->mUseRemoteSubframes;
     context->mOriginAttributes = inherit->mOriginAttributes;
-
-    // CORPP 3.1.3 https://mikewest.github.io/corpp/#integration-html
-    context->mFields.SetWithoutSyncing<IDX_EmbedderPolicy>(
-        inherit->GetEmbedderPolicy());
   }
 
   // if our parent has a parent that's loading, we need it too

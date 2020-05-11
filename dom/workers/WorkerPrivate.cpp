@@ -5264,8 +5264,8 @@ WorkerPrivate::GetOwnerEmbedderPolicy() const {
     return GetParent()->GetEmbedderPolicy();
   }
 
-  if (GetWindow() && GetWindow()->GetBrowsingContext()) {
-    return Some(GetWindow()->GetBrowsingContext()->GetEmbedderPolicy());
+  if (GetWindow() && GetWindow()->GetWindowContext()) {
+    return Some(GetWindow()->GetWindowContext()->GetEmbedderPolicy());
   }
 
   return Nothing();

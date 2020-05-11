@@ -31,7 +31,8 @@ class WindowGlobalInit;
   FIELD(IsSecure, bool)                                                \
   /* Whether the user has overriden the mixed content blocker to allow \
    * mixed content loads to happen */                                  \
-  FIELD(AllowMixedContent, bool)
+  FIELD(AllowMixedContent, bool)                                       \
+  FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -98,6 +99,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
  private:
   friend class BrowsingContext;
   friend class WindowGlobalChild;
+  friend class WindowGlobalActor;
 
   void AppendChildBrowsingContext(BrowsingContext* aBrowsingContext);
   void RemoveChildBrowsingContext(BrowsingContext* aBrowsingContext);
@@ -121,6 +123,11 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_IsOnContentBlockingAllowList>, const bool& aValue,
               ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_EmbedderPolicy>, const bool& aValue,
+              ContentParent* aSource) {
+    return true;
+  }
 
   bool CanSet(FieldIndex<IDX_IsThirdPartyWindow>,
               const bool& IsThirdPartyWindow, ContentParent* aSource);
