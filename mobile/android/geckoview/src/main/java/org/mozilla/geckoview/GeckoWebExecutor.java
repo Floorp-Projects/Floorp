@@ -124,8 +124,8 @@ public class GeckoWebExecutor {
         }
 
         // We don't need to fully validate the URI here, just a sanity check
-        if (!request.uri.toLowerCase().startsWith("http")) {
-            throw new IllegalArgumentException("URI scheme must be http or https");
+        if (!request.uri.toLowerCase().matches("(http|blob).*")) {
+            throw new IllegalArgumentException("Unsupported URI scheme");
         }
 
         final GeckoResult<WebResponse> result = new GeckoResult<>();
