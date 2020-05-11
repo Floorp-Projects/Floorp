@@ -2057,8 +2057,9 @@ class RetainedDisplayList;
   }                                                                          \
                                                                              \
   template <typename T, typename F, typename... Args>                        \
-  friend T* ::MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,     \
-                              Args&&... aArgs);                              \
+  friend T* ::MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,       \
+                                       F* aFrame, const uint16_t aIndex,     \
+                                       Args&&... aArgs);                     \
                                                                              \
  public:
 
@@ -2091,8 +2092,9 @@ bool ShouldBuildItemForEventsOrPlugins(const DisplayItemType aType);
 void UpdateDisplayItemData(nsPaintedDisplayItem* aItem);
 
 template <typename T, typename F, typename... Args>
-MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
-                                     Args&&... aArgs) {
+MOZ_ALWAYS_INLINE T* MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,
+                                              F* aFrame, const uint16_t aIndex,
+                                              Args&&... aArgs) {
   static_assert(std::is_base_of<nsDisplayItem, T>::value,
                 "Display item should be derived from nsDisplayItem");
   static_assert(std::is_base_of<nsIFrame, F>::value,
@@ -2143,6 +2145,13 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
 #endif
 
   return item;
+}
+
+template <typename T, typename F, typename... Args>
+MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
+                                     Args&&... aArgs) {
+  return MakeDisplayItemWithIndex<T>(aBuilder, aFrame, 0,
+                                     std::forward<Args>(aArgs)...);
 }
 
 /**
@@ -4132,9 +4141,11 @@ class nsDisplayGeneric : public nsPaintedDisplayItem {
   void* operator new(size_t aSize, nsDisplayListBuilder* aBuilder) {
     return aBuilder->Allocate(aSize, DisplayItemType::TYPE_GENERIC);
   }
+
   template <typename T, typename F, typename... Args>
-  friend T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
-                            Args&&... aArgs);
+  friend T* ::MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,
+                                       F* aFrame, const uint16_t aIndex,
+                                       Args&&... aArgs);
 
   PaintCallback mPaint;
   OldPaintCallback mOldPaint;  // XXX: should be removed eventually
