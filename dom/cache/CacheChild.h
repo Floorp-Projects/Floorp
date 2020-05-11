@@ -27,17 +27,8 @@ class CacheChild final : public PCacheChild, public ActorChild {
   friend class PCacheChild;
 
  public:
-  class MOZ_RAII AutoLock final {
-    CacheChild* mActor;
-
-   public:
-    explicit AutoLock(CacheChild* aActor) : mActor(aActor) {
-      MOZ_DIAGNOSTIC_ASSERT(mActor);
-      mActor->Lock();
-    }
-
-    ~AutoLock() { mActor->Unlock(); }
-  };
+  friend class mozilla::detail::BaseAutoLock<CacheChild&>;
+  using AutoLock = mozilla::detail::BaseAutoLock<CacheChild&>;
 
   CacheChild();
   ~CacheChild();
