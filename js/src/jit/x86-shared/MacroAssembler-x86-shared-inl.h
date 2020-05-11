@@ -908,6 +908,12 @@ void MacroAssembler::branchTestGCThing(Condition cond, const BaseIndex& address,
   branchTestGCThingImpl(cond, address, label);
 }
 
+void MacroAssembler::branchTestGCThing(Condition cond,
+                                       const ValueOperand& value,
+                                       Label* label) {
+  branchTestGCThingImpl(cond, value, label);
+}
+
 template <typename T>
 void MacroAssembler::branchTestGCThingImpl(Condition cond, const T& t,
                                            Label* label) {

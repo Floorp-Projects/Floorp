@@ -774,6 +774,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testMagic(Condition cond, const ValueOperand& value);
 
   Condition testPrimitive(Condition cond, const ValueOperand& value);
+  Condition testGCThing(Condition cond, const ValueOperand& value);
 
   // Register-based tests.
   Condition testInt32(Condition cond, Register tag);
@@ -788,6 +789,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testNumber(Condition cond, Register tag);
   Condition testMagic(Condition cond, Register tag);
   Condition testPrimitive(Condition cond, Register tag);
+  Condition testGCThing(Condition cond, Register tag);
 
   Condition testGCThing(Condition cond, const Address& address);
   Condition testMagic(Condition cond, const Address& address);
