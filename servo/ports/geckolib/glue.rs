@@ -6799,6 +6799,7 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Create(
 pub unsafe extern "C" fn Servo_SharedMemoryBuilder_AddStylesheet(
     builder: &mut RawServoSharedMemoryBuilder,
     raw_contents: &RawServoStyleSheetContents,
+    error_message: &mut nsACString,
 ) -> *const ServoCssRules {
     let builder = SharedMemoryBuilder::from_ffi_mut(builder);
     let contents = StylesheetContents::as_arc(&raw_contents);
@@ -6810,10 +6811,15 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_AddStylesheet(
     debug_assert!(contents.source_map_url.read().is_none());
     debug_assert!(contents.source_url.read().is_none());
 
-    let rules = &contents.rules;
-    let shared_rules: &Arc<Locked<CssRules>> = &*builder.write(rules);
-    (&*shared_rules)
-        .with_raw_offset_arc(|arc| *Locked::<CssRules>::arc_as_borrowed(arc) as *const _)
+    match builder.write(&contents.rules) {
+        Ok(rules_ptr) => {
+            (*rules_ptr).with_raw_offset_arc(|arc| *Locked::arc_as_borrowed(arc) as *const _)
+        },
+        Err(message) => {
+            error_message.assign(&message);
+            ptr::null()
+        },
+    }
 }
 
 #[no_mangle]
