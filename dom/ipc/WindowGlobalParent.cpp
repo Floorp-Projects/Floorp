@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/WindowGlobalParent.h"
 
-#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ipc/InProcessParent.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
@@ -280,27 +279,7 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentPrincipal(
 }
 mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentTitle(
     const nsString& aTitle) {
-  if (mDocumentTitle == aTitle) {
-    return IPC_OK();
-  }
-
   mDocumentTitle = aTitle;
-
-  // Send a pagetitlechanged event only for changes to the title
-  // for top-level frames.
-  if (!BrowsingContext()->IsTop()) {
-    return IPC_OK();
-  }
-
-  Element* frameElement = BrowsingContext()->GetEmbedderElement();
-  if (!frameElement) {
-    return IPC_OK();
-  }
-
-  (new AsyncEventDispatcher(frameElement, NS_LITERAL_STRING("pagetitlechanged"),
-                            CanBubble::eYes, ChromeOnlyDispatch::eYes))
-      ->RunDOMEventWhenSafe();
-
   return IPC_OK();
 }
 
