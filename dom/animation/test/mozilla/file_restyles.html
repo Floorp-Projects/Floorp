@@ -1450,6 +1450,35 @@ waitForAllPaints(() => {
   );
 
   add_task(
+    async function no_throttling_animations_in_view_position_fixed_element() {
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('srcdoc', '<div id="target"></div>');
+      document.documentElement.appendChild(iframe);
+
+      await new Promise(resolve => {
+        iframe.addEventListener('load', () => {
+          resolve();
+        });
+      });
+
+      const target = iframe.contentDocument.getElementById('target');
+      target.style= 'position: fixed; top: 20px; width: 100px; height: 100px;';
+
+      const animation = target.animate({ zIndex: [ '0', '999' ] },
+                                       { duration: 100 * MS_PER_SEC,
+                                         iterations: Infinity });
+      await waitForAnimationReadyToRestyle(animation);
+
+      const markers = await observeStylingInTargetWindow(iframe.contentWindow, 5);
+      is(markers.length, 5,
+         'CSS animation on an in-view position:fixed element should NOT be ' +
+         'throttled');
+
+      await ensureElementRemoval(iframe);
+    }
+  );
+
+  add_task(
     async function throttling_position_absolute_animations_in_collapsed_iframe() {
       const iframe = document.createElement('iframe');
       iframe.setAttribute('srcdoc', '<div id="target"></div>');
