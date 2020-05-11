@@ -310,6 +310,8 @@ class TargetList {
     // Note that this is a public attribute, used outside of this class
     // and helps knowing what is the current top level target we debug.
     this.targetFront = targetFront;
+    targetFront.setTargetType(this.getTargetType(targetFront));
+    targetFront.setIsTopLevel(true);
 
     // Reports if we have at least one listener for the given target type
     this._listenersStarted = new Set();
@@ -376,26 +378,30 @@ class TargetList {
       return;
     }
 
-    this._targets.add(targetFront);
-
     // Map the descriptor typeName to a target type.
     const targetType = this.getTargetType(targetFront);
+    const isTopLevel = targetFront == this.targetFront;
+
+    targetFront.setTargetType(targetType);
+    targetFront.setIsTopLevel(isTopLevel);
+
+    this._targets.add(targetFront);
 
     // Notify the target front creation listeners
     await this._createListeners.emitAsync(targetType, {
       type: targetType,
       targetFront,
-      isTopLevel: targetFront == this.targetFront,
+      isTopLevel,
       isTargetSwitching,
     });
   }
 
   _onTargetDestroyed(targetFront, isTargetSwitching = false) {
-    const targetType = this.getTargetType(targetFront);
+    const targetType = targetFront.targetType;
     this._destroyListeners.emit(targetType, {
       type: targetType,
       targetFront,
-      isTopLevel: targetFront == this.targetFront,
+      isTopLevel: targetFront.isTopLevel,
       isTargetSwitching,
     });
     this._targets.delete(targetFront);
@@ -538,7 +544,7 @@ class TargetList {
   }
 
   _matchTargetType(type, target) {
-    return type === this.getTargetType(target);
+    return type === target.targetType;
   }
 
   /**
@@ -567,17 +573,14 @@ class TargetList {
 
     // Notify about already existing target of these types
     const promises = [...this._targets]
-      .filter(targetFront => {
-        const targetType = this.getTargetType(targetFront);
-        return types.includes(targetType);
-      })
+      .filter(targetFront => types.includes(targetFront.targetType))
       .map(async targetFront => {
         try {
           // Ensure waiting for eventual async create listeners
           // which may setup things regarding the existing targets
           // and listen callsite may care about the full initialization
           await onAvailable({
-            type: this.getTargetType(targetFront),
+            type: targetFront.targetType,
             targetFront,
             isTopLevel: targetFront == this.targetFront,
             isTargetSwitching: false,

@@ -3,16 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 "use strict";
 
-function registerTarget(targetFront, targetList) {
-  const target = {
-    actorID: targetFront.actorID,
-    isMainTarget: targetFront === targetList?.targetFront,
-    name: targetFront.name,
-    type: targetList?.getTargetType(targetFront),
-    url: targetFront.url,
-    _targetFront: targetFront,
-  };
-  return { type: "REGISTER_TARGET", target };
+function registerTarget(targetFront) {
+  return { type: "REGISTER_TARGET", targetFront };
 }
 
 function unregisterTarget(targetFront) {

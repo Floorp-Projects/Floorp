@@ -59,19 +59,19 @@ class EvaluationContextSelector extends Component {
   }
 
   getIcon(target) {
-    if (target.type === TARGET_TYPES.FRAME) {
+    if (target.targetType === TARGET_TYPES.FRAME) {
       return "resource://devtools/client/debugger/images/globe-small.svg";
     }
 
     if (
-      target.type === TARGET_TYPES.WORKER ||
-      target.type === TARGET_TYPES.SHARED_WORKER ||
-      target.type === TARGET_TYPES.SERVICE_WORKER
+      target.targetType === TARGET_TYPES.WORKER ||
+      target.targetType === TARGET_TYPES.SHARED_WORKER ||
+      target.targetType === TARGET_TYPES.SERVICE_WORKER
     ) {
       return "resource://devtools/client/debugger/images/worker.svg";
     }
 
-    if (target.type === TARGET_TYPES.PROCESS) {
+    if (target.targetType === TARGET_TYPES.PROCESS) {
       return "resource://devtools/client/debugger/images/window.svg";
     }
 
@@ -81,7 +81,7 @@ class EvaluationContextSelector extends Component {
   renderMenuItem(target) {
     const { selectTarget, selectedTarget } = this.props;
 
-    const label = target.isMainTarget
+    const label = target.isTopLevel
       ? l10n.getStr("webconsole.input.selector.top")
       : target.name;
 
@@ -89,7 +89,7 @@ class EvaluationContextSelector extends Component {
       key: `webconsole-evaluation-selector-item-${target.actorID}`,
       className: "menu-item webconsole-evaluation-selector-item",
       type: "checkbox",
-      checked: selectedTarget ? selectedTarget == target : target.isMainTarget,
+      checked: selectedTarget ? selectedTarget == target : target.isTopLevel,
       label,
       tooltip: target.url,
       icon: this.getIcon(target),
@@ -122,10 +122,10 @@ class EvaluationContextSelector extends Component {
     for (const target of targets) {
       const menuItem = this.renderMenuItem(target);
 
-      if (target.isMainTarget) {
+      if (target.isTopLevel) {
         mainTarget = menuItem;
       } else {
-        dict[target.type].push(menuItem);
+        dict[target.targetType].push(menuItem);
       }
     }
 
@@ -149,7 +149,7 @@ class EvaluationContextSelector extends Component {
   getLabel() {
     const { selectedTarget } = this.props;
 
-    if (!selectedTarget || selectedTarget.isMainTarget) {
+    if (!selectedTarget || selectedTarget.isTopLevel) {
       return l10n.getStr("webconsole.input.selector.top");
     }
 
@@ -172,7 +172,7 @@ class EvaluationContextSelector extends Component {
         label: this.getLabel(),
         className:
           "webconsole-evaluation-selector-button devtools-button devtools-dropdown-button" +
-          (selectedTarget && !selectedTarget.isMainTarget
+          (selectedTarget && !selectedTarget.isTopLevel
             ? " webconsole-evaluation-selector-button-non-top"
             : ""),
         title: l10n.getStr("webconsole.input.selector.tooltip"),
