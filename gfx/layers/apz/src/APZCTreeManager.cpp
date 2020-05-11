@@ -703,13 +703,11 @@ void APZCTreeManager::UpdateHitTestingTree(
 
 void APZCTreeManager::SampleForWebRender(
     wr::TransactionWrapper& aTxn, const TimeStamp& aSampleTime,
-    wr::RenderRoot aRenderRoot,
     const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
   AssertOnSamplerThread();
   MutexAutoLock lock(mMapLock);
 
-  bool activeAnimations =
-      AdvanceAnimationsInternal(lock, Some(aRenderRoot), aSampleTime);
+  bool activeAnimations = AdvanceAnimationsInternal(lock, aSampleTime);
   if (activeAnimations) {
     RefPtr<CompositorController> controller;
     CompositorBridgeParent::CallWithIndirectShadowTree(
@@ -726,10 +724,6 @@ void APZCTreeManager::SampleForWebRender(
   // Sample async transforms on scrollable layers.
   for (const auto& mapping : mApzcMap) {
     AsyncPanZoomController* apzc = mapping.second.apzc;
-    if (apzc->GetRenderRoot() != aRenderRoot) {
-      // If this APZC belongs to a different render root, skip over it
-      continue;
-    }
 
     const AsyncTransformComponents asyncTransformComponents =
         apzc->GetZoomAnimationId()
@@ -823,10 +817,6 @@ void APZCTreeManager::SampleForWebRender(
     }
     AsyncPanZoomController* scrollTargetApzc = it->second.apzc;
     MOZ_ASSERT(scrollTargetApzc);
-    if (scrollTargetApzc->GetRenderRoot() != aRenderRoot) {
-      // If this APZC belongs to a different render root, skip over it
-      continue;
-    }
     LayerToParentLayerMatrix4x4 transform =
         scrollTargetApzc->CallWithLastContentPaintMetrics(
             [&](const FrameMetrics& aMetrics) {
@@ -902,10 +892,9 @@ void APZCTreeManager::SampleForWebRender(
   aTxn.AppendTransformProperties(transforms);
 }
 
-bool APZCTreeManager::AdvanceAnimations(Maybe<wr::RenderRoot> aRenderRoot,
-                                        const TimeStamp& aSampleTime) {
+bool APZCTreeManager::AdvanceAnimations(const TimeStamp& aSampleTime) {
   MutexAutoLock lock(mMapLock);
-  return AdvanceAnimationsInternal(lock, std::move(aRenderRoot), aSampleTime);
+  return AdvanceAnimationsInternal(lock, aSampleTime);
 }
 
 ParentLayerRect APZCTreeManager::ComputeClippedCompositionBounds(
@@ -967,17 +956,11 @@ ParentLayerRect APZCTreeManager::ComputeClippedCompositionBounds(
 }
 
 bool APZCTreeManager::AdvanceAnimationsInternal(
-    const MutexAutoLock& aProofOfMapLock, Maybe<wr::RenderRoot> aRenderRoot,
-    const TimeStamp& aSampleTime) {
+    const MutexAutoLock& aProofOfMapLock, const TimeStamp& aSampleTime) {
   ClippedCompositionBoundsMap clippedCompBounds;
   bool activeAnimations = false;
   for (const auto& mapping : mApzcMap) {
     AsyncPanZoomController* apzc = mapping.second.apzc;
-    if (aRenderRoot && apzc->GetRenderRoot() != *aRenderRoot) {
-      // If this APZC belongs to a different render root, skip over it
-      continue;
-    }
-
     // Note that this call is recursive, but it early-exits if called again
     // with the same guid. So this loop is still amortized O(n) with respect to
     // the number of APZCs.

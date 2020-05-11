@@ -889,7 +889,6 @@ extern "C" {
     fn apz_sample_transforms(
         window_id: WrWindowId,
         transaction: &mut Transaction,
-        document_id: WrDocumentId,
         epochs_being_rendered: &WrPipelineIdEpochs,
     );
     fn apz_deregister_sampler(window_id: WrWindowId);
@@ -976,13 +975,12 @@ impl AsyncPropertySampler for SamplerCallback {
         unsafe { apz_register_sampler(self.window_id) }
     }
 
-    fn sample(&self, document_id: DocumentId, epochs_being_rendered: &FastHashMap<PipelineId, Epoch>) -> Vec<FrameMsg> {
+    fn sample(&self, _document_id: DocumentId, epochs_being_rendered: &FastHashMap<PipelineId, Epoch>) -> Vec<FrameMsg> {
         let mut transaction = Transaction::new();
         unsafe {
             apz_sample_transforms(
                 self.window_id,
                 &mut transaction,
-                document_id,
                 &epochs_being_rendered.iter().map(WrPipelineIdAndEpoch::from).collect(),
             )
         };
