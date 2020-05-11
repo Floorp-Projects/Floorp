@@ -48,7 +48,7 @@ function download_failed(install) {
 
 function install_ended(install, addon) {
   ok(false, "Add-on should not have installed");
-  install.cancel();
+  return addon.uninstall();
 }
 
 function finish_test(count) {

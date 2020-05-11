@@ -41,7 +41,7 @@ function confirm_install(panel) {
 }
 
 function install_ended(install, addon) {
-  install.cancel();
+  return addon.uninstall();
 }
 
 const finish_test = async function(count) {

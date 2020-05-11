@@ -35,7 +35,7 @@ function install_ended(install, addon) {
     source: "unknown",
     sourceURL: undefined,
   });
-  install.cancel();
+  return addon.uninstall();
 }
 
 function finish_test(count) {

@@ -954,6 +954,30 @@ add_task(async function test_local_hash() {
   install.cancel();
 });
 
+// Test that an install cannot be canceled after the install is completed.
+add_task(async function test_cancel_completed() {
+  let url = "http://example.com/addons/test_install1.xpi";
+  let install = await AddonManager.getInstallForURL(url);
+
+  let cancelPromise = new Promise((resolve, reject) => {
+    install.addListener({
+      onInstallEnded() {
+        try {
+          install.cancel();
+          reject("Cancel should fail.");
+        } catch (e) {
+          resolve();
+        }
+      },
+    });
+  });
+
+  install.install();
+  await cancelPromise;
+
+  equal(install.state, AddonManager.STATE_INSTALLED);
+});
+
 // Test that an install may be canceled after a redirect.
 add_task(async function test_cancel_redirect() {
   let url = "http://example.com/redirect?/addons/test_install1.xpi";
