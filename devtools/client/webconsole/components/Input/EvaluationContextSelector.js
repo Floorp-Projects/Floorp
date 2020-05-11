@@ -63,7 +63,11 @@ class EvaluationContextSelector extends Component {
       return "resource://devtools/client/debugger/images/globe-small.svg";
     }
 
-    if (target.type === TARGET_TYPES.WORKER) {
+    if (
+      target.type === TARGET_TYPES.WORKER ||
+      target.type === TARGET_TYPES.SHARED_WORKER ||
+      target.type === TARGET_TYPES.SERVICE_WORKER
+    ) {
       return "resource://devtools/client/debugger/images/worker.svg";
     }
 
@@ -103,12 +107,16 @@ class EvaluationContextSelector extends Component {
     let mainTarget;
     const frames = [];
     const contentProcesses = [];
-    const workers = [];
+    const dedicatedWorkers = [];
+    const sharedWorkers = [];
+    const serviceWorkers = [];
 
     const dict = {
       [TARGET_TYPES.FRAME]: frames,
       [TARGET_TYPES.PROCESS]: contentProcesses,
-      [TARGET_TYPES.WORKER]: workers,
+      [TARGET_TYPES.WORKER]: dedicatedWorkers,
+      [TARGET_TYPES.SHARED_WORKER]: sharedWorkers,
+      [TARGET_TYPES.SERVICE_WORKER]: serviceWorkers,
     };
 
     for (const target of targets) {
@@ -123,25 +131,13 @@ class EvaluationContextSelector extends Component {
 
     const items = [mainTarget];
 
-    if (frames.length > 0) {
-      items.push(
-        MenuItem({ role: "menuseparator", key: "frames-separator" }),
-        ...frames
-      );
-    }
-
-    if (contentProcesses.length > 0) {
-      items.push(
-        MenuItem({ role: "menuseparator", key: "process-separator" }),
-        ...contentProcesses
-      );
-    }
-
-    if (workers.length > 0) {
-      items.push(
-        MenuItem({ role: "menuseparator", key: "worker-separator" }),
-        ...workers
-      );
+    for (const [targetType, menuItems] of Object.entries(dict)) {
+      if (menuItems.length > 0) {
+        items.push(
+          MenuItem({ role: "menuseparator", key: `${targetType}-separator` }),
+          ...menuItems
+        );
+      }
     }
 
     return MenuList(
