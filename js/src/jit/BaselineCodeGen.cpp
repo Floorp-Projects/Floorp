@@ -6317,7 +6317,7 @@ bool BaselineCodeGen<Handler>::emit_InitHomeObject() {
 
   Label skipBarrier;
   masm.branchPtrInNurseryChunk(Assembler::Equal, func, temp, &skipBarrier);
-  masm.branchValueIsNurseryObject(Assembler::NotEqual, R0, temp, &skipBarrier);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, R0, temp, &skipBarrier);
   masm.call(&postBarrierSlot_);
   masm.bind(&skipBarrier);
 
