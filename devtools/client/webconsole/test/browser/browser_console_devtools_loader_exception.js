@@ -10,6 +10,10 @@ const TEST_URI =
   "data:text/html;charset=utf8,<p>browser_console_devtools_loader_exception.js</p>";
 
 add_task(async function() {
+  // Disable the preloaded process as it creates processes intermittently
+  // which forces the emission of RDP requests we aren't correctly waiting for.
+  await pushPref("dom.ipc.processPrelaunch.enabled", false);
+
   const wcHud = await openNewTabAndConsole(TEST_URI);
   ok(wcHud, "web console opened");
 
@@ -60,4 +64,6 @@ add_task(async function() {
   ok(true, "The view source tab was opened in response to clicking the link");
 
   await BrowserTestUtils.removeTab(newTab);
+  info("Close browser console");
+  await BrowserConsoleManager.toggleBrowserConsole();
 });
