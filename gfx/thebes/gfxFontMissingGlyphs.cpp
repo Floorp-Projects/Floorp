@@ -224,10 +224,8 @@ static void PurgeWRGlyphAtlas() {
         uint32_t handle = (uint32_t)(uintptr_t)gWRGlyphAtlas[i]->GetUserData(
             reinterpret_cast<UserDataKey*>(manager));
         if (handle) {
-          wr::RenderRoot renderRoot = wr::RenderRoot::Default;
-          manager->GetRenderRootStateManager(renderRoot)
-              ->AddImageKeyForDiscard(
-                  wr::ImageKey{manager->WrBridge()->GetNamespace(), handle});
+          manager->GetRenderRootStateManager()->AddImageKeyForDiscard(
+              wr::ImageKey{manager->WrBridge()->GetNamespace(), handle});
         }
       }
     }
