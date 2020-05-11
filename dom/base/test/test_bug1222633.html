@@ -40,23 +40,6 @@ function testPreloadEvent(url, crossorigin, expectLoad) {
   });
 }
 
-function testCancelPreloadNotCrash(url) {
-  var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
-            getService(SpecialPowers.Ci.nsIIOService);
-  var prefetch = SpecialPowers.Cc["@mozilla.org/prefetch-service;1"].
-                   getService(SpecialPowers.Ci.nsIPrefetchService);
-
-  var link = document.createElement("LINK");
-  link.setAttribute("rel", "preload");
-  link.setAttribute("href", url);
-  link.setAttribute("as", "fetch");
-  document.head.appendChild(link);
-
-  // Not actually verifying any value, just to ensure cancelPrefetchPreload
-  // won't cause crash.
-  prefetch.cancelPrefetchPreloadURI(ios.newURI(url), link);
-}
-
 function testChangePrefetchToPreload(url) {
   return new Promise((resolve) => {
     var preloaded = false;
@@ -91,7 +74,7 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [["network.preload", true]]})
 
 // test same origin
-.then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=no-cache", false, false))
+.then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=no-cache", false, true))
 .then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=404&cacheControl=no-cache", false, false))
 .then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", false, true))
 .then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=404&cacheControl=max-age%3D120", false, false))
@@ -115,14 +98,11 @@ SpecialPowers.pushPrefEnv({"set": [["network.preload", true]]})
 .then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=404&cacheControl=max-age%3D120", true, true))
 
 // test cross origin with CORS request and CORS response
-.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=200&cacheControl=no-cache&allowOrigin=*", true, false))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=200&cacheControl=no-cache&allowOrigin=*", true, true))
 .then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=404&cacheControl=no-cache&allowOrigin=*", true, false))
 .then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120&allowOrigin=*", true, true))
 .then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=404&cacheControl=max-age%3D120&allowOrigin=*", true, false))
 .then(() => testChangePrefetchToPreload(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", false, true))
-
-// test the crash issue: https://bugzilla.mozilla.org/show_bug.cgi?id=1294159
-.then(() => testCancelPreloadNotCrash(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120"))
 
 .catch((err) => ok(false, "promise rejected: " + err))
 .then(() => SimpleTest.finish());
