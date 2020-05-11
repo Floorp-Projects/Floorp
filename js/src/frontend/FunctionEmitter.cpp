@@ -702,34 +702,39 @@ bool FunctionScriptEmitter::emitEndBody() {
 
 bool FunctionScriptEmitter::initScript() {
   MOZ_ASSERT(state_ == State::EndBody);
+  MOZ_ASSERT(!bce_->outputScript);
+
+  JSContext* cx = bce_->cx;
 
   js::UniquePtr<ImmutableScriptData> immutableScriptData =
-      bce_->createImmutableScriptData(bce_->cx);
+      bce_->createImmutableScriptData(cx);
   if (!immutableScriptData) {
     return false;
   }
 
-  BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
-
-  RootedFunction function(bce_->cx, funbox_->function());
-  RootedScript script(bce_->cx);
   if (bce_->emitterMode == BytecodeEmitter::LazyFunction) {
-    script = JSScript::CastFromLazy(funbox_->function()->baseScript());
+    BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
+    RootedScript script(
+        cx, JSScript::CastFromLazy(funbox_->function()->baseScript()));
+
+    if (!JSScript::fullyInitFromStencil(cx, bce_->compilationInfo, script,
+                                        stencil)) {
+      return false;
+    }
+
+    bce_->outputScript = script;
   } else {
-    script =
-        JSScript::Create(bce_->cx, function, bce_->compilationInfo.sourceObject,
-                         funbox_->getScriptExtent(), stencil.immutableFlags);
+    SourceExtent extent = funbox_->getScriptExtent();
+    BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
+
+    RootedScript script(cx,
+                        stencil.intoScript(cx, bce_->compilationInfo, extent));
     if (!script) {
       return false;
     }
-  }
 
-  if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->compilationInfo, script,
-                                      stencil)) {
-    return false;
+    bce_->outputScript = script;
   }
-  MOZ_ASSERT(!bce_->outputScript);
-  bce_->outputScript = script;
 
 #ifdef DEBUG
   state_ = State::End;
