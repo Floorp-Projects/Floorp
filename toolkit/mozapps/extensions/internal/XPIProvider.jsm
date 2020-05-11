@@ -92,6 +92,7 @@ const URI_EXTENSION_STRINGS =
 
 const DIR_EXTENSIONS = "extensions";
 const DIR_SYSTEM_ADDONS = "features";
+const DIR_APP_SYSTEM_PROFILE = "system-extensions";
 const DIR_STAGE = "staged";
 const DIR_TRASH = "trash";
 
@@ -103,6 +104,7 @@ const KEY_APP_DISTRIBUTION = "XREAppDist";
 const KEY_APP_FEATURES = "XREAppFeat";
 
 const KEY_APP_PROFILE = "app-profile";
+const KEY_APP_SYSTEM_PROFILE = "app-system-profile";
 const KEY_APP_SYSTEM_ADDONS = "app-system-addons";
 const KEY_APP_SYSTEM_DEFAULTS = "app-system-defaults";
 const KEY_APP_BUILTINS = "app-builtin";
@@ -988,10 +990,13 @@ class DirectoryLocation extends XPIStateLocation {
    *        The scope of add-ons installed in this location.
    * @param {boolean} [locked = true]
    *        If false, the location accepts new add-on installs.
+   * @param {boolean} [system = false]
+   *        If true, the location is a system addon location.
    */
-  constructor(name, dir, scope, locked = true) {
+  constructor(name, dir, scope, locked = true, system = false) {
     super(name, dir, scope);
     this.locked = locked;
+    this._isSystem = system;
   }
 
   makeInstaller() {
@@ -1113,6 +1118,10 @@ class DirectoryLocation extends XPIStateLocation {
       addons.set(id, entry);
     }
     return addons;
+  }
+
+  get isSystem() {
+    return this._isSystem;
   }
 }
 
@@ -2203,13 +2212,13 @@ var XPIProvider = {
   },
 
   setupInstallLocations(aAppChanged) {
-    function DirectoryLoc(aName, aScope, aKey, aPaths, aLocked) {
+    function DirectoryLoc(aName, aScope, aKey, aPaths, aLocked, aIsSystem) {
       try {
         var dir = FileUtils.getDir(aKey, aPaths);
       } catch (e) {
         return null;
       }
-      return new DirectoryLocation(aName, dir, aScope, aLocked);
+      return new DirectoryLocation(aName, dir, aScope, aLocked, aIsSystem);
     }
 
     function SystemDefaultsLoc(name, scope, key, paths) {
@@ -2248,6 +2257,16 @@ var XPIProvider = {
         KEY_PROFILEDIR,
         [DIR_EXTENSIONS],
         false,
+      ],
+
+      [
+        DirectoryLoc,
+        KEY_APP_SYSTEM_PROFILE,
+        AddonManager.SCOPE_PROFILE,
+        KEY_PROFILEDIR,
+        [DIR_APP_SYSTEM_PROFILE],
+        false,
+        true,
       ],
 
       [
@@ -3137,6 +3156,11 @@ var XPIProvider = {
         }
     }
   },
+
+  uninstallSystemProfileAddon(aID) {
+    let location = XPIStates.getLocation(KEY_APP_SYSTEM_PROFILE);
+    return XPIInstall.uninstallAddonFromLocation(aID, location);
+  },
 };
 
 for (let meth of [
@@ -3171,8 +3195,13 @@ var XPIInternal = {
   BootstrapScope,
   BuiltInLocation,
   DB_SCHEMA,
+  DIR_STAGE,
+  DIR_TRASH,
+  KEY_APP_PROFILE,
+  KEY_APP_SYSTEM_PROFILE,
   KEY_APP_SYSTEM_ADDONS,
   KEY_APP_SYSTEM_DEFAULTS,
+  KEY_PROFILEDIR,
   PREF_BRANCH_INSTALLED_ADDON,
   PREF_SYSTEM_ADDON_SET,
   SystemAddonLocation,
