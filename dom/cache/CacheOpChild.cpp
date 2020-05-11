@@ -16,6 +16,13 @@
 
 namespace mozilla {
 namespace dom {
+// XXX Move this to ToJSValue.h
+template <typename T>
+MOZ_MUST_USE bool ToJSValue(JSContext* aCx, const SafeRefPtr<T>& aArgument,
+                            JS::MutableHandle<JS::Value> aValue) {
+  return ToJSValue(aCx, *aArgument.unsafeGetRawPtr(), aValue);
+}
+
 namespace cache {
 
 using mozilla::ipc::PBackgroundChild;
@@ -212,7 +219,7 @@ void CacheOpChild::HandleResponseList(
 
 void CacheOpChild::HandleRequestList(
     const nsTArray<CacheRequest>& aRequestList) {
-  AutoTArray<RefPtr<Request>, 256> requests;
+  AutoTArray<SafeRefPtr<Request>, 256> requests;
   requests.SetCapacity(aRequestList.Length());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {

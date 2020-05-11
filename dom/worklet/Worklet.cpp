@@ -127,7 +127,7 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     RequestInit requestInit;
     requestInit.mCredentials.Construct(aOptions.mCredentials);
 
-    RefPtr<Request> request =
+    SafeRefPtr<Request> request =
         Request::Constructor(global, aCx, requestInput, requestInit, aRv);
     if (aRv.Failed()) {
       return nullptr;
@@ -136,7 +136,7 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     request->OverrideContentPolicyType(aWorklet->Impl()->ContentPolicyType());
 
     RequestOrUSVString finalRequestInput;
-    finalRequestInput.SetAsRequest() = request;
+    finalRequestInput.SetAsRequest() = request.unsafeGetRawPtr();
 
     RefPtr<Promise> fetchPromise = FetchRequest(
         global, finalRequestInput, requestInit, CallerType::System, aRv);

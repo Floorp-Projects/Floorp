@@ -91,7 +91,7 @@ class TypeUtils {
 
   SafeRefPtr<InternalRequest> ToInternalRequest(const CacheRequest& aIn);
 
-  already_AddRefed<Request> ToRequest(const CacheRequest& aIn);
+  SafeRefPtr<Request> ToRequest(const CacheRequest& aIn);
 
   // static methods
   static already_AddRefed<InternalHeaders> ToInternalHeaders(
@@ -117,7 +117,7 @@ class TypeUtils {
                          nsACString* aUrlQueryOut, ErrorResult& aRv);
 
  private:
-  void CheckAndSetBodyUsed(JSContext* aCx, Request* aRequest,
+  void CheckAndSetBodyUsed(JSContext* aCx, Request& aRequest,
                            BodyAction aBodyAction, ErrorResult& aRv);
 
   SafeRefPtr<InternalRequest> ToInternalRequest(const nsAString& aIn,

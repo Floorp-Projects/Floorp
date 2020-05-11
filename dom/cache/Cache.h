@@ -99,11 +99,11 @@ class Cache final : public nsISupports,
                                       ErrorResult& aRv);
 
   already_AddRefed<Promise> AddAll(const GlobalObject& aGlobal,
-                                   nsTArray<RefPtr<Request>>&& aRequestList,
+                                   nsTArray<SafeRefPtr<Request>>&& aRequestList,
                                    CallerType aCallerType, ErrorResult& aRv);
 
   already_AddRefed<Promise> PutAll(
-      JSContext* aCx, const nsTArray<RefPtr<Request>>& aRequestList,
+      JSContext* aCx, const nsTArray<SafeRefPtr<Request>>& aRequestList,
       const nsTArray<RefPtr<Response>>& aResponseList, ErrorResult& aRv);
 
   OpenMode GetOpenMode() const;
