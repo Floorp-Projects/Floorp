@@ -1534,9 +1534,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder, WebRenderScrollData& aScrollData,
     WrFiltersHolder&& aFilters) {
   AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_WRDisplayList);
-  wr::RenderRootArray<StackingContextHelper> rootScs;
-  MOZ_ASSERT(aBuilder.GetRenderRoot() == wr::RenderRoot::Default);
 
+  StackingContextHelper sc;
   aScrollData = WebRenderScrollData(mManager);
   MOZ_ASSERT(mLayerScrollData.empty());
   mClipManager.BeginBuild(mManager, aBuilder);
@@ -1554,8 +1553,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     params.clip =
         wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
 
-    StackingContextHelper pageRootSc(rootScs[wr::RenderRoot::Default], nullptr,
-                                     nullptr, nullptr, aBuilder, params);
+    StackingContextHelper pageRootSc(sc, nullptr, nullptr, nullptr, aBuilder,
+                                     params);
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex =
           aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
