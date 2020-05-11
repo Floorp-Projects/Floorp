@@ -82,24 +82,24 @@ class StatReader {
     nsresult rv = NS_OK;
     // see the proc documentation for fields index references.
     switch (aIndex) {
-      case 15:
+      case 13:
         // Amount of time that this process has been scheduled
         // in user mode, measured in clock ticks
         aInfo.cpuUser = GetCPUTime(aToken, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
-      case 16:
+      case 14:
         // Amount of time that this process has been scheduled
         // in kernel mode, measured in clock ticks
         aInfo.cpuKernel = GetCPUTime(aToken, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
-      case 24:
+      case 22:
         // Virtual memory size in bytes.
         aInfo.virtualMemorySize = Get64Value(aToken, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
-      case 25:
+      case 23:
         // Resident Set Size: number of pages the process has
         // in real memory.
         aInfo.residentSetSize = Get64Value(aToken, &rv);
