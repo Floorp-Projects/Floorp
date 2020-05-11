@@ -197,7 +197,7 @@ struct App {}
 impl Example for App {
     fn render(
         &mut self,
-        api: &RenderApi,
+        api: &mut RenderApi,
         builder: &mut DisplayListBuilder,
         txn: &mut Transaction,
         _device_size: DeviceIntSize,
