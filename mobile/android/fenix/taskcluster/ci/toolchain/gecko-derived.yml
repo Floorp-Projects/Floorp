@@ -27,7 +27,7 @@ linux64-ffmpeg-4.1.4:
 
 linux64-geckodriver:
     attributes:
-        toolchain-artifact: public/build/geckodriver.tar.xz
+        toolchain-artifact: public/build/geckodriver.tar.gz
     description: "Geckodriver toolchain"
     run:
         index-search:
