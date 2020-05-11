@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GetAddrInfo.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/net/DNS.h"
 #include "prnetdb.h"
 #include "nsHostResolver.h"

@@ -4,6 +4,9 @@
 
 #include "IDNBlocklistUtils.h"
 
+#include "mozilla/Preferences.h"
+#include "nsStringFwd.h"
+
 namespace mozilla {
 namespace net {
 
