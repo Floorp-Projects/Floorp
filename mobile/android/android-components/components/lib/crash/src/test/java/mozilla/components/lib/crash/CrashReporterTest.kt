@@ -430,6 +430,54 @@ class CrashReporterTest {
     }
 
     @Test
+    fun `Caught exception with no stack trace should be reported as CrashReporterException`() {
+        val testMessage = "test_Message"
+        val testData = hashMapOf("1" to "one", "2" to "two")
+        val testCategory = "testing_category"
+        val testLevel = Breadcrumb.Level.CRITICAL
+        val testType = Breadcrumb.Type.USER
+        var exceptionCrash = false
+        var exceptionThrowable: Throwable? = null
+        var exceptionBreadcrumb: ArrayList<Breadcrumb>? = null
+        val service = object : CrashReporterService {
+            override val id: String = "test"
+
+            override val name: String = "TestReporter"
+
+            override fun createCrashReportUrl(identifier: String): String? = null
+
+            override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
+
+            override fun report(crash: Crash.NativeCodeCrash): String? = null
+
+            override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? {
+                exceptionCrash = true
+                exceptionThrowable = throwable
+                exceptionBreadcrumb = breadcrumbs
+                return null
+            }
+        }
+
+        val reporter = spy(CrashReporter(
+            context = testContext,
+            services = listOf(service),
+            shouldPrompt = CrashReporter.Prompt.NEVER
+        ).install(testContext))
+
+        val throwable = RuntimeException()
+        throwable.stackTrace = emptyArray()
+        val breadcrumb = Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+        reporter.recordCrashBreadcrumb(breadcrumb)
+
+        reporter.submitCaughtException(throwable).joinBlocking()
+
+        assertTrue(exceptionCrash)
+        assert(exceptionThrowable is CrashReporterException.UnexpectedlyMissingStacktrace)
+        assert(exceptionThrowable?.cause is java.lang.RuntimeException)
+        assertEquals(exceptionBreadcrumb?.get(0), breadcrumb)
+    }
+
+    @Test
     fun `CrashReporter forwards native crashes to telemetry service`() {
         var nativeCrash = false
 
