@@ -1799,11 +1799,9 @@ var AddonManagerInternal = {
    * @param  aTelemetryInfo
    *         An optional object which provides details about the installation source
    *         included in the addon manager telemetry events.
-   * @param  aUseSystemLocation
-   *         If true the addon is installed into the system profile location.
    * @throws if the aFile or aCallback arguments are not specified
    */
-  getInstallForFile(aFile, aMimetype, aTelemetryInfo, aUseSystemLocation) {
+  getInstallForFile(aFile, aMimetype, aTelemetryInfo) {
     if (!gStarted) {
       throw Components.Exception(
         "AddonManager is not initialized",
@@ -1831,8 +1829,7 @@ var AddonManagerInternal = {
           provider,
           "getInstallForFile",
           aFile,
-          aTelemetryInfo,
-          aUseSystemLocation
+          aTelemetryInfo
         );
 
         if (install) {
@@ -1842,25 +1839,6 @@ var AddonManagerInternal = {
 
       return null;
     })();
-  },
-
-  /**
-   * Uninstall an addon from the system profile location.
-   *
-   * @param {string} aID
-   *         The ID of the addon to remove.
-   * @returns A promise that resolves when the addon is uninstalled.
-   */
-  uninstallSystemProfileAddon(aID) {
-    if (!gStarted) {
-      throw Components.Exception(
-        "AddonManager is not initialized",
-        Cr.NS_ERROR_NOT_INITIALIZED
-      );
-    }
-    return AddonManagerInternal._getProviderByName(
-      "XPIProvider"
-    ).uninstallSystemProfileAddon(aID);
   },
 
   /**
@@ -3979,22 +3957,12 @@ var AddonManager = {
     return AddonManagerInternal.getInstallForURL(aUrl, aOptions);
   },
 
-  getInstallForFile(
-    aFile,
-    aMimetype,
-    aTelemetryInfo,
-    aUseSystemLocation = false
-  ) {
+  getInstallForFile(aFile, aMimetype, aTelemetryInfo) {
     return AddonManagerInternal.getInstallForFile(
       aFile,
       aMimetype,
-      aTelemetryInfo,
-      aUseSystemLocation
+      aTelemetryInfo
     );
-  },
-
-  uninstallSystemProfileAddon(aID) {
-    return AddonManagerInternal.uninstallSystemProfileAddon(aID);
   },
 
   /**
