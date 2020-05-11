@@ -135,6 +135,25 @@ PreloadHashKey PreloadHashKey::CreateAsImage(
   return key;
 }
 
+// static
+PreloadHashKey PreloadHashKey::CreateAsFetch(
+    nsIURI* aURI, const CORSMode aCORSMode,
+    const dom::ReferrerPolicy& aReferrerPolicy) {
+  PreloadHashKey key(aURI, ResourceType::FETCH);
+  key.mReferrerPolicy = aReferrerPolicy;
+  key.mCORSMode = aCORSMode;
+
+  return key;
+}
+
+// static
+PreloadHashKey PreloadHashKey::CreateAsFetch(
+    nsIURI* aURI, const nsAString& aCrossOrigin,
+    const dom::ReferrerPolicy& aReferrerPolicy) {
+  return CreateAsFetch(aURI, dom::Element::StringToCORSMode(aCrossOrigin),
+                       aReferrerPolicy);
+}
+
 bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
   if (mAs != aOther->mAs || mCORSMode != aOther->mCORSMode ||
       mReferrerPolicy != aOther->mReferrerPolicy) {
@@ -181,6 +200,7 @@ bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
     case ResourceType::FONT:
       break;
     case ResourceType::FETCH:
+      // No more checks needed.
       break;
     case ResourceType::NONE:
       break;
