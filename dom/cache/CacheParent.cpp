@@ -16,8 +16,8 @@ namespace cache {
 // Declared in ActorUtils.h
 void DeallocPCacheParent(PCacheParent* aActor) { delete aActor; }
 
-CacheParent::CacheParent(cache::Manager* aManager, CacheId aCacheId)
-    : mManager(aManager), mCacheId(aCacheId) {
+CacheParent::CacheParent(SafeRefPtr<cache::Manager> aManager, CacheId aCacheId)
+    : mManager(std::move(aManager)), mCacheId(aCacheId) {
   MOZ_COUNT_CTOR(cache::CacheParent);
   MOZ_DIAGNOSTIC_ASSERT(mManager);
   mManager->AddRefCacheId(mCacheId);
@@ -54,7 +54,7 @@ bool CacheParent::DeallocPCacheOpParent(PCacheOpParent* aActor) {
 mozilla::ipc::IPCResult CacheParent::RecvPCacheOpConstructor(
     PCacheOpParent* aActor, const CacheOpArgs& aOpArgs) {
   auto actor = static_cast<CacheOpParent*>(aActor);
-  actor->Execute(mManager);
+  actor->Execute(mManager.clonePtr());
   return IPC_OK();
 }
 

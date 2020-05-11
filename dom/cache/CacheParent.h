@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_cache_CacheParent_h
 #define mozilla_dom_cache_CacheParent_h
 
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/cache/PCacheParent.h"
 #include "mozilla/dom/cache/Types.h"
 
@@ -20,7 +21,7 @@ class CacheParent final : public PCacheParent {
   friend class PCacheParent;
 
  public:
-  CacheParent(cache::Manager* aManager, CacheId aCacheId);
+  CacheParent(SafeRefPtr<cache::Manager> aManager, CacheId aCacheId);
   virtual ~CacheParent();
 
  private:
@@ -36,7 +37,7 @@ class CacheParent final : public PCacheParent {
 
   mozilla::ipc::IPCResult RecvTeardown();
 
-  RefPtr<cache::Manager> mManager;
+  SafeRefPtr<cache::Manager> mManager;
   const CacheId mCacheId;
 };
 

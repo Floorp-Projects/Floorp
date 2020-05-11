@@ -379,13 +379,14 @@ AutoParentOpResult::~AutoParentOpResult() {
   mStreamCleanupList.Clear();
 }
 
-void AutoParentOpResult::Add(CacheId aOpenedCacheId, Manager* aManager) {
+void AutoParentOpResult::Add(CacheId aOpenedCacheId,
+                             SafeRefPtr<Manager> aManager) {
   MOZ_DIAGNOSTIC_ASSERT(mOpResult.type() == CacheOpResult::TStorageOpenResult);
   MOZ_DIAGNOSTIC_ASSERT(mOpResult.get_StorageOpenResult().actorParent() ==
                         nullptr);
   mOpResult.get_StorageOpenResult().actorParent() =
       mManager->SendPCacheConstructor(
-          new CacheParent(aManager, aOpenedCacheId));
+          new CacheParent(std::move(aManager), aOpenedCacheId));
 }
 
 void AutoParentOpResult::Add(const SavedResponse& aSavedResponse,

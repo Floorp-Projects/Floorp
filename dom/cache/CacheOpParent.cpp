@@ -47,24 +47,22 @@ void CacheOpParent::Execute(ManagerId* aManagerId) {
   MOZ_DIAGNOSTIC_ASSERT(!mManager);
   MOZ_DIAGNOSTIC_ASSERT(!mVerifier);
 
-  RefPtr<cache::Manager> manager;
-  nsresult rv =
-      cache::Manager::GetOrCreate(aManagerId, getter_AddRefs(manager));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    ErrorResult result(rv);
+  auto managerOrErr = cache::Manager::AcquireCreateIfNonExistent(aManagerId);
+  if (NS_WARN_IF(managerOrErr.isErr())) {
+    ErrorResult result(managerOrErr.unwrapErr());
     Unused << Send__delete__(this, std::move(result), void_t());
     return;
   }
 
-  Execute(manager);
+  Execute(managerOrErr.unwrap());
 }
 
-void CacheOpParent::Execute(cache::Manager* aManager) {
+void CacheOpParent::Execute(SafeRefPtr<cache::Manager> aManager) {
   NS_ASSERT_OWNINGTHREAD(CacheOpParent);
   MOZ_DIAGNOSTIC_ASSERT(!mManager);
   MOZ_DIAGNOSTIC_ASSERT(!mVerifier);
 
-  mManager = aManager;
+  mManager = std::move(aManager);
 
   // Handle put op
   if (mOpArgs.type() == CacheOpArgs::TCachePutAllArgs) {
@@ -168,7 +166,7 @@ void CacheOpParent::OnOpComplete(
   AutoParentOpResult result(mIpcManager, aResult, entryCount);
 
   if (aOpenedCacheId != INVALID_CACHE_ID) {
-    result.Add(aOpenedCacheId, mManager);
+    result.Add(aOpenedCacheId, mManager.clonePtr());
   }
 
   for (uint32_t i = 0; i < aSavedResponseList.Length(); ++i) {
