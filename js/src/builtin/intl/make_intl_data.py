@@ -9,6 +9,7 @@
     make_intl_data.py langtags [cldr_core.zip]
     make_intl_data.py tzdata
     make_intl_data.py currency
+    make_intl_data.py units
 
 
     Target "langtags":
@@ -26,15 +27,22 @@
 
     Target "currency":
     Generates the mapping from currency codes to decimal digits used for them.
+
+
+    Target "units":
+    Generate source and test files using the list of so-called "sanctioned unit
+    identifiers" and verifies that the ICU data filter includes these units.
 """
 
 from __future__ import print_function
 import os
 import re
 import io
+import json
 import sys
 import tarfile
 import tempfile
+import yaml
 from contextlib import closing
 from functools import partial, total_ordering
 from itertools import chain, groupby, tee
@@ -2370,6 +2378,358 @@ const char* js::intl::LanguageTag::replace{0}ExtensionType(
 """.strip("\n"))
 
 
+def readICUUnitResourceFile(filepath):
+    """ Return a set of unit descriptor pairs where the first entry denotes the unit type and the
+        second entry the unit name.
+
+        Example:
+
+        root{
+            units{
+                compound{
+                }
+                coordinate{
+                }
+                length{
+                    meter{
+                    }
+                }
+            }
+            unitsNarrow:alias{"/LOCALE/unitsShort"}
+            unitsShort{
+                duration{
+                    day{
+                    }
+                    day-person:alias{"/LOCALE/unitsShort/duration/day"}
+                }
+                length{
+                    meter{
+                    }
+                }
+            }
+        }
+
+        Returns {("length", "meter"), ("duration", "day"), ("duration", "day-person")}
+    """
+
+    start_table_re = re.compile(r"^([\w\-%:\"]+){$")
+    end_table_re = re.compile(r"^}$")
+    table_entry_re = re.compile(r"^([\w\-%:\"]+){\"(.*?)\"}$")
+
+    # The current resource table.
+    table = {}
+
+    # List of parent tables when parsing.
+    parents = []
+
+    # Track multi-line comments state.
+    in_multiline_comment = False
+
+    for line in flines(filepath, "utf-8-sig"):
+        # Remove leading and trailing whitespace.
+        line = line.strip()
+
+        # Skip over comments.
+        if in_multiline_comment:
+            if line.endswith("*/"):
+                in_multiline_comment = False
+            continue
+
+        if line.startswith("//"):
+            continue
+
+        if line.startswith("/*"):
+            in_multiline_comment = True
+            continue
+
+        # Try to match the start of a table, e.g. `length{` or `meter{`.
+        match = start_table_re.match(line)
+        if match:
+            parents.append(table)
+            table_name = match.group(1)
+            new_table = {}
+            table[table_name] = new_table
+            table = new_table
+            continue
+
+        # Try to match the end of a table.
+        match = end_table_re.match(line)
+        if match:
+            table = parents.pop()
+            continue
+
+        # Try to match a table entry, e.g. `dnam{"meter"}`.
+        match = table_entry_re.match(line)
+        if match:
+            entry_key = match.group(1)
+            entry_value = match.group(2)
+            table[entry_key] = entry_value
+            continue
+
+        raise Exception("unexpected line: '{}' in {}".format(line, file_name))
+
+    assert len(parents) == 0, "Not all tables closed"
+    assert len(table) == 1, "More than one root table"
+
+    # Remove the top-level language identifier table.
+    (_, unit_table) = table.popitem()
+
+    # Add all units for the three display formats "units", "unitsNarrow", and "unitsShort".
+    # But exclude the pseudo-units "compound" and "ccoordinate".
+    return {(unit_type, unit_name if not unit_name.endswith(":alias") else unit_name[:-6])
+            for unit_display in ("units", "unitsNarrow", "unitsShort")
+            if unit_display in unit_table
+            for (unit_type, unit_names) in unit_table[unit_display].items()
+            if unit_type != "compound" and unit_type != "coordinate"
+            for unit_name in unit_names.keys()}
+
+
+def computeSupportedUnits(all_units, sanctioned_units):
+    """ Given the set of all possible ICU unit identifiers and the set of sanctioned unit
+        identifiers, compute the set of effectively supported ICU unit identifiers.
+    """
+
+    def find_match(unit):
+        unit_match = [(unit_type, unit_name)
+                      for (unit_type, unit_name) in all_units
+                      if unit_name == unit]
+        if unit_match:
+            assert len(unit_match) == 1
+            return unit_match[0]
+        return None
+
+    def compound_unit_identifiers():
+        for numerator in sanctioned_units:
+            for denominator in sanctioned_units:
+                yield "{}-per-{}".format(numerator, denominator)
+
+    supported_simple_units = {find_match(unit) for unit in sanctioned_units}
+    assert None not in supported_simple_units
+
+    supported_compound_units = {unit_match
+                                for unit_match in (find_match(unit)
+                                                   for unit in compound_unit_identifiers())
+                                if unit_match}
+
+    return supported_simple_units | supported_compound_units
+
+
+def readICUDataFilterForUnits(data_filter_file):
+    with io.open(data_filter_file, mode="r", encoding="utf-8") as f:
+        data_filter = json.load(f)
+
+    # Find the rule set for the "unit_tree".
+    unit_tree_rules = [entry["rules"]
+                       for entry in data_filter["resourceFilters"]
+                       if entry["categories"] == ["unit_tree"]]
+    assert len(unit_tree_rules) == 1
+
+    # Compute the list of included units from that rule set. The regular expression must match
+    # "+/*/length/meter" and mustn't match either "-/*" or "+/*/compound".
+    included_unit_re = re.compile(r"^\+/\*/(.+?)/(.+)$")
+    filtered_units = (included_unit_re.match(unit) for unit in unit_tree_rules[0])
+
+    return {(unit.group(1), unit.group(2)) for unit in filtered_units if unit}
+
+
+def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
+    intl_dir = os.path.dirname(os.path.abspath(__file__))
+
+    def find_unit_type(unit):
+        result = [unit_type for (unit_type, unit_name) in all_units if unit_name == unit]
+        assert result and len(result) == 1
+        return result[0]
+
+    sanctioned_js_file = os.path.join(intl_dir, "SanctionedSimpleUnitIdentifiersGenerated.js")
+    with io.open(sanctioned_js_file, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        sanctioned_units_object = json.dumps({unit: True for unit in sorted(sanctioned_units)},
+                                             sort_keys=True, indent=4, separators=(',', ': '))
+
+        println(generatedFileWarning)
+
+        println(u"""
+/**
+ * The list of currently supported simple unit identifiers.
+ *
+ * Intl.NumberFormat Unified API Proposal
+ */""")
+
+        println(u"var sanctionedSimpleUnitIdentifiers = {};".format(sanctioned_units_object))
+
+    sanctioned_cpp_file = os.path.join(intl_dir, "MeasureUnitGenerated.h")
+    with io.open(sanctioned_cpp_file, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        println(generatedFileWarning)
+
+        println(u"""
+struct MeasureUnit {
+  const char* const type;
+  const char* const name;
+};
+
+/**
+ * The list of currently supported simple unit identifiers.
+ *
+ * The list must be kept in alphabetical order of |name|.
+ */
+inline constexpr MeasureUnit simpleMeasureUnits[] = {
+    // clang-format off""")
+
+        for unit_name in sorted(sanctioned_units):
+            println(u'  {{"{}", "{}"}},'.format(find_unit_type(unit_name), unit_name))
+
+        println(u"""
+    // clang-format on
+};""".lstrip("\n"))
+
+    writeUnitTestFiles(all_units, sanctioned_units)
+
+
+def writeUnitTestFiles(all_units, sanctioned_units):
+    """ Generate test files for unit number formatters. """
+
+    test_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "../../tests/non262/Intl/NumberFormat")
+
+    def write_test(file_name, test_content, indent=4):
+        file_path = os.path.join(test_dir, file_name)
+        with io.open(file_path, mode="w", encoding="utf-8", newline="") as f:
+            println = partial(print, file=f)
+
+            println(u'// |reftest| skip-if(!this.hasOwnProperty("Intl"))')
+            println(u"")
+            println(generatedFileWarning)
+            println(u"")
+
+            sanctioned_units_array = json.dumps([unit for unit in sorted(sanctioned_units)],
+                                                indent=indent, separators=(',', ': '))
+
+            println(u"const sanctionedSimpleUnitIdentifiers = {};".format(sanctioned_units_array))
+
+            println(test_content)
+
+            println(u"""
+if (typeof reportCompare === "function")
+{}reportCompare(true, true);""".format(" " * indent))
+
+    write_test("unit-compound-combinations.js", u"""
+// Test all simple unit identifier combinations are allowed.
+
+for (const numerator of sanctionedSimpleUnitIdentifiers) {
+    for (const denominator of sanctionedSimpleUnitIdentifiers) {
+        const unit = `${numerator}-per-${denominator}`;
+        const nf = new Intl.NumberFormat("en", {style: "unit", unit});
+
+        assertEq(nf.format(1), nf.formatToParts(1).map(p => p.value).join(""));
+    }
+}""")
+
+    all_units_array = json.dumps(["-".join(unit) for unit in sorted(all_units)],
+                                 indent=4, separators=(',', ': '))
+
+    write_test("unit-well-formed.js", u"""
+const allUnits = {};
+""".format(all_units_array) + u"""
+// Test only sanctioned unit identifiers are allowed.
+
+for (const typeAndUnit of allUnits) {
+    const [_, type, unit] = typeAndUnit.match(/(\w+)-(.+)/);
+
+    let allowed;
+    if (unit.includes("-per-")) {
+        const [numerator, denominator] = unit.split("-per-");
+        allowed = sanctionedSimpleUnitIdentifiers.includes(numerator) &&
+                  sanctionedSimpleUnitIdentifiers.includes(denominator);
+    } else {
+        allowed = sanctionedSimpleUnitIdentifiers.includes(unit);
+    }
+
+    if (allowed) {
+        const nf = new Intl.NumberFormat("en", {style: "unit", unit});
+        assertEq(nf.format(1), nf.formatToParts(1).map(p => p.value).join(""));
+    } else {
+        assertThrowsInstanceOf(() => new Intl.NumberFormat("en", {style: "unit", unit}),
+                               RangeError, `Missing error for "${typeAndUnit}"`);
+    }
+}""")
+
+    write_test("unit-formatToParts-has-unit-field.js", u"""
+// Test only English and Chinese to keep the overall runtime reasonable.
+//
+// Chinese is included because it contains more than one "unit" element for
+// certain unit combinations.
+const locales = ["en", "zh"];
+
+// Plural rules for English only differentiate between "one" and "other". Plural
+// rules for Chinese only use "other". That means we only need to test two values
+// per unit.
+const values = [0, 1];
+
+// Ensure unit formatters contain at least one "unit" element.
+
+for (const locale of locales) {
+  for (const unit of sanctionedSimpleUnitIdentifiers) {
+    const nf = new Intl.NumberFormat(locale, {style: "unit", unit});
+
+    for (const value of values) {
+      assertEq(nf.formatToParts(value).some(e => e.type === "unit"), true,
+               `locale=${locale}, unit=${unit}`);
+    }
+  }
+
+  for (const numerator of sanctionedSimpleUnitIdentifiers) {
+    for (const denominator of sanctionedSimpleUnitIdentifiers) {
+      const unit = `${numerator}-per-${denominator}`;
+      const nf = new Intl.NumberFormat(locale, {style: "unit", unit});
+
+      for (const value of values) {
+        assertEq(nf.formatToParts(value).some(e => e.type === "unit"), true,
+                 `locale=${locale}, unit=${unit}`);
+      }
+    }
+  }
+}""", indent=2)
+
+
+def updateUnits(topsrcdir, args):
+    icu_path = os.path.join(topsrcdir, "intl", "icu")
+    icu_unit_path = os.path.join(icu_path, "source", "data", "unit")
+
+    with io.open("SanctionedSimpleUnitIdentifiers.yaml", mode="r", encoding="utf-8") as f:
+        sanctioned_units = yaml.safe_load(f)
+
+    # Read all possible ICU unit identifiers from the "unit/root.txt" resource.
+    unit_root_file = os.path.join(icu_unit_path, "root.txt")
+    all_units = readICUUnitResourceFile(unit_root_file)
+
+    # Compute the set of effectively supported ICU unit identifiers.
+    supported_units = computeSupportedUnits(all_units, sanctioned_units)
+
+    # Read the list of units we're including into the ICU data file.
+    data_filter_file = os.path.join(icu_path, "data_filter.json")
+    filtered_units = readICUDataFilterForUnits(data_filter_file)
+
+    # Both sets must match to avoid resource loading errors at runtime.
+    if supported_units != filtered_units:
+        def units_to_string(units):
+            return ", ".join("/".join(u) for u in units)
+
+        missing = supported_units - filtered_units
+        if missing:
+            raise RuntimeError("Missing units: {}".format(units_to_string(missing)))
+
+        # Not exactly an error, but we currently don't have a use case where we need to support
+        # more units than required by ECMA-402.
+        extra = filtered_units - supported_units
+        if extra:
+            raise RuntimeError("Unnecessary units: {}".format(units_to_string(extra)))
+
+    writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units)
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -2439,6 +2799,10 @@ if __name__ == "__main__":
                                  nargs="?",
                                  help="Local currency code list file, if omitted uses <URL>")
     parser_currency.set_defaults(func=partial(updateCurrency, topsrcdir))
+
+    parser_units = subparsers.add_parser("units",
+                                         help="Update sanctioned unit identifiers mapping")
+    parser_units.set_defaults(func=partial(updateUnits, topsrcdir))
 
     args = parser.parse_args()
     args.func(args)
