@@ -321,7 +321,7 @@ nsresult GetIPCInternalRequest(nsIInterceptedChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  RefPtr<InternalRequest> internalRequest = new InternalRequest(
+  auto internalRequest = MakeSafeRefPtr<InternalRequest>(
       spec, fragment, method, internalHeaders.forget(), cacheMode, requestMode,
       requestRedirect, requestCredentials, referrer, referrerPolicy,
       contentPolicyType, integrity);

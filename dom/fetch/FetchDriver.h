@@ -13,6 +13,7 @@
 #include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/dom/AbortSignal.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/RefPtr.h"
@@ -100,7 +101,7 @@ class FetchDriver final : public nsIStreamListener,
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-  FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
+  FetchDriver(SafeRefPtr<InternalRequest> aRequest, nsIPrincipal* aPrincipal,
               nsILoadGroup* aLoadGroup, nsIEventTarget* aMainThreadEventTarget,
               nsICookieJarSettings* aCookieJarSettings,
               PerformanceStorage* aPerformanceStorage, bool aIsTrackingFetch);
@@ -130,7 +131,7 @@ class FetchDriver final : public nsIStreamListener,
  private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
-  RefPtr<InternalRequest> mRequest;
+  SafeRefPtr<InternalRequest> mRequest;
   RefPtr<InternalResponse> mResponse;
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
   RefPtr<FetchDriverObserver> mObserver;

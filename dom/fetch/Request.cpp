@@ -52,12 +52,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Request)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END_INHERITING(FetchBody<Request>)
 
-Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest,
+Request::Request(nsIGlobalObject* aOwner, SafeRefPtr<InternalRequest> aRequest,
                  AbortSignal* aSignal)
-    : FetchBody<Request>(aOwner), mRequest(aRequest) {
-  MOZ_ASSERT(aRequest->Headers()->Guard() == HeadersGuardEnum::Immutable ||
-             aRequest->Headers()->Guard() == HeadersGuardEnum::Request ||
-             aRequest->Headers()->Guard() == HeadersGuardEnum::Request_no_cors);
+    : FetchBody<Request>(aOwner), mRequest(std::move(aRequest)) {
+  MOZ_ASSERT(mRequest->Headers()->Guard() == HeadersGuardEnum::Immutable ||
+             mRequest->Headers()->Guard() == HeadersGuardEnum::Request ||
+             mRequest->Headers()->Guard() == HeadersGuardEnum::Request_no_cors);
   SetMimeType();
 
   if (aSignal) {
@@ -72,9 +72,8 @@ Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest,
 
 Request::~Request() = default;
 
-already_AddRefed<InternalRequest> Request::GetInternalRequest() {
-  RefPtr<InternalRequest> r = mRequest;
-  return r.forget();
+SafeRefPtr<InternalRequest> Request::GetInternalRequest() {
+  return mRequest.clonePtr();
 }
 
 namespace {
@@ -276,7 +275,7 @@ already_AddRefed<Request> Request::Constructor(nsIGlobalObject* aGlobal,
                                                const RequestInit& aInit,
                                                ErrorResult& aRv) {
   bool hasCopiedBody = false;
-  RefPtr<InternalRequest> request;
+  SafeRefPtr<InternalRequest> request;
 
   RefPtr<AbortSignal> signal;
 
@@ -322,7 +321,8 @@ already_AddRefed<Request> Request::Constructor(nsIGlobalObject* aGlobal,
     if (aRv.Failed()) {
       return nullptr;
     }
-    request = new InternalRequest(NS_ConvertUTF16toUTF8(requestURL), fragment);
+    request = MakeSafeRefPtr<InternalRequest>(NS_ConvertUTF16toUTF8(requestURL),
+                                              fragment);
   }
   request = request->GetRequestConstructorCopy(aGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -593,7 +593,7 @@ already_AddRefed<Request> Request::Constructor(nsIGlobalObject* aGlobal,
     }
   }
 
-  RefPtr<Request> domRequest = new Request(aGlobal, request, signal);
+  RefPtr<Request> domRequest = new Request(aGlobal, std::move(request), signal);
   domRequest->SetMimeType();
 
   if (aInput.IsRequest()) {
@@ -621,13 +621,14 @@ already_AddRefed<Request> Request::Clone(ErrorResult& aRv) {
     return nullptr;
   }
 
-  RefPtr<InternalRequest> ir = mRequest->Clone();
+  SafeRefPtr<InternalRequest> ir = mRequest->Clone();
   if (!ir) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  RefPtr<Request> request = new Request(mOwner, ir, GetOrCreateSignal());
+  RefPtr<Request> request =
+      new Request(mOwner, std::move(ir), GetOrCreateSignal());
 
   return request.forget();
 }

@@ -10,6 +10,7 @@
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/LoadTainting.h"
 #include "mozilla/UniquePtr.h"
 
@@ -72,11 +73,11 @@ class IPCInternalRequest;
 class Request;
 
 #define kFETCH_CLIENT_REFERRER_STR "about:client"
-class InternalRequest final {
+class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
   friend class Request;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalRequest)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(InternalRequest)
   InternalRequest(const nsACString& aURL, const nsACString& aFragment);
   InternalRequest(const nsACString& aURL, const nsACString& aFragment,
                   const nsACString& aMethod,
@@ -94,7 +95,7 @@ class InternalRequest final {
   void ToIPC(IPCInternalRequest* aIPCRequest, M* aManager,
              UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
 
-  already_AddRefed<InternalRequest> Clone();
+  SafeRefPtr<InternalRequest> Clone();
 
   void GetMethod(nsCString& aMethod) const { aMethod.Assign(mMethod); }
 
@@ -264,7 +265,7 @@ class InternalRequest final {
 
   void SetUnsafeRequest() { mUnsafeRequest = true; }
 
-  InternalHeaders* Headers() { return mHeaders; }
+  InternalHeaders* Headers() const { return mHeaders; }
 
   void SetHeaders(InternalHeaders* aHeaders) {
     MOZ_ASSERT(aHeaders);
@@ -280,7 +281,7 @@ class InternalRequest final {
 
   // Will return the original stream!
   // Use a tee or copy if you don't want to erase the original.
-  void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr) {
+  void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr) const {
     nsCOMPtr<nsIInputStream> s = mBodyStream;
     s.forget(aStream);
 
@@ -300,7 +301,7 @@ class InternalRequest final {
   const nsAString& BodyLocalPath() const { return mBodyLocalPath; }
 
   // The global is used as the client for the new object.
-  already_AddRefed<InternalRequest> GetRequestConstructorCopy(
+  SafeRefPtr<InternalRequest> GetRequestConstructorCopy(
       nsIGlobalObject* aGlobal, ErrorResult& aRv) const;
 
   bool IsNavigationRequest() const;
@@ -335,12 +336,18 @@ class InternalRequest final {
     mPreferredAlternativeDataType = aDataType;
   }
 
- private:
-  // Does not copy mBodyStream.  Use fallible Clone() for complete copy.
-  explicit InternalRequest(const InternalRequest& aOther);
-
   ~InternalRequest();
 
+  InternalRequest(const InternalRequest& aOther) = delete;
+
+ private:
+  struct ConstructorGuard {};
+
+ public:
+  // Does not copy mBodyStream.  Use fallible Clone() for complete copy.
+  InternalRequest(const InternalRequest& aOther, ConstructorGuard);
+
+ private:
   // Map the content policy type to the associated fetch destination, as defined
   // by the spec at https://fetch.spec.whatwg.org/#concept-request-destination.
   // Note that while the HTML spec for the "Link" element and its "as" attribute
