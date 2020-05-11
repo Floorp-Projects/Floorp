@@ -30,8 +30,6 @@ class StatementData;
 }  // namespace storage
 }  // namespace mozilla
 
-MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::storage::StatementData)
-
 namespace mozilla::storage {
 class AsyncExecuteStatements final : public nsIRunnable,
                                      public mozIStoragePendingStatement {
