@@ -138,10 +138,10 @@ void CacheOpParent::OnPrincipalVerified(nsresult aRv, ManagerId* aManagerId) {
   Execute(aManagerId);
 }
 
-void CacheOpParent::OnOpComplete(
-    ErrorResult&& aRv, const CacheOpResult& aResult, CacheId aOpenedCacheId,
-    const nsTArray<SavedResponse>& aSavedResponseList,
-    const nsTArray<SavedRequest>& aSavedRequestList, StreamList* aStreamList) {
+void CacheOpParent::OnOpComplete(ErrorResult&& aRv,
+                                 const CacheOpResult& aResult,
+                                 CacheId aOpenedCacheId,
+                                 const Maybe<StreamInfo>& aStreamInfo) {
   NS_ASSERT_OWNINGTHREAD(CacheOpParent);
   MOZ_DIAGNOSTIC_ASSERT(mIpcManager);
   MOZ_DIAGNOSTIC_ASSERT(mManager);
@@ -153,9 +153,11 @@ void CacheOpParent::OnOpComplete(
     return;
   }
 
-  uint32_t entryCount = std::max(
-      1lu, static_cast<unsigned long>(std::max(aSavedResponseList.Length(),
-                                               aSavedRequestList.Length())));
+  uint32_t entryCount =
+      std::max(1lu, aStreamInfo ? static_cast<unsigned long>(std::max(
+                                      aStreamInfo->mSavedResponseList.Length(),
+                                      aStreamInfo->mSavedRequestList.Length()))
+                                : 0lu);
 
   // The result must contain the appropriate type at this point.  It may
   // or may not contain the additional result data yet.  For types that
@@ -169,12 +171,16 @@ void CacheOpParent::OnOpComplete(
     result.Add(aOpenedCacheId, mManager.clonePtr());
   }
 
-  for (uint32_t i = 0; i < aSavedResponseList.Length(); ++i) {
-    result.Add(aSavedResponseList[i], aStreamList);
-  }
+  if (aStreamInfo) {
+    const auto& streamInfo = *aStreamInfo;
 
-  for (uint32_t i = 0; i < aSavedRequestList.Length(); ++i) {
-    result.Add(aSavedRequestList[i], aStreamList);
+    for (const auto& savedResponse : streamInfo.mSavedResponseList) {
+      result.Add(savedResponse, streamInfo.mStreamList);
+    }
+
+    for (const auto& savedRequest : streamInfo.mSavedRequestList) {
+      result.Add(savedRequest, streamInfo.mStreamList);
+    }
   }
 
   Unused << Send__delete__(this, std::move(aRv), result.SendAsOpResult());

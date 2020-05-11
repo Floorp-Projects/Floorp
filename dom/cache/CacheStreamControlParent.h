@@ -31,7 +31,7 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
   CacheStreamControlParent();
   ~CacheStreamControlParent();
 
-  void SetStreamList(StreamList* aStreamList);
+  void SetStreamList(SafeRefPtr<StreamList> aStreamList);
   void Close(const nsID& aId);
   void CloseAll();
   void Shutdown();
@@ -68,7 +68,7 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
   // Cycle with StreamList via a weak-ref to us.  Cleanup occurs when the actor
   // is deleted by the PBackground manager.  ActorDestroy() then calls
   // StreamList::RemoveStreamControl() to clear the weak ref.
-  RefPtr<StreamList> mStreamList;
+  SafeRefPtr<StreamList> mStreamList;
 
   NS_DECL_OWNINGTHREAD
 };

@@ -94,22 +94,26 @@ class Manager final : public SafeRefCounted<Manager> {
 
     void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                       const SavedResponse& aSavedResponse,
-                      StreamList* aStreamList);
+                      StreamList& aStreamList);
 
     void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                       const nsTArray<SavedResponse>& aSavedResponseList,
-                      StreamList* aStreamList);
+                      StreamList& aStreamList);
 
     void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                       const nsTArray<SavedRequest>& aSavedRequestList,
-                      StreamList* aStreamList);
+                      StreamList& aStreamList);
+
+    struct StreamInfo {
+      const nsTArray<SavedResponse>& mSavedResponseList;
+      const nsTArray<SavedRequest>& mSavedRequestList;
+      StreamList& mStreamList;
+    };
 
     // interface to be implemented
     virtual void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                               CacheId aOpenedCacheId,
-                              const nsTArray<SavedResponse>& aSavedResponseList,
-                              const nsTArray<SavedRequest>& aSavedRequestList,
-                              StreamList* aStreamList) {}
+                              const Maybe<StreamInfo>& aStreamInfo) {}
 
    protected:
     ~Listener() = default;

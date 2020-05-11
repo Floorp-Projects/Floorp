@@ -126,10 +126,11 @@ mozilla::ipc::IPCResult CacheStreamControlParent::RecvNoteClosed(
   return IPC_OK();
 }
 
-void CacheStreamControlParent::SetStreamList(StreamList* aStreamList) {
+void CacheStreamControlParent::SetStreamList(
+    SafeRefPtr<StreamList> aStreamList) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
   MOZ_DIAGNOSTIC_ASSERT(!mStreamList);
-  mStreamList = aStreamList;
+  mStreamList = std::move(aStreamList);
 }
 
 void CacheStreamControlParent::Close(const nsID& aId) {

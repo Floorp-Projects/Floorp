@@ -56,7 +56,7 @@ void StreamList::SetStreamControl(CacheStreamControlParent* aStreamControl) {
   }
 
   mStreamControl = aStreamControl;
-  mStreamControl->SetStreamList(this);
+  mStreamControl->SetStreamList(SafeRefPtrFromThis());
 }
 
 void StreamList::RemoveStreamControl(CacheStreamControlParent* aStreamControl) {
