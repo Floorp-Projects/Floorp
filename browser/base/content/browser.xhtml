@@ -1393,9 +1393,11 @@
     <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>
 
-  <box id="customization-container" flex="1" hidden="true"><![CDATA[
+  <html:template id="customizationPanel">
+    <box id="customization-container" flex="1" hidden="true"><![CDATA[
 #include ../../components/customizableui/content/customizeMode.inc.xhtml
-  ]]></box>
+    ]]></box>
+  </html:template>
 
   <html:div id="fullscreen-and-pointerlock-wrapper">
     <html:div id="fullscreen-warning" class="pointerlockfswarning" hidden="true">
