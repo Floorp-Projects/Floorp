@@ -396,7 +396,7 @@ impl YamlFrameReader {
             txn.delete_font(font);
         }
 
-        wrench.api.update_resources(txn.resource_updates);
+        wrench.api.send_transaction(wrench.document_id, txn);
     }
 
     fn top_space_and_clip(&self) -> SpaceAndClipInfo {
@@ -777,7 +777,7 @@ impl YamlFrameReader {
             txn.add_image(image_key, descriptor, image_data, tiling);
         }
 
-        wrench.api.update_resources(txn.resource_updates);
+        wrench.api.send_transaction(wrench.document_id, txn);
         let val = (
             image_key,
             LayoutSize::new(descriptor.size.width as f32, descriptor.size.height as f32),
