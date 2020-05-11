@@ -569,7 +569,7 @@ Object.defineProperty(this, "gReduceMotion", {
   },
 });
 // Reduce motion during startup. The setting will be reset later.
-var gReduceMotionSetting = true;
+let gReduceMotionSetting = true;
 // This is for tests to set.
 var gReduceMotionOverride;
 
