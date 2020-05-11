@@ -72,6 +72,9 @@
         },
         "Locked": {
           "type": "boolean"
+        },
+        "PrivateBrowsing": {
+          "type": "boolean"
         }
       }
     },
