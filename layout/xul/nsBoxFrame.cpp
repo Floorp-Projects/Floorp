@@ -959,10 +959,10 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
     if (forceLayer) {
       // Wrap the list to make it its own layer
-      aLists.Content()->AppendNewToTop<nsDisplayOwnLayer>(
-          aBuilder, this, &masterList, ownLayerASR,
-          nsDisplayOwnLayerFlags::None, mozilla::layers::ScrollbarData{}, true,
-          true, nsDisplayOwnLayer::OwnLayerForBoxFrame);
+      aLists.Content()->AppendNewToTopWithIndex<nsDisplayOwnLayer>(
+          aBuilder, this, /* aIndex = */ nsDisplayOwnLayer::OwnLayerForBoxFrame,
+          &masterList, ownLayerASR, nsDisplayOwnLayerFlags::None,
+          mozilla::layers::ScrollbarData{}, true, true);
     }
   }
 }
