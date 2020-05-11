@@ -44,6 +44,20 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.device.mkdir(path, parents=True, timeout=timeout, root=root)
         self.device.chmod(path, recursive=True, mask=mask, timeout=timeout, root=root)
 
+    def updateTestPrefsFile(self):
+        testPrefsFile = xpcshell.XPCShellTestThread.updateTestPrefsFile(self)
+        if testPrefsFile == self.rootPrefsFile:
+            # The pref file is the shared one, which has been already pushed on the
+            # devide, and so there is nothing more to do here.
+            return self.rootPrefsFile
+
+        # Push the per-test prefs file in the remote temp dir.
+        remoteTestPrefsFile = posixpath.join(self.remoteTmpDir, 'user.js')
+        self.device.push(testPrefsFile, remoteTestPrefsFile)
+        self.device.chmod(remoteTestPrefsFile, root=True)
+        os.remove(testPrefsFile)
+        return remoteTestPrefsFile
+
     def buildCmdTestFile(self, name):
         remoteDir = self.remoteForLocal(os.path.dirname(name))
         if remoteDir == self.remoteHere:
