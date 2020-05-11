@@ -29,7 +29,8 @@ class CacheStorageChild final : public PCacheStorageChild, public ActorChild {
   friend class PCacheStorageChild;
 
  public:
-  CacheStorageChild(CacheStorage* aListener, CacheWorkerRef* aWorkerRef);
+  CacheStorageChild(CacheStorage* aListener,
+                    SafeRefPtr<CacheWorkerRef> aWorkerRef);
   ~CacheStorageChild();
 
   // Must be called by the associated CacheStorage listener in its

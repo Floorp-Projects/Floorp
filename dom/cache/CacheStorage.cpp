@@ -188,7 +188,7 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnWorker(
     return ref.forget();
   }
 
-  RefPtr<CacheWorkerRef> workerRef =
+  SafeRefPtr<CacheWorkerRef> workerRef =
       CacheWorkerRef::Create(aWorkerPrivate, CacheWorkerRef::eIPCWorkerRef);
   if (!workerRef) {
     NS_WARNING("Worker thread is shutting down.");
@@ -228,8 +228,8 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnWorker(
     return ref.forget();
   }
 
-  RefPtr<CacheStorage> ref =
-      new CacheStorage(aNamespace, aGlobal, principalInfo, workerRef);
+  RefPtr<CacheStorage> ref = new CacheStorage(
+      aNamespace, aGlobal, principalInfo, std::move(workerRef));
   return ref.forget();
 }
 
@@ -267,7 +267,7 @@ bool CacheStorage::DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal) {
 
 CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
                            const PrincipalInfo& aPrincipalInfo,
-                           CacheWorkerRef* aWorkerRef)
+                           SafeRefPtr<CacheWorkerRef> aWorkerRef)
     : mNamespace(aNamespace),
       mGlobal(aGlobal),
       mPrincipalInfo(MakeUnique<PrincipalInfo>(aPrincipalInfo)),
@@ -286,7 +286,8 @@ CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
   // WorkerRef ownership is passed to the CacheStorageChild actor and any
   // actors it may create.  The WorkerRef will keep the worker thread alive
   // until the actors can gracefully shutdown.
-  CacheStorageChild* newActor = new CacheStorageChild(this, aWorkerRef);
+  CacheStorageChild* newActor =
+      new CacheStorageChild(this, std::move(aWorkerRef));
   PCacheStorageChild* constructedActor = actor->SendPCacheStorageConstructor(
       newActor, mNamespace, *mPrincipalInfo);
 
