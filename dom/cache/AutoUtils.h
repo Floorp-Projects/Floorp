@@ -8,6 +8,7 @@
 #define mozilla_dom_cache_AutoUtils_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/TypeUtils.h"
@@ -73,7 +74,7 @@ class MOZ_STACK_CLASS AutoParentOpResult final {
                      const CacheOpResult& aOpResult, uint32_t aEntryCount);
   ~AutoParentOpResult();
 
-  void Add(CacheId aOpenedCacheId, Manager* aManager);
+  void Add(CacheId aOpenedCacheId, SafeRefPtr<Manager> aManager);
   void Add(const SavedResponse& aSavedResponse, StreamList* aStreamList);
   void Add(const SavedRequest& aSavedRequest, StreamList* aStreamList);
 

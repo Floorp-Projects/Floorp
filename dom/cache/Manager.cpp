@@ -231,72 +231,46 @@ class Manager::Factory {
  public:
   friend class StaticAutoPtr<Manager::Factory>;
 
-  static nsresult GetOrCreate(ManagerId* aManagerId, Manager** aManagerOut) {
+  static Result<SafeRefPtr<Manager>, nsresult> AcquireCreateIfNonExistent(
+      ManagerId* aManagerId) {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
-    // Ensure there is a factory instance.  This forces the Get() call
+    // Ensure there is a factory instance.  This forces the Acquire() call
     // below to use the same factory.
     nsresult rv = MaybeCreateInstance();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
 
-    RefPtr<Manager> ref = Get(aManagerId);
+    SafeRefPtr<Manager> ref = Acquire(aManagerId);
     if (!ref) {
       // TODO: replace this with a thread pool (bug 1119864)
       nsCOMPtr<nsIThread> ioThread;
       rv = NS_NewNamedThread("DOMCacheThread", getter_AddRefs(ioThread));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
-      ref = new Manager(aManagerId, ioThread);
+      ref = MakeSafeRefPtr<Manager>(aManagerId, ioThread, ConstructorGuard{});
 
       // There may be an old manager for this origin in the process of
       // cleaning up.  We need to tell the new manager about this so
       // that it won't actually start until the old manager is done.
-      RefPtr<Manager> oldManager = Get(aManagerId, Closing);
-      ref->Init(oldManager);
+      SafeRefPtr<Manager> oldManager = Acquire(aManagerId, Closing);
+      ref->Init(oldManager ? SomeRef(*oldManager) : Nothing());
 
       MOZ_ASSERT(!sFactory->mManagerList.Contains(ref));
-      sFactory->mManagerList.AppendElement(ref);
+      sFactory->mManagerList.AppendElement(ref.unsafeGetRawPtr());
     }
 
-    ref.forget(aManagerOut);
-
-    return NS_OK;
+    return ref;
   }
 
-  static already_AddRefed<Manager> Get(ManagerId* aManagerId,
-                                       State aState = Open) {
+  static void Remove(Manager& aManager) {
     mozilla::ipc::AssertIsOnBackgroundThread();
-
-    nsresult rv = MaybeCreateInstance();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
-
-    // Iterate in reverse to find the most recent, matching Manager.  This
-    // is important when looking for a Closing Manager.  If a new Manager
-    // chains to an old Manager we want it to be the most recent one.
-    ManagerList::BackwardIterator iter(sFactory->mManagerList);
-    while (iter.HasMore()) {
-      RefPtr<Manager> manager = iter.GetNext();
-      if (aState == manager->GetState() &&
-          *manager->mManagerId == *aManagerId) {
-        return manager.forget();
-      }
-    }
-
-    return nullptr;
-  }
-
-  static void Remove(Manager* aManager) {
-    mozilla::ipc::AssertIsOnBackgroundThread();
-    MOZ_DIAGNOSTIC_ASSERT(aManager);
     MOZ_DIAGNOSTIC_ASSERT(sFactory);
 
-    MOZ_ALWAYS_TRUE(sFactory->mManagerList.RemoveElement(aManager));
+    MOZ_ALWAYS_TRUE(sFactory->mManagerList.RemoveElement(&aManager));
 
     // clean up the factory singleton if there are no more managers
     MaybeDestroyInstance();
@@ -320,9 +294,11 @@ class Manager::Factory {
 
       ManagerList::ForwardIterator iter(sFactory->mManagerList);
       while (iter.HasMore()) {
-        RefPtr<Manager> manager = iter.GetNext();
+        Manager* manager = iter.GetNext();
         if (aOrigin.IsVoid() || manager->mManagerId->QuotaOrigin() == aOrigin) {
-          manager->Abort();
+          auto pinnedManager =
+              SafeRefPtr{manager, AcquireStrongRefFromRawPtr{}};
+          pinnedManager->Abort();
         }
       }
     }
@@ -348,8 +324,9 @@ class Manager::Factory {
 
       ManagerList::ForwardIterator iter(sFactory->mManagerList);
       while (iter.HasMore()) {
-        RefPtr<Manager> manager = iter.GetNext();
-        manager->Shutdown();
+        auto pinnedManager =
+            SafeRefPtr{iter.GetNext(), AcquireStrongRefFromRawPtr{}};
+        pinnedManager->Shutdown();
       }
     }
 
@@ -417,6 +394,30 @@ class Manager::Factory {
     sFactory = nullptr;
   }
 
+  static SafeRefPtr<Manager> Acquire(ManagerId* aManagerId,
+                                     State aState = Open) {
+    mozilla::ipc::AssertIsOnBackgroundThread();
+
+    nsresult rv = MaybeCreateInstance();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    // Iterate in reverse to find the most recent, matching Manager.  This
+    // is important when looking for a Closing Manager.  If a new Manager
+    // chains to an old Manager we want it to be the most recent one.
+    ManagerList::BackwardIterator iter(sFactory->mManagerList);
+    while (iter.HasMore()) {
+      Manager* manager = iter.GetNext();
+      if (aState == manager->GetState() &&
+          *manager->mManagerId == *aManagerId) {
+        return {manager, AcquireStrongRefFromRawPtr{}};
+      }
+    }
+
+    return nullptr;
+  }
+
   // Singleton created on demand and deleted when last Manager is cleared
   // in Remove().
   // PBackground thread only.
@@ -457,9 +458,9 @@ bool Manager::Factory::sFactoryShutdown = false;
 // Manager.
 class Manager::BaseAction : public SyncDBAction {
  protected:
-  BaseAction(Manager* aManager, ListenerId aListenerId)
+  BaseAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId)
       : SyncDBAction(DBAction::Existing),
-        mManager(aManager),
+        mManager(std::move(aManager)),
         mListenerId(aListenerId) {}
 
   virtual void Complete(Listener* aListener, ErrorResult&& aRv) = 0;
@@ -475,7 +476,7 @@ class Manager::BaseAction : public SyncDBAction {
     mManager = nullptr;
   }
 
-  RefPtr<Manager> mManager;
+  SafeRefPtr<Manager> mManager;
   const ListenerId mListenerId;
 };
 
@@ -485,9 +486,9 @@ class Manager::BaseAction : public SyncDBAction {
 // a Cache object that has been orphaned.
 class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
  public:
-  DeleteOrphanedCacheAction(Manager* aManager, CacheId aCacheId)
+  DeleteOrphanedCacheAction(SafeRefPtr<Manager> aManager, CacheId aCacheId)
       : SyncDBAction(DBAction::Existing),
-        mManager(aManager),
+        mManager(std::move(aManager)),
         mCacheId(aCacheId),
         mDeletedPaddingSize(0) {}
 
@@ -532,7 +533,7 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
   }
 
  private:
-  RefPtr<Manager> mManager;
+  SafeRefPtr<Manager> mManager;
   const CacheId mCacheId;
   nsTArray<nsID> mDeletedBodyIdList;
   Maybe<QuotaInfo> mQuotaInfo;
@@ -544,9 +545,10 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
 
 class Manager::CacheMatchAction final : public Manager::BaseAction {
  public:
-  CacheMatchAction(Manager* aManager, ListenerId aListenerId, CacheId aCacheId,
-                   const CacheMatchArgs& aArgs, StreamList* aStreamList)
-      : BaseAction(aManager, aListenerId),
+  CacheMatchAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
+                   CacheId aCacheId, const CacheMatchArgs& aArgs,
+                   StreamList* aStreamList)
+      : BaseAction(std::move(aManager), aListenerId),
         mCacheId(aCacheId),
         mArgs(aArgs),
         mStreamList(aStreamList),
@@ -611,10 +613,10 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
 
 class Manager::CacheMatchAllAction final : public Manager::BaseAction {
  public:
-  CacheMatchAllAction(Manager* aManager, ListenerId aListenerId,
+  CacheMatchAllAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                       CacheId aCacheId, const CacheMatchAllArgs& aArgs,
                       StreamList* aStreamList)
-      : BaseAction(aManager, aListenerId),
+      : BaseAction(std::move(aManager), aListenerId),
         mCacheId(aCacheId),
         mArgs(aArgs),
         mStreamList(aStreamList) {}
@@ -679,12 +681,12 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
 class Manager::CachePutAllAction final : public DBAction {
  public:
   CachePutAllAction(
-      Manager* aManager, ListenerId aListenerId, CacheId aCacheId,
+      SafeRefPtr<Manager> aManager, ListenerId aListenerId, CacheId aCacheId,
       const nsTArray<CacheRequestResponse>& aPutList,
       const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreamList,
       const nsTArray<nsCOMPtr<nsIInputStream>>& aResponseStreamList)
       : DBAction(DBAction::Existing),
-        mManager(aManager),
+        mManager(std::move(aManager)),
         mListenerId(aListenerId),
         mCacheId(aCacheId),
         mList(aPutList.Length()),
@@ -1039,7 +1041,7 @@ class Manager::CachePutAllAction final : public DBAction {
   }
 
   // initiating thread only
-  RefPtr<Manager> mManager;
+  SafeRefPtr<Manager> mManager;
   const ListenerId mListenerId;
 
   // Set on initiating thread, read on target thread.  State machine guarantees
@@ -1076,9 +1078,9 @@ class Manager::CachePutAllAction final : public DBAction {
 
 class Manager::CacheDeleteAction final : public Manager::BaseAction {
  public:
-  CacheDeleteAction(Manager* aManager, ListenerId aListenerId, CacheId aCacheId,
-                    const CacheDeleteArgs& aArgs)
-      : BaseAction(aManager, aListenerId),
+  CacheDeleteAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
+                    CacheId aCacheId, const CacheDeleteArgs& aArgs)
+      : BaseAction(std::move(aManager), aListenerId),
         mCacheId(aCacheId),
         mArgs(aArgs),
         mSuccess(false),
@@ -1145,9 +1147,10 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
 
 class Manager::CacheKeysAction final : public Manager::BaseAction {
  public:
-  CacheKeysAction(Manager* aManager, ListenerId aListenerId, CacheId aCacheId,
-                  const CacheKeysArgs& aArgs, StreamList* aStreamList)
-      : BaseAction(aManager, aListenerId),
+  CacheKeysAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
+                  CacheId aCacheId, const CacheKeysArgs& aArgs,
+                  StreamList* aStreamList)
+      : BaseAction(std::move(aManager), aListenerId),
         mCacheId(aCacheId),
         mArgs(aArgs),
         mStreamList(aStreamList) {}
@@ -1208,10 +1211,10 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
 
 class Manager::StorageMatchAction final : public Manager::BaseAction {
  public:
-  StorageMatchAction(Manager* aManager, ListenerId aListenerId,
+  StorageMatchAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                      Namespace aNamespace, const StorageMatchArgs& aArgs,
                      StreamList* aStreamList)
-      : BaseAction(aManager, aListenerId),
+      : BaseAction(std::move(aManager), aListenerId),
         mNamespace(aNamespace),
         mArgs(aArgs),
         mStreamList(aStreamList),
@@ -1273,9 +1276,9 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
 
 class Manager::StorageHasAction final : public Manager::BaseAction {
  public:
-  StorageHasAction(Manager* aManager, ListenerId aListenerId,
+  StorageHasAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                    Namespace aNamespace, const StorageHasArgs& aArgs)
-      : BaseAction(aManager, aListenerId),
+      : BaseAction(std::move(aManager), aListenerId),
         mNamespace(aNamespace),
         mArgs(aArgs),
         mCacheFound(false) {}
@@ -1302,9 +1305,9 @@ class Manager::StorageHasAction final : public Manager::BaseAction {
 
 class Manager::StorageOpenAction final : public Manager::BaseAction {
  public:
-  StorageOpenAction(Manager* aManager, ListenerId aListenerId,
+  StorageOpenAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                     Namespace aNamespace, const StorageOpenArgs& aArgs)
-      : BaseAction(aManager, aListenerId),
+      : BaseAction(std::move(aManager), aListenerId),
         mNamespace(aNamespace),
         mArgs(aArgs),
         mCacheId(INVALID_CACHE_ID) {}
@@ -1364,9 +1367,9 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
 
 class Manager::StorageDeleteAction final : public Manager::BaseAction {
  public:
-  StorageDeleteAction(Manager* aManager, ListenerId aListenerId,
+  StorageDeleteAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                       Namespace aNamespace, const StorageDeleteArgs& aArgs)
-      : BaseAction(aManager, aListenerId),
+      : BaseAction(std::move(aManager), aListenerId),
         mNamespace(aNamespace),
         mArgs(aArgs),
         mCacheDeleted(false),
@@ -1419,7 +1422,7 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
         } else {
           context->CancelForCacheId(mCacheId);
           RefPtr<Action> action =
-              new DeleteOrphanedCacheAction(mManager, mCacheId);
+              new DeleteOrphanedCacheAction(mManager.clonePtr(), mCacheId);
           context->Dispatch(action);
         }
       }
@@ -1439,9 +1442,9 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
 
 class Manager::StorageKeysAction final : public Manager::BaseAction {
  public:
-  StorageKeysAction(Manager* aManager, ListenerId aListenerId,
+  StorageKeysAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                     Namespace aNamespace)
-      : BaseAction(aManager, aListenerId), mNamespace(aNamespace) {}
+      : BaseAction(std::move(aManager), aListenerId), mNamespace(aNamespace) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
@@ -1465,9 +1468,9 @@ class Manager::StorageKeysAction final : public Manager::BaseAction {
 
 class Manager::OpenStreamAction final : public Manager::BaseAction {
  public:
-  OpenStreamAction(Manager* aManager, ListenerId aListenerId,
+  OpenStreamAction(SafeRefPtr<Manager> aManager, ListenerId aListenerId,
                    InputStreamResolver&& aResolver, const nsID& aBodyId)
-      : BaseAction(aManager, aListenerId),
+      : BaseAction(std::move(aManager), aListenerId),
         mResolver(std::move(aResolver)),
         mBodyId(aBodyId) {}
 
@@ -1549,15 +1552,10 @@ void Manager::Listener::OnOpComplete(
 }
 
 // static
-nsresult Manager::GetOrCreate(ManagerId* aManagerId, Manager** aManagerOut) {
+Result<SafeRefPtr<Manager>, nsresult> Manager::AcquireCreateIfNonExistent(
+    ManagerId* aManagerId) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  return Factory::GetOrCreate(aManagerId, aManagerOut);
-}
-
-// static
-already_AddRefed<Manager> Manager::Get(ManagerId* aManagerId) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-  return Factory::Get(aManagerId);
+  return Factory::AcquireCreateIfNonExistent(aManagerId);
 }
 
 // static
@@ -1621,7 +1619,7 @@ void Manager::RemoveContext(Context* aContext) {
   // Once the context is gone, we can immediately remove ourself from the
   // Factory list.  We don't need to block shutdown by staying in the list
   // any more.
-  Factory::Remove(this);
+  Factory::Remove(*this);
 }
 
 void Manager::NoteClosing() {
@@ -1670,7 +1668,7 @@ void Manager::ReleaseCacheId(CacheId aCacheId) {
           } else {
             context->CancelForCacheId(aCacheId);
             RefPtr<Action> action =
-                new DeleteOrphanedCacheAction(this, aCacheId);
+                new DeleteOrphanedCacheAction(SafeRefPtrFromThis(), aCacheId);
             context->Dispatch(action);
           }
         }
@@ -1758,26 +1756,26 @@ void Manager::ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
   RefPtr<Context> context = mContext;
   MOZ_DIAGNOSTIC_ASSERT(!context->IsCanceled());
 
-  RefPtr<StreamList> streamList = new StreamList(this, context);
+  RefPtr<StreamList> streamList = new StreamList(SafeRefPtrFromThis(), context);
   ListenerId listenerId = SaveListener(aListener);
 
   RefPtr<Action> action;
   switch (aOpArgs.type()) {
     case CacheOpArgs::TCacheMatchArgs:
-      action = new CacheMatchAction(this, listenerId, aCacheId,
+      action = new CacheMatchAction(SafeRefPtrFromThis(), listenerId, aCacheId,
                                     aOpArgs.get_CacheMatchArgs(), streamList);
       break;
     case CacheOpArgs::TCacheMatchAllArgs:
       action =
-          new CacheMatchAllAction(this, listenerId, aCacheId,
+          new CacheMatchAllAction(SafeRefPtrFromThis(), listenerId, aCacheId,
                                   aOpArgs.get_CacheMatchAllArgs(), streamList);
       break;
     case CacheOpArgs::TCacheDeleteArgs:
-      action = new CacheDeleteAction(this, listenerId, aCacheId,
+      action = new CacheDeleteAction(SafeRefPtrFromThis(), listenerId, aCacheId,
                                      aOpArgs.get_CacheDeleteArgs());
       break;
     case CacheOpArgs::TCacheKeysArgs:
-      action = new CacheKeysAction(this, listenerId, aCacheId,
+      action = new CacheKeysAction(SafeRefPtrFromThis(), listenerId, aCacheId,
                                    aOpArgs.get_CacheKeysArgs(), streamList);
       break;
     default:
@@ -1800,30 +1798,32 @@ void Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
   RefPtr<Context> context = mContext;
   MOZ_DIAGNOSTIC_ASSERT(!context->IsCanceled());
 
-  RefPtr<StreamList> streamList = new StreamList(this, context);
+  RefPtr<StreamList> streamList = new StreamList(SafeRefPtrFromThis(), context);
   ListenerId listenerId = SaveListener(aListener);
 
   RefPtr<Action> action;
   switch (aOpArgs.type()) {
     case CacheOpArgs::TStorageMatchArgs:
       action =
-          new StorageMatchAction(this, listenerId, aNamespace,
+          new StorageMatchAction(SafeRefPtrFromThis(), listenerId, aNamespace,
                                  aOpArgs.get_StorageMatchArgs(), streamList);
       break;
     case CacheOpArgs::TStorageHasArgs:
-      action = new StorageHasAction(this, listenerId, aNamespace,
-                                    aOpArgs.get_StorageHasArgs());
+      action = new StorageHasAction(SafeRefPtrFromThis(), listenerId,
+                                    aNamespace, aOpArgs.get_StorageHasArgs());
       break;
     case CacheOpArgs::TStorageOpenArgs:
-      action = new StorageOpenAction(this, listenerId, aNamespace,
-                                     aOpArgs.get_StorageOpenArgs());
+      action = new StorageOpenAction(SafeRefPtrFromThis(), listenerId,
+                                     aNamespace, aOpArgs.get_StorageOpenArgs());
       break;
     case CacheOpArgs::TStorageDeleteArgs:
-      action = new StorageDeleteAction(this, listenerId, aNamespace,
-                                       aOpArgs.get_StorageDeleteArgs());
+      action =
+          new StorageDeleteAction(SafeRefPtrFromThis(), listenerId, aNamespace,
+                                  aOpArgs.get_StorageDeleteArgs());
       break;
     case CacheOpArgs::TStorageKeysArgs:
-      action = new StorageKeysAction(this, listenerId, aNamespace);
+      action =
+          new StorageKeysAction(SafeRefPtrFromThis(), listenerId, aNamespace);
       break;
     default:
       MOZ_CRASH("Unknown CacheStorage operation!");
@@ -1853,8 +1853,8 @@ void Manager::ExecuteOpenStream(Listener* aListener,
   // mechanism in favor of std::function or MozPromise.
   ListenerId listenerId = SaveListener(aListener);
 
-  RefPtr<Action> action =
-      new OpenStreamAction(this, listenerId, std::move(aResolver), aBodyId);
+  RefPtr<Action> action = new OpenStreamAction(SafeRefPtrFromThis(), listenerId,
+                                               std::move(aResolver), aBodyId);
 
   context->Dispatch(action);
 }
@@ -1878,13 +1878,14 @@ void Manager::ExecutePutAll(
   ListenerId listenerId = SaveListener(aListener);
 
   RefPtr<Action> action =
-      new CachePutAllAction(this, listenerId, aCacheId, aPutList,
-                            aRequestStreamList, aResponseStreamList);
+      new CachePutAllAction(SafeRefPtrFromThis(), listenerId, aCacheId,
+                            aPutList, aRequestStreamList, aResponseStreamList);
 
   context->Dispatch(action);
 }
 
-Manager::Manager(ManagerId* aManagerId, nsIThread* aIOThread)
+Manager::Manager(ManagerId* aManagerId, nsIThread* aIOThread,
+                 const ConstructorGuard&)
     : mManagerId(aManagerId),
       mIOThread(aIOThread),
       mContext(nullptr),
@@ -1908,7 +1909,7 @@ Manager::~Manager() {
       "nsIThread::AsyncShutdown", ioThread, &nsIThread::AsyncShutdown)));
 }
 
-void Manager::Init(Manager* aOldManager) {
+void Manager::Init(Maybe<Manager&> aOldManager) {
   NS_ASSERT_OWNINGTHREAD(Manager);
 
   RefPtr<Context> oldContext;
@@ -1920,8 +1921,9 @@ void Manager::Init(Manager* aOldManager) {
   // per Manager now, this lets us cleanly call Factory::Remove() once the
   // Context goes away.
   RefPtr<Action> setupAction = new SetupAction();
-  RefPtr<Context> ref = Context::Create(this, mIOThread->SerialEventTarget(),
-                                        setupAction, oldContext);
+  RefPtr<Context> ref =
+      Context::Create(SafeRefPtrFromThis(), mIOThread->SerialEventTarget(),
+                      setupAction, oldContext);
   mContext = ref;
 }
 

@@ -34,7 +34,7 @@ class CacheOpParent final : public PCacheOpParent,
 
   void Execute(ManagerId* aManagerId);
 
-  void Execute(cache::Manager* aManager);
+  void Execute(SafeRefPtr<cache::Manager> aManager);
 
   void WaitForVerification(PrincipalVerifier* aVerifier);
 
@@ -61,7 +61,7 @@ class CacheOpParent final : public PCacheOpParent,
   const CacheId mCacheId;
   const Namespace mNamespace;
   const CacheOpArgs mOpArgs;
-  RefPtr<cache::Manager> mManager;
+  SafeRefPtr<cache::Manager> mManager;
   RefPtr<PrincipalVerifier> mVerifier;
 
   NS_DECL_OWNINGTHREAD
