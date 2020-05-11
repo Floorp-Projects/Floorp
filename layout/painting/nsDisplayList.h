@@ -5035,8 +5035,7 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
                                 const nscolor& aColor, nsIFrame* aAncestorFrame)
       : nsDisplayBackgroundColor(aBuilder, aFrame, aBackgroundRect,
                                  aBackgroundStyle, aColor),
-        mAncestorFrame(aAncestorFrame),
-        mTableType(GetTableTypeFromFrame(aAncestorFrame)) {
+        mAncestorFrame(aAncestorFrame) {
     if (aBuilder->IsRetainingDisplayList()) {
       mAncestorFrame->AddDisplayItem(this);
     }
@@ -5060,17 +5059,12 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
     nsDisplayBackgroundColor::RemoveFrame(aFrame);
   }
 
-  uint16_t CalculatePerFrameKey() const override {
-    return static_cast<uint8_t>(mTableType);
-  }
-
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
 
  protected:
   nsIFrame* mAncestorFrame;
-  TableType mTableType;
 };
 
 class nsDisplayClearBackground : public nsPaintedDisplayItem {
