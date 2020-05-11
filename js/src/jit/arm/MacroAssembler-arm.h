@@ -876,7 +876,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType type);
 
   // See comment in MacroAssembler-x64.h.
-  void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
+  void unboxGCThingForGCBarrier(const Address& src, Register dest) {
     load32(ToPayload(src), dest);
   }
 
