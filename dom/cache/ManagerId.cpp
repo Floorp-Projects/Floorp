@@ -18,8 +18,8 @@ namespace cache {
 using mozilla::dom::quota::QuotaManager;
 
 // static
-nsresult ManagerId::Create(nsIPrincipal* aPrincipal,
-                           ManagerId** aManagerIdOut) {
+Result<SafeRefPtr<ManagerId>, nsresult> ManagerId::Create(
+    nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // The QuotaManager::GetInfoFromPrincipal() has special logic for system
@@ -31,13 +31,10 @@ nsresult ManagerId::Create(nsIPrincipal* aPrincipal,
                                                    nullptr,  // group
                                                    &quotaOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  RefPtr<ManagerId> ref = new ManagerId(aPrincipal, quotaOrigin);
-  ref.forget(aManagerIdOut);
-
-  return NS_OK;
+  return MakeSafeRefPtr<ManagerId>(aPrincipal, quotaOrigin, ConstructorGuard{});
 }
 
 already_AddRefed<nsIPrincipal> ManagerId::Principal() const {
@@ -46,7 +43,8 @@ already_AddRefed<nsIPrincipal> ManagerId::Principal() const {
   return ref.forget();
 }
 
-ManagerId::ManagerId(nsIPrincipal* aPrincipal, const nsACString& aQuotaOrigin)
+ManagerId::ManagerId(nsIPrincipal* aPrincipal, const nsACString& aQuotaOrigin,
+                     ConstructorGuard)
     : mPrincipal(aPrincipal), mQuotaOrigin(aQuotaOrigin) {
   MOZ_DIAGNOSTIC_ASSERT(mPrincipal);
 }

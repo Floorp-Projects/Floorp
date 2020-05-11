@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/cache/Types.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsISupportsImpl.h"
@@ -20,10 +21,11 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-class ManagerId final {
+class ManagerId final : public AtomicSafeRefCounted<ManagerId> {
  public:
   // Main thread only
-  static nsresult Create(nsIPrincipal* aPrincipal, ManagerId** aManagerIdOut);
+  static Result<SafeRefPtr<ManagerId>, nsresult> Create(
+      nsIPrincipal* aPrincipal);
 
   // Main thread only
   already_AddRefed<nsIPrincipal> Principal() const;
@@ -35,20 +37,20 @@ class ManagerId final {
   }
 
  private:
-  ManagerId(nsIPrincipal* aPrincipal, const nsACString& aOrigin);
-  ~ManagerId();
-
-  ManagerId(const ManagerId&) = delete;
-  ManagerId& operator=(const ManagerId&) = delete;
-
   // only accessible on main thread
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   // immutable to allow threadsfe access
   const nsCString mQuotaOrigin;
 
+  struct ConstructorGuard {};
+
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::cache::ManagerId)
+  ManagerId(nsIPrincipal* aPrincipal, const nsACString& aOrigin,
+            ConstructorGuard);
+  ~ManagerId();
+
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(mozilla::dom::cache::ManagerId)
 };
 
 }  // namespace cache

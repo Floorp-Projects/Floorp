@@ -232,7 +232,7 @@ class Manager::Factory {
   friend class StaticAutoPtr<Manager::Factory>;
 
   static Result<SafeRefPtr<Manager>, nsresult> AcquireCreateIfNonExistent(
-      ManagerId* aManagerId) {
+      const SafeRefPtr<ManagerId>& aManagerId) {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
     // Ensure there is a factory instance.  This forces the Acquire() call
@@ -242,7 +242,7 @@ class Manager::Factory {
       return Err(rv);
     }
 
-    SafeRefPtr<Manager> ref = Acquire(aManagerId);
+    SafeRefPtr<Manager> ref = Acquire(*aManagerId);
     if (!ref) {
       // TODO: replace this with a thread pool (bug 1119864)
       nsCOMPtr<nsIThread> ioThread;
@@ -251,12 +251,13 @@ class Manager::Factory {
         return Err(rv);
       }
 
-      ref = MakeSafeRefPtr<Manager>(aManagerId, ioThread, ConstructorGuard{});
+      ref = MakeSafeRefPtr<Manager>(aManagerId.clonePtr(), ioThread,
+                                    ConstructorGuard{});
 
       // There may be an old manager for this origin in the process of
       // cleaning up.  We need to tell the new manager about this so
       // that it won't actually start until the old manager is done.
-      SafeRefPtr<Manager> oldManager = Acquire(aManagerId, Closing);
+      SafeRefPtr<Manager> oldManager = Acquire(*aManagerId, Closing);
       ref->Init(oldManager ? SomeRef(*oldManager) : Nothing());
 
       MOZ_ASSERT(!sFactory->mManagerList.Contains(ref));
@@ -394,7 +395,7 @@ class Manager::Factory {
     sFactory = nullptr;
   }
 
-  static SafeRefPtr<Manager> Acquire(ManagerId* aManagerId,
+  static SafeRefPtr<Manager> Acquire(const ManagerId& aManagerId,
                                      State aState = Open) {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
@@ -409,8 +410,7 @@ class Manager::Factory {
     ManagerList::BackwardIterator iter(sFactory->mManagerList);
     while (iter.HasMore()) {
       Manager* manager = iter.GetNext();
-      if (aState == manager->GetState() &&
-          *manager->mManagerId == *aManagerId) {
+      if (aState == manager->GetState() && *manager->mManagerId == aManagerId) {
         return {manager, AcquireStrongRefFromRawPtr{}};
       }
     }
@@ -1555,7 +1555,7 @@ void Manager::Listener::OnOpComplete(
 
 // static
 Result<SafeRefPtr<Manager>, nsresult> Manager::AcquireCreateIfNonExistent(
-    ManagerId* aManagerId) {
+    const SafeRefPtr<ManagerId>& aManagerId) {
   mozilla::ipc::AssertIsOnBackgroundThread();
   return Factory::AcquireCreateIfNonExistent(aManagerId);
 }
@@ -1729,10 +1729,7 @@ void Manager::ReleaseBodyId(const nsID& aBodyId) {
   MOZ_ASSERT_UNREACHABLE("Attempt to release BodyId that is not referenced!");
 }
 
-already_AddRefed<ManagerId> Manager::GetManagerId() const {
-  RefPtr<ManagerId> ref = mManagerId;
-  return ref.forget();
-}
+const ManagerId& Manager::GetManagerId() const { return *mManagerId; }
 
 void Manager::AddStreamList(StreamList* aStreamList) {
   NS_ASSERT_OWNINGTHREAD(Manager);
@@ -1890,9 +1887,9 @@ void Manager::ExecutePutAll(
   pinnedContext->Dispatch(action);
 }
 
-Manager::Manager(ManagerId* aManagerId, nsIThread* aIOThread,
+Manager::Manager(SafeRefPtr<ManagerId> aManagerId, nsIThread* aIOThread,
                  const ConstructorGuard&)
-    : mManagerId(aManagerId),
+    : mManagerId(std::move(aManagerId)),
       mIOThread(aIOThread),
       mContext(nullptr),
       mShuttingDown(false),
