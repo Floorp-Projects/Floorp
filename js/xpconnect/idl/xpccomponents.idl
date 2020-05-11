@@ -525,6 +525,11 @@ interface nsIXPCComponents_Utils : nsISupports
     void unblockScriptForGlobal(in jsval global);
 
     /**
+     * Check whether the given object is an opaque wrapper (PermissiveXrayOpaque).
+     */
+    bool isOpaqueWrapper(in jsval obj);
+
+    /**
      * Check whether the given object is an XrayWrapper.
      */
     bool isXrayWrapper(in jsval obj);

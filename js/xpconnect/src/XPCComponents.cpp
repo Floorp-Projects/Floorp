@@ -2154,6 +2154,13 @@ nsXPCComponents_Utils::UnblockScriptForGlobal(HandleValue globalArg,
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::IsOpaqueWrapper(HandleValue obj, bool* aRetval) {
+  *aRetval =
+      obj.isObject() && xpc::WrapperFactory::IsOpaqueWrapper(&obj.toObject());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::IsXrayWrapper(HandleValue obj, bool* aRetval) {
   *aRetval =
       obj.isObject() && xpc::WrapperFactory::IsXrayWrapper(&obj.toObject());
