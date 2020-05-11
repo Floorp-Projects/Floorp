@@ -162,6 +162,7 @@
 | [mozilla.components.lib.crash.handler](mozilla.components.lib.crash.handler/index.md) |  |
 | [mozilla.components.lib.crash.prompt](mozilla.components.lib.crash.prompt/index.md) |  |
 | [mozilla.components.lib.crash.service](mozilla.components.lib.crash.service/index.md) |  |
+| [mozilla.components.lib.crash.ui](mozilla.components.lib.crash.ui/index.md) |  |
 | [mozilla.components.lib.dataprotect](mozilla.components.lib.dataprotect/index.md) |  |
 | [mozilla.components.lib.fetch.httpurlconnection](mozilla.components.lib.fetch.httpurlconnection/index.md) |  |
 | [mozilla.components.lib.fetch.okhttp](mozilla.components.lib.fetch.okhttp/index.md) |  |
