@@ -261,9 +261,7 @@ class WebRenderBridgeParent final
    * Call CompositorVsyncScheduler::ScheduleComposition() directly, if we just
    * want to trigger AsyncImagePipelines update checks.
    */
-  void ScheduleGenerateFrame(const Maybe<wr::RenderRoot>& aRenderRoot);
-  void ScheduleGenerateFrame(const wr::RenderRootSet& aRenderRoots);
-  void ScheduleGenerateFrameAllRenderRoots();
+  void ScheduleGenerateFrame();
 
   /**
    * Invalidate rendered frame.
