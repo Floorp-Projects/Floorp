@@ -1313,7 +1313,7 @@ async function setInitialState(addon, initialState) {
   }
 }
 
-async function installBuiltinExtension(extensionData, waitForStartup = true) {
+async function setupBuiltinExtension(extensionData) {
   let xpi = await AddonTestUtils.createTempWebExtensionFile(extensionData);
 
   // The built-in location requires a resource: URL that maps to a
@@ -1324,6 +1324,10 @@ async function installBuiltinExtension(extensionData, waitForStartup = true) {
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler);
   resProto.setSubstitution("ext-test", base);
+}
+
+async function installBuiltinExtension(extensionData, waitForStartup = true) {
+  await setupBuiltinExtension(extensionData);
 
   let id = extensionData.manifest.applications.gecko.id;
   let wrapper = ExtensionTestUtils.expectExtension(id);
