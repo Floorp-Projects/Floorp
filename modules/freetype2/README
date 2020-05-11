@@ -1,4 +1,4 @@
-  FreeType 2.10.1
+  FreeType 2.10.2
   ===============
 
   Homepage: https://www.freetype.org
@@ -16,17 +16,20 @@
   the file `docs/LICENSE.TXT' for the available licenses.
 
   The FreeType  2 API  reference is located  in `docs/reference/site';
-  use  the  file `index.html'  as  the  top entry  point.   Additional
-  documentation is available as a separate package from our sites.  Go
-  to
+  use the file `index.html' as the top entry point.  [Please note that
+  currently the  search function  for locally  installed documentation
+  doesn't work due to cross-site scripting issues.]
+
+  Additional documentation is available as a separate package from our
+  sites.  Go to
 
     https://download.savannah.gnu.org/releases/freetype/
 
   and download one of the following files.
 
-    freetype-doc-2.10.1.tar.xz
-    freetype-doc-2.10.1.tar.gz
-    ftdoc2101.zip
+    freetype-doc-2.10.2.tar.xz
+    freetype-doc-2.10.2.tar.gz
+    ftdoc2102.zip
 
   To view the documentation online, go to
 
@@ -71,7 +74,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2006-2019 by
+Copyright (C) 2006-2020 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

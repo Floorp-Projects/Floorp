@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2101.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
@@ -78,7 +78,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2101_D.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype_D.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
@@ -102,8 +102,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"lib\freetype2101_D.lib"
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2101MT_D.lib"
+# ADD BASE LIB32 /nologo /out:"lib\freetype_D.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetypeMT_D.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
@@ -126,8 +126,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"lib\freetype2101.lib"
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2101MT.lib"
+# ADD BASE LIB32 /nologo /out:"lib\freetype.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetypeMT.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
@@ -151,8 +151,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype2101.lib"
-# ADD LIB32 /out:"..\..\..\objs\freetype2101ST.lib"
+# ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype.lib"
+# ADD LIB32 /out:"..\..\..\objs\freetypeST.lib"
 # SUBTRACT LIB32 /nologo
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
@@ -177,8 +177,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype2101_D.lib"
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype2101ST_D.lib"
+# ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype_D.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetypeST_D.lib"
 
 !ENDIF
 
@@ -377,6 +377,14 @@ SOURCE=..\..\..\include\freetype\config\ftoption.h
 # Begin Source File
 
 SOURCE=..\..\..\include\freetype\config\ftstdlib.h
+# End Source File
+# End Group
+# Begin Group "Resource Files"
+
+# PROP Default_Filter "rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
+# Begin Source File
+
+SOURCE=..\..\..\src\base\ftver.rc
 # End Source File
 # End Group
 # End Target

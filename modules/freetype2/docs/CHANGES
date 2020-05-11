@@ -1,4 +1,41 @@
 
+CHANGES BETWEEN 2.10.1 and 2.10.2
+
+  I. IMPORTANT CHANGES
+
+  - Support  of  WOFF2  fonts.   This  code  contribution  was  Nikhil
+    Ramakrishnan's GSoC 2019 project.
+
+
+  II. MISCELLANEOUS
+
+  - Function  `FT_Get_Var_Axis_Flags' returned random data for  Type 1
+    MM fonts.
+
+  - Type 1 fonts with non-integer metrics are now supported by the new
+    (CFF) engine introduced in FreeType 2.9.
+
+  - Drop  support  for Python 2 in Freetype's API reference  generator
+    `docwriter'  (Python >= 3.5 is required for targets  `make refdoc'
+    and `make refdoc-venv').
+
+  - Auto-hinter support for Hanifi Rohingya.
+
+  - Document the `FT2_KEEP_ALIVE' debugging environment variable.
+
+  - The Visual C++ (and Visual C)  project files for Windows builds no
+    longer generate libraries that contain the FreeType version in its
+    filenames.   Instead,  a  resource  file gets  used  to  make  the
+    libraries contain the corresponding information.
+
+  - The next release will remove Jam build support.
+
+  - The  `ftbench'  demo  program  has  a new  test  for  testing  the
+    `FT_Glyph_Stroke' functionality.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.10.0 and 2.10.1
 
   I. IMPORTANT BUG FIXES
@@ -5198,7 +5235,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright (C) 2000-2019 by
+Copyright (C) 2000-2020 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,
