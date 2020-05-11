@@ -23,59 +23,65 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#
-# Try to find Harfbuzz include and library directories.
+
+
+# Try to find HarfBuzz include and library directories.
 #
 # After successful discovery, this will set for inclusion where needed:
-# HARFBUZZ_INCLUDE_DIRS - containg the HarfBuzz headers
-# HARFBUZZ_LIBRARIES - containg the HarfBuzz library
+#
+#   HARFBUZZ_INCLUDE_DIRS - containg the HarfBuzz headers
+#   HARFBUZZ_LIBRARIES    - containg the HarfBuzz library
 
 include(FindPkgConfig)
 pkg_check_modules(PC_HARFBUZZ QUIET harfbuzz)
 
 find_path(HARFBUZZ_INCLUDE_DIRS
-    NAMES hb.h
-    HINTS ${PC_HARFBUZZ_INCLUDEDIR}
-          ${PC_HARFBUZZ_INCLUDE_DIRS}
-    PATH_SUFFIXES harfbuzz
-)
+  NAMES hb.h
+  HINTS ${PC_HARFBUZZ_INCLUDEDIR}
+        ${PC_HARFBUZZ_INCLUDE_DIRS}
+  PATH_SUFFIXES harfbuzz)
 
-find_library(HARFBUZZ_LIBRARIES NAMES harfbuzz
-    HINTS ${PC_HARFBUZZ_LIBDIR}
-          ${PC_HARFBUZZ_LIBRARY_DIRS}
-)
+find_library(HARFBUZZ_LIBRARIES
+  NAMES harfbuzz
+  HINTS ${PC_HARFBUZZ_LIBDIR}
+        ${PC_HARFBUZZ_LIBRARY_DIRS})
 
 if (HARFBUZZ_INCLUDE_DIRS)
-    if (EXISTS "${HARFBUZZ_INCLUDE_DIRS}/hb-version.h")
-        file(READ "${HARFBUZZ_INCLUDE_DIRS}/hb-version.h" _harfbuzz_version_content)
+  if (EXISTS "${HARFBUZZ_INCLUDE_DIRS}/hb-version.h")
+    file(READ "${HARFBUZZ_INCLUDE_DIRS}/hb-version.h" _harfbuzz_version_content)
 
-        string(REGEX MATCH "#define +HB_VERSION_STRING +\"([0-9]+\\.[0-9]+\\.[0-9]+)\"" _dummy "${_harfbuzz_version_content}")
-        set(HARFBUZZ_VERSION "${CMAKE_MATCH_1}")
-    endif ()
+    string(REGEX MATCH
+           "#define +HB_VERSION_STRING +\"([0-9]+\\.[0-9]+\\.[0-9]+)\""
+           _dummy "${_harfbuzz_version_content}")
+    set(HARFBUZZ_VERSION "${CMAKE_MATCH_1}")
+  endif ()
 endif ()
 
 if ("${harfbuzz_FIND_VERSION}" VERSION_GREATER "${HARFBUZZ_VERSION}")
-    message(FATAL_ERROR "Required version (" ${harfbuzz_FIND_VERSION} ") is higher than found version (" ${HARFBUZZ_VERSION} ")")
+  message(FATAL_ERROR
+    "Required version (" ${harfbuzz_FIND_VERSION} ")"
+    " is higher than found version (" ${HARFBUZZ_VERSION} ")")
 endif ()
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(
-    harfbuzz 
-        REQUIRED_VARS HARFBUZZ_INCLUDE_DIRS HARFBUZZ_LIBRARIES
-        VERSION_VAR HARFBUZZ_VERSION)
+find_package_handle_standard_args(
+  harfbuzz
+  REQUIRED_VARS HARFBUZZ_INCLUDE_DIRS HARFBUZZ_LIBRARIES
+  VERSION_VAR HARFBUZZ_VERSION)
 
 mark_as_advanced(
-    HARFBUZZ_INCLUDE_DIRS
-    HARFBUZZ_LIBRARIES
-)
+  HARFBUZZ_INCLUDE_DIRS
+  HARFBUZZ_LIBRARIES)
 
-# Allows easy linking as in 
+# Allow easy linking as in
+#
 #   target_link_libraries(freetype PRIVATE Harfbuzz::Harfbuzz)
+#
 if (NOT CMAKE_VERSION VERSION_LESS 3.1)
-    if (HARFBUZZ_FOUND AND NOT TARGET Harfbuzz::Harfbuzz)
-        add_library(Harfbuzz::Harfbuzz INTERFACE IMPORTED)
-        set_target_properties(
-            Harfbuzz::Harfbuzz PROPERTIES
-                INTERFACE_INCLUDE_DIRECTORIES "${HARFBUZZ_INCLUDE_DIRS}")
-    endif ()
+  if (HARFBUZZ_FOUND AND NOT TARGET Harfbuzz::Harfbuzz)
+    add_library(Harfbuzz::Harfbuzz INTERFACE IMPORTED)
+    set_target_properties(
+        Harfbuzz::Harfbuzz PROPERTIES
+          INTERFACE_INCLUDE_DIRECTORIES "${HARFBUZZ_INCLUDE_DIRS}")
+  endif ()
 endif ()

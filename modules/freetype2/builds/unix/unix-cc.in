@@ -2,7 +2,7 @@
 # FreeType 2 template for Unix-specific compiler definitions
 #
 
-# Copyright (C) 1996-2019 by
+# Copyright (C) 1996-2020 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -76,10 +76,13 @@ T := -o$(space)
 #   Use the ANSIFLAGS variable to define the compiler flags used to enfore
 #   ANSI compliance.
 #
-#   We use our own FreeType configuration file.
+#   We use our own FreeType configuration files overriding defaults.
 #
 CPPFLAGS := @CPPFLAGS@
-CFLAGS   := -c @XX_CFLAGS@ @CFLAGS@ -DFT_CONFIG_CONFIG_H="<ftconfig.h>"
+CFLAGS   := -c @XX_CFLAGS@ @CFLAGS@ \
+            $DFT_CONFIG_CONFIG_H="<ftconfig.h>" \
+            $DFT_CONFIG_MODULES_H="<ftmodule.h>" \
+            $DFT_CONFIG_OPTIONS_H="<ftoption.h>"
 
 # ANSIFLAGS: Put there the flags used to make your compiler ANSI-compliant.
 #
@@ -87,8 +90,12 @@ ANSIFLAGS := @XX_ANSIFLAGS@
 
 # C compiler to use -- we use libtool!
 #
-CCraw := $(CC)
-CC    := $(LIBTOOL) --mode=compile $(CCraw)
+# CC might be set on the command line; we store this value in `CCraw'.
+# Consequently, we use the `override' directive to ensure that the
+# libtool call is always prepended.
+#
+CCraw       := $(CC)
+override CC := $(LIBTOOL) --mode=compile $(CCraw)
 
 # Resource compiler to use on Cygwin/MinGW, usually windres.
 #

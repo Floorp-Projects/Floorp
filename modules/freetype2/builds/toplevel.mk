@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 1996-2019 by
+# Copyright (C) 1996-2020 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -268,7 +268,7 @@ do-dist: distclean refdoc
 	cp $(CONFIG_SUB) builds/unix
 
 	@# Remove intermediate files created by the `refdoc' target.
-	rm -rf docs/reference/markdown
-	rm -f docs/reference/mkdocs.yml
+	rm -rf docs/markdown
+	rm -f docs/mkdocs.yml
 
 # EOF
