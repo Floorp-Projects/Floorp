@@ -1260,13 +1260,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
     shellSecurityCallbacks = *scb;
     JS_SetSecurityCallbacks(cx, &shellSecurityCallbacks);
 
-    RefPtr<BackstagePass> backstagePass;
-    rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
-    if (NS_FAILED(rv)) {
-      fprintf(gErrFile, "+++ Failed to create BackstagePass: %8x\n",
-              static_cast<uint32_t>(rv));
-      return 1;
-    }
+    auto backstagePass = MakeRefPtr<BackstagePass>();
 
     // Make the default XPCShell global use a fresh zone (rather than the
     // System Zone) to improve cross-zone test coverage.
