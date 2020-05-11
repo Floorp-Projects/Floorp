@@ -32,6 +32,13 @@ RegExpRunStatus Execute(JSContext* cx, MutableHandleRegExpShared re,
                         HandleLinearString input, size_t start,
                         VectorMatchPairs* matches);
 
+RegExpRunStatus ExecuteForFuzzing(JSContext* cx, HandleAtom pattern,
+                                  HandleLinearString input,
+                                  JS::RegExpFlags flags,
+                                  size_t startIndex,
+                                  VectorMatchPairs* matches,
+                                  RegExpShared::CodeKind codeKind);
+
 }  // namespace irregexp
 }  // namespace js
 
