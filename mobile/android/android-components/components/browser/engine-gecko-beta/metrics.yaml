@@ -6,6 +6,7 @@
 # sure the correct code is generated even though the GeckoView AAR file
 # reports an empty metrics.yaml file. The metric in this file is currently
 # disabled and not supposed to collect any data.
+---
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 

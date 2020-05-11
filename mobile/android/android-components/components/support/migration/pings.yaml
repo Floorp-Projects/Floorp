@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
 
 $schema: moz://mozilla.org/schemas/glean/pings/1-0-0
 
@@ -9,8 +10,8 @@ migration:
     A ping sent after a Fennec->Fenix migration was completed.
   include_client_id: true
   bugs:
-  - https://github.com/mozilla-mobile/fenix/issues/5888
+    - https://github.com/mozilla-mobile/fenix/issues/5888
   notification_emails:
-  - fenix-core@mozilla.com
+    - fenix-core@mozilla.com
   data_reviews:
-  - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
