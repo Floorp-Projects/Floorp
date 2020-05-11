@@ -1548,22 +1548,12 @@ function test(sharedMem) {
     assertEq(Object.prototype.toString.apply(new DataView(view.buffer)), "[object DataView]");
     assertEq(Object.prototype.toString.apply(DataView.prototype), "[object DataView]");
 
-    // Technically the spec requires these throw a TypeError -- right now.  It's
-    // not clear this is desirable.  Once we implement @@toStringTag we can see
-    // whether ES6's desired semantics will work.
-    assertEq(Object.prototype.toString.apply(Uint8Array.prototype), "[object Uint8ArrayPrototype]");
-    assertEq(Object.prototype.toString.apply(Float32Array.prototype), "[object Float32ArrayPrototype]");
-
-    // Same applies for %TypedArray%.prototype, except because of its newness we
-    // give it the thoroughly-inscrutable "???" as its class name so (hopefully)
-    // people won't rely on it.  ("???" is the class exposed by
-    // ({ [@@toStringTag]: nonUndefinedNonStringValue }).toString(), so
-    // it has slight precedent even if it's not-to-spec.)
-    checkThrowTODO(() => {
-      var typedArrayPrototype = Object.getPrototypeOf(Float32Array.prototype);
-      assertEq(Object.prototype.toString.apply(typedArrayPrototype),
-               "[object ???]");
-    }, TypeError);
+    // get %TypedArray%.prototype[@@toStringTag] returns undefined thus
+    // Object.prototype.toString falls back to [object Object]
+    assertEq(Object.prototype.toString.apply(Uint8Array.prototype), "[object Object]");
+    assertEq(Object.prototype.toString.apply(Float32Array.prototype), "[object Object]");
+    var typedArrayPrototype = Object.getPrototypeOf(Float32Array.prototype);
+    assertEq(Object.prototype.toString.apply(typedArrayPrototype), "[object Object]");
 
     // Accessing DataView fields on DataView.prototype should crash
     checkThrow(() => DataView.prototype.byteLength, TypeError);

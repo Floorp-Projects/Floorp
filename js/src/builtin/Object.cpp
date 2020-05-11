@@ -648,7 +648,9 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 14.
-  // Currently omitted for non-standard fallback.
+  if (!builtinTag) {
+    builtinTag = cx->names().objectObject;
+  }
 
   // Step 15.
   RootedValue tag(cx);
@@ -659,21 +661,6 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 16.
   if (!tag.isString()) {
-    // Non-standard (bug 1277801): Use ClassName as a fallback in the interim
-    if (!builtinTag) {
-      const char* className = GetObjectClassName(cx, obj);
-      StringBuffer sb(cx);
-      if (!sb.append("[object ") || !sb.append(className, strlen(className)) ||
-          !sb.append(']')) {
-        return false;
-      }
-
-      builtinTag = sb.finishAtom();
-      if (!builtinTag) {
-        return false;
-      }
-    }
-
     args.rval().setString(builtinTag);
     return true;
   }
