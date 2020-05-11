@@ -293,6 +293,7 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
       destination = RequestDestination::_empty;
       break;
     case nsIContentPolicy::TYPE_FONT:
+    case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
       destination = RequestDestination::Font;
       break;
     case nsIContentPolicy::TYPE_MEDIA:

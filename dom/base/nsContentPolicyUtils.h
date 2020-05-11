@@ -141,6 +141,7 @@ inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
     CASE_RETURN(TYPE_INTERNAL_FORCE_ALLOWED_DTD);
     CASE_RETURN(TYPE_INTERNAL_AUDIOWORKLET);
     CASE_RETURN(TYPE_INTERNAL_PAINTWORKLET);
+    CASE_RETURN(TYPE_INTERNAL_FONT_PRELOAD);
     default:
       return "<Unknown Type>";
   }

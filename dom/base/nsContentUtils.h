@@ -3411,6 +3411,9 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD:
       return nsIContentPolicy::TYPE_DTD;
 
+    case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
+      return nsIContentPolicy::TYPE_FONT;
+
     default:
       return aType;
   }

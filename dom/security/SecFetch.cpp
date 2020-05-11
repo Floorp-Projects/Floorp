@@ -75,6 +75,7 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD:
       return NS_LITERAL_CSTRING("empty");
     case nsIContentPolicy::TYPE_FONT:
+    case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
       return NS_LITERAL_CSTRING("font");
     case nsIContentPolicy::TYPE_MEDIA:
       return NS_LITERAL_CSTRING("empty");
