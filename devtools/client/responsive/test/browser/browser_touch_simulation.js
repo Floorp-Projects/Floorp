@@ -228,12 +228,7 @@ async function testWithTouch(ui) {
       },
       true
     );
-
-    await EventUtils.synthesizeMouseAtCenter(
-      div,
-      { type: "mousedown", isSynthesized: false },
-      content
-    );
+    await EventUtils.synthesizeClick(div);
   });
 }
 
