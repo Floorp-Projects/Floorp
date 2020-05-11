@@ -1979,11 +1979,14 @@ bool nsXULPopupManager::HandleShortcutNavigation(KeyboardEvent* aKeyEvent,
 }
 
 bool nsXULPopupManager::HandleKeyboardNavigation(uint32_t aKeyCode) {
+  if (nsMenuChainItem* nextitem = GetTopVisibleMenu()) {
+    nextitem->Content()->OwnerDoc()->FlushPendingNotifications(FlushType::Frames);
+  }
+
   // navigate up through the open menus, looking for the topmost one
   // in the same hierarchy
   nsMenuChainItem* item = nullptr;
   nsMenuChainItem* nextitem = GetTopVisibleMenu();
-
   while (nextitem) {
     item = nextitem;
     nextitem = item->GetParent();
