@@ -1,0 +1,22 @@
+diff --git a/tools/fuzzing/libfuzzer/FuzzerDefs.h b/tools/fuzzing/libfuzzer/FuzzerDefs.h
+--- a/tools/fuzzing/libfuzzer/FuzzerDefs.h
++++ b/tools/fuzzing/libfuzzer/FuzzerDefs.h
+@@ -174,17 +174,17 @@ extern ExternalFunctions *EF;
+ // We are using a custom allocator to give a different symbol name to STL
+ // containers in order to avoid ODR violations.
+ template<typename T>
+   class fuzzer_allocator: public std::allocator<T> {
+     public:
+       fuzzer_allocator() = default;
+ 
+       template<class U>
+-      fuzzer_allocator(const fuzzer_allocator<U>&) {}
++      explicit fuzzer_allocator(const fuzzer_allocator<U>&) {}
+ 
+       template<class Other>
+       struct rebind { typedef fuzzer_allocator<Other> other;  };
+   };
+ 
+ template<typename T>
+ using Vector = std::vector<T, fuzzer_allocator<T>>;
+ 

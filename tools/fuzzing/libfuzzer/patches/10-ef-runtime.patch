@@ -1,0 +1,31 @@
+# HG changeset patch
+# User Christian Holler <choller@mozilla.com>
+# Date 1586344236 -7200
+#      Wed Apr 08 13:10:36 2020 +0200
+# Node ID ab10fba76a52a5b205038150ad198dfc4583c566
+# Parent  5f0446b8b0b20f432fa5dc016b781270c469fe83
+[libFuzzer] Allow external functions to be defined at runtime
+
+diff --git a/tools/fuzzing/libfuzzer/FuzzerDriver.cpp b/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
+--- a/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
++++ b/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
+@@ -560,17 +560,18 @@ int AnalyzeDictionary(Fuzzer *F, const V
+   Printf("###### End of useless dictionary elements. ######\n");
+   return 0;
+ }
+ 
+ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
+   using namespace fuzzer;
+   assert(argc && argv && "Argument pointers cannot be nullptr");
+   std::string Argv0((*argv)[0]);
+-  EF = new ExternalFunctions();
++  if (!EF)
++    EF = new ExternalFunctions();
+   if (EF->LLVMFuzzerInitialize)
+     EF->LLVMFuzzerInitialize(argc, argv);
+   if (EF->__msan_scoped_disable_interceptor_checks)
+     EF->__msan_scoped_disable_interceptor_checks();
+   const Vector<std::string> Args(*argv, *argv + *argc);
+   assert(!Args.empty());
+   ProgName = new std::string(Args[0]);
+   if (Argv0 != *ProgName) {
