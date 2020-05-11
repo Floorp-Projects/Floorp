@@ -1054,6 +1054,8 @@ void nsHtml5TreeOpExecutor::SetSpeculationBase(const nsAString& aURL) {
   DebugOnly<nsresult> rv = NS_NewURI(getter_AddRefs(mSpeculationBaseURI), aURL,
                                      encoding, mDocument->GetDocumentURI());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to create a URI");
+
+  mDocument->Preloads().SetSpeculationBase(mSpeculationBaseURI);
 }
 
 void nsHtml5TreeOpExecutor::UpdateReferrerInfoFromMeta(

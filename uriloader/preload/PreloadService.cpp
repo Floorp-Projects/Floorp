@@ -5,6 +5,12 @@
 
 #include "PreloadService.h"
 
+#include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/HTMLLinkElement.h"
+#include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/StaticPrefs_network.h"
+#include "nsNetUtil.h"
+
 namespace mozilla {
 
 bool PreloadService::RegisterPreload(PreloadHashKey* aKey,
@@ -32,6 +38,122 @@ bool PreloadService::PreloadExists(PreloadHashKey* aKey) {
 already_AddRefed<PreloaderBase> PreloadService::LookupPreload(
     PreloadHashKey* aKey) const {
   return mPreloads.Get(aKey);
+}
+
+already_AddRefed<nsIURI> PreloadService::GetPreloadURI(const nsAString& aURL) {
+  nsIURI* base = BaseURIForPreload();
+  auto encoding = mDocument->GetDocumentCharacterSet();
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, encoding, base);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return uri.forget();
+}
+
+already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
+    dom::HTMLLinkElement* aLinkElement, nsContentPolicyType aPolicyType,
+    nsIReferrerInfo* aReferrerInfo) {
+  if (!StaticPrefs::network_preload_experimental()) {
+    return nullptr;
+  }
+
+  if (!CheckReferrerURIScheme(aReferrerInfo)) {
+    return nullptr;
+  }
+
+  if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
+    NotifyNodeEvent(aLinkElement, false);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> uri = aLinkElement->GetURI();
+
+  nsAutoString as, charset, crossOrigin, integrity, referrerPolicyAttr, srcset,
+      sizes, type;
+  aLinkElement->GetAs(as);
+  aLinkElement->GetCharset(charset);
+  aLinkElement->GetCrossOrigin(crossOrigin);
+  aLinkElement->GetIntegrity(integrity);
+  aLinkElement->GetReferrerPolicy(referrerPolicyAttr);
+  PreloadHashKey preloadKey;
+
+  // * Branch according the "as" value and build the `preloadKey` value.
+  if (true) {
+    NotifyNodeEvent(aLinkElement, false);
+    return nullptr;
+  }
+
+  RefPtr<PreloaderBase> preload = LookupPreload(&preloadKey);
+  if (!preload) {
+    // * Start preload accordint the "as" value and various other per-type
+    // specific attributes.
+
+    preload = LookupPreload(&preloadKey);
+    if (!preload) {
+      NotifyNodeEvent(aLinkElement, false);
+      return nullptr;
+    }
+  }
+
+  preload->AddLinkPreloadNode(aLinkElement);
+
+  return preload.forget();
+}
+
+// static
+void PreloadService::NotifyNodeEvent(nsINode* aNode, bool aSuccess) {
+  if (!aNode->IsInComposedDoc()) {
+    return;
+  }
+
+  // We don't dispatch synchronously since |node| might be in a DocGroup
+  // that we're not allowed to touch. (Our network request happens in the
+  // DocGroup of one of the mSources nodes--not necessarily this one).
+
+  RefPtr<AsyncEventDispatcher> dispatcher = new AsyncEventDispatcher(
+      aNode, aSuccess ? NS_LITERAL_STRING("load") : NS_LITERAL_STRING("error"),
+      CanBubble::eNo);
+
+  dispatcher->RequireNodeInDocument();
+  dispatcher->PostDOMEvent();
+}
+
+dom::ReferrerPolicy PreloadService::PreloadReferrerPolicy(
+    const nsAString& aReferrerPolicy) {
+  dom::ReferrerPolicy referrerPolicy =
+      dom::ReferrerInfo::ReferrerPolicyAttributeFromString(aReferrerPolicy);
+  if (referrerPolicy == dom::ReferrerPolicy::_empty) {
+    referrerPolicy = mDocument->GetPreloadReferrerInfo()->ReferrerPolicy();
+  }
+
+  return referrerPolicy;
+}
+
+bool PreloadService::CheckReferrerURIScheme(nsIReferrerInfo* aReferrerInfo) {
+  if (!aReferrerInfo) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> referrer = aReferrerInfo->GetOriginalReferrer();
+  if (!referrer) {
+    return false;
+  }
+  if (!referrer->SchemeIs("http") && !referrer->SchemeIs("https")) {
+    return false;
+  }
+
+  return true;
+}
+
+nsIURI* PreloadService::BaseURIForPreload() {
+  nsIURI* documentURI = mDocument->GetDocumentURI();
+  nsIURI* documentBaseURI = mDocument->GetDocBaseURI();
+  return (documentURI == documentBaseURI)
+             ? (mSpeculationBaseURI ? mSpeculationBaseURI.get() : documentURI)
+             : documentBaseURI;
 }
 
 }  // namespace mozilla
