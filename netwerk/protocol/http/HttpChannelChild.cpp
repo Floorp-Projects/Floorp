@@ -1962,6 +1962,12 @@ bool HttpChannelChild::Redirect3Complete(OverrideRunnable* aRunnable) {
   MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = NS_OK;
 
+  nsCOMPtr<nsIRedirectResultListener> vetoHook;
+  GetCallback(vetoHook);
+  if (vetoHook) {
+    vetoHook->OnRedirectResult(true);
+  }
+
   nsCOMPtr<nsIHttpChannelChild> chan = do_QueryInterface(mRedirectChannelChild);
   RefPtr<HttpChannelChild> httpChannelChild =
       static_cast<HttpChannelChild*>(chan.get());
