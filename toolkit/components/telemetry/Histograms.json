@@ -14863,28 +14863,38 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "geckoview"],
     "alert_emails": ["cmccormack@mozilla.com"],
-    "bug_numbers": [1562060],
-    "expires_in_version": "76",
+    "bug_numbers": [1562060, 1621773],
+    "expires_in_version": "83",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
     "description": "Whether the parent process successfully mapped the User Agent style sheet shared memory buffer at the desired address"
   },
+  "SHARED_MEMORY_UA_SHEETS_TOSHMEM_SUCCEEDED": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "geckoview"],
+    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1621773],
+    "expires_in_version": "83",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether the parent process failed to convert User Agent style sheets into a form suitable for storing in shared memory"
+  },
   "SHARED_MEMORY_UA_SHEETS_MAPPED_PARENT_AFTER_FREEZE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "geckoview"],
-    "alert_emails": ["cmccormack@mozilla.com"],
-    "bug_numbers": [1562060],
-    "expires_in_version": "76",
+    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1562060, 1621773],
+    "expires_in_version": "83",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
-    "description": "Whether the parent process successfully re-mapped the User Agent style sheet shared memory buffer at the desired address after freezing it"
+    "description": "Whether the parent process successfully mapped the User Agent style sheet shared memory buffer at the desired address"
   },
   "SHARED_MEMORY_UA_SHEETS_MAPPED_CHILD": {
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview"],
-    "alert_emails": ["cmccormack@mozilla.com"],
-    "bug_numbers": [1562060],
-    "expires_in_version": "76",
+    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1562060, 1621773],
+    "expires_in_version": "83",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
     "description": "Whether a child process successfully mapped the User Agent style sheet shared memory buffer at the desired address"
