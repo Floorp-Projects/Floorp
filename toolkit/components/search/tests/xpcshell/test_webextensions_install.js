@@ -93,26 +93,3 @@ add_task(async function complex_multilocale_test() {
     { visibleDefaultEngines: ["multilocale-af", "multilocale-an"] }
   );
 });
-add_task(async function test_manifest_selection() {
-  await forceExpiration();
-  Services.prefs.setCharPref("browser.search.region", "an");
-  Services.locale.availableLocales = ["af"];
-  Services.locale.requestedLocales = ["af"];
-
-  await withGeoServer(
-    async function cont(requests) {
-      await restart();
-      let engine = await Services.search.getEngineByName("Multilocale AN");
-      Assert.ok(
-        engine.iconURI.spec.endsWith("favicon-an.ico"),
-        "Should have the correct favicon for an extension of one locale using a different locale."
-      );
-      Assert.equal(
-        engine.description,
-        "A enciclopedia Libre",
-        "Should have the correct engine name for an extension of one locale using a different locale."
-      );
-    },
-    { visibleDefaultEngines: ["multilocale-an"] }
-  );
-});

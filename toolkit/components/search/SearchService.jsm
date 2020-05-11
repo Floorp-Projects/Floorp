@@ -2678,7 +2678,7 @@ SearchService.prototype = {
     let { IconDetails } = ExtensionParent;
 
     // General set of icons for an engine.
-    let icons = manifest.icons;
+    let icons = extension.manifest.icons;
     let iconList = [];
     if (icons) {
       iconList = Object.entries(icons).map(icon => {
@@ -2735,7 +2735,7 @@ SearchService.prototype = {
     let params = {
       name: searchProvider.name.trim(),
       shortName,
-      description: manifest.description,
+      description: extension.manifest.description,
       searchForm: searchProvider.search_form,
       // AddonManager will sometimes encode the URL via `new URL()`. We want
       // to ensure we're always dealing with decoded urls.
