@@ -39,6 +39,14 @@ class SentryService(
     private val sendEventForNativeCrashes: Boolean = false,
     clientFactory: SentryClientFactory? = null
 ) : CrashReporterService {
+    override val id: String = "sentry"
+
+    override val name: String = "Sentry"
+
+    override fun createCrashReportUrl(identifier: String): String? {
+        val id = identifier.replace("-", "")
+        return "https://sentry.prod.mozaws.net/operations/samples-crash/?query=$id"
+    }
 
     // Fenix perf note: Sentry init may negatively impact cold startup so it's important this is lazily init.
     @VisibleForTesting(otherwise = PRIVATE)
@@ -73,6 +81,7 @@ class SentryService(
         val eventBuilder = EventBuilder().withMessage(createMessage(crash))
                 .withLevel(Event.Level.FATAL)
                 .withSentryInterface(ExceptionInterface(crash.throwable))
+
         client.sendEvent(eventBuilder)
         client.context.clearBreadcrumbs()
 

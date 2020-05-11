@@ -40,6 +40,7 @@ class CrashHandlerServiceTest {
     fun setUp() {
         val scope = TestCoroutineScope(testDispatcher)
         reporter = spy(CrashReporter(
+            context = testContext,
             shouldPrompt = CrashReporter.Prompt.NEVER,
             services = listOf(mock()),
             nonFatalCrashIntent = mock(),

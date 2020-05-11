@@ -231,8 +231,9 @@ class SentryServiceTest {
                 )
 
         val reporter = spy(CrashReporter(
-                services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.NEVER
+            context = testContext,
+            services = listOf(service),
+            shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))
 
         `when`(client.context).thenReturn(clientContext)
@@ -277,6 +278,7 @@ class SentryServiceTest {
         )
 
         val reporter = spy(CrashReporter(
+            testContext,
             services = listOf(service),
             shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))

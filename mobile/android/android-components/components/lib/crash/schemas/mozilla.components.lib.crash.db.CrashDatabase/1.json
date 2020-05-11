@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c82f6a8cf8fbd6509f73a7d7d5ff97cd",
+    "identityHash": "212dfa0b59d6a78d81e65cead34d40e0",
     "entities": [
       {
         "tableName": "crashes",
@@ -38,7 +38,7 @@
       },
       {
         "tableName": "reports",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `crashUuid` TEXT NOT NULL, `service_id` TEXT NOT NULL, `report_id` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `crash_uuid` TEXT NOT NULL, `service_id` TEXT NOT NULL, `report_id` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -48,7 +48,7 @@
           },
           {
             "fieldPath": "crashUuid",
-            "columnName": "crashUuid",
+            "columnName": "crash_uuid",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -78,7 +78,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c82f6a8cf8fbd6509f73a7d7d5ff97cd')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '212dfa0b59d6a78d81e65cead34d40e0')"
     ]
   }
 }

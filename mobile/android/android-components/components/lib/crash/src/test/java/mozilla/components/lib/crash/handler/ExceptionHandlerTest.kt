@@ -38,6 +38,7 @@ class ExceptionHandlerTest {
         val service: CrashReporterService = mock()
 
         val crashReporter = spy(CrashReporter(
+            context = testContext,
             shouldPrompt = CrashReporter.Prompt.NEVER,
             services = listOf(service),
             scope = scope
@@ -59,15 +60,22 @@ class ExceptionHandlerTest {
         val defaultExceptionHandler: Thread.UncaughtExceptionHandler = mock()
 
         val crashReporter = CrashReporter(
-                shouldPrompt = CrashReporter.Prompt.NEVER,
-                services = listOf(object : CrashReporterService {
-                    override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
+            context = testContext,
+            shouldPrompt = CrashReporter.Prompt.NEVER,
+            services = listOf(object : CrashReporterService {
+                override val id: String = "test"
 
-                    override fun report(crash: Crash.NativeCodeCrash): String? = null
+                override val name: String = "TestReporter"
 
-                    override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
-                }),
-                scope = scope
+                override fun createCrashReportUrl(identifier: String): String? = null
+
+                override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
+
+                override fun report(crash: Crash.NativeCodeCrash): String? = null
+
+                override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
+            }),
+            scope = scope
         ).install(testContext)
 
         val handler = ExceptionHandler(

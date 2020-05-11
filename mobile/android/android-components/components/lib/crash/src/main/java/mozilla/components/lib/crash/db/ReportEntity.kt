@@ -7,6 +7,7 @@ package mozilla.components.lib.crash.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.service.CrashReporterService
 
 /**
@@ -41,3 +42,11 @@ internal data class ReportEntity(
     @ColumnInfo(name = "report_id")
     var reportId: String
 )
+
+internal fun CrashReporterService.toReportEntity(crash: Crash, reportId: String): ReportEntity {
+    return ReportEntity(
+        crashUuid = crash.uuid,
+        serviceId = id,
+        reportId = reportId
+    )
+}

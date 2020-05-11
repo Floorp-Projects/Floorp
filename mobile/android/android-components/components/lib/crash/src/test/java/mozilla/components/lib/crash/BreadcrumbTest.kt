@@ -35,8 +35,9 @@ class BreadcrumbTest {
         val testType = Breadcrumb.Type.USER
 
         val reporter = spy(CrashReporter(
-                services = listOf(mock()),
-                shouldPrompt = CrashReporter.Prompt.NEVER
+            context = testContext,
+            services = listOf(mock()),
+            shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))
 
         reporter.recordCrashBreadcrumb(
@@ -60,8 +61,9 @@ class BreadcrumbTest {
         val testType = Breadcrumb.Type.USER
 
         val reporter = spy(CrashReporter(
-                services = listOf(mock()),
-                shouldPrompt = CrashReporter.Prompt.NEVER
+            context = testContext,
+            services = listOf(mock()),
+            shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))
 
         reporter.recordCrashBreadcrumb(
@@ -89,8 +91,9 @@ class BreadcrumbTest {
         val testType = Breadcrumb.Type.USER
 
         val reporter = spy(CrashReporter(
-                services = listOf(mock()),
-                shouldPrompt = CrashReporter.Prompt.NEVER
+            context = testContext,
+            services = listOf(mock()),
+            shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))
 
         val beginDate = Date()
