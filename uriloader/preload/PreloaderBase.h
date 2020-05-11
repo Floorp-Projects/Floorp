@@ -47,6 +47,8 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
   // Called by resource loaders to register this preload in the document's
   // preload service to provide coalescing, and access to the preload when it
   // should be used for an actual load.
+  void NotifyOpen(PreloadHashKey* aKey, dom::Document* aDocument,
+                  bool aIsPreload);
   void NotifyOpen(PreloadHashKey* aKey, nsIChannel* aChannel,
                   dom::Document* aDocument, bool aIsPreload);
 
@@ -62,6 +64,9 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
   // (OnStartRequest or equal) and when it finished (OnStopRequest or equal)
   void NotifyStart(nsIRequest* aRequest);
   void NotifyStop(nsIRequest* aRequest, nsresult aStatus);
+  // Use this variant only in complement to NotifyOpen without providing a
+  // channel.
+  void NotifyStop(nsresult aStatus);
 
   // Called when this currently existing load has to be asynchronously
   // revalidated before it can be used.  This prevents link preload DOM nodes
@@ -108,7 +113,6 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
   virtual ~PreloaderBase();
 
  private:
-  void NotifyStop(nsresult aStatus);
   void NotifyNodeEvent(nsINode* aNode);
 
   // A helper class that will update the PreloaderBase.mChannel member when a

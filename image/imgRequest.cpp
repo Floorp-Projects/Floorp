@@ -18,6 +18,7 @@
 
 #include "nsIChannel.h"
 #include "nsICacheInfoChannel.h"
+#include "nsIClassOfService.h"
 #include "mozilla/dom/Document.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIInputStream.h"
@@ -67,7 +68,9 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
       mIsInCache(false),
       mDecodeRequested(false),
       mNewPartPending(false),
-      mHadInsecureRedirect(false) {
+      mHadInsecureRedirect(false),
+      mIsDeniedCrossSiteCORSRequest(false),
+      mIsCrossSiteNoCORSRequest(false) {
   LOG_FUNC(gImgLog, "imgRequest::imgRequest()");
 }
 
@@ -642,6 +645,15 @@ imgRequest::OnStartRequest(nsIRequest* aRequest) {
 
   RefPtr<Image> image;
 
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest)) {
+    nsresult rv;
+    nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->LoadInfo();
+    mIsDeniedCrossSiteCORSRequest =
+        loadInfo->GetTainting() == LoadTainting::CORS &&
+        (NS_FAILED(httpChannel->GetStatus(&rv)) || NS_FAILED(rv));
+    mIsCrossSiteNoCORSRequest = loadInfo->GetTainting() == LoadTainting::Opaque;
+  }
+
   // Figure out if we're multipart.
   nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
   MOZ_ASSERT(multiPartChannel || !mIsMultiPartChannel,
@@ -982,6 +994,13 @@ void imgRequest::FinishPreparingForNewPart(const NewPartResult& aResult) {
 }
 
 bool imgRequest::ImageAvailable() const { return mImageAvailable; }
+
+void imgRequest::PrioritizeAsPreload() {
+  if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(mChannel)) {
+    cos->AddClassFlags(nsIClassOfService::Unblocked);
+  }
+  AdjustPriorityInternal(nsISupportsPriority::PRIORITY_HIGHEST);
+}
 
 NS_IMETHODIMP
 imgRequest::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,

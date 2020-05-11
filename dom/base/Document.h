@@ -2907,7 +2907,11 @@ class Document : public nsINode,
    * when this image is for loading <picture> or <img srcset> images.
    */
   void MaybePreLoadImage(nsIURI* uri, const nsAString& aCrossOriginAttr,
-                         ReferrerPolicyEnum aReferrerPolicy, bool aIsImgSet);
+                         ReferrerPolicyEnum aReferrerPolicy, bool aIsImgSet,
+                         bool aLinkPreload);
+  void PreLoadImage(nsIURI* uri, const nsAString& aCrossOriginAttr,
+                    ReferrerPolicyEnum aReferrerPolicy, bool aIsImgSet,
+                    bool aLinkPreload);
 
   /**
    * Called by images to forget an image preload when they start doing

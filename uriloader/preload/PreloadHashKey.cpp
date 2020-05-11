@@ -23,6 +23,7 @@ PreloadHashKey::PreloadHashKey(PreloadHashKey&& aToMove)
   mAs = std::move(aToMove.mAs);
   mCORSMode = std::move(aToMove.mCORSMode);
   mReferrerPolicy = std::move(aToMove.mReferrerPolicy);
+  mPrincipal = std::move(aToMove.mPrincipal);
 
   switch (mAs) {
     case ResourceType::SCRIPT:
@@ -51,6 +52,7 @@ PreloadHashKey& PreloadHashKey::operator=(const PreloadHashKey& aOther) {
   mAs = aOther.mAs;
   mCORSMode = aOther.mCORSMode;
   mReferrerPolicy = aOther.mReferrerPolicy;
+  mPrincipal = aOther.mPrincipal;
 
   switch (mAs) {
     case ResourceType::SCRIPT:
@@ -104,8 +106,8 @@ PreloadHashKey PreloadHashKey::CreateAsStyle(
     CORSMode aCORSMode, css::SheetParsingMode aParsingMode) {
   PreloadHashKey key(aURI, ResourceType::STYLE);
   key.mCORSMode = aCORSMode;
+  key.mPrincipal = aPrincipal;
 
-  key.mStyle.mPrincipal = aPrincipal;
   key.mStyle.mParsingMode = aParsingMode;
   key.mStyle.mReferrerInfo = aReferrerInfo;
 
@@ -121,9 +123,29 @@ PreloadHashKey PreloadHashKey::CreateAsStyle(
                        aSheetLoadData.mSheet->ParsingMode());
 }
 
+// static
+PreloadHashKey PreloadHashKey::CreateAsImage(
+    nsIURI* aURI, nsIPrincipal* aPrincipal, CORSMode aCORSMode,
+    dom::ReferrerPolicy const& aReferrerPolicy) {
+  PreloadHashKey key(aURI, ResourceType::IMAGE);
+  key.mReferrerPolicy = aReferrerPolicy;
+  key.mCORSMode = aCORSMode;
+  key.mPrincipal = aPrincipal;
+
+  return key;
+}
+
 bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
   if (mAs != aOther->mAs || mCORSMode != aOther->mCORSMode ||
       mReferrerPolicy != aOther->mReferrerPolicy) {
+    return false;
+  }
+  if (!mPrincipal != !aOther->mPrincipal) {
+    // One or the other has a principal, but not both... not equal
+    return false;
+  }
+
+  if (mPrincipal && !mPrincipal->Equals(aOther->mPrincipal)) {
     return false;
   }
 
@@ -139,10 +161,6 @@ bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
       }
       break;
     case ResourceType::STYLE: {
-      if (!mStyle.mPrincipal != !aOther->mStyle.mPrincipal) {
-        // One or the other has a principal, but not both... not equal
-        return false;
-      }
       if (mStyle.mParsingMode != aOther->mStyle.mParsingMode) {
         return false;
       }
@@ -152,14 +170,13 @@ bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
           !eq) {
         return false;
       }
-      if (mStyle.mPrincipal && (NS_FAILED(mStyle.mPrincipal->Equals(
-                                    aOther->mStyle.mPrincipal, &eq)) ||
-                                !eq)) {
-        return false;
-      }
       break;
     }
     case ResourceType::IMAGE:
+      // No more checks needed.  The image cache key consists of the document
+      // (which we are scoped into), origin attributes (which we compare as part
+      // of the principal check) and the URL.  imgLoader::ValidateEntry compares
+      // CORS, referrer info and principal, which we do by default.
       break;
     case ResourceType::FONT:
       break;
