@@ -55,7 +55,7 @@ function Finder(docShell) {
     .QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIWebProgress)
     .addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
-  BrowserUtils.getRootWindow(this._docShell).addEventListener(
+  docShell.domWindow.addEventListener(
     "unload",
     this.onLocationChange.bind(this, { isTopLevel: true })
   );
