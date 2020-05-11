@@ -14,7 +14,7 @@
 
 pub use app_units::Au;
 use euclid::{Length, Rect, Scale, Size2D, Transform3D, Translation2D};
-use euclid::{Point2D, Point3D, Vector2D, Vector3D, SideOffsets2D};
+use euclid::{Point2D, Point3D, Vector2D, Vector3D, SideOffsets2D, Box2D};
 use euclid::HomogeneousVector;
 use peek_poke::PeekPoke;
 // local imports
@@ -60,6 +60,7 @@ pub type PictureSize = Size2D<f32, PicturePixel>;
 pub type PicturePoint3D = Point3D<f32, PicturePixel>;
 pub type PictureVector2D = Vector2D<f32, PicturePixel>;
 pub type PictureVector3D = Vector3D<f32, PicturePixel>;
+pub type PictureBox2D = Box2D<f32, PicturePixel>;
 
 /// Geometry gets rasterized in a given root coordinate space. This
 /// is often the root spatial node (world space), but may be a local
