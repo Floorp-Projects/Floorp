@@ -27,6 +27,7 @@ const AppConstants = ChromeUtils.import(
  * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
  * @typedef {import("../@types/perf").PopupBackgroundFeatures} PopupBackgroundFeatures
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
+ * @typedef {import("../@types/perf").Library} Library
  * @typedef {import("../@types/perf").PerformancePref} PerformancePref
  * @typedef {import("../@types/perf").ProfilerWebChannel} ProfilerWebChannel
  * @typedef {import("../@types/perf").MessageFromFrontend} MessageFromFrontend
@@ -69,10 +70,12 @@ const lazy = createLazyLoaders({
     require("devtools/shared/performance-new/recording-utils"),
   CustomizableUI: () =>
     ChromeUtils.import("resource:///modules/CustomizableUI.jsm"),
+  PerfSymbolication: () =>
+    ChromeUtils.import(
+      "resource://devtools/client/performance-new/symbolication.jsm.js"
+    ),
   PreferenceManagement: () =>
     require("devtools/client/performance-new/preference-management"),
-  ProfilerGetSymbols: () =>
-    ChromeUtils.import("resource://gre/modules/ProfilerGetSymbols.jsm"),
   ProfilerMenuButton: () =>
     ChromeUtils.import(
       "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
@@ -133,27 +136,25 @@ const presets = {
 
 /**
  * This Map caches the symbols from the shared libraries.
- * @type {Map<string, { path: string, debugPath: string }>}
+ * @type {Map<string, Library>}
  */
 const symbolCache = new Map();
 
 /**
+ * @param {PageContext} pageContext
  * @param {string} debugName
  * @param {string} breakpadId
  */
-async function getSymbolsFromThisBrowser(debugName, breakpadId) {
+async function getSymbolsFromThisBrowser(pageContext, debugName, breakpadId) {
   if (symbolCache.size === 0) {
     // Prime the symbols cache.
     for (const lib of Services.profiler.sharedLibraries) {
-      symbolCache.set(`${lib.debugName}/${lib.breakpadId}`, {
-        path: lib.path,
-        debugPath: lib.debugPath,
-      });
+      symbolCache.set(`${lib.debugName}/${lib.breakpadId}`, lib);
     }
   }
 
-  const cachedLibInfo = symbolCache.get(`${debugName}/${breakpadId}`);
-  if (!cachedLibInfo) {
+  const cachedLib = symbolCache.get(`${debugName}/${breakpadId}`);
+  if (!cachedLib) {
     throw new Error(
       `The library ${debugName} ${breakpadId} is not in the ` +
         "Services.profiler.sharedLibraries list, so the local path for it is not known " +
@@ -164,27 +165,19 @@ async function getSymbolsFromThisBrowser(debugName, breakpadId) {
     );
   }
 
-  const { path, debugPath } = cachedLibInfo;
-  const { OS } = lazy.OS();
-  if (!OS.Path.split(path).absolute) {
-    throw new Error(
-      "Services.profiler.sharedLibraries did not contain an absolute path for " +
-        `the library ${debugName} ${breakpadId}, so symbols for this library can not ` +
-        "be obtained."
-    );
-  }
-
-  const { ProfilerGetSymbols } = lazy.ProfilerGetSymbols();
-
-  return ProfilerGetSymbols.getSymbolTable(path, debugPath, breakpadId);
+  const lib = cachedLib;
+  const objdirs = getObjdirPrefValue(pageContext);
+  const { getSymbolTableMultiModal } = lazy.PerfSymbolication();
+  return getSymbolTableMultiModal(lib, objdirs);
 }
 
 /**
  * This function is called directly by devtools/startup/DevToolsStartup.jsm when
  * using the shortcut keys to capture a profile.
- * @type {() => Promise<void>}
+ * @param {PageContext} pageContext
+ * @return {Promise<void>}
  */
-async function captureProfile() {
+async function captureProfile(pageContext) {
   if (!Services.profiler.IsActive()) {
     // The profiler is not active, ignore this shortcut.
     return;
@@ -203,7 +196,9 @@ async function captureProfile() {
     );
 
   const receiveProfile = lazy.BrowserModule().receiveProfile;
-  receiveProfile(profile, getSymbolsFromThisBrowser);
+  receiveProfile(profile, (debugName, breakpadId) => {
+    return getSymbolsFromThisBrowser(pageContext, debugName, breakpadId);
+  });
 
   Services.profiler.StopProfiler();
 }
@@ -315,6 +310,15 @@ function getPrefPostfix(pageContext) {
 
 /**
  * @param {PageContext} pageContext
+ * @returns {string[]}
+ */
+function getObjdirPrefValue(pageContext) {
+  const postfix = getPrefPostfix(pageContext);
+  return _getArrayOfStringsHostPref(OBJDIRS_PREF + postfix);
+}
+
+/**
+ * @param {PageContext} pageContext
  * @param {string[]} supportedFeatures
  * @returns {RecordingStateFromPreferences}
  */
@@ -323,7 +327,7 @@ function getRecordingPreferences(pageContext, supportedFeatures) {
 
   // If you add a new preference here, please do not forget to update
   // `revertRecordingPreferences` as well.
-  const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF + postfix);
+  const objdirs = getObjdirPrefValue(pageContext);
   const presetName = Services.prefs.getCharPref(PRESET_PREF + postfix);
 
   // First try to get the values from a preset.

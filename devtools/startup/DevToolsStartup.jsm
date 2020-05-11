@@ -857,7 +857,7 @@ DevToolsStartup.prototype = {
           return;
         }
         case "profilerCapture": {
-          ProfilerPopupBackground.captureProfile();
+          ProfilerPopupBackground.captureProfile("aboutprofiling");
           return;
         }
       }

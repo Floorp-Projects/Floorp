@@ -104,7 +104,10 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
 
       // The popup doesn't need to support remote symbol tables from the debuggee.
       // Only get the symbols from this browser.
-      getSymbolTableGetter: () => getSymbolsFromThisBrowser,
+      getSymbolTableGetter: () => {
+        return (debugName, breakpadId) =>
+          getSymbolsFromThisBrowser(pageContext, debugName, breakpadId);
+      },
       pageContext,
       openRemoteDevTools,
     })
