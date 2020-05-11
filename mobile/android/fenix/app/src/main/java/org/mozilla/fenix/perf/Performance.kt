@@ -30,6 +30,7 @@ object Performance {
 
         disableOnboarding(context)
         disableTrackingProtectionPopups(context)
+        disableFirstTimePWAPopup(context)
     }
 
     /**
@@ -67,5 +68,12 @@ object Performance {
      */
     private fun disableTrackingProtectionPopups(context: Context) {
         Settings.getInstance(context).isOverrideTPPopupsForPerformanceTest = true
+    }
+
+    /**
+     * Disables the first time PWA popup.
+     */
+    private fun disableFirstTimePWAPopup(context: Context) {
+        Settings.getInstance(context).shouldShowFirstTimePwaFragment = false
     }
 }
