@@ -446,7 +446,7 @@ impl Wrench {
         let key = self.api.generate_font_key();
         let mut txn = Transaction::new();
         txn.add_native_font(key, descriptor.clone());
-        self.api.update_resources(txn.resource_updates);
+        self.api.send_transaction(self.document_id, txn);
         key
     }
 
@@ -537,7 +537,7 @@ impl Wrench {
         let key = self.api.generate_font_key();
         let mut txn = Transaction::new();
         txn.add_raw_font(key, bytes, index);
-        self.api.update_resources(txn.resource_updates);
+        self.api.send_transaction(self.document_id, txn);
         key
     }
 
@@ -561,7 +561,7 @@ impl Wrench {
         }
         options.synthetic_italics = synthetic_italics;
         txn.add_font_instance(key, font_key, size, Some(options), None, Vec::new());
-        self.api.update_resources(txn.resource_updates);
+        self.api.send_transaction(self.document_id, txn);
         key
     }
 
@@ -569,7 +569,7 @@ impl Wrench {
     pub fn delete_font_instance(&mut self, key: FontInstanceKey) {
         let mut txn = Transaction::new();
         txn.delete_font_instance(key);
-        self.api.update_resources(txn.resource_updates);
+        self.api.send_transaction(self.document_id, txn);
     }
 
     pub fn update(&mut self, dim: DeviceIntSize) {
