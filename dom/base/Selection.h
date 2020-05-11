@@ -23,7 +23,7 @@
 #include "nsWrapperCache.h"
 
 struct CachedOffsetForFrame;
-class nsAutoScrollTimer;
+class AutoScroller;
 class nsIFrame;
 class nsFrameSelection;
 class nsPIDOMWindowOuter;
@@ -621,10 +621,6 @@ class Selection final : public nsSupportsWeakReference,
   nsresult SelectionLanguageChange(bool aLangRTL);
 
  private:
-  friend class ::nsAutoScrollTimer;
-
-  MOZ_CAN_RUN_SCRIPT nsresult DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint);
-
   bool HasSameRootOrSameComposedDoc(const nsINode& aNode);
 
   // XXX Please don't add additional uses of this method, it's only for
@@ -873,7 +869,7 @@ class Selection final : public nsSupportsWeakReference,
   RefPtr<nsFrameSelection> mFrameSelection;
   RefPtr<AccessibleCaretEventHub> mAccessibleCaretEventHub;
   RefPtr<SelectionChangeEventDispatcher> mSelectionChangeEventDispatcher;
-  RefPtr<nsAutoScrollTimer> mAutoScrollTimer;
+  RefPtr<AutoScroller> mAutoScroller;
   nsTArray<nsCOMPtr<nsISelectionListener>> mSelectionListeners;
   nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
   CachedOffsetForFrame* mCachedOffsetForFrame;
