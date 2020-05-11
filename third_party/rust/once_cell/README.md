@@ -51,6 +51,3 @@ More patterns and use-cases are in the [docs](https://docs.rs/once_cell/)!
 * [lazycell](https://crates.io/crates/lazycell)
 * [mitochondria](https://crates.io/crates/mitochondria)
 * [lazy_static](https://crates.io/crates/lazy_static)
-
-The API of `once_cell` is being proposed for inclusion in
-[`std`](https://github.com/rust-lang/rfcs/pull/2788).
