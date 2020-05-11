@@ -376,6 +376,11 @@ class ScriptStencil : public ScriptStencilBase {
     return immutableFlags.hasFlag(ImmutableFlags::IsFunction);
   }
 
+  // Allocate a JSScript and initialize it with bytecode. This consumes
+  // allocations within this stencil.
+  JSScript* intoScript(JSContext* cx, CompilationInfo& compilationInfo,
+                       SourceExtent extent);
+
   // Store all atoms into `atoms`
   // `atoms` is the pointer to `this.natoms`-length array of `GCPtrAtom`.
   virtual void initAtomMap(GCPtrAtom* atoms) const = 0;

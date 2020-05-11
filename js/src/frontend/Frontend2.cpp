@@ -414,20 +414,6 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
 
   *unimplemented = false;
 
-  RootedScriptSourceObject sso(cx,
-                               frontend::CreateScriptSourceObject(cx, options));
-  if (!sso) {
-    return nullptr;
-  }
-
-  RootedObject proto(cx);
-  if (!GetFunctionPrototype(cx, GeneratorKind::NotGenerator,
-                            FunctionAsyncKind::SyncFunction, &proto)) {
-    return nullptr;
-  }
-
-  SourceExtent extent = SourceExtent::makeGlobalExtent(length);
-
   Vector<ScopeNote, 0, SystemAllocPolicy> scopeNotes;
   if (!scopeNotes.resize(smoosh.scope_notes.len)) {
     return nullptr;
@@ -461,17 +447,14 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
+  SourceExtent extent = SourceExtent::makeGlobalExtent(length);
   SmooshScriptStencil stencil(smoosh, compilationInfo);
   if (!stencil.init(cx, std::move(immutableScriptData))) {
     return nullptr;
   }
 
-  RootedScript script(cx, JSScript::Create(cx, cx->global(), sso, extent,
-                                           stencil.immutableFlags));
+  RootedScript script(cx, stencil.intoScript(cx, compilationInfo, extent));
   if (!script) {
-    return nullptr;
-  }
-  if (!JSScript::fullyInitFromStencil(cx, compilationInfo, script, stencil)) {
     return nullptr;
   }
 
