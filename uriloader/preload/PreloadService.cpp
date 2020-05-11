@@ -80,6 +80,7 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   aLinkElement->GetReferrerPolicy(referrerPolicyAttr);
   auto referrerPolicy = PreloadReferrerPolicy(referrerPolicyAttr);
 
+  bool isImgSet = false;
   PreloadHashKey preloadKey;
 
   if (as.LowerCaseEqualsASCII("script")) {
@@ -96,6 +97,21 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
         uri, mDocument->NodePrincipal(), referrerInfo,
         dom::Element::StringToCORSMode(crossOrigin),
         css::eAuthorSheetFeatures /* see Loader::LoadSheet */);
+  } else if (as.LowerCaseEqualsASCII("image")) {
+    aLinkElement->GetImageSrcset(srcset);
+    aLinkElement->GetImageSizes(sizes);
+    nsAutoString url;
+    aLinkElement->GetHref(url);
+    uri = mDocument->ResolvePreloadImage(BaseURIForPreload(), url, srcset,
+                                         sizes, &isImgSet);
+    if (!uri) {
+      NotifyNodeEvent(aLinkElement, false);
+      return nullptr;
+    }
+
+    preloadKey = PreloadHashKey::CreateAsImage(
+        uri, mDocument->NodePrincipal(),
+        dom::Element::StringToCORSMode(crossOrigin), referrerPolicy);
   } else {
     NotifyNodeEvent(aLinkElement, false);
     return nullptr;
@@ -108,6 +124,8 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
                     integrity, true /* isInHead - TODO */);
     } else if (as.LowerCaseEqualsASCII("style")) {
       PreloadStyle(uri, charset, crossOrigin, referrerPolicyAttr, integrity);
+    } else if (as.LowerCaseEqualsASCII("image")) {
+      PreloadImage(uri, crossOrigin, referrerPolicyAttr, isImgSet);
     }
 
     preload = LookupPreload(&preloadKey);
@@ -140,6 +158,14 @@ void PreloadService::PreloadStyle(nsIURI* aURI, const nsAString& aCharset,
   mDocument->PreloadStyle(aURI, Encoding::ForLabel(aCharset), aCrossOrigin,
                           PreloadReferrerPolicy(aReferrerPolicy), aIntegrity,
                           true);
+}
+
+void PreloadService::PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
+                                  const nsAString& aImageReferrerPolicy,
+                                  bool aIsImgSet) {
+  mDocument->PreLoadImage(aURI, aCrossOrigin,
+                          PreloadReferrerPolicy(aImageReferrerPolicy),
+                          aIsImgSet, true);
 }
 
 // static

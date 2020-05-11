@@ -201,6 +201,14 @@ class imgRequest final : public nsIStreamListener,
 
   bool ImageAvailable() const;
 
+  void PrioritizeAsPreload();
+
+  bool IsDeniedCrossSiteCORSRequest() const {
+    return mIsDeniedCrossSiteCORSRequest;
+  }
+
+  bool IsCrossSiteNoCORSRequest() const { return mIsCrossSiteNoCORSRequest; }
+
  private:
   friend class FinishPreparingForNewPartRunnable;
 
@@ -289,6 +297,8 @@ class imgRequest final : public nsIStreamListener,
   bool mDecodeRequested : 1;
   bool mNewPartPending : 1;
   bool mHadInsecureRedirect : 1;
+  bool mIsDeniedCrossSiteCORSRequest : 1;
+  bool mIsCrossSiteNoCORSRequest : 1;
 };
 
 #endif  // mozilla_image_imgRequest_h

@@ -921,7 +921,7 @@ class nsContentUtils {
       int32_t aLoadFlags, const nsAString& initiatorType,
       imgRequestProxy** aRequest,
       uint32_t aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE,
-      bool aUseUrgentStartForChannel = false);
+      bool aUseUrgentStartForChannel = false, bool aLinkPreload = false);
 
   /**
    * Obtain an image loader that respects the given document/channel's privacy

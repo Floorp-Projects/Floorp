@@ -53,6 +53,7 @@
 #include "nsMimeTypes.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsQueryObject.h"
 #include "nsReadableUtils.h"
 #include "nsStreamUtils.h"
 #include "prtime.h"
@@ -1198,6 +1199,21 @@ static imgLoader* gNormalLoader = nullptr;
 static imgLoader* gPrivateBrowsingLoader = nullptr;
 
 /* static */
+mozilla::CORSMode imgLoader::ConvertToCORSMode(uint32_t aImgCORS) {
+  switch (aImgCORS) {
+    case imgIRequest::CORS_NONE:
+      return CORSMode::CORS_NONE;
+    case imgIRequest::CORS_ANONYMOUS:
+      return CORSMode::CORS_ANONYMOUS;
+    case imgIRequest::CORS_USE_CREDENTIALS:
+      return CORSMode::CORS_USE_CREDENTIALS;
+  }
+
+  MOZ_ASSERT(false, "Unexpected imgIRequest CORS value");
+  return CORSMode::CORS_NONE;
+}
+
+/* static */
 already_AddRefed<imgLoader> imgLoader::CreateImageLoader() {
   // In some cases, such as xpctests, XPCOM modules are not automatically
   // initialized.  We need to make sure that our module is initialized before
@@ -1665,7 +1681,7 @@ bool imgLoader::ValidateRequestWithNewChannel(
     imgINotificationObserver* aObserver, Document* aLoadingDocument,
     uint64_t aInnerWindowId, nsLoadFlags aLoadFlags,
     nsContentPolicyType aLoadPolicyType, imgRequestProxy** aProxyRequest,
-    nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode,
+    nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode, bool aLinkPreload,
     bool* aNewChannelCreated) {
   // now we need to insert a new channel request object in between the real
   // request and the proxy that basically delays loading the image until it
@@ -1675,7 +1691,7 @@ bool imgLoader::ValidateRequestWithNewChannel(
 
   // If we're currently in the middle of validating this request, just hand
   // back a proxy to it; the required work will be done for us.
-  if (request->GetValidator()) {
+  if (imgCacheValidator* validator = request->GetValidator()) {
     rv = CreateNewProxyForRequest(request, aURI, aLoadGroup, aLoadingDocument,
                                   aObserver, aLoadFlags, aProxyRequest);
     if (NS_FAILED(rv)) {
@@ -1691,8 +1707,18 @@ bool imgLoader::ValidateRequestWithNewChannel(
       // resulting from methods such as StartDecoding(). See bug 579122.
       proxy->MarkValidating();
 
+      if (aLinkPreload) {
+        MOZ_ASSERT(aLoadingDocument);
+        MOZ_ASSERT(aReferrerInfo);
+        proxy->PrioritizeAsPreload();
+        auto preloadKey = PreloadHashKey::CreateAsImage(
+            aURI, aTriggeringPrincipal, ConvertToCORSMode(aCORSMode),
+            aReferrerInfo->ReferrerPolicy());
+        proxy->NotifyOpen(&preloadKey, aLoadingDocument, true);
+      }
+
       // Attach the proxy without notifying
-      request->GetValidator()->AddProxy(proxy);
+      validator->AddProxy(proxy);
     }
 
     return NS_SUCCEEDED(rv);
@@ -1750,6 +1776,16 @@ bool imgLoader::ValidateRequestWithNewChannel(
   // resulting from methods such as StartDecoding(). See bug 579122.
   req->MarkValidating();
 
+  if (aLinkPreload) {
+    MOZ_ASSERT(aLoadingDocument);
+    MOZ_ASSERT(aReferrerInfo);
+    req->PrioritizeAsPreload();
+    auto preloadKey = PreloadHashKey::CreateAsImage(
+        aURI, aTriggeringPrincipal, ConvertToCORSMode(aCORSMode),
+        aReferrerInfo->ReferrerPolicy());
+    req->NotifyOpen(&preloadKey, aLoadingDocument, true);
+  }
+
   // Add the proxy without notifying
   hvc->AddProxy(req);
 
@@ -1773,7 +1809,7 @@ bool imgLoader::ValidateEntry(
     nsLoadFlags aLoadFlags, nsContentPolicyType aLoadPolicyType,
     bool aCanMakeNewChannel, bool* aNewChannelCreated,
     imgRequestProxy** aProxyRequest, nsIPrincipal* aTriggeringPrincipal,
-    int32_t aCORSMode) {
+    int32_t aCORSMode, bool aLinkPreload) {
   LOG_SCOPE(gImgLog, "imgLoader::ValidateEntry");
 
   // If the expiration time is zero, then the request has not gotten far enough
@@ -1892,7 +1928,8 @@ bool imgLoader::ValidateEntry(
     return ValidateRequestWithNewChannel(
         request, aURI, aInitialDocumentURI, aReferrerInfo, aLoadGroup,
         aObserver, aLoadingDocument, innerWindowID, aLoadFlags, aLoadPolicyType,
-        aProxyRequest, aTriggeringPrincipal, aCORSMode, aNewChannelCreated);
+        aProxyRequest, aTriggeringPrincipal, aCORSMode, aLinkPreload,
+        aNewChannelCreated);
   }
 
   return !validateRequest;
@@ -2051,11 +2088,11 @@ imgLoader::LoadImageXPCOM(
     aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE;
   }
   imgRequestProxy* proxy;
-  nsresult rv =
-      LoadImage(aURI, aInitialDocumentURI, aReferrerInfo, aTriggeringPrincipal,
-                0, aLoadGroup, aObserver, aLoadingDocument, aLoadingDocument,
-                aLoadFlags, aCacheKey, aContentPolicyType, EmptyString(),
-                /* aUseUrgentStartForChannel */ false, &proxy);
+  nsresult rv = LoadImage(
+      aURI, aInitialDocumentURI, aReferrerInfo, aTriggeringPrincipal, 0,
+      aLoadGroup, aObserver, aLoadingDocument, aLoadingDocument, aLoadFlags,
+      aCacheKey, aContentPolicyType, EmptyString(),
+      /* aUseUrgentStartForChannel */ false, /* aListPreload */ false, &proxy);
   *_retval = proxy;
   return rv;
 }
@@ -2067,7 +2104,7 @@ nsresult imgLoader::LoadImage(
     nsINode* aContext, Document* aLoadingDocument, nsLoadFlags aLoadFlags,
     nsISupports* aCacheKey, nsContentPolicyType aContentPolicyType,
     const nsAString& initiatorType, bool aUseUrgentStartForChannel,
-    imgRequestProxy** _retval) {
+    bool aLinkPreload, imgRequestProxy** _retval) {
   VerifyCacheSizes();
 
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
@@ -2137,6 +2174,9 @@ nsresult imgLoader::LoadImage(
   if (aLoadFlags & nsIRequest::LOAD_BACKGROUND) {
     // Propagate background loading...
     requestFlags |= nsIRequest::LOAD_BACKGROUND;
+  } else if (aLinkPreload) {
+    // Set background loading if it is <link rel=preload>
+    requestFlags |= nsIRequest::LOAD_BACKGROUND;
   }
 
   int32_t corsmode = imgIRequest::CORS_NONE;
@@ -2144,6 +2184,54 @@ nsresult imgLoader::LoadImage(
     corsmode = imgIRequest::CORS_ANONYMOUS;
   } else if (aLoadFlags & imgILoader::LOAD_CORS_USE_CREDENTIALS) {
     corsmode = imgIRequest::CORS_USE_CREDENTIALS;
+  }
+
+  // Look in the preloaded images of loading document first.
+  if (StaticPrefs::network_preload_experimental() && !aLinkPreload &&
+      aLoadingDocument) {
+    auto key = PreloadHashKey::CreateAsImage(
+        aURI, aTriggeringPrincipal, ConvertToCORSMode(corsmode),
+        aReferrerInfo ? aReferrerInfo->ReferrerPolicy()
+                      : ReferrerPolicy::_empty);
+    if (RefPtr<PreloaderBase> preload =
+            aLoadingDocument->Preloads().LookupPreload(&key)) {
+      RefPtr<imgRequestProxy> proxy = do_QueryObject(preload);
+      MOZ_ASSERT(proxy);
+
+      MOZ_LOG(gImgLog, LogLevel::Debug,
+              ("[this=%p] imgLoader::LoadImage -- preloaded [proxy=%p]"
+               " [document=%p]\n",
+               this, proxy.get(), aLoadingDocument));
+      proxy->NotifyUsage();
+      // XXXedgar: we link the preloaded image to all subsequent "real" load,
+      // where Blink seems only link the preloaded image to the next "real"
+      // load.
+      // There is a spec discussion for "preload cache", see
+      // https://github.com/w3c/preload/issues/97. And it is also not clear how
+      // preload image interacts with list of available images, see
+      // https://github.com/whatwg/html/issues/4474.
+      imgRequest* request = proxy->GetOwner();
+      nsresult rv =
+          CreateNewProxyForRequest(request, aURI, aLoadGroup, aLoadingDocument,
+                                   aObserver, requestFlags, _retval);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      imgRequestProxy* newProxy = *_retval;
+      if (imgCacheValidator* validator = request->GetValidator()) {
+        newProxy->MarkValidating();
+        // Attach the proxy without notifying and this will add us to the load
+        // group.
+        validator->AddProxy(newProxy);
+      } else {
+        // It's OK to add here even if the request is done. If it is, it'll send
+        // a OnStopRequest()and the proxy will be removed from the loadgroup in
+        // imgRequestProxy::OnLoadComplete.
+        newProxy->AddToLoadGroup();
+        newProxy->NotifyListener();
+      }
+
+      return NS_OK;
+    }
   }
 
   RefPtr<imgCacheEntry> entry;
@@ -2164,7 +2252,7 @@ nsresult imgLoader::LoadImage(
     if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerInfo,
                       aLoadGroup, aObserver, aLoadingDocument, requestFlags,
                       aContentPolicyType, true, &newChannelCreated, _retval,
-                      aTriggeringPrincipal, corsmode)) {
+                      aTriggeringPrincipal, corsmode, aLinkPreload)) {
       request = entry->GetRequest();
 
       // If this entry has no proxies, its request has no reference to the
@@ -2324,6 +2412,16 @@ nsresult imgLoader::LoadImage(
       newChannel->SetNotificationCallbacks(requestor);
     }
 
+    if (aLinkPreload) {
+      MOZ_ASSERT(aLoadingDocument);
+      MOZ_ASSERT(aReferrerInfo);
+      proxy->PrioritizeAsPreload();
+      auto preloadKey = PreloadHashKey::CreateAsImage(
+          aURI, aTriggeringPrincipal, ConvertToCORSMode(corsmode),
+          aReferrerInfo->ReferrerPolicy());
+      proxy->NotifyOpen(&preloadKey, aLoadingDocument, true);
+    }
+
     // Note that it's OK to add here even if the request is done.  If it is,
     // it'll send a OnStopRequest() to the proxy in imgRequestProxy::Notify and
     // the proxy will be removed from the loadgroup.
@@ -2419,7 +2517,8 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
       if (ValidateEntry(entry, uri, nullptr, nullptr, nullptr, aObserver,
                         aLoadingDocument, requestFlags, policyType, false,
-                        nullptr, nullptr, nullptr, imgIRequest::CORS_NONE)) {
+                        nullptr, nullptr, nullptr, imgIRequest::CORS_NONE,
+                        false)) {
         request = entry->GetRequest();
       } else {
         nsCOMPtr<nsICacheInfoChannel> cacheChan(do_QueryInterface(channel));
@@ -2786,6 +2885,11 @@ void imgCacheValidator::AddProxy(imgRequestProxy* aProxy) {
 
 void imgCacheValidator::RemoveProxy(imgRequestProxy* aProxy) {
   mProxies.RemoveElement(aProxy);
+}
+
+void imgCacheValidator::PrioritizeAsPreload() {
+  MOZ_ASSERT(mNewRequest);
+  mNewRequest->PrioritizeAsPreload();
 }
 
 void imgCacheValidator::UpdateProxies(bool aCancelRequest, bool aSyncNotify) {

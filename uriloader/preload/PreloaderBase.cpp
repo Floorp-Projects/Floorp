@@ -81,8 +81,8 @@ void PreloaderBase::AddLoadBackgroundFlag(nsIChannel* aChannel) {
   aChannel->SetLoadFlags(loadFlags | nsIRequest::LOAD_BACKGROUND);
 }
 
-void PreloaderBase::NotifyOpen(PreloadHashKey* aKey, nsIChannel* aChannel,
-                               dom::Document* aDocument, bool aIsPreload) {
+void PreloaderBase::NotifyOpen(PreloadHashKey* aKey, dom::Document* aDocument,
+                               bool aIsPreload) {
   if (aDocument && !aDocument->Preloads().RegisterPreload(aKey, this)) {
     // This means there is already a preload registered under this key in this
     // document.  We only allow replacement when this is a regular load.
@@ -92,9 +92,14 @@ void PreloaderBase::NotifyOpen(PreloadHashKey* aKey, nsIChannel* aChannel,
     aDocument->Preloads().RegisterPreload(aKey, this);
   }
 
-  mChannel = aChannel;
   mKey = *aKey;
   mIsUsed = !aIsPreload;
+}
+
+void PreloaderBase::NotifyOpen(PreloadHashKey* aKey, nsIChannel* aChannel,
+                               dom::Document* aDocument, bool aIsPreload) {
+  NotifyOpen(aKey, aDocument, aIsPreload);
+  mChannel = aChannel;
 
   // * Start the usage timer if aIsPreload.
 

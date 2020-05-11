@@ -2473,6 +2473,7 @@ nsresult nsImageFrame::LoadIcon(const nsAString& aSpec,
       nullptr, /* Not associated with any particular document */
       loadFlags, nullptr, contentPolicyType, EmptyString(),
       false, /* aUseUrgentStartForChannel */
+      false, /* aLinkPreload */
       aRequest);
 }
 
