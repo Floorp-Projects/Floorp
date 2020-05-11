@@ -38,7 +38,7 @@ Operand CodeGeneratorX64::ToOperand64(const LInt64Allocation& a64) {
   if (a.isGeneralReg()) {
     return Operand(a.toGeneralReg()->reg());
   }
-  return Operand(masm.getStackPointer(), ToStackOffset(a));
+  return Operand(ToAddress(a));
 }
 
 FrameSizeClass FrameSizeClass::FromDepth(uint32_t frameDepth) {

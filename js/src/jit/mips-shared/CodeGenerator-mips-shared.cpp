@@ -48,7 +48,7 @@ Operand CodeGeneratorMIPSShared::ToOperand(const LAllocation& a) {
   if (a.isFloatReg()) {
     return Operand(a.toFloatReg()->reg());
   }
-  return Operand(masm.getStackPointer(), ToStackOffset(&a));
+  return Operand(ToAddress(a));
 }
 
 Operand CodeGeneratorMIPSShared::ToOperand(const LAllocation* a) {
@@ -1091,12 +1091,11 @@ MoveOperand CodeGeneratorMIPSShared::toMoveOperand(LAllocation a) const {
   if (a.isFloatReg()) {
     return MoveOperand(ToFloatRegister(a));
   }
-  int32_t offset = ToStackOffset(a);
-  MOZ_ASSERT((offset & 3) == 0);
   MoveOperand::Kind kind =
       a.isStackArea() ? MoveOperand::EFFECTIVE_ADDRESS : MoveOperand::MEMORY;
-
-  return MoveOperand(StackPointer, offset, kind);
+  Address address = ToAddress(a);
+  MOZ_ASSERT((address.offset & 3) == 0);
+  return MoveOperand(address, kind);
 }
 
 void CodeGenerator::visitMathD(LMathD* math) {

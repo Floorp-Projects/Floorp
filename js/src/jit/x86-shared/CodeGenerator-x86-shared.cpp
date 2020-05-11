@@ -1808,7 +1808,7 @@ Operand CodeGeneratorX86Shared::ToOperand(const LAllocation& a) {
   if (a.isFloatReg()) {
     return Operand(a.toFloatReg()->reg());
   }
-  return Operand(masm.getStackPointer(), ToStackOffset(&a));
+  return Operand(ToAddress(a));
 }
 
 Operand CodeGeneratorX86Shared::ToOperand(const LAllocation* a) {
@@ -1828,7 +1828,7 @@ MoveOperand CodeGeneratorX86Shared::toMoveOperand(LAllocation a) const {
   }
   MoveOperand::Kind kind =
       a.isStackArea() ? MoveOperand::EFFECTIVE_ADDRESS : MoveOperand::MEMORY;
-  return MoveOperand(StackPointer, ToStackOffset(a), kind);
+  return MoveOperand(ToAddress(a), kind);
 }
 
 class OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorX86Shared> {

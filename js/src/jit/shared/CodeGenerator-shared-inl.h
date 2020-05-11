@@ -242,13 +242,26 @@ int32_t CodeGeneratorShared::ToStackOffset(const LAllocation* a) const {
   return ToStackOffset(*a);
 }
 
-Address CodeGeneratorShared::ToAddress(const LAllocation& a) {
-  MOZ_ASSERT(a.isMemory());
+Address CodeGeneratorShared::ToAddress(const LAllocation& a) const {
+  MOZ_ASSERT(a.isMemory() || a.isStackArea());
+  if (useWasmStackArgumentAbi() && a.isArgument()) {
+    return Address(FramePointer, ToFramePointerOffset(a));
+  }
   return Address(masm.getStackPointer(), ToStackOffset(&a));
 }
 
-Address CodeGeneratorShared::ToAddress(const LAllocation* a) {
+Address CodeGeneratorShared::ToAddress(const LAllocation* a) const {
   return ToAddress(*a);
+}
+
+int32_t CodeGeneratorShared::ToFramePointerOffset(LAllocation a) const {
+  MOZ_ASSERT(useWasmStackArgumentAbi());
+  MOZ_ASSERT(a.isArgument());
+  return a.toArgument()->index() + sizeof(wasm::Frame);
+}
+
+int32_t CodeGeneratorShared::ToFramePointerOffset(const LAllocation* a) const {
+  return ToFramePointerOffset(*a);
 }
 
 void CodeGeneratorShared::saveLive(LInstruction* ins) {
