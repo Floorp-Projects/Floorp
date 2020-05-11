@@ -130,7 +130,7 @@
     pc1.addEventListener('iceconnectionstatechange', onIceConnectionStateChange);
 
     exchangeIceCandidates(pc1, pc2);
-    doSignalingHandshake(pc1, pc2);
+    exchangeOfferAnswer(pc1, pc2);
   }, 'connection with one data channel should eventually have connected or ' +
      'completed connection state');
 
@@ -176,7 +176,7 @@ async_test(t => {
     pc1.addEventListener('iceconnectionstatechange', onIceConnectionStateChange);
 
     exchangeIceCandidates(pc1, pc2);
-    doSignalingHandshake(pc1, pc2);
+    exchangeOfferAnswer(pc1, pc2);
   }, 'connection with one data channel should eventually ' +
      'have connected connection state');
 
@@ -191,7 +191,7 @@ async_test(t => {
     stream.getTracks().forEach(track => pc1.addTrack(track, stream));
 
     exchangeIceCandidates(pc1, pc2);
-    doSignalingHandshake(pc1, pc2);
+    exchangeOfferAnswer(pc1, pc2);
     await listenToIceConnected(pc1);
   }, 'connection with audio track should eventually ' +
      'have connected connection state');
@@ -207,7 +207,7 @@ async_test(t => {
     stream.getTracks().forEach(track => pc1.addTrack(track, stream));
 
     exchangeIceCandidates(pc1, pc2);
-    doSignalingHandshake(pc1, pc2);
+    exchangeOfferAnswer(pc1, pc2);
     await listenToIceConnected(pc1);
   }, 'connection with audio and video tracks should eventually ' +
      'have connected connection state');
@@ -224,7 +224,7 @@ async_test(t => {
     const [track] = stream.getTracks();
     callee.addTrack(track, stream);
     exchangeIceCandidates(caller, callee);
-    await doSignalingHandshake(caller, callee);
+    await exchangeOfferAnswer(caller, callee);
 
     assert_equals(caller.getTransceivers().length, 1);
     const [transceiver] = caller.getTransceivers();
@@ -384,7 +384,7 @@ promise_test(async t => {
 
   stream.getTracks().forEach(track => pc1.addTrack(track, stream));
   exchangeIceCandidates(pc1, pc2);
-  doSignalingHandshake(pc1, pc2);
+  exchangeOfferAnswer(pc1, pc2);
   await listenToIceConnected(pc2);
 
   pc2.oniceconnectionstatechange = t.unreached_func();
