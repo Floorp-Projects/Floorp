@@ -120,6 +120,7 @@ var Harness = {
 
       this._boundWin = Cu.getWeakReference(win); // need this so our addon manager listener knows which window to use.
       AddonManager.addInstallListener(this);
+      AddonManager.addAddonListener(this);
 
       Services.wm.addListener(this);
 
@@ -143,6 +144,7 @@ var Harness = {
         Services.obs.removeObserver(self, "addon-install-complete");
 
         AddonManager.removeInstallListener(self);
+        AddonManager.removeAddonListener(self);
 
         Services.wm.removeListener(self);
 
@@ -156,15 +158,21 @@ var Harness = {
           0,
           "Should be no active installs at the end of the test"
         );
-        aInstalls.forEach(function(aInstall) {
-          info(
-            "Install for " +
-              aInstall.sourceURI +
-              " is in state " +
-              aInstall.state
-          );
-          aInstall.cancel();
-        });
+        await Promise.all(
+          aInstalls.map(async function(aInstall) {
+            info(
+              "Install for " +
+                aInstall.sourceURI +
+                " is in state " +
+                aInstall.state
+            );
+            if (aInstall.state == AddonManager.STATE_INSTALLED) {
+              await aInstall.addon.uninstall();
+            } else {
+              aInstall.cancel();
+            }
+          })
+        );
       });
     }
 
@@ -431,10 +439,10 @@ var Harness = {
     }
   },
 
-  onInstallEnded(install, addon) {
+  async onInstallEnded(install, addon) {
     this.installCount++;
     if (this.installEndedCallback) {
-      this.installEndedCallback(install, addon);
+      await this.installEndedCallback(install, addon);
     }
     this.checkTestEnded();
   },
@@ -444,6 +452,14 @@ var Harness = {
       this.installFailedCallback(install);
     }
     this.checkTestEnded();
+  },
+
+  onUninstalled(addon) {
+    let idx = this.runningInstalls.findIndex(install => install.addon == addon);
+    if (idx != -1) {
+      this.runningInstalls.splice(idx, 1);
+      this.checkTestEnded();
+    }
   },
 
   onInstallCancelled(install) {

@@ -90,7 +90,7 @@ function finish_failed_download() {
 }
 
 function install_ended(install, addon) {
-  install.cancel();
+  return addon.uninstall();
 }
 
 function finish_test(count) {

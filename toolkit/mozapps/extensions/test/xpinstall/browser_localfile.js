@@ -30,7 +30,7 @@ function install_ended(install, addon) {
     "Got the expected install.installTelemetryInfo"
   );
 
-  install.cancel();
+  return addon.uninstall();
 }
 
 function finish_test(count) {
