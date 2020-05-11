@@ -83,11 +83,9 @@ class nsAccUtils {
    *
    * @param aAttributes    where to store the attributes
    * @param aStartContent  node to start from
-   * @param aTopContent    node to end at
    */
   static void SetLiveContainerAttributes(nsIPersistentProperties* aAttributes,
-                                         nsIContent* aStartContent,
-                                         mozilla::dom::Element* aTopEl);
+                                         nsIContent* aStartContent);
 
   /**
    * Any ARIA property of type boolean or NMTOKEN is undefined if the ARIA
