@@ -112,25 +112,6 @@ mod unsync {
     }
 
     #[test]
-    fn lazy_deref_mut() {
-        let called = Cell::new(0);
-        let mut x = Lazy::new(|| {
-            called.set(called.get() + 1);
-            92
-        });
-
-        assert_eq!(called.get(), 0);
-
-        let y = *x - 30;
-        assert_eq!(y, 62);
-        assert_eq!(called.get(), 1);
-
-        *x /= 2;
-        assert_eq!(*x, 46);
-        assert_eq!(called.get(), 1);
-    }
-
-    #[test]
     fn lazy_default() {
         static CALLED: AtomicUsize = AtomicUsize::new(0);
 
@@ -156,6 +137,7 @@ mod unsync {
     }
 
     #[test]
+    #[cfg(not(miri))] // miri doesn't support panics
     #[cfg(feature = "std")]
     fn lazy_poisoning() {
         let x: Lazy<String> = Lazy::new(|| panic!("kaboom"));
@@ -167,24 +149,11 @@ mod unsync {
 
     #[test]
     fn aliasing_in_get() {
-        let x = OnceCell::new();
+        let x = once_cell::unsync::OnceCell::new();
         x.set(42).unwrap();
         let at_x = x.get().unwrap(); // --- (shared) borrow of inner `Option<T>` --+
         let _ = x.set(27); // <-- temporary (unique) borrow of inner `Option<T>`   |
         println!("{}", at_x); // <------- up until here ---------------------------+
-    }
-
-    #[test]
-    #[should_panic(expected = "reentrant init")]
-    fn reentrant_init() {
-        let x: OnceCell<Box<i32>> = OnceCell::new();
-        let dangling_ref: Cell<Option<&i32>> = Cell::new(None);
-        x.get_or_init(|| {
-            let r = x.get_or_init(|| Box::new(92));
-            dangling_ref.set(Some(r));
-            Box::new(62)
-        });
-        eprintln!("use after free: {:?}", dangling_ref.get().unwrap());
     }
 }
 
@@ -199,14 +168,14 @@ mod sync {
         pub(super) use crossbeam_utils::thread::scope;
     }
 
-    #[cfg(miri)] // "stub threads" for Miri
+    #[cfg(miri)]
     mod scope {
         pub(super) struct Scope;
 
         #[cfg(miri)]
         impl Scope {
-            pub(super) fn spawn<R>(&self, f: impl FnOnce(()) -> R) -> R {
-                f(())
+            pub(super) fn spawn(&self, f: impl FnOnce(())) {
+                f(());
             }
         }
 
@@ -292,6 +261,7 @@ mod sync {
     }
 
     #[test]
+    #[cfg(not(miri))] // miri doesn't support panics
     fn get_or_try_init() {
         let cell: OnceCell<String> = OnceCell::new();
         assert!(cell.get().is_none());
@@ -351,7 +321,7 @@ mod sync {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // miri doesn't support processes
+    #[cfg(not(miri))] // miri doesn't support processes
     fn reentrant_init() {
         let examples_dir = {
             let mut exe = std::env::current_exe().unwrap();
@@ -404,25 +374,6 @@ mod sync {
     }
 
     #[test]
-    fn lazy_deref_mut() {
-        let called = AtomicUsize::new(0);
-        let mut x = Lazy::new(|| {
-            called.fetch_add(1, SeqCst);
-            92
-        });
-
-        assert_eq!(called.load(SeqCst), 0);
-
-        let y = *x - 30;
-        assert_eq!(y, 62);
-        assert_eq!(called.load(SeqCst), 1);
-
-        *x /= 2;
-        assert_eq!(*x, 46);
-        assert_eq!(called.load(SeqCst), 1);
-    }
-
-    #[test]
     fn lazy_default() {
         static CALLED: AtomicUsize = AtomicUsize::new(0);
 
@@ -448,7 +399,7 @@ mod sync {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // leaks memory
+    #[cfg(not(miri))] // leaks memory
     fn static_lazy() {
         static XS: Lazy<Vec<i32>> = Lazy::new(|| {
             let mut xs = Vec::new();
@@ -467,7 +418,7 @@ mod sync {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // leaks memory
+    #[cfg(not(miri))] // leaks memory
     fn static_lazy_via_fn() {
         fn xs() -> &'static Vec<i32> {
             static XS: OnceCell<Vec<i32>> = OnceCell::new();
@@ -483,6 +434,7 @@ mod sync {
     }
 
     #[test]
+    #[cfg(not(miri))] // miri doesn't support panics
     fn lazy_poisoning() {
         let x: Lazy<String> = Lazy::new(|| panic!("kaboom"));
         for _ in 0..2 {
@@ -499,6 +451,7 @@ mod sync {
     }
 
     #[test]
+    #[cfg(not(miri))] // leaks memory
     fn eval_once_macro() {
         macro_rules! eval_once {
             (|| -> $ty:ty {
@@ -526,7 +479,7 @@ mod sync {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // deadlocks without real threads
+    #[cfg(not(miri))] // deadlocks without real threads
     fn once_cell_does_not_leak_partially_constructed_boxes() {
         let n_tries = 100;
         let n_readers = 10;
@@ -545,7 +498,7 @@ mod sync {
                     });
                 }
                 for _ in 0..n_writers {
-                    let _ = scope.spawn(|_| cell.set(MSG.to_owned()));
+                    scope.spawn(|_| cell.set(MSG.to_owned()));
                 }
             })
             .unwrap()
@@ -553,7 +506,7 @@ mod sync {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // miri doesn't support Barrier
+    #[cfg(not(miri))] // miri doesn't support Barrier
     fn get_does_not_block() {
         use std::sync::Barrier;
 
