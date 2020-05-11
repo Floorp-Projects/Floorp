@@ -75,6 +75,22 @@ function TargetMixin(parentClass) {
       return null;
     }
 
+    get targetType() {
+      return this._targetType;
+    }
+
+    get isTopLevel() {
+      return this._isTopLevel;
+    }
+
+    setTargetType(type) {
+      this._targetType = type;
+    }
+
+    setIsTopLevel(isTopLevel) {
+      this._isTopLevel = isTopLevel;
+    }
+
     /**
      * Get the top level WatcherFront for this target.
      *
