@@ -3397,6 +3397,18 @@ static nsDisplayBackgroundImage* CreateBackgroundImage(
                                                             index, aBgData);
 }
 
+static nsDisplayThemedBackground* CreateThemedBackground(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* aSecondaryFrame,
+    nsRect& aBgRect) {
+  if (aSecondaryFrame) {
+    const uint16_t index = static_cast<uint16_t>(GetTableTypeFromFrame(aFrame));
+    return MakeDisplayItemWithIndex<nsDisplayTableThemedBackground>(
+        aBuilder, aSecondaryFrame, index, aBgRect, aFrame);
+  }
+
+  return MakeDisplayItem<nsDisplayThemedBackground>(aBuilder, aFrame, aBgRect);
+}
+
 /*static*/
 bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -3514,22 +3526,15 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
         aBuilder->IsInChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
       bgItemList.AppendNewToTop<nsDisplayClearBackground>(aBuilder, aFrame);
     }
-    if (aSecondaryReferenceFrame) {
-      nsDisplayTableThemedBackground* bgItem =
-          MakeDisplayItem<nsDisplayTableThemedBackground>(
-              aBuilder, aSecondaryReferenceFrame, bgRect, aFrame);
-      if (bgItem) {
-        bgItem->Init(aBuilder);
-        bgItemList.AppendToTop(bgItem);
-      }
-    } else {
-      nsDisplayThemedBackground* bgItem =
-          MakeDisplayItem<nsDisplayThemedBackground>(aBuilder, aFrame, bgRect);
-      if (bgItem) {
-        bgItem->Init(aBuilder);
-        bgItemList.AppendToTop(bgItem);
-      }
+
+    nsDisplayThemedBackground* bgItem = CreateThemedBackground(
+        aBuilder, aFrame, aSecondaryReferenceFrame, bgRect);
+
+    if (bgItem) {
+      bgItem->Init(aBuilder);
+      bgItemList.AppendToTop(bgItem);
     }
+
     aList->AppendToTop(&bgItemList);
     return true;
   }
