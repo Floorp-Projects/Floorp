@@ -98,6 +98,9 @@ class ScriptLoadHandler final : public nsIIncrementalStreamLoaderObserver {
 
   // Unicode decoder for charset.
   mozilla::UniquePtr<mozilla::Decoder> mDecoder;
+
+  // Flipped to true after calling NotifyStart the first time
+  bool mPreloadStartNotified = false;
 };
 
 }  // namespace dom

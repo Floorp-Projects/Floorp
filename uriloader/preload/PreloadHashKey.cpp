@@ -4,10 +4,14 @@
 
 #include "PreloadHashKey.h"
 
+#include "mozilla/dom/Element.h"  // StringToCORSMode
 #include "nsIPrincipal.h"
 #include "nsIReferrerInfo.h"
 
 namespace mozilla {
+
+PreloadHashKey::PreloadHashKey(const nsIURI* aKey, ResourceType aAs)
+    : nsURIHashKey(aKey), mAs(aAs) {}
 
 PreloadHashKey::PreloadHashKey(const PreloadHashKey* aKey)
     : nsURIHashKey(aKey->mKey) {
@@ -22,6 +26,7 @@ PreloadHashKey::PreloadHashKey(PreloadHashKey&& aToMove)
 
   switch (mAs) {
     case ResourceType::SCRIPT:
+      mScript = std::move(aToMove.mScript);
       break;
     case ResourceType::STYLE:
       break;
@@ -48,6 +53,7 @@ PreloadHashKey& PreloadHashKey::operator=(const PreloadHashKey& aOther) {
 
   switch (mAs) {
     case ResourceType::SCRIPT:
+      mScript = aOther.mScript;
       break;
     case ResourceType::STYLE:
       break;
@@ -64,6 +70,32 @@ PreloadHashKey& PreloadHashKey::operator=(const PreloadHashKey& aOther) {
   return *this;
 }
 
+// static
+PreloadHashKey PreloadHashKey::CreateAsScript(
+    nsIURI* aURI, const CORSMode& aCORSMode, const dom::ScriptKind& aScriptKind,
+    const dom::ReferrerPolicy& aReferrerPolicy) {
+  PreloadHashKey key(aURI, ResourceType::SCRIPT);
+  key.mCORSMode = aCORSMode;
+  key.mReferrerPolicy = aReferrerPolicy;
+
+  key.mScript.mScriptKind = aScriptKind;
+
+  return key;
+}
+
+// static
+PreloadHashKey PreloadHashKey::CreateAsScript(
+    nsIURI* aURI, const nsAString& aCrossOrigin, const nsAString& aType,
+    const dom::ReferrerPolicy& aReferrerPolicy) {
+  dom::ScriptKind scriptKind = dom::ScriptKind::eClassic;
+  if (aType.LowerCaseEqualsASCII("module")) {
+    scriptKind = dom::ScriptKind::eModule;
+  }
+  CORSMode crossOrigin = dom::Element::StringToCORSMode(aCrossOrigin);
+
+  return CreateAsScript(aURI, crossOrigin, scriptKind, aReferrerPolicy);
+}
+
 bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
   if (mAs != aOther->mAs || mCORSMode != aOther->mCORSMode ||
       mReferrerPolicy != aOther->mReferrerPolicy) {
@@ -77,6 +109,9 @@ bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
 
   switch (mAs) {
     case ResourceType::SCRIPT:
+      if (mScript.mScriptKind != aOther->mScript.mScriptKind) {
+        return false;
+      }
       break;
     case ResourceType::STYLE:
       break;
