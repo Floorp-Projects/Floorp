@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   HttpServer: "resource://testing-common/httpd.js",
+  PlacesSearchAutocompleteProvider:
+    "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",

@@ -52,10 +52,10 @@ var localMuxerModules = {
     "resource:///modules/UrlbarMuxerUnifiedComplete.jsm",
 };
 
-// To improve dataflow and reduce UI work, when a match is added by a
-// non-immediate provider, we notify it to the controller after a delay, so
-// that we can chunk matches coming in that timeframe into a single call.
-const CHUNK_MATCHES_DELAY_MS = 16;
+// To improve dataflow and reduce UI work, when a result is added by a
+// non-heuristic provider, we notify it to the controller after a delay, so
+// that we can chunk results coming in that timeframe into a single call.
+const CHUNK_RESULTS_DELAY_MS = 16;
 
 const DEFAULT_MUXER = "UnifiedComplete";
 
@@ -66,8 +66,8 @@ const DEFAULT_MUXER = "UnifiedComplete";
  */
 class ProvidersManager {
   constructor() {
-    // Tracks the available providers.
-    // This is a sorted array, with IMMEDIATE providers at the top.
+    // Tracks the available providers.  This is a sorted array, with HEURISTIC
+    // providers at the front.
     this.providers = [];
     for (let [symbol, module] of Object.entries(localProviderModules)) {
       let { [symbol]: provider } = ChromeUtils.import(module, {});
@@ -101,11 +101,18 @@ class ProvidersManager {
       throw new Error(`Unknown provider type ${provider.type}`);
     }
     logger.info(`Registering provider ${provider.name}`);
-    if (provider.type == UrlbarUtils.PROVIDER_TYPE.IMMEDIATE) {
-      this.providers.unshift(provider);
-    } else {
-      this.providers.push(provider);
+    let index = -1;
+    if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
+      // Keep heuristic providers in order at the front of the array.  Find the
+      // first non-heuristic provider and insert the new provider there.
+      index = this.providers.findIndex(
+        p => p.type != UrlbarUtils.PROVIDER_TYPE.HEURISTIC
+      );
     }
+    if (index < 0) {
+      index = this.providers.length;
+    }
+    this.providers.splice(index, 0, provider);
   }
 
   /**
@@ -331,36 +338,48 @@ class Query {
       return;
     }
 
+    this.context.activeProviders = new Set(activeProviders.map(p => p.name));
+
     // Start querying active providers.
     let queryPromises = [];
     for (let provider of activeProviders) {
-      if (provider.type == UrlbarUtils.PROVIDER_TYPE.IMMEDIATE) {
-        queryPromises.push(
-          provider.tryMethod("startQuery", this.context, this.add.bind(this))
+      let promise;
+      if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
+        promise = provider.tryMethod(
+          "startQuery",
+          this.context,
+          this.add.bind(this)
         );
-        continue;
-      }
-      if (!this._sleepTimer) {
-        // Tracks the delay timer. We will fire (in this specific case, cancel
-        // would do the same, since the callback is empty) the timer when the
-        // search is canceled, unblocking start().
-        this._sleepTimer = new SkippableTimer({
-          name: "Query provider timer",
-          time: UrlbarPrefs.get("delay"),
-          logger,
+      } else {
+        if (!this._sleepTimer) {
+          // Tracks the delay timer. We will fire (in this specific case, cancel
+          // would do the same, since the callback is empty) the timer when the
+          // search is canceled, unblocking start().
+          this._sleepTimer = new SkippableTimer({
+            name: "Query provider timer",
+            time: UrlbarPrefs.get("delay"),
+            logger,
+          });
+        }
+        promise = this._sleepTimer.promise.then(() => {
+          if (this.canceled) {
+            return undefined;
+          }
+          return provider.tryMethod(
+            "startQuery",
+            this.context,
+            this.add.bind(this)
+          );
         });
       }
       queryPromises.push(
-        this._sleepTimer.promise
+        promise
+          .catch(Cu.reportError)
           .then(() => {
-            if (this.canceled) {
-              return undefined;
+            if (!this.canceled) {
+              this.context.activeProviders.delete(provider.name);
+              this._notifyResultsFromProvider(provider);
             }
-            return provider.tryMethod(
-              "startQuery",
-              this.context,
-              this.add.bind(this)
-            );
           })
           .catch(Cu.reportError)
       );
@@ -399,11 +418,11 @@ class Query {
   }
 
   /**
-   * Adds a match returned from a provider to the results set.
+   * Adds a result returned from a provider to the results set.
    * @param {object} provider
-   * @param {object} match
+   * @param {object} result
    */
-  add(provider, match) {
+  add(provider, result) {
     if (!(provider instanceof UrlbarProvider)) {
       throw new Error("Invalid provider passed to the add callback");
     }
@@ -413,45 +432,51 @@ class Query {
     }
     // Check if the result source should be filtered out. Pay attention to the
     // heuristic result though, that is supposed to be added regardless.
-    if (!this.acceptableSources.includes(match.source) && !match.heuristic) {
+    if (!this.acceptableSources.includes(result.source) && !result.heuristic) {
       return;
     }
 
     // Filter out javascript results for safety. The provider is supposed to do
     // it, but we don't want to risk leaking these out.
     if (
-      match.type != UrlbarUtils.RESULT_TYPE.KEYWORD &&
-      match.payload.url &&
-      match.payload.url.startsWith("javascript:") &&
+      result.type != UrlbarUtils.RESULT_TYPE.KEYWORD &&
+      result.payload.url &&
+      result.payload.url.startsWith("javascript:") &&
       !this.context.searchString.startsWith("javascript:") &&
       UrlbarPrefs.get("filter.javascript")
     ) {
       return;
     }
 
-    match.providerName = provider.name;
-    this.context.results.push(match);
+    result.providerName = provider.name;
+    this.context.results.push(result);
+    if (result.heuristic) {
+      this.context.heuristicResult = result;
+    }
 
     this._notifyResultsFromProvider(provider);
   }
 
   _notifyResultsFromProvider(provider) {
-    // If the provider is not of immediate type, chunk results, to improve the
+    // If the provider is not of heuristic type, chunk results, to improve the
     // dataflow and reduce UI flicker.
-    if (provider.type == UrlbarUtils.PROVIDER_TYPE.IMMEDIATE) {
+    if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
       this._notifyResults();
     } else if (!this._chunkTimer) {
       this._chunkTimer = new SkippableTimer({
         name: "Query chunk timer",
         callback: () => this._notifyResults(),
-        time: CHUNK_MATCHES_DELAY_MS,
+        time: CHUNK_RESULTS_DELAY_MS,
         logger,
       });
     }
   }
 
   _notifyResults() {
-    this.muxer.sort(this.context);
+    if (!this.muxer.sort(this.context) || !this.context.results.length) {
+      // The muxer needs more results before it can decide how to sort them.
+      return;
+    }
 
     if (this._chunkTimer) {
       this._chunkTimer.cancel().catch(Cu.reportError);
@@ -461,7 +486,7 @@ class Query {
     // Crop results to the requested number, taking their result spans into
     // account.
     logger.debug(
-      `Cropping ${this.context.results.length} matches to ${this.context.maxResults}`
+      `Cropping ${this.context.results.length} results to ${this.context.maxResults}`
     );
     let resultCount = this.context.maxResults;
     for (let i = 0; i < this.context.results.length; i++) {
