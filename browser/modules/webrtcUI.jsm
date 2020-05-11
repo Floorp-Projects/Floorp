@@ -21,6 +21,11 @@ ChromeUtils.defineModuleGetter(
   "PluralForm",
   "resource://gre/modules/PluralForm.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserWindowTracker",
+  "resource:///modules/BrowserWindowTracker.jsm"
+);
 
 var webrtcUI = {
   initialized: false,
@@ -49,6 +54,14 @@ var webrtcUI = {
       }
     }
   },
+
+  SHARING_NONE: 0,
+  SHARING_WINDOW: 1,
+  SHARING_SCREEN: 2,
+
+  // Set of browser windows that are being shared over WebRTC.
+  sharedWindows: new WeakSet(),
+  sharingScreen: false,
 
   // Map of browser elements to indicator data.
   perTabIndicators: new Map(),
@@ -264,6 +277,42 @@ var webrtcUI = {
         state: aData,
       };
     }
+
+    let sharedWindowRawDeviceIds = new Set();
+    this.sharingScreen = false;
+    for (let stream of this._streams) {
+      let { state } = stream;
+      for (let device of state.devices) {
+        if (!device.scary) {
+          continue;
+        }
+
+        let mediaSource = device.mediaSource;
+
+        if (mediaSource == "window") {
+          sharedWindowRawDeviceIds.add(device.rawId);
+        } else if (mediaSource == "screen") {
+          this.sharingScreen = true;
+        }
+      }
+    }
+
+    this.sharedWindows = new WeakSet();
+
+    for (let win of BrowserWindowTracker.orderedWindows) {
+      let rawDeviceId;
+      try {
+        rawDeviceId = win.windowUtils.webrtcRawDeviceId;
+      } catch (e) {
+        // This can theoretically throw if some of the underlying
+        // window primitives don't exist. In that case, we can skip
+        // to the next window.
+        continue;
+      }
+      if (sharedWindowRawDeviceIds.has(rawDeviceId)) {
+        this.sharedWindows.add(win);
+      }
+    }
   },
 
   /**
@@ -462,6 +511,15 @@ var webrtcUI = {
       gIndicatorWindow.close();
       gIndicatorWindow = null;
     }
+  },
+
+  getWindowShareState(window) {
+    if (this.sharingScreen) {
+      return this.SHARING_SCREEN;
+    } else if (this.sharedWindows.has(window)) {
+      return this.SHARING_WINDOW;
+    }
+    return this.SHARING_NONE;
   },
 };
 
