@@ -23,6 +23,7 @@
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SerializedStackHolder.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -922,32 +923,22 @@ void WebSocket::BindToOwner(nsIGlobalObject* aNew) {
 //---------------------------------------------------------------------------
 
 // Constructor:
-already_AddRefed<WebSocket> WebSocket::Constructor(const GlobalObject& aGlobal,
-                                                   const nsAString& aUrl,
-                                                   ErrorResult& aRv) {
-  Sequence<nsString> protocols;
-  return WebSocket::ConstructorCommon(aGlobal, aUrl, protocols, nullptr,
-                                      EmptyCString(), aRv);
-}
+already_AddRefed<WebSocket> WebSocket::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aUrl,
+    const StringOrStringSequence& aProtocols, ErrorResult& aRv) {
+  if (aProtocols.IsStringSequence()) {
+    return WebSocket::ConstructorCommon(aGlobal, aUrl,
+                                        aProtocols.GetAsStringSequence(),
+                                        nullptr, EmptyCString(), aRv);
+  }
 
-already_AddRefed<WebSocket> WebSocket::Constructor(const GlobalObject& aGlobal,
-                                                   const nsAString& aUrl,
-                                                   const nsAString& aProtocol,
-                                                   ErrorResult& aRv) {
   Sequence<nsString> protocols;
-  if (!protocols.AppendElement(aProtocol, fallible)) {
+  if (!protocols.AppendElement(aProtocols.GetAsString(), fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
 
   return WebSocket::ConstructorCommon(aGlobal, aUrl, protocols, nullptr,
-                                      EmptyCString(), aRv);
-}
-
-already_AddRefed<WebSocket> WebSocket::Constructor(
-    const GlobalObject& aGlobal, const nsAString& aUrl,
-    const Sequence<nsString>& aProtocols, ErrorResult& aRv) {
-  return WebSocket::ConstructorCommon(aGlobal, aUrl, aProtocols, nullptr,
                                       EmptyCString(), aRv);
 }
 
