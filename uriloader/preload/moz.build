@@ -10,11 +10,13 @@ with Files("**"):
 EXPORTS.mozilla += [
     'PreloaderBase.h',
     'PreloadHashKey.h',
+    'PreloadService.h',
 ]
 
 UNIFIED_SOURCES += [
     'PreloaderBase.cpp',
     'PreloadHashKey.cpp',
+    'PreloadService.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

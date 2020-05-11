@@ -57,6 +57,7 @@
 #include "mozilla/HashTable.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/PreloadService.h"
 #include "mozilla/SegmentedVector.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -1521,6 +1522,8 @@ class Document : public nsINode,
   // Used by nsContentUtils::GenerateStateKey to get a unique number for each
   // parser inserted form control element.
   int32_t GetNextControlNumber() { return mNextControlNumber++; }
+
+  PreloadService& Preloads() { return mPreloadService; }
 
  protected:
   friend class nsUnblockOnloadEvent;
@@ -5087,6 +5090,9 @@ class Document : public nsINode,
   // See GetNextFormNumber and GetNextControlNumber.
   int32_t mNextFormNumber;
   int32_t mNextControlNumber;
+
+  // Scope preloads per document.  This is used by speculative loading as well.
+  PreloadService mPreloadService;
 
  public:
   // Needs to be public because the bindings code pokes at it.
