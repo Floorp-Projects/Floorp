@@ -38,3 +38,8 @@ if CONFIG['JS_HAS_INTL_API']:
     CXXFLAGS += ['-DV8_INTL_SUPPORT']
     SOURCES += ['property-sequences.cc',
                 'special-case.cc']
+
+# Make sure all irregexp code is built with libfuzzer
+# coverage instrumentation in FUZZING mode.
+if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
+    include('/tools/fuzzing/libfuzzer-config.mozbuild')

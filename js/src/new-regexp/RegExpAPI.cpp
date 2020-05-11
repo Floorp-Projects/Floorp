@@ -13,6 +13,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 
+#include "gc/Zone.h"
 #include "jit/JitCommon.h"
 #include "new-regexp/regexp-bytecode-generator.h"
 #include "new-regexp/regexp-compiler.h"
@@ -465,7 +466,6 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
     FlatStringReader patternBytes(pattern);
     if (!RegExpParser::ParseRegExp(cx->isolate, &zone, &patternBytes, flags,
                                    &data)) {
-      MOZ_ASSERT(data.error == RegExpError::kStackOverflow);
       JS::CompileOptions options(cx);
       DummyTokenStream dummyTokenStream(cx, options);
       ReportSyntaxError(dummyTokenStream, data, pattern);
@@ -600,6 +600,19 @@ RegExpRunStatus Execute(JSContext* cx, MutableHandleRegExpShared re,
   }
 
   return Interpret(cx, re, input, startIndex, matches);
+}
+
+RegExpRunStatus ExecuteForFuzzing(JSContext* cx, HandleAtom pattern,
+                                  HandleLinearString input,
+                                  JS::RegExpFlags flags,
+                                  size_t startIndex,
+                                  VectorMatchPairs* matches,
+                                  RegExpShared::CodeKind codeKind) {
+  RootedRegExpShared re(cx, cx->zone()->regExps().get(cx, pattern, flags));
+  if (!RegExpShared::compileIfNecessary(cx, &re, input, codeKind)) {
+    return RegExpRunStatus_Error;
+  }
+  return RegExpShared::execute(cx, &re, input, startIndex, matches);
 }
 
 }  // namespace irregexp

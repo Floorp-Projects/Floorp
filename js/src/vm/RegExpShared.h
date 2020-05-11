@@ -162,9 +162,6 @@ class RegExpShared : public gc::TenuredCell {
                       HandleAtom pattern, HandleLinearString input,
                       CodeKind code);
 
-  static bool compileIfNecessary(JSContext* cx, MutableHandleRegExpShared res,
-                                 HandleLinearString input, CodeKind code);
-
   const RegExpCompilation& compilation(bool latin1) const {
     return compilationArray[CompilationIndex(latin1)];
   }
@@ -175,6 +172,9 @@ class RegExpShared : public gc::TenuredCell {
 
  public:
   ~RegExpShared() = delete;
+
+  static bool compileIfNecessary(JSContext* cx, MutableHandleRegExpShared res,
+                                 HandleLinearString input, CodeKind code);
 
   static RegExpRunStatus executeAtom(JSContext* cx,
                                      MutableHandleRegExpShared re,
