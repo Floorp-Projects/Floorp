@@ -32,7 +32,7 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
   void Initialize(const ServiceWorkerFetchEventOpArgs& aArgs);
 
   // Must only be called once and on a worker thread.
-  RefPtr<InternalRequest> ExtractInternalRequest();
+  SafeRefPtr<InternalRequest> ExtractInternalRequest();
 
  private:
   ~FetchEventOpProxyChild() = default;
@@ -45,7 +45,7 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
   RefPtr<FetchEventOp> mOp;
 
   // Initialized on RemoteWorkerService::Thread, read on a worker thread.
-  RefPtr<InternalRequest> mInternalRequest;
+  SafeRefPtr<InternalRequest> mInternalRequest;
 };
 
 }  // namespace dom

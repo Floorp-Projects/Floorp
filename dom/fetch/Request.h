@@ -15,6 +15,7 @@
 // Required here due to certain WebIDL enums/classes being declared in both
 // files.
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/SafeRefPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -29,7 +30,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
                                                          FetchBody<Request>)
 
  public:
-  Request(nsIGlobalObject* aOwner, InternalRequest* aRequest,
+  Request(nsIGlobalObject* aOwner, SafeRefPtr<InternalRequest> aRequest,
           AbortSignal* aSignal);
 
   JSObject* WrapObject(JSContext* aCx,
@@ -114,7 +115,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
 
   already_AddRefed<Request> Clone(ErrorResult& aRv);
 
-  already_AddRefed<InternalRequest> GetInternalRequest();
+  SafeRefPtr<InternalRequest> GetInternalRequest();
 
   const UniquePtr<mozilla::ipc::PrincipalInfo>& GetPrincipalInfo() const {
     return mRequest->GetPrincipalInfo();
@@ -128,7 +129,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
  private:
   ~Request();
 
-  RefPtr<InternalRequest> mRequest;
+  SafeRefPtr<InternalRequest> mRequest;
 
   // Lazily created.
   RefPtr<Headers> mHeaders;

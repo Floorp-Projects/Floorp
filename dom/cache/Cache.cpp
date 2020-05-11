@@ -254,7 +254,7 @@ already_AddRefed<Promise> Cache::Match(JSContext* aCx,
 
   CacheChild::AutoLock actorLock(*mActor);
 
-  RefPtr<InternalRequest> ir =
+  SafeRefPtr<InternalRequest> ir =
       ToInternalRequest(aCx, aRequest, IgnoreBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -266,7 +266,7 @@ already_AddRefed<Promise> Cache::Match(JSContext* aCx,
   AutoChildOpArgs args(
       this, CacheMatchArgs(CacheRequest(), params, GetOpenMode()), 1);
 
-  args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
+  args.Add(*ir, IgnoreBody, IgnoreInvalidScheme, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -291,13 +291,13 @@ already_AddRefed<Promise> Cache::MatchAll(
                        CacheMatchAllArgs(Nothing(), params, GetOpenMode()), 1);
 
   if (aRequest.WasPassed()) {
-    RefPtr<InternalRequest> ir =
+    SafeRefPtr<InternalRequest> ir =
         ToInternalRequest(aCx, aRequest.Value(), IgnoreBody, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
 
-    args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
+    args.Add(*ir, IgnoreBody, IgnoreInvalidScheme, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
@@ -404,14 +404,15 @@ already_AddRefed<Promise> Cache::Put(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<InternalRequest> ir = ToInternalRequest(aCx, aRequest, ReadBody, aRv);
+  SafeRefPtr<InternalRequest> ir =
+      ToInternalRequest(aCx, aRequest, ReadBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   AutoChildOpArgs args(this, CachePutAllArgs(), 1);
 
-  args.Add(aCx, ir, ReadBody, TypeErrorOnInvalidScheme, aResponse, aRv);
+  args.Add(aCx, *ir, ReadBody, TypeErrorOnInvalidScheme, aResponse, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -430,7 +431,7 @@ already_AddRefed<Promise> Cache::Delete(JSContext* aCx,
 
   CacheChild::AutoLock actorLock(*mActor);
 
-  RefPtr<InternalRequest> ir =
+  SafeRefPtr<InternalRequest> ir =
       ToInternalRequest(aCx, aRequest, IgnoreBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -441,7 +442,7 @@ already_AddRefed<Promise> Cache::Delete(JSContext* aCx,
 
   AutoChildOpArgs args(this, CacheDeleteArgs(CacheRequest(), params), 1);
 
-  args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
+  args.Add(*ir, IgnoreBody, IgnoreInvalidScheme, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -466,13 +467,13 @@ already_AddRefed<Promise> Cache::Keys(
                        1);
 
   if (aRequest.WasPassed()) {
-    RefPtr<InternalRequest> ir =
+    SafeRefPtr<InternalRequest> ir =
         ToInternalRequest(aCx, aRequest.Value(), IgnoreBody, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
-    args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
+    args.Add(*ir, IgnoreBody, IgnoreInvalidScheme, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -598,8 +599,8 @@ already_AddRefed<Promise> Cache::PutAll(
   AutoChildOpArgs args(this, CachePutAllArgs(), aRequestList.Length());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
-    RefPtr<InternalRequest> ir = aRequestList[i]->GetInternalRequest();
-    args.Add(aCx, ir, ReadBody, TypeErrorOnInvalidScheme, *aResponseList[i],
+    SafeRefPtr<InternalRequest> ir = aRequestList[i]->GetInternalRequest();
+    args.Add(aCx, *ir, ReadBody, TypeErrorOnInvalidScheme, *aResponseList[i],
              aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;

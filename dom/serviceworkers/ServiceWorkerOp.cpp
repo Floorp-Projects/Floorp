@@ -1503,7 +1503,8 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
    * correct thread before creating this op, so we can take its saved
    * InternalRequest.
    */
-  RefPtr<InternalRequest> internalRequest = mActor->ExtractInternalRequest();
+  SafeRefPtr<InternalRequest> internalRequest =
+      mActor->ExtractInternalRequest();
 
   /**
    * Step 2: get the worker's global object
@@ -1521,7 +1522,7 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
    * which should be aborted if the loading is aborted. See but 1394102.
    */
   RefPtr<Request> request =
-      new Request(globalObjectAsSupports, internalRequest, nullptr);
+      new Request(globalObjectAsSupports, internalRequest.clonePtr(), nullptr);
   MOZ_ASSERT_IF(internalRequest->IsNavigationRequest(),
                 request->Redirect() == RequestRedirect::Manual);
 

@@ -74,13 +74,10 @@ void GetBlobURISpecFromChannel(nsIRequest* aRequest, nsCString& aBlobURISpec) {
   uri->GetSpec(aBlobURISpec);
 }
 
-bool ShouldCheckSRI(const InternalRequest* const aRequest,
-                    const InternalResponse* const aResponse) {
-  MOZ_DIAGNOSTIC_ASSERT(aRequest);
-  MOZ_DIAGNOSTIC_ASSERT(aResponse);
-
-  return !aRequest->GetIntegrity().IsEmpty() &&
-         aResponse->Type() != ResponseType::Error;
+bool ShouldCheckSRI(const InternalRequest& aRequest,
+                    const InternalResponse& aResponse) {
+  return !aRequest.GetIntegrity().IsEmpty() &&
+         aResponse.Type() != ResponseType::Error;
 }
 
 }  // anonymous namespace
@@ -323,15 +320,15 @@ AlternativeDataStreamListener::CheckListenerChain() { return NS_OK; }
 NS_IMPL_ISUPPORTS(FetchDriver, nsIStreamListener, nsIChannelEventSink,
                   nsIInterfaceRequestor, nsIThreadRetargetableStreamListener)
 
-FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
-                         nsILoadGroup* aLoadGroup,
+FetchDriver::FetchDriver(SafeRefPtr<InternalRequest> aRequest,
+                         nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup,
                          nsIEventTarget* aMainThreadEventTarget,
                          nsICookieJarSettings* aCookieJarSettings,
                          PerformanceStorage* aPerformanceStorage,
                          bool aIsTrackingFetch)
     : mPrincipal(aPrincipal),
       mLoadGroup(aLoadGroup),
-      mRequest(aRequest),
+      mRequest(std::move(aRequest)),
       mMainThreadEventTarget(aMainThreadEventTarget),
       mCookieJarSettings(aCookieJarSettings),
       mPerformanceStorage(aPerformanceStorage),
@@ -346,7 +343,7 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
 {
   AssertIsOnMainThread();
 
-  MOZ_ASSERT(aRequest);
+  MOZ_ASSERT(mRequest);
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aMainThreadEventTarget);
 }
@@ -592,7 +589,7 @@ nsresult FetchDriver::HttpFetch(
     }
 
     rv = FetchUtil::SetRequestReferrer(mPrincipal, mDocument, httpChan,
-                                       mRequest);
+                                       *mRequest);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Bug 1120722 - Authorization will be handled later.
@@ -759,7 +756,7 @@ already_AddRefed<InternalResponse> FetchDriver::BeginAndGetFilteredResponse(
 
   MOZ_ASSERT(filteredResponse);
   MOZ_ASSERT(mObserver);
-  if (!ShouldCheckSRI(mRequest, filteredResponse)) {
+  if (!ShouldCheckSRI(*mRequest, *filteredResponse)) {
     mObserver->OnResponseAvailable(filteredResponse);
 #ifdef DEBUG
     mResponseAvailableCalled = true;
@@ -1044,7 +1041,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
   }
 
   // From "Main Fetch" step 19: SRI-part1.
-  if (ShouldCheckSRI(mRequest, mResponse) && mSRIMetadata.IsEmpty()) {
+  if (ShouldCheckSRI(*mRequest, *mResponse) && mSRIMetadata.IsEmpty()) {
     nsIConsoleReportCollector* reporter = nullptr;
     if (mObserver) {
       reporter = mObserver->GetReporter();
@@ -1174,7 +1171,7 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
   // Note: Avoid checking the hidden opaque body.
   nsresult rv;
   if (mResponse->Type() != ResponseType::Opaque &&
-      ShouldCheckSRI(mRequest, mResponse)) {
+      ShouldCheckSRI(*mRequest, *mResponse)) {
     MOZ_ASSERT(mSRIDataVerifier);
 
     SRIVerifierAndOutputHolder holder(mSRIDataVerifier.get(),
@@ -1230,7 +1227,7 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     MOZ_ASSERT(!mResponse->IsError());
 
     // From "Main Fetch" step 19: SRI-part3.
-    if (ShouldCheckSRI(mRequest, mResponse)) {
+    if (ShouldCheckSRI(*mRequest, *mResponse)) {
       MOZ_ASSERT(mSRIDataVerifier);
 
       nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -1287,7 +1284,7 @@ void FetchDriver::FinishOnStopRequest(
 
   if (mObserver) {
     // From "Main Fetch" step 19.1, 19.2: Process response.
-    if (ShouldCheckSRI(mRequest, mResponse)) {
+    if (ShouldCheckSRI(*mRequest, *mResponse)) {
       MOZ_ASSERT(mResponse);
       mObserver->OnResponseAvailable(mResponse);
 #ifdef DEBUG
