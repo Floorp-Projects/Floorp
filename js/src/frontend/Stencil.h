@@ -384,9 +384,6 @@ class ScriptStencil : public ScriptStencilBase {
   // Store all atoms into `atoms`
   // `atoms` is the pointer to `this.natoms`-length array of `GCPtrAtom`.
   virtual void initAtomMap(GCPtrAtom* atoms) const = 0;
-
-  // Call `FunctionBox::finish` for all inner functions.
-  virtual void finishInnerFunctions() const = 0;
 };
 
 } /* namespace js::frontend */

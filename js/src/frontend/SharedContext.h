@@ -339,6 +339,17 @@ class FunctionBox : public SharedContext {
   bool emitLazy : 1;
   bool wasEmitted : 1;
 
+  // True if the enclosing script is generating a JSOp::Lambda/LambdaArrow op
+  // referring to this function. This function will potentially be exposed to
+  // script as a result. We may or may not be a lazy function.
+  //
+  // In particular, this criteria excludes functions inside lazy functions. We
+  // require our parent to generate bytecode in order for this function to have
+  // complete information such as its enclosing scope.
+  //
+  // See: FunctionBox::finish()
+  bool exposeScript : 1;
+
   // Need to emit a synthesized Annex B assignment
   bool isAnnexB : 1;
 

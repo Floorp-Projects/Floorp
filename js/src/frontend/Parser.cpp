@@ -1909,6 +1909,15 @@ bool CompilationInfo::publishDeferredFunctions() {
   return true;
 }
 
+void CompilationInfo::finishFunctions() {
+  for (FunctionBox* funbox = traceListHead; funbox;
+       funbox = funbox->traceLink()) {
+    if (funbox->exposeScript) {
+      funbox->finish();
+    }
+  }
+}
+
 static YieldHandling GetYieldHandling(GeneratorKind generatorKind) {
   if (generatorKind == GeneratorKind::NotGenerator) {
     return YieldIsName;
