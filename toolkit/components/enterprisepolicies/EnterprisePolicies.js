@@ -474,6 +474,20 @@ class JSONPoliciesProvider {
 
   _getConfigurationFile() {
     let configFile = null;
+
+    if (AppConstants.platform == "linux") {
+      let systemConfigFile = Cc["@mozilla.org/file/local;1"].createInstance(
+        Ci.nsIFile
+      );
+      systemConfigFile.initWithPath(
+        "/etc/" + Services.appinfo.name.toLowerCase() + "/policies"
+      );
+      systemConfigFile.append(POLICIES_FILENAME);
+      if (systemConfigFile.exists()) {
+        return systemConfigFile;
+      }
+    }
+
     try {
       let perUserPath = Services.prefs.getBoolPref(PREF_PER_USER_DIR, false);
       if (perUserPath) {
