@@ -430,9 +430,10 @@ browser.startup:
   slow_startup_notification_disabled:
     bug_numbers:
       - 1601993
+      - 1634224
     description:
       Whether the slow startup notification bar is disabled for the user.
-    expires: "78"
+    expires: "85"
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
@@ -445,9 +446,10 @@ browser.startup:
   too_new_for_notification:
     bug_numbers:
       - 1601993
+      - 1634224
     description:
       Whether the slow startup notification bar was suppressed because the profile is too new.
-    expires: "78"
+    expires: "85"
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
@@ -460,9 +462,10 @@ browser.startup:
   slow_startup_notified:
     bug_numbers:
       - 1601993
+      - 1634224
     description:
       Whether the slow startup notification bar was shown to the user during this session.
-    expires: "78"
+    expires: "85"
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
@@ -475,9 +478,10 @@ browser.startup:
   recorded_time:
     bug_numbers:
       - 1601993
+      - 1634224
     description: >
       The startup time computed by the slow startup notification bar in milliseconds.
-    expires: "78"
+    expires: "85"
     kind: uint
     notification_emails:
       - mconley@mozilla.com
@@ -490,9 +494,10 @@ browser.startup:
   average_time:
     bug_numbers:
       - 1601993
+      - 1634224
     description: >
       The average startup time computed by the slow startup notification bar in milliseconds.
-    expires: "78"
+    expires: "85"
     kind: uint
     notification_emails:
       - mconley@mozilla.com
@@ -505,13 +510,14 @@ browser.startup:
   action:
     bug_numbers:
       - 1601993
+      - 1634224
     description: >
       The action that the user took with the slow startup notification bar.
       0: No action (default)
       1: User chose to open SUMO document on slow startup
       2: User chose to never show the notification bar again
       3: User dismissed the notification bar
-    expires: "78"
+    expires: "85"
     kind: uint
     notification_emails:
       - mconley@mozilla.com
