@@ -125,9 +125,11 @@ static void LogDocShellTree(dom::Document* aDocumentNode) {
     treeItem->GetInProcessParent(getter_AddRefs(parentTreeItem));
     nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
     treeItem->GetInProcessRootTreeItem(getter_AddRefs(rootTreeItem));
-    printf("docshell hierarchy, parent: %p, root: %p, is tab document: %s;",
-           static_cast<void*>(parentTreeItem), static_cast<void*>(rootTreeItem),
-           (nsCoreUtils::IsTabDocument(aDocumentNode) ? "yes" : "no"));
+    printf(
+        "in-process docshell hierarchy, parent: %p, root: %p, "
+        "is tab document: %s;",
+        static_cast<void*>(parentTreeItem), static_cast<void*>(rootTreeItem),
+        (nsCoreUtils::IsTabDocument(aDocumentNode) ? "yes" : "no"));
   }
 }
 
