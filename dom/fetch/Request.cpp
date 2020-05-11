@@ -260,20 +260,20 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
 }  // namespace
 
 /*static*/
-already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
-                                               const RequestOrUSVString& aInput,
-                                               const RequestInit& aInit,
-                                               ErrorResult& aRv) {
+SafeRefPtr<Request> Request::Constructor(const GlobalObject& aGlobal,
+                                         const RequestOrUSVString& aInput,
+                                         const RequestInit& aInit,
+                                         ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(global, aGlobal.Context(), aInput, aInit, aRv);
 }
 
 /*static*/
-already_AddRefed<Request> Request::Constructor(nsIGlobalObject* aGlobal,
-                                               JSContext* aCx,
-                                               const RequestOrUSVString& aInput,
-                                               const RequestInit& aInit,
-                                               ErrorResult& aRv) {
+SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
+                                         JSContext* aCx,
+                                         const RequestOrUSVString& aInput,
+                                         const RequestInit& aInit,
+                                         ErrorResult& aRv) {
   bool hasCopiedBody = false;
   SafeRefPtr<InternalRequest> request;
 
@@ -593,7 +593,8 @@ already_AddRefed<Request> Request::Constructor(nsIGlobalObject* aGlobal,
     }
   }
 
-  RefPtr<Request> domRequest = new Request(aGlobal, std::move(request), signal);
+  auto domRequest =
+      MakeSafeRefPtr<Request>(aGlobal, std::move(request), signal);
   domRequest->SetMimeType();
 
   if (aInput.IsRequest()) {
@@ -608,10 +609,10 @@ already_AddRefed<Request> Request::Constructor(nsIGlobalObject* aGlobal,
       }
     }
   }
-  return domRequest.forget();
+  return domRequest;
 }
 
-already_AddRefed<Request> Request::Clone(ErrorResult& aRv) {
+SafeRefPtr<Request> Request::Clone(ErrorResult& aRv) {
   bool used = GetBodyUsed(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -627,10 +628,7 @@ already_AddRefed<Request> Request::Clone(ErrorResult& aRv) {
     return nullptr;
   }
 
-  RefPtr<Request> request =
-      new Request(mOwner, std::move(ir), GetOrCreateSignal());
-
-  return request.forget();
+  return MakeSafeRefPtr<Request>(mOwner, std::move(ir), GetOrCreateSignal());
 }
 
 Headers* Request::Headers_() {
