@@ -7,6 +7,7 @@
 #ifndef AudioContext_h_
 #define AudioContext_h_
 
+#include "X11UndefineNone.h"
 #include "AudioParamDescriptorMap.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "mozilla/dom/AudioContextBinding.h"
@@ -24,12 +25,6 @@
 #include "nsTHashtable.h"
 #include "js/TypeDecls.h"
 #include "nsIMemoryReporter.h"
-
-// X11 has a #define for CurrentTime. Unbelievable :-(.
-// See dom/media/DOMMediaStream.h for more fun!
-#ifdef CurrentTime
-#  undef CurrentTime
-#endif
 
 namespace WebCore {
 class PeriodicWave;
