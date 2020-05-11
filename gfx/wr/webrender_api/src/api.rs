@@ -1599,13 +1599,13 @@ impl RenderApi {
     }
 
     /// Send a transaction to WebRender.
-    pub fn send_transaction(&self, document_id: DocumentId, transaction: Transaction) {
+    pub fn send_transaction(&mut self, document_id: DocumentId, transaction: Transaction) {
         let msg = transaction.finalize();
         self.api_sender.send(ApiMsg::UpdateDocuments(vec![document_id], vec![msg])).unwrap();
     }
 
     /// Send multiple transactions.
-    pub fn send_transactions(&self, document_ids: Vec<DocumentId>, mut transactions: Vec<Transaction>) {
+    pub fn send_transactions(&mut self, document_ids: Vec<DocumentId>, mut transactions: Vec<Transaction>) {
         debug_assert!(document_ids.len() == transactions.len());
         let msgs = transactions.drain(..)
             .map(|txn| txn.finalize())

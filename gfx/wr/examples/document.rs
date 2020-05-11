@@ -33,7 +33,7 @@ struct App {
 impl App {
     fn init(
         &mut self,
-        api: &RenderApi,
+        api: &mut RenderApi,
         device_pixel_ratio: f32,
     ) {
         let init_data = vec![
@@ -89,7 +89,7 @@ impl App {
 impl Example for App {
     fn render(
         &mut self,
-        api: &RenderApi,
+        api: &mut RenderApi,
         base_builder: &mut DisplayListBuilder,
         _txn: &mut Transaction,
         device_size: DeviceIntSize,

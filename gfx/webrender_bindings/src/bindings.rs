@@ -1936,7 +1936,7 @@ pub extern "C" fn wr_api_send_transaction(dh: &mut DocumentHandle, transaction: 
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_send_transactions(
-    document_handles: *const *const DocumentHandle,
+    document_handles: *const *mut DocumentHandle,
     transactions: *const *mut Transaction,
     transaction_count: usize,
     is_async: bool,

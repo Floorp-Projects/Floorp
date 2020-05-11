@@ -183,7 +183,7 @@ impl Example for App {
 
     fn render(
         &mut self,
-        api: &RenderApi,
+        api: &mut RenderApi,
         builder: &mut DisplayListBuilder,
         txn: &mut Transaction,
         _: DeviceIntSize,
@@ -296,7 +296,7 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self, event: winit::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
+    fn on_event(&mut self, event: winit::WindowEvent, api: &mut RenderApi, document_id: DocumentId) -> bool {
         let mut txn = Transaction::new();
         match event {
             winit::WindowEvent::Touch(touch) => match self.touch_state.handle_event(touch) {
