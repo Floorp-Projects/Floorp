@@ -1277,10 +1277,13 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
 
   const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   RefPtr<Selection> selection = mDomSelections[index];
-  if (newFrame->IsSelected() && selection &&
-      mMaintainedRange.AdjustNormalSelection(offsets.content, offsets.offset,
-                                             *selection)) {
-    return;
+  if (newFrame->IsSelected() && selection) {
+    // `MOZ_KnownLive` required because of
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1636889.
+    if (mMaintainedRange.AdjustNormalSelection(MOZ_KnownLive(offsets.content),
+                                               offsets.offset, *selection)) {
+      return;
+    }
   }
 
   const bool scrollViewStop = mLimiters.mLimiter != nullptr;
