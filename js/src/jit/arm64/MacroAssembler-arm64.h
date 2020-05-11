@@ -1392,9 +1392,13 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   }
 
   // See comment in MacroAssembler-x64.h.
-  void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
+  void unboxGCThingForGCBarrier(const Address& src, Register dest) {
     loadPtr(src, dest);
     And(ARMRegister(dest, 64), ARMRegister(dest, 64),
+        Operand(JS::detail::ValueGCThingPayloadMask));
+  }
+  void unboxGCThingForGCBarrier(const ValueOperand& src, Register dest) {
+    And(ARMRegister(dest, 64), ARMRegister(src.valueReg(), 64),
         Operand(JS::detail::ValueGCThingPayloadMask));
   }
 
