@@ -133,15 +133,33 @@ td {
   background-position-x: left 4px;
 }
 .asc {
-  background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
   -moz-context-properties: fill;
   fill: currentColor;
 }
 .desc {
-  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
   -moz-context-properties: fill;
   fill: currentColor;
 }
+/*
+  Linux has conventions opposite to Windows, macOS on the direction of arrows
+  when sorting.
+*/
+%ifdef XP_LINUX
+.asc {
+  background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
+}
+.desc {
+  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+}
+%else
+.asc {
+  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+}
+.desc {
+  background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
+}
+%endif
+
 #process-thead > tr > td.clickable:hover {
   background-color: var(--in-content-button-background-hover);
 }
