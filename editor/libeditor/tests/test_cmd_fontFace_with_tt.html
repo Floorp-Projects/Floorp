@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <title>Testing font face "tt"</title>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div id="display">
+</div>
+
+<div id="content" contenteditable>abc</div>
+
+<pre id="test">
+</pre>
+
+<script class="testbody">
+"use strict";
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let editor = document.querySelector("div[contenteditable]");
+  editor.focus();
+  let selection = document.getSelection();
+
+  // "tt" is a magic value of "cmd_fontFace", it should work as "cmd_tt".
+  editor.innerHTML = "abc";
+  selection.setBaseAndExtent(editor.firstChild, 1, editor.firstChild, 2);
+  SpecialPowers.doCommand(window, "cmd_fontFace", "tt");
+  is(editor.innerHTML, "a<tt>b</tt>c",
+     "\"cmd_fontFace\" with \"tt\" should wrap selected text <tt> element");
+
+  editor.innerHTML = "<br>";
+  selection.collapse(editor, 0);
+  SpecialPowers.doCommand(window, "cmd_fontFace", "tt");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  is(editor.innerHTML, "<tt>tt</tt><br>",
+     "Typed text after \"cmd_fontFace\" with \"tt\" should be wrapped by <tt> element");
+
+  // But it shouldn't work with `Document.execCommand()`.
+  editor.innerHTML = "abc";
+  selection.setBaseAndExtent(editor.firstChild, 1, editor.firstChild, 2);
+  document.execCommand("fontname", false, "tt");
+  is(editor.innerHTML, "a<font face=\"tt\">b</font>c",
+     "execCommand(\"fontname\") with \"tt\" should wrap selected text with <font> element");
+
+  editor.innerHTML = "<br>";
+  selection.collapse(editor, 0);
+  document.execCommand("fontname", false, "tt");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  is(editor.innerHTML, "<font face=\"tt\">tt</font><br>",
+     "Typed text after execCommand(\"fontname\") with \"tt\" should be wrapped by <font> element");
+
+  // "cmd_fontFace" with "tt" should remove `<font>` element.
+  editor.innerHTML = "a<font face=\"sans-serif\">b</font>c";
+  selection.selectAllChildren(editor.querySelector("font"));
+  SpecialPowers.doCommand(window, "cmd_fontFace", "tt");
+  is(editor.innerHTML, "a<tt>b</tt>c",
+     "\"cmd_fontFace\" with \"tt\" should wrap selected text <tt> element after removing <font> element");
+
+  editor.innerHTML = "<font face=\"sans-serif\">abc</font>";
+  selection.setBaseAndExtent(editor.firstChild.firstChild, 1, editor.firstChild.firstChild, 2);
+  SpecialPowers.doCommand(window, "cmd_fontFace", "tt");
+  is(editor.innerHTML, "<font face=\"sans-serif\">a</font><tt>b</tt><font face=\"sans-serif\">c</font>",
+     "\"cmd_fontFace\" with \"tt\" should wrap selected text <tt> element after removing <font> element");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

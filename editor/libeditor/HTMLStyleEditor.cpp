@@ -79,6 +79,10 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
+  nsAtom* property = &aProperty;
+  nsAtom* attribute = aAttribute;
+  nsAutoString value(aValue);
+
   if (&aProperty == nsGkAtoms::sup) {
     // Superscript and Subscript styles are mutually exclusive.
     nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::sub, nullptr,
@@ -116,17 +120,34 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
         return EditorBase::ToGenericNSResult(rv);
       }
     } else if (&aProperty == nsGkAtoms::font && aAttribute == nsGkAtoms::face) {
-      nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::tt, nullptr,
-                                                 RemoveRelatedElements::No);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "HTMLEditor::RemoveInlinePropertyInternal(nsGkAtoms::tt, "
-            "RemoveRelatedElements::No) failed");
-        return EditorBase::ToGenericNSResult(rv);
+      if (!value.LowerCaseEqualsASCII("tt")) {
+        nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::tt, nullptr,
+                                                   RemoveRelatedElements::No);
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "HTMLEditor::RemoveInlinePropertyInternal(nsGkAtoms::tt, "
+              "RemoveRelatedElements::No) failed");
+          return EditorBase::ToGenericNSResult(rv);
+        }
+      } else {
+        nsresult rv = RemoveInlinePropertyInternal(
+            nsGkAtoms::font, nsGkAtoms::face, RemoveRelatedElements::No);
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "HTMLEditor::RemoveInlinePropertyInternal(nsGkAtoms::font, "
+              "nsGkAtoms::face, RemoveRelatedElements::No) failed");
+          return EditorBase::ToGenericNSResult(rv);
+        }
+        // Override property, attribute and value if the new font face value is
+        // "tt".
+        property = nsGkAtoms::tt;
+        attribute = nullptr;
+        value.Truncate();
       }
     }
   }
-  rv = SetInlinePropertyInternal(aProperty, aAttribute, aValue);
+  rv = SetInlinePropertyInternal(MOZ_KnownLive(*property),
+                                 MOZ_KnownLive(attribute), value);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::SetInlinePropertyInternal() failed");
   return EditorBase::ToGenericNSResult(rv);
