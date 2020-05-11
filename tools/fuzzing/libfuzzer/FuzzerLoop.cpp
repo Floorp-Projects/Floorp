@@ -450,9 +450,7 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
   if (!Size)
     return false;
 
-  if (ExecuteCallback(Data, Size) > 0) {
-    return false;
-  }
+  ExecuteCallback(Data, Size);
 
   UniqFeatureSetTmp.clear();
   size_t FoundUniqFeaturesOfII = 0;
@@ -509,7 +507,7 @@ static bool LooseMemeq(const uint8_t *A, const uint8_t *B, size_t Size) {
          !memcmp(A + Size - Limit / 2, B + Size - Limit / 2, Limit / 2);
 }
 
-int Fuzzer::ExecuteCallback(const uint8_t *Data, size_t Size) {
+void Fuzzer::ExecuteCallback(const uint8_t *Data, size_t Size) {
   TPC.RecordInitialStack();
   TotalNumberOfRuns++;
   assert(InFuzzingThread());
@@ -522,24 +520,23 @@ int Fuzzer::ExecuteCallback(const uint8_t *Data, size_t Size) {
   if (CurrentUnitData && CurrentUnitData != Data)
     memcpy(CurrentUnitData, Data, Size);
   CurrentUnitSize = Size;
-  int Res = 0;
   {
     ScopedEnableMsanInterceptorChecks S;
     AllocTracer.Start(Options.TraceMalloc);
     UnitStartTime = system_clock::now();
     TPC.ResetMaps();
     RunningUserCallback = true;
-    Res = CB(DataCopy, Size);
+    int Res = CB(DataCopy, Size);
     RunningUserCallback = false;
     UnitStopTime = system_clock::now();
-    assert(Res >= 0);
+    (void)Res;
+    assert(Res == 0);
     HasMoreMallocsThanFrees = AllocTracer.Stop();
   }
   if (!LooseMemeq(DataCopy, Data, Size))
     CrashOnOverwrittenData();
   CurrentUnitSize = 0;
   delete[] DataCopy;
-  return Res;
 }
 
 std::string Fuzzer::WriteToOutputCorpus(const Unit &U) {
@@ -663,10 +660,6 @@ void Fuzzer::MutateAndTestOne() {
                                   II.DataFlowTraceForFocusFunction);
     else
       NewSize = MD.Mutate(CurrentUnitData, Size, CurrentMaxMutationLen);
-
-    if (!NewSize)
-      continue;
-
     assert(NewSize > 0 && "Mutator returned empty unit");
     assert(NewSize <= CurrentMaxMutationLen && "Mutator return oversized unit");
     Size = NewSize;
@@ -835,9 +828,7 @@ void Fuzzer::MinimizeCrashLoop(const Unit &U) {
     memcpy(CurrentUnitData, U.data(), U.size());
     for (int i = 0; i < Options.MutateDepth; i++) {
       size_t NewSize = MD.Mutate(CurrentUnitData, U.size(), MaxMutationLen);
-      assert(NewSize <= MaxMutationLen);
-      if (!NewSize)
-        continue;
+      assert(NewSize > 0 && NewSize <= MaxMutationLen);
       ExecuteCallback(CurrentUnitData, NewSize);
       PrintPulseAndReportSlowInput(CurrentUnitData, NewSize);
       TryDetectingAMemoryLeak(CurrentUnitData, NewSize,

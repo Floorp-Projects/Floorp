@@ -224,9 +224,7 @@ void Fuzzer::CrashResistantMergeInternalStep(const std::string &CFPath) {
     OF.flush();  // Flush is important since Command::Execute may crash.
     // Run.
     TPC.ResetMaps();
-    if (ExecuteCallback(U.data(), U.size()) > 0) {
-      continue;
-    }
+    ExecuteCallback(U.data(), U.size());
     // Collect coverage. We are iterating over the files in this order:
     // * First, files in the initial corpus ordered by size, smallest first.
     // * Then, all other files, smallest first.
