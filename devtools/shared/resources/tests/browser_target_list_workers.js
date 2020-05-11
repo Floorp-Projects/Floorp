@@ -6,6 +6,7 @@
 // Test the TargetList API around workers
 
 const { TargetList } = require("devtools/shared/resources/target-list");
+const { TYPES } = TargetList;
 
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const CHROME_WORKER_URL = CHROME_URL_ROOT + "test_worker.js";
@@ -46,42 +47,78 @@ async function testBrowserWorkers(mainRoot) {
   const targetList = new TargetList(mainRoot, target);
   await targetList.startListening();
 
-  // Very naive sanity check against getAllTargets(worker)
-  const workers = await targetList.getAllTargets(TargetList.TYPES.WORKER);
+  // Very naive sanity check against getAllTargets(workerType)
+  info("Check that getAllTargets returned the expected targets");
+  const workers = await targetList.getAllTargets(TYPES.WORKER);
   const hasWorker = workers.find(workerTarget => {
     return workerTarget.url == CHROME_WORKER_URL + "#simple-worker";
   });
   ok(hasWorker, "retrieve the target for the worker");
 
-  const hasSharedWorker = workers.find(workerTarget => {
+  const sharedWorkers = await targetList.getAllTargets(TYPES.SHARED_WORKER);
+  const hasSharedWorker = sharedWorkers.find(workerTarget => {
     return workerTarget.url == CHROME_WORKER_URL + "#shared-worker";
   });
   ok(hasSharedWorker, "retrieve the target for the shared worker");
 
-  const hasServiceWorker = workers.find(workerTarget => {
+  const serviceWorkers = await targetList.getAllTargets(TYPES.SERVICE_WORKER);
+  const hasServiceWorker = serviceWorkers.find(workerTarget => {
     return workerTarget.url == SERVICE_WORKER_URL;
   });
   ok(hasServiceWorker, "retrieve the target for the service worker");
 
-  // Check that calling getAllTargets(worker) return the same target instances
-  const workers2 = await targetList.getAllTargets(TargetList.TYPES.WORKER);
+  info(
+    "Check that calling getAllTargets again return the same target instances"
+  );
+  const workers2 = await targetList.getAllTargets(TYPES.WORKER);
+  const sharedWorkers2 = await targetList.getAllTargets(TYPES.SHARED_WORKER);
+  const serviceWorkers2 = await targetList.getAllTargets(TYPES.SERVICE_WORKER);
   is(workers2.length, workers.length, "retrieved the same number of workers");
+  is(
+    sharedWorkers2.length,
+    sharedWorkers.length,
+    "retrieved the same number of shared workers"
+  );
+  is(
+    serviceWorkers2.length,
+    serviceWorkers.length,
+    "retrieved the same number of service workers"
+  );
 
-  function sortFronts(f1, f2) {
-    return f1.actorID < f2.actorID;
-  }
   workers.sort(sortFronts);
   workers2.sort(sortFronts);
+  sharedWorkers.sort(sortFronts);
+  sharedWorkers2.sort(sortFronts);
+  serviceWorkers.sort(sortFronts);
+  serviceWorkers2.sort(sortFronts);
+
   for (let i = 0; i < workers.length; i++) {
     is(workers[i], workers2[i], `worker ${i} targets are the same`);
   }
+  for (let i = 0; i < sharedWorkers2.length; i++) {
+    is(
+      sharedWorkers[i],
+      sharedWorkers2[i],
+      `shared worker ${i} targets are the same`
+    );
+  }
+  for (let i = 0; i < serviceWorkers2.length; i++) {
+    is(
+      serviceWorkers[i],
+      serviceWorkers2[i],
+      `service worker ${i} targets are the same`
+    );
+  }
 
-  // Assert that watchTargets will call the create callback for all existing workers
+  info(
+    "Check that watchTargets will call the create callback for all existing workers"
+  );
   const targets = [];
   const onAvailable = async ({ type, targetFront, isTopLevel }) => {
-    is(
-      type,
-      TargetList.TYPES.WORKER,
+    ok(
+      type === TYPES.WORKER ||
+        type === TYPES.SHARED_WORKER ||
+        type === TYPES.SERVICE_WORKER,
       "We are only notified about worker targets"
     );
     ok(
@@ -90,23 +127,33 @@ async function testBrowserWorkers(mainRoot) {
     );
     targets.push(targetFront);
   };
-  await targetList.watchTargets([TargetList.TYPES.WORKER], onAvailable);
+  await targetList.watchTargets(
+    [TYPES.WORKER, TYPES.SHARED_WORKER, TYPES.SERVICE_WORKER],
+    onAvailable
+  );
   is(
     targets.length,
-    workers.length,
+    workers.length + sharedWorkers.length + serviceWorkers.length,
     "retrieved the same number of workers via watchTargets"
   );
 
-  workers.sort(sortFronts);
   targets.sort(sortFronts);
-  for (let i = 0; i < workers.length; i++) {
+  const allWorkers = workers
+    .concat(sharedWorkers, serviceWorkers)
+    .sort(sortFronts);
+
+  for (let i = 0; i < allWorkers.length; i++) {
     is(
-      workers[i],
+      allWorkers[i],
       targets[i],
       `worker ${i} targets are the same via watchTargets`
     );
   }
-  targetList.unwatchTargets([TargetList.TYPES.WORKER], onAvailable);
+
+  targetList.unwatchTargets(
+    [TYPES.WORKER, TYPES.SHARED_WORKER, TYPES.SERVICE_WORKER],
+    onAvailable
+  );
 
   // Create a new worker and see if the worker target is reported
   const onWorkerCreated = new Promise(resolve => {
@@ -114,10 +161,10 @@ async function testBrowserWorkers(mainRoot) {
       if (targets.includes(targetFront)) {
         return;
       }
-      targetList.unwatchTargets([TargetList.TYPES.WORKER], onAvailable2);
+      targetList.unwatchTargets([TYPES.WORKER], onAvailable2);
       resolve(targetFront);
     };
-    targetList.watchTargets([TargetList.TYPES.WORKER], onAvailable2);
+    targetList.watchTargets([TYPES.WORKER], onAvailable2);
   });
   // eslint-disable-next-line no-unused-vars
   const worker2 = new Worker(CHROME_WORKER_URL + "#second");
@@ -130,9 +177,9 @@ async function testBrowserWorkers(mainRoot) {
     "This worker target is about the new worker"
   );
 
-  const workers3 = await targetList.getAllTargets(TargetList.TYPES.WORKER);
+  const workers3 = await targetList.getAllTargets(TYPES.WORKER);
   const hasWorker2 = workers3.find(
-    worderTarget => workerTarget.url == CHROME_WORKER_URL + "#second"
+    ({ url }) => url == `${CHROME_WORKER_URL}#second`
   );
   ok(hasWorker2, "retrieve the target for tab via getAllTargets");
 
@@ -160,27 +207,27 @@ async function testTabWorkers(mainRoot, tab) {
   await targetList.startListening();
 
   // Check that calling getAllTargets(workers) return the same target instances
-  const workers = await targetList.getAllTargets(TargetList.TYPES.WORKER);
+  const workers = await targetList.getAllTargets(TYPES.WORKER);
   is(workers.length, 1, "retrieved the worker");
   is(workers[0].url, WORKER_URL, "The first worker is the page worker");
 
   // Assert that watchTargets will call the create callback for all existing workers
   const targets = [];
   const onAvailable = async ({ type, targetFront, isTopLevel }) => {
-    is(
-      type,
-      TargetList.TYPES.WORKER,
-      "We are only notified about worker targets"
-    );
+    is(type, TYPES.WORKER, "We are only notified about worker targets");
     ok(!isTopLevel, "The workers are never top level");
     targets.push(targetFront);
   };
-  await targetList.watchTargets([TargetList.TYPES.WORKER], onAvailable);
+  await targetList.watchTargets([TYPES.WORKER], onAvailable);
   is(targets.length, 1, "retrieved just the worker");
   is(targets[0], workers[0], "Got the exact same target front");
-  targetList.unwatchTargets([TargetList.TYPES.WORKER], onAvailable);
+  targetList.unwatchTargets([TYPES.WORKER], onAvailable);
 
   targetList.stopListening();
 
   BrowserTestUtils.removeTab(tab);
+}
+
+function sortFronts(f1, f2) {
+  return f1.actorID < f2.actorID;
 }

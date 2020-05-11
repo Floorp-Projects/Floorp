@@ -47,6 +47,14 @@ class WorkerTargetFront extends TargetMixin(
     return this.url.split("/").pop();
   }
 
+  get isDedicatedWorker() {
+    return this.type === Ci.nsIWorkerDebugger.TYPE_DEDICATED;
+  }
+
+  get isSharedWorker() {
+    return this.type === Ci.nsIWorkerDebugger.TYPE_SHARED;
+  }
+
   get isServiceWorker() {
     return this.type === Ci.nsIWorkerDebugger.TYPE_SERVICE;
   }
