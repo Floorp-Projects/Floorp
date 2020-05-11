@@ -78,7 +78,6 @@ DIRS += [
     'utils',
     'url-classifier',
     'urlformatter',
-    'viaduct',
     'viewconfig',
     'viewsource',
     'windowcreator',
