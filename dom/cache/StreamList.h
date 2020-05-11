@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_cache_StreamList_h
 #define mozilla_dom_cache_StreamList_h
 
-#include "mozilla/RefPtr.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/cache/Context.h"
 #include "mozilla/dom/cache/Types.h"
@@ -22,7 +21,8 @@ namespace cache {
 class CacheStreamControlParent;
 class Manager;
 
-class StreamList final : public Context::Activity {
+class StreamList final : public Context::Activity,
+                         public SafeRefCounted<StreamList> {
  public:
   StreamList(SafeRefPtr<Manager> aManager, SafeRefPtr<Context> aContext);
 
@@ -47,7 +47,6 @@ class StreamList final : public Context::Activity {
   virtual bool MatchesCacheId(CacheId aCacheId) const override;
 
  private:
-  ~StreamList();
   struct Entry {
     explicit Entry(const nsID& aId, nsCOMPtr<nsIInputStream>&& aStream)
         : mId(aId), mStream(std::move(aStream)) {}
@@ -63,7 +62,10 @@ class StreamList final : public Context::Activity {
   bool mActivated;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(cache::StreamList)
+  ~StreamList();
+
+  NS_DECL_OWNINGTHREAD
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(cache::StreamList)
 };
 
 }  // namespace cache

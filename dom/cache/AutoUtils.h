@@ -76,17 +76,17 @@ class MOZ_STACK_CLASS AutoParentOpResult final {
   ~AutoParentOpResult();
 
   void Add(CacheId aOpenedCacheId, SafeRefPtr<Manager> aManager);
-  void Add(const SavedResponse& aSavedResponse, StreamList* aStreamList);
-  void Add(const SavedRequest& aSavedRequest, StreamList* aStreamList);
+  void Add(const SavedResponse& aSavedResponse, StreamList& aStreamList);
+  void Add(const SavedRequest& aSavedRequest, StreamList& aStreamList);
 
   const CacheOpResult& SendAsOpResult();
 
  private:
   void SerializeResponseBody(const SavedResponse& aSavedResponse,
-                             StreamList* aStreamList,
+                             StreamList& aStreamList,
                              CacheResponse* aResponseOut);
 
-  void SerializeReadStream(const nsID& aId, StreamList* aStreamList,
+  void SerializeReadStream(const nsID& aId, StreamList& aStreamList,
                            CacheReadStream* aReadStreamOut);
 
   mozilla::ipc::PBackgroundParent* mManager;
