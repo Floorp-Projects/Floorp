@@ -145,22 +145,29 @@ struct CachedOffsetForFrame {
   bool mCanCacheFrameOffset;   // cached frame offset is valid?
 };
 
-class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
+class AutoScroller final : public nsITimerCallback, public nsINamed {
  public:
   NS_DECL_ISUPPORTS
 
-  nsAutoScrollTimer(nsFrameSelection* aFrameSelection, Selection* aSelection)
+  explicit AutoScroller(nsFrameSelection* aFrameSelection)
       : mFrameSelection(aFrameSelection),
-        mSelection(aSelection),
         mPresContext(0),
         mPoint(0, 0),
-        mDelayInMs(30) {
+        mDelayInMs(30),
+        mFurtherScrollingAllowed(FurtherScrollingAllowed::kYes) {
     MOZ_ASSERT(mFrameSelection);
-    MOZ_ASSERT(mSelection);
   }
 
+  MOZ_CAN_RUN_SCRIPT nsresult DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint);
+
+ private:
   // aPoint is relative to aPresContext's root frame
-  nsresult Start(nsPresContext* aPresContext, nsPoint& aPoint) {
+  nsresult ScheduleNextDoAutoScroll(nsPresContext* aPresContext,
+                                    nsPoint& aPoint) {
+    if (NS_WARN_IF(mFurtherScrollingAllowed == FurtherScrollingAllowed::kNo)) {
+      return NS_ERROR_FAILURE;
+    }
+
     mPoint = aPoint;
 
     // Store the presentation context. The timer will be
@@ -181,14 +188,20 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
     return mTimer->InitWithCallback(this, mDelayInMs, nsITimer::TYPE_ONE_SHOT);
   }
 
-  nsresult Stop() {
+ public:
+  enum class FurtherScrollingAllowed { kYes, kNo };
+
+  void Stop(const FurtherScrollingAllowed aFurtherScrollingAllowed) {
+    MOZ_ASSERT((aFurtherScrollingAllowed == FurtherScrollingAllowed::kNo) ||
+               (mFurtherScrollingAllowed == FurtherScrollingAllowed::kYes));
+
     if (mTimer) {
       mTimer->Cancel();
       mTimer = nullptr;
     }
 
     mContent = nullptr;
-    return NS_OK;
+    mFurtherScrollingAllowed = aFurtherScrollingAllowed;
   }
 
   void SetDelay(uint32_t aDelayInMs) { mDelayInMs = aDelayInMs; }
@@ -211,19 +224,18 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
       }
 
       NS_ASSERTION(frame->PresContext() == mPresContext, "document mismatch?");
-      RefPtr<Selection> selection = mSelection;
-      selection->DoAutoScroll(frame, pt);
+      DoAutoScroll(frame, pt);
     }
     return NS_OK;
   }
 
   NS_IMETHOD GetName(nsACString& aName) override {
-    aName.AssignLiteral("nsAutoScrollTimer");
+    aName.AssignLiteral("AutoScroller");
     return NS_OK;
   }
 
  protected:
-  virtual ~nsAutoScrollTimer() {
+  virtual ~AutoScroller() {
     if (mTimer) {
       mTimer->Cancel();
     }
@@ -231,16 +243,16 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
 
  private:
   nsFrameSelection* const mFrameSelection;
-  Selection* const mSelection;
   nsPresContext* mPresContext;
   // relative to mPresContext's root frame
   nsPoint mPoint;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIContent> mContent;
   uint32_t mDelayInMs;
+  FurtherScrollingAllowed mFurtherScrollingAllowed;
 };
 
-NS_IMPL_ISUPPORTS(nsAutoScrollTimer, nsITimerCallback, nsINamed)
+NS_IMPL_ISUPPORTS(AutoScroller, nsITimerCallback, nsINamed)
 
 #ifdef PRINT_RANGE
 void printRange(nsRange* aDomRange) {
@@ -541,9 +553,9 @@ void Selection::Disconnect() {
 
   mStyledRanges.UnregisterSelection();
 
-  if (mAutoScrollTimer) {
-    mAutoScrollTimer->Stop();
-    mAutoScrollTimer = nullptr;
+  if (mAutoScroller) {
+    mAutoScroller->Stop(AutoScroller::FurtherScrollingAllowed::kNo);
+    mAutoScroller = nullptr;
   }
 
   mScrollEvent.Revoke();
@@ -1793,30 +1805,30 @@ nsresult Selection::StartAutoScrollTimer(nsIFrame* aFrame,
     return NS_OK;  // nothing to do
   }
 
-  if (!mAutoScrollTimer) {
-    mAutoScrollTimer = new nsAutoScrollTimer(mFrameSelection, this);
+  if (!mAutoScroller) {
+    mAutoScroller = new AutoScroller(mFrameSelection);
   }
 
-  mAutoScrollTimer->SetDelay(aDelayInMs);
+  mAutoScroller->SetDelay(aDelayInMs);
 
-  return DoAutoScroll(aFrame, aPoint);
+  RefPtr<AutoScroller> autoScroller{mAutoScroller};
+  return autoScroller->DoAutoScroll(aFrame, aPoint);
 }
 
 nsresult Selection::StopAutoScrollTimer() {
   MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
 
-  if (mAutoScrollTimer) {
-    return mAutoScrollTimer->Stop();
+  if (mAutoScroller) {
+    mAutoScroller->Stop(AutoScroller::FurtherScrollingAllowed::kYes);
   }
+
   return NS_OK;
 }
 
-nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
+nsresult AutoScroller::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   MOZ_ASSERT(aFrame, "Need a frame");
 
-  if (mAutoScrollTimer) {
-    (void)mAutoScrollTimer->Stop();
-  }
+  Stop(FurtherScrollingAllowed::kYes);
 
   nsPresContext* presContext = aFrame->PresContext();
   RefPtr<PresShell> presShell = presContext->PresShell();
@@ -1866,11 +1878,14 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   }
 
   // Start the AutoScroll timer if necessary.
-  if (didScroll && mAutoScrollTimer) {
+  // `ScrollFrameRectIntoView` above may have run script and this may have
+  // forbidden to continue scrolling.
+  if (didScroll &&
+      (mFurtherScrollingAllowed == FurtherScrollingAllowed::kYes)) {
     nsPoint presContextPoint =
         globalPoint -
         presShell->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
-    mAutoScrollTimer->Start(presContext, presContextPoint);
+    ScheduleNextDoAutoScroll(presContext, presContextPoint);
   }
 
   return NS_OK;
