@@ -1366,7 +1366,8 @@ Document::Document(const char* aContentType)
       mGeneration(0),
       mCachedTabSizeGeneration(0),
       mNextFormNumber(0),
-      mNextControlNumber(0) {
+      mNextControlNumber(0),
+      mPreloadService(this) {
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p created", this));
 
   SetIsInDocument();
