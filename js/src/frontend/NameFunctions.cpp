@@ -220,7 +220,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
   MOZ_MUST_USE bool resolveFun(FunctionNode* funNode,
                                MutableHandleAtom retAtom) {
     MOZ_ASSERT(funNode != nullptr);
-    RootedFunction fun(cx_, funNode->funbox()->function());
+    FunctionBox* funbox = funNode->funbox();
 
     MOZ_ASSERT(buf_.empty());
     auto resetBuf = mozilla::MakeScopeExit([&] { buf_.clear(); });
@@ -228,14 +228,15 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     retAtom.set(nullptr);
 
     // If the function already has a name, use that.
-    if (fun->displayAtom() != nullptr) {
+    if (funbox->displayAtom() != nullptr) {
       if (prefix_ == nullptr) {
-        retAtom.set(fun->displayAtom());
+        retAtom.set(funbox->displayAtom());
         return true;
       }
       if (!buf_.append(prefix_) || !buf_.append('/') ||
-          !buf_.append(fun->displayAtom()))
+          !buf_.append(funbox->displayAtom())) {
         return false;
+      }
       retAtom.set(buf_.finishAtom());
       return !!retAtom;
     }
@@ -319,7 +320,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     // Skip assigning the guessed name if the function has a (dynamically)
     // computed inferred name.
     if (!funNode->isDirectRHSAnonFunction()) {
-      fun->setGuessedAtom(retAtom);
+      funbox->setGuessedAtom(retAtom);
     }
     return true;
   }
