@@ -568,6 +568,10 @@ class AddonInternal {
   }
 
   async updateBlocklistState(options = {}) {
+    if (this.location.isSystem || this.location.isBuiltin) {
+      return;
+    }
+
     let { applySoftBlock = true, updateDatabase = true } = options;
 
     let oldState = this.blocklistState;
