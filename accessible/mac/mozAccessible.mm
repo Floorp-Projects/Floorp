@@ -158,6 +158,14 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 }
 
 - (BOOL)ignoreWithParent:(mozAccessible*)parent {
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    if (accWrap->IsContent() && accWrap->GetContent()->IsXULElement()) {
+      if (accWrap->VisibilityState() & states::INVISIBLE) {
+        return YES;
+      }
+    }
+  }
+
   return [parent ignoreChild:self];
 }
 
