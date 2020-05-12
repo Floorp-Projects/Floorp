@@ -1679,8 +1679,9 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
   // an initial content page created that was then immediately replaced.
   // This is pretty close to what we are actually doing.
   if (mClientSource) {
-    nsCOMPtr<nsIPrincipal> clientPrincipal(
-        mClientSource->Info().GetPrincipal());
+    auto principalOrErr = mClientSource->Info().GetPrincipal();
+    nsCOMPtr<nsIPrincipal> clientPrincipal =
+        principalOrErr.isOk() ? principalOrErr.unwrap() : nullptr;
     if (!clientPrincipal || !clientPrincipal->Equals(mDoc->NodePrincipal())) {
       mClientSource.reset();
     }

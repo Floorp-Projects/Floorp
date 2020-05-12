@@ -19,6 +19,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIFileStreams.h"
 #include "nsIDirectoryEnumerator.h"
+#include "nsIPrincipal.h"
 #include "nsStringStream.h"
 #include "prio.h"
 #include "SimpleDBCommon.h"
@@ -1042,15 +1043,15 @@ nsresult OpenOp::Open() {
   } else {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-    nsresult rv;
-    nsCOMPtr<nsIPrincipal> principal =
-        PrincipalInfoToPrincipal(principalInfo, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    auto principalOrErr = PrincipalInfoToPrincipal(principalInfo);
+    if (NS_WARN_IF(principalOrErr.isErr())) {
+      return principalOrErr.unwrapErr();
     }
 
-    rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup,
-                                            &mOrigin);
+    nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+
+    nsresult rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix,
+                                                     &mGroup, &mOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

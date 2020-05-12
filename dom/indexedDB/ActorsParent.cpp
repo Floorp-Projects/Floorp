@@ -20857,16 +20857,17 @@ nsresult FactoryOp::CheckPermission(
 
   MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(principalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto principalOrErr = PrincipalInfoToPrincipal(principalInfo);
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    return principalOrErr.unwrapErr();
   }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   nsCString suffix;
   nsCString group;
   nsCString origin;
+  nsresult rv;
   rv = QuotaManager::GetInfoFromPrincipal(principal, &suffix, &group, &origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

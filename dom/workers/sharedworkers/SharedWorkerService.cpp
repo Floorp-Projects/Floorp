@@ -9,6 +9,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticMutex.h"
+#include "nsIPrincipal.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {
@@ -171,22 +172,26 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
   MOZ_ASSERT(aBackgroundEventTarget);
   MOZ_ASSERT(aActor);
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrincipal> storagePrincipal =
-      PrincipalInfoToPrincipal(aData.storagePrincipalInfo(), &rv);
-  if (NS_WARN_IF(!storagePrincipal)) {
-    ErrorPropagationOnMainThread(aBackgroundEventTarget, aActor, rv);
+  auto storagePrincipalOrErr =
+      PrincipalInfoToPrincipal(aData.storagePrincipalInfo());
+  if (NS_WARN_IF(storagePrincipalOrErr.isErr())) {
+    ErrorPropagationOnMainThread(aBackgroundEventTarget, aActor,
+                                 storagePrincipalOrErr.unwrapErr());
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> loadingPrincipal =
-      PrincipalInfoToPrincipal(aData.loadingPrincipalInfo(), &rv);
-  if (NS_WARN_IF(!loadingPrincipal)) {
-    ErrorPropagationOnMainThread(aBackgroundEventTarget, aActor, rv);
+  auto loadingPrincipalOrErr =
+      PrincipalInfoToPrincipal(aData.loadingPrincipalInfo());
+  if (NS_WARN_IF(loadingPrincipalOrErr.isErr())) {
+    ErrorPropagationOnMainThread(aBackgroundEventTarget, aActor,
+                                 loadingPrincipalOrErr.unwrapErr());
     return;
   }
 
   RefPtr<SharedWorkerManagerHolder> managerHolder;
+
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = loadingPrincipalOrErr.unwrap();
+  nsCOMPtr<nsIPrincipal> storagePrincipal = storagePrincipalOrErr.unwrap();
 
   // Let's see if there is already a SharedWorker to share.
   nsCOMPtr<nsIURI> resolvedScriptURL =

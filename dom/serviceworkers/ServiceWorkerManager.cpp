@@ -8,12 +8,14 @@
 
 #include <algorithm>
 
+#include "nsCOMPtr.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsINamed.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIMutableArray.h"
+#include "nsIPrincipal.h"
 #include "nsITimer.h"
 #include "nsIUploadChannel2.h"
 #include "nsServiceManagerUtils.h"
@@ -966,8 +968,14 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerManager::Register(
   }
 
   // If the previous validation step passed then we must have a principal.
-  nsCOMPtr<nsIPrincipal> principal = aClientInfo.GetPrincipal();
+  auto principalOrErr = aClientInfo.GetPrincipal();
 
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+        CopyableErrorResult(principalOrErr.unwrapErr()), __func__);
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
   nsAutoCString scopeKey;
   rv = PrincipalToScopeKey(principal, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1021,10 +1029,12 @@ class GetRegistrationsRunnable final : public Runnable {
       return NS_OK;
     }
 
-    nsCOMPtr<nsIPrincipal> principal = mClientInfo.GetPrincipal();
-    if (!principal) {
+    auto principalOrErr = mClientInfo.GetPrincipal();
+    if (NS_WARN_IF(principalOrErr.isErr())) {
       return NS_OK;
     }
+
+    nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
     nsTArray<ServiceWorkerRegistrationDescriptor> array;
 
@@ -1111,12 +1121,13 @@ class GetRegistrationRunnable final : public Runnable {
       return NS_OK;
     }
 
-    nsCOMPtr<nsIPrincipal> principal = mClientInfo.GetPrincipal();
-    if (!principal) {
+    auto principalOrErr = mClientInfo.GetPrincipal();
+    if (NS_WARN_IF(principalOrErr.isErr())) {
       mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
       return NS_OK;
     }
 
+    nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), mURL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1344,10 +1355,13 @@ void ServiceWorkerManager::NoteInheritedController(
     const ClientInfo& aClientInfo, const ServiceWorkerDescriptor& aController) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(aController.PrincipalInfo());
-  NS_ENSURE_TRUE_VOID(principal);
+  auto principalOrErr = PrincipalInfoToPrincipal(aController.PrincipalInfo());
 
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
   nsCOMPtr<nsIURI> scope;
   nsresult rv = NS_NewURI(getter_AddRefs(scope), aController.Scope());
   NS_ENSURE_SUCCESS_VOID(rv);
@@ -1637,11 +1651,11 @@ void ServiceWorkerManager::LoadRegistration(
     const ServiceWorkerRegistrationData& aRegistration) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(aRegistration.principal());
-  if (!principal) {
+  auto principalOrErr = PrincipalInfoToPrincipal(aRegistration.principal());
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     return;
   }
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetRegistration(principal, aRegistration.scope());
@@ -1722,9 +1736,12 @@ void ServiceWorkerManager::StoreRegistration(
 already_AddRefed<ServiceWorkerRegistrationInfo>
 ServiceWorkerManager::GetServiceWorkerRegistrationInfo(
     const ClientInfo& aClientInfo) const {
-  nsCOMPtr<nsIPrincipal> principal = aClientInfo.GetPrincipal();
-  NS_ENSURE_TRUE(principal, nullptr);
+  auto principalOrErr = aClientInfo.GetPrincipal();
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    return nullptr;
+  }
 
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aClientInfo.URL());
   NS_ENSURE_SUCCESS(rv, nullptr);
@@ -1948,9 +1965,14 @@ bool ServiceWorkerManager::StartControlling(
     const ServiceWorkerDescriptor& aServiceWorker) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIPrincipal> principal =
+  auto principalOrErr =
       PrincipalInfoToPrincipal(aServiceWorker.PrincipalInfo());
-  NS_ENSURE_TRUE(principal, false);
+
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   nsCOMPtr<nsIURI> scope;
   nsresult rv = NS_NewURI(getter_AddRefs(scope), aServiceWorker.Scope());
@@ -2231,8 +2253,13 @@ void ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
       // here and perform the ClientChannelHelper's replacement of
       // reserved client automatically.
       if (!XRE_IsParentProcess()) {
-        nsCOMPtr<nsIPrincipal> clientPrincipal =
-            clientInfo.ref().GetPrincipal();
+        auto clientPrincipalOrErr = clientInfo.ref().GetPrincipal();
+
+        nsCOMPtr<nsIPrincipal> clientPrincipal;
+        if (clientPrincipalOrErr.isOk()) {
+          clientPrincipal = clientPrincipalOrErr.unwrap();
+        }
+
         if (!clientPrincipal || !clientPrincipal->Equals(principal)) {
           UniquePtr<ClientSource> reservedClient =
               loadInfo->TakeReservedClientSource();
@@ -2601,7 +2628,15 @@ RefPtr<GenericErrorResultPromise> ServiceWorkerManager::MaybeClaimClient(
   }
 
   // Same origin check
-  nsCOMPtr<nsIPrincipal> principal(aClientInfo.GetPrincipal());
+  auto principalOrErr = aClientInfo.GetPrincipal();
+
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    CopyableErrorResult rv;
+    rv.ThrowSecurityError("Could not extract client's principal");
+    return GenericErrorResultPromise::CreateAndReject(rv, __func__);
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
   if (!aWorkerRegistration->Principal()->Equals(principal)) {
     CopyableErrorResult rv;
     rv.ThrowSecurityError("Worker is for a different origin");
@@ -2627,10 +2662,12 @@ RefPtr<GenericErrorResultPromise> ServiceWorkerManager::MaybeClaimClient(
 RefPtr<GenericErrorResultPromise> ServiceWorkerManager::MaybeClaimClient(
     const ClientInfo& aClientInfo,
     const ServiceWorkerDescriptor& aServiceWorker) {
-  nsCOMPtr<nsIPrincipal> principal = aServiceWorker.GetPrincipal();
-  if (!principal) {
+  auto principalOrErr = aServiceWorker.GetPrincipal();
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     return GenericErrorResultPromise::CreateAndResolve(false, __func__);
   }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetRegistration(principal, aServiceWorker.Scope());

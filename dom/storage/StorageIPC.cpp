@@ -14,6 +14,8 @@
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Unused.h"
+#include "nsCOMPtr.h"
+#include "nsIPrincipal.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -76,18 +78,18 @@ mozilla::ipc::IPCResult LocalStorageCacheChild::RecvObserve(
     const nsString& aNewValue) {
   AssertIsOnOwningThread();
 
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  auto principalOrErr = PrincipalInfoToPrincipal(aPrincipalInfo);
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  nsCOMPtr<nsIPrincipal> cachePrincipal =
-      PrincipalInfoToPrincipal(aCachePrincipalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  auto cachePrincipalOrErr = PrincipalInfoToPrincipal(aCachePrincipalInfo);
+  if (NS_WARN_IF(cachePrincipalOrErr.isErr())) {
     return IPC_FAIL_NO_REASON(this);
   }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+  nsCOMPtr<nsIPrincipal> cachePrincipal = cachePrincipalOrErr.unwrap();
 
   if (StorageUtils::PrincipalsEqual(principal, cachePrincipal)) {
     Storage::NotifyChange(/* aStorage */ nullptr, principal, aKey, aOldValue,
