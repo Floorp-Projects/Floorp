@@ -58,10 +58,7 @@ fail() {
 # start pulseaudio
 maybe_start_pulse() {
     if $NEED_PULSEAUDIO; then
-        # call pulseaudio for Ubuntu only
-        if [ $DISTRIBUTION == "Ubuntu" ]; then
-            pulseaudio --fail --daemonize --start
-        fi
+        pulseaudio --fail --daemonize --start -vvvvv --exit-idle-time=-1
     fi
 }
 
