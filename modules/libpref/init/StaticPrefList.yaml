@@ -5429,14 +5429,10 @@
 
 # One of several prefs affecting the maximum area to pre-render when animating
 # a large element on the compositor.
-- name: layout.animation.prerender.viewport-ratio-limit-x
-  type: AtomicFloat
-  value: 1.125f
-  mirror: always
-
-# One of several prefs affecting the maximum area to pre-render when animating
-# a large element on the compositor.
-- name: layout.animation.prerender.viewport-ratio-limit-y
+# This value is applied to both x and y axes and a perfect square contructed
+# by the greater axis value which will be capped by the absolute limits is used
+# for the partial pre-render area.
+- name: layout.animation.prerender.viewport-ratio-limit
   type: AtomicFloat
   value: 1.125f
   mirror: always
