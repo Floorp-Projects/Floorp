@@ -3486,10 +3486,10 @@ void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
 
 JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx)
     : ReadOnlyCompileOptions(),
-      elementRoot(cx),
       elementAttributeNameRoot(cx),
       introductionScriptRoot(cx),
-      scriptOrModuleRoot(cx) {}
+      scriptOrModuleRoot(cx),
+      privateValueRoot(cx) {}
 
 void JS::OwningCompileOptions::release() {
   // OwningCompileOptions always owns these, so these casts are okay.
@@ -3518,10 +3518,10 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   copyPODNonTransitiveOptions(rhs);
   copyPODTransitiveOptions(rhs);
 
-  elementRoot = rhs.element();
   elementAttributeNameRoot = rhs.elementAttributeName();
   introductionScriptRoot = rhs.introductionScript();
   scriptOrModuleRoot = rhs.scriptOrModule();
+  privateValueRoot = rhs.privateValue();
 
   if (rhs.filename()) {
     filename_ = DuplicateString(cx, rhs.filename()).release();
@@ -3550,10 +3550,10 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
 
 JS::CompileOptions::CompileOptions(JSContext* cx)
     : ReadOnlyCompileOptions(),
-      elementRoot(cx),
       elementAttributeNameRoot(cx),
       introductionScriptRoot(cx),
-      scriptOrModuleRoot(cx) {
+      scriptOrModuleRoot(cx),
+      privateValueRoot(cx) {
   discardSource = cx->realm()->behaviors().discardSource();
   if (!cx->options().asmJS()) {
     asmJSOption = AsmJSOption::Disabled;
