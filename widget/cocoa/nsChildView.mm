@@ -2807,6 +2807,19 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     return;
   }
 
+  // Instead of calling beginOrEndGestureForEventPhase we basically inline
+  // the effects of it here, because that function doesn't play too well with
+  // how we create PinchGestureInput events below. The main point of that
+  // function is to avoid flip-flopping between rotation/magnify gestures, which
+  // we can do by checking and setting mGestureState appropriately. A secondary
+  // result of that function is to send the final eMagnifyGesture event when
+  // the gesture ends, but APZ takes care of that for us.
+  if (mGestureState == eGestureState_RotateGesture && [anEvent phase] != NSEventPhaseBegan) {
+    // If we're already in a rotation and not "starting" a magnify, abort.
+    return;
+  }
+  mGestureState = eGestureState_MagnifyGesture;
+
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(anEvent, [self window]);
   ScreenPoint position =
       ViewAs<ScreenPixel>([self convertWindowCoordinatesRoundDown:locationInWindow],
@@ -2831,6 +2844,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     }
     case NSEventPhaseEnded: {
       pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
+      mGestureState = eGestureState_None;
       break;
     }
     default: {
