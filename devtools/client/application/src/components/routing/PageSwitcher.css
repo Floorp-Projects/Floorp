@@ -9,7 +9,7 @@
 
 .app-page {
   min-height: 100vh;
-  padding: 0 2rem;
+  padding: calc(var(--base-unit) * 3) calc(var(--base-unit) * 8);
   display: grid;
   user-select: none;
 }
@@ -22,7 +22,7 @@
 }
 
 .app-page__title {
-  font-size: var(--title-30-font-size);
-  font-weight: var(--title-30-font-weight);
+  font-size: var(--title-20-font-size);
+  font-weight: var(--title-20-font-weight);
   margin: 0;
 }

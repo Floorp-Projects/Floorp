@@ -13,7 +13,9 @@ Array [
         className="app-page__title"
       />
     </Localized>
-    <ul>
+    <ul
+      className="registrations-container__list"
+    >
       <Registration
         className="registrations-container__item"
         isDebugEnabled={true}
@@ -68,7 +70,9 @@ Array [
         className="app-page__title"
       />
     </Localized>
-    <ul>
+    <ul
+      className="registrations-container__list"
+    >
       <Registration
         className="registrations-container__item"
         isDebugEnabled={true}
