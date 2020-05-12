@@ -343,7 +343,7 @@ void WorkerGlobalScope::ImportScripts(JSContext* aCx,
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   UniquePtr<SerializedStackHolder> stack;
-  if (mWorkerPrivate->IsWatchedByDevtools()) {
+  if (mWorkerPrivate->IsWatchedByDevTools()) {
     stack = GetCurrentStackForNetMonitor(aCx);
   }
 
