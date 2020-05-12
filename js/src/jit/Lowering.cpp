@@ -3958,6 +3958,7 @@ void LIRGenerator::visitGuardValue(MGuardValue* ins) {
   auto* lir = new (alloc()) LGuardValue(useBox(ins->value()));
   assignSnapshot(lir, Bailout_ValueGuard);
   add(lir, ins);
+  redefine(ins, ins->value());
 }
 
 void LIRGenerator::visitGuardNullOrUndefined(MGuardNullOrUndefined* ins) {
