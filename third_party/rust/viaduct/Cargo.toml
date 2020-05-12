@@ -1,0 +1,25 @@
+[package]
+name = "viaduct"
+version = "0.1.0"
+authors = ["Thom Chiovoloni <tchiovoloni@mozilla.com>"]
+edition = "2018"
+license = "MPL-2.0"
+exclude = ["/android", "/ios"]
+
+[lib]
+crate-type = ["lib"]
+
+[features]
+default = []
+
+[dependencies]
+failure = "0.1"
+failure_derive = "0.1"
+url = "2.1"
+log = "0.4"
+serde = "1"
+serde_json = "1"
+once_cell = "1.3.1"
+prost = "0.6.1"
+prost-derive = "0.6.1"
+ffi-support = "0.4"
