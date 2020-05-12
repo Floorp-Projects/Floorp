@@ -8866,6 +8866,7 @@ class MGuardNullOrUndefined : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, val) {
     setGuard();
     setMovable();
+    setResultType(MIRType::Value);
   }
 
  public:
@@ -8876,6 +8877,7 @@ class MGuardNullOrUndefined : public MUnaryInstruction,
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
