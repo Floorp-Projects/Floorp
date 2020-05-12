@@ -211,7 +211,7 @@ function makeUrlbarResult(tokens, info) {
             keyword: [action.params.alias, UrlbarUtils.HIGHLIGHT.TYPED],
             query: [
               action.params.searchQuery.trim(),
-              UrlbarUtils.HIGHLIGHT.NONE,
+              UrlbarUtils.HIGHLIGHT.TYPED,
             ],
             isSearchHistory: !!action.params.isSearchHistory,
             icon: [info.icon],
