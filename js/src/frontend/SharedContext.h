@@ -315,8 +315,9 @@ class FunctionBox : public SharedContext {
   // has expressions.
   VarScope::Data* extraVarScopeBindings_ = nullptr;
 
-  // The explicit name of the function.
-  JSAtom* explicitName_ = nullptr;
+  // The explicit or implicit name of the function. The FunctionFlags indicate
+  // the kind of name.
+  JSAtom* atom_ = nullptr;
 
   // Index into CompilationInfo::funcData, which contains the function
   // information, either a JSFunction* (for a FunctionBox representing a real
@@ -518,7 +519,31 @@ class FunctionBox : public SharedContext {
 
   FunctionFlags::FunctionKind kind() { return flags_.kind(); }
 
-  JSAtom* explicitName() const { return explicitName_; }
+  bool hasInferredName() const { return flags_.hasInferredName(); }
+  bool hasGuessedAtom() const { return flags_.hasGuessedAtom(); }
+
+  JSAtom* displayAtom() const { return atom_; }
+  JSAtom* explicitName() const {
+    return (hasInferredName() || hasGuessedAtom()) ? nullptr : atom_;
+  }
+
+  // NOTE: We propagate to any existing functions for now. This handles both the
+  // delazification case where functions already exist, and also handles
+  // code-coverage which is not yet deferred.
+  void setInferredName(JSAtom* atom) {
+    atom_ = atom;
+    flags_.setInferredName();
+    if (hasFunction()) {
+      function()->setInferredName(atom);
+    }
+  }
+  void setGuessedAtom(JSAtom* atom) {
+    atom_ = atom;
+    flags_.setGuessedAtom();
+    if (hasFunction()) {
+      function()->setGuessedAtom(atom);
+    }
+  }
 
   void setAlwaysNeedsArgsObj() {
     MOZ_ASSERT(argumentsHasVarBinding());
@@ -594,12 +619,6 @@ class FunctionBox : public SharedContext {
     RootedFunction fun(cx, function());
     return JSFunction::setTypeForScriptedFunction(cx, fun, singleton);
   }
-
-  void setInferredName(JSAtom* atom) { function()->setInferredName(atom); }
-
-  JSAtom* inferredName() const { return function()->inferredName(); }
-
-  bool hasInferredName() const { return function()->hasInferredName(); }
 
   size_t index() { return funcDataIndex_; }
 

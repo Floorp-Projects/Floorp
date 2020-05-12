@@ -275,7 +275,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
       cx_, compilationInfo_.traceListHead, extent, this->getCompilationInfo(),
-      inheritedDirectives, generatorKind, asyncKind, fun->explicitName(),
+      inheritedDirectives, generatorKind, asyncKind, fun->displayAtom(),
       fun->flags(), index);
   if (!funbox) {
     ReportOutOfMemory(cx_);
