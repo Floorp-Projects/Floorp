@@ -4873,6 +4873,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         stmt = StmtCode(
             '''
             RefPtr<${promise}> promise__ = new ${promise}(__func__);
+            promise__->UseDirectTaskDispatch(__func__);
             ${send}($,{args});
             return promise__;
             ''',
