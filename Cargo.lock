@@ -1255,7 +1255,7 @@ checksum = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e1daa2a7e9add66c5a36a7c967495510c2e117e8#e1daa2a7e9add66c5a36a7c967495510c2e117e8"
+source = "git+https://github.com/mozilla/application-services?rev=7352f64601cdbf39d28831d30d246f7340ef31b3#7352f64601cdbf39d28831d30d246f7340ef31b3"
 dependencies = [
  "failure",
 ]
@@ -2201,7 +2201,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e1daa2a7e9add66c5a36a7c967495510c2e117e8#e1daa2a7e9add66c5a36a7c967495510c2e117e8"
+source = "git+https://github.com/mozilla/application-services?rev=7352f64601cdbf39d28831d30d246f7340ef31b3#7352f64601cdbf39d28831d30d246f7340ef31b3"
 
 [[package]]
 name = "intl-memoizer"
@@ -3132,7 +3132,7 @@ dependencies = [
 [[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e1daa2a7e9add66c5a36a7c967495510c2e117e8#e1daa2a7e9add66c5a36a7c967495510c2e117e8"
+source = "git+https://github.com/mozilla/application-services?rev=7352f64601cdbf39d28831d30d246f7340ef31b3#7352f64601cdbf39d28831d30d246f7340ef31b3"
 
 [[package]]
 name = "nsstring"
@@ -4276,7 +4276,7 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e1daa2a7e9add66c5a36a7c967495510c2e117e8#e1daa2a7e9add66c5a36a7c967495510c2e117e8"
+source = "git+https://github.com/mozilla/application-services?rev=7352f64601cdbf39d28831d30d246f7340ef31b3#7352f64601cdbf39d28831d30d246f7340ef31b3"
 dependencies = [
  "ffi-support",
  "interrupt-support",
@@ -4473,7 +4473,7 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e1daa2a7e9add66c5a36a7c967495510c2e117e8#e1daa2a7e9add66c5a36a7c967495510c2e117e8"
+source = "git+https://github.com/mozilla/application-services?rev=7352f64601cdbf39d28831d30d246f7340ef31b3#7352f64601cdbf39d28831d30d246f7340ef31b3"
 dependencies = [
  "base64 0.12.0",
  "rand",
@@ -4484,7 +4484,7 @@ dependencies = [
 [[package]]
 name = "sync15-traits"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e1daa2a7e9add66c5a36a7c967495510c2e117e8#e1daa2a7e9add66c5a36a7c967495510c2e117e8"
+source = "git+https://github.com/mozilla/application-services?rev=7352f64601cdbf39d28831d30d246f7340ef31b3#7352f64601cdbf39d28831d30d246f7340ef31b3"
 dependencies = [
  "failure",
  "ffi-support",
@@ -5199,7 +5199,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e1daa2a7e9add66c5a36a7c967495510c2e117e8#e1daa2a7e9add66c5a36a7c967495510c2e117e8"
+source = "git+https://github.com/mozilla/application-services?rev=7352f64601cdbf39d28831d30d246f7340ef31b3#7352f64601cdbf39d28831d30d246f7340ef31b3"
 dependencies = [
  "error-support",
  "failure",
