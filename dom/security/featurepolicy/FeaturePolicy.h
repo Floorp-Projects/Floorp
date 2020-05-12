@@ -80,6 +80,8 @@ class FeaturePolicy final : public nsISupports, public nsWrapperCache {
     mDefaultOrigin = aPrincipal;
   }
 
+  void SetSrcOrigin(nsIPrincipal* aPrincipal) { mSrcOrigin = aPrincipal; }
+
   nsIPrincipal* DefaultOrigin() const { return mDefaultOrigin; }
 
   // Inherits the policy from the 'parent' context if it exists.
@@ -114,6 +116,8 @@ class FeaturePolicy final : public nsISupports, public nsWrapperCache {
   // explicitly in ancestor chain,
   bool AllowsFeatureExplicitlyInAncestorChain(const nsAString& aFeatureName,
                                               nsIPrincipal* aOrigin) const;
+
+  bool IsSameOriginAsSrc(nsIPrincipal* aPrincipal) const;
 
   // WebIDL internal methods.
 
