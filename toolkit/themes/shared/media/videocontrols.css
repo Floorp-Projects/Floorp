@@ -599,13 +599,13 @@
   display: none;
 }
 
-[status="errorAborted"]         > [id="errorAborted"],
-[status="errorNetwork"]         > [id="errorNetwork"],
-[status="errorDecode"]          > [id="errorDecode"],
-[status="errorSrcNotSupported"] > [id="errorSrcNotSupported"],
-[status="errorNoSource"]        > [id="errorNoSource"],
-[status="errorGeneric"]         > [id="errorGeneric"],
-[status="pictureInPicture"]     > [id="pictureInPicture"] {
+[status="errorAborted"]         > #errorAborted,
+[status="errorNetwork"]         > #errorNetwork,
+[status="errorDecode"]          > #errorDecode,
+[status="errorSrcNotSupported"] > #errorSrcNotSupported,
+[status="errorNoSource"]        > #errorNoSource,
+[status="errorGeneric"]         > #errorGeneric,
+[status="pictureInPicture"]     > #pictureInPicture {
   display: inline;
 }
 
