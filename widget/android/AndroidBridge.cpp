@@ -44,7 +44,6 @@
 #include "WidgetUtils.h"
 
 #include "GeneratedJNIWrappers.h"
-#include "mozilla/java/HardwareCodecCapabilityUtilsWrappers.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
