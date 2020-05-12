@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
+import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
 import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
@@ -29,6 +30,7 @@ import org.mozilla.samples.browser.ext.components
 /**
  * Fragment use for managing add-ons.
  */
+@Suppress("TooManyFunctions")
 class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
     private lateinit var recyclerView: RecyclerView
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -139,6 +141,29 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         }
     }
 
+    private fun showInstallationDialog(addon: Addon) {
+        if (isInstallationInProgress) {
+            return
+        }
+        val addonCollectionProvider = context!!.components.addonCollectionProvider
+        val dialog = AddonInstallationDialogFragment.newInstance(
+            addon = addon,
+            addonCollectionProvider = addonCollectionProvider,
+            onConfirmButtonClicked = { _, allowInPrivateBrowsing ->
+                if (allowInPrivateBrowsing) {
+                    requireContext().components.addonManager.setAddonAllowedInPrivateBrowsing(
+                        addon,
+                        allowInPrivateBrowsing
+                    )
+                }
+            }
+        )
+
+        if (!isAlreadyADialogCreated() && fragmentManager != null) {
+            dialog.show(requireFragmentManager(), INSTALLATION_DIALOG_FRAGMENT_TAG)
+        }
+    }
+
     private val onPositiveButtonClicked: ((Addon) -> Unit) = { addon ->
         addonProgressOverlay.visibility = View.VISIBLE
         isInstallationInProgress = true
@@ -146,18 +171,10 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         requireContext().components.addonManager.installAddon(
             addon,
             onSuccess = {
-                Toast.makeText(
-                    requireContext(),
-                    getString(
-                        R.string.mozac_feature_addons_successfully_installed,
-                        it.translatedName
-                    ),
-                    Toast.LENGTH_SHORT
-                ).show()
-
                 adapter?.updateAddon(it)
                 addonProgressOverlay.visibility = View.GONE
                 isInstallationInProgress = false
+                showInstallationDialog(it)
             },
             onError = { _, _ ->
                 Toast.makeText(
@@ -182,5 +199,6 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
 
     companion object {
         private const val PERMISSIONS_DIALOG_FRAGMENT_TAG = "ADDONS_PERMISSIONS_DIALOG_FRAGMENT"
+        private const val INSTALLATION_DIALOG_FRAGMENT_TAG = "ADDONS_INSTALLATION_DIALOG_FRAGMENT"
     }
 }
