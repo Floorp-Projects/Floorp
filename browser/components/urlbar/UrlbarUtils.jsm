@@ -618,6 +618,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       suggestion: {
         type: "string",
       },
+      tail: {
+        type: "string",
+      },
       title: {
         type: "string",
       },

@@ -345,14 +345,17 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
     let suggestions = [];
     suggestions.push(
-      ...fetchData.local.map(r => ({ suggestion: r, historical: true })),
-      ...fetchData.remote.map(r => ({ suggestion: r, historical: false }))
+      ...fetchData.local.map(e => ({ entry: e, historical: true })),
+      ...fetchData.remote.map(e => ({ entry: e, historical: false }))
     );
 
     // If we don't return many results, then keep track of the query. If the
-    // user just adds on to the query, we won't fetch more suggestions since
-    // we are unlikely to get any.
-    if (suggestions.length >= 0 && suggestions.length < 2) {
+    // user just adds on to the query, we won't fetch more suggestions if the
+    // query is very long since we are unlikely to get any.
+    if (
+      !suggestions.length &&
+      searchString.length > UrlbarPrefs.get("maxCharsForSearchSuggestions")
+    ) {
       this._lastLowResultsSearchSuggestion = searchString;
     }
 
@@ -360,8 +363,8 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     for (let suggestion of suggestions) {
       if (
         !suggestion ||
-        suggestion.suggestion == searchString ||
-        looksLikeUrl(suggestion.suggestion)
+        suggestion.entry.value == searchString ||
+        looksLikeUrl(suggestion.entry.value)
       ) {
         continue;
       }
@@ -374,14 +377,22 @@ class ProviderSearchSuggestions extends UrlbarProvider {
             ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
               engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
               suggestion: [
-                suggestion.suggestion,
+                suggestion.entry.value,
+                UrlbarUtils.HIGHLIGHT.SUGGESTED,
+              ],
+              tail: [
+                UrlbarPrefs.get("richSuggestions.tail") &&
+                suggestion.entry.matchPrefix &&
+                suggestion.entry.tail
+                  ? suggestion.entry.matchPrefix + suggestion.entry.tail
+                  : undefined,
                 UrlbarUtils.HIGHLIGHT.SUGGESTED,
               ],
               keyword: [alias ? alias : undefined, UrlbarUtils.HIGHLIGHT.TYPED],
               query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
               isSearchHistory: false,
               icon: [
-                engine.iconURI && !suggestion.suggestion
+                engine.iconURI && !suggestion.entry.value
                   ? engine.iconURI.spec
                   : "",
               ],
