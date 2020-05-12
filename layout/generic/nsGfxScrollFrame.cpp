@@ -3557,6 +3557,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
+  ScrollableLayerGuid::ViewID scrollId =
+      nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
+
   {
     // Note that setting the current scroll parent id here means that positioned
     // children of this scroll info layer will pick up the scroll info layer as
@@ -3564,10 +3567,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // happens for positioned children of scroll layers, and we want to maintain
     // consistent behaviour between scroll layers and scroll info layers.
     nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(
-        aBuilder,
-        couldBuildLayer && mScrolledFrame->GetContent()
-            ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
-            : aBuilder->GetCurrentScrollParentId());
+        aBuilder, couldBuildLayer && mScrolledFrame->GetContent()
+                      ? scrollId
+                      : aBuilder->GetCurrentScrollParentId());
 
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     // If we're building an async zoom container, clip the contents inside
@@ -3750,15 +3752,12 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsDisplayList resultList;
     set.SerializeWithCorrectZOrder(&resultList, mOuter->GetContent());
 
-    mozilla::layers::FrameMetrics::ViewID viewID =
-        nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
-
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     clipState.ClipContentDescendants(clipRect, haveRadii ? radii : nullptr);
 
     set.Content()->AppendNewToTop<nsDisplayAsyncZoom>(
         aBuilder, mOuter, &resultList, aBuilder->CurrentActiveScrolledRoot(),
-        viewID);
+        scrollId);
   }
 
   nsDisplayListCollection scrolledContent(aBuilder);
@@ -3808,6 +3807,20 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
             MakeDisplayItemWithIndex<nsDisplayCompositorHitTestInfo>(
                 aBuilder, mScrolledFrame, 1, info, Some(area));
         if (hitInfo) {
+          if (provideScrollInfoForAPZ) {
+            // Since the hit info item has the eInactiveScrollframe flag, the
+            // actual scrollId here doesn't matter as APZ will fall back to
+            // main-thread layerization. But conceptually it seems better to
+            // send the most accurate scrollId that we can, as it makes
+            // behaviour more consistent between WR and non-WR codepaths for
+            // testing purposes. In the case where provideScrollInfoForAPZ is
+            // true, we will include a scrollinfo item (below), and so we can
+            // set the true scrollId here without APZ complaining about scrollId
+            // references that it doesn't know about. If provideScrollInfoForAPZ
+            // is false, APZ may not even know that this scrollframe even exists
+            // so we shouldn't refer to its scrollId in hit-test info items.
+            hitInfo->SetInactiveScrollTarget(scrollId);
+          }
           AppendInternalItemToTop(scrolledContent, hitInfo, Some(INT32_MAX));
         }
       }
