@@ -209,7 +209,7 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
   // request.
   nsAutoString hintCharset;
   if (!mRequest->IsPreload()) {
-    mRequest->Element()->GetScriptCharset(hintCharset);
+    mRequest->GetScriptElement()->GetScriptCharset(hintCharset);
   } else {
     nsTArray<ScriptLoader::PreloadInfo>::index_type i =
         mScriptLoader->mPreloads.IndexOf(
@@ -279,7 +279,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
 
   if (mRequest->IsLoadingSource()) {
     mRequest->SetTextSource();
-    TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
+    TRACE_FOR_TEST(mRequest->GetScriptElement(), "scriptloader_load_source");
     return NS_OK;
   }
 
@@ -289,7 +289,8 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
     cic->GetAlternativeDataType(altDataType);
     if (altDataType.Equals(nsContentUtils::JSBytecodeMimeType())) {
       mRequest->SetBytecode();
-      TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_bytecode");
+      TRACE_FOR_TEST(mRequest->GetScriptElement(),
+                     "scriptloader_load_bytecode");
       return NS_OK;
     }
     MOZ_ASSERT(altDataType.IsEmpty());
@@ -303,7 +304,8 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
       if (mimeType.LowerCaseEqualsASCII(APPLICATION_JAVASCRIPT_BINAST)) {
         if (mRequest->ShouldAcceptBinASTEncoding()) {
           mRequest->SetBinASTSource();
-          TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
+          TRACE_FOR_TEST(mRequest->GetScriptElement(),
+                         "scriptloader_load_source");
           return NS_OK;
         }
 
@@ -317,7 +319,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
   }
 
   mRequest->SetTextSource();
-  TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
+  TRACE_FOR_TEST(mRequest->GetScriptElement(), "scriptloader_load_source");
 
   MOZ_ASSERT(!mRequest->IsUnknownDataType());
   MOZ_ASSERT(mRequest->IsLoading());
