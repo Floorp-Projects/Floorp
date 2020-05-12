@@ -6,14 +6,18 @@ package mozilla.components.feature.accounts
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.runWithSessionIdOrSelected
-import mozilla.components.concept.engine.Engine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
+import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.sync.AuthType
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncEngine
@@ -23,6 +27,7 @@ import mozilla.components.service.fxa.toAuthType
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.isSameOriginAs
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONArray
 import org.json.JSONException
@@ -45,43 +50,43 @@ enum class FxaCapability {
  *
  * @property context a reference to the context.
  * @property customTabSessionId optional custom tab session ID, if feature is being used with a custom tab.
- * @property engine a reference to application's browser engine.
- * @property sessionManager a reference to application's [SessionManager].
+ * @property runtime the [WebExtensionRuntime] (e.g the browser engine) to use.
+ * @property store a reference to the application's [BrowserStore].
  * @property accountManager a reference to application's [FxaAccountManager].
  * @property fxaCapabilities a set of [FxaCapability] that client supports.
  */
 class FxaWebChannelFeature(
     private val context: Context,
     private val customTabSessionId: String?,
-    private val engine: Engine,
-    private val sessionManager: SessionManager,
+    private val runtime: WebExtensionRuntime,
+    private val store: BrowserStore,
     private val accountManager: FxaAccountManager,
     private val serverConfig: ServerConfig,
     private val fxaCapabilities: Set<FxaCapability> = emptySet()
-) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
+) : LifecycleAwareFeature {
+
+    private var scope: CoroutineScope? = null
 
     @VisibleForTesting
     // This is an internal var to make it mutable for unit testing purposes only
     internal var extensionController = WebExtensionController(WEB_CHANNEL_EXTENSION_ID, WEB_CHANNEL_EXTENSION_URL)
 
     override fun start() {
-        // Runs observeSelected (if we're not in a custom tab) or observeFixed (if we are).
-        observeIdOrSelected(customTabSessionId)
+        extensionController.install(runtime)
 
-        sessionManager.runWithSessionIdOrSelected(customTabSessionId) { session ->
-            registerFxaContentMessageHandler(session)
-            true
+        scope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabSessionId) }
+                .ifChanged { it.engineState.engineSession }
+                .collect {
+                    it.engineState.engineSession?.let { engineSession ->
+                        registerFxaContentMessageHandler(engineSession)
+                    }
+                }
         }
-
-        extensionController.install(engine)
     }
 
-    override fun onSessionAdded(session: Session) {
-        registerFxaContentMessageHandler(session)
-    }
-
-    override fun onSessionRemoved(session: Session) {
-        extensionController.disconnectPort(sessionManager.getEngineSession(session))
+    override fun stop() {
+        scope?.cancel()
     }
 
     @Suppress("MaxLineLength", "")
@@ -151,8 +156,7 @@ class FxaWebChannelFeature(
         }
     }
 
-    private fun registerFxaContentMessageHandler(session: Session) {
-        val engineSession = sessionManager.getOrCreateEngineSession(session)
+    private fun registerFxaContentMessageHandler(engineSession: EngineSession) {
         val messageHandler = WebChannelViewContentMessageHandler(accountManager, serverConfig, fxaCapabilities)
         extensionController.registerContentMessageHandler(engineSession, messageHandler)
     }

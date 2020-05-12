@@ -21,13 +21,19 @@ android {
     }
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += [
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    ]
+}
+
 dependencies {
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.androidx_work_runtime
     implementation Dependencies.androidx_lifecycle_extensions
 
     implementation project(':concept-engine')
-    implementation project(":browser-session")
+    implementation project(":browser-state")
     implementation project(':feature-tabs')
     implementation project(':service-firefox-accounts')
     implementation project(':support-ktx')
