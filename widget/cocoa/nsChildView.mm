@@ -2375,7 +2375,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     mDragService = nullptr;
 
     mGestureState = eGestureState_None;
-    mCumulativeMagnification = 0.0;
     mCumulativeRotation = 0.0;
 
     mIsUpdatingLayer = NO;
@@ -2849,52 +2848,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
                           100.0 * (1.0 - [anEvent magnification]),
                           nsCocoaUtils::ModifiersForEvent(anEvent)};
 
-  // FIXME: bug 1525793 -- this may need to handle zooming or not on a per-document basis.
-  if (StaticPrefs::apz_allow_zooming()) {
-    mGeckoChild->DispatchAPZInputEvent(event);
-  } else {
-    if (!anEvent || [self beginOrEndGestureForEventPhase:anEvent]) {
-      return;
-    }
-
-    nsAutoRetainCocoaObject kungFuDeathGrip(self);
-
-    float deltaZ = [anEvent deltaZ];
-
-    EventMessage msg;
-    switch (mGestureState) {
-      case eGestureState_StartGesture:
-        msg = eMagnifyGestureStart;
-        mGestureState = eGestureState_MagnifyGesture;
-        break;
-
-      case eGestureState_MagnifyGesture:
-        msg = eMagnifyGestureUpdate;
-        break;
-
-      case eGestureState_None:
-      case eGestureState_RotateGesture:
-      default:
-        return;
-    }
-
-    // See PinchGestureInput::ToWidgetWheelEvent for a lengthy explanation of the values we put into
-    // the WidgetWheelEvent that used to be here.
-
-    WidgetWheelEvent geckoWheelEvent(event.ToWidgetWheelEvent(mGeckoChild));
-    mGeckoChild->DispatchWindowEvent(geckoWheelEvent);
-
-    // If the fake wheel event wasn't stopped, then send a normal magnify event.
-    if (!geckoWheelEvent.mFlags.mDefaultPrevented) {
-      WidgetSimpleGestureEvent geckoEvent(true, msg, mGeckoChild);
-      geckoEvent.mDelta = deltaZ;
-      [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
-      mGeckoChild->DispatchWindowEvent(geckoEvent);
-
-      // Keep track of the cumulative magnification for the final "magnify" event.
-      mCumulativeMagnification += deltaZ;
-    }
-  }
+  mGeckoChild->DispatchAPZInputEvent(event);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3006,7 +2960,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   }
 
   mGestureState = eGestureState_StartGesture;
-  mCumulativeMagnification = 0;
   mCumulativeRotation = 0.0;
 }
 
@@ -3016,7 +2969,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   if (!anEvent || !mGeckoChild) {
     // Clear the gestures state if we cannot send an event.
     mGestureState = eGestureState_None;
-    mCumulativeMagnification = 0.0;
     mCumulativeRotation = 0.0;
     return;
   }
@@ -3024,16 +2976,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   switch (mGestureState) {
-    case eGestureState_MagnifyGesture: {
-      // Setup the "magnify" event.
-      WidgetSimpleGestureEvent geckoEvent(true, eMagnifyGesture, mGeckoChild);
-      geckoEvent.mDelta = mCumulativeMagnification;
-      [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
-
-      // Send the event.
-      mGeckoChild->DispatchWindowEvent(geckoEvent);
-    } break;
-
     case eGestureState_RotateGesture: {
       // Setup the "rotate" event.
       WidgetSimpleGestureEvent geckoEvent(true, eRotateGesture, mGeckoChild);
@@ -3049,6 +2991,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
       mGeckoChild->DispatchWindowEvent(geckoEvent);
     } break;
 
+    case eGestureState_MagnifyGesture:  // APZ handles sending the widget events
     case eGestureState_None:
     case eGestureState_StartGesture:
     default:
@@ -3057,7 +3000,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
   // Clear the gestures state.
   mGestureState = eGestureState_None;
-  mCumulativeMagnification = 0.0;
   mCumulativeRotation = 0.0;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
