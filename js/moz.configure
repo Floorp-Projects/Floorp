@@ -632,9 +632,9 @@ set_define('ENABLE_SHARED_MEMORY', enable_shared_memory)
 # Initial support for new regexp engine
 # ==================================================
 
-js_option('--disable-new-regexp', help='{Enable|Disable} new regexp engine')
+js_option('--enable-new-regexp', default=False, help='Enable new regexp engine')
 
-@depends('--disable-new-regexp')
+@depends('--enable-new-regexp')
 def enable_new_regexp(value):
     if value:
         return True
