@@ -656,12 +656,14 @@
   },
   "GC_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "products": ["firefox", "fennec", "geckoview", "geckoview_streaming"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "bug_numbers": [1636419],
     "description": "Time spent running JS GC (ms)"
   },
   "GC_IN_PROGRESS_MS": {
