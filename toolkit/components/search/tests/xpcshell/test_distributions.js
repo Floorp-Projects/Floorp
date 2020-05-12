@@ -37,6 +37,17 @@ tests.push({
 });
 
 tests.push({
+  locale: "ru",
+  region: "RU",
+  distribution: "mailru-001",
+  test: engines =>
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900201") &&
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900201") &&
+    hasDefault(engines, "Поиск Mail.Ru") &&
+    hasEnginesFirst(engines, ["Поиск Mail.Ru"]),
+});
+
+tests.push({
   locale: "az",
   distribution: "okru-001",
   test: engines =>
@@ -77,6 +88,17 @@ tests.push({
 });
 
 tests.push({
+  locale: "kk",
+  region: "KZ",
+  distribution: "okru-001",
+  test: engines =>
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900206") &&
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900206") &&
+    hasDefault(engines, "Поиск Mail.Ru") &&
+    hasEnginesFirst(engines, ["Поиск Mail.Ru"]),
+});
+
+tests.push({
   locale: "ro",
   distribution: "okru-001",
   test: engines =>
@@ -97,7 +119,29 @@ tests.push({
 });
 
 tests.push({
+  locale: "ru",
+  region: "RU",
+  distribution: "okru-001",
+  test: engines =>
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900203") &&
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900203") &&
+    hasDefault(engines, "Поиск Mail.Ru") &&
+    hasEnginesFirst(engines, ["Поиск Mail.Ru"]),
+});
+
+tests.push({
   locale: "tr",
+  distribution: "okru-001",
+  test: engines =>
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900210") &&
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900210") &&
+    hasDefault(engines, "Поиск Mail.Ru") &&
+    hasEnginesFirst(engines, ["Поиск Mail.Ru"]),
+});
+
+tests.push({
+  locale: "tr",
+  region: "TR",
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900210") &&
