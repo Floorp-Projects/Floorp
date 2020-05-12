@@ -54,16 +54,14 @@ class IMediaController {
  * relationship, we use tab's top-level browsing context ID to initialize the
  * controller and use that as its ID.
  *
- * Whenever controlled media started, we would notify the controller to increase
- * or decrease the amount of its controlled media when its controlled media
- * started or stopped.
+ * The controller would be activated when its controlled media starts and
+ * becomes audible. After the controller is activated, then we can use its
+ * controlling methods, such as `Play()`, `Pause()` to control the media within
+ * the tab.
  *
- * Once the controller started, which means it has controlled some media, then
- * we can use its controlling methods, such as `Play()`, `Pause()` to control
- * the media within the tab. If there is at least one controlled media playing
- * in the tab, then we would say the controller is `playing`. If there is at
- * least one controlled media is playing and audible, then we would say the
- * controller is `audible`.
+ * If there is at least one controlled media playing in the tab, then we would
+ * say the controller is `playing`. If there is at least one controlled media is
+ * playing and audible, then we would say the controller is `audible`.
  *
  * Note that, if we don't enable audio competition, then we might have multiple
  * tabs playing media at the same time, we can use the ID to query the specific
@@ -111,8 +109,15 @@ class MediaController final
   void HandleActualPlaybackStateChanged() override;
   void UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent aEvent);
+
+  // This would register controller to the media control service that takes a
+  // responsibility to manage all active controllers.
   void Activate();
+
+  // This would unregister controller from the media control service.
   void Deactivate();
+
+  void UpdateActivatedStateIfNeeded();
   bool ShouldActivateController() const;
   bool ShouldDeactivateController() const;
 
