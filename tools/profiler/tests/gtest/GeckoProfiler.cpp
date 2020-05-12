@@ -630,20 +630,32 @@ TEST(GeckoProfiler, Markers)
   UniquePtr<char[]> okstr1 = MakeUnique<char[]>(kMax);
   UniquePtr<char[]> okstr2 = MakeUnique<char[]>(kMax);
   UniquePtr<char[]> longstr = MakeUnique<char[]>(kMax + 1);
+  UniquePtr<char[]> longstrCut = MakeUnique<char[]>(kMax + 1);
   for (size_t i = 0; i < kMax; i++) {
     okstr1[i] = 'a';
     okstr2[i] = 'b';
     longstr[i] = 'c';
+    longstrCut[i] = 'c';
   }
   okstr1[kMax - 1] = '\0';
   okstr2[kMax - 1] = '\0';
   longstr[kMax] = '\0';
+  longstrCut[kMax] = '\0';
   // Should be output as-is.
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("", LAYOUT, "");
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR("", LAYOUT, okstr1.get());
   // Should be output as label + space + okstr2.
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR("okstr2", LAYOUT, okstr2.get());
-  // Should be output as "(too long)".
+  // Should be output with kMax length, ending with "...\0".
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR("", LAYOUT, longstr.get());
+  ASSERT_EQ(longstrCut[kMax - 4], 'c');
+  longstrCut[kMax - 4] = '.';
+  ASSERT_EQ(longstrCut[kMax - 3], 'c');
+  longstrCut[kMax - 3] = '.';
+  ASSERT_EQ(longstrCut[kMax - 2], 'c');
+  longstrCut[kMax - 2] = '.';
+  ASSERT_EQ(longstrCut[kMax - 1], 'c');
+  longstrCut[kMax - 1] = '\0';
 
   // Used in markers below.
   TimeStamp ts1 = TimeStamp::NowUnfuzzed();
@@ -897,6 +909,7 @@ TEST(GeckoProfiler, Markers)
       ASSERT_TRUE(stringTable.isArray());
 
       // Test the expected labels in the string table.
+      bool foundEmpty = false;
       bool foundOkstr1 = false;
       bool foundOkstr2 = false;
       const std::string okstr2Label = std::string("okstr2 ") + okstr2.get();
@@ -904,19 +917,23 @@ TEST(GeckoProfiler, Markers)
       for (const auto& s : stringTable) {
         ASSERT_TRUE(s.isString());
         std::string sString = s.asString();
-        if (sString == okstr1.get()) {
+        if (sString.empty()) {
+          EXPECT_FALSE(foundEmpty);
+          foundEmpty = true;
+        } else if (sString == okstr1.get()) {
           EXPECT_FALSE(foundOkstr1);
           foundOkstr1 = true;
         } else if (sString == okstr2Label) {
           EXPECT_FALSE(foundOkstr2);
           foundOkstr2 = true;
-        } else if (sString == "(too long)") {
+        } else if (sString == longstrCut.get()) {
           EXPECT_FALSE(foundTooLong);
           foundTooLong = true;
         } else {
           EXPECT_NE(sString, longstr.get());
         }
       }
+      EXPECT_TRUE(foundEmpty);
       EXPECT_TRUE(foundOkstr1);
       EXPECT_TRUE(foundOkstr2);
       EXPECT_TRUE(foundTooLong);
