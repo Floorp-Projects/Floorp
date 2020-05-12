@@ -26,10 +26,71 @@ EXPORTS += [
     'AndroidBridge.h',
 ]
 
-EXPORTS += [
-    '!GeneratedJNINatives.h',
-    '!GeneratedJNIWrappers.h',
+classes_with_WrapForJNI = [
+    'AndroidGamepadManager',
+    'Base64Utils',
+    'Clipboard',
+    'CodecProxy',
+    'EventCallback',
+    'EventDispatcher',
+    'GeckoAppShell',
+    'GeckoAudioInfo',
+    'GeckoBatteryManager',
+    'GeckoBundle',
+    'GeckoEditableChild',
+    'GeckoHLSDemuxerWrapper',
+    'GeckoHLSResourceWrapper',
+    'GeckoHLSSample',
+    'GeckoInputStream',
+    'GeckoJavaSampler',
+    'GeckoNetworkManager',
+    'GeckoProcessManager',
+    'GeckoResult',
+    'GeckoRuntime',
+    'GeckoScreenOrientation',
+    'GeckoServiceChildProcess',
+    'GeckoSession',
+    'GeckoSurface',
+    'GeckoSurfaceTexture',
+    'GeckoSystemStateListener',
+    'GeckoThread',
+    'GeckoVRManager',
+    'GeckoVideoInfo',
+    'GeckoWebExecutor',
+    'HardwareCodecCapabilityUtils',
+    'ImageDecoder',
+    'MediaDrmProxy',
+    'PanZoomController',
+    'PrefsHelper',
+    'RuntimeTelemetry',
+    'Sample',
+    'SampleBuffer',
+    'ScreenManagerHelper',
+    'SessionAccessibility',
+    'SessionKeyInfo',
+    'SessionTextInput',
+    'SpeechSynthesisService',
+    'StackScroller',
+    'SurfaceAllocator',
+    'SurfaceTextureListener',
+    'TelemetryUtils',
+    'VsyncSource',
+    'WebAuthnTokenManager',
+    'WebMessage',
+    'WebNotification',
+    'WebNotificationDelegate',
+    'WebRequest',
+    'WebRequestError',
+    'WebResponse',
+    'XPCOMEventTarget',
 ]
+
+headers_from_WrapForJNI = sorted(
+    ['Generated{}JNINatives.h'.format(c) for c in classes_with_WrapForJNI] +
+    ['Generated{}JNIWrappers.h'.format(c) for c in classes_with_WrapForJNI])
+
+sources_from_WrapForJNI = sorted(
+    'Generated{}JNIWrappers.cpp'.format(c) for c in classes_with_WrapForJNI)
 
 EXPORTS.mozilla.widget += [
     'AndroidCompositorWidget.h',
@@ -38,8 +99,11 @@ EXPORTS.mozilla.widget += [
     'nsWindow.h',
 ]
 
+EXPORTS += ['!{}'.format(c) for c in headers_from_WrapForJNI]
+
+SOURCES += ['!{}'.format(c) for c in sources_from_WrapForJNI]
+
 SOURCES += [
-    '!GeneratedJNIWrappers.cpp',
     'MediaKeysEventSourceFactory.cpp',
 ]
 
@@ -79,9 +143,11 @@ include('/ipc/chromium/chromium-config.mozbuild')
 # an open FileAvoidWrite to the invoked script.  That doesn't work well with
 # the Gradle task that generates all of the outputs, so we add a dummy first
 # output.
-GeneratedFile(
-    'generated_jni_wrappers', 'GeneratedJNINatives.h', 'GeneratedJNIWrappers.h',
-    'GeneratedJNIWrappers.cpp', script='/mobile/android/gradle.py',
+
+t = tuple(['generated_jni_wrappers'] + headers_from_WrapForJNI + sources_from_WrapForJNI)
+
+GeneratedFile(*t,
+    script='/mobile/android/gradle.py',
     entry_point='generate_generated_jni_wrappers')
 
 FINAL_LIBRARY = 'xul'
