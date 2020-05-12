@@ -3788,6 +3788,21 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // Make sure that APZ will dispatch events back to content so we can
     // create a displayport for this frame. We'll add the item later on.
     if (!mWillBuildScrollableLayer) {
+      // The scrollframe is inactive, but if IsMaybeScrollingActive() returns
+      // true, the scrollbars may have been layerized and may refer to the
+      // scrollId of this scrollframe. In this situation, we need to send a
+      // scrollinfo layer to APZ, so that it has some knowledge of this
+      // scrollframe, rather than potentially getting a hit-test result with a
+      // scrollId it knows nothing about (which can cause assertion failures in
+      // a debug WR-enabled configuration).
+      bool provideScrollInfoForAPZ = IsMaybeScrollingActive();
+      if (aBuilder->ShouldBuildScrollInfoItemsForHoisting()) {
+        // If this condition is true, then we'll be including a scrollinfo item
+        // anyway below, and we shouldn't do it twice (runs afoul of display
+        // item uniqueness checks).
+        provideScrollInfoForAPZ = false;
+      }
+
       if (aBuilder->BuildCompositorHitTestInfo()) {
         nsDisplayCompositorHitTestInfo* hitInfo =
             MakeDisplayItemWithIndex<nsDisplayCompositorHitTestInfo>(
@@ -3795,6 +3810,12 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         if (hitInfo) {
           AppendInternalItemToTop(scrolledContent, hitInfo, Some(INT32_MAX));
         }
+      }
+      if (provideScrollInfoForAPZ) {
+        nsDisplayScrollInfoLayer* scrollInfo =
+            MakeDisplayItem<nsDisplayScrollInfoLayer>(aBuilder, mScrolledFrame,
+                                                      mOuter, info, area);
+        AppendInternalItemToTop(scrolledContent, scrollInfo, Nothing());
       }
     }
 
