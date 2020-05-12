@@ -74,17 +74,37 @@ void ProfileBuffer::CollectCodeLocation(
   if (aStr) {
     // Store the string using one or more DynamicStringFragment entries.
     size_t strLen = strlen(aStr) + 1;  // +1 for the null terminator
-    for (size_t j = 0; j < strLen;) {
+    // If larger than the prescribed limit, we will cut the string and end it
+    // with an ellipsis.
+    const bool tooBig = strLen > kMaxFrameKeyLength;
+    if (tooBig) {
+      strLen = kMaxFrameKeyLength;
+    }
+    char chars[ProfileBufferEntry::kNumChars];
+    for (size_t j = 0;; j += ProfileBufferEntry::kNumChars) {
       // Store up to kNumChars characters in the entry.
-      char chars[ProfileBufferEntry::kNumChars];
       size_t len = ProfileBufferEntry::kNumChars;
-      if (j + len >= strLen) {
+      const bool last = j + len >= strLen;
+      if (last) {
+        // Only the last entry may be smaller than kNumChars.
         len = strLen - j;
+        if (tooBig) {
+          // That last entry is part of a too-big string, replace the end
+          // characters with an ellipsis "...".
+          len = std::max(len, size_t(4));
+          chars[len - 4] = '.';
+          chars[len - 3] = '.';
+          chars[len - 2] = '.';
+          chars[len - 1] = '\0';
+          // Make sure the memcpy will not overwrite our ellipsis!
+          len -= 4;
+        }
       }
       memcpy(chars, &aStr[j], len);
-      j += ProfileBufferEntry::kNumChars;
-
       AddEntry(ProfileBufferEntry::DynamicStringFragment(chars));
+      if (last) {
+        break;
+      }
     }
   }
 
@@ -229,8 +249,6 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
     // Adjust the dynamic string as necessary.
     if (ProfilerFeature::HasPrivacy(mFeatures) && !isChromeJSEntry) {
       dynamicString = "(private)";
-    } else if (strlen(dynamicString) >= ProfileBuffer::kMaxFrameKeyLength) {
-      dynamicString = "(too long)";
     }
   }
 
