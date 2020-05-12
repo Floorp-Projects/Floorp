@@ -1174,7 +1174,16 @@ void DisplayListBuilder::PushClearRectWithComplexRegion(
   WRDL_LOG("PushClearRectWithComplexRegion b=%s c=%s\n", mWrState,
            Stringify(aBounds).c_str(), Stringify(clip).c_str());
 
-  auto clipId = DefineRoundedRectClip(aRegion);
+  // TODO(gw): This doesn't pass the complex region through to WR, as clear
+  //           rects with complex clips are currently broken. This is the
+  //           only place they are used, and they are used only for a single
+  //           case (close buttons on Win7 machines). We might be able to
+  //           get away with not supporting this at all in WR, using the
+  //           non-clipped clear rect is an improvement for now, at least.
+  //           See https://bugzilla.mozilla.org/show_bug.cgi?id=1636683 for
+  //           more information.
+  AutoTArray<wr::ComplexClipRegion, 1> clips;
+  auto clipId = DefineClip(Nothing(), aBounds, &clips);
   auto spaceAndClip = WrSpaceAndClip{mCurrentSpaceAndClipChain.space, clipId};
 
   wr_dp_push_clear_rect_with_parent_clip(mWrState, aBounds, clip,
