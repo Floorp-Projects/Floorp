@@ -5625,6 +5625,16 @@ MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MGuardValue::foldsTo(TempAllocator& alloc) {
+  if (MConstant* cst = value()->maybeConstantValue()) {
+    if (cst->toJSValue() == expected()) {
+      return value();
+    }
+  }
+
+  return this;
+}
+
 MDefinition* MGuardSpecificAtom::foldsTo(TempAllocator& alloc) {
   if (str()->isConstant()) {
     JSAtom* cstAtom = &str()->toConstant()->toString()->asAtom();
