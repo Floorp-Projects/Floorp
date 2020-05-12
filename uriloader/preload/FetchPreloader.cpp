@@ -20,6 +20,7 @@
 #include "nsITimedChannel.h"
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
+#include "nsIDocShell.h"
 
 namespace mozilla {
 
