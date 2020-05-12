@@ -120,6 +120,21 @@ inline constexpr bool IsCCTraceKind(JS::TraceKind aKind) {
   }
 }
 
+// Helper for SFINAE to ensure certain methods are only used on appropriate base
+// types. This avoids common footguns such as `Cell::is<JSFunction>()` which
+// match any type of JSObject.
+template <typename T>
+struct IsBaseTraceType : std::false_type {};
+
+#define JS_EXPAND_DEF(_, type, _1, _2) \
+  template <>                          \
+  struct IsBaseTraceType<type> : std::true_type {};
+JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
+#undef JS_EXPAND_DEF
+
+template <typename T>
+inline constexpr bool IsBaseTraceType_v = IsBaseTraceType<T>::value;
+
 // Map from all public types to their trace kind.
 #define JS_EXPAND_DEF(name, type, _, _1)                   \
   template <>                                              \
