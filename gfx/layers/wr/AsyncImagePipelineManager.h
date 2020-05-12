@@ -103,8 +103,7 @@ class AsyncImagePipelineManager final {
                                      wr::TransactionBuilder& aFastTxn);
   void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId,
                                   wr::TransactionBuilder& aTxn,
-                                  wr::TransactionBuilder& aTxnForImageBridge,
-                                  wr::RenderRoot aRenderRoot);
+                                  wr::TransactionBuilder& aTxnForImageBridge);
 
   void SetEmptyDisplayList(const wr::PipelineId& aPipelineId,
                            wr::TransactionBuilder& aTxn,
