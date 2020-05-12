@@ -284,11 +284,13 @@ tests.push({
   test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1945686"),
 });
 
-tests.push({
-  locale: "ru",
-  distribution: "yandex-uk",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1923018"),
-});
+// Disabled as it will fail with the latest configuration and modern config is
+// disabled on 77.
+// tests.push({
+//   locale: "ru",
+//   distribution: "yandex-uk",
+//   test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1923018"),
+// });
 
 tests.push({
   locale: "ru",
