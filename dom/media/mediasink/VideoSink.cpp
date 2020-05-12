@@ -378,6 +378,7 @@ void VideoSink::OnVideoQueueFinished() {
 }
 
 void VideoSink::Redraw(const VideoInfo& aInfo) {
+  AUTO_PROFILER_LABEL("VideoSink::Redraw", MEDIA_PLAYBACK);
   AssertOwnerThread();
 
   // No video track, nothing to draw.
@@ -414,6 +415,8 @@ void VideoSink::Redraw(const VideoInfo& aInfo) {
 }
 
 void VideoSink::TryUpdateRenderedVideoFrames() {
+  AUTO_PROFILER_LABEL("VideoSink::TryUpdateRenderedVideoFrames",
+                      MEDIA_PLAYBACK);
   AssertOwnerThread();
   if (mUpdateScheduler.IsScheduled() || !mAudioSink->IsPlaying()) {
     return;
@@ -466,6 +469,7 @@ void VideoSink::DisconnectListener() {
 
 void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
                                   const TimeStamp& aClockTimeStamp) {
+  AUTO_PROFILER_LABEL("VideoSink::RenderVideoFrames", MEDIA_PLAYBACK);
   AssertOwnerThread();
 
   AutoTArray<RefPtr<VideoData>, 16> frames;
@@ -534,6 +538,7 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
 }
 
 void VideoSink::UpdateRenderedVideoFrames() {
+  AUTO_PROFILER_LABEL("VideoSink::UpdateRenderedVideoFrames", MEDIA_PLAYBACK);
   AssertOwnerThread();
   MOZ_ASSERT(mAudioSink->IsPlaying(), "should be called while playing.");
 
