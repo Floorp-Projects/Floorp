@@ -2037,48 +2037,56 @@ installation:
     expires: "2020-09-01"
 
 browser.search:
-    with_ads:
-      type: labeled_counter
-      description: >
-        Records counts of SERP pages with adverts displayed. The key format is ‘<provider-name>’.
-      send_in_pings:
-        - baseline
-        - metrics
-      bugs:
-        - https://github.com/mozilla-mobile/fenix/issues/6558
-      data_reviews:
-        - https://github.com/mozilla-mobile/fenix/pull/10112
-      notification_emails:
-        - fenix-core@mozilla.com
-      expires: "2020-09-01"
-    ad_clicks:
-      type: labeled_counter
-      description: >
-        Records clicks of adverts on SERP pages. The key format is ‘<provider-name>’.
-      send_in_pings:
-        - baseline
-        - metrics
-      bugs:
-        - https://github.com/mozilla-mobile/fenix/issues/6558
-      data_reviews:
-        - https://github.com/mozilla-mobile/fenix/pull/10112
-      notification_emails:
-        - fenix-core@mozilla.com
-      expires: "2020-09-01"
-    in_content:
-      type: labeled_counter
-      description: >
-        Records the type of interaction a user has on SERP pages.
-      send_in_pings:
-        - baseline
-        - metrics
-      bugs:
-        - https://github.com/mozilla-mobile/fenix/issues/6557
-      data_reviews:
-        - https://github.com/mozilla-mobile/fenix/pull/10167
-      notification_emails:
-        - fenix-core@mozilla.com
-      expires: "2020-09-01"
+  with_ads:
+    type: labeled_counter
+    description: |
+      Records counts of SERP pages with adverts displayed.
+      The key format is ‘<provider-name>’.
+    send_in_pings:
+      - baseline
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6558
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10112
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+    # TODO: https://github.com/mozilla-mobile/fenix/issues/10599
+    no_lint: [BASELINE_PING]
+  ad_clicks:
+    type: labeled_counter
+    description: |
+      Records clicks of adverts on SERP pages.
+      The key format is ‘<provider-name>’.
+    send_in_pings:
+      - baseline
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6558
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10112
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+    # TODO: https://github.com/mozilla-mobile/fenix/issues/10599
+    no_lint: [BASELINE_PING]
+  in_content:
+    type: labeled_counter
+    description: |
+      Records the type of interaction a user has on SERP pages.
+    send_in_pings:
+      - baseline
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6557
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10167
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+    # TODO: https://github.com/mozilla-mobile/fenix/issues/10599
+    no_lint: [BASELINE_PING]
 
 addons:
   open_addons_in_settings:

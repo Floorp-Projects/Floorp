@@ -257,7 +257,10 @@ The following metrics are added to the ping:
 ## startup-timeline
 
 This ping is intended to provide an understanding of startup performance.
-The ping is intended to be captured by performance testing automation to report results there, in addition to user telemetry. We place these metrics into their own ping in order to isolate them and make this process easier.
+
+The ping is intended to be captured by performance testing automation to
+report results there, in addition to user telemetry. We place these metrics
+into their own ping in order to isolate them and make this process easier.
 
 
 **Data reviews for this ping:**
