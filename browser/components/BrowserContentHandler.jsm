@@ -808,12 +808,20 @@ nsBrowserContentHandler.prototype = {
         try {
           var width = cmdLine.handleFlagWithParam("width", false);
           var height = cmdLine.handleFlagWithParam("height", false);
+          var left = cmdLine.handleFlagWithParam("left", false);
+          var top = cmdLine.handleFlagWithParam("top", false);
 
           if (width) {
             this.mFeatures += ",width=" + width;
           }
           if (height) {
             this.mFeatures += ",height=" + height;
+          }
+          if (left) {
+            this.mFeatures += ",left=" + left;
+          }
+          if (top) {
+            this.mFeatures += ",top=" + top;
           }
         } catch (e) {}
       }
