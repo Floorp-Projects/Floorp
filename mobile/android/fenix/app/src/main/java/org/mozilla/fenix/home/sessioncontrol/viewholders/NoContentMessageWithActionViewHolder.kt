@@ -8,12 +8,10 @@ import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.view.isVisible
-import kotlinx.android.synthetic.main.no_content_message_with_action.view.*
+import kotlinx.android.synthetic.main.no_content_message_with_action.*
 import org.mozilla.fenix.R
 
-class NoContentMessageWithActionViewHolder(
-    private val view: View
-) : NoContentMessageViewHolder(view) {
+class NoContentMessageWithActionViewHolder(view: View) : NoContentMessageViewHolder(view) {
 
     /**
      * @param header ID of string resource for title text.
@@ -31,12 +29,12 @@ class NoContentMessageWithActionViewHolder(
         listener: (() -> Unit)? = null
     ) {
         super.bind(header, description)
-        with(view.context) {
+        with(itemView.context) {
 
             if (buttonIcon != 0 || buttonText != 0) {
-                view.add_new_tab_button.apply {
+                add_new_tab_button.apply {
                     isVisible = true
-                    setIcon(getDrawable(buttonIcon))
+                    icon = getDrawable(buttonIcon)
                     text = getString(buttonText)
                     setOnClickListener {
                         listener?.invoke()

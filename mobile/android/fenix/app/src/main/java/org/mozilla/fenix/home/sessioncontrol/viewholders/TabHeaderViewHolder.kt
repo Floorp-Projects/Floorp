@@ -9,20 +9,20 @@ import android.view.View
 import android.widget.PopupWindow
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.tab_header.view.*
+import kotlinx.android.synthetic.main.tab_header.*
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.ViewHolder
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
 class TabHeaderViewHolder(
-    private val view: View,
+    view: View,
     private val interactor: SessionControlInteractor
-) : RecyclerView.ViewHolder(view) {
+) : ViewHolder(view) {
     private var isPrivate = false
     private var tabsMenu: TabHeaderMenu
 
@@ -39,34 +39,28 @@ class TabHeaderViewHolder(
             }
         }
 
-        view.apply {
-            share_tabs_button.run {
-                setOnClickListener {
-                    interactor.onShareTabs()
-                }
-            }
+        share_tabs_button.setOnClickListener {
+            interactor.onShareTabs()
+        }
 
-            close_tabs_button.run {
-                setOnClickListener {
-                    view.context.components.analytics.metrics.track(Event.PrivateBrowsingGarbageIconTapped)
-                    interactor.onCloseAllTabs(true)
-                }
-            }
+        close_tabs_button.setOnClickListener {
+            it.context.components.analytics.metrics.track(Event.PrivateBrowsingGarbageIconTapped)
+            interactor.onCloseAllTabs(true)
+        }
 
-            tabs_overflow_button.run {
-                var menu: PopupWindow? = null
-                setOnClickListener {
-                    if (menu == null) {
-                        menu = tabsMenu.menuBuilder
-                            .build(view.context)
-                            .show(
-                                anchor = it,
-                                orientation = BrowserMenu.Orientation.DOWN,
-                                onDismiss = { menu = null }
-                            )
-                    } else {
-                        menu?.dismiss()
-                    }
+        tabs_overflow_button.run {
+            var menu: PopupWindow? = null
+            setOnClickListener {
+                if (menu == null) {
+                    menu = tabsMenu.menuBuilder
+                        .build(it.context)
+                        .show(
+                            anchor = it,
+                            orientation = BrowserMenu.Orientation.DOWN,
+                            onDismiss = { menu = null }
+                        )
+                } else {
+                    menu?.dismiss()
                 }
             }
         }
@@ -78,10 +72,10 @@ class TabHeaderViewHolder(
 
         val headerTextResourceId =
             if (isPrivate) R.string.tabs_header_private_tabs_title else R.string.tab_header_label
-        view.header_text.text = view.context.getString(headerTextResourceId)
-        view.share_tabs_button.isInvisible = !isPrivate || !hasTabs
-        view.close_tabs_button.isInvisible = !isPrivate || !hasTabs
-        view.tabs_overflow_button.isVisible = !isPrivate && hasTabs
+        header_text.text = itemView.context.getString(headerTextResourceId)
+        share_tabs_button.isInvisible = !isPrivate || !hasTabs
+        close_tabs_button.isInvisible = !isPrivate || !hasTabs
+        tabs_overflow_button.isVisible = !isPrivate && hasTabs
     }
 
     class TabHeaderMenu(

@@ -904,7 +904,7 @@ class HomeFragment : Fragment() {
             val viewHolder =
                 sessionControlView!!.view.findViewHolderForAdapterPosition(indexOfCollection)
             val border =
-                (viewHolder as? CollectionViewHolder)?.view?.findViewById<View>(R.id.selected_border)
+                (viewHolder as? CollectionViewHolder)?.itemView?.findViewById<View>(R.id.selected_border)
             val listener = object : Animator.AnimatorListener {
                 override fun onAnimationCancel(animation: Animator?) {
                     border?.visibility = View.GONE

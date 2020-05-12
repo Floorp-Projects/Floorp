@@ -9,13 +9,12 @@ import android.graphics.Outline
 import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_list_row.*
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.support.ktx.android.util.dpToFloat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.ViewHolder
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
@@ -27,10 +26,8 @@ import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
 
 class TabViewHolder(
     view: View,
-    interactor: TabSessionInteractor,
-    override val containerView: View? = view
-) :
-    RecyclerView.ViewHolder(view), LayoutContainer {
+    interactor: TabSessionInteractor
+) : ViewHolder(view) {
 
     internal var tab: Tab? = null
 

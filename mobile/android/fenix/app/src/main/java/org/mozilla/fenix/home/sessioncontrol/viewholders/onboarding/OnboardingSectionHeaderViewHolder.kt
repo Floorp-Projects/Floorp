@@ -10,10 +10,12 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_section_header.view.*
 import org.mozilla.fenix.R
 
-class OnboardingSectionHeaderViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
+class OnboardingSectionHeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+    private val sectionHeader = view.section_header_text
 
     fun bind(labelBuilder: (Context) -> String) {
-        view.section_header_text.text = labelBuilder(view.context)
+        sectionHeader.text = labelBuilder(itemView.context)
     }
 
     companion object {

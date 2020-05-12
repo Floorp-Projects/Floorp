@@ -7,7 +7,6 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.flexbox.FlexboxLayoutManager
-import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_top_sites.view.*
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
@@ -16,9 +15,9 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSitesAdapte
 
 class TopSiteViewHolder(
     view: View,
-    interactor: TopSiteInteractor,
-    override val containerView: View? = view
-) : RecyclerView.ViewHolder(view), LayoutContainer {
+    interactor: TopSiteInteractor
+) : RecyclerView.ViewHolder(view) {
+
     private val topSitesAdapter = TopSitesAdapter(interactor)
 
     init {

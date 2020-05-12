@@ -5,7 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.onboarding_automatic_signin.view.*
@@ -19,8 +19,10 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.components
 
-class OnboardingAutomaticSignInViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
+class OnboardingAutomaticSignInViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
     private lateinit var shareableAccount: ShareableAccount
+    private val headerText = view.header_text
 
     init {
         view.turn_on_sync_button.setOnClickListener {
@@ -57,11 +59,11 @@ class OnboardingAutomaticSignInViewHolder(private val view: View) : RecyclerView
 
     fun bind(account: ShareableAccount) {
         shareableAccount = account
-        view.header_text.text = view.context.getString(
+        headerText.text = itemView.context.getString(
             R.string.onboarding_firefox_account_auto_signin_header_2, account.email
         )
-        val icon = AppCompatResources.getDrawable(view.context, R.drawable.ic_onboarding_avatar_anonymous)
-        view.header_text.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)
+        val icon = getDrawable(itemView.context, R.drawable.ic_onboarding_avatar_anonymous)
+        headerText.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)
     }
 
     companion object {

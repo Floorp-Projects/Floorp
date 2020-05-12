@@ -14,7 +14,10 @@ import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeW
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.HomeFragmentDirections
 
-class OnboardingManualSignInViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
+class OnboardingManualSignInViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+    private val headerText = view.header_text
+
     init {
         view.turn_on_sync_button.setOnClickListener {
             val directions = HomeFragmentDirections.actionGlobalTurnOnSync()
@@ -23,11 +26,13 @@ class OnboardingManualSignInViewHolder(private val view: View) : RecyclerView.Vi
     }
 
     fun bind() {
-        val appName = view.context.getString(R.string.app_name)
-        view.header_text.text = view.context.getString(R.string.onboarding_firefox_account_header, appName)
-        val icon = AppCompatResources.getDrawable(view.context, R.drawable.ic_onboarding_firefox_accounts)
-        icon?.setTint(ContextCompat.getColor(view.context, R.color.white_color))
-        view.header_text.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)
+        val context = itemView.context
+
+        val appName = context.getString(R.string.app_name)
+        headerText.text = context.getString(R.string.onboarding_firefox_account_header, appName)
+        val icon = AppCompatResources.getDrawable(context, R.drawable.ic_onboarding_firefox_accounts)
+        icon?.setTint(ContextCompat.getColor(context, R.color.white_color))
+        headerText.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)
     }
 
     companion object {
