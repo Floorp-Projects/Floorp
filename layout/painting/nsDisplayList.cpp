@@ -4831,12 +4831,6 @@ void nsDisplayCompositorHitTestInfo::InitializeScrollTarget(
   }
 }
 
-void nsDisplayCompositorHitTestInfo::SetInactiveScrollTarget(
-    ScrollableLayerGuid::ViewID aScrollTarget) {
-  MOZ_ASSERT(!mScrollTarget);
-  mScrollTarget = Some(aScrollTarget);
-}
-
 bool nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,

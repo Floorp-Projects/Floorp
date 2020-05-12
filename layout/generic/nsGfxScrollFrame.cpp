@@ -3557,9 +3557,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  ScrollableLayerGuid::ViewID scrollId =
-      nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
-
   {
     // Note that setting the current scroll parent id here means that positioned
     // children of this scroll info layer will pick up the scroll info layer as
@@ -3567,9 +3564,10 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // happens for positioned children of scroll layers, and we want to maintain
     // consistent behaviour between scroll layers and scroll info layers.
     nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(
-        aBuilder, couldBuildLayer && mScrolledFrame->GetContent()
-                      ? scrollId
-                      : aBuilder->GetCurrentScrollParentId());
+        aBuilder,
+        couldBuildLayer && mScrolledFrame->GetContent()
+            ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
+            : aBuilder->GetCurrentScrollParentId());
 
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     // If we're building an async zoom container, clip the contents inside
@@ -3752,12 +3750,15 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsDisplayList resultList;
     set.SerializeWithCorrectZOrder(&resultList, mOuter->GetContent());
 
+    mozilla::layers::FrameMetrics::ViewID viewID =
+        nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
+
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     clipState.ClipContentDescendants(clipRect, haveRadii ? radii : nullptr);
 
     set.Content()->AppendNewToTop<nsDisplayAsyncZoom>(
         aBuilder, mOuter, &resultList, aBuilder->CurrentActiveScrolledRoot(),
-        scrollId);
+        viewID);
   }
 
   nsDisplayListCollection scrolledContent(aBuilder);
@@ -3787,48 +3788,13 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // Make sure that APZ will dispatch events back to content so we can
     // create a displayport for this frame. We'll add the item later on.
     if (!mWillBuildScrollableLayer) {
-      // The scrollframe is inactive, but if IsMaybeScrollingActive() returns
-      // true, the scrollbars may have been layerized and may refer to the
-      // scrollId of this scrollframe. In this situation, we need to send a
-      // scrollinfo layer to APZ, so that it has some knowledge of this
-      // scrollframe, rather than potentially getting a hit-test result with a
-      // scrollId it knows nothing about (which can cause assertion failures in
-      // a debug WR-enabled configuration).
-      bool provideScrollInfoForAPZ = IsMaybeScrollingActive();
-      if (aBuilder->ShouldBuildScrollInfoItemsForHoisting()) {
-        // If this condition is true, then we'll be including a scrollinfo item
-        // anyway below, and we shouldn't do it twice (runs afoul of display
-        // item uniqueness checks).
-        provideScrollInfoForAPZ = false;
-      }
-
       if (aBuilder->BuildCompositorHitTestInfo()) {
         nsDisplayCompositorHitTestInfo* hitInfo =
             MakeDisplayItemWithIndex<nsDisplayCompositorHitTestInfo>(
                 aBuilder, mScrolledFrame, 1, info, Some(area));
         if (hitInfo) {
-          if (provideScrollInfoForAPZ) {
-            // Since the hit info item has the eInactiveScrollframe flag, the
-            // actual scrollId here doesn't matter as APZ will fall back to
-            // main-thread layerization. But conceptually it seems better to
-            // send the most accurate scrollId that we can, as it makes
-            // behaviour more consistent between WR and non-WR codepaths for
-            // testing purposes. In the case where provideScrollInfoForAPZ is
-            // true, we will include a scrollinfo item (below), and so we can
-            // set the true scrollId here without APZ complaining about scrollId
-            // references that it doesn't know about. If provideScrollInfoForAPZ
-            // is false, APZ may not even know that this scrollframe even exists
-            // so we shouldn't refer to its scrollId in hit-test info items.
-            hitInfo->SetInactiveScrollTarget(scrollId);
-          }
           AppendInternalItemToTop(scrolledContent, hitInfo, Some(INT32_MAX));
         }
-      }
-      if (provideScrollInfoForAPZ) {
-        nsDisplayScrollInfoLayer* scrollInfo =
-            MakeDisplayItem<nsDisplayScrollInfoLayer>(aBuilder, mScrolledFrame,
-                                                      mOuter, info, area);
-        AppendInternalItemToTop(scrolledContent, scrollInfo, Nothing());
       }
     }
 
