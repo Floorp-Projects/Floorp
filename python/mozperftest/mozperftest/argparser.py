@@ -15,9 +15,9 @@ except ImportError:
     build_obj = None
     conditions = None
 
-from mozperftest.system import get_layers as system_layers
-from mozperftest.browser import get_layers as browser_layers
-from mozperftest.metrics import get_layers as metrics_layers
+from mozperftest.system import get_layers as system_layers  # noqa
+from mozperftest.browser import get_layers as browser_layers  # noqa
+from mozperftest.metrics import get_layers as metrics_layers  # noqa
 
 FLAVORS = ["script", "doc"]
 
