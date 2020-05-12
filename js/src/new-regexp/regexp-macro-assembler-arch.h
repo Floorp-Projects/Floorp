@@ -223,17 +223,13 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   js::jit::Register backtrack_stack_pointer_;
   js::jit::Register temp0_, temp1_, temp2_;
 
-  // These labels are used in various API calls and bound (if used) in
-  // GetCode. If we abort in the middle of a compilation, as may
-  // happen if a regexp is too big, they may be used but not
-  // bound.
-  js::jit::NonAssertingLabel entry_label_;
-  js::jit::NonAssertingLabel start_label_;
-  js::jit::NonAssertingLabel backtrack_label_;
-  js::jit::NonAssertingLabel success_label_;
-  js::jit::NonAssertingLabel exit_label_;
-  js::jit::NonAssertingLabel stack_overflow_label_;
-  js::jit::NonAssertingLabel exit_with_exception_label_;
+  js::jit::Label entry_label_;
+  js::jit::Label start_label_;
+  js::jit::Label backtrack_label_;
+  js::jit::Label success_label_;
+  js::jit::Label exit_label_;
+  js::jit::Label stack_overflow_label_;
+  js::jit::Label exit_with_exception_label_;
 
   // When we generate the code to push a backtrack label's address
   // onto the backtrack stack, we don't know its final address. We
