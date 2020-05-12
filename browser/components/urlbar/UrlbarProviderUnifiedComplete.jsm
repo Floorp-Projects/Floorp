@@ -208,6 +208,8 @@ function makeUrlbarResult(tokens, info) {
               action.params.searchSuggestion,
               UrlbarUtils.HIGHLIGHT.SUGGESTED,
             ],
+            // For test interoperabilty with UrlbarProviderSearchSuggestions.
+            tail: undefined,
             keyword: [action.params.alias, UrlbarUtils.HIGHLIGHT.TYPED],
             query: [
               action.params.searchQuery.trim(),
