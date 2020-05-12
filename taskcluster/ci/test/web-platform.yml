@@ -59,7 +59,10 @@ web-platform-tests:
     max-run-time:
         by-test-platform:
             .*-ccov/.*: 10800
-            linux.*64-qr/debug: 9000
+            linux.*64-asan/opt: 10800
+            linux.*64(-qr)?/debug: 10800
+            macosx.*/debug: 10800
+            android-em.*/.*: 10800
             default: 7200
     e10s: true
     run-on-projects:
