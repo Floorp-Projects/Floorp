@@ -1,7 +1,8 @@
 // This creates a serialized <script> element that is useful for blob/data/srcdoc-style tests.
 
 function createScript(sameOrigin, crossOrigin, type="parent", id="") {
-  return `const data = { id: "${id}",
+  return `<script>
+const data = { id: "${id}",
                opener: !!window.opener,
                origin: window.origin,
                sameOriginNoCORPSuccess: false,
@@ -26,5 +27,6 @@ Promise.all(records).then(() => {
   } else {
     window.${type}.postMessage(data, "*");
   }
-});`;
+});
+<\/script>`;
 }
