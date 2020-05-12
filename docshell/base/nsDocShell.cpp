@@ -397,7 +397,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mBlankTiming(false),
       mTitleValidForCurrentURI(false),
       mWillChangeProcess(false),
-      mWatchedByDevtools(false),
       mIsNavigating(false),
       mSuspendMediaWhenInactive(false) {
   // If no outer window ID was provided, generate a new one.
@@ -12659,20 +12658,4 @@ bool nsDocShell::GetIsAttemptingToNavigate() {
   }
 
   return false;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetWatchedByDevtools(bool* aWatched) {
-  NS_ENSURE_ARG(aWatched);
-  *aWatched = mWatchedByDevtools;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetWatchedByDevtools(bool aWatched) {
-  mWatchedByDevtools = aWatched;
-  if (!mWillChangeProcess) {
-    mBrowsingContext->SetWatchedByDevtools(aWatched);
-  }
-  return NS_OK;
 }

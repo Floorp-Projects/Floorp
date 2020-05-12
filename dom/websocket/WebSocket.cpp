@@ -1358,8 +1358,8 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     nsPIDOMWindowOuter* outerWindow = ownerWindow->GetOuterWindow();
 
     UniquePtr<SerializedStackHolder> stack;
-    nsIDocShell* docShell = outerWindow->GetDocShell();
-    if (docShell && docShell->GetWatchedByDevtools()) {
+    BrowsingContext* browsingContext = ownerWindow->GetBrowsingContext();
+    if (browsingContext && browsingContext->WatchedByDevTools()) {
       stack = GetCurrentStackForNetMonitor(aGlobal.Context());
     }
 
@@ -1383,7 +1383,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
 
     UniquePtr<SerializedStackHolder> stack;
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    if (workerPrivate->IsWatchedByDevtools()) {
+    if (workerPrivate->IsWatchedByDevTools()) {
       stack = GetCurrentStackForNetMonitor(aGlobal.Context());
     }
 

@@ -2425,7 +2425,7 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
   MOZ_DIAGNOSTIC_ASSERT(worker->PrincipalIsValid());
 
   UniquePtr<SerializedStackHolder> stack;
-  if (worker->IsWatchedByDevtools()) {
+  if (worker->IsWatchedByDevTools()) {
     stack = GetCurrentStackForNetMonitor(aCx);
   }
 
@@ -2535,7 +2535,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     loadInfo.mServiceWorkersTestingInWindow =
         aParent->ServiceWorkersTestingInWindow();
     loadInfo.mParentController = aParent->GlobalScope()->GetController();
-    loadInfo.mWatchedByDevtools = aParent->IsWatchedByDevtools();
+    loadInfo.mWatchedByDevTools = aParent->IsWatchedByDevTools();
   } else {
     AssertIsOnMainThread();
 
@@ -2656,10 +2656,9 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
 
       loadInfo.mXHRParamsAllowed = perm == nsIPermissionManager::ALLOW_ACTION;
 
-      nsIDocShell* docShell = globalWindow->GetDocShell();
-      if (docShell) {
-        loadInfo.mWatchedByDevtools = docShell->GetWatchedByDevtools();
-      }
+      BrowsingContext* browsingContext = globalWindow->GetBrowsingContext();
+      loadInfo.mWatchedByDevTools =
+          browsingContext ? browsingContext->WatchedByDevTools() : false;
 
       loadInfo.mReferrerInfo =
           ReferrerInfo::CreateForFetch(loadInfo.mLoadingPrincipal, document);
