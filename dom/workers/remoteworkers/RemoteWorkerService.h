@@ -13,6 +13,7 @@
 class nsIThread;
 
 namespace mozilla {
+class AbstractThread;
 namespace dom {
 
 class RemoteWorkerServiceChild;
@@ -38,6 +39,10 @@ class RemoteWorkerService final : public nsIObserver {
   void ShutdownOnTargetThread();
 
   nsCOMPtr<nsIThread> mThread;
+  // We create an AbstractThread for mThread thread so that we can use direct
+  // task dispatching with MozPromise, which is similar (but not identical to)
+  // the microtask semantics of JS promises.
+  RefPtr<AbstractThread> mAbstractThread;
   RefPtr<RemoteWorkerServiceChild> mActor;
 };
 
