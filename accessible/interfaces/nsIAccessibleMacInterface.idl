@@ -6,6 +6,8 @@
 #include "nsISupports.idl"
 
 %{C++
+#include <objc/objc.h>
+
 #define NS_ACCESSIBLE_MAC_EVENT_TOPIC "accessible-mac-event"
 %}
 
@@ -36,5 +38,22 @@ interface nsIAccessibleMacInterface : nsISupports
    * Emulatets `AXUIElementPerformAction`.
    */
   void performAction(in AString actionName);
+
+  /**
+   * Returns true if the given attribute is settable on the object.
+   * Emulates `AXUIElementIsAttributeSettable`.
+   **/
+  bool isAttributeSettable(in AString attributeName);
+
+  /**
+   * Sets the given attribute with the given value on the object.
+   * Emulates `AXUIElementSetAttributeValue`.
+   **/
+  [implicit_jscontext]
+  void setAttributeValue(in AString attributeName, in jsval attributeValue);
+
+  %{C++
+  virtual id GetNativeMacAccessible() const = 0;
+  %}
 };
 
