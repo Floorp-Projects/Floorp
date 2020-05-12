@@ -5024,7 +5024,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         declArgs=declArgs)
 
     def incrementNestingLevel():
-        if nestingLevel is "":
+        if nestingLevel == "":
             return 1
         return nestingLevel + 1
 
