@@ -18,7 +18,6 @@ import traceback
 import uuid
 from collections import Iterable
 
-from mach.sentry import register_sentry, report_exception
 from six import string_types
 
 from .base import (
@@ -320,7 +319,6 @@ To see more help for a specific command, run:
         Returns the integer exit code that should be used. 0 means success. All
         other values indicate failure.
         """
-        register_sentry()
 
         # If no encoding is defined, we default to UTF-8 because without this
         # Python 2.7 will assume the default encoding of ASCII. This will blow
@@ -377,7 +375,6 @@ To see more help for a specific command, run:
             stack = traceback.extract_tb(exc_tb)
 
             self._print_exception(sys.stdout, exc_type, exc_value, stack)
-            report_exception(exc_value)
 
             return 1
 
@@ -483,7 +480,6 @@ To see more help for a specific command, run:
             return e.exit_code
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
-            report_exception(exc_value)
 
             # The first two frames are us and are never used.
             stack = traceback.extract_tb(exc_tb)[2:]
