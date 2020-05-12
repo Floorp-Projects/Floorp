@@ -4,3 +4,4 @@
 
 toolkit.jar:
   content/global/reader/aboutReader.html             (content/aboutReader.html)
+  content/global/reader/aboutReader.js               (content/aboutReader.js)

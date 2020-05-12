@@ -1489,11 +1489,8 @@ this.tabs = class extends ExtensionAPI {
             );
           }
           let nativeTab = getTabOrActive(tabId);
-
-          nativeTab.linkedBrowser.sendMessageToActor(
-            "Reader:ToggleReaderMode",
-            {},
-            "AboutReader"
+          nativeTab.linkedBrowser.messageManager.sendAsyncMessage(
+            "Reader:ToggleReaderMode"
           );
         },
 

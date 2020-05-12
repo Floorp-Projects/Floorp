@@ -29,11 +29,6 @@ ChromeUtils.defineModuleGetter(
   "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutReaderParent",
-  "resource:///actors/AboutReaderParent.jsm"
-);
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
 
@@ -249,8 +244,8 @@ var SaveToPocket = {
       this.updateElements(false);
       Services.obs.addObserver(this, "browser-delayed-startup-finished");
     }
-    AboutReaderParent.addMessageListener("Reader:OnSetup", this);
-    AboutReaderParent.addMessageListener("Reader:Clicked-pocket-button", this);
+    Services.mm.addMessageListener("Reader:OnSetup", this);
+    Services.mm.addMessageListener("Reader:Clicked-pocket-button", this);
   },
 
   observe(subject, topic, data) {
@@ -270,7 +265,7 @@ var SaveToPocket = {
 
   onPrefChange(pref, oldValue, newValue) {
     if (!newValue) {
-      AboutReaderParent.broadcastAsyncMessage("Reader:RemoveButton", {
+      Services.mm.broadcastAsyncMessage("Reader:RemoveButton", {
         id: "pocket-button",
       });
       PocketOverlay.shutdown();
@@ -282,7 +277,7 @@ var SaveToPocket = {
       // If we don't have this, there's also no possibility of there being a reader
       // mode tab already loaded. We'll get an Reader:OnSetup message when that happens.
       if (this._readerButtonData.title) {
-        AboutReaderParent.broadcastAsyncMessage(
+        Services.mm.broadcastAsyncMessage(
           "Reader:AddButton",
           this._readerButtonData
         );
@@ -324,10 +319,9 @@ var SaveToPocket = {
           this._readerButtonData.title = button.getAttribute("tooltiptext");
         }
         // Tell the reader about our button.
-        message.target.sendMessageToActor(
+        message.target.messageManager.sendAsyncMessage(
           "Reader:AddButton",
-          this._readerButtonData,
-          "AboutReader"
+          this._readerButtonData
         );
         break;
       }
