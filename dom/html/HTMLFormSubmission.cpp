@@ -30,6 +30,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsContentUtils.h"
 
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -831,14 +832,8 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
   }
 
   if (method == NS_FORM_METHOD_DIALOG) {
-    HTMLDialogElement* dialog = nullptr;
-    for (nsIContent* parent = aForm->GetParent(); parent;
-         parent = parent->GetParent()) {
-      dialog = HTMLDialogElement::FromNodeOrNull(parent);
-      if (dialog) {
-        break;
-      }
-    }
+    HTMLDialogElement* dialog =
+        AncestorsOfType<HTMLDialogElement>::First(*aForm);
 
     // If there isn't one, or if it does not have an open attribute, do
     // nothing.
