@@ -193,128 +193,142 @@ tests.push({
     hasEnginesFirst(engines, ["Seznam"]),
 });
 
-tests.push({
-  distribution: "sweetlabs-b-oem1",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MZSL01") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
+for (const locale of ["en-US", "en-GB", "fr", "de"]) {
+  tests.push({
+    locale,
+    distribution: "sweetlabs-b-oem1",
+    test: engines =>
+      hasParams(engines, "Bing", "searchbar", "pc=MZSL01") &&
+      hasDefault(engines, "Bing") &&
+      hasEnginesFirst(engines, ["Bing"]),
+  });
 
-tests.push({
-  distribution: "sweetlabs-b-r-oem1",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MZSL01") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
+  tests.push({
+    locale,
+    distribution: "sweetlabs-b-r-oem1",
+    test: engines =>
+      hasParams(engines, "Bing", "searchbar", "pc=MZSL01") &&
+      hasDefault(engines, "Bing") &&
+      hasEnginesFirst(engines, ["Bing"]),
+  });
 
-tests.push({
-  distribution: "sweetlabs-b-oem2",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MZSL02") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
+  tests.push({
+    locale,
+    distribution: "sweetlabs-b-oem2",
+    test: engines =>
+      hasParams(engines, "Bing", "searchbar", "pc=MZSL02") &&
+      hasDefault(engines, "Bing") &&
+      hasEnginesFirst(engines, ["Bing"]),
+  });
 
-tests.push({
-  distribution: "sweetlabs-b-r-oem2",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MZSL02") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
+  tests.push({
+    locale,
+    distribution: "sweetlabs-b-r-oem2",
+    test: engines =>
+      hasParams(engines, "Bing", "searchbar", "pc=MZSL02") &&
+      hasDefault(engines, "Bing") &&
+      hasEnginesFirst(engines, ["Bing"]),
+  });
 
-tests.push({
-  distribution: "sweetlabs-b-oem3",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MZSL03") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
+  tests.push({
+    locale,
+    distribution: "sweetlabs-b-oem3",
+    test: engines =>
+      hasParams(engines, "Bing", "searchbar", "pc=MZSL03") &&
+      hasDefault(engines, "Bing") &&
+      hasEnginesFirst(engines, ["Bing"]),
+  });
 
-tests.push({
-  distribution: "sweetlabs-b-r-oem3",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MZSL03") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
+  tests.push({
+    locale,
+    distribution: "sweetlabs-b-r-oem3",
+    test: engines =>
+      hasParams(engines, "Bing", "searchbar", "pc=MZSL03") &&
+      hasDefault(engines, "Bing") &&
+      hasEnginesFirst(engines, ["Bing"]),
+  });
 
-tests.push({
-  distribution: "sweetlabs-oem1",
-  test: engines =>
-    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
-    hasDefault(engines, "Google") &&
-    hasEnginesFirst(engines, ["Google"]),
-});
+  tests.push({
+    locale,
+    distribution: "sweetlabs-oem1",
+    test: engines =>
+      hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
+      hasDefault(engines, "Google") &&
+      hasEnginesFirst(engines, ["Google"]),
+  });
 
-tests.push({
-  distribution: "sweetlabs-r-oem1",
-  test: engines =>
-    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
-    hasDefault(engines, "Google") &&
-    hasEnginesFirst(engines, ["Google"]),
-});
+  tests.push({
+    locale,
+    distribution: "sweetlabs-r-oem1",
+    test: engines =>
+      hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
+      hasDefault(engines, "Google") &&
+      hasEnginesFirst(engines, ["Google"]),
+  });
 
-tests.push({
-  distribution: "sweetlabs-oem2",
-  test: engines =>
-    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
-    hasDefault(engines, "Google") &&
-    hasEnginesFirst(engines, ["Google"]),
-});
+  tests.push({
+    locale,
+    distribution: "sweetlabs-oem2",
+    test: engines =>
+      hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
+      hasDefault(engines, "Google") &&
+      hasEnginesFirst(engines, ["Google"]),
+  });
 
-tests.push({
-  distribution: "sweetlabs-r-oem2",
-  test: engines =>
-    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
-    hasDefault(engines, "Google") &&
-    hasEnginesFirst(engines, ["Google"]),
-});
+  tests.push({
+    locale,
+    distribution: "sweetlabs-r-oem2",
+    test: engines =>
+      hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
+      hasDefault(engines, "Google") &&
+      hasEnginesFirst(engines, ["Google"]),
+  });
+}
 
-tests.push({
-  locale: "de",
-  distribution: "1und1",
-  test: engines =>
-    hasParams(engines, "1&1 Suche", "searchbar", "enc=UTF-8") &&
-    hasDefault(engines, "1&1 Suche") &&
-    hasEnginesFirst(engines, ["1&1 Suche"]),
-});
+for (const locale of ["en-US", "de"]) {
+  tests.push({
+    locale,
+    distribution: "1und1",
+    test: engines =>
+      hasParams(engines, "1&1 Suche", "searchbar", "enc=UTF-8") &&
+      hasDefault(engines, "1&1 Suche") &&
+      hasEnginesFirst(engines, ["1&1 Suche"]),
+  });
 
-tests.push({
-  locale: "de",
-  distribution: "gmx",
-  test: engines =>
-    hasParams(engines, "GMX Suche", "searchbar", "enc=UTF-8") &&
-    hasDefault(engines, "GMX Suche") &&
-    hasEnginesFirst(engines, ["GMX Suche"]),
-});
+  tests.push({
+    locale,
+    distribution: "gmx",
+    test: engines =>
+      hasParams(engines, "GMX Suche", "searchbar", "enc=UTF-8") &&
+      hasDefault(engines, "GMX Suche") &&
+      hasEnginesFirst(engines, ["GMX Suche"]),
+  });
 
-tests.push({
-  locale: "de",
-  distribution: "gmx",
-  test: engines =>
-    hasParams(engines, "GMX Shopping", "searchbar", "origin=br_osd"),
-});
+  tests.push({
+    locale,
+    distribution: "gmx",
+    test: engines =>
+      hasParams(engines, "GMX Shopping", "searchbar", "origin=br_osd"),
+  });
 
-tests.push({
-  locale: "de",
-  distribution: "mail.com",
-  test: engines =>
-    hasParams(engines, "mail.com search", "searchbar", "enc=UTF-8") &&
-    hasDefault(engines, "mail.com search") &&
-    hasEnginesFirst(engines, ["mail.com search"]),
-});
+  tests.push({
+    locale,
+    distribution: "mail.com",
+    test: engines =>
+      hasParams(engines, "mail.com search", "searchbar", "enc=UTF-8") &&
+      hasDefault(engines, "mail.com search") &&
+      hasEnginesFirst(engines, ["mail.com search"]),
+  });
 
-tests.push({
-  locale: "de",
-  distribution: "webde",
-  test: engines =>
-    hasParams(engines, "WEB.DE Suche", "searchbar", "enc=UTF-8") &&
-    hasDefault(engines, "WEB.DE Suche") &&
-    hasEnginesFirst(engines, ["WEB.DE Suche"]),
-});
+  tests.push({
+    locale,
+    distribution: "webde",
+    test: engines =>
+      hasParams(engines, "WEB.DE Suche", "searchbar", "enc=UTF-8") &&
+      hasDefault(engines, "WEB.DE Suche") &&
+      hasEnginesFirst(engines, ["WEB.DE Suche"]),
+  });
+}
 
 tests.push({
   locale: "ru",
@@ -353,34 +367,34 @@ tests.push({
 });
 
 tests.push({
-  locale: "ru",
+  locale: "tr",
   distribution: "yandex-tr",
   test: engines =>
-    hasParams(engines, "Яндекс", "searchbar", "clid=1953197") &&
-    hasDefault(engines, "Яндекс") &&
-    hasEnginesFirst(engines, ["Яндекс"]),
+    hasParams(engines, "Yandex", "searchbar", "clid=1953197") &&
+    hasDefault(engines, "Yandex") &&
+    hasEnginesFirst(engines, ["Yandex"]),
 });
 
 tests.push({
-  locale: "ru",
+  locale: "tr",
   distribution: "yandex-tr-gezginler",
   test: engines =>
-    hasParams(engines, "Яндекс", "searchbar", "clid=1945716") &&
-    hasDefault(engines, "Яндекс") &&
-    hasEnginesFirst(engines, ["Яндекс"]),
+    hasParams(engines, "Yandex", "searchbar", "clid=1945716") &&
+    hasDefault(engines, "Yandex") &&
+    hasEnginesFirst(engines, ["Yandex"]),
 });
 
 tests.push({
-  locale: "ru",
+  locale: "tr",
   distribution: "yandex-tr-tamindir",
   test: engines =>
-    hasParams(engines, "Яндекс", "searchbar", "clid=1945686") &&
-    hasDefault(engines, "Яндекс") &&
-    hasEnginesFirst(engines, ["Яндекс"]),
+    hasParams(engines, "Yandex", "searchbar", "clid=1945686") &&
+    hasDefault(engines, "Yandex") &&
+    hasEnginesFirst(engines, ["Yandex"]),
 });
 
 tests.push({
-  locale: "ru",
+  locale: "uk",
   distribution: "yandex-uk",
   test: engines =>
     hasParams(engines, "Яндекс", "searchbar", "clid=1923018") &&
