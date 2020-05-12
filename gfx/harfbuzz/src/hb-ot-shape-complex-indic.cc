@@ -248,6 +248,7 @@ struct indic_shape_plan_t
   hb_indic_would_substitute_feature_t pref;
   hb_indic_would_substitute_feature_t blwf;
   hb_indic_would_substitute_feature_t pstf;
+  hb_indic_would_substitute_feature_t vatu;
 
   hb_mask_t mask_array[INDIC_NUM_FEATURES];
 };
@@ -286,6 +287,7 @@ data_create_indic (const hb_ot_shape_plan_t *plan)
   indic_plan->pref.init (&plan->map, HB_TAG('p','r','e','f'), zero_context);
   indic_plan->blwf.init (&plan->map, HB_TAG('b','l','w','f'), zero_context);
   indic_plan->pstf.init (&plan->map, HB_TAG('p','s','t','f'), zero_context);
+  indic_plan->vatu.init (&plan->map, HB_TAG('v','a','t','u'), zero_context);
 
   for (unsigned int i = 0; i < ARRAY_LENGTH (indic_plan->mask_array); i++)
     indic_plan->mask_array[i] = (indic_features[i].flags & F_GLOBAL) ?
@@ -315,10 +317,16 @@ consonant_position_from_face (const indic_shape_plan_t *indic_plan,
    * base at 0.  The font however, only has lookups matching
    * 930,94D in 'blwf', not the expected 94D,930 (with new-spec
    * table).  As such, we simply match both sequences.  Seems
-   * to work. */
+   * to work.
+   *
+   * Vatu is done as well, for:
+   * https://github.com/harfbuzz/harfbuzz/issues/1587
+   */
   hb_codepoint_t glyphs[3] = {virama, consonant, virama};
   if (indic_plan->blwf.would_substitute (glyphs  , 2, face) ||
-      indic_plan->blwf.would_substitute (glyphs+1, 2, face))
+      indic_plan->blwf.would_substitute (glyphs+1, 2, face) ||
+      indic_plan->vatu.would_substitute (glyphs  , 2, face) ||
+      indic_plan->vatu.would_substitute (glyphs+1, 2, face))
     return POS_BELOW_C;
   if (indic_plan->pstf.would_substitute (glyphs  , 2, face) ||
       indic_plan->pstf.would_substitute (glyphs+1, 2, face))

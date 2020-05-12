@@ -33,6 +33,7 @@
 
 #include "hb-common.h"
 #include "hb-face.h"
+#include "hb-draw.h"
 
 HB_BEGIN_DECLS
 
@@ -704,6 +705,12 @@ hb_font_set_var_coords_design (hb_font_t *font,
 			       const float *coords,
 			       unsigned int coords_length);
 
+#ifdef HB_EXPERIMENTAL_API
+HB_EXTERN const float *
+hb_font_get_var_coords_design (hb_font_t *font,
+			       unsigned int *length);
+#endif
+
 HB_EXTERN void
 hb_font_set_var_coords_normalized (hb_font_t *font,
 				   const int *coords, /* 2.14 normalized */
@@ -716,6 +723,12 @@ hb_font_get_var_coords_normalized (hb_font_t *font,
 HB_EXTERN void
 hb_font_set_var_named_instance (hb_font_t *font,
 				unsigned instance_index);
+
+#ifdef HB_EXPERIMENTAL_API
+HB_EXTERN hb_bool_t
+hb_font_draw_glyph (hb_font_t *font, hb_codepoint_t glyph,
+		    const hb_draw_funcs_t *funcs, void *user_data);
+#endif
 
 HB_END_DECLS
 

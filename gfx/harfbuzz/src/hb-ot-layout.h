@@ -161,7 +161,7 @@ HB_EXTERN hb_bool_t
 hb_ot_layout_table_find_script (hb_face_t    *face,
 				hb_tag_t      table_tag,
 				hb_tag_t      script_tag,
-				unsigned int *script_index);
+				unsigned int *script_index /* OUT */);
 
 HB_EXTERN hb_bool_t
 hb_ot_layout_table_select_script (hb_face_t      *face,
@@ -199,15 +199,15 @@ hb_ot_layout_language_get_required_feature_index (hb_face_t    *face,
 						  hb_tag_t      table_tag,
 						  unsigned int  script_index,
 						  unsigned int  language_index,
-						  unsigned int *feature_index);
+						  unsigned int *feature_index /* OUT */);
 
 HB_EXTERN hb_bool_t
 hb_ot_layout_language_get_required_feature (hb_face_t    *face,
 					    hb_tag_t      table_tag,
 					    unsigned int  script_index,
 					    unsigned int  language_index,
-					    unsigned int *feature_index,
-					    hb_tag_t     *feature_tag);
+					    unsigned int *feature_index /* OUT */,
+					    hb_tag_t     *feature_tag /* OUT */);
 
 HB_EXTERN unsigned int
 hb_ot_layout_language_get_feature_indexes (hb_face_t    *face,
@@ -233,7 +233,7 @@ hb_ot_layout_language_find_feature (hb_face_t    *face,
 				    unsigned int  script_index,
 				    unsigned int  language_index,
 				    hb_tag_t      feature_tag,
-				    unsigned int *feature_index);
+				    unsigned int *feature_index /* OUT */);
 
 HB_EXTERN unsigned int
 hb_ot_layout_feature_get_lookups (hb_face_t    *face,
@@ -262,6 +262,20 @@ hb_ot_layout_collect_lookups (hb_face_t      *face,
 			      const hb_tag_t *languages,
 			      const hb_tag_t *features,
 			      hb_set_t       *lookup_indexes /* OUT */);
+
+#ifdef HB_EXPERIMENTAL_API
+HB_EXTERN void
+hb_ot_layout_closure_lookups (hb_face_t      *face,
+			      hb_tag_t        table_tag,
+			      const hb_set_t *glyphs,
+			      hb_set_t       *lookup_indexes /* IN/OUT */);
+
+HB_EXTERN void
+hb_ot_layout_closure_features (hb_face_t      *face,
+			       hb_tag_t        table_tag,
+			       const hb_map_t *lookup_indexes, /* IN */
+			       hb_set_t       *feature_indexes /* OUT */);
+#endif
 
 HB_EXTERN void
 hb_ot_layout_lookup_collect_glyphs (hb_face_t    *face,

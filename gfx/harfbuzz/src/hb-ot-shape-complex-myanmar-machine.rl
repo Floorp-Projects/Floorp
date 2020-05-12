@@ -78,7 +78,7 @@ complex_syllable_tail = As* medial_group main_vowel_group post_vowel_group* pwo_
 syllable_tail = (H (c|IV).VS?)* (H | complex_syllable_tail);
 
 consonant_syllable =	(k|CS)? (c|IV|D|GB).VS? syllable_tail;
-punctuation_cluster = 	P V;
+punctuation_cluster =	P V;
 broken_cluster =	k? VS? syllable_tail;
 other =			any;
 

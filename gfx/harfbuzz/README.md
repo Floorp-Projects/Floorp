@@ -27,8 +27,8 @@ Documentation: https://harfbuzz.github.io
 
 
 <details>
-  <summary>Packaging status of HarfBuzz</summary
+  <summary>Packaging status of HarfBuzz</summary>
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/harfbuzz.svg?header=harfbuzz)](https://repology.org/project/harfbuzz/versions)  
+[![Packaging status](https://repology.org/badge/vertical-allrepos/harfbuzz.svg?header=harfbuzz)](https://repology.org/project/harfbuzz/versions)
 
 </details>
