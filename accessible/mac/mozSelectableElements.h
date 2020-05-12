@@ -7,14 +7,22 @@
 #import "mozAccessible.h"
 
 @interface mozSelectableAccessible : mozAccessible
-- (id)selectableChildren;
+- (NSArray*)selectableChildren;
+- (NSArray*)selectedChildren;
 @end
 
 @interface mozSelectableChildAccessible : mozAccessible
+@property(getter=isSelected) BOOL selected;
 @end
 
 @interface mozTabGroupAccessible : mozSelectableAccessible
 @end
 
 @interface mozTabAccessible : mozSelectableChildAccessible
+@end
+
+@interface mozListboxAccessible : mozSelectableAccessible
+@end
+
+@interface mozOptionAccessible : mozSelectableChildAccessible
 @end
