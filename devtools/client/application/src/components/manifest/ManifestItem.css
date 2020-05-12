@@ -7,14 +7,22 @@
 }
 
 .manifest-item__label {
-  color: var(--theme-text-color-alt);
-  width: calc(var(--base-unit) * 28);
-  font-weight: var(--title-10-font-weight);
-  text-align: right;
+  box-sizing: border-box;
+  min-width: calc(var(--base-unit) * 32);
+  padding-inline-end: calc(var(--base-unit) * 4);
+  padding-inline-start: 0;
   vertical-align: top;
+  color: var(--theme-text-color-alt);
+  font-weight: inherit;
+  text-align: start;
 }
 
 .manifest-item__value {
   word-break: break-all;
   vertical-align: top;
+}
+
+.manifest-item__label,
+.manifest-item__value {
+  padding-block: calc(var(--base-unit) * 1);
 }

@@ -15,10 +15,14 @@
   flex-grow: 1;
 }
 
+.registrations-container__list {
+  padding-inline-start: 0;
+}
+
 .registrations-container__item {
   list-style-type: none;
   margin: 0;
-  padding: 0;
+  padding: calc(var(--base-unit) * 5) 0;
 }
 
 .registrations-container__item:first-child {

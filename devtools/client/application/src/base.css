@@ -13,8 +13,9 @@
   --body-20-font-weight: 400;
   --body-20-font-weight-bold: 700;
   --title-10-font-size: 13px;
+  --title-10-font-weight: 600;
   --title-20-font-size: 17px;
-  --title-20-font-weight: 600;
+  --title-20-font-weight: 400;
   --title-30-font-size: 22px;
   --title-30-font-weight: 300;
 
@@ -60,6 +61,10 @@ a {
 
 p {
   margin: 0;
+}
+
+table {
+  border-spacing: 0;
 }
 
 /*

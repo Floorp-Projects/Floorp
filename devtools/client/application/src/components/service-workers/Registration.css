@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .registration {
-  padding: 1rem 0;
   line-height: 1.5;
   font-size: var(--body-10-font-size);
 }
+
 
 /*
  * The current layout of a registration header is
@@ -23,7 +23,8 @@
 }
 
 .registration__scope {
-  font-weight: bold;
+  font-size: var(--title-10-font-size);
+  font-weight: var(--title-10-font-weight);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
