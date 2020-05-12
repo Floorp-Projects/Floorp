@@ -343,7 +343,6 @@ nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
 
   mPresShell = aPresShell;
   mDragState = false;
-  mDesiredCaretPos.mIsSet = false;
   mLimiters.mLimiter = aLimiter;
   mCaret.mMovementStyle =
       Preferences::GetInt("bidi.edit.caret_movement_style", 2);
