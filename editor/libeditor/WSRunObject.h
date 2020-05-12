@@ -579,10 +579,8 @@ class MOZ_STACK_CLASS WSRunScanner {
                                      nsINode* aBlockParent) const;
   nsIContent* GetPreviousWSNode(const EditorDOMPoint& aPoint,
                                 nsINode* aBlockParent) const;
-  nsIContent* GetNextWSNodeInner(nsINode* aStartNode,
-                                 nsINode* aBlockParent) const;
   nsIContent* GetNextWSNode(const EditorDOMPoint& aPoint,
-                            nsINode* aBlockParent) const;
+                            nsIContent& aBlockParent) const;
 
   /**
    * GetPreviousCharPoint() and GetPreviousCharPointFromPointInText() return
