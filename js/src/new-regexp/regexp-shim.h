@@ -16,6 +16,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SegmentedVector.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Types.h"
 
 #include <algorithm>
