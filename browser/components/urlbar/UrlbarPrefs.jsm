@@ -101,6 +101,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // results.
   ["restyleSearches", false],
 
+  // If true, we show tail suggestions when available.
+  ["richSuggestions.tail", false],
+
   // Hidden pref. Disables checks that prevent search tips being shown, thus
   // showing them every time the newtab page or the default search engine
   // homepage is opened.

@@ -303,6 +303,9 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 // should be opened in new tabs by default.
 pref("browser.urlbar.openintab", false);
 
+// If true, we show tail suggestions when available.
+pref("browser.urlbar.richSuggestions.tail", false);
+
 // This is disabled until Bug 1340663 figures out the remaining requirements.
 pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
