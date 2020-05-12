@@ -45,6 +45,7 @@ const whitelist = {
     "resource:///actors/SearchTelemetryChild.jsm",
     "resource:///actors/PromptChild.jsm",
     "resource://gre/actors/AutoCompleteChild.jsm",
+    "resource://gre/modules/ActorChild.jsm",
     "resource://gre/modules/ActorManagerChild.jsm",
     "resource://gre/modules/E10SUtils.jsm",
     "resource://gre/modules/Readerable.jsm",

@@ -21,7 +21,8 @@ var gStrings = Services.strings.createBundle(
   "chrome://global/locale/narrate.properties"
 );
 
-function NarrateControls(win, languagePromise) {
+function NarrateControls(mm, win, languagePromise) {
+  this._mm = mm;
   this._winRef = Cu.getWeakReference(win);
   this._languagePromise = languagePromise;
 

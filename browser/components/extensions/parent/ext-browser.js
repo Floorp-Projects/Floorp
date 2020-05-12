@@ -25,11 +25,6 @@ ChromeUtils.defineModuleGetter(
   "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutReaderParent",
-  "resource:///actors/AboutReaderParent.jsm"
-);
 
 var { ExtensionError } = ExtensionUtils;
 
@@ -357,7 +352,7 @@ class TabTracker extends TabTrackerBase {
     windowTracker.addOpenListener(this._handleWindowOpen);
     windowTracker.addCloseListener(this._handleWindowClose);
 
-    AboutReaderParent.addMessageListener("Reader:UpdateReaderButton", this);
+    Services.mm.addMessageListener("Reader:UpdateReaderButton", this);
 
     /* eslint-disable mozilla/balanced-listeners */
     this.on("tab-detached", this._handleTabDestroyed);
