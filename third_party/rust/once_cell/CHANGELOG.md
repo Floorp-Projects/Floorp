@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.1
+
+- remove unnecessary `F: fmt::Debug` bound from `impl fmt::Debug for Lazy<T, F>`.
+
+## 1.3.0
+
+- `Lazy<T>` now implements `DerefMut`.
+- update implementation according to the latest changes in `std`.
+
 ## 1.2.0
 
 - add `sync::OnceCell::get_unchecked`.
