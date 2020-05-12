@@ -140,18 +140,23 @@ class SheetLoadDataHashKey : public nsURIHashKey {
         mPrincipal(aKey->mPrincipal),
         mReferrerInfo(aKey->mReferrerInfo),
         mCORSMode(aKey->mCORSMode),
-        mParsingMode(aKey->mParsingMode) {
+        mParsingMode(aKey->mParsingMode),
+        mSRIMetadata(aKey->mSRIMetadata),
+        mIsLinkPreload(aKey->mIsLinkPreload) {
     MOZ_COUNT_CTOR(SheetLoadDataHashKey);
   }
 
   SheetLoadDataHashKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
                        nsIReferrerInfo* aReferrerInfo, CORSMode aCORSMode,
-                       css::SheetParsingMode aParsingMode)
+                       css::SheetParsingMode aParsingMode,
+                       const SRIMetadata& aSRIMetadata, bool aIsLinkPreload)
       : nsURIHashKey(aURI),
         mPrincipal(aPrincipal),
         mReferrerInfo(aReferrerInfo),
         mCORSMode(aCORSMode),
-        mParsingMode(aParsingMode) {
+        mParsingMode(aParsingMode),
+        mSRIMetadata(aSRIMetadata),
+        mIsLinkPreload(aIsLinkPreload) {
     MOZ_COUNT_CTOR(SheetLoadDataHashKey);
   }
 
@@ -160,7 +165,9 @@ class SheetLoadDataHashKey : public nsURIHashKey {
         mPrincipal(std::move(toMove.mPrincipal)),
         mReferrerInfo(std::move(toMove.mReferrerInfo)),
         mCORSMode(std::move(toMove.mCORSMode)),
-        mParsingMode(std::move(toMove.mParsingMode)) {
+        mParsingMode(std::move(toMove.mParsingMode)),
+        mSRIMetadata(std::move(toMove.mSRIMetadata)),
+        mIsLinkPreload(std::move(toMove.mIsLinkPreload)) {
     MOZ_COUNT_CTOR(SheetLoadDataHashKey);
   }
 
@@ -197,8 +204,27 @@ class SheetLoadDataHashKey : public nsURIHashKey {
       return false;
     }
 
-    return !mPrincipal ||
-           (NS_SUCCEEDED(mPrincipal->Equals(aKey->mPrincipal, &eq)) && eq);
+    if (mPrincipal && !mPrincipal->Equals(aKey->mPrincipal)) {
+      return false;
+    }
+
+    // Consuming stylesheet tags must never coalesce to <link preload> initiated
+    // speculative loads with a weaker SRI hash or its different value.  This
+    // check makes sure that regular loads will never find such a weaker preload
+    // and rather start a new, independent load with new, stronger SRI checker
+    // set up, so that integrity is ensured.
+    if (mIsLinkPreload != aKey->mIsLinkPreload) {
+      const SRIMetadata& linkPreloadMetadata =
+          mIsLinkPreload ? mSRIMetadata : aKey->mSRIMetadata;
+      const SRIMetadata& consumerPreloadMetadata =
+          mIsLinkPreload ? aKey->mSRIMetadata : mSRIMetadata;
+
+      if (!consumerPreloadMetadata.CanTrustBeDelegatedTo(linkPreloadMetadata)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   static const SheetLoadDataHashKey* KeyToPointer(SheetLoadDataHashKey* aKey) {
@@ -221,6 +247,8 @@ class SheetLoadDataHashKey : public nsURIHashKey {
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   CORSMode mCORSMode;
   css::SheetParsingMode mParsingMode;
+  SRIMetadata mSRIMetadata;
+  bool mIsLinkPreload;
 };
 
 SheetLoadDataHashKey::SheetLoadDataHashKey(css::SheetLoadData& aLoadData)
@@ -228,9 +256,13 @@ SheetLoadDataHashKey::SheetLoadDataHashKey(css::SheetLoadData& aLoadData)
       mPrincipal(aLoadData.mLoaderPrincipal),
       mReferrerInfo(aLoadData.ReferrerInfo()),
       mCORSMode(aLoadData.mSheet->GetCORSMode()),
-      mParsingMode(aLoadData.mSheet->ParsingMode()) {
+      mParsingMode(aLoadData.mSheet->ParsingMode()),
+      mIsLinkPreload(aLoadData.mIsLinkPreload) {
   MOZ_COUNT_CTOR(SheetLoadDataHashKey);
+
+  aLoadData.mSheet->GetIntegrity(mSRIMetadata);
 }
+
 }  // namespace mozilla
 
 namespace mozilla {
@@ -268,6 +300,7 @@ SheetLoadData::SheetLoadData(
       mIsCrossOriginNoCORS(false),
       mBlockResourceTiming(false),
       mLoadFailed(false),
+      mIsLinkPreload(false),
       mOwningElement(aOwningElement),
       mObserver(aObserver),
       mLoaderPrincipal(aLoaderPrincipal),
@@ -304,6 +337,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
       mIsCrossOriginNoCORS(false),
       mBlockResourceTiming(false),
       mLoadFailed(false),
+      mIsLinkPreload(false),
       mOwningElement(nullptr),
       mObserver(aObserver),
       mLoaderPrincipal(aLoaderPrincipal),
@@ -349,6 +383,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
       mIsCrossOriginNoCORS(false),
       mBlockResourceTiming(false),
       mLoadFailed(false),
+      mIsLinkPreload(false),
       mOwningElement(nullptr),
       mObserver(aObserver),
       mLoaderPrincipal(aLoaderPrincipal),
@@ -1123,19 +1158,6 @@ Tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
     mSheets = MakeUnique<Sheets>();
   }
 
-  SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
-                           aCORSMode, aParsingMode);
-  auto cacheResult = mSheets->Lookup(key, aSyncLoad);
-  if (Get<0>(cacheResult)) {
-    LOG(("  Hit cache with state: %s",
-         gStateStrings[size_t(Get<1>(cacheResult))]));
-    return cacheResult;
-  }
-
-  nsIURI* sheetURI = aURI;
-  nsIURI* baseURI = aURI;
-  nsIURI* originalURI = aURI;
-
   SRIMetadata sriMetadata;
   if (!aIntegrity.IsEmpty()) {
     MOZ_LOG(gSriPRLog, LogLevel::Debug,
@@ -1147,6 +1169,20 @@ Tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
     }
     SRICheck::IntegrityMetadata(aIntegrity, sourceUri, mReporter, &sriMetadata);
   }
+
+  SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
+                           aCORSMode, aParsingMode, sriMetadata,
+                           false /** TODO - is-link-preload **/);
+  auto cacheResult = mSheets->Lookup(key, aSyncLoad);
+  if (Get<0>(cacheResult)) {
+    LOG(("  Hit cache with state: %s",
+         gStateStrings[size_t(Get<1>(cacheResult))]));
+    return cacheResult;
+  }
+
+  nsIURI* sheetURI = aURI;
+  nsIURI* baseURI = aURI;
+  nsIURI* originalURI = aURI;
 
   auto sheet = MakeRefPtr<StyleSheet>(aParsingMode, aCORSMode, sriMetadata);
   sheet->SetURIs(sheetURI, originalURI, baseURI);
@@ -1325,6 +1361,8 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   LOG_URI("  Load from: '%s'", aLoadData.mURI);
 
   nsresult rv = NS_OK;
+
+  aLoadData.mIsLinkPreload = aIsPreload == IsPreload::FromLink;
 
   if (!mDocument && !aLoadData.mIsNonDocumentSheet) {
     // No point starting the load; just release all the data and such.

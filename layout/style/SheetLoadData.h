@@ -176,6 +176,14 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   // to true if this load, or the load of any descendant import, fails.
   bool mLoadFailed : 1;
 
+  // If this data has been created for <link rel=preload as=style> element
+  // (either as a speculative load or a regular load for dynamically added
+  // preloads).
+  // This member is updated during life-time of this class, not in the
+  // constructor, because it's not always known if this is a preload or not at
+  // that time.
+  bool mIsLinkPreload : 1;
+
   // This is the element that imported the sheet.  Needed to get the
   // charset set on it and to fire load/error events.
   nsCOMPtr<nsIStyleSheetLinkingElement> mOwningElement;
