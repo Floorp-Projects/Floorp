@@ -522,15 +522,18 @@ bool Navigator::CookieEnabled() {
     return cookieEnabled;
   }
 
-  uint32_t rejectedReason = 0;
-  bool granted = false;
-  nsresult rv = doc->NodePrincipal()->HasFirstpartyStorageAccess(
-      mWindow, &rejectedReason, &granted);
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsIURI> contentURI;
+  doc->NodePrincipal()->GetURI(getter_AddRefs(contentURI));
+
+  if (!contentURI) {
     // Not a content, so technically can't set cookies, but let's
     // just return the default value.
     return cookieEnabled;
   }
+
+  uint32_t rejectedReason = 0;
+  bool granted = ContentBlocking::ShouldAllowAccessFor(mWindow, contentURI,
+                                                       &rejectedReason);
 
   ContentBlockingNotifier::OnDecision(
       mWindow,
