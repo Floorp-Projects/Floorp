@@ -781,7 +781,6 @@
           }
         }
       ],
-      "orderHint": 500,
       "telemetryId": "amazondotcn",
       "webExtension": {
         "id": "amazondotcn@search.mozilla.org"
@@ -1390,7 +1389,6 @@
           }
         }
       ],
-      "orderHint": 1000,
       "extraParams": [
         {
           "name": "channel",
@@ -1794,7 +1792,6 @@
           }
         }
       ],
-      "orderHint": 500,
       "telemetryId": "amazondotcom",
       "webExtension": {
         "id": "amazondotcom@search.mozilla.org"
@@ -2129,7 +2126,6 @@
           }
         }
       ],
-      "orderHint": 500,
       "webExtension": {
         "id": "amazon@search.mozilla.org"
       },
@@ -2957,7 +2953,6 @@
           }
         }
       ],
-      "orderHint": 500,
       "webExtension": {
         "id": "ebay@search.mozilla.org"
       },
@@ -2973,7 +2968,6 @@
           }
         }
       ],
-      "orderHint": 500,
       "extraParams": [
         {
           "name": "t",
