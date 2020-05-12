@@ -1,3 +1,23 @@
+Overview of changes leading to 2.6.6
+Tuesday, May 12, 2020
+====================================
+- A fix in AAT kerning for Geeza Pro.
+- Better support for resource fork fonts on macOS.
+
+
+Overview of changes leading to 2.6.5
+Friday, April 17, 2020
+====================================
+- Add experimental meson build system.  Autotools is still the primary
+  and supported build system.
+- AAT is now always preferred for horizontal scripts when both AAT and OT
+  layout tables exist at the same time.
+- Subsetter improvements.
+- New API:
++hb_ft_font_lock_face()
++hb_ft_font_unlock_face()
+
+
 Overview of changes leading to 2.6.4
 Monday, October 29, 2019
 ====================================

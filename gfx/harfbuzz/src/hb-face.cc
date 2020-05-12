@@ -226,7 +226,7 @@ hb_face_create (hb_blob_t    *blob,
 hb_face_t *
 hb_face_get_empty ()
 {
-  return const_cast<hb_face_t *> (&Null(hb_face_t));
+  return const_cast<hb_face_t *> (&Null (hb_face_t));
 }
 
 
@@ -546,7 +546,7 @@ void
 hb_face_collect_unicodes (hb_face_t *face,
 			  hb_set_t  *out)
 {
-  face->table.cmap->collect_unicodes (out);
+  face->table.cmap->collect_unicodes (out, face->get_num_glyphs ());
 }
 /**
  * hb_face_collect_variation_selectors:
