@@ -113,6 +113,11 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
+  bool IsFrameOfType(uint32_t aFlags) const override {
+    return nsContainerFrame::IsFrameOfType(
+        aFlags & ~(nsIFrame::eCanContainOverflowContainers));
+  }
+
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
 
@@ -519,8 +524,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * @param aBorderPadding the border and padding for this frame (possibly with
    *                       some sides skipped as-appropriate, if we're in a
    *                       continuation chain).
-   * @param aConsumedBSize the sum of our content block-size consumed by our
-   *                       prev-in-flows.
+   * @param aSumOfPrevInFlowsChildrenBlockSize See the comment for
+   *                                           SumOfChildrenBlockSizeProperty.
    * @param aFlexContainerAscent [in/out] initially, the "tentative" flex
    *                             container ascent computed in DoFlexLayout; or,
    *                             nscoord_MIN if the ascent hasn't been
@@ -537,8 +542,9 @@ class nsFlexContainerFrame final : public nsContainerFrame {
       const nscoord aContentBoxCrossSize,
       const mozilla::LogicalSize& aAvailableSizeForItems,
       const mozilla::LogicalMargin& aBorderPadding,
-      const nscoord aConsumedBSize, nscoord& aFlexContainerAscent,
-      nsTArray<FlexLine>& aLines, nsTArray<nsIFrame*>& aPlaceholders,
+      const nscoord aSumOfPrevInFlowsChildrenBlockSize,
+      nscoord& aFlexContainerAscent, nsTArray<FlexLine>& aLines,
+      nsTArray<nsIFrame*>& aPlaceholders,
       const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis);
 
   /**
