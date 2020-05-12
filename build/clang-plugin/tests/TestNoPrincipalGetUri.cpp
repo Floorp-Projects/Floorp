@@ -17,10 +17,10 @@ public:
 
 void f() {
   nsIPrincipal *a = new SomePrincipal();
-  a->GetURI(0); //  expected-error {{Principal->GetURI is depricated and will be removed soon. Please consider using the new helper functions of nsIPrincipal}}
+  a->GetURI(0); //  expected-warning {{nsIPrincipal->GetURI is depricated and will be removed soon. Please consider using the new helper functions of nsIPrincipal}}
 
   nsIPrincipal *b = new NullPrincipal();
-  b->GetURI(0); //  expected-error {{Principal->GetURI is depricated and will be removed soon. Please consider using the new helper functions of nsIPrincipal}}
+  b->GetURI(0); //  expected-warning {{nsIPrincipal->GetURI is depricated and will be removed soon. Please consider using the new helper functions of nsIPrincipal}}
 
   SomeURI *c = new SomeURI();
   c->GetURI(0);
