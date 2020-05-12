@@ -6,7 +6,7 @@ package mozilla.components.browser.menu.item
 
 import android.content.Context
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
+import mozilla.components.concept.menu.candidate.CompoundMenuCandidate
 
 /**
  * A simple browser menu switch.

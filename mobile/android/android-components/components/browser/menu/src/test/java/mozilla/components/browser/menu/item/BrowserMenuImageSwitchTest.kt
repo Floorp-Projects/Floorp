@@ -6,8 +6,8 @@ package mozilla.components.browser.menu.item
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
-import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
+import mozilla.components.concept.menu.candidate.CompoundMenuCandidate
+import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before

@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu2
 
+import mozilla.components.concept.menu.Side
 import org.junit.Test
 
 class MenuControllerTest {

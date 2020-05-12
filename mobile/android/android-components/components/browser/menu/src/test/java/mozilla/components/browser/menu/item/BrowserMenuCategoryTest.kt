@@ -10,8 +10,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.DecorativeTextMenuCandidate
-import mozilla.components.browser.menu2.candidate.TextStyle
+import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
+import mozilla.components.concept.menu.candidate.TextStyle
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test

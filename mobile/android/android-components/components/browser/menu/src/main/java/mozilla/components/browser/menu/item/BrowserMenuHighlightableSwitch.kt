@@ -16,9 +16,9 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.HighlightableMenuItem
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
-import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
-import mozilla.components.browser.menu2.candidate.LowPriorityHighlightEffect
+import mozilla.components.concept.menu.candidate.CompoundMenuCandidate
+import mozilla.components.concept.menu.candidate.DrawableMenuIcon
+import mozilla.components.concept.menu.candidate.LowPriorityHighlightEffect
 
 /**
  * A browser menu switch that can show a highlighted icon.

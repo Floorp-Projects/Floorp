@@ -11,9 +11,9 @@ import androidx.core.content.ContextCompat.getColor
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.DecorativeTextMenuCandidate
-import mozilla.components.browser.menu2.candidate.TextMenuCandidate
-import mozilla.components.browser.menu2.candidate.TextStyle
+import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
+import mozilla.components.concept.menu.candidate.TextMenuCandidate
+import mozilla.components.concept.menu.candidate.TextStyle
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

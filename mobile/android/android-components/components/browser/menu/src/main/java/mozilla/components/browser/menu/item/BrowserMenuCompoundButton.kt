@@ -10,8 +10,8 @@ import android.widget.CompoundButton
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
-import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
-import mozilla.components.browser.menu2.candidate.ContainerStyle
+import mozilla.components.concept.menu.candidate.CompoundMenuCandidate
+import mozilla.components.concept.menu.candidate.ContainerStyle
 import java.lang.reflect.Modifier.PRIVATE
 
 /**

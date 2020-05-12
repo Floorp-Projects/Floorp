@@ -16,10 +16,10 @@ import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.ContainerStyle
-import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
-import mozilla.components.browser.menu2.candidate.TextMenuCandidate
-import mozilla.components.browser.menu2.candidate.TextStyle
+import mozilla.components.concept.menu.candidate.ContainerStyle
+import mozilla.components.concept.menu.candidate.DrawableMenuIcon
+import mozilla.components.concept.menu.candidate.TextMenuCandidate
+import mozilla.components.concept.menu.candidate.TextStyle
 
 internal const val NO_ID = -1
 

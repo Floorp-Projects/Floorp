@@ -12,8 +12,8 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.SwitchCompat
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
-import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
+import mozilla.components.concept.menu.candidate.CompoundMenuCandidate
+import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import java.lang.reflect.Modifier
 
 /**

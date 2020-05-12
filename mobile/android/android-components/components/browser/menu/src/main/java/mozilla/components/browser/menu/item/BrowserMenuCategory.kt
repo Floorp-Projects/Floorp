@@ -13,11 +13,11 @@ import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.ContainerStyle
-import mozilla.components.browser.menu2.candidate.DecorativeTextMenuCandidate
-import mozilla.components.browser.menu2.candidate.TextAlignment
-import mozilla.components.browser.menu2.candidate.TextStyle
-import mozilla.components.browser.menu2.candidate.TypefaceStyle
+import mozilla.components.concept.menu.candidate.ContainerStyle
+import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
+import mozilla.components.concept.menu.candidate.TextAlignment
+import mozilla.components.concept.menu.candidate.TextStyle
+import mozilla.components.concept.menu.candidate.TypefaceStyle
 
 /**
  * A browser menu item displaying styleable text, usable for menu categories
