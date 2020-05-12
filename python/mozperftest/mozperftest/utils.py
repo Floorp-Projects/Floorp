@@ -6,8 +6,12 @@ import contextlib
 import sys
 import os
 import random
+from io import StringIO
+from redo import retry
+import requests
 
-from six import StringIO
+
+RETRY_SLEEP = 10
 
 
 @contextlib.contextmanager
@@ -96,3 +100,32 @@ def build_test_list(tests, randomized=False):
         # we don't always run tests in the same order
         random.shuffle(res)
     return res
+
+
+def download_file(url, target, retry_sleep=RETRY_SLEEP, attempts=3):
+    """Downloads a file, given an URL in the target path.
+
+    The function will attempt several times on failures.
+    """
+
+    def _download_file(url, target):
+        req = requests.get(url, stream=True, timeout=30)
+        target_dir = target.parent.resolve()
+        if str(target_dir) != "":
+            target_dir.mkdir(exist_ok=True)
+
+        with target.open("wb") as f:
+            for chunk in req.iter_content(chunk_size=1024):
+                if not chunk:
+                    continue
+                f.write(chunk)
+                f.flush()
+        return target
+
+    return retry(
+        _download_file,
+        args=(url, target),
+        attempts=attempts,
+        sleeptime=retry_sleep,
+        jitter=0,
+    )

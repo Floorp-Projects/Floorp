@@ -57,3 +57,18 @@ def get_running_env(**kwargs):
     env = MachEnvironment(mach_cmd, **mach_args)
     metadata = Metadata(mach_cmd, env, "script")
     return mach_cmd, metadata, env
+
+
+def requests_content(chunks=None):
+    if chunks is None:
+        chunks = [b"some ", b"content"]
+
+    def _content(*args, **kw):
+        class Resp:
+            def iter_content(self, **kw):
+                for chunk in chunks:
+                    yield chunk
+
+        return Resp()
+
+    return _content
