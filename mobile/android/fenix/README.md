@@ -173,7 +173,7 @@ Specify a relative path to your local `mozilla-central` checkout via `dependency
 and optional a path to m-c object directory via `dependencySubstitutions.geckoviewTopobjdir`.
 
 If these are configured, local builds of GeckoView will be used instead of what's configured in Dependencies.kt.
-For more details, see https://mozilla.github.io/geckoview/contributor/geckoview-quick-start#include-geckoview-as-a-dependency
+For more details, see https://firefox-source-docs.mozilla.org/mobile/android/geckoview/contributor/geckoview-quick-start.html#include-geckoview-as-a-dependency
 
 ## License
 
