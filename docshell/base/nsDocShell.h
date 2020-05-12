@@ -1309,9 +1309,6 @@ class nsDocShell final : public nsDocLoader,
   // we prepare the browsing context to change process.
   bool mWillChangeProcess : 1;
 
-  // Set when activity in this docshell is being watched by the developer tools.
-  bool mWatchedByDevtools : 1;
-
   // This flag indicates whether or not the DocShell is currently executing an
   // nsIWebNavigation navigation method.
   bool mIsNavigating : 1;

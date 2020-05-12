@@ -127,7 +127,7 @@ struct WorkerLoadInfoData {
   bool mXHRParamsAllowed;
   bool mPrincipalIsSystem;
   bool mPrincipalIsAddonOrExpandedAddon;
-  bool mWatchedByDevtools;
+  bool mWatchedByDevTools;
   StorageAccess mStorageAccess;
   bool mFirstPartyStorageAccessGranted;
   bool mServiceWorkersTestingInWindow;
