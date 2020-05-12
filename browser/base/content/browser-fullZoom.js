@@ -334,7 +334,7 @@ var FullZoom = {
   async reduce() {
     let browser = gBrowser.selectedBrowser;
     if (browser.currentURI.spec.startsWith("about:reader")) {
-      browser.messageManager.sendAsyncMessage("Reader:ZoomOut");
+      browser.sendMessageToActor("Reader:ZoomOut", {}, "AboutReader");
     } else if (this._isPDFViewer(browser)) {
       browser.messageManager.sendAsyncMessage("PDFJS:ZoomOut");
     } else {
@@ -351,7 +351,7 @@ var FullZoom = {
   async enlarge() {
     let browser = gBrowser.selectedBrowser;
     if (browser.currentURI.spec.startsWith("about:reader")) {
-      browser.messageManager.sendAsyncMessage("Reader:ZoomIn");
+      browser.sendMessageToActor("Reader:ZoomIn", {}, "AboutReader");
     } else if (this._isPDFViewer(browser)) {
       browser.messageManager.sendAsyncMessage("PDFJS:ZoomIn");
     } else {
@@ -371,7 +371,7 @@ var FullZoom = {
   changeZoomBy(aBrowser, aValue) {
     if (aBrowser.currentURI.spec.startsWith("about:reader")) {
       const message = aValue > 0 ? "Reader::ZoomIn" : "Reader:ZoomOut";
-      aBrowser.messageManager.sendAsyncMessage(message);
+      aBrowser.sendMessageToActor(message, {}, "AboutReader");
       return;
     } else if (this._isPDFViewer(aBrowser)) {
       const message = aValue > 0 ? "PDFJS::ZoomIn" : "PDFJS:ZoomOut";
@@ -412,7 +412,7 @@ var FullZoom = {
   reset: function FullZoom_reset(browser = gBrowser.selectedBrowser) {
     let forceValue;
     if (browser.currentURI.spec.startsWith("about:reader")) {
-      browser.messageManager.sendAsyncMessage("Reader:ResetZoom");
+      browser.sendMessageToActor("Reader:ResetZoom", {}, "AboutReader");
     } else if (this._isPDFViewer(browser)) {
       browser.messageManager.sendAsyncMessage("PDFJS:ZoomReset");
       // Ensure that the UI elements of the PDF viewer won't be zoomed in/out
