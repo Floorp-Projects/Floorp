@@ -492,7 +492,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         requireContext(),
                         customTabSessionId,
                         requireComponents.core.engine,
-                        requireComponents.core.sessionManager,
+                        requireComponents.core.store,
                         requireComponents.backgroundServices.accountManager,
                         requireComponents.backgroundServices.serverConfig,
                         setOf(FxaCapability.CHOOSE_WHAT_TO_SYNC)
