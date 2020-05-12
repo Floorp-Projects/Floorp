@@ -357,7 +357,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
               engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
               suggestion: [result.suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
               keyword: [alias ? alias : undefined, UrlbarUtils.HIGHLIGHT.TYPED],
-              query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
+              query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.TYPED],
               isSearchHistory: false,
               icon: [
                 engine.iconURI && !result.suggestion ? engine.iconURI.spec : "",

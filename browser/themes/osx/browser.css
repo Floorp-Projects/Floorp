@@ -280,7 +280,15 @@
   --panel-disabled-color: #737373;
 }
 
+.urlbarView {
+  font-size: 14px;
+}
+
 @supports -moz-bool-pref("browser.urlbar.update2.expandTextOnFocus") {
+  .urlbarView {
+    font-size: inherit;
+  }
+
   #urlbar[breakout-extend] {
     font-size: 1.36em;
   }
