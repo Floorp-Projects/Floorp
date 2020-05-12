@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { Ci } = require("chrome");
+
 const {
   createFactory,
   PureComponent,
@@ -65,7 +67,9 @@ class Registration extends PureComponent {
 
   isActive() {
     const { workers } = this.props.registration;
-    return workers.some(x => x.isActive);
+    return workers.some(
+      x => x.state === Ci.nsIServiceWorkerInfo.STATE_ACTIVATED
+    );
   }
 
   formatScope(scope) {

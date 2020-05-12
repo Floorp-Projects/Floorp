@@ -47,7 +47,7 @@ exports[`Worker Renders the expected snapshot for a non-active worker 1`] = `
     </Localized>
     <dd>
       <span
-        className="js-worker-status worker__status"
+        className="js-worker-status worker__status worker__status--waiting"
       >
         installed
       </span>
@@ -104,7 +104,7 @@ exports[`Worker Renders the expected snapshot for a running worker 1`] = `
     </Localized>
     <dd>
       <span
-        className="js-worker-status worker__status"
+        className="js-worker-status worker__status worker__status--active"
       >
         serviceworker-worker-status-running
       </span>
@@ -161,7 +161,7 @@ exports[`Worker Renders the expected snapshot for a stopped worker 1`] = `
     </Localized>
     <dd>
       <span
-        className="js-worker-status worker__status"
+        className="js-worker-status worker__status worker__status--active"
       >
         serviceworker-worker-status-stopped
       </span>

@@ -72,18 +72,18 @@ add_task(async function() {
       workers: [
         {
           id: "w1",
-          isActive: true,
           url: "https://example.com/w1.js",
           workerTargetFront: rawData[0].workers[0].workerTargetFront,
           registrationFront: rawData[0].registration,
+          state: Ci.nsIServiceWorkerInfo.STATE_ACTIVATED,
           stateText: "activated",
         },
         {
           id: "w2",
-          isActive: false,
           url: "https://example.com/w2.js",
           workerTargetFront: undefined,
           registrationFront: rawData[0].registration,
+          state: Ci.nsIServiceWorkerInfo.STATE_INSTALLED,
           stateText: "installed",
         },
       ],

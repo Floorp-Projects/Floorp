@@ -15,7 +15,6 @@ exports[`WorkersPage filters out workers from diferent domains 1`] = `
           "workers": Array [
             Object {
               "id": "id-worker-1-example",
-              "isActive": true,
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
@@ -30,7 +29,6 @@ exports[`WorkersPage filters out workers from diferent domains 1`] = `
           "workers": Array [
             Object {
               "id": "id-worker-2-example",
-              "isActive": true,
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
@@ -67,7 +65,6 @@ exports[`WorkersPage it renders a list with a single element if there's just 1 w
           "workers": Array [
             Object {
               "id": "id-worker-1-example",
-              "isActive": true,
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
@@ -96,7 +93,6 @@ exports[`WorkersPage renders a list with multiple elements when there are multip
           "workers": Array [
             Object {
               "id": "id-worker-1-example",
-              "isActive": true,
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
@@ -111,7 +107,6 @@ exports[`WorkersPage renders a list with multiple elements when there are multip
           "workers": Array [
             Object {
               "id": "id-worker-2-example",
-              "isActive": false,
               "state": 2,
               "stateText": "installed",
               "url": "http://example.com/worker.js",
@@ -126,7 +121,6 @@ exports[`WorkersPage renders a list with multiple elements when there are multip
           "workers": Array [
             Object {
               "id": "id-worker-3-example",
-              "isActive": true,
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",

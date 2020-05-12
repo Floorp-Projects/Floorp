@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
-
 const {
   UPDATE_CAN_DEBUG_WORKERS,
   UPDATE_WORKERS,
@@ -27,8 +25,8 @@ function buildWorkerDataFromFronts({ registration, workers }) {
     scope: registration.scope,
     workers: workers.map(worker => ({
       id: worker.id,
-      isActive: worker.state === Ci.nsIServiceWorkerInfo.STATE_ACTIVATED,
       url: worker.url,
+      state: worker.state,
       stateText: worker.stateText,
       registrationFront: registration,
       workerTargetFront: worker.workerTargetFront,
