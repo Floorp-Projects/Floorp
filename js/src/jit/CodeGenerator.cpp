@@ -12491,7 +12491,7 @@ void CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir) {
 
   Scalar::Type writeType = mir->writeType();
 
-  size_t width = Scalar::byteSize(mir->storageType());
+  size_t width = Scalar::byteSize(mir->writeType());
 
   if (lir->index()->isConstant()) {
     Address dest(elements, ToInt32(lir->index()) * width);
@@ -12510,7 +12510,7 @@ void CodeGenerator::visitStoreUnboxedBigInt(LStoreUnboxedBigInt* lir) {
 
   const MStoreUnboxedScalar* mir = lir->mir();
   Scalar::Type writeType = mir->writeType();
-  size_t width = Scalar::byteSize(mir->storageType());
+  size_t width = Scalar::byteSize(mir->writeType());
 
   masm.loadBigInt64(value, temp);
 

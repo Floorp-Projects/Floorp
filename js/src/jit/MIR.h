@@ -8024,7 +8024,6 @@ class StoreUnboxedScalarBase {
   }
 
  public:
-  void setWriteType(Scalar::Type type) { writeType_ = type; }
   Scalar::Type writeType() const { return writeType_; }
   bool isByteWrite() const {
     return writeType_ == Scalar::Int8 || writeType_ == Scalar::Uint8 ||
@@ -8045,9 +8044,6 @@ class StoreUnboxedScalarBase {
 class MStoreUnboxedScalar : public MTernaryInstruction,
                             public StoreUnboxedScalarBase,
                             public StoreUnboxedScalarPolicy::Data {
- private:
-  Scalar::Type storageType_;
-
   bool requiresBarrier_;
 
   MStoreUnboxedScalar(
@@ -8056,7 +8052,6 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
       MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier)
       : MTernaryInstruction(classOpcode, elements, index, value),
         StoreUnboxedScalarBase(storageType),
-        storageType_(storageType),
         requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier) {
     if (requiresBarrier_) {
       setGuard();  // Not removable or movable
@@ -8073,7 +8068,6 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, elements), (1, index), (2, value))
 
-  Scalar::Type storageType() const { return storageType_; }
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::UnboxedElement);
   }
