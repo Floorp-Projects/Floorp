@@ -430,15 +430,19 @@
           "params": {
             "searchUrlGetParams": [
               {
-                "name": "clid",
-                "value": "2039342"
-              },
-              {
                 "name": "text",
                 "value": "{searchTerms}"
               }
             ]
           },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "2039342",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
           "override": true,
           "default": "yes",
           "application": {
@@ -451,15 +455,19 @@
           "params": {
             "searchUrlGetParams": [
               {
-                "name": "clid",
-                "value": "1857376"
-              },
-              {
                 "name": "text",
                 "value": "{searchTerms}"
               }
             ]
           },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1857376",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
           "override": true,
           "default": "yes",
           "application": {
@@ -472,15 +480,19 @@
           "params": {
             "searchUrlGetParams": [
               {
-                "name": "clid",
-                "value": "1923034"
-              },
-              {
                 "name": "text",
                 "value": "{searchTerms}"
               }
             ]
           },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1923034",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
           "override": true,
           "default": "yes",
           "application": {
@@ -493,15 +505,19 @@
           "params": {
             "searchUrlGetParams": [
               {
-                "name": "clid",
-                "value": "1923018"
-              },
-              {
                 "name": "text",
                 "value": "{searchTerms}"
               }
             ]
           },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1923018",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
           "override": true,
           "default": "yes",
           "application": {
@@ -514,15 +530,19 @@
           "params": {
             "searchUrlGetParams": [
               {
-                "name": "clid",
-                "value": "1953197"
-              },
-              {
                 "name": "text",
                 "value": "{searchTerms}"
               }
             ]
           },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1953197",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
           "override": true,
           "default": "yes",
           "application": {
@@ -535,15 +555,19 @@
           "params": {
             "searchUrlGetParams": [
               {
-                "name": "clid",
-                "value": "1945716"
-              },
-              {
                 "name": "text",
                 "value": "{searchTerms}"
               }
             ]
           },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1945716",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
           "override": true,
           "default": "yes",
           "application": {
@@ -556,15 +580,19 @@
           "params": {
             "searchUrlGetParams": [
               {
-                "name": "clid",
-                "value": "1945686"
-              },
-              {
                 "name": "text",
                 "value": "{searchTerms}"
               }
             ]
           },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1945686",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
           "override": true,
           "default": "yes",
           "application": {
@@ -587,6 +615,14 @@
               "yandex-uk"
             ]
           },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1923018",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
           "webExtension": {
             "locales": [
               "ua"
@@ -597,15 +633,19 @@
           "params": {
             "searchUrlGetParams": [
               {
-                "name": "clid",
-                "value": "2320519"
-              },
-              {
                 "name": "text",
                 "value": "{searchTerms}"
               }
             ]
           },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "2320519",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
           "override": true,
           "default": "yes",
           "application": {
@@ -830,10 +870,6 @@
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "tn",
-                "value": "monline_4_dg"
-              },
               {
                 "name": "ie",
                 "value": "utf-8"
