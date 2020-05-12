@@ -97,7 +97,6 @@ public class AnnotationProcessor {
         generatedNamesToUnify.add("GeckoVRManager");
         generatedNamesToUnify.add("GeckoVideoInfo");
         generatedNamesToUnify.add("GeckoWebExecutor");
-        generatedNamesToUnify.add("HardwareCodecCapabilityUtils");
         generatedNamesToUnify.add("ImageDecoder");
         generatedNamesToUnify.add("MediaDrmProxy");
         generatedNamesToUnify.add("PanZoomController");
