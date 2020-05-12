@@ -575,11 +575,6 @@ class MOZ_STACK_CLASS WSRunScanner {
   nsIContent* GetEditableBlockParentOrTopmotEditableInlineContent(
       nsIContent* aContent) const;
 
-  nsIContent* GetPreviousWSNode(const EditorDOMPoint& aPoint,
-                                nsIContent& aBlockParent) const;
-  nsIContent* GetNextWSNode(const EditorDOMPoint& aPoint,
-                            nsIContent& aBlockParent) const;
-
   /**
    * GetPreviousCharPoint() and GetPreviousCharPointFromPointInText() return
    * previous character's point of of aPoint. If there is no character before
