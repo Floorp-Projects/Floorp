@@ -7,7 +7,6 @@
   font-size: var(--body-10-font-size);
 }
 
-
 /*
  * The current layout of a registration header is
  *
@@ -29,6 +28,20 @@
   overflow: hidden;
   white-space: nowrap;
   user-select: text;
+
+  /* display flex to handle showing the icon with ::before */
+  display: flex;
+  flex-direction: row;
+  column-gap: calc(var(--base-unit) * 2);
+  align-items: center;
+}
+
+.registration__scope::before {
+  display: inline-block;
+  width: calc(var(--base-unit) * 4);
+  height: calc(var(--base-unit) * 4);
+  content: "";
+  background-image: url(chrome://devtools/skin/images/debugging-workers.svg);
 }
 
 .registration__updated-time {
