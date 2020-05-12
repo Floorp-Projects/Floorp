@@ -55,9 +55,10 @@ linux64-clang-9:
         using: toolchain-script
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-9-linux64.json'
+            - 'build/build-clang/clang-linux64.json'
         resources:
-            - 'build/build-clang/clang-9-linux64.json'
+            - 'build/build-clang/clang-linux64.json'
+        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     fetches:
         fetch:
@@ -116,10 +117,10 @@ linux64-clang-9-mingw-x64:
             - linux64-gcc-7
             - linux64-binutils
 
-linux64-clang-10-android-cross:
-    description: "Clang 10 toolchain build"
+linux64-clang-9-android-cross:
+    description: "Clang 9 toolchain build"
     treeherder:
-        symbol: TL(clang10-android)
+        symbol: TL(clang9-android)
     run:
         using: toolchain-script
         script: build-clang.sh
@@ -131,16 +132,16 @@ linux64-clang-10-android-cross:
         toolchain-artifact: public/build/clang.tar.xz
     fetches:
         fetch:
-            - clang-10
+            - clang-9
         toolchain:
             - linux64-binutils
             - linux64-gcc-7
             - linux64-android-ndk-linux-repack
 
-linux64-clang-10-aarch64-cross:
-    description: "Clang 10 toolchain build with aarch64 runtime"
+linux64-clang-9-aarch64-cross:
+    description: "Clang 9 toolchain build with aarch64 runtime"
     treeherder:
-        symbol: TL(clang10-aarch64)
+        symbol: TL(clang9-aarch64)
     worker-type: b-linux
     worker:
         max-run-time: 5400
@@ -156,15 +157,15 @@ linux64-clang-10-aarch64-cross:
         toolchain-artifact: public/build/clang.tar.xz
     fetches:
         fetch:
-            - clang-10
+            - clang-9
         toolchain:
             - linux64-binutils
             - linux64-gcc-7
 
-linux64-clang-10-macosx-cross:
-    description: "Clang 10 toolchain build with MacOS Compiler RT libs"
+linux64-clang-9-macosx-cross:
+    description: "Clang 9 toolchain build with MacOS Compiler RT libs"
     treeherder:
-        symbol: TL(clang10-macosx-cross)
+        symbol: TL(clang9-macosx-cross)
     worker-type: b-linux
     worker:
         max-run-time: 3600
@@ -182,17 +183,17 @@ linux64-clang-10-macosx-cross:
         tooltool-downloads: internal
     fetches:
         fetch:
-            - clang-10
+            - clang-9
         toolchain:
             - linux64-binutils
             - linux64-cctools-port
-            - linux64-clang-10
+            - linux64-clang-9
             - linux64-gcc-7
 
-linux64-clang-10-win-cross:
-    description: "Clang 10 toolchain build with Windows Compiler RT libs"
+linux64-clang-9-win-cross:
+    description: "Clang 9 toolchain build with Windows Compiler RT libs"
     treeherder:
-        symbol: TL(clang10-win-cross)
+        symbol: TL(clang9-win-cross)
     worker-type: b-linux
     worker:
         max-run-time: 600
@@ -204,7 +205,7 @@ linux64-clang-10-win-cross:
         win64-clang-cl-2stage: toolchain-win64-clang-cl-2stage
     fetches:
         toolchain:
-            - linux64-clang-10
+            - linux64-clang-9
         win64-clang-cl-2stage:
             - artifact: clang.tar.bz2
               extract: false
@@ -218,10 +219,9 @@ linux64-clang-10:
         using: toolchain-script
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-linux64.json'
+            - 'build/build-clang/clang-10-linux64.json'
         resources:
-            - 'build/build-clang/clang-linux64.json'
-        toolchain-alias: linux64-clang
+            - 'build/build-clang/clang-10-linux64.json'
         toolchain-artifact: public/build/clang.tar.xz
     fetches:
         fetch:
@@ -254,11 +254,11 @@ macosx64-clang:
         toolchain-artifact: public/build/clang.tar.xz
     fetches:
         fetch:
-            - clang-10
+            - clang-9
         toolchain:
             - linux64-binutils
             - linux64-cctools-port
-            - linux64-clang-10
+            - linux64-clang-9
             - linux64-gcc-7
             - linux64-node
 
@@ -281,7 +281,7 @@ win64-clang-cl:
         tooltool-downloads: internal
     fetches:
         fetch:
-            - clang-10
+            - clang-9
             - cmake
             - ninja
 
@@ -304,6 +304,6 @@ win64-clang-cl-2stage:
         tooltool-downloads: internal
     fetches:
         fetch:
-            - clang-10
+            - clang-9
             - cmake
             - ninja

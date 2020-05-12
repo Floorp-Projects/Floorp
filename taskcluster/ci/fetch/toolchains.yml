@@ -322,7 +322,7 @@ llvm-for-dsymutil:
     fetch:
         type: git
         repo: https://github.com/llvm/llvm-project
-        revision: d32170dbd5b0d54436537b6b75beaf44324e0c28
+        revision: 3b7811f6441be13c9f613f81ef93297d231b4f8e
 
 rust-size:
     description: rust-size source code
