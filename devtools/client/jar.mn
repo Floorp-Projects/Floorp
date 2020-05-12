@@ -9,6 +9,7 @@ devtools.jar:
     content/shared/widgets/widgets.css (shared/widgets/widgets.css)
     content/webconsole/index.html (webconsole/index.html)
     content/shared/splitview.css (shared/splitview.css)
+    content/shared/toolbarbutton.css (shared/toolbarbutton.css)
     content/shared/theme-switching.js (shared/theme-switching.js)
     content/styleeditor/index.xhtml (styleeditor/index.xhtml)
     content/storage/index.xhtml (storage/index.xhtml)
