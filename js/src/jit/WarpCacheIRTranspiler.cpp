@@ -309,6 +309,7 @@ bool WarpCacheIRTranspiler::emitGuardIsNull(ValOperandId inputId) {
 
   auto* ins = MGuardValue::New(alloc(), input, NullValue());
   add(ins);
+  setOperand(inputId, ins);
   return true;
 }
 
@@ -320,6 +321,7 @@ bool WarpCacheIRTranspiler::emitGuardIsUndefined(ValOperandId inputId) {
 
   auto* ins = MGuardValue::New(alloc(), input, UndefinedValue());
   add(ins);
+  setOperand(inputId, ins);
   return true;
 }
 

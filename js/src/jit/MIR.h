@@ -8832,9 +8832,11 @@ class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
   MGuardValue(MDefinition* val, const Value& expected)
       : MUnaryInstruction(classOpcode, val), expected_(expected) {
+    MOZ_ASSERT(expected.isNullOrUndefined() || expected.isMagic());
+
     setGuard();
     setMovable();
-    MOZ_ASSERT(expected.isNullOrUndefined() || expected.isMagic());
+    setResultType(MIRType::Value);
   }
 
  public:
@@ -8853,6 +8855,7 @@ class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
     }
     return congruentIfOperandsEqual(ins);
   }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
