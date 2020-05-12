@@ -177,8 +177,12 @@ class TabTrayFragment : Fragment(R.layout.fragment_tab_tray), TabsTray.Observer,
         val tabs = getListOfSessions()
         val tabIds = tabs.map { it.id }.toList().toTypedArray()
         val tabCollectionStorage = (activity as HomeActivity).components.core.tabCollectionStorage
+        val navController = findNavController()
 
         val step = when {
+            // Show the SelectTabs fragment if there are multiple opened tabs to select which tabs
+            // you want to save to a collection.
+            tabs.size > 1 -> SaveCollectionStep.SelectTabs
             // If there is an existing tab collection, show the SelectCollection fragment to save
             // the selected tab to a collection of your choice.
             tabCollectionStorage.cachedTabCollections.isNotEmpty() -> SaveCollectionStep.SelectCollection
@@ -186,17 +190,15 @@ class TabTrayFragment : Fragment(R.layout.fragment_tab_tray), TabsTray.Observer,
             else -> SaveCollectionStep.NameCollection
         }
 
+        if (navController.currentDestination?.id == R.id.collectionCreationFragment) return
+
         val directions = TabTrayFragmentDirections.actionTabTrayFragmentToCreateCollectionFragment(
             tabIds = tabIds,
             previousFragmentId = R.id.tabTrayFragment,
             saveCollectionStep = step,
-            selectedTabIds = tabIds,
-            selectedTabCollectionId = -1
+            selectedTabIds = tabIds
         )
-
-        view?.let {
-            findNavController().navigate(directions)
-        }
+        navController.nav(R.id.tabTrayFragment, directions)
     }
 
     override fun onStart() {
