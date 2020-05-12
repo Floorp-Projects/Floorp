@@ -188,7 +188,7 @@ interface mixin MozEditableElement {
   // Returns an nsIEditor instance which is associated with the element.
   // If the element can be associated with an editor but not yet created,
   // this creates new one automatically.
-  [Pure, ChromeOnly]
+  [Pure, ChromeOnly, BinaryName="editorForBindings"]
   readonly attribute nsIEditor? editor;
 
   // Returns true if an nsIEditor instance has already been associated with

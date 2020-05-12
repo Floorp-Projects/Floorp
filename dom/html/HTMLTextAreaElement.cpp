@@ -214,6 +214,13 @@ bool HTMLTextAreaElement::ValueEquals(const nsAString& aValue) const {
   return mState->ValueEquals(aValue);
 }
 
+nsIEditor* HTMLTextAreaElement::GetEditorForBindings() {
+  if (!GetPrimaryFrame()) {
+    GetPrimaryFrame(FlushType::Frames);
+  }
+  return GetTextEditor();
+}
+
 TextEditor* HTMLTextAreaElement::GetTextEditor() {
   MOZ_ASSERT(mState);
   return mState->GetTextEditor();
