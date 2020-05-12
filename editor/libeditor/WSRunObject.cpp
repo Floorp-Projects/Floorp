@@ -746,16 +746,19 @@ nsresult WSRunScanner::GetWSNodes() {
 
   while (!mStartNode) {
     // we haven't found the start of ws yet.  Keep looking
-    nsCOMPtr<nsIContent> priorNode = GetPreviousWSNode(
-        start, *editableBlockParentOrTopmotEditableInlineContent);
-    if (priorNode) {
-      if (HTMLEditUtils::IsBlockElement(*priorNode)) {
+    nsIContent* previousLeafContentOrBlock =
+        HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+            start, *editableBlockParentOrTopmotEditableInlineContent,
+            mEditingHost);
+    if (previousLeafContentOrBlock) {
+      if (HTMLEditUtils::IsBlockElement(*previousLeafContentOrBlock)) {
         mStartNode = start.GetContainer();
         mStartOffset = start.Offset();
         mStartReason = WSType::OtherBlockBoundary;
-        mStartReasonContent = priorNode;
-      } else if (priorNode->IsText() && priorNode->IsEditable()) {
-        RefPtr<Text> textNode = priorNode->AsText();
+        mStartReasonContent = previousLeafContentOrBlock;
+      } else if (previousLeafContentOrBlock->IsText() &&
+                 previousLeafContentOrBlock->IsEditable()) {
+        RefPtr<Text> textNode = previousLeafContentOrBlock->AsText();
         mNodeArray.InsertElementAt(0, textNode);
         const nsTextFragment* textFrag = &textNode->TextFragment();
         uint32_t len = textNode->TextLength();
@@ -763,7 +766,7 @@ nsresult WSRunScanner::GetWSNodes() {
         if (len < 1) {
           // Zero length text node. Set start point to it
           // so we can get past it!
-          start.Set(priorNode, 0);
+          start.Set(previousLeafContentOrBlock, 0);
         } else {
           for (int32_t pos = len - 1; pos >= 0; pos--) {
             // sanity bounds check the char position.  bug 136165
@@ -797,12 +800,12 @@ nsresult WSRunScanner::GetWSNodes() {
         // not a break but still serves as a terminator to ws runs.
         mStartNode = start.GetContainer();
         mStartOffset = start.Offset();
-        if (priorNode->IsHTMLElement(nsGkAtoms::br)) {
+        if (previousLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)) {
           mStartReason = WSType::BRElement;
         } else {
           mStartReason = WSType::SpecialContent;
         }
-        mStartReasonContent = priorNode;
+        mStartReasonContent = previousLeafContentOrBlock;
       }
     } else {
       // no prior node means we exhausted
@@ -852,17 +855,20 @@ nsresult WSRunScanner::GetWSNodes() {
 
   while (!mEndNode) {
     // we haven't found the end of ws yet.  Keep looking
-    nsCOMPtr<nsIContent> nextNode =
-        GetNextWSNode(end, *editableBlockParentOrTopmotEditableInlineContent);
-    if (nextNode) {
-      if (HTMLEditUtils::IsBlockElement(*nextNode)) {
+    nsIContent* nextLeafContentOrBlock =
+        HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+            end, *editableBlockParentOrTopmotEditableInlineContent,
+            mEditingHost);
+    if (nextLeafContentOrBlock) {
+      if (HTMLEditUtils::IsBlockElement(*nextLeafContentOrBlock)) {
         // we encountered a new block.  therefore no more ws.
         mEndNode = end.GetContainer();
         mEndOffset = end.Offset();
         mEndReason = WSType::OtherBlockBoundary;
-        mEndReasonContent = nextNode;
-      } else if (nextNode->IsText() && nextNode->IsEditable()) {
-        RefPtr<Text> textNode = nextNode->AsText();
+        mEndReasonContent = nextLeafContentOrBlock;
+      } else if (nextLeafContentOrBlock->IsText() &&
+                 nextLeafContentOrBlock->IsEditable()) {
+        RefPtr<Text> textNode = nextLeafContentOrBlock->AsText();
         mNodeArray.AppendElement(textNode);
         const nsTextFragment* textFrag = &textNode->TextFragment();
         uint32_t len = textNode->TextLength();
@@ -905,12 +911,12 @@ nsresult WSRunScanner::GetWSNodes() {
         // serves as a terminator to ws runs.
         mEndNode = end.GetContainer();
         mEndOffset = end.Offset();
-        if (nextNode->IsHTMLElement(nsGkAtoms::br)) {
+        if (nextLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)) {
           mEndReason = WSType::BRElement;
         } else {
           mEndReason = WSType::SpecialContent;
         }
-        mEndReasonContent = nextNode;
+        mEndReasonContent = nextLeafContentOrBlock;
       }
     } else {
       // no next node means we exhausted
@@ -1086,102 +1092,6 @@ void WSRunScanner::InitializeWithSingleFragment(
   mStartRun->SetEndBy(mEndReason);
 
   mEndRun = mStartRun;
-}
-
-nsIContent* WSRunScanner::GetPreviousWSNode(const EditorDOMPoint& aPoint,
-                                            nsIContent& aBlockParent) const {
-  // Can't really recycle various getnext/prior routines because we
-  // have special needs here.  Need to step into inline containers but
-  // not block containers.
-  MOZ_ASSERT(aPoint.IsSet());
-
-  if (aPoint.IsInTextNode()) {
-    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-        *aPoint.ContainerAsText(), aBlockParent, mEditingHost);
-  }
-  if (!aPoint.IsInContentNode()) {
-    return nullptr;
-  }
-  if (!HTMLEditUtils::IsContainerNode(*aPoint.ContainerAsContent())) {
-    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-        *aPoint.ContainerAsContent(), aBlockParent, mEditingHost);
-  }
-
-  if (aPoint.IsStartOfContainer()) {
-    if (aPoint.GetContainer() == &aBlockParent) {
-      // We are at start of the block.
-      return nullptr;
-    }
-
-    // We are at start of non-block container
-    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-        *aPoint.ContainerAsContent(), aBlockParent, mEditingHost);
-  }
-
-  nsCOMPtr<nsIContent> previousContent = aPoint.GetPreviousSiblingOfChild();
-  if (NS_WARN_IF(!previousContent)) {
-    return nullptr;
-  }
-
-  // We have a prior node.  If it's a block, return it.
-  if (HTMLEditUtils::IsBlockElement(*previousContent)) {
-    return previousContent;
-  }
-  if (HTMLEditUtils::IsContainerNode(*previousContent)) {
-    // Else if it's a container, get deep rightmost child
-    if (nsIContent* child = HTMLEditUtils::GetLastLeafChild(
-            *previousContent, ChildBlockBoundary::Ignore)) {
-      return child;
-    }
-  }
-  // Else return the node itself
-  return previousContent;
-}
-
-nsIContent* WSRunScanner::GetNextWSNode(const EditorDOMPoint& aPoint,
-                                        nsIContent& aBlockParent) const {
-  // Can't really recycle various getnext/prior routines because we have
-  // special needs here.  Need to step into inline containers but not block
-  // containers.
-  MOZ_ASSERT(aPoint.IsSet());
-
-  if (aPoint.IsInTextNode()) {
-    return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-        *aPoint.ContainerAsText(), aBlockParent, mEditingHost);
-  }
-  if (!aPoint.IsInContentNode()) {
-    return nullptr;
-  }
-  if (!HTMLEditUtils::IsContainerNode(*aPoint.ContainerAsContent())) {
-    return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-        *aPoint.ContainerAsContent(), aBlockParent, mEditingHost);
-  }
-
-  nsCOMPtr<nsIContent> nextContent = aPoint.GetChild();
-  if (!nextContent) {
-    if (aPoint.GetContainer() == &aBlockParent) {
-      // We are at end of the block.
-      return nullptr;
-    }
-
-    // We are at end of non-block container
-    return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-        *aPoint.ContainerAsContent(), aBlockParent, mEditingHost);
-  }
-
-  // We have a next node.  If it's a block, return it.
-  if (HTMLEditUtils::IsBlockElement(*nextContent)) {
-    return nextContent;
-  }
-  if (HTMLEditUtils::IsContainerNode(*nextContent)) {
-    // else if it's a container, get deep leftmost child
-    if (nsIContent* child = HTMLEditUtils::GetFirstLeafChild(
-            *nextContent, ChildBlockBoundary::Ignore)) {
-      return child;
-    }
-  }
-  // Else return the node itself
-  return nextContent;
 }
 
 nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {

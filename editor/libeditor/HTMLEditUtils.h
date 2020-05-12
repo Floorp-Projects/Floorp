@@ -304,6 +304,55 @@ class HTMLEditUtils final {
   }
 
   /**
+   * Similar to the above method, but take a DOM point to specify scan start
+   * point.
+   */
+  template <typename PT, typename CT>
+  static nsIContent* GetNextLeafContentOrNextBlockElement(
+      const EditorDOMPointBase<PT, CT>& aStartPoint, nsIContent& aCurrentBlock,
+      Element* aAncestorLimiter = nullptr) {
+    MOZ_ASSERT(aStartPoint.IsSet());
+
+    if (!aStartPoint.IsInContentNode()) {
+      return nullptr;
+    }
+    if (aStartPoint.IsInTextNode()) {
+      return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+          *aStartPoint.ContainerAsText(), aCurrentBlock, aAncestorLimiter);
+    }
+    if (!HTMLEditUtils::IsContainerNode(*aStartPoint.ContainerAsContent())) {
+      return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+          *aStartPoint.ContainerAsContent(), aCurrentBlock, aAncestorLimiter);
+    }
+
+    nsCOMPtr<nsIContent> nextContent = aStartPoint.GetChild();
+    if (!nextContent) {
+      if (aStartPoint.GetContainer() == &aCurrentBlock) {
+        // We are at end of the block.
+        return nullptr;
+      }
+
+      // We are at end of non-block container
+      return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+          *aStartPoint.ContainerAsContent(), aCurrentBlock, aAncestorLimiter);
+    }
+
+    // We have a next node.  If it's a block, return it.
+    if (HTMLEditUtils::IsBlockElement(*nextContent)) {
+      return nextContent;
+    }
+    if (HTMLEditUtils::IsContainerNode(*nextContent)) {
+      // else if it's a container, get deep leftmost child
+      if (nsIContent* child = HTMLEditUtils::GetFirstLeafChild(
+              *nextContent, ChildBlockBoundary::Ignore)) {
+        return child;
+      }
+    }
+    // Else return the node itself
+    return nextContent;
+  }
+
+  /**
    * GetPreviousLeafContentOrPreviousBlockElement() returns previous leaf
    * content or previous block element of aStartContent inside
    * aAncestorLimiter.
@@ -364,6 +413,60 @@ class HTMLEditUtils final {
       }
     }
     // Else return the next content itself.
+    return previousContent;
+  }
+
+  /**
+   * Similar to the above method, but take a DOM point to specify scan start
+   * point.
+   */
+  template <typename PT, typename CT>
+  static nsIContent* GetPreviousLeafContentOrPreviousBlockElement(
+      const EditorDOMPointBase<PT, CT>& aStartPoint, nsIContent& aCurrentBlock,
+      Element* aAncestorLimiter = nullptr) {
+    MOZ_ASSERT(aStartPoint.IsSet());
+
+    if (!aStartPoint.IsInContentNode()) {
+      return nullptr;
+    }
+    if (aStartPoint.IsInTextNode()) {
+      return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+          *aStartPoint.ContainerAsText(), aCurrentBlock, aAncestorLimiter);
+    }
+    if (!HTMLEditUtils::IsContainerNode(*aStartPoint.ContainerAsContent())) {
+      return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+          *aStartPoint.ContainerAsContent(), aCurrentBlock, aAncestorLimiter);
+    }
+
+    if (aStartPoint.IsStartOfContainer()) {
+      if (aStartPoint.GetContainer() == &aCurrentBlock) {
+        // We are at start of the block.
+        return nullptr;
+      }
+
+      // We are at start of non-block container
+      return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+          *aStartPoint.ContainerAsContent(), aCurrentBlock, aAncestorLimiter);
+    }
+
+    nsCOMPtr<nsIContent> previousContent =
+        aStartPoint.GetPreviousSiblingOfChild();
+    if (NS_WARN_IF(!previousContent)) {
+      return nullptr;
+    }
+
+    // We have a prior node.  If it's a block, return it.
+    if (HTMLEditUtils::IsBlockElement(*previousContent)) {
+      return previousContent;
+    }
+    if (HTMLEditUtils::IsContainerNode(*previousContent)) {
+      // Else if it's a container, get deep rightmost child
+      if (nsIContent* child = HTMLEditUtils::GetLastLeafChild(
+              *previousContent, ChildBlockBoundary::Ignore)) {
+        return child;
+      }
+    }
+    // Else return the node itself
     return previousContent;
   }
 
