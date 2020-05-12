@@ -25,7 +25,7 @@ add_task(async function() {
   const scopeEl = registrationContainer.querySelector(".js-sw-scope");
   const expectedScope =
     "example.com/browser/devtools/client/application/test/" +
-    "browser/resources/service-workers/";
+    "browser/resources/service-workers";
   ok(
     scopeEl.textContent.startsWith(expectedScope),
     "Registration has the expected scope"

@@ -53,4 +53,20 @@ describe("Registration", () => {
 
     expect(wrapper).toMatchSnapshot();
   });
+
+  it("Removes the ending forward slash from the scope, when present", () => {
+    const registration = Object.assign({}, REGISTRATION_SINGLE_WORKER, {
+      scope: "https://example.com/something/",
+    });
+
+    const wrapper = shallow(
+      Registration({
+        isDebugEnabled: false,
+        registration: registration,
+      })
+    );
+
+    const scopeEl = wrapper.find(".js-sw-scope");
+    expect(scopeEl.text()).toBe("example.com/something");
+  });
 });
