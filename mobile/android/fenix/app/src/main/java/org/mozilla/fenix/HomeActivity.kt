@@ -232,7 +232,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                     tabsTray
                 )
             }
-            val tray = BrowserTabsTray(context, attrs, tabsAdapter = adapter, layout = layout)
             val decoration = DividerItemDecoration(
                 context,
                 DividerItemDecoration.VERTICAL
@@ -240,9 +239,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             val drawable = AppCompatResources.getDrawable(context, R.drawable.tab_tray_divider)
             drawable?.let {
                 decoration.setDrawable(it)
-                tray.addItemDecoration(decoration)
             }
-            tray
+            BrowserTabsTray(
+                context,
+                attrs,
+                tabsAdapter = adapter,
+                layout = layout,
+                itemDecoration = decoration
+            )
         }
         else -> super.onCreateView(parent, name, context, attrs)
     }
