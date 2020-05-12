@@ -8,7 +8,6 @@ import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.feature.session.SessionUseCases
@@ -20,7 +19,7 @@ internal const val HISTORY_SUGGESTION_LIMIT = 20
  * A [AwesomeBar.SuggestionProvider] implementation that provides suggestions based on the browsing
  * history stored in the [HistoryStorage].
  *
- * @property historyStorage and instance of the [BookmarksStorage] used
+ * @property historyStorage and instance of the [HistoryStorage] used
  * to query matching bookmarks.
  * @property loadUrlUseCase the use case invoked to load the url when the
  * user clicks on the suggestion.

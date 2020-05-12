@@ -11,8 +11,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.awesomebar.facts.BrowserAwesomeBarFacts
 import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.FactProcessor
+import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -28,6 +34,7 @@ import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.Shadows.shadowOf
 import java.util.UUID
 import java.util.concurrent.Executor
@@ -43,20 +50,50 @@ class BrowserAwesomeBarTest {
     fun `BrowserAwesomeBar forwards input to providers`() {
         runBlocking {
             val provider1 = mockProvider()
+            val awesomeBar = BrowserAwesomeBar(testContext)
+
             val provider2 = mockProvider()
             val provider3 = mockProvider()
+            awesomeBar.addProviders(provider1)
 
-            val awesomeBar = BrowserAwesomeBar(testContext)
-            awesomeBar.addProviders(provider1, provider2)
-            awesomeBar.addProviders(provider3)
+            val facts = mutableListOf<Fact>()
+            Facts.registerProcessor(object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            })
 
             awesomeBar.onInputChanged("Hello World!")
             awesomeBar.awaitForAllJobsToFinish()
 
             verify(provider1).onInputChanged("Hello World!")
-            verify(provider2).onInputChanged("Hello World!")
-            verify(provider3).onInputChanged("Hello World!")
+            verifyZeroInteractions(provider2)
+            verifyZeroInteractions(provider3)
+
+            assertEquals(1, facts.size)
+            assertBrowserAwesomebarFact(facts[0], provider1)
+
+            awesomeBar.addProviders(provider2, provider3)
+
+            awesomeBar.onInputChanged("Hello Back!")
+            awesomeBar.awaitForAllJobsToFinish()
+
+            verify(provider2).onInputChanged("Hello Back!")
+            verify(provider3).onInputChanged("Hello Back!")
+
+            assertEquals(4, facts.size)
+
+            facts.forEach { assertBrowserAwesomebarFact(it) }
         }
+    }
+
+    private fun assertBrowserAwesomebarFact(f: Fact, provider: AwesomeBar.SuggestionProvider? = null) {
+        assertEquals(Component.BROWSER_AWESOMEBAR, f.component)
+        assertEquals(Action.INTERACTION, f.action)
+        assertEquals(BrowserAwesomeBarFacts.Items.PROVIDER_DURATION, f.item)
+        val pair = f.metadata!![BrowserAwesomeBarFacts.MetadataKeys.DURATION_PAIR] as Pair<*, *>
+        provider?.let { assertEquals(pair.first, provider) }
+        assertTrue(pair.second is Long)
     }
 
     @Test
