@@ -658,7 +658,7 @@ bool nsRetrievalContextWayland::HasSelectionSupport(void) {
 
 nsRetrievalContextWayland::nsRetrievalContextWayland(void)
     : mInitialized(false),
-      mDisplay(WaylandDisplayGet()),
+      mDisplay(mozilla::widget::WaylandDisplayGet()),
       mActiveOffers(g_hash_table_new(NULL, NULL)),
       mClipboardOffer(nullptr),
       mPrimaryOffer(nullptr),

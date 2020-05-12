@@ -22,7 +22,7 @@
 #include "nsEnumeratorUtils.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
-#include "mozcontainer.h"
+#include "MozContainer.h"
 
 #include "nsFilePicker.h"
 
