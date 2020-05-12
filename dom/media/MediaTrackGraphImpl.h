@@ -623,6 +623,12 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
   Watchable<GraphTime>& CurrentTime() override;
 
+  /**
+   * Interrupt any JS running on the graph thread.
+   * Called on the main thread when shutting down the graph.
+   */
+  void InterruptJS();
+
   class TrackSet {
    public:
     class iterator {
@@ -896,13 +902,22 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   }
 
   /**
-   * True when we need to do a forced shutdown, during application shutdown or
-   * when shutting down a non-realtime graph.
+   * True when we need to do a forced shutdown, during process shutdown or
+   * when shutting down a non-realtime graph, and the graph thread has
+   * received the message.  This is checked in the decision to shut down the
+   * graph thread so that control messages dispatched before forced shutdown
+   * are processed on the graph thread.
    * Only set on the graph thread.
    * Can be read safely on the thread currently owning the graph, as indicated
    * by mLifecycleState.
    */
-  bool mForceShutDown;
+  bool mForceShutDownReceived = false;
+  /**
+   * true when InterruptJS() has been called, because shutdown (normal or
+   * forced) has commenced.  Set on the main thread under mMonitor and read on
+   * the graph thread under mMonitor.
+   **/
+  bool mInterruptJSCalled = false;
 
   /**
    * Remove this blocker to unblock shutdown.
@@ -916,6 +931,14 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Accessed on both main and MTG thread, mMonitor must be held.
    */
   bool mPostedRunInStableStateEvent;
+
+  /**
+   * The JSContext of the graph thread.  Set under mMonitor on only the graph
+   * or GraphRunner thread.  Once set this does not change until reset when
+   * the thread is about to exit.  Read under mMonitor on the main thread to
+   * interrupt running JS for forced shutdown.
+   **/
+  JSContext* mJSContext = nullptr;
 
   // Main thread only
 

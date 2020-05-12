@@ -1097,6 +1097,12 @@ class MediaTrackGraph {
   void StartNonRealtimeProcessing(uint32_t aTicksToProcess);
 
   /**
+   * NotifyJSContext() is called on the graph thread before content script
+   * runs.
+   */
+  void NotifyJSContext(JSContext* aCx);
+
+  /**
    * Media graph thread only.
    * Dispatches a runnable that will run on the main thread after all
    * main-thread track state has been updated, i.e., during stable state.
