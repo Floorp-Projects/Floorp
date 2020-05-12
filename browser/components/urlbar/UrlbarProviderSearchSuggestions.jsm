@@ -17,6 +17,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   PlacesSearchAutocompleteProvider:
     "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
+  SearchSuggestionController:
+    "resource://gre/modules/SearchSuggestionController.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
@@ -271,7 +273,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     }
 
     let alias = (aliasEngine && aliasEngine.alias) || "";
-    let results = await this._matchSearchSuggestions(
+    let results = await this._fetchSearchSuggestions(
       queryContext,
       engine,
       query,
@@ -305,74 +307,95 @@ class ProviderSearchSuggestions extends UrlbarProvider {
   cancelQuery(queryContext) {
     logger.info(`Canceling query for ${queryContext.searchString}`);
 
-    if (this._suggestionsFetch) {
-      this._suggestionsFetch.stop();
-      this._suggestionsFetch = null;
+    if (this._suggestionsController) {
+      this._suggestionsController.stop();
+      this._suggestionsController = null;
     }
 
     this.queries.delete(queryContext);
   }
 
-  async _matchSearchSuggestions(queryContext, engine, searchString, alias) {
-    this._suggestionsFetch = PlacesSearchAutocompleteProvider.newSuggestionsFetch(
-      engine,
+  async _fetchSearchSuggestions(queryContext, engine, searchString, alias) {
+    if (!engine || !searchString) {
+      return null;
+    }
+
+    this._suggestionsController = new SearchSuggestionController();
+    this._suggestionsController.maxLocalResults = UrlbarPrefs.get(
+      "maxHistoricalSearchSuggestions"
+    );
+    this._suggestionsController.maxRemoteResults =
+      queryContext.maxResults -
+      UrlbarPrefs.get("maxHistoricalSearchSuggestions");
+
+    this._suggestionsFetchCompletePromise = this._suggestionsController.fetch(
       searchString,
       queryContext.isPrivate,
-      UrlbarPrefs.get("maxHistoricalSearchSuggestions"),
-      queryContext.maxResults -
-        UrlbarPrefs.get("maxHistoricalSearchSuggestions"),
+      engine,
       queryContext.userContextId
     );
-    await this._suggestionsFetch.fetchCompletePromise;
-    try {
-      // The fetch has been canceled already.
-      if (!this._suggestionsFetch) {
-        return null;
-      }
-      // If we don't return many results, then keep track of the query. If the
-      // user just adds on to the query, we won't fetch more suggestions since
-      // we are unlikely to get any.
-      if (
-        this._suggestionsFetch.resultsCount >= 0 &&
-        this._suggestionsFetch.resultsCount < 2
-      ) {
-        this._lastLowResultsSearchSuggestion = searchString;
-      }
-      let results = [];
-      let result;
-      while ((result = this._suggestionsFetch.consume())) {
-        if (
-          !result ||
-          result.suggestion == searchString ||
-          looksLikeUrl(result.suggestion)
-        ) {
-          continue;
-        }
 
+    // See `SearchSuggestionsController.fetch` documentation for a description
+    // of `fetchData`.
+    let fetchData = await this._suggestionsFetchCompletePromise;
+    // The fetch was canceled.
+    if (!fetchData) {
+      return null;
+    }
+
+    let suggestions = [];
+    suggestions.push(
+      ...fetchData.local.map(r => ({ suggestion: r, historical: true })),
+      ...fetchData.remote.map(r => ({ suggestion: r, historical: false }))
+    );
+
+    // If we don't return many results, then keep track of the query. If the
+    // user just adds on to the query, we won't fetch more suggestions since
+    // we are unlikely to get any.
+    if (suggestions.length >= 0 && suggestions.length < 2) {
+      this._lastLowResultsSearchSuggestion = searchString;
+    }
+
+    let results = [];
+    for (let suggestion of suggestions) {
+      if (
+        !suggestion ||
+        suggestion.suggestion == searchString ||
+        looksLikeUrl(suggestion.suggestion)
+      ) {
+        continue;
+      }
+
+      try {
         results.push(
           new UrlbarResult(
             UrlbarUtils.RESULT_TYPE.SEARCH,
             UrlbarUtils.RESULT_SOURCE.SEARCH,
             ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
               engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-              suggestion: [result.suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+              suggestion: [
+                suggestion.suggestion,
+                UrlbarUtils.HIGHLIGHT.SUGGESTED,
+              ],
               keyword: [alias ? alias : undefined, UrlbarUtils.HIGHLIGHT.TYPED],
               query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
               isSearchHistory: false,
               icon: [
-                engine.iconURI && !result.suggestion ? engine.iconURI.spec : "",
+                engine.iconURI && !suggestion.suggestion
+                  ? engine.iconURI.spec
+                  : "",
               ],
               keywordOffer: UrlbarUtils.KEYWORD_OFFER.NONE,
             })
           )
         );
+      } catch (err) {
+        Cu.reportError(err);
+        continue;
       }
-
-      return results;
-    } catch (err) {
-      Cu.reportError(err);
-      return null;
     }
+
+    return results;
   }
 
   /**
