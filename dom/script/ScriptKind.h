@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace dom {
 
-enum class ScriptKind { eClassic, eModule };
+enum class ScriptKind { eClassic, eModule, eEvent };
 
 }  // namespace dom
 }  // namespace mozilla
