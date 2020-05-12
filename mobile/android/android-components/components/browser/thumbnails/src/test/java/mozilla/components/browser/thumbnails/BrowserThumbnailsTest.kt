@@ -4,98 +4,143 @@
 
 package mozilla.components.browser.thumbnails
 
+import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.Engine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertNull
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.verifyZeroInteractions
 
 @RunWith(AndroidJUnit4::class)
 class BrowserThumbnailsTest {
 
-    private lateinit var mockSessionManager: SessionManager
-    private lateinit var mockEngineView: EngineView
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    private lateinit var store: BrowserStore
+    private lateinit var engineView: EngineView
     private lateinit var thumbnails: BrowserThumbnails
+    private val tabId = "test-tab"
 
     @Before
     fun setup() {
-        val engine = mock<Engine>()
-        mockSessionManager = spy(SessionManager(engine))
-        mockEngineView = mock()
-        thumbnails = BrowserThumbnails(testContext, mockEngineView, mockSessionManager)
+        Dispatchers.setMain(testDispatcher)
+        store = spy(BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = tabId)
+            ),
+            selectedTabId = tabId
+        )))
+        engineView = mock()
+        thumbnails = BrowserThumbnails(testContext, engineView, store)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
-    fun `when feature is stop must not capture thumbnail when a site finish loading`() {
+    fun `do not capture thumbnail when feature is stopped and a site finishes loading`() {
         thumbnails.start()
         thumbnails.stop()
 
-        val session = getSelectedSession()
+        // Initial loading state is false
+        verify(engineView).captureThumbnail(any())
 
-        session.notifyObservers {
-            onLoadingStateChanged(session, false)
-        }
+        store.dispatch(ContentAction.UpdateThumbnailAction(tabId, mock())).joinBlocking()
 
-        verify(mockEngineView, never()).captureThumbnail(any())
+        verifyNoMoreInteractions(engineView)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test
+    fun `feature must capture thumbnail when a site finishes loading`() {
+        val bitmap: Bitmap? = mock()
+
+        store.dispatch(ContentAction.UpdateLoadingStateAction(tabId, true)).joinBlocking()
+
+        thumbnails.start()
+
+        `when`(engineView.captureThumbnail(any()))
+            .thenAnswer { // if engineView responds with a bitmap
+                (it.arguments[0] as (Bitmap?) -> Unit).invoke(bitmap)
+            }
+
+        verify(store, never()).dispatch(ContentAction.UpdateThumbnailAction(tabId, bitmap!!))
+
+        store.dispatch(ContentAction.UpdateLoadingStateAction(tabId, false)).joinBlocking()
+
+        verify(store).dispatch(ContentAction.UpdateThumbnailAction(tabId, bitmap))
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test
+    fun `feature never updates the store if there is no thumbnail bitmap`() {
+        val store: BrowserStore = mock()
+        val state: BrowserState = mock()
+        val engineView: EngineView = mock()
+        val feature = BrowserThumbnails(testContext, engineView, store)
+
+        `when`(store.state).thenReturn(state)
+        `when`(engineView.captureThumbnail(any()))
+            .thenAnswer { // if engineView responds with a bitmap
+                (it.arguments[0] as (Bitmap?) -> Unit).invoke(null)
+            }
+
+        feature.requestScreenshot()
+
+        verifyZeroInteractions(store)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test
+    fun `feature never updates the store if there is no tab ID`() {
+        val store: BrowserStore = mock()
+        val state: BrowserState = mock()
+        val engineView: EngineView = mock()
+        val feature = BrowserThumbnails(testContext, engineView, store)
+        val bitmap: Bitmap = mock()
+
+        `when`(store.state).thenReturn(state)
+        `when`(state.selectedTabId).thenReturn(tabId)
+        `when`(engineView.captureThumbnail(any()))
+            .thenAnswer { // if engineView responds with a bitmap
+                (it.arguments[0] as (Bitmap?) -> Unit).invoke(bitmap)
+            }
+
+        feature.requestScreenshot()
+
+        verify(store).dispatch(ContentAction.UpdateThumbnailAction(tabId, bitmap))
     }
 
     @Test
-    fun `feature must capture thumbnail when a site finish loading`() {
-        thumbnails.start()
-
-        val session = getSelectedSession()
-
-        session.notifyObservers {
-            onLoadingStateChanged(session, false)
-        }
-
-        verify(mockEngineView).captureThumbnail(any())
-    }
-
-    @Test
-    fun `feature must capture thumbnail when title changes`() {
-        thumbnails.start()
-
-        val session = getSelectedSession()
-
-        session.notifyObservers {
-            onTitleChanged(session, "test")
-        }
-
-        verify(mockEngineView).captureThumbnail(any())
-    }
-
-    @Test
-    fun `when a page is loaded and the os is in low memory condition none thumbnail should be captured`() {
-        thumbnails.start()
-
-        val session = getSelectedSession()
-        session.thumbnail = mock()
+    fun `when a page is loaded and the os is in low memory condition thumbnail should not be captured`() {
+        store.dispatch(ContentAction.UpdateThumbnailAction(tabId, mock())).joinBlocking()
 
         thumbnails.testLowMemory = true
 
-        session.notifyObservers {
-            onLoadingStateChanged(session, false)
-        }
+        thumbnails.start()
 
-        verify(mockEngineView, never()).captureThumbnail(any())
-        assertNull(session.thumbnail)
-    }
-
-    private fun getSelectedSession(): Session {
-        val session = Session("https://www.mozilla.org")
-        mockSessionManager.add(session)
-        mockSessionManager.select(session)
-        return session
+        verify(engineView, never()).captureThumbnail(any())
     }
 }
