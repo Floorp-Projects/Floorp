@@ -162,6 +162,7 @@
             ]
           },
           "override": true,
+          "orderHint": 2000,
           "default": "yes",
           "application": {
             "distributions": [
@@ -188,6 +189,7 @@
               ]
             }
           },
+          "orderHint": 1500,
           "application": {
             "distributions": [
               "qwant-001",
@@ -769,6 +771,7 @@
         },
         {
           "override": true,
+          "orderHint": 1500,
           "application": {
             "distributions": [
               "MozillaOnline"
@@ -862,6 +865,7 @@
           },
           "override": true,
           "default": "yes",
+          "orderHint": 3000,
           "application": {
             "distributions": [
               "MozillaOnline"
@@ -1097,6 +1101,15 @@
               "acer-002"
             ]
           }
+        },
+        {
+          "override": "true",
+          "orderHint": 2500,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          }
         }
       ],
       "extraParams": [
@@ -1156,6 +1169,15 @@
           "default": "yes-if-no-other",
           "included": {
             "everywhere": true
+          }
+        },
+        {
+          "override": true,
+          "orderHint": 2000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
           }
         },
         {
@@ -4536,6 +4558,15 @@
           "webExtension": {
             "locales": [
               "pt"
+            ]
+          }
+        },
+        {
+          "override": true,
+          "orderHint": 1000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
             ]
           }
         }
