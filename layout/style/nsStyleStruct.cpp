@@ -231,7 +231,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
       mMathDisplay(aSrc.mMathDisplay),
       mMinFontSizeRatio(aSrc.mMinFontSizeRatio),
       mExplicitLanguage(aSrc.mExplicitLanguage),
-      mAllowZoom(aSrc.mAllowZoom),
+      mAllowZoomAndMinSize(aSrc.mAllowZoomAndMinSize),
       mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize),
       mScriptMinSize(aSrc.mScriptMinSize),
       mScriptSizeMultiplier(aSrc.mScriptSizeMultiplier),
@@ -252,7 +252,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mMathDisplay(NS_MATHML_DISPLAYSTYLE_INLINE),
       mMinFontSizeRatio(100),  // 100%
       mExplicitLanguage(false),
-      mAllowZoom(true),
+      mAllowZoomAndMinSize(true),
       mScriptUnconstrainedSize(mSize),
       mScriptMinSize(nsPresContext::CSSTwipsToAppUnits(
           NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT))),
@@ -269,8 +269,9 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
 }
 
 nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
-  MOZ_ASSERT(mAllowZoom == aNewData.mAllowZoom,
-             "expected mAllowZoom to be the same on both nsStyleFonts");
+  MOZ_ASSERT(
+      mAllowZoomAndMinSize == aNewData.mAllowZoomAndMinSize,
+      "expected mAllowZoomAndMinSize to be the same on both nsStyleFonts");
   if (mSize != aNewData.mSize || mLanguage != aNewData.mLanguage ||
       mExplicitLanguage != aNewData.mExplicitLanguage ||
       mMathVariant != aNewData.mMathVariant ||
