@@ -11,7 +11,7 @@ default = []
 
 [dependencies]
 error-support = { path = "../support/error" }
-failure = "0.1.6"
+failure = "0.1"
 interrupt-support = { path = "../support/interrupt" }
 lazy_static = "1.4.0"
 log = "0.4"
@@ -28,7 +28,7 @@ version = "0.23.1"
 features = ["functions", "bundled", "serde_json"]
 
 [dev-dependencies]
-env_logger = "0.7.0"
+env_logger = "0.7"
 prettytable-rs = "0.8"
 
 # A *direct* dep on the -sys crate is required for our build.rs
