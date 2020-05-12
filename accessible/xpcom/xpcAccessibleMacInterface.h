@@ -29,6 +29,9 @@ class xpcAccessibleMacInterface : public nsIAccessibleMacInterface {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLEMACINTERFACE
 
+  // Get the wrapped NSObject for this intterface.
+  id GetNativeMacAccessible() const final;
+
   // This sends notifications via nsIObserverService to be consumed by our
   // mochitests. aNativeObj is a NSAccessibility protocol object,
   // and aNotification is a NSString.
@@ -46,6 +49,11 @@ class xpcAccessibleMacInterface : public nsIAccessibleMacInterface {
   // into a properly typed js value populated in the aResult handle.
   nsresult NSObjectToJsValue(id aObj, JSContext* aCx,
                              JS::MutableHandleValue aResult);
+
+  // Convert a js value to an NSObject. This is called recursively for arrays.
+  // If the conversion fails, aResult is set to an error and nil is returned.
+  id JsValueToNSObject(JS::HandleValue aValue, JSContext* aCx,
+                       nsresult* aResult);
   id mNativeObject;
 
  private:
