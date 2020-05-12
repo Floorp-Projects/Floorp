@@ -30,6 +30,14 @@ void PlatformInit() {}
 void PlatformShutdown() {}
 
 void ProxyCreated(ProxyAccessible* aProxy, uint32_t) {
+  ProxyAccessible* parent = aProxy->Parent();
+  if (parent && nsAccUtils::MustPrune(parent)) {
+    // We don't create a native object if we're child of a "flat" accessible;
+    // for example, on OS X buttons shouldn't have any children, because that
+    // makes the OS confused.
+    return;
+  }
+
   // Pass in dummy state for now as retrieving proxy state requires IPC.
   // Note that we can use ProxyAccessible::IsTable* functions here because they
   // do not use IPC calls but that might change after bug 1210477.
