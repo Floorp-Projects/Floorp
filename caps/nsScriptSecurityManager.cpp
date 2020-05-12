@@ -615,9 +615,9 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
   }
 
   nsCOMPtr<nsIURI> sourceURI;
-  auto* basePrin = BasePrincipal::Cast(aPrincipal);
-  basePrin->GetURI(getter_AddRefs(sourceURI));
+  aPrincipal->GetURI(getter_AddRefs(sourceURI));
   if (!sourceURI) {
+    auto* basePrin = BasePrincipal::Cast(aPrincipal);
     if (basePrin->Is<ExpandedPrincipal>()) {
       auto expanded = basePrin->As<ExpandedPrincipal>();
       for (auto& prin : expanded->AllowList()) {
