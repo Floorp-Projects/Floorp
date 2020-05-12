@@ -10,6 +10,10 @@
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestorUtils.h"
 
+// Change this if we want to cancel and remove the associated preload on removal
+// of all <link rel=preload> tags from the tree.
+constexpr static bool kCancelAndRemovePreloadOnZeroReferences = false;
+
 namespace mozilla {
 
 PreloaderBase::RedirectSink::RedirectSink(PreloaderBase* aPreloader,
@@ -217,15 +221,12 @@ void PreloaderBase::RemoveLinkPreloadNode(nsINode* aNode) {
   nsWeakPtr node = do_GetWeakReference(aNode);
   mNodes.RemoveElement(node);
 
-  if (mNodes.Length() == 0 && !mIsUsed) {
+  if (kCancelAndRemovePreloadOnZeroReferences && mNodes.Length() == 0 &&
+      !mIsUsed) {
     // Keep a reference, because the following call may release us.  The caller
     // may use a WeakPtr to access this.
     RefPtr<PreloaderBase> self(this);
-
-    dom::Document* doc = aNode->OwnerDoc();
-    if (doc) {
-      doc->Preloads().DeregisterPreload(&mKey);
-    }
+    aNode->OwnerDoc()->Preloads().DeregisterPreload(&mKey);
 
     if (mChannel) {
       mChannel->Cancel(NS_BINDING_ABORTED);
