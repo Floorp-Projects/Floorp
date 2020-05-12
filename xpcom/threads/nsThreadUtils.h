@@ -12,6 +12,7 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/AbstractEventQueue.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
@@ -1797,6 +1798,56 @@ nsIEventTarget* GetMainThreadEventTarget();
 nsISerialEventTarget* GetCurrentThreadSerialEventTarget();
 
 nsISerialEventTarget* GetMainThreadSerialEventTarget();
+
+// Returns a wrapper around the current thread which routes normal dispatches
+// through the tail dispatcher.
+// This means that they will run at the end of the current task, rather than
+// after all the subsequent tasks queued. This is useful to allow MozPromise
+// callbacks returned by IPDL methods to avoid an extra trip through the event
+// loop, and thus maintain correct ordering relative to other IPC events. The
+// current thread implementation must support tail dispatch.
+class TailDispatchingTarget : public nsISerialEventTarget {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  TailDispatchingTarget()
+#if DEBUG
+      : mOwnerThread(AbstractThread::GetCurrent())
+#endif
+  {
+    MOZ_ASSERT(mOwnerThread, "Must be used with AbstractThreads");
+  }
+
+  NS_IMETHOD
+  Dispatch(already_AddRefed<nsIRunnable> event, uint32_t flags) override {
+    MOZ_ASSERT(flags == DISPATCH_NORMAL);
+    MOZ_ASSERT(
+        AbstractThread::GetCurrent() == mOwnerThread,
+        "TailDispatchingTarget can only be used on the thread upon which it "
+        "was created - see the comment on the class declaration.");
+    AbstractThread::DispatchDirectTask(std::move(event));
+    return NS_OK;
+  }
+  NS_IMETHOD_(bool) IsOnCurrentThreadInfallible(void) override { return true; }
+  NS_IMETHOD IsOnCurrentThread(bool* _retval) override {
+    *_retval = true;
+    return NS_OK;
+  }
+  NS_IMETHOD DispatchFromScript(nsIRunnable* event, uint32_t flags) override {
+    MOZ_ASSERT_UNREACHABLE("not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD DelayedDispatch(already_AddRefed<nsIRunnable> event,
+                             uint32_t delay) override {
+    MOZ_ASSERT_UNREACHABLE("not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+ private:
+  virtual ~TailDispatchingTarget() = default;
+#if DEBUG
+  const RefPtr<AbstractThread> mOwnerThread;
+#endif
+};
 
 // Returns the number of CPUs, like PR_GetNumberOfProcessors, except
 // that it can return a cached value on platforms where sandboxing
