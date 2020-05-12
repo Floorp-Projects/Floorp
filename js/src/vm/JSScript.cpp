@@ -293,7 +293,7 @@ XDRResult BaseScript::XDRLazyScriptData(XDRState<mode>* xdr,
       case JS::TraceKind::String: {
         if (mode == XDR_ENCODE) {
           gc::Cell* cell = elem.asCell();
-          MOZ_ASSERT_IF(cell, cell->is<JSAtom>());
+          MOZ_ASSERT_IF(cell, cell->as<JSString>()->isAtom());
           atom = static_cast<JSAtom*>(cell);
         }
         MOZ_TRY(XDRAtom(xdr, &atom));
