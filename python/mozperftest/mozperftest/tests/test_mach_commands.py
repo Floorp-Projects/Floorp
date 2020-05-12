@@ -16,9 +16,9 @@ Registrar.categories = {"testing": []}
 Registrar.commands_by_category = {"testing": set()}
 
 
-from mozperftest.environment import MachEnvironment
-from mozperftest.mach_commands import Perftest, PerftestTests
-from mozperftest.tests.support import EXAMPLE_TESTS_DIR
+from mozperftest.environment import MachEnvironment  # noqa
+from mozperftest.mach_commands import Perftest, PerftestTests  # noqa
+from mozperftest.tests.support import EXAMPLE_TESTS_DIR  # noqa
 
 
 class _TestMachEnvironment(MachEnvironment):

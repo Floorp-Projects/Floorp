@@ -200,13 +200,16 @@ class BrowsertimeRunner(NodeRunner):
             "Extracts the browser name if any"
             # These are BT arguments, it's BT job to check them
             # here we just want to extract the browser name
-            res = re.findall("(--browser|-b)[= ]([\w]+)", " ".join(args))
+            res = re.findall(r"(--browser|-b)[= ]([\w]+)", " ".join(args))
             if res == []:
                 return None
             return res[0][-1]
 
         def matches(args, *flags):
-            "Return True if any argument matches any of the given flags (maybe with an argument)."
+            """Returns True if any argument matches any of the given flags
+
+            Maybe with an argument.
+            """
             for flag in flags:
                 if flag in args or any(arg.startswith(flag + "=") for arg in args):
                     return True
