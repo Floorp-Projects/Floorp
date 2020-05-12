@@ -24,6 +24,7 @@
 #  include "nsXULAppAPI.h"
 #endif
 #include "Tracing.h"
+#include "webaudio/blink/DenormalDisabler.h"
 
 // Use abort() instead of exception in SoundTouch.
 #define ST_NO_EXCEPTION_HANDLING 1
@@ -579,6 +580,8 @@ void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
 }
 
 long AudioStream::DataCallback(void* aBuffer, long aFrames) {
+  WebCore::DenormalDisabler disabler;
+
   TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
   TRACE();
   MonitorAutoLock mon(mMonitor);
