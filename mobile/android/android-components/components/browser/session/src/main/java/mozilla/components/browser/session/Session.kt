@@ -18,9 +18,10 @@ import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
 import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
 import mozilla.components.browser.state.action.ContentAction.FullScreenChangedAction
+import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
+import mozilla.components.browser.state.action.ContentAction.RemoveWebAppManifestAction
 import mozilla.components.browser.state.action.ContentAction.UpdateBackNavigationStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateForwardNavigationStateAction
-import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
@@ -29,6 +30,7 @@ import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoA
 import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
+import mozilla.components.browser.state.action.ContentAction.UpdateWebAppManifestAction
 import mozilla.components.browser.state.action.ContentAction.ViewportFitChangedAction
 import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomTabAction
 import mozilla.components.browser.state.action.EngineAction
@@ -310,8 +312,17 @@ class Session(
     /**
      * The Web App Manifest for the currently visited page (or null).
      */
-    var webAppManifest: WebAppManifest? by Delegates.observable<WebAppManifest?>(null) { _, _, new ->
+    var webAppManifest: WebAppManifest? by Delegates.observable<WebAppManifest?>(null) { _, old, new ->
         notifyObservers { onWebAppManifestChanged(this@Session, new) }
+
+        if (old != new) {
+            val action = if (new != null) {
+                UpdateWebAppManifestAction(id, new)
+            } else {
+                RemoveWebAppManifestAction(id)
+            }
+            store?.syncDispatch(action)
+        }
     }
 
     /**

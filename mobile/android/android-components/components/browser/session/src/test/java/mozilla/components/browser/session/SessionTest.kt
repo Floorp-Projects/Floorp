@@ -375,6 +375,37 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when web app manifest is set`() {
+        val manifest = WebAppManifest(
+            name = "HackerWeb",
+            description = "A simply readable Hacker News app.",
+            startUrl = ".",
+            display = WebAppManifest.DisplayMode.STANDALONE,
+            icons = listOf(
+                WebAppManifest.Icon(
+                    src = "images/touch/homescreen192.png",
+                    sizes = listOf(Size(192, 192)),
+                    type = "image/png"
+                )
+            )
+        )
+
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        session.webAppManifest = manifest
+        verify(store).dispatch(ContentAction.UpdateWebAppManifestAction(session.id, manifest))
+
+        session.webAppManifest = null
+        verify(store).dispatch(ContentAction.RemoveWebAppManifestAction(session.id))
+
+        verifyNoMoreInteractions(store)
+    }
+
+    @Test
     fun `session returns initial URL`() {
         val session = Session("https://www.mozilla.org")
 
