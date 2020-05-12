@@ -451,8 +451,10 @@ void nsFrameSelection::InvalidateDesiredCaretPos()  // do not listen to
                                                     // mDesiredCaretPos.mValue;
                                                     // you must get another.
 {
-  mDesiredCaretPos.mIsSet = false;
+  mDesiredCaretPos.Invalidate();
 }
+
+void nsFrameSelection::DesiredCaretPos::Invalidate() { mIsSet = false; }
 
 void nsFrameSelection::DesiredCaretPos::Set(const nsPoint& aPos) {
   mValue = aPos;
@@ -751,7 +753,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   if (isIntraLineCaretMove.inspect()) {
     // Forget old caret position for moving caret to different line since
     // caret position may be changed.
-    InvalidateDesiredCaretPos();
+    mDesiredCaretPos.Invalidate();
   }
 
   Result<nsPeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
@@ -1221,7 +1223,7 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
                                        CaretAssociateHint aHint) {
   if (!aNewFocus) return NS_ERROR_INVALID_ARG;
 
-  InvalidateDesiredCaretPos();
+  mDesiredCaretPos.Invalidate();
 
   if (aFocusMode != FocusMode::kExtendSelection) {
     mMaintainedRange.mRange = nullptr;
