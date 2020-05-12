@@ -46,7 +46,12 @@ import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
+import mozilla.components.lib.crash.CrashReporter
 
+/**
+ *The main application class for Fenix. Records data to measure initialization performance.
+ *  Installs [CrashReporter], initializes [Glean]  in fenix builds and setup Megazord in the main process.
+ */
 @SuppressLint("Registered")
 @Suppress("TooManyFunctions", "LargeClass")
 open class FenixApplication : LocaleAwareApplication() {
