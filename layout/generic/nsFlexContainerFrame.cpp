@@ -5058,7 +5058,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
   }
 
   // XXX: Children are always complete for now.
-  return {maxBlockEndEdgeOfChildren, true};
+  return {maxBlockEndEdgeOfChildren, false};
 }
 
 void nsFlexContainerFrame::PopulateReflowOutput(
@@ -5066,7 +5066,7 @@ void nsFlexContainerFrame::PopulateReflowOutput(
     nsReflowStatus& aStatus, const LogicalSize& aContentBoxSize,
     const LogicalMargin& aBorderPadding, const nscoord aConsumedBSize,
     const bool aMayNeedNextInFlow, const nscoord aMaxBlockEndEdgeOfChildren,
-    const bool aAreChildrenComplete, nscoord aFlexContainerAscent,
+    const bool aAnyChildIncomplete, nscoord aFlexContainerAscent,
     nsTArray<FlexLine>& aLines, const FlexboxAxisTracker& aAxisTracker) {
   const WritingMode flexWM = aReflowInput.GetWritingMode();
 
@@ -5182,7 +5182,7 @@ void nsFlexContainerFrame::PopulateReflowOutput(
   // to add it in.
   desiredSizeInFlexWM.BSize(flexWM) += blockEndContainerBP;
 
-  if (aStatus.IsComplete() && !aAreChildrenComplete) {
+  if (aStatus.IsComplete() && aAnyChildIncomplete) {
     aStatus.SetOverflowIncomplete();
     aStatus.SetNextInFlowNeedsReflow();
   }
