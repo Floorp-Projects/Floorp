@@ -1,0 +1,46 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="24" height="24" viewBox="0 0 24 24">
+ <style>
+  @keyframes grow {
+    0%   { transform: scaleY(1);   }
+    15%  { transform: scaleY(1.5); }
+    15%  { transform: scaleY(1.5); }
+    30%  { transform: scaleY(1);   }
+    100% { transform: scaleY(1);   }
+  }
+
+  .waveform > rect {
+    fill: context-fill;
+  }
+
+  /* Only animate if we're using a hash to address the SVG */
+  g:target > rect {
+    fill: #58bf43;
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation-name: grow;
+    animation-duration: 1750ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+
+  .waveform > rect:nth-child(2) { animation-delay: 250ms; }
+  .waveform > rect:nth-child(3) { animation-delay: 500ms; }
+  .waveform > rect:nth-child(4) { animation-delay: 750ms; }
+  .waveform > rect:nth-child(5) { animation-delay: 1000ms; }
+  .waveform > rect:nth-child(6) { animation-delay: 1250ms; }
+  .waveform > rect:nth-child(7) { animation-delay: 1500ms; }
+ </style>
+ <g id="waveform" class="waveform">
+   <rect x="1"  y="8" width="2" height="8"  rx=".5" ry=".5" />
+   <rect x="4"  y="5" width="2" height="14" rx=".5" ry=".5" />
+   <rect x="7"  y="8" width="2" height="8"  rx=".5" ry=".5" />
+   <rect x="10" y="4" width="2" height="16" rx=".5" ry=".5" />
+   <rect x="13" y="2" width="2" height="20" rx=".5" ry=".5" />
+   <rect x="16" y="4" width="2" height="16" rx=".5" ry=".5" />
+   <rect x="19" y="7" width="2" height="10" rx=".5" ry=".5" />
+ </g>
+</svg>
