@@ -43,4 +43,32 @@
 
 .worker__status {
   text-transform: capitalize;
+  --status-bg-color: transparent;
+  --status-border-color: transparent;
+}
+
+.worker__status::before {
+  content: "";
+  margin-inline-end: var(--base-unit);
+  width: calc(var(--base-unit) * 2);
+  height: calc(var(--base-unit) * 2);
+  display: inline-block;
+  background: var(--status-bg-color);
+  border: 1px solid var(--status-border-color);
+  border-radius: 100%;
+}
+
+.worker__status--active {
+  --status-bg-color: var(--green-60);
+  --status-border-color: var(--green-60);
+}
+
+.worker__status--waiting {
+  --status-bg-color: var(--theme-text-color-alt);
+  --status-border-color: var(--theme-text-color-alt);
+}
+
+.worker__status--installing, .worker__status--default {
+  --status-bg-color: transparent;
+  --status-border-color: var(--theme-text-color-alt);
 }

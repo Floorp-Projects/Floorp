@@ -8,7 +8,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const worker = {
   id: PropTypes.string.isRequired,
-  isActive: PropTypes.bool.isRequired,
+  state: PropTypes.number.isRequired,
   stateText: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
   workerTargetFront: PropTypes.object,
