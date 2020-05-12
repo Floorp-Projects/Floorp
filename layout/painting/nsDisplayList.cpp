@@ -240,7 +240,7 @@ static uint64_t AddAnimationsForWebRender(
   if (!animationInfo.GetAnimations().IsEmpty()) {
     OpAddCompositorAnimations anim(
         CompositorAnimations(animationInfo.GetAnimations(), animationsId));
-    aManager->WrBridge()->AddWebRenderParentCommand(anim, aRenderRoot);
+    aManager->WrBridge()->AddWebRenderParentCommand(anim);
     aManager->AddActiveCompositorAnimationId(animationsId);
   } else if (animationsId) {
     aManager->AddCompositorAnimationsIdForDiscard(animationsId);

@@ -65,8 +65,7 @@ class ImageClient : public CompositableClient {
    */
   virtual void FlushAllImages() {}
 
-  virtual void RemoveTexture(TextureClient* aTexture,
-                             const Maybe<wr::RenderRoot>& aRenderRoot) override;
+  virtual void RemoveTexture(TextureClient* aTexture) override;
 
   virtual ImageClientSingle* AsImageClientSingle() { return nullptr; }
 
