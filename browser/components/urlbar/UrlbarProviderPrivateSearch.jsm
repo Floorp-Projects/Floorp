@@ -136,7 +136,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-        query: [searchString, UrlbarUtils.HIGHLIGHT.TYPED],
+        query: [searchString, UrlbarUtils.HIGHLIGHT.NONE],
         icon: [engine.iconURI ? engine.iconURI.spec : null],
         inPrivateWindow: true,
         isPrivateEngine,
