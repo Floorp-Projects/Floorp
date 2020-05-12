@@ -747,7 +747,7 @@ nsresult WSRunScanner::GetWSNodes() {
   while (!mStartNode) {
     // we haven't found the start of ws yet.  Keep looking
     nsCOMPtr<nsIContent> priorNode = GetPreviousWSNode(
-        start, editableBlockParentOrTopmotEditableInlineContent);
+        start, *editableBlockParentOrTopmotEditableInlineContent);
     if (priorNode) {
       if (HTMLEditUtils::IsBlockElement(*priorNode)) {
         mStartNode = start.GetContainer();
@@ -1088,88 +1088,34 @@ void WSRunScanner::InitializeWithSingleFragment(
   mEndRun = mStartRun;
 }
 
-nsIContent* WSRunScanner::GetPreviousWSNodeInner(nsINode* aStartNode,
-                                                 nsINode* aBlockParent) const {
-  // Can't really recycle various getnext/prior routines because we have
-  // special needs here.  Need to step into inline containers but not block
-  // containers.
-  MOZ_ASSERT(aStartNode && aBlockParent);
-
-  if (aStartNode == mEditingHost) {
-    NS_WARNING(
-        "WSRunScanner::GetPreviousWSNodeInner() was called with editing host");
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIContent> previousContent = aStartNode->GetPreviousSibling();
-  OwningNonNull<nsINode> curNode = *aStartNode;
-  while (!previousContent) {
-    // We have exhausted nodes in parent of aStartNode.
-    nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
-    if (!curParent) {
-      NS_WARNING("Reached orphan node while climbing up the DOM tree");
-      return nullptr;
-    }
-    if (curParent == aBlockParent) {
-      // We have exhausted nodes in the block parent.  The convention here is
-      // to return null.
-      return nullptr;
-    }
-    if (curParent == mEditingHost) {
-      NS_WARNING("Reached editing host while climbing up the DOM tree");
-      return nullptr;
-    }
-    // We have a parent: look for previous sibling
-    previousContent = curParent->GetPreviousSibling();
-    curNode = curParent;
-  }
-
-  if (!previousContent) {
-    return nullptr;
-  }
-
-  // We have a prior node.  If it's a block, return it.
-  if (HTMLEditUtils::IsBlockElement(*previousContent)) {
-    return previousContent;
-  }
-  if (HTMLEditUtils::IsContainerNode(*previousContent)) {
-    // Else if it's a container, get deep rightmost child
-    if (nsIContent* child = HTMLEditUtils::GetLastLeafChild(
-            *previousContent, ChildBlockBoundary::Ignore)) {
-      return child;
-    }
-  }
-  // Else return the node itself
-  return previousContent;
-}
-
 nsIContent* WSRunScanner::GetPreviousWSNode(const EditorDOMPoint& aPoint,
-                                            nsINode* aBlockParent) const {
+                                            nsIContent& aBlockParent) const {
   // Can't really recycle various getnext/prior routines because we
   // have special needs here.  Need to step into inline containers but
   // not block containers.
-  MOZ_ASSERT(aPoint.IsSet() && aBlockParent);
+  MOZ_ASSERT(aPoint.IsSet());
 
   if (aPoint.IsInTextNode()) {
-    return GetPreviousWSNodeInner(aPoint.GetContainer(), aBlockParent);
+    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+        *aPoint.ContainerAsText(), aBlockParent, mEditingHost);
   }
-  if (!aPoint.IsInContentNode() ||
-      !HTMLEditUtils::IsContainerNode(*aPoint.ContainerAsContent())) {
-    return GetPreviousWSNodeInner(aPoint.GetContainer(), aBlockParent);
+  if (!aPoint.IsInContentNode()) {
+    return nullptr;
+  }
+  if (!HTMLEditUtils::IsContainerNode(*aPoint.ContainerAsContent())) {
+    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+        *aPoint.ContainerAsContent(), aBlockParent, mEditingHost);
   }
 
-  if (!aPoint.Offset()) {
-    if (aPoint.GetContainer() == aBlockParent) {
+  if (aPoint.IsStartOfContainer()) {
+    if (aPoint.GetContainer() == &aBlockParent) {
       // We are at start of the block.
       return nullptr;
     }
 
     // We are at start of non-block container
-    return GetPreviousWSNodeInner(aPoint.GetContainer(), aBlockParent);
-  }
-
-  if (NS_WARN_IF(!aPoint.IsInContentNode())) {
-    return nullptr;
+    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+        *aPoint.ContainerAsContent(), aBlockParent, mEditingHost);
   }
 
   nsCOMPtr<nsIContent> previousContent = aPoint.GetPreviousSiblingOfChild();
