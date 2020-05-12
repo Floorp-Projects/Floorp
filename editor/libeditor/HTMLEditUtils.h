@@ -304,6 +304,70 @@ class HTMLEditUtils final {
   }
 
   /**
+   * GetPreviousLeafContentOrPreviousBlockElement() returns previous leaf
+   * content or previous block element of aStartContent inside
+   * aAncestorLimiter.
+   * Note that the result may be a contet outside aCurrentBlock if
+   * aStartContent equals aCurrentBlock.
+   *
+   * @param aStartContent       The start content to scan previous content.
+   * @param aCurrentBlock       Must be ancestor of aStartContent.  Dispite
+   *                            the name, inline content is allowed if
+   *                            aStartContent is in an inline editing host.
+   * @param aAncestorLimiter    Optional, setting this guarantees the
+   *                            result is in aAncestorLimiter unless
+   *                            aStartContent is not a descendant of this.
+   */
+  static nsIContent* GetPreviousLeafContentOrPreviousBlockElement(
+      nsIContent& aStartContent, nsIContent& aCurrentBlock,
+      Element* aAncestorLimiter = nullptr) {
+    if (&aStartContent == aAncestorLimiter) {
+      return nullptr;
+    }
+
+    nsIContent* previousContent = aStartContent.GetPreviousSibling();
+    if (!previousContent) {
+      if (!aStartContent.GetParentElement()) {
+        NS_WARNING("Reached orphan node while climbing up the DOM tree");
+        return nullptr;
+      }
+      for (Element* parentElement : dom::InclusiveAncestorsOfType<Element>(
+               *aStartContent.GetParentNode())) {
+        if (parentElement == &aCurrentBlock) {
+          return nullptr;
+        }
+        if (parentElement == aAncestorLimiter) {
+          NS_WARNING("Reached editing host while climbing up the DOM tree");
+          return nullptr;
+        }
+        previousContent = parentElement->GetPreviousSibling();
+        if (previousContent) {
+          break;
+        }
+        if (!parentElement->GetParentElement()) {
+          NS_WARNING("Reached orphan node while climbing up the DOM tree");
+          return nullptr;
+        }
+      }
+      MOZ_ASSERT(previousContent);
+    }
+
+    // We have a next content.  If it's a block, return it.
+    if (HTMLEditUtils::IsBlockElement(*previousContent)) {
+      return previousContent;
+    }
+    if (HTMLEditUtils::IsContainerNode(*previousContent)) {
+      // Else if it's a container, get deep rightmost child
+      if (nsIContent* child = HTMLEditUtils::GetLastLeafChild(
+              *previousContent, ChildBlockBoundary::Ignore)) {
+        return child;
+      }
+    }
+    // Else return the next content itself.
+    return previousContent;
+  }
+
+  /**
    * GetAncestorBlockElement() returns parent or nearest ancestor of aContent
    * which is a block element.  If aAncestorLimiter is not nullptr,
    * this stops looking for the result when it meets the limiter.
