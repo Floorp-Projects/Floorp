@@ -856,12 +856,8 @@ class nsFrameSelection final {
     }
   }
 
-  nsresult FetchDesiredCaretPos(
-      nsPoint& aDesiredCaretPos);  // the position requested by the Key Handling
-                                   // for up down
   void InvalidateDesiredCaretPos();  // do not listen to mDesiredCaretPos.mValue
                                      // you must get another.
-  void SetDesiredCaretPos(nsPoint aPos);  // set the mDesiredCaretPos.mValue
 
   bool IsBatching() const { return mBatching.mCounter > 0; }
 
@@ -1003,10 +999,19 @@ class nsFrameSelection final {
 
   nsBidiLevel mKbdBidiLevel = NSBIDI_LTR;
 
-  // TODO: could presumably be transformed to a `mozilla::Maybe`.
-  struct DesiredCaretPos {
-    nsPoint mValue;
+  class DesiredCaretPos {
+   public:
+    // the position requested by the Key Handling for up down
+    nsresult FetchPos(nsPoint& aDesiredCaretPos,
+                      const mozilla::PresShell& aPresShell,
+                      mozilla::dom::Selection& aNormalSelection) const;
+
+    void Set(const nsPoint& aPos);
+
     bool mIsSet = false;
+
+   private:
+    nsPoint mValue;
   };
 
   DesiredCaretPos mDesiredCaretPos;
