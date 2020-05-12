@@ -741,7 +741,7 @@ nsISerialEventTarget* AudioContext::GetMainThread() const {
 
 void AudioContext::DisconnectFromOwner() {
   mIsDisconnecting = true;
-  Shutdown();
+  OnWindowDestroy();
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
@@ -759,7 +759,7 @@ void AudioContext::BindToOwner(nsIGlobalObject* aNew) {
   }
 }
 
-void AudioContext::Shutdown() {
+void AudioContext::OnWindowDestroy() {
   // Avoid resend the Telemetry data.
   if (!mIsShutDown) {
     MaybeUpdateAutoplayTelemetryWhenShutdown();
@@ -788,9 +788,18 @@ void AudioContext::Shutdown() {
   // PBrowser::Destroy() message before xpcom shutdown begins.
   ShutdownWorklet();
 
-  // For offline contexts, we can destroy the MediaTrackGraph at this point.
-  if (mIsOffline && mDestination) {
-    mDestination->OfflineShutdown();
+  if (mDestination) {
+    // We can destroy the MediaTrackGraph at this point.
+    // Although there may be other clients using the graph, this graph is used
+    // only for clients in the same window and this window is going away.
+    // This will also interrupt any worklet script still running on the graph
+    // thread.
+    Graph()->ForceShutDown();
+    // AudioDestinationNodes on rendering offline contexts have a
+    // self-reference which needs removal.
+    if (mIsOffline) {
+      mDestination->OfflineShutdown();
+    }
   }
 }
 
