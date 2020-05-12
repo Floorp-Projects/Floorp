@@ -7779,19 +7779,15 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   // If the incoming dirty rect already contains the entire overflow area,
   // we are already rendering the entire content.
   nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
-  // UntransformRect will not touch the output rect (`&untranformedDirtyRect`)
-  // in cases of non-invertible transforms, so we set `untransformedRect` to
-  // `aDirtyRect` as an initial value for such cases.
-  nsRect untransformedDirtyRect = *aDirtyRect;
-  UntransformRect(*aDirtyRect, overflow, aFrame, &untransformedDirtyRect);
-  if (untransformedDirtyRect.Contains(overflow)) {
-    *aDirtyRect = untransformedDirtyRect;
+  if (aDirtyRect->Contains(overflow)) {
     result.mDecision = PrerenderDecision::Full;
     return result;
   }
 
-  float viewportRatio =
-      StaticPrefs::layout_animation_prerender_viewport_ratio_limit();
+  float viewportRatioX =
+      StaticPrefs::layout_animation_prerender_viewport_ratio_limit_x();
+  float viewportRatioY =
+      StaticPrefs::layout_animation_prerender_viewport_ratio_limit_y();
   uint32_t absoluteLimitX =
       StaticPrefs::layout_animation_prerender_absolute_limit_x();
   uint32_t absoluteLimitY =
@@ -7800,9 +7796,8 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   // Only prerender if the transformed frame's size is <= a multiple of the
   // reference frame size (~viewport), and less than an absolute limit.
   // Both the ratio and the absolute limit are configurable.
-  nscoord maxLength = std::max(nscoord(refSize.width * viewportRatio),
-                               nscoord(refSize.height * viewportRatio));
-  nsSize relativeLimit(maxLength, maxLength);
+  nsSize relativeLimit(nscoord(refSize.width * viewportRatioX),
+                       nscoord(refSize.height * viewportRatioY));
   nsSize absoluteLimit(
       aFrame->PresContext()->DevPixelsToAppUnits(absoluteLimitX),
       aFrame->PresContext()->DevPixelsToAppUnits(absoluteLimitY));
@@ -7826,8 +7821,8 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   }
 
   if (StaticPrefs::layout_animation_prerender_partial()) {
-    *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(
-        aFrame, untransformedDirtyRect, overflow, maxSize);
+    *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(*aDirtyRect,
+                                                             overflow, maxSize);
     result.mDecision = PrerenderDecision::Partial;
     return result;
   }
