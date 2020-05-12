@@ -1,14 +1,13 @@
 /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set sts=2 sw=2 et tw=80: */
-
 "use strict";
 
 add_task(
-  async function test_sendMessage_connect_to_self_should_not_trigger_onMessage_onConnect() {
+  async function test_messaging_to_self_should_not_trigger_onMessage_onConnect() {
     async function background() {
       browser.runtime.onMessage.addListener(msg => {
         browser.test.assertEq("msg from child", msg);
-        browser.test.notifyPass(
+        browser.test.sendMessage(
           "sendMessage did not call same-frame onMessage"
         );
       });
@@ -27,11 +26,12 @@ add_task(
       );
 
       browser.runtime.onConnect.addListener(port => {
-        browser.test.fail("Should not receive runtime.onConnect from self");
+        browser.test.assertEq("from-frame", port.name);
+        browser.runtime.connect({ name: "from-bg-2" });
       });
 
       await new Promise(resolve => {
-        let port = browser.runtime.connect();
+        let port = browser.runtime.connect({ name: "from-bg-1" });
         port.onDisconnect.addListener(() => {
           browser.test.assertEq(
             "Could not establish connection. Receiving end does not exist.",
@@ -52,6 +52,12 @@ add_task(
         browser.runtime.sendMessage("msg from child");
       });
       browser.test.sendMessage("sendMessage callback called");
+
+      browser.runtime.onConnect.addListener(port => {
+        browser.test.assertEq("from-bg-2", port.name);
+        browser.test.sendMessage("connect did not call same-frame onConnect");
+      });
+      browser.runtime.connect({ name: "from-frame" });
     }
 
     let extensionData = {
@@ -67,9 +73,11 @@ add_task(
 
     await extension.awaitMessage("sendMessage callback called");
     extension.sendMessage("sendMessage with a listener in another frame");
-    await extension.awaitFinish(
-      "sendMessage did not call same-frame onMessage"
-    );
+
+    await Promise.all([
+      extension.awaitMessage("connect did not call same-frame onConnect"),
+      extension.awaitMessage("sendMessage did not call same-frame onMessage"),
+    ]);
 
     await extension.unload();
   }
