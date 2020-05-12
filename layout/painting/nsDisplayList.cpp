@@ -7785,7 +7785,13 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   // If the incoming dirty rect already contains the entire overflow area,
   // we are already rendering the entire content.
   nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
-  if (aDirtyRect->Contains(overflow)) {
+  // UntransformRect will not touch the output rect (`&untranformedDirtyRect`)
+  // in cases of non-invertible transforms, so we set `untransformedRect` to
+  // `aDirtyRect` as an initial value for such cases.
+  nsRect untransformedDirtyRect = *aDirtyRect;
+  UntransformRect(*aDirtyRect, overflow, aFrame, &untransformedDirtyRect);
+  if (untransformedDirtyRect.Contains(overflow)) {
+    *aDirtyRect = untransformedDirtyRect;
     result.mDecision = PrerenderDecision::Full;
     return result;
   }
@@ -7828,7 +7834,7 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
 
   if (StaticPrefs::layout_animation_prerender_partial()) {
     *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(
-        aFrame, *aDirtyRect, overflow, maxSize);
+        aFrame, untransformedDirtyRect, overflow, maxSize);
     result.mDecision = PrerenderDecision::Partial;
     return result;
   }
