@@ -109,7 +109,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   // aChild is the child being inserted for inserts, and the first
   // child being appended for appends.
-  void ConstructLazily(Operation aOperation, nsIContent* aChild);
+  bool MaybeConstructLazily(Operation aOperation, nsIContent* aChild);
 
 #ifdef DEBUG
   void CheckBitsForLazyFrameConstruction(nsIContent* aParent);
@@ -198,22 +198,40 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    * inserts/appends as passed from the presshell, except for the insert of the
    * root element, which is always non-lazy.
    *
-   * If we construct lazily, then we add NODE_NEEDS_FRAME bits to the newly
+   * Even if the aInsertionKind passed to ContentAppended/Inserted is
+   * Async we still may not be able to construct lazily, so we call
+   * MaybeConstructLazily.  MaybeConstructLazily does not allow lazy
+   * construction if any of the following are true:
+   *  -we are in chrome
+   *  -the container is in a native anonymous subtree
+   *  -the container is XUL
+   *  -is any of the appended/inserted nodes are XUL or editable
+   *  -(for inserts) the child is anonymous.  In the append case this function
+   *   must not be called with anonymous children.
+   * The XUL and chrome checks are because XBL bindings only get applied at
+   * frame construction time and some things depend on the bindings getting
+   * attached synchronously.
+   *
+   * If MaybeConstructLazily returns false we construct as usual, but if it
+   * returns true then it adds NODE_NEEDS_FRAME bits to the newly
    * inserted/appended nodes and adds NODE_DESCENDANTS_NEED_FRAMES bits to the
    * container and up along the parent chain until it hits the root or another
    * node with that bit set. Then it posts a restyle event to ensure that a
    * flush happens to construct those frames.
    *
-   * When the flush happens the RestyleManager walks the dirty nodes during
-   * ProcessPostTraversal, and ends up calling Content{Appended,Inserted} with
-   * InsertionKind::Sync in ProcessRestyledFrames.
+   * When the flush happens the presshell calls
+   * nsCSSFrameConstructor::CreateNeededFrames. CreateNeededFrames follows any
+   * nodes with NODE_DESCENDANTS_NEED_FRAMES set down the content tree looking
+   * for nodes with NODE_NEEDS_FRAME set. It calls ContentAppended for any runs
+   * of nodes with NODE_NEEDS_FRAME set that are at the end of their childlist,
+   * and ContentRangeInserted for any other runs that aren't.
    *
    * If a node is removed from the document then we don't bother unsetting any
    * of the lazy bits that might be set on it, its descendants, or any of its
    * ancestor nodes because that is a slow operation, the work might be wasted
    * if another node gets inserted in its place, and we can clear the bits
-   * quicker by processing the content tree from top down the next time we
-   * reconstruct frames. (We do clear the bits when BindToTree is called on any
+   * quicker by processing the content tree from top down the next time we call
+   * CreateNeededFrames. (We do clear the bits when BindToTree is called on any
    * nsIContent; so any nodes added to the document will not have any lazy bits
    * set.)
    */
