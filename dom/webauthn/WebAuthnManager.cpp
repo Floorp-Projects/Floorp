@@ -110,7 +110,8 @@ nsresult GetOrigin(nsPIDOMWindowInner* aParent,
   }
 
   nsCOMPtr<nsIURI> originUri;
-  if (NS_FAILED(principal->GetURI(getter_AddRefs(originUri)))) {
+  auto* basePrin = BasePrincipal::Cast(principal);
+  if (NS_FAILED(basePrin->GetURI(getter_AddRefs(originUri)))) {
     return NS_ERROR_FAILURE;
   }
   if (NS_FAILED(originUri->GetAsciiHost(aHost))) {
@@ -128,8 +129,10 @@ nsresult RelaxSameOrigin(nsPIDOMWindowInner* aParent,
   MOZ_ASSERT(doc);
 
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  auto* basePrin = BasePrincipal::Cast(principal);
   nsCOMPtr<nsIURI> uri;
-  if (NS_FAILED(principal->GetURI(getter_AddRefs(uri)))) {
+
+  if (NS_FAILED(basePrin->GetURI(getter_AddRefs(uri)))) {
     return NS_ERROR_FAILURE;
   }
   nsAutoCString originHost;
