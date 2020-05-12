@@ -117,7 +117,11 @@ async function test_engine(engines, privateMode) {
   await new Promise(resolve => {
     controller = new SearchSuggestionController(result => {
       Assert.equal(result.local.length, 0, "Should have no local suggestions");
-      Assert.equal(result.remote.length, 0, "Should have no remte suggestions");
+      Assert.equal(
+        result.remote.length,
+        0,
+        "Should have no remote suggestions"
+      );
       if (result.term == "cookie") {
         resolve();
       }

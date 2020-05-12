@@ -142,9 +142,9 @@ add_task(async function simple_remote_no_local_result() {
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 3);
-  Assert.equal(result.remote[0], "Mozilla");
-  Assert.equal(result.remote[1], "modern");
-  Assert.equal(result.remote[2], "mom");
+  Assert.equal(result.remote[0].value, "Mozilla");
+  Assert.equal(result.remote[1].value, "modern");
+  Assert.equal(result.remote[2].value, "mom");
 });
 
 add_task(async function simple_remote_no_local_result_telemetry() {
@@ -173,9 +173,9 @@ add_task(async function simple_remote_no_local_result_alternative_type() {
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 3);
-  Assert.equal(result.remote[0], "Mozilla");
-  Assert.equal(result.remote[1], "modern");
-  Assert.equal(result.remote[2], "mom");
+  Assert.equal(result.remote[0].value, "Mozilla");
+  Assert.equal(result.remote[1].value, "modern");
+  Assert.equal(result.remote[2].value, "mom");
 });
 
 add_task(async function remote_term_case_mismatch() {
@@ -183,7 +183,7 @@ add_task(async function remote_term_case_mismatch() {
   let result = await controller.fetch("Query Case Mismatch", false, getEngine);
   Assert.equal(result.term, "Query Case Mismatch");
   Assert.equal(result.remote.length, 1);
-  Assert.equal(result.remote[0], "Query Case Mismatch");
+  Assert.equal(result.remote[0].value, "Query Case Mismatch");
 });
 
 add_task(async function simple_local_no_remote_result() {
@@ -193,7 +193,7 @@ add_task(async function simple_local_no_remote_result() {
   let result = await controller.fetch("no remote", false, getEngine);
   Assert.equal(result.term, "no remote");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "no remote entries");
+  Assert.equal(result.local[0].value, "no remote entries");
   Assert.equal(result.remote.length, 0);
 
   await updateSearchHistory("remove", "no remote entries");
@@ -206,9 +206,9 @@ add_task(async function simple_non_ascii() {
   let result = await controller.fetch("I ❤️", false, getEngine);
   Assert.equal(result.term, "I ❤️");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "I ❤️ XUL");
+  Assert.equal(result.local[0].value, "I ❤️ XUL");
   Assert.equal(result.remote.length, 1);
-  Assert.equal(result.remote[0], "I ❤️ Mozilla");
+  Assert.equal(result.remote[0].value, "I ❤️ Mozilla");
 });
 
 add_task(async function both_local_remote_result_dedupe() {
@@ -218,10 +218,10 @@ add_task(async function both_local_remote_result_dedupe() {
   let result = await controller.fetch("mo", false, getEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "Mozilla");
+  Assert.equal(result.local[0].value, "Mozilla");
   Assert.equal(result.remote.length, 2);
-  Assert.equal(result.remote[0], "modern");
-  Assert.equal(result.remote[1], "mom");
+  Assert.equal(result.remote[0].value, "modern");
+  Assert.equal(result.remote[1].value, "mom");
 });
 
 add_task(async function POST_both_local_remote_result_dedupe() {
@@ -229,10 +229,10 @@ add_task(async function POST_both_local_remote_result_dedupe() {
   let result = await controller.fetch("mo", false, postEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "Mozilla");
+  Assert.equal(result.local[0].value, "Mozilla");
   Assert.equal(result.remote.length, 2);
-  Assert.equal(result.remote[0], "modern");
-  Assert.equal(result.remote[1], "mom");
+  Assert.equal(result.remote[0].value, "modern");
+  Assert.equal(result.remote[1].value, "mom");
 });
 
 add_task(async function both_local_remote_result_dedupe2() {
@@ -242,10 +242,10 @@ add_task(async function both_local_remote_result_dedupe2() {
   let result = await controller.fetch("mo", false, getEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 2);
-  Assert.equal(result.local[0], "mom");
-  Assert.equal(result.local[1], "Mozilla");
+  Assert.equal(result.local[0].value, "mom");
+  Assert.equal(result.local[1].value, "Mozilla");
   Assert.equal(result.remote.length, 1);
-  Assert.equal(result.remote[0], "modern");
+  Assert.equal(result.remote[0].value, "modern");
 });
 
 add_task(async function both_local_remote_result_dedupe3() {
@@ -256,10 +256,95 @@ add_task(async function both_local_remote_result_dedupe3() {
   let result = await controller.fetch("mo", false, getEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 3);
-  Assert.equal(result.local[0], "modern");
-  Assert.equal(result.local[1], "mom");
-  Assert.equal(result.local[2], "Mozilla");
+  Assert.equal(result.local[0].value, "modern");
+  Assert.equal(result.local[1].value, "mom");
+  Assert.equal(result.local[2].value, "Mozilla");
   Assert.equal(result.remote.length, 0);
+});
+
+add_task(async function valid_tail_results() {
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch("tail query", false, getEngine);
+  Assert.equal(result.term, "tail query");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 3);
+  Assert.equal(result.remote[0].value, "tail query normal");
+  Assert.ok(!result.remote[0].matchPrefix);
+  Assert.ok(!result.remote[0].tail);
+  Assert.equal(result.remote[1].value, "tail query tail 1");
+  Assert.equal(result.remote[1].matchPrefix, "… ");
+  Assert.equal(result.remote[1].tail, "tail 1");
+  Assert.equal(result.remote[2].value, "tail query tail 2");
+  Assert.equal(result.remote[2].matchPrefix, "… ");
+  Assert.equal(result.remote[2].tail, "tail 2");
+});
+
+add_task(async function alt_tail_results() {
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch("tailalt query", false, getEngine);
+  Assert.equal(result.term, "tailalt query");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 3);
+  Assert.equal(result.remote[0].value, "tailalt query normal");
+  Assert.ok(!result.remote[0].matchPrefix);
+  Assert.ok(!result.remote[0].tail);
+  Assert.equal(result.remote[1].value, "tailalt query tail 1");
+  Assert.equal(result.remote[1].matchPrefix, "… ");
+  Assert.equal(result.remote[1].tail, "tail 1");
+  Assert.equal(result.remote[2].value, "tailalt query tail 2");
+  Assert.equal(result.remote[2].matchPrefix, "… ");
+  Assert.equal(result.remote[2].tail, "tail 2");
+});
+
+add_task(async function invalid_tail_results() {
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch("tailjunk query", false, getEngine);
+  Assert.equal(result.term, "tailjunk query");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 3);
+  Assert.equal(result.remote[0].value, "tailjunk query normal");
+  Assert.ok(!result.remote[0].matchPrefix);
+  Assert.ok(!result.remote[0].tail);
+  Assert.equal(result.remote[1].value, "tailjunk query tail 1");
+  Assert.ok(!result.remote[1].matchPrefix);
+  Assert.ok(!result.remote[1].tail);
+  Assert.equal(result.remote[2].value, "tailjunk query tail 2");
+  Assert.ok(!result.remote[2].matchPrefix);
+  Assert.ok(!result.remote[2].tail);
+});
+
+add_task(async function too_few_tail_results() {
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch("tailjunk few query", false, getEngine);
+  Assert.equal(result.term, "tailjunk few query");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 3);
+  Assert.equal(result.remote[0].value, "tailjunk few query normal");
+  Assert.ok(!result.remote[0].matchPrefix);
+  Assert.ok(!result.remote[0].tail);
+  Assert.equal(result.remote[1].value, "tailjunk few query tail 1");
+  Assert.ok(!result.remote[1].matchPrefix);
+  Assert.ok(!result.remote[1].tail);
+  Assert.equal(result.remote[2].value, "tailjunk few query tail 2");
+  Assert.ok(!result.remote[2].matchPrefix);
+  Assert.ok(!result.remote[2].tail);
+});
+
+add_task(async function empty_rich_results() {
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch("richempty query", false, getEngine);
+  Assert.equal(result.term, "richempty query");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 3);
+  Assert.equal(result.remote[0].value, "richempty query normal");
+  Assert.ok(!result.remote[0].matchPrefix);
+  Assert.ok(!result.remote[0].tail);
+  Assert.equal(result.remote[1].value, "richempty query tail 1");
+  Assert.ok(!result.remote[1].matchPrefix);
+  Assert.ok(!result.remote[1].tail);
+  Assert.equal(result.remote[2].value, "richempty query tail 2");
+  Assert.ok(!result.remote[2].matchPrefix);
+  Assert.ok(!result.remote[2].tail);
 });
 
 add_task(async function fetch_twice_in_a_row() {
@@ -277,9 +362,9 @@ add_task(async function fetch_twice_in_a_row() {
   let result = await resultPromise2;
   Assert.equal(result.term, "delayed ");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "delayed local");
+  Assert.equal(result.local[0].value, "delayed local");
   Assert.equal(result.remote.length, 1);
-  Assert.equal(result.remote[0], "delayed ");
+  Assert.equal(result.remote[0].value, "delayed ");
 });
 
 add_task(async function fetch_twice_subset_reuse_formHistoryResult() {
@@ -292,10 +377,10 @@ add_task(async function fetch_twice_subset_reuse_formHistoryResult() {
   let result = await controller.fetch("delay", false, getEngine);
   Assert.equal(result.term, "delay");
   Assert.equal(result.local.length, 2);
-  Assert.equal(result.local[0], "delay local");
-  Assert.equal(result.local[1], "delayed local");
+  Assert.equal(result.local[0].value, "delay local");
+  Assert.equal(result.local[1].value, "delayed local");
   Assert.equal(result.remote.length, 1);
-  Assert.equal(result.remote[0], "delay");
+  Assert.equal(result.remote[0].value, "delay");
 
   // Remove the entry from the DB but it should remain in the cached formHistoryResult.
   await updateSearchHistory("remove", "delayed local");
@@ -303,9 +388,9 @@ add_task(async function fetch_twice_subset_reuse_formHistoryResult() {
   let result2 = await controller.fetch("delayed ", false, getEngine);
   Assert.equal(result2.term, "delayed ");
   Assert.equal(result2.local.length, 1);
-  Assert.equal(result2.local[0], "delayed local");
+  Assert.equal(result2.local[0].value, "delayed local");
   Assert.equal(result2.remote.length, 1);
-  Assert.equal(result2.remote[0], "delayed ");
+  Assert.equal(result2.remote[0].value, "delayed ");
 });
 
 add_task(async function both_identical_with_more_than_max_results() {
@@ -329,14 +414,14 @@ add_task(async function both_identical_with_more_than_max_results() {
   Assert.equal(result.local.length, 7);
   for (let i = 0; i < controller.maxLocalResults; i++) {
     Assert.equal(
-      result.local[i],
+      result.local[i].value,
       "letter " + String.fromCharCode("A".charCodeAt() + i)
     );
   }
   Assert.equal(result.local.length + result.remote.length, 10);
   for (let i = 0; i < result.remote.length; i++) {
     Assert.equal(
-      result.remote[i],
+      result.remote[i].value,
       "letter " +
         String.fromCharCode("A".charCodeAt() + controller.maxLocalResults + i)
     );
@@ -352,7 +437,7 @@ add_task(async function noremote_maxLocal() {
   Assert.equal(result.local.length, 26);
   for (let i = 0; i < result.local.length; i++) {
     Assert.equal(
-      result.local[i],
+      result.local[i].value,
       "letter " + String.fromCharCode("A".charCodeAt() + i)
     );
   }
@@ -368,7 +453,7 @@ add_task(async function someremote_maxLocal() {
   Assert.equal(result.local.length, 2);
   for (let i = 0; i < result.local.length; i++) {
     Assert.equal(
-      result.local[i],
+      result.local[i].value,
       "letter " + String.fromCharCode("A".charCodeAt() + i)
     );
   }
@@ -376,7 +461,7 @@ add_task(async function someremote_maxLocal() {
   // "A" and "B" will have been de-duped, start at C for remote results
   for (let i = 0; i < result.remote.length; i++) {
     Assert.equal(
-      result.remote[i],
+      result.remote[i].value,
       "letter " + String.fromCharCode("C".charCodeAt() + i)
     );
   }
@@ -389,9 +474,9 @@ add_task(async function one_of_each() {
   let result = await controller.fetch("letter ", false, getEngine);
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "letter A");
+  Assert.equal(result.local[0].value, "letter A");
   Assert.equal(result.remote.length, 1);
-  Assert.equal(result.remote[0], "letter B");
+  Assert.equal(result.remote[0].value, "letter B");
 });
 
 add_task(async function local_result_returned_remote_result_disabled() {
@@ -404,7 +489,7 @@ add_task(async function local_result_returned_remote_result_disabled() {
   Assert.equal(result.local.length, 26);
   for (let i = 0; i < 26; i++) {
     Assert.equal(
-      result.local[i],
+      result.local[i].value,
       "letter " + String.fromCharCode("A".charCodeAt() + i)
     );
   }
@@ -423,7 +508,7 @@ add_task(
     Assert.equal(result.local.length, 26);
     for (let i = 0; i < 26; i++) {
       Assert.equal(
-        result.local[i],
+        result.local[i].value,
         "letter " + String.fromCharCode("A".charCodeAt() + i)
       );
     }
@@ -442,9 +527,9 @@ add_task(
     let result = await controller.fetch("letter ", false, getEngine);
     Assert.equal(result.term, "letter ");
     Assert.equal(result.local.length, 1);
-    Assert.equal(result.local[0], "letter A");
+    Assert.equal(result.local[0].value, "letter A");
     Assert.equal(result.remote.length, 1);
-    Assert.equal(result.remote[0], "letter B");
+    Assert.equal(result.remote[0].value, "letter B");
 
     Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   }
@@ -459,7 +544,7 @@ add_task(async function one_local_zero_remote() {
   Assert.equal(result.local.length, 26);
   for (let i = 0; i < 26; i++) {
     Assert.equal(
-      result.local[i],
+      result.local[i].value,
       "letter " + String.fromCharCode("A".charCodeAt() + i)
     );
   }
@@ -474,7 +559,7 @@ add_task(async function zero_local_one_remote() {
   Assert.equal(result.term, "letter ");
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 1);
-  Assert.equal(result.remote[0], "letter A");
+  Assert.equal(result.remote[0].value, "letter A");
 });
 
 add_task(async function stop_search() {
@@ -502,7 +587,7 @@ add_task(async function slow_timeout() {
   function check_result(result) {
     Assert.equal(result.term, "slow ");
     Assert.equal(result.local.length, 1);
-    Assert.equal(result.local[0], "slow local result");
+    Assert.equal(result.local[0].value, "slow local result");
     Assert.equal(result.remote.length, 0);
   }
   await updateSearchHistory("bump", "slow local result");
@@ -543,7 +628,7 @@ add_task(async function remote_term_mismatch() {
   let result = await controller.fetch("Query Mismatch", false, getEngine);
   Assert.equal(result.term, "Query Mismatch");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "Query Mismatch Entry");
+  Assert.equal(result.local[0].value, "Query Mismatch Entry");
   Assert.equal(result.remote.length, 0);
 });
 
@@ -554,7 +639,7 @@ add_task(async function http_404() {
   let result = await controller.fetch("HTTP 404", false, getEngine);
   Assert.equal(result.term, "HTTP 404");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "HTTP 404 Entry");
+  Assert.equal(result.local[0].value, "HTTP 404 Entry");
   Assert.equal(result.remote.length, 0);
 });
 
@@ -565,7 +650,7 @@ add_task(async function http_500() {
   let result = await controller.fetch("HTTP 500", false, getEngine);
   Assert.equal(result.term, "HTTP 500");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "HTTP 500 Entry");
+  Assert.equal(result.local[0].value, "HTTP 500 Entry");
   Assert.equal(result.remote.length, 0);
 });
 
@@ -580,7 +665,7 @@ add_task(async function unresolvable_server() {
   );
   Assert.equal(result.term, "Unresolvable Server");
   Assert.equal(result.local.length, 1);
-  Assert.equal(result.local[0], "Unresolvable Server Entry");
+  Assert.equal(result.local[0].value, "Unresolvable Server Entry");
   Assert.equal(result.remote.length, 0);
 });
 
