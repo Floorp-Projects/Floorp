@@ -470,6 +470,14 @@ void* nsChildView::GetNativeData(uint32_t aDataType) {
         retVal = this;
       }
       break;
+
+    case NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID: {
+      NSWindow* win = [mView window];
+      if (win) {
+        retVal = (void*)[win windowNumber];
+      }
+      break;
+    }
   }
 
   return retVal;
