@@ -595,13 +595,8 @@ pref("browser.gesture.swipe.left", "Browser:BackOrBackDuplicate");
 pref("browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate");
 pref("browser.gesture.swipe.up", "cmd_scrollTop");
 pref("browser.gesture.swipe.down", "cmd_scrollBottom");
-#ifdef XP_MACOSX
-  pref("browser.gesture.pinch.latched", true);
-  pref("browser.gesture.pinch.threshold", 150);
-#else
-  pref("browser.gesture.pinch.latched", false);
-  pref("browser.gesture.pinch.threshold", 25);
-#endif
+pref("browser.gesture.pinch.latched", false);
+pref("browser.gesture.pinch.threshold", 25);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   // Enabled for touch input display zoom.
   pref("browser.gesture.pinch.out", "cmd_fullZoomEnlarge");
