@@ -414,10 +414,6 @@ void AudioDestinationNode::DestroyMediaTrack() {
   Context()->ShutdownWorklet();
 
   mTrack->RemoveMainThreadListener(this);
-  MediaTrackGraph* graph = mTrack->Graph();
-  if (graph->IsNonRealtime()) {
-    MediaTrackGraph::DestroyNonRealtimeInstance(graph);
-  }
   AudioNode::DestroyMediaTrack();
 }
 
