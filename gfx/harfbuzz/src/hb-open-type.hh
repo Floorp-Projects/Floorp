@@ -73,6 +73,13 @@ struct IntType
 
   HB_INTERNAL static int cmp (const IntType *a, const IntType *b)
   { return b->cmp (*a); }
+  HB_INTERNAL static int cmp (const void *a, const void *b)
+  {
+    IntType *pa = (IntType *) a;
+    IntType *pb = (IntType *) b;
+
+    return pb->cmp (*pa);
+  }
   template <typename Type2>
   int cmp (Type2 a) const
   {
@@ -306,11 +313,8 @@ struct OffsetTo : Offset<OffsetType, has_null>
   }
 
   template <typename ...Ts>
-  bool serialize_subset (hb_subset_context_t *c,
-			 const OffsetTo& src,
-			 const void *src_base,
-			 const void *dst_base,
-			 Ts&&... ds)
+  bool serialize_subset (hb_subset_context_t *c, const OffsetTo& src,
+			 const void *src_base, Ts&&... ds)
   {
     *this = 0;
     if (src.is_null ())
@@ -323,7 +327,7 @@ struct OffsetTo : Offset<OffsetType, has_null>
     bool ret = c->dispatch (src_base+src, hb_forward<Ts> (ds)...);
 
     if (ret || !has_null)
-      s->add_link (*this, s->pop_pack (), dst_base);
+      s->add_link (*this, s->pop_pack ());
     else
       s->pop_discard ();
 
@@ -331,11 +335,13 @@ struct OffsetTo : Offset<OffsetType, has_null>
   }
 
   /* TODO: Somehow merge this with previous function into a serialize_dispatch(). */
+  /* Workaround clang bug: https://bugs.llvm.org/show_bug.cgi?id=23029
+   * Can't compile: whence = hb_serialize_context_t::Head followed by Ts&&...
+   */
   template <typename ...Ts>
-  bool serialize_copy (hb_serialize_context_t *c,
-		       const OffsetTo& src,
-		       const void *src_base,
-		       const void *dst_base,
+  bool serialize_copy (hb_serialize_context_t *c, const OffsetTo& src,
+		       const void *src_base, unsigned dst_bias,
+		       hb_serialize_context_t::whence_t whence,
 		       Ts&&... ds)
   {
     *this = 0;
@@ -346,10 +352,14 @@ struct OffsetTo : Offset<OffsetType, has_null>
 
     bool ret = c->copy (src_base+src, hb_forward<Ts> (ds)...);
 
-    c->add_link (*this, c->pop_pack (), dst_base);
+    c->add_link (*this, c->pop_pack (), whence, dst_bias);
 
     return ret;
   }
+
+  bool serialize_copy (hb_serialize_context_t *c, const OffsetTo& src,
+		       const void *src_base, unsigned dst_bias = 0)
+  { return serialize_copy (c, src, src_base, dst_bias, hb_serialize_context_t::Head); }
 
   bool sanitize_shallow (hb_sanitize_context_t *c, const void *base) const
   {
@@ -594,7 +604,7 @@ struct ArrayOf
   hb_array_t<Type> sub_array (unsigned int start_offset, unsigned int *count = nullptr /* IN/OUT */)
   { return as_array ().sub_array (start_offset, count); }
 
-  bool serialize (hb_serialize_context_t *c, unsigned int items_len)
+  hb_success_t serialize (hb_serialize_context_t *c, unsigned items_len)
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
@@ -604,7 +614,7 @@ struct ArrayOf
   }
   template <typename Iterator,
 	    hb_requires (hb_is_source_of (Iterator, Type))>
-  bool serialize (hb_serialize_context_t *c, Iterator items)
+  hb_success_t serialize (hb_serialize_context_t *c, Iterator items)
   {
     TRACE_SERIALIZE (this);
     unsigned count = items.len ();
@@ -1026,18 +1036,15 @@ struct VarSizedBinSearchArrayOf
   template <typename T>
   const Type *bsearch (const T &key) const
   {
-    unsigned int size = header.unitSize;
-    int min = 0, max = (int) get_length () - 1;
-    while (min <= max)
-    {
-      int mid = ((unsigned int) min + (unsigned int) max) / 2;
-      const Type *p = (const Type *) (((const char *) &bytesZ) + (mid * size));
-      int c = p->cmp (key);
-      if (c < 0) max = mid - 1;
-      else if (c > 0) min = mid + 1;
-      else return p;
-    }
-    return nullptr;
+    unsigned pos;
+    return hb_bsearch_impl (&pos,
+			    key,
+			    (const void *) bytesZ,
+			    get_length (),
+			    header.unitSize,
+			    _hb_cmp_method<T, Type>)
+	   ? (const Type *) (((const char *) &bytesZ) + (pos * header.unitSize))
+	   : nullptr;
   }
 
   private:

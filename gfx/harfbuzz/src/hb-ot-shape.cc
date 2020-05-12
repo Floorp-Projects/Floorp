@@ -48,6 +48,16 @@
 #include "hb-aat-layout.hh"
 
 
+#ifndef HB_NO_AAT_SHAPE
+static inline bool
+_hb_apply_morx (hb_face_t *face, const hb_segment_properties_t *props)
+{
+  /* https://github.com/harfbuzz/harfbuzz/issues/2124 */
+  return hb_aat_layout_has_substitution (face) &&
+	 (HB_DIRECTION_IS_HORIZONTAL (props->direction) || !hb_ot_layout_has_substitution (face));
+}
+#endif
+
 /**
  * SECTION:hb-ot-shape
  * @title: hb-ot-shape
@@ -63,23 +73,6 @@ hb_ot_shape_collect_features (hb_ot_shape_planner_t          *planner,
 			      const hb_feature_t             *user_features,
 			      unsigned int                    num_user_features);
 
-#ifndef HB_NO_AAT_SHAPE
-static inline bool
-_hb_apply_morx (hb_face_t *face)
-{
-  if (hb_options ().aat &&
-      hb_aat_layout_has_substitution (face))
-    return true;
-
-  /* Ignore empty GSUB tables. */
-  return (!hb_ot_layout_has_substitution (face) ||
-	  !hb_ot_layout_table_get_script_tags (face,
-					       HB_OT_TAG_GSUB,
-					       0, nullptr, nullptr)) &&
-	 hb_aat_layout_has_substitution (face);
-}
-#endif
-
 hb_ot_shape_planner_t::hb_ot_shape_planner_t (hb_face_t                     *face,
 					      const hb_segment_properties_t *props) :
 						face (face),
@@ -87,7 +80,7 @@ hb_ot_shape_planner_t::hb_ot_shape_planner_t (hb_face_t                     *fac
 						map (face, props),
 						aat_map (face, props)
 #ifndef HB_NO_AAT_SHAPE
-						, apply_morx (_hb_apply_morx (face))
+						, apply_morx (_hb_apply_morx (face, props))
 #endif
 {
   shaper = hb_ot_shape_complex_categorize (this);
@@ -95,8 +88,9 @@ hb_ot_shape_planner_t::hb_ot_shape_planner_t (hb_face_t                     *fac
   script_zero_marks = shaper->zero_width_marks != HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE;
   script_fallback_mark_positioning = shaper->fallback_position;
 
-  if (apply_morx)
-    shaper = &_hb_ot_complex_shaper_default;
+  /* https://github.com/harfbuzz/harfbuzz/issues/1528 */
+  if (apply_morx && shaper != &_hb_ot_complex_shaper_default)
+    shaper = &_hb_ot_complex_shaper_dumber;
 }
 
 void
@@ -119,6 +113,8 @@ hb_ot_shape_planner_t::compile (hb_ot_shape_plan_t           &plan,
 #endif
 
   plan.rtlm_mask = plan.map.get_1_mask (HB_TAG ('r','t','l','m'));
+  plan.has_vert = !!plan.map.get_1_mask (HB_TAG ('v','e','r','t'));
+
   hb_tag_t kern_tag = HB_DIRECTION_IS_HORIZONTAL (props.direction) ?
 		      HB_TAG ('k','e','r','n') : HB_TAG ('v','k','r','n');
 #ifndef HB_NO_OT_KERN
@@ -156,17 +152,13 @@ hb_ot_shape_planner_t::compile (hb_ot_shape_plan_t           &plan,
   if (0)
     ;
 #ifndef HB_NO_AAT_SHAPE
-  else if (hb_options ().aat && hb_aat_layout_has_positioning (face))
+  else if (hb_aat_layout_has_positioning (face))
     plan.apply_kerx = true;
 #endif
   else if (!apply_morx && !disable_gpos && hb_ot_layout_has_positioning (face))
     plan.apply_gpos = true;
-#ifndef HB_NO_AAT_SHAPE
-  else if (hb_aat_layout_has_positioning (face))
-    plan.apply_kerx = true;
-#endif
 
-  if (!plan.apply_kerx && !has_gpos_kern)
+  if (!plan.apply_kerx && (!has_gpos_kern || !plan.apply_gpos))
   {
     /* Apparently Apple applies kerx if GPOS kern was not applied. */
 #ifndef HB_NO_AAT_SHAPE
@@ -594,24 +586,85 @@ hb_ensure_native_direction (hb_buffer_t *buffer)
  * Substitute
  */
 
-static inline void
-hb_ot_mirror_chars (const hb_ot_shape_context_t *c)
+static hb_codepoint_t
+hb_vert_char_for (hb_codepoint_t u)
 {
-  if (HB_DIRECTION_IS_FORWARD (c->target_direction))
-    return;
+  switch (u >> 8)
+  {
+    case 0x20: switch (u) {
+      case 0x2013u: return 0xfe32u; // EN DASH
+      case 0x2014u: return 0xfe31u; // EM DASH
+      case 0x2025u: return 0xfe30u; // TWO DOT LEADER
+      case 0x2026u: return 0xfe19u; // HORIZONTAL ELLIPSIS
+    } break;
+    case 0x30: switch (u) {
+      case 0x3001u: return 0xfe11u; // IDEOGRAPHIC COMMA
+      case 0x3002u: return 0xfe12u; // IDEOGRAPHIC FULL STOP
+      case 0x3008u: return 0xfe3fu; // LEFT ANGLE BRACKET
+      case 0x3009u: return 0xfe40u; // RIGHT ANGLE BRACKET
+      case 0x300au: return 0xfe3du; // LEFT DOUBLE ANGLE BRACKET
+      case 0x300bu: return 0xfe3eu; // RIGHT DOUBLE ANGLE BRACKET
+      case 0x300cu: return 0xfe41u; // LEFT CORNER BRACKET
+      case 0x300du: return 0xfe42u; // RIGHT CORNER BRACKET
+      case 0x300eu: return 0xfe43u; // LEFT WHITE CORNER BRACKET
+      case 0x300fu: return 0xfe44u; // RIGHT WHITE CORNER BRACKET
+      case 0x3010u: return 0xfe3bu; // LEFT BLACK LENTICULAR BRACKET
+      case 0x3011u: return 0xfe3cu; // RIGHT BLACK LENTICULAR BRACKET
+      case 0x3014u: return 0xfe39u; // LEFT TORTOISE SHELL BRACKET
+      case 0x3015u: return 0xfe3au; // RIGHT TORTOISE SHELL BRACKET
+      case 0x3016u: return 0xfe17u; // LEFT WHITE LENTICULAR BRACKET
+      case 0x3017u: return 0xfe18u; // RIGHT WHITE LENTICULAR BRACKET
+    } break;
+    case 0xfe: switch (u) {
+      case 0xfe4fu: return 0xfe34u; // WAVY LOW LINE
+    } break;
+    case 0xff: switch (u) {
+      case 0xff01u: return 0xfe15u; // FULLWIDTH EXCLAMATION MARK
+      case 0xff08u: return 0xfe35u; // FULLWIDTH LEFT PARENTHESIS
+      case 0xff09u: return 0xfe36u; // FULLWIDTH RIGHT PARENTHESIS
+      case 0xff0cu: return 0xfe10u; // FULLWIDTH COMMA
+      case 0xff1au: return 0xfe13u; // FULLWIDTH COLON
+      case 0xff1bu: return 0xfe14u; // FULLWIDTH SEMICOLON
+      case 0xff1fu: return 0xfe16u; // FULLWIDTH QUESTION MARK
+      case 0xff3bu: return 0xfe47u; // FULLWIDTH LEFT SQUARE BRACKET
+      case 0xff3du: return 0xfe48u; // FULLWIDTH RIGHT SQUARE BRACKET
+      case 0xff3fu: return 0xfe33u; // FULLWIDTH LOW LINE
+      case 0xff5bu: return 0xfe37u; // FULLWIDTH LEFT CURLY BRACKET
+      case 0xff5du: return 0xfe38u; // FULLWIDTH RIGHT CURLY BRACKET
+    } break;
+  }
 
+  return u;
+}
+
+static inline void
+hb_ot_rotate_chars (const hb_ot_shape_context_t *c)
+{
   hb_buffer_t *buffer = c->buffer;
-  hb_unicode_funcs_t *unicode = buffer->unicode;
-  hb_mask_t rtlm_mask = c->plan->rtlm_mask;
-
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
-  for (unsigned int i = 0; i < count; i++) {
-    hb_codepoint_t codepoint = unicode->mirroring (info[i].codepoint);
-    if (likely (codepoint == info[i].codepoint || !c->font->has_glyph (codepoint)))
-      info[i].mask |= rtlm_mask;
-    else
-      info[i].codepoint = codepoint;
+
+  if (HB_DIRECTION_IS_BACKWARD (c->target_direction))
+  {
+    hb_unicode_funcs_t *unicode = buffer->unicode;
+    hb_mask_t rtlm_mask = c->plan->rtlm_mask;
+
+    for (unsigned int i = 0; i < count; i++) {
+      hb_codepoint_t codepoint = unicode->mirroring (info[i].codepoint);
+      if (unlikely (codepoint != info[i].codepoint && c->font->has_glyph (codepoint)))
+	info[i].codepoint = codepoint;
+      else
+	info[i].mask |= rtlm_mask;
+    }
+  }
+
+  if (HB_DIRECTION_IS_VERTICAL (c->target_direction) && !c->plan->has_vert)
+  {
+    for (unsigned int i = 0; i < count; i++) {
+      hb_codepoint_t codepoint = hb_vert_char_for (info[i].codepoint);
+      if (unlikely (codepoint != info[i].codepoint && c->font->has_glyph (codepoint)))
+	info[i].codepoint = codepoint;
+    }
   }
 }
 
@@ -693,7 +746,7 @@ hb_ot_shape_setup_masks (const hb_ot_shape_context_t *c)
   for (unsigned int i = 0; i < c->num_user_features; i++)
   {
     const hb_feature_t *feature = &c->user_features[i];
-    if (!(feature->start == 0 && feature->end == (unsigned int)-1)) {
+    if (!(feature->start == HB_FEATURE_GLOBAL_START && feature->end == HB_FEATURE_GLOBAL_END)) {
       unsigned int shift;
       hb_mask_t mask = map->get_mask (feature->tag, &shift);
       buffer->set_masks (feature->value << shift, mask, feature->start, feature->end);
@@ -788,7 +841,7 @@ hb_ot_substitute_default (const hb_ot_shape_context_t *c)
 {
   hb_buffer_t *buffer = c->buffer;
 
-  hb_ot_mirror_chars (c);
+  hb_ot_rotate_chars (c);
 
   HB_BUFFER_ALLOCATE_VAR (buffer, glyph_index);
 

@@ -83,9 +83,9 @@ struct AxisRecord
 
   public:
   Tag		axisTag;	/* Tag identifying the design variation for the axis. */
-  HBFixed		minValue;	/* The minimum coordinate value for the axis. */
-  HBFixed		defaultValue;	/* The default coordinate value for the axis. */
-  HBFixed		maxValue;	/* The maximum coordinate value for the axis. */
+  HBFixed	minValue;	/* The minimum coordinate value for the axis. */
+  HBFixed	defaultValue;	/* The default coordinate value for the axis. */
+  HBFixed	maxValue;	/* The maximum coordinate value for the axis. */
   HBUINT16	flags;		/* Axis flags. */
   NameID	axisNameID;	/* The name ID for entries in the 'name' table that
 				 * provide a display name for this axis. */
@@ -150,17 +150,8 @@ struct fvar
   {
     if (axes_count)
     {
-      /* TODO Rewrite as hb_array_t<>::sub-array() */
-      unsigned int count = axisCount;
-      start_offset = hb_min (start_offset, count);
-
-      count -= start_offset;
-      axes_array += start_offset;
-
-      count = hb_min (count, *axes_count);
-      *axes_count = count;
-
-      for (unsigned int i = 0; i < count; i++)
+      hb_array_t<const AxisRecord> arr = hb_array (&(this+firstAxis), axisCount).sub_array (start_offset, axes_count);
+      for (unsigned i = 0; i < arr.length; ++i)
 	get_axis_deprecated (start_offset + i, axes_array + i);
     }
     return axisCount;
@@ -173,17 +164,8 @@ struct fvar
   {
     if (axes_count)
     {
-      /* TODO Rewrite as hb_array_t<>::sub-array() */
-      unsigned int count = axisCount;
-      start_offset = hb_min (start_offset, count);
-
-      count -= start_offset;
-      axes_array += start_offset;
-
-      count = hb_min (count, *axes_count);
-      *axes_count = count;
-
-      for (unsigned int i = 0; i < count; i++)
+      hb_array_t<const AxisRecord> arr = hb_array (&(this+firstAxis), axisCount).sub_array (start_offset, axes_count);
+      for (unsigned i = 0; i < arr.length; ++i)
 	get_axis_info (start_offset + i, axes_array + i);
     }
     return axisCount;
@@ -229,7 +211,7 @@ struct fvar
     hb_ot_var_axis_info_t axis;
     get_axis_info (axis_index, &axis);
 
-    v = hb_max (hb_min (v, axis.max_value), axis.min_value); /* Clamp. */
+    v = hb_clamp (v, axis.min_value, axis.max_value);
 
     if (v == axis.default_value)
       return 0;
