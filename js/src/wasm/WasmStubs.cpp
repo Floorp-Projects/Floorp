@@ -2604,12 +2604,13 @@ static const LiveRegisterSet RegsToPreserve(
 #    error "high lanes of SIMD registers need to be saved too."
 #  endif
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-// It's fine to use AllVector128Mask even when SIMD is not enabled:
-// PushRegsInMask strips out the high lanes of the XMM registers in this case.
+// It's correct to use FloatRegisters::AllMask even when SIMD is not enabled;
+// PushRegsInMask strips out the high lanes of the XMM registers in this case,
+// while the singles will be stripped as they are aliased by the larger doubles.
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask &
                        ~(uint32_t(1) << Registers::StackPointer)),
-    FloatRegisterSet(FloatRegisters::AllVector128Mask));
+    FloatRegisterSet(FloatRegisters::AllMask));
 #else
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllDoubleMask));
