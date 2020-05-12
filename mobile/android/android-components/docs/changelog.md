@@ -31,7 +31,10 @@ permalink: /changelog/
   * Glean was updated to v29.1.0
     * ⚠️ **This is a breaking change**: glinter errors found during code generation will now return an error code.
     * The minimum and maximum values of a timing distribution can now be controlled by the `time_unit` parameter. See [bug 1630997](https://bugzilla.mozilla.org/show_bug.cgi?id=1630997) for more details.
-  
+
+* **browser-toolbar**
+  * It will only be animated for vertical scrolls inside the EngineView. Not for horizontal scrolls. Not for zoom gestures.
+
 # 40.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v39.0.0...v40.0.0)
@@ -151,7 +154,7 @@ permalink: /changelog/
 
 * **Developer ergonomics**
   * Improved autoPublication workflow. See https://mozac.org/contributing/testing-components-inside-app for updated documentation.
-
+  
 * **browser-search**
   * Added `getSearchTemplate` to reconstruct the user-entered search engine url template
 
