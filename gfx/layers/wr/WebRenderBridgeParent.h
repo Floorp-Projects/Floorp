@@ -163,8 +163,7 @@ class WebRenderBridgeParent final
   mozilla::ipc::IPCResult RecvSetFocusTarget(
       const FocusTarget& aFocusTarget) override;
   mozilla::ipc::IPCResult RecvParentCommands(
-      nsTArray<WebRenderParentCommand>&& commands,
-      const wr::RenderRoot& aRenderRoot) override;
+      nsTArray<WebRenderParentCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture) override;
 
   mozilla::ipc::IPCResult RecvSetLayersObserverEpoch(
@@ -444,7 +443,7 @@ class WebRenderBridgeParent final
 
   bool ProcessWebRenderParentCommands(
       const nsTArray<WebRenderParentCommand>& aCommands,
-      wr::TransactionBuilder& aTxn, wr::RenderRoot aRenderRoot);
+      wr::TransactionBuilder& aTxn);
 
   void ClearResources();
   bool ShouldParentObserveEpoch();

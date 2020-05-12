@@ -181,7 +181,7 @@ void WebRenderBridgeChild::ProcessWebRenderParentCommands() {
   MOZ_ASSERT(!mDestroyed);
 
   if (!mParentCommands.IsEmpty()) {
-    this->SendParentCommands(mParentCommands, wr::RenderRoot::Default);
+    this->SendParentCommands(mParentCommands);
     mParentCommands.Clear();
   }
 }

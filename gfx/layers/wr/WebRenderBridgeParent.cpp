@@ -488,8 +488,7 @@ bool WebRenderBridgeParent::HandleDeferredPipelineData(
         [&](ParentCommands& data) {
           wr::TransactionBuilder txn;
           txn.SetLowPriority(!IsRootWebRenderBridgeParent());
-          if (!ProcessWebRenderParentCommands(data.mCommands, txn,
-                                              wr::RenderRoot::Default)) {
+          if (!ProcessWebRenderParentCommands(data.mCommands, txn)) {
             return false;
           }
 
@@ -1241,8 +1240,8 @@ bool WebRenderBridgeParent::ProcessRenderRootDisplayListData(
     sender.emplace(mApi, &txn);
   }
 
-  if (NS_WARN_IF(!ProcessWebRenderParentCommands(aDisplayList.mCommands, txn,
-                                                 renderRoot))) {
+  if (NS_WARN_IF(
+          !ProcessWebRenderParentCommands(aDisplayList.mCommands, txn))) {
     return false;
   }
 
@@ -1427,8 +1426,7 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
 
   if (!aUpdates.mCommands.IsEmpty()) {
     mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-    if (!ProcessWebRenderParentCommands(aUpdates.mCommands, txn,
-                                        aUpdates.mRenderRoot)) {
+    if (!ProcessWebRenderParentCommands(aUpdates.mCommands, txn)) {
       return false;
     }
   }
@@ -1572,14 +1570,12 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetFocusTarget(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
-    nsTArray<WebRenderParentCommand>&& aCommands,
-    const wr::RenderRoot& aRenderRoot) {
+    nsTArray<WebRenderParentCommand>&& aCommands) {
   if (mDestroyed) {
     return IPC_OK();
   }
 
   if (!mRenderRoot) {
-    MOZ_ASSERT(aRenderRoot == RenderRoot::Default);
     PushDeferredPipelineData(AsVariant(ParentCommands{
         std::move(aCommands),
     }));
@@ -1588,7 +1584,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
 
   wr::TransactionBuilder txn;
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
-  if (!ProcessWebRenderParentCommands(aCommands, txn, aRenderRoot)) {
+  if (!ProcessWebRenderParentCommands(aCommands, txn)) {
     return IPC_FAIL(this, "Invalid parent command found");
   }
 
@@ -1598,7 +1594,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
 
 bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
     const nsTArray<WebRenderParentCommand>& aCommands,
-    wr::TransactionBuilder& aTxn, wr::RenderRoot aRenderRoot) {
+    wr::TransactionBuilder& aTxn) {
   // Transaction for async image pipeline that uses ImageBridge always need to
   // be non low priority.
   wr::TransactionBuilder txnForImageBridge;
