@@ -55,7 +55,7 @@ class RegistrationList extends PureComponent {
           })
         ),
         ul(
-          {},
+          { className: "registrations-container__list" },
           registrations.map(registration =>
             Registration({
               key: registration.id,

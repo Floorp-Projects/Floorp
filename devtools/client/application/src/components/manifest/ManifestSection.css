@@ -20,7 +20,6 @@
 
 .manifest-section__title {
   font-size: var(--title-10-font-size);
-  font-weight: var(--title-20-font-weight);
-  text-align: left;
+  font-weight: var(--title-10-font-weight);
   margin: 0;
 }
