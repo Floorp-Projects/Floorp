@@ -1008,6 +1008,8 @@ class nsFrameSelection final {
 
     void Set(const nsPoint& aPos);
 
+    void Invalidate();
+
     bool mIsSet = false;
 
    private:
