@@ -9562,10 +9562,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_setelem_typed(Scalar::Type arrayType,
     ins = MStoreTypedArrayElementHole::New(alloc(), elements, length, id,
                                            toWrite, arrayType);
   } else {
-    MStoreUnboxedScalar* store =
-        MStoreUnboxedScalar::New(alloc(), elements, id, toWrite, arrayType,
-                                 MStoreUnboxedScalar::TruncateInput);
-    ins = store;
+    ins = MStoreUnboxedScalar::New(alloc(), elements, id, toWrite, arrayType);
   }
 
   current->add(ins);
