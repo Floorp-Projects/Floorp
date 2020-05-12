@@ -131,14 +131,10 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 
 #pragma mark -
 
-- (BOOL)accessibilityIsIgnored {
+- (BOOL)isAccessibilityElement {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  // unknown (either unimplemented, or irrelevant) elements are marked as ignored
-  // as well as expired elements.
-
-  return [[self role] isEqualToString:NSAccessibilityUnknownRole] &&
-         [self stateWithMask:states::FOCUSABLE];
+  return YES;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
