@@ -7827,8 +7827,8 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   }
 
   if (StaticPrefs::layout_animation_prerender_partial()) {
-    *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(*aDirtyRect,
-                                                             overflow, maxSize);
+    *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(
+        aFrame, *aDirtyRect, overflow, maxSize);
     result.mDecision = PrerenderDecision::Partial;
     return result;
   }
