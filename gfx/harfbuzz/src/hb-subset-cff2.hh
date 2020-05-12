@@ -32,6 +32,7 @@
 #include "hb-subset-plan.hh"
 
 HB_INTERNAL bool
-hb_subset_cff2 (hb_subset_context_t *c);
+hb_subset_cff2 (hb_subset_plan_t *plan,
+	       hb_blob_t       **cff2_prime /* OUT */);
 
 #endif /* HB_SUBSET_CFF2_HH */

@@ -33,9 +33,6 @@
 
 #include "hb-ot.h"
 
-#include "hb-ot-var-avar-table.hh"
-#include "hb-ot-var-fvar-table.hh"
-
 
 /**
  * SECTION:hb-font
@@ -677,8 +674,7 @@ hb_font_funcs_set_##name##_func (hb_font_funcs_t             *ffuncs,    \
 				 void                        *user_data, \
 				 hb_destroy_func_t            destroy)   \
 {                                                                        \
-  if (hb_object_is_immutable (ffuncs))                                   \
-  {                                                                      \
+  if (hb_object_is_immutable (ffuncs)) {                                 \
     if (destroy)                                                         \
       destroy (user_data);                                               \
     return;                                                              \
@@ -1336,7 +1332,6 @@ DEFINE_NULL_INSTANCE (hb_font_t) =
 
   0, /* num_coords */
   nullptr, /* coords */
-  nullptr, /* design_coords */
 
   const_cast<hb_font_funcs_t *> (&_hb_Null_hb_font_funcs_t),
 
@@ -1388,20 +1383,6 @@ hb_font_create (hb_face_t *face)
   return font;
 }
 
-static void
-_hb_font_adopt_var_coords (hb_font_t *font,
-			   int *coords, /* 2.14 normalized */
-			   float *design_coords,
-			   unsigned int coords_length)
-{
-  free (font->coords);
-  free (font->design_coords);
-
-  font->coords = coords;
-  font->design_coords = design_coords;
-  font->num_coords = coords_length;
-}
-
 /**
  * hb_font_create_sub_font:
  * @parent: parent font.
@@ -1432,22 +1413,15 @@ hb_font_create_sub_font (hb_font_t *parent)
   font->y_ppem = parent->y_ppem;
   font->ptem = parent->ptem;
 
-  unsigned int num_coords = parent->num_coords;
-  if (num_coords)
+  font->num_coords = parent->num_coords;
+  if (font->num_coords)
   {
-    int *coords = (int *) calloc (num_coords, sizeof (parent->coords[0]));
-    float *design_coords = (float *) calloc (num_coords, sizeof (parent->design_coords[0]));
-    if (likely (coords && design_coords))
-    {
-      memcpy (coords, parent->coords, num_coords * sizeof (parent->coords[0]));
-      memcpy (design_coords, parent->design_coords, num_coords * sizeof (parent->design_coords[0]));
-      _hb_font_adopt_var_coords (font, coords, design_coords, num_coords);
-    }
+    unsigned int size = parent->num_coords * sizeof (parent->coords[0]);
+    font->coords = (int *) malloc (size);
+    if (unlikely (!font->coords))
+      font->num_coords = 0;
     else
-    {
-      free (coords);
-      free (design_coords);
-    }
+      memcpy (font->coords, parent->coords, size);
   }
 
   return font;
@@ -1465,7 +1439,7 @@ hb_font_create_sub_font (hb_font_t *parent)
 hb_font_t *
 hb_font_get_empty ()
 {
-  return const_cast<hb_font_t *> (&Null (hb_font_t));
+  return const_cast<hb_font_t *> (&Null(hb_font_t));
 }
 
 /**
@@ -1507,7 +1481,6 @@ hb_font_destroy (hb_font_t *font)
   hb_font_funcs_destroy (font->klass);
 
   free (font->coords);
-  free (font->design_coords);
 
   free (font);
 }
@@ -1869,6 +1842,17 @@ hb_font_get_ptem (hb_font_t *font)
  * Variations
  */
 
+static void
+_hb_font_adopt_var_coords_normalized (hb_font_t *font,
+				      int *coords, /* 2.14 normalized */
+				      unsigned int coords_length)
+{
+  free (font->coords);
+
+  font->coords = coords;
+  font->num_coords = coords_length;
+}
+
 /**
  * hb_font_set_variations:
  *
@@ -1891,30 +1875,13 @@ hb_font_set_variations (hb_font_t *font,
   unsigned int coords_length = hb_ot_var_get_axis_count (font->face);
 
   int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : nullptr;
-  float *design_coords = coords_length ? (float *) calloc (coords_length, sizeof (float)) : nullptr;
-
-  if (unlikely (coords_length && !(normalized && design_coords)))
-  {
-    free (normalized);
-    free (design_coords);
+  if (unlikely (coords_length && !normalized))
     return;
-  }
 
-  const OT::fvar &fvar = *font->face->table.fvar;
-  for (unsigned int i = 0; i < variations_length; i++)
-  {
-    hb_ot_var_axis_info_t info;
-    if (hb_ot_var_find_axis_info (font->face, variations[i].tag, &info) &&
-	info.axis_index < coords_length)
-    {
-      float v = variations[i].value;
-      design_coords[info.axis_index] = v;
-      normalized[info.axis_index] = fvar.normalize_axis_value (info.axis_index, v);
-    }
-  }
-  font->face->table.avar->map_coords (normalized, coords_length);
-
-  _hb_font_adopt_var_coords (font, normalized, design_coords, coords_length);
+  hb_ot_var_normalize_variations (font->face,
+				  variations, variations_length,
+				  normalized, coords_length);
+  _hb_font_adopt_var_coords_normalized (font, normalized, coords_length);
 }
 
 /**
@@ -1931,20 +1898,11 @@ hb_font_set_var_coords_design (hb_font_t *font,
     return;
 
   int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : nullptr;
-  float *design_coords = coords_length ? (float *) calloc (coords_length, sizeof (float)) : nullptr;
-
-  if (unlikely (coords_length && !(normalized && design_coords)))
-  {
-    free (normalized);
-    free (design_coords);
+  if (unlikely (coords_length && !normalized))
     return;
-  }
-
-  if (coords_length)
-    memcpy (design_coords, coords, coords_length * sizeof (font->design_coords[0]));
 
   hb_ot_var_normalize_coords (font->face, coords_length, coords, normalized);
-  _hb_font_adopt_var_coords (font, normalized, design_coords, coords_length);
+  _hb_font_adopt_var_coords_normalized (font, normalized, coords_length);
 }
 
 /**
@@ -1988,30 +1946,13 @@ hb_font_set_var_coords_normalized (hb_font_t *font,
     return;
 
   int *copy = coords_length ? (int *) calloc (coords_length, sizeof (coords[0])) : nullptr;
-  int *unmapped = coords_length ? (int *) calloc (coords_length, sizeof (coords[0])) : nullptr;
-  float *design_coords = coords_length ? (float *) calloc (coords_length, sizeof (design_coords[0])) : nullptr;
-
-  if (unlikely (coords_length && !(copy && unmapped && design_coords)))
-  {
-    free (copy);
-    free (unmapped);
-    free (design_coords);
+  if (unlikely (coords_length && !copy))
     return;
-  }
 
   if (coords_length)
-  {
     memcpy (copy, coords, coords_length * sizeof (coords[0]));
-    memcpy (unmapped, coords, coords_length * sizeof (coords[0]));
-  }
 
-  /* Best effort design coords simulation */
-  font->face->table.avar->unmap_coords (unmapped, coords_length);
-  for (unsigned int i = 0; i < coords_length; ++i)
-    design_coords[i] = font->face->table.fvar->unnormalize_axis_value (i, unmapped[i]);
-  free (unmapped);
-
-  _hb_font_adopt_var_coords (font, copy, design_coords, coords_length);
+  _hb_font_adopt_var_coords_normalized (font, copy, coords_length);
 }
 
 /**
@@ -2031,26 +1972,6 @@ hb_font_get_var_coords_normalized (hb_font_t *font,
 
   return font->coords;
 }
-
-#ifdef HB_EXPERIMENTAL_API
-/**
- * hb_font_get_var_coords_design:
- *
- * Return value is valid as long as variation coordinates of the font
- * are not modified.
- *
- * Since: EXPERIMENTAL
- */
-const float *
-hb_font_get_var_coords_design (hb_font_t *font,
-			       unsigned int *length)
-{
-  if (length)
-    *length = font->num_coords;
-
-  return font->design_coords;
-}
-#endif
 #endif
 
 #ifndef HB_DISABLE_DEPRECATED
@@ -2155,13 +2076,6 @@ hb_font_funcs_set_glyph_func (hb_font_funcs_t *ffuncs,
 			      hb_font_get_glyph_func_t func,
 			      void *user_data, hb_destroy_func_t destroy)
 {
-  if (hb_object_is_immutable (ffuncs))
-  {
-    if (destroy)
-      destroy (user_data);
-    return;
-  }
-
   hb_font_get_glyph_trampoline_t *trampoline;
 
   trampoline = trampoline_create (func, user_data, destroy);

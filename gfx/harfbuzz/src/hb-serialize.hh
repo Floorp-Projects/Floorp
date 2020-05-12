@@ -45,13 +45,12 @@ struct hb_serialize_context_t
 {
   typedef unsigned objidx_t;
 
-  enum whence_t {
-     Head,	/* Relative to the current object head (default). */
-     Tail,	/* Relative to the current object tail after packed. */
-     Absolute	/* Absolute: from the start of the serialize buffer. */
-   };
+  struct range_t
+  {
+    char *head, *tail;
+  };
 
-  struct object_t
+  struct object_t : range_t
   {
     void fini () { links.fini (); }
 
@@ -71,29 +70,17 @@ struct hb_serialize_context_t
     struct link_t
     {
       bool is_wide: 1;
-      bool is_signed: 1;
-      unsigned whence: 2;
-      unsigned position: 28;
+      unsigned position : 31;
       unsigned bias;
       objidx_t objidx;
     };
 
-    char *head;
-    char *tail;
     hb_vector_t<link_t> links;
     object_t *next;
   };
 
-  struct snapshot_t
-  {
-    char *head;
-    char *tail;
-    object_t *current; // Just for sanity check
-    unsigned num_links;
-  };
+  range_t snapshot () { range_t s = {head, tail} ; return s; }
 
-  snapshot_t snapshot ()
-  { return snapshot_t { head, tail, current, current->links.length }; }
 
   hb_serialize_context_t (void *start_, unsigned int size) :
     start ((char *) start_),
@@ -136,7 +123,7 @@ struct hb_serialize_context_t
 
   template <typename T1, typename T2>
   bool check_equal (T1 &&v1, T2 &&v2)
-  { return check_success ((long long) v1 == (long long) v2); }
+  { return check_success (v1 == v2); }
 
   template <typename T1, typename T2>
   bool check_assign (T1 &v1, T2 &&v2)
@@ -179,7 +166,7 @@ struct hb_serialize_context_t
     if (packed.length <= 1)
       return;
 
-    pop_pack (false);
+    pop_pack ();
 
     resolve_links ();
   }
@@ -204,16 +191,11 @@ struct hb_serialize_context_t
     object_t *obj = current;
     if (unlikely (!obj)) return;
     current = current->next;
-    revert (obj->head, obj->tail);
+    revert (*obj);
     obj->fini ();
     object_pool.free (obj);
   }
-
-  /* Set share to false when an object is unlikely sharable with others
-   * so not worth an attempt, or a contiguous table is serialized as
-   * multiple consecutive objects in the reverse order so can't be shared.
-   */
-  objidx_t pop_pack (bool share=true)
+  objidx_t pop_pack ()
   {
     object_t *obj = current;
     if (unlikely (!obj)) return 0;
@@ -229,15 +211,11 @@ struct hb_serialize_context_t
       return 0;
     }
 
-    objidx_t objidx;
-    if (share)
+    objidx_t objidx = packed_map.get (obj);
+    if (objidx)
     {
-      objidx = packed_map.get (obj);
-      if (objidx)
-      {
-	obj->fini ();
-	return objidx;
-      }
+      obj->fini ();
+      return objidx;
     }
 
     tail -= len;
@@ -253,24 +231,17 @@ struct hb_serialize_context_t
 
     objidx = packed.length - 1;
 
-    if (share) packed_map.set (obj, objidx);
+    packed_map.set (obj, objidx);
 
     return objidx;
   }
 
-  void revert (snapshot_t snap)
+  void revert (range_t snap)
   {
-    assert (snap.current == current);
-    current->links.shrink (snap.num_links);
-    revert (snap.head, snap.tail);
-  }
-  void revert (char *snap_head,
-	       char *snap_tail)
-  {
-    assert (snap_head <= head);
-    assert (tail <= snap_tail);
-    head = snap_head;
-    tail = snap_tail;
+    assert (snap.head <= head);
+    assert (tail <= snap.tail);
+    head = snap.head;
+    tail = snap.tail;
     discard_stale_objects ();
   }
 
@@ -289,9 +260,7 @@ struct hb_serialize_context_t
   }
 
   template <typename T>
-  void add_link (T &ofs, objidx_t objidx,
-		 whence_t whence = Head,
-		 unsigned bias = 0)
+  void add_link (T &ofs, objidx_t objidx, const void *base = nullptr)
   {
     static_assert (sizeof (T) == 2 || sizeof (T) == 4, "");
 
@@ -301,22 +270,16 @@ struct hb_serialize_context_t
     assert (current);
     assert (current->head <= (const char *) &ofs);
 
+    if (!base)
+      base = current->head;
+    else
+      assert (current->head <= (const char *) base);
+
     auto& link = *current->links.push ();
-
     link.is_wide = sizeof (T) == 4;
-    link.is_signed = hb_is_signed (hb_unwrap_type (T));
-    link.whence = (unsigned) whence;
     link.position = (const char *) &ofs - current->head;
-    link.bias = bias;
+    link.bias = (const char *) base - current->head;
     link.objidx = objidx;
-  }
-
-  unsigned to_bias (const void *base) const
-  {
-    if (!base) return 0;
-    assert (current);
-    assert (current->head <= (const char *) base);
-    return (const char *) base - current->head;
   }
 
   void resolve_links ()
@@ -330,29 +293,20 @@ struct hb_serialize_context_t
       for (const object_t::link_t &link : parent->links)
       {
 	const object_t* child = packed[link.objidx];
-	if (unlikely (!child)) { err_other_error(); return; }
-	unsigned offset = 0;
-	switch ((whence_t) link.whence) {
-	case Head:     offset = child->head - parent->head; break;
-	case Tail:     offset = child->head - parent->tail; break;
-	case Absolute: offset = (head - start) + (child->head - tail); break;
-	}
+	assert (link.bias <= (size_t) (parent->tail - parent->head));
+	unsigned offset = (child->head - parent->head) - link.bias;
 
-	assert (offset >= link.bias);
-	offset -= link.bias;
-	if (link.is_signed)
+	if (link.is_wide)
 	{
-	  if (link.is_wide)
-	    assign_offset<int32_t> (parent, link, offset);
-	  else
-	    assign_offset<int16_t> (parent, link, offset);
+	  auto &off = * ((BEInt<uint32_t, 4> *) (parent->head + link.position));
+	  assert (0 == off);
+	  check_assign (off, offset);
 	}
 	else
 	{
-	  if (link.is_wide)
-	    assign_offset<uint32_t> (parent, link, offset);
-	  else
-	    assign_offset<uint16_t> (parent, link, offset);
+	  auto &off = * ((BEInt<uint16_t, 2> *) (parent->head + link.position));
+	  assert (0 == off);
+	  check_assign (off, offset);
 	}
       }
   }
@@ -433,12 +387,6 @@ struct hb_serialize_context_t
   Type *copy (const Type *src, Ts&&... ds)
   { return copy (*src, hb_forward<Ts> (ds)...); }
 
-  template<typename Iterator,
-	   hb_requires (hb_is_iterator (Iterator)),
-	   typename ...Ts>
-  void copy_all (Iterator it, Ts&&... ds)
-  { for (decltype (*it) _ : it) copy (_, hb_forward<Ts> (ds)...); }
-
   template <typename Type>
   hb_serialize_context_t& operator << (const Type &obj) & { embed (obj); return *this; }
 
@@ -491,15 +439,6 @@ struct hb_serialize_context_t
     return hb_blob_create (b.arrayZ, b.length,
 			   HB_MEMORY_MODE_WRITABLE,
 			   (char *) b.arrayZ, free);
-  }
-
-  private:
-  template <typename T>
-  void assign_offset (const object_t* parent, const object_t::link_t &link, unsigned offset)
-  {
-    auto &off = * ((BEInt<T, sizeof (T)> *) (parent->head + link.position));
-    assert (0 == off);
-    check_assign (off, offset);
   }
 
   public: /* TODO Make private. */

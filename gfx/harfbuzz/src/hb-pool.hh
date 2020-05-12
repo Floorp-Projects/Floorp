@@ -41,7 +41,9 @@ struct hb_pool_t
   {
     next = nullptr;
 
-    for (chunk_t *_ : chunks) ::free (_);
+    + hb_iter (chunks)
+    | hb_apply ([] (chunk_t *_) { ::free (_); })
+    ;
 
     chunks.fini ();
   }

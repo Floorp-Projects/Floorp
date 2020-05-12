@@ -129,11 +129,6 @@ struct FeatureName
 
   hb_ot_name_id_t get_feature_name_id () const { return nameIndex; }
 
-  bool is_exclusive () const { return featureFlags & Exclusive; }
-
-  /* A FeatureName with no settings is meaningless */
-  bool has_data () const { return nSettings; }
-
   bool sanitize (hb_sanitize_context_t *c, const void *base) const
   {
     TRACE_SANITIZE (this);
@@ -144,7 +139,7 @@ struct FeatureName
   protected:
   HBUINT16	feature;	/* Feature type. */
   HBUINT16	nSettings;	/* The number of records in the setting name array. */
-  LNNOffsetTo<UnsizedArrayOf<SettingName>>
+  LOffsetTo<UnsizedArrayOf<SettingName>, false>
 		settingTableZ;	/* Offset in bytes from the beginning of this table to
 				 * this feature's setting name array. The actual type of
 				 * record this offset refers to will depend on the
@@ -176,9 +171,6 @@ struct feat
     }
     return featureNameCount;
   }
-
-  bool exposes_feature (hb_aat_layout_feature_type_t feature_type) const
-  { return get_feature (feature_type).has_data (); }
 
   const FeatureName& get_feature (hb_aat_layout_feature_type_t feature_type) const
   { return namesZ.bsearch (featureNameCount, feature_type); }

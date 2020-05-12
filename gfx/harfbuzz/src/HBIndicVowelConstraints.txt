@@ -1,12 +1,5 @@
-# IndicShapingInvalidCluster.txt
-# Date: 2015-03-12, 21:17:00 GMT [AG]
-# Date: 2019-11-08, 23:22:00 GMT [AG]
-#
-# This file defines the following property:
-#
-#    Indic_Shaping_Invalid_Cluster
-#
-# Scope: This file enumerates sequences of characters that should be treated as invalid clusters
+# Copied from https://docs.microsoft.com/en-us/typography/script-development/use
+# On October 23, 2018; with documentd dated 02/07/2018.
 
   0905 0946       ; # DEVANAGARI LETTER A, DEVANAGARI VOWEL SIGN SHORT E
   0905 093E       ; # DEVANAGARI LETTER A, DEVANAGARI VOWEL SIGN AA
@@ -55,7 +48,6 @@
   0B05 0B3E       ; # ORIYA LETTER A, ORIYA VOWEL SIGN AA
   0B0F 0B57       ; # ORIYA LETTER E, ORIYA AU LENGTH MARK
   0B13 0B57       ; # ORIYA LETTER O, ORIYA AU LENGTH MARK
-  0B85 0BC2       ; # TAMIL LETTER A, TAMIL VOWEL SIGN UU
   0C12 0C55       ; # TELUGU LETTER O, TELUGU LENGTH MARK
   0C12 0C4C       ; # TELUGU LETTER O, TELUGU VOWEL SIGN AU
   0C3F 0C55       ; # TELUGU VOWEL SIGN I, TELUGU LENGTH MARK
