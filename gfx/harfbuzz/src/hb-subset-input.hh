@@ -41,13 +41,11 @@ struct hb_subset_input_t
   hb_set_t *unicodes;
   hb_set_t *glyphs;
   hb_set_t *name_ids;
-  hb_set_t *name_languages;
   hb_set_t *drop_tables;
 
   bool drop_hints;
   bool desubroutinize;
   bool retain_gids;
-  bool name_legacy;
   /* TODO
    *
    * features

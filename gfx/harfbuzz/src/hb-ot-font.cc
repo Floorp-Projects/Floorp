@@ -183,21 +183,22 @@ hb_ot_get_glyph_extents (hb_font_t *font,
 			 void *user_data HB_UNUSED)
 {
   const hb_ot_face_t *ot_face = (const hb_ot_face_t *) font_data;
+  bool ret = false;
 
 #if !defined(HB_NO_OT_FONT_BITMAP) && !defined(HB_NO_COLOR)
-  if (ot_face->sbix->get_extents (font, glyph, extents)) return true;
+  if (!ret) ret = ot_face->sbix->get_extents (font, glyph, extents);
 #endif
-  if (ot_face->glyf->get_extents (font, glyph, extents)) return true;
+  if (!ret) ret = ot_face->glyf->get_extents (font, glyph, extents);
 #ifndef HB_NO_OT_FONT_CFF
-  if (ot_face->cff1->get_extents (font, glyph, extents)) return true;
-  if (ot_face->cff2->get_extents (font, glyph, extents)) return true;
+  if (!ret) ret = ot_face->cff1->get_extents (font, glyph, extents);
+  if (!ret) ret = ot_face->cff2->get_extents (font, glyph, extents);
 #endif
 #if !defined(HB_NO_OT_FONT_BITMAP) && !defined(HB_NO_COLOR)
-  if (ot_face->CBDT->get_extents (font, glyph, extents)) return true;
+  if (!ret) ret = ot_face->CBDT->get_extents (font, glyph, extents);
 #endif
 
   // TODO Hook up side-bearings variations.
-  return false;
+  return ret;
 }
 
 #ifndef HB_NO_OT_FONT_GLYPH_NAMES
@@ -209,11 +210,7 @@ hb_ot_get_glyph_name (hb_font_t *font HB_UNUSED,
 		      void *user_data HB_UNUSED)
 {
   const hb_ot_face_t *ot_face = (const hb_ot_face_t *) font_data;
-  if (ot_face->post->get_glyph_name (glyph, name, size)) return true;
-#ifndef HB_NO_OT_FONT_CFF
-  if (ot_face->cff1->get_glyph_name (glyph, name, size)) return true;
-#endif
-  return false;
+  return ot_face->post->get_glyph_name (glyph, name, size);
 }
 static hb_bool_t
 hb_ot_get_glyph_from_name (hb_font_t *font HB_UNUSED,
@@ -223,11 +220,7 @@ hb_ot_get_glyph_from_name (hb_font_t *font HB_UNUSED,
 			   void *user_data HB_UNUSED)
 {
   const hb_ot_face_t *ot_face = (const hb_ot_face_t *) font_data;
-  if (ot_face->post->get_glyph_from_name (name, len, glyph)) return true;
-#ifndef HB_NO_OT_FONT_CFF
-    if (ot_face->cff1->get_glyph_from_name (name, len, glyph)) return true;
-#endif
-  return false;
+  return ot_face->post->get_glyph_from_name (name, len, glyph);
 }
 #endif
 

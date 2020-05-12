@@ -68,7 +68,7 @@ main (int argc, char **argv)
   buf = hb_buffer_create ();
 
   char line[BUFSIZ], out[BUFSIZ];
-  while (fgets (line, sizeof(line), stdin))
+  while (fgets (line, sizeof(line), stdin) != nullptr)
   {
     hb_buffer_clear_contents (buf);
 

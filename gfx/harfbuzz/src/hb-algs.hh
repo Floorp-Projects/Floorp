@@ -360,13 +360,6 @@ struct
   (hb_forward<T> (a) >= hb_forward<T2> (b) ? hb_forward<T> (a) : hb_forward<T2> (b))
 }
 HB_FUNCOBJ (hb_max);
-struct
-{
-  template <typename T, typename T2, typename T3> constexpr auto
-  operator () (T&& x, T2&& min, T3&& max) const HB_AUTO_RETURN
-  (hb_min (hb_max (hb_forward<T> (x), hb_forward<T2> (min)), hb_forward<T3> (max)))
-}
-HB_FUNCOBJ (hb_clamp);
 
 
 /*
@@ -493,7 +486,7 @@ template <typename T>
 static inline HB_CONST_FUNC unsigned int
 hb_ctz (T v)
 {
-  if (unlikely (!v)) return 8 * sizeof (T);
+  if (unlikely (!v)) return 0;
 
 #if (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)
   if (sizeof (T) <= sizeof (unsigned int))
@@ -607,6 +600,12 @@ hb_memset (void *s, int c, unsigned int n)
   return memset (s, c, n);
 }
 
+static inline bool
+hb_unsigned_mul_overflows (unsigned int count, unsigned int size)
+{
+  return (size > 0) && (count >= ((unsigned int) -1) / size);
+}
+
 static inline unsigned int
 hb_ceil_to_4 (unsigned int v)
 {
@@ -635,90 +634,29 @@ hb_in_ranges (T u, T lo1, T hi1, T lo2, T hi2, T lo3, T hi3)
 
 
 /*
- * Overflow checking.
- */
-
-/* Consider __builtin_mul_overflow use here also */
-static inline bool
-hb_unsigned_mul_overflows (unsigned int count, unsigned int size)
-{
-  return (size > 0) && (count >= ((unsigned int) -1) / size);
-}
-
-
-/*
  * Sort and search.
  */
-
-template <typename K, typename V, typename ...Ts>
-static int
-_hb_cmp_method (const void *pkey, const void *pval, Ts... ds)
+template <typename ...Ts>
+static inline void *
+hb_bsearch (const void *key, const void *base,
+	    size_t nmemb, size_t size,
+	    int (*compar)(const void *_key, const void *_item, Ts... _ds),
+	    Ts... ds)
 {
-  const K& key = * (const K*) pkey;
-  const V& val = * (const V*) pval;
-
-  return val.cmp (key, ds...);
-}
-
-template <typename V, typename K, typename ...Ts>
-static inline bool
-hb_bsearch_impl (unsigned *pos, /* Out */
-		 const K& key,
-		 V* base, size_t nmemb, size_t stride,
-		 int (*compar)(const void *_key, const void *_item, Ts... _ds),
-		 Ts... ds)
-{
-  /* This is our *only* bsearch implementation. */
-
   int min = 0, max = (int) nmemb - 1;
   while (min <= max)
   {
     int mid = ((unsigned int) min + (unsigned int) max) / 2;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-    V* p = (V*) (((const char *) base) + (mid * stride));
-#pragma GCC diagnostic pop
-    int c = compar ((const void *) hb_addressof (key), (const void *) p, ds...);
+    const void *p = (const void *) (((const char *) base) + (mid * size));
+    int c = compar (key, p, ds...);
     if (c < 0)
       max = mid - 1;
     else if (c > 0)
       min = mid + 1;
     else
-    {
-      *pos = mid;
-      return true;
-    }
+      return (void *) p;
   }
-  *pos = min;
-  return false;
-}
-
-template <typename V, typename K>
-static inline V*
-hb_bsearch (const K& key, V* base,
-	    size_t nmemb, size_t stride = sizeof (V),
-	    int (*compar)(const void *_key, const void *_item) = _hb_cmp_method<K, V>)
-{
-  unsigned pos;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-  return hb_bsearch_impl (&pos, key, base, nmemb, stride, compar) ?
-	 (V*) (((const char *) base) + (pos * stride)) : nullptr;
-#pragma GCC diagnostic pop
-}
-template <typename V, typename K, typename ...Ts>
-static inline V*
-hb_bsearch (const K& key, V* base,
-	    size_t nmemb, size_t stride,
-	    int (*compar)(const void *_key, const void *_item, Ts... _ds),
-	    Ts... ds)
-{
-  unsigned pos;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-  return hb_bsearch_impl (&pos, key, base, nmemb, stride, compar, ds...) ?
-	 (V*) (((const char *) base) + (pos * stride)) : nullptr;
-#pragma GCC diagnostic pop
+  return nullptr;
 }
 
 
