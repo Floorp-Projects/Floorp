@@ -5,10 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsThreadUtils.h"
+
+#include "LeakRefPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/TimeStamp.h"
-#include "LeakRefPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsExceptionHandler.h"
 #include "nsITimer.h"
@@ -17,9 +18,9 @@
 #ifdef MOZILLA_INTERNAL_API
 #  include "nsThreadManager.h"
 #else
-#  include "nsXPCOMCIDInternal.h"
 #  include "nsIThreadManager.h"
 #  include "nsServiceManagerUtils.h"
+#  include "nsXPCOMCIDInternal.h"
 #endif
 
 #ifdef XP_WIN
@@ -40,6 +41,8 @@ static LazyLogModule sEventDispatchAndRunLog("events");
   MOZ_LOG(sEventDispatchAndRunLog, mozilla::LogLevel::Error, args)
 
 using namespace mozilla;
+
+NS_IMPL_ISUPPORTS(TailDispatchingTarget, nsIEventTarget, nsISerialEventTarget)
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
