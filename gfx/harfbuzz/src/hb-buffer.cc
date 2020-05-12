@@ -438,13 +438,6 @@ hb_buffer_t::set_masks (hb_mask_t    value,
   if (!mask)
     return;
 
-  if (cluster_start == 0 && cluster_end == (unsigned int)-1) {
-    unsigned int count = len;
-    for (unsigned int i = 0; i < count; i++)
-      info[i].mask = (info[i].mask & not_mask) | value;
-    return;
-  }
-
   unsigned int count = len;
   for (unsigned int i = 0; i < count; i++)
     if (cluster_start <= info[i].cluster && info[i].cluster < cluster_end)
@@ -455,27 +448,13 @@ void
 hb_buffer_t::reverse_range (unsigned int start,
 			    unsigned int end)
 {
-  unsigned int i, j;
-
   if (end - start < 2)
     return;
 
-  for (i = start, j = end - 1; i < j; i++, j--) {
-    hb_glyph_info_t t;
-
-    t = info[i];
-    info[i] = info[j];
-    info[j] = t;
-  }
+  hb_array_t<hb_glyph_info_t> (info, len).reverse (start, end);
 
   if (have_positions) {
-    for (i = start, j = end - 1; i < j; i++, j--) {
-      hb_glyph_position_t t;
-
-      t = pos[i];
-      pos[i] = pos[j];
-      pos[j] = t;
-    }
+    hb_array_t<hb_glyph_position_t> (pos, len).reverse (start, end);
   }
 }
 
@@ -612,7 +591,7 @@ done:
 void
 hb_buffer_t::unsafe_to_break_impl (unsigned int start, unsigned int end)
 {
-  unsigned int cluster = (unsigned int) -1;
+  unsigned int cluster = UINT_MAX;
   cluster = _unsafe_to_break_find_min_cluster (info, start, end, cluster);
   _unsafe_to_break_set_mask (info, start, end, cluster);
 }
@@ -628,7 +607,7 @@ hb_buffer_t::unsafe_to_break_from_outbuffer (unsigned int start, unsigned int en
   assert (start <= out_len);
   assert (idx <= end);
 
-  unsigned int cluster = (unsigned int) -1;
+  unsigned int cluster = UINT_MAX;
   cluster = _unsafe_to_break_find_min_cluster (out_info, start, out_len, cluster);
   cluster = _unsafe_to_break_find_min_cluster (info, idx, end, cluster);
   _unsafe_to_break_set_mask (out_info, start, out_len, cluster);
@@ -736,7 +715,7 @@ hb_buffer_create ()
 hb_buffer_t *
 hb_buffer_get_empty ()
 {
-  return const_cast<hb_buffer_t *> (&Null(hb_buffer_t));
+  return const_cast<hb_buffer_t *> (&Null (hb_buffer_t));
 }
 
 /**
@@ -958,7 +937,7 @@ hb_buffer_get_direction (hb_buffer_t    *buffer)
  *
  * You can pass one of the predefined #hb_script_t values, or use
  * hb_script_from_string() or hb_script_from_iso15924_tag() to get the
- * corresponding script from an ISO 15924 script tag.
+ * corresponding script from an ISO 15924 script tag.
  *
  * Since: 0.9.2
  **/
@@ -1001,7 +980,7 @@ hb_buffer_get_script (hb_buffer_t *buffer)
  * are orthogonal to the scripts, and though they are related, they are
  * different concepts and should not be confused with each other.
  *
- * Use hb_language_from_string() to convert from BCP 47 language tags to
+ * Use hb_language_from_string() to convert from BCP 47 language tags to
  * #hb_language_t.
  *
  * Since: 0.9.2
@@ -1738,7 +1717,7 @@ hb_buffer_add_codepoints (hb_buffer_t          *buffer,
  * @buffer: an #hb_buffer_t.
  * @source: source #hb_buffer_t.
  * @start: start index into source buffer to copy.  Use 0 to copy from start of buffer.
- * @end: end index into source buffer to copy.  Use (unsigned int) -1 to copy to end of buffer.
+ * @end: end index into source buffer to copy.  Use @HB_FEATURE_GLOBAL_END to copy to end of buffer.
  *
  * Append (part of) contents of another buffer to this buffer.
  *
@@ -1860,18 +1839,8 @@ hb_buffer_normalize_glyphs (hb_buffer_t *buffer)
 
   bool backward = HB_DIRECTION_IS_BACKWARD (buffer->props.direction);
 
-  unsigned int count = buffer->len;
-  if (unlikely (!count)) return;
-  hb_glyph_info_t *info = buffer->info;
-
-  unsigned int start = 0;
-  unsigned int end;
-  for (end = start + 1; end < count; end++)
-    if (info[start].cluster != info[end].cluster) {
-      normalize_glyphs_cluster (buffer, start, end, backward);
-      start = end;
-    }
-  normalize_glyphs_cluster (buffer, start, end, backward);
+  foreach_cluster (buffer, start, end)
+    normalize_glyphs_cluster (buffer, start, end, backward);
 }
 
 void

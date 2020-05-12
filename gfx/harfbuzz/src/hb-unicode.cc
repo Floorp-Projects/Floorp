@@ -212,7 +212,7 @@ DEFINE_NULL_INSTANCE (hb_unicode_funcs_t) =
 hb_unicode_funcs_t *
 hb_unicode_funcs_get_empty ()
 {
-  return const_cast<hb_unicode_funcs_t *> (&Null(hb_unicode_funcs_t));
+  return const_cast<hb_unicode_funcs_t *> (&Null (hb_unicode_funcs_t));
 }
 
 /**

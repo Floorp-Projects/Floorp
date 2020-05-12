@@ -31,6 +31,7 @@
 #include "hb-ot-cmap-table.hh"
 #include "hb-ot-glyf-table.hh"
 #include "hb-ot-cff1-table.hh"
+#include "hb-ot-color-colr-table.hh"
 #include "hb-ot-var-fvar-table.hh"
 #include "hb-ot-stat-table.hh"
 
@@ -50,8 +51,24 @@ _add_cff_seac_components (const OT::cff1::accelerator_t &cff,
 #endif
 
 #ifndef HB_NO_SUBSET_LAYOUT
+#ifdef HB_EXPERIMENTAL_API
+static void
+_remap_indexes (const hb_set_t *indexes,
+		hb_map_t       *mapping /* OUT */)
+{
+  unsigned count = indexes->get_population ();
+
+  for (auto _ : + hb_zip (indexes->iter (), hb_range (count)))
+    mapping->set (_.first, _.second);
+
+}
+#endif
+
 static inline void
-_gsub_closure (hb_face_t *face, hb_set_t *gids_to_retain)
+_gsub_closure_glyphs_lookups_features (hb_face_t *face,
+				       hb_set_t *gids_to_retain,
+				       hb_map_t *gsub_lookups,
+				       hb_map_t *gsub_features)
 {
   hb_set_t lookup_indices;
   hb_ot_layout_collect_lookups (face,
@@ -63,6 +80,51 @@ _gsub_closure (hb_face_t *face, hb_set_t *gids_to_retain)
   hb_ot_layout_lookups_substitute_closure (face,
 					   &lookup_indices,
 					   gids_to_retain);
+#ifdef HB_EXPERIMENTAL_API
+  hb_ot_layout_closure_lookups (face,
+				HB_OT_TAG_GSUB,
+				gids_to_retain,
+				&lookup_indices);
+  _remap_indexes (&lookup_indices, gsub_lookups);
+
+  //closure features
+  hb_set_t feature_indices;
+  hb_ot_layout_closure_features (face,
+				 HB_OT_TAG_GSUB,
+				 gsub_lookups,
+				 &feature_indices);
+  _remap_indexes (&feature_indices, gsub_features);
+#endif
+}
+
+static inline void
+_gpos_closure_lookups_features (hb_face_t      *face,
+				const hb_set_t *gids_to_retain,
+				hb_map_t       *gpos_lookups,
+				hb_map_t       *gpos_features)
+{
+  hb_set_t lookup_indices;
+  hb_ot_layout_collect_lookups (face,
+				HB_OT_TAG_GPOS,
+				nullptr,
+				nullptr,
+				nullptr,
+				&lookup_indices);
+#ifdef HB_EXPERIMENTAL_API
+  hb_ot_layout_closure_lookups (face,
+				HB_OT_TAG_GPOS,
+				gids_to_retain,
+				&lookup_indices);
+  _remap_indexes (&lookup_indices, gpos_lookups);
+
+  //closure features
+  hb_set_t feature_indices;
+  hb_ot_layout_closure_features (face,
+				 HB_OT_TAG_GPOS,
+				 gpos_lookups,
+				 &feature_indices);
+  _remap_indexes (&feature_indices, gpos_features);
+#endif
 }
 #endif
 
@@ -93,14 +155,21 @@ static void
 _populate_gids_to_retain (hb_subset_plan_t* plan,
 			  const hb_set_t *unicodes,
 			  const hb_set_t *input_glyphs_to_retain,
-			  bool close_over_gsub)
+			  bool close_over_gsub,
+			  bool close_over_gpos)
 {
   OT::cmap::accelerator_t cmap;
   OT::glyf::accelerator_t glyf;
+#ifndef HB_NO_SUBSET_CFF
   OT::cff1::accelerator_t cff;
+#endif
+  OT::COLR::accelerator_t colr;
   cmap.init (plan->source);
   glyf.init (plan->source);
+#ifndef HB_NO_SUBSET_CFF
   cff.init (plan->source);
+#endif
+  colr.init (plan->source);
 
   plan->_glyphset_gsub->add (0); // Not-def
   hb_set_union (plan->_glyphset_gsub, input_glyphs_to_retain);
@@ -123,8 +192,11 @@ _populate_gids_to_retain (hb_subset_plan_t* plan,
 
 #ifndef HB_NO_SUBSET_LAYOUT
   if (close_over_gsub)
-    // Add all glyphs needed for GSUB substitutions.
-    _gsub_closure (plan->source, plan->_glyphset_gsub);
+    // closure all glyphs/lookups/features needed for GSUB substitutions.
+    _gsub_closure_glyphs_lookups_features (plan->source, plan->_glyphset_gsub, plan->gsub_lookups, plan->gsub_features);
+
+  if (close_over_gpos)
+    _gpos_closure_lookups_features (plan->source, plan->_glyphset_gsub, plan->gpos_lookups, plan->gpos_features);
 #endif
   _remove_invalid_gids (plan->_glyphset_gsub, plan->source->get_num_glyphs ());
 
@@ -138,11 +210,15 @@ _populate_gids_to_retain (hb_subset_plan_t* plan,
     if (cff.is_valid ())
       _add_cff_seac_components (cff, gid, plan->_glyphset);
 #endif
+    if (colr.is_valid ())
+      colr.closure_glyphs (gid, plan->_glyphset);
   }
 
   _remove_invalid_gids (plan->_glyphset, plan->source->get_num_glyphs ());
 
+#ifndef HB_NO_SUBSET_CFF
   cff.fini ();
+#endif
   glyf.fini ();
   cmap.fini ();
 }
@@ -213,9 +289,11 @@ hb_subset_plan_create (hb_face_t         *face,
   plan->drop_hints = input->drop_hints;
   plan->desubroutinize = input->desubroutinize;
   plan->retain_gids = input->retain_gids;
+  plan->name_legacy = input->name_legacy;
   plan->unicodes = hb_set_create ();
   plan->name_ids = hb_set_reference (input->name_ids);
   _nameid_closure (face, plan->name_ids);
+  plan->name_languages = hb_set_reference (input->name_languages);
   plan->drop_tables = hb_set_reference (input->drop_tables);
   plan->source = hb_face_reference (face);
   plan->dest = hb_face_builder_create ();
@@ -225,11 +303,16 @@ hb_subset_plan_create (hb_face_t         *face,
   plan->codepoint_to_glyph = hb_map_create ();
   plan->glyph_map = hb_map_create ();
   plan->reverse_glyph_map = hb_map_create ();
+  plan->gsub_lookups = hb_map_create ();
+  plan->gpos_lookups = hb_map_create ();
+  plan->gsub_features = hb_map_create ();
+  plan->gpos_features = hb_map_create ();
 
   _populate_gids_to_retain (plan,
 			    input->unicodes,
 			    input->glyphs,
-			    !input->drop_tables->has (HB_OT_TAG_GSUB));
+			    !input->drop_tables->has (HB_OT_TAG_GSUB),
+			    !input->drop_tables->has (HB_OT_TAG_GPOS));
 
   _create_old_gid_to_new_gid_map (face,
 				  input->retain_gids,
@@ -253,6 +336,7 @@ hb_subset_plan_destroy (hb_subset_plan_t *plan)
 
   hb_set_destroy (plan->unicodes);
   hb_set_destroy (plan->name_ids);
+  hb_set_destroy (plan->name_languages);
   hb_set_destroy (plan->drop_tables);
   hb_face_destroy (plan->source);
   hb_face_destroy (plan->dest);
@@ -261,6 +345,11 @@ hb_subset_plan_destroy (hb_subset_plan_t *plan)
   hb_map_destroy (plan->reverse_glyph_map);
   hb_set_destroy (plan->_glyphset);
   hb_set_destroy (plan->_glyphset_gsub);
+  hb_map_destroy (plan->gsub_lookups);
+  hb_map_destroy (plan->gpos_lookups);
+  hb_map_destroy (plan->gsub_features);
+  hb_map_destroy (plan->gpos_features);
+
 
   free (plan);
 }
