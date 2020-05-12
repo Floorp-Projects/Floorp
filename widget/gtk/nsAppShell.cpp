@@ -279,7 +279,7 @@ void nsAppShell::ScheduleNativeEventCallback() {
 bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
   bool ret = g_main_context_iteration(nullptr, mayWait);
 #ifdef MOZ_WAYLAND
-  WaylandDispatchDisplays();
+  mozilla::widget::WaylandDispatchDisplays();
 #endif
   return ret;
 }
