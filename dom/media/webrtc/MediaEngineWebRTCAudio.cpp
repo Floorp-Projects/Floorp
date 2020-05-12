@@ -164,25 +164,29 @@ nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
 }
 
 void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
-    bool aEnable, bool aUseAecMobile,
-    EchoCancellation::SuppressionLevel aLevel) {
+    bool aEnable, bool aUseAecMobile, EchoCancellation::SuppressionLevel aLevel,
+    EchoControlMobile::RoutingMode aRoutingMode) {
   AssertIsOnOwningThread();
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [that, track = mTrack, aEnable, aUseAecMobile, aLevel] {
+      __func__,
+      [that, track = mTrack, aEnable, aUseAecMobile, aLevel, aRoutingMode] {
         class Message : public ControlMessage {
          public:
           Message(AudioInputProcessing* aInputProcessing, bool aEnable,
-                  bool aUseAecMobile, EchoCancellation::SuppressionLevel aLevel)
+                  bool aUseAecMobile, EchoCancellation::SuppressionLevel aLevel,
+                  EchoControlMobile::RoutingMode aRoutingMode)
               : ControlMessage(nullptr),
                 mInputProcessing(aInputProcessing),
                 mEnable(aEnable),
                 mUseAecMobile(aUseAecMobile),
-                mLevel(aLevel) {}
+                mLevel(aLevel),
+                mRoutingMode(aRoutingMode) {}
 
           void Run() override {
-            mInputProcessing->UpdateAECSettings(mEnable, mUseAecMobile, mLevel);
+            mInputProcessing->UpdateAECSettings(mEnable, mUseAecMobile, mLevel,
+                                                mRoutingMode);
           }
 
          protected:
@@ -190,14 +194,16 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
           bool mEnable;
           bool mUseAecMobile;
           EchoCancellation::SuppressionLevel mLevel;
+          EchoControlMobile::RoutingMode mRoutingMode;
         };
 
         if (track->IsDestroyed()) {
           return;
         }
 
-        track->GraphImpl()->AppendMessage(MakeUnique<Message>(
-            that->mInputProcessing, aEnable, aUseAecMobile, aLevel));
+        track->GraphImpl()->AppendMessage(
+            MakeUnique<Message>(that->mInputProcessing, aEnable, aUseAecMobile,
+                                aLevel, aRoutingMode));
       }));
 }
 
@@ -352,7 +358,9 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
         static_cast<webrtc::NoiseSuppression::Level>(aPrefs.mNoise));
     UpdateAECSettings(
         aPrefs.mAecOn, aPrefs.mUseAecMobile,
-        static_cast<webrtc::EchoCancellation::SuppressionLevel>(aPrefs.mAec));
+        static_cast<webrtc::EchoCancellation::SuppressionLevel>(aPrefs.mAec),
+        static_cast<webrtc::EchoControlMobile::RoutingMode>(
+            aPrefs.mRoutingMode));
     UpdateHPFSettings(aPrefs.mHPFOn);
 
     UpdateAPMExtraOptions(mExtendedFilter, mDelayAgnostic);
@@ -677,10 +685,12 @@ void AudioInputProcessing::SetRequestedInputChannelCount(
   } while (0);
 
 void AudioInputProcessing::UpdateAECSettings(
-    bool aEnable, bool aUseAecMobile,
-    EchoCancellation::SuppressionLevel aLevel) {
+    bool aEnable, bool aUseAecMobile, EchoCancellation::SuppressionLevel aLevel,
+    EchoControlMobile::RoutingMode aRoutingMode) {
   if (aUseAecMobile) {
     HANDLE_APM_ERROR(mAudioProcessing->echo_control_mobile()->Enable(aEnable));
+    HANDLE_APM_ERROR(mAudioProcessing->echo_control_mobile()->set_routing_mode(
+        aRoutingMode));
     HANDLE_APM_ERROR(mAudioProcessing->echo_cancellation()->Enable(false));
   } else {
     if (aLevel != EchoCancellation::SuppressionLevel::kLowSuppression &&
