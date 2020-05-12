@@ -9,8 +9,8 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.Dispatchers
 import mozilla.components.concept.push.EncryptedPushMessage
-import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
+import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -21,6 +21,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -73,22 +74,22 @@ class AbstractFirebasePushServiceTest {
     }
 
     @Test
-    fun `malformed message exception handled with the processor`() {
+    fun `malformed message exception should not be thrown`() {
         val remoteMessage: RemoteMessage = mock()
         val data = mapOf(
-            "chid" to "1234",
-            "enc" to "salt",
-            "body" to "oo3j532j4",
-            "cryptokey" to "dh256"
+            "chid" to "1234"
         )
-        val captor = argumentCaptor<PushError>()
+        val captor = argumentCaptor<EncryptedPushMessage>()
         `when`(remoteMessage.data).thenReturn(data)
         service.onMessageReceived(remoteMessage)
 
-        verify(processor).onError(captor.capture())
+        verify(processor, never()).onError(any())
+        verify(processor).onMessageReceived(captor.capture())
 
-        assertTrue(captor.value is PushError.MalformedMessage)
-        assertTrue(captor.value.message.contains("NoSuchElementException"))
+        assertEquals("1234", captor.value.channelId)
+        assertEquals("aes128gcm", captor.value.encoding)
+        assertEquals("", captor.value.salt)
+        assertEquals("", captor.value.cryptoKey)
     }
 
     @Test

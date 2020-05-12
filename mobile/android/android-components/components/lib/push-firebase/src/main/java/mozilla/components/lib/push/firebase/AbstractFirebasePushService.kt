@@ -18,6 +18,11 @@ import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.push.PushService
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_BODY
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_CHANNEL_ID
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_CRYPTO_KEY
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_ENCODING
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_SALT
 import mozilla.components.support.base.log.logger.Logger
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
@@ -50,20 +55,13 @@ abstract class AbstractFirebasePushService(
                 return
             }
 
-            val message = try {
-                EncryptedPushMessage(
-                    channelId = it.data.getValue(MESSAGE_KEY_CHANNEL_ID),
-                    encoding = it.data.getValue(MESSAGE_KEY_ENCODING),
-                    body = it.data[MESSAGE_KEY_BODY],
-                    salt = it.data[MESSAGE_KEY_SALT],
-                    cryptoKey = it.data[MESSAGE_KEY_CRYPTO_KEY]
-                )
-            } catch (e: NoSuchElementException) {
-                PushProcessor.requireInstance.onError(
-                    PushError.MalformedMessage("parsing encrypted message failed: $e")
-                )
-                return
-            }
+            val message = EncryptedPushMessage(
+                channelId = it.data.getValue(MESSAGE_KEY_CHANNEL_ID),
+                encoding = it.data[MESSAGE_KEY_ENCODING],
+                body = it.data[MESSAGE_KEY_BODY],
+                salt = it.data[MESSAGE_KEY_SALT],
+                cryptoKey = it.data[MESSAGE_KEY_CRYPTO_KEY]
+            )
 
             // In case of any errors, let the PushProcessor handle this exception. Instead of crashing
             // here, just drop the message on the floor. This is fine, since we don't really need to
@@ -103,13 +101,5 @@ abstract class AbstractFirebasePushService(
 
     override fun isServiceAvailable(context: Context): Boolean {
         return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
-    }
-
-    companion object {
-        const val MESSAGE_KEY_CHANNEL_ID = "chid"
-        const val MESSAGE_KEY_BODY = "body"
-        const val MESSAGE_KEY_ENCODING = "con"
-        const val MESSAGE_KEY_SALT = "enc"
-        const val MESSAGE_KEY_CRYPTO_KEY = "cryptokey"
     }
 }
