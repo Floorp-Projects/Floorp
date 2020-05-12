@@ -9755,8 +9755,8 @@ void nsHttpChannel::SetOriginHeader() {
   }
 
   nsCOMPtr<nsIURI> referrer;
-  auto* basePrin = BasePrincipal::Cast(mLoadInfo->TriggeringPrincipal());
-  basePrin->GetURI(getter_AddRefs(referrer));
+  mLoadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(referrer));
+
   if (!referrer || !dom::ReferrerInfo::IsReferrerSchemeAllowed(referrer)) {
     return;
   }
