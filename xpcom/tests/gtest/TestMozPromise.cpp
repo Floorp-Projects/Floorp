@@ -18,6 +18,7 @@
 using namespace mozilla;
 
 typedef MozPromise<int, double, false> TestPromise;
+typedef MozPromise<int, double, true /* exclusive */> TestPromiseExcl;
 typedef TestPromise::ResolveOrRejectValue RRValue;
 
 class MOZ_STACK_CLASS AutoTaskQueue {
@@ -454,4 +455,39 @@ TEST(MozPromise, MessageLoopEventTarget)
   NS_ProcessPendingEvents(nullptr);
 }
 
+TEST(MozPromise, SynchronousTaskDispatch1)
+{
+  bool value = false;
+  RefPtr<TestPromiseExcl::Private> promise =
+      new TestPromiseExcl::Private(__func__);
+  promise->UseSynchronousTaskDispatch(__func__);
+  promise->Resolve(42, __func__);
+  EXPECT_EQ(value, false);
+  promise->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [&](int aResolveValue) -> void {
+        EXPECT_EQ(aResolveValue, 42);
+        value = true;
+      },
+      DO_FAIL);
+  EXPECT_EQ(value, true);
+}
+
+TEST(MozPromise, SynchronousTaskDispatch2)
+{
+  bool value = false;
+  RefPtr<TestPromiseExcl::Private> promise =
+      new TestPromiseExcl::Private(__func__);
+  promise->UseSynchronousTaskDispatch(__func__);
+  promise->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [&](int aResolveValue) -> void {
+        EXPECT_EQ(aResolveValue, 42);
+        value = true;
+      },
+      DO_FAIL);
+  EXPECT_EQ(value, false);
+  promise->Resolve(42, __func__);
+  EXPECT_EQ(value, true);
+}
 #undef DO_FAIL
