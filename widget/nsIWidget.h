@@ -131,6 +131,7 @@ typedef void* nsNativeWidget;
 // IME context.  Note that the result is only valid in the process.  So,
 // XP code should use nsIWidget::GetNativeIMEContext() instead of using this.
 #define NS_RAW_NATIVE_IME_CONTEXT 14
+#define NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID 15
 #ifdef XP_MACOSX
 #  define NS_NATIVE_PLUGIN_PORT_QD 100
 #  define NS_NATIVE_PLUGIN_PORT_CG 101
