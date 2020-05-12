@@ -3807,9 +3807,8 @@ IonBuilder::InliningResult IonBuilder::inlineAtomicsStore(CallInfo& callInfo) {
     toWrite = MTruncateToInt32::New(alloc(), toWrite);
     current->add(toWrite->toInstruction());
   }
-  MStoreUnboxedScalar* store = MStoreUnboxedScalar::New(
-      alloc(), elements, index, toWrite, arrayType,
-      MStoreUnboxedScalar::TruncateInput, DoesRequireMemoryBarrier);
+  auto* store = MStoreUnboxedScalar::New(alloc(), elements, index, toWrite,
+                                         arrayType, DoesRequireMemoryBarrier);
   current->add(store);
   current->push(value);  // Either Int32 or not used; in either case correct
 
