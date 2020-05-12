@@ -451,9 +451,20 @@ class MozPromise : public MozPromiseBase {
 
       nsCOMPtr<nsIRunnable> r = new ResolveOrRejectRunnable(this, aPromise);
       PROMISE_LOG(
-          "%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p]",
+          "%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p] "
+          "%s dispatch",
           aPromise->mValue.IsResolve() ? "Resolving" : "Rejecting", mCallSite,
-          r.get(), aPromise, this);
+          r.get(), aPromise, this,
+          aPromise->mUseSynchronousTaskDispatch ? "synchronous" : "normal");
+
+      if (aPromise->mUseSynchronousTaskDispatch &&
+          mResponseTarget->IsOnCurrentThread()) {
+        PROMISE_LOG("ThenValue::Dispatch running task synchronously [this=%p]",
+                    this);
+        r->Run();
+        return;
+      }
+
 
       // Promise consumers are allowed to disconnect the Request object and
       // then shut down the thread or task queue that the promise result would
@@ -1039,6 +1050,7 @@ class MozPromise : public MozPromiseBase {
   const char* mCreationSite;  // For logging
   Mutex mMutex;
   ResolveOrRejectValue mValue;
+  bool mUseSynchronousTaskDispatch = false;
 #  ifdef PROMISE_DEBUG
   uint32_t mMagic1 = sMagic;
 #  endif
@@ -1118,6 +1130,24 @@ class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
     }
     mValue = std::forward<ResolveOrRejectValue_>(aValue);
     DispatchAll();
+  }
+
+  // If the caller and target are both on the same thread, run the the resolve
+  // or reject callback synchronously. Otherwise, the task will be dispatched
+  // via the target Dispatch method.
+  void UseSynchronousTaskDispatch(const char* aSite) {
+    static_assert(
+        IsExclusive,
+        "Synchronous dispatch can only be used with exclusive promises");
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic &&
+                   mMagic3 == sMagic && mMagic4 == &mMutex);
+    MutexAutoLock lock(mMutex);
+    PROMISE_LOG("%s UseSynchronousTaskDispatch MozPromise (%p created at %s)",
+                aSite, this, mCreationSite);
+    MOZ_ASSERT(IsPending(),
+               "A Promise must not have been already resolved or rejected to "
+               "set dispatch state");
+    mUseSynchronousTaskDispatch = true;
   }
 };
 
