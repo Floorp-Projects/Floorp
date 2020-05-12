@@ -66,8 +66,8 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (BOOL)accessibilityIsIgnored {
-  return NO;
+- (BOOL)isAccessibilityElement {
+  return YES;
 }
 
 - (void)invalidateChildren {

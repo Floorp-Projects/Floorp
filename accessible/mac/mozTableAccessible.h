@@ -18,7 +18,7 @@
 - (NSString*)accessibilityRoleDescription;
 - (mozAccessible*)accessibilityParent;
 - (NSArray*)accessibilityChildren;
-- (BOOL)accessibilityIsIgnored;
+- (BOOL)isAccessibilityElement;
 - (void)invalidateChildren;
 - (void)dealloc;
 - (void)expire;

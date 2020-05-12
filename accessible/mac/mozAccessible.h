@@ -153,9 +153,8 @@ static const uintptr_t IS_PROXY = 1;
 
 // ---- NSAccessibility methods ---- //
 
-// whether to skip this element when traversing the accessibility
-// hierarchy.
-- (BOOL)accessibilityIsIgnored;
+// whether to include this element in the platform's tree
+- (BOOL)isAccessibilityElement;
 
 // called by third-parties to determine the deepest child element under the mouse
 - (id)accessibilityHitTest:(NSPoint)point;
