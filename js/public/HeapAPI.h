@@ -8,6 +8,7 @@
 #define js_HeapAPI_h
 
 #include <limits.h>
+#include <type_traits>
 
 #include "jspubtd.h"
 
@@ -335,14 +336,14 @@ class JS_FRIEND_API GCCellPtr {
   }
 
   // Simplify checks to the kind.
-  template <typename T>
+  template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   bool is() const {
     return kind() == JS::MapTypeToTraceKind<T>::kind;
   }
 
   // Conversions to more specific types must match the kind. Access to
   // further refined types is not allowed directly from a GCCellPtr.
-  template <typename T>
+  template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   T& as() const {
     MOZ_ASSERT(kind() == JS::MapTypeToTraceKind<T>::kind);
     // We can't use static_cast here, because the fact that JSObject
