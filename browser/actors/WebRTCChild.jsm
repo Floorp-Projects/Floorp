@@ -428,7 +428,8 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     microphone = {},
     screen = {},
     window = {},
-    browser = {};
+    browser = {},
+    devices = {};
   MediaManagerService.mediaCaptureWindowState(
     aContentWindow,
     camera,
@@ -436,6 +437,7 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     screen,
     window,
     browser,
+    devices,
     false
   );
 
