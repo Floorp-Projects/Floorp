@@ -5,14 +5,12 @@
 import json
 import os
 import pathlib
-import yaml
 from collections import OrderedDict
 
 from .transformer import SimplePerfherderTransformer
 from .analyzer import NotebookAnalyzer
 from .constant import Constant
 from .logger import NotebookLogger
-from .notebookparser import parse_args
 
 logger = NotebookLogger()
 
@@ -179,39 +177,14 @@ class PerftestNotebook(object):
 
         # Gather config["analysis"] corresponding notebook sections
         if "analysis" in self.config:
-            raise Exception(
+            raise NotImplementedError(
                 "Analysis aspect of the notebook is disabled for the time being"
             )
 
         # Post to Iodide server
         if not no_iodide:
-            raise Exception(
+            raise NotImplementedError(
                 "Opening report through Iodide is not available in production at the moment"
             )
 
         return {"data": self.fmt_data, "file-output": output_data_filepath}
-
-
-def main():
-    args = parse_args()
-
-    NotebookLogger.debug = args.debug
-
-    config = None
-    with open(args.config, "r") as f:
-        logger.info("yaml_path: {}".format(args.config))
-        config = yaml.safe_load(f)
-
-    custom_transform = config.get("custom_transform", None)
-
-    ptnb = PerftestNotebook(
-        config["file_groups"],
-        config,
-        custom_transform=custom_transform,
-        sort_files=args.sort_files,
-    )
-    ptnb.process(args.no_iodide)
-
-
-if __name__ == "__main__":
-    main()
