@@ -1996,25 +1996,19 @@ fn generate_capture_path(path: *const c_char) -> Option<PathBuf> {
     use std::io::Write;
 
     let cstr = unsafe { CStr::from_ptr(path) };
-    let mut path = PathBuf::from(&*cstr.to_string_lossy());
+    let local_dir = PathBuf::from(&*cstr.to_string_lossy());
 
-    #[cfg(target_os = "android")]
-    {
-        // On Android we need to write into a particular folder on external
-        // storage so that (a) it can be written without requiring permissions
-        // and (b) it can be pulled off via `adb pull`. This env var is set
-        // in GeckoLoader.java.
-        if let Ok(storage_path) = env::var("PUBLIC_STORAGE") {
-            path = PathBuf::from(storage_path).join(path);
-        }
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        if let Some(storage_path) = dirs::data_local_dir() {
-            path = PathBuf::from(storage_path).join(path);
-        }
-    }
+    // On Android we need to write into a particular folder on external
+    // storage so that (a) it can be written without requiring permissions
+    // and (b) it can be pulled off via `adb pull`. This env var is set
+    // in GeckoLoader.java.
+    let mut path = if let Ok(storage_path) = env::var("PUBLIC_STORAGE") {
+        PathBuf::from(storage_path).join(local_dir)
+    } else if let Some(storage_path) = dirs::home_dir() {
+        PathBuf::from(storage_path).join(local_dir)
+    } else {
+        local_dir
+    };
 
     // Increment the extension until we find a fresh path
     while path.is_dir() {
@@ -2037,14 +2031,13 @@ fn generate_capture_path(path: *const c_char) -> Option<PathBuf> {
             if let Some(moz_revision) = option_env!("GECKO_HEAD_REV") {
                 writeln!(file, "mozilla-central {}", moz_revision).unwrap();
             }
+            Some(path)
         }
         Err(e) => {
             warn!("Unable to create path '{:?}' for capture: {:?}", path, e);
-            return None;
+            None
         }
     }
-
-    Some(path)
 }
 
 #[no_mangle]
