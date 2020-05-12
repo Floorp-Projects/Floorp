@@ -10,6 +10,7 @@
 #  include <type_traits>
 #  include <utility>
 
+#  include "mozilla/AbstractThread.h"
 #  include "mozilla/Logging.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/Monitor.h"
@@ -18,7 +19,6 @@
 #  include "mozilla/Tuple.h"
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/Variant.h"
-
 #  include "nsISerialEventTarget.h"
 #  include "nsTArray.h"
 #  include "nsThreadUtils.h"
@@ -37,6 +37,10 @@
 #    define PROMISE_ASSERT(...) \
       do {                      \
       } while (0)
+#  endif
+
+#  if DEBUG
+#    include "nsPrintfCString.h"
 #  endif
 
 namespace mozilla {
@@ -455,7 +459,9 @@ class MozPromise : public MozPromiseBase {
           "%s dispatch",
           aPromise->mValue.IsResolve() ? "Resolving" : "Rejecting", mCallSite,
           r.get(), aPromise, this,
-          aPromise->mUseSynchronousTaskDispatch ? "synchronous" : "normal");
+          aPromise->mUseSynchronousTaskDispatch
+              ? "synchronous"
+              : aPromise->mUseDirectTaskDispatch ? "directtask" : "normal");
 
       if (aPromise->mUseSynchronousTaskDispatch &&
           mResponseTarget->IsOnCurrentThread()) {
@@ -465,6 +471,29 @@ class MozPromise : public MozPromiseBase {
         return;
       }
 
+      if (aPromise->mUseDirectTaskDispatch &&
+          mResponseTarget->IsOnCurrentThread()) {
+        PROMISE_LOG(
+            "ThenValue::Dispatch dispatch task via direct task queue [this=%p]",
+            this);
+#  if DEBUG
+        if (!AbstractThread::GetCurrent() ||
+            !AbstractThread::GetCurrent()->IsTailDispatcherAvailable()) {
+          NS_WARNING(
+              nsPrintfCString(
+                  "Direct Task dispatching not available for thread \"%s\"",
+                  PR_GetThreadName(PR_GetCurrentThread()))
+                  .get());
+        }
+#  endif
+        MOZ_DIAGNOSTIC_ASSERT(
+            AbstractThread::GetCurrent() &&
+                AbstractThread::GetCurrent()->IsTailDispatcherAvailable(),
+            "An AbstractThread must exist for the current thread with a tail "
+            "dispatcher available");
+        AbstractThread::DispatchDirectTask(r.forget());
+        return;
+      }
 
       // Promise consumers are allowed to disconnect the Request object and
       // then shut down the thread or task queue that the promise result would
@@ -1051,6 +1080,7 @@ class MozPromise : public MozPromiseBase {
   Mutex mMutex;
   ResolveOrRejectValue mValue;
   bool mUseSynchronousTaskDispatch = false;
+  bool mUseDirectTaskDispatch = false;
 #  ifdef PROMISE_DEBUG
   uint32_t mMagic1 = sMagic;
 #  endif
@@ -1148,6 +1178,25 @@ class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
                "A Promise must not have been already resolved or rejected to "
                "set dispatch state");
     mUseSynchronousTaskDispatch = true;
+  }
+
+  // If the caller and target are both on the same thread, run the
+  // resolve/reject callback off the direct task queue instead. This avoids a
+  // full trip to the back of the event queue for each additional asynchronous
+  // step when using MozPromise, and is similar (but not identical to) the
+  // microtask semantics of JS promises.
+  void UseDirectTaskDispatch(const char* aSite) {
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic &&
+                   mMagic3 == sMagic && mMagic4 == &mMutex);
+    MutexAutoLock lock(mMutex);
+    PROMISE_LOG("%s UseDirectTaskDispatch MozPromise (%p created at %s)", aSite,
+                this, mCreationSite);
+    MOZ_ASSERT(IsPending(),
+               "A Promise must not have been already resolved or rejected to "
+               "set dispatch state");
+    MOZ_ASSERT(!mUseSynchronousTaskDispatch,
+               "Promise already set for synchronous dispatch");
+    mUseDirectTaskDispatch = true;
   }
 };
 

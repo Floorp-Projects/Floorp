@@ -490,4 +490,39 @@ TEST(MozPromise, SynchronousTaskDispatch2)
   promise->Resolve(42, __func__);
   EXPECT_EQ(value, true);
 }
+
+TEST(MozPromise, DirectTaskDispatch)
+{
+  bool value1 = false;
+  bool value2 = false;
+
+  // For direct task dispatch to be working, we must be within a
+  // nested event loop. So the test itself must be dispatched within
+  // a task.
+  GetCurrentThreadSerialEventTarget()->Dispatch(
+      NS_NewRunnableFunction("test", [&]() {
+        GetCurrentThreadSerialEventTarget()->Dispatch(
+            NS_NewRunnableFunction("test", [&]() {
+              EXPECT_EQ(value1, true);
+              value2 = true;
+            }));
+        RefPtr<TestPromise::Private> promise =
+            new TestPromise::Private(__func__);
+        promise->UseDirectTaskDispatch(__func__);
+        promise->Resolve(42, __func__);
+        EXPECT_EQ(value1, false);
+        promise->Then(
+            GetCurrentThreadSerialEventTarget(), __func__,
+            [&](int aResolveValue) -> void {
+              EXPECT_EQ(aResolveValue, 42);
+              EXPECT_EQ(value2, false);
+              value1 = true;
+            },
+            DO_FAIL);
+        EXPECT_EQ(value1, false);
+      }));
+
+  // Spin the event loop.
+  NS_ProcessPendingEvents(nullptr);
+}
 #undef DO_FAIL
