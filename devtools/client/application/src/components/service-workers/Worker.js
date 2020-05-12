@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { Ci } = require("chrome");
+
 const {
   createFactory,
   PureComponent,
@@ -85,7 +87,7 @@ class Worker extends PureComponent {
   }
 
   isActive() {
-    return this.props.worker.isActive;
+    return this.props.worker.state === Ci.nsIServiceWorkerInfo.STATE_ACTIVATED;
   }
 
   getLocalizedStatus() {
@@ -97,6 +99,23 @@ class Worker extends PureComponent {
     // NOTE: this is already localized by the service worker front
     // (strings are in debugger.properties)
     return this.props.worker.stateText;
+  }
+
+  getClassNameForStatus(baseClass) {
+    const { state } = this.props.worker;
+
+    switch (state) {
+      case Ci.nsIServiceWorkerInfo.STATE_PARSED:
+      case Ci.nsIServiceWorkerInfo.STATE_INSTALLING:
+        return "worker__status--installing";
+      case Ci.nsIServiceWorkerInfo.STATE_INSTALLED:
+      case Ci.nsIServiceWorkerInfo.STATE_ACTIVATING:
+        return "worker__status--waiting";
+      case Ci.nsIServiceWorkerInfo.STATE_ACTIVATED:
+        return "worker__status--active";
+    }
+
+    return "worker__status--default";
   }
 
   formatSource(source) {
@@ -160,6 +179,7 @@ class Worker extends PureComponent {
   render() {
     const { worker } = this.props;
     const statusText = this.getLocalizedStatus();
+    const statusClassName = this.getClassNameForStatus();
 
     return section(
       { className: "worker js-sw-worker" },
@@ -187,7 +207,10 @@ class Worker extends PureComponent {
         ),
         dd(
           {},
-          span({ className: "js-worker-status worker__status" }, statusText),
+          span(
+            { className: `js-worker-status worker__status ${statusClassName}` },
+            statusText
+          ),
           " ",
           this.renderStartButton()
         )

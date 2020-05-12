@@ -6,6 +6,18 @@
 
 module.exports = {
   Cc: {},
-  Ci: {},
+  Ci: {
+    // sw states from
+    // mozilla-central/source/dom/interfaces/base/nsIServiceWorkerManager.idl
+    nsIServiceWorkerInfo: {
+      STATE_PARSED: 0,
+      STATE_INSTALLING: 1,
+      STATE_INSTALLED: 2,
+      STATE_ACTIVATING: 3,
+      STATE_ACTIVATED: 4,
+      STATE_REDUNDANT: 5,
+      STATE_UNKNOWN: 6,
+    },
+  },
   Cu: {},
 };

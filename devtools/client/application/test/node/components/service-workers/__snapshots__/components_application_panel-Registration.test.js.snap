@@ -39,7 +39,6 @@ exports[`Registration Renders the expected snapshot for a registration with a wo
           worker={
             Object {
               "id": "id-worker-1-example",
-              "isActive": true,
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
@@ -92,7 +91,6 @@ exports[`Registration Renders the expected snapshot for a registration with mult
           worker={
             Object {
               "id": "id-worker-1-example",
-              "isActive": true,
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
@@ -110,7 +108,6 @@ exports[`Registration Renders the expected snapshot for a registration with mult
           worker={
             Object {
               "id": "id-worker-2-example",
-              "isActive": false,
               "state": 2,
               "stateText": "installed",
               "url": "http://example.com/worker.js",
@@ -163,7 +160,6 @@ exports[`Registration Renders the expected snapshot when sw debugging is disable
           worker={
             Object {
               "id": "id-worker-1-example",
-              "isActive": true,
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
