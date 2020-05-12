@@ -400,12 +400,12 @@ class HgRepository(Repository):
                     self._run(b'files', b'-0').split('\0') if p)
 
     def working_directory_clean(self, untracked=False, ignored=False):
-        args = [b'status', b'--modified', b'--added', b'--removed',
-                b'--deleted']
+        args = ['status', '--modified', '--added', '--removed',
+                '--deleted']
         if untracked:
-            args.append(b'--unknown')
+            args.append('--unknown')
         if ignored:
-            args.append(b'--ignored')
+            args.append('--ignored')
 
         # If output is empty, there are no entries of requested status, which
         # means we are clean.
