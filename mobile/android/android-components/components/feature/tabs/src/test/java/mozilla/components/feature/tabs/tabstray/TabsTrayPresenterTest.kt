@@ -222,15 +222,15 @@ class TabsTrayPresenterTest {
     @Test
     fun `tabs tray will get updated if mediaState changes`() {
         val store = BrowserStore(
-                BrowserState(
-                        tabs = listOf(
-                                createTab("https://www.mozilla.org", id = "a"),
-                                createTab("https://getpocket.com", id = "b"),
-                                createTab("https://developer.mozilla.org", id = "c"),
-                                createTab("https://www.firefox.com", id = "d"),
-                                createTab("https://www.google.com", id = "e")
-                        ),
-                        selectedTabId = "a"
+            BrowserState(
+                tabs = listOf(
+                        createTab("https://www.mozilla.org", id = "a"),
+                        createTab("https://getpocket.com", id = "b"),
+                        createTab("https://developer.mozilla.org", id = "c"),
+                        createTab("https://www.firefox.com", id = "d"),
+                        createTab("https://www.google.com", id = "e")
+                    ),
+                    selectedTabId = "a"
                 )
         )
 
@@ -242,7 +242,7 @@ class TabsTrayPresenterTest {
 
         store.dispatch(
                 MediaAction.UpdateMediaAggregateAction(
-                        store.state.media.aggregate.copy(activeTabId = "a", state = MediaState.State.PLAYING)
+                    store.state.media.aggregate.copy(activeTabId = "a", state = MediaState.State.PLAYING)
                 )
         ).joinBlocking()
 

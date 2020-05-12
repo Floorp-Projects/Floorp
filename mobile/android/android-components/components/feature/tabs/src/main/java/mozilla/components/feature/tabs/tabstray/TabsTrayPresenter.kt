@@ -31,24 +31,20 @@ class TabsTrayPresenter(
     private val closeTabsTray: () -> Unit
 ) {
     private var tabs: Tabs? = null
-    private var tabScope: CoroutineScope? = null
+    private var scope: CoroutineScope? = null
 
     fun start() {
-        tabScope = store.flowScoped { flow -> collect(flow) }
+        scope = store.flowScoped { flow -> collect(flow) }
     }
 
     fun stop() {
-        tabScope?.cancel()
+        scope?.cancel()
     }
 
     private suspend fun collect(flow: Flow<BrowserState>) {
-        flow.map { state ->
-            val tabs = state.toTabs(tabsFilter)
-            tabs
-        }
+        flow.map { it.toTabs(tabsFilter) }
             .ifChanged()
             .collect { tabs ->
-
                 // Do not invoke the callback on start if this is the initial state.
                 if (tabs.list.isEmpty() && this.tabs != null) {
                     closeTabsTray.invoke()
