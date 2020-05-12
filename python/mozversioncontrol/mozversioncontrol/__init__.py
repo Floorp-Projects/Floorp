@@ -323,7 +323,8 @@ class HgRepository(Repository):
 
     def get_commit_time(self):
         return int(self._run(
-            'parent', '--template', '{word(0, date|hgdate)}').strip())
+            'log', '--rev', 'heads(ancestors(.) and not draft())',
+            '--template', '{word(0, date|hgdate)}', '--limit', '1').strip())
 
     def sparse_checkout_present(self):
         # We assume a sparse checkout is enabled if the .hg/sparse file
