@@ -174,7 +174,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Make this MediaTrackGraph enter forced-shutdown state. This state
    * will be noticed by the media graph thread, which will shut down all tracks
    * and other state controlled by the media graph thread.
-   * This is called during application shutdown.
+   * This is called during application shutdown, and on document unload if an
+   * AudioContext is using the graph.
    */
   void ForceShutDown();
 
@@ -841,13 +842,13 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * creation after this point will create a new graph. An async event is
    * dispatched to Shutdown() the graph's threads and then delete the graph
    * object.
-   * 2) Forced shutdown at application shutdown, or completion of a
-   * non-realtime graph. A flag is set, RunThread() detects the flag and
-   * exits, the next RunInStableState() detects the flag, and dispatches the
-   * async event to Shutdown() the graph's threads. However the graph object
-   * is not deleted. New messages for the graph are processed synchronously on
-   * the main thread if necessary. When the last track is destroyed, the
-   * graph object is deleted.
+   * 2) Forced shutdown at application shutdown, completion of a non-realtime
+   * graph, or document unload. A flag is set, RunThread() detects the flag
+   * and exits, the next RunInStableState() detects the flag, and dispatches
+   * the async event to Shutdown() the graph's threads. However the graph
+   * object is not deleted. New messages for the graph are processed
+   * synchronously on the main thread if necessary. When the last track is
+   * destroyed, the graph object is deleted.
    *
    * This should be kept in sync with the LifecycleState_str array in
    * MediaTrackGraph.cpp
@@ -902,9 +903,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   }
 
   /**
-   * True when we need to do a forced shutdown, during process shutdown or
-   * when shutting down a non-realtime graph, and the graph thread has
-   * received the message.  This is checked in the decision to shut down the
+   * True once the graph thread has received the message from ForceShutDown().
+   * This is checked in the decision to shut down the
    * graph thread so that control messages dispatched before forced shutdown
    * are processed on the graph thread.
    * Only set on the graph thread.

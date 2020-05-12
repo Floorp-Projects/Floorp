@@ -499,7 +499,7 @@ void AudioDestinationNode::OfflineShutdown() {
              "Should only be called on a valid OfflineAudioContext");
 
   if (mTrack) {
-    MediaTrackGraph::DestroyNonRealtimeInstance(mTrack->Graph());
+    mTrack->Graph()->MediaTrackGraph::ForceShutDown();
     mOfflineRenderingRef.Drop(this);
   }
 }
