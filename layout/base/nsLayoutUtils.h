@@ -2970,16 +2970,21 @@ class nsLayoutUtils {
   /**
    * Compute a rect to pre-render in cases where we want to render more of
    * something than what is visible (usually to support async transformation).
-   * @param aDirtyRect the area that's visible
-   * @param aOverflow the total size of the thing we're rendering
-   * @param aPrerenderSize how large of an area we're willing to render
+   * @param aFrame the target frame to be pre-rendered
+   * @param aDirtyRect the area that's visible in the coordinate system of
+   *        |aFrame|.
+   * @param aOverflow the total size of the thing we're rendering in the
+   *        coordinate system of |aFrame|.
+   * @param aPrerenderSize how large of an area we're willing to render in the
+   *        coordinate system of the root frame.
    * @return A rectangle that includes |aDirtyRect|, is clamped to |aOverflow|,
    *         and is no larger than |aPrerenderSize| (unless |aPrerenderSize|
    *         is smaller than |aDirtyRect|, in which case the returned rect
    *         will still include |aDirtyRect| and thus be larger than
    *         |aPrerenderSize|).
    */
-  static nsRect ComputePartialPrerenderArea(const nsRect& aDirtyRect,
+  static nsRect ComputePartialPrerenderArea(nsIFrame* aFrame,
+                                            const nsRect& aDirtyRect,
                                             const nsRect& aOverflow,
                                             const nsSize& aPrerenderSize);
 
