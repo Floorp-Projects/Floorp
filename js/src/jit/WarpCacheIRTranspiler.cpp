@@ -298,6 +298,8 @@ bool WarpCacheIRTranspiler::emitGuardIsNullOrUndefined(ValOperandId inputId) {
 
   auto* ins = MGuardNullOrUndefined::New(alloc(), input);
   add(ins);
+
+  setOperand(inputId, ins);
   return true;
 }
 
