@@ -13,7 +13,7 @@
 #    - Change "src/regexp/*" to "new-regexp/*".
 #    - Remove other v8-specific headers completely.
 # 4. Add '#include "new-regexp/regexp-shim.h" in the necessary places.
-# 5. Update the VERSION file to include the correct git hash.
+# 5. Update the IRREGEXP_VERSION file to include the correct git hash.
 #
 # Usage:
 #  cd path/to/js/src/new-regexp
@@ -105,9 +105,9 @@ def import_from(srcdir, dstdir):
             continue
         copy_and_update_includes(file, dstdir / file.name)
 
-    # Update VERSION file
+    # Update IRREGEXP_VERSION file
     hash = get_hash(srcdir)
-    version_file = open(str(dstdir / 'VERSION'), 'w')
+    version_file = open(str(dstdir / 'IRREGEXP_VERSION'), 'w')
     version_file.write('Imported using import-irregexp.py from:\n')
     version_file.write('https://github.com/v8/v8/tree/%s/src/regexp\n' % hash)
 
