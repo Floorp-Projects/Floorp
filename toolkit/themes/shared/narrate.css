@@ -63,20 +63,19 @@ body.dark .narrate-word-highlight {
 
 .narrate-toggle {
   margin: 0;
-  background-image: url("chrome://global/skin/narrate/headphone.svg");
+  background-image: url("chrome://global/skin/narrate/waveform.svg");
 }
 
 .speaking .narrate-toggle {
   /* This shows with an animation. */
-  background-image: url("chrome://global/skin/narrate/headphone-active.svg");
+  background-image: url("chrome://global/skin/narrate/waveform.svg#waveform");
 }
 
 .narrate-dropdown > .dropdown-popup button {
   background-color: transparent;
 }
 
-.narrate-dropdown > .dropdown-popup button:enabled:hover,
-.narrate-dropdown > .dropdown-popup button:enabled:focus {
+.narrate-dropdown > .dropdown-popup button:hover:not(:disabled) {
   background-color: var(--toolbar-hover);
 }
 
@@ -85,10 +84,6 @@ body.dark .narrate-word-highlight {
   align-items: center;
   min-height: 40px;
   box-sizing: border-box;
-}
-
-.narrate-row:not(.narrate-voices) {
-  direction: ltr;
 }
 
 .narrate-row:not(:first-child) {
@@ -102,14 +97,14 @@ body.dark .narrate-word-highlight {
   background-repeat: no-repeat;
   background-position: center center;
   height: 64px;
-  width: 82px;
+  width: 100px;
   border: none;
   color: #666;
   box-sizing: border-box;
 }
 
 .narrate-control > button:not(:first-child) {
-  border-inline-start: 1px solid var(--popup-line);
+  border-left: 1px solid var(--border-color);
 }
 
 .narrate-skip-previous {
@@ -154,8 +149,9 @@ body.dark .narrate-word-highlight {
 .narrate-rate-input {
   margin: 0 1px;
   flex-grow: 1;
+}
+.narrate-rate-input {
   background-color: var(--popup-bgcolor);
-  width: 148px;
 }
 
 .narrate-rate-input::-moz-range-track {
@@ -164,7 +160,7 @@ body.dark .narrate-word-highlight {
 }
 
 .narrate-rate-input::-moz-range-progress {
-  background-color: var(--active-color);
+  background-color: #2EA3FF;
   height: 2px;
 }
 
@@ -177,13 +173,13 @@ body.dark .narrate-word-highlight {
 }
 
 .narrate-rate-input:active::-moz-range-thumb {
-  background-color: var(--blue-60);
+  background-color: #2EA3FF;
 }
 
 /* Voice selection */
 
 .voiceselect {
-  width: 246px;
+  width: 100%;
 }
 
 .voiceselect > button.select-toggle,

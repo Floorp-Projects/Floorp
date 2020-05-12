@@ -5,62 +5,28 @@
 /* Avoid adding ID selector rules in this style sheet, since they could
  * inadvertently match elements in the article content. */
 :root {
-  --popup-border: rgba(0, 0, 0, 0.12);
-  --popup-shadow: rgba(49, 49, 49, 0.3);
-  --radio-button-border: rgb(177, 177, 179);
-  --close-button-hover: #e1e1e5;
-  --close-button-hover-border: #b1b1b1;
-  --grey-90-a30: rgba(12, 12, 13, 0.3);
-  --grey-10: #f9f9fa;
-  --grey-20: #ededf0;
-  --grey-30: #d7d7db;
-  --grey-50: #737373;
-  --grey-80: #2a2a2e;
-  --blue-40: #45a1ff;
-  --blue-60: #0060df;
-  --active-color: #0B83FF;
-  --font-size: 12;
-  --content-width: 22em;
-  --line-height: 1.6em;
+   --close-button-hover: #d94141;
 }
-
-
 body {
-  --toolbar-bgcolor: var(--grey-10);
-  --toolbar-border: var(--grey-90-a30);
-  --toolbar-hover: #e0e0e1;
-  --toolbar-transperent: #f9f9fabd;
-  --popup-bgcolor: var(--grey-10);
-  --popup-button: #edecf0;
-  --selected-button: #d1e1ff;
-  --selected-border: #a0beff;
-  --popup-line: var(--grey-30);
-  --font-value-border: var(--grey-30);
-  --font-color: #000000;
-  --icon-fill: #3b3b3c;
-  --close-button-background: var(--grey-10);
-  --close-button-foreground: #000000;
-  --close-button-border: var(--grey-90-a30);
+  --toolbar-bgcolor: #fbfbfb;
+  --toolbar-border: #b5b5b5;
+  --toolbar-hover: #ebebeb;
+  --popup-bgcolor: #fbfbfb;
+  --popup-border: #b5b5b5;
+  --font-color: #4c4c4c;
+  --icon-fill: #808080;
   --icon-disabled-fill: #8080807F;
   /* light colours */
 }
 
 body.dark {
-  --toolbar-bgcolor: #323234;
-  --toolbar-border: #000000;
-  --toolbar-hover: var(--grey-50);
-  --toolbar-transperent: #323234d4;
-  --popup-bgcolor: #4c4a50;
-  --popup-button:  #5c5c61;
-  --selected-button: var(--blue-40);
-  --selected-border: var(--blue-60);
-  --popup-line: #5c5c61;
-  --font-value-border: #656468;
+  --toolbar-bgcolor: #2a2a2d;
+  --toolbar-border: #4B4A50;
+  --toolbar-hover: #737373;
+  --popup-bgcolor: #4b4a50;
+  --popup-border: #65646a;
   --font-color: #fff;
   --icon-fill: #fff;
-  --close-button-background: var(--grey-20);
-  --close-button-foreground: #000000;
-  --close-button-border: var(--grey-80);
   --icon-disabled-fill: #ffffff66;
   /* dark colours */
 }
@@ -107,10 +73,46 @@ body.serif .remove-button  {
 }
 
 .container {
+  --font-size: 12;
+  max-width: 30em;
   margin: 0 auto;
   font-size: var(--font-size);
-  max-width: var(--content-width);
-  line-height: var(--line-height);
+}
+
+.container.content-width1 {
+  max-width: 20em;
+}
+
+.container.content-width2 {
+  max-width: 25em;
+}
+
+.container.content-width3 {
+  max-width: 30em;
+}
+
+.container.content-width4  {
+  max-width: 35em;
+}
+
+.container.content-width5 {
+  max-width: 40em;
+}
+
+.container.content-width6 {
+  max-width: 45em;
+}
+
+.container.content-width7 {
+  max-width: 50em;
+}
+
+.container.content-width8 {
+  max-width: 55em;
+}
+
+.container.content-width9 {
+  max-width: 60em;
 }
 
 /* Override some controls and content styles based on color scheme */
@@ -143,15 +145,18 @@ body.dark blockquote {
   border-inline-start: 2px solid #eeeeee !important;
 }
 
-body:not(.loaded) .toolbar-container {
-  transform: translateY(-100%);
+/* Add toolbar transition base on loaded class  */
+
+body.loaded .toolbar {
+  transition: transform 0.3s ease-out;
 }
 
-/* Add toolbar transition base on loaded class  */
-@media (prefers-reduced-motion: no-preference) {
-  body.loaded .toolbar-container {
-    transition: transform 0.2s ease-out;
-  }
+body:not(.loaded) .toolbar:-moz-locale-dir(ltr) {
+  transform: translateX(-100%);
+}
+
+body:not(.loaded) .toolbar:-moz-locale-dir(rtl) {
+  transform: translateX(100%);
 }
 
 .light-button {
@@ -227,55 +232,28 @@ body:not(.loaded) .toolbar-container {
 
 /*======= Controls toolbar =======*/
 
-.toolbar-container {
-  width: 100%;
-  position: fixed;
-  z-index: 1;
-  background-color: var(--toolbar-bgcolor);
-  border-bottom: 1px solid var(--toolbar-border);
-  inset-inline-start: 0;
-  top: 0;
-}
-
-.toolbar-container.scrolled {
-  background-color: var(--toolbar-transperent);
-}
-
 .toolbar {
   font-family: Helvetica, Arial, sans-serif;
-  margin: 2px auto;
+  position: fixed;
+  height: 100%;
+  top: 0;
+  left: 0;
+  margin: 0;
   padding: 0;
   list-style: none;
+  background-color:  var(--toolbar-bgcolor);
   -moz-user-select: none;
-  font-size: 12px;
-  max-width: 60em;
-  min-width: 450px;
-  width: 100%;
-  padding-inline: 10px;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.scrolled .reader-controls,
-.toolbar-container.scrolled .toolbar {
-  background-color: transparent;
-  height: 23px;
-}
-
-.toolbar-container.scrolled .toolbar {
-  margin: 4px auto;
-}
-
-.reader-controls {
-  float: inline-start;
+  border-right: 1px solid  var(--toolbar-border);
+  z-index: 1;
 }
 
 .button {
+  display: block;
   background-size: 24px 24px;
   background-repeat: no-repeat;
-  color: var(--font-color);
-  background-color: inherit;
-  height: 38px;
+  color: #333;
+  background-color: var(--toolbar-bgcolor);
+  height: 40px;
   padding: 0;
 }
 
@@ -285,45 +263,19 @@ button {
   fill: var(--icon-fill);
 }
 
-.toolbar button::-moz-focus-inner {
-  border: 0;
-}
-
 button:disabled {
   fill: var(--icon-disabled-fill);
 }
 
 .toolbar .button {
-  background-position: top 5px center;
-  background-size: 16px 16px;
-  border: none;
-  border-radius: 4px;
-  margin-inline-end: 10px;
-  padding: 20px 10px 0;
-  font-size: 11px;
-  height: 43px;
-}
-
-.open .button {
-  color: var(--active-color);
-  fill: var(--active-color);
-}
-
-.scrolled .button {
-  height: 24px;
+  width: 40px;
   background-position: center;
-  margin-inline-end: 60px;
-}
-
-.scrolled .style-button,
-.scrolled .narrate-toggle,
-.scrolled .pocket-button {
-  font-size: 0;
-  width: 30px;
-}
-
-.toolbar-container.scrolled .button {
-  background-color: transparent;
+  margin-right: -1px;
+  border-top: 0;
+  border-left: 0;
+  border-right: 1px solid var(--toolbar-border);
+  border-bottom: 1px solid var(--toolbar-border);
+  background-color:  var(--toolbar-bgcolor);
 }
 
 .button[hidden] {
@@ -335,7 +287,6 @@ button:disabled {
   list-style: none;
   margin: 0;
   padding: 0;
-  float: inline-start;
 }
 
 .dropdown li {
@@ -345,17 +296,18 @@ button:disabled {
 
 /*======= Popup =======*/
 
-.dropdown .dropdown-popup {
+.dropdown-popup {
+  min-width: 300px;
   text-align: start;
   position: absolute;
+  left: 48px; /* offset to account for toolbar width */
   z-index: 1000;
   background-color: var(--popup-bgcolor);
   visibility: hidden;
   border-radius: 4px;
   border: 1px solid var(--popup-border);
-  box-shadow: 0 4px 6px 0 var(--popup-shadow);
   border-bottom-width: 0;
-  margin-top: 2px;
+  box-shadow: 0 1px 3px #c1c1c1;
 }
 
 .keep-open .dropdown-popup {
@@ -372,16 +324,17 @@ button:disabled {
 
 .dropdown-arrow {
   position: absolute;
-  top: -15px; /* offset arrow from top of popup */
-  height: 15px;
-  width: 24px;
-  inset-inline-start: calc(var(--popup-anchor-width) / 2 - 12px);
+  top: 30px; /* offset arrow from top of popup */
+  left: -16px;
+  width: 16px;
+  height: 24px;
   background-image: url("chrome://global/skin/reader/RM-Type-Controls-Arrow.svg");
   display: block;
   -moz-context-properties:  fill, stroke;
   fill: var(--popup-bgcolor);
   stroke: var(--popup-border);
 }
+
 
 /*======= Font style popup =======*/
 
@@ -392,20 +345,19 @@ button:disabled {
 .line-height-buttons {
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
 }
 
-.content-width-value,
-.font-size-value,
-.line-height-value {
-  font-size: 11px;
-  background-color: var(--popup-button);
-  border-radius: 10px;
-  display: inline-block;
-  width: 50px;
-  border: 1px solid var(--font-value-border);
-  text-align: center;
-  margin: auto;
+.font-type-buttons > button:first-child {
+  border-top-left-radius: 3px;
+}
+.font-type-buttons > button:last-child {
+  border-top-right-radius: 3px;
+}
+.color-scheme-buttons > button:first-child {
+  border-bottom-left-radius: 3px;
+}
+.color-scheme-buttons > button:last-child {
+  border-bottom-right-radius: 3px;
 }
 
 .font-type-buttons > button,
@@ -423,102 +375,106 @@ button:disabled {
 .line-height-buttons > button {
   width: 50%;
   background-color: transparent;
+  border-left: 1px solid var(--popup-border);
+  border-bottom: 1px solid var(--popup-border);
 }
 
 .color-scheme-buttons > button {
-  font-size: 10px;
-  margin: 10px;
-  height: 34px;
-  border-radius: 4px;
-  width: 70px;
-  display: inline;
-  border: 1px solid var(--popup-border);
-  padding-block: 0 12px;
-  padding-inline: 0 21px;
+  width: 33.33%;
+  font-size: 14px;
 }
 
-.color-scheme-buttons .radio-button {
-  margin-block-end: -1px;
-  display: inline-block;
+.color-scheme-buttons > .dark-button {
+  margin-top: -1px;
+  height: 61px;
+}
+
+.font-type-buttons > button:first-child,
+.font-size-buttons > button:first-child,
+.content-width-buttons > button:first-child,
+.line-height-buttons > button:first-child {
+  border-left: 0;
 }
 
 .font-type-buttons > button {
-  height: 65px;
-  margin: 10px;
-  background-color: var(--popup-button);
-  border-radius: 2px;
-  border: 1px solid var(--popup-line);
-}
-
-.font-type-buttons,
-.font-size-buttons,
-.content-width-buttons,
-.line-height-buttons {
-  border-bottom:  1px solid var(--popup-line);
+  display: inline-block;
+  font-size: 62px;
+  height: 100px;
 }
 
 .font-size-buttons > button,
+.color-scheme-buttons > button,
 .content-width-buttons > button,
 .line-height-buttons > button {
   height: 60px;
-  width: 90px;
 }
 
-.font-type-buttons > button.selected:active:hover,
-.font-type-buttons > button.selected:hover,
+.font-type-buttons > button:active:hover,
+.font-type-buttons > button.selected,
+.color-scheme-buttons > button:active:hover,
+.color-scheme-buttons > button.selected {
+  box-shadow: inset 0 -3px 0 0 #fc6420;
+}
+
+.font-type-buttons > button:active:hover,
 .font-type-buttons > button.selected {
-  background-color: var(--selected-button);
-  border: 1px solid var(--selected-border);
-}
-
-.color-scheme-buttons > button.selected,
-.font-type-buttons > button:-moz-focusring,
-.color-scheme-buttons > button:-moz-focusring {
-  border-color: var(--selected-border);
+  border-bottom: 1px solid #FC6420;
 }
 
 /* Make the serif button content the same size as the sans-serif button content. */
 .font-type-buttons > button > .description {
   font-size: 12px;
-  text-align: start;
-  display: inline-block;
-  min-width: 60%;
+  margin-top: -5px;
 }
 
-.description {
-  line-height: 1.5em;
-  vertical-align: middle;
-}
-
+/* Font sizes are different per-platform, so we need custom CSS to line them up. */
+%ifdef XP_MACOSX
 .font-type-buttons > .sans-serif-button > .name {
-  background-image: url("chrome://global/skin/reader/RM-Sans-Serif.svg");
+  margin-top: 10px;
 }
 
-.font-type-buttons > .serif-button > .name{
-  background-image: url("chrome://global/skin/reader/RM-Serif.svg");
+.font-type-buttons > .sans-serif-button > .description {
+  margin-top: -4px;
 }
 
-.font-type-buttons > .sans-serif-button > .name,
 .font-type-buttons > .serif-button > .name {
-  display: inline-block;
-  height: 39px;
-  width: 60px;
-  background-size: contain;
-  background-repeat: no-repeat;
+  font-size: 63px;
+}
+%elifdef XP_WIN
+.font-type-buttons > .sans-serif-button > .name {
+  margin-top: 2px;
 }
 
-.toolbar .button:hover,
-.toolbar .button:-moz-focusring,
+.font-type-buttons > .sans-serif-button > .description {
+  margin-top: -4px;
+}
+
+.font-type-buttons > .serif-button > .name {
+  font-size: 63px;
+}
+%else
+.font-type-buttons > .sans-serif-button > .name {
+  margin-top: 5px;
+}
+
+.font-type-buttons > .sans-serif-button > .description {
+  margin-top: -8px;
+}
+
+.font-type-buttons > .serif-button > .name {
+  font-size: 70px;
+}
+%endif
+
+.button:hover,
 .font-size-buttons > button:hover,
-.font-size-buttons > button:-moz-focusring,
 .font-type-buttons > button:hover,
 .content-width-buttons > button:hover,
-.content-width-buttons > button:-moz-focusring,
-.line-height-buttons > button:hover,
-.line-height-buttons > button:-moz-focusring {
+.line-height-buttons > button:hover {
   background-color: var(--toolbar-hover);
 }
 
+.dropdown.open,
 .button:active,
 .font-size-buttons > button:active,
 .font-size-buttons > button.selected,
@@ -549,70 +505,27 @@ button:disabled {
 
 /*======= Toolbar icons =======*/
 
-.toolbar .close-button {
-  float: inline-end;
+.close-button {
+  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg");
+  height: 68px;
   background-position: center 8px;
-  border: 1px solid var(--close-button-border);
-  border-radius: 2px;
-  color: var(--close-button-foreground);
-  height: 31px;
-  padding-top: 0;
-  padding-inline: 20px;
-  background-color: var(--close-button-background);
-  margin-top: 6px;
 }
 
-
-@media (prefers-reduced-motion: no-preference) {
-  .toolbar .close-button {
-    transition: padding-inline 0.4s ease-in;
-  }
-}
-
-.toolbar button::-moz-focusring,
-.toolbar .close-button:hover,
-.toolbar-container.scrolled .close-button:hover {
+.close-button:hover {
+  fill: #fff;
   background-color: var(--close-button-hover);
-  border-color: var(--close-button-hover-border);
+  border-bottom: 1px solid var(--close-button-hover);
+  border-right: 1px solid var(--close-button-hover);
 }
 
-.toolbar-container.scrolled .close-button {
-  height: 23px;
-  background-color: var(--close-button-background);
-  padding-inline: 10px;
-  margin-inline-end: 0;
-  margin-block-start: 0;
+.close-button:hover:active {
+  background-color: #AE2325;
+  border-bottom: 1px solid #AE2325;
+  border-right: 1px solid #AE2325;
 }
 
-.toolbar-container .close-button:-moz-focusring {
-  background-color: var(--toolbar-hover);
-}
-
-.toolbar .style-button {
+.style-button {
   background-image: url("chrome://global/skin/reader/RM-Type-Controls-24x24.svg");
-  background-size: 20px 20px;
-}
-
-.radio-button {
-  -moz-appearance: none;
-  -moz-outline-radius: 100%;
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  outline: 1px solid var(--radio-button-border);
-  background-color: #ffffff;
-  margin: 0;
-  margin-inline-end: 5px;
-  vertical-align: middle;
-}
-
-.radio-button:checked {
-  background-color: var(--blue-40);;
-  border: 2px solid #ffffff;
-}
-
-.font-type-buttons .radio-button {
-  margin-inline-start: -2px;
 }
 
 .minus-button {
@@ -643,11 +556,6 @@ button:disabled {
   background-image: url("chrome://global/skin/reader/RM-Line-Height-Plus-38x24.svg");
 }
 
-.line-height-minus-button:dir(rtl),
-.line-height-plus-button :dir(rtl) {
-  transform: scaleX(-1);
-}
-
 @media print {
   .toolbar {
     display: none !important;
@@ -664,6 +572,42 @@ button:disabled {
   display: none;
   font-size: 1em;
   line-height: 1.6em;
+}
+
+.moz-reader-content.line-height1 {
+  line-height: 1em;
+}
+
+.moz-reader-content.line-height2 {
+  line-height: 1.2em;
+}
+
+.moz-reader-content.line-height3 {
+  line-height: 1.4em;
+}
+
+.moz-reader-content.line-height4 {
+  line-height: 1.6em;
+}
+
+.moz-reader-content.line-height5 {
+  line-height: 1.8em;
+}
+
+.moz-reader-content.line-height6 {
+  line-height: 2.0em;
+}
+
+.moz-reader-content.line-height7 {
+  line-height: 2.2em;
+}
+
+.moz-reader-content.line-height8 {
+  line-height: 2.4em;
+}
+
+.moz-reader-content.line-height9 {
+  line-height: 2.6em;
 }
 
 @media print {
