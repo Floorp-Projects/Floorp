@@ -1029,10 +1029,15 @@ var Policies = {
 
   Homepage: {
     onBeforeUIStartup(manager, param) {
+      if ("StartPage" in param && param.StartPage == "none") {
+        // For blank startpage, we use about:blank rather
+        // than messing with browser.startup.page
+        param.URL = new URL("about:blank");
+      }
       // |homepages| will be a string containing a pipe-separated ('|') list of
       // URLs because that is what the "Home page" section of about:preferences
       // (and therefore what the pref |browser.startup.homepage|) accepts.
-      if (param.URL) {
+      if ("URL" in param) {
         let homepages = param.URL.href;
         if (param.Additional && param.Additional.length) {
           homepages += "|" + param.Additional.map(url => url.href).join("|");
@@ -1059,17 +1064,20 @@ var Policies = {
       if (param.StartPage) {
         let prefValue;
         switch (param.StartPage) {
-          case "none":
-            prefValue = 0;
-            break;
           case "homepage":
+          case "homepage-locked":
+          case "none":
             prefValue = 1;
             break;
           case "previous-session":
             prefValue = 3;
             break;
         }
-        setDefaultPref("browser.startup.page", prefValue, param.Locked);
+        setDefaultPref(
+          "browser.startup.page",
+          prefValue,
+          param.StartPage == "homepage-locked"
+        );
       }
     },
   },

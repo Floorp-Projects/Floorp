@@ -30,7 +30,7 @@ add_task(async function homepage_test_startpage_homepage_locked() {
     policies: {
       Homepage: {
         URL: "http://example1.com/#test",
-        StartPage: "homepage",
+        StartPage: "homepage-locked",
         Locked: true,
       },
     },
@@ -50,19 +50,10 @@ add_task(async function homepage_test_startpage_none() {
       },
     },
   });
-  await check_homepage({ expectedPageVal: 0 });
-});
-
-add_task(async function homepage_test_startpage_none_locked() {
-  await setupPolicyEngineWithJson({
-    policies: {
-      Homepage: {
-        StartPage: "none",
-        Locked: true,
-      },
-    },
+  await check_homepage({
+    expectedURL: "about:blank",
+    expectedPageVal: 1,
   });
-  await check_homepage({ expectedPageVal: 0, locked: true });
 });
 
 add_task(async function homepage_test_startpage_restore() {
@@ -74,16 +65,4 @@ add_task(async function homepage_test_startpage_restore() {
     },
   });
   await check_homepage({ expectedPageVal: 3 });
-});
-
-add_task(async function homepage_test_startpage_restore_locked() {
-  await setupPolicyEngineWithJson({
-    policies: {
-      Homepage: {
-        StartPage: "previous-session",
-        Locked: true,
-      },
-    },
-  });
-  await check_homepage({ expectedPageVal: 3, locked: true });
 });
