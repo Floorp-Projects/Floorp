@@ -31,7 +31,7 @@ declTest("sendQuery Error", {
     is(error.name, "SyntaxError", "Error should have the correct name");
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestProcessActorChild.jsm:28:31\n" +
+      "receiveMessage@resource://testing-common/TestProcessActorChild.jsm:35:31\n" +
         asyncStack,
       "Error should have the correct stack"
     );
@@ -59,7 +59,7 @@ declTest("sendQuery Exception", {
     );
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestProcessActorChild.jsm:31:22\n" +
+      "receiveMessage@resource://testing-common/TestProcessActorChild.jsm:38:22\n" +
         asyncStack,
       "Error should have the correct stack"
     );
