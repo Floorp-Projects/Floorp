@@ -3870,6 +3870,7 @@ void LIRGenerator::visitGuardSpecificAtom(MGuardSpecificAtom* ins) {
   auto* guard = new (alloc()) LGuardSpecificAtom(useRegister(ins->str()));
   assignSnapshot(guard, Bailout_SpecificAtomGuard);
   add(guard, ins);
+  redefine(ins, ins->str());
 }
 
 void LIRGenerator::visitGuardShape(MGuardShape* ins) {
