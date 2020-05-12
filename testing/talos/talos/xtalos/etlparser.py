@@ -258,10 +258,13 @@ def trackThreadNetIO(row, io, stage):
         gConnectionIDs[connID] = tid
     origThread = gConnectionIDs[connID]
     if origThread in gThreads:
-        try:
-            netEvt = re.match("[\w-]+\/([\w-]+)", event).group(1)
-        except AttributeError as e:
-            print("Error matching event {}: {}".format(event, str(e)))
+        match = re.match("[\w-]+\/([\w-]+)?", event)
+        if not match:
+            raise xtalos.XTalosError(
+                "Could not find a regular expression match for event: {}"
+                .format(event)
+            )
+        netEvt = match.group(1)
 
         if netEvt in net_events:
             opType = net_events[netEvt]
