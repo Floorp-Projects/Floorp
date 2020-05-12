@@ -7,6 +7,7 @@ package mozilla.components.feature.downloads
 import android.annotation.TargetApi
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
+import android.app.Notification
 import android.app.Service
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
@@ -45,6 +46,12 @@ import mozilla.components.concept.fetch.Headers.Names.CONTENT_RANGE
 import mozilla.components.concept.fetch.Headers.Names.RANGE
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.CANCELLED
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.COMPLETED
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.ACTIVE
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.FAILED
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.PAUSED
+import mozilla.components.feature.downloads.DownloadNotification.NOTIFICATION_DOWNLOAD_GROUP_ID
 import mozilla.components.feature.downloads.ext.addCompletedDownload
 import mozilla.components.feature.downloads.ext.getDownloadExtra
 import mozilla.components.feature.downloads.ext.withResponse
@@ -78,6 +85,8 @@ abstract class AbstractFetchDownloadService : Service() {
     internal val broadcastManager by lazy { LocalBroadcastManager.getInstance(this) }
     @VisibleForTesting
     internal val context: Context get() = this
+    @VisibleForTesting
+    internal var compatForegroundNotificationId: Int = COMPAT_DEFAULT_FOREGROUND_ID
 
     internal var downloadJobs = mutableMapOf<Long, DownloadJobState>()
 
@@ -146,27 +155,25 @@ abstract class AbstractFetchDownloadService : Service() {
 
                 when (intent.action) {
                     ACTION_PAUSE -> {
-                        setDownloadJobStatus(currentDownloadJobState, DownloadJobStatus.PAUSED)
+                        setDownloadJobStatus(currentDownloadJobState, PAUSED)
                         currentDownloadJobState.job?.cancel()
                         emitNotificationPauseFact()
                     }
 
                     ACTION_RESUME -> {
-                        setDownloadJobStatus(currentDownloadJobState, DownloadJobStatus.ACTIVE)
+                        setDownloadJobStatus(currentDownloadJobState, ACTIVE)
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
-                            startDownloadJob(downloadId)
+                            startDownloadJob(currentDownloadJobState)
                         }
 
                         emitNotificationResumeFact()
                     }
 
                     ACTION_CANCEL -> {
-                        NotificationManagerCompat.from(context).cancel(
-                            currentDownloadJobState.foregroundServiceId
-                        )
+                        removeNotification(context, currentDownloadJobState)
                         currentDownloadJobState.lastNotificationUpdate = System.currentTimeMillis()
-                        setDownloadJobStatus(currentDownloadJobState, DownloadJobStatus.CANCELLED)
+                        setDownloadJobStatus(currentDownloadJobState, CANCELLED)
                         currentDownloadJobState.job?.cancel()
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
@@ -174,22 +181,23 @@ abstract class AbstractFetchDownloadService : Service() {
                             currentDownloadJobState.downloadDeleted = true
                         }
 
+                        removeDownloadJob(currentDownloadJobState)
                         emitNotificationCancelFact()
                     }
 
                     ACTION_TRY_AGAIN -> {
-                        NotificationManagerCompat.from(context).cancel(
-                            currentDownloadJobState.foregroundServiceId
-                        )
+                        removeNotification(context, currentDownloadJobState)
                         currentDownloadJobState.lastNotificationUpdate = System.currentTimeMillis()
-                        setDownloadJobStatus(currentDownloadJobState, DownloadJobStatus.ACTIVE)
+                        setDownloadJobStatus(currentDownloadJobState, ACTIVE)
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
-                            startDownloadJob(downloadId)
+                            startDownloadJob(currentDownloadJobState)
                         }
 
                         emitNotificationTryAgainFact()
                     }
+
+                    ACTION_DISMISS -> removeDownloadJob(currentDownloadJobState)
 
                     ACTION_OPEN -> {
                         if (!openFile(
@@ -228,15 +236,19 @@ abstract class AbstractFetchDownloadService : Service() {
         val foregroundServiceId = downloadJobs[download.id]?.foregroundServiceId ?: Random.nextInt()
 
         // Create a new job and add it, with its downloadState to the map
-        downloadJobs[download.id] = DownloadJobState(
+        val downloadJobState = DownloadJobState(
             state = download,
             foregroundServiceId = foregroundServiceId,
-            status = DownloadJobStatus.ACTIVE
+            status = ACTIVE
         )
 
-        downloadJobs[download.id]?.job = CoroutineScope(IO).launch {
-            startDownloadJob(download.id)
+        downloadJobState.job = CoroutineScope(IO).launch {
+            startDownloadJob(downloadJobState)
         }
+
+        downloadJobs[download.id] = downloadJobState
+
+        setForegroundNotification(downloadJobState)
 
         notificationUpdateScope.launch {
             while (isActive) {
@@ -249,7 +261,7 @@ abstract class AbstractFetchDownloadService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    /***
+    /**
      * Android rate limits notifications being sent, so we must send them on a delay so that
      * notifications are not dropped
      */
@@ -265,73 +277,59 @@ abstract class AbstractFetchDownloadService : Service() {
             */
             val uiStatus = getDownloadJobStatus(download)
 
+            updateForegroundNotificationIfNeeded(download)
+
             // Dispatch the corresponding notification based on the current status
-            val notification = when (uiStatus) {
-                DownloadJobStatus.ACTIVE -> {
-                    DownloadNotification.createOngoingDownloadNotification(
-                        context,
-                        download
-                    )
-                }
+            updateDownloadNotification(uiStatus, download)
 
-                DownloadJobStatus.PAUSED -> {
-                    DownloadNotification.createPausedDownloadNotification(context, download)
-                }
-
-                DownloadJobStatus.COMPLETED -> {
-                    DownloadNotification.createDownloadCompletedNotification(context, download)
-                }
-
-                DownloadJobStatus.FAILED -> {
-                    DownloadNotification.createDownloadFailedNotification(context, download)
-                }
-
-                DownloadJobStatus.CANCELLED -> {
-                    NotificationManagerCompat.from(context).cancel(download.foregroundServiceId)
-                    download.lastNotificationUpdate = System.currentTimeMillis()
-                    null
-                }
-            }
-
-            notification?.let {
-                NotificationManagerCompat.from(context).notify(
-                    download.foregroundServiceId,
-                    it
-                )
-                download.lastNotificationUpdate = System.currentTimeMillis()
-            }
-
-            if (uiStatus != DownloadJobStatus.ACTIVE) {
+            if (uiStatus != ACTIVE) {
                 sendDownloadStopped(download)
             }
         }
     }
 
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        // If the task gets removed (app gets swiped away in the task switcher) our process and this
-        // service gets killed. In this situation we remove the notification since the download will
-        // stop and cannot be controlled via the notification anymore (until we persist enough data
-        // to resume downloads from a new process).
+    /**
+     * Updates the notification state with the passed [download] data.
+     * Be aware that you need to pass [latestUIStatus] as [DownloadJobState.status] can be modified
+     * from another thread, causing inconsistencies in the ui.
+     */
+    private fun updateDownloadNotification(latestUIStatus: DownloadJobStatus, download: DownloadJobState) {
+        val notification = when (latestUIStatus) {
+            ACTIVE -> DownloadNotification.createOngoingDownloadNotification(context, download)
+            PAUSED -> DownloadNotification.createPausedDownloadNotification(context, download)
+            COMPLETED -> DownloadNotification.createDownloadCompletedNotification(context, download)
+            FAILED -> DownloadNotification.createDownloadFailedNotification(context, download)
+            CANCELLED -> {
+                removeNotification(context, download)
+                download.lastNotificationUpdate = System.currentTimeMillis()
+                null
+            }
+        }
 
-        clearAllDownloadsNotificationsAndJobs()
+        notification?.let {
+            NotificationManagerCompat.from(context).notify(download.foregroundServiceId, it)
+            download.lastNotificationUpdate = System.currentTimeMillis()
+        }
     }
 
-    // As we are not fulfilling the api contract of a foreground service, we can be easily killed
-    // by the system when low on memory, without any call to onDestroy().
-    // To fulfill the contract, we need a pinned notification and call startForeground().
-    // This means can be left with stuck notifications.
-    // https://developer.android.com/guide/components/services#Foreground
-    // https://github.com/mozilla-mobile/android-components/issues/6893
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        stopSelf()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
 
         clearAllDownloadsNotificationsAndJobs()
+        unregisterNotificationActionsReceiver()
     }
 
     // Cancels all running jobs and remove all notifications.
     // Also cleans any resources that we were holding like broadcastReceivers
     internal fun clearAllDownloadsNotificationsAndJobs() {
         val notificationManager = NotificationManagerCompat.from(context)
+
+        stopForeground(true)
+        compatForegroundNotificationId = COMPAT_DEFAULT_FOREGROUND_ID
 
         // Before doing any cleaning, we have to stop the notification updater scope.
         // To ensure we are not recreating the notifications.
@@ -341,16 +339,13 @@ abstract class AbstractFetchDownloadService : Service() {
             notificationManager.cancel(state.foregroundServiceId)
             state.job?.cancel()
         }
-        unregisterNotificationActionsReceiver()
     }
 
-    internal fun startDownloadJob(downloadId: Long) {
-        val currentDownloadJobState = downloadJobs[downloadId] ?: return
-
+    internal fun startDownloadJob(currentDownloadJobState: DownloadJobState) {
         try {
-            performDownload(currentDownloadJobState.state)
+            performDownload(currentDownloadJobState)
         } catch (e: IOException) {
-            setDownloadJobStatus(currentDownloadJobState, DownloadJobStatus.FAILED)
+            setDownloadJobStatus(currentDownloadJobState, FAILED)
         }
     }
 
@@ -365,6 +360,7 @@ abstract class AbstractFetchDownloadService : Service() {
             addAction(ACTION_PAUSE)
             addAction(ACTION_RESUME)
             addAction(ACTION_CANCEL)
+            addAction(ACTION_DISMISS)
             addAction(ACTION_TRY_AGAIN)
             addAction(ACTION_OPEN)
         }
@@ -377,9 +373,134 @@ abstract class AbstractFetchDownloadService : Service() {
         context.unregisterReceiver(broadcastReceiver)
     }
 
+    @VisibleForTesting
+    internal fun removeDownloadJob(downloadJobState: DownloadJobState) {
+        downloadJobs.remove(downloadJobState.state.id)
+        if (downloadJobs.isEmpty()) {
+            stopSelf()
+        } else {
+            updateForegroundNotificationIfNeeded(downloadJobState)
+            removeNotification(context, downloadJobState)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun removeNotification(context: Context, currentDownloadJobState: DownloadJobState) {
+        NotificationManagerCompat.from(context).cancel(currentDownloadJobState.foregroundServiceId)
+    }
+
+    /**
+     * Refresh the notification group content only for devices that support it,
+     * otherwise nothing will happen.
+     */
+    @VisibleForTesting
+    internal fun updateNotificationGroup(): Notification? {
+        return if (SDK_INT >= Build.VERSION_CODES.N) {
+            val downloadList = downloadJobs.values.toList()
+            val notificationGroup = DownloadNotification.createDownloadGroupNotification(context, downloadList)
+            NotificationManagerCompat.from(context).apply {
+                notify(NOTIFICATION_DOWNLOAD_GROUP_ID, notificationGroup)
+            }
+            notificationGroup
+        } else {
+            null
+        }
+    }
+
+    internal fun createCompactForegroundNotification(downloadJobState: DownloadJobState): Notification {
+        val notification = DownloadNotification.createOngoingDownloadNotification(context, downloadJobState)
+        compatForegroundNotificationId = downloadJobState.foregroundServiceId
+        NotificationManagerCompat.from(context).apply {
+            notify(compatForegroundNotificationId, notification)
+            downloadJobState.lastNotificationUpdate = System.currentTimeMillis()
+        }
+        return notification
+    }
+
+    @VisibleForTesting
+    internal fun getForegroundId(): Int {
+        return if (SDK_INT >= Build.VERSION_CODES.N) {
+            NOTIFICATION_DOWNLOAD_GROUP_ID
+        } else {
+            compatForegroundNotificationId
+        }
+    }
+
+    /**
+     * We have two different behaviours as notification groups are not supported in all devices.
+     * For devices that support it, we create a separate notification which will be the foreground
+     * notification, it will be always present until we don't have more active downloads.
+     * For devices that doesn't support notification groups, we set the latest active notification as
+     * the foreground notification and we keep changing it to the latest active download.
+     */
+    @VisibleForTesting
+    internal fun setForegroundNotification(downloadJobState: DownloadJobState) {
+        var previousDownload: DownloadJobState? = null
+
+        val (notificationId, notification) = if (SDK_INT >= Build.VERSION_CODES.N) {
+            NOTIFICATION_DOWNLOAD_GROUP_ID to updateNotificationGroup()
+        } else {
+            previousDownload = downloadJobs.values.firstOrNull {
+                it.foregroundServiceId == compatForegroundNotificationId
+            }
+            downloadJobState.foregroundServiceId to createCompactForegroundNotification(downloadJobState)
+        }
+
+        startForeground(notificationId, notification)
+        /**
+         * In devices that doesn't use notification groups, every new download becomes the new foreground one,
+         * unfortunately, when we call startForeground it removes the previous foreground notification
+         * when it's not an ongoing one, for this reason, we have to recreate the deleted notification.
+         * By the way ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH)
+         * doesn't work neither calling stopForeground(false) and then calling startForeground,
+         * it always deletes the previous notification :(
+         */
+        previousDownload?.let {
+            updateDownloadNotification(previousDownload.status, it)
+        }
+    }
+
+    /**
+     * Indicates the status of a download has changed and maybe the foreground notification needs,
+     * to be updated. For devices that support group notifications, we update the overview
+     * notification. For devices that don't support group notifications, we try to find a new
+     * active download and selected it as the new foreground notification.
+     */
+    internal fun updateForegroundNotificationIfNeeded(download: DownloadJobState) {
+        if (SDK_INT < Build.VERSION_CODES.N) {
+            /**
+             * For devices that don't support notification groups, we have to keep updating
+             * the foreground notification id, when the previous one gets a state that
+             * is likely to be dismissed.
+             */
+            val status = download.status
+            val foregroundId = download.foregroundServiceId
+            val isSelectedForegroundId = compatForegroundNotificationId == foregroundId
+            val needNewForegroundNotification = when (status) {
+                COMPLETED, FAILED, CANCELLED -> true
+                else -> false
+            }
+
+            if (isSelectedForegroundId && needNewForegroundNotification) {
+                // We need to deselect the actual foreground notification, because while it is
+                // selected the user will not be able to dismiss it.
+                stopForeground(false)
+
+                // Now we need to find a new foreground notification, if needed.
+                val newSelectedForegroundDownload = downloadJobs.values.firstOrNull { it.status == ACTIVE }
+                newSelectedForegroundDownload?.let {
+                    setForegroundNotification(it)
+                }
+            }
+        } else {
+            // This device supports notification groups, we just need to update the summary notification
+            updateNotificationGroup()
+        }
+    }
+
     @Suppress("ComplexCondition")
-    internal fun performDownload(download: DownloadState) {
-        val currentDownloadJobState = downloadJobs[download.id] ?: return
+    internal fun performDownload(currentDownloadJobState: DownloadJobState) {
+        val download = currentDownloadJobState.state
         val isResumingDownload = currentDownloadJobState.currentBytesCopied > 0L
         val headers = MutableHeaders()
 
@@ -396,7 +517,7 @@ abstract class AbstractFetchDownloadService : Service() {
             (isResumingDownload && !response.headers.contains(CONTENT_RANGE))) {
             // We experienced a problem trying to fetch the file, send a failure notification
             currentDownloadJobState.currentBytesCopied = 0
-            setDownloadJobStatus(currentDownloadJobState, DownloadJobStatus.FAILED)
+            setDownloadJobStatus(currentDownloadJobState, FAILED)
             return
         }
 
@@ -418,9 +539,9 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun verifyDownload(download: DownloadJobState) {
         if (getDownloadJobStatus(download) == DownloadJobStatus.ACTIVE &&
             download.currentBytesCopied < download.state.contentLength ?: 0) {
-            setDownloadJobStatus(download, DownloadJobStatus.FAILED)
+            setDownloadJobStatus(download, FAILED)
         } else if (getDownloadJobStatus(download) == DownloadJobStatus.ACTIVE) {
-            setDownloadJobStatus(download, DownloadJobStatus.COMPLETED)
+            setDownloadJobStatus(download, COMPLETED)
         }
     }
 
@@ -550,7 +671,7 @@ abstract class AbstractFetchDownloadService : Service() {
         FileOutputStream(file, append).use(block)
 
         val downloadJobState = downloadJobs[download.id] ?: return
-        if (getDownloadJobStatus(downloadJobState) != DownloadJobStatus.COMPLETED) { return }
+        if (getDownloadJobStatus(downloadJobState) != COMPLETED) { return }
 
         addCompletedDownload(
             title = fileName,
@@ -610,6 +731,8 @@ abstract class AbstractFetchDownloadService : Service() {
         const val ACTION_PAUSE = "mozilla.components.feature.downloads.PAUSE"
         const val ACTION_RESUME = "mozilla.components.feature.downloads.RESUME"
         const val ACTION_CANCEL = "mozilla.components.feature.downloads.CANCEL"
+        const val ACTION_DISMISS = "mozilla.components.feature.downloads.DISMISS"
         const val ACTION_TRY_AGAIN = "mozilla.components.feature.downloads.TRY_AGAIN"
+        const val COMPAT_DEFAULT_FOREGROUND_ID = -1
     }
 }
