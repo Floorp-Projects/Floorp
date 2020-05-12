@@ -313,9 +313,14 @@ void nsSliderFrame::BuildDisplayListForChildren(
 
       const nsRect overflow = thumb->GetVisualOverflowRectRelativeToParent();
       nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
+      const gfxSize scale = nsLayoutUtils::GetTransformToAncestorScale(thumb);
+      if (scale.width != 0 && scale.height != 0) {
+        refSize.width /= scale.width;
+        refSize.height /= scale.height;
+      }
       nsRect dirty = aBuilder->GetVisibleRect().Intersect(thumbRect);
       dirty = nsLayoutUtils::ComputePartialPrerenderArea(
-          thumb, aBuilder->GetVisibleRect(), overflow, refSize);
+          aBuilder->GetVisibleRect(), overflow, refSize);
 
       nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
           aBuilder, this, dirty, dirty);
