@@ -416,23 +416,22 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsFrameSelection, Release)
 
 // Get the x (or y, in vertical writing mode) position requested
 // by the Key Handling for line-up/down
-nsresult nsFrameSelection::FetchDesiredCaretPos(nsPoint& aDesiredCaretPos) {
-  if (!mPresShell) {
-    NS_ERROR("fetch desired position failed");
-    return NS_ERROR_FAILURE;
-  }
-  if (mDesiredCaretPos.mIsSet) {
-    aDesiredCaretPos = mDesiredCaretPos.mValue;
+nsresult nsFrameSelection::DesiredCaretPos::FetchPos(
+    nsPoint& aDesiredCaretPos, const PresShell& aPresShell,
+    Selection& aNormalSelection) const {
+  MOZ_ASSERT(aNormalSelection.GetType() == SelectionType::eNormal);
+
+  if (mIsSet) {
+    aDesiredCaretPos = mValue;
     return NS_OK;
   }
 
-  RefPtr<nsCaret> caret = mPresShell->GetCaret();
+  RefPtr<nsCaret> caret = aPresShell.GetCaret();
   if (!caret) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  caret->SetSelection(mDomSelections[index]);
+  caret->SetSelection(&aNormalSelection);
 
   nsRect coord;
   nsIFrame* caretFrame = caret->GetGeometry(&coord);
@@ -456,9 +455,9 @@ void nsFrameSelection::InvalidateDesiredCaretPos()  // do not listen to
   mDesiredCaretPos.mIsSet = false;
 }
 
-void nsFrameSelection::SetDesiredCaretPos(nsPoint aPos) {
-  mDesiredCaretPos.mValue = aPos;
-  mDesiredCaretPos.mIsSet = true;
+void nsFrameSelection::DesiredCaretPos::Set(const nsPoint& aPos) {
+  mValue = aPos;
+  mIsSet = true;
 }
 
 nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
@@ -707,11 +706,11 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   AutoPrepareFocusRange prep(sel, false);
 
   if (aAmount == eSelectLine) {
-    nsresult result = FetchDesiredCaretPos(desiredPos);
+    nsresult result = mDesiredCaretPos.FetchPos(desiredPos, *mPresShell, *sel);
     if (NS_FAILED(result)) {
       return result;
     }
-    SetDesiredCaretPos(desiredPos);
+    mDesiredCaretPos.Set(desiredPos);
   }
 
   if (doCollapse) {
