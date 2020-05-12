@@ -2978,9 +2978,9 @@ class nsLayoutUtils {
    * @param aPrerenderSize how large of an area we're willing to render in the
    *        coordinate system of the root frame.
    * @return A rectangle that includes |aDirtyRect|, is clamped to |aOverflow|,
-   *         and is no larger than |aPrerenderSize| (unless |aPrerenderSize|
-   *         is smaller than |aDirtyRect|, in which case the returned rect
-   *         will still include |aDirtyRect| and thus be larger than
+   *         and is no larger than |aPrerenderSize| (unless |aPrerenderSize| is
+   *         smaller than |aDirtyRect|, in which case the returned rect will
+   *         still include |aDirtyRect| and thus be larger than
    *         |aPrerenderSize|).
    */
   static nsRect ComputePartialPrerenderArea(nsIFrame* aFrame,

@@ -3325,14 +3325,10 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     switch (decision.mDecision) {
       case nsDisplayTransform::PrerenderDecision::Full:
-        allowAsyncAnimation = true;
-        visibleRect = dirtyRect;
-        break;
       case nsDisplayTransform::PrerenderDecision::Partial:
         allowAsyncAnimation = true;
         visibleRect = dirtyRect;
-        [[fallthrough]];
-        // fall through to the PrerenderDecision::No case
+        break;
       case nsDisplayTransform::PrerenderDecision::No: {
         // If we didn't prerender an animated frame in a preserve-3d context,
         // then we want disable async animations for the rest of the preserve-3d
