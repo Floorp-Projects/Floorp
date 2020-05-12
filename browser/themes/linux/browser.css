@@ -274,15 +274,12 @@ notification[value="translation"] menulist::part(dropmarker) {
   --urlbar-popup-action-color: -moz-nativehyperlinktext;
 }
 
-.urlbarView {
+#urlbar,
+#searchbar {
   font-size: 1.05em;
 }
 
 @supports -moz-bool-pref("browser.urlbar.update2.expandTextOnFocus") {
-  .urlbarView {
-    font-size: inherit;
-  }
-
   #urlbar[breakout-extend] {
     font-size: 1.14em;
   }
