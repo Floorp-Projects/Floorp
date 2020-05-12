@@ -179,8 +179,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         aManager->WrBridge()->AddWebRenderParentCommand(
             OpUpdateAsyncImagePipeline(data->GetPipelineId().value(), scBounds,
                                        scTransform, scaleToSize, filter,
-                                       mixBlendMode),
-            aBuilder.GetRenderRoot());
+                                       mixBlendMode));
         break;
       }
       case CanvasContextType::WebGPU: {

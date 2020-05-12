@@ -88,7 +88,7 @@ void CanvasClient2D::UpdateFromTexture(TextureClient* aTexture,
   t->mPictureRect = nsIntRect(nsIntPoint(0, 0), aTexture->GetSize());
   t->mFrameID = mFrameID;
 
-  GetForwarder()->UseTextures(this, textures, Some(aRenderRoot));
+  GetForwarder()->UseTextures(this, textures);
   aTexture->SyncWithObject(GetForwarder()->GetSyncObject());
 }
 
@@ -97,7 +97,7 @@ void CanvasClient2D::Update(gfx::IntSize aSize,
                             wr::RenderRoot aRenderRoot) {
   mBufferProviderTexture = nullptr;
 
-  AutoRemoveTexture autoRemove(this, aRenderRoot);
+  AutoRemoveTexture autoRemove(this);
   if (mBackBuffer &&
       (mBackBuffer->IsReadLocked() || mBackBuffer->GetSize() != aSize)) {
     autoRemove.mTexture = mBackBuffer;
@@ -157,7 +157,7 @@ void CanvasClient2D::Update(gfx::IntSize aSize,
     t->mTextureClient = mBackBuffer;
     t->mPictureRect = nsIntRect(nsIntPoint(0, 0), mBackBuffer->GetSize());
     t->mFrameID = mFrameID;
-    GetForwarder()->UseTextures(this, textures, Some(aRenderRoot));
+    GetForwarder()->UseTextures(this, textures);
     mBackBuffer->SyncWithObject(GetForwarder()->GetSyncObject());
   }
 
@@ -520,7 +520,7 @@ void CanvasClientSharedSurface::Updated(wr::RenderRoot aRenderRoot) {
   t->mTextureClient = mFront;
   t->mPictureRect = nsIntRect(nsIntPoint(0, 0), mFront->GetSize());
   t->mFrameID = mFrameID;
-  forwarder->UseTextures(this, textures, Some(aRenderRoot));
+  forwarder->UseTextures(this, textures);
 }
 
 void CanvasClientSharedSurface::OnDetach() { ClearSurfaces(); }

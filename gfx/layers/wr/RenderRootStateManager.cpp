@@ -176,7 +176,7 @@ void RenderRootStateManager::WrReleasedImages(
 
 void RenderRootStateManager::AddWebRenderParentCommand(
     const WebRenderParentCommand& aCmd) {
-  WrBridge()->AddWebRenderParentCommand(aCmd, mRenderRoot);
+  WrBridge()->AddWebRenderParentCommand(aCmd);
 }
 void RenderRootStateManager::UpdateResources(
     wr::IpcResourceUpdateQueue& aResources) {
@@ -184,21 +184,20 @@ void RenderRootStateManager::UpdateResources(
 }
 void RenderRootStateManager::AddPipelineIdForAsyncCompositable(
     const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
-  WrBridge()->AddPipelineIdForAsyncCompositable(aPipelineId, aHandle,
-                                                mRenderRoot);
+  WrBridge()->AddPipelineIdForAsyncCompositable(aPipelineId, aHandle);
 }
 void RenderRootStateManager::AddPipelineIdForCompositable(
     const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
-  WrBridge()->AddPipelineIdForCompositable(aPipelineId, aHandle, mRenderRoot);
+  WrBridge()->AddPipelineIdForCompositable(aPipelineId, aHandle);
 }
 void RenderRootStateManager::RemovePipelineIdForCompositable(
     const wr::PipelineId& aPipelineId) {
-  WrBridge()->RemovePipelineIdForCompositable(aPipelineId, mRenderRoot);
+  WrBridge()->RemovePipelineIdForCompositable(aPipelineId);
 }
 /// Release TextureClient that is bounded to ImageKey.
 /// It is used for recycling TextureClient.
 void RenderRootStateManager::ReleaseTextureOfImage(const wr::ImageKey& aKey) {
-  WrBridge()->ReleaseTextureOfImage(aKey, mRenderRoot);
+  WrBridge()->ReleaseTextureOfImage(aKey);
 }
 
 Maybe<wr::FontInstanceKey> RenderRootStateManager::GetFontKeyForScaledFont(

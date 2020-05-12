@@ -247,7 +247,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
 
   AutoTArray<RenderRootUpdates, wr::kRenderRootCount> renderRootUpdates;
   if (mStateManager.mAsyncResourceUpdates || !mPendingScrollUpdates.IsEmpty() ||
-      WrBridge()->HasWebRenderParentCommands(wr::RenderRoot::Default)) {
+      WrBridge()->HasWebRenderParentCommands()) {
     auto updates = renderRootUpdates.AppendElement();
     updates->mRenderRoot = wr::RenderRoot::Default;
     updates->mPaintSequenceNumber = mPaintSequenceNumber;

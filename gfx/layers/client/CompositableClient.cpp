@@ -125,9 +125,8 @@ void CompositableClient::HandleMemoryPressure() {
   }
 }
 
-void CompositableClient::RemoveTexture(
-    TextureClient* aTexture, const Maybe<wr::RenderRoot>& aRenderRoot) {
-  mForwarder->RemoveTextureFromCompositable(this, aTexture, aRenderRoot);
+void CompositableClient::RemoveTexture(TextureClient* aTexture) {
+  mForwarder->RemoveTextureFromCompositable(this, aTexture);
 }
 
 TextureClientRecycleAllocator* CompositableClient::GetTextureClientRecycler() {
@@ -198,7 +197,7 @@ void CompositableClient::DumpTextureClient(std::stringstream& aStream,
 
 AutoRemoveTexture::~AutoRemoveTexture() {
   if (mCompositable && mTexture && mCompositable->IsConnected()) {
-    mCompositable->RemoveTexture(mTexture, Some(mRenderRoot));
+    mCompositable->RemoveTexture(mTexture);
   }
 }
 

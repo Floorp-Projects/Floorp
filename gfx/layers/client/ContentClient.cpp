@@ -720,7 +720,7 @@ void ContentClientRemoteBuffer::Updated(const nsIntRegion& aRegionToDraw,
     IntSize size = remoteBuffer->GetClient()->GetSize();
     t->mPictureRect = nsIntRect(0, 0, size.width, size.height);
 
-    GetForwarder()->UseTextures(this, textures, Nothing());
+    GetForwarder()->UseTextures(this, textures);
   }
 
   // This forces a synchronous transaction, so we can swap buffers now

@@ -64,9 +64,8 @@ already_AddRefed<ImageClient> ImageClient::CreateImageClient(
   return result.forget();
 }
 
-void ImageClient::RemoveTexture(TextureClient* aTexture,
-                                const Maybe<wr::RenderRoot>& aRenderRoot) {
-  GetForwarder()->RemoveTextureFromCompositable(this, aTexture, aRenderRoot);
+void ImageClient::RemoveTexture(TextureClient* aTexture) {
+  GetForwarder()->RemoveTextureFromCompositable(this, aTexture);
 }
 
 ImageClientSingle::ImageClientSingle(CompositableForwarder* aFwd,
@@ -84,7 +83,7 @@ void ImageClientSingle::FlushAllImages() {
     // the texture actually presents in a content render root, as the only
     // risk would be if the content render root has not / is not going to
     // generate a frame before the texture gets cleared.
-    RemoveTexture(b.mTextureClient, Some(wr::RenderRoot::Default));
+    RemoveTexture(b.mTextureClient);
   }
   mBuffers.Clear();
 }
@@ -187,7 +186,7 @@ bool ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     // We return true because the caller would attempt to recreate the
     // ImageClient otherwise, and that isn't going to help.
     for (auto& b : mBuffers) {
-      RemoveTexture(b.mTextureClient, aRenderRoot);
+      RemoveTexture(b.mTextureClient);
     }
     mBuffers.Clear();
     return true;
@@ -251,10 +250,10 @@ bool ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     texture->SyncWithObject(GetForwarder()->GetSyncObject());
   }
 
-  GetForwarder()->UseTextures(this, textures, aRenderRoot);
+  GetForwarder()->UseTextures(this, textures);
 
   for (auto& b : mBuffers) {
-    RemoveTexture(b.mTextureClient, aRenderRoot);
+    RemoveTexture(b.mTextureClient);
   }
   mBuffers.SwapElements(newBuffers);
 
