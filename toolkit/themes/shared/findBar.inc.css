@@ -54,6 +54,7 @@ html|input.findbar-textbox {
   border: 1px solid var(--lwt-toolbar-field-border-color, ThreeDShadow);
   border-start-start-radius: 2px;
   border-end-start-radius: 2px;
+  outline: none;
   margin: 0;
   padding: 2px 5px;
   width: 14em;
