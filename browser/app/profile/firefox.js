@@ -2259,13 +2259,17 @@ pref("devtools.responsive.metaViewport.enabled", true);
 // The user agent of the viewport.
 pref("devtools.responsive.userAgent", "");
 
-// Show the custom user agent input and browser embedded RDM UI in
-// Nightly builds.
+// Show the custom user agent input only in Nightly.
 #if defined(NIGHTLY_BUILD)
   pref("devtools.responsive.showUserAgentInput", true);
-  pref("devtools.responsive.browserUI.enabled", true);
 #else
   pref("devtools.responsive.showUserAgentInput", false);
+#endif
+
+// Show the RDM browser UI in Nightly or DevEdition builds.
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
+  pref("devtools.responsive.browserUI.enabled", true);
+#else
   pref("devtools.responsive.browserUI.enabled", false);
 #endif
 
