@@ -521,7 +521,7 @@ angle::Result Clear11::clearFramebuffer(const gl::Context *context,
             UINT sampleMask;
             ID3D11BlendState *blendState;
             D3D11_BLEND_DESC blendDesc;
-            deviceContext1->OMGetBlendState(&blendState, blendFactor, &sampleMask);
+            deviceContext->OMGetBlendState(&blendState, blendFactor, &sampleMask);
             if (blendState) {
                     blendState->GetDesc(&blendDesc);
                     // You can only use dual source blending on slot 0 so only check there

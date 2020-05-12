@@ -1,3 +1,12 @@
+commit eabf2a79aac36223b5ab5c5b0810d5522095f0bc
+Author: Jeff Muizelaar <jrmuizel@gmail.com>
+Date:   Mon May 11 13:01:46 2020 -0400
+
+    Use deviceContext instead of deviceContext1 (#24)
+    
+    Sometimes we don't have a deviceContext1 (on Win7) and would crash. We
+    on't have any need to use it so just use deviceContext.
+
 commit 19f1bef071c32df60d9d62a7907c42270d0a3dd7
 Author: Jeff Muizelaar <jrmuizel@gmail.com>
 Date:   Fri May 8 15:08:24 2020 -0400
