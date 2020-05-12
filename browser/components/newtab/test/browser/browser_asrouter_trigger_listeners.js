@@ -63,10 +63,7 @@ add_task(async function check_openArticleURL() {
   // Send a message from the content page (the TEST_URL) to the parent
   // This should trigger the `receiveMessage` cb in the articleTrigger
   await ContentTask.spawn(win.gBrowser.selectedBrowser, null, async () => {
-    let readerActor = content.windowGlobalChild.getActor("AboutReader");
-    readerActor.sendAsyncMessage("Reader:UpdateReaderButton", {
-      isArticle: true,
-    });
+    sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: true });
   });
 
   await listenerTriggered.then(data =>
