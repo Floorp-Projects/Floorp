@@ -6,6 +6,7 @@
 
 | Name | Summary |
 |---|---|
+| [AddonInstallationDialogFragment](-addon-installation-dialog-fragment/index.md) | `class AddonInstallationDialogFragment : AppCompatDialogFragment`<br>A dialog that shows [Addon](../mozilla.components.feature.addons/-addon/index.md) installation confirmation. |
 | [AddonPermissionsAdapter](-addon-permissions-adapter/index.md) | `class AddonPermissionsAdapter : Adapter<ViewHolder>`<br>An adapter for displaying the permissions of an add-on. |
 | [AddonsManagerAdapter](-addons-manager-adapter/index.md) | `class AddonsManagerAdapter : ListAdapter<`[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, `[`CustomViewHolder`](-custom-view-holder/index.md)`>`<br>An adapter for displaying add-on items. This will display information related to the state of an add-on such as recommended, unsupported or installed. In addition, it will perform actions such as installing an add-on. |
 | [AddonsManagerAdapterDelegate](-addons-manager-adapter-delegate/index.md) | `interface AddonsManagerAdapterDelegate`<br>Provides methods for handling the add-on items in the add-on manager. |
