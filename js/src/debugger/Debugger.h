@@ -737,7 +737,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    *
    * An entry is present in this table when:
    *  - both the debuggee generator object and the Debugger.Frame object exists
-   *  - the debuggee generator object belongs to a relam that is a debuggee of
+   *  - the debuggee generator object belongs to a realm that is a debuggee of
    *    the Debugger.Frame's owner.
    *
    * regardless of whether the frame is currently suspended. (This list is
