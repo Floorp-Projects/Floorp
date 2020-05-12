@@ -32,6 +32,7 @@ class nsIPrefBranch;
 //-----------------------------------------------------------------------------
 
 namespace mozilla {
+class AbstractThread;
 namespace net {
 
 //
@@ -143,6 +144,10 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   //-------------------------------------------------------------------------
 
   nsCOMPtr<nsIThread> mThread;  // protected by mLock
+  // We create an AbstractThread for mThread thread so that we can use direct
+  // task dispatching with MozPromise, which is similar (but not identical to)
+  // the microtask semantics of JS promises.
+  RefPtr<AbstractThread> mAbstractThread;
   UniquePtr<PollableEvent> mPollableEvent;
 
   // Returns mThread, protecting the get-and-addref with mLock
