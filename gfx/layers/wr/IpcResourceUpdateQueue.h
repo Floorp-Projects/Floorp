@@ -89,10 +89,7 @@ class IpcResourceUpdateQueue {
   // 64k - 2 * 4k - 16 = 57328 bytes as the default alloc size.
   explicit IpcResourceUpdateQueue(
       layers::WebRenderBridgeChild* aAllocator,
-      wr::RenderRoot aRenderRoot = wr::RenderRoot::Default,
       size_t aChunkSize = 57328);
-
-  wr::RenderRoot GetRenderRoot() { return mRenderRoot; }
 
   IpcResourceUpdateQueue(IpcResourceUpdateQueue&& aOther) noexcept;
   IpcResourceUpdateQueue& operator=(IpcResourceUpdateQueue&& aOther) noexcept;
@@ -171,7 +168,6 @@ class IpcResourceUpdateQueue {
  protected:
   ShmSegmentsWriter mWriter;
   nsTArray<layers::OpUpdateResource> mUpdates;
-  wr::RenderRoot mRenderRoot;
 };
 
 }  // namespace wr

@@ -39,7 +39,7 @@ wr::IpcResourceUpdateQueue& RenderRootStateManager::AsyncResourceUpdates() {
   MOZ_ASSERT(XRE_IsParentProcess() || mRenderRoot == wr::RenderRoot::Default);
 
   if (!mAsyncResourceUpdates) {
-    mAsyncResourceUpdates.emplace(WrBridge(), mRenderRoot);
+    mAsyncResourceUpdates.emplace(WrBridge());
 
     RefPtr<Runnable> task = NewRunnableMethod(
         "RenderRootStateManager::FlushAsyncResourceUpdates", this,
