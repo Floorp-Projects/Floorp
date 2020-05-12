@@ -853,7 +853,7 @@ nsresult WSRunScanner::GetWSNodes() {
   while (!mEndNode) {
     // we haven't found the end of ws yet.  Keep looking
     nsCOMPtr<nsIContent> nextNode =
-        GetNextWSNode(end, editableBlockParentOrTopmotEditableInlineContent);
+        GetNextWSNode(end, *editableBlockParentOrTopmotEditableInlineContent);
     if (nextNode) {
       if (HTMLEditUtils::IsBlockElement(*nextNode)) {
         // we encountered a new block.  therefore no more ws.
@@ -1192,89 +1192,35 @@ nsIContent* WSRunScanner::GetPreviousWSNode(const EditorDOMPoint& aPoint,
   return previousContent;
 }
 
-nsIContent* WSRunScanner::GetNextWSNodeInner(nsINode* aStartNode,
-                                             nsINode* aBlockParent) const {
-  // Can't really recycle various getnext/prior routines because we have
-  // special needs here.  Need to step into inline containers but not block
-  // containers.
-  MOZ_ASSERT(aStartNode && aBlockParent);
-
-  if (aStartNode == mEditingHost) {
-    NS_WARNING(
-        "WSRunScanner::GetNextWSNodeInner() was called with editing host");
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIContent> nextContent = aStartNode->GetNextSibling();
-  nsCOMPtr<nsINode> curNode = aStartNode;
-  while (!nextContent) {
-    // We have exhausted nodes in parent of aStartNode.
-    nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
-    if (!curParent) {
-      NS_WARNING("Reached orphan node while climbing up the DOM tree");
-      return nullptr;
-    }
-    if (curParent == aBlockParent) {
-      // We have exhausted nodes in the block parent.  The convention here is
-      // to return null.
-      return nullptr;
-    }
-    if (curParent == mEditingHost) {
-      NS_WARNING("Reached editing host while climbing up the DOM tree");
-      return nullptr;
-    }
-    // We have a parent: look for next sibling
-    nextContent = curParent->GetNextSibling();
-    curNode = curParent;
-  }
-
-  if (!nextContent) {
-    return nullptr;
-  }
-
-  // We have a next node.  If it's a block, return it.
-  if (HTMLEditUtils::IsBlockElement(*nextContent)) {
-    return nextContent;
-  }
-  if (HTMLEditUtils::IsContainerNode(*nextContent)) {
-    // Else if it's a container, get deep leftmost child
-    if (nsIContent* child = HTMLEditUtils::GetFirstLeafChild(
-            *nextContent, ChildBlockBoundary::Ignore)) {
-      return child;
-    }
-  }
-  // Else return the node itself
-  return nextContent;
-}
-
 nsIContent* WSRunScanner::GetNextWSNode(const EditorDOMPoint& aPoint,
-                                        nsINode* aBlockParent) const {
+                                        nsIContent& aBlockParent) const {
   // Can't really recycle various getnext/prior routines because we have
   // special needs here.  Need to step into inline containers but not block
   // containers.
-  MOZ_ASSERT(aPoint.IsSet() && aBlockParent);
+  MOZ_ASSERT(aPoint.IsSet());
 
   if (aPoint.IsInTextNode()) {
-    return GetNextWSNodeInner(aPoint.GetContainer(), aBlockParent);
+    return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+        *aPoint.ContainerAsText(), aBlockParent, mEditingHost);
   }
-  if (!aPoint.IsInContentNode() ||
-      !HTMLEditUtils::IsContainerNode(*aPoint.ContainerAsContent())) {
-    return GetNextWSNodeInner(aPoint.GetContainer(), aBlockParent);
-  }
-
-  if (NS_WARN_IF(!aPoint.IsInContentNode())) {
+  if (!aPoint.IsInContentNode()) {
     return nullptr;
+  }
+  if (!HTMLEditUtils::IsContainerNode(*aPoint.ContainerAsContent())) {
+    return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+        *aPoint.ContainerAsContent(), aBlockParent, mEditingHost);
   }
 
   nsCOMPtr<nsIContent> nextContent = aPoint.GetChild();
   if (!nextContent) {
-    if (aPoint.GetContainer() == aBlockParent) {
+    if (aPoint.GetContainer() == &aBlockParent) {
       // We are at end of the block.
       return nullptr;
     }
 
     // We are at end of non-block container
-    return GetNextWSNodeInner(aPoint.GetContainer(), aBlockParent);
+    return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+        *aPoint.ContainerAsContent(), aBlockParent, mEditingHost);
   }
 
   // We have a next node.  If it's a block, return it.
