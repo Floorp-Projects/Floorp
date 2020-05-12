@@ -1071,19 +1071,3 @@ performance.interaction:
       - mconley@mozilla.com
       - dolske@mozilla.com
     expires: never
-
-javascript.gc:
-  total_time:
-    type: timing_distribution
-    time_unit: millisecond
-    gecko_datapoint: GC_MS
-    description: >
-      The total time taken by a collection.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419#c8
-    notification_emails:
-      - dev-telemetry-gc-alerts@mozilla.org
-      - jcoppeard@mozilla.com
-    expires: never
