@@ -202,8 +202,13 @@ void OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC,
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(aArgs.principalInfo());
+  auto principalOrErr = PrincipalInfoToPrincipal(aArgs.principalInfo());
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    nsPrintfCString err("Failed to obtain principal");
+    aRv.ThrowTypeError(err);
+    return;
+  }
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
   MOZ_DIAGNOSTIC_ASSERT(principal);
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;

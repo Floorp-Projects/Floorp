@@ -55,10 +55,12 @@ mozilla::ipc::IPCResult ServiceWorkerManagerChild::RecvNotifyUnregister(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aPrincipalInfo);
-  if (NS_WARN_IF(!principal)) {
+  auto principalOrErr = PrincipalInfoToPrincipal(aPrincipalInfo);
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     return IPC_OK();
   }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   nsresult rv = swm->NotifyUnregister(principal, aScope);
   Unused << NS_WARN_IF(NS_FAILED(rv));

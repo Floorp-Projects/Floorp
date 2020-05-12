@@ -1463,11 +1463,12 @@ DocumentLoadListener::RedirectToRealChannel(
           CreateAndReject(ipc::ResponseRejectReason::SendError, __func__);
     }
 
-    nsresult rv;
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-        PrincipalInfoToPrincipal(loadInfo.ref().triggeringPrincipalInfo(), &rv);
+    auto triggeringPrincipalOrErr =
+        PrincipalInfoToPrincipal(loadInfo.ref().triggeringPrincipalInfo());
 
-    if (NS_SUCCEEDED(rv) && triggeringPrincipal) {
+    if (triggeringPrincipalOrErr.isOk()) {
+      nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+          triggeringPrincipalOrErr.unwrap();
       cp->TransmitBlobDataIfBlobURL(args.uri(), triggeringPrincipal);
     }
 

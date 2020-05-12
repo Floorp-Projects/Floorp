@@ -881,15 +881,14 @@ nsresult IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       return NS_OK;
 
     case PrincipalInfo::TContentPrincipalInfo: {
-      nsresult rv;
-      nsCOMPtr<nsIPrincipal> principal =
-          PrincipalInfoToPrincipal(*principalInfo, &rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      auto principalOrErr = PrincipalInfoToPrincipal(*principalInfo);
+      if (NS_WARN_IF(principalOrErr.isErr())) {
+        return principalOrErr.unwrapErr();
       }
 
-      rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr,
-                                              &aOrigin);
+      nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+      nsresult rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr,
+                                                       nullptr, &aOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

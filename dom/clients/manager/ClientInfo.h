@@ -94,9 +94,8 @@ class ClientInfo final {
   // Determine if the client is in private browsing mode.
   bool IsPrivateBrowsing() const;
 
-  // Get a main-thread nsIPrincipal for the client.  This may return nullptr
-  // if the PrincipalInfo() fails to deserialize for some reason.
-  nsCOMPtr<nsIPrincipal> GetPrincipal() const;
+  // Get a main-thread nsIPrincipal for the client.
+  Result<nsCOMPtr<nsIPrincipal>, nsresult> GetPrincipal() const;
 
   const Maybe<mozilla::ipc::CSPInfo>& GetCspInfo() const;
   void SetCspInfo(const mozilla::ipc::CSPInfo& aCSPInfo);

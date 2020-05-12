@@ -19,6 +19,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "ServiceWorker.h"
@@ -285,8 +286,8 @@ class SWRUpdateRunnable final : public Runnable {
     MOZ_ASSERT(NS_IsMainThread());
     ErrorResult result;
 
-    nsCOMPtr<nsIPrincipal> principal = mDescriptor.GetPrincipal();
-    if (NS_WARN_IF(!principal)) {
+    auto principalOrErr = mDescriptor.GetPrincipal();
+    if (NS_WARN_IF(principalOrErr.isErr())) {
       mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
       return NS_OK;
     }
@@ -296,6 +297,8 @@ class SWRUpdateRunnable final : public Runnable {
       mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
       return NS_OK;
     }
+
+    nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
     // This will delay update jobs originating from a service worker thread.
     // We don't currently handle ServiceWorkerRegistration.update() from other
@@ -445,11 +448,13 @@ class StartUnregisterRunnable final : public Runnable {
   Run() override {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsCOMPtr<nsIPrincipal> principal = mDescriptor.GetPrincipal();
-    if (!principal) {
+    auto principalOrErr = mDescriptor.GetPrincipal();
+    if (NS_WARN_IF(principalOrErr.isErr())) {
       mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
       return NS_OK;
     }
+
+    nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
     nsCOMPtr<nsIServiceWorkerManager> swm =
         mozilla::services::GetServiceWorkerManager();
@@ -493,11 +498,13 @@ void ServiceWorkerRegistrationMainThread::Update(
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = mDescriptor.GetPrincipal();
-  if (!principal) {
+  auto principalOrErr = mDescriptor.GetPrincipal();
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
     return;
   }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   RefPtr<MainThreadUpdateCallback> cb = new MainThreadUpdateCallback();
   UpdateInternal(principal, NS_ConvertUTF16toUTF8(mScope),
@@ -542,11 +549,13 @@ void ServiceWorkerRegistrationMainThread::Unregister(
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = mDescriptor.GetPrincipal();
-  if (!principal) {
+  auto principalOrErr = mDescriptor.GetPrincipal();
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
     return;
   }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   RefPtr<UnregisterCallback> cb = new UnregisterCallback();
 
