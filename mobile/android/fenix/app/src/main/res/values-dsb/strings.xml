@@ -1259,6 +1259,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Zmóžniśo to, aby roz- a zaśěgowanje z dwěma palcoma dowólił, samo na websedłach, kótarež toś tej gesće zajźuju.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Mjenju (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Slědnem wužyśu</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Meni pśizjawjeńskich datow sortěrowaś</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pytnicu pśidaś</string>
     <!-- Title of the Edit search engine screen -->

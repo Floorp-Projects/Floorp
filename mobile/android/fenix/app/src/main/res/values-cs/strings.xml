@@ -23,11 +23,6 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Používáte anonymní prohlížení</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">
-         %1$s vymaže vaši historii vyhledávání a navštívených stránek po ukončení aplikace nebo zavření všech anonymních panelů. S touto funkcí nejste na internetu zcela neviditelní a např. poskytovatel připojení k internetu může stále zjistit, které stránky navštěvujete. Vaše aktivita na internetu ale zůstane utajena před dalšími uživateli tohoto zařízení.
-    </string>
     <string name="private_browsing_common_myths">
        Časté omyly o fungování anonymního prohlížení
     </string>
@@ -367,7 +362,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Zapnout synchronizaci</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Naskenujte párovací kód zobrazení ve Firefoxu na počítači</string>
+    <string name="preferences_sync_pair">Naskenujte párovací kód zobrazený ve Firefoxu na počítači</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Přihlásit se</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -597,8 +592,6 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Záložka odstraněna: %1$s</string>
 
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Mazání vybraných záložek</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ZPĚT</string>
 
@@ -979,7 +972,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Otevřte Firefoxu na svém počítači a navštivte stránku <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Připraveno ke skenování</string>
+    <string name="sign_in_ready_for_scan">Připraveno na skenování</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Přihlásit se pomocí fotoaparátu</string>
     <!-- Text shown for settings option for sign with email -->

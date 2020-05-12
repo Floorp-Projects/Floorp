@@ -416,8 +416,6 @@
     <string name="library_reading_list">Popis za čitanje</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Traži</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Biblioteka</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Postavke</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1267,6 +1265,13 @@
 
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Aktiviraj, kako bi se omogućile geste za smanjivanje i zumiranje prikaza, čak i ako web-stranica sprečava ovu gestu.</string>
+
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Naziv (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Zadnja upotreba</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Izbornik sortiranja prijava</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Dodaj tražilicu</string>
