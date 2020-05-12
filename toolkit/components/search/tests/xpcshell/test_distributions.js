@@ -134,6 +134,8 @@ tests.push({
     hasParams(engines, "百度", "suggestions", "tn=monline_4_dg") &&
     hasParams(engines, "百度", "homepage", "tn=monline_3_dg") &&
     hasParams(engines, "百度", "newtab", "tn=monline_3_dg") &&
+    hasParams(engines, "百度", "contextmenu", "tn=monline_4_dg") &&
+    hasParams(engines, "百度", "keyword", "tn=monline_4_dg") &&
     hasDefault(engines, "百度") &&
     hasEnginesFirst(engines, ["百度", "Bing", "Google", "亚马逊", "维基百科"]),
 });
@@ -335,6 +337,8 @@ tests.push({
   distribution: "yandex-drp",
   test: engines =>
     hasParams(engines, "Яндекс", "searchbar", "clid=2039342") &&
+    // Test that fallback works correct as well.
+    hasParams(engines, "Яндекс", "contextmenu", "clid=2039342") &&
     hasDefault(engines, "Яндекс") &&
     hasEnginesFirst(engines, ["Яндекс"]),
 });
@@ -413,11 +417,22 @@ tests.push({
 
 function hasParams(engines, engineName, purpose, param) {
   let engine = engines.find(e => e._name === engineName);
-  if (!engine) {
-    Assert.ok(false, `Cannot find ${engineName}`);
-  }
+  Assert.ok(engine, `Should be able to find ${engineName}`);
+
   let submission = engine.getSubmission("test", "text/html", purpose);
-  let result = submission.uri.query.split("&").includes(param);
+  let queries = submission.uri.query.split("&");
+
+  let paramNames = new Set();
+  for (let query of queries) {
+    let queryParam = query.split("=")[0];
+    Assert.ok(
+      !paramNames.has(queryParam),
+      `Should not have a duplicate ${param}`
+    );
+    paramNames.add(queryParam);
+  }
+
+  let result = queries.includes(param);
   Assert.ok(result, `expect ${submission.uri.query} to include ${param}`);
   return true;
 }
