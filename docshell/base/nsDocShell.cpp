@@ -7615,7 +7615,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
       if (!parentSite.Equals(thisSite)) {
 #ifdef MOZ_GECKO_PROFILER
         nsCOMPtr<nsIURI> prinURI;
-        thisPrincipal->GetURI(getter_AddRefs(prinURI));
+        BasePrincipal::Cast(thisPrincipal)->GetURI(getter_AddRefs(prinURI));
         nsPrintfCString marker("Iframe loaded in background: %s",
                                prinURI->GetSpecOrDefault().get());
         TimeStamp now = TimeStamp::Now();
