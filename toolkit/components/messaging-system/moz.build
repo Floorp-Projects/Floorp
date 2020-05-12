@@ -7,10 +7,13 @@
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Messaging System')
 
+BROWSER_CHROME_MANIFESTS += ['test/browser/specialMessageActions/browser.ini']
+
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 TESTING_JS_MODULES += [
-    'test/MSTestUtils.jsm'
+    'schemas/SpecialMessageActionSchemas.js',
+    'test/MSTestUtils.jsm',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
