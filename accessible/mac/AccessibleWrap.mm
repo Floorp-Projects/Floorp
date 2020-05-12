@@ -32,7 +32,17 @@ mozAccessible* AccessibleWrap::GetNativeObject() {
   if (!mNativeInited && !mNativeObject) {
     // We don't creat OSX accessibles for xul tooltips, defunct accessibles,
     // or pruned children.
-    if (!IsXULTooltip() && !IsDefunct() && !AncestorIsFlat()) {
+    //
+    // We also don't create a native object if we're child of a "flat" accessible;
+    // for example, on OS X buttons shouldn't have any children, because that
+    // makes the OS confused.
+    //
+    // To maintain a scripting environment where the XPCOM accessible hierarchy
+    // look the same on all platforms, we still let the C++ objects be created
+    // though.
+    Accessible* parent = Parent();
+    bool mustBePruned = parent && nsAccUtils::MustPrune(parent);
+    if (!IsXULTooltip() && !IsDefunct() && !mustBePruned) {
       uintptr_t accWrap = reinterpret_cast<uintptr_t>(this);
       mNativeObject = [[GetNativeType() alloc] initWithAccessible:accWrap];
     }
@@ -156,25 +166,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // AccessibleWrap protected
-
-bool AccessibleWrap::AncestorIsFlat() {
-  // We don't create a native object if we're child of a "flat" accessible;
-  // for example, on OS X buttons shouldn't have any children, because that
-  // makes the OS confused.
-  //
-  // To maintain a scripting environment where the XPCOM accessible hierarchy
-  // look the same on all platforms, we still let the C++ objects be created
-  // though.
-
-  Accessible* parent = Parent();
-  while (parent) {
-    if (nsAccUtils::MustPrune(parent)) return true;
-
-    parent = parent->Parent();
-  }
-  // no parent was flat
-  return false;
-}
 
 Class a11y::GetTypeFromRole(roles::Role aRole) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;

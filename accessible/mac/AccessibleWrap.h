@@ -53,11 +53,6 @@ class AccessibleWrap : public Accessible {
   friend class xpcAccessibleMacInterface;
 
   /**
-   * Return true if the parent doesn't have children to expose to AT.
-   */
-  bool AncestorIsFlat();
-
-  /**
    * Get the native object. Create it if needed.
    */
 #if defined(__OBJC__)
