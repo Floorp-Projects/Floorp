@@ -357,7 +357,7 @@ var gTests = [
             "expected " + Object.keys(expected).join(" and ") + " to be shared"
           );
 
-          await closeStream(false, "frame1");
+          await closeStream(false, aIframeId);
         } else if (aExpect == PromptResult.DENY) {
           const observerPromise = expectObserverCalled(
             "recording-window-ended"
@@ -409,6 +409,46 @@ var gTests = [
         PromptResult.ALLOW
       );
 
+      // Wildcard attributes still get delegation when their src is unchanged.
+      await checkPersistentPermission(
+        Perms.PROMPT_ACTION,
+        "camera",
+        "frame4",
+        PromptResult.PROMPT
+      );
+      await checkPersistentPermission(
+        Perms.DENY_ACTION,
+        "camera",
+        "frame4",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.ALLOW_ACTION,
+        "camera",
+        "frame4",
+        PromptResult.ALLOW
+      );
+
+      // Wildcard attributes still get delegation when their src is unchanged.
+      await checkPersistentPermission(
+        Perms.PROMPT_ACTION,
+        "microphone",
+        "frame4",
+        PromptResult.PROMPT
+      );
+      await checkPersistentPermission(
+        Perms.DENY_ACTION,
+        "microphone",
+        "frame4",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.ALLOW_ACTION,
+        "microphone",
+        "frame4",
+        PromptResult.ALLOW
+      );
+
       await checkPersistentPermission(
         Perms.PROMPT_ACTION,
         "screen",
@@ -426,6 +466,12 @@ var gTests = [
         Perms.ALLOW_ACTION,
         "screen",
         "frame1",
+        PromptResult.PROMPT
+      );
+      await checkPersistentPermission(
+        Perms.ALLOW_ACTION,
+        "screen",
+        "frame4",
         PromptResult.PROMPT
       );
 
@@ -541,20 +587,16 @@ var gTests = [
       await checkTempPermission("screen");
     },
   },
-
-  {
-    desc:
-      "Prompt and display both first party and third party origin in maybe unsafe permission delegation",
-    run: async function checkPromptNoDelegate() {
-      await promptNoDelegate("test1.example.com");
-      await promptNoDelegate("test1.example.com", true, false);
-      await promptNoDelegate("test1.example.com", false, true);
-    },
-  },
   {
     desc:
       "Don't reprompt while actively sharing in maybe unsafe permission delegation",
     run: async function checkNoRepromptNoDelegate() {
+      // Change location to ensure that we're treated as potentially unsafe.
+      await promiseChangeLocationFrame(
+        "frame4",
+        "https://test2.example.com/browser/browser/base/content/test/webrtc/get_user_media.html"
+      );
+
       // Check that we get a prompt.
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -566,7 +608,7 @@ var gTests = [
       is(
         PopupNotifications.getNotification("webRTC-shareDevices").options
           .secondName,
-        "test1.example.com",
+        "test2.example.com",
         "Use third party's origin as secondName"
       );
 
@@ -612,13 +654,6 @@ var gTests = [
   },
   {
     desc:
-      "Prompt and display both first party and third party origin when sharing screen in unsafe permission delegation",
-    run: async function checkPromptNoDelegateScreenSharing() {
-      await promptNoDelegateScreenSharing("test1.example.com");
-    },
-  },
-  {
-    desc:
       "Change location, prompt and display both first party and third party origin in maybe unsafe permission delegation",
     run: async function checkPromptNoDelegateChangeLoxation() {
       await promiseChangeLocationFrame(
@@ -646,6 +681,12 @@ var gTests = [
       "Prompt and display both first party and third party origin and temporary deny in frame does not change permission scope",
     skipObserverVerification: true,
     run: async function checkPromptBothOriginsTempDenyFrame() {
+      // Change location to ensure that we're treated as potentially unsafe.
+      await promiseChangeLocationFrame(
+        "frame4",
+        "https://test2.example.com/browser/browser/base/content/test/webrtc/get_user_media.html"
+      );
+
       // Persistent allowed first party origin
       let browser = gBrowser.selectedBrowser;
       let uri = gBrowser.selectedBrowser.documentURI;

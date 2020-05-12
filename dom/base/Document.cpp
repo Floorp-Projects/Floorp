@@ -3485,6 +3485,7 @@ nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
   if (parentPolicy) {
     // Let's inherit the policy from the parent HTMLIFrameElement if it exists.
     mFeaturePolicy->InheritPolicy(parentPolicy);
+    mFeaturePolicy->SetSrcOrigin(parentPolicy->GetSrcOrigin());
   }
 
   // We don't want to parse the http Feature-Policy header if this pref is off.
