@@ -583,6 +583,8 @@ pref("media.cubeb.logging_level", "");
   pref("media.cubeb.backend", "audiounit-rust");
 #endif
 
+pref("media.cubeb.output_voice_routing", true);
+
 // GraphRunner (fixed MediaTrackGraph thread) control
 pref("media.audiograph.single_thread.enabled", true);
 
