@@ -1612,7 +1612,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
         const OpAddPipelineIdForCompositable& op =
             cmd.get_OpAddPipelineIdForCompositable();
         AddPipelineIdForCompositable(op.pipelineId(), op.handle(), op.isAsync(),
-                                     aTxn, txnForImageBridge, aRenderRoot);
+                                     aTxn, txnForImageBridge);
         break;
       }
       case WebRenderParentCommand::TOpRemovePipelineIdForCompositable: {
@@ -1632,18 +1632,16 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
         mAsyncImageManager->UpdateAsyncImagePipeline(
             op.pipelineId(), op.scBounds(), op.scTransform(), op.scaleToSize(),
             op.filter(), op.mixBlendMode());
-        mAsyncImageManager->ApplyAsyncImageForPipeline(
-            op.pipelineId(), aTxn, txnForImageBridge,
-            RenderRootForExternal(aRenderRoot));
+        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn,
+                                                       txnForImageBridge);
         break;
       }
       case WebRenderParentCommand::TOpUpdatedAsyncImagePipeline: {
         const OpUpdatedAsyncImagePipeline& op =
             cmd.get_OpUpdatedAsyncImagePipeline();
         aTxn.InvalidateRenderedFrame();
-        mAsyncImageManager->ApplyAsyncImageForPipeline(
-            op.pipelineId(), aTxn, txnForImageBridge,
-            RenderRootForExternal(aRenderRoot));
+        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn,
+                                                       txnForImageBridge);
         break;
       }
       case WebRenderParentCommand::TCompositableOperation: {
@@ -1866,8 +1864,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
 void WebRenderBridgeParent::AddPipelineIdForCompositable(
     const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
     const bool& aAsync, wr::TransactionBuilder& aTxn,
-    wr::TransactionBuilder& aTxnForImageBridge,
-    const wr::RenderRoot& aRenderRoot) {
+    wr::TransactionBuilder& aTxnForImageBridge) {
   if (mDestroyed) {
     return;
   }

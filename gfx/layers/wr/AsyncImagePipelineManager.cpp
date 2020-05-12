@@ -416,7 +416,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
 
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn,
-    wr::TransactionBuilder& aTxnForImageBridge, wr::RenderRoot aRenderRoot) {
+    wr::TransactionBuilder& aTxnForImageBridge) {
   AsyncImagePipeline* pipeline =
       mAsyncImagePipelines.Get(wr::AsUint64(aPipelineId));
   if (!pipeline) {
