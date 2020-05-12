@@ -75,8 +75,16 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
       contentType == nsIContentPolicy::TYPE_STYLESHEET ||
       contentType == nsIContentPolicy::TYPE_DTD ||
       contentType == nsIContentPolicy::TYPE_XBL;
-  if (aURI->SchemeIs("resource") && !isImgOrStyleOrDTDorXBL) {
-    return true;
+  if (aURI->SchemeIs("resource")) {
+    nsAutoCString uriSpec;
+    aURI->GetSpec(uriSpec);
+    // Exempt pdf.js from being subject to a page's CSP.
+    if (StringBeginsWith(uriSpec, NS_LITERAL_CSTRING("resource://pdf.js/"))) {
+      return false;
+    }
+    if (!isImgOrStyleOrDTDorXBL) {
+      return true;
+    }
   }
   if (aURI->SchemeIs("chrome") && !isImgOrStyleOrDTDorXBL) {
     return true;
@@ -316,9 +324,9 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
 
   bool isPreload = nsContentUtils::IsPreloadType(policyType);
 
-  /* On redirect, if the content policy is a preload type, rejecting the preload
-   * results in the load silently failing, so we convert preloads to the actual
-   * type. See Bug 1219453.
+  /* On redirect, if the content policy is a preload type, rejecting the
+   * preload results in the load silently failing, so we convert preloads to
+   * the actual type. See Bug 1219453.
    */
   policyType =
       nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(policyType);
