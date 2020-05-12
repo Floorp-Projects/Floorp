@@ -15,18 +15,21 @@ with the BB indexing at the top level to make it easier to integrate
 D69914, but possibly that's not the right choice.
 
 Differential Revision: https://reviews.llvm.org/D70376
+---
+ llvm/lib/Analysis/LazyValueInfo.cpp | 143 +++++++++-------------------
+ 1 file changed, 47 insertions(+), 96 deletions(-)
 
 diff --git a/llvm/lib/Analysis/LazyValueInfo.cpp b/llvm/lib/Analysis/LazyValueInfo.cpp
-index bad2de9e5f5..33406a75d80 100644
+index 542ff709d47..eb51744aec3 100644
 --- a/llvm/lib/Analysis/LazyValueInfo.cpp
 +++ b/llvm/lib/Analysis/LazyValueInfo.cpp
-@@ -136,12 +136,10 @@ namespace {
+@@ -132,12 +132,9 @@ namespace {
    /// A callback value handle updates the cache when values are erased.
    class LazyValueInfoCache;
    struct LVIValueHandle final : public CallbackVH {
 -    // Needs to access getValPtr(), which is protected.
 -    friend struct DenseMapInfo<LVIValueHandle>;
- 
+-
      LazyValueInfoCache *Parent;
  
 -    LVIValueHandle(Value *V, LazyValueInfoCache *P)
@@ -34,7 +37,7 @@ index bad2de9e5f5..33406a75d80 100644
        : CallbackVH(V), Parent(P) { }
  
      void deleted() override;
-@@ -155,89 +153,63 @@ namespace {
+@@ -151,89 +148,63 @@ namespace {
    /// This is the cache kept by LazyValueInfo which
    /// maintains information about queries across the clients' queries.
    class LazyValueInfoCache {
@@ -86,7 +89,7 @@ index bad2de9e5f5..33406a75d80 100644
 -      else {
 -        auto It = ValueCache.find_as(Val);
 -        if (It == ValueCache.end()) {
--          ValueCache[Val] = std::make_unique<ValueCacheEntryTy>(Val, this);
+-          ValueCache[Val] = make_unique<ValueCacheEntryTy>(Val, this);
 -          It = ValueCache.find_as(Val);
 -          assert(It != ValueCache.end() && "Val was just added to the map!");
 -        }
@@ -135,12 +138,12 @@ index bad2de9e5f5..33406a75d80 100644
  
 -      auto I = ValueCache.find_as(V);
 -      if (I == ValueCache.end())
--        return ValueLatticeElement();
--      auto BBI = I->second->BlockVals.find(BB);
--      if (BBI == I->second->BlockVals.end())
 +      auto LatticeIt = It->second.LatticeElements.find(V);
 +      if (LatticeIt == It->second.LatticeElements.end())
          return ValueLatticeElement();
+-      auto BBI = I->second->BlockVals.find(BB);
+-      if (BBI == I->second->BlockVals.end())
+-        return ValueLatticeElement();
 -      return BBI->second;
 +
 +      return LatticeIt->second;
@@ -156,7 +159,7 @@ index bad2de9e5f5..33406a75d80 100644
      }
  
      /// Inform the cache that a given value has been deleted.
-@@ -251,23 +223,18 @@ namespace {
+@@ -247,23 +218,18 @@ namespace {
      /// OldSucc might have (unless also overdefined in NewSucc).  This just
      /// flushes elements from the cache and does not add any.
      void threadEdgeImpl(BasicBlock *OldSucc,BasicBlock *NewSucc);
@@ -186,7 +189,7 @@ index bad2de9e5f5..33406a75d80 100644
  }
  
  void LVIValueHandle::deleted() {
-@@ -277,18 +244,7 @@ void LVIValueHandle::deleted() {
+@@ -273,18 +239,7 @@ void LVIValueHandle::deleted() {
  }
  
  void LazyValueInfoCache::eraseBlock(BasicBlock *BB) {
@@ -206,7 +209,7 @@ index bad2de9e5f5..33406a75d80 100644
  }
  
  void LazyValueInfoCache::threadEdgeImpl(BasicBlock *OldSucc,
-@@ -306,10 +262,11 @@ void LazyValueInfoCache::threadEdgeImpl(BasicBlock *OldSucc,
+@@ -302,10 +257,11 @@ void LazyValueInfoCache::threadEdgeImpl(BasicBlock *OldSucc,
    std::vector<BasicBlock*> worklist;
    worklist.push_back(OldSucc);
  
@@ -221,7 +224,7 @@ index bad2de9e5f5..33406a75d80 100644
  
    // Use a worklist to perform a depth-first search of OldSucc's successors.
    // NOTE: We do not need a visited list since any blocks we have already
-@@ -323,10 +280,10 @@ void LazyValueInfoCache::threadEdgeImpl(BasicBlock *OldSucc,
+@@ -319,10 +275,10 @@ void LazyValueInfoCache::threadEdgeImpl(BasicBlock *OldSucc,
      if (ToUpdate == NewSucc) continue;
  
      // If a value was marked overdefined in OldSucc, and is here too...
@@ -235,7 +238,7 @@ index bad2de9e5f5..33406a75d80 100644
  
      bool changed = false;
      for (Value *V : ValsToClear) {
-@@ -336,11 +293,6 @@ void LazyValueInfoCache::threadEdgeImpl(BasicBlock *OldSucc,
+@@ -332,11 +288,6 @@ void LazyValueInfoCache::threadEdgeImpl(BasicBlock *OldSucc,
        // If we removed anything, then we potentially need to update
        // blocks successors too.
        changed = true;
@@ -247,3 +250,6 @@ index bad2de9e5f5..33406a75d80 100644
      }
  
      if (!changed) continue;
+-- 
+2.24.0
+
