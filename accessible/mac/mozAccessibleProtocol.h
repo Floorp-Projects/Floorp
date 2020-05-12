@@ -42,8 +42,8 @@
 // returns the accessible at the specified point.
 - (id)accessibilityHitTest:(NSPoint)point;
 
-// whether this element is flagged as ignored.
-- (BOOL)accessibilityIsIgnored;
+// whether this element should be exposed to platform.
+- (BOOL)isAccessibilityElement;
 
 // currently focused UI element (possibly a child accessible)
 - (id)accessibilityFocusedUIElement;

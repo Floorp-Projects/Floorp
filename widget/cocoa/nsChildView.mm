@@ -4977,10 +4977,10 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 
 // general
 
-- (BOOL)accessibilityIsIgnored {
-  if (!mozilla::a11y::ShouldA11yBeEnabled()) return [super accessibilityIsIgnored];
+- (BOOL)isAccessibilityElement {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) return [super isAccessibilityElement];
 
-  return [[self accessible] accessibilityIsIgnored];
+  return [[self accessible] isAccessibilityElement];
 }
 
 - (id)accessibilityHitTest:(NSPoint)point {

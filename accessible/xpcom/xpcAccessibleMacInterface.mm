@@ -341,8 +341,8 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
     return NSObjectToJsValue(
         @[ [NSNumber numberWithDouble:size.width], [NSNumber numberWithDouble:size.height] ], aCx,
         aResult);
-  } else if ([aObj respondsToSelector:@selector(accessibilityIsIgnored)]) {
-    // We expect all of our accessibility objects to implement accessibilityIsIgnored
+  } else if ([aObj respondsToSelector:@selector(isAccessibilityElement)]) {
+    // We expect all of our accessibility objects to implement isAccessibilityElement
     // at the very least. If it is implemented we will assume its an accessibility object.
     nsCOMPtr<nsIAccessibleMacInterface> obj = new xpcAccessibleMacInterface(aObj);
     return nsContentUtils::WrapNative(aCx, obj, &NS_GET_IID(nsIAccessibleMacInterface), aResult);
