@@ -8,8 +8,8 @@ import os
 import requests
 import json
 from datetime import datetime, timedelta
-
 import six
+
 
 TASK_DURATION_URL = 'https://storage.googleapis.com/mozilla-mach-data/task_duration_history.json'
 GRAPH_QUANTILES_URL = 'https://storage.googleapis.com/mozilla-mach-data/machtry_quantiles.csv'

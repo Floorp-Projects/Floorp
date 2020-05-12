@@ -46,6 +46,22 @@ class Options:
         },
         "--hooks": {"type": str, "default": "", "help": "Python hooks"},
         "--verbose": {"action": "store_true", "default": False, "help": "Verbose mode"},
+        "--push-to-try": {
+            "action": "store_true",
+            "default": False,
+            "help": "Pushin the test to try",
+        },
+        "--try-platform": {
+            "type": str,
+            "default": "g5",
+            "help": "Platform to use on try",
+            "choices": ["g5", "pixel2", "linux", "mac", "win"],
+        },
+        "--on-try": {
+            "action": "store_true",
+            "default": False,
+            "help": "Running the test on try",
+        },
     }
 
     args = copy.deepcopy(general_args)

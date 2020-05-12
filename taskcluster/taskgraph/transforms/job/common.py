@@ -81,7 +81,7 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
     worker = job['worker']
     is_mac = worker['os'] == 'macosx'
     is_win = worker['os'] == 'windows'
-    is_linux = worker['os'] == 'linux'
+    is_linux = worker['os'] == 'linux' or 'linux-bitbar'
     assert is_mac or is_win or is_linux
 
     if is_win:

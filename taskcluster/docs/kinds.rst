@@ -280,6 +280,10 @@ push-apk-checks
 ---------------
 Runs the checks done in push-apk to ensure APKs are sane before submitting them
 
+perftest
+--------
+Runs performance tests using mozperftest.
+
 release-balrog-submit-toplevel
 ------------------------------
 Toplevel tasks are responsible for submitting metadata to Balrog that is not specific to any
