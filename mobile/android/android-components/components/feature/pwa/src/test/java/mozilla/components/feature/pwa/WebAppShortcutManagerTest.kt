@@ -53,6 +53,10 @@ class WebAppShortcutManagerTest {
     @Mock private lateinit var storage: ManifestStorage
     @Mock private lateinit var icons: BrowserIcons
     private lateinit var manager: WebAppShortcutManager
+    private val baseManifest = WebAppManifest(
+        name = "Demo",
+        startUrl = "https://example.com"
+    )
 
     @Before
     fun setup() {
@@ -73,9 +77,7 @@ class WebAppShortcutManagerTest {
 
     @Test
     fun `requestPinShortcut no-op if pinning unsupported`() = runBlockingTest {
-        val manifest = WebAppManifest(
-            name = "Demo",
-            startUrl = "https://example.com",
+        val manifest = baseManifest.copy(
             display = WebAppManifest.DisplayMode.STANDALONE,
             icons = listOf(WebAppManifest.Icon(
                 src = "https://example.com/icon.png",
@@ -99,9 +101,7 @@ class WebAppShortcutManagerTest {
     @Test
     fun `requestPinShortcut won't make a PWA icon if the session is not installable`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.O)
-        val manifest = WebAppManifest(
-            name = "Demo",
-            startUrl = "https://example.com",
+        val manifest = baseManifest.copy(
             display = WebAppManifest.DisplayMode.STANDALONE,
             icons = emptyList() // no icons
         )
@@ -118,9 +118,7 @@ class WebAppShortcutManagerTest {
     @Test
     fun `requestPinShortcut pins PWA shortcut`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.O)
-        val manifest = WebAppManifest(
-            name = "Demo",
-            startUrl = "https://example.com",
+        val manifest = baseManifest.copy(
             display = WebAppManifest.DisplayMode.STANDALONE,
             icons = listOf(WebAppManifest.Icon(
                 src = "https://example.com/icon.png",
@@ -202,7 +200,7 @@ class WebAppShortcutManagerTest {
 
     @Test
     fun `updateShortcuts no-op`() = runBlockingTest {
-        val manifests = listOf(WebAppManifest(name = "Demo", startUrl = "https://example.com"))
+        val manifests = listOf(baseManifest)
         doReturn(null).`when`(manager).buildWebAppShortcut(context, manifests[0])
 
         manager.updateShortcuts(context, manifests)
@@ -217,7 +215,7 @@ class WebAppShortcutManagerTest {
     @Test
     fun `updateShortcuts updates list of existing shortcuts`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.N_MR1)
-        val manifests = listOf(WebAppManifest(name = "Demo", startUrl = "https://example.com"))
+        val manifests = listOf(baseManifest)
         val shortcutCompat: ShortcutInfoCompat = mock()
         val shortcut: ShortcutInfo = mock()
         doReturn(shortcutCompat).`when`(manager).buildWebAppShortcut(context, manifests[0])
@@ -229,13 +227,12 @@ class WebAppShortcutManagerTest {
 
     @Test
     fun `buildWebAppShortcut builds shortcut and saves manifest`() = runBlockingTest {
-        val manifest = WebAppManifest(name = "Demo", startUrl = "https://example.com")
-        doReturn(mock<IconCompat>()).`when`(manager).buildIconFromManifest(manifest)
+        doReturn(mock<IconCompat>()).`when`(manager).buildIconFromManifest(baseManifest)
 
-        val shortcut = manager.buildWebAppShortcut(context, manifest)!!
+        val shortcut = manager.buildWebAppShortcut(context, baseManifest)!!
         val intent = shortcut.intent
 
-        verify(storage).saveManifest(manifest)
+        verify(storage).saveManifest(baseManifest)
 
         assertEquals("https://example.com", shortcut.id)
         assertEquals("Demo", shortcut.longLabel)
