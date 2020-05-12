@@ -302,7 +302,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteAPK = None
         self.remoteAPK = posixpath.join(self.remoteBinDir,
                                         os.path.basename(options['localAPK']))
-        self.setAppRoot()
 
         # data that needs to be passed to the RemoteXPCShellTestThread
         self.mobileArgs = {
@@ -368,8 +367,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.buildCoreEnvironment()
         self.setLD_LIBRARY_PATH()
         self.env["MOZ_LINKER_CACHE"] = self.remoteBinDir
-        if self.appRoot:
-            self.env["GRE_HOME"] = self.appRoot
+        self.env["GRE_HOME"] = self.remoteBinDir
         self.env["XPCSHELL_TEST_PROFILE_DIR"] = self.profileDir
         self.env["TMPDIR"] = self.remoteTmpDir
         self.env["HOME"] = self.profileDir
@@ -411,19 +409,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 abi = names[0].split('/')[1]
         self.log.info("Using abi %s." % abi)
         self.env["MOZ_ANDROID_CPU_ABI"] = abi
-
-    def setAppRoot(self):
-        # Determine the application root directory associated with the package
-        # name used by the APK.
-        self.appRoot = None
-        packageName = None
-        try:
-            packageName = self.localAPKContents.read("package-name.txt")
-        except Exception as e:
-            print("unable to determine app root; assuming geckoview: " + str(e))
-            packageName = "org.mozilla.geckoview.test"
-        if packageName:
-            self.appRoot = posixpath.join("/data", "data", packageName.strip())
 
     def setupUtilities(self):
         self.initDir(self.remoteTmpDir)
