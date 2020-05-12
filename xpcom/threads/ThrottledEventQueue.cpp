@@ -250,7 +250,11 @@ class ThrottledEventQueue::Inner final : public nsISupports {
     }
 
     // Execute the event now that we have unlocked.
+    LogRunnable::Run log(event);
     Unused << event->Run();
+
+    // To cover the event's destructor code in the LogRunnable log
+    event = nullptr;
   }
 
  public:
@@ -343,7 +347,9 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
     // Only add the event to the underlying queue if are able to
     // dispatch to our base target.
-    mEventQueue.PutEvent(std::move(aEvent), EventQueuePriority::Normal, lock);
+    nsCOMPtr<nsIRunnable> event(aEvent);
+    LogRunnable::LogDispatch(event);
+    mEventQueue.PutEvent(event.forget(), EventQueuePriority::Normal, lock);
     return NS_OK;
   }
 
