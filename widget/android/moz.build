@@ -86,6 +86,7 @@ classes_with_WrapForJNI = [
 ]
 
 headers_from_WrapForJNI = sorted(
+    ['GeneratedJNINatives.h', 'GeneratedJNIWrappers.h'] +
     ['Generated{}JNINatives.h'.format(c) for c in classes_with_WrapForJNI] +
     ['Generated{}JNIWrappers.h'.format(c) for c in classes_with_WrapForJNI])
 
