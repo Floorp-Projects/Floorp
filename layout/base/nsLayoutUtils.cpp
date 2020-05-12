@@ -9810,13 +9810,19 @@ CSSPoint nsLayoutUtils::GetCumulativeApzCallbackTransform(nsIFrame* aFrame) {
 
 /* static */
 nsRect nsLayoutUtils::ComputePartialPrerenderArea(
-    const nsRect& aDirtyRect, const nsRect& aOverflow,
+    nsIFrame* aFrame, const nsRect& aDirtyRect, const nsRect& aOverflow,
     const nsSize& aPrerenderSize) {
+  const gfxSize scale = GetTransformToAncestorScale(aFrame);
+  nsSize prerenderSize = aPrerenderSize;
+  if (scale.width != 0 && scale.height != 0) {
+    prerenderSize.width /= scale.width;
+    prerenderSize.height /= scale.height;
+  }
   // Simple calculation for now: center the pre-render area on the dirty rect,
   // and clamp to the overflow area. Later we can do more advanced things like
   // redistributing from one axis to another, or from one side to another.
-  nscoord xExcess = std::max(aPrerenderSize.width - aDirtyRect.width, 0);
-  nscoord yExcess = std::max(aPrerenderSize.height - aDirtyRect.height, 0);
+  nscoord xExcess = std::max(prerenderSize.width - aDirtyRect.width, 0);
+  nscoord yExcess = std::max(prerenderSize.height - aDirtyRect.height, 0);
   nsRect result = aDirtyRect;
   result.Inflate(xExcess / 2, yExcess / 2);
   return result.MoveInsideAndClamp(aOverflow);
