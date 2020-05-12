@@ -214,7 +214,8 @@ NS_IMPL_ISUPPORTS(nsMixedContentBlocker, nsIContentPolicy, nsIChannelEventSink)
 static void LogMixedContentMessage(
     MixedContentTypes aClassification, nsIURI* aContentLocation,
     uint64_t aInnerWindowID, nsMixedContentBlockerMessageType aMessageType,
-    nsIURI* aRequestingLocation) {
+    nsIURI* aRequestingLocation,
+    const nsACString& aOverruleMessageLookUpKeyWithThis = EmptyCString()) {
   nsAutoCString messageCategory;
   uint32_t severityFlag;
   nsAutoCString messageLookupKey;
@@ -235,6 +236,13 @@ static void LogMixedContentMessage(
     } else {
       messageLookupKey.AssignLiteral("LoadingMixedActiveContent2");
     }
+  }
+
+  // if the callee explicitly wants to use a special message for this
+  // console report, then we allow to overrule the default with the
+  // explicitly provided one here.
+  if (!aOverruleMessageLookUpKeyWithThis.IsEmpty()) {
+    messageLookupKey = aOverruleMessageLookUpKeyWithThis;
   }
 
   nsAutoString localizedMsg;
@@ -940,7 +948,11 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // set hasMixedContentObjectSubrequest on this object if necessary
   if (contentType == TYPE_OBJECT_SUBREQUEST) {
     if (!StaticPrefs::security_mixed_content_block_object_subrequest()) {
-      rootDoc->WarnOnceAbout(Document::eMixedDisplayObjectSubrequest);
+      nsAutoCString messageLookUpKey(
+          "LoadingMixedDisplayObjectSubrequestDeprecation");
+      LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
+                             eUserOverride, requestingLocation,
+                             messageLookUpKey);
     }
   }
 
