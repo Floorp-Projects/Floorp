@@ -925,7 +925,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   CompilationInfo compilationInfo(cx, allocScope, options);
-  compilationInfo.initFromSourceObject(lazy->sourceObject());
+  compilationInfo.initFromLazy(lazy);
 
   Parser<FullParseHandler, Unit> parser(cx, options, units, length,
                                         /* foldConstants = */ true,
@@ -1009,7 +1009,7 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   CompilationInfo compilationInfo(cx, allocScope, options);
-  compilationInfo.initFromSourceObject(lazy->sourceObject());
+  compilationInfo.initFromLazy(lazy);
 
   frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options, lazy);
 
