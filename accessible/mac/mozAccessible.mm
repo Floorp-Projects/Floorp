@@ -133,10 +133,36 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 
 - (BOOL)isAccessibilityElement {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  mozAccessible* parent = nil;
 
-  return YES;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    if (accWrap->Parent()) {
+      parent = GetNativeFromGeckoAccessible(accWrap->Parent());
+    }
+  }
+
+  if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    if (proxy->Parent()) {
+      parent = GetNativeFromProxy(proxy->Parent());
+    }
+
+    if (!parent) {
+      Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
+      parent = outerDoc ? GetNativeFromGeckoAccessible(outerDoc) : nil;
+    }
+  }
+
+  return ![self ignoreWithParent:parent];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+}
+
+- (BOOL)ignoreWithParent:(mozAccessible*)parent {
+  return [parent ignoreChild:self];
+}
+
+- (BOOL)ignoreChild:(mozAccessible*)child {
+  return NO;
 }
 
 - (NSArray*)additionalAccessibilityAttributeNames {
@@ -295,24 +321,6 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   mCachedState = 0;
 }
 
-- (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  ProxyAccessible* proxy = [self getProxyAccessible];
-  if (!accWrap && !proxy) return 0;
-
-  // By default this calls -[[mozAccessible children] count].
-  // Since we don't cache mChildren. This is faster.
-  if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) {
-    if (accWrap) return accWrap->ChildCount();
-
-    return proxy->ChildrenCount();
-  }
-
-  id array = [self accessibilityAttributeValue:attribute];
-
-  return [array isKindOfClass:[NSArray class]] ? [array count] : 0;
-}
-
 - (id)accessibilityAttributeValue:(NSString*)attribute {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -374,7 +382,8 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
       Relation rel = accWrap->RelationByType(RelationType::LABELLED_BY);
       Accessible* tempAcc = rel.Next();
       if (tempAcc && !rel.Next()) {
-        return GetNativeFromGeckoAccessible(tempAcc);
+        mozAccessible* label = GetNativeFromGeckoAccessible(tempAcc);
+        return [label isAccessibilityElement] ? label : nil;
       } else {
         return nil;
       }
@@ -382,7 +391,8 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     nsTArray<ProxyAccessible*> rel = proxy->RelationByType(RelationType::LABELLED_BY);
     ProxyAccessible* tempProxy = rel.SafeElementAt(0);
     if (tempProxy && rel.Length() <= 1) {
-      return GetNativeFromProxy(tempProxy);
+      mozAccessible* label = GetNativeFromProxy(tempProxy);
+      return [label isAccessibilityElement] ? label : nil;
     } else {
       return nil;
     }
@@ -526,7 +536,9 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 - (id)accessibilityHitTest:(NSPoint)point {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  if (!accWrap && !proxy) return nil;
+  if (!accWrap && !proxy) {
+    return nil;
+  }
 
   // Convert the given screen-global point in the cocoa coordinate system (with
   // origin in the bottom-left corner of the screen) into point in the Gecko
@@ -552,10 +564,14 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   } else if (proxy) {
     ProxyAccessible* child =
         proxy->ChildAtPoint(geckoPoint.x, geckoPoint.y, Accessible::eDeepestChild);
-    if (child) nativeChild = GetNativeFromProxy(child);
+    if (child) {
+      nativeChild = GetNativeFromProxy(child);
+    }
   }
 
-  if (nativeChild) return nativeChild;
+  if (nativeChild) {
+    return [nativeChild isAccessibilityElement] ? nativeChild : [nativeChild parent];
+  }
 
   // if we didn't find anything, return ourself or child view.
   return GetObjectOrRepresentedView(self);
@@ -705,7 +721,9 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 - (id)accessibilityFocusedUIElement {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  if (!accWrap && !proxy) return nil;
+  if (!accWrap && !proxy) {
+    return nil;
+  }
 
   mozAccessible* focusedChild = nil;
   if (accWrap) {
@@ -724,10 +742,14 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     }
   } else if (proxy) {
     ProxyAccessible* focusedGeckoChild = proxy->FocusedChild();
-    if (focusedGeckoChild) focusedChild = GetNativeFromProxy(focusedGeckoChild);
+    if (focusedGeckoChild) {
+      focusedChild = GetNativeFromProxy(focusedGeckoChild);
+    }
   }
 
-  if (focusedChild) return GetObjectOrRepresentedView(focusedChild);
+  if ([focusedChild isAccessibilityElement]) {
+    return GetObjectOrRepresentedView(focusedChild);
+  }
 
   // return ourself if we can't get a native focused child.
   return GetObjectOrRepresentedView(self);
@@ -742,24 +764,27 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
     Accessible* accessibleParent = accWrap->Parent();
     if (accessibleParent) nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
-    if (nativeParent) return GetObjectOrRepresentedView(nativeParent);
+    if (!nativeParent) {
+      // Return native of root accessible if we have no direct parent
+      nativeParent = GetNativeFromGeckoAccessible(accWrap->RootAccessible());
+    }
 
-    // Return native of root accessible if we have no direct parent
-    nativeParent = GetNativeFromGeckoAccessible(accWrap->RootAccessible());
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
     if (ProxyAccessible* proxyParent = proxy->Parent()) {
       nativeParent = GetNativeFromProxy(proxyParent);
     }
 
-    if (nativeParent) return GetObjectOrRepresentedView(nativeParent);
-
-    Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
-    nativeParent = outerDoc ? GetNativeFromGeckoAccessible(outerDoc) : nil;
+    if (!nativeParent) {
+      Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
+      nativeParent = outerDoc ? GetNativeFromGeckoAccessible(outerDoc) : nil;
+    }
   } else {
     return nil;
   }
 
-  NSAssert1(nativeParent, @"!!! we can't find a parent for %@", self);
+  if (![nativeParent isAccessibilityElement]) {
+    nativeParent = [nativeParent parent];
+  }
 
   return GetObjectOrRepresentedView(nativeParent);
 
@@ -780,38 +805,33 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
 // gets our native children lazily.
 - (NSArray*)children {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  AccessibleOrProxy acc = nullptr;
+  // XXX: AccessibleOrProxy's bit layout is identical to mGeckoAccessible. Once
+  // We convert everytthing to AccessibleOrProxy this can go away.
+  acc.SetBits(mGeckoAccessible);
 
-  NSMutableArray* children = [NSMutableArray new];
+  NSMutableArray* children = [[NSMutableArray alloc] initWithCapacity:acc.ChildCount()];
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (accWrap) {
-    uint32_t childCount = accWrap->ChildCount();
-    for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-      mozAccessible* nativeChild = GetNativeFromGeckoAccessible(accWrap->GetChildAt(childIdx));
-      if (nativeChild) [children addObject:nativeChild];
+  for (uint32_t childIdx = 0; childIdx < acc.ChildCount(); childIdx++) {
+    AccessibleOrProxy child = acc.ChildAt(childIdx);
+    mozAccessible* nativeChild = child.IsProxy()
+                                     ? GetNativeFromProxy(child.AsProxy())
+                                     : GetNativeFromGeckoAccessible(child.AsAccessible());
+    if (!nativeChild) {
+      continue;
     }
 
-    // children from child if this is an outerdoc
-    OuterDocAccessible* docOwner = accWrap->AsOuterDoc();
-    if (docOwner) {
-      if (ProxyAccessible* proxyDoc = docOwner->RemoteChildDoc()) {
-        mozAccessible* nativeRemoteChild = GetNativeFromProxy(proxyDoc);
-        [children insertObject:nativeRemoteChild atIndex:0];
-        NSAssert1(nativeRemoteChild, @"%@ found a child remote doc missing a native\n", self);
-      }
-    }
-  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    uint32_t childCount = proxy->ChildrenCount();
-    for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-      mozAccessible* nativeChild = GetNativeFromProxy(proxy->ChildAt(childIdx));
-      if (nativeChild) [children addObject:nativeChild];
+    if ([nativeChild ignoreWithParent:self]) {
+      // If this child should be ignored get its unignored children.
+      // This will in turn recurse to any unignored descendants if the
+      // child is ignored.
+      [children addObjectsFromArray:[nativeChild children]];
+    } else {
+      [children addObject:nativeChild];
     }
   }
 
   return children;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (NSValue*)position {
@@ -1300,6 +1320,11 @@ struct RoleDescrComparator {
   if (gfxPlatform::IsHeadless()) {
     // Using a headless toolkit for tests and whatnot, posting accessibility
     // notification won't work.
+    return;
+  }
+
+  if (![self isAccessibilityElement]) {
+    // If this is an ignored object, don't expose it to system.
     return;
   }
 
