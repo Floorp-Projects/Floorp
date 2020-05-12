@@ -47,6 +47,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   // The resulting outermost script for the compilation powered
   // by this CompilationInfo.
   JS::Rooted<JSScript*> script;
+  JS::Rooted<BaseScript*> lazy;
 
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
@@ -82,6 +83,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
         keepAtoms(cx),
         directives(options.forceStrictMode()),
         script(cx),
+        lazy(cx),
         usedNames(cx),
         allocScope(alloc),
         regExpData(cx),
@@ -92,7 +94,10 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
 
   bool init(JSContext* cx);
 
-  void initFromSourceObject(ScriptSourceObject* sso) { sourceObject = sso; }
+  void initFromLazy(BaseScript* lazy) {
+    this->lazy = lazy;
+    this->sourceObject = lazy->sourceObject();
+  }
 
   template <typename Unit>
   MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
