@@ -11,12 +11,16 @@ const tests = [];
 
 tests.push({
   distribution: "acer-001",
-  test: engines => hasParams(engines, "Bing", "searchbar", "pc=MOZD"),
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
+    hasDefault(engines, "Bing"),
 });
 
 tests.push({
   distribution: "acer-002",
-  test: engines => hasParams(engines, "Bing", "searchbar", "pc=MOZD"),
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
+    hasDefault(engines, "Bing"),
 });
 
 tests.push({
@@ -24,7 +28,8 @@ tests.push({
   distribution: "mailru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900201") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900201"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900201") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -32,7 +37,8 @@ tests.push({
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900209") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900209"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900209") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -40,7 +46,8 @@ tests.push({
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900205") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900205"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900205") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -48,7 +55,8 @@ tests.push({
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900211") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900211"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900211") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -56,7 +64,8 @@ tests.push({
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900206") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900206"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900206") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -64,7 +73,8 @@ tests.push({
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900207") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900207"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900207") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -72,7 +82,8 @@ tests.push({
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900203") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900203"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900203") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -80,7 +91,8 @@ tests.push({
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900210") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900210"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900210") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -88,7 +100,8 @@ tests.push({
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900204") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900204"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900204") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -96,7 +109,8 @@ tests.push({
   distribution: "okru-001",
   test: engines =>
     hasParams(engines, "Поиск Mail.Ru", "searchbar", "gp=900208") &&
-    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900208"),
+    hasParams(engines, "Поиск Mail.Ru", "searchbar", "frc=900208") &&
+    hasDefault(engines, "Поиск Mail.Ru"),
 });
 
 tests.push({
@@ -106,7 +120,8 @@ tests.push({
     hasParams(engines, "百度", "searchbar", "tn=monline_4_dg") &&
     hasParams(engines, "百度", "suggestions", "tn=monline_4_dg") &&
     hasParams(engines, "百度", "homepage", "tn=monline_3_dg") &&
-    hasParams(engines, "百度", "newtab", "tn=monline_3_dg"),
+    hasParams(engines, "百度", "newtab", "tn=monline_3_dg") &&
+    hasDefault(engines, "百度"),
 });
 
 tests.push({
@@ -126,7 +141,8 @@ tests.push({
   locale: "fr",
   distribution: "qwant-001",
   test: engines =>
-    hasParams(engines, "Qwant", "searchbar", "client=firefoxqwant"),
+    hasParams(engines, "Qwant", "searchbar", "client=firefoxqwant") &&
+    hasDefault(engines, "Qwant"),
 });
 
 tests.push({
@@ -140,7 +156,8 @@ tests.push({
   locale: "fr",
   distribution: "qwant-002",
   test: engines =>
-    hasParams(engines, "Qwant", "searchbar", "client=firefoxqwant"),
+    hasParams(engines, "Qwant", "searchbar", "client=firefoxqwant") &&
+    hasDefault(engines, "Qwant"),
 });
 
 tests.push({
@@ -153,73 +170,95 @@ tests.push({
 tests.push({
   locale: "cs",
   distribution: "seznam",
-  test: engines => hasParams(engines, "Seznam", "searchbar", "sourceid=FF_3"),
+  test: engines =>
+    hasParams(engines, "Seznam", "searchbar", "sourceid=FF_3") &&
+    hasDefault(engines, "Seznam"),
 });
 
 tests.push({
   distribution: "sweetlabs-b-oem1",
-  test: engines => hasParams(engines, "Bing", "searchbar", "pc=MZSL01"),
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MZSL01") &&
+    hasDefault(engines, "Bing"),
 });
 
 tests.push({
   distribution: "sweetlabs-b-r-oem1",
-  test: engines => hasParams(engines, "Bing", "searchbar", "pc=MZSL01"),
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MZSL01") &&
+    hasDefault(engines, "Bing"),
 });
 
 tests.push({
   distribution: "sweetlabs-b-oem2",
-  test: engines => hasParams(engines, "Bing", "searchbar", "pc=MZSL02"),
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MZSL02") &&
+    hasDefault(engines, "Bing"),
 });
 
 tests.push({
   distribution: "sweetlabs-b-r-oem2",
-  test: engines => hasParams(engines, "Bing", "searchbar", "pc=MZSL02"),
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MZSL02") &&
+    hasDefault(engines, "Bing"),
 });
 
 tests.push({
   distribution: "sweetlabs-b-oem3",
-  test: engines => hasParams(engines, "Bing", "searchbar", "pc=MZSL03"),
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MZSL03") &&
+    hasDefault(engines, "Bing"),
 });
 
 tests.push({
   distribution: "sweetlabs-b-r-oem3",
-  test: engines => hasParams(engines, "Bing", "searchbar", "pc=MZSL03"),
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MZSL03") &&
+    hasDefault(engines, "Bing"),
 });
 
 tests.push({
   distribution: "sweetlabs-oem1",
   test: engines =>
-    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1"),
+    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
+    hasDefault(engines, "Google"),
 });
 
 tests.push({
   distribution: "sweetlabs-r-oem1",
   test: engines =>
-    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1"),
+    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
+    hasDefault(engines, "Google"),
 });
 
 tests.push({
   distribution: "sweetlabs-oem2",
   test: engines =>
-    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2"),
+    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
+    hasDefault(engines, "Google"),
 });
 
 tests.push({
   distribution: "sweetlabs-r-oem2",
   test: engines =>
-    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2"),
+    hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
+    hasDefault(engines, "Google"),
 });
 
 tests.push({
   locale: "de",
   distribution: "1und1",
-  test: engines => hasParams(engines, "1&1 Suche", "searchbar", "enc=UTF-8"),
+  test: engines =>
+    hasParams(engines, "1&1 Suche", "searchbar", "enc=UTF-8") &&
+    hasDefault(engines, "1&1 Suche"),
 });
 
 tests.push({
   locale: "de",
   distribution: "gmx",
-  test: engines => hasParams(engines, "GMX Suche", "searchbar", "enc=UTF-8"),
+  test: engines =>
+    hasParams(engines, "GMX Suche", "searchbar", "enc=UTF-8") &&
+    hasDefault(engines, "GMX Suche"),
 });
 
 tests.push({
@@ -233,67 +272,88 @@ tests.push({
   locale: "de",
   distribution: "mail.com",
   test: engines =>
-    hasParams(engines, "mail.com search", "searchbar", "enc=UTF-8"),
+    hasParams(engines, "mail.com search", "searchbar", "enc=UTF-8") &&
+    hasDefault(engines, "mail.com search"),
 });
 
 tests.push({
   locale: "de",
   distribution: "webde",
-  test: engines => hasParams(engines, "WEB.DE Suche", "searchbar", "enc=UTF-8"),
+  test: engines =>
+    hasParams(engines, "WEB.DE Suche", "searchbar", "enc=UTF-8") &&
+    hasDefault(engines, "WEB.DE Suche"),
 });
 
 tests.push({
   locale: "ru",
   distribution: "yandex-drp",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=2039342"),
+  test: engines =>
+    hasParams(engines, "Яндекс", "searchbar", "clid=2039342") &&
+    hasDefault(engines, "Яндекс"),
 });
 
 tests.push({
   locale: "ru",
   distribution: "yandex-planb",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1857376"),
+  test: engines =>
+    hasParams(engines, "Яндекс", "searchbar", "clid=1857376") &&
+    hasDefault(engines, "Яндекс"),
 });
 
 tests.push({
   locale: "ru",
   distribution: "yandex-portals",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1923034"),
+  test: engines =>
+    hasParams(engines, "Яндекс", "searchbar", "clid=1923034") &&
+    hasDefault(engines, "Яндекс"),
 });
 
 tests.push({
   locale: "ru",
   distribution: "yandex-ru",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1923018"),
+  test: engines =>
+    hasParams(engines, "Яндекс", "searchbar", "clid=1923018") &&
+    hasDefault(engines, "Яндекс"),
 });
 
 tests.push({
   locale: "ru",
   distribution: "yandex-tr",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1953197"),
+  test: engines =>
+    hasParams(engines, "Яндекс", "searchbar", "clid=1953197") &&
+    hasDefault(engines, "Яндекс"),
 });
 
 tests.push({
   locale: "ru",
   distribution: "yandex-tr-gezginler",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1945716"),
+  test: engines =>
+    hasParams(engines, "Яндекс", "searchbar", "clid=1945716") &&
+    hasDefault(engines, "Яндекс"),
 });
 
 tests.push({
   locale: "ru",
   distribution: "yandex-tr-tamindir",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1945686"),
+  test: engines =>
+    hasParams(engines, "Яндекс", "searchbar", "clid=1945686") &&
+    hasDefault(engines, "Яндекс"),
 });
 
 tests.push({
   locale: "ru",
   distribution: "yandex-uk",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=1923018"),
+  test: engines =>
+    hasParams(engines, "Яндекс", "searchbar", "clid=1923018") &&
+    hasDefault(engines, "Яндекс"),
 });
 
 tests.push({
   locale: "ru",
   distribution: "yandex-ru-mz",
-  test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=2320519"),
+  test: engines =>
+    hasParams(engines, "Яндекс", "searchbar", "clid=2320519") &&
+    hasDefault(engines, "Яндекс"),
 });
 
 function hasParams(engines, engineName, purpose, param) {
@@ -304,6 +364,16 @@ function hasParams(engines, engineName, purpose, param) {
   let submission = engine.getSubmission("test", "text/html", purpose);
   let result = submission.uri.query.split("&").includes(param);
   Assert.ok(result, `expect ${submission.uri.query} to include ${param}`);
+  return true;
+}
+
+function hasDefault(engines, expectedDefaultName) {
+  Assert.equal(
+    engines[0].name,
+    expectedDefaultName,
+    "Should have the expected engine set as default"
+  );
+  return true;
 }
 
 const engineSelector = new SearchEngineSelector();
@@ -312,7 +382,7 @@ add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 });
 
-add_task(async function test_application_name() {
+add_task(async function test_expected_distribution_engines() {
   for (const { distribution, locale = "en-US", region = "US", test } of tests) {
     let config = await engineSelector.fetchEngineConfiguration(
       locale,
