@@ -132,14 +132,14 @@ static void printRange(nsRange* aDomRange);
 
 nsPeekOffsetStruct::nsPeekOffsetStruct(
     nsSelectionAmount aAmount, nsDirection aDirection, int32_t aStartOffset,
-    nsPoint aDesiredPos, bool aJumpLines, bool aScrollViewStop,
+    nsPoint aDesiredCaretPos, bool aJumpLines, bool aScrollViewStop,
     bool aIsKeyboardSelect, bool aVisual, bool aExtend,
     ForceEditableRegion aForceEditableRegion,
     EWordMovementType aWordMovementType, bool aTrimSpaces)
     : mAmount(aAmount),
       mDirection(aDirection),
       mStartOffset(aStartOffset),
-      mDesiredPos(aDesiredPos),
+      mDesiredCaretPos(aDesiredCaretPos),
       mWordMovementType(aWordMovementType),
       mJumpLines(aJumpLines),
       mTrimSpaces(aTrimSpaces),
@@ -294,7 +294,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
       }
     }
     if (aSelection->mFrameSelection) {
-      aSelection->mFrameSelection->InvalidateDesiredPos();
+      aSelection->mFrameSelection->InvalidateDesiredCaretPos();
     }
   }
 
@@ -343,7 +343,7 @@ nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
 
   mPresShell = aPresShell;
   mDragState = false;
-  mDesiredPos.mIsSet = false;
+  mDesiredCaretPos.mIsSet = false;
   mLimiters.mLimiter = aLimiter;
   mCaret.mMovementStyle =
       Preferences::GetInt("bidi.edit.caret_movement_style", 2);
@@ -416,13 +416,13 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsFrameSelection, Release)
 
 // Get the x (or y, in vertical writing mode) position requested
 // by the Key Handling for line-up/down
-nsresult nsFrameSelection::FetchDesiredPos(nsPoint& aDesiredPos) {
+nsresult nsFrameSelection::FetchDesiredCaretPos(nsPoint& aDesiredCaretPos) {
   if (!mPresShell) {
     NS_ERROR("fetch desired position failed");
     return NS_ERROR_FAILURE;
   }
-  if (mDesiredPos.mIsSet) {
-    aDesiredPos = mDesiredPos.mValue;
+  if (mDesiredCaretPos.mIsSet) {
+    aDesiredCaretPos = mDesiredCaretPos.mValue;
     return NS_OK;
   }
 
@@ -445,20 +445,20 @@ nsresult nsFrameSelection::FetchDesiredPos(nsPoint& aDesiredPos) {
   if (view) {
     coord += viewOffset;
   }
-  aDesiredPos = coord.TopLeft();
+  aDesiredCaretPos = coord.TopLeft();
   return NS_OK;
 }
 
-void nsFrameSelection::InvalidateDesiredPos()  // do not listen to
-                                               // mDesiredPos.mValue; you must
-                                               // get another.
+void nsFrameSelection::InvalidateDesiredCaretPos()  // do not listen to
+                                                    // mDesiredCaretPos.mValue;
+                                                    // you must get another.
 {
-  mDesiredPos.mIsSet = false;
+  mDesiredCaretPos.mIsSet = false;
 }
 
-void nsFrameSelection::SetDesiredPos(nsPoint aPos) {
-  mDesiredPos.mValue = aPos;
-  mDesiredPos.mIsSet = true;
+void nsFrameSelection::SetDesiredCaretPos(nsPoint aPos) {
+  mDesiredCaretPos.mValue = aPos;
+  mDesiredCaretPos.mIsSet = true;
 }
 
 nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
@@ -707,11 +707,11 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   AutoPrepareFocusRange prep(sel, false);
 
   if (aAmount == eSelectLine) {
-    nsresult result = FetchDesiredPos(desiredPos);
+    nsresult result = FetchDesiredCaretPos(desiredPos);
     if (NS_FAILED(result)) {
       return result;
     }
-    SetDesiredPos(desiredPos);
+    SetDesiredCaretPos(desiredPos);
   }
 
   if (doCollapse) {
@@ -753,7 +753,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   if (isIntraLineCaretMove.inspect()) {
     // Forget old caret position for moving caret to different line since
     // caret position may be changed.
-    InvalidateDesiredPos();
+    InvalidateDesiredCaretPos();
   }
 
   Result<nsPeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
@@ -850,7 +850,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
 Result<nsPeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
     nsDirection aDirection, bool aContinueSelection,
     const nsSelectionAmount aAmount, CaretMovementStyle aMovementStyle,
-    const nsPoint& aDesiredPos) const {
+    const nsPoint& aDesiredCaretPos) const {
   Selection* selection =
       mDomSelections[GetIndexFromSelectionType(SelectionType::eNormal)];
   if (!selection) {
@@ -891,7 +891,7 @@ Result<nsPeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
   // set data using mLimiters.mLimiter to stop on scroll views.  If we have a
   // limiter then we stop peeking when we hit scrollable views.  If no limiter
   // then just let it go ahead
-  nsPeekOffsetStruct pos(aAmount, direction, offsetused, aDesiredPos, true,
+  nsPeekOffsetStruct pos(aAmount, direction, offsetused, aDesiredCaretPos, true,
                          !!mLimiters.mLimiter, true, visualMovement,
                          aContinueSelection, kForceEditableRegion);
   if (NS_FAILED(rv = frame->PeekOffset(&pos))) {
@@ -1223,7 +1223,7 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
                                        CaretAssociateHint aHint) {
   if (!aNewFocus) return NS_ERROR_INVALID_ARG;
 
-  InvalidateDesiredPos();
+  InvalidateDesiredCaretPos();
 
   if (aFocusMode != FocusMode::kExtendSelection) {
     mMaintainedRange.mRange = nullptr;
@@ -1376,10 +1376,12 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
                                                              IgnoreErrors());
         mBatching = saveBatching;
       } else {
-        bool oldDesiredPosSet = mDesiredPos.mIsSet;  // need to keep old desired
-                                                     // position if it was set.
+        bool oldDesiredPosSet =
+            mDesiredCaretPos.mIsSet;  // need to keep old desired
+                                      // position if it was set.
         mDomSelections[index]->Collapse(aNewFocus, aContentOffset);
-        mDesiredPos.mIsSet = oldDesiredPosSet;  // now reset desired pos back.
+        mDesiredCaretPos.mIsSet =
+            oldDesiredPosSet;  // now reset desired pos back.
         mBatching = saveBatching;
       }
       if (aContentEndOffset != aContentOffset) {
@@ -1795,8 +1797,8 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
   }
 
   // find out where the caret is.
-  // we should know mDesiredPos.mValue value of nsFrameSelection, but I havent
-  // seen that behavior in other windows applications yet.
+  // we should know mDesiredCaretPos.mValue value of nsFrameSelection, but I
+  // havent seen that behavior in other windows applications yet.
   RefPtr<Selection> selection = GetSelection(SelectionType::eNormal);
   if (!selection) {
     return NS_OK;

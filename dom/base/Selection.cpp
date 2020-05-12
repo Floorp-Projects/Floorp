@@ -2131,7 +2131,7 @@ void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
   }
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-  frameSelection->InvalidateDesiredPos();
+  frameSelection->InvalidateDesiredCaretPos();
   if (!frameSelection->IsValidSelectionPoint(aPoint.Container())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -3564,7 +3564,7 @@ nsresult Selection::SelectionLanguageChange(bool aLangRTL) {
 
   // The caret might have moved, so invalidate the desired position
   // for future usages of up-arrow or down-arrow
-  frameSelection->InvalidateDesiredPos();
+  frameSelection->InvalidateDesiredCaretPos();
 
   return NS_OK;
 }

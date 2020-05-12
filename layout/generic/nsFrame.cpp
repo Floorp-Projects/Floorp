@@ -8521,7 +8521,7 @@ nsresult nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       nsView* view;  // used for call of get offset from view
       aBlockFrame->GetOffsetFromView(offset, &view);
       nsPoint newDesiredPos =
-          aPos->mDesiredPos -
+          aPos->mDesiredCaretPos -
           offset;  // get desired position into blockframe coords
       result = it->FindFrameAt(searchingLine, newDesiredPos, &resultFrame,
                                &isBeforeFirstFrame, &isAfterLastFrame);
@@ -8574,11 +8574,11 @@ nsresult nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
           return NS_ERROR_FAILURE;
         }
         if (resultFrame->GetWritingMode().IsVertical()) {
-          point.y = aPos->mDesiredPos.y;
+          point.y = aPos->mDesiredCaretPos.y;
           point.x = tempRect.width + offset.x;
         } else {
           point.y = tempRect.height + offset.y;
-          point.x = aPos->mDesiredPos.x;
+          point.x = aPos->mDesiredCaretPos.x;
         }
 
         // special check. if we allow non-text selection then we can allow a hit
@@ -8654,7 +8654,7 @@ nsresult nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         );
       }
       while (!found) {
-        nsPoint point = aPos->mDesiredPos;
+        nsPoint point = aPos->mDesiredCaretPos;
         nsView* view;
         nsPoint offset;
         resultFrame->GetOffsetFromView(offset, &view);
