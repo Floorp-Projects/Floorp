@@ -89,8 +89,7 @@ class AsyncImagePipelineManager final {
   TimeStamp GetCompositeUntilTime() const { return mCompositeUntilTime; }
 
   void AddAsyncImagePipeline(const wr::PipelineId& aPipelineId,
-                             WebRenderImageHost* aImageHost,
-                             wr::RenderRoot aRenderRoot);
+                             WebRenderImageHost* aImageHost);
   void RemoveAsyncImagePipeline(const wr::PipelineId& aPipelineId,
                                 wr::TransactionBuilder& aTxn);
 
@@ -189,7 +188,6 @@ class AsyncImagePipelineManager final {
     }
 
     bool mInitialised;
-    wr::RenderRoot mRenderRoot;
     bool mIsChanged;
     bool mUseExternalImage;
     LayoutDeviceRect mScBounds;

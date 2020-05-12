@@ -1903,8 +1903,7 @@ void WebRenderBridgeParent::AddPipelineIdForCompositable(
 
   wrHost->SetWrBridge(aPipelineId, this);
   mAsyncCompositables.emplace(wr::AsUint64(aPipelineId), wrHost);
-  mAsyncImageManager->AddAsyncImagePipeline(aPipelineId, wrHost,
-                                            RenderRootForExternal(aRenderRoot));
+  mAsyncImageManager->AddAsyncImagePipeline(aPipelineId, wrHost);
 
   // If this is being called from WebRenderBridgeParent::RecvSetDisplayList,
   // then aTxn might contain a display list that references pipelines that
