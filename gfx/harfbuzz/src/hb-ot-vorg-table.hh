@@ -84,7 +84,7 @@ struct VORG
     this->defaultVertOriginY = defaultVertOriginY;
     this->vertYOrigins.len = it.len ();
 
-    c->copy_all (it);
+    for (const auto _ : it) c->copy (_);
   }
 
   bool subset (hb_subset_context_t *c) const
@@ -122,11 +122,10 @@ struct VORG
   }
 
   protected:
-  FixedVersion<>version;	/* Version of VORG table. Set to 0x00010000u. */
-  FWORD		defaultVertOriginY;
-				/* The default vertical origin. */
+  FixedVersion<>	version;		/* Version of VORG table. Set to 0x00010000u. */
+  FWORD			defaultVertOriginY;	/* The default vertical origin. */
   SortedArrayOf<VertOriginMetric>
-		vertYOrigins;	/* The array of vertical origins. */
+			vertYOrigins;		/* The array of vertical origins. */
 
   public:
   DEFINE_SIZE_ARRAY(8, vertYOrigins);

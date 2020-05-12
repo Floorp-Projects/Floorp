@@ -22,7 +22,8 @@ fi
 
 tested=false
 # harfbuzz-icu links to libstdc++ because icu does.
-for soname in harfbuzz harfbuzz-subset harfbuzz-gobject; do
+# harfbuzz-subset uses libstdc++.
+for soname in harfbuzz harfbuzz-gobject; do
 	for suffix in so dylib; do
 		so=$libs/lib$soname.$suffix
 		if ! test -f "$so"; then continue; fi
