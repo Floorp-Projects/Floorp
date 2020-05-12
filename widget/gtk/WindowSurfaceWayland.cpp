@@ -11,7 +11,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Tools.h"
 #include "gfxPlatform.h"
-#include "MozContainer.h"
+#include "mozcontainer.h"
 #include "nsTArray.h"
 #include "base/message_loop.h"  // for MessageLoop
 #include "base/task.h"          // for NewRunnableMethod, etc
