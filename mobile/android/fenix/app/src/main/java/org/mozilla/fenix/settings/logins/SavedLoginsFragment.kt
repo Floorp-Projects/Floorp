@@ -46,7 +46,7 @@ import org.mozilla.fenix.settings.SupportUtils
 
 @SuppressWarnings("TooManyFunctions")
 class SavedLoginsFragment : Fragment() {
-    private lateinit var savedLoginsStore: SavedLoginsFragmentStore
+    private lateinit var savedLoginsStore: LoginsFragmentStore
     private lateinit var savedLoginsView: SavedLoginsView
     private lateinit var savedLoginsInteractor: SavedLoginsInteractor
     private lateinit var dropDownMenuAnchorView: View
@@ -76,10 +76,10 @@ class SavedLoginsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_saved_logins, container, false)
         savedLoginsStore = StoreProvider.get(this) {
-            SavedLoginsFragmentStore(
-                SavedLoginsFragmentState(
+            LoginsFragmentStore(
+                LoginsListState(
                     isLoading = true,
-                    items = listOf(),
+                    loginList = listOf(),
                     filteredItems = listOf(),
                     searchedForText = null,
                     sortingStrategy = requireContext().settings().savedLoginsSortingStrategy,
@@ -88,7 +88,7 @@ class SavedLoginsFragment : Fragment() {
             )
         }
         val savedLoginsController: SavedLoginsController =
-            DefaultSavedLoginsController(savedLoginsStore, requireContext().settings())
+            SavedLoginsController(savedLoginsStore, requireContext().settings())
         savedLoginsInteractor =
             SavedLoginsInteractor(savedLoginsController, ::itemClicked, ::openLearnMore)
         savedLoginsView = SavedLoginsView(view.savedLoginsLayout, savedLoginsInteractor)
@@ -119,7 +119,7 @@ class SavedLoginsFragment : Fragment() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                savedLoginsStore.dispatch(SavedLoginsFragmentAction.FilterLogins(newText))
+                savedLoginsStore.dispatch(LoginsAction.FilterLogins(newText))
                 return false
             }
         })
@@ -134,17 +134,17 @@ class SavedLoginsFragment : Fragment() {
         (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().setDisplayShowTitleEnabled(true)
         sortingStrategyPopupMenu.dismiss()
 
-        if (findNavController().currentDestination?.id != R.id.savedLoginSiteInfoFragment) {
+        if (findNavController().currentDestination?.id != R.id.loginDetailFragment) {
             activity?.let { it.checkAndUpdateScreenshotPermission(it.settings()) }
-            findNavController().popBackStack(R.id.loginsFragment, false)
+            findNavController().popBackStack(R.id.savedLoginsAuthFragment, false)
         }
         super.onPause()
     }
 
-    private fun itemClicked(item: SavedLoginsItem) {
+    private fun itemClicked(item: SavedLogin) {
         context?.components?.analytics?.metrics?.track(Event.OpenOneLogin)
         val directions =
-            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToSavedLoginSiteInfoFragment(item)
+            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToLoginDetailFragment(item.guid)
         findNavController().navigate(directions)
     }
 
@@ -166,9 +166,9 @@ class SavedLoginsFragment : Fragment() {
             val logins = deferredLogins?.await()
             logins?.let {
                 withContext(Main) {
-                    savedLoginsStore.dispatch(SavedLoginsFragmentAction.UpdateLogins(logins.map { item ->
-                        SavedLoginsItem(item.origin, item.username, item.password, item.guid!!, item.timeLastUsed)
-                    }))
+                    savedLoginsStore.dispatch(
+                        LoginsAction.UpdateLoginsList(logins.map { it.mapToSavedLogin() })
+                    )
                 }
             }
         }

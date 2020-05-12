@@ -40,6 +40,11 @@ object FeatureFlags {
     val tips = Config.channel.isDebug
 
     /**
+     * Allows edit of saved logins.
+     */
+    val loginsEdit = Config.channel.isNightlyOrDebug
+
+    /**
      * Enables new tab tray pref
      */
     val tabTray = Config.channel.isNightlyOrDebug

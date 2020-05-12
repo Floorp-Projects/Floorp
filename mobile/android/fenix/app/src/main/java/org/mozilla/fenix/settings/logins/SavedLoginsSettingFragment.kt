@@ -15,7 +15,7 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.RadioButtonPreference
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 
-class SaveLoginSettingFragment : PreferenceFragmentCompat() {
+class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.save_logins_preferences, rootKey)
     }

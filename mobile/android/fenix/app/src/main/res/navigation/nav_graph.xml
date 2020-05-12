@@ -263,30 +263,74 @@
     </fragment>
 
     <fragment
-        android:id="@+id/loginsFragment"
-        android:name="org.mozilla.fenix.settings.LoginsFragment"
+        android:id="@+id/savedLoginsAuthFragment"
+        android:name="org.mozilla.fenix.settings.logins.SavedLoginsAuthFragment"
         android:label="@string/preferences_passwords_logins_and_passwords">
         <action
-            android:id="@+id/action_loginsFragment_to_savedLoginsFragment"
+            android:id="@+id/action_savedLoginsAuthFragment_to_loginsListFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/savedLoginsFragment" />
         <action
-            android:id="@+id/action_loginsFragment_to_turnOnSyncFragment"
+            android:id="@+id/action_savedLoginsAuthFragment_to_turnOnSyncFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/turnOnSyncFragment" />
         <action
-            android:id="@+id/action_loginsFragment_to_saveLoginSettingFragment"
+            android:id="@+id/action_savedLoginsAuthFragment_to_savedLoginsSettingFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/saveLoginSettingFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/savedLoginsFragment"
+        android:name="org.mozilla.fenix.settings.logins.SavedLoginsFragment"
+        tools:layout="@layout/fragment_saved_logins">
+        <action
+            android:id="@+id/action_savedLoginsFragment_to_loginDetailFragment"
+            app:destination="@id/loginDetailFragment" />
+        <action
+            android:id="@+id/action_savedLoginsFragment_to_browserFragment"
+            app:destination="@id/browserFragment"
+            app:popUpTo="@id/settingsFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/loginDetailFragment"
+        android:name="org.mozilla.fenix.settings.logins.LoginDetailFragment"
+        tools:layout="@layout/fragment_login_detail">
+        <argument
+            android:name="savedLoginId"
+            app:argType="string"
+            app:nullable="false"/>
+        <action
+            android:id="@+id/action_loginDetailFragment_to_editLoginFragment"
+            app:destination="@id/editLoginFragment"
+            app:popUpTo="@id/editLoginFragment"
+            app:popUpToInclusive="true"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/editLoginFragment"
+        android:name="org.mozilla.fenix.settings.logins.EditLoginFragment"
+        android:label="@string/edit">
+        <argument
+            android:name="savedLoginItem"
+            app:argType="org.mozilla.fenix.settings.logins.SavedLogin"
+            app:nullable="false"/>
+        <action
+            android:id="@+id/action_editLoginFragment_to_loginDetailFragment"
+            app:destination="@id/loginDetailFragment"
+            app:popUpTo="@id/loginDetailFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
 
     <fragment
@@ -309,12 +353,12 @@
             app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/sitePermissionsFragment" />
         <action
-            android:id="@+id/action_settingsFragment_to_loginsFragment"
+            android:id="@+id/action_settingsFragment_to_savedLoginsAuthFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/loginsFragment" />
+            app:destination="@id/savedLoginsAuthFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_accessibilityFragment"
             app:enterAnim="@anim/slide_in_right"
@@ -669,22 +713,6 @@
         android:id="@+id/defaultBrowserSettingsFragment"
         android:name="org.mozilla.fenix.settings.DefaultBrowserSettingsFragment"/>
     <fragment
-        android:id="@+id/savedLoginsFragment"
-        android:name="org.mozilla.fenix.settings.logins.SavedLoginsFragment"
-        tools:layout="@layout/fragment_saved_logins">
-        <action
-            android:id="@+id/action_savedLoginsFragment_to_savedLoginSiteInfoFragment"
-            app:destination="@id/savedLoginSiteInfoFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/savedLoginSiteInfoFragment"
-        android:name="org.mozilla.fenix.settings.logins.SavedLoginSiteInfoFragment"
-        tools:layout="@layout/fragment_saved_login_site_info">
-        <argument
-            android:name="savedLoginItem"
-            app:argType="org.mozilla.fenix.settings.logins.SavedLoginsItem" />
-    </fragment>
-    <fragment
         android:id="@+id/addSearchEngineFragment"
         android:name="org.mozilla.fenix.settings.search.AddSearchEngineFragment" />
     <fragment
@@ -699,7 +727,7 @@
         android:name="org.mozilla.fenix.settings.advanced.LocaleSettingsFragment" />
     <fragment
         android:id="@+id/saveLoginSettingFragment"
-        android:name="org.mozilla.fenix.settings.logins.SaveLoginSettingFragment"
+        android:name="org.mozilla.fenix.settings.logins.SavedLoginsSettingFragment"
         android:label="SaveLoginSettingFragment" />
     <fragment
         android:id="@+id/addonsManagementFragment"

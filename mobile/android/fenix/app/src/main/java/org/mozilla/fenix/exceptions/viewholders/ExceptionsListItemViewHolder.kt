@@ -22,7 +22,7 @@ class ExceptionsListItemViewHolder(
 ) : RecyclerView.ViewHolder(view) {
 
     private val favicon = view.favicon_image
-    private val url = view.domainView
+    private val url = view.webAddressView
     private val deleteButton = view.delete_exception
 
     private var item: TrackingProtectionException? = null

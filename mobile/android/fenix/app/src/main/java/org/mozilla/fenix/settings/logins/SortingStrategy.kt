@@ -8,17 +8,17 @@ import android.content.Context
 import org.mozilla.fenix.ext.urlToTrimmedHost
 
 sealed class SortingStrategy {
-    abstract operator fun invoke(logins: List<SavedLoginsItem>): List<SavedLoginsItem>
+    abstract operator fun invoke(logins: List<SavedLogin>): List<SavedLogin>
     abstract val appContext: Context
 
     data class Alphabetically(override val appContext: Context) : SortingStrategy() {
-        override fun invoke(logins: List<SavedLoginsItem>): List<SavedLoginsItem> {
-            return logins.sortedBy { it.url.urlToTrimmedHost(appContext) }
+        override fun invoke(logins: List<SavedLogin>): List<SavedLogin> {
+            return logins.sortedBy { it.origin.urlToTrimmedHost(appContext) }
         }
     }
 
     data class LastUsed(override val appContext: Context) : SortingStrategy() {
-        override fun invoke(logins: List<SavedLoginsItem>): List<SavedLoginsItem> {
+        override fun invoke(logins: List<SavedLogin>): List<SavedLogin> {
             return logins.sortedByDescending { it.timeLastUsed }
         }
     }

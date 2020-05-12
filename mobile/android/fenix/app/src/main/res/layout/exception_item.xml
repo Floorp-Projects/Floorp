@@ -26,7 +26,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/domainView"
+        android:id="@+id/webAddressView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="12dp"

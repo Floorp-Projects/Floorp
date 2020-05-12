@@ -15,7 +15,7 @@ import kotlin.random.Random
 @RunWith(FenixRobolectricTestRunner::class)
 class SavedLoginsInteractorTest {
     private val controller: SavedLoginsController = mockk(relaxed = true)
-    private val savedLoginClicked: (SavedLoginsItem) -> Unit = mockk(relaxed = true)
+    private val savedLoginClicked: (SavedLogin) -> Unit = mockk(relaxed = true)
     private val learnMore: () -> Unit = mockk(relaxed = true)
     private val interactor = SavedLoginsInteractor(
         controller,
@@ -25,7 +25,7 @@ class SavedLoginsInteractorTest {
 
     @Test
     fun itemClicked() {
-        val item = SavedLoginsItem("mozilla.org", "username", "password", "id", Random.nextLong())
+        val item = SavedLogin("mozilla.org", "username", "password", "id", Random.nextLong())
         interactor.itemClicked(item)
 
         verify {

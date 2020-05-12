@@ -240,7 +240,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 null
             }
             resources.getString(R.string.pref_key_passwords) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToLoginsFragment()
+                SettingsFragmentDirections.actionSettingsFragmentToSavedLoginsAuthFragment()
             }
             resources.getString(R.string.pref_key_about) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToAboutFragment()

@@ -1336,8 +1336,26 @@
     <string name="certificate_info_verified_by">Verified By: %1$s </string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Delete</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Edit</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Are you sure you want to delete this login?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Delete</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Login options</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">The editable text field for the web address of the login.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">The editable text field for the username of the login.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">The editable text field for the password of the login.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Save changes to login.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Discard changes</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Edit</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Password required</string>
 </resources>

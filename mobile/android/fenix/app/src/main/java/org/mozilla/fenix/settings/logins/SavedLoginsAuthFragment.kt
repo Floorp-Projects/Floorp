@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings
+package org.mozilla.fenix.settings.logins
 
 import android.annotation.TargetApi
 import android.app.Activity.RESULT_OK
@@ -38,10 +38,11 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import java.util.concurrent.Executors
 
 @Suppress("TooManyFunctions", "LargeClass")
-class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
+class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
 
     @TargetApi(M)
     private lateinit var biometricPromptCallback: BiometricPrompt.AuthenticationCallback
@@ -114,7 +115,8 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
             isEnabled = context.settings().shouldPromptToSaveLogins
             isChecked =
                 context.settings().shouldAutofillLogins && context.settings().shouldPromptToSaveLogins
-            onPreferenceChangeListener = SharedPreferenceUpdater()
+            onPreferenceChangeListener =
+                SharedPreferenceUpdater()
         }
 
         val savedLoginsKey = getPreferenceKey(R.string.pref_key_saved_logins)
@@ -253,7 +255,9 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
             getString(R.string.logins_biometric_prompt_message_pin),
             getString(R.string.logins_biometric_prompt_message)
         )
-        startActivityForResult(intent, PIN_REQUEST)
+        startActivityForResult(intent,
+            PIN_REQUEST
+        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -266,29 +270,29 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
 
     private fun navigateToSavedLoginsFragment() {
         context?.components?.analytics?.metrics?.track(Event.OpenLogins)
-        val directions = LoginsFragmentDirections.actionLoginsFragmentToSavedLoginsFragment()
+        val directions = SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToLoginsListFragment()
         findNavController().navigate(directions)
     }
 
     private fun navigateToAccountSettingsFragment() {
         val directions =
-            LoginsFragmentDirections.actionGlobalAccountSettingsFragment()
+            SavedLoginsAuthFragmentDirections.actionGlobalAccountSettingsFragment()
         findNavController().navigate(directions)
     }
 
     private fun navigateToAccountProblemFragment() {
-        val directions = LoginsFragmentDirections.actionGlobalAccountProblemFragment()
+        val directions = SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment()
         findNavController().navigate(directions)
     }
 
     private fun navigateToTurnOnSyncFragment() {
-        val directions = LoginsFragmentDirections.actionLoginsFragmentToTurnOnSyncFragment()
+        val directions = SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment()
         findNavController().navigate(directions)
     }
 
     private fun navigateToSaveLoginSettingFragment() {
         val directions =
-            LoginsFragmentDirections.actionLoginsFragmentToSaveLoginSettingFragment()
+            SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToSavedLoginsSettingFragment()
         findNavController().navigate(directions)
     }
 
