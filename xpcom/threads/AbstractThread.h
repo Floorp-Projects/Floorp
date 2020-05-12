@@ -21,11 +21,6 @@ class TaskQueue;
 class TaskDispatcher;
 
 /*
- * NOTE: PLEASE AVOID USE OF AbstractThread OUTSIDE MEDIA CODE WHEN POSSIBLE.
- * The nsISerialEventTarget interface should be preferred. AbstractThread
- * has unusual "tail dispatch" semantics that usually are not needed outside
- * of media code.
- *
  * We often want to run tasks on a target that guarantees that events will never
  * run in parallel. There are various target types that achieve this - namely
  * nsIThread and TaskQueue. Note that nsIThreadPool (which implements
@@ -34,10 +29,17 @@ class TaskDispatcher;
  * the structures we might use here and provides a consistent interface.
  *
  * At present, the supported AbstractThread implementations are TaskQueue,
- * AbstractThread::MainThread() and DocGroup::AbstractThreadFor().
- * If you add support for another thread that is not the MainThread, you'll need
- * to figure out how to make it unique such that comparing AbstractThread
- * pointers is equivalent to comparing nsIThread pointers.
+ * AbstractThread::MainThread() and XPCOMThreadWrapper which can wrap any
+ * nsThread.
+ *
+ * The primary use of XPCOMThreadWrapper is to allow any threads to provide
+ * Direct Task dispatching which is similar (but not identical to) the microtask
+ * semantics of JS promises. Instantiating a XPCOMThreadWrapper on the current
+ * nsThread is sufficient to enable direct task dispatching.
+ *
+ * You shouldn't use pointers when comparing AbstractThread or nsIThread to
+ * determine if you are currently on the thread, but instead use the
+ * nsISerialEventTarget::IsOnCurrentThread() method.
  */
 class AbstractThread : public nsISerialEventTarget {
  public:
