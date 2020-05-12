@@ -1010,27 +1010,20 @@ bool RegExpShared::compileIfNecessary(JSContext* cx,
                                       MutableHandleRegExpShared re,
                                       HandleLinearString input,
                                       RegExpShared::CodeKind codeKind) {
-  if (codeKind == RegExpShared::CodeKind::Any) {
-    // We start by interpreting regexps, then compile them once they are
-    // sufficiently hot. For very long input strings, we tier up eagerly.
-    codeKind = RegExpShared::CodeKind::Bytecode;
-    if (IsNativeRegExpEnabled() &&
-        (re->markedForTierUp() || input->length() > 1000)) {
-      codeKind = RegExpShared::CodeKind::Jitcode;
-    }
-  }
-
   bool needsCompile = false;
   if (re->kind() == RegExpShared::Kind::Unparsed) {
     needsCompile = true;
   }
   if (re->kind() == RegExpShared::Kind::RegExp) {
+    if (codeKind == RegExpShared::CodeKind::Any && re->markedForTierUp()) {
+      codeKind = RegExpShared::CodeKind::Jitcode;
+    }
     if (!re->isCompiled(input->hasLatin1Chars(), codeKind)) {
       needsCompile = true;
     }
   }
   if (needsCompile) {
-    return irregexp::CompilePattern(cx, re, input, codeKind);
+    return irregexp::CompilePattern(cx, re, input);
   }
   return true;
 }
@@ -1133,11 +1126,11 @@ void RegExpShared::tierUpTick() {
   }
 }
 
-bool RegExpShared::markedForTierUp() const {
+bool RegExpShared::markedForTierUp() {
   if (!IsNativeRegExpEnabled()) {
     return false;
   }
-  if (kind() != RegExpShared::Kind::RegExp) {
+  if (kind() == RegExpShared::Kind::Atom) {
     return false;
   }
   return ticks_ == 0;
@@ -1764,37 +1757,4 @@ JS_PUBLIC_API JSString* JS::GetRegExpSource(JSContext* cx, HandleObject obj) {
     return nullptr;
   }
   return shared->getSource();
-}
-
-JS_PUBLIC_API bool JS::CheckRegExpSyntax(JSContext* cx, const char16_t* chars,
-                                         size_t length, RegExpFlags flags,
-                                         MutableHandleValue error) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  CompileOptions dummyOptions(cx);
-  frontend::DummyTokenStream dummyTokenStream(cx, dummyOptions);
-
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-
-  mozilla::Range<const char16_t> source(chars, length);
-#ifdef ENABLE_NEW_REGEXP
-  bool success =
-      irregexp::CheckPatternSyntax(cx, dummyTokenStream, source, flags);
-#else
-  bool success = irregexp::ParsePatternSyntax(
-      dummyTokenStream, allocScope.alloc(), source, flags.unicode());
-#endif
-  error.set(UndefinedValue());
-  if (!success) {
-    // We can fail because of OOM or over-recursion even if the syntax is valid.
-    if (cx->isThrowingOutOfMemory() || cx->isThrowingOverRecursed()) {
-      return false;
-    }
-    if (!cx->getPendingException(error)) {
-      return false;
-    }
-    cx->clearPendingException();
-  }
-  return true;
 }

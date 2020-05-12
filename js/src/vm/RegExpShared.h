@@ -210,7 +210,7 @@ class RegExpShared : public gc::TenuredCell {
   void useRegExpMatch(size_t parenCount);
 
   void tierUpTick();
-  bool markedForTierUp() const;
+  bool markedForTierUp();
 
   void setByteCode(ByteCode* code, bool latin1) {
     compilation(latin1).byteCode = code;

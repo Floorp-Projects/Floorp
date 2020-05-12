@@ -974,10 +974,6 @@ JSContext::~JSContext() {
   }
 #endif
 
-#ifdef ENABLE_NEW_REGEXP
-  irregexp::DestroyIsolate(isolate.ref());
-#endif
-
   js_delete(atomsZoneFreeLists_.ref());
 
   TlsContext.set(nullptr);
