@@ -1684,7 +1684,7 @@ const JSJitInfo* MCallDOMNative::getJitInfo() const {
 }
 
 MDefinition* MStringLength::foldsTo(TempAllocator& alloc) {
-  if (type() == MIRType::Int32 && string()->isConstant()) {
+  if (string()->isConstant()) {
     JSAtom* atom = &string()->toConstant()->toString()->asAtom();
     return MConstant::New(alloc, Int32Value(atom->length()));
   }
@@ -5620,6 +5620,17 @@ MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
   if (!input->mightBeType(MIRType::Null) &&
       !input->mightBeType(MIRType::Undefined)) {
     return MConstant::New(alloc, BooleanValue(false));
+  }
+
+  return this;
+}
+
+MDefinition* MGuardSpecificAtom::foldsTo(TempAllocator& alloc) {
+  if (str()->isConstant()) {
+    JSAtom* cstAtom = &str()->toConstant()->toString()->asAtom();
+    if (cstAtom == atom()) {
+      return str();
+    }
   }
 
   return this;

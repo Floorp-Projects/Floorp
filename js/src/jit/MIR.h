@@ -9004,7 +9004,7 @@ class MGuardSpecificAtom : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, str), atom_(atom) {
     setGuard();
     setMovable();
-    setResultType(MIRType::None);
+    setResultType(MIRType::String);
   }
 
  public:
@@ -9023,6 +9023,7 @@ class MGuardSpecificAtom : public MUnaryInstruction,
     }
     return congruentIfOperandsEqual(ins);
   }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   bool appendRoots(MRootList& roots) const override {
