@@ -324,13 +324,13 @@ class WebExtensionSupportTest {
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()
         val actionCaptor = argumentCaptor<WebExtensionAction>()
         val tabHandlerCaptor = argumentCaptor<TabHandler>()
-
         verify(ext).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
+        verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
+
         actionHandlerCaptor.value.onBrowserAction(ext, engineSession, mock())
         verify(store, times(3)).dispatch(actionCaptor.capture())
         assertEquals(ext.id, (actionCaptor.allValues.last() as WebExtensionAction.UpdateTabBrowserAction).extensionId)
 
-        verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
         tabHandlerCaptor.value.onUpdateTab(ext, engineSession, true, null)
         verify(store).dispatch(TabListAction.SelectTabAction("1"))
         tabHandlerCaptor.value.onUpdateTab(ext, engineSession, true, "url")
