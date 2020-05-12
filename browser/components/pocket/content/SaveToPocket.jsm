@@ -32,12 +32,6 @@ ChromeUtils.defineModuleGetter(
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
 
-XPCOMUtils.defineLazyGetter(this, "gStrings", () => {
-  return Services.strings.createBundle(
-    "chrome://global/locale/aboutReader.properties"
-  );
-});
-
 var PocketPageAction = {
   pageAction: null,
   urlbarNode: null,
@@ -264,10 +258,9 @@ var SaveToPocket = {
 
   _readerButtonData: {
     id: "pocket-button",
-    label: gStrings.GetStringFromName("readerView.savetopocket.label"),
-    image: "chrome://global/skin/reader/pocket.svg",
-    width: 16,
-    height: 16,
+    image: "chrome://pocket/content/panels/img/pocket-outline.svg",
+    width: 20,
+    height: 20,
   },
 
   onPrefChange(pref, oldValue, newValue) {
