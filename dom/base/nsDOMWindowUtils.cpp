@@ -4341,3 +4341,26 @@ nsDOMWindowUtils::GetPaintCount(uint64_t* aPaintCount) {
   *aPaintCount = presShell ? presShell->GetPaintCount() : 0;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetWebrtcRawDeviceId(nsAString& aRawDeviceId) {
+  if (!XRE_IsParentProcess()) {
+    MOZ_CRASH(
+        "GetWebrtcRawDeviceId is only available in the parent "
+        "process");
+  }
+
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int64_t rawDeviceId =
+      (int64_t)(widget->GetNativeData(NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID));
+  if (!rawDeviceId) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aRawDeviceId.AppendInt(rawDeviceId);
+  return NS_OK;
+}
