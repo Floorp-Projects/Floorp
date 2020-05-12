@@ -137,6 +137,23 @@ class Network extends Domain {
   }
 
   /**
+   * Activates emulation of network conditions.
+   *
+   * @param {Object} options
+   * @param {boolean} offline
+   *     True to emulate internet disconnection.
+   */
+  emulateNetworkConditions(options = {}) {
+    const { offline } = options;
+
+    if (typeof offline != "boolean") {
+      throw new TypeError("offline: boolean value expected");
+    }
+
+    Services.io.offline = offline;
+  }
+
+  /**
    * Returns all browser cookies for the current URL.
    *
    * @param {Object} options
