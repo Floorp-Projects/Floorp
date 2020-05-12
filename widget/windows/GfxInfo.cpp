@@ -1755,7 +1755,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // On nightly, we use a more conversative range of drivers that we have
     // confirmed the issue occurs with. On beta/release, we block everything
     // earlier to minimize the probability of missing a particular driver.
-#ifdef NIGHTLY_BUILD
+#ifdef EARLY_BETA_OR_EARLIER
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(
         OperatingSystem::Windows, DeviceFamily::IntelAll,
         nsIGfxInfo::FEATURE_WEBRENDER,
