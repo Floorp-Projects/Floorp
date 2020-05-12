@@ -5274,8 +5274,6 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoBase {
   NS_DISPLAY_DECL_NAME("CompositorHitTestInfo", TYPE_COMPOSITOR_HITTEST_INFO)
 
   void InitializeScrollTarget(nsDisplayListBuilder* aBuilder);
-  void SetInactiveScrollTarget(
-      mozilla::layers::ScrollableLayerGuid::ViewID aScrollTarget);
 
   bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
