@@ -40,8 +40,7 @@ function* test(testDriver) {
                  APZHitResultFlags.VISIBLE |
                  (config.isWebRender ? APZHitResultFlags.INACTIVE_SCROLLFRAME
                                      : APZHitResultFlags.IRREGULAR_AREA),
-                 (config.isWebRender ? utils.getViewId(document.scrollingElement)
-                                     : utils.getViewId(scroller)),
+                 utils.getViewId(scroller),
                  utils.getLayersId(),
                  "inactive will-change scrollframe");
 
