@@ -180,7 +180,11 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   bool mLoadFailed : 1;
 
   // Whether this is a preload, and which kind of preload it is.
-  const IsPreload mIsPreload : 2;
+  //
+  // TODO(emilio): This can become a bitfield once we build with a GCC version
+  // that has the fix for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61414,
+  // which causes a false positive warning here.
+  const IsPreload mIsPreload;
 
   // This is the element that imported the sheet.  Needed to get the
   // charset set on it and to fire load/error events.
