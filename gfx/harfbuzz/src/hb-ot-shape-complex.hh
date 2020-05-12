@@ -50,8 +50,9 @@ enum hb_ot_shape_zero_width_marks_type_t {
 
 /* Master OT shaper list */
 #define HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS \
-  HB_COMPLEX_SHAPER_IMPLEMENT (default) /* should be first */ \
   HB_COMPLEX_SHAPER_IMPLEMENT (arabic) \
+  HB_COMPLEX_SHAPER_IMPLEMENT (default) \
+  HB_COMPLEX_SHAPER_IMPLEMENT (dumber) \
   HB_COMPLEX_SHAPER_IMPLEMENT (hangul) \
   HB_COMPLEX_SHAPER_IMPLEMENT (hebrew) \
   HB_COMPLEX_SHAPER_IMPLEMENT (indic) \
@@ -60,7 +61,7 @@ enum hb_ot_shape_zero_width_marks_type_t {
   HB_COMPLEX_SHAPER_IMPLEMENT (myanmar_zawgyi) \
   HB_COMPLEX_SHAPER_IMPLEMENT (thai) \
   HB_COMPLEX_SHAPER_IMPLEMENT (use) \
-  /* ^--- Add new shapers here */
+  /* ^--- Add new shapers here; keep sorted. */
 
 
 struct hb_ot_complex_shaper_t

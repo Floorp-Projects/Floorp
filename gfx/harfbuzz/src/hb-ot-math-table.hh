@@ -48,7 +48,7 @@ struct MathValueRecord
   }
 
   protected:
-  HBINT16			value;		/* The X or Y value in design units */
+  HBINT16		value;		/* The X or Y value in design units */
   OffsetTo<Device>	deviceTable;	/* Offset to the device table - from the
 					 * beginning of parent table.  May be NULL.
 					 * Suggested format for device table is 1. */
@@ -279,14 +279,15 @@ struct MathKern
   protected:
   HBUINT16	heightCount;
   UnsizedArrayOf<MathValueRecord>
-		mathValueRecordsZ;	/* Array of correction heights at
-					 * which the kern value changes.
-					 * Sorted by the height value in
-					 * design units (heightCount entries),
-					 * Followed by:
-					 * Array of kern values corresponding
-					 * to heights. (heightCount+1 entries).
-					 */
+		mathValueRecordsZ;
+				/* Array of correction heights at
+				 * which the kern value changes.
+				 * Sorted by the height value in
+				 * design units (heightCount entries),
+				 * Followed by:
+				 * Array of kern values corresponding
+				 * to heights. (heightCount+1 entries).
+				 */
 
   public:
   DEFINE_SIZE_ARRAY (2, mathValueRecordsZ);
@@ -345,15 +346,18 @@ struct MathKernInfo
   }
 
   protected:
-  OffsetTo<Coverage>		mathKernCoverage;    /* Offset to Coverage table -
-						      * from the beginning of the
-						      * MathKernInfo table. */
-  ArrayOf<MathKernInfoRecord>	mathKernInfoRecords; /* Array of
-						      * MathKernInfoRecords,
-						      * per-glyph information for
-						      * mathematical positioning
-						      * of subscripts and
-						      * superscripts. */
+  OffsetTo<Coverage>
+		mathKernCoverage;
+				/* Offset to Coverage table -
+				 * from the beginning of the
+				 * MathKernInfo table. */
+  ArrayOf<MathKernInfoRecord>
+		mathKernInfoRecords;
+				/* Array of MathKernInfoRecords,
+				 * per-glyph information for
+				 * mathematical positioning
+				 * of subscripts and
+				 * superscripts. */
 
   public:
   DEFINE_SIZE_ARRAY (4, mathKernInfoRecords);
@@ -471,19 +475,21 @@ struct MathGlyphPartRecord
   }
 
   protected:
-  HBGlyphID   glyph;		  /* Glyph ID for the part. */
-  HBUINT16    startConnectorLength; /* Advance width/ height of the straight bar
-				   * connector material, in design units, is at
-				   * the beginning of the glyph, in the
-				   * direction of the extension. */
-  HBUINT16    endConnectorLength;   /* Advance width/ height of the straight bar
-				   * connector material, in design units, is at
-				   * the end of the glyph, in the direction of
-				   * the extension. */
-  HBUINT16    fullAdvance;	  /* Full advance width/height for this part,
-				   * in the direction of the extension.
-				   * In design units. */
-  PartFlags partFlags;		  /* Part qualifiers. */
+  HBGlyphID	glyph;		/* Glyph ID for the part. */
+  HBUINT16	startConnectorLength;
+				/* Advance width/ height of the straight bar
+				 * connector material, in design units, is at
+				 * the beginning of the glyph, in the
+				 * direction of the extension. */
+  HBUINT16	endConnectorLength;
+				/* Advance width/ height of the straight bar
+				 * connector material, in design units, is at
+				 * the end of the glyph, in the direction of
+				 * the extension. */
+  HBUINT16	fullAdvance;	/* Full advance width/height for this part,
+				 * in the direction of the extension.
+				 * In design units. */
+  PartFlags	partFlags;	/* Part qualifiers. */
 
   public:
   DEFINE_SIZE_STATIC (10);
@@ -522,12 +528,15 @@ struct MathGlyphAssembly
   }
 
   protected:
-  MathValueRecord	   italicsCorrection; /* Italics correction of this
-					       * MathGlyphAssembly. Should not
-					       * depend on the assembly size. */
-  ArrayOf<MathGlyphPartRecord> partRecords;   /* Array of part records, from
-					       * left to right and bottom to
-					       * top. */
+  MathValueRecord
+		italicsCorrection;
+				/* Italics correction of this
+				 * MathGlyphAssembly. Should not
+				 * depend on the assembly size. */
+  ArrayOf<MathGlyphPartRecord>
+		partRecords;	/* Array of part records, from
+				 * left to right and bottom to
+				 * top. */
 
   public:
   DEFINE_SIZE_ARRAY (6, partRecords);
@@ -645,27 +654,30 @@ struct MathVariants
   }
 
   protected:
-  HBUINT16	     minConnectorOverlap; /* Minimum overlap of connecting
-					   * glyphs during glyph construction,
-					   * in design units. */
-  OffsetTo<Coverage> vertGlyphCoverage;   /* Offset to Coverage table -
-					   * from the beginning of MathVariants
-					   * table. */
-  OffsetTo<Coverage> horizGlyphCoverage;  /* Offset to Coverage table -
-					   * from the beginning of MathVariants
-					   * table. */
-  HBUINT16	     vertGlyphCount;      /* Number of glyphs for which
-					   * information is provided for
-					   * vertically growing variants. */
-  HBUINT16	     horizGlyphCount;     /* Number of glyphs for which
-					   * information is provided for
-					   * horizontally growing variants. */
+  HBUINT16	minConnectorOverlap;
+				/* Minimum overlap of connecting
+				 * glyphs during glyph construction,
+				 * in design units. */
+  OffsetTo<Coverage> vertGlyphCoverage;
+				/* Offset to Coverage table -
+				 * from the beginning of MathVariants
+				 * table. */
+  OffsetTo<Coverage> horizGlyphCoverage;
+				/* Offset to Coverage table -
+				 * from the beginning of MathVariants
+				 * table. */
+  HBUINT16	vertGlyphCount;	/* Number of glyphs for which
+				 * information is provided for
+				 * vertically growing variants. */
+  HBUINT16	horizGlyphCount;/* Number of glyphs for which
+				 * information is provided for
+				 * horizontally growing variants. */
 
   /* Array of offsets to MathGlyphConstruction tables - from the beginning of
      the MathVariants table, for shapes growing in vertical/horizontal
      direction. */
   UnsizedArrayOf<OffsetTo<MathGlyphConstruction>>
- 			glyphConstruction;
+			glyphConstruction;
 
   public:
   DEFINE_SIZE_ARRAY (10, glyphConstruction);
@@ -702,11 +714,14 @@ struct MATH
   const MathVariants &get_variants () const    { return this+mathVariants; }
 
   protected:
-  FixedVersion<>version;		/* Version of the MATH table
-					 * initially set to 0x00010000u */
-  OffsetTo<MathConstants> mathConstants;/* MathConstants table */
-  OffsetTo<MathGlyphInfo> mathGlyphInfo;/* MathGlyphInfo table */
-  OffsetTo<MathVariants>  mathVariants;	/* MathVariants table */
+  FixedVersion<>version;	/* Version of the MATH table
+				 * initially set to 0x00010000u */
+  OffsetTo<MathConstants>
+		mathConstants;	/* MathConstants table */
+  OffsetTo<MathGlyphInfo>
+		mathGlyphInfo;	/* MathGlyphInfo table */
+  OffsetTo<MathVariants>
+		mathVariants;	/* MathVariants table */
 
   public:
   DEFINE_SIZE_STATIC (10);
