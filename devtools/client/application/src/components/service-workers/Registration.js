@@ -74,7 +74,9 @@ class Registration extends PureComponent {
 
   formatScope(scope) {
     const [, remainder] = getUnicodeUrl(scope).split("://");
-    return remainder || scope;
+    // remove the last slash from the url, if present
+    // or return the full scope if there's no remainder
+    return remainder ? remainder.replace(/\/$/, "") : scope;
   }
 
   render() {
