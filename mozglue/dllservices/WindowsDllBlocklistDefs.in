@@ -264,6 +264,9 @@ BROWSER_PROCESS += [
     # Hancom Office shell extension causes crashes when the file picker is
     # opened. See bug 1581092.
     DllBlocklistEntry("hncshellext64.dll", (1, 0, 0 ,3)),
+
+    # Cambridge Silicon Radio, bug 1634538
+    DllBlocklistEntry("BLEtokenCredentialProvider.dll", (2, 1, 63, 0)),
 ]
 
 CHILD_PROCESSES += [
