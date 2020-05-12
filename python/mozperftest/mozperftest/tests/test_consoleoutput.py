@@ -15,8 +15,7 @@ HERE = os.path.dirname(__file__)
 def test_console_output(*mocked):
     with temp_dir() as tempdir:
         options = {
-            "perfherder": True,
-            "perfherder-prefix": "",
+            "console-prefix": "",
             "console": True,
             "output": tempdir,
         }
