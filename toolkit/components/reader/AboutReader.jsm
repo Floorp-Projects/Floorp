@@ -47,7 +47,8 @@ const zoomOnMeta =
 const gIsFirefoxDesktop =
   Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
-var AboutReader = function(mm, win, articlePromise) {
+var AboutReader = function(actor, articlePromise) {
+  let win = actor.contentWindow;
   let url = this._getOriginalUrl(win);
   if (!(url.startsWith("http://") || url.startsWith("https://"))) {
     let errorMsg =
@@ -62,14 +63,7 @@ var AboutReader = function(mm, win, articlePromise) {
 
   let doc = win.document;
 
-  this._mm = mm;
-  this._mm.addMessageListener("Reader:CloseDropdown", this);
-  this._mm.addMessageListener("Reader:AddButton", this);
-  this._mm.addMessageListener("Reader:RemoveButton", this);
-  this._mm.addMessageListener("Reader:GetStoredArticleData", this);
-  this._mm.addMessageListener("Reader:ZoomIn", this);
-  this._mm.addMessageListener("Reader:ZoomOut", this);
-  this._mm.addMessageListener("Reader:ResetZoom", this);
+  this._actor = actor;
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
@@ -136,7 +130,7 @@ var AboutReader = function(mm, win, articlePromise) {
 
   if (gIsFirefoxDesktop) {
     // we're ready for any external setup, send a signal for that.
-    this._mm.sendAsyncMessage("Reader:OnSetup");
+    this._actor.sendAsyncMessage("Reader:OnSetup");
   }
 
   let colorSchemeValues = JSON.parse(
@@ -193,7 +187,7 @@ var AboutReader = function(mm, win, articlePromise) {
   this._setupLineHeightButtons();
 
   if (win.speechSynthesis && Services.prefs.getBoolPref("narrate.enabled")) {
-    new NarrateControls(mm, win, this._languagePromise);
+    new NarrateControls(win, this._languagePromise);
   }
 
   this._loadArticle();
@@ -292,26 +286,8 @@ AboutReader.prototype = {
     ));
   },
 
-  // Provides unique view Id.
-  get viewId() {
-    let _viewId = Cc["@mozilla.org/uuid-generator;1"]
-      .getService(Ci.nsIUUIDGenerator)
-      .generateUUID()
-      .toString();
-    Object.defineProperty(this, "viewId", { value: _viewId });
-
-    return _viewId;
-  },
-
   receiveMessage(message) {
     switch (message.name) {
-      // Triggered by Android user pressing BACK while the banner font-dropdown is open.
-      case "Reader:CloseDropdown": {
-        // Just close it.
-        this._closeDropdowns();
-        break;
-      }
-
       case "Reader:AddButton": {
         if (
           message.data.id &&
@@ -334,7 +310,7 @@ AboutReader.prototype = {
           let tb = this._toolbarElement;
           tb.appendChild(btn);
           this._setupButton(message.data.id, button => {
-            this._mm.sendAsyncMessage(
+            this._actor.sendAsyncMessage(
               "Reader:Clicked-" + button.dataset.buttonid,
               { article: this._article }
             );
@@ -349,12 +325,6 @@ AboutReader.prototype = {
             btn.remove();
           }
         }
-        break;
-      }
-      case "Reader:GetStoredArticleData": {
-        this._mm.sendAsyncMessage("Reader:StoredArticleData", {
-          article: this._article,
-        });
         break;
       }
       case "Reader:ZoomIn": {
@@ -405,7 +375,6 @@ AboutReader.prototype = {
           }
 
           let isScrollingUp = this._scrollOffset > vv.pageTop;
-          this._setSystemUIVisibility(isScrollingUp);
           this._setToolbarVisibility(isScrollingUp);
         }
 
@@ -464,35 +433,18 @@ AboutReader.prototype = {
         // Close the Banners Font-dropdown, cleanup Android BackPressListener.
         this._closeDropdowns();
 
-        this._mm.removeMessageListener("Reader:CloseDropdown", this);
-        this._mm.removeMessageListener("Reader:AddButton", this);
-        this._mm.removeMessageListener("Reader:RemoveButton", this);
-        this._mm.removeMessageListener("Reader:GetStoredArticleData", this);
-        this._mm.removeMessageListener("Reader:ZoomIn", this);
-        this._mm.removeMessageListener("Reader:ZoomOut", this);
-        this._mm.removeMessageListener("Reader:ResetZoom", this);
-        this._windowUnloaded = true;
+        this._actor.readerModeHidden();
+        this.clearActor();
         break;
     }
   },
 
-  observe(subject, topic, data) {
-    if (
-      subject.QueryInterface(Ci.nsISupportsPRUint64).data != this._innerWindowId
-    ) {
-      return;
-    }
-
-    Services.obs.removeObserver(this, "inner-window-destroyed");
-
-    this._mm.removeMessageListener("Reader:CloseDropdown", this);
-    this._mm.removeMessageListener("Reader:AddButton", this);
-    this._mm.removeMessageListener("Reader:RemoveButton", this);
-    this._windowUnloaded = true;
+  clearActor() {
+    this._actor = null;
   },
 
   _onReaderClose() {
-    ReaderMode.leaveReaderMode(this._mm.docShell, this._win);
+    ReaderMode.leaveReaderMode(this._actor.docShell, this._win);
   },
 
   async _resetFontSize() {
@@ -858,10 +810,6 @@ AboutReader.prototype = {
     AsyncPrefs.set("reader.font_type", this._fontType);
   },
 
-  _setSystemUIVisibility(visible) {
-    this._mm.sendAsyncMessage("Reader:SystemUIVisibility", { visible });
-  },
-
   _setToolbarVisibility(visible) {
     let tb = this._toolbarElement;
 
@@ -893,7 +841,7 @@ AboutReader.prototype = {
       article = await this._articlePromise;
     } else {
       try {
-        article = await this._getArticle(url);
+        article = await ReaderMode.downloadAndParseDocument(url);
       } catch (e) {
         if (e && e.newURL) {
           let readerURL = "about:reader?url=" + encodeURIComponent(e.newURL);
@@ -903,7 +851,7 @@ AboutReader.prototype = {
       }
     }
 
-    if (this._windowUnloaded) {
+    if (!this._actor) {
       return;
     }
 
@@ -918,38 +866,15 @@ AboutReader.prototype = {
     this._showContent(article);
   },
 
-  _getArticle(url) {
-    if (this.PLATFORM_HAS_CACHE) {
-      return new Promise((resolve, reject) => {
-        let listener = message => {
-          this._mm.removeMessageListener("Reader:ArticleData", listener);
-          if (message.data.newURL) {
-            reject({ newURL: message.data.newURL });
-            return;
-          }
-          resolve(message.data.article);
-        };
-        this._mm.addMessageListener("Reader:ArticleData", listener);
-        this._mm.sendAsyncMessage("Reader:ArticleGet", { url });
-      });
-    }
-    return ReaderMode.downloadAndParseDocument(url);
-  },
-
-  _requestFavicon() {
-    let handleFaviconReturn = message => {
-      this._mm.removeMessageListener(
-        "Reader:FaviconReturn",
-        handleFaviconReturn
-      );
-      this._loadFavicon(message.data.url, message.data.faviconUrl);
-    };
-
-    this._mm.addMessageListener("Reader:FaviconReturn", handleFaviconReturn);
-    this._mm.sendAsyncMessage("Reader:FaviconRequest", {
+  async _requestFavicon() {
+    let iconDetails = await this._actor.sendQuery("Reader:FaviconRequest", {
       url: this._article.url,
       preferredWidth: 16 * this._win.devicePixelRatio,
     });
+
+    if (iconDetails) {
+      this._loadFavicon(iconDetails.url, iconDetails.faviconUrl);
+    }
   },
 
   _loadFavicon(url, faviconUrl) {
@@ -1134,7 +1059,7 @@ AboutReader.prototype = {
       // No need to show progress if the article has been loaded,
       // if the window has been unloaded, or if there was an error
       // trying to load the article.
-      if (this._article || this._windowUnloaded || this._error) {
+      if (this._article || !this._actor || this._error) {
         return;
       }
 
@@ -1300,7 +1225,6 @@ AboutReader.prototype = {
 
     // Trigger BackPressListener initialization in Android.
     dropdown.classList.add("open");
-    this._mm.sendAsyncMessage("Reader:DropdownOpened", this.viewId);
   },
 
   /*
@@ -1317,11 +1241,6 @@ AboutReader.prototype = {
     let openDropdowns = this._doc.querySelectorAll(selector);
     for (let dropdown of openDropdowns) {
       dropdown.classList.remove("open");
-    }
-
-    // Trigger BackPressListener cleanup in Android.
-    if (openDropdowns.length) {
-      this._mm.sendAsyncMessage("Reader:DropdownClosed", this.viewId);
     }
   },
 
