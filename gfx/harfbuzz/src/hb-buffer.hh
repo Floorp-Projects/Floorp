@@ -228,10 +228,10 @@ struct hb_buffer_t
   /* Makes a copy of the glyph at idx to output and replace glyph_index */
   hb_glyph_info_t & output_glyph (hb_codepoint_t glyph_index)
   {
-    if (unlikely (!make_room_for (0, 1))) return Crap(hb_glyph_info_t);
+    if (unlikely (!make_room_for (0, 1))) return Crap (hb_glyph_info_t);
 
     if (unlikely (idx == len && !out_len))
-      return Crap(hb_glyph_info_t);
+      return Crap (hb_glyph_info_t);
 
     out_info[out_len] = idx < len ? info[idx] : out_info[out_len - 1];
     out_info[out_len].codepoint = glyph_index;
@@ -386,7 +386,7 @@ struct hb_buffer_t
     inf.cluster = cluster;
   }
 
-  int
+  unsigned int
   _unsafe_to_break_find_min_cluster (const hb_glyph_info_t *infos,
 				     unsigned int start, unsigned int end,
 				     unsigned int cluster) const

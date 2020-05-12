@@ -222,7 +222,7 @@ struct JSTF
   FixedVersion<>version;	/* Version of the JSTF table--initially set
 				 * to 0x00010000u */
   RecordArrayOf<JstfScript>
-		scriptList;  	/* Array of JstfScripts--listed
+		scriptList;	/* Array of JstfScripts--listed
 				 * alphabetically by ScriptTag */
   public:
   DEFINE_SIZE_ARRAY (6, scriptList);

@@ -41,7 +41,11 @@
  * @short_description: GLib integration
  * @include: hb-glib.h
  *
- * Functions for using HarfBuzz with the GLib library to provide Unicode data.
+ * Functions for using HarfBuzz with the GLib library. 
+ *
+ * HarfBuzz supports using GLib to provide Unicode data, by attaching
+ * GLib functions to the virtual methods in a #hb_unicode_funcs_t function
+ * structure.
  **/
 
 
@@ -169,6 +173,17 @@ glib_script_to_script[] =
 };
 #endif
 
+/**
+ * hb_glib_script_to_script:
+ * @script: The GUnicodeScript identifier to query
+ *
+ * Fetches the #hb_script_t script that corresponds to the
+ * specified GUnicodeScript identifier.
+ *
+ * Return value: the #hb_script_t script found
+ *
+ * Since: 0.9.38
+ **/
 hb_script_t
 hb_glib_script_to_script (GUnicodeScript script)
 {
@@ -185,6 +200,17 @@ hb_glib_script_to_script (GUnicodeScript script)
 #endif
 }
 
+/**
+ * hb_glib_script_from_script:
+ * @script: The #hb_script_t to query
+ *
+ * Fetches the GUnicodeScript identifier that corresponds to the
+ * specified #hb_script_t script.
+ *
+ * Return value: the GUnicodeScript identifier found
+ *
+ * Since: 0.9.38
+ **/
 GUnicodeScript
 hb_glib_script_from_script (hb_script_t script)
 {
@@ -373,6 +399,16 @@ void free_static_glib_funcs ()
 }
 #endif
 
+/**
+ * hb_glib_get_unicode_funcs:
+ *
+ * Fetches a Unicode-functions structure that is populated
+ * with the appropriate GLib function for each method.
+ *
+ * Return value: (transfer none): a pointer to the #hb_unicode_funcs_t Unicode-functions structure
+ *
+ * Since: 0.9.38
+ **/
 hb_unicode_funcs_t *
 hb_glib_get_unicode_funcs ()
 {
@@ -391,6 +427,12 @@ _hb_g_bytes_unref (void *data)
 
 /**
  * hb_glib_blob_create:
+ * @gbytes: the GBytes structure to work upon
+ *
+ * Creates an #hb_blob_t blob from the specified
+ * GBytes data structure.
+ *
+ * Return value: (transfer full): the new #hb_blob_t blob object
  *
  * Since: 0.9.38
  **/

@@ -18,6 +18,17 @@ EXTRA_DIST = \
 	TESTING.md \
 	CMakeLists.txt \
 	replace-enum-strings.cmake \
+	meson.build \
+	meson_options.txt \
+	subprojects/expat.wrap \
+	subprojects/fontconfig.wrap \
+	subprojects/freetype2.wrap \
+	subprojects/glib.wrap \
+	subprojects/libffi.wrap \
+	subprojects/proxy-libintl.wrap \
+	subprojects/zlib.wrap \
+	meson-cc-tests/intel-atomic-primitives-test.c \
+	meson-cc-tests/solaris-atomic-operations.c \
 	mingw-configure.sh \
 	mingw-ldd.py \
 	mingw32.sh \

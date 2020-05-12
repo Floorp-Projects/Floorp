@@ -65,7 +65,7 @@ struct FontDescriptor
   protected:
   Tag		tag;		/* The 4-byte table tag name. */
   union {
-  HBFixed		value;		/* The value for the descriptor tag. */
+  HBFixed	value;		/* The value for the descriptor tag. */
   HBUINT32	nalfType;	/* If the tag is `nalf`, see non_alphabetic_value_t */
   } u;
   public:
@@ -80,10 +80,10 @@ struct fdsc
     Weight	 = HB_TAG ('w','g','h','t'),
 				/* Percent weight relative to regular weight.
 				 * (defaul value: 1.0) */
-    Width 	 = HB_TAG ('w','d','t','h'),
+    Width	 = HB_TAG ('w','d','t','h'),
 				/* Percent width relative to regular width.
 				 * (default value: 1.0) */
-    Slant 	 = HB_TAG ('s','l','n','t'),
+    Slant	 = HB_TAG ('s','l','n','t'),
 				/* Angle of slant in degrees, where positive
 				 * is clockwise from straight up.
 				 * (default value: 0.0) */
@@ -108,7 +108,7 @@ struct fdsc
   }
 
   protected:
-  HBFixed		version;	/* Version number of the font descriptors
+  HBFixed	version;	/* Version number of the font descriptors
 				 * table (0x00010000 for the current version). */
   LArrayOf<FontDescriptor>
 		descriptors;	/* List of tagged-coordinate pairs style descriptors
