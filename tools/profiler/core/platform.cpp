@@ -2514,11 +2514,12 @@ static void locked_profiler_stream_json_for_this_process(
     if (ActivePS::FeatureJava(aLock)) {
       java::GeckoJavaSampler::Pause();
 
-      // locked_profiler_start uses sample count is 1000 for Java thread.
-      // This entry size is enough now, but we might have to estimate it
-      // if we can customize it
+      // We are allocating it chunk by chunk. So this will not allocate 64 MiB
+      // at once. This size should be more than enough for java threads.
+      // This buffer is being created for each process but Android has
+      // relatively less processes compared to desktop, so it's okay here.
       mozilla::ProfileBufferChunkManagerWithLocalLimit chunkManager(
-          8 * 1024 * 1024, 1024 * 1024);
+          64 * 1024 * 1024, 1024 * 1024);
       ProfileChunkedBuffer bufferManager(
           ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
       ProfileBuffer javaBuffer(bufferManager);
@@ -4260,9 +4261,10 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 #if defined(GP_OS_android)
   if (ActivePS::FeatureJava(aLock)) {
     int javaInterval = interval;
-    // Java sampling doesn't accurately keep up with 1ms sampling.
-    if (javaInterval < 10) {
-      javaInterval = 10;
+    // Java sampling doesn't accurately keep up with the sampling rate that is
+    // lower than 1ms.
+    if (javaInterval < 1) {
+      javaInterval = 1;
     }
     // Send the interval-relative entry count, but we have 100000 hard cap in
     // the java code, it can't be more than that.
