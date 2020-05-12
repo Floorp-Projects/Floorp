@@ -8,6 +8,7 @@ license = "MPL-2.0"
 webrender_debugger = ["webrender/debugger"]
 
 [dependencies]
+dirs = "2"
 rayon = "1"
 num_cpus = "1.7.0"
 tracy-rs = "0.1"
@@ -30,7 +31,6 @@ features = ["capture", "serialize_program"]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.11"
-dirs = "1.0"
 winapi = "0.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]

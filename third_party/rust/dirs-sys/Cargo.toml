@@ -11,16 +11,19 @@
 # will likely look very different (and much more reasonable)
 
 [package]
-name = "dirs"
-version = "2.0.2"
+name = "dirs-sys"
+version = "0.3.4"
 authors = ["Simon Ochsenreither <simon@ochsenreither.de>"]
-description = "A tiny low-level library that provides platform-specific standard locations of directories for config, cache and other data on Linux, Windows, macOS and Redox by leveraging the mechanisms defined by the XDG base/user directory specifications on Linux, the Known Folder API on Windows, and the Standard Directory guidelines on macOS."
+description = "System-level helper functions for the dirs and directories crates."
 readme = "README.md"
-keywords = ["xdg", "basedir", "app_dirs", "path", "folder"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/soc/dirs-rs"
+repository = "https://github.com/soc/dirs-sys-rs"
 [dependencies.cfg-if]
 version = "0.1"
-
-[dependencies.dirs-sys]
-version = "0.3.4"
+[target."cfg(target_os = \"redox\")".dependencies.redox_users]
+version = "0.3.0"
+[target."cfg(unix)".dependencies.libc]
+version = "0.2"
+[target."cfg(windows)".dependencies.winapi]
+version = "0.3"
+features = ["knownfolders", "objbase", "shlobj", "winbase", "winerror"]
