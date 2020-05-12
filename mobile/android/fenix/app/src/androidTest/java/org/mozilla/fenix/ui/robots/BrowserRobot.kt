@@ -237,13 +237,6 @@ class BrowserRobot {
         menuSaveImage.click()
     }
 
-    fun waitForCollectionSavedPopup() {
-        mDevice.wait(
-            Until.findObject(text("Tab saved!")),
-            waitingTime
-        )
-    }
-
     fun createBookmark(url: Uri) {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(url) {

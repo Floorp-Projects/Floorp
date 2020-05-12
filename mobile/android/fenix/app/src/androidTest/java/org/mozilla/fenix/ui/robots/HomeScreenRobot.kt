@@ -9,8 +9,12 @@ package org.mozilla.fenix.ui.robots
 import android.graphics.Bitmap
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.longClick
+import androidx.test.espresso.action.ViewActions.swipeLeft
+import androidx.test.espresso.action.ViewActions.swipeRight
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
@@ -18,6 +22,7 @@ import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItem
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -125,38 +130,191 @@ class HomeScreenRobot {
     // Collections element
     fun clickCollectionThreeDotButton() {
         collectionThreeDotButton().click()
-        mDevice.waitNotNull(Until.findObject(By.text("Delete collection")), waitingTime)
+        mDevice.waitNotNull(findObject(text("Delete collection")), waitingTime)
+    }
+
+    fun selectOpenTabs() {
+        onView(allOf(withText("Open tabs"))).click()
     }
 
     fun selectRenameCollection() {
-        onView(allOf(ViewMatchers.withText("Rename collection"))).click()
-        mDevice.waitNotNull(Until.findObject(By.res("name_collection_edittext")))
+        onView(allOf(withText("Rename collection"))).click()
+        mDevice.waitNotNull(findObject(text("Rename collection")))
+    }
+
+    fun selectAddTabToCollection() {
+        onView(allOf(withText("Add tab"))).click()
+        mDevice.waitNotNull(findObject(text("Select Tabs")))
     }
 
     fun selectDeleteCollection() {
-        onView(allOf(ViewMatchers.withText("Delete collection"))).click()
-        mDevice.waitNotNull(Until.findObject(By.res("message")), waitingTime)
+        onView(allOf(withText("Delete collection"))).click()
+        mDevice.waitNotNull(findObject(By.res("android:id/message")), waitingTime)
     }
 
     fun confirmDeleteCollection() {
-        onView(allOf(ViewMatchers.withText("DELETE"))).click()
-        mDevice.waitNotNull(Until.findObject(By.res("collections_header")), waitingTime)
+        onView(allOf(withText("DELETE"))).click()
+        mDevice.waitNotNull(findObject(By.res("org.mozilla.fenix.debug:id/collections_header")), waitingTime)
     }
 
     fun typeCollectionName(name: String) {
-        mDevice.wait(Until.findObject(By.res("name_collection_edittext")), waitingTime)
+        mDevice.wait(findObject(By.res("org.mozilla.fenix.debug:id/name_collection_edittext")), waitingTime)
         collectionNameTextField().perform(ViewActions.replaceText(name))
         collectionNameTextField().perform(ViewActions.pressImeActionButton())
+        mDevice.waitNotNull(Until.gone(text("Name collection")))
     }
+
+    fun saveTabsSelectedForCollection() = onView(withId(R.id.save_button)).click()
+
+    fun verifyCollectionIsDisplayed(title: String) {
+        mDevice.wait(findObject(text(title)), waitingTime)
+        collectionTitle(title).check(matches(isDisplayed()))
+    }
+
+    fun verifyCollectionIcon() =
+        onView(withId(R.id.collection_icon)).check(matches(isDisplayed()))
+
+    fun expandCollection(title: String) {
+        try {
+            mDevice.waitNotNull(findObject(text(title)), waitingTime)
+            collectionTitle(title).click()
+        } catch (e: NoMatchingViewException) {
+            scrollToElementByText(title)
+        }
+    }
+
+    fun collapseCollection(title: String) {
+        try {
+            mDevice.waitNotNull(findObject(text(title)), waitingTime)
+            onView(allOf(withId(R.id.chevron), hasSibling(withText(title)))).click()
+        } catch (e: NoMatchingViewException) {
+            scrollToElementByText(title)
+        }
+    }
+
+    fun clickSaveCollectionButton() = saveCollectionButton().click()
+
+    fun verifyItemInCollectionExists(title: String, visible: Boolean = true) {
+        try {
+            collectionItem(title)
+                .check(
+                    if (visible) matches(isDisplayed()) else doesNotExist()
+                )
+        } catch (e: NoMatchingViewException) {
+            scrollToElementByText(title)
+        }
+    }
+
+    fun verifyCollectionItemLogo() =
+        onView(withId(R.id.list_item_favicon)).check(matches(isDisplayed()))
+
+    fun verifyCollectionItemUrl() =
+        onView(withId(R.id.list_item_url)).check(matches(isDisplayed()))
+
+    fun verifyShareCollectionButtonIsVisible(visible: Boolean) {
+        shareCollectionButton()
+            .check(
+                if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE))
+                else matches(withEffectiveVisibility(Visibility.GONE))
+            )
+    }
+
+    fun verifyCollectionMenuIsVisible(visible: Boolean) {
+        collectionThreeDotButton()
+            .check(
+                if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE))
+                else matches(withEffectiveVisibility(Visibility.GONE))
+            )
+    }
+
+    fun verifyCollectionItemRemoveButtonIsVisible(title: String, visible: Boolean) {
+        removeTabFromCollectionButton(title)
+            .check(
+                if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE))
+                else doesNotExist()
+            )
+    }
+
+    fun verifySelectTabsView(vararg tabTitles: String) {
+        onView(allOf(withId(R.id.back_button), withText("Select Tabs")))
+            .check(matches(isDisplayed()))
+
+        for (title in tabTitles)
+            onView(withId(R.id.tab_list)).check(matches(hasItem(withText(title))))
+    }
+
+    fun verifyTabsSelectedCounterText(tabsSelected: Int) {
+        when (tabsSelected) {
+            0 -> onView(withId(R.id.bottom_bar_text)).check(matches(withText("Select tabs to save")))
+            1 -> onView(withId(R.id.bottom_bar_text)).check(matches(withText("1 tab selected")))
+            else -> onView(withId(R.id.bottom_bar_text)).check(matches(withText("$tabsSelected tabs selected")))
+        }
+    }
+
+    fun selectAllTabsForCollection() {
+        onView(withId(R.id.select_all_button))
+            .check(matches(withText("Select All")))
+            .click()
+    }
+
+    fun deselectAllTabsForCollection() {
+        onView(withId(R.id.select_all_button))
+            .check(matches(withText("Deselect All")))
+            .click()
+    }
+
+    fun selectTabForCollection(title: String) {
+        tab(title).click()
+    }
+
+    fun clickAddNewCollection() =
+        onView(allOf(withText("Add new collection"))).click()
+
+    fun verifyNameCollectionView() {
+        onView(allOf(withId(R.id.back_button), withText("Name collection")))
+            .check(matches(isDisplayed()))
+    }
+
+    fun verifyDefaultCollectionName(name: String) =
+        onView(withId(R.id.name_collection_edittext)).check(matches(withText(name)))
+
+    fun verifySelectCollectionView() {
+        onView(allOf(withId(R.id.back_button), withText("Select collection")))
+            .check(matches(isDisplayed()))
+    }
+
+    fun verifyShareTabsOverlay() = assertShareTabsOverlay()
+
+    fun clickShareCollectionButton() = onView(withId(R.id.collection_share_button)).click()
+
+    fun removeTabFromCollection(title: String) = removeTabFromCollectionButton(title).click()
+
+    fun swipeCollectionItemRight(title: String) {
+        try {
+            collectionItem(title).perform(swipeRight())
+        } catch (e: NoMatchingViewException) {
+            scrollToElementByText(title)
+        }
+    }
+
+    fun swipeCollectionItemLeft(title: String) {
+        try {
+            collectionItem(title).perform(swipeLeft())
+        } catch (e: NoMatchingViewException) {
+            scrollToElementByText(title)
+        }
+    }
+
+    fun longTapSelectTab(title: String) {
+        tab(title).perform(longClick())
+    }
+
+    fun goBackCollectionFlow() = collectionFlowBackButton().click()
 
     fun scrollToElementByText(text: String): UiScrollable {
         val appView = UiScrollable(UiSelector().scrollable(true))
         appView.scrollTextIntoView(text)
         return appView
-    }
-
-    fun swipeUpToDismissFirstRun() {
-        scrollToElementByText("Start browsing")
     }
 
     fun closeTab() {
@@ -174,16 +332,16 @@ class HomeScreenRobot {
         onView(withId(R.id.sessionControlRecyclerView)).perform(ViewActions.swipeDown())
 
     fun swipeTabRight(title: String) =
-        onView(allOf(withId(R.id.tab_title), withText(title))).perform(ViewActions.swipeRight())
+        tab(title).perform(ViewActions.swipeRight())
 
     fun swipeTabLeft(title: String) =
-        onView(allOf(withId(R.id.tab_title), withText(title))).perform(ViewActions.swipeLeft())
+        tab(title).perform(ViewActions.swipeLeft())
 
     fun closeTabViaXButton(title: String) = closeTabViaX(title)
 
     fun verifySnackBarText(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.waitNotNull(Until.findObject(By.text(expectedText)), TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(findObject(By.text(expectedText)), TestAssetHelper.waitingTime)
     }
 
     fun snackBarButtonClick(expectedText: String) {
@@ -226,10 +384,6 @@ class HomeScreenRobot {
 
         fun dismissOnboarding() {
             openThreeDotMenu { }.openSettings { }.goBack { }
-        }
-
-        fun addNewTab() {
-            openSearch { }.openBrowser { }.openHomeScreen { }
         }
 
         fun togglePrivateBrowsingMode() {
@@ -315,12 +469,7 @@ class HomeScreenRobot {
 
         fun openTab(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(findObject(text(title)))
-            onView(
-                allOf(
-                    withId(R.id.tab_title),
-                    withText(title)
-                )
-            ).click()
+            tab(title).click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -582,12 +731,20 @@ private fun assertExistingTabList() =
     onView(allOf(withId(R.id.item_tab)))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertExistingOpenTabs(title: String) =
-    onView(withId(R.id.sessionControlRecyclerView)).perform(
-        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-            ViewMatchers.hasDescendant(withText(title))
-        )
-    ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertExistingOpenTabs(title: String) {
+    try {
+        tab(title).check(matches(isDisplayed()))
+    } catch (e: NoMatchingViewException) {
+        onView(withId(R.id.sessionControlRecyclerView)).perform(
+            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                allOf(
+                    withId(R.id.tab_title),
+                    withText(title)
+                )
+            )
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
+}
 
 private fun tabsListThreeDotButton() = onView(allOf(withId(R.id.tabs_overflow_button)))
 
@@ -596,6 +753,9 @@ private fun collectionThreeDotButton() =
 
 private fun collectionNameTextField() =
     onView(allOf(ViewMatchers.withResourceName("name_collection_edittext")))
+
+private fun collectionTitle(title: String) =
+    onView(allOf(withId(R.id.collection_title), withText(title)))
 
 private fun closeTabViaX(title: String) {
     val closeButton = onView(
@@ -626,13 +786,45 @@ private fun assertTopSiteContextMenuItems() {
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
     mDevice.waitNotNull(
-        Until.findObject(By.text("Open in private tab")),
+        findObject(By.text("Open in private tab")),
         waitingTime
     )
     mDevice.waitNotNull(
-        Until.findObject(By.text("Remove")),
+        findObject(By.text("Remove")),
         waitingTime
     )
 }
 
+private fun assertShareTabsOverlay() {
+    onView(withId(R.id.shared_site_list)).check(matches(isDisplayed()))
+    onView(withId(R.id.share_tab_title)).check(matches(isDisplayed()))
+    onView(withId(R.id.share_tab_favicon)).check(matches(isDisplayed()))
+    onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
+}
+
 private fun tabMediaControlButton() = onView(withId(R.id.play_pause_button))
+
+private fun collectionItem(title: String) =
+    onView(allOf(withId(R.id.list_element_title), withText(title)))
+
+private fun saveCollectionButton() = onView(withId(R.id.save_tab_group_button))
+
+private fun shareCollectionButton() = onView(withId(R.id.collection_share_button))
+
+private fun removeTabFromCollectionButton(title: String) =
+    onView(
+        allOf(
+            withId(R.id.list_item_action_button),
+            hasSibling(withText(title))
+        )
+    )
+
+private fun collectionFlowBackButton() = onView(withId(R.id.back_button))
+
+private fun tab(title: String) =
+    onView(
+        allOf(
+            withId(R.id.tab_title),
+            withText(title)
+        )
+    )
