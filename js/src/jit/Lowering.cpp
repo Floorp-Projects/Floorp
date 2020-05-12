@@ -3966,6 +3966,7 @@ void LIRGenerator::visitGuardNullOrUndefined(MGuardNullOrUndefined* ins) {
   auto* lir = new (alloc()) LGuardNullOrUndefined(useBox(ins->value()));
   assignSnapshot(lir, Bailout_NullOrUndefinedGuard);
   add(lir, ins);
+  redefine(ins, ins->value());
 }
 
 void LIRGenerator::visitAssertRange(MAssertRange* ins) {

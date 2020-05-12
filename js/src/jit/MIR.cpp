@@ -5610,7 +5610,7 @@ MDefinition* MTypedArrayIndexToInt32::foldsTo(TempAllocator& alloc) {
 MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
   MDefinition* input = value();
   if (input->isBox()) {
-    input = input->getOperand(0);
+    input = input->toBox()->input();
   }
 
   if (input->definitelyType({MIRType::Null, MIRType::Undefined})) {
@@ -5630,6 +5630,19 @@ MDefinition* MGuardValue::foldsTo(TempAllocator& alloc) {
     if (cst->toJSValue() == expected()) {
       return value();
     }
+  }
+
+  return this;
+}
+
+MDefinition* MGuardNullOrUndefined::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = value();
+  if (input->isBox()) {
+    input = input->toBox()->input();
+  }
+
+  if (input->definitelyType({MIRType::Null, MIRType::Undefined})) {
+    return value();
   }
 
   return this;
