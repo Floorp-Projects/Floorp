@@ -12,6 +12,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 
+#include "nsDebug.h"
 #include "nsIPrincipal.h"
 
 namespace mozilla {
@@ -22,8 +23,12 @@ WebBrowserPersistRemoteDocument ::WebBrowserPersistRemoteDocument(
     WebBrowserPersistDocumentParent* aActor, const Attrs& aAttrs,
     nsIInputStream* aPostData)
     : mActor(aActor), mAttrs(aAttrs), mPostData(aPostData) {
-  nsresult rv;
-  mPrincipal = ipc::PrincipalInfoToPrincipal(mAttrs.principal(), &rv);
+  auto principalOrErr = ipc::PrincipalInfoToPrincipal(mAttrs.principal());
+  if (principalOrErr.isOk()) {
+    mPrincipal = principalOrErr.unwrap();
+  } else {
+    NS_WARNING("Failed to obtain principal!");
+  }
   if (mAttrs.sessionHistoryEntryOrCacheKey().type() ==
       SessionHistoryEntryOrCacheKey::TPSHEntryParent) {
     mSHEntry = static_cast<dom::SHEntryParent*>(

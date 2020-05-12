@@ -1288,11 +1288,11 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
   if (!deserializedURI) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(requestingPrincipal);
-  if (!principal) {
+  auto principalOrErr = PrincipalInfoToPrincipal(requestingPrincipal);
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     return IPC_FAIL_NO_REASON(this);
   }
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
   nsCORSListenerProxy::RemoveFromCorsPreflightCache(deserializedURI, principal);
   return IPC_OK();
 }

@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "MainThreadUtils.h"
+#include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIConsoleReportCollector.h"
@@ -309,26 +310,25 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   // Ensure that the IndexedDatabaseManager is initialized
   Unused << NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate());
 
-  nsresult rv = NS_OK;
-
   auto scopeExit = MakeScopeExit([&] { TransitionStateToTerminated(); });
 
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(aData.principalInfo(), &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto principalOrErr = PrincipalInfoToPrincipal(aData.principalInfo());
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    return principalOrErr.unwrapErr();
   }
 
-  nsCOMPtr<nsIPrincipal> loadingPrincipal =
-      PrincipalInfoToPrincipal(aData.loadingPrincipalInfo(), &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+
+  auto loadingPrincipalOrErr =
+      PrincipalInfoToPrincipal(aData.loadingPrincipalInfo());
+  if (NS_WARN_IF(loadingPrincipalOrErr.isErr())) {
+    return loadingPrincipalOrErr.unwrapErr();
   }
 
-  nsCOMPtr<nsIPrincipal> storagePrincipal =
-      PrincipalInfoToPrincipal(aData.storagePrincipalInfo(), &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto storagePrincipalOrErr =
+      PrincipalInfoToPrincipal(aData.storagePrincipalInfo());
+  if (NS_WARN_IF(storagePrincipalOrErr.isErr())) {
+    return storagePrincipalOrErr.unwrapErr();
   }
 
   WorkerLoadInfo info;
@@ -342,8 +342,8 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mReferrerInfo = aData.referrerInfo();
   info.mDomain = aData.domain();
   info.mPrincipal = principal;
-  info.mStoragePrincipal = storagePrincipal;
-  info.mLoadingPrincipal = loadingPrincipal;
+  info.mStoragePrincipal = storagePrincipalOrErr.unwrap();
+  info.mLoadingPrincipal = loadingPrincipalOrErr.unwrap();
   info.mStorageAccess = aData.storageAccess();
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
@@ -367,6 +367,8 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   if (aData.clientInfo().isSome()) {
     clientInfo.emplace(ClientInfo(aData.clientInfo().ref()));
   }
+
+  nsresult rv = NS_OK;
 
   if (clientInfo.isSome()) {
     Maybe<mozilla::ipc::CSPInfo> cspInfo = clientInfo.ref().GetCspInfo();

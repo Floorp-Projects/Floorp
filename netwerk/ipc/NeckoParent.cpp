@@ -110,7 +110,8 @@ static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
 
   const PrincipalInfo& principalInfo = optionalPrincipalInfo.ref();
 
-  return PrincipalInfoToPrincipal(principalInfo);
+  auto principalOrErr = PrincipalInfoToPrincipal(principalInfo);
+  return principalOrErr.isOk() ? principalOrErr.unwrap().forget() : nullptr;
 }
 
 static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(

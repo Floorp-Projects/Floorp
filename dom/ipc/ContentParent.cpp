@@ -14,6 +14,7 @@
 #include "BrowserParent.h"
 
 #include "chrome/common/process_watcher.h"
+#include "mozilla/Result.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/PDocAccessible.h"
@@ -2575,9 +2576,9 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     // Send down to the content process the permissions for each of the
     // registered service worker scopes.
     for (auto& registration : registrations) {
-      nsCOMPtr<nsIPrincipal> principal =
-          PrincipalInfoToPrincipal(registration.principal());
-      if (principal) {
+      auto principalOrErr = PrincipalInfoToPrincipal(registration.principal());
+      if (principalOrErr.isOk()) {
+        nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
         TransmitPermissionsForPrincipal(principal);
       }
     }
