@@ -354,7 +354,6 @@ void WorkletThread::EnsureCycleCollectedJSContext(JSRuntime* aParentRuntime) {
   // FIXME: JSSettings
   // FIXME: JS_SetSecurityCallbacks
   // FIXME: JS::SetAsyncTaskCallbacks
-  // FIXME: JS_AddInterruptCallback
   // FIXME: JS::SetCTypesActivityCallback
   // FIXME: JS_SetGCZeal
 
