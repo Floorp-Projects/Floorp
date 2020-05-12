@@ -3,7 +3,7 @@ import mozunit
 import pytest
 import mock
 
-from mozperftest.tests.support import get_running_env
+from mozperftest.tests.support import get_running_env, requests_content
 from mozperftest.environment import SYSTEM
 from mozperftest.system.android import DeviceError
 
@@ -46,6 +46,23 @@ def test_android_failure():
     system = env.layers[SYSTEM]
     with system as android, pytest.raises(DeviceError):
         android(metadata)
+
+
+@mock.patch("mozperftest.utils.requests.get", new=requests_content())
+@mock.patch("mozperftest.system.android.ADBDevice")
+def test_android_apk_alias(device):
+    args = {
+        "android-install-apk": ["fennec_nightly_armeabi_v7a"],
+        "android": True,
+        "android-app-name": "org.mozilla.fenned_aurora",
+    }
+
+    mach_cmd, metadata, env = get_running_env(**args)
+    system = env.layers[SYSTEM]
+    with system as android:
+        android(metadata)
+    # XXX really ?
+    assert device.mock_calls[1][1][0].endswith("target.apk")
 
 
 if __name__ == "__main__":
