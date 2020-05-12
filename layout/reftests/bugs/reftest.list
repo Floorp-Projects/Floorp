@@ -1773,7 +1773,6 @@ fuzzy-if(skiaContent,0-1,0-3) == 931464-1.html 931464-1-ref.html
 == 931853.html 931853-ref.html
 == 931853-quirks.html 931853-quirks-ref.html
 == 933264-1.html 933264-1-ref.html
-test-pref(font.minimum-size.x-western,32) == 935056-1.html 935056-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 936670-1.svg 936670-1-ref.svg # Bug 1392106
 == 941940-1.html 941940-1-ref.html
 fails == 942017.html 942017-ref.html # bug 942017
