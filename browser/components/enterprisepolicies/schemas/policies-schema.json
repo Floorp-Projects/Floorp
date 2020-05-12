@@ -548,7 +548,7 @@
         },
         "StartPage": {
           "type": "string",
-          "enum": ["none", "homepage", "previous-session"]
+          "enum": ["none", "homepage", "previous-session", "homepage-locked"]
         }
       }
     },
