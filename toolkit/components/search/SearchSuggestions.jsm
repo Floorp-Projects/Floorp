@@ -59,7 +59,7 @@ SuggestAutoComplete.prototype = {
 
     // If form history has results, add them to the list.
     for (let i = 0; i < results.local.length; ++i) {
-      finalResults.push(results.local[i]);
+      finalResults.push(results.local[i].value);
       finalComments.push("");
     }
 
@@ -68,7 +68,11 @@ SuggestAutoComplete.prototype = {
       // "comments" column values for suggestions are empty strings
       let comments = new Array(results.remote.length).fill("");
       // now put the history results above the suggestions
-      finalResults = finalResults.concat(results.remote);
+      // We shouldn't show tail suggestions in their full-text form.
+      let nonTailEntries = results.remote.filter(
+        e => !e.matchPrefix && !e.tail
+      );
+      finalResults = finalResults.concat(nonTailEntries.map(e => e.value));
       finalComments = finalComments.concat(comments);
     }
 
