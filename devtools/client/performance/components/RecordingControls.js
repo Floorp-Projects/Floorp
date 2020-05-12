@@ -37,28 +37,25 @@ class RecordingControls extends Component {
 
     return div(
       { className: "devtools-toolbar" },
-      div(
-        { className: "toolbar-group" },
-        button({
-          id: "clear-button",
-          className: "devtools-button",
-          title: L10N.getStr("recordings.clear.tooltip"),
-          onClick: onClearButtonClick,
-        }),
-        button({
-          id: "main-record-button",
-          className: recordButtonClassList.join(" "),
-          disabled: isLocked,
-          title: L10N.getStr("recordings.start.tooltip"),
-          onClick: onRecordButtonClick,
-        }),
-        button({
-          id: "import-button",
-          className: "devtools-button",
-          title: L10N.getStr("recordings.import.tooltip"),
-          onClick: onImportButtonClick,
-        })
-      )
+      button({
+        id: "clear-button",
+        className: "devtools-button",
+        title: L10N.getStr("recordings.clear.tooltip"),
+        onClick: onClearButtonClick,
+      }),
+      button({
+        id: "main-record-button",
+        className: recordButtonClassList.join(" "),
+        disabled: isLocked,
+        title: L10N.getStr("recordings.start.tooltip"),
+        onClick: onRecordButtonClick,
+      }),
+      button({
+        id: "import-button",
+        className: "devtools-button",
+        title: L10N.getStr("recordings.import.tooltip"),
+        onClick: onImportButtonClick,
+      })
     );
   }
 }
