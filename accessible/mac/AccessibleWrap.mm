@@ -207,6 +207,13 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
     case roles::LINK:
       return [mozLinkAccessible class];
 
+    case roles::LISTBOX:
+      return [mozListboxAccessible class];
+
+    case roles::OPTION: {
+      return [mozOptionAccessible class];
+    }
+
     default:
       return [mozAccessible class];
   }

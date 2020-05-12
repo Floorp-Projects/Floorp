@@ -1294,7 +1294,22 @@ struct RoleDescrComparator {
 }
 
 - (BOOL)isEnabled {
-  return [self stateWithMask:states::UNAVAILABLE] == 0;
+  if ([self stateWithMask:states::UNAVAILABLE]) {
+    return NO;
+  }
+
+  if (![self isRoot]) {
+    mozAccessible* parent = (mozAccessible*)[self parent];
+    if (![parent isRoot]) {
+     return ![parent disableChild:self];
+    }
+  }
+
+  return YES;
+}
+
+- (BOOL)disableChild:(mozAccessible*)child {
+  return NO;
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
@@ -1316,6 +1331,7 @@ struct RoleDescrComparator {
     case nsIAccessibleEvent::EVENT_SELECTION:
     case nsIAccessibleEvent::EVENT_SELECTION_ADD:
     case nsIAccessibleEvent::EVENT_SELECTION_REMOVE:
+    case nsIAccessibleEvent::EVENT_SELECTION_WITHIN:
       [self postNotification:NSAccessibilitySelectedChildrenChangedNotification];
       break;
   }
