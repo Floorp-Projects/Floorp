@@ -82,7 +82,7 @@ already_AddRefed<MediaEncryptedEvent> MediaEncryptedEvent::Constructor(
                                  aEventInitDict.mInitData.Value().Obj());
     e->mInitData = JS::CopyArrayBuffer(aGlobal.Context(), buffer);
     if (!e->mInitData) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      aRv.NoteJSContextException(aGlobal.Context());
       return nullptr;
     }
   }
@@ -101,7 +101,7 @@ void MediaEncryptedEvent::GetInitData(JSContext* cx,
     mInitData = ArrayBuffer::Create(cx, this, mRawInitData.Length(),
                                     mRawInitData.Elements());
     if (!mInitData) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      aRv.NoteJSContextException(cx);
       return;
     }
     mRawInitData.Clear();
