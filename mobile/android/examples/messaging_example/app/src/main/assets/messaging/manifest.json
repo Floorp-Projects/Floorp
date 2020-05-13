@@ -3,6 +3,11 @@
   "name": "messaging",
   "version": "1.0",
   "description": "Example messaging web extension.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "messaging@example.com"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["*://*.twitter.com/*"],
@@ -11,6 +16,7 @@
   ],
   "permissions": [
     "nativeMessaging",
+    "nativeMessagingFromContent",
     "geckoViewAddons"
   ]
 }
