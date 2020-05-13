@@ -20,22 +20,29 @@
 namespace mozilla {
 namespace dom {
 
-static already_AddRefed<nsISHistory> CreateSHistory(nsDocShell* aDocShell) {
-  if (XRE_IsContentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
-    return do_AddRef(static_cast<SHistoryChild*>(
-        ContentChild::GetSingleton()->SendPSHistoryConstructor(
-            aDocShell->GetBrowsingContext())));
+ChildSHistory::ChildSHistory(BrowsingContext* aBrowsingContext)
+    : mBrowsingContext(aBrowsingContext) {}
+
+void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
+  if (!aIsInProcess) {
+    mHistory = nullptr;
+
+    return;
   }
 
-  nsCOMPtr<nsISHistory> history =
-      new nsSHistory(aDocShell->GetBrowsingContext(), aDocShell->HistoryID());
-  return history.forget();
+  if (mHistory) {
+    return;
+  }
+
+  if (XRE_IsContentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
+    mHistory = do_AddRef(static_cast<SHistoryChild*>(
+        ContentChild::GetSingleton()->SendPSHistoryConstructor(
+            mBrowsingContext)));
+    return;
+  }
+
+  mHistory = new nsSHistory(mBrowsingContext);
 }
-
-ChildSHistory::ChildSHistory(nsDocShell* aDocShell)
-    : mDocShell(aDocShell), mHistory(CreateSHistory(aDocShell)) {}
-
-ChildSHistory::~ChildSHistory() {}
 
 int32_t ChildSHistory::Count() { return mHistory->GetCount(); }
 
@@ -87,7 +94,10 @@ void ChildSHistory::EvictLocalContentViewers() {
   mHistory->EvictAllContentViewers();
 }
 
-nsISHistory* ChildSHistory::LegacySHistory() { return mHistory; }
+nsISHistory* ChildSHistory::LegacySHistory() {
+  MOZ_RELEASE_ASSERT(mHistory);
+  return mHistory;
+}
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChildSHistory)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -97,7 +107,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ChildSHistory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ChildSHistory)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ChildSHistory, mDocShell, mHistory)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ChildSHistory, mBrowsingContext, mHistory)
 
 JSObject* ChildSHistory::WrapObject(JSContext* cx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -105,14 +115,7 @@ JSObject* ChildSHistory::WrapObject(JSContext* cx,
 }
 
 nsISupports* ChildSHistory::GetParentObject() const {
-  // We want to get the BrowserChildMessageManager, which is the
-  // messageManager on mDocShell.
-  RefPtr<ContentFrameMessageManager> mm;
-  if (mDocShell) {
-    mm = mDocShell->GetMessageManager();
-  }
-  // else we must be unlinked... can that happen here?
-  return ToSupports(mm);
+  return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
 already_AddRefed<nsISHEntry> CreateSHEntryForDocShell(nsISHistory* aSHistory) {
