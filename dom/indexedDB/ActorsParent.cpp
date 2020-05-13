@@ -10318,6 +10318,9 @@ class DeserializeIndexValueHelper final : public Runnable {
         mStatus(NS_ERROR_FAILURE) {}
 
   void DispatchAndWait(ErrorResult& aRv) {
+    // FIXME(Bug 1637530) Re-enable optimization using a non-system-principaled
+    // JS context
+#if 0
     // We don't need to go to the main-thread and use the sandbox. Let's create
     // the updateInfo data here.
     if (!mCloneReadInfo.Data().Size()) {
@@ -10332,6 +10335,7 @@ class DeserializeIndexValueHelper final : public Runnable {
                                             &mUpdateInfoArray, &aRv);
       return;
     }
+#endif
 
     // The operation will continue on the main-thread.
 
