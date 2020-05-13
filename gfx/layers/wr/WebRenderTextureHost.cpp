@@ -52,7 +52,7 @@ WebRenderTextureHost::WebRenderTextureHost(
 
 WebRenderTextureHost::~WebRenderTextureHost() {
   MOZ_COUNT_DTOR(WebRenderTextureHost);
-  BufferTextureHost::DestroyRenderTexture(mExternalImageId);
+  TextureHost::DestroyRenderTexture(mExternalImageId);
 }
 
 void WebRenderTextureHost::CreateRenderTextureHost(

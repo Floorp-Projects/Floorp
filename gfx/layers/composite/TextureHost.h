@@ -648,6 +648,8 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
         "No CreateRenderTexture() implementation for this TextureHost type.");
   }
 
+  static void DestroyRenderTexture(const wr::ExternalImageId& aExternalImageId);
+
   /// Returns the number of actual textures that will be used to render this.
   /// For example in a lot of YUV cases it will be 3
   virtual uint32_t NumSubTextures() { return 1; }
@@ -788,8 +790,6 @@ class BufferTextureHost : public TextureHost {
 
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
-
-  static void DestroyRenderTexture(const wr::ExternalImageId& aExternalImageId);
 
   uint32_t NumSubTextures() override;
 

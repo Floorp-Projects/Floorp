@@ -454,6 +454,12 @@ void TextureHost::CallNotifyNotUsed() {
   static_cast<TextureParent*>(mActor)->NotifyNotUsed(mFwdTransactionId);
 }
 
+void TextureHost::DestroyRenderTexture(
+    const wr::ExternalImageId& aExternalImageId) {
+  wr::RenderThread::Get()->UnregisterExternalImage(
+      wr::AsUint64(aExternalImageId));
+}
+
 void TextureHost::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   aStream << aPrefix;
   aStream << nsPrintfCString("%s (0x%p)", Name(), this).get();
@@ -603,12 +609,6 @@ void BufferTextureHost::CreateRenderTexture(
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
-}
-
-void BufferTextureHost::DestroyRenderTexture(
-    const wr::ExternalImageId& aExternalImageId) {
-  wr::RenderThread::Get()->UnregisterExternalImage(
-      wr::AsUint64(aExternalImageId));
 }
 
 uint32_t BufferTextureHost::NumSubTextures() {
