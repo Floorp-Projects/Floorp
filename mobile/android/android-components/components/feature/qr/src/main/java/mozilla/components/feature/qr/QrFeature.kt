@@ -30,6 +30,8 @@ typealias OnScanResult = (result: String) -> Unit
  * need to be requested before a QR scan can be performed. Once the request
  * is completed, [onPermissionsResult] needs to be invoked. This feature
  * will request [android.Manifest.permission.CAMERA].
+ * @property scanMessage (Optional) String resource for an optional message
+ * to be laid out below the QR scan viewfinder
  */
 class QrFeature(
     private val context: Context,

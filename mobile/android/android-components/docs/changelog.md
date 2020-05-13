@@ -25,6 +25,10 @@ permalink: /changelog/
 * **browser-store**
   * Added `webAppManifest` property to `ContentState`.
 
+ * **feature-qr**
+   * Added `CustomViewFinder`, a `View` that shows a ViewFinder positioned in center of the camera view and draws an Overlay
+   * Added optional String resource `scanMessage` param to `QrFeature` for adding a message below the viewfinder
+
 # 41.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v40.0.0...v41.0.0)
