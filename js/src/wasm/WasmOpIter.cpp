@@ -462,7 +462,6 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::V128Bitselect:
           WASM_SIMD_OP(OpKind::VectorSelect);
         case SimdOp::V8x16Shuffle:
-        case SimdOp::V8x16ShuffleLegacy:
           WASM_SIMD_OP(OpKind::VectorShuffle);
         case SimdOp::V128Const:
           WASM_SIMD_OP(OpKind::V128);

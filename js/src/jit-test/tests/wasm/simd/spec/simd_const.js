@@ -6725,8 +6725,9 @@ try { wasmTextToBinary(`
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
+
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\69\\38\\78\\31\\36\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\02" "\\00\\00\\00\\00" "\\80\\80\\80\\80" "\\ff\\ff\\ff\\ff" "\\ff\\ff\\ff\\ff" "\\0b" )
+( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\69\\38\\78\\31\\36\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\0c" "\\00\\00\\00\\00" "\\80\\80\\80\\80" "\\ff\\ff\\ff\\ff" "\\ff\\ff\\ff\\ff" "\\0b" )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -6746,7 +6747,7 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\69\\31\\36\\78\\38\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\02" "\\00\\00\\00\\00" "\\00\\80\\00\\80" "\\ff\\ff\\ff\\ff" "\\ff\\ff\\ff\\ff" "\\0b" )
+( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\69\\31\\36\\78\\38\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\0c" "\\00\\00\\00\\00" "\\00\\80\\00\\80" "\\ff\\ff\\ff\\ff" "\\ff\\ff\\ff\\ff" "\\0b" )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -6766,7 +6767,7 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\69\\33\\32\\78\\34\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\02" "\\d1\\ff\\ff\\ff" "\\d1\\ff\\ff\\ff" "\\d1\\ff\\ff\\ff" "\\d1\\ff\\ff\\ff" "\\0b" )
+( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\69\\33\\32\\78\\34\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\0c" "\\d1\\ff\\ff\\ff" "\\d1\\ff\\ff\\ff" "\\d1\\ff\\ff\\ff" "\\d1\\ff\\ff\\ff" "\\0b" )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -6786,7 +6787,7 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\69\\36\\34\\78\\32\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\02" "\\ff\\ff\\ff\\ff\\ff\\ff\\ff\\7f" "\\ff\\ff\\ff\\ff\\ff\\ff\\ff\\7f" "\\0b" )
+( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\69\\36\\34\\78\\32\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\0c" "\\ff\\ff\\ff\\ff\\ff\\ff\\ff\\7f" "\\ff\\ff\\ff\\ff\\ff\\ff\\ff\\7f" "\\0b" )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -6806,7 +6807,7 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\66\\33\\32\\78\\34\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\02" "\\00\\00\\80\\4f" "\\00\\00\\80\\4f" "\\00\\00\\80\\4f" "\\00\\00\\80\\4f" "\\0b" )
+( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\66\\33\\32\\78\\34\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\0c" "\\00\\00\\80\\4f" "\\00\\00\\80\\4f" "\\00\\00\\80\\4f" "\\00\\00\\80\\4f" "\\0b" )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -6826,7 +6827,7 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\66\\36\\34\\78\\32\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\02" "\\ff\\ff\\ff\\ff\\ff\\ff\\ef\\7f" "\\ff\\ff\\ff\\ff\\ff\\ff\\ef\\7f" "\\0b" )
+( module binary "\\00asm" "\\01\\00\\00\\00" "\\01\\05\\01" "\\60\\00\\01\\7b" "\\03\\02\\01\\00" "\\07\\0f\\01\\0b" "\\70\\61\\72\\73\\65\\5f\\66\\36\\34\\78\\32\\00\\00" "\\0a\\16\\01" "\\14\\00\\fd\\0c" "\\ff\\ff\\ff\\ff\\ff\\ff\\ef\\7f" "\\ff\\ff\\ff\\ff\\ff\\ff\\ef\\7f" "\\0b" )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -6845,4 +6846,3 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
-
