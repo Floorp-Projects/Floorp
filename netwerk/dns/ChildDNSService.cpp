@@ -374,6 +374,11 @@ ChildDNSService::GetCurrentTrrURI(nsACString& aURI) {
 }
 
 NS_IMETHODIMP
+ChildDNSService::GetCurrentTrrMode(uint32_t* aMode) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 ChildDNSService::GetMyHostName(nsACString& result) {
   // TODO: get value from parent during PNecko construction?
   return NS_ERROR_NOT_AVAILABLE;
