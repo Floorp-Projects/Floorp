@@ -536,3 +536,6 @@ wasmAssert(`
     { type: 'i64', func: '$f', args: ['i32.const  1'], expected: '0xc0010ff08badf00d' },
     { type: 'i64', func: '$f', args: ['i32.const -1'], expected: '0xc0010ff08badf00d' },
 ], imports);
+
+var exp = wasmEvalText(`(module (func (export "f")))`).exports;
+assertEq(Object.isFrozen(exp), true);
