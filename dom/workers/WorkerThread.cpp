@@ -93,6 +93,8 @@ already_AddRefed<WorkerThread> WorkerThread::Create(
     NS_WARNING("Failed to create new thread!");
     return nullptr;
   }
+  thread->mAbstractThread = AbstractThread::CreateXPCOMThreadWrapper(
+      thread, false /* aRequireTailDispatch */);
 
   return thread.forget();
 }
@@ -328,6 +330,14 @@ PerformanceCounter* WorkerThread::GetPerformanceCounter(
     return mWorkerPrivate->GetPerformanceCounter();
   }
   return nullptr;
+}
+
+NS_IMETHODIMP
+WorkerThread::Shutdown() {
+  MOZ_ALWAYS_SUCCEEDS(nsThread::Shutdown());
+  // We need to break the cycle.
+  mAbstractThread = nullptr;
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(WorkerThread::Observer, nsIThreadObserver)
