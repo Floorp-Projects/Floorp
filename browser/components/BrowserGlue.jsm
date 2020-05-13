@@ -2382,13 +2382,6 @@ BrowserGlue.prototype = {
         },
       },
 
-      // Marionette needs to be initialized as very last step
-      {
-        task: () => {
-          Services.obs.notifyObservers(null, "marionette-startup-requested");
-        },
-      },
-
       // Run TRR performance measurements for DoH.
       {
         task: () => {
@@ -2416,6 +2409,22 @@ BrowserGlue.prototype = {
           }
         },
       },
+
+      // Marionette needs to be initialized as very last step
+      {
+        task: () => {
+          // Use idleDispatch a second time to run this after the per-window
+          // idle tasks.
+          ChromeUtils.idleDispatch(() => {
+            Services.obs.notifyObservers(
+              null,
+              "browser-startup-idle-tasks-finished"
+            );
+            Services.obs.notifyObservers(null, "marionette-startup-requested");
+          });
+        },
+      },
+      // Do NOT add anything after marionette initialization.
     ];
 
     for (let task of idleTasks) {
