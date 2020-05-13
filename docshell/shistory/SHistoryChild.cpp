@@ -215,9 +215,6 @@ SHistoryChild::AddEntry(nsISHEntry* aEntry, bool aPersist) {
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
-SHistoryChild::ClearRootBrowsingContext() { mRootDocShell = nullptr; }
-
 NS_IMETHODIMP
 SHistoryChild::UpdateIndex(void) {
   return SendUpdateIndex() ? NS_OK : NS_ERROR_FAILURE;
