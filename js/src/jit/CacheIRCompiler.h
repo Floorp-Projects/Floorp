@@ -719,6 +719,10 @@ class MOZ_RAII CacheIRCompiler {
                                   TypedThingLayout layout,
                                   Scalar::Type elementType, bool handleOOB);
 
+  bool emitStoreTypedElement(ObjOperandId objId, TypedThingLayout layout,
+                             Scalar::Type elementType, Int32OperandId indexId,
+                             uint32_t rhsId, bool handleOOB);
+
   void emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceType type,
                                          const Address& dest, Register scratch);
 
