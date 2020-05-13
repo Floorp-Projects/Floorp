@@ -35,6 +35,9 @@ codespell:
     description: Checks for misspellings in text files
     treeherder:
         symbol: text(spell)
+        # We don't want patches to be backed out because of a typo, a follow up bug will be
+        # good enough
+        tier: 2
     run:
         mach: lint -v -l codespell -f treeherder -f json:/builds/worker/mozlint.json *
     when:
@@ -331,6 +334,9 @@ file-whitespace:
     platform: lint/opt
     treeherder:
         symbol: pedantic(file-whitespace)
+        # We don't want patches to be backed out because of this, a follow up bug will be
+        # good enough
+        tier: 2
     run:
         mach: lint -v -l file-whitespace -f treeherder -f json:/builds/worker/mozlint.json *
     when:
@@ -349,6 +355,9 @@ file-perm:
     platform: lint/opt
     treeherder:
         symbol: pedantic(file-perm)
+        # We don't want patches to be backed out because of this, a follow up bug will be
+        # good enough
+        tier: 2
     run:
         mach: lint -v -l file-perm -f treeherder -f json:/builds/worker/mozlint.json *
     when:
