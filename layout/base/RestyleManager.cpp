@@ -1500,9 +1500,11 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
 
       if (!(frame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED)) {
         // Frame can not be transformed, and thus a change in transform will
-        // have no effect and we should not use the
-        // nsChangeHint_UpdatePostTransformOverflow hint.
-        hint &= ~nsChangeHint_UpdatePostTransformOverflow;
+        // have no effect and we should not use either
+        // nsChangeHint_UpdatePostTransformOverflow or
+        // nsChangeHint_UpdateTransformLayerhint.
+        hint &= ~(nsChangeHint_UpdatePostTransformOverflow |
+                  nsChangeHint_UpdateTransformLayer);
       }
 
       if ((hint & nsChangeHint_UpdateTransformLayer) &&
