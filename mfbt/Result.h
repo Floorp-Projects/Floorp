@@ -423,7 +423,7 @@ class MOZ_MUST_USE_TYPE Result final {
 
   /**
    * Map a function V -> W over this result's success variant. If this result is
-   * an error, do not invoke the function and return a copy of the error.
+   * an error, do not invoke the function and propagate the error.
    *
    * Mapping over success values invokes the function to produce a new success
    * value:
@@ -438,7 +438,8 @@ class MOZ_MUST_USE_TYPE Result final {
    *     Result<size_t, E> res2 = res.map(strlen);
    *     MOZ_ASSERT(res2.unwrap() == 11);
    *
-   * Mapping over an error does not invoke the function and copies the error:
+   * Mapping over an error does not invoke the function and propagates the
+   * error:
    *
    *     Result<V, int> res(5);
    *     MOZ_ASSERT(res.isErr());
@@ -485,8 +486,7 @@ class MOZ_MUST_USE_TYPE Result final {
 
   /**
    * Given a function V -> Result<W, E>, apply it to this result's success value
-   * and return its result. If this result is an error value, then return a
-   * copy.
+   * and return its result. If this result is an error value, it is propagated.
    *
    * This is sometimes called "flatMap" or ">>=" in other contexts.
    *
@@ -504,7 +504,7 @@ class MOZ_MUST_USE_TYPE Result final {
    *     MOZ_ASSERT(res2.unwrap() == HtmlFreeString("hello, andThen!");
    *
    * `andThen`ing over error results does not invoke the function, and just
-   * produces a new copy of the error result:
+   * propagates the error result:
    *
    *     Result<int, const char*> res("some error");
    *     auto res2 = res.andThen([](int x) { ... });
