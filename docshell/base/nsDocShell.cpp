@@ -3253,7 +3253,7 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
 
   RefPtr<nsDocShellLoadState> loadState;
   nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
-      GetAsSupports(this), aURI, aLoadURIOptions, getter_AddRefs(loadState));
+      mBrowsingContext, aURI, aLoadURIOptions, getter_AddRefs(loadState));
 
   uint32_t loadFlags = aLoadURIOptions.mLoadFlags;
   if (NS_ERROR_MALFORMED_URI == rv) {
