@@ -59,8 +59,6 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
       return NS_LITERAL_CSTRING("frame");
     case nsIContentPolicy::TYPE_REFRESH:
       return NS_LITERAL_CSTRING("empty");
-    case nsIContentPolicy::TYPE_XBL:
-      return NS_LITERAL_CSTRING("empty");
     case nsIContentPolicy::TYPE_PING:
       return NS_LITERAL_CSTRING("empty");
     case nsIContentPolicy::TYPE_XMLHTTPREQUEST:

@@ -69,13 +69,11 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   // hence we use protocol flags to accomplish that, but we also
   // want resource:, chrome: and moz-icon to be subject to CSP
   // (which also use URI_IS_LOCAL_RESOURCE).
-  // Exception to the rule are images, styles, localization DTDs,
-  // and XBLs using a scheme of resource: or chrome:
-  bool isImgOrStyleOrDTDorXBL =
-      contentType == nsIContentPolicy::TYPE_IMAGE ||
-      contentType == nsIContentPolicy::TYPE_STYLESHEET ||
-      contentType == nsIContentPolicy::TYPE_DTD ||
-      contentType == nsIContentPolicy::TYPE_XBL;
+  // Exception to the rule are images, styles, and localization
+  // DTDs using a scheme of resource: or chrome:
+  bool isImgOrStyleOrDTD = contentType == nsIContentPolicy::TYPE_IMAGE ||
+                           contentType == nsIContentPolicy::TYPE_STYLESHEET ||
+                           contentType == nsIContentPolicy::TYPE_DTD;
   if (aURI->SchemeIs("resource")) {
     nsAutoCString uriSpec;
     aURI->GetSpec(uriSpec);
@@ -83,11 +81,11 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
     if (StringBeginsWith(uriSpec, NS_LITERAL_CSTRING("resource://pdf.js/"))) {
       return false;
     }
-    if (!isImgOrStyleOrDTDorXBL) {
+    if (!isImgOrStyleOrDTD) {
       return true;
     }
   }
-  if (aURI->SchemeIs("chrome") && !isImgOrStyleOrDTDorXBL) {
+  if (aURI->SchemeIs("chrome") && !isImgOrStyleOrDTD) {
     return true;
   }
   if (aURI->SchemeIs("moz-icon")) {
