@@ -319,6 +319,11 @@ interface nsIDNSService : nsISupports
     readonly attribute AUTF8String currentTrrURI;
 
     /**
+     * Returns the value of the TRR Service's current default mode.
+     */
+    readonly attribute unsigned long currentTrrMode;
+
+    /**
      * @return the hostname of the operating system.
      */
     readonly attribute AUTF8String myHostName;
@@ -416,6 +421,12 @@ interface nsIDNSService : nsISupports
  * TRR service is using has changed.
  */
 #define NS_NETWORK_TRR_URI_CHANGED_TOPIC "network:trr-uri-changed"
+
+/**
+ * An observer notification for this topic is sent whenever the mode that the
+ * TRR service is using has changed.
+ */
+#define NS_NETWORK_TRR_MODE_CHANGED_TOPIC "network:trr-mode-changed"
 
 %}
 

@@ -26,6 +26,7 @@ static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
 static const char kPrefSkipTRRParentalControl[] =
     "network.dns.skipTRR-when-parental-control-enabled";
 static const char kRolloutURIPref[] = "doh-rollout.uri";
+static const char kRolloutModePref[] = "doh-rollout.mode";
 
 #define TRR_PREF_PREFIX "network.trr."
 #define TRR_PREF(x) TRR_PREF_PREFIX x
@@ -89,6 +90,7 @@ nsresult TRRService::Init() {
     prefBranch->AddObserver(kDisableIpv6Pref, this, true);
     prefBranch->AddObserver(kPrefSkipTRRParentalControl, this, true);
     prefBranch->AddObserver(kRolloutURIPref, this, true);
+    prefBranch->AddObserver(kRolloutModePref, this, true);
   }
   nsCOMPtr<nsICaptivePortalService> captivePortalService =
       do_GetService(NS_CAPTIVEPORTAL_CID);
@@ -274,6 +276,35 @@ void TRRService::CheckURIPrefs() {
   MaybeSetPrivateURI(mURIPref);
 }
 
+// static
+uint32_t TRRService::ModeFromPrefs() {
+  // 0 - off, 1 - reserved, 2 - TRR first, 3 - TRR only, 4 - reserved,
+  // 5 - explicit off
+
+  auto processPrefValue = [](uint32_t value) -> uint32_t {
+    if (value == MODE_RESERVED1 || value == MODE_RESERVED4 ||
+        value > MODE_TRROFF) {
+      return MODE_TRROFF;
+    }
+    return value;
+  };
+
+  uint32_t tmp = MODE_NATIVEONLY;
+  if (NS_SUCCEEDED(Preferences::GetUint(TRR_PREF("mode"), &tmp))) {
+    tmp = processPrefValue(tmp);
+  }
+
+  if (tmp != MODE_NATIVEONLY) {
+    return tmp;
+  }
+
+  if (NS_SUCCEEDED(Preferences::GetUint(kRolloutModePref, &tmp))) {
+    return processPrefValue(tmp);
+  }
+
+  return MODE_NATIVEONLY;
+}
+
 nsresult TRRService::ReadPrefs(const char* name) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 
@@ -281,21 +312,17 @@ nsresult TRRService::ReadPrefs(const char* name) {
   // we set this to true then do it at the end of the method.
   bool clearEntireCache = false;
 
-  if (!name || !strcmp(name, TRR_PREF("mode"))) {
-    // 0 - off, 1 - reserved, 2 - TRR first, 3 - TRR only, 4 - reserved,
-    // 5 - explicit off
-    uint32_t tmp;
-    if (NS_SUCCEEDED(Preferences::GetUint(TRR_PREF("mode"), &tmp))) {
-      if (tmp > MODE_TRROFF) {
-        tmp = MODE_TRROFF;
+  if (!name || !strcmp(name, TRR_PREF("mode")) ||
+      !strcmp(name, kRolloutModePref)) {
+    uint32_t oldMode = mMode;
+    mMode = ModeFromPrefs();
+    if (mMode != oldMode) {
+      nsCOMPtr<nsIObserverService> obs =
+          mozilla::services::GetObserverService();
+      if (obs) {
+        obs->NotifyObservers(nullptr, NS_NETWORK_TRR_MODE_CHANGED_TOPIC,
+                             nullptr);
       }
-      if (tmp == MODE_RESERVED1) {
-        tmp = MODE_TRROFF;
-      }
-      if (tmp == MODE_RESERVED4) {
-        tmp = MODE_TRROFF;
-      }
-      mMode = tmp;
     }
   }
   if (!name || !strcmp(name, TRR_PREF("uri")) ||

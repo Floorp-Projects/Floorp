@@ -107,6 +107,8 @@ class TRRService : public nsIObserver,
   void ProcessURITemplate(nsACString& aURI);
   void ClearEntireCache();
 
+  static uint32_t ModeFromPrefs();
+
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mMode;
   Atomic<uint32_t, Relaxed> mTRRBlacklistExpireTime;
