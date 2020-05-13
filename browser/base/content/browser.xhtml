@@ -861,7 +861,8 @@
           <toolbartabstop/>
           <hbox id="urlbar" flex="1"
                 context=""
-                defaultPlaceholder="&urlbar.placeholder2;"
+                data-l10n-id="urlbar-default-placeholder"
+                data-l10n-attrs="defaultPlaceholder"
                 focused="true"
                 pageproxystate="invalid">
             <hbox id="urlbar-background"/>
@@ -900,7 +901,7 @@
                        consumeanchor="identity-box"
                        onclick="PageProxyClickHandler(event);"/>
                 <image id="permissions-granted-icon"
-                       tooltiptext="&urlbar.permissionsGranted.tooltip;"/>
+                       data-l10n-id="urlbar-permissions-granted"/>
                 <box style="pointer-events: none;">
                     <image class="sharing-icon" id="webrtc-sharing-icon"/>
                     <image class="sharing-icon geo-icon" id="geo-sharing-icon"/>
@@ -983,12 +984,12 @@
                          data-l10n-id="urlbar-storage-access-anchor"/>
                 </box>
                 <image id="remote-control-icon"
-                       tooltiptext="&urlbar.remoteControlNotificationAnchor.tooltip;"/>
+                       data-l10n-id="urlbar-remote-control-notification-anchor"/>
                 <label id="identity-icon-label" class="plain" crop="center" flex="1"/>
               </box>
               <box id="urlbar-label-box" align="center">
-                <label id="urlbar-label-switchtab" class="urlbar-label" value="&urlbar.switchToTab.label;"/>
-                <label id="urlbar-label-extension" class="urlbar-label" value="&urlbar.extension.label;"/>
+                <label id="urlbar-label-switchtab" class="urlbar-label" data-l10n-id="urlbar-switch-to-tab"/>
+                <label id="urlbar-label-extension" class="urlbar-label" data-l10n-id="urlbar-extension"/>
               </box>
               <moz-input-box tooltip="aHTMLTooltip"
                              class="urlbar-input-box"
@@ -1002,12 +1003,13 @@
                             aria-controls="urlbar-results"
                             aria-autocomplete="both"
                             inputmode="mozAwesomebar"
-                            placeholder="&urlbar.placeholder2;"/>
+                            data-l10n-id="urlbar-placeholder"
+                            data-l10n-attrs="placeholder"/>
               </moz-input-box>
               <image id="urlbar-go-button"
                      class="urlbar-icon"
                      onclick="gURLBar.handleCommand(event);"
-                     tooltiptext="&goEndCap.tooltip;"/>
+                     data-l10n-id="urlbar-go-end-cap"/>
               <hbox id="page-action-buttons" context="pageActionContextMenu">
                 <toolbartabstop/>
                 <hbox id="contextual-feature-recommendation" role="button" hidden="true">
@@ -1036,12 +1038,12 @@
                 <image id="pageActionButton"
                        class="urlbar-icon urlbar-page-action"
                        role="button"
-                       tooltiptext="&pageActionButton.tooltip;"
+                       data-l10n-id="urlbar-page-action-button"
                        onmousedown="BrowserPageActions.mainButtonClicked(event);"
                        onkeypress="BrowserPageActions.mainButtonClicked(event);"/>
                 <image id="pocket-button"
                        class="urlbar-icon urlbar-page-action"
-                       tooltiptext="&pocketButton.tooltiptext;"
+                       data-l10n-id="urlbar-pocket-button"
                        role="button"
                        hidden="true"
                        onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('pocket'), event, this);"/>

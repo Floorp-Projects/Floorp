@@ -103,14 +103,8 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY recentBookmarks.label "Recently Bookmarked">
 <!ENTITY bookmarksToolbarChevron.tooltip "Show more bookmarks">
 
-<!ENTITY goEndCap.tooltip             "Go to the address in the Location Bar">
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
-
-<!ENTITY urlbar.remoteControlNotificationAnchor.tooltip   "Browser is under remote control">
-
-<!ENTITY urlbar.permissionsGranted.tooltip       "You have granted this website additional permissions.">
-
 
 <!ENTITY searchItem.title             "Search">
 
@@ -236,11 +230,6 @@ this container is a toolbar. This avoids double-speaking. -->
     secondary commands. -->
 <!ENTITY moreMenu.label "More">
 
-<!ENTITY urlbar.placeholder2          "Search or enter address">
-<!-- LOCALIZATION NOTE (urlbar.extension.label): Used to indicate that a selected autocomplete entry is provided by an extension. -->
-<!ENTITY urlbar.extension.label       "Extension:">
-<!ENTITY urlbar.switchToTab.label     "Switch to tab:">
-
 <!ENTITY contentSearchSubmit.tooltip  "Submit search">
 
 <!-- LOCALIZATION NOTE (searchInput.placeholder):
@@ -254,7 +243,6 @@ this container is a toolbar. This avoids double-speaking. -->
 
 <!-- LOCALIZATION NOTE(pocket-button.tooltiptext, saveToPocketCmd.label, saveLinkToPocketCmd.label, pocketMenuitem.label):
   "Pocket" is a brand name. -->
-<!ENTITY pocketButton.tooltiptext     "Save to Pocket">
 <!ENTITY saveToPocketCmd.label        "Save Page to Pocket">
 <!ENTITY pocketMenuitem.label         "View Pocket List">
 
@@ -304,8 +292,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY updateManual.panelUI.label "Download a fresh copy of &brandShorterName;">
 <!ENTITY updateUnsupported.panelUI.label "You cannot perform further updates">
 <!ENTITY updateRestart.panelUI.label2 "Restart to update &brandShorterName;">
-
-<!ENTITY pageActionButton.tooltip "Page actions">
 
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
 
