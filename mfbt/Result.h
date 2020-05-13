@@ -406,6 +406,21 @@ class MOZ_MUST_USE_TYPE Result final {
     return mImpl.inspectErr();
   }
 
+  /** Propagate the error value from this Result, which must be an error result.
+   *
+   * This can be used to propagate an error from a function call to the caller
+   * with a different value type, but the same error type:
+   *
+   *    Result<T1, E> Func1() {
+   *       Result<T2, E> res = Func2();
+   *       if (res.isErr()) { return res.propagateErr(); }
+   *    }
+   */
+  GenericErrorResult<E> propagateErr() {
+    MOZ_ASSERT(isErr());
+    return GenericErrorResult<E>{mImpl.unwrapErr()};
+  }
+
   /**
    * Map a function V -> W over this result's success variant. If this result is
    * an error, do not invoke the function and return a copy of the error.
@@ -499,8 +514,7 @@ class MOZ_MUST_USE_TYPE Result final {
   template <typename F, typename = std::enable_if_t<detail::IsResult<
                             decltype((*((F*)nullptr))(*((V*)nullptr)))>::value>>
   auto andThen(F f) -> decltype(f(*((V*)nullptr))) {
-    return MOZ_LIKELY(isOk()) ? f(unwrap())
-                              : GenericErrorResult<E>(unwrapErr());
+    return MOZ_LIKELY(isOk()) ? f(unwrap()) : propagateErr();
   }
 };
 
@@ -535,12 +549,12 @@ inline GenericErrorResult<E> Err(E&& aErrorValue) {
  * discards the result altogether. On error, it immediately returns an error
  * Result from the enclosing function.
  */
-#define MOZ_TRY(expr)                                       \
-  do {                                                      \
-    auto mozTryTempResult_ = ::mozilla::ToResult(expr);     \
-    if (MOZ_UNLIKELY(mozTryTempResult_.isErr())) {          \
-      return ::mozilla::Err(mozTryTempResult_.unwrapErr()); \
-    }                                                       \
+#define MOZ_TRY(expr)                                   \
+  do {                                                  \
+    auto mozTryTempResult_ = ::mozilla::ToResult(expr); \
+    if (MOZ_UNLIKELY(mozTryTempResult_.isErr())) {      \
+      return mozTryTempResult_.propagateErr();          \
+    }                                                   \
   } while (0)
 
 /**
@@ -550,13 +564,13 @@ inline GenericErrorResult<E> Err(E&& aErrorValue) {
  * immediately returns the error result. |target| must evaluate to a reference
  * without any side effects.
  */
-#define MOZ_TRY_VAR(target, expr)                              \
-  do {                                                         \
-    auto mozTryVarTempResult_ = (expr);                        \
-    if (MOZ_UNLIKELY(mozTryVarTempResult_.isErr())) {          \
-      return ::mozilla::Err(mozTryVarTempResult_.unwrapErr()); \
-    }                                                          \
-    (target) = mozTryVarTempResult_.unwrap();                  \
+#define MOZ_TRY_VAR(target, expr)                     \
+  do {                                                \
+    auto mozTryVarTempResult_ = (expr);               \
+    if (MOZ_UNLIKELY(mozTryVarTempResult_.isErr())) { \
+      return mozTryVarTempResult_.propagateErr();     \
+    }                                                 \
+    (target) = mozTryVarTempResult_.unwrap();         \
   } while (0)
 
 #endif  // mozilla_Result_h
