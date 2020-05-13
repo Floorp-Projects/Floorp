@@ -39,20 +39,22 @@ Array [
       />
     </ul>
   </article>,
-  <Localized
-    a={
-      <a
-        className="aboutdebugging-plug__link"
-        onClick={[Function]}
-      />
-    }
-    id="serviceworker-list-aboutdebugging"
-    key="serviceworkerlist-footer"
+  <footer
+    className="aboutdebugging-plug"
   >
-    <footer
-      className="aboutdebugging-plug"
-    />
-  </Localized>,
+    <Localized
+      a={
+        <a
+          className="aboutdebugging-plug__link"
+          onClick={[Function]}
+        />
+      }
+      id="serviceworker-list-aboutdebugging"
+      key="serviceworkerlist-footer"
+    >
+      <p />
+    </Localized>
+  </footer>,
 ]
 `;
 
@@ -137,19 +139,21 @@ Array [
       />
     </ul>
   </article>,
-  <Localized
-    a={
-      <a
-        className="aboutdebugging-plug__link"
-        onClick={[Function]}
-      />
-    }
-    id="serviceworker-list-aboutdebugging"
-    key="serviceworkerlist-footer"
+  <footer
+    className="aboutdebugging-plug"
   >
-    <footer
-      className="aboutdebugging-plug"
-    />
-  </Localized>,
+    <Localized
+      a={
+        <a
+          className="aboutdebugging-plug__link"
+          onClick={[Function]}
+        />
+      }
+      id="serviceworker-list-aboutdebugging"
+      key="serviceworkerlist-footer"
+    >
+      <p />
+    </Localized>
+  </footer>,
 ]
 `;

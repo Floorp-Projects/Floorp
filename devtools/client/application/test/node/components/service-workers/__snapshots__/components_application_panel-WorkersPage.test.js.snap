@@ -2,7 +2,7 @@
 
 exports[`WorkersPage filters out workers from diferent domains 1`] = `
 <section
-  className="app-page js-service-workers-page "
+  className="app-page js-service-workers-page app-page--workers"
 >
   <RegistrationList
     canDebugWorkers={true}
@@ -52,7 +52,7 @@ exports[`WorkersPage filters out workers from different domains and renders an e
 
 exports[`WorkersPage it renders a list with a single element if there's just 1 worker 1`] = `
 <section
-  className="app-page js-service-workers-page "
+  className="app-page js-service-workers-page app-page--workers"
 >
   <RegistrationList
     canDebugWorkers={true}
@@ -80,7 +80,7 @@ exports[`WorkersPage it renders a list with a single element if there's just 1 w
 
 exports[`WorkersPage renders a list with multiple elements when there are multiple workers 1`] = `
 <section
-  className="app-page js-service-workers-page "
+  className="app-page js-service-workers-page app-page--workers"
 >
   <RegistrationList
     canDebugWorkers={true}

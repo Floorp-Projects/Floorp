@@ -15,6 +15,7 @@ const {
   article,
   footer,
   h1,
+  p,
   ul,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
@@ -66,16 +67,20 @@ class RegistrationList extends PureComponent {
           )
         )
       ),
-      Localized(
-        {
-          id: "serviceworker-list-aboutdebugging",
-          key: "serviceworkerlist-footer",
-          a: a({
-            className: "aboutdebugging-plug__link",
-            onClick: () => openTrustedLink("about:debugging#workers"),
-          }),
-        },
-        footer({ className: "aboutdebugging-plug" })
+
+      footer(
+        { className: "aboutdebugging-plug" },
+        Localized(
+          {
+            id: "serviceworker-list-aboutdebugging",
+            key: "serviceworkerlist-footer",
+            a: a({
+              className: "aboutdebugging-plug__link",
+              onClick: () => openTrustedLink("about:debugging#workers"),
+            }),
+          },
+          p({})
+        )
       ),
     ];
   }
