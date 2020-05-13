@@ -484,7 +484,8 @@ WebrtcVideoConduit::WebrtcVideoConduit(
           this)  // 'this' is stored but not dereferenced in the constructor.
       ,
       mRecvSSRC(0),
-      mVideoStatsTimer(NS_NewTimer()) {
+      mVideoStatsTimer(NS_NewTimer()),
+      mRtpSourceObserver(new RtpSourceObserver(mCall->GetTimestampMaker())) {
   mCall->RegisterConduit(this);
   mRecvStreamConfig.renderer = this;
   mRecvStreamConfig.rtcp_event_observer = this;
@@ -664,6 +665,7 @@ void WebrtcVideoConduit::DeleteRecvStream() {
   mMutex.AssertCurrentThreadOwns();
 
   if (mRecvStream) {
+    mRecvStream->RemoveSecondarySink(this);
     mCall->Call()->DestroyVideoReceiveStream(mRecvStream);
     mRecvStream = nullptr;
     mDecoders.clear();
@@ -720,6 +722,10 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateRecvStream() {
     mDecoders.clear();
     return kMediaConduitUnknownError;
   }
+
+  // Add RTPPacketSinkInterface for synchronization source tracking
+  mRecvStream->AddSecondarySink(this);
+
   CSFLogDebug(LOGTAG, "Created VideoReceiveStream %p for SSRC %u (0x%x)",
               mRecvStream, mRecvStreamConfig.rtp.remote_ssrc,
               mRecvStreamConfig.rtp.remote_ssrc);
@@ -1280,6 +1286,12 @@ bool WebrtcVideoConduit::GetRTCPSenderReport(unsigned int* packetsSent,
   *packetsSent = mRecvStreamStats.PacketsSent();
   *bytesSent = mRecvStreamStats.BytesSent();
   return true;
+}
+
+void WebrtcVideoConduit::GetRtpSources(
+    nsTArray<dom::RTCRtpSourceEntry>& outSources) {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mRtpSourceObserver->GetRtpSources(outSources);
 }
 
 MediaConduitErrorCode WebrtcVideoConduit::InitMain() {
@@ -2337,6 +2349,20 @@ uint64_t WebrtcVideoConduit::MozVideoLatencyAvg() {
   mTransportMonitor.AssertCurrentThreadIn();
 
   return mVideoLatencyAvg / sRoundingPadding;
+}
+
+void WebrtcVideoConduit::OnRtpPacket(const webrtc::RtpPacketReceived& aPacket) {
+  ASSERT_ON_THREAD(mStsThread);
+  webrtc::RTPHeader header;
+  aPacket.GetHeader(&header);
+  if (header.extension.hasAudioLevel ||
+      header.extension.csrcAudioLevels.numAudioLevels) {
+    CSFLogDebug(LOGTAG,
+                "Video packet has audio level extension."
+                "RTP source tracking ignored for this packet.");
+    return;
+  }
+  mRtpSourceObserver->OnRtpPacket(header, mRecvStreamStats.JitterMs());
 }
 
 void WebrtcVideoConduit::OnRtcpBye() {
