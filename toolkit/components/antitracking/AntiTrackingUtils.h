@@ -105,6 +105,17 @@ class AntiTrackingUtils final {
   // Given a channel, compute and set the IsThirdPartyContextToTopWindow for
   // this channel. This function is supposed to be called in the parent process.
   static void ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel);
+
+  // Given a channel, this function determines if this channel is a third party.
+  // Note that this function also considers the top-level window. The channel
+  // will be considered as a third party only when it's a third party to both
+  // its parent and the top-level window.
+  static bool IsThirdPartyChannel(nsIChannel* aChannel);
+
+  // Given a window and a URI, this function first determines if the window is
+  // third-party with respect to the URI. The function returns if it's true.
+  // Otherwise, it will continue to check if the window is third-party.
+  static bool IsThirdPartyWindow(nsPIDOMWindowInner* aWindow, nsIURI* aURI);
 };
 
 }  // namespace mozilla
