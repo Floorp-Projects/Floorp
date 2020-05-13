@@ -21,6 +21,7 @@ Configuration
 To enable codespell on new directory, add the path to the include
 section in the `codespell.yml <https://searchfox.org/mozilla-central/source/tools/lint/codespell.yml>`_ file.
 
+This job is configured as `tier 2 <https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy#Overview_of_the_Job_Visibility_Tiers>`_.
 
 Autofix
 -------
