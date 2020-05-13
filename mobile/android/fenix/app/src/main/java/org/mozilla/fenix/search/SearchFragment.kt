@@ -15,10 +15,7 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.RecognizerIntent.EXTRA_RESULTS
 import android.text.style.StyleSpan
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.ViewStub
+import android.view.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -39,6 +36,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -127,6 +125,14 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         awesomeBarView = AwesomeBarView(view.scrollable_area, searchInteractor)
 
+        view.scrollView.setOnTouchListener { _, event ->
+            when (event?.action){
+                MotionEvent.ACTION_SCROLL, MotionEvent.ACTION_MOVE -> {
+                    view.hideKeyboard()
+                }
+            }
+            false
+        }
         toolbarView = ToolbarView(
             view.toolbar_component_wrapper,
             searchInteractor,
