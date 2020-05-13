@@ -2,7 +2,7 @@
 
 # BrowserAwesomeBar
 
-`class BrowserAwesomeBar : RecyclerView, `[`AwesomeBar`](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/awesomebar/src/main/java/mozilla/components/browser/awesomebar/BrowserAwesomeBar.kt#L34)
+`class BrowserAwesomeBar : RecyclerView, `[`AwesomeBar`](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/awesomebar/src/main/java/mozilla/components/browser/awesomebar/BrowserAwesomeBar.kt#L36)
 
 A customizable [AwesomeBar](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md) implementation.
 

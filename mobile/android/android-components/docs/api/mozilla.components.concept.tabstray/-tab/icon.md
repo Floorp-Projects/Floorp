@@ -2,7 +2,7 @@
 
 # icon
 
-`val icon: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/tabstray/src/main/java/mozilla/components/concept/tabstray/Tab.kt#L22)
+`val icon: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/tabstray/src/main/java/mozilla/components/concept/tabstray/Tab.kt#L24)
 
 Current icon of the tab (or null)
 

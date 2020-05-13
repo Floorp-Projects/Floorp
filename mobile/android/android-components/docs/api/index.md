@@ -6,6 +6,7 @@
 |---|---|
 | [mozilla.components](mozilla.components/index.md) |  |
 | [mozilla.components.browser.awesomebar](mozilla.components.browser.awesomebar/index.md) |  |
+| [mozilla.components.browser.awesomebar.facts](mozilla.components.browser.awesomebar.facts/index.md) |  |
 | [mozilla.components.browser.awesomebar.layout](mozilla.components.browser.awesomebar.layout/index.md) |  |
 | [mozilla.components.browser.awesomebar.transform](mozilla.components.browser.awesomebar.transform/index.md) |  |
 | [mozilla.components.browser.domains](mozilla.components.browser.domains/index.md) |  |

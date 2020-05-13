@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [BrowserThumbnails](-browser-thumbnails/index.md) | `class BrowserThumbnails : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)<br>Feature implementation for automatically taking thumbnails of sites. The feature will take a screenshot when the page finishes loading, and will add it to the [Session.thumbnail](../mozilla.components.browser.session/-session/thumbnail.md) property. |
+| [BrowserThumbnails](-browser-thumbnails/index.md) | `class BrowserThumbnails : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)<br>Feature implementation for automatically taking thumbnails of sites. The feature will take a screenshot when the page finishes loading, and will add it to the [ContentState.thumbnail](../mozilla.components.browser.state.state/-content-state/thumbnail.md) property. |

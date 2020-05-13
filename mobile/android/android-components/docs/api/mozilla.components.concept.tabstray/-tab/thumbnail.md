@@ -2,7 +2,7 @@
 
 # thumbnail
 
-`val thumbnail: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/tabstray/src/main/java/mozilla/components/concept/tabstray/Tab.kt#L23)
+`val thumbnail: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/tabstray/src/main/java/mozilla/components/concept/tabstray/Tab.kt#L25)
 
 Current thumbnail of the tab (or null)
 
