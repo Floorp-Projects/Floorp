@@ -238,10 +238,6 @@ var sdputils = {
       .replace(
         /a=extmap:[^\s]* urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id.*\r\n/g,
         ""
-      )
-      .replace(
-        /a=extmap:[^\s]* urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id.*\r\n/g,
-        ""
       );
   },
 
@@ -269,16 +265,6 @@ var sdputils = {
       "a=extmap:" +
       extmap_id[1] +
       "/recvonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n";
-    var extmap_id = offer_sdp.match(
-      "a=extmap:([0-9+])/sendonly urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id"
-    );
-    ok(extmap_id != null, "Offer contains RID RTP header extension");
-    new_answer_sdp =
-      new_answer_sdp +
-      "a=extmap:" +
-      extmap_id[1] +
-      "/recvonly urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id\r\n";
-
     return new_answer_sdp;
   },
 

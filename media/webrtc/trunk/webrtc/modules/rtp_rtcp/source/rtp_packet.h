@@ -118,14 +118,6 @@ class RtpPacket {
   // Returns empty arrayview on failure.
   rtc::ArrayView<uint8_t> AllocateRawExtension(int id, size_t length);
 
-  // Find an extension |type|.
-  // Returns view of the raw extension or empty view on failure.
-  rtc::ArrayView<const uint8_t> FindExtension(ExtensionType type) const;
-
-  // Find or allocate an extension |type|. Returns view of size |length|
-  // to write raw extension to or an empty view on failure.
-  rtc::ArrayView<uint8_t> AllocateExtension(ExtensionType type, size_t length);
-
   // Reserve size_bytes for payload. Returns nullptr on failure.
   uint8_t* SetPayloadSize(size_t size_bytes);
   // Same as SetPayloadSize but doesn't guarantee to keep current payload.
@@ -142,6 +134,14 @@ class RtpPacket {
   // Helper function for Parse. Fill header fields using data in given buffer,
   // but does not touch packet own buffer, leaving packet in invalid state.
   bool ParseBuffer(const uint8_t* buffer, size_t size);
+
+  // Find an extension |type|.
+  // Returns view of the raw extension or empty view on failure.
+  rtc::ArrayView<const uint8_t> FindExtension(ExtensionType type) const;
+
+  // Find or allocate an extension |type|. Returns view of size |length|
+  // to write raw extension to or an empty view on failure.
+  rtc::ArrayView<uint8_t> AllocateExtension(ExtensionType type, size_t length);
 
   uint8_t* WriteAt(size_t offset);
   void WriteAt(size_t offset, uint8_t byte);
