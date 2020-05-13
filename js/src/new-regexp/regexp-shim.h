@@ -981,6 +981,7 @@ using Factory = Isolate;
 class Isolate {
  public:
   Isolate(JSContext* cx) : cx_(cx) {}
+  ~Isolate();
   bool init();
 
   //********** Isolate code **********//

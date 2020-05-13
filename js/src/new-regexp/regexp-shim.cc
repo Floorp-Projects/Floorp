@@ -161,6 +161,12 @@ bool Isolate::init() {
   return true;
 }
 
+Isolate::~Isolate() {
+  if (regexpStack_) {
+    js_delete(regexpStack_);
+  }
+}
+
 byte* Isolate::top_of_regexp_stack() const {
   return reinterpret_cast<byte*>(regexpStack_->memory_top_address_address());
 }
