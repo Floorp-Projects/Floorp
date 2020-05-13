@@ -476,6 +476,11 @@ class nsContainerFrame : public nsSplittableFrame {
   }
 #endif
 
+  // Incorporate the child overflow areas into aOverflowAreas.
+  // If the child does not have a overflow, use the child area.
+  void ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
+                             nsIFrame* aChildFrame);
+
  protected:
   nsContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                    ClassID aID)
@@ -737,6 +742,58 @@ class nsContainerFrame : public nsSplittableFrame {
   // be rendered vertically, based on writing-mode and -moz-orient properties.
   bool ResolvedOrientationIsVertical();
 
+  /**
+   * Calculate the used values for 'width' and 'height' for a replaced element.
+   *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
+   */
+  mozilla::LogicalSize ComputeSizeWithIntrinsicDimensions(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
+      const mozilla::IntrinsicSize& aIntrinsicSize,
+      const mozilla::AspectRatio& aIntrinsicRatio,
+      const mozilla::LogicalSize& aCBSize, const mozilla::LogicalSize& aMargin,
+      const mozilla::LogicalSize& aBorder, const mozilla::LogicalSize& aPadding,
+      ComputeSizeFlags aFlags);
+
+  // Compute tight bounds assuming this frame honours its border, background
+  // and outline, its children's tight bounds, and nothing else.
+  nsRect ComputeSimpleTightBounds(mozilla::gfx::DrawTarget* aDrawTarget) const;
+
+  /*
+   * If this frame is dirty, marks all absolutely-positioned children of this
+   * frame dirty. If this frame isn't dirty, or if there are no
+   * absolutely-positioned children, does nothing.
+   *
+   * It's necessary to use PushDirtyBitToAbsoluteFrames() when you plan to
+   * reflow this frame's absolutely-positioned children after the dirty bit on
+   * this frame has already been cleared, which prevents ReflowInput from
+   * propagating the dirty bit normally. This situation generally only arises
+   * when a multipass layout algorithm is used.
+   */
+  void PushDirtyBitToAbsoluteFrames();
+
+  // Helper function that tests if the frame tree is too deep; if it is
+  // it marks the frame as "unflowable", zeroes out the metrics, sets
+  // the reflow status, and returns true. Otherwise, the frame is
+  // unmarked "unflowable" and the metrics and reflow status are not
+  // touched and false is returned.
+  bool IsFrameTreeTooDeep(const ReflowInput& aReflowInput,
+                          ReflowOutput& aMetrics, nsReflowStatus& aStatus);
+
+  /**
+   * @return true if we should avoid a page/column break in this frame.
+   */
+  bool ShouldAvoidBreakInside(const ReflowInput& aReflowInput) const;
+
+  /**
+   * To be called by |BuildDisplayLists| of this class or derived classes to add
+   * a translucent overlay if this frame's content is selected.
+   * @param aContentType an nsISelectionDisplay DISPLAY_ constant identifying
+   * which kind of content this is for
+   */
+  void DisplaySelectionOverlay(
+      nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
+      uint16_t aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
+
   // ==========================================================================
 
 #ifdef DEBUG
@@ -936,5 +993,137 @@ inline void nsContainerFrame::DestroyOverflowList() {
   MOZ_ASSERT(list && list->IsEmpty());
   list->Delete(PresShell());
 }
+
+// Start Display Reflow Debugging
+#ifdef DEBUG
+
+struct DR_cookie {
+  DR_cookie(nsPresContext* aPresContext, nsIFrame* aFrame,
+            const mozilla::ReflowInput& aReflowInput,
+            mozilla::ReflowOutput& aMetrics, nsReflowStatus& aStatus);
+  ~DR_cookie();
+  void Change() const;
+
+  nsPresContext* mPresContext;
+  nsIFrame* mFrame;
+  const mozilla::ReflowInput& mReflowInput;
+  mozilla::ReflowOutput& mMetrics;
+  nsReflowStatus& mStatus;
+  void* mValue;
+};
+
+struct DR_layout_cookie {
+  explicit DR_layout_cookie(nsIFrame* aFrame);
+  ~DR_layout_cookie();
+
+  nsIFrame* mFrame;
+  void* mValue;
+};
+
+struct DR_intrinsic_inline_size_cookie {
+  DR_intrinsic_inline_size_cookie(nsIFrame* aFrame, const char* aType,
+                                  nscoord& aResult);
+  ~DR_intrinsic_inline_size_cookie();
+
+  nsIFrame* mFrame;
+  const char* mType;
+  nscoord& mResult;
+  void* mValue;
+};
+
+struct DR_intrinsic_size_cookie {
+  DR_intrinsic_size_cookie(nsIFrame* aFrame, const char* aType,
+                           nsSize& aResult);
+  ~DR_intrinsic_size_cookie();
+
+  nsIFrame* mFrame;
+  const char* mType;
+  nsSize& mResult;
+  void* mValue;
+};
+
+struct DR_init_constraints_cookie {
+  DR_init_constraints_cookie(nsIFrame* aFrame, mozilla::ReflowInput* aState,
+                             nscoord aCBWidth, nscoord aCBHeight,
+                             const nsMargin* aMargin, const nsMargin* aPadding);
+  ~DR_init_constraints_cookie();
+
+  nsIFrame* mFrame;
+  mozilla::ReflowInput* mState;
+  void* mValue;
+};
+
+struct DR_init_offsets_cookie {
+  DR_init_offsets_cookie(nsIFrame* aFrame,
+                         mozilla::SizeComputationInput* aState,
+                         nscoord aPercentBasis,
+                         mozilla::WritingMode aCBWritingMode,
+                         const nsMargin* aMargin, const nsMargin* aPadding);
+  ~DR_init_offsets_cookie();
+
+  nsIFrame* mFrame;
+  mozilla::SizeComputationInput* mState;
+  void* mValue;
+};
+
+struct DR_init_type_cookie {
+  DR_init_type_cookie(nsIFrame* aFrame, mozilla::ReflowInput* aState);
+  ~DR_init_type_cookie();
+
+  nsIFrame* mFrame;
+  mozilla::ReflowInput* mState;
+  void* mValue;
+};
+
+#  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state,               \
+                         dr_rf_metrics, dr_rf_status)                          \
+    DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, \
+                        dr_rf_status);
+#  define DISPLAY_REFLOW_CHANGE() dr_cookie.Change();
+#  define DISPLAY_LAYOUT(dr_frame) DR_layout_cookie dr_cookie(dr_frame);
+#  define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Min", dr_result)
+#  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
+#  define DISPLAY_PREF_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
+#  define DISPLAY_MIN_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_size_cookie dr_cookie(dr_frame, "Min", dr_result)
+#  define DISPLAY_MAX_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_size_cookie dr_cookie(dr_frame, "Max", dr_result)
+#  define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
+                                   dr_pad)                                     \
+    DR_init_constraints_cookie dr_cookie(dr_frame, dr_state, dr_cbw, dr_cbh,   \
+                                         dr_bdr, dr_pad)
+#  define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr, \
+                               dr_pad)                                     \
+    DR_init_offsets_cookie dr_cookie(dr_frame, dr_state, dr_pb, dr_cbwm,   \
+                                     dr_bdr, dr_pad)
+#  define DISPLAY_INIT_TYPE(dr_frame, dr_result) \
+    DR_init_type_cookie dr_cookie(dr_frame, dr_result)
+
+#else
+
+#  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, \
+                         dr_rf_metrics, dr_rf_status)
+#  define DISPLAY_REFLOW_CHANGE()
+#  define DISPLAY_LAYOUT(dr_frame) PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
+    PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
+    PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_PREF_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_MIN_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_MAX_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
+                                   dr_pad)                                     \
+    PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr, \
+                               dr_pad)                                     \
+    PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_INIT_TYPE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+
+#endif
+// End Display Reflow Debugging
 
 #endif /* nsContainerFrame_h___ */
