@@ -181,7 +181,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 'clobber',
                 'download-and-extract',
                 'create-virtualenv',
-                'start-pulseaudio',
                 'install',
                 'stage-files',
                 'run-tests',
@@ -590,30 +589,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                                  if self._query_specified_suites(cat) is not None]
         super(DesktopUnittest, self).download_and_extract(extract_dirs=extract_dirs,
                                                           suite_categories=target_categories)
-
-    def start_pulseaudio(self):
-        command = []
-        # Implies that underlying system is Linux.
-        if (os.environ.get('NEED_PULSEAUDIO') == 'true'):
-            command.extend([
-                'pulseaudio',
-                '--daemonize',
-                '--log-level=4',
-                '--log-time=1',
-                '-vvvvv',
-                '--exit-idle-time=-1'
-            ])
-
-            # Only run the initialization for Debian.
-            # Ubuntu appears to have an alternate method of starting pulseaudio.
-            if self._is_debian():
-                self._kill_named_proc('pulseaudio')
-                self.run_command(command)
-
-            # All Linux systems need module-null-sink to be loaded, otherwise
-            # media tests fail.
-            self.run_command('pactl load-module module-null-sink')
-            self.run_command('pactl list modules short')
 
     def stage_files(self):
         for category in SUITE_CATEGORIES:
