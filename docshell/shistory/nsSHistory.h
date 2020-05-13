@@ -70,7 +70,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
     nsTArray<EntriesAndBrowsingContextData>* entriesToUpdate;
   };
 
-  nsSHistory(mozilla::dom::BrowsingContext* aRootBC, const nsID& aDocShellID);
+  explicit nsSHistory(mozilla::dom::BrowsingContext* aRootBC);
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
 
