@@ -1352,7 +1352,7 @@ impl NinePatchDescriptor {
             repeat_vertical: RepeatMode,
             extra_flags: BrushFlags,
         ) {
-            if uv_rect.uv1.x < uv_rect.uv0.x || uv_rect.uv1.y < uv_rect.uv0.y {
+            if uv_rect.uv1.x <= uv_rect.uv0.x || uv_rect.uv1.y <= uv_rect.uv0.y {
                 return;
             }
 
