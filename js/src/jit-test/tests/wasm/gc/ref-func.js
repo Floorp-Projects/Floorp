@@ -88,7 +88,7 @@ function validFuncRefText(forwardDeclare, tbl_type) {
 }
 
 // referenced function must be forward declared somehow
-assertErrorMessage(() => validFuncRefText('', 'funcref'), WebAssembly.CompileError, /function index is not in an element segment/);
+assertErrorMessage(() => validFuncRefText('', 'funcref'), WebAssembly.CompileError, /function index is not declared in a section before the code section/);
 
 // referenced function can be forward declared via segments
 assertEq(validFuncRefText('(elem 0 (i32.const 0) func $referenced)', 'funcref') instanceof WebAssembly.Instance, true);
@@ -99,13 +99,14 @@ assertEq(validFuncRefText('(elem declare $referenced)', 'funcref') instanceof We
 assertEq(validFuncRefText('(elem 0 (i32.const 0) funcref (ref.func $referenced))', 'funcref') instanceof WebAssembly.Instance, true);
 assertEq(validFuncRefText('(elem funcref (ref.func $referenced))', 'funcref') instanceof WebAssembly.Instance, true);
 
-// referenced function cannot be forward declared via start section or export
-assertErrorMessage(() => validFuncRefText('(start $referenced)', 'funcref'),
-                   WebAssembly.CompileError,
-                   /function index is not in an element segment/);
-assertErrorMessage(() => validFuncRefText('(export "referenced" (func $referenced))', 'funcref'),
-                   WebAssembly.CompileError,
-                   /function index is not in an element segment/);
+// reference function can be forward declared via globals
+assertEq(validFuncRefText('(global funcref (ref.func $referenced))', 'anyref') instanceof WebAssembly.Instance, true);
+
+// reference function can be forward declared via export
+assertEq(validFuncRefText('(export "referenced" (func $referenced))', 'anyref') instanceof WebAssembly.Instance, true);
+
+// reference function can be forward declared via start
+assertEq(validFuncRefText('(start $referenced)', 'anyref') instanceof WebAssembly.Instance, true);
 
 // Tests not expressible in the text format.
 
