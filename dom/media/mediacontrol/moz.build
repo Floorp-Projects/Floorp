@@ -13,6 +13,7 @@ EXPORTS.mozilla.dom += [
     'MediaController.h',
     'MediaControlService.h',
     'MediaControlUtils.h',
+    'MediaPlaybackStatus.h',
 ]
 
 EXPORTS.ipc += [
@@ -29,6 +30,7 @@ UNIFIED_SOURCES += [
     'MediaController.cpp',
     'MediaControlService.cpp',
     'MediaControlUtils.cpp',
+    'MediaPlaybackStatus.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
