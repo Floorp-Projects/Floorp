@@ -426,8 +426,6 @@
     <string name="library_reading_list">Daftar Baca</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Cari</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Pustaka</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Setelan</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -481,11 +479,18 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Hapus</string>
 
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Mode Privat)</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Hapus riwayat</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Yakin akan menghapus riwayat Anda?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Riwayat Dihapus</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s terhapus</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Bersihkan</string>
     <!-- History overflow menu copy button -->
@@ -542,6 +547,10 @@
     <string name="bookmark_edit">Edit markah</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Pilih folder</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Yakin akan menghapus folder ini?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s terhapus</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Tambah folder</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -595,7 +604,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s terhapus</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Menghapus markah terpilih</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Markah dihapus</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">URUNGKAN</string>
 
@@ -1262,6 +1271,13 @@
     <string name="preference_accessibility_force_enable_zoom">Zum di semua situs web</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Aktifkan untuk memungkinkan cubitan dan zum, bahkan di situs web yang mencegah gerakan ini.</string>
+
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nama (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Terakhir digunakan</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sortir menu log masuk</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tambah mesin pencari</string>

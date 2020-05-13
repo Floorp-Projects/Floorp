@@ -423,8 +423,6 @@
     <string name="library_reading_list">Список для чтения</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Поиск</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Библиотека</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Настройки</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1288,6 +1286,13 @@
     <string name="preference_accessibility_force_enable_zoom">Масштабирование на всех сайтах</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Включите, чтобы разрешить масштабирование даже на тех сайтах, которые это запрещают.</string>
+
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">По имени (А-Я)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">По последнему использованию</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню сортировки логинов</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Добавление поисковой системы</string>

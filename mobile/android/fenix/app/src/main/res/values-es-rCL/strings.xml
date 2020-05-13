@@ -414,8 +414,6 @@
     <string name="library_reading_list">Lista de lectura</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Buscar</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Biblioteca</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Ajustes</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1255,6 +1253,13 @@
     <string name="preference_accessibility_force_enable_zoom">Zoom en todos los sitios</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Actívalo para permitir pellizcar y ajustar el zoom, incluso en sitios que no permiten este gesto.</string>
+
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nombre (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Último uso</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menú para ordenar conexiones</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Añadir motor de búsqueda</string>
