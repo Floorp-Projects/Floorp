@@ -2,6 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * Global styles
+ */
+a {
+  color: var(--theme-highlight-blue);
+  text-decoration: none;
+  cursor: pointer;
+}
+
 /* Storage Host Tree */
 
 #storage-tree {
@@ -23,8 +32,13 @@
   outline: 0;
 }
 
+/* Storage Table */
+
 /* Let the component gain focus when a click hits an empty area */
 #storage-table {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   -moz-user-focus: normal;
 }
 

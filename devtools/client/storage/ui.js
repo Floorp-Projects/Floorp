@@ -10,6 +10,7 @@ const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const { parseItemValue } = require("devtools/shared/storage/utils");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { getUnicodeHostname } = require("devtools/client/shared/unicode-url");
+const getStorageTypeURL = require("devtools/client/storage/utils/mdn-utils");
 
 // GUID to be used as a separator in compound keys. This must match the same
 // constant in devtools/server/actors/storage.js,
@@ -131,7 +132,7 @@ class StorageUI {
 
     const tableNode = this._panelDoc.getElementById("storage-table");
     this.table = new TableWidget(tableNode, {
-      emptyText: L10N.getStr("table.emptyText"),
+      emptyText: "storage-table-empty-text",
       highlightUpdated: true,
       cellContextMenuId: "storage-table-popup",
     });
@@ -1049,6 +1050,33 @@ class StorageUI {
 
     let names = null;
     if (!host) {
+      let storageTypeHintL10nId = "";
+      switch (type) {
+        case "Cache":
+          storageTypeHintL10nId = "storage-table-type-cache-hint";
+          break;
+        case "cookies":
+          storageTypeHintL10nId = "storage-table-type-cookies-hint";
+          break;
+        case "extensionStorage":
+          storageTypeHintL10nId = "storage-table-type-extensionstorage-hint";
+          break;
+        case "localStorage":
+          storageTypeHintL10nId = "storage-table-type-localstorage-hint";
+          break;
+        case "indexedDB":
+          storageTypeHintL10nId = "storage-table-type-indexeddb-hint";
+          break;
+        case "sessionStorage":
+          storageTypeHintL10nId = "storage-table-type-sessionstorage-hint";
+          break;
+      }
+      this.table.setPlaceholder(
+        storageTypeHintL10nId,
+        getStorageTypeURL(this.table.datatype) +
+          "?utm_source=devtools&utm_medium=storage-inspector"
+      );
+
       // If selected item has no host then reset table headers
       await this.clearHeaders();
       return;
