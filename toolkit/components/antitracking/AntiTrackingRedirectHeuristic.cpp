@@ -279,7 +279,7 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
   AutoTArray<nsString, 2> params = {NS_ConvertUTF8toUTF16(newOrigin),
                                     NS_ConvertUTF8toUTF16(oldOrigin)};
   rv = nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eNECKO_PROPERTIES, "CookieAllowedForTrackerByHeuristic",
+      nsContentUtils::eNECKO_PROPERTIES, "CookieAllowedForOriginByHeuristic",
       params, errorText);
   if (NS_SUCCEEDED(rv)) {
     nsContentUtils::ReportToConsoleByWindowID(

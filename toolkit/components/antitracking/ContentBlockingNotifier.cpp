@@ -73,13 +73,13 @@ void ReportUnblockingToConsole(
 
         switch (aReason) {
           case ContentBlockingNotifier::eStorageAccessAPI:
-            messageWithSameOrigin = "CookieAllowedForTrackerByStorageAccessAPI";
+            messageWithSameOrigin = "CookieAllowedForOriginByStorageAccessAPI";
             break;
 
           case ContentBlockingNotifier::eOpenerAfterUserInteraction:
             [[fallthrough]];
           case ContentBlockingNotifier::eOpener:
-            messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
+            messageWithSameOrigin = "CookieAllowedForOriginByHeuristic";
             break;
         }
 
