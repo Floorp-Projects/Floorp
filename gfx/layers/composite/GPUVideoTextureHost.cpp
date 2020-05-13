@@ -33,10 +33,6 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
     return mWrappedTextureHost;
   }
 
-  // In the future when the RDD process has a PVideoBridge connection,
-  // then there might be two VideoBridgeParents (one within the GPU process,
-  // one from RDD). We'll need to flag which one to use to lookup our
-  // descriptor, or just try both.
   auto& sd = static_cast<SurfaceDescriptorRemoteDecoder&>(mDescriptor);
   mWrappedTextureHost =
       VideoBridgeParent::GetSingleton(sd.source())->LookupTexture(sd.handle());
