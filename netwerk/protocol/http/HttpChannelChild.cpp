@@ -206,12 +206,22 @@ HttpChannelChild::~HttpChannelChild() {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy && mAsyncOpenSucceeded &&
       !mSuccesfullyRedirected && !mOnStopRequestCalled) {
+    uint32_t flags =
+        (mSynthesizedResponse ? 1 << 0 : 0) |
+        (mShouldInterceptSubsequentRedirect ? 1 << 1 : 0) |
+        (mRedirectingForSubsequentSynthesizedResponse ? 1 << 2 : 0) |
+        (mPostRedirectChannelShouldIntercept ? 1 << 3 : 0) |
+        (mPostRedirectChannelShouldUpgrade ? 1 << 4 : 0) |
+        (mShouldParentIntercept ? 1 << 5 : 0) |
+        (mInterceptListener ? 1 << 6 : 0) |
+        (mInterceptedRedirectListener ? 1 << 7 : 0) | (mCanceled ? 1 << 8 : 0) |
+        (mRedirectChannelChild ? 1 << 9 : 0);
     MOZ_CRASH_UNSAFE_PRINTF(
-        "~HttpChannelChild %p, mOnStopRequestCalled=false, mStatus=0x%08x, "
-        "mActorDestroyReason=%d, mRedirectChannelChild=%p",
-        this, static_cast<uint32_t>(nsresult(mStatus)),
+        "~HttpChannelChild, mOnStopRequestCalled=false, mStatus=0x%08x, "
+        "mActorDestroyReason=%d, redirect count=%zu, flags=%u",
+        static_cast<uint32_t>(nsresult(mStatus)),
         static_cast<int32_t>(mActorDestroyReason ? *mActorDestroyReason : -1),
-        mRedirectChannelChild.get());
+        mLoadInfo->RedirectChainIncludingInternalRedirects().Length(), flags);
   }
 #endif
 
