@@ -549,13 +549,14 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
       ar.emplace(aCx, &unwrapped.toObject());
     }
 
-    js::ErrorReport report(aCx);
+    JS::ErrorReportBuilder report(aCx);
     RefPtr<Exception> exn;
     if (unwrapped.isObject() &&
         (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, &unwrapped, exn)) ||
          NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &unwrapped, exn)))) {
       xpcReport->Init(aCx, exn, isChrome, innerWindowID);
-    } else if (report.init(aCx, unwrapped, js::ErrorReport::NoSideEffects)) {
+    } else if (report.init(aCx, unwrapped,
+                           JS::ErrorReportBuilder::NoSideEffects)) {
       xpcReport->Init(report.report(), report.toStringResult().c_str(),
                       isChrome, innerWindowID);
     } else {

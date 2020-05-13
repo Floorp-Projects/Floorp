@@ -51,10 +51,9 @@ BEGIN_TEST(testPrintError_Works) {
   CHECK(JS_GetPendingException(cx, &exception));
   JS_ClearPendingException(cx);
 
-  js::ErrorReport report(cx);
-  CHECK(report.init(cx, exception,
-                    js::ErrorReport::SniffingBehavior::NoSideEffects));
-  JS::PrintError(cx, buf.stream(), report.toStringResult(), report.report(),
+  JS::ErrorReportBuilder builder(cx);
+  CHECK(builder.init(cx, exception, JS::ErrorReportBuilder::NoSideEffects));
+  JS::PrintError(cx, buf.stream(), builder.toStringResult(), builder.report(),
                  false);
 
   CHECK(buf.contains("testPrintError_Works.js:3:1 uncaught exception: null\n"));
@@ -113,10 +112,9 @@ BEGIN_TEST(testPrintError_UTF16CodePoints) {
   CHECK(JS_GetPendingException(cx, &exception));
   JS_ClearPendingException(cx);
 
-  js::ErrorReport report(cx);
-  CHECK(report.init(cx, exception,
-                    js::ErrorReport::SniffingBehavior::NoSideEffects));
-  JS::PrintError(cx, buf.stream(), report.toStringResult(), report.report(),
+  JS::ErrorReportBuilder builder(cx);
+  CHECK(builder.init(cx, exception, JS::ErrorReportBuilder::NoSideEffects));
+  JS::PrintError(cx, buf.stream(), builder.toStringResult(), builder.report(),
                  false);
 
   CHECK(buf.contains(
