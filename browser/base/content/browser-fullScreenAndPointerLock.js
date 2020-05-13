@@ -308,7 +308,7 @@ var FullScreen = {
         Services.prefs.getBoolPref("full-screen-api.macos-native-full-screen");
       if (
         (alwaysUsesNativeFullscreen || !document.fullscreenElement) &&
-        this.useLionFullScreen
+        AppConstants.platform == "macosx"
       ) {
         document.documentElement.setAttribute("OSXLionFullscreen", true);
       }
@@ -659,7 +659,7 @@ var FullScreen = {
     }
 
     // Track whether mouse is near the toolbox
-    if (trackMouse && !this.useLionFullScreen) {
+    if (trackMouse && AppConstants.platform != "macosx") {
       let rect = gBrowser.tabpanels.getBoundingClientRect();
       this._mouseTargetRect = {
         top: rect.top + 50,
@@ -685,8 +685,8 @@ var FullScreen = {
     if (this._isPopupOpen) {
       return;
     }
-    // On OS X Lion we don't want to hide toolbars.
-    if (this.useLionFullScreen) {
+    // On macOS we don't want to hide toolbars.
+    if (AppConstants.platform == "macosx") {
       return;
     }
 
@@ -779,11 +779,11 @@ var FullScreen = {
 
     ToolbarIconColor.inferFromText("fullscreen", aEnterFS);
 
-    // For Lion fullscreen, all fullscreen controls are hidden, don't
-    // bother to touch them. If we don't stop here, the following code
-    // could cause the native fullscreen button be shown unexpectedly.
-    // See bug 1165570.
-    if (this.useLionFullScreen) {
+    // For macOS, we use native full screen, all full screen controls
+    // are hidden, don't bother to touch them. If we don't stop here,
+    // the following code could cause the native full screen button be
+    // shown unexpectedly. See bug 1165570.
+    if (AppConstants.platform == "macosx") {
       return;
     }
 
@@ -812,16 +812,5 @@ XPCOMUtils.defineLazyGetter(FullScreen, "_permissionNotificationIDs", () => {
       .map(value => value.prototype.notificationID)
       // Additionally include webRTC permission prompt which does not use PermissionUI
       .concat(["webRTC-shareDevices"])
-  );
-});
-
-XPCOMUtils.defineLazyGetter(FullScreen, "useLionFullScreen", () => {
-  // We'll only use OS X Lion full screen if we're
-  // * on OS X
-  // * on Lion or higher (Darwin 11+)
-  // * have fullscreenbutton="true"
-  return (
-    AppConstants.isPlatformAndVersionAtLeast("macosx", 11) &&
-    document.documentElement.getAttribute("fullscreenbutton") == "true"
   );
 });
