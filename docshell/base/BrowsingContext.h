@@ -562,6 +562,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     bool mWindowless = false;
     bool mUseRemoteTabs = false;
     bool mUseRemoteSubframes = false;
+    bool mHasSessionHistory = false;
     OriginAttributes mOriginAttributes;
 
     FieldTuple mFields;

@@ -6383,6 +6383,23 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryCommit(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
+    const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
+    HistoryGoResolver&& aResolveRequestedIndex) {
+  if (!aContext.IsDiscarded()) {
+    nsSHistory* shistory =
+      static_cast<nsSHistory*>(aContext.get_canonical()->GetSessionHistory());
+    nsTArray<nsSHistory::LoadEntryResult> loadResults;
+    nsresult rv = shistory->GotoIndex(aOffset, loadResults);
+    if (NS_FAILED(rv)) {
+      return IPC_FAIL(this, "GotoIndex failed");
+    }
+    aResolveRequestedIndex(shistory->GetRequestedIndex());
+    shistory->LoadURIs(loadResults);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvCommitWindowContextTransaction(
     const MaybeDiscarded<WindowContext>& aContext,
     WindowContext::BaseTransaction&& aTransaction, uint64_t aEpoch) {

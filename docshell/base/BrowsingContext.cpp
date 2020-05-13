@@ -37,6 +37,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIURIFixup.h"
@@ -359,6 +360,9 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
   }
 
   context->mWindowless = aInit.mWindowless;
+  if (aInit.mHasSessionHistory) {
+    context->InitSessionHistory();
+  }
 
   // NOTE: Call through the `Set` methods for these values to ensure that any
   // relevant process-local state is also updated.
@@ -1786,6 +1790,7 @@ BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
   init.mUseRemoteTabs = mUseRemoteTabs;
   init.mUseRemoteSubframes = mUseRemoteSubframes;
   init.mOriginAttributes = mOriginAttributes;
+  init.mHasSessionHistory = mChildSessionHistory != nullptr;
   init.mFields = mFields.Fields();
   return init;
 }
@@ -2228,14 +2233,18 @@ void BrowsingContext::InitSessionHistory() {
 }
 
 ChildSHistory* BrowsingContext::GetChildSessionHistory() {
-  // For now we're checking that the session history object for the child
-  // process is available before returning the ChildSHistory object, because
-  // it is the actual implementation that ChildSHistory forwards to. This can
-  // be removed once session history is stored exclusively in the parent
-  // process.
-  return mChildSessionHistory && mChildSessionHistory->IsInProcess()
-             ? mChildSessionHistory.get()
-             : nullptr;
+  if (!StaticPrefs::fission_sessionHistoryInParent()) {
+    // For now we're checking that the session history object for the child
+    // process is available before returning the ChildSHistory object, because
+    // it is the actual implementation that ChildSHistory forwards to. This can
+    // be removed once session history is stored exclusively in the parent
+    // process.
+    return mChildSessionHistory && mChildSessionHistory->IsInProcess()
+               ? mChildSessionHistory.get()
+               : nullptr;
+  }
+
+  return mChildSessionHistory;
 }
 
 void BrowsingContext::CreateChildSHistory() {

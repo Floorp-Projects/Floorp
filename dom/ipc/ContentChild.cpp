@@ -4128,6 +4128,14 @@ mozilla::ipc::IPCResult ContentChild::RecvDisplayLoadError(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvHistoryCommitLength(
+    const MaybeDiscarded<BrowsingContext>& aContext, uint32_t aLength) {
+  if (!aContext.IsNullOrDiscarded()) {
+    aContext.get()->GetChildSessionHistory()->SetLength(aLength);
+  }
+  return IPC_OK();
+}
+
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 mozilla::ipc::IPCResult ContentChild::RecvInitSandboxTesting(
     Endpoint<PSandboxTestingChild>&& aEndpoint) {
