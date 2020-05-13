@@ -68,7 +68,6 @@ function setupEvents(dependencies: Dependencies): void {
 
 function setupEventsTopTarget(targetFront: Target): void {
   targetFront.on("workerListChanged", threadListChanged);
-  addThreadEventListeners(targetFront.threadFront);
 
   if (features.windowlessServiceWorkers || attachAllTargets(targetFront)) {
     workersListener.addListener(threadListChanged);
