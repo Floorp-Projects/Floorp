@@ -14,4 +14,4 @@ jobs:
         description: "upstream nightly job"
         run:
             index-search:
-                - gecko.v2.mozilla-central.nightly.latest.mobile.android-x86_64-opt
+                - gecko.v2.mozilla-central.shippable.latest.mobile.android-x86_64-opt
