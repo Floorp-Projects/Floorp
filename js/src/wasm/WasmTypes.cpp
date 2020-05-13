@@ -263,7 +263,6 @@ static bool IsImmediateType(ValType vt) {
       switch (vt.refTypeKind()) {
         case RefType::Func:
         case RefType::Any:
-        case RefType::Null:
           return true;
         case RefType::TypeIndex:
           return false;
@@ -292,8 +291,6 @@ static unsigned EncodeImmediateType(ValType vt) {
           return 5;
         case RefType::Any:
           return 6;
-        case RefType::Null:
-          return 7;
         case RefType::TypeIndex:
           break;
       }

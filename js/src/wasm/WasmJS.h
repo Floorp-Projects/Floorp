@@ -97,7 +97,7 @@ bool StreamingCompilationAvailable(JSContext* cx);
 // optimizing compiler tier.
 bool CodeCachingAvailable(JSContext* cx);
 
-// General reference types (anyref, funcref, nullref) and operations on them.
+// General reference types (anyref, funcref) and operations on them.
 bool ReftypesAvailable(JSContext* cx);
 
 // Experimental (ref T) types and structure types.

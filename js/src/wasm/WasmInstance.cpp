@@ -167,18 +167,6 @@ static bool ToWebAssemblyValue_anyref(JSContext* cx, HandleValue val,
   return true;
 }
 template <typename Debug = NoDebug>
-static bool ToWebAssemblyValue_nullref(JSContext* cx, HandleValue val,
-                                       void** loc) {
-  if (!val.isNull()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_NULL_REQUIRED);
-    return false;
-  }
-  *loc = nullptr;
-  Debug::print(*loc);
-  return true;
-}
-template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val,
                                        void** loc) {
   RootedFunction fun(cx);
@@ -217,8 +205,6 @@ static bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
           return ToWebAssemblyValue_funcref<Debug>(cx, val, (void**)loc);
         case RefType::Any:
           return ToWebAssemblyValue_anyref<Debug>(cx, val, (void**)loc);
-        case RefType::Null:
-          return ToWebAssemblyValue_nullref<Debug>(cx, val, (void**)loc);
         case RefType::TypeIndex:
           return ToWebAssemblyValue_typeref<Debug>(cx, val, (void**)loc);
       }
@@ -264,12 +250,6 @@ static bool ToJSValue_funcref(JSContext* cx, void* src,
   return true;
 }
 template <typename Debug = NoDebug>
-static bool ToJSValue_nullref(JSContext* cx, MutableHandleValue dst) {
-  dst.setNull();
-  Debug::print((void*)nullptr);
-  return true;
-}
-template <typename Debug = NoDebug>
 static bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
   dst.set(UnboxAnyRef(AnyRef::fromCompiledCode(src)));
   Debug::print(src);
@@ -306,8 +286,6 @@ static bool ToJSValue(JSContext* cx, const void* src, ValType type,
         case RefType::Func:
           return ToJSValue_funcref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
-        case RefType::Null:
-          return ToJSValue_nullref<Debug>(cx, dst);
         case RefType::Any:
           return ToJSValue_anyref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
@@ -564,9 +542,6 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
               // dynamically in the callee.  Code in the stubs layer must box up
               // the FuncRef as a Value.
               break;
-            case RefType::Null:
-              // Ditto NullRef.
-              break;
             case RefType::TypeIndex:
               // Guarded by temporarilyUnsupportedReftypeForExit()
               MOZ_CRASH("case guarded above");
@@ -662,17 +637,6 @@ Instance::callImport_anyref(Instance* instance, int32_t funcImportIndex,
   }
   static_assert(sizeof(argv[0]) >= sizeof(void*), "fits");
   return ToWebAssemblyValue_anyref(cx, rval, (void**)argv);
-}
-
-/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
-Instance::callImport_nullref(Instance* instance, int32_t funcImportIndex,
-                             int32_t argc, uint64_t* argv) {
-  JSContext* cx = TlsContext.get();
-  RootedValue rval(cx);
-  if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval)) {
-    return false;
-  }
-  return ToWebAssemblyValue_nullref(cx, rval, (void**)argv);
 }
 
 /* static */ int32_t /* 0 to signal trap; 1 to signal OK */
@@ -2189,7 +2153,6 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
           }
           break;
         }
-        case RefType::Null:
         case RefType::Any: {
           RootedAnyRef ref(cx, AnyRef::fromCompiledCode(ptr));
           ASSERT_ANYREF_IS_JSOBJECT;

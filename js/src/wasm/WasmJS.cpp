@@ -328,14 +328,6 @@ bool wasm::CheckRefType(JSContext* cx, RefType::Kind targetTypeKind,
         return false;
       }
       break;
-    case RefType::Null:
-      if (!v.isNull()) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_WASM_NULL_REQUIRED);
-        return false;
-      }
-      refval.set(AnyRef::null());
-      break;
     case RefType::Any:
       if (!BoxAnyRef(cx, v, refval)) {
         return false;
@@ -398,7 +390,6 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
           val.set(Val(RefType::func(), FuncRef::fromJSFunction(fun)));
           return true;
         case RefType::Any:
-        case RefType::Null:
           val.set(Val(targetType.refType(), any));
           return true;
         case RefType::TypeIndex:
@@ -443,7 +434,6 @@ static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
           out.set(UnboxFuncRef(FuncRef::fromAnyRefUnchecked(val.ref())));
           return true;
         case RefType::Any:
-        case RefType::Null:
           out.set(UnboxAnyRef(val.ref()));
           return true;
         case RefType::TypeIndex:
@@ -2450,18 +2440,13 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       StringEqualsLiteral(elementLinearStr, "funcref")) {
     tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
-  } else if (StringEqualsLiteral(elementLinearStr, "anyref") ||
-             StringEqualsLiteral(elementLinearStr, "nullref")) {
+  } else if (StringEqualsLiteral(elementLinearStr, "anyref")) {
     if (!ReftypesAvailable(cx)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_BAD_ELEMENT);
       return false;
     }
-    if (StringEqualsLiteral(elementLinearStr, "anyref")) {
-      tableKind = TableKind::AnyRef;
-    } else {
-      tableKind = TableKind::NullRef;
-    }
+    tableKind = TableKind::AnyRef;
 #endif
   } else {
 #ifdef ENABLE_WASM_REFTYPES
@@ -2606,7 +2591,6 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
     case TableKind::FuncRef:
       table.fillFuncRef(index, 1, FuncRef::fromJSFunction(fun), cx);
       break;
-    case TableKind::NullRef:
     case TableKind::AnyRef:
       table.fillAnyRef(index, 1, any);
       break;
@@ -2778,8 +2762,6 @@ void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
                                        "wasm reference-typed global");
           }
           break;
-        case RefType::Null:
-          break;
         case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");
       }
@@ -2844,8 +2826,6 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
             JSObject::writeBarrierPost(cell->ref.asJSObjectAddress(), nullptr,
                                        cell->ref.asJSObject());
           }
-          break;
-        case RefType::Null:
           break;
         case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");
@@ -2934,9 +2914,6 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   } else if (ReftypesAvailable(cx) &&
              StringEqualsLiteral(typeLinearStr, "anyref")) {
     globalType = RefType::any();
-  } else if (ReftypesAvailable(cx) &&
-             StringEqualsLiteral(typeLinearStr, "nullref")) {
-    globalType = RefType::null();
 #endif
   } else {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -2972,7 +2949,6 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
           globalVal = Val(RefType::func(), AnyRef::null());
           break;
         case RefType::Any:
-        case RefType::Null:
           globalVal = Val(RefType::any(), AnyRef::null());
           break;
         case RefType::TypeIndex:
@@ -3045,7 +3021,6 @@ bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
           args.thisv().toObject().as<WasmGlobalObject>().type().refTypeKind()) {
         case RefType::Func:
         case RefType::Any:
-        case RefType::Null:
           args.thisv().toObject().as<WasmGlobalObject>().value(cx, args.rval());
           return true;
         case RefType::TypeIndex:
@@ -3159,9 +3134,6 @@ void WasmGlobalObject::setVal(JSContext* cx, wasm::HandleVal hval) {
           }
           break;
         }
-        case RefType::Null: {
-          break;
-        }
         case RefType::TypeIndex: {
           MOZ_CRASH("Ref NYI");
         }
@@ -3194,7 +3166,6 @@ void WasmGlobalObject::val(MutableHandleVal outval) const {
           outval.set(Val(RefType::func(), cell->ref));
           return;
         case RefType::Any:
-        case RefType::Null:
           outval.set(Val(RefType::any(), cell->ref));
           return;
         case RefType::TypeIndex:
