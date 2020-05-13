@@ -502,9 +502,9 @@ void AutoJSAPI::ReportException() {
   MOZ_ASSERT(JS_IsGlobalObject(errorGlobal));
   JSAutoRealm ar(cx(), errorGlobal);
   JS::ExceptionStack exnStack(cx());
-  JS::ErrorReportBuilder jsReport(cx());
+  js::ErrorReport jsReport(cx());
   if (StealExceptionAndStack(&exnStack) &&
-      jsReport.init(cx(), exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
+      jsReport.init(cx(), exnStack, js::ErrorReport::WithSideEffects)) {
     if (mIsMainThread) {
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
 

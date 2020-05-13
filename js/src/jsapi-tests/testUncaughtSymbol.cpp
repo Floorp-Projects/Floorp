@@ -35,9 +35,9 @@ static SymbolExceptionType GetSymbolExceptionType(JSContext* cx) {
   MOZ_RELEASE_ASSERT(JS::StealPendingExceptionStack(cx, &exnStack));
   MOZ_RELEASE_ASSERT(exnStack.exception().isSymbol());
 
-  JS::ErrorReportBuilder report(cx);
+  js::ErrorReport report(cx);
   MOZ_RELEASE_ASSERT(
-      report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects));
+      report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
 
   if (strcmp(report.toStringResult().c_str(),
              "uncaught exception: Symbol(Symbol.iterator)") == 0) {
