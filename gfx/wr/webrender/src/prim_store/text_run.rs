@@ -330,10 +330,11 @@ impl TextRunPrimitive {
         let mut allow_subpixel = match subpixel_mode {
             SubpixelMode::Allow => true,
             SubpixelMode::Deny => false,
-            SubpixelMode::Conditional { excluded_rects } => {
+            SubpixelMode::Conditional { allowed_rect, excluded_rects } => {
                 // Conditional mode allows subpixel AA to be enabled for this
                 // text run, so long as it doesn't intersect with any of the
-                // cutout rectangles in the list.
+                // cutout rectangles in the list, and it's inside the allowed rect.
+                allowed_rect.contains_rect(&prim_rect) &&
                 excluded_rects.iter().all(|rect| !rect.intersects(&prim_rect))
             }
         };
