@@ -273,8 +273,8 @@ class Opcode {
 
 // A PackedTypeCode represents a TypeCode paired with a refTypeIndex (valid only
 // for TypeCode::OptRef).  PackedTypeCode is guaranteed to be POD.  The TypeCode
-// spans the full range of type codes including the specialized AnyRef, FuncRef,
-// NullRef.
+// spans the full range of type codes including the specialized AnyRef, and
+// FuncRef.
 //
 // PackedTypeCode is an enum class, as opposed to the more natural
 // struct-with-bitfields, because bitfields would make it non-POD.
@@ -363,7 +363,6 @@ static inline bool IsReferenceType(PackedTypeCode ptc) {
 class RefType {
  public:
   enum Kind {
-    Null = uint8_t(TypeCode::NullRef),
     Any = uint8_t(TypeCode::AnyRef),
     Func = uint8_t(TypeCode::FuncRef),
     TypeIndex = uint8_t(TypeCode::OptRef)
@@ -375,7 +374,6 @@ class RefType {
 #ifdef DEBUG
   bool isValid() const {
     switch (UnpackTypeCodeType(ptc_)) {
-      case TypeCode::NullRef:
       case TypeCode::FuncRef:
       case TypeCode::AnyRef:
         MOZ_ASSERT(UnpackTypeCodeIndexUnchecked(ptc_) == NoRefTypeIndex);
@@ -419,7 +417,6 @@ class RefType {
 
   static RefType any() { return RefType(Any); }
   static RefType func() { return RefType(Func); }
-  static RefType null() { return RefType(Null); }
 
   bool operator==(const RefType& that) const { return ptc_ == that.ptc_; }
   bool operator!=(const RefType& that) const { return ptc_ != that.ptc_; }
@@ -442,7 +439,6 @@ class ValType {
       case TypeCode::V128:
       case TypeCode::AnyRef:
       case TypeCode::FuncRef:
-      case TypeCode::NullRef:
       case TypeCode::OptRef:
         return true;
       default:
@@ -544,10 +540,6 @@ class ValType {
 
   bool isAnyRef() const { return UnpackTypeCodeType(tc_) == TypeCode::AnyRef; }
 
-  bool isNullRef() const {
-    return UnpackTypeCodeType(tc_) == TypeCode::NullRef;
-  }
-
   bool isFuncRef() const {
     return UnpackTypeCodeType(tc_) == TypeCode::FuncRef;
   }
@@ -590,7 +582,6 @@ class ValType {
     switch (typeCode()) {
       case TypeCode::AnyRef:
       case TypeCode::FuncRef:
-      case TypeCode::NullRef:
         return true;
       default:
         return false;
@@ -708,8 +699,6 @@ static inline const char* ToCString(ValType type) {
           return "anyref";
         case RefType::Func:
           return "funcref";
-        case RefType::Null:
-          return "nullref";
         case RefType::TypeIndex:
           return "ref";
       }
@@ -2672,7 +2661,6 @@ enum class SymbolicAddress {
   CallImport_F64,
   CallImport_FuncRef,
   CallImport_AnyRef,
-  CallImport_NullRef,
   CoerceInPlace_ToInt32,
   CoerceInPlace_ToNumber,
   CoerceInPlace_JitEntry,
@@ -2802,21 +2790,16 @@ struct Limits {
 //
 // The TableKind determines the representation:
 //  - AnyRef: a wasm anyref word (wasm::AnyRef)
-//  - NullRef: as AnyRef
 //  - FuncRef: a two-word FunctionTableElem (wasm indirect call ABI)
 //  - AsmJS: a two-word FunctionTableElem (asm.js ABI)
 // Eventually there should be a single unified AnyRef representation.
-//
-// TableKind::NullRef is a reasonable default initializer, if one is needed.
 
-enum class TableKind { AnyRef, NullRef, FuncRef, AsmJS };
+enum class TableKind { AnyRef, FuncRef, AsmJS };
 
 static inline ValType ToElemValType(TableKind tk) {
   switch (tk) {
     case TableKind::AnyRef:
       return RefType::any();
-    case TableKind::NullRef:
-      return RefType::null();
     case TableKind::FuncRef:
       return RefType::func();
     case TableKind::AsmJS:
@@ -3284,7 +3267,6 @@ class DebugFrame {
           switch (type.refTypeKind()) {
             case RefType::Any:
             case RefType::Func:
-            case RefType::Null:
             case RefType::TypeIndex:
               return;
           }
