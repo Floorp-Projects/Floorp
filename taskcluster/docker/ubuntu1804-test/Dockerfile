@@ -1,4 +1,4 @@
-FROM          ubuntu:bionic-20200403
+FROM          ubuntu:bionic-20200112
 MAINTAINER    Edwin Takahashi <egao@mozilla.com>
 
 # Create necessary directories and worker user account
