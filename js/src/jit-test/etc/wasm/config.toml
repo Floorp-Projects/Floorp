@@ -51,7 +51,7 @@ parent = "spec"
 name = "multi-value"
 url = "https://github.com/WebAssembly/multi-value"
 parent = "spec"
-excluded_tests = ["call.wast", "call_indirect.wast", "block.wast", "fac.wast", "func.wast", "if.wast"]
+excluded_tests = ["call.wast", "fac.wast", "if.wast"]
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled
@@ -71,6 +71,12 @@ directive = "; skip-if: !wasmThreadsSupported()"
 name = "bulk-memory-operations"
 url = "https://github.com/WebAssembly/bulk-memory-operations"
 parent = "spec"
+excluded_tests = [
+  # invalid encoding, needs to merge with latest reference-types
+  "binary.wast",
+  # invalid encoding, needs to merge with latest reference-types
+  "bulk.wast"
+]
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled
@@ -80,7 +86,7 @@ directive = "; skip-if: !wasmBulkMemSupported()"
 name = "reference-types"
 url = "https://github.com/WebAssembly/reference-types"
 parent = "spec"
-excluded_tests = []
+excluded_tests = ["call.wast", "fac.wast", "if.wast"]
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled

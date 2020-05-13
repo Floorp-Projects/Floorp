@@ -52,19 +52,22 @@ const EXPECT_INVALID = false;
 
 /* DATA **********************************************************************/
 
-let hostrefs = {};
-let hostsym = Symbol("hostref");
-function hostref(s) {
-  if (! (s in hostrefs)) hostrefs[s] = {[hostsym]: s};
-  return hostrefs[s];
+let externrefs = {};
+let externsym = Symbol("externref");
+function externref(s) {
+  if (! (s in externrefs)) externrefs[s] = {[externsym]: s};
+  return externrefs[s];
 }
-function is_hostref(x) {
-  return (x !== null && hostsym in x) ? 1 : 0;
+function is_externref(x) {
+  return (x !== null && externsym in x) ? 1 : 0;
 }
 function is_funcref(x) {
   return typeof x === "function" ? 1 : 0;
 }
-function eq_ref(x, y) {
+function eq_externref(x, y) {
+  return x === y ? 1 : 0;
+}
+function eq_funcref(x, y) {
   return x === y ? 1 : 0;
 }
 
@@ -83,10 +86,11 @@ function reinitializeRegistry() {
 
   chain = chain.then(_ => {
     let spectest = {
-      hostref: hostref,
-      is_hostref: is_hostref,
+      externref: externref,
+      is_externref: is_externref,
       is_funcref: is_funcref,
-      eq_ref: eq_ref,
+      eq_externref: eq_externref,
+      eq_funcref: eq_funcref,
       print: console.log.bind(console),
       print_i32: console.log.bind(console),
       print_i32_f32: console.log.bind(console),
