@@ -25,6 +25,8 @@ Configuration
 
 This linter is enabled on the whole code base.
 
+This job is configured as `tier 2 <https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy#Overview_of_the_Job_Visibility_Tiers>`_.
+
 Autofix
 -------
 
