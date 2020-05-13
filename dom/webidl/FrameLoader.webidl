@@ -186,18 +186,16 @@ interface FrameLoader {
  * (e.g., if this object is a FrameLoader for an out-of-process
  * frame).
  *
- * XXXbz This method should really just return a Promise...
- *
  * @see nsIWebBrowserPersistDocumentReceiver
  * @see nsIWebBrowserPersistDocument
  * @see nsIWebBrowserPersist
  *
- * @param aOuterWindowID
- *        The outer window ID of the subframe we'd like to persist.
- *        If set at 0, WebBrowserPersistable will attempt to persist
- *        the top-level document. If the outer window ID is for a subframe
- *        that does not exist, or is not held beneath the WebBrowserPersistable,
- *        aRecv's onError method will be called with NS_ERROR_NO_CONTENT.
+ * @param aContext
+ *        The browsing context of the subframe we'd like to persist.
+ *        If set to nullptr, WebBrowserPersistable will attempt to persist
+ *        the top-level document. If the browsing context is for a subframe
+ *        that is not held beneath the WebBrowserPersistable, aRecv's onError
+ *        method will be called with NS_ERROR_NO_CONTENT.
  * @param aRecv
  *        The nsIWebBrowserPersistDocumentReceiver is a callback that
  *        will be fired once the document is ready for persisting.
@@ -205,7 +203,7 @@ interface FrameLoader {
 interface mixin WebBrowserPersistable
 {
   [Throws]
-  void startPersistence(unsigned long long aOuterWindowID,
+  void startPersistence(BrowsingContext? aContext,
                         nsIWebBrowserPersistDocumentReceiver aRecv);
 };
 
