@@ -72,19 +72,20 @@ def configure_gradlew(config, job, taskdesc):
     run = job["run"]
     worker = taskdesc["worker"] = job["worker"]
 
+    fetches_dir = path.join(run["workdir"], worker["env"]["MOZ_FETCHES_DIR"])
     worker.setdefault("env", {}).update({
         "ANDROID_SDK_ROOT": path.join(
-            run["workdir"], worker["env"]["MOZ_FETCHES_DIR"], "android-sdk-linux"
+            fetches_dir, "android-sdk-linux"
         )
     })
 
-    run["command"] = _extract_gradlew_command(run)
+    run["command"] = _extract_gradlew_command(run, fetches_dir)
     _inject_secrets_scopes(run, taskdesc)
     _set_run_task_attributes(job)
     configure_taskdesc_for_run(config, job, taskdesc, job["worker"]["implementation"])
 
 
-def _extract_gradlew_command(run):
+def _extract_gradlew_command(run, fetches_dir):
     pre_gradle_commands = run.pop("pre-gradlew", [])
     pre_gradle_commands += [
         _generate_dummy_secret_command(secret) for secret in run.pop("dummy-secrets", [])
@@ -93,7 +94,14 @@ def _extract_gradlew_command(run):
         _generate_secret_command(secret) for secret in run.get("secrets", [])
     ]
 
-    gradle_command = ["./gradlew"] + run.pop("gradlew")
+    maven_dependencies_dir = path.join(fetches_dir, "android-gradle-dependencies")
+    gradle_repos_args = [
+        "-P{repo_name}Repo=file://{dir}/{repo_name}".format(
+            dir=maven_dependencies_dir, repo_name=repo_name
+        )
+        for repo_name in ("google", "jcenter")
+    ]
+    gradle_command = ["./gradlew"] + gradle_repos_args + ["listRepositories"] + run.pop("gradlew")
     post_gradle_commands = run.pop("post-gradlew", [])
 
     commands = pre_gradle_commands + [gradle_command] + post_gradle_commands

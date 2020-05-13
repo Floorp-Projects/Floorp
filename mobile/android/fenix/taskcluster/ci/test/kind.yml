@@ -20,6 +20,7 @@ job-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
+            - android-gradle-dependencies
     include-pull-request-number: false
     run:
         using: gradlew

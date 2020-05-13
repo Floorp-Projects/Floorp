@@ -26,6 +26,7 @@ job-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
+            - android-gradle-dependencies
     run:
         using: gradlew
         use-caches: false

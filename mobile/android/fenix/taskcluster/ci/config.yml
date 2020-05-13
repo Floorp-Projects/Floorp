@@ -34,7 +34,12 @@ workers:
             provisioner: 'mobile-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: 'b-linux'
+            worker-type: b-linux
+        b-android-large:
+            provisioner: 'mobile-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: b-linux-large
         dep-signing:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing

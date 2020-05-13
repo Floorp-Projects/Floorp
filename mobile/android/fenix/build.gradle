@@ -4,6 +4,7 @@ buildscript {
     // This logic is duplicated in the allprojects block: I don't know how to fix that.
     repositories {
         maven {
+            name "Mozilla Nightly"
             url "https://nightly.maven.mozilla.org/maven2"
             content {
                 // Improve performance: only check moz maven for mozilla deps.
@@ -11,29 +12,45 @@ buildscript {
             }
         }
         maven {
+            name "Mozilla"
             url "https://maven.mozilla.org/maven2"
             content {
                 // Improve performance: only check moz maven for mozilla deps.
                 includeGroupByRegex RepoMatching.mozilla
             }
         }
-        google() {
-            content {
-                // Improve performance: only check google maven for mozilla deps.
-                includeGroupByRegex RepoMatching.androidx
-                includeGroupByRegex RepoMatching.comGoogleAndroid
-                includeGroupByRegex RepoMatching.comGoogleFirebase
-                includeGroupByRegex RepoMatching.comAndroid
+        if (project.hasProperty("googleRepo")) {
+            maven {
+                name "Google"
+                url project.property("googleRepo")
+            }
+        } else {
+            google() {
+                content {
+                    // Improve performance: only check google maven for mozilla deps.
+                    includeGroupByRegex RepoMatching.androidx
+                    includeGroupByRegex RepoMatching.comGoogleAndroid
+                    includeGroupByRegex RepoMatching.comGoogleFirebase
+                    includeGroupByRegex RepoMatching.comAndroid
+                }
             }
         }
-        jcenter() {
-            content {
-                // Improve security: don't search deps with known repos.
-                excludeGroupByRegex RepoMatching.mozilla
-                excludeGroupByRegex RepoMatching.androidx
-                excludeGroupByRegex RepoMatching.comGoogleAndroid
-                excludeGroupByRegex RepoMatching.comGoogleFirebase
-                excludeGroupByRegex RepoMatching.comAndroid
+
+        if (project.hasProperty("jcenterRepo")) {
+            maven {
+                name "BintrayJCenter"
+                url project.property("jcenterRepo")
+            }
+        } else {
+            jcenter() {
+                content {
+                    // Improve security: don't search deps with known repos.
+                    excludeGroupByRegex RepoMatching.mozilla
+                    excludeGroupByRegex RepoMatching.androidx
+                    excludeGroupByRegex RepoMatching.comGoogleAndroid
+                    excludeGroupByRegex RepoMatching.comGoogleFirebase
+                    excludeGroupByRegex RepoMatching.comAndroid
+                }
             }
         }
     }
@@ -60,6 +77,7 @@ allprojects {
     // This logic is duplicated in the buildscript block: I don't know how to fix that.
     repositories {
         maven {
+            name "Mozilla Nightly"
             url "https://nightly.maven.mozilla.org/maven2"
             content {
                 // Improve performance: only check moz maven for mozilla deps.
@@ -67,29 +85,44 @@ allprojects {
             }
         }
         maven {
+            name "Mozilla"
             url "https://maven.mozilla.org/maven2"
             content {
                 // Improve performance: only check moz maven for mozilla deps.
                 includeGroupByRegex RepoMatching.mozilla
             }
         }
-        google() {
-            content {
-                // Improve performance: only check google maven for google deps.
-                includeGroupByRegex RepoMatching.androidx
-                includeGroupByRegex RepoMatching.comGoogleAndroid
-                includeGroupByRegex RepoMatching.comGoogleFirebase
-                includeGroupByRegex RepoMatching.comAndroid
+        if (project.hasProperty("googleRepo")) {
+            maven {
+                name "Google"
+                url project.property("googleRepo")
+            }
+        } else {
+            google() {
+                content {
+                    // Improve performance: only check google maven for mozilla deps.
+                    includeGroupByRegex RepoMatching.androidx
+                    includeGroupByRegex RepoMatching.comGoogleAndroid
+                    includeGroupByRegex RepoMatching.comGoogleFirebase
+                    includeGroupByRegex RepoMatching.comAndroid
+                }
             }
         }
-        jcenter() {
-            content {
-                // Improve security: don't search deps with known repos.
-                excludeGroupByRegex RepoMatching.mozilla
-                excludeGroupByRegex RepoMatching.androidx
-                excludeGroupByRegex RepoMatching.comGoogleAndroid
-                excludeGroupByRegex RepoMatching.comGoogleFirebase
-                excludeGroupByRegex RepoMatching.comAndroid
+        if (project.hasProperty("jcenterRepo")) {
+            maven {
+                name "BintrayJCenter"
+                url project.property("jcenterRepo")
+            }
+        } else {
+            jcenter() {
+                content {
+                    // Improve security: don't search deps with known repos.
+                    excludeGroupByRegex RepoMatching.mozilla
+                    excludeGroupByRegex RepoMatching.androidx
+                    excludeGroupByRegex RepoMatching.comGoogleAndroid
+                    excludeGroupByRegex RepoMatching.comGoogleFirebase
+                    excludeGroupByRegex RepoMatching.comAndroid
+                }
             }
         }
     }
@@ -143,4 +176,11 @@ tasks.withType(io.gitlab.arturbosch.detekt.Detekt.class) {
     exclude("**/resources/**")
     exclude("**/test/**")
     exclude("**/tmp/**")
+}
+
+task listRepositories {
+    doLast {
+        println "Repositories:"
+        project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
+   }
 }
