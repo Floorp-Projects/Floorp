@@ -140,3 +140,65 @@ TEST(FilePreferencesWin, AccessUNC)
   rv = lf->InitWithPath(NS_LITERAL_STRING("\\\\nice\\..\\evil\\share"));
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
 }
+
+TEST(FilePreferencesWin, AccessDOSDevicePath)
+{
+  const auto devicePathSpecifier = NS_LITERAL_STRING("\\\\?\\");
+
+  nsCOMPtr<nsIFile> lf = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+
+  nsresult rv;
+
+  mozilla::FilePreferences::testing::SetBlockUNCPaths(true);
+
+  rv = lf->InitWithPath(devicePathSpecifier +
+                        NS_LITERAL_STRING("evil\\z:\\share"));
+  ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
+
+  rv = lf->InitWithPath(devicePathSpecifier +
+                        NS_LITERAL_STRING("UNC\\evil\\share"));
+  ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
+
+  rv = lf->InitWithPath(devicePathSpecifier + NS_LITERAL_STRING("C:\\"));
+  ASSERT_EQ(rv, NS_OK);
+
+  nsCOMPtr<nsIFile> base;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(base));
+  ASSERT_EQ(rv, NS_OK);
+
+  nsAutoString path;
+  rv = base->GetPath(path);
+  ASSERT_EQ(rv, NS_OK);
+
+  rv = lf->InitWithPath(devicePathSpecifier + path);
+  ASSERT_EQ(rv, NS_OK);
+}
+
+TEST(FilePreferencesWin, StartsWithDiskDesignatorAndBackslash)
+{
+  bool result;
+
+  result = mozilla::FilePreferences::StartsWithDiskDesignatorAndBackslash(
+      NS_LITERAL_STRING("\\\\UNC\\path"));
+  ASSERT_FALSE(result);
+
+  result = mozilla::FilePreferences::StartsWithDiskDesignatorAndBackslash(
+      NS_LITERAL_STRING("\\single\\backslash"));
+  ASSERT_FALSE(result);
+
+  result = mozilla::FilePreferences::StartsWithDiskDesignatorAndBackslash(
+      NS_LITERAL_STRING("C:relative"));
+  ASSERT_FALSE(result);
+
+  result = mozilla::FilePreferences::StartsWithDiskDesignatorAndBackslash(
+      NS_LITERAL_STRING("\\\\?\\C:\\"));
+  ASSERT_FALSE(result);
+
+  result = mozilla::FilePreferences::StartsWithDiskDesignatorAndBackslash(
+      NS_LITERAL_STRING("C:\\"));
+  ASSERT_TRUE(result);
+
+  result = mozilla::FilePreferences::StartsWithDiskDesignatorAndBackslash(
+      NS_LITERAL_STRING("c:\\"));
+  ASSERT_TRUE(result);
+}
