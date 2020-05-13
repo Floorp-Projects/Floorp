@@ -5,10 +5,17 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
+import mozilla.components.browser.awesomebar.facts.BrowserAwesomeBarFacts
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.menu.facts.BrowserMenuFacts
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.toolbar.facts.ToolbarFacts
+import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
 import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.downloads.facts.DownloadsFacts
@@ -30,11 +37,13 @@ import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Logins
+import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
+import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
 import java.util.Locale
 
 sealed class Event {
@@ -469,6 +478,25 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
             }
         }
 
+        null
+    }
+    Component.BROWSER_AWESOMEBAR to BrowserAwesomeBarFacts.Items.PROVIDER_DURATION -> {
+        metadata?.get(BrowserAwesomeBarFacts.MetadataKeys.DURATION_PAIR)?.let { providerTiming ->
+            require(providerTiming is Pair<*, *>) { "Expected providerTiming to be a Pair" }
+            when (val provider = providerTiming.first as AwesomeBar.SuggestionProvider) {
+                is HistoryStorageSuggestionProvider -> PerfAwesomebar.historySuggestions
+                is BookmarksStorageSuggestionProvider -> PerfAwesomebar.bookmarkSuggestions
+                is SessionSuggestionProvider -> PerfAwesomebar.sessionSuggestions
+                is SearchSuggestionProvider -> PerfAwesomebar.searchEngineSuggestions
+                is ClipboardSuggestionProvider -> PerfAwesomebar.clipboardSuggestions
+                is ShortcutsSuggestionProvider -> PerfAwesomebar.shortcutsSuggestions
+                // NB: add PerfAwesomebar.syncedTabsSuggestions once we're using SyncedTabsSuggestionProvider
+                else -> {
+                    Logger("Metrics").error("Unknown suggestion provider: $provider")
+                    null
+                }
+            }?.accumulateSamples(longArrayOf(providerTiming.second as Long))
+        }
         null
     }
     else -> null

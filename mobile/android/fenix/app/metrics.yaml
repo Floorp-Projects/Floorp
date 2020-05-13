@@ -2179,3 +2179,110 @@ startup.timeline:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2020-07-15"
+
+perf.awesomebar:
+  history_suggestions:
+    send_in_pings:
+      - metrics
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Duration of a history awesomebar suggestion query.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4992
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    notification_emails:
+      - fenix-core@mozilla.com
+      - gkruglov@mozilla.com
+    expires: "2020-09-15"
+  bookmark_suggestions:
+    send_in_pings:
+      - metrics
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Duration of a bookmarks awesomebar suggestion query.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4992
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    notification_emails:
+      - fenix-core@mozilla.com
+      - gkruglov@mozilla.com
+    expires: "2020-09-15"
+  search_engine_suggestions:
+    send_in_pings:
+      - metrics
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Duration of a search engine awesomebar suggestion query.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4992
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    notification_emails:
+      - fenix-core@mozilla.com
+      - gkruglov@mozilla.com
+    expires: "2020-09-15"
+  session_suggestions:
+    send_in_pings:
+      - metrics
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Duration of a session awesomebar suggestion query.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4992
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    notification_emails:
+      - fenix-core@mozilla.com
+      - gkruglov@mozilla.com
+    expires: "2020-09-15"
+  synced_tabs_suggestions:
+    send_in_pings:
+      - metrics
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Duration of a synced tabs awesomebar suggestion query.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4992
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    notification_emails:
+      - fenix-core@mozilla.com
+      - gkruglov@mozilla.com
+    expires: "2020-09-15"
+  clipboard_suggestions:
+    send_in_pings:
+      - metrics
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Duration of a clipboard awesomebar suggestion query.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4992
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    notification_emails:
+      - fenix-core@mozilla.com
+      - gkruglov@mozilla.com
+    expires: "2020-09-15"
+  shortcuts_suggestions:
+    send_in_pings:
+      - metrics
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Duration of a shortcuts awesomebar suggestion query.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4992
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    notification_emails:
+      - fenix-core@mozilla.com
+      - gkruglov@mozilla.com
+    expires: "2020-09-15"
