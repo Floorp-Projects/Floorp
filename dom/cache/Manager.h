@@ -16,7 +16,7 @@
 #include "nsTArray.h"
 
 class nsIInputStream;
-class nsIThread;
+class nsISerialEventTarget;
 
 namespace mozilla {
 
@@ -213,7 +213,7 @@ class Manager final : public SafeRefCounted<Manager> {
   void MaybeAllowContextToClose();
 
   SafeRefPtr<ManagerId> mManagerId;
-  nsCOMPtr<nsIThread> mIOThread;
+  nsCOMPtr<nsISerialEventTarget> mIOThread;
 
   // Weak reference cleared by RemoveContext() in Context destructor.
   Context* MOZ_NON_OWNING_REF mContext;
@@ -270,7 +270,8 @@ class Manager final : public SafeRefCounted<Manager> {
   struct ConstructorGuard {};
 
  public:
-  Manager(SafeRefPtr<ManagerId> aManagerId, nsIThread* aIOThread,
+  Manager(SafeRefPtr<ManagerId> aManagerId,
+          already_AddRefed<nsISerialEventTarget> aIOThread,
           const ConstructorGuard&);
   ~Manager();
 
