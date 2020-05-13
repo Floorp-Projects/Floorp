@@ -294,7 +294,6 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
                   nsIContentPolicy::TYPE_DOCUMENT == 6 &&
                   nsIContentPolicy::TYPE_SUBDOCUMENT == 7 &&
                   nsIContentPolicy::TYPE_REFRESH == 8 &&
-                  nsIContentPolicy::TYPE_XBL == 9 &&
                   nsIContentPolicy::TYPE_PING == 10 &&
                   nsIContentPolicy::TYPE_XMLHTTPREQUEST == 11 &&
                   nsIContentPolicy::TYPE_DATAREQUEST == 11 &&

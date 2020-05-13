@@ -271,9 +271,6 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
     case nsIContentPolicy::TYPE_REFRESH:
       destination = RequestDestination::_empty;
       break;
-    case nsIContentPolicy::TYPE_XBL:
-      destination = RequestDestination::_empty;
-      break;
     case nsIContentPolicy::TYPE_PING:
       destination = RequestDestination::_empty;
       break;
