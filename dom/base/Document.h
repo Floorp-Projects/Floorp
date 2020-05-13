@@ -1048,91 +1048,55 @@ class Document : public nsINode,
   /**
    * Get the has mixed active content loaded flag for this document.
    */
-  bool GetHasMixedActiveContentLoaded() {
-    return mMixedContentFlags &
-           nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
-  }
+  bool GetHasMixedActiveContentLoaded() { return mHasMixedActiveContentLoaded; }
 
   /**
    * Set the has mixed active content loaded flag for this document.
    */
   void SetHasMixedActiveContentLoaded(bool aHasMixedActiveContentLoaded) {
-    if (aHasMixedActiveContentLoaded) {
-      mMixedContentFlags |=
-          nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
-    } else {
-      mMixedContentFlags &=
-          ~nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
-    }
+    mHasMixedActiveContentLoaded = aHasMixedActiveContentLoaded;
   }
 
   /**
    * Get mixed active content blocked flag for this document.
    */
   bool GetHasMixedActiveContentBlocked() {
-    return mMixedContentFlags &
-           nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+    return mHasMixedActiveContentBlocked;
   }
 
   /**
    * Set the mixed active content blocked flag for this document.
    */
   void SetHasMixedActiveContentBlocked(bool aHasMixedActiveContentBlocked) {
-    if (aHasMixedActiveContentBlocked) {
-      mMixedContentFlags |=
-          nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
-    } else {
-      mMixedContentFlags &=
-          ~nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
-    }
+    mHasMixedActiveContentBlocked = aHasMixedActiveContentBlocked;
   }
 
   /**
    * Get the has mixed display content loaded flag for this document.
    */
   bool GetHasMixedDisplayContentLoaded() {
-    return mMixedContentFlags &
-           nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
+    return mHasMixedDisplayContentLoaded;
   }
 
   /**
    * Set the has mixed display content loaded flag for this document.
    */
   void SetHasMixedDisplayContentLoaded(bool aHasMixedDisplayContentLoaded) {
-    if (aHasMixedDisplayContentLoaded) {
-      mMixedContentFlags |=
-          nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
-    } else {
-      mMixedContentFlags &=
-          ~nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
-    }
+    mHasMixedDisplayContentLoaded = aHasMixedDisplayContentLoaded;
   }
 
   /**
    * Get mixed display content blocked flag for this document.
    */
   bool GetHasMixedDisplayContentBlocked() {
-    return mMixedContentFlags &
-           nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
+    return mHasMixedDisplayContentBlocked;
   }
 
   /**
    * Set the mixed display content blocked flag for this document.
    */
   void SetHasMixedDisplayContentBlocked(bool aHasMixedDisplayContentBlocked) {
-    if (aHasMixedDisplayContentBlocked) {
-      mMixedContentFlags |=
-          nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
-    } else {
-      mMixedContentFlags &=
-          ~nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
-    }
-  }
-
-  uint32_t GetMixedContentFlags() const { return mMixedContentFlags; }
-
-  void AddMixedContentFlags(uint32_t aMixedContentFlags) {
-    mMixedContentFlags |= aMixedContentFlags;
+    mHasMixedDisplayContentBlocked = aHasMixedDisplayContentBlocked;
   }
 
   /**
@@ -4380,8 +4344,6 @@ class Document : public nsINode,
   // GetPermissionDelegateHandler
   RefPtr<PermissionDelegateHandler> mPermissionDelegateHandler;
 
-  uint32_t mMixedContentFlags = 0;
-
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;
   // True if we may need to recompute the language prefs for this document.
@@ -4474,6 +4436,22 @@ class Document : public nsINode,
   // True if an nsIAnimationObserver is perhaps attached to a node in the
   // document.
   bool mMayHaveAnimationObservers : 1;
+
+  // True if a document has loaded Mixed Active Script (see
+  // nsMixedContentBlocker.cpp)
+  bool mHasMixedActiveContentLoaded : 1;
+
+  // True if a document has blocked Mixed Active Script (see
+  // nsMixedContentBlocker.cpp)
+  bool mHasMixedActiveContentBlocked : 1;
+
+  // True if a document has loaded Mixed Display/Passive Content (see
+  // nsMixedContentBlocker.cpp)
+  bool mHasMixedDisplayContentLoaded : 1;
+
+  // True if a document has blocked Mixed Display/Passive Content (see
+  // nsMixedContentBlocker.cpp)
+  bool mHasMixedDisplayContentBlocked : 1;
 
   // True if a document load has a CSP attached.
   bool mHasCSP : 1;
