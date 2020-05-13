@@ -339,8 +339,6 @@
         setFindbarInActor(this._browser, this);
 
         this._browser.finder.addResultListener(this);
-
-        this._findField.value = this._browser._lastSearchString;
       }
       return val;
     }
