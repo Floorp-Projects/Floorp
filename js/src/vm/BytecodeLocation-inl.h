@@ -16,16 +16,6 @@
 
 namespace js {
 
-inline JS_PUBLIC_API bool BytecodeLocation::isValid(
-    const JSScript* script) const {
-  // Note: Don't create a new BytecodeLocation during the implementation of
-  // this, as it is used in the constructor, and will recurse forever.
-  return script->contains(*this) || toRawBytecode() == script->codeEnd();
-}
-
-inline bool BytecodeLocation::isInBounds(const JSScript* script) const {
-  return script->contains(*this);
-}
 inline uint32_t BytecodeLocation::bytecodeToOffset(
     const JSScript* script) const {
   MOZ_ASSERT(this->isInBounds());

@@ -69,30 +69,31 @@ class BytecodeLocation {
 
   RawBytecode toRawBytecode() const { return rawBytecode_; }
 
+#ifdef DEBUG
   // Return true if this bytecode location is valid for the given script.
   // This includes the location 1-past the end of the bytecode.
-  JS_PUBLIC_API bool isValid(const JSScript* script) const;
+  bool isValid(const JSScript* script) const;
 
   // Return true if this bytecode location is within the bounds of the
   // bytecode for a given script.
   bool isInBounds(const JSScript* script) const;
+#endif
 
-  uint32_t bytecodeToOffset(const JSScript* script) const;
+  inline uint32_t bytecodeToOffset(const JSScript* script) const;
 
-  uint32_t tableSwitchCaseOffset(const JSScript* script,
-                                 uint32_t caseIndex) const;
+  inline uint32_t tableSwitchCaseOffset(const JSScript* script,
+                                        uint32_t caseIndex) const;
 
-  uint32_t getJumpTargetOffset(const JSScript* script) const;
+  inline uint32_t getJumpTargetOffset(const JSScript* script) const;
 
-  uint32_t getTableSwitchDefaultOffset(const JSScript* script) const;
+  inline uint32_t getTableSwitchDefaultOffset(const JSScript* script) const;
 
   inline BytecodeLocation getTableSwitchDefaultTarget() const;
   inline BytecodeLocation getTableSwitchCaseTarget(const JSScript* script,
                                                    uint32_t caseIndex) const;
 
-  uint32_t useCount() const;
-
-  uint32_t defCount() const;
+  inline uint32_t useCount() const;
+  inline uint32_t defCount() const;
 
   int32_t jumpOffset() const { return GET_JUMP_OFFSET(rawBytecode_); }
   int32_t codeOffset() const { return GET_CODE_OFFSET(rawBytecode_); }
@@ -110,7 +111,7 @@ class BytecodeLocation {
     return GET_UINT8(rawBytecode_);
   }
 
-  Scope* innermostScope(const JSScript* script) const;
+  inline Scope* innermostScope(const JSScript* script) const;
 
 #ifdef DEBUG
   bool hasSameScript(const BytecodeLocation& other) const {
