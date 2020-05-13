@@ -3,6 +3,8 @@
 
 "use strict";
 
+const NS_ERROR_DOM_QUOTA_EXCEEDED_ERR = 0x80530016;
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "StorageSyncService",
@@ -246,5 +248,39 @@ add_task(
       let { value } = await promisify(area.get, extId, "null");
       deepEqual(value, {}, `Wipe should remove all values for ${extId}`);
     }
+  }
+);
+
+add_task(
+  {
+    skip_if: () => !AppConstants.MOZ_NEW_WEBEXT_STORAGE,
+  },
+  async function test_storage_sync_quota() {
+    const service = StorageSyncService.getInterface(
+      Ci.mozIExtensionStorageArea
+    );
+    const engine = StorageSyncService.getInterface(Ci.mozIBridgedSyncEngine);
+    await promisify(engine.wipe);
+    await promisify(service.set, "ext-1", JSON.stringify({ x: "hi" }));
+    await promisify(service.set, "ext-1", JSON.stringify({ longer: "value" }));
+
+    let { value: v1 } = await promisify(service.getBytesInUse, "ext-1", '"x"');
+    Assert.equal(v1, 5); // key len without quotes, value len with quotes.
+    let { value: v2 } = await promisify(service.getBytesInUse, "ext-1", "null");
+    // 5 from 'x', plus 'longer' (6 for key, 7 for value = 13) = 18.
+    Assert.equal(v2, 18);
+
+    // Now set something greater than our quota.
+    await Assert.rejects(
+      promisify(
+        service.set,
+        "ext-1",
+        JSON.stringify({
+          big: "x".repeat(Ci.mozIExtensionStorageArea.SYNC_QUOTA_BYTES),
+        })
+      ),
+      ex => ex.result == NS_ERROR_DOM_QUOTA_EXCEEDED_ERR,
+      "should reject with NS_ERROR_DOM_QUOTA_EXCEEDED_ERR"
+    );
   }
 );
