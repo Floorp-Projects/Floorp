@@ -163,6 +163,12 @@ if CONFIG['JS_BUILD_BINAST'] and CONFIG['JS_STANDALONE'] and not CONFIG['FUZZING
         'testBinASTReader.cpp',
     ]
 
+if CONFIG['OS_ARCH'] != 'WINNT':
+    # open_memstream() not available on Windows
+    UNIFIED_SOURCES += [
+        'testPrintError.cpp',
+    ]
+
 
 DEFINES['EXPORT_JS_API'] = True
 
