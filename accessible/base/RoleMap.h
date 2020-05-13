@@ -227,7 +227,7 @@ ROLE(TOOLBAR,
 ROLE(STATUSBAR,
      "statusbar",
      ATK_ROLE_STATUSBAR,
-     NSAccessibilityUnknownRole,  //Doesn't exist on OS X (a status bar is its parts; a progressbar, a label, etc.)
+     NSAccessibilityGroupRole,
      ROLE_SYSTEM_STATUSBAR,
      ROLE_SYSTEM_STATUSBAR,
      java::SessionAccessibility::CLASSNAME_VIEW,
