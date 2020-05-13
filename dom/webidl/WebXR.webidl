@@ -87,7 +87,7 @@ interface XRRenderState {
 
 callback XRFrameRequestCallback = void (DOMHighResTimeStamp time, XRFrame frame);
 
-[Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
+[ProbablyShortLivingWrapper, Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
 interface XRFrame {
   [SameObject] readonly attribute XRSession session;
 
@@ -129,7 +129,7 @@ enum XREye {
   "right"
 };
 
-[Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
+[ProbablyShortLivingWrapper, Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
 interface XRView {
   readonly attribute XREye eye;
   [Throws]
@@ -138,7 +138,7 @@ interface XRView {
   readonly attribute XRRigidTransform transform;
 };
 
-[Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
+[ProbablyShortLivingWrapper, Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
 interface XRViewport {
   readonly attribute long x;
   readonly attribute long y;
@@ -146,7 +146,7 @@ interface XRViewport {
   readonly attribute long height;
 };
 
-[Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
+[ProbablyShortLivingWrapper, Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
 interface XRRigidTransform {
   [Throws]
   constructor(optional DOMPointInit position = {}, optional DOMPointInit orientation = {});
@@ -157,13 +157,13 @@ interface XRRigidTransform {
   [SameObject] readonly attribute XRRigidTransform inverse;
 };
 
-[Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
+[ProbablyShortLivingWrapper, Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
 interface XRPose {
   [SameObject] readonly attribute XRRigidTransform transform;
   readonly attribute boolean emulatedPosition;
 };
 
-[Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
+[ProbablyShortLivingWrapper, Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
 interface XRViewerPose : XRPose {
   // TODO: Use FrozenArray once available. (Bug 1236777)
   [Constant, Cached, Frozen]
