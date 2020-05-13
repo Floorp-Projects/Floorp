@@ -292,7 +292,9 @@ DocumentChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
 }
 
 NS_IMETHODIMP DocumentChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
-  MOZ_CRASH("Don't set flags after creation");
+  NS_ERROR(
+      "DocumentChannel::SetLoadFlags: "
+      "Don't set flags after creation");
   return NS_OK;
 }
 
