@@ -84,6 +84,12 @@ void MediaController::Stop() {
       MediaControlKeysEvent::eStop);
 }
 
+uint64_t MediaController::Id() const { return mTopLevelBCId; }
+
+bool MediaController::IsAudible() const { return IsMediaAudible(); }
+
+bool MediaController::IsPlaying() const { return IsMediaPlaying(); }
+
 void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
     MediaControlKeysEvent aEvent) {
   // There is no controlled media existing or controller has been shutdown, we
@@ -98,7 +104,7 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
   RefPtr<BrowsingContext> context =
       mActiveMediaSessionContextId
           ? BrowsingContext::Get(*mActiveMediaSessionContextId)
-          : BrowsingContext::Get(mTopLevelBCId);
+          : BrowsingContext::Get(Id());
   if (context && !context->IsDiscarded()) {
     context->Canonical()->UpdateMediaControlKeysEvent(aEvent);
   }
@@ -215,8 +221,6 @@ void MediaController::HandleActualPlaybackStateChanged() {
 bool MediaController::IsInPictureInPictureMode() const {
   return mIsInPictureInPictureMode;
 }
-
-bool MediaController::IsAudible() const { return IsMediaAudible(); }
 
 }  // namespace dom
 }  // namespace mozilla

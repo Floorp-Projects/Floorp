@@ -32,7 +32,7 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
 
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(service);
-  RefPtr<MediaController> controller = service->GetMainController();
+  RefPtr<IMediaController> controller = service->GetMainController();
   if (!controller) {
     return;
   }
@@ -48,7 +48,7 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
       controller->Pause();
       return;
     case MediaControlKeysEvent::ePlayPause: {
-      if (controller->GetState() == MediaSessionPlaybackState::Playing) {
+      if (controller->IsPlaying()) {
         controller->Pause();
       } else {
         controller->Play();

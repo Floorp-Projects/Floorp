@@ -111,7 +111,6 @@ class MediaSessionController : public IMediaInfoUpdater {
   // it has already set its metadata. Otherwise, return default media metadata
   // which is based on website's title and favicon.
   MediaMetadataBase GetCurrentMediaMetadata() const;
-  uint64_t Id() const { return mTopLevelBCId; }
 
   bool IsMediaAudible() const;
   bool IsMediaPlaying() const;

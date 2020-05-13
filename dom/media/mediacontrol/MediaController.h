@@ -22,6 +22,30 @@ class BrowsingContext;
 enum class MediaControlKeysEvent : uint32_t;
 
 /**
+ * IMediaController is an interface which includes control related methods and
+ * methods used to know its playback state.
+ */
+class IMediaController {
+ public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  // Focus the window currently playing media.
+  virtual void Focus() = 0;
+  virtual void Play() = 0;
+  virtual void Pause() = 0;
+  virtual void Stop() = 0;
+  virtual void PrevTrack() = 0;
+  virtual void NextTrack() = 0;
+  virtual void SeekBackward() = 0;
+  virtual void SeekForward() = 0;
+
+  // Return the ID of the top level browsing context within a tab.
+  virtual uint64_t Id() const = 0;
+  virtual bool IsAudible() const = 0;
+  virtual bool IsPlaying() const = 0;
+};
+
+/**
  * MediaController is a class, which is used to control all media within a tab.
  * It can only be used in Chrome process and the controlled media are usually
  * in the content process (unless we disable e10s).
@@ -46,22 +70,26 @@ enum class MediaControlKeysEvent : uint32_t;
  * controller from `MediaControlService`.
  */
 class MediaController final
-    : public MediaSessionController,
+    : public IMediaController,
+      public MediaSessionController,
       public LinkedListElement<RefPtr<MediaController>> {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaController, override);
 
   explicit MediaController(uint64_t aContextId);
 
-  // Focus the window currently playing media.
-  void Focus();
-  void Play();
-  void Pause();
-  void Stop();
-  void PrevTrack();
-  void NextTrack();
-  void SeekBackward();
-  void SeekForward();
+  // IMediaController's methods
+  void Focus() override;
+  void Play() override;
+  void Pause() override;
+  void Stop() override;
+  void PrevTrack() override;
+  void NextTrack() override;
+  void SeekBackward() override;
+  void SeekForward() override;
+  uint64_t Id() const override;
+  bool IsAudible() const override;
+  bool IsPlaying() const override;
 
   // IMediaInfoUpdater's methods
   void NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
@@ -77,8 +105,6 @@ class MediaController final
   // Calling this method explicitly would mark this controller as deprecated,
   // then calling any its method won't take any effect.
   void Shutdown();
-
-  bool IsAudible() const;
 
  private:
   ~MediaController();
