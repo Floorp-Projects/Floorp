@@ -64,7 +64,7 @@ parent:
   async UpdateResources(OpUpdateResource[] aResourceUpdates,
                         RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
                         RenderRoot aRenderRoot);
-  async ParentCommands(WebRenderParentCommand[] commands, RenderRoot aRenderRoot);
+  async ParentCommands(WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture);
   async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
   async ClearCachedResources();

@@ -55,7 +55,7 @@ AAT::hb_aat_apply_context_t::hb_aat_apply_context_t (const hb_ot_shape_plan_t *p
 						       face (font->face),
 						       buffer (buffer_),
 						       sanitizer (),
-						       ankr_table (&Null(AAT::ankr)),
+						       ankr_table (&Null (AAT::ankr)),
 						       lookup_index (0),
 						       debug_depth (0)
 {
@@ -172,11 +172,7 @@ static const hb_aat_feature_mapping_t feature_mappings[] =
 const hb_aat_feature_mapping_t *
 hb_aat_layout_find_feature_mapping (hb_tag_t tag)
 {
-  return (const hb_aat_feature_mapping_t *) hb_bsearch (&tag,
-							feature_mappings,
-							ARRAY_LENGTH (feature_mappings),
-							sizeof (feature_mappings[0]),
-							hb_aat_feature_mapping_t::cmp);
+  return hb_sorted_array (feature_mappings).bsearch (tag);
 }
 #endif
 

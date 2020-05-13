@@ -537,10 +537,10 @@ nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
           nsCOMPtr<nsIEditor> editor;
           if (RefPtr<HTMLInputElement> input =
                   HTMLInputElement::FromNode(node)) {
-            editor = input->GetEditor();
+            editor = input->GetTextEditor();
           } else if (RefPtr<HTMLTextAreaElement> textarea =
                          HTMLTextAreaElement::FromNode(node)) {
-            editor = textarea->GetEditor();
+            editor = textarea->GetTextEditor();
           } else {
             node = node->GetParentNode();
             continue;

@@ -249,7 +249,7 @@ struct TTCHeader
     switch (u.header.version.major) {
     case 2: /* version 2 is compatible with version 1 */
     case 1: return u.version1.get_face (i);
-    default:return Null(OpenTypeFontFace);
+    default:return Null (OpenTypeFontFace);
     }
   }
 
@@ -284,7 +284,7 @@ struct TTCHeader
 struct ResourceRecord
 {
   const OpenTypeFontFace & get_face (const void *data_base) const
-  { return CastR<OpenTypeFontFace> ((data_base+offset).arrayZ); }
+  { return * reinterpret_cast<const OpenTypeFontFace *> ((data_base+offset).arrayZ); }
 
   bool sanitize (hb_sanitize_context_t *c,
 		 const void *data_base) const
@@ -478,7 +478,7 @@ struct OpenTypeFontFile
     case TrueTypeTag:	return u.fontFace;
     case TTCTag:	return u.ttcHeader.get_face (i);
     case DFontTag:	return u.rfHeader.get_face (i, base_offset);
-    default:		return Null(OpenTypeFontFace);
+    default:		return Null (OpenTypeFontFace);
     }
   }
 

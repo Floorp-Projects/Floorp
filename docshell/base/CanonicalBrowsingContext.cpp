@@ -565,7 +565,7 @@ bool CanonicalBrowsingContext::AttemptLoadURIInParent(
   // process notifications, which happens after the load is initiated in this
   // case. Devtools clears all prior requests when it detects a new navigation,
   // so it drops the main document load that happened here.
-  if (GetWatchedByDevtools()) {
+  if (WatchedByDevTools()) {
     return false;
   }
 

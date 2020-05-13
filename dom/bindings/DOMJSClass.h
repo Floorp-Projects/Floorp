@@ -477,9 +477,9 @@ struct DOMIfaceAndProtoJSClass {
 
   const NativePropertyHooks* mNativeHooks;
 
-  // The value to return for toString() on this interface or interface prototype
+  // The value to return for Function.prototype.toString on this interface
   // object.
-  const char* mToString;
+  const char* mFunToString;
 
   ProtoGetter mGetParentProto;
 

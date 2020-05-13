@@ -424,7 +424,8 @@ class ScriptLoader final : public nsISupports {
   bool ProcessInlineScript(nsIScriptElement* aElement, ScriptKind aScriptKind);
 
   ScriptLoadRequest* LookupPreloadRequest(nsIScriptElement* aElement,
-                                          ScriptKind aScriptKind);
+                                          ScriptKind aScriptKind,
+                                          const SRIMetadata& aSRIMetadata);
 
   void GetSRIMetadata(const nsAString& aIntegrityAttr,
                       SRIMetadata* aMetadataOut);

@@ -69,6 +69,8 @@ void DOMSecurityMonitor::AuditParsingOfHTMLXMLFragments(
       NS_LITERAL_CSTRING(
           "resource://devtools/client/shared/vendor/react-dom.js"),
       NS_LITERAL_CSTRING(
+          "resource://devtools/client/shared/vendor/react-dom-dev.js"),
+      NS_LITERAL_CSTRING(
           "resource://devtools/client/shared/widgets/FilterWidget.js"),
       NS_LITERAL_CSTRING("resource://devtools/client/shared/widgets/tooltip/"
                          "inactive-css-tooltip-helper.js"),

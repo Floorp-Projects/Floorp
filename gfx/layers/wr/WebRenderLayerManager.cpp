@@ -247,7 +247,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
 
   AutoTArray<RenderRootUpdates, wr::kRenderRootCount> renderRootUpdates;
   if (mStateManager.mAsyncResourceUpdates || !mPendingScrollUpdates.IsEmpty() ||
-      WrBridge()->HasWebRenderParentCommands(wr::RenderRoot::Default)) {
+      WrBridge()->HasWebRenderParentCommands()) {
     auto updates = renderRootUpdates.AppendElement();
     updates->mRenderRoot = wr::RenderRoot::Default;
     updates->mPaintSequenceNumber = mPaintSequenceNumber;
@@ -374,24 +374,18 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   }
 
   if (mStateManager.mAsyncResourceUpdates) {
-    if (!resourceUpdates.HasSubQueue(wr::RenderRoot::Default) ||
-        resourceUpdates.SubQueue(wr::RenderRoot::Default).IsEmpty()) {
-      resourceUpdates.SubQueue(wr::RenderRoot::Default)
-          .ReplaceResources(
-              std::move(mStateManager.mAsyncResourceUpdates.ref()));
+    if (resourceUpdates.IsEmpty()) {
+      resourceUpdates.ReplaceResources(
+          std::move(mStateManager.mAsyncResourceUpdates.ref()));
     } else {
       WrBridge()->UpdateResources(mStateManager.mAsyncResourceUpdates.ref(),
                                   mStateManager.GetRenderRoot());
     }
     mStateManager.mAsyncResourceUpdates.reset();
   }
-  mStateManager.DiscardImagesInTransaction(
-      resourceUpdates.SubQueue(wr::RenderRoot::Default));
+  mStateManager.DiscardImagesInTransaction(resourceUpdates);
 
-  if (resourceUpdates.HasSubQueue(wr::RenderRoot::Default)) {
-    WrBridge()->RemoveExpiredFontKeys(
-        resourceUpdates.SubQueue(wr::RenderRoot::Default));
-  }
+  WrBridge()->RemoveExpiredFontKeys(resourceUpdates);
 
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status.
@@ -411,9 +405,9 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     renderRootDL->mRenderRoot = wr::RenderRoot::Default;
     builder.Finalize(*renderRootDL);
     mLastDisplayListSize = renderRootDL->mDL->mCapacity;
-    resourceUpdates.SubQueue(wr::RenderRoot::Default)
-        .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
-               renderRootDL->mLargeShmems);
+    resourceUpdates.Flush(renderRootDL->mResourceUpdates,
+                          renderRootDL->mSmallShmems,
+                          renderRootDL->mLargeShmems);
     renderRootDL->mRect =
         LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
     renderRootDL->mScrollData.emplace(std::move(mScrollData));
@@ -527,9 +521,8 @@ void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
 
 void WebRenderLayerManager::DiscardImages() {
   wr::IpcResourceUpdateQueue resources(WrBridge());
-  auto& subqueue = resources.SubQueue(wr::RenderRoot::Default);
-  mStateManager.DiscardImagesInTransaction(subqueue);
-  WrBridge()->UpdateResources(subqueue, wr::RenderRoot::Default);
+  mStateManager.DiscardImagesInTransaction(resources);
+  WrBridge()->UpdateResources(resources, wr::RenderRoot::Default);
 }
 
 void WebRenderLayerManager::DiscardLocalImages() {

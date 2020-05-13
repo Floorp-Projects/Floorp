@@ -488,8 +488,7 @@ bool WebRenderBridgeParent::HandleDeferredPipelineData(
         [&](ParentCommands& data) {
           wr::TransactionBuilder txn;
           txn.SetLowPriority(!IsRootWebRenderBridgeParent());
-          if (!ProcessWebRenderParentCommands(data.mCommands, txn,
-                                              wr::RenderRoot::Default)) {
+          if (!ProcessWebRenderParentCommands(data.mCommands, txn)) {
             return false;
           }
 
@@ -1241,8 +1240,8 @@ bool WebRenderBridgeParent::ProcessRenderRootDisplayListData(
     sender.emplace(mApi, &txn);
   }
 
-  if (NS_WARN_IF(!ProcessWebRenderParentCommands(aDisplayList.mCommands, txn,
-                                                 renderRoot))) {
+  if (NS_WARN_IF(
+          !ProcessWebRenderParentCommands(aDisplayList.mCommands, txn))) {
     return false;
   }
 
@@ -1427,8 +1426,7 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
 
   if (!aUpdates.mCommands.IsEmpty()) {
     mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-    if (!ProcessWebRenderParentCommands(aUpdates.mCommands, txn,
-                                        aUpdates.mRenderRoot)) {
+    if (!ProcessWebRenderParentCommands(aUpdates.mCommands, txn)) {
       return false;
     }
   }
@@ -1572,14 +1570,12 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetFocusTarget(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
-    nsTArray<WebRenderParentCommand>&& aCommands,
-    const wr::RenderRoot& aRenderRoot) {
+    nsTArray<WebRenderParentCommand>&& aCommands) {
   if (mDestroyed) {
     return IPC_OK();
   }
 
   if (!mRenderRoot) {
-    MOZ_ASSERT(aRenderRoot == RenderRoot::Default);
     PushDeferredPipelineData(AsVariant(ParentCommands{
         std::move(aCommands),
     }));
@@ -1588,7 +1584,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
 
   wr::TransactionBuilder txn;
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
-  if (!ProcessWebRenderParentCommands(aCommands, txn, aRenderRoot)) {
+  if (!ProcessWebRenderParentCommands(aCommands, txn)) {
     return IPC_FAIL(this, "Invalid parent command found");
   }
 
@@ -1598,7 +1594,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
 
 bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
     const nsTArray<WebRenderParentCommand>& aCommands,
-    wr::TransactionBuilder& aTxn, wr::RenderRoot aRenderRoot) {
+    wr::TransactionBuilder& aTxn) {
   // Transaction for async image pipeline that uses ImageBridge always need to
   // be non low priority.
   wr::TransactionBuilder txnForImageBridge;
@@ -1612,7 +1608,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
         const OpAddPipelineIdForCompositable& op =
             cmd.get_OpAddPipelineIdForCompositable();
         AddPipelineIdForCompositable(op.pipelineId(), op.handle(), op.isAsync(),
-                                     aTxn, txnForImageBridge, aRenderRoot);
+                                     aTxn, txnForImageBridge);
         break;
       }
       case WebRenderParentCommand::TOpRemovePipelineIdForCompositable: {
@@ -1632,18 +1628,16 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
         mAsyncImageManager->UpdateAsyncImagePipeline(
             op.pipelineId(), op.scBounds(), op.scTransform(), op.scaleToSize(),
             op.filter(), op.mixBlendMode());
-        mAsyncImageManager->ApplyAsyncImageForPipeline(
-            op.pipelineId(), aTxn, txnForImageBridge,
-            RenderRootForExternal(aRenderRoot));
+        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn,
+                                                       txnForImageBridge);
         break;
       }
       case WebRenderParentCommand::TOpUpdatedAsyncImagePipeline: {
         const OpUpdatedAsyncImagePipeline& op =
             cmd.get_OpUpdatedAsyncImagePipeline();
         aTxn.InvalidateRenderedFrame();
-        mAsyncImageManager->ApplyAsyncImageForPipeline(
-            op.pipelineId(), aTxn, txnForImageBridge,
-            RenderRootForExternal(aRenderRoot));
+        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn,
+                                                       txnForImageBridge);
         break;
       }
       case WebRenderParentCommand::TCompositableOperation: {
@@ -1866,8 +1860,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
 void WebRenderBridgeParent::AddPipelineIdForCompositable(
     const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
     const bool& aAsync, wr::TransactionBuilder& aTxn,
-    wr::TransactionBuilder& aTxnForImageBridge,
-    const wr::RenderRoot& aRenderRoot) {
+    wr::TransactionBuilder& aTxnForImageBridge) {
   if (mDestroyed) {
     return;
   }
@@ -1903,8 +1896,7 @@ void WebRenderBridgeParent::AddPipelineIdForCompositable(
 
   wrHost->SetWrBridge(aPipelineId, this);
   mAsyncCompositables.emplace(wr::AsUint64(aPipelineId), wrHost);
-  mAsyncImageManager->AddAsyncImagePipeline(aPipelineId, wrHost,
-                                            RenderRootForExternal(aRenderRoot));
+  mAsyncImageManager->AddAsyncImagePipeline(aPipelineId, wrHost);
 
   // If this is being called from WebRenderBridgeParent::RecvSetDisplayList,
   // then aTxn might contain a display list that references pipelines that

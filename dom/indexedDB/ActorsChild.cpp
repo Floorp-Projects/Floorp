@@ -207,7 +207,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     nsTArray<StructuredCloneReadInfoChild>* mStructuredCloneArray;
     const Key* mKey;
     const nsTArray<Key>* mKeyArray;
-    const JS::Value* mJSVal;
+    uint64_t mUInt64Value;
     const JS::Handle<JS::Value>* mJSValHandle;
   } mResult;
 
@@ -219,7 +219,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     ResultTypeStructuredCloneArray,
     ResultTypeKey,
     ResultTypeKeyArray,
-    ResultTypeJSVal,
+    ResultTypeUInt64,
     ResultTypeJSValHandle,
   } mResultType;
 
@@ -307,15 +307,14 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
   }
 
   ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               const JS::Value* aResult)
+               const uint64_t aResult)
       : mRequest(aRequest),
         mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
         mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeJSVal) {
+        mResultType(ResultTypeUInt64) {
     MOZ_ASSERT(aRequest);
-    MOZ_ASSERT(!aResult->isGCThing());
 
-    mResult.mJSVal = aResult;
+    mResult.mUInt64Value = aResult;
   }
 
   ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
@@ -357,8 +356,8 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
       case ResultTypeKeyArray:
         return GetResult(aCx, mResult.mKeyArray, aResult);
 
-      case ResultTypeJSVal:
-        aResult.set(*mResult.mJSVal);
+      case ResultTypeUInt64:
+        aResult.set(JS::NumberValue(mResult.mUInt64Value));
         return NS_OK;
 
       case ResultTypeJSValHandle:
@@ -920,12 +919,13 @@ class WorkerPermissionChallenge final : public Runnable {
       return true;
     }
 
-    nsresult rv;
-    const nsCOMPtr<nsIPrincipal> principal =
-        mozilla::ipc::PrincipalInfoToPrincipal(mPrincipalInfo, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    auto principalOrErr =
+        mozilla::ipc::PrincipalInfoToPrincipal(mPrincipalInfo);
+    if (NS_WARN_IF(principalOrErr.isErr())) {
       return true;
     }
+
+    const nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
     if (XRE_IsParentProcess()) {
       const nsCOMPtr<Element> ownerElement =
@@ -1695,12 +1695,11 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     return IPC_OK();
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-      mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  auto principalOrErr = mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo);
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     return IPC_FAIL_NO_REASON(this);
   }
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIGlobalObject> global = mFactory->GetParentObject();
@@ -2681,9 +2680,7 @@ void BackgroundRequestChild::HandleResponse(JS::Handle<JS::Value> aResponse) {
 void BackgroundRequestChild::HandleResponse(uint64_t aResponse) {
   AssertIsOnOwningThread();
 
-  JS::Value response(JS::NumberValue(aResponse));
-
-  ResultHelper helper(mRequest, AcquireTransaction(), &response);
+  ResultHelper helper(mRequest, AcquireTransaction(), aResponse);
 
   helper.DispatchSuccessEvent();
 }

@@ -157,8 +157,7 @@ class CompositableClient {
    *
    * See AutoRemoveTexture to automatically invoke this at the end of a scope.
    */
-  virtual void RemoveTexture(TextureClient* aTexture,
-                             const Maybe<wr::RenderRoot>& aRenderRoot);
+  virtual void RemoveTexture(TextureClient* aTexture);
 
   void InitIPDL(const CompositableHandle& aHandle);
 
@@ -189,12 +188,9 @@ class CompositableClient {
  * Helper to call RemoveTexture at the end of a scope.
  */
 struct AutoRemoveTexture {
-  AutoRemoveTexture(CompositableClient* aCompositable,
-                    wr::RenderRoot aRenderRoot,
-                    TextureClient* aTexture = nullptr)
-      : mTexture(aTexture),
-        mCompositable(aCompositable),
-        mRenderRoot(aRenderRoot) {}
+  explicit AutoRemoveTexture(CompositableClient* aCompositable,
+                             TextureClient* aTexture = nullptr)
+      : mTexture(aTexture), mCompositable(aCompositable) {}
 
   ~AutoRemoveTexture();
 
@@ -202,7 +198,6 @@ struct AutoRemoveTexture {
 
  private:
   CompositableClient* mCompositable;
-  wr::RenderRoot mRenderRoot;
 };
 
 }  // namespace layers

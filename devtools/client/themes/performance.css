@@ -53,8 +53,7 @@
 }
 
 #performance-toolbar-controls-detail-views .toolbarbutton-text {
-  padding-inline-start: 4px;
-  padding-inline-end: 8px;
+  margin-inline: 4px;
 }
 
 #filter-button {
@@ -112,11 +111,6 @@
   display: none;
 }
 
-.notice-container .record-button {
-  padding: 5px !important;
-}
-
-.notice-container .record-button.checked,
 .notice-container .record-button.checked {
   color: var(--theme-selection-color) !important;
   background: var(--theme-selection-background) !important;
@@ -141,11 +135,8 @@
  * DE-XUL: The height of the toolbar is not correct without tweaking the line-height.
  */
 #recordings-pane .devtools-toolbar {
-  line-height: 0;
-}
-
-#recordings-pane .devtools-toolbar .devtools-button {
-  height: calc(var(--theme-toolbar-height) - 2px);
+  display: flex;
+  line-height: 1;
 }
 
 .theme-sidebar {

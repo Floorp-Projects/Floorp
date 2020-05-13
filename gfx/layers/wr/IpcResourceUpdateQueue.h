@@ -89,25 +89,7 @@ class IpcResourceUpdateQueue {
   // 64k - 2 * 4k - 16 = 57328 bytes as the default alloc size.
   explicit IpcResourceUpdateQueue(
       layers::WebRenderBridgeChild* aAllocator,
-      wr::RenderRoot aRenderRoot = wr::RenderRoot::Default,
       size_t aChunkSize = 57328);
-
-  // Although resource updates don't belong to a particular document/render root
-  // in any concrete way, they still end up being tied to a render root because
-  // we need to know which WR document to generate a frame for when they change.
-  IpcResourceUpdateQueue& SubQueue(wr::RenderRoot aRenderRoot) {
-    MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
-    MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default);
-    return *this;
-  }
-
-  bool HasAnySubQueue() { return false; }
-
-  bool HasSubQueue(wr::RenderRoot aRenderRoot) {
-    return aRenderRoot == wr::RenderRoot::Default;
-  }
-
-  wr::RenderRoot GetRenderRoot() { return mRenderRoot; }
 
   IpcResourceUpdateQueue(IpcResourceUpdateQueue&& aOther) noexcept;
   IpcResourceUpdateQueue& operator=(IpcResourceUpdateQueue&& aOther) noexcept;
@@ -186,7 +168,6 @@ class IpcResourceUpdateQueue {
  protected:
   ShmSegmentsWriter mWriter;
   nsTArray<layers::OpUpdateResource> mUpdates;
-  wr::RenderRoot mRenderRoot;
 };
 
 }  // namespace wr

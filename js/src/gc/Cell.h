@@ -7,6 +7,8 @@
 #ifndef gc_Cell_h
 #define gc_Cell_h
 
+#include <type_traits>
+
 #include "gc/GCEnum.h"
 #include "gc/Heap.h"
 #include "js/GCAnnotations.h"
@@ -180,12 +182,12 @@ struct alignas(gc::CellAlignBytes) Cell {
     return reinterpret_cast<const CellHeader*>(this)->isForwarded();
   }
 
-  template <class T>
+  template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   inline bool is() const {
     return getTraceKind() == JS::MapTypeToTraceKind<T>::kind;
   }
 
-  template <class T>
+  template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   inline T* as() {
     // |this|-qualify the |is| call below to avoid compile errors with even
     // fairly recent versions of gcc, e.g. 7.1.1 according to bz.
@@ -193,7 +195,7 @@ struct alignas(gc::CellAlignBytes) Cell {
     return static_cast<T*>(this);
   }
 
-  template <class T>
+  template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   inline const T* as() const {
     // |this|-qualify the |is| call below to avoid compile errors with even
     // fairly recent versions of gcc, e.g. 7.1.1 according to bz.
@@ -267,12 +269,12 @@ class TenuredCell : public Cell {
     return JS::shadow::Zone::from(zoneFromAnyThread());
   }
 
-  template <class T>
+  template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   inline bool is() const {
     return getTraceKind() == JS::MapTypeToTraceKind<T>::kind;
   }
 
-  template <class T>
+  template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   inline T* as() {
     // |this|-qualify the |is| call below to avoid compile errors with even
     // fairly recent versions of gcc, e.g. 7.1.1 according to bz.
@@ -280,7 +282,7 @@ class TenuredCell : public Cell {
     return static_cast<T*>(this);
   }
 
-  template <class T>
+  template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   inline const T* as() const {
     // |this|-qualify the |is| call below to avoid compile errors with even
     // fairly recent versions of gcc, e.g. 7.1.1 according to bz.

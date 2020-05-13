@@ -1,11 +1,15 @@
-#!/usr/bin/env python
-
-from __future__ import print_function, division, absolute_import
+#!/usr/bin/env python3
 
 import io, os.path, sys
 
 if len (sys.argv) != 4:
-	print ("usage: ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt", file=sys.stderr)
+	print ("""usage: ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt
+
+Input files, as of Unicode 12:
+* https://unicode.org/Public/UCD/latest/ucd/ArabicShaping.txt
+* https://unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
+* https://unicode.org/Public/UCD/latest/ucd/Blocks.txt
+""", file=sys.stderr)
 	sys.exit (1)
 
 files = [io.open (x, encoding='utf-8') for x in sys.argv[1:]]

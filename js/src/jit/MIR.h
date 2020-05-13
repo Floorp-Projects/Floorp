@@ -8024,7 +8024,6 @@ class StoreUnboxedScalarBase {
   }
 
  public:
-  void setWriteType(Scalar::Type type) { writeType_ = type; }
   Scalar::Type writeType() const { return writeType_; }
   bool isByteWrite() const {
     return writeType_ == Scalar::Int8 || writeType_ == Scalar::Uint8 ||
@@ -8045,26 +8044,14 @@ class StoreUnboxedScalarBase {
 class MStoreUnboxedScalar : public MTernaryInstruction,
                             public StoreUnboxedScalarBase,
                             public StoreUnboxedScalarPolicy::Data {
- public:
-  enum TruncateInputKind { DontTruncateInput, TruncateInput };
-
- private:
-  Scalar::Type storageType_;
-
-  // Whether this store truncates out of range inputs, for use by range
-  // analysis.
-  TruncateInputKind truncateInput_;
-
   bool requiresBarrier_;
 
   MStoreUnboxedScalar(
       MDefinition* elements, MDefinition* index, MDefinition* value,
-      Scalar::Type storageType, TruncateInputKind truncateInput,
+      Scalar::Type storageType,
       MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier)
       : MTernaryInstruction(classOpcode, elements, index, value),
         StoreUnboxedScalarBase(storageType),
-        storageType_(storageType),
-        truncateInput_(truncateInput),
         requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier) {
     if (requiresBarrier_) {
       setGuard();  // Not removable or movable
@@ -8081,11 +8068,9 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, elements), (1, index), (2, value))
 
-  Scalar::Type storageType() const { return storageType_; }
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::UnboxedElement);
   }
-  TruncateInputKind truncateInput() const { return truncateInput_; }
   bool requiresMemoryBarrier() const { return requiresBarrier_; }
   TruncateKind operandTruncateKind(size_t index) const override;
 
@@ -8847,9 +8832,11 @@ class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
   MGuardValue(MDefinition* val, const Value& expected)
       : MUnaryInstruction(classOpcode, val), expected_(expected) {
+    MOZ_ASSERT(expected.isNullOrUndefined() || expected.isMagic());
+
     setGuard();
     setMovable();
-    MOZ_ASSERT(expected.isNullOrUndefined() || expected.isMagic());
+    setResultType(MIRType::Value);
   }
 
  public:
@@ -8868,6 +8855,7 @@ class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
     }
     return congruentIfOperandsEqual(ins);
   }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
@@ -8878,6 +8866,7 @@ class MGuardNullOrUndefined : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, val) {
     setGuard();
     setMovable();
+    setResultType(MIRType::Value);
   }
 
  public:
@@ -8888,6 +8877,7 @@ class MGuardNullOrUndefined : public MUnaryInstruction,
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
@@ -9019,7 +9009,7 @@ class MGuardSpecificAtom : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, str), atom_(atom) {
     setGuard();
     setMovable();
-    setResultType(MIRType::None);
+    setResultType(MIRType::String);
   }
 
  public:
@@ -9038,6 +9028,7 @@ class MGuardSpecificAtom : public MUnaryInstruction,
     }
     return congruentIfOperandsEqual(ins);
   }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   bool appendRoots(MRootList& roots) const override {

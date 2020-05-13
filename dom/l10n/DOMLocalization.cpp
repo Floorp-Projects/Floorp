@@ -458,17 +458,20 @@ void DOMLocalization::ApplyTranslations(
     return;
   }
 
+  bool hasMissingTranslation = false;
+
   nsTArray<L10nOverlaysError> errors;
   for (size_t i = 0; i < aTranslations.Length(); ++i) {
     Element* elem = aElements[i];
     if (aTranslations[i].IsNull()) {
+      hasMissingTranslation = true;
       continue;
     }
     L10nOverlays::TranslateElement(*elem, aTranslations[i].Value(), errors,
                                    aRv);
     if (NS_WARN_IF(aRv.Failed())) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
+      hasMissingTranslation = true;
+      continue;
     }
     if (aProto) {
       // We only need to rebuild deep if the translation has a value.
@@ -478,13 +481,18 @@ void DOMLocalization::ApplyTranslations(
     }
   }
 
+  ReportL10nOverlaysErrors(errors);
+
   ResumeObserving(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  ReportL10nOverlaysErrors(errors);
+  if (hasMissingTranslation) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 }
 
 /* Protected */

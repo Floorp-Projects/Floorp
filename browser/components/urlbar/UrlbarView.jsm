@@ -440,7 +440,13 @@ class UrlbarView {
     queryOptions.autofillIgnoresSelection = true;
     queryOptions.event.interactionType = "returned";
 
-    this._openPanel();
+    if (
+      this._queryContext &&
+      this._queryContext.results &&
+      this._queryContext.results.length
+    ) {
+      this._openPanel();
+    }
 
     // If we had cached results, this will just refresh them, avoiding results
     // flicker, otherwise there may be some noise.

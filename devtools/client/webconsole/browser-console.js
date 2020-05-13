@@ -113,6 +113,11 @@ class BrowserConsole extends WebConsole {
       // toolbox session id.
       this._telemetry.toolClosed("browserconsole", -1, this);
 
+      // Wait for any pending connection initialization.
+      await Promise.all(
+        this.ui.getAllProxies().map(proxy => proxy.getConnectionPromise())
+      );
+
       await this.targetList.stopListening();
       await super.destroy();
       await this.currentTarget.destroy();

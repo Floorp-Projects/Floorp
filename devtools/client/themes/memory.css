@@ -327,10 +327,6 @@ html, body, #app, #memory-tool {
   font-size: 120%;
 }
 
-#heap-view > .heap-view-panel > .take-snapshot {
-  padding: 5px;
-}
-
 #heap-view > .heap-view-panel[data-state="snapshot-state-error"] pre {
   background-color: var(--theme-body-background);
   margin: 20px;

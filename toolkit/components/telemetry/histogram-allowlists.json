@@ -562,7 +562,6 @@
     "GC_MINOR_REASON_LONG",
     "GC_MINOR_US",
     "GC_MMU_50",
-    "GC_MS",
     "GC_NON_INCREMENTAL",
     "GC_REASON_2",
     "GC_RESET",

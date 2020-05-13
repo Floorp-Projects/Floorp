@@ -2,13 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import json
+import jsonschema
 import os
+import pathlib
 import statistics
 
 from mozperftest.layers import Layer
 from mozperftest.metrics.exceptions import PerfherderValidDataError
 from mozperftest.metrics.common import filtered_metrics
 from mozperftest.metrics.utils import write_json
+
+
+PERFHERDER_SCHEMA = pathlib.Path(
+    "testing", "mozharness", "external_tools", "performance-artifact-schema.json"
+)
 
 
 class Perfherder(Layer):
@@ -54,7 +61,7 @@ class Perfherder(Layer):
             metadata, output, prefix, metrics=self.get_arg("metrics"), settings=True
         )
 
-        if not results:
+        if not any([results[name] for name in results]):
             self.warning("No results left after filtering")
             return metadata
 
@@ -87,12 +94,15 @@ class Perfherder(Layer):
                 summary=settings.get("value"),
             )
 
-            # XXX Validate perfherder data
-
             if all_perfherder_data is None:
                 all_perfherder_data = perfherder_data
             else:
                 all_perfherder_data["suites"].extend(perfherder_data["suites"])
+
+        # Validate the final perfherder data blob
+        with pathlib.Path(metadata._mach_cmd.topsrcdir, PERFHERDER_SCHEMA).open() as f:
+            schema = json.load(f)
+        jsonschema.validate(all_perfherder_data, schema)
 
         file = "perfherder-data.json"
         if prefix:
@@ -174,9 +184,9 @@ class Perfherder(Layer):
         if subtest_should_alert is None:
             subtest_should_alert = []
         if framework is None:
-            framework = {"name": "mozperftest"}
+            framework = {"name": "browsertime"}
         if application is None:
-            application = {"name": "Firefox", "version": "9000"}
+            application = {"name": "firefox", "version": "9000"}
 
         perf_subtests = []
         suite = {

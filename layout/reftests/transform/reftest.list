@@ -156,3 +156,7 @@ test-pref(layout.css.zoom-transform-hack.enabled,false) != zoom-hack-1.html zoom
 test-pref(layout.css.zoom-transform-hack.enabled,true) == zoom-hack-2.html zoom-hack-ref.html
 
 == transform-anon-block-1.html transform-anon-block-1-ref.html
+test-pref(layout.animation.prerender.partial,true) == partial-prerender-expansion-translate.html partial-prerender-expansion-ref.html
+# This reftest heavily depends on layout.animation.prerender.viewport-ratio-limit
+# and reftest viewport size (800, 1000).
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||Android) test-pref(layout.animation.prerender.partial,true) test-pref(layout.animation.prerender.viewport-ratio-limit,"1.125") == partial-prerender-expansion-rotate.html partial-prerender-expansion-ref.html

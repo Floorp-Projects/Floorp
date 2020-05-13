@@ -151,9 +151,9 @@ struct hb_inc_bimap_t : hb_bimap_t
 
     for (hb_codepoint_t rhs = 0; rhs < count; rhs++)
       work[rhs] = back_map[rhs];
-  
+
     work.qsort (cmp_id);
-  
+
     clear ();
     for (hb_codepoint_t rhs = 0; rhs < count; rhs++)
       set (work[rhs], rhs);

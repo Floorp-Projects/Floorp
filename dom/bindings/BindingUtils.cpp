@@ -751,7 +751,7 @@ JSString* InterfaceObjectToString(JSContext* aCx, JS::Handle<JSObject*> aObject,
 
   const DOMIfaceAndProtoJSClass* ifaceAndProtoJSClass =
       DOMIfaceAndProtoJSClass::FromJSClass(clasp);
-  return JS_NewStringCopyZ(aCx, ifaceAndProtoJSClass->mToString);
+  return JS_NewStringCopyZ(aCx, ifaceAndProtoJSClass->mFunToString);
 }
 
 bool Constructor(JSContext* cx, unsigned argc, JS::Value* vp) {

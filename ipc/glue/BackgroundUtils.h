@@ -65,10 +65,10 @@ class PrincipalInfo;
 /**
  * Convert a PrincipalInfo to an nsIPrincipal.
  *
- * MUST be called on the main thread only.
+ * MUST be called on the main thread.
  */
-already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
-    const PrincipalInfo& aPrincipalInfo, nsresult* aOptionalResult = nullptr);
+Result<nsCOMPtr<nsIPrincipal>, nsresult> PrincipalInfoToPrincipal(
+    const PrincipalInfo& aPrincipalInfo);
 
 /**
  * Convert an nsIPrincipal to a PrincipalInfo.

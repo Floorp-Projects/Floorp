@@ -89,29 +89,6 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
   return YES;
 }
 
-- (NSArray*)children {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  return [[super children]
-      filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(mozAccessible* child,
-                                                                        NSDictionary* bindings) {
-        AccessibleWrap* childAcc = [child getGeckoAccessible];
-        if (childAcc) {
-          if (((childAcc->VisibilityState() & states::INVISIBLE) != 0)) {
-            // Filter out all invisible XUL popup menus, dialogs, alerts and panes. Invisible
-            // elements in our browser chrome are unique in the sense that we want screen readers to
-            // ignore them. These only exist in the top level process so we don't do a similar check
-            // on proxies.
-            return NO;
-          }
-        }
-
-        return YES;
-      }]];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
 // this will return our parallell NSView. see mozDocAccessible.h
 - (id)representedView {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;

@@ -17,6 +17,21 @@ let processActorOptions = {
   },
 };
 
+function promiseNotification(aNotification) {
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  let notificationResolve;
+  let notificationObserver = function observer() {
+    notificationResolve();
+    Services.obs.removeObserver(notificationObserver, aNotification);
+  };
+  return new Promise(resolve => {
+    notificationResolve = resolve;
+    Services.obs.addObserver(notificationObserver, aNotification);
+  });
+}
+
 function declTest(name, cfg) {
   let { url = "about:blank", remoteTypes, fission, test } = cfg;
 

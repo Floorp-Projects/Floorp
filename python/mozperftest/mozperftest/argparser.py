@@ -15,9 +15,9 @@ except ImportError:
     build_obj = None
     conditions = None
 
-from mozperftest.system import get_layers as system_layers
-from mozperftest.browser import get_layers as browser_layers
-from mozperftest.metrics import get_layers as metrics_layers
+from mozperftest.system import get_layers as system_layers  # noqa
+from mozperftest.browser import get_layers as browser_layers  # noqa
+from mozperftest.metrics import get_layers as metrics_layers  # noqa
 
 FLAVORS = ["script", "doc"]
 
@@ -46,6 +46,22 @@ class Options:
         },
         "--hooks": {"type": str, "default": "", "help": "Python hooks"},
         "--verbose": {"action": "store_true", "default": False, "help": "Verbose mode"},
+        "--push-to-try": {
+            "action": "store_true",
+            "default": False,
+            "help": "Pushin the test to try",
+        },
+        "--try-platform": {
+            "type": str,
+            "default": "g5",
+            "help": "Platform to use on try",
+            "choices": ["g5", "pixel2", "linux", "mac", "win"],
+        },
+        "--on-try": {
+            "action": "store_true",
+            "default": False,
+            "help": "Running the test on try",
+        },
     }
 
     args = copy.deepcopy(general_args)

@@ -154,10 +154,6 @@ class WidgetRenderingContext;
   // beginGestureWithEvent and endGestureWithEvent sequence. We
   // discard the spurious gesture event so as not to confuse Gecko.
   //
-  // mCumulativeMagnification keeps track of the total amount of
-  // magnification peformed during a magnify gesture so that we can
-  // send that value with the final MozMagnifyGesture event.
-  //
   // mCumulativeRotation keeps track of the total amount of rotation
   // performed during a rotate gesture so we can send that value with
   // the final MozRotateGesture event.
@@ -167,7 +163,6 @@ class WidgetRenderingContext;
     eGestureState_MagnifyGesture,
     eGestureState_RotateGesture
   } mGestureState;
-  float mCumulativeMagnification;
   float mCumulativeRotation;
 
 #ifdef __LP64__

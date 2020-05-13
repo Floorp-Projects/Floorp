@@ -304,19 +304,21 @@ void AssertLoadingPrincipalAndClientInfoMatch(
   }
 
   // Perform a fast comparison for most principal checks.
-  nsCOMPtr<nsIPrincipal> clientPrincipal(aLoadingClientInfo.GetPrincipal());
-  if (aLoadingPrincipal->Equals(clientPrincipal)) {
-    return;
+  auto clientPrincipalOrErr(aLoadingClientInfo.GetPrincipal());
+  if (clientPrincipalOrErr.isOk()) {
+    nsCOMPtr<nsIPrincipal> clientPrincipal = clientPrincipalOrErr.unwrap();
+    if (aLoadingPrincipal->Equals(clientPrincipal)) {
+      return;
+    }
+    // Fall back to a slower origin equality test to support null principals.
+    nsAutoCString loadingOrigin;
+    MOZ_ALWAYS_SUCCEEDS(aLoadingPrincipal->GetOrigin(loadingOrigin));
+
+    nsAutoCString clientOrigin;
+    MOZ_ALWAYS_SUCCEEDS(clientPrincipal->GetOrigin(clientOrigin));
+
+    MOZ_DIAGNOSTIC_ASSERT(loadingOrigin == clientOrigin);
   }
-
-  // Fall back to a slower origin equality test to support null principals.
-  nsAutoCString loadingOrigin;
-  MOZ_ALWAYS_SUCCEEDS(aLoadingPrincipal->GetOrigin(loadingOrigin));
-
-  nsAutoCString clientOrigin;
-  MOZ_ALWAYS_SUCCEEDS(clientPrincipal->GetOrigin(clientOrigin));
-
-  MOZ_DIAGNOSTIC_ASSERT(loadingOrigin == clientOrigin);
 #endif
 }
 

@@ -629,6 +629,46 @@ pub const SUPPORTED_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
     CKA_EC_PARAMS,
 ];
 
+// Given a pointer to a CERT_CHAIN_CONTEXT, enumerates each chain in the context and each element
+// in each chain to gather every CERT_CONTEXT pointed to by the CERT_CHAIN_CONTEXT.
+// https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/ns-wincrypt-cert_chain_context says
+// that the 0th element of the 0th chain will be the end-entity certificate. This certificate (if
+// present), will be the 0th element of the returned Vec.
+fn gather_cert_contexts(cert_chain_context: *const CERT_CHAIN_CONTEXT) -> Vec<*const CERT_CONTEXT> {
+    let mut cert_contexts = Vec::new();
+    if cert_chain_context.is_null() {
+        return cert_contexts;
+    }
+    let cert_chain_context = unsafe { &*cert_chain_context };
+    let cert_chains = unsafe {
+        std::slice::from_raw_parts(
+            cert_chain_context.rgpChain,
+            cert_chain_context.cChain as usize,
+        )
+    };
+    for cert_chain in cert_chains {
+        // First dereference the borrow.
+        let cert_chain = *cert_chain;
+        if cert_chain.is_null() {
+            continue;
+        }
+        // Then dereference the pointer.
+        let cert_chain = unsafe { &*cert_chain };
+        let chain_elements = unsafe {
+            std::slice::from_raw_parts(cert_chain.rgpElement, cert_chain.cElement as usize)
+        };
+        for chain_element in chain_elements {
+            let chain_element = *chain_element; // dereference borrow
+            if chain_element.is_null() {
+                continue;
+            }
+            let chain_element = unsafe { &*chain_element }; // dereference pointer
+            cert_contexts.push(chain_element.pCertContext);
+        }
+    }
+    cert_contexts
+}
+
 /// Attempts to enumerate certificates with private keys exposed by the OS. Currently only looks in
 /// the "My" cert store of the current user. In the future this may look in more locations.
 pub fn list_objects() -> Vec<Object> {
@@ -656,31 +696,62 @@ pub fn list_objects() -> Vec<Object> {
         error!("CertOpenStore failed");
         return objects;
     }
-    let mut cert_context: PCCERT_CONTEXT = std::ptr::null_mut();
+    let find_params = CERT_CHAIN_FIND_ISSUER_PARA {
+        cbSize: std::mem::size_of::<CERT_CHAIN_FIND_ISSUER_PARA>() as u32,
+        pszUsageIdentifier: std::ptr::null(),
+        dwKeySpec: 0,
+        dwAcquirePrivateKeyFlags: 0,
+        cIssuer: 0,
+        rgIssuer: std::ptr::null_mut(),
+        pfnFindCallback: None,
+        pvFindArg: std::ptr::null_mut(),
+        pdwIssuerChainIndex: std::ptr::null_mut(),
+        pdwIssuerElementIndex: std::ptr::null_mut(),
+    };
+    let mut cert_chain_context: PCCERT_CHAIN_CONTEXT = std::ptr::null_mut();
     loop {
-        cert_context = unsafe {
-            CertFindCertificateInStore(
+        // CertFindChainInStore finds all certificates with private keys in the store. It also
+        // attempts to build a verified certificate chain to a trust anchor for each certificate.
+        // We gather and hold onto these extra certificates so that gecko can use them when
+        // filtering potential client certificates according to the acceptable CAs list sent by
+        // servers when they request client certificates.
+        cert_chain_context = unsafe {
+            CertFindChainInStore(
                 *store,
                 X509_ASN_ENCODING,
-                CERT_FIND_HAS_PRIVATE_KEY,
-                CERT_FIND_ANY,
-                std::ptr::null_mut(),
-                cert_context,
+                CERT_CHAIN_FIND_BY_ISSUER_CACHE_ONLY_FLAG
+                    | CERT_CHAIN_FIND_BY_ISSUER_CACHE_ONLY_URL_FLAG,
+                CERT_CHAIN_FIND_BY_ISSUER,
+                &find_params as *const CERT_CHAIN_FIND_ISSUER_PARA as *const winapi::ctypes::c_void,
+                cert_chain_context,
             )
         };
-        if cert_context.is_null() {
+        if cert_chain_context.is_null() {
             break;
         }
-        let cert = match Cert::new(cert_context) {
-            Ok(cert) => cert,
-            Err(()) => continue,
+        let cert_contexts = gather_cert_contexts(cert_chain_context);
+        // The 0th CERT_CONTEXT is the end-entity (i.e. the certificate with the private key we're
+        // after).
+        match cert_contexts.get(0) {
+            Some(cert_context) => {
+                let cert = match Cert::new(*cert_context) {
+                    Ok(cert) => cert,
+                    Err(()) => continue,
+                };
+                let key = match Key::new(*cert_context) {
+                    Ok(key) => key,
+                    Err(()) => continue,
+                };
+                objects.push(Object::Cert(cert));
+                objects.push(Object::Key(key));
+            }
+            None => {}
         };
-        let key = match Key::new(cert_context) {
-            Ok(key) => key,
-            Err(()) => continue,
-        };
-        objects.push(Object::Cert(cert));
-        objects.push(Object::Key(key));
+        for cert_context in cert_contexts.iter().skip(1) {
+            if let Ok(cert) = Cert::new(*cert_context) {
+                objects.push(Object::Cert(cert));
+            }
+        }
     }
     objects
 }

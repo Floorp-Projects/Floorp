@@ -199,9 +199,11 @@ bool WarpCacheIRTranspiler::emitGuardSpecificAtom(StringOperandId strId,
   MDefinition* str = getOperand(strId);
   JSString* expected = stringStubField(expectedOffset);
 
-  // TODO: Improved code-gen and folding.
+  // TODO: Improve code-gen.
   auto* ins = MGuardSpecificAtom::New(alloc(), str, &expected->asAtom());
   add(ins);
+
+  setOperand(strId, ins);
   return true;
 }
 
@@ -296,6 +298,8 @@ bool WarpCacheIRTranspiler::emitGuardIsNullOrUndefined(ValOperandId inputId) {
 
   auto* ins = MGuardNullOrUndefined::New(alloc(), input);
   add(ins);
+
+  setOperand(inputId, ins);
   return true;
 }
 
@@ -307,6 +311,7 @@ bool WarpCacheIRTranspiler::emitGuardIsNull(ValOperandId inputId) {
 
   auto* ins = MGuardValue::New(alloc(), input, NullValue());
   add(ins);
+  setOperand(inputId, ins);
   return true;
 }
 
@@ -318,6 +323,7 @@ bool WarpCacheIRTranspiler::emitGuardIsUndefined(ValOperandId inputId) {
 
   auto* ins = MGuardValue::New(alloc(), input, UndefinedValue());
   add(ins);
+  setOperand(inputId, ins);
   return true;
 }
 

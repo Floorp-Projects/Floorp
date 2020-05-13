@@ -1805,6 +1805,59 @@ nsISerialEventTarget* GetMainThreadSerialEventTarget();
 // in practice.
 size_t GetNumberOfProcessors();
 
+/**
+ * A helper class to log tasks dispatch and run with "MOZ_LOG=events:1".  The
+ * output is more machine readable and creates a link between dispatch and run.
+ *
+ * Usage example for the concrete template type nsIRunnable.
+ * To log a dispatch, which means putting an event to a queue:
+ *   LogRunnable::LogDispatch(event);
+ *   theQueue.putEvent(event);
+ *
+ * To log execution (running) of the event:
+ *   nsCOMPtr<nsIRunnable> event = theQueue.popEvent();
+ *   {
+ *     LogRunnable::Run log(event);
+ *     event->Run();
+ *     event = null;  // to include the destructor code in the span
+ *   }
+ *
+ * The class is a template so that we can support various specific super-types
+ * of tasks in the future.  We can't use void* because it may cast differently
+ * and tracking the pointer in logs would then be impossible.
+ */
+template <typename T>
+class LogTaskBase {
+ public:
+  LogTaskBase() = delete;
+
+  // Adds a simple log about dispatch of this runnable.
+  static void LogDispatch(T* aEvent);
+
+  // This is designed to surround a call to `Run()` or any code representing
+  // execution of the task body.
+  // The constructor adds a simple log about start of the runnable execution and
+  // the destructor adds a log about ending the execution.
+  class MOZ_RAII Run {
+   public:
+    Run() = delete;
+    explicit Run(T* aEvent, bool aWillRunAgain = false);
+    ~Run();
+
+    // When this is called, the log in this RAII dtor will only say
+    // "interrupted" expecting that the event will run again.
+    void WillRunAgain() { mWillRunAgain = true; }
+
+   private:
+    T* mEvent;
+    bool mWillRunAgain = false;
+  };
+};
+
+typedef LogTaskBase<nsIRunnable> LogRunnable;
+// If you add new types don't forget to add:
+// `template class LogTaskBase<YourType>;` to nsThreadUtils.cpp
+
 }  // namespace mozilla
 
 #endif  // nsThreadUtils_h__

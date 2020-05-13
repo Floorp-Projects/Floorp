@@ -4,7 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import sys
 import mozunit
-from mozperftest.utils import host_platform, silence
+import mock
+import pytest
+from pathlib import Path
+
+from mozperftest.utils import host_platform, silence, download_file
+from mozperftest.tests.support import temp_file, requests_content
 
 
 def test_silence():
@@ -23,6 +28,24 @@ def test_host_platform():
             assert "64" in plat
         else:
             assert "64" not in plat
+
+
+def get_raise(*args, **kw):
+    raise Exception()
+
+
+@mock.patch("mozperftest.utils.requests.get", new=get_raise)
+def test_download_file_fails():
+    with temp_file() as target, pytest.raises(Exception):
+        download_file("http://I don't exist", Path(target), retry_sleep=0.1)
+
+
+@mock.patch("mozperftest.utils.requests.get", new=requests_content())
+def test_download_file_success():
+    with temp_file() as target:
+        download_file("http://content", Path(target), retry_sleep=0.1)
+        with open(target) as f:
+            assert f.read() == "some content"
 
 
 if __name__ == "__main__":

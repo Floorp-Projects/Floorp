@@ -6,9 +6,9 @@
 
 #include "builtin/DataViewObject.h"
 
-#include "mozilla/Alignment.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/WrappingOperations.h"
 
 #include <algorithm>
@@ -265,75 +265,21 @@ SharedMem<uint8_t*> DataViewObject::getDataPointer(JSContext* cx,
   return obj->dataPointerEither().cast<uint8_t*>() + uint32_t(offset);
 }
 
-static inline bool needToSwapBytes(bool littleEndian) {
-#if MOZ_LITTLE_ENDIAN()
-  return !littleEndian;
-#else
-  return littleEndian;
-#endif
+template <typename T>
+static inline std::enable_if_t<sizeof(T) != 1> SwapBytes(T* value,
+                                                         bool isLittleEndian) {
+  if (isLittleEndian) {
+    mozilla::NativeEndian::swapToLittleEndianInPlace(value, 1);
+  } else {
+    mozilla::NativeEndian::swapToBigEndianInPlace(value, 1);
+  }
 }
 
-static inline uint8_t swapBytes(uint8_t x) { return x; }
-
-static inline uint16_t swapBytes(uint16_t x) {
-  return ((x & 0xff) << 8) | (x >> 8);
+template <typename T>
+static inline std::enable_if_t<sizeof(T) == 1> SwapBytes(T* value,
+                                                         bool isLittleEndian) {
+  // mozilla::NativeEndian doesn't support int8_t/uint8_t types.
 }
-
-static inline uint32_t swapBytes(uint32_t x) {
-  return ((x & 0xff) << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) |
-         ((x & 0xff000000) >> 24);
-}
-
-static inline uint64_t swapBytes(uint64_t x) {
-  uint32_t a = x & UINT32_MAX;
-  uint32_t b = x >> 32;
-  return (uint64_t(swapBytes(a)) << 32) | swapBytes(b);
-}
-
-template <typename DataType>
-struct DataToRepType {
-  using result = DataType;
-};
-template <>
-struct DataToRepType<int8_t> {
-  using result = uint8_t;
-};
-template <>
-struct DataToRepType<uint8_t> {
-  using result = uint8_t;
-};
-template <>
-struct DataToRepType<int16_t> {
-  using result = uint16_t;
-};
-template <>
-struct DataToRepType<uint16_t> {
-  using result = uint16_t;
-};
-template <>
-struct DataToRepType<int32_t> {
-  using result = uint32_t;
-};
-template <>
-struct DataToRepType<uint32_t> {
-  using result = uint32_t;
-};
-template <>
-struct DataToRepType<int64_t> {
-  using result = uint64_t;
-};
-template <>
-struct DataToRepType<uint64_t> {
-  using result = uint64_t;
-};
-template <>
-struct DataToRepType<float> {
-  using result = uint32_t;
-};
-template <>
-struct DataToRepType<double> {
-  using result = uint64_t;
-};
 
 static inline void Memcpy(uint8_t* dest, uint8_t* src, size_t nbytes) {
   memcpy(dest, src, nbytes);
@@ -351,28 +297,25 @@ static inline void Memcpy(SharedMem<uint8_t*> dest, uint8_t* src,
 
 template <typename DataType, typename BufferPtrType>
 struct DataViewIO {
-  using ReadWriteType = typename DataToRepType<DataType>::result;
+  using ReadWriteType =
+      typename mozilla::UnsignedStdintTypeForSize<sizeof(DataType)>::Type;
 
   static constexpr auto alignMask =
-      std::min<size_t>(MOZ_ALIGNOF(void*), sizeof(DataType)) - 1;
+      std::min<size_t>(alignof(void*), sizeof(DataType)) - 1;
 
   static void fromBuffer(DataType* dest, BufferPtrType unalignedBuffer,
-                         bool wantSwap) {
+                         bool isLittleEndian) {
     MOZ_ASSERT((reinterpret_cast<uintptr_t>(dest) & alignMask) == 0);
     Memcpy((uint8_t*)dest, unalignedBuffer, sizeof(ReadWriteType));
-    if (wantSwap) {
-      ReadWriteType* rwDest = reinterpret_cast<ReadWriteType*>(dest);
-      *rwDest = swapBytes(*rwDest);
-    }
+    ReadWriteType* rwDest = reinterpret_cast<ReadWriteType*>(dest);
+    SwapBytes(rwDest, isLittleEndian);
   }
 
   static void toBuffer(BufferPtrType unalignedBuffer, const DataType* src,
-                       bool wantSwap) {
+                       bool isLittleEndian) {
     MOZ_ASSERT((reinterpret_cast<uintptr_t>(src) & alignMask) == 0);
     ReadWriteType temp = *reinterpret_cast<const ReadWriteType*>(src);
-    if (wantSwap) {
-      temp = swapBytes(temp);
-    }
+    SwapBytes(&temp, isLittleEndian);
     Memcpy(unalignedBuffer, (uint8_t*)&temp, sizeof(ReadWriteType));
   }
 };
@@ -410,11 +353,11 @@ bool DataViewObject::read(JSContext* cx, Handle<DataViewObject*> obj,
 
   // Step 13.
   if (isSharedMemory) {
-    DataViewIO<NativeType, SharedMem<uint8_t*>>::fromBuffer(
-        val, data, needToSwapBytes(isLittleEndian));
+    DataViewIO<NativeType, SharedMem<uint8_t*>>::fromBuffer(val, data,
+                                                            isLittleEndian);
   } else {
-    DataViewIO<NativeType, uint8_t*>::fromBuffer(
-        val, data.unwrapUnshared(), needToSwapBytes(isLittleEndian));
+    DataViewIO<NativeType, uint8_t*>::fromBuffer(val, data.unwrapUnshared(),
+                                                 isLittleEndian);
   }
   return true;
 }
@@ -525,11 +468,11 @@ bool DataViewObject::write(JSContext* cx, Handle<DataViewObject*> obj,
 
   // Step 14.
   if (isSharedMemory) {
-    DataViewIO<NativeType, SharedMem<uint8_t*>>::toBuffer(
-        data, &value, needToSwapBytes(isLittleEndian));
+    DataViewIO<NativeType, SharedMem<uint8_t*>>::toBuffer(data, &value,
+                                                          isLittleEndian);
   } else {
     DataViewIO<NativeType, uint8_t*>::toBuffer(data.unwrapUnshared(), &value,
-                                               needToSwapBytes(isLittleEndian));
+                                               isLittleEndian);
   }
   return true;
 }

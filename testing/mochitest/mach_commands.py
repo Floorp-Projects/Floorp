@@ -284,6 +284,10 @@ class MachCommands(MachCommandBase):
         from mozlog.handlers import StreamHandler
         from moztest.resolve import get_suite_definition
 
+        # TODO: This is only strictly necessary while mochitest is using Python
+        # 2 and can be removed once the command is migrated to Python 3.
+        self._activate_virtualenv()
+
         buildapp = None
         for app in SUPPORTED_APPS:
             if conditions.is_buildapp_in(self, apps=[app]):

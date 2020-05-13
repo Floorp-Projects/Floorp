@@ -25,12 +25,6 @@
   --theme-focus-outline: 1px dotted var(--theme-focus-outline-color);
   --theme-focus-box-shadow-textbox: 0 0 0 1px var(--theme-textbox-box-shadow);
 
-  --toolbarbutton-focus-background: var(--theme-selection-focus-background);
-  --toolbarbutton-focus-color: var(--theme-selection-focus-color);
-  --toolbarbutton-checked-background: var(--theme-selection-background);
-  --toolbarbutton-checked-color: var(--theme-selection-color);
-  --toolbarbutton-checked-focus-background: var(--blue-60);
-
   /* The photon animation curve */
   --animation-curve: cubic-bezier(0.07, 0.95, 0, 1);
 
@@ -120,8 +114,13 @@
   --theme-toolbar-separator: var(--grey-90-a10);
 
   /* Toolbar buttons */
-  --toolbarbutton-background: var(--theme-toolbar-background);
-  --toolbarbutton-hover-background: var(--theme-toolbar-hover);
+  --toolbarbutton-background: var(--grey-10);
+  --toolbarbutton-hover-background: var(--grey-20);
+  --toolbarbutton-focus-background: var(--grey-20);
+  --toolbarbutton-focus-color: var(--grey-70);
+  --toolbarbutton-checked-background: var(--blue-55);
+  --toolbarbutton-checked-focus-background: var(--blue-60);
+  --toolbarbutton-checked-color: #ffffff;
 
   /* Buttons */
   --theme-button-background: rgba(12, 12, 13, 0.05);
@@ -135,7 +134,6 @@
   --theme-selection-background: var(--blue-55);
   --theme-selection-background-hover: #f0f9fe;
   --theme-selection-focus-background: var(--toolbarbutton-hover-background);
-  --theme-selection-focus-color: var(--grey-70);
   --theme-selection-color: #ffffff;
 
   /* Border color that splits the toolbars/panels/headers. */
@@ -243,6 +241,11 @@
   /* Toolbar buttons */
   --toolbarbutton-background: var(--grey-70);
   --toolbarbutton-hover-background: var(--grey-70);
+  --toolbarbutton-focus-background: var(--grey-60);
+  --toolbarbutton-focus-color: var(--grey-30);
+  --toolbarbutton-checked-background: #204e8a;
+  --toolbarbutton-checked-focus-background: var(--blue-60);
+  --toolbarbutton-checked-color: #ffffff;
 
   /* Buttons */
   --theme-button-background: rgba(249, 249, 250, 0.1);
@@ -256,7 +259,6 @@
   --theme-selection-background: #204e8a;
   --theme-selection-background-hover: #353b48;
   --theme-selection-focus-background: var(--grey-60);
-  --theme-selection-focus-color: var(--grey-30);
   --theme-selection-color: #ffffff;
 
   /* Border color that splits the toolbars/panels/headers. */

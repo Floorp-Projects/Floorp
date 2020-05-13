@@ -72,7 +72,7 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct {
 
   nsPeekOffsetStruct(
       nsSelectionAmount aAmount, nsDirection aDirection, int32_t aStartOffset,
-      nsPoint aDesiredPos, bool aJumpLines, bool aScrollViewStop,
+      nsPoint aDesiredCaretPos, bool aJumpLines, bool aScrollViewStop,
       bool aIsKeyboardSelect, bool aVisual, bool aExtend,
       ForceEditableRegion = ForceEditableRegion::No,
       mozilla::EWordMovementType aWordMovementType = mozilla::eDefaultBehavior,
@@ -111,7 +111,7 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct {
   // depending on line's writing mode)
   //
   // Used with: eSelectLine.
-  const nsPoint mDesiredPos;
+  const nsPoint mDesiredCaretPos;
 
   // An enum that determines whether to prefer the start or end of a word or to
   // use the default beahvior, which is a combination of direction and the
@@ -820,7 +820,7 @@ class nsFrameSelection final {
   mozilla::Result<nsPeekOffsetStruct, nsresult> PeekOffsetForCaretMove(
       nsDirection aDirection, bool aContinueSelection,
       const nsSelectionAmount aAmount, CaretMovementStyle aMovementStyle,
-      const nsPoint& aDesiredPos) const;
+      const nsPoint& aDesiredCaretPos) const;
 
   /**
    * CreateRangeExtendedToSomewhere() is common method to implement
@@ -856,12 +856,8 @@ class nsFrameSelection final {
     }
   }
 
-  nsresult FetchDesiredPos(
-      nsPoint& aDesiredPos);  // the position requested by the Key Handling for
-                              // up down
-  void InvalidateDesiredPos();  // do not listen to mDesiredPos.mValue you must
-                                // get another.
-  void SetDesiredPos(nsPoint aPos);  // set the mDesiredPos.mValue
+  void InvalidateDesiredCaretPos();  // do not listen to mDesiredCaretPos.mValue
+                                     // you must get another.
 
   bool IsBatching() const { return mBatching.mCounter > 0; }
 
@@ -1003,13 +999,24 @@ class nsFrameSelection final {
 
   nsBidiLevel mKbdBidiLevel = NSBIDI_LTR;
 
-  // TODO: could presumably be transformed to a `mozilla::Maybe`.
-  struct DesiredPos {
-    nsPoint mValue;
+  class DesiredCaretPos {
+   public:
+    // the position requested by the Key Handling for up down
+    nsresult FetchPos(nsPoint& aDesiredCaretPos,
+                      const mozilla::PresShell& aPresShell,
+                      mozilla::dom::Selection& aNormalSelection) const;
+
+    void Set(const nsPoint& aPos);
+
+    void Invalidate();
+
     bool mIsSet = false;
+
+   private:
+    nsPoint mValue;
   };
 
-  DesiredPos mDesiredPos;
+  DesiredCaretPos mDesiredCaretPos;
 
   struct DelayedMouseEvent {
     bool mIsValid = false;

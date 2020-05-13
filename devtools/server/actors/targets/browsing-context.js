@@ -790,12 +790,8 @@ const browsingContextTargetPrototype = {
 
       // In child processes, we have new root docshells,
       // let's watch them and all their child docshells.
-      if (this._isRootDocShell(docShell)) {
-        if (this.watchNewDocShells) {
-          this._progressListener.watch(docShell);
-        }
-      } else if (this._progressListener.isParentWatched(docShell)) {
-        docShell.watchedByDevtools = true;
+      if (this._isRootDocShell(docShell) && this.watchNewDocShells) {
+        this._progressListener.watch(docShell);
       }
       this._notifyDocShellsUpdate([docShell]);
     });
@@ -1616,12 +1612,10 @@ DebuggerProgressListener.prototype = {
       this._knownWindowIDs.set(getWindowID(win), win);
     }
 
-    // The watchedByDevtools flag is set on each docshell this target is
-    // associated with. This enables Gecko behavior tied to this flag, such as
-    // reporting the contents of HTML loaded in the docshells, or capturing
-    // stacks for the network monitor.
-    docShell.watchedByDevtools = true;
-    getChildDocShells(docShell).forEach(d => (d.watchedByDevtools = true));
+    // The `watchedByDevTools` enables gecko behavior tied to this flag, such as:
+    //  - reporting the contents of HTML loaded in the docshells,
+    //  - or capturing stacks for the network monitor.
+    docShell.browsingContext.watchedByDevTools = true;
   },
 
   unwatch(docShell) {
@@ -1654,19 +1648,7 @@ DebuggerProgressListener.prototype = {
       this._knownWindowIDs.delete(getWindowID(win));
     }
 
-    docShell.watchedByDevtools = false;
-    getChildDocShells(docShell).forEach(d => (d.watchedByDevtools = false));
-  },
-
-  isParentWatched(docShell) {
-    let parent = docShell.parent;
-    while (parent) {
-      if (this._watchedDocShells.has(parent.domWindow)) {
-        return true;
-      }
-      parent = parent.parent;
-    }
-    return false;
+    docShell.browsingContext.watchedByDevTools = false;
   },
 
   _getWindowsInDocShell(docShell) {

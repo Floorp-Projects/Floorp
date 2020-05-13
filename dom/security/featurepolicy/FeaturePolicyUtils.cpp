@@ -165,6 +165,7 @@ bool FeaturePolicyUtils::IsFeatureUnsafeAllowedAll(
   MOZ_ASSERT(policy);
 
   return policy->HasFeatureUnsafeAllowsAll(aFeatureName) &&
+         !policy->IsSameOriginAsSrc(aDocument->NodePrincipal()) &&
          !policy->AllowsFeatureExplicitlyInAncestorChain(
              aFeatureName, policy->DefaultOrigin()) &&
          !IsSameOriginAsTop(aDocument);

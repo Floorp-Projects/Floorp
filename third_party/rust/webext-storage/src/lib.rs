@@ -12,18 +12,9 @@ mod schema;
 pub mod store;
 mod sync;
 
-// This is what we roughly expect the "bridge" used by desktop to do.
-// It's primarily here to avoid dead-code warnings (but I don't want to disable
-// those warning, as stuff that remains after this is suspect!)
-pub fn delme_demo_usage() -> error::Result<()> {
-    use serde_json::json;
+// We publish some constants from non-public modules.
+pub use sync::STORAGE_VERSION;
 
-    let store = store::Store::new("webext-storage.db")?;
-    store.set("ext-id", json!({}))?;
-    store.get("ext-id", json!({}))?;
-    store.remove("ext-id", json!({}))?;
-    store.clear("ext-id")?;
-    // and it might even...
-    store.wipe_all()?;
-    Ok(())
-}
+pub use api::SYNC_MAX_ITEMS;
+pub use api::SYNC_QUOTA_BYTES;
+pub use api::SYNC_QUOTA_BYTES_PER_ITEM;

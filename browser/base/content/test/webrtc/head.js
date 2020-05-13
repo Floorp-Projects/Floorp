@@ -421,6 +421,7 @@ async function getMediaCaptureState() {
       let hasScreenShare = {};
       let hasWindowShare = {};
       let hasBrowserShare = {};
+      let devices = {};
       mediaManagerService.mediaCaptureWindowState(
         content,
         hasCamera,
@@ -428,6 +429,7 @@ async function getMediaCaptureState() {
         hasScreenShare,
         hasWindowShare,
         hasBrowserShare,
+        devices,
         false
       );
 

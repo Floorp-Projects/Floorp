@@ -513,10 +513,10 @@ extern "C" fn C_FindObjectsInit(
         return CKR_ARGUMENTS_BAD;
     }
     let mut attrs = Vec::new();
-    info!("C_FindObjectsInit:");
+    trace!("C_FindObjectsInit:");
     for i in 0..ulCount {
         let attr = unsafe { &*pTemplate.offset(i as isize) };
-        info!("  {:?}", attr);
+        trace!("  {:?}", attr);
         let slice = unsafe {
             std::slice::from_raw_parts(attr.pValue as *const u8, attr.ulValueLen as usize)
         };

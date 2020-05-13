@@ -714,8 +714,7 @@ bool FunctionScriptEmitter::initScript() {
 
   if (bce_->emitterMode == BytecodeEmitter::LazyFunction) {
     BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
-    RootedScript script(
-        cx, JSScript::CastFromLazy(funbox_->function()->baseScript()));
+    RootedScript script(cx, JSScript::CastFromLazy(bce_->compilationInfo.lazy));
 
     if (!JSScript::fullyInitFromStencil(cx, bce_->compilationInfo, script,
                                         stencil)) {

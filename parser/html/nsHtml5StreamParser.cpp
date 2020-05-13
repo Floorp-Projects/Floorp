@@ -310,8 +310,9 @@ void nsHtml5StreamParser::FeedDetector(Span<const uint8_t> aBuffer,
 void nsHtml5StreamParser::SetViewSourceTitle(nsIURI* aURL) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsIDocShell* docshell = mExecutor->GetDocument()->GetDocShell();
-  if (docshell && docshell->GetWatchedByDevtools()) {
+  BrowsingContext* browsingContext =
+      mExecutor->GetDocument()->GetBrowsingContext();
+  if (browsingContext && browsingContext->WatchedByDevTools()) {
     mURIToSendToDevtools = aURL;
 
     nsID uuid;

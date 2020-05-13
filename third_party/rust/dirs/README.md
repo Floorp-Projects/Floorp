@@ -26,7 +26,7 @@ The library provides the location of these directories by leveraging the mechani
 This library is written in Rust, and supports Linux, Redox, macOS and Windows.
 Other platforms are also supported; they use the Linux conventions.
 
-The minimal required version of Rust is 1.13 on Linux and Windows, and 1.20 on macOS.
+The minimal required version of Rust is 1.13.
 
 It's mid-level sister library, _directories_, is available for Rust ([directories-rs](https://github.com/soc/directories-rs))
 and on the JVM ([directories-jvm](https://github.com/soc/directories-jvm)).
@@ -38,7 +38,7 @@ and on the JVM ([directories-jvm](https://github.com/soc/directories-jvm)).
 Add the library as a dependency to your project by inserting
 
 ```toml
-dirs = "1.0"
+dirs = "2.0"
 ```
 
 into the `[dependencies]` section of your Cargo.toml file.
@@ -155,9 +155,20 @@ The following commands will build this library on Linux, macOS and Windows:
 
 ```
 cargo build --target=x86_64-unknown-linux-gnu
-cargo build --target=x86_64-apple-darwin
 cargo build --target=x86_64-pc-windows-gnu
+cargo build --target=x86_64-apple-darwin
+cargo build --target=x86_64-unknown-redox
 ```
+
+## Changelog
+
+### 2
+
+The behavior of deactivated, missing or invalid [_XDG User Dirs_](https://www.freedesktop.org/wiki/Software/xdg-user-dirs/)
+entries on Linux has been improved (contributed by @tmiasko, thank you!):
+
+- Version 1 returned the user's home directory (`Some($HOME)`) for such faulty entries, except for a faulty `XDG_DESKTOP_DIR` entry which returned (`Some($HOME/Desktop)`).
+- Version 2 returns `None` for such entries.
 
 ## License
 

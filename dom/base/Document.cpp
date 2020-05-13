@@ -3485,6 +3485,7 @@ nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
   if (parentPolicy) {
     // Let's inherit the policy from the parent HTMLIFrameElement if it exists.
     mFeaturePolicy->InheritPolicy(parentPolicy);
+    mFeaturePolicy->SetSrcOrigin(parentPolicy->GetSrcOrigin());
   }
 
   // We don't want to parse the http Feature-Policy header if this pref is off.
@@ -3963,7 +3964,7 @@ void Document::OnParsingCompleted() {
   }
 }
 
-void Document::InitialTranslationCompleted() {
+void Document::InitialTranslationCompleted(bool aL10nCached) {
   if (mDocumentL10n && mDocumentL10n->mBlockingLayout) {
     // This means we blocked the load event in LocalizationLinkAdded.  It's
     // important that the load blocker removal here be async, because our caller
@@ -3977,7 +3978,7 @@ void Document::InitialTranslationCompleted() {
 
   nsXULPrototypeDocument* proto = GetPrototype();
   if (proto) {
-    proto->SetIsL10nCached();
+    proto->SetIsL10nCached(aL10nCached);
   }
 }
 

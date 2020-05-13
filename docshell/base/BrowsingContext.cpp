@@ -239,7 +239,6 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
 
   context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE);
-  context->mFields.SetWithoutSyncing<IDX_WatchedByDevtools>(false);
 
   if (aOpener && aOpener->SameOriginWithTop()) {
     // We inherit the opener policy if there is a creator and if the creator's
@@ -1915,10 +1914,27 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
-bool BrowsingContext::CanSet(FieldIndex<IDX_WatchedByDevtools>,
-                             const bool& aWatchedByDevtools,
+// We map `watchedByDevTools` WebIDL attribute to `watchedByDevToolsInternal`
+// BC field. And we map it to the top level BrowsingContext.
+bool BrowsingContext::WatchedByDevTools() {
+  return Top()->GetWatchedByDevToolsInternal();
+}
+
+// Enforce that the watchedByDevTools BC field can only be set on the top level
+// Browsing Context.
+bool BrowsingContext::CanSet(FieldIndex<IDX_WatchedByDevToolsInternal>,
+                             const bool& aWatchedByDevTools,
                              ContentParent* aSource) {
-  return CheckOnlyOwningProcessCanSet(aSource);
+  return IsTop();
+}
+void BrowsingContext::SetWatchedByDevTools(bool aWatchedByDevTools,
+                                           ErrorResult& aRv) {
+  if (!IsTop()) {
+    aRv.ThrowInvalidModificationError(
+        "watchedByDevTools can only be set on top BrowsingContext");
+    return;
+  }
+  SetWatchedByDevToolsInternal(aWatchedByDevTools);
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_DefaultLoadFlags>,

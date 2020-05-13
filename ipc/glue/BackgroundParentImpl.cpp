@@ -864,10 +864,14 @@ class CheckPrincipalRunnable final : public Runnable {
 
     NullifyContentParentRAII raii(mContentParent);
 
-    nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
+    auto principalOrErr = PrincipalInfoToPrincipal(mPrincipalInfo);
+    if (NS_WARN_IF(principalOrErr.isErr())) {
+      mContentParent->KillHard(
+          "BroadcastChannel killed: PrincipalInfoToPrincipal failed.");
+    }
 
     nsAutoCString origin;
-    nsresult rv = principal->GetOrigin(origin);
+    nsresult rv = principalOrErr.unwrap()->GetOrigin(origin);
     if (NS_FAILED(rv)) {
       mContentParent->KillHard(
           "BroadcastChannel killed: principal::GetOrigin failed.");
