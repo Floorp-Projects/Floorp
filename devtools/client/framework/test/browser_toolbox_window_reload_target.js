@@ -9,6 +9,12 @@
 // It is therefore quite long to run.
 
 requestLongerTimeout(10);
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+
+// whitelist a context error because it is harmless. This could likely be removed in the next patch because it is a symptom of events coming from the target-list and debugger targets module...
+PromiseTestUtils.whitelistRejectionsGlobally(/Page has navigated/);
 
 const TEST_URL =
   "data:text/html;charset=utf-8," +
