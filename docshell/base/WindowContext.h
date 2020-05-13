@@ -26,6 +26,7 @@ class WindowGlobalInit;
   /* Whether this window's channel has been marked as a third-party    \
    * tracking resource */                                              \
   FIELD(IsThirdPartyTrackingResourceWindow, bool)                      \
+  FIELD(IsSecureContext, bool)                                         \
   /* Mixed-Content: If the corresponding documentURI is https,         \
    * then this flag is true. */                                        \
   FIELD(IsSecure, bool)                                                \
@@ -133,6 +134,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               const bool& IsThirdPartyWindow, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
               const bool& aIsThirdPartyTrackingResourceWindow,
+              ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_IsSecureContext>, const bool& aIsSecureContext,
               ContentParent* aSource);
 
   // Overload `DidSet` to get notifications for a particular field being set.

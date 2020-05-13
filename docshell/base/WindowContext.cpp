@@ -154,6 +154,12 @@ bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_IsSecureContext>,
+                           const bool& aIsSecureContext,
+                           ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
 void WindowContext::CreateFromIPC(IPCInitializer&& aInit) {
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess(),
                      "Should be a WindowGlobalParent in the parent");
