@@ -117,9 +117,6 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
            mJsepTransceiver->mRecvTrack.GetActive();
   }
 
-  void GetRtpSources(const int64_t aTimeNow,
-                     nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
-
   MediaSessionConduit* GetConduit() const { return mConduit; }
 
   // nsISupports
