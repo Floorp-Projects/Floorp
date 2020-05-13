@@ -13,7 +13,7 @@
 #include "nsThreadUtils.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/EnterpriseRootsWrappers.h"
 #endif  // MOZ_WIDGET_ANDROID
 
 #ifdef XP_MACOSX
