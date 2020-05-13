@@ -13,12 +13,12 @@ assertErrorMessage(() => wasmEvalText(`(module
     (func (result anyref)
         i32.const 42
     )
-)`), CompileError, mismatchError('i32', 'anyref'));
+)`), CompileError, mismatchError('i32', 'externref'));
 
 assertErrorMessage(() => wasmEvalText(`(module
     (func (result anyref)
         i32.const 0
-        ref.null
+        ref.null extern
         i32.const 42
         select (result anyref)
     )
@@ -26,27 +26,27 @@ assertErrorMessage(() => wasmEvalText(`(module
 
 assertErrorMessage(() => wasmEvalText(`(module
     (func (result i32)
-        ref.null
+        ref.null extern
         if
             i32.const 42
         end
     )
-)`), CompileError, mismatchError('nullref', 'i32'));
+)`), CompileError, mismatchError('externref', 'i32'));
 
 
 // Basic compilation tests.
 
 let simpleTests = [
-    "(module (func (drop (ref.null))))",
+    "(module (func (drop (ref.null extern))))",
     "(module (func $test (local anyref)))",
     "(module (func $test (param anyref)))",
-    "(module (func $test (result anyref) (ref.null)))",
+    "(module (func $test (result anyref) (ref.null extern)))",
     "(module (func $test (block (result anyref) (unreachable)) unreachable))",
-    "(module (func $test (result i32) (local anyref) (ref.is_null (local.get 0))))",
+    "(module (func $test (result i32) (local anyref) (ref.is_null extern (local.get 0))))",
     `(module (import "a" "b" (func (param anyref))))`,
     `(module (import "a" "b" (func (result anyref))))`,
-    `(module (global anyref (ref.null)))`,
-    `(module (global (mut anyref) (ref.null)))`,
+    `(module (global anyref (ref.null extern)))`,
+    `(module (global (mut anyref) (ref.null extern)))`,
 ];
 
 for (let src of simpleTests) {
@@ -58,8 +58,8 @@ for (let src of simpleTests) {
 
 let { exports } = wasmEvalText(`(module
     (func (export "is_null") (result i32)
-        ref.null
-        ref.is_null
+        ref.null extern
+        ref.is_null extern
     )
 
     (func $sum (param i32) (result i32)
@@ -69,21 +69,21 @@ let { exports } = wasmEvalText(`(module
     )
 
     (func (export "is_null_spill") (result i32)
-        ref.null
+        ref.null extern
         i32.const 58
         call $sum
         drop
-        ref.is_null
+        ref.is_null extern
     )
 
     (func (export "is_null_local") (result i32) (local anyref)
-        ref.null
+        ref.null extern
         local.set 0
         i32.const 58
         call $sum
         drop
         local.get 0
-        ref.is_null
+        ref.is_null extern
     )
     )`);
 
@@ -96,12 +96,12 @@ assertEq(exports.is_null_local(), 1);
 exports = wasmEvalText(`(module
     (func (export "is_null") (param $ref anyref) (result i32)
         local.get $ref
-        ref.is_null
+        ref.is_null extern
     )
 
     (func (export "ref_or_null") (param $ref anyref) (param $selector i32) (result anyref)
         local.get $ref
-        ref.null
+        ref.null extern
         local.get $selector
         select (result anyref)
     )
@@ -397,7 +397,7 @@ assertEq(exports.count_g(), 1);
 
 // Anyref globals in wasm modules.
 
-assertErrorMessage(() => wasmEvalText(`(module (global (import "glob" "anyref") anyref))`, { glob: { anyref: new WebAssembly.Global({ value: 'i32' }, 42) } }),
+assertErrorMessage(() => wasmEvalText(`(module (global (import "glob" "externref") anyref))`, { glob: { externref: new WebAssembly.Global({ value: 'i32' }, 42) } }),
     WebAssembly.LinkError,
     /imported global type mismatch/);
 
@@ -409,8 +409,8 @@ imports = {
     constants: {
         imm_null: null,
         imm_bread: new Baguette(321),
-        mut_null: new WebAssembly.Global({ value: "anyref", mutable: true }, null),
-        mut_bread: new WebAssembly.Global({ value: "anyref", mutable: true }, new Baguette(123))
+        mut_null: new WebAssembly.Global({ value: "externref", mutable: true }, null),
+        mut_bread: new WebAssembly.Global({ value: "externref", mutable: true }, new Baguette(123))
     }
 };
 
@@ -421,9 +421,9 @@ exports = wasmEvalText(`(module
     (global $g_imp_mut_null   (import "constants" "mut_null") (mut anyref))
     (global $g_imp_mut_bread  (import "constants" "mut_bread") (mut anyref))
 
-    (global $g_imm_null     anyref (ref.null))
+    (global $g_imm_null     anyref (ref.null extern))
     (global $g_imm_getglob  anyref (global.get $g_imp_imm_bread))
-    (global $g_mut         (mut anyref) (ref.null))
+    (global $g_mut         (mut anyref) (ref.null extern))
 
     (func (export "imm_null")      (result anyref) global.get $g_imm_null)
     (func (export "imm_getglob")   (result anyref) global.get $g_imm_getglob)
@@ -469,7 +469,7 @@ wasmEvalText(
     `(module
        (func
          (return)
-         (ref.null)
+         (ref.null extern)
          (drop)
         )
     )`);
@@ -478,7 +478,7 @@ wasmEvalText(
     `(module
        (func (param anyref)
          (return)
-         (ref.is_null (get_local 0))
+         (ref.is_null extern (get_local 0))
          (drop)
         )
     )`);

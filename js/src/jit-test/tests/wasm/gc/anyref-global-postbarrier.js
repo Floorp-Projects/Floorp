@@ -10,10 +10,10 @@ function Baguette(calories) {
 // Ensure the baseline compiler sync's before the postbarrier.
 (function() {
     wasmEvalText(`(module
-        (global (mut anyref) (ref.null))
+        (global (mut anyref) (ref.null extern))
         (func (export "f")
             global.get 0
-            ref.null
+            ref.null extern
             global.set 0
             global.set 0
         )
@@ -22,13 +22,13 @@ function Baguette(calories) {
 
 let exportsPlain = wasmEvalText(`(module
     (global i32 (i32.const 42))
-    (global $g (mut anyref) (ref.null))
+    (global $g (mut anyref) (ref.null extern))
     (func (export "set") (param anyref) local.get 0 global.set $g)
     (func (export "get") (result anyref) global.get $g)
 )`).exports;
 
 let exportsObj = wasmEvalText(`(module
-    (global $g (export "g") (mut anyref) (ref.null))
+    (global $g (export "g") (mut anyref) (ref.null extern))
     (func (export "set") (param anyref) local.get 0 global.set $g)
     (func (export "get") (result anyref) global.get $g)
 )`).exports;

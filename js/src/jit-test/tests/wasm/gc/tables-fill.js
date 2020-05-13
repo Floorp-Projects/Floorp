@@ -134,13 +134,12 @@ function testTableFill(tbl_type, val_type, obj) {
 var objs = [];
 for (var i = 0; i < N; i++)
   objs[i] = {n:i};
-testTableFill('anyref', 'anyref', objs);
+testTableFill('externref', 'externref', objs);
 
 var funcs = [];
 for (var i = 0; i < N; i++)
   funcs[i] = wasmEvalText(`(module (func (export "x") (result i32) (i32.const ${i})))`).exports.x;
 testTableFill('funcref', 'funcref', funcs);
-testTableFill('anyref', 'funcref', funcs);  // funcref <: anyref so implicit upcast on fill
 
 
 // Type errors.  Required sig is: (i32, anyref, i32) -> void
@@ -165,7 +164,7 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (table $t 10 anyref)
       (func $expected-3-args-got-2
-        (table.fill $t (ref.null) (i32.const 0))
+        (table.fill $t (ref.null extern) (i32.const 0))
      ))`),
      WebAssembly.CompileError, /popping value from empty stack/);
 
@@ -173,7 +172,7 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (table $t 10 anyref)
       (func $argty-1-wrong
-        (table.fill $t (i32.const 0) (ref.null) (f64.const 0))
+        (table.fill $t (i32.const 0) (ref.null extern) (f64.const 0))
      ))`),
      WebAssembly.CompileError,
      /type mismatch: expression has type f64 but expected i32/);
@@ -185,13 +184,13 @@ assertErrorMessage(() => wasmEvalText(
         (table.fill $t (i32.const 0) (f32.const 0) (i32.const 0))
      ))`),
      WebAssembly.CompileError,
-     /type mismatch: expression has type f32 but expected anyref/);
+     /type mismatch: expression has type f32 but expected externref/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
       (table $t 10 anyref)
       (func $argty-3-wrong
-        (table.fill $t (i64.const 0) (ref.null) (i32.const 0))
+        (table.fill $t (i64.const 0) (ref.null extern) (i32.const 0))
      ))`),
      WebAssembly.CompileError,
      /type mismatch: expression has type i64 but expected i32/);
@@ -200,7 +199,7 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (table $t 10 anyref)
       (func $retty-wrong (result i32)
-        (table.fill $t (i32.const 0) (ref.null) (i32.const 0))
+        (table.fill $t (i32.const 0) (ref.null extern) (i32.const 0))
      ))`),
      WebAssembly.CompileError,
      /popping value from empty stack/);
@@ -212,4 +211,4 @@ assertErrorMessage(() => wasmEvalText(
          (table.fill (i32.const 0) (local.get $v) (i32.const 0)))
      )`),
      WebAssembly.CompileError,
-     /expression has type anyref but expected funcref/);
+     /expression has type externref but expected funcref/);

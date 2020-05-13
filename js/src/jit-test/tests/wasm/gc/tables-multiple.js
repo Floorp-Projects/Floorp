@@ -57,9 +57,9 @@ assertEq(ins.t2.length, 3);
 // - table.get and table.set can point to a table
 
 var exp = {m:{t0: new WebAssembly.Table({element:"funcref", initial:2}),
-              t1: new WebAssembly.Table({element:"anyref", initial:3}),
+              t1: new WebAssembly.Table({element:"externref", initial:3}),
               t2: new WebAssembly.Table({element:"funcref", initial:4}),
-              t3: new WebAssembly.Table({element:"anyref", initial:5})}};
+              t3: new WebAssembly.Table({element:"externref", initial:5})}};
 var ins = wasmEvalText(
     `(module
       (table $t0 (import "m" "t0") 2 funcref)
@@ -105,14 +105,14 @@ assertEq(exp.m.t3.get(4), x);
 // - growing a table grows the right table but not the others
 // - table.size on tables other than table 0
 
-var exp = {m:{t0: new WebAssembly.Table({element:"anyref", initial:2}),
-              t1: new WebAssembly.Table({element:"anyref", initial:3})}};
+var exp = {m:{t0: new WebAssembly.Table({element:"externref", initial:2}),
+              t1: new WebAssembly.Table({element:"externref", initial:3})}};
 var ins = wasmEvalText(
     `(module
       (table $t0 (import "m" "t0") 2 anyref)
       (table $t1 (import "m" "t1") 3 anyref)
       (func (export "f") (result i32)
-       (table.grow $t1 (ref.null) (i32.const 5)))
+       (table.grow $t1 (ref.null extern) (i32.const 5)))
       (func (export "size0") (result i32)
        (table.size $t0))
       (func (export "size1") (result i32)
@@ -126,8 +126,8 @@ assertEq(ins.exports.size1(), 8);
 
 // - table.copy can point to tables
 
-var exp = {m:{t0: new WebAssembly.Table({element:"anyref", initial:2}),
-              t1: new WebAssembly.Table({element:"anyref", initial:3})}};
+var exp = {m:{t0: new WebAssembly.Table({element:"externref", initial:2}),
+              t1: new WebAssembly.Table({element:"externref", initial:3})}};
 var ins = wasmEvalText(
     `(module
       (table $t0 (import "m" "t0") 2 anyref)
@@ -214,7 +214,7 @@ for (let [a,b,x,y,result,init] of [['$t0', '$t1', '(export "t")', '', arg*13, tr
 // - test the (import "m" "t" (table ...)) syntax
 // - if table is grown from JS, wasm can observe the growth
 
-var tbl = new WebAssembly.Table({element:"anyref", initial:1});
+var tbl = new WebAssembly.Table({element:"externref", initial:1});
 var exp = {m: {t0: tbl, t1:tbl}};
 
 var ins = wasmEvalText(
@@ -223,9 +223,9 @@ var ins = wasmEvalText(
       (import "m" "t1" (table $t1 1 anyref))
       (table $t2 (export "t2") 1 funcref)
       (func (export "f") (result i32)
-       (table.grow $t0 (ref.null) (i32.const 1)))
+       (table.grow $t0 (ref.null extern) (i32.const 1)))
       (func (export "g") (result i32)
-       (table.grow $t1 (ref.null) (i32.const 1)))
+       (table.grow $t1 (ref.null extern) (i32.const 1)))
       (func (export "size") (result i32)
        (table.size $t2)))`,
     exp);
@@ -369,7 +369,7 @@ assertErrorMessage(() => wasmEvalText(
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (result i32)
-       (table.grow 2 (ref.null) (i32.const 1))))`),
+       (table.grow 2 (ref.null extern) (i32.const 1))))`),
                    WebAssembly.CompileError,
                    /table index out of range for table.grow/);
 

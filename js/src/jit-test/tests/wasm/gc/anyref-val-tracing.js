@@ -2,11 +2,11 @@
 
 gczeal(14, 1);
 let { exports } = wasmEvalText(`(module
-    (global $anyref (import "glob" "anyref") anyref)
+    (global $anyref (import "glob" "externref") anyref)
     (func (export "get") (result anyref) global.get $anyref)
 )`, {
     glob: {
-        anyref: { sentinel: "lol" },
+        externref: { sentinel: "lol" },
     }
 });
 assertEq(exports.get().sentinel, "lol");

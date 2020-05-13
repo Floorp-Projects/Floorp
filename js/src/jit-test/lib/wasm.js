@@ -21,7 +21,12 @@ function wasmEvalText(str, imports) {
 }
 
 function wasmValidateText(str) {
-    assertEq(WebAssembly.validate(wasmTextToBinary(str)), true);
+    let binary = wasmTextToBinary(str);
+    let valid = WebAssembly.validate(binary);
+    if (!valid) {
+        new WebAssembly.Module(binary);
+    }
+    assertEq(valid, true);
 }
 
 function wasmFailValidateText(str, pattern) {

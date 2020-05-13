@@ -5,7 +5,7 @@ wasmFullPass(`
 	(module
 		(func $f1)
 		(elem declare $f1)
-		(elem declare funcref (ref.null))
+		(elem declare funcref (ref.null func))
 		(func $run)
 		(export "run" (func $run))
 	)
@@ -37,7 +37,7 @@ wasmAssert(`
 		(func $at (param i32) (result i32)
 			local.get 0
 			table.get 0
-			ref.is_null
+			ref.is_null func
 		)
 		(export "at" (func $at))
 	)
