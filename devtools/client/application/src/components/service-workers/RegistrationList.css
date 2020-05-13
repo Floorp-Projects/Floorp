@@ -3,12 +3,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .aboutdebugging-plug {
-  text-align: right;
-  padding: 1rem 0;
+  padding-block-start: calc(var(--base-unit) * 3);
+  border-block-start: 1px solid var(--separator-color);
+
+  /* display flex to handle showing the icon with ::before */
+  display: flex;
+  flex-direction: row;
+  column-gap: calc(var(--base-unit) * 2);
+  align-items: center;
+  font-size: var(--body-10-font-size);
+  font-weight: var(--body-10-font-weight);
 }
 
-.aboutdebugging-plug__link {
-  margin: 0;
+.aboutdebugging-plug::before {
+    display: inline-block;
+    width: calc(var(--base-unit) * 4);
+    height: calc(var(--base-unit) * 4);
+    content: "";
+    background-image: url(chrome://browser/skin/developer.svg)
 }
 
 .registrations-container {
