@@ -12,6 +12,7 @@ import androidx.test.uiautomator.Until
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -79,6 +80,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     // open a webpage, and add currently opened tab to existing collection
     fun addTabToExistingCollectionTest() {
@@ -105,6 +107,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun collectionMenuAddTabButtonTest() {
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
@@ -126,6 +129,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun collectionMenuOpenAllTabsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -141,6 +145,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun renameCollectionTest() {
         createCollection(firstCollectionName)
@@ -155,6 +160,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun deleteCollectionTest() {
         createCollection(firstCollectionName)
@@ -168,6 +174,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun createCollectionFromTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -184,6 +191,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun verifyExpandedCollectionItemsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -208,6 +216,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun shareCollectionTest() {
         createCollection(firstCollectionName)
@@ -218,6 +227,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun removeTabFromCollectionTest() {
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -274,6 +284,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun tabsOverflowMenuSaveCollectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -302,6 +313,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun navigateBackInCollectionFlowTest() {
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)

@@ -76,6 +76,7 @@ class ContextMenusTest {
         }
     }
 
+    @Ignore("Intermittent failure - https://github.com/mozilla-mobile/fenix/issues/10586")
     @Test
     fun verifyContextOpenLinkPrivateTab() {
         val pageLinks =
@@ -119,6 +120,7 @@ class ContextMenusTest {
         }
     }
 
+    @Ignore("Intermittent failure - https://github.com/mozilla-mobile/fenix/issues/10586")
     @Test
     fun verifyContextShareLink() {
         val pageLinks =
