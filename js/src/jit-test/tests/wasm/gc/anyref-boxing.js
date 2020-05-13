@@ -39,7 +39,7 @@ let VALUES = [null,
 
 for (let v of VALUES)
 {
-    let g = new WebAssembly.Global({value: "anyref"}, v);
+    let g = new WebAssembly.Global({value: "externref"}, v);
     assertEq(g.value, v);
 }
 
@@ -47,7 +47,7 @@ for (let v of VALUES)
 
 for (let v of VALUES)
 {
-    let g = new WebAssembly.Global({value: "anyref", mutable: true});
+    let g = new WebAssembly.Global({value: "externref", mutable: true});
     g.value = v;
     assertEq(g.value, v);
 }
@@ -56,7 +56,7 @@ for (let v of VALUES)
 
 for (let v of VALUES)
 {
-    let g = new WebAssembly.Global({value: "anyref"}, v);
+    let g = new WebAssembly.Global({value: "externref"}, v);
     let ins = wasmEvalText(
         `(module
            (import "m" "g" (global $glob anyref))
@@ -70,7 +70,7 @@ for (let v of VALUES)
 
 for (let v of VALUES)
 {
-    let g = new WebAssembly.Global({value: "anyref", mutable: true});
+    let g = new WebAssembly.Global({value: "externref", mutable: true});
     let ins = wasmEvalText(
         `(module
            (import "m" "g" (global $glob (mut anyref)))
@@ -99,7 +99,7 @@ for (let v of VALUES)
 
 for (let v of VALUES)
 {
-    let t = new WebAssembly.Table({element: "anyref", initial: 10});
+    let t = new WebAssembly.Table({element: "externref", initial: 10});
     t.set(3, v);
     assertEq(t.get(3), v);
 }
@@ -108,7 +108,7 @@ for (let v of VALUES)
 
 for (let v of VALUES)
 {
-    let t = new WebAssembly.Table({element: "anyref", initial: 10});
+    let t = new WebAssembly.Table({element: "externref", initial: 10});
     let ins = wasmEvalText(
         `(module
            (import "m" "t" (table $t 10 anyref))
@@ -123,7 +123,7 @@ for (let v of VALUES)
 
 for (let v of VALUES)
 {
-    let t = new WebAssembly.Table({element: "anyref", initial: 10});
+    let t = new WebAssembly.Table({element: "externref", initial: 10});
     let ins = wasmEvalText(
         `(module
            (import "m" "t" (table $t 10 anyref))

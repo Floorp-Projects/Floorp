@@ -59,7 +59,7 @@ for (let v of VALUES)
         `(module
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (result anyref)
-             (struct.new $S (ref.null)))
+             (struct.new $S (ref.null extern)))
            (func (export "get") (param $o anyref) (result anyref)
              (struct.get $S 0 (struct.narrow anyref (ref opt $S) (local.get $o)))))`);
     let x = ins.exports.make();
@@ -75,7 +75,7 @@ for (let v of VALUES)
         `(module
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (result anyref)
-             (struct.new $S (ref.null)))
+             (struct.new $S (ref.null extern)))
            (func (export "get") (param $o anyref) (result anyref)
              (struct.get $S 0 (struct.narrow anyref (ref opt $S) (local.get $o)))))`);
     let constructor = ins.exports.make().constructor;
@@ -108,7 +108,7 @@ for (let v of VALUES) {
         `(module
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (result anyref)
-             (struct.new $S (ref.null))))`);
+             (struct.new $S (ref.null extern))))`);
     let constructor = ins.exports.make().constructor;
     let x = new constructor();
     assertEq(x._0, null);
@@ -122,7 +122,7 @@ for (let v of VALUES) {
         `(module
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (result anyref)
-             (struct.new $S (ref.null))))`);
+             (struct.new $S (ref.null extern))))`);
     let constructor = ins.exports.make().constructor;
     let x = new constructor({});
     assertEq(x._0, undefined);

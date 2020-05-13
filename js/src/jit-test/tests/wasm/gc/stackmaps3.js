@@ -28,7 +28,7 @@ let t =
      (import "" "mkBoxedInt" (func $mkBoxedInt (result anyref)))
 
      (func $mkNil (result anyref)
-       ref.null
+       ref.null extern
      )
 
      (func $mkConsIgnoringScalar

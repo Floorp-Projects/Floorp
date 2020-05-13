@@ -8,22 +8,22 @@ const typeErr = /type mismatch/;
 
 // Validation:
 
-wasmEvalText(`(module (func (local anyref funcref) (local.set 0 (local.get 1))))`);
+wasmFailValidateText(`(module (func (local anyref funcref) (local.set 0 (local.get 1))))`, typeErr);
 wasmEvalText(`(module (func (local funcref funcref) (local.set 0 (local.get 1))))`);
-wasmEvalText(`(module (func (local funcref) (local.set 0 (ref.null))))`);
+wasmEvalText(`(module (func (local funcref) (local.set 0 (ref.null func))))`);
 wasmFailValidateText(`(module (func (local funcref anyref) (local.set 0 (local.get 1))))`, typeErr);
-wasmEvalText(`(module (global (mut funcref) (ref.null)) (func (param funcref) (global.set 0 (local.get 0))))`);
-wasmEvalText(`(module (global (mut anyref) (ref.null)) (func (param funcref) (global.set 0 (local.get 0))))`);
-wasmFailValidateText(`(module (global (mut funcref) (ref.null)) (func (param anyref) (global.set 0 (local.get 0))))`, typeErr);
+wasmEvalText(`(module (global (mut funcref) (ref.null func)) (func (param funcref) (global.set 0 (local.get 0))))`);
+wasmFailValidateText(`(module (global (mut anyref) (ref.null extern)) (func (param funcref) (global.set 0 (local.get 0))))`, typeErr);
+wasmFailValidateText(`(module (global (mut funcref) (ref.null func)) (func (param anyref) (global.set 0 (local.get 0))))`, typeErr);
 wasmEvalText(`(module (func (param funcref)) (func (param funcref) (call 0 (local.get 0))))`);
-wasmEvalText(`(module (func (param anyref)) (func (param funcref) (call 0 (local.get 0))))`);
+wasmFailValidateText(`(module (func (param anyref)) (func (param funcref) (call 0 (local.get 0))))`, typeErr);
 wasmFailValidateText(`(module (func (param funcref)) (func (param anyref) (call 0 (local.get 0))))`, typeErr);
 wasmEvalText(`(module (func (param funcref) (result funcref) (block (result funcref) (local.get 0) (br 0))))`);
-wasmEvalText(`(module (func (param funcref) (result anyref) (block (result anyref) (local.get 0) (br 0))))`);
+wasmFailValidateText(`(module (func (param funcref) (result anyref) (block (result anyref) (local.get 0) (br 0))))`, typeErr);
 wasmFailValidateText(`(module (func (param anyref) (result anyref) (block (result funcref) (local.get 0) (br 0))))`, typeErr);
 wasmEvalText(`(module (func (param funcref funcref) (result funcref) (select (result funcref) (local.get 0) (local.get 1) (i32.const 0))))`);
-wasmEvalText(`(module (func (param anyref funcref) (result anyref) (select (result anyref) (local.get 0) (local.get 1) (i32.const 0))))`);
-wasmEvalText(`(module (func (param funcref anyref) (result anyref) (select (result anyref)(local.get 0) (local.get 1) (i32.const 0))))`);
+wasmFailValidateText(`(module (func (param anyref funcref) (result anyref) (select (result anyref) (local.get 0) (local.get 1) (i32.const 0))))`, typeErr);
+wasmFailValidateText(`(module (func (param funcref anyref) (result anyref) (select (result anyref)(local.get 0) (local.get 1) (i32.const 0))))`, typeErr);
 wasmFailValidateText(`(module (func (param anyref funcref) (result funcref) (select (result funcref) (local.get 0) (local.get 1) (i32.const 0))))`, typeErr);
 wasmFailValidateText(`(module (func (param funcref anyref) (result funcref) (select (result funcref) (local.get 0) (local.get 1) (i32.const 0))))`, typeErr);
 
@@ -36,7 +36,7 @@ const wasmFun2 = new Instance(m).exports.wasmFun;
 const wasmFun3 = new Instance(m).exports.wasmFun;
 
 var run = wasmEvalText(`(module
-    (global (mut funcref) (ref.null))
+    (global (mut funcref) (ref.null func))
     (func (param $x funcref) (param $test i32) (result funcref)
       local.get $x
       global.get 0
@@ -65,43 +65,36 @@ assertEq(run(wasmFun1, wasmFun2, wasmFun3, false, true), wasmFun3);
 var run = wasmEvalText(`(module
   (type $t0 (func (param anyref) (result anyref)))
   (type $t1 (func (param funcref) (result anyref)))
-  (type $t2 (func (param anyref) (result funcref)))
-  (type $t3 (func (param funcref funcref) (result funcref)))
-  (func $f0 (type $t0) ref.null)
-  (func $f1 (type $t1) ref.null)
-  (func $f2 (type $t2) ref.null)
-  (func $f3 (type $t3) ref.null)
-  (table funcref (elem $f0 $f1 $f2 $f3))
+  (type $t2 (func (param funcref funcref) (result anyref)))
+  (func $f0 (type $t0) ref.null extern)
+  (func $f1 (type $t1) ref.null extern)
+  (func $f2 (type $t2) ref.null extern)
+  (table funcref (elem $f0 $f1 $f2))
   (func (export "run") (param i32 i32) (result anyref)
-    block $b3 block $b2 block $b1 block $b0
+    block $b2 block $b1 block $b0
       local.get 0
-      br_table $b0 $b1 $b2 $b3
+      br_table $b0 $b1 $b2
     end $b0
-      ref.null
+      ref.null extern
       local.get 1
       call_indirect (type $t0)
       return
     end $b1
-      ref.null
+      ref.null func
       local.get 1
       call_indirect (type $t1)
       return
     end $b2
-      ref.null
+      ref.null func
+      ref.null func
       local.get 1
       call_indirect (type $t2)
-      return
-    end $b3
-      ref.null
-      ref.null
-      local.get 1
-      call_indirect (type $t3)
       return
   )
 )`).exports.run;
 
-for (var i = 0; i < 4; i++) {
-  for (var j = 0; j < 4; j++) {
+for (var i = 0; i < 3; i++) {
+  for (var j = 0; j < 3; j++) {
     if (i == j)
       assertEq(run(i, j), null);
     else

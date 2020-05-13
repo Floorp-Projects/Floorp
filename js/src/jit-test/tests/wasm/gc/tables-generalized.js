@@ -16,12 +16,12 @@ new WebAssembly.Module(wasmTextToBinary(
 new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table (import "m" "t") 10 anyref))`)),
-                         {m:{t: new WebAssembly.Table({element:"anyref", initial:10})}});
+                         {m:{t: new WebAssembly.Table({element:"externref", initial:10})}});
 
 new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
        (import "m" "t" (table 10 anyref)))`)),
-                         {m:{t: new WebAssembly.Table({element:"anyref", initial:10})}});
+                         {m:{t: new WebAssembly.Table({element:"externref", initial:10})}});
 
 // Wasm: Export table-of-anyref, initial values shall be null
 
@@ -77,33 +77,22 @@ new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     assertEq(t.get(9), objs[9]);
 }
 
-// Wasm: table.copy from table(funcref) to table(anyref) should work
+// Wasm: table.copy from table(funcref) to table(anyref) should not work
 
-{
-    let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
-    `(module
-       (table (export "t") 10 anyref)
-       (func $f1)
-       (func $f2)
-       (func $f3)
-       (func $f4)
-       (func $f5)
-       (table 5 funcref)
-       (elem (table 1) (i32.const 0) func $f1 $f2 $f3 $f4 $f5)
-       (func (export "f")
-         (table.copy 0 1 (i32.const 5) (i32.const 0) (i32.const 5))))`)));
-    ins.exports.f();
-    let t = ins.exports.t;
-    let xs = [];
-    for (let i=0; i < 5; i++) {
-        xs[i] = t.get(i+5);
-        assertEq(typeof xs[i], "function");
-    }
-    for (let i=0; i < 5; i++) {
-        for (j=i+1; j < 5; j++)
-            assertEq(xs[i] != xs[j], true);
-    }
-}
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
+  `(module
+     (table (export "t") 10 anyref)
+     (func $f1)
+     (func $f2)
+     (func $f3)
+     (func $f4)
+     (func $f5)
+     (table 5 funcref)
+     (elem (table 1) (i32.const 0) func $f1 $f2 $f3 $f4 $f5)
+     (func (export "f")
+       (table.copy 0 1 (i32.const 5) (i32.const 0) (i32.const 5))))`)),
+    WebAssembly.CompileError,
+    /expression has type funcref but expected externref/);
 
 // Wasm: table.copy from table(anyref) to table(funcref) should not work
 
@@ -114,49 +103,41 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (func (export "f")
          (table.copy 0 1 (i32.const 0) (i32.const 0) (i32.const 5))))`)),
                    WebAssembly.CompileError,
-                   /expression has type anyref but expected funcref/);
+                   /expression has type externref but expected funcref/);
 
-// Wasm: Element segments can target tables of anyref whether the element type
-// is anyref or funcref.
+// Wasm: Element segments of funcref can't target tables of anyref
 
-for (let elem_ty of ["funcref", "anyref"]) {
-    let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (func $f1 (export "f") (result i32) (i32.const 0))
-       (func $f2 (result i32) (i32.const 0)) ;; on purpose not exported
+       (func $f1 (result i32) (i32.const 0))
        (table (export "t") 10 anyref)
-       (elem (table 0) (i32.const 0) ${elem_ty} (ref.func $f1) (ref.func $f2))
-       )`)));
-    let t = ins.exports.t;
-    let f = ins.exports.f;
-    assertEq(t.get(0), f);
-    assertEq(t.get(2), null);  // not much of a test since that's the default value
-}
+       (elem 0 (i32.const 0) funcref (ref.func $f1)))`)),
+                   WebAssembly.CompileError,
+                   /segment's element type must be subtype of table's element type/);
+
 
 // Wasm: Element segments of anyref can't target tables of funcref
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (func $f1 (result i32) (i32.const 0))
        (table (export "t") 10 funcref)
-       (elem 0 (i32.const 0) anyref (ref.func $f1)))`)),
+       (elem 0 (i32.const 0) anyref (ref.null extern)))`)),
                    WebAssembly.CompileError,
                    /segment's element type must be subtype of table's element type/);
 
-// Wasm: table.init on table-of-anyref is allowed whether the segment has
-// anyrefs or funcrefs.
+// Wasm: table.init on table-of-anyref is not allowed when the segment has
+// funcref.
 
-for (let elem_ty of ["funcref", "anyref"]) {
-    let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (func $f1 (result i32) (i32.const 0))
-       (table (export "t") 10 anyref)
-       (elem ${elem_ty} (ref.func $f1))
-       (func (export "f")
-         (table.init 0 (i32.const 2) (i32.const 0) (i32.const 1))))`)));
-    ins.exports.f();
-    assertEq(typeof ins.exports.t.get(2), "function");
-}
+       (table 10 anyref)
+       (elem funcref (ref.func $f1))
+       (func
+         (table.init 0 (i32.const 0) (i32.const 0) (i32.const 0))))`)),
+                   WebAssembly.CompileError,
+                   /expression has type funcref but expected externref/);
+
 
 // Wasm: table.init on table-of-funcref is not allowed when the segment has
 // anyref.
@@ -164,11 +145,11 @@ for (let elem_ty of ["funcref", "anyref"]) {
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 funcref)
-       (elem anyref (ref.null))
+       (elem anyref (ref.null extern))
        (func
          (table.init 0 (i32.const 0) (i32.const 0) (i32.const 0))))`)),
                    WebAssembly.CompileError,
-                   /expression has type anyref but expected funcref/);
+                   /expression has type externref but expected funcref/);
 
 // Wasm: table types must match at link time
 
@@ -196,7 +177,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 // additional js api tests
 
 {
-    let tbl = new WebAssembly.Table({element:"anyref", initial:10});
+    let tbl = new WebAssembly.Table({element:"externref", initial:10});
 
     // Initial value.
     assertEq(tbl.get(0), null);
@@ -242,7 +223,7 @@ function testTableGet(type, x) {
     assertErrorMessage(() => ins.exports.f(10), WebAssembly.RuntimeError, /index out of bounds/);
     assertErrorMessage(() => ins.exports.f(-5), WebAssembly.RuntimeError, /index out of bounds/);
 }
-testTableGet('anyref', {});
+testTableGet('externref', {});
 testTableGet('funcref', wasmFun);
 
 // table.get with non-i32 index - fails validation
@@ -268,14 +249,14 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 // table.set with null - works
 // table.set out of bounds - fails
 
-function testTableSet(lhs_type, rhs_type, x) {
+function testTableSet(lhs_type, rhs_type, rhs_reftype, x) {
     let ins = wasmEvalText(
         `(module
            (table (export "t") 10 ${lhs_type})
            (func (export "set_ref") (param i32) (param ${rhs_type})
              (table.set (local.get 0) (local.get 1)))
            (func (export "set_null") (param i32)
-             (table.set (local.get 0) (ref.null))))`);
+             (table.set (local.get 0) (ref.null ${rhs_reftype}))))`);
     ins.exports.set_ref(3, x);
     assertEq(ins.exports.t.get(3), x);
     ins.exports.set_null(3);
@@ -284,9 +265,8 @@ function testTableSet(lhs_type, rhs_type, x) {
     assertErrorMessage(() => ins.exports.set_ref(10, x), WebAssembly.RuntimeError, /index out of bounds/);
     assertErrorMessage(() => ins.exports.set_ref(-1, x), WebAssembly.RuntimeError, /index out of bounds/);
 }
-testTableSet('anyref', 'anyref', {});
-testTableSet('funcref', 'funcref', wasmFun);
-testTableSet('anyref', 'funcref', wasmFun);
+testTableSet('externref', 'externref', 'extern', {});
+testTableSet('funcref', 'funcref', 'func', wasmFun);
 
 // Wasm: table.set on table(funcref) with anyref value should fail
 
@@ -296,7 +276,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
            (func (export "set_ref") (param i32) (param anyref)
              (table.set (local.get 0) (local.get 1))))`)),
                    WebAssembly.CompileError,
-                   /type mismatch: expression has type anyref but expected funcref/);
+                   /type mismatch: expression has type externref but expected funcref/);
 
 // table.set with non-i32 index - fails validation
 
@@ -304,7 +284,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 anyref)
        (func (export "f") (param f64)
-         (table.set (local.get 0) (ref.null))))`)),
+         (table.set (local.get 0) (ref.null extern))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
 
@@ -334,12 +314,12 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
                    WebAssembly.CompileError,
                    /table index out of range for table.set/);
 
-function testTableGrow(lhs_type, rhs_type, x) {
+function testTableGrow(lhs_type, lhs_reftype, rhs_type, x) {
   let ins = wasmEvalText(
       `(module
         (table (export "t") 10 20 ${lhs_type})
         (func (export "grow") (param i32) (result i32)
-         (table.grow (ref.null) (local.get 0)))
+         (table.grow (ref.null ${lhs_reftype}) (local.get 0)))
         (func (export "grow2") (param i32) (param ${rhs_type}) (result i32)
          (table.grow (local.get 1) (local.get 0))))`);
 
@@ -369,9 +349,8 @@ function testTableGrow(lhs_type, rhs_type, x) {
   assertEq(ins.exports.grow(-1), -1);
   assertEq(ins.exports.t.length, 20)
 }
-testTableGrow('anyref', 'anyref', 42);
-testTableGrow('funcref', 'funcref', wasmFun);
-testTableGrow('anyref', 'funcref', wasmFun);
+testTableGrow('externref', 'extern', 'externref', 42);
+testTableGrow('funcref', 'func', 'funcref', wasmFun);
 
 // Wasm: table.grow on table(funcref) with anyref initializer should fail
 
@@ -381,7 +360,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
         (func (export "grow2") (param i32) (param anyref) (result i32)
          (table.grow (local.get 1) (local.get 0))))`)),
                    WebAssembly.CompileError,
-                   /type mismatch: expression has type anyref but expected funcref/);
+                   /type mismatch: expression has type externref but expected funcref/);
 
 // Special case for private tables without a maximum
 
@@ -390,7 +369,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
         `(module
           (table 10 anyref)
           (func (export "grow") (param i32) (result i32)
-           (table.grow (ref.null) (local.get 0))))`);
+           (table.grow (ref.null extern) (local.get 0))))`);
     assertEq(ins.exports.grow(0), 10);
     assertEq(ins.exports.grow(1), 10);
     assertEq(ins.exports.grow(9), 11);
@@ -403,7 +382,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 anyref)
        (func (export "f") (param f64)
-        (table.grow (ref.null) (local.get 0))))`)),
+        (table.grow (ref.null extern) (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
 
@@ -412,21 +391,21 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (func (export "f") (param i32)
-        (table.grow (ref.null) (local.get 0))))`)),
+        (table.grow (ref.null extern) (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /table index out of range for table.grow/);
 
 // table.size on table of anyref
 
 for (let visibility of ['', '(export "t")', '(import "m" "t")']) {
-    let exp = {m:{t: new WebAssembly.Table({element:"anyref",
+    let exp = {m:{t: new WebAssembly.Table({element:"externref",
                                             initial: 10,
                                             maximum: 20})}};
     let ins = wasmEvalText(
         `(module
           (table ${visibility} 10 20 anyref)
           (func (export "grow") (param i32) (result i32)
-           (table.grow (ref.null) (local.get 0)))
+           (table.grow (ref.null extern) (local.get 0)))
           (func (export "size") (result i32)
            (table.size)))`,
         exp);
@@ -469,7 +448,7 @@ let VALUES = [null,
               () => 1337];
 
 {
-    let t = new WebAssembly.Table({element:"anyref", initial:0});
+    let t = new WebAssembly.Table({element:"externref", initial:0});
     t.grow(1);
     assertEq(t.get(t.length-1), null);
     let prev = null;
@@ -499,7 +478,7 @@ let VALUES = [null,
 // If growing by zero elements there are no spurious writes
 
 {
-    let t = new WebAssembly.Table({element:"anyref", initial:1});
+    let t = new WebAssembly.Table({element:"externref", initial:1});
     t.set(0, 1337);
     t.grow(0, 1789);
     assertEq(t.get(0), 1337);
