@@ -181,7 +181,6 @@ class FinalizationRegistryObject : public NativeObject {
     ActiveRecords,
     RecordsToBeCleanedUpSlot,
     IsQueuedForCleanupSlot,
-    IsCleanupJobActiveSlot,
     SlotCount
   };
 
@@ -194,11 +193,9 @@ class FinalizationRegistryObject : public NativeObject {
   FinalizationRecordSet* activeRecords() const;
   FinalizationRecordVector* recordsToBeCleanedUp() const;
   bool isQueuedForCleanup() const;
-  bool isCleanupJobActive() const;
 
   void queueRecordToBeCleanedUp(FinalizationRecordObject* record);
   void setQueuedForCleanup(bool value);
-  void setCleanupJobActive(bool value);
 
   void sweep();
 
@@ -227,9 +224,6 @@ class FinalizationRegistryObject : public NativeObject {
 
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);
-
-  static bool hasRegisteredRecordsToBeCleanedUp(
-      HandleFinalizationRegistryObject registry);
 };
 
 // An iterator over a finalization registry's queued held values. In the spec
