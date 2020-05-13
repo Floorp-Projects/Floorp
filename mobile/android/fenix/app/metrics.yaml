@@ -111,7 +111,6 @@ events:
       interaction by website scripts that programmatically redirect to a new
       location.
     send_in_pings:
-      - baseline
       - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1301
@@ -122,8 +121,6 @@ events:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
-    no_lint:
-      - BASELINE_PING
   preference_toggled:
     type: event
     description: |
@@ -366,7 +363,6 @@ metrics:
       `other` option for the source but it should never enter on this case.
     send_in_pings:
       - metrics
-      - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1158
       - https://github.com/mozilla-mobile/fenix/issues/6556
@@ -377,8 +373,6 @@ metrics:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
-    no_lint:
-      - BASELINE_PING
   mozilla_products:
     type: string_list
     lifetime: application
@@ -2043,7 +2037,6 @@ browser.search:
       Records counts of SERP pages with adverts displayed.
       The key format is ‘<provider-name>’.
     send_in_pings:
-      - baseline
       - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6558
@@ -2052,15 +2045,12 @@ browser.search:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
-    # TODO: https://github.com/mozilla-mobile/fenix/issues/10599
-    no_lint: [BASELINE_PING]
   ad_clicks:
     type: labeled_counter
     description: |
       Records clicks of adverts on SERP pages.
       The key format is ‘<provider-name>’.
     send_in_pings:
-      - baseline
       - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6558
@@ -2069,14 +2059,11 @@ browser.search:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
-    # TODO: https://github.com/mozilla-mobile/fenix/issues/10599
-    no_lint: [BASELINE_PING]
   in_content:
     type: labeled_counter
     description: |
       Records the type of interaction a user has on SERP pages.
     send_in_pings:
-      - baseline
       - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6557
@@ -2085,8 +2072,6 @@ browser.search:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
-    # TODO: https://github.com/mozilla-mobile/fenix/issues/10599
-    no_lint: [BASELINE_PING]
 
 addons:
   open_addons_in_settings:
