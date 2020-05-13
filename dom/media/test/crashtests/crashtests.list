@@ -101,7 +101,6 @@ load 1450845.html
 load disconnect-wrong-destination.html
 load analyser-channels-1.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load audiocontext-double-suspend.html
-skip-if(Android) load audioworklet-iloop-1.html # bug 1637491
 load buffer-source-duration-1.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load buffer-source-ended-1.html
 load buffer-source-resampling-start-1.html
