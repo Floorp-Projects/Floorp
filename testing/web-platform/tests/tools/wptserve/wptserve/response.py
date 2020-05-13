@@ -101,8 +101,8 @@ class Response(object):
         """Set a cookie to be sent with a Set-Cookie header in the
         response
 
-        :param name: String name of the cookie
-        :param value: String value of the cookie
+        :param name: name of the cookie (a binary string)
+        :param value: value of the cookie (a binary string, or None)
         :param max_age: datetime.timedelta int representing the time (in seconds)
                         until the cookie expires
         :param path: String path to which the cookie applies
@@ -115,14 +115,20 @@ class Response(object):
                         time or interval from now when the cookie expires
 
         """
+        # TODO(Python 3): Convert other parameters (e.g. path) to bytes, too.
+        if value is None:
+            value = b''
+            max_age = 0
+            expires = timedelta(days=-1)
+
+        if PY3:
+            name = isomorphic_decode(name)
+            value = isomorphic_decode(value)
+
         days = {i+1: name for i, name in enumerate(["jan", "feb", "mar",
                                                     "apr", "may", "jun",
                                                     "jul", "aug", "sep",
                                                     "oct", "nov", "dec"])}
-        if value is None:
-            value = ''
-            max_age = 0
-            expires = timedelta(days=-1)
 
         if isinstance(expires, timedelta):
             expires = datetime.utcnow() + expires
@@ -156,6 +162,8 @@ class Response(object):
 
     def unset_cookie(self, name):
         """Remove a cookie from those that are being sent with the response"""
+        if PY3:
+            name = isomorphic_decode(name)
         cookies = self.headers.get("Set-Cookie")
         parser = BaseCookie()
         for cookie in cookies:
