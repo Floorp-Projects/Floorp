@@ -120,7 +120,7 @@ class WindowGlobalParent final : public WindowContext,
   // The current URI which loaded in the document.
   nsIURI* GetDocumentURI() override { return mDocumentURI; }
 
-  const nsString& GetDocumentTitle() const { return mDocumentTitle; }
+  void GetDocumentTitle(nsAString& aTitle) const { aTitle = mDocumentTitle; }
 
   nsIPrincipal* GetContentBlockingAllowListPrincipal() const {
     return mDocContentBlockingAllowListPrincipal;
