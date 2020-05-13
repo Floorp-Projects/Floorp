@@ -74,9 +74,14 @@ is present in the `manifest.json` file of the extension.
 ### One-off messages
 
 The easiest way to send messages from a [content script][9] or a [background
-script][10] is using [`runtime.sendNativeMessage`][12]. The app will set up a
-message delegate on the same `nativeApp` that the extension is using to send
-messages. In our example we will use the `"browser"` native app identifier.
+script][10] is using [`runtime.sendNativeMessage`][12].
+
+Note: Ordinarily, native extensions would use a [native manifest][27] to define
+what native app identifier to use. For GeckoView this is _not_ needed, the
+`nativeApp` parameter in `setMessageDelegate` will be use to determine what
+native app string is used.
+
+### Messaging Example
 
 To receive messages from the background script, call [`setMessageDelegate`][14]
 on the [`WebExtension`][3] object.
@@ -92,6 +97,9 @@ receive messages from content scripts.
 session.getWebExtensionController()
     .setMessageDelegate(extension, messageDelegate, "browser");
 ```
+
+Note: the `"browser"` parameter in the code above determines what native app id
+the extension can use to send native messages.
 
 Note: extension can only send messages from content scripts if explicitly
 authorized by the app by adding `nativeMessagingFromContent` in the
@@ -380,3 +388,4 @@ This allows bidirectional communication between the app and the extension.
 [24]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntime.html
 [25]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings
 [26]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/version
+[27]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_messaging#App_manifest
