@@ -22,7 +22,6 @@
 #include "AudioNodeExternalInputTrack.h"
 #include "MediaTrackListener.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
-#include "mozilla/dom/WorkletThread.h"
 #include "mozilla/media/MediaUtils.h"
 #include <algorithm>
 #include "GeckoProfiler.h"
@@ -1337,29 +1336,25 @@ void MediaTrackGraphImpl::Process(AudioMixer* aMixer) {
 
 bool MediaTrackGraphImpl::UpdateMainThreadState() {
   MOZ_ASSERT(OnGraphThread());
-  if (mForceShutDownReceived) {
+  if (mForceShutDown) {
     for (MediaTrack* track : AllTracks()) {
       track->NotifyForcedShutdown();
     }
   }
-  {
-    MonitorAutoLock lock(mMonitor);
-    bool finalUpdate =
-        mForceShutDownReceived || (IsEmpty() && mBackMessageQueue.IsEmpty());
-    PrepareUpdatesToMainThreadState(finalUpdate);
-    if (!finalUpdate) {
-      SwapMessageQueues();
-      return true;
-    }
-    // The JSContext will not be used again.
-    // Clear main thread access while under monitor.
-    mJSContext = nullptr;
+
+  MonitorAutoLock lock(mMonitor);
+  bool finalUpdate =
+      mForceShutDown || (IsEmpty() && mBackMessageQueue.IsEmpty());
+  PrepareUpdatesToMainThreadState(finalUpdate);
+  if (finalUpdate) {
+    // Enter shutdown mode when this iteration is completed.
+    // No need to Destroy tracks here. The main-thread owner of each
+    // track is responsible for calling Destroy on them.
+    return false;
   }
-  dom::WorkletThread::DeleteCycleCollectedJSContext();
-  // Enter shutdown mode when this iteration is completed.
-  // No need to Destroy tracks here. The main-thread owner of each
-  // track is responsible for calling Destroy on them.
-  return false;
+
+  SwapMessageQueues();
+  return true;
 }
 
 auto MediaTrackGraphImpl::OneIteration(GraphTime aStateEnd,
@@ -1474,7 +1469,7 @@ void MediaTrackGraphImpl::ForceShutDown() {
    public:
     explicit Message(MediaTrackGraphImpl* aGraph)
         : ControlMessage(nullptr), mGraph(aGraph) {}
-    void Run() override { mGraph->mForceShutDownReceived = true; }
+    void Run() override { mGraph->mForceShutDown = true; }
     // The graph owns this message.
     MediaTrackGraphImpl* MOZ_NON_OWNING_REF mGraph;
   };
@@ -1483,7 +1478,6 @@ void MediaTrackGraphImpl::ForceShutDown() {
     // If both the track and port counts are zero, the regular shutdown
     // sequence will progress shortly to shutdown threads and destroy the graph.
     AppendMessage(MakeUnique<Message>(this));
-    InterruptJS();
   }
 }
 
@@ -1618,10 +1612,11 @@ class MediaTrackGraphShutDownRunnable : public Runnable {
       // mGraph is no longer needed, so delete it.
       mGraph->Destroy();
     } else {
-      // The graph is not empty.  We must be in a forced shutdown.
-      // Some later AppendMessage will detect that the graph has
+      // The graph is not empty.  We must be in a forced shutdown, either for
+      // process shutdown or a non-realtime graph that has finished
+      // processing. Some later AppendMessage will detect that the graph has
       // been emptied, and delete it.
-      NS_ASSERTION(mGraph->mForceShutDownReceived, "Not in forced shutdown?");
+      NS_ASSERTION(mGraph->mForceShutDown, "Not in forced shutdown?");
       mGraph->LifecycleStateRef() =
           MediaTrackGraphImpl::LIFECYCLE_WAITING_FOR_TRACK_DESTRUCTION;
     }
@@ -1734,7 +1729,7 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
       // If this MediaTrackGraph has entered regular (non-forced) shutdown it
       // is not able to process any more messages. Those messages being added to
       // the graph in the first place is an error.
-      MOZ_DIAGNOSTIC_ASSERT(mForceShutDownReceived ||
+      MOZ_DIAGNOSTIC_ASSERT(mForceShutDown ||
                             LifecycleStateRef() <
                                 LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP);
     }
@@ -1764,7 +1759,7 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
     }
 
     if (LifecycleStateRef() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP &&
-        mForceShutDownReceived) {
+        mForceShutDown) {
       // Defer calls to RunDuringShutdown() to happen while mMonitor is not
       // held.
       for (uint32_t i = 0; i < mBackMessageQueue.Length(); ++i) {
@@ -2962,6 +2957,7 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
       mOutputDeviceID(aOutputDeviceID),
       mMonitor("MediaTrackGraphImpl"),
       mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED),
+      mForceShutDown(false),
       mPostedRunInStableStateEvent(false),
       mGraphDriverRunning(false),
       mPostedRunInStableState(false),
@@ -3128,10 +3124,12 @@ MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(
   return graph;
 }
 
-void MediaTrackGraph::ForceShutDown() {
+void MediaTrackGraph::DestroyNonRealtimeInstance(MediaTrackGraph* aGraph) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+  MOZ_ASSERT(aGraph->IsNonRealtime(),
+             "Should not destroy the global graph here");
 
-  MediaTrackGraphImpl* graph = static_cast<MediaTrackGraphImpl*>(this);
+  MediaTrackGraphImpl* graph = static_cast<MediaTrackGraphImpl*>(aGraph);
 
   graph->ForceShutDown();
 }
@@ -3318,9 +3316,6 @@ void MediaTrackGraphImpl::RemoveTrack(MediaTrack* aTrack) {
         break;
       }
     }
-    // The graph thread will shut itself down soon, but won't be able to do
-    // that if JS continues to run.
-    InterruptJS();
   }
 }
 
@@ -3692,38 +3687,6 @@ void MediaTrackGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess) {
   };
 
   graph->AppendMessage(MakeUnique<Message>(graph, aTicksToProcess));
-}
-
-void MediaTrackGraphImpl::InterruptJS() {
-  MonitorAutoLock lock(mMonitor);
-  mInterruptJSCalled = true;
-  if (mJSContext) {
-    JS_RequestInterruptCallback(mJSContext);
-  }
-}
-
-static bool InterruptCallback(JSContext* aCx) {
-  // Interrupt future calls also.
-  JS_RequestInterruptCallback(aCx);
-  // Stop execution.
-  return false;
-}
-
-void MediaTrackGraph::NotifyJSContext(JSContext* aCx) {
-  MOZ_ASSERT(OnGraphThread());
-  MOZ_ASSERT(aCx);
-
-  auto* impl = static_cast<MediaTrackGraphImpl*>(this);
-  if (impl->mJSContext) {
-    MOZ_ASSERT(impl->mJSContext == aCx);
-    return;
-  }
-  JS_AddInterruptCallback(aCx, InterruptCallback);
-  MonitorAutoLock lock(impl->mMonitor);
-  impl->mJSContext = aCx;
-  if (impl->mInterruptJSCalled) {
-    JS_RequestInterruptCallback(aCx);
-  }
 }
 
 void ProcessedMediaTrack::AddInput(MediaInputPort* aPort) {

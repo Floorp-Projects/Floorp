@@ -40,10 +40,6 @@ AudioWorkletGlobalScope::AudioWorkletGlobalScope(AudioWorkletImpl* aImpl)
 
 bool AudioWorkletGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {
-  // |this| is being exposed to JS and content script will soon be running.
-  // The graph needs a handle on the JSContext so it can interrupt JS.
-  mImpl->DestinationTrack()->Graph()->NotifyJSContext(aCx);
-
   JS::RealmOptions options;
 
   // The SharedArrayBuffer global constructor property should not be present in
