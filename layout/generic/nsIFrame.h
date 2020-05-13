@@ -4415,7 +4415,10 @@ class nsIFrame : public nsQueryFrame {
   }
 
   bool MayHaveTransformAnimation() const { return mMayHaveTransformAnimation; }
-  void SetMayHaveTransformAnimation() { mMayHaveTransformAnimation = true; }
+  void SetMayHaveTransformAnimation() {
+    AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
+    mMayHaveTransformAnimation = true;
+  }
   bool MayHaveOpacityAnimation() const { return mMayHaveOpacityAnimation; }
   void SetMayHaveOpacityAnimation() { mMayHaveOpacityAnimation = true; }
 
