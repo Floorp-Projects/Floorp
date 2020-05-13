@@ -138,7 +138,7 @@
 
 - name: GuardToInt32ModUint32
   shared: true
-  transpile: true
+  transpile: false
   args:
     input: ValId
     result: Int32Id
@@ -663,17 +663,7 @@
   args:
     obj: ObjId
 
-- name: StoreTypedArrayElement
-  shared: true
-  transpile: true
-  args:
-    obj: ObjId
-    elementType: ScalarTypeImm
-    index: Int32Id
-    rhs: RawId
-    handleOOB: BoolImm
-
-- name: StoreTypedObjectElement
+- name: StoreTypedElement
   shared: true
   transpile: false
   args:
@@ -682,6 +672,7 @@
     elementType: ScalarTypeImm
     index: Int32Id
     rhs: RawId
+    handleOOB: BoolImm
 
 - name: CallNativeSetter
   shared: false
