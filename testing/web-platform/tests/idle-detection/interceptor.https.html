@@ -37,8 +37,8 @@ promise_test(async t => {
   await detector.start({ signal: controller.signal });
   await initial_state;
 
-  assert_equals(detector.state.user, "active");
-  assert_equals(detector.state.screen, "locked");
+  assert_equals(detector.userState, "active");
+  assert_equals(detector.screenState, "locked");
 
   controller.abort();
 }, 'start()');
@@ -75,8 +75,8 @@ promise_test(async t => {
   // Wait for the first change in state.
   await watcher.wait_for("change");
 
-  assert_equals(detector.state.user, "idle");
-  assert_equals(detector.state.screen, "unlocked");
+  assert_equals(detector.userState, "idle");
+  assert_equals(detector.screenState, "unlocked");
 
   controller.abort();
 }, 'updates once');
@@ -120,11 +120,11 @@ promise_test(async t => {
 
   // Waits for the first event.
   await watcher.wait_for("change");
-  assert_equals(detector.state.user, "idle");
+  assert_equals(detector.userState, "idle");
 
   // Waits for the second event.
   await watcher.wait_for("change");
-  assert_equals(detector.state.user, "active");
+  assert_equals(detector.userState, "active");
 
   controller.abort();
 }, 'updates twice');
@@ -148,7 +148,7 @@ promise_test(async t => {
   await detector.start({ signal: controller.signal });
   await initial_state;
 
-  assert_equals(detector.state.screen, "locked");
+  assert_equals(detector.screenState, "locked");
 
   controller.abort();
 }, 'locked screen');
@@ -175,8 +175,8 @@ promise_test(async t => {
   // Waits for the first event.
   await event;
 
-  assert_equals(detector.state.user, "active");
-  assert_equals(detector.state.screen, "locked");
+  assert_equals(detector.userState, "active");
+  assert_equals(detector.screenState, "locked");
 
   controller.abort();
 }, 'IdleDetector.onchange');
@@ -203,8 +203,8 @@ promise_test(async t => {
   await start_promise;
 
   await initial_state;
-  assert_equals(detector.state.user, "active");
-  assert_equals(detector.state.screen, "unlocked");
+  assert_equals(detector.userState, "active");
+  assert_equals(detector.screenState, "unlocked");
 
   // Calling abort() multiple times is safe.
   controller.abort();
@@ -268,8 +268,8 @@ promise_test(async t => {
   initial_state = watcher.wait_for("change");
   await detector.start({ signal: controller.signal });
   await initial_state;
-  assert_equals(detector.state.user, "idle");
-  assert_equals(detector.state.screen, "locked");
+  assert_equals(detector.userState, "idle");
+  assert_equals(detector.screenState, "locked");
 
   controller.abort();
 }, 'Calling start() after stop(): re-starting monitor.');
