@@ -7,7 +7,7 @@ from six.moves.http_cookies import BaseCookie
 from six.moves.urllib.parse import parse_qsl, urlsplit
 
 from . import stash
-from .utils import HTTPException, isomorphic_encode
+from .utils import HTTPException, isomorphic_encode, isomorphic_decode
 
 missing = object()
 
@@ -229,13 +229,13 @@ class Request(object):
 
     .. attribute:: cookies
 
-    Cookies object representing cookies sent with the request with a
+    A Cookies object representing cookies sent with the request with a
     dictionary-like interface.
 
     .. attribute:: auth
 
-    Object with username and password properties representing any
-    credentials supplied using HTTP authentication.
+    An instance of Authentication with username and password properties
+    representing any credentials supplied using HTTP authentication.
 
     .. attribute:: server
 
@@ -322,14 +322,12 @@ class Request(object):
     @property
     def cookies(self):
         if self._cookies is None:
-            parser = BaseCookie()
+            parser = BinaryCookieParser()
             cookie_headers = self.headers.get("cookie", b"")
-            if PY3:
-                cookie_headers = cookie_headers.decode("iso-8859-1")
             parser.load(cookie_headers)
             cookies = Cookies()
             for key, value in iteritems(parser):
-                cookies[key] = CookieValue(value)
+                cookies[isomorphic_encode(key)] = CookieValue(value)
             self._cookies = cookies
         return self._cookies
 
@@ -590,8 +588,39 @@ class MultiDict(dict):
         return self
 
 
+class BinaryCookieParser(BaseCookie):
+    """A subclass of BaseCookie that returns values in binary strings
+
+    This is not intended to store the cookies; use Cookies instead.
+    """
+    def value_decode(self, val):
+        """Decode value from network to (real_value, coded_value).
+
+        Override BaseCookie.value_decode.
+        """
+        return isomorphic_encode(val), val
+
+    def value_encode(self, val):
+        raise NotImplementedError('BinaryCookieParser is not for setting cookies')
+
+    def load(self, rawdata):
+        """Load cookies from a binary string.
+
+        This overrides and calls BaseCookie.load. Unlike BaseCookie.load, it
+        does not accept dictionaries.
+        """
+        assert isinstance(rawdata, binary_type)
+        if PY3:
+            # BaseCookie.load expects a native string, which in Python 3 is text.
+            rawdata = isomorphic_decode(rawdata)
+        super(BinaryCookieParser, self).load(rawdata)
+
+
 class Cookies(MultiDict):
-    """MultiDict specialised for Cookie values"""
+    """MultiDict specialised for Cookie values
+
+    Keys and values are binary strings.
+    """
     def __init__(self):
         pass
 
