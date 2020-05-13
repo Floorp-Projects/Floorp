@@ -430,7 +430,7 @@ void UrlClassifierCommon::AnnotateChannel(nsIChannel* aChannel,
   }
 
   bool isThirdPartyWithTopLevelWinURI =
-      nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, chanURI);
+      AntiTrackingUtils::IsThirdPartyChannel(aChannel);
 
   UC_LOG(("UrlClassifierCommon::AnnotateChannel, annotating channel[%p]",
           aChannel));
