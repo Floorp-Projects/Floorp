@@ -355,11 +355,6 @@ bool WarpCacheIRTranspiler::emitTruncateDoubleToUInt32(
   return defineOperand(resultId, ins);
 }
 
-bool WarpCacheIRTranspiler::emitGuardToInt32ModUint32(ValOperandId valId,
-                                                      Int32OperandId resultId) {
-  return emitTruncateDoubleToUInt32(valId, resultId);
-}
-
 bool WarpCacheIRTranspiler::emitLoadInt32Result(Int32OperandId valId) {
   MDefinition* val = getOperand(valId);
   MOZ_ASSERT(val->type() == MIRType::Int32);
@@ -662,38 +657,6 @@ bool WarpCacheIRTranspiler::emitStoreDenseElement(ObjOperandId objId,
   auto* store =
       MStoreElement::New(alloc(), elements, index, rhs, needsHoleCheck);
   store->setNeedsBarrier();
-  addEffectful(store);
-  return resumeAfter(store);
-}
-
-bool WarpCacheIRTranspiler::emitStoreTypedArrayElement(ObjOperandId objId,
-                                                       Scalar::Type elementType,
-                                                       Int32OperandId indexId,
-                                                       uint32_t rhsId,
-                                                       bool handleOOB) {
-  MDefinition* obj = getOperand(objId);
-  MDefinition* index = getOperand(indexId);
-  MDefinition* rhs = getOperand(ValOperandId(rhsId));
-
-  auto* length = MTypedArrayLength::New(alloc(), obj);
-  add(length);
-
-  if (!handleOOB) {
-    // MStoreTypedArrayElementHole does the bounds checking.
-    index = addBoundsCheck(index, length);
-  }
-
-  auto* elements = MTypedArrayElements::New(alloc(), obj);
-  add(elements);
-
-  MInstruction* store;
-  if (handleOOB) {
-    store = MStoreTypedArrayElementHole::New(alloc(), elements, length, index,
-                                             rhs, elementType);
-  } else {
-    store = MStoreUnboxedScalar::New(alloc(), elements, index, rhs, elementType,
-                                     MStoreUnboxedScalar::TruncateInput);
-  }
   addEffectful(store);
   return resumeAfter(store);
 }
