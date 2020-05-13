@@ -481,7 +481,8 @@ bool WarpCacheIRTranspiler::emitLoadInt32ArrayLengthResult(ObjOperandId objId) {
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(ObjOperandId objId) {
+bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(
+    ObjOperandId objId, uint32_t getterOffset) {
   MDefinition* obj = getOperand(objId);
 
   auto* length = MTypedArrayLength::New(alloc(), obj);

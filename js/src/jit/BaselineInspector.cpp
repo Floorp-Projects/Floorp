@@ -975,7 +975,7 @@ static bool AddCacheIRGetPropFunction(
   //   [..Id Guard..]
   //   [..WindowProxy innerization..]
   //   <GuardReceiver objId>
-  //   Call(Scripted|Native)GetterResult objId
+  //   (Call(Scripted|Native)Getter|TypedArrayLength)Result objId
   //
   // Or a getter on the prototype:
   //
@@ -985,7 +985,7 @@ static bool AddCacheIRGetPropFunction(
   //   <GuardReceiver objId>
   //   LoadObject holderId
   //   GuardShape holderId
-  //   Call(Scripted|Native)GetterResult objId
+  //   (Call(Scripted|Native)Getter|TypedArrayLength)Result objId
   //
   // If |innerized| is true, we replaced a WindowProxy with the Window
   // object and we're only interested in Baseline getter stubs that performed
@@ -1044,7 +1044,8 @@ static bool AddCacheIRGetPropFunction(
   }
 
   if (reader.matchOp(CacheOp::CallScriptedGetterResult, objId) ||
-      reader.matchOp(CacheOp::CallNativeGetterResult, objId)) {
+      reader.matchOp(CacheOp::CallNativeGetterResult, objId) ||
+      reader.matchOp(CacheOp::LoadTypedArrayLengthResult, objId)) {
     // This is an own property getter, the first case.
     MOZ_ASSERT(receiver.getShape());
     MOZ_ASSERT(!receiver.getGroup());
@@ -1081,7 +1082,8 @@ static bool AddCacheIRGetPropFunction(
       stub->stubInfo()->getStubField<Shape*>(stub, reader.stubOffset());
 
   if (!reader.matchOp(CacheOp::CallScriptedGetterResult, objId) &&
-      !reader.matchOp(CacheOp::CallNativeGetterResult, objId)) {
+      !reader.matchOp(CacheOp::CallNativeGetterResult, objId) &&
+      !reader.matchOp(CacheOp::LoadTypedArrayLengthResult, objId)) {
     return false;
   }
 
