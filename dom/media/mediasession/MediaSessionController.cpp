@@ -39,10 +39,20 @@ static bool IsMetadataEmpty(const Maybe<MediaMetadataBase>& aMetadata) {
          metadata.mAlbum.IsEmpty() && metadata.mArtwork.IsEmpty();
 }
 
-MediaSessionController::MediaSessionController(uint64_t aContextId)
-    : mTopLevelBCId(aContextId) {
+MediaSessionController::MediaSessionController(uint64_t aBrowsingContextId)
+    : mTopLevelBCId(aBrowsingContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "MediaSessionController only runs on Chrome process!");
+}
+
+void MediaSessionController::NotifyMediaPlaybackChanged(
+    uint64_t aBrowsingContextId, MediaPlaybackState aState) {
+  mMediaStatusDelegate.UpdateMediaPlaybackState(aBrowsingContextId, aState);
+}
+
+void MediaSessionController::NotifyMediaAudibleChanged(
+    uint64_t aBrowsingContextId, MediaAudibleState aState) {
+  mMediaStatusDelegate.UpdateMediaAudibleState(aBrowsingContextId, aState);
 }
 
 void MediaSessionController::NotifySessionCreated(uint64_t aSessionContextId) {
@@ -270,6 +280,18 @@ bool MediaSessionController::IsInPrivateBrowsing() const {
     return false;
   }
   return nsContentUtils::IsInPrivateBrowsing(element->OwnerDoc());
+}
+
+bool MediaSessionController::IsMediaAudible() const {
+  return mMediaStatusDelegate.IsAudible();
+}
+
+bool MediaSessionController::IsMediaPlaying() const {
+  return mMediaStatusDelegate.IsPlaying();
+}
+
+bool MediaSessionController::IsAnyMediaBeingControlled() const {
+  return mMediaStatusDelegate.IsAnyMediaBeingControlled();
 }
 
 }  // namespace dom

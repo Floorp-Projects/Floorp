@@ -38,6 +38,24 @@ class MediaSessionInfo {
 };
 
 /**
+ * IMediaInfoUpdater is an interface which provides methods to update the media
+ * related information that happens in the content process.
+ */
+class IMediaInfoUpdater {
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  // Use this method to update controlled media's playback state and the
+  // browsing context where controlled media exists.
+  virtual void NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
+                                          MediaPlaybackState aState) = 0;
+
+  // Use this method to update controlled media's audible state and the
+  // browsing context where controlled media exists.
+  virtual void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
+                                         MediaAudibleState aState) = 0;
+};
+
+/**
  * MediaSessionController is used to track all alive media sessions within a tab
  * and store their metadata which could be used to show on the virtual media
  * control interface. In addition, we can use it to get the current media
@@ -55,11 +73,15 @@ class MediaSessionInfo {
  *
  * [1] https://w3c.github.io/mediasession/#active-media-session
  */
-class MediaSessionController {
+class MediaSessionController : public IMediaInfoUpdater {
  public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+  explicit MediaSessionController(uint64_t aBrowsingContextId);
 
-  explicit MediaSessionController(uint64_t aContextId);
+  // IMediaInfoUpdater's methods
+  void NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
+                                  MediaPlaybackState aState) override;
+  void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
+                                 MediaAudibleState aState) override;
 
   // Use these functions to ensure that we can track all existing media session
   // in the same tab when media session is created or destroyed in the content
@@ -77,6 +99,10 @@ class MediaSessionController {
   // which is based on website's title and favicon.
   MediaMetadataBase GetCurrentMediaMetadata() const;
   uint64_t Id() const { return mTopLevelBCId; }
+
+  bool IsMediaAudible() const;
+  bool IsMediaPlaying() const;
+  bool IsAnyMediaBeingControlled() const;
 
   MediaEventSource<MediaMetadataBase>& MetadataChangedEvent() {
     return mMetadataChangedEvent;
@@ -107,6 +133,7 @@ class MediaSessionController {
 
   nsDataHashtable<nsUint64HashKey, MediaSessionInfo> mMediaSessionInfoMap;
   MediaEventProducer<MediaMetadataBase> mMetadataChangedEvent;
+  MediaPlaybackStatus mMediaStatusDelegate;
 };
 
 }  // namespace dom

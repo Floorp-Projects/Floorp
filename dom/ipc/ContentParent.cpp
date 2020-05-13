@@ -5795,9 +5795,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaPlaybackChanged(
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
-  if (RefPtr<MediaController> controller =
+  if (RefPtr<IMediaInfoUpdater> updater =
           aContext.get_canonical()->GetMediaController()) {
-    controller->NotifyMediaPlaybackChanged(aContext.ContextId(), aState);
+    updater->NotifyMediaPlaybackChanged(aContext.ContextId(), aState);
   }
   return IPC_OK();
 }
@@ -5807,9 +5807,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
-  if (RefPtr<MediaController> controller =
+  if (RefPtr<IMediaInfoUpdater> updater =
           aContext.get_canonical()->GetMediaController()) {
-    controller->NotifyMediaAudibleChanged(aContext.ContextId(), aState);
+    updater->NotifyMediaAudibleChanged(aContext.ContextId(), aState);
   }
   return IPC_OK();
 }
