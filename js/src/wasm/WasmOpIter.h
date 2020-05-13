@@ -1683,7 +1683,8 @@ inline bool OpIter<Policy>::readRefFunc(uint32_t* funcTypeIndex) {
     return fail("function index out of range");
   }
   if (!env_.validForRefFunc.getBit(*funcTypeIndex)) {
-    return fail("function index is not in an element segment");
+    return fail(
+        "function index is not declared in a section before the code section");
   }
   return push(RefType::func());
 }
