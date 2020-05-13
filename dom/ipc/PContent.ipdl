@@ -885,6 +885,9 @@ child:
      */
     async AbortOrientationPendingPromises(MaybeDiscardedBrowsingContext aContext);
 
+    async HistoryCommitLength(MaybeDiscardedBrowsingContext aContext,
+                              uint32_t aLength);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -1579,6 +1582,9 @@ parent:
 
     async HistoryCommit(MaybeDiscardedBrowsingContext aContext,
                         uint64_t aSessionHistoryEntryID);
+
+    async HistoryGo(MaybeDiscardedBrowsingContext aContext,
+                    int32_t aOffset) returns(int32_t requestedIndex);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,

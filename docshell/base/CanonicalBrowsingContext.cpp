@@ -206,7 +206,7 @@ static uint64_t gNextHistoryEntryId = 0;
 UniquePtr<SessionHistoryInfoAndId>
 CanonicalBrowsingContext::CreateSessionHistoryEntryForLoad(
     nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
-  MOZ_ASSERT(GetChildSessionHistory(),
+  MOZ_ASSERT(GetSessionHistory(),
              "Creating an entry but session history is not enabled for this "
              "browsing context!");
   uint64_t id = ++gNextHistoryEntryId;
@@ -248,6 +248,12 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
           }
         }
       }
+      Group()->EachParent([&](ContentParent* aParent) {
+        // FIXME Should we return the length to the one process that committed
+        //       as an async return value? Or should this use synced fields?
+        Unused << aParent->SendHistoryCommitLength(
+            Top(), GetSessionHistory()->GetCount());
+      });
       return;
     }
   }

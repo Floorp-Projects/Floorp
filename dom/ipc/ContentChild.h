@@ -790,7 +790,10 @@ class ContentChild final : public PContentChild,
 
   JSActor::Type GetSide() override { return JSActor::Type::Child; }
 
- private:
+  mozilla::ipc::IPCResult RecvHistoryCommitLength(
+      const MaybeDiscarded<BrowsingContext>& aContext, uint32_t aLength);
+
+private:
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;
 #else
