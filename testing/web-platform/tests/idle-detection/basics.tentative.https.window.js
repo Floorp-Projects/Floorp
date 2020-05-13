@@ -1,21 +1,25 @@
+// META: script=/resources/testdriver.js
+// META: script=/resources/testdriver-vendor.js
 // META: title=Idle Detection API: Basics
 
 'use strict';
 
+promise_setup(async t => {
+  await test_driver.set_permission({ name: 'notifications' }, 'granted', false);
+})
+
 promise_test(async t => {
   let status = new IdleDetector();
-
   let watcher = new EventWatcher(t, status, ["change"]);
+  let initial_state = watcher.wait_for("change");
 
   await status.start();
-
-  await watcher.wait_for("change");
+  await initial_state;
 
   assert_true(['active', 'idle'].includes(status.state.user),
                 'status has a valid user state');
   assert_true(['locked', 'unlocked'].includes(status.state.screen),
                 'status has a valid screen state');
-
 }, 'start() basics');
 
 promise_test(async t => {
@@ -91,4 +95,3 @@ promise_test(async t => {
 promise_test(async t => {
   new IdleDetector({threshold: undefined});
 }, 'constructor uses a default value for the threshold');
-
