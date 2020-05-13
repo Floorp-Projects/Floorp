@@ -987,6 +987,12 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   Array<float> getColorMatrix();
 
+  /**
+   * Initialize session history for this docshell. The docshell must be the root
+   * docshell.
+   */
+  void initSessionHistory();
+
 %{C++
   /**
    * These methods call nsDocShell::GetHTMLEditorInternal() and

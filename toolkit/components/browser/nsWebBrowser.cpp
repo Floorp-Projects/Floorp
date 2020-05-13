@@ -154,9 +154,7 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   // handler that always gets called (even for subframes) for any bubbling
   // event.
 
-  if (aBrowsingContext->IsTop()) {
-    aBrowsingContext->InitSessionHistory();
-  }
+  docShell->InitSessionHistory();
 
   NS_ENSURE_SUCCESS(docShellAsWin->Create(), nullptr);
 

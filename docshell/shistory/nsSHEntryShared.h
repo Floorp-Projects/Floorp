@@ -53,12 +53,11 @@ class SHEntrySharedParentState {
 
   void NotifyListenersContentViewerEvicted();
 
-  explicit SHEntrySharedParentState(nsISHistory* aSHistory);
-
  protected:
-  explicit SHEntrySharedParentState(SHEntrySharedParentState* aDuplicate)
-      : SHEntrySharedParentState(aDuplicate->mSHistory) {}
-  explicit SHEntrySharedParentState(nsIWeakReference* aSHistory);
+  SHEntrySharedParentState(nsISHistory* aSHistory, uint64_t aID);
+  SHEntrySharedParentState(SHEntrySharedParentState* aDuplicate, uint64_t aID)
+      : SHEntrySharedParentState(aDuplicate->mSHistory, aID) {}
+  SHEntrySharedParentState(nsIWeakReference* aSHistory, uint64_t aID);
   virtual ~SHEntrySharedParentState();
   NS_INLINE_DECL_VIRTUAL_REFCOUNTING_WITH_DESTROY(SHEntrySharedParentState,
                                                   Destroy())
@@ -105,6 +104,8 @@ class SHEntrySharedParentState {
  */
 class SHEntrySharedChildState {
  protected:
+  SHEntrySharedChildState();
+
   void CopyFrom(SHEntrySharedChildState* aSource);
 
  public:
@@ -116,11 +117,16 @@ class SHEntrySharedChildState {
   // they're specific to a particular content viewer.
   nsCOMPtr<nsIContentViewer> mContentViewer;
   RefPtr<mozilla::dom::Document> mDocument;
+  // FIXME Move to parent?
+  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
   nsCOMPtr<nsISupports> mWindowState;
   // FIXME Move to parent?
   nsCOMPtr<nsIMutableArray> mRefreshURIList;
   nsExpirationState mExpirationState;
   UniquePtr<nsDocShellEditorData> mEditorData;
+
+  // FIXME Move to parent?
+  bool mSaveLayoutState;
 };
 
 }  // namespace dom
@@ -143,7 +149,7 @@ class nsSHEntryShared final : public nsIBFCacheEntry,
 
   using SHEntrySharedParentState::SHEntrySharedParentState;
 
-  already_AddRefed<nsSHEntryShared> Duplicate();
+  already_AddRefed<nsSHEntryShared> Duplicate(uint64_t aNewSharedID);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIBFCACHEENTRY
@@ -160,7 +166,7 @@ class nsSHEntryShared final : public nsIBFCacheEntry,
  private:
   ~nsSHEntryShared();
 
-  friend class nsSHEntry;
+  friend class nsLegacySHEntry;
 
   void RemoveFromExpirationTracker();
   void SyncPresentationState();

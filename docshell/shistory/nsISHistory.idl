@@ -151,6 +151,13 @@ interface nsISHistory: nsISupports
   void addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
   /**
+   * Clear the reference to the toplevel browsing context object that this
+   * SHistory object belongs to.
+   */
+  [noscript, notxpcom]
+  void ClearRootBrowsingContext();
+
+  /**
    * Update the index maintained by sessionHistory
    */
   void updateIndex();

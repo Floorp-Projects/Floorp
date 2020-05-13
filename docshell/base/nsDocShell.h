@@ -64,7 +64,6 @@ namespace dom {
 class ClientInfo;
 class ClientSource;
 class EventTarget;
-class SessionHistoryInfo;
 }  // namespace dom
 namespace net {
 class LoadInfo;
@@ -663,10 +662,6 @@ class nsDocShell final : public nsDocLoader,
   void SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
                                   const Maybe<nsISHEntry*>& aOSHE);
 
-  mozilla::dom::ChildSHistory* GetSessionHistory() {
-    return mBrowsingContext->GetChildSessionHistory();
-  }
-
   //
   // URI Load
   //
@@ -1132,11 +1127,6 @@ class nsDocShell final : public nsDocLoader,
   // load don't generate history entries the way frame navigation after the
   // parent has loaded does. (This isn't the only purpose of mLSHE.)
   nsCOMPtr<nsISHEntry> mLSHE;
-
-  // These are only set when fission.sessionHistoryInParent is set.
-  mozilla::UniquePtr<mozilla::dom::SessionHistoryInfo> mActiveEntry;
-  mozilla::UniquePtr<mozilla::dom::SessionHistoryInfo> mLoadingEntry;
-  uint64_t mLoadingEntryId;
 
   // Holds a weak pointer to a RestorePresentationEvent object if any that
   // holds a weak pointer back to us. We use this pointer to possibly revoke
