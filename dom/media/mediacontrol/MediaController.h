@@ -63,6 +63,12 @@ class MediaController final
   void SeekBackward();
   void SeekForward();
 
+  // IMediaInfoUpdater's methods
+  void NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
+                                  MediaPlaybackState aState) override;
+  void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
+                                 MediaAudibleState aState) override;
+
   // If any of controlled media is being used in Picture-In-Picture mode, then
   // this function should be callled and set the value.
   void SetIsInPictureInPictureMode(bool aIsInPictureInPictureMode);
@@ -76,18 +82,10 @@ class MediaController final
   void Shutdown();
 
   bool IsAudible() const;
-  bool IsAnyMediaBeingControlled() const;
   MediaSessionPlaybackState GetState() const;
 
   void SetDeclaredPlaybackState(uint64_t aSessionContextId,
                                 MediaSessionPlaybackState aState) override;
-
-  // These methods are only being used to notify the state changes of controlled
-  // media in ContentParent or MediaControlUtils.
-  void NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
-                                  MediaPlaybackState aState);
-  void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
-                                 MediaAudibleState aState);
 
  private:
   ~MediaController();
@@ -111,7 +109,6 @@ class MediaController final
   bool mIsRegisteredToService = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;
-  MediaPlaybackStatus mMediaStatus;
 
   // This state can match to the `guessed playback state` in the spec [1], it
   // indicates if we have any media element playing within the tab which this
