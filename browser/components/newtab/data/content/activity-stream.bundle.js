@@ -1709,6 +1709,13 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
         }, info.url), ")");
       } else if (provider.type === "remote-settings") {
         label = `remote settings (${provider.bucket})`;
+      } else if (provider.type === "remote-experiments") {
+        label = react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "remote settings (", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
+          className: "providerUrl",
+          target: "_blank",
+          href: "https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/messaging-experiments/records",
+          rel: "noopener noreferrer"
+        }, "messaging-experiments"), ")");
       }
 
       let reasonsDisabled = [];

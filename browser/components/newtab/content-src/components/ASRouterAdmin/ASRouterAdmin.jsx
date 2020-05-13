@@ -1088,6 +1088,21 @@ export class ASRouterAdminInner extends React.PureComponent {
               );
             } else if (provider.type === "remote-settings") {
               label = `remote settings (${provider.bucket})`;
+            } else if (provider.type === "remote-experiments") {
+              label = (
+                <span>
+                  remote settings (
+                  <a
+                    className="providerUrl"
+                    target="_blank"
+                    href="https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/messaging-experiments/records"
+                    rel="noopener noreferrer"
+                  >
+                    messaging-experiments
+                  </a>
+                  )
+                </span>
+              );
             }
 
             let reasonsDisabled = [];
