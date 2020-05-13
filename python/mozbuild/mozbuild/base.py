@@ -554,7 +554,7 @@ class MozbuildObject(ProcessExecutionMixin):
         if where == 'staged-package':
             stem = os.path.join(stem, substs['MOZ_APP_NAME'])
 
-        if substs['OS_ARCH'] == 'Darwin':
+        if substs['OS_ARCH'] == 'Darwin' and 'MOZ_WIDGET_TOOLKIT' in substs:
             if substs['MOZ_BUILD_APP'] == 'xulrunner':
                 stem = os.path.join(stem, 'XUL.framework')
             else:
