@@ -389,7 +389,7 @@ static RegExpNode* WrapBody(MutableHandleRegExpShared re,
 }
 
 bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
-                    HandleLinearString input) {
+                    HandleLinearString input, RegExpShared::CodeKind codeKind) {
   RootedAtom pattern(cx, re->getSource());
   JS::RegExpFlags flags = re->getFlags();
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
@@ -452,8 +452,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
     return false;
   }
 
-  bool useNativeCode = re->markedForTierUp();
-
+  bool useNativeCode = codeKind == RegExpShared::CodeKind::Jitcode;
   MOZ_ASSERT_IF(useNativeCode, IsNativeRegExpEnabled());
 
   Maybe<jit::JitContext> jctx;
