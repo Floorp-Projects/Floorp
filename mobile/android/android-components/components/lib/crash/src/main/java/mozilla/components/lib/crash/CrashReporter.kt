@@ -139,11 +139,19 @@ class CrashReporter(
      * Submit a caught exception report to all registered services.
      */
     override fun submitCaughtException(throwable: Throwable): Job {
-        logger.info("Caught Exception report submitted to ${services.size} services")
+        /*
+         * if stacktrace is empty, replace throwable with UnexpectedlyMissingStacktrace exception so
+         * we can figure out which module is submitting caught exception reports without a stacktrace.
+         */
+        var reportThrowable = throwable
+        if (throwable.stackTrace.isEmpty()) {
+            reportThrowable = CrashReporterException.UnexpectedlyMissingStacktrace("Missing Stacktrace", throwable)
+        }
 
+        logger.info("Caught Exception report submitted to ${services.size} services")
         return scope.launch {
             services.forEach {
-                it.report(throwable, crashBreadcrumbs.toSortedArrayList())
+                it.report(reportThrowable, crashBreadcrumbs.toSortedArrayList())
             }
         }
     }
@@ -291,4 +299,17 @@ class CrashReporter(
             get() = instance ?: throw IllegalStateException(
                 "You need to call install() on your CrashReporter instance from Application.onCreate().")
     }
+}
+
+/**
+ * A base class for exceptions describing crash reporter exception.
+ */
+internal abstract class CrashReporterException(message: String, cause: Throwable?) : Exception(message, cause) {
+    /**
+     * Stacktrace was expected to be present, but it wasn't.
+     */
+    internal class UnexpectedlyMissingStacktrace(
+        message: String,
+        cause: Throwable?
+    ) : CrashReporterException(message, cause)
 }
