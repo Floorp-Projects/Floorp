@@ -15,7 +15,6 @@ idl_test(
 
       idl_array.add_objects({
         IdleDetector: ['idle'],
-        IdleState: ['idle.state']
       });
     }
 );
