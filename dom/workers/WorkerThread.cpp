@@ -6,14 +6,15 @@
 
 #include "WorkerThread.h"
 
-#include "mozilla/Assertions.h"
-#include "mozilla/ipc/BackgroundChild.h"
 #include "EventQueue.h"
-#include "mozilla/ThreadEventQueue.h"
-#include "mozilla/PerformanceCounter.h"
-#include "nsIThreadInternal.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
+#include "mozilla/AbstractThread.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/PerformanceCounter.h"
+#include "mozilla/ThreadEventQueue.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "nsIThreadInternal.h"
 
 #ifdef DEBUG
 #  include "nsThreadManager.h"
