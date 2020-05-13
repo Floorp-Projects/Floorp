@@ -236,13 +236,8 @@ struct MOZ_RAII AutoPrepareFocusRange {
       return;
     }
 
-    int16_t reason = aSelection->mFrameSelection->mSelectionChangeReasons;
-    bool isAnchorRelativeOp =
-        (reason & (nsISelectionListener::DRAG_REASON |
-                   nsISelectionListener::MOUSEDOWN_REASON |
-                   nsISelectionListener::MOUSEUP_REASON |
-                   nsISelectionListener::COLLAPSETOSTART_REASON));
-    if (!isAnchorRelativeOp) {
+    if (!IsAnchorRelativeOperation(
+            aSelection->mFrameSelection->mSelectionChangeReasons)) {
       return;
     }
 
@@ -296,6 +291,19 @@ struct MOZ_RAII AutoPrepareFocusRange {
     if (aSelection->mFrameSelection) {
       aSelection->mFrameSelection->InvalidateDesiredCaretPos();
     }
+  }
+
+ private:
+  /**
+   * @aParam aSelectionChangeReasons can be multiple of the reasons defined in
+             nsISelectionListener.idl.
+   */
+  static bool IsAnchorRelativeOperation(const int16_t aSelectionChangeReasons) {
+    return aSelectionChangeReasons &
+           (nsISelectionListener::DRAG_REASON |
+            nsISelectionListener::MOUSEDOWN_REASON |
+            nsISelectionListener::MOUSEUP_REASON |
+            nsISelectionListener::COLLAPSETOSTART_REASON);
   }
 
   Maybe<Selection::AutoUserInitiated> mUserSelect;
