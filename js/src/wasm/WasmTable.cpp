@@ -65,8 +65,7 @@ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
       return SharedTable(
           cx->new_<Table>(cx, desc, maybeObject, std::move(functions)));
     }
-    case TableKind::AnyRef:
-    case TableKind::NullRef: {
+    case TableKind::AnyRef: {
       TableAnyRefVector objects;
       if (!objects.resize(desc.limits.initial)) {
         return nullptr;
@@ -101,9 +100,6 @@ void Table::tracePrivate(JSTracer* trc) {
     }
     case TableKind::AnyRef: {
       objects_.trace(trc);
-      break;
-    }
-    case TableKind::NullRef: {
       break;
     }
     case TableKind::AsmJS: {

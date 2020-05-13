@@ -74,7 +74,6 @@ class Table : public ShareableBase<Table> {
   TableRepr repr() const {
     switch (kind()) {
       case TableKind::AnyRef:
-      case TableKind::NullRef:
         return TableRepr::Ref;
       case TableKind::FuncRef:
       case TableKind::AsmJS:

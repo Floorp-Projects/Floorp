@@ -1108,7 +1108,6 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
             break;
           }
           case RefType::Func:
-          case RefType::Null:
           case RefType::TypeIndex: {
             // Guarded against by temporarilyUnsupportedReftypeForEntry()
             MOZ_CRASH("unexpected argument type when calling from the jit");
@@ -1276,8 +1275,6 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         switch (results[0].refTypeKind()) {
           case RefType::Func:
             // For FuncRef use the AnyRef path for now, since that will work.
-          case RefType::Null:
-            // For NullRef, ditto
           case RefType::Any:
             // Per comment above, the call may have clobbered the Tls register,
             // so reload since unboxing will need it.
@@ -1575,8 +1572,6 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         switch (results[0].refTypeKind()) {
           case wasm::RefType::Func:
             // For FuncRef, use the AnyRef path for now, since that will work.
-          case wasm::RefType::Null:
-            // For NullRef, ditto.
           case wasm::RefType::Any:
             // The call to wasm above preserves the WasmTlsReg, we don't need to
             // reload it here.
@@ -2107,15 +2102,6 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
                       funcImportIndex);
             GenPrintPtr(DebugChannel::Import, masm, ReturnReg);
             break;
-          case RefType::Null:
-            masm.call(SymbolicAddress::CallImport_NullRef);
-            masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg,
-                              throwLabel);
-            masm.loadPtr(argv, ReturnReg);
-            GenPrintf(DebugChannel::Import, masm, "wasm-import[%u]; returns ",
-                      funcImportIndex);
-            GenPrintPtr(DebugChannel::Import, masm, ReturnReg);
-            break;
           case RefType::TypeIndex:
             MOZ_CRASH("No Ref support here yet");
         }
@@ -2349,7 +2335,6 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
             GenPrintPtr(DebugChannel::Import, masm, ReturnReg);
             break;
           case RefType::Func:
-          case RefType::Null:
           case RefType::TypeIndex:
             MOZ_CRASH("typed reference returned by import (jit exit) NYI");
         }
@@ -2455,7 +2440,6 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
                                 throwLabel);
               break;
             case RefType::Func:
-            case RefType::Null:
             case RefType::TypeIndex:
               MOZ_CRASH("Unsupported convert type");
           }

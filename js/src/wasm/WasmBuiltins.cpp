@@ -629,7 +629,6 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
             }
             break;
           case RefType::Func:
-          case RefType::Null:
           case RefType::TypeIndex:
             // Guarded against by temporarilyUnsupportedReftypeForEntry()
             MOZ_CRASH("unexpected input argument in CoerceInPlace_JitEntry");
@@ -841,11 +840,6 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
           ArgType_Int32,
           {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_General});
       return FuncCast(Instance::callImport_anyref, *abiType);
-    case SymbolicAddress::CallImport_NullRef:
-      *abiType = MakeABIFunctionType(
-          ArgType_Int32,
-          {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_General});
-      return FuncCast(Instance::callImport_nullref, *abiType);
     case SymbolicAddress::CoerceInPlace_ToInt32:
       *abiType = Args_General1;
       return FuncCast(CoerceInPlace_ToInt32, *abiType);
@@ -1153,7 +1147,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::CallImport_F64:
     case SymbolicAddress::CallImport_FuncRef:
     case SymbolicAddress::CallImport_AnyRef:
-    case SymbolicAddress::CallImport_NullRef:
     case SymbolicAddress::CoerceInPlace_ToInt32:  // GenerateImportJitExit
     case SymbolicAddress::CoerceInPlace_ToNumber:
 #if defined(ENABLE_WASM_BIGINT)

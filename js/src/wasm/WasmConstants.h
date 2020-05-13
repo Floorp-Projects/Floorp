@@ -65,9 +65,6 @@ enum class TypeCode {
   // A reference to any type.
   AnyRef = 0x6f,  // SLEB128(-0x11)
 
-  // A null reference.
-  NullRef = 0x6e,  // SLEB128(-0x12)
-
   // Type constructor for reference types.
   OptRef = 0x6c,
 

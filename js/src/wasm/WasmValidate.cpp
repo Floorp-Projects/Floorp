@@ -1685,7 +1685,6 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
             break;
           case RefType::Func:
           case RefType::Any:
-          case RefType::Null:
             offset = layout.addReference(ReferenceType::TYPE_WASM_ANYREF);
             break;
         }
@@ -1887,16 +1886,11 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
   if (elementType == uint8_t(TypeCode::FuncRef)) {
     tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
-  } else if (elementType == uint8_t(TypeCode::AnyRef) ||
-             elementType == uint8_t(TypeCode::NullRef)) {
+  } else if (elementType == uint8_t(TypeCode::AnyRef)) {
     if (!refTypesEnabled) {
       return d.fail("expected 'funcref' element type");
     }
-    if (elementType == uint8_t(TypeCode::AnyRef)) {
-      tableKind = TableKind::AnyRef;
-    } else {
-      tableKind = TableKind::NullRef;
-    }
+    tableKind = TableKind::AnyRef;
 #endif
   } else {
 #ifdef ENABLE_WASM_REFTYPES
@@ -1938,7 +1932,6 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
       switch (type.refTypeKind()) {
         case RefType::Func:
         case RefType::Any:
-        case RefType::Null:
           break;
         case RefType::TypeIndex:
 #ifdef WASM_PRIVATE_REFTYPES
@@ -2682,9 +2675,6 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
               break;
             case uint8_t(TypeCode::AnyRef):
               elemType = RefType::any();
-              break;
-            case uint8_t(TypeCode::NullRef):
-              elemType = RefType::null();
               break;
             default:
               return d.fail(
