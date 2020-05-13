@@ -486,6 +486,18 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean isInThirdPartyContext;
 
   /**
+   * True if this request is a third party in respect to the top-level window.
+   *
+   * Note that this doesn't consider the parent window. I.e. It will still
+   * return false even in the case that the parent is cross-origin but the
+   * top-level is same-origin.
+   *
+   * This value would be set during opening the channel in parent and propagate
+   * to the channel in the content.
+   */
+  [infallible] attribute boolean isThirdPartyContextToTopWindow;
+
+  /**
    * See the SEC_COOKIES_* flags above. This attribute will never return
    * SEC_COOKIES_DEFAULT, but will instead return what the policy resolves to.
    * I.e. SEC_COOKIES_SAME_ORIGIN for CORS mode, and SEC_COOKIES_INCLUDE

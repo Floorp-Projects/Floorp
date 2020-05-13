@@ -157,7 +157,8 @@ class LoadInfo final : public nsILoadInfo {
            uint64_t aTopOuterWindowID, uint64_t aFrameOuterWindowID,
            uint64_t aBrowsingContextID, uint64_t aFrameBrowsingContextID,
            bool aInitialSecurityCheckDone, bool aIsThirdPartyRequest,
-           bool aIsFormSubmission, bool aSendCSPViolationEvents,
+           bool aIsThirdPartyContextToTopWindow, bool aIsFormSubmission,
+           bool aSendCSPViolationEvents,
            const OriginAttributes& aOriginAttributes,
            RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
            RedirectHistoryArray& aRedirectChain,
@@ -250,6 +251,7 @@ class LoadInfo final : public nsILoadInfo {
   uint64_t mFrameBrowsingContextID;
   bool mInitialSecurityCheckDone;
   bool mIsThirdPartyContext;
+  bool mIsThirdPartyContextToTopWindow;
   bool mIsFormSubmission;
   bool mSendCSPViolationEvents;
   OriginAttributes mOriginAttributes;
