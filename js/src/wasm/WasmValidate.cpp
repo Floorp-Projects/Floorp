@@ -2304,6 +2304,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
         return d.fail(
             "failed to read ref.func index in initializer expression");
       }
+      env->validForRefFunc.setBit(i);
       *init = InitExpr::fromRefFunc(i);
       break;
     }
@@ -2454,6 +2455,7 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
       }
 #endif
 
+      env->validForRefFunc.setBit(funcIndex);
       return env->exports.emplaceBack(std::move(fieldName), funcIndex,
                                       DefinitionKind::Function);
     }
@@ -2555,6 +2557,8 @@ static bool DecodeStartSection(Decoder& d, ModuleEnvironment* env) {
   if (funcIndex >= env->numFuncs()) {
     return d.fail("unknown start function");
   }
+
+  env->validForRefFunc.setBit(funcIndex);
 
   const FuncType& funcType = *env->funcTypes[funcIndex];
   if (funcType.results().length() > 0) {
