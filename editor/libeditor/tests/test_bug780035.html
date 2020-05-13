@@ -17,7 +17,7 @@ SimpleTest.waitForFocus(function() {
   sendKey("RETURN");
   sendChar("x");
   is(document.querySelector("div").innerHTML,
-     "<div><br></div><div>x</div>", "No <font> tag should be generated");
+     "<div><br></div><div>x<br></div>", "No <font> tag should be generated");
   SimpleTest.finish();
 });
 </script>

@@ -1700,38 +1700,6 @@ EditActionResult HTMLEditor::HandleInsertText(
                        "Failed to unset interline position");
 
   if (currentPoint.IsSet()) {
-    if (currentPoint.IsInTextNode() &&
-        IsVisibleTextNode(*currentPoint.ContainerAsText())) {
-      // If the text is visible, we should remove padding <br> element if
-      // there is.  Currently, we should remove it when it's immediately
-      // after the text node.  I.e., not scanning next <br> element outside
-      // the parent element even if there is one in same block because <br>
-      // element should be in same element if it's created for empty line.
-      RefPtr<nsIContent> nextSibling =
-          currentPoint.GetContainer()->GetNextSibling();
-      if (nextSibling && nextSibling->IsHTMLElement(nsGkAtoms::br) &&
-          !IsVisibleBRElement(nextSibling)) {
-        {
-          AutoTrackDOMPoint tracker(RangeUpdaterRef(), &currentPoint);
-          nsresult rv = DeleteNodeWithTransaction(*nextSibling);
-          if (NS_WARN_IF(Destroyed())) {
-            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (NS_FAILED(rv)) {
-            NS_WARNING(
-                "HTMLEditor::DeleteNodeWithTransaction() failed to remove "
-                "unnecessary padding <br> element");
-            return EditActionHandled(rv);
-          }
-        }
-        if (!currentPoint.IsSetAndValid()) {
-          NS_WARNING(
-              "Mutation event listener changed the DOM tree unexpected while "
-              "removing invisible <br> element");
-          return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-        }
-      }
-    }
     nsresult rv = CollapseSelectionTo(currentPoint);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
