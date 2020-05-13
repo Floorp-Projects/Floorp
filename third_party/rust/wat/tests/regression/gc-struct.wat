@@ -21,6 +21,5 @@
   (func
     struct.narrow i32 f32
     struct.narrow anyref funcref
-    struct.narrow anyref nullref
   )
 )

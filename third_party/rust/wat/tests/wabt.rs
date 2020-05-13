@@ -245,6 +245,7 @@ fn error_matches(error: &str, message: &str) -> bool {
         || message == "unclosed annotation"
         || message == "malformed annotation id"
         || message == "alignment must be a power of two"
+        || message == "i32 constant out of range"
     {
         return error.contains("expected ")
             || error.contains("constant out of range")
@@ -445,6 +446,10 @@ struct Wast2Json {
 }
 
 fn wast2json(test: &Path) -> Option<Wast2Json> {
+    // Right now wabt infinite loops on this test.
+    if test.ends_with("testsuite/proposals/annotations/annotations.wast") {
+        return None;
+    }
     let td = tempfile::TempDir::new().unwrap();
     let result = Command::new("wast2json")
         .arg(test)
@@ -501,6 +506,24 @@ fn skip_test(test: &Path, contents: &str) -> bool {
 
     // wait for wabt to catch up on the annotations spec test
     if test.ends_with("wabt/third_party/testsuite/proposals/annotations/annotations.wast") {
+        return true;
+    }
+
+    // Waiting for wabt to remove subtyping from reference-types.
+    if test
+        .iter()
+        .any(|x| x == "bulk-memory-operations" || x == "reference-types")
+        || test.ends_with("reference-types.txt")
+        || test.ends_with("all-features.txt")
+        || test.ends_with("all-features.txt")
+        || test.ends_with("bulk-memory-named.txt")
+        || test.ends_with("reference-types-named.txt")
+        || test.ends_with("table-grow.txt")
+        || test.ends_with("result-exnref.txt")
+        || test.ends_with("global-exnref.txt")
+        || test.ends_with("global.txt")
+        || test.ends_with("bulk-memory.txt")
+    {
         return true;
     }
 

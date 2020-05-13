@@ -209,7 +209,20 @@ impl<'a> Resolver<'a> {
 
     fn resolve_valtype(&self, ty: &mut ValType<'a>) -> Result<(), Error> {
         match ty {
-            ValType::Ref(i) | ValType::Optref(i) | ValType::Rtt(i) => {
+            ValType::Ref(ty) => self.resolve_reftype(ty)?,
+            ValType::Rtt(i) => {
+                self.ns(Ns::Type)
+                    .resolve(i)
+                    .map_err(|id| self.resolve_error(id, "type"))?;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn resolve_reftype(&self, ty: &mut RefType<'a>) -> Result<(), Error> {
+        match ty {
+            RefType::Type(i) | RefType::OptType(i) => {
                 self.ns(Ns::Type)
                     .resolve(i)
                     .map_err(|id| self.resolve_error(id, "type"))?;
@@ -514,7 +527,7 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 ));
             }
 
-            Br(i) | BrIf(i) | BrOnCast(i) => self.resolve_label(i),
+            Br(i) | BrIf(i) | BrOnCast(i) | BrOnNull(i) => self.resolve_label(i),
 
             BrTable(i) => {
                 for label in i.labels.iter_mut() {
@@ -547,6 +560,8 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolver.resolve_valtype(&mut s.from)?;
                 self.resolver.resolve_valtype(&mut s.to)
             }
+
+            RefNull(ty) | RefIsNull(ty) => self.resolver.resolve_reftype(ty),
 
             _ => Ok(()),
         }
