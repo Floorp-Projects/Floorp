@@ -681,6 +681,8 @@ static inline jit::MIRType ToMIRType(const Maybe<ValType>& t) {
   return t ? ToMIRType(ValType(t.ref())) : jit::MIRType::None;
 }
 
+extern UniqueChars ToString(ValType type);
+
 static inline const char* ToCString(ValType type) {
   switch (type.kind()) {
     case ValType::I32:
@@ -700,7 +702,7 @@ static inline const char* ToCString(ValType type) {
         case RefType::Func:
           return "funcref";
         case RefType::TypeIndex:
-          return "ref";
+          return "optref";
       }
   }
   MOZ_CRASH("bad value type");
