@@ -147,12 +147,6 @@ void VRDisplayClient::FireEvents() {
     vm->NotifyPresentationGenerationChanged(mDisplayInfo.mDisplayID);
   }
 
-  // Check if we need to trigger VRDisplay.requestAnimationFrame
-  if (mLastEventFrameId != mDisplayInfo.mFrameId) {
-    mLastEventFrameId = mDisplayInfo.mFrameId;
-    StartFrame();
-  }
-
   // In WebXR spec, Gamepad instances returned by an XRInputSource's gamepad
   // attribute MUST NOT be included in the array returned by
   // navigator.getGamepads().
@@ -165,6 +159,12 @@ void VRDisplayClient::FireEvents() {
     if (inputs) {
       inputs->Update(session);
     }
+  }
+
+  // Check if we need to trigger VRDisplay.requestAnimationFrame
+  if (mLastEventFrameId != mDisplayInfo.mFrameId) {
+    mLastEventFrameId = mDisplayInfo.mFrameId;
+    StartFrame();
   }
 }
 
