@@ -307,9 +307,9 @@ function fetchDocument(url) {
   });
 }
 
-function getPreparedDocument(url) {
+function getPreparedDocument(id, url) {
   return new Promise((resolve, reject) => {
-    let id = url.searchParams.get("id");
+
     browser.runtime.sendMessage({action: "getSerializedDoc", id: id}).then((serializedDoc) => {
         if (serializedDoc) {
           let doc = new JSDOMParser().parse(serializedDoc, url);
@@ -328,6 +328,7 @@ connectNativePort();
 function connectNativePort() {
   let url = new URL(window.location.href);
   let articleUrl = decodeURIComponent(url.searchParams.get("url"));
+  let id = url.searchParams.get("id");
   let baseUrl = browser.runtime.getURL("/");
 
   let port = browser.runtime.connectNative("mozacReaderview");
@@ -336,7 +337,7 @@ function connectNativePort() {
       case 'show':
         async function showAsync(options) {
           try {
-            let doc = await Promise.any([fetchDocument(articleUrl), getPreparedDocument(url)]);
+            let doc = await Promise.any([fetchDocument(articleUrl), getPreparedDocument(id, articleUrl)]);
             readerView.show(doc, articleUrl, options);
           } catch(e) {
             console.log(e);
