@@ -1411,11 +1411,12 @@ var gKeywordURIFixup = {
   observe(fixupInfo, topic, data) {
     fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
 
-    if (!fixupInfo.consumer || fixupInfo.consumer.ownerGlobal != window) {
+    let browser = fixupInfo.consumer?.top?.embedderElement;
+    if (!browser || browser.ownerGlobal != window) {
       return;
     }
 
-    this.check(fixupInfo.consumer, fixupInfo);
+    this.check(browser, fixupInfo);
   },
 
   receiveMessage({ target: browser, data: fixupInfo }) {

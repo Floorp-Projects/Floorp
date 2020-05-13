@@ -51,7 +51,7 @@ class nsDocShellLoadState final {
                                            nsDocShellLoadState** aResult);
 
   static nsresult CreateFromLoadURIOptions(
-      nsISupports* aConsumer, const nsAString& aURI,
+      BrowsingContext* aBrowsingContext, const nsAString& aURI,
       const mozilla::dom::LoadURIOptions& aLoadURIOptions,
       nsDocShellLoadState** aResult);
 

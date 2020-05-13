@@ -8,6 +8,7 @@
 
 interface nsIURI;
 interface nsIInputStream;
+webidl BrowsingContext;
 
 /**
  * Interface indicating what we found/corrected when fixing up a URI
@@ -18,7 +19,7 @@ interface nsIURIFixupInfo : nsISupports
   /**
    * Consumer that asked for fixed up URI.
    */
-  attribute nsISupports consumer;
+  attribute BrowsingContext consumer;
 
   /**
    * Our best guess as to what URI the consumer will want. Might
