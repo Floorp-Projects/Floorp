@@ -8,8 +8,6 @@
 #include "mozilla/dom/ChildSHistoryBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
-#include "mozilla/dom/SHEntryChild.h"
-#include "mozilla/dom/SHistoryChild.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "nsComponentManagerUtils.h"
 #include "nsSHEntry.h"
@@ -31,13 +29,6 @@ void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
   }
 
   if (mHistory) {
-    return;
-  }
-
-  if (XRE_IsContentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
-    mHistory = do_AddRef(static_cast<SHistoryChild*>(
-        ContentChild::GetSingleton()->SendPSHistoryConstructor(
-            mBrowsingContext)));
     return;
   }
 
@@ -116,18 +107,6 @@ JSObject* ChildSHistory::WrapObject(JSContext* cx,
 
 nsISupports* ChildSHistory::GetParentObject() const {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
-}
-
-already_AddRefed<nsISHEntry> CreateSHEntryForDocShell(nsISHistory* aSHistory) {
-  uint64_t sharedID = SHEntryChildShared::CreateSharedID();
-  if (XRE_IsContentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
-    return do_AddRef(static_cast<SHEntryChild*>(
-        ContentChild::GetSingleton()->SendPSHEntryConstructor(
-            static_cast<SHistoryChild*>(aSHistory), sharedID)));
-  }
-
-  nsCOMPtr<nsISHEntry> entry = new nsLegacySHEntry(aSHistory, sharedID);
-  return entry.forget();
 }
 
 }  // namespace dom

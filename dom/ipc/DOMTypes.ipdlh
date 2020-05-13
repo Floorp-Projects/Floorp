@@ -13,7 +13,6 @@ include IPCBlob;
 include IPCStream;
 include protocol PIPCBlobInputStream;
 include ProtocolTypes;
-include protocol PSHEntry;
 
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
@@ -41,9 +40,7 @@ using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 using refcounted class nsIVariant from "mozilla/dom/PropertyBagUtils.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
-using refcounted class nsISHEntry from "nsISHEntry.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
-using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
 using mozilla::dom::WindowContextInitializer from "mozilla/dom/WindowContext.h";
 
 namespace mozilla {
@@ -278,10 +275,6 @@ struct DocShellLoadStateInit
   nsIInputStream HeadersStream;
 
   nsString SrcdocData; // useless without sourcedocshell
-  // This might be missing if serialization of session history entries is
-  // not supported. This is the case when 'fission.sessionHistoryInParent'
-  // pref is off.
-  CrossProcessSHEntry SHEntry;
 
   // Fields missing due to lack of need or serialization
   // nsCOMPtr<nsIDocShell> mSourceDocShell;
@@ -384,12 +377,6 @@ struct OwnerShowInfo {
   // parent process too instead.
   bool parentWindowIsActive;
   nsSizeMode sizeMode;
-};
-
-struct SwapEntriesDocshellData {
-  CrossProcessSHEntry oldEntry;
-  CrossProcessSHEntry newEntry;
-  MaybeDiscardedBrowsingContext context;
 };
 
 } // namespace dom
