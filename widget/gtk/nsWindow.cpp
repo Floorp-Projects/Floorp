@@ -100,6 +100,7 @@ using namespace mozilla::widget;
 #include "nsImageToPixbuf.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "ClientLayerManager.h"
+#include "nsIGSettingsService.h"
 
 #include "gfxPlatformGtk.h"
 #include "gfxContext.h"
@@ -1788,6 +1789,33 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   mSizeState = mSizeMode;
 }
 
+#define kDesktopMutterSchema "org.gnome.mutter"
+#define kDesktopDynamicWorkspacesKey "dynamic-workspaces"
+
+static bool DesktopUsesDynamicWorkspaces() {
+  static const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+  if (!currentDesktop || !strstr(currentDesktop, "GNOME")) {
+    return false;
+  }
+
+  nsCOMPtr<nsIGSettingsService> gsettings =
+      do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
+  if (gsettings) {
+    nsCOMPtr<nsIGSettingsCollection> mutterSettings;
+    gsettings->GetCollectionForSchema(NS_LITERAL_CSTRING(kDesktopMutterSchema),
+                                      getter_AddRefs(mutterSettings));
+    if (mutterSettings) {
+      bool usesDynamicWorkspaces;
+      if (NS_SUCCEEDED(mutterSettings->GetBoolean(
+              NS_LITERAL_CSTRING(kDesktopDynamicWorkspacesKey),
+              &usesDynamicWorkspaces))) {
+        return usesDynamicWorkspaces;
+      }
+    }
+  }
+  return false;
+}
+
 void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
   workspaceID.Truncate();
 
@@ -1797,6 +1825,10 @@ void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
   // Get the gdk window for this widget.
   GdkWindow* gdk_window = gtk_widget_get_window(mShell);
   if (!gdk_window) {
+    return;
+  }
+
+  if (DesktopUsesDynamicWorkspaces()) {
     return;
   }
 
@@ -1836,7 +1868,6 @@ void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
   // This code is inspired by some found in the 'gxtuner' project.
   // https://github.com/brummer10/gxtuner/blob/792d453da0f3a599408008f0f1107823939d730d/deskpager.cpp#L50
   XEvent xevent;
-  guint value = workspaceID;
   Display* xdisplay = gdk_x11_get_default_xdisplay();
   GdkScreen* screen = gdk_window_get_screen(gdk_window);
   Window root_win = GDK_WINDOW_XID(gdk_screen_get_root_window(screen));
@@ -1851,7 +1882,7 @@ void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
   xevent.xclient.window = GDK_WINDOW_XID(gdk_window);
   xevent.xclient.message_type = type;
   xevent.xclient.format = 32;
-  xevent.xclient.data.l[0] = value;
+  xevent.xclient.data.l[0] = workspaceID;
   xevent.xclient.data.l[1] = X11CurrentTime;
   xevent.xclient.data.l[2] = 0;
   xevent.xclient.data.l[3] = 0;
