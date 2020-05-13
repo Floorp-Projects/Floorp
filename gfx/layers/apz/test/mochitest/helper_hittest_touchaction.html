@@ -99,6 +99,9 @@
   <div id="taScroller3">
    <div></div>
   </div>
+  <div id="taScroller4" style="touch-action: pan-y">
+   <div style="overflow:hidden"></div>
+  </div>
  </div>
 </body>
 <script type="application/javascript">
@@ -325,6 +328,15 @@ function* test(testDriver) {
       config.utils.getViewId(document.getElementById("taScroller3")),
       layersId,
       "touch-action: manipulation outside scroller gets inherited in");
+  checkHitResult(
+      hitTest(centerOf("taScroller4")),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      config.utils.getViewId(document.getElementById("taScroller4")),
+      layersId,
+      "overflow:hidden div doesn't reset pan-x/pan-y from enclosing scroller");
 }
 
 if (!config.isWebRender) {
