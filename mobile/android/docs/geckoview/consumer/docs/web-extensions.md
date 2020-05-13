@@ -8,36 +8,14 @@ exclude: true
 # Interacting with Web content and WebExtensions
 
 GeckoView allows embedder applications to register and run [WebExtensions][8]
-in a GeckoView instance. WebExtensions are the preferred way to interact with
+in a GeckoView instance. Extensions are the preferred way to interact with
 Web content.
 
-## Running WebExtensions in GeckoView
+## Running extensions in GeckoView
 
-WebExtensions bundled with applications can be provided either in compressed
-`.xpi` files or in regular folders. Like ordinary WebExtensions, every
-WebExtension requires a [`manifest.json`][23] file.
-
-To run a WebExtension in GeckoView, simply create a [`WebExtension`][3] object
-and register it in your [`GeckoRuntime`][24] instance.
-
-```java
-WebExtension extension = new WebExtension(
-    // The location where the web extension is installed, if the location is a
-    // folder make sure the path ends with a "/" character.
-    "resource://android/assets/messaging/",
-    // This is the id and must be unique for every web extension
-    "myextension@example.com",
-    // Extra flags can be specified here
-    WebExtension.Flags.NONE);
-
-// Run the WebExtension
-runtime.registerWebExtension(extension);
-```
-
-Note that the lifetime of the WebExtension is tied with the lifetime of the
-[`GeckoRuntime`][24] instance. The WebExtension will need to be registered
-every time the runtime is created and will not persist once the runtime is
-closed.
+Extensions bundled with applications can be provided in a folder in the
+`/assets` section of the APK. Like ordinary extensions, every extension bundled
+with GeckoView requires a [`manifest.json`][23] file.
 
 To locate files bundled with the APK, GeckoView provides a shorthand
 `resource://android/` that points to the root of the APK.
@@ -45,9 +23,45 @@ To locate files bundled with the APK, GeckoView provides a shorthand
 E.g. `resource://android/assets/messaging/` will point to the
 `/assets/messaging/` folder present in the APK.
 
+Note: Every installed extension will need an [`id`][25] and [`version`][26]
+specified in the `manifest.json` file.
+
+To install a bundled extension in GeckoView, simply call
+[`WebExtensionController.installBuilt`][3].
+
+```java
+runtime.getWebExtensionController()
+  .installBuiltIn("resource://android/assets/messaging/")
+```
+
+Note that the lifetime of the extension is not tied with the lifetime of the
+[`GeckoRuntime`][24] instance. The extension persist even when your app is
+restarted. Installing at every start up is fine, but it could be slow. To avoid
+installing multiple times you can query the list of installed extensions using
+`WebExtensionRuntime.list`:
+
+```java
+runtime.getWebExtensionController().list().then(extensionList -> {
+    for (WebExtension extension : extensionList) {
+        if (extension.id.equals("messaging@example.com")
+                && extension.metaData.version.equals("1.0")) {
+            // Extension already installed, no need to install it again
+            return GeckoResult.fromValue(extension);
+        }
+    }
+
+    // Install if it's not already installed.
+    return runtime.getWebExtensionController()
+        .installBuiltIn("resource://android/assets/messaging/");
+}).accept(
+        extension -> Log.i("MessageDelegate", "Extension installed: " + extension),
+        e -> Log.e("MessageDelegate", "Error registering WebExtension", e)
+);
+```
+
 ## Communicating with Web Content
 GeckoView allows bidirectional communication with Web pages through
-WebExtensions.
+extensions.
 
 When using GeckoView, [native messaging][11] can be used for communicating to
 and from the browser.
@@ -55,28 +69,45 @@ and from the browser.
 * [`runtime.connectNative`][13] for connection-based messaging.
 
 Note: these APIs are only available when the `geckoViewAddons` [permission][17]
-is present in the `manifest.json` file of the WebExtension.
+is present in the `manifest.json` file of the extension.
 
 ### One-off messages
 
 The easiest way to send messages from a [content script][9] or a [background
 script][10] is using [`runtime.sendNativeMessage`][12]. The app will set up a
-message delegate on the same `nativeApp` that the WebExtension is using to send
+message delegate on the same `nativeApp` that the extension is using to send
 messages. In our example we will use the `"browser"` native app identifier.
 
 To receive messages from the background script, call [`setMessageDelegate`][14]
 on the [`WebExtension`][3] object.
 
-[`GeckoSession.setMessageDelegate`][16] allows the app to receive messages from
-content scripts.
+```java
+extension.setMessageDelegate(messageDelegate, "browser");
+```
 
-Note: WebExtensions can only send messages from content scripts if explicitly
-authorized by the app setting
-[`WebExtension.Flags.ALLOW_CONTENT_MESSAGING`][22] in the [constructor][15].
+[`SessionController.setMessageDelegate`][16] allows the app to
+receive messages from content scripts.
+
+```java
+session.getWebExtensionController()
+    .setMessageDelegate(extension, messageDelegate, "browser");
+```
+
+Note: extension can only send messages from content scripts if explicitly
+authorized by the app by adding `nativeMessagingFromContent` in the
+manifest.json file, e.g.
+
+```json
+  "permissions": [
+    "nativeMessaging",
+    "nativeMessagingFromContent",
+    "geckoViewAddons"
+  ]
+```
 
 ### Example
 
-Let's set up an activity that registers a WebExtension located in the
+Let's set up an activity that registers an extension located in the
 `/assets/messaging/` folder of the APK. This activity will set up a
 [`MessageDelegate`][18] that will be used to communicate with Web Content.
 
@@ -86,7 +117,8 @@ You can find the full example here: [MessagingExample][20].
 ```java
 WebExtension.MessageDelegate messageDelegate = new WebExtension.MessageDelegate() {
     @Nullable
-    public GeckoResult<Object> onMessage(final @NonNull Object message,
+    public GeckoResult<Object> onMessage(final @NonNull String nativeApp,
+                                         final @NonNull Object message,
                                          final @NonNull WebExtension.MessageSender sender) {
         // The sender object contains information about the session that
         // originated this message and can be used to validate that the message
@@ -101,20 +133,29 @@ WebExtension.MessageDelegate messageDelegate = new WebExtension.MessageDelegate(
     }
 };
 
-WebExtension extension = new WebExtension(
-    "resource://android/assets/messaging/",
-    "myextension@example.com",
-    WebExtension.Flags.ALLOW_CONTENT_MESSAGING);
+// Let's check if the extension is already installed first
+runtime.getWebExtensionController().list().then(extensionList -> {
+    for (WebExtension extension : extensionList) {
+        if (extension.id.equals(EXTENSION_ID)
+                && extension.metaData.version.equals(EXTENSION_VERSION)) {
+            // Extension already installed, no need to install it again
+            return GeckoResult.fromValue(extension);
+        }
+    }
 
-// Run the WebExtension
-runtime.registerWebExtension(extension);
-
-// Set the delegate that will receive messages coming from this WebExtension.
-session.setMessageDelegate(messageDelegate, "browser");
+    // Install if it's not already installed.
+    return runtime.getWebExtensionController().installBuiltIn(EXTENSION_LOCATION);
+}).accept(
+        // Set the delegate that will receive messages coming from this WebExtension.
+        extension -> session.getWebExtensionController()
+                .setMessageDelegate(extension, messageDelegate, "browser"),
+        // Something bad happened, let's log an error
+        e -> Log.e("MessageDelegate", "Error registering WebExtension", e)
+);
 ```
 
-Now add the `geckoViewAddons` and `nativeMessaging` permissions to your
-`manifest.json` file.
+Now add the `geckoViewAddons`, `nativeMessaging` and
+`nativeMessagingFromContent` permissions to your `manifest.json` file.
 
 ##### /assets/messaging/manifest.json
 ```json
@@ -123,6 +164,11 @@ Now add the `geckoViewAddons` and `nativeMessaging` permissions to your
   "name": "messaging",
   "version": "1.0",
   "description": "Example messaging web extension.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "messaging@example.com"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["*://*.twitter.com/*"],
@@ -131,6 +177,7 @@ Now add the `geckoViewAddons` and `nativeMessaging` permissions to your
   ],
   "permissions": [
     "nativeMessaging",
+    "nativeMessagingFromContent",
     "geckoViewAddons"
   ]
 }
@@ -160,7 +207,8 @@ You can handle this message in the `onMessage` method in the `messageDelegate`
 
 ```java
 @Nullable
-public GeckoResult<Object> onMessage(final @NonNull Object message,
+public GeckoResult<Object> onMessage(final @NonNull String nativeApp,
+                                     final @NonNull Object message,
                                      final @NonNull WebExtension.MessageSender sender) {
     if (message instanceof JSONObject) {
         JSONObject json = (JSONObject) message;
@@ -182,11 +230,11 @@ to the `GeckoSession` instance from which the message originated. For
 background scripts, `sender.session` will always be `null`.
 
 Also note that the type of `message` will depend on what was sent from the
-WebExtension.
+extension.
 
-The type of `message` will be `JSONObject` when the WebExtension sends a
-javascript object, but could also be a primitive type if the WebExtension sends
-one, e.g. for 
+The type of `message` will be `JSONObject` when the extension sends a
+javascript object, but could also be a primitive type if the extension sends
+one, e.g. for
 
 ```javascript
 runtime.browser.sendNativeMessage("browser", "Hello World!");
@@ -197,17 +245,17 @@ the type of `message` will be `java.util.String`.
 ## Connection-based messaging
 
 For more complex scenarios or for when you want to send messages _from_ the app
-to the WebExtension, [`runtime.connectNative`][13] is the appropriate API to
+to the extension, [`runtime.connectNative`][13] is the appropriate API to
 use.
 
 `connectNative` returns a [`runtime.Port`][6] that can be used to send messages
 to the app. On the app side, implementing [`MessageDelegate#onConnect`][1] will
 allow you to receive a [`Port`][7] object that can be used to receive and send
-messages to the WebExtension.
+messages to the extension.
 
 The following example can be found [here][21].
 
-For this example, the WebExtension side will do the following:
+For this example, the extension side will do the following:
   * open a port on the background script using `connectNative`
   * listen on the port and log to console every message received
   * send a message immediately after opening the port.
@@ -242,7 +290,7 @@ protected void onCreate(Bundle savedInstanceState) {
         public void onPortMessage(final @NonNull Object message,
                                   final @NonNull WebExtension.Port port) {
             // This method will be called every time a message is sent from the
-            // WebExtension through this port. For now, let's just log a
+            // extension through this port. For now, let's just log a
             // message.
             Log.d("PortDelegate", "Received message from WebExtension: "
                     + message);
@@ -257,7 +305,7 @@ protected void onCreate(Bundle savedInstanceState) {
     };
 
     // This delegate will handle requests to open a port coming from the
-    // WebExtension
+    // extension
     WebExtension.MessageDelegate messageDelegate = new WebExtension.MessageDelegate() {
         @Nullable
         public void onConnect(final @NonNull WebExtension.Port port) {
@@ -271,24 +319,26 @@ protected void onCreate(Bundle savedInstanceState) {
         }
     };
 
-    WebExtension extension = new WebExtension(
-            "resource://android/assets/messaging/");
-
-    // Register message delegate for the background script
-    extension.setMessageDelegate(messageDelegate, "browser");
+    runtime.getWebExtensionController()
+        .installBuiltIn("resource://android/assets/messaging/")
+        .accept(
+            // Register message delegate for background script
+            extension -> extension.setMessageDelegate(messageDelegate, "browser"),
+            e -> Log.e("MessageDelegate", "Error registering WebExtension", e)
+        );
 
     // ... other
 }
 ```
 
-For example, let's send a message to the WebExtension every time the user long
+For example, let's send a message to the extension every time the user long
 presses on a key on the virtual keyboard, e.g. on the back button.
 
 ```java
 @Override
 public boolean onKeyLongPress(int keyCode, KeyEvent event) {
     if (mPort == null) {
-        // No WebExtension registered yet, let's ignore this message
+        // No extension registered yet, let's ignore this message
         return false;
     }
 
@@ -305,7 +355,7 @@ public boolean onKeyLongPress(int keyCode, KeyEvent event) {
 }
 ```
 
-This allows bidirectional communication between the app and the WebExtension.
+This allows bidirectional communication between the app and the extension.
 
 [1]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.MessageDelegate.html#onConnect-org.mozilla.geckoview.WebExtension.Port-
 [3]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.html
@@ -328,3 +378,5 @@ This allows bidirectional communication between the app and the WebExtension.
 [22]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.Flags.html#ALLOW_CONTENT_MESSAGING
 [23]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json
 [24]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntime.html
+[25]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings
+[26]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/version
