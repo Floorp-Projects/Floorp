@@ -1371,6 +1371,15 @@ nsDNSService::GetCurrentTrrURI(nsACString& aURI) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSService::GetCurrentTrrMode(uint32_t* aMode) {
+  *aMode = 0;  // The default mode.
+  if (mTrrService) {
+    *aMode = mTrrService->Mode();
+  }
+  return NS_OK;
+}
+
 size_t nsDNSService::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   // Measurement of the following members may be added later if DMD finds it
