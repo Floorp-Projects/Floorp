@@ -34,9 +34,8 @@ interface mozIBridgedSyncEngineApplyCallback : nsISupports {
     void handleError(in nsresult code, in AUTF8String message);
 };
 
-// A bridged engine is implemented in native (Rust) code. It handles storage
-// internally, and exposes a minimal interface for the JS Sync code to
-// control it.
+// A bridged engine is implemented in Rust. It handles storage internally, and
+// exposes a minimal interface for the JS Sync code to control it.
 [scriptable, uuid(3b2b80be-c30e-4498-8065-01809cfe8d47)]
 interface mozIBridgedSyncEngine : nsISupports {
     // The storage version for this engine's collection. If the version in the

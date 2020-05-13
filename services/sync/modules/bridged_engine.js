@@ -2,10 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * This file has all the machinery for hooking up bridged engines implemented
+ * in Rust. It's the JavaScript side of the Golden Gate bridge that connects
+ * Desktop Sync to a Rust `BridgedEngine`, via the `mozIBridgedSyncEngine`
+ * XPCOM interface.
+ *
+ * Creating a bridged engine only takes a few lines of code, since most of the
+ * hard work is done on the Rust side. On the JS side, you'll need to subclass
+ * `BridgedEngine` (instead of `SyncEngine`), supply a `mozIBridgedSyncEngine`
+ * for your subclass to wrap, and optionally implement and override the tracker.
+ */
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Changeset, SyncEngine } = ChromeUtils.import(
+const { Changeset, SyncEngine, Tracker } = ChromeUtils.import(
   "resource://services-sync/engines.js"
 );
 const { RawCryptoWrapper } = ChromeUtils.import(
@@ -18,17 +30,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
-var EXPORTED_SYMBOLS = [
-  "BridgedEngine",
-  "BridgedStore",
-  "BridgedTracker",
-  "BridgedRecord",
-];
+var EXPORTED_SYMBOLS = ["BridgedEngine"];
 
 /**
- * A stub store that keeps all decrypted records in memory. Since the interface
- * we need is so minimal, this class doesn't inherit from the base `Store`
- * implementation...it would take more code to override all those behaviors!
+ * A stub store that converts between raw decrypted incoming records and
+ * envelopes. Since the interface we need is so minimal, this class doesn't
+ * inherit from the base `Store` implementation...it would take more code to
+ * override all those behaviors!
+ *
+ * This class isn't meant to be subclassed, because bridged engines shouldn't
+ * override their store classes in `_storeObj`.
  */
 class BridgedStore {
   constructor(name, engine) {
@@ -60,54 +71,12 @@ class BridgedStore {
 }
 
 /**
- * A stub tracker that doesn't track anything.
- */
-class BridgedTracker {
-  constructor(name, engine) {
-    if (!engine) {
-      throw new Error("Tracker must be associated with an Engine instance.");
-    }
-
-    this._log = Log.repository.getLogger(`Sync.Engine.${name}.Tracker`);
-    this.score = 0;
-    this.asyncObserver = Async.asyncObserver(this, this._log);
-  }
-
-  get ignoreAll() {
-    return false;
-  }
-
-  set ignoreAll(value) {}
-
-  async onEngineEnabledChanged(engineEnabled) {
-    // ...
-  }
-
-  resetScore() {
-    this.score = 0;
-  }
-
-  start() {
-    // ...
-  }
-
-  async stop() {
-    // ...
-  }
-
-  async clearChangedIDs() {
-    // ...
-  }
-
-  async finalize() {
-    // ...
-  }
-}
-
-/**
  * A wrapper class to convert between BSOs on the JS side, and envelopes on the
  * Rust side. This class intentionally subclasses `RawCryptoWrapper`, because we
  * don't want the stringification and parsing machinery in `CryptoWrapper`.
+ *
+ * This class isn't meant to be subclassed, because bridged engines shouldn't
+ * override their record classes in `_recordObj`.
  */
 class BridgedRecord extends RawCryptoWrapper {
   /**
@@ -224,17 +193,21 @@ class LogAdapter {
 }
 
 /**
- * The JavaScript side of the native bridge. This is a base class that can be
- * used to wire up a Sync engine written in Rust to the existing Sync codebase,
- * and have it work like any other engine. The Rust side must expose an XPCOM
- * component class that implements the `mozIBridgedSyncEngine` interface.
+ * A base class used to plug a Rust engine into Sync, and have it work like any
+ * other engine. The constructor takes a bridge as its first argument, which is
+ * an instance of an XPCOM component class that implements
+ * `mozIBridgedSyncEngine`.
  *
- * `SyncEngine` has a lot of machinery that we don't need, but makes it fairly
- * easy to opt out by overriding those methods. It would be harder to
- * reimplement the machinery that we _do_ need here, especially for a first cut.
- * However, because of that, this class has lots of methods that do nothing, or
- * return empty data. The docs above each method explain what it's overriding,
- * and why.
+ * This class inherits from `SyncEngine`, which has a lot of machinery that we
+ * don't need, but that's fairly easy to override. It would be harder to
+ * reimplement the machinery that we _do_ need here. However, because of that,
+ * this class has lots of methods that do nothing, or return empty data. The
+ * docs above each method explain what it's overriding, and why.
+ *
+ * This class is designed to be subclassed, but the only part that your engine
+ * may want to override is `_trackerObj`. Even then, using the default (no-op)
+ * tracker is fine, because the shape of the `Tracker` interface may not make
+ * sense for all engines.
  */
 function BridgedEngine(bridge, name, service) {
   SyncEngine.call(this, name, service);
@@ -245,9 +218,30 @@ function BridgedEngine(bridge, name, service) {
 
 BridgedEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  _recordObj: BridgedRecord,
-  _storeObj: BridgedStore,
-  _trackerObj: BridgedTracker,
+
+  /**
+   * The tracker class for this engine. Subclasses may want to override this
+   * with their own tracker, though using the default `Tracker` is fine.
+   */
+  _trackerObj: Tracker,
+
+  /** Returns the record class for all bridged engines. */
+  get _recordObj() {
+    return BridgedRecord;
+  },
+
+  set _recordObj(obj) {
+    throw new TypeError("Don't override the record class for bridged engines");
+  },
+
+  /** Returns the store class for all bridged engines. */
+  get _storeObj() {
+    return BridgedStore;
+  },
+
+  set _storeObj(obj) {
+    throw new TypeError("Don't override the store class for bridged engines");
+  },
 
   /** Returns the storage version for this engine. */
   get version() {
