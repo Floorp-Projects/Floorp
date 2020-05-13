@@ -470,6 +470,10 @@ input[type="image"]:disabled {
   cursor: unset;
 }
 
+input[type="image"]:-moz-focusring {
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
+}
 
 /* file selector */
 input[type="file"] {
@@ -558,15 +562,15 @@ input[type="checkbox"]:disabled:hover:active {
   cursor: unset;
 }
 
-input:not([type="file"]):not([type="image"]):-moz-focusring,
-select:-moz-focusring,
-button:-moz-focusring,
-textarea:-moz-focusring {
-  /* These elements can handle outline themselves when themed, so we use
-   * outline-style: auto and skip rendering the outline only when themed and
-   * the theme allows so */
-  outline-style: auto;
+% On Mac, the native theme takes care of this.
+% See nsNativeThemeCocoa::ThemeDrawsFocusForWidget.
+%ifndef XP_MACOSX
+input[type="checkbox"]:-moz-focusring,
+input[type="radio"]:-moz-focusring {
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
 }
+%endif
 
 input[type="search"] {
   box-sizing: border-box;

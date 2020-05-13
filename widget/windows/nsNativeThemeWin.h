@@ -68,8 +68,6 @@ class nsNativeThemeWin : private nsNativeTheme, public nsITheme {
 
   bool ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
 
-  bool ThemeWantsButtonInnerFocusRing(StyleAppearance) override { return true; }
-
   bool ThemeNeedsComboboxDropmarker() override;
 
   virtual bool WidgetAppearanceDependsOnWindowFocus(
