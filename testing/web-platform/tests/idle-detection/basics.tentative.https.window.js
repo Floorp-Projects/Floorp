@@ -28,7 +28,7 @@ promise_test(async t => {
   new IdleDetector({
     get threshold() {
       used = true;
-      return 60;
+      return 60000;
     }
   });
 
@@ -36,56 +36,31 @@ promise_test(async t => {
 }, 'constructor uses threshold property');
 
 promise_test(async t => {
-  try {
-    new IdleDetector({threshold: 0});
-    assert_unreached('Threshold under 60 should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
+  assert_throws_js(TypeError, () => new IdleDetector({threshold: 0}));
 }, 'constructor throws with invalid threshold (0)');
 
 promise_test(async t => {
-  try {
-    new IdleDetector({threshold: 59});
-    assert_unreached('Threshold under 60 should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
-}, 'constructor throws with threshold below minimum (59)');
+  assert_throws_js(TypeError, () => new IdleDetector({threshold: 59000}));
+}, 'constructor throws with threshold below minimum (59000)');
 
 promise_test(async t => {
-  new IdleDetector({threshold: 60});
-}, 'constructor allows threshold (60)');
+  new IdleDetector({threshold: 60000});
+}, 'constructor allows threshold (60000)');
 
 promise_test(async t => {
-  new IdleDetector({threshold: 61});
-}, 'constructor allows threshold (61)');
+  new IdleDetector({threshold: 61000});
+}, 'constructor allows threshold (61000)');
 
 promise_test(async t => {
-  try {
-    new IdleDetector({threshold: null});
-    assert_unreached('Threshold of null should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
+  assert_throws_js(TypeError, () => new IdleDetector({threshold: null}));
 }, 'constructor throws with invalid threshold (null)');
 
 promise_test(async t => {
-  try {
-    new IdleDetector({threshold: -1});
-    assert_unreached('Threshold of negative numbers should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
+  assert_throws_js(TypeError, () => new IdleDetector({threshold: -1}));
 }, 'constructor throws with invalid threshold (-1)');
 
 promise_test(async t => {
-  try {
-    new IdleDetector({threshold: NaN});
-    assert_unreached('Threshold of NaN should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
+  assert_throws_js(TypeError, () => new IdleDetector({threshold: NaN}));
 }, 'constructor throws with invalid threshold (NaN)');
 
 promise_test(async t => {
