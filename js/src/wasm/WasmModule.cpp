@@ -1100,10 +1100,13 @@ static bool CreateExportObject(
   }
 
   RootedObject exportObj(cx);
+  uint8_t propertyAttr = JSPROP_ENUMERATE;
+
   if (metadata.isAsmJS()) {
     exportObj = NewBuiltinClassInstance<PlainObject>(cx);
   } else {
     exportObj = NewObjectWithGivenProto<PlainObject>(cx, nullptr);
+    propertyAttr |= JSPROP_READONLY | JSPROP_PERMANENT;
   }
   if (!exportObj) {
     return false;
@@ -1147,13 +1150,13 @@ static bool CreateExportObject(
       }
     }
 
-    if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE)) {
+    if (!JS_DefinePropertyById(cx, exportObj, id, val, propertyAttr)) {
       return false;
     }
   }
 
   if (!metadata.isAsmJS()) {
-    if (!JS_FreezeObject(cx, exportObj)) {
+    if (!PreventExtensions(cx, exportObj)) {
       return false;
     }
   }

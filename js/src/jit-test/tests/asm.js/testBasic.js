@@ -168,3 +168,6 @@ if (wasmIsSupported()) {
     var j = asmLink(asmCompile('glob', 'ffis', USE_ASM + 'var i = ffis.i; function j() { return i(1)|0; } return j'), null, {i});
     assertEq(j(), 0);
 }
+
+var exp = asmLink(asmCompile(USE_ASM + "function f() { return 0 } return {f:f}"));
+assertEq(Object.isFrozen(exp), false);
