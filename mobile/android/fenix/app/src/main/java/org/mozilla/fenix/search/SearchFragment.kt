@@ -15,7 +15,11 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.RecognizerIntent.EXTRA_RESULTS
 import android.text.style.StyleSpan
-import android.view.*
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewStub
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -71,6 +75,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             requireContext().settings().shouldShowSearchSuggestions
         }
 
+    @Suppress("LongMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -126,7 +131,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         awesomeBarView = AwesomeBarView(view.scrollable_area, searchInteractor)
 
         view.scrollView.setOnTouchListener { _, event ->
-            when (event?.action){
+            when (event?.action) {
                 MotionEvent.ACTION_SCROLL, MotionEvent.ACTION_MOVE -> {
                     view.hideKeyboard()
                 }
