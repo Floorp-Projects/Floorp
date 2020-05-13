@@ -16,6 +16,7 @@ var {
   Store,
   SyncEngine,
   Tracker,
+  LegacyTracker,
 } = ChromeUtils.import("resource://services-sync/engines.js");
 var {
   ABORT_SYNC_COMMAND,

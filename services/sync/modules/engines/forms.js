@@ -4,7 +4,7 @@
 
 var EXPORTED_SYMBOLS = ["FormEngine", "FormRec", "FormValidator"];
 
-const { Store, SyncEngine, Tracker } = ChromeUtils.import(
+const { Store, SyncEngine, LegacyTracker } = ChromeUtils.import(
   "resource://services-sync/engines.js"
 );
 const { CryptoWrapper } = ChromeUtils.import(
@@ -216,10 +216,10 @@ FormStore.prototype = {
 };
 
 function FormTracker(name, engine) {
-  Tracker.call(this, name, engine);
+  LegacyTracker.call(this, name, engine);
 }
 FormTracker.prototype = {
-  __proto__: Tracker.prototype,
+  __proto__: LegacyTracker.prototype,
 
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,

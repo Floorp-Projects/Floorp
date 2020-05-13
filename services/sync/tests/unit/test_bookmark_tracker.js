@@ -20,7 +20,6 @@ add_task(async function setup() {
   engine = Service.engineManager.get("bookmarks");
   store = engine._store;
   tracker = engine._tracker;
-  tracker.persistChangedIDs = false;
 });
 
 // Test helpers.

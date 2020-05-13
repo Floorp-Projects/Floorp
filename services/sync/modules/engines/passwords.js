@@ -14,7 +14,7 @@ const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
 const { CollectionValidator } = ChromeUtils.import(
   "resource://services-sync/collection_validator.js"
 );
-const { Store, SyncEngine, Tracker } = ChromeUtils.import(
+const { Store, SyncEngine, LegacyTracker } = ChromeUtils.import(
   "resource://services-sync/engines.js"
 );
 const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
@@ -363,10 +363,10 @@ PasswordStore.prototype = {
 };
 
 function PasswordTracker(name, engine) {
-  Tracker.call(this, name, engine);
+  LegacyTracker.call(this, name, engine);
 }
 PasswordTracker.prototype = {
-  __proto__: Tracker.prototype,
+  __proto__: LegacyTracker.prototype,
 
   onStart() {
     Svc.Obs.add("passwordmgr-storage-changed", this.asyncObserver);

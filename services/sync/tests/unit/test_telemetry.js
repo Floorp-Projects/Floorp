@@ -24,12 +24,11 @@ SteamStore.prototype = {
 };
 
 function SteamTracker(name, engine) {
-  Tracker.call(this, name || "Steam", engine);
+  LegacyTracker.call(this, name || "Steam", engine);
 }
 
 SteamTracker.prototype = {
-  __proto__: Tracker.prototype,
-  persistChangedIDs: false,
+  __proto__: LegacyTracker.prototype,
 };
 
 function SteamEngine(service) {

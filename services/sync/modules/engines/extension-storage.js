@@ -104,9 +104,18 @@ ExtensionStorageEngine.prototype = {
 
 function ExtensionStorageTracker(name, engine) {
   Tracker.call(this, name, engine);
+  this._ignoreAll = false;
 }
 ExtensionStorageTracker.prototype = {
   __proto__: Tracker.prototype,
+
+  get ignoreAll() {
+    return this._ignoreAll;
+  },
+
+  set ignoreAll(value) {
+    this._ignoreAll = value;
+  },
 
   onStart() {
     Svc.Obs.add("ext.storage.sync-changed", this.asyncObserver);
@@ -129,12 +138,4 @@ ExtensionStorageTracker.prototype = {
     // own, so let's just increment score a bit.
     this.score += SCORE_INCREMENT_MEDIUM;
   },
-
-  // Override a bunch of methods which don't do anything for us.
-  // This is a performance hack.
-  ignoreID() {},
-  unignoreID() {},
-  addChangedID() {},
-  removeChangedID() {},
-  clearChangedIDs() {},
 };
