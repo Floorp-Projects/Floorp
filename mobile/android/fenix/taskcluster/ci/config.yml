@@ -25,7 +25,7 @@ taskgraph:
     repositories:
         mobile:
             name: "Fenix"
-    cached-task-prefix: project.mobile.fenix
+    cached-task-prefix: mobile.v2.fenix
     decision-parameters: 'fenix_taskgraph.parameters:get_decision_parameters'
 
 workers:
@@ -35,24 +35,22 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: 'b-linux'
-        images:
-            provisioner: 'mobile-{level}'
-            implementation: docker-worker
-            os: linux
-            worker-type: 'images'
         dep-signing:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing
             os: scriptworker
             worker-type: mobile-t-signing
-        signing:
-            provisioner: scriptworker-k8s
-            implementation: scriptworker-signing
-            os: scriptworker
-            worker-type:
-                by-level:
-                    "3": mobile-3-signing
-                    default: mobile-t-signing
+        images:
+            provisioner: 'mobile-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: 'images'
+        # misc is used by taskgraph to generate tasks with more than 10 routes
+        misc:
+            provisioner: 'mobile-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: 'b-linux'
         push-apk:
             provisioner: scriptworker-k8s
             implementation: scriptworker-pushapk
@@ -63,6 +61,14 @@ workers:
             implementation: scriptworker-shipit
             os: scriptworker
             worker-type: 'mobile-{level}-shipit'
+        signing:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-signing
+            os: scriptworker
+            worker-type:
+                by-level:
+                    "3": mobile-3-signing
+                    default: mobile-t-signing
         t-bitbar.*:
             provisioner: proj-autophone
             implementation: generic-worker

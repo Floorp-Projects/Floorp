@@ -8,7 +8,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: a8366f88fc8b35b284ad550358c89ec10133fb42
+              revision: 760d9fb4d3dd59e7cbb2fb224cdbe983d0e5a525
           trustDomain: mobile
       in:
           $let:
@@ -168,11 +168,18 @@ tasks:
                                         # staging release promotion on forks.
                                         - $if: 'tasks_for == "github-push"'
                                           then:
+                                              - index.mobile.v2.${project}.branch.${short_head_branch}.latest.taskgraph.decision
+                                              - index.mobile.v2.${project}.branch.${short_head_branch}.revision.${head_sha}.taskgraph.decision
+                                              # TODO Bug 1631839: Remove the following routes once all consumers have migrated
                                               - index.project.mobile.${project}.v2.branch.${short_head_branch}.latest.taskgraph.decision
                                               - index.project.mobile.${project}.v2.branch.${short_head_branch}.revision.${head_sha}.taskgraph.decision
                                         - $if: 'tasks_for == "cron"'
                                           then:
                                               # cron context provides ${head_branch} as a short one
+                                              - index.mobile.v2.${project}.branch.${head_branch}.latest.taskgraph.decision-${cron.job_name}
+                                              - index.mobile.v2.${project}.branch.${head_branch}.revision.${head_sha}.taskgraph.decision-${cron.job_name}
+                                              - index.mobile.v2.${project}.branch.${head_branch}.revision.${head_sha}.taskgraph.cron.${ownTaskId}
+                                              # TODO Bug 1631839: Remove the following routes once all consumers have migrated
                                               - index.project.mobile.${project}.v2.branch.${head_branch}.latest.taskgraph.decision-${cron.job_name}
                                               - index.project.mobile.${project}.v2.branch.${head_branch}.revision.${head_sha}.taskgraph.decision-${cron.job_name}
                                               - index.project.mobile.${project}.v2.branch.${head_branch}.revision.${head_sha}.taskgraph.cron.${ownTaskId}
