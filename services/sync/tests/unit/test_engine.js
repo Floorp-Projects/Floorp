@@ -23,11 +23,10 @@ SteamStore.prototype = {
 };
 
 function SteamTracker(name, engine) {
-  Tracker.call(this, name || "Steam", engine);
+  LegacyTracker.call(this, name || "Steam", engine);
 }
 SteamTracker.prototype = {
-  __proto__: Tracker.prototype,
-  persistChangedIDs: false,
+  __proto__: LegacyTracker.prototype,
 };
 
 function SteamEngine(name, service) {
@@ -80,6 +79,7 @@ async function cleanup(engine) {
 add_task(async function test_members() {
   _("Engine object members");
   let engine = new SteamEngine("Steam", Service);
+  await engine.initialize();
   Assert.equal(engine.Name, "Steam");
   Assert.equal(engine.prefName, "steam");
   Assert.ok(engine._store instanceof SteamStore);
@@ -89,6 +89,7 @@ add_task(async function test_members() {
 add_task(async function test_score() {
   _("Engine.score corresponds to tracker.score and is readonly");
   let engine = new SteamEngine("Steam", Service);
+  await engine.initialize();
   Assert.equal(engine.score, 0);
   engine._tracker.score += 5;
   Assert.equal(engine.score, 5);
@@ -106,6 +107,7 @@ add_task(async function test_score() {
 add_task(async function test_resetClient() {
   _("Engine.resetClient calls _resetClient");
   let engine = new SteamEngine("Steam", Service);
+  await engine.initialize();
   Assert.ok(!engine.wasReset);
 
   await engine.resetClient();
@@ -119,6 +121,7 @@ add_task(async function test_resetClient() {
 add_task(async function test_invalidChangedIDs() {
   _("Test that invalid changed IDs on disk don't end up live.");
   let engine = new SteamEngine("Steam", Service);
+  await engine.initialize();
   let tracker = engine._tracker;
 
   await tracker._beforeSave();
@@ -145,6 +148,7 @@ add_task(async function test_invalidChangedIDs() {
 add_task(async function test_wipeClient() {
   _("Engine.wipeClient calls resetClient, wipes store, clears changed IDs");
   let engine = new SteamEngine("Steam", Service);
+  await engine.initialize();
   Assert.ok(!engine.wasReset);
   Assert.ok(!engine._store.wasWiped);
   Assert.ok(await engine._tracker.addChangedID("a-changed-id"));
@@ -167,6 +171,7 @@ add_task(async function test_wipeClient() {
 add_task(async function test_enabled() {
   _("Engine.enabled corresponds to preference");
   let engine = new SteamEngine("Steam", Service);
+  await engine.initialize();
   try {
     Assert.ok(!engine.enabled);
     Svc.Prefs.set("engine.steam", true);
@@ -181,6 +186,7 @@ add_task(async function test_enabled() {
 
 add_task(async function test_sync() {
   let engine = new SteamEngine("Steam", Service);
+  await engine.initialize();
   try {
     _("Engine.sync doesn't call _sync if it's not enabled");
     Assert.ok(!engine.enabled);
@@ -204,6 +210,7 @@ add_task(async function test_sync() {
 add_task(async function test_disabled_no_track() {
   _("When an engine is disabled, its tracker is not tracking.");
   let engine = new SteamEngine("Steam", Service);
+  await engine.initialize();
   let tracker = engine._tracker;
   Assert.equal(engine, tracker.engine);
 

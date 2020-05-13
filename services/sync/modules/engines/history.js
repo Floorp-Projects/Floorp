@@ -17,7 +17,7 @@ const {
   SCORE_INCREMENT_SMALL,
   SCORE_INCREMENT_XLARGE,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-const { Store, SyncEngine, Tracker } = ChromeUtils.import(
+const { Store, SyncEngine, LegacyTracker } = ChromeUtils.import(
   "resource://services-sync/engines.js"
 );
 const { CryptoWrapper } = ChromeUtils.import(
@@ -517,10 +517,10 @@ HistoryStore.prototype = {
 };
 
 function HistoryTracker(name, engine) {
-  Tracker.call(this, name, engine);
+  LegacyTracker.call(this, name, engine);
 }
 HistoryTracker.prototype = {
-  __proto__: Tracker.prototype,
+  __proto__: LegacyTracker.prototype,
 
   onStart() {
     this._log.info("Adding Places observer.");

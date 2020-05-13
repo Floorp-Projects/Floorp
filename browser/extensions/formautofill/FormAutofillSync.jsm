@@ -220,16 +220,6 @@ FormAutofillTracker.prototype = {
     }
   },
 
-  // `_ignore` checks the change source for each observer notification, so we
-  // don't want to let the engine ignore all changes during a sync.
-  get ignoreAll() {
-    return false;
-  },
-
-  // Define an empty setter so that the engine doesn't throw a `TypeError`
-  // setting a read-only property.
-  set ignoreAll(value) {},
-
   onStart() {
     Services.obs.addObserver(this, "formautofill-storage-changed");
   },
@@ -237,31 +227,6 @@ FormAutofillTracker.prototype = {
   onStop() {
     Services.obs.removeObserver(this, "formautofill-storage-changed");
   },
-
-  // We never want to persist changed IDs, as the changes are already stored
-  // in FormAutofillStorage
-  persistChangedIDs: false,
-
-  // Ensure we aren't accidentally using the base persistence.
-  get changedIDs() {
-    throw new Error("changedIDs isn't meaningful for this engine");
-  },
-
-  set changedIDs(obj) {
-    throw new Error("changedIDs isn't meaningful for this engine");
-  },
-
-  addChangedID(id, when) {
-    throw new Error("Don't add IDs to the autofill tracker");
-  },
-
-  removeChangedID(id) {
-    throw new Error("Don't remove IDs from the autofill tracker");
-  },
-
-  // This method is called at various times, so we override with a no-op
-  // instead of throwing.
-  clearChangedIDs() {},
 };
 
 // This uses the same conventions as BookmarkChangeset in

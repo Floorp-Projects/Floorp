@@ -50,7 +50,6 @@ add_task(async function run_test() {
 
   _("We assume that tabs have changed at startup.");
   let tracker = engine._tracker;
-  tracker.persistChangedIDs = false;
 
   Assert.ok(tracker.modified);
   Assert.ok(
