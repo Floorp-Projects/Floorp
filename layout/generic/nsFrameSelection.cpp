@@ -245,26 +245,10 @@ struct MOZ_RAII AutoPrepareFocusRange {
     // represents the focus in a multi-range selection.  The anchor from a user
     // perspective is the most distant generated range on the opposite side.
     // Find that range and make it the mAnchorFocusRange.
-    const size_t len = ranges.Length();
-    size_t newAnchorFocusIndex = size_t(-1);
-    if (aSelection->GetDirection() == eDirNext) {
-      for (size_t i = 0; i < len; ++i) {
-        if (ranges[i].mRange->IsGenerated()) {
-          newAnchorFocusIndex = i;
-          break;
-        }
-      }
-    } else {
-      size_t i = len;
-      while (i--) {
-        if (ranges[i].mRange->IsGenerated()) {
-          newAnchorFocusIndex = i;
-          break;
-        }
-      }
-    }
+    nsRange* const newAnchorFocusRange =
+        FindGeneratedRangeMostDistantFromAnchor(*aSelection);
 
-    if (newAnchorFocusIndex == size_t(-1)) {
+    if (!newAnchorFocusRange) {
       // There are no generated ranges - that's fine.
       return;
     }
@@ -273,9 +257,9 @@ struct MOZ_RAII AutoPrepareFocusRange {
     if (aSelection->mAnchorFocusRange) {
       aSelection->mAnchorFocusRange->SetIsGenerated(true);
     }
-    nsRange* range = ranges[newAnchorFocusIndex].mRange;
-    range->SetIsGenerated(false);
-    aSelection->mAnchorFocusRange = range;
+
+    newAnchorFocusRange->SetIsGenerated(false);
+    aSelection->mAnchorFocusRange = newAnchorFocusRange;
 
     RemoveGeneratedRanges(*aSelection);
 
@@ -285,6 +269,31 @@ struct MOZ_RAII AutoPrepareFocusRange {
   }
 
  private:
+  static nsRange* FindGeneratedRangeMostDistantFromAnchor(
+      const Selection& aSelection) {
+    const nsTArray<StyledRange>& ranges = aSelection.mStyledRanges.mRanges;
+    const size_t len = ranges.Length();
+    nsRange* result{nullptr};
+    if (aSelection.GetDirection() == eDirNext) {
+      for (size_t i = 0; i < len; ++i) {
+        if (ranges[i].mRange->IsGenerated()) {
+          result = ranges[i].mRange;
+          break;
+        }
+      }
+    } else {
+      size_t i = len;
+      while (i--) {
+        if (ranges[i].mRange->IsGenerated()) {
+          result = ranges[i].mRange;
+          break;
+        }
+      }
+    }
+
+    return result;
+  }
+
   static void RemoveGeneratedRanges(Selection& aSelection) {
     RefPtr<nsPresContext> presContext = aSelection.GetPresContext();
     nsTArray<StyledRange>& ranges = aSelection.mStyledRanges.mRanges;
