@@ -5374,7 +5374,7 @@ MDefinition* IonBuilder::createThisScriptedBaseline(MDefinition* callee) {
   }
 
   // Shape guard.
-  callee = addShapeGuard(callee, target->lastProperty(), Bailout_ShapeGuard);
+  callee = addShapeGuard(callee, target->lastProperty());
 
   // Guard callee.prototype == proto.
   MOZ_ASSERT(shape->numFixedSlots() == 0, "Must be a dynamic slot");
@@ -10105,7 +10105,7 @@ AbortReasonOr<bool> IonBuilder::testCommonGetterSetter(
   if (guardGlobal) {
     JSObject* obj = &script()->global();
     MDefinition* globalObj = constant(ObjectValue(*obj));
-    *globalGuard = addShapeGuard(globalObj, globalShape, Bailout_ShapeGuard);
+    *globalGuard = addShapeGuard(globalObj, globalShape);
   }
 
   // If the getter/setter is not configurable we don't have to guard on the
@@ -10118,8 +10118,7 @@ AbortReasonOr<bool> IonBuilder::testCommonGetterSetter(
   }
 
   MInstruction* wrapper = constant(ObjectValue(*foundProto));
-  *guard =
-      addShapeGuard(wrapper, foundProto->lastProperty(), Bailout_ShapeGuard);
+  *guard = addShapeGuard(wrapper, foundProto->lastProperty());
   return true;
 }
 
@@ -10787,11 +10786,11 @@ MDefinition* IonBuilder::addShapeGuardsForGetterSetter(
 
   if (isOwnProperty) {
     MOZ_ASSERT(receivers.empty());
-    return addShapeGuard(obj, holderShape, Bailout_ShapeGuard);
+    return addShapeGuard(obj, holderShape);
   }
 
   MDefinition* holderDef = constant(ObjectValue(*holder));
-  addShapeGuard(holderDef, holderShape, Bailout_ShapeGuard);
+  addShapeGuard(holderDef, holderShape);
 
   return addGuardReceiverPolymorphic(obj, receivers);
 }
@@ -11036,7 +11035,7 @@ AbortReasonOr<Ok> IonBuilder::getPropTryInlineAccess(bool* emitted,
       // Monomorphic load from a native object.
       spew("Inlining monomorphic native GETPROP");
 
-      obj = addShapeGuard(obj, receivers[0].getShape(), Bailout_ShapeGuard);
+      obj = addShapeGuard(obj, receivers[0].getShape());
 
       Shape* shape = receivers[0].getShape()->searchLinear(NameToId(name));
       MOZ_ASSERT(shape);
@@ -11129,7 +11128,7 @@ AbortReasonOr<Ok> IonBuilder::getPropTryInlineProtoAccess(
   // Guard on the holder's shape.
   MInstruction* holderDef = constant(ObjectValue(*holder));
   Shape* holderShape = holder->as<NativeObject>().shape();
-  holderDef = addShapeGuard(holderDef, holderShape, Bailout_ShapeGuard);
+  holderDef = addShapeGuard(holderDef, holderShape);
 
   Shape* propShape = holderShape->searchLinear(NameToId(name));
   MOZ_ASSERT(propShape);
@@ -11617,7 +11616,7 @@ AbortReasonOr<Ok> IonBuilder::setPropTryInlineAccess(
       // Monomorphic store to a native object.
       spew("Inlining monomorphic native SETPROP");
 
-      obj = addShapeGuard(obj, receivers[0].getShape(), Bailout_ShapeGuard);
+      obj = addShapeGuard(obj, receivers[0].getShape());
 
       Shape* shape = receivers[0].getShape()->searchLinear(NameToId(name));
       MOZ_ASSERT(shape);
@@ -12596,7 +12595,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_instanceof() {
     }
 
     // Shape guard.
-    rhs = addShapeGuard(rhs, shape, Bailout_ShapeGuard);
+    rhs = addShapeGuard(rhs, shape);
 
     // Guard .prototype == protoObject.
     MOZ_ASSERT(shape->numFixedSlots() == 0, "Must be a dynamic slot");
@@ -12872,9 +12871,8 @@ MInstruction* IonBuilder::addBoundsCheck(MDefinition* index,
   return check;
 }
 
-MInstruction* IonBuilder::addShapeGuard(MDefinition* obj, Shape* const shape,
-                                        BailoutKind bailoutKind) {
-  MGuardShape* guard = MGuardShape::New(alloc(), obj, shape, bailoutKind);
+MInstruction* IonBuilder::addShapeGuard(MDefinition* obj, Shape* const shape) {
+  MGuardShape* guard = MGuardShape::New(alloc(), obj, shape);
   current->add(guard);
 
   // If a shape guard failed in the past, don't optimize shape guard.
@@ -12909,7 +12907,7 @@ MInstruction* IonBuilder::addGuardReceiverPolymorphic(
   if (receivers.length() == 1) {
     if (!receivers[0].getGroup()) {
       // Monomorphic guard on a native object.
-      return addShapeGuard(obj, receivers[0].getShape(), Bailout_ShapeGuard);
+      return addShapeGuard(obj, receivers[0].getShape());
     }
   }
 

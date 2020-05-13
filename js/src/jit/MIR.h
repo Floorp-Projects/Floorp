@@ -8787,12 +8787,9 @@ class MCallBindVar : public MUnaryInstruction, public SingleObjectPolicy::Data {
 // Guard on an object's shape.
 class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
   CompilerShape shape_;
-  BailoutKind bailoutKind_;
 
-  MGuardShape(MDefinition* obj, Shape* shape, BailoutKind bailoutKind)
-      : MUnaryInstruction(classOpcode, obj),
-        shape_(shape),
-        bailoutKind_(bailoutKind) {
+  MGuardShape(MDefinition* obj, Shape* shape)
+      : MUnaryInstruction(classOpcode, obj), shape_(shape) {
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
@@ -8805,15 +8802,11 @@ class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
   NAMED_OPERANDS((0, object))
 
   const Shape* shape() const { return shape_; }
-  BailoutKind bailoutKind() const { return bailoutKind_; }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isGuardShape()) {
       return false;
     }
     if (shape() != ins->toGuardShape()->shape()) {
-      return false;
-    }
-    if (bailoutKind() != ins->toGuardShape()->bailoutKind()) {
       return false;
     }
     return congruentIfOperandsEqual(ins);
