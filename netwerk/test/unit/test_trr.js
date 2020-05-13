@@ -1946,3 +1946,65 @@ add_task(async function test_pref_changes() {
   // Restore the pref
   gDefaultPref.setCharPref("network.trr.uri", defaultURI);
 });
+
+add_task(async function test_dohrollout_mode() {
+  Services.prefs.clearUserPref("network.trr.mode");
+  Services.prefs.clearUserPref("doh-rollout.mode");
+
+  equal(dns.currentTrrMode, 0);
+
+  async function doThenCheckMode(trrMode, rolloutMode, expectedMode, message) {
+    let modeChanged;
+    if (dns.currentTrrMode != expectedMode) {
+      modeChanged = observerPromise("network:trr-mode-changed");
+    }
+
+    if (trrMode != undefined) {
+      Services.prefs.setIntPref("network.trr.mode", trrMode);
+    }
+
+    if (rolloutMode != undefined) {
+      Services.prefs.setIntPref("doh-rollout.mode", rolloutMode);
+    }
+
+    if (modeChanged) {
+      await modeChanged;
+    }
+    equal(dns.currentTrrMode, expectedMode, message);
+  }
+
+  await doThenCheckMode(2, undefined, 2);
+  await doThenCheckMode(3, undefined, 3);
+  await doThenCheckMode(5, undefined, 5);
+  await doThenCheckMode(2, undefined, 2);
+  await doThenCheckMode(0, undefined, 0);
+  await doThenCheckMode(1, undefined, 5);
+  await doThenCheckMode(6, undefined, 5);
+
+  await doThenCheckMode(2, 0, 2);
+  await doThenCheckMode(2, 1, 2);
+  await doThenCheckMode(2, 2, 2);
+  await doThenCheckMode(2, 3, 2);
+  await doThenCheckMode(2, 5, 2);
+  await doThenCheckMode(3, 2, 3);
+  await doThenCheckMode(5, 2, 5);
+
+  Services.prefs.clearUserPref("network.trr.mode");
+  Services.prefs.clearUserPref("doh-rollout.mode");
+
+  await doThenCheckMode(undefined, 2, 2);
+  await doThenCheckMode(undefined, 3, 3);
+
+  // All modes that are not 0,2,3 are treated as 5
+  await doThenCheckMode(undefined, 5, 5);
+  await doThenCheckMode(undefined, 4, 5);
+  await doThenCheckMode(undefined, 6, 5);
+
+  await doThenCheckMode(undefined, 2, 2);
+  await doThenCheckMode(3, undefined, 3);
+
+  Services.prefs.clearUserPref("network.trr.mode");
+  equal(dns.currentTrrMode, 2);
+  Services.prefs.clearUserPref("doh-rollout.mode");
+  equal(dns.currentTrrMode, 0);
+});
