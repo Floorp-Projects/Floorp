@@ -77,6 +77,7 @@ function PageError(props) {
         serviceContainer,
         type,
         customFormat: true,
+        maybeScrollToBottom,
         ...repsProps,
       })
     );
