@@ -97,35 +97,6 @@ async function verifyGeneratedPasswordWasFilled(
   );
 }
 
-async function verifyConfirmationHint(browser, forceClose) {
-  let hintElem = browser.ownerGlobal.ConfirmationHint._panel;
-  await BrowserTestUtils.waitForPopupEvent(hintElem, "shown");
-  try {
-    is(hintElem.state, "open", "hint popup is open");
-    ok(
-      BrowserTestUtils.is_visible(hintElem.anchorNode),
-      "hint anchorNode is visible"
-    );
-    is(
-      hintElem.anchorNode.id,
-      "password-notification-icon",
-      "Hint should be anchored on the password notification icon"
-    );
-    info("verifyConfirmationHint, hint is shown and has its anchorNode");
-    if (forceClose) {
-      await closePopup(hintElem);
-    } else {
-      info("verifyConfirmationHint, assertion ok, wait for poopuphidden");
-      await BrowserTestUtils.waitForPopupEvent(hintElem, "hidden");
-      info("verifyConfirmationHint, hintElem popup is hidden");
-    }
-  } catch (ex) {
-    ok(false, "Confirmation hint not shown: " + ex.message);
-  } finally {
-    info("verifyConfirmationHint promise finalized");
-  }
-}
-
 async function openFormInNewTab(url, formValues, taskFn) {
   let formFilled = listenForTestNotification("FormProcessed");
 

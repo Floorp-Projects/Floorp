@@ -265,6 +265,7 @@ const NEVER_MENUITEM = 0;
 
 const CHANGE_BUTTON = "button";
 const DONT_CHANGE_BUTTON = "secondaryButton";
+const REMOVE_LOGIN_MENUITEM = 0;
 
 /**
  * Checks if we have a password capture popup notification
@@ -782,4 +783,37 @@ async function changeContentInputValue(browser, selector, str) {
   });
   info("Input value changed");
   await TestUtils.waitForTick();
+}
+
+async function verifyConfirmationHint(
+  browser,
+  forceClose,
+  anchorID = "password-notification-icon"
+) {
+  let hintElem = browser.ownerGlobal.ConfirmationHint._panel;
+  await BrowserTestUtils.waitForPopupEvent(hintElem, "shown");
+  try {
+    is(hintElem.state, "open", "hint popup is open");
+    ok(
+      BrowserTestUtils.is_visible(hintElem.anchorNode),
+      "hint anchorNode is visible"
+    );
+    is(
+      hintElem.anchorNode.id,
+      anchorID,
+      "Hint should be anchored on the expected notification icon"
+    );
+    info("verifyConfirmationHint, hint is shown and has its anchorNode");
+    if (forceClose) {
+      await closePopup(hintElem);
+    } else {
+      info("verifyConfirmationHint, assertion ok, wait for poopuphidden");
+      await BrowserTestUtils.waitForPopupEvent(hintElem, "hidden");
+      info("verifyConfirmationHint, hintElem popup is hidden");
+    }
+  } catch (ex) {
+    ok(false, "Confirmation hint not shown: " + ex.message);
+  } finally {
+    info("verifyConfirmationHint promise finalized");
+  }
 }

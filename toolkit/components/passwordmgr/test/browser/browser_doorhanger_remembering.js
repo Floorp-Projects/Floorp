@@ -493,6 +493,38 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
   Services.logins.removeLogin(login1);
 });
 
+add_task(async function test_changeUPLoginOnUPForm_remove() {
+  info("Check for change-password popup, u+p login on u+p form. (remove)");
+  Services.logins.addLogin(login1);
+
+  await testSubmittingLoginForm("subtst_notifications_8.html", async function(
+    fieldValues
+  ) {
+    is(fieldValues.username, "notifyu1", "Checking submitted username");
+    is(fieldValues.password, "pass2", "Checking submitted password");
+    let notif = await getCaptureDoorhangerThatMayOpen("password-change");
+    ok(notif, "got notification popup");
+    ok(!notif.dismissed, "doorhanger is not dismissed");
+    is(notif.message, "Would you like to update this login?", "Check message");
+
+    await checkDoorhangerUsernamePassword("notifyu1", "pass2");
+    clickDoorhangerButton(notif, REMOVE_LOGIN_MENUITEM);
+  });
+
+  // Let the hint hide itself
+  const forceClosePopup = false;
+  // Make sure confirmation hint was shown
+  info("waiting for verifyConfirmationHint");
+  await verifyConfirmationHint(
+    gBrowser.selectedBrowser,
+    forceClosePopup,
+    "identity-icon"
+  );
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 0, "Should have 0 logins");
+});
+
 add_task(async function test_changeUPLoginOnUPForm_change() {
   info("Check for change-password popup, u+p login on u+p form.");
   Services.logins.addLogin(login1);
