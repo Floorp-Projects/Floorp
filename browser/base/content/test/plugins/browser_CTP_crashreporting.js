@@ -99,6 +99,12 @@ add_task(async function() {
         Cu.waiveXrays(plugin).crash();
       } catch (e) {}
 
+      // Wait for the shadow DOM to be connected.
+      await ContentTaskUtils.waitForCondition(
+        () => plugin.openOrClosedShadowRoot,
+        "Need plugin shadow root"
+      );
+
       let getUI = id => {
         return plugin.openOrClosedShadowRoot.getElementById(id);
       };
@@ -109,7 +115,7 @@ add_task(async function() {
 
       await ContentTaskUtils.waitForCondition(() => {
         statusDiv = getUI("submitStatus");
-        return statusDiv.getAttribute("status") == "please";
+        return statusDiv?.getAttribute("status") == "please";
       }, "Waited too long for plugin to show crash report UI");
 
       // Make sure the UI matches our expectations...

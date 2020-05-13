@@ -36,6 +36,10 @@ add_task(async function() {
     let frame = content.document.getElementById("frame");
     let doc = frame.contentDocument;
     let plugin = doc.getElementById("test");
+    await ContentTaskUtils.waitForCondition(
+      () => plugin.openOrClosedShadowRoot?.getElementById("main"),
+      "Wait for plugin shadow root"
+    );
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
     Assert.ok(
       plugin && overlay.classList.contains("visible"),
