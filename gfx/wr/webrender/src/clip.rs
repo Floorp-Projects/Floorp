@@ -93,7 +93,7 @@
 //!
 
 use api::{BorderRadius, ClipIntern, ClipMode, ComplexClipRegion, ImageMask};
-use api::{BoxShadowClipMode, ClipId, ImageKey, ImageRendering};
+use api::{BoxShadowClipMode, ClipId, ImageKey, ImageRendering, PipelineId};
 use api::units::*;
 use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
 use crate::box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
@@ -164,6 +164,10 @@ pub struct ClipChainBuilder {
     /// A cache used during building child clip chains. Retained here to avoid
     /// extra memory allocations each time we build a clip.
     existing_clips_cache: FastHashSet<(ItemUid, SpatialNodeIndex)>,
+    /// Cache the previous ClipId we built, since it's quite common to share clip
+    /// id between primitives.
+    prev_clip_id: ClipId,
+    prev_clip_chain_id: ClipChainId,
 }
 
 impl ClipChainBuilder {
@@ -207,6 +211,8 @@ impl ClipChainBuilder {
             clip_chain_id,
             existing_clips_cache: parent_clips.clone(),
             parent_clips,
+            prev_clip_id: ClipId::root(PipelineId::dummy()),
+            prev_clip_chain_id: ClipChainId::NONE,
         }
     }
 
@@ -264,6 +270,10 @@ impl ClipChainBuilder {
         clip_chain_nodes: &mut Vec<ClipChainNode>,
         templates: &FastHashMap<ClipId, ClipTemplate>,
     ) -> ClipChainId {
+        if self.prev_clip_id == clip_id {
+            return self.prev_clip_chain_id;
+        }
+
         // Instead of cloning here, do a clear and manual insertions, to
         // avoid any extra heap allocations each time we build a clip-chain here.
         // Maybe there is a better way to do this?
@@ -280,6 +290,9 @@ impl ClipChainBuilder {
             clip_chain_nodes,
             templates,
         );
+
+        self.prev_clip_id = clip_id;
+        self.prev_clip_chain_id = clip_chain_id;
 
         clip_chain_id
     }
