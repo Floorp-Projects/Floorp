@@ -112,8 +112,8 @@ const SearchWidgetTracker = {
         .querySelectorAll("toolbarspring")
         .forEach(n => n.removeAttribute("width"));
       let searchbar =
-        win.document.getElementById(this.WIDGET_ID) ||
-        win.gNavToolbox.palette.querySelector("#" + this.WIDGET_ID);
+        win.document.getElementById(WIDGET_ID) ||
+        win.gNavToolbox.palette.querySelector("#" + WIDGET_ID);
       searchbar.removeAttribute("width");
     }
   },
