@@ -53,6 +53,11 @@ class IMediaInfoUpdater {
   // browsing context where controlled media exists.
   virtual void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
                                          MediaAudibleState aState) = 0;
+
+  // Use this method to update media session's declared playback state for the
+  // specific media session.
+  virtual void SetDeclaredPlaybackState(uint64_t aSessionContextId,
+                                        MediaSessionPlaybackState aState) = 0;
 };
 
 /**
@@ -82,6 +87,8 @@ class MediaSessionController : public IMediaInfoUpdater {
                                   MediaPlaybackState aState) override;
   void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
                                  MediaAudibleState aState) override;
+  void SetDeclaredPlaybackState(uint64_t aSessionContextId,
+                                MediaSessionPlaybackState aState) override;
 
   // Use these functions to ensure that we can track all existing media session
   // in the same tab when media session is created or destroyed in the content
@@ -108,17 +115,13 @@ class MediaSessionController : public IMediaInfoUpdater {
     return mMetadataChangedEvent;
   }
 
-  // This method is used to update the declared playback state for the specific
-  // media session.
-  virtual void SetDeclaredPlaybackState(uint64_t aSessionContextId,
-                                        MediaSessionPlaybackState aState);
-
-  // Return the active media session's declared playback state. If we don't have
-  // active media session, we would return 'None'.
-  MediaSessionPlaybackState GetCurrentDeclaredPlaybackState() const;
+  // Return the actual playback state.
+  MediaSessionPlaybackState GetState() const;
 
  protected:
   ~MediaSessionController() = default;
+  virtual void HandleActualPlaybackStateChanged() = 0;
+
   uint64_t mTopLevelBCId;
   Maybe<uint64_t> mActiveMediaSessionContextId;
 
@@ -130,6 +133,35 @@ class MediaSessionController : public IMediaInfoUpdater {
   void FillMissingTitleAndArtworkIfNeeded(MediaMetadataBase& aMetadata) const;
 
   void UpdateActiveMediaSessionContextId();
+
+  // When the amount of playing media changes, we would use this function to
+  // update the guessed playback state.
+  void SetGuessedPlayState(MediaSessionPlaybackState aState);
+
+  // Whenever the declared playback state or the guessed playback state changes,
+  // we should recompute actual playback state to know if we need to update the
+  // virtual control interface.
+  void UpdateActualPlaybackState();
+
+  // Return the active media session's declared playback state. If the active
+  // media session doesn't exist, return  'None' instead.
+  MediaSessionPlaybackState GetCurrentDeclaredPlaybackState() const;
+
+  // This state can match to the `guessed playback state` in the spec [1], it
+  // indicates if we have any media element playing within the tab which this
+  // controller belongs to. But currently we only take media elements into
+  // account, which is different from the way the spec recommends. In addition,
+  // We don't support web audio and plugin and not consider audible state of
+  // media.
+  // [1] https://w3c.github.io/mediasession/#guessed-playback-state
+  MediaSessionPlaybackState mGuessedPlaybackState =
+      MediaSessionPlaybackState::None;
+
+  // This playback state would be the final playback which can be used to know
+  // if the controller is playing or not.
+  // https://w3c.github.io/mediasession/#actual-playback-state
+  MediaSessionPlaybackState mActualPlaybackState =
+      MediaSessionPlaybackState::None;
 
   nsDataHashtable<nsUint64HashKey, MediaSessionInfo> mMediaSessionInfoMap;
   MediaEventProducer<MediaMetadataBase> mMetadataChangedEvent;

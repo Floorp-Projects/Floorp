@@ -5,6 +5,7 @@
 #include "MediaSessionController.h"
 
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/MediaControlUtils.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsIChromeRegistry.h"
@@ -43,11 +44,6 @@ MediaSessionController::MediaSessionController(uint64_t aBrowsingContextId)
     : mTopLevelBCId(aBrowsingContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "MediaSessionController only runs on Chrome process!");
-}
-
-void MediaSessionController::NotifyMediaPlaybackChanged(
-    uint64_t aBrowsingContextId, MediaPlaybackState aState) {
-  mMediaStatusDelegate.UpdateMediaPlaybackState(aBrowsingContextId, aState);
 }
 
 void MediaSessionController::NotifyMediaAudibleChanged(
@@ -227,6 +223,7 @@ void MediaSessionController::SetDeclaredPlaybackState(
       ToMediaSessionPlaybackStateStr(info->mDeclaredPlaybackState),
       ToMediaSessionPlaybackStateStr(aState));
   info->mDeclaredPlaybackState = aState;
+  UpdateActualPlaybackState();
 }
 
 MediaSessionPlaybackState
@@ -236,6 +233,52 @@ MediaSessionController::GetCurrentDeclaredPlaybackState() const {
   }
   return mMediaSessionInfoMap.Get(*mActiveMediaSessionContextId)
       .mDeclaredPlaybackState;
+}
+
+void MediaSessionController::NotifyMediaPlaybackChanged(
+    uint64_t aBrowsingContextId, MediaPlaybackState aState) {
+  LOG("UpdateMediaPlaybackState %s for context %" PRId64,
+      ToMediaPlaybackStateStr(aState), aBrowsingContextId);
+  const bool oldPlaying = mMediaStatusDelegate.IsPlaying();
+  mMediaStatusDelegate.UpdateMediaPlaybackState(aBrowsingContextId, aState);
+
+  // Playback state doesn't change, we don't need to update the guessed playback
+  // state. This is used to prevent the state from changing from `none` to
+  // `paused` when receiving `MediaPlaybackState::eStarted`.
+  if (mMediaStatusDelegate.IsPlaying() == oldPlaying) {
+    return;
+  }
+  if (mMediaStatusDelegate.IsPlaying()) {
+    SetGuessedPlayState(MediaSessionPlaybackState::Playing);
+  } else {
+    SetGuessedPlayState(MediaSessionPlaybackState::Paused);
+  }
+}
+
+void MediaSessionController::SetGuessedPlayState(
+    MediaSessionPlaybackState aState) {
+  if (aState == mGuessedPlaybackState) {
+    return;
+  }
+  LOG("SetGuessedPlayState : '%s'", ToMediaSessionPlaybackStateStr(aState));
+  mGuessedPlaybackState = aState;
+  UpdateActualPlaybackState();
+}
+
+void MediaSessionController::UpdateActualPlaybackState() {
+  // The way to compute the actual playback state is based on the spec.
+  // https://w3c.github.io/mediasession/#actual-playback-state
+  MediaSessionPlaybackState newState =
+      GetCurrentDeclaredPlaybackState() == MediaSessionPlaybackState::Playing
+          ? MediaSessionPlaybackState::Playing
+          : mGuessedPlaybackState;
+  if (mActualPlaybackState == newState) {
+    return;
+  }
+  mActualPlaybackState = newState;
+  LOG("UpdateActualPlaybackState : '%s'",
+      ToMediaSessionPlaybackStateStr(mActualPlaybackState));
+  HandleActualPlaybackStateChanged();
 }
 
 MediaMetadataBase MediaSessionController::GetCurrentMediaMetadata() const {
@@ -282,12 +325,16 @@ bool MediaSessionController::IsInPrivateBrowsing() const {
   return nsContentUtils::IsInPrivateBrowsing(element->OwnerDoc());
 }
 
+MediaSessionPlaybackState MediaSessionController::GetState() const {
+  return mActualPlaybackState;
+}
+
 bool MediaSessionController::IsMediaAudible() const {
   return mMediaStatusDelegate.IsAudible();
 }
 
 bool MediaSessionController::IsMediaPlaying() const {
-  return mMediaStatusDelegate.IsPlaying();
+  return mActualPlaybackState == MediaSessionPlaybackState::Playing;
 }
 
 bool MediaSessionController::IsAnyMediaBeingControlled() const {
