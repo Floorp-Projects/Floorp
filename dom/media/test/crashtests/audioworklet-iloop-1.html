@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Bug 1625372: JS infinite loops on AudioWorklet thread</title>
+  <script id="processor" type="worklet">
+registerProcessor("iloop", class extends AudioWorkletProcessor {
+  constructor() { while (true) {} }
+});
+  </script>
+  <script>
+const realtime = new AudioContext();
+const offline = new OfflineAudioContext({length: 1, sampleRate: 16384});
+const url = URL.createObjectURL(
+  new Blob([document.getElementById("processor").innerText]),
+  {type: "application/javascript"});
+Promise.all([
+  realtime.audioWorklet.addModule(url).then(
+    () => new AudioWorkletNode(realtime, "iloop")),
+  offline.audioWorklet.addModule(url).then(
+    () => new AudioWorkletNode(offline, "iloop"))
+]).then(() => document.documentElement.removeAttribute("class"));
+  </script>
+</head>
+</html>
