@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 window.buildSettings = {
-  defaultSentryDsn: "https://904ccdd4866247c092ae8fc1a4764a63:940d44bdc71d4daea133c19080ccd38d@sentry.prod.mozaws.net/224",
+  defaultSentryDsn: "",
   logLevel: "" || "warn",
   captureText: ("" === "true"),
   uploadBinary: ("" === "true"),
