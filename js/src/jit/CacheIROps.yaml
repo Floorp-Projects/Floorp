@@ -912,6 +912,7 @@
   transpile: true
   args:
     obj: ObjId
+    getter: ObjectField
 
 - name: LoadStringCharResult
   shared: true
