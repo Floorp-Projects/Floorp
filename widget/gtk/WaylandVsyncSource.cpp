@@ -115,7 +115,7 @@ void WaylandVsyncSource::WaylandDisplay::Notify() {
 }
 
 void WaylandVsyncSource::WaylandDisplay::SetupFrameCallback() {
-  struct wl_surface* surface = moz_container_get_wl_surface(mContainer);
+  struct wl_surface* surface = moz_container_wayland_get_surface(mContainer);
   if (!surface) {
     // We don't have a surface, either due to being called before it was made
     // available in the mozcontainer, or after it was destroyed. We're all done
