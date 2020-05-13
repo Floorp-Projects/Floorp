@@ -106,6 +106,13 @@ monitor-header-content-signed-in = { -monitor-brand-name } warns you if your inf
 monitor-sign-up = Sign Up for Breach Alerts
 auto-scan = Automatically scanned today
 
+monitor-emails-tooltip =
+  .title = View monitored email addresses on { -monitor-brand-short-name }
+monitor-breaches-tooltip =
+  .title = View known data breaches on { -monitor-brand-short-name }
+monitor-passwords-tooltip =
+  .title = View exposed passwords on { -monitor-brand-short-name }
+
 # This string is displayed after a large numeral that indicates the total number
 # of email addresses being monitored. Don’t add $count to
 # your localization, because it would result in the number showing twice.
