@@ -504,6 +504,13 @@ class FennecMigrator private constructor(
             return result
         }
 
+        // If we need to run an FxA migration later, first make sure 'accountManager' is initialized
+        // while we're still on the main thread. This is necessary because accountManager can't be
+        // initialized on a background thread.
+        if (migrationsToRun.any { it.migration is Migration.FxA }) {
+            accountManager?.value
+        }
+
         return runMigrationsAsync(store, migrationsToRun)
     }
 
