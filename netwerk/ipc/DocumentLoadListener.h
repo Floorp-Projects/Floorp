@@ -14,7 +14,6 @@
 #include "mozilla/net/PDocumentChannelParent.h"
 #include "mozilla/net/ParentChannelListener.h"
 #include "mozilla/net/ADocumentChannelBridge.h"
-#include "mozilla/dom/SessionHistoryEntry.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIParentChannel.h"
@@ -399,8 +398,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   nsString mSrcdocData;
   nsCOMPtr<nsIURI> mBaseURI;
-
-  mozilla::UniquePtr<mozilla::dom::SessionHistoryInfoAndId> mSessionHistoryInfo;
 
   // Flags from nsDocShellLoadState::LoadFlags/Type that we want to make
   // available to the new docshell if we switch processes.

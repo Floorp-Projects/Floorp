@@ -66,7 +66,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
-#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -199,7 +198,7 @@
 #include "nsSandboxFlags.h"
 #include "nsSHEntry.h"
 #include "nsSHistory.h"
-#include "nsSHEntry.h"
+#include "SHEntryChild.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsSubDocumentFrame.h"
 #include "nsView.h"
@@ -424,6 +423,10 @@ nsDocShell::~nsDocShell() {
 
   Destroy();
 
+  if (mSessionHistory) {
+    mSessionHistory->LegacySHistory()->ClearRootBrowsingContext();
+  }
+
   if (mContentViewer) {
     mContentViewer->Close(nullptr);
     mContentViewer->Destroy();
@@ -541,7 +544,7 @@ void nsDocShell::DestroyChildren() {
 
 NS_IMPL_CYCLE_COLLECTION_WEAK_PTR_INHERITED(nsDocShell, nsDocLoader,
                                             mScriptGlobal, mInitialClientSource,
-                                            mBrowsingContext,
+                                            mSessionHistory, mBrowsingContext,
                                             mChromeEventHandler)
 
 NS_IMPL_ADDREF_INHERITED(nsDocShell, nsDocLoader)
@@ -2952,8 +2955,8 @@ nsresult nsDocShell::AddChildSHEntryInternal(nsISHEntry* aCloneRef,
                                              uint32_t aLoadType,
                                              bool aCloneChildren) {
   nsresult rv = NS_OK;
-  if (GetSessionHistory()) {
-    rv = GetSessionHistory()->LegacySHistory()->AddChildSHEntryHelper(
+  if (mSessionHistory) {
+    rv = mSessionHistory->LegacySHistory()->AddChildSHEntryHelper(
         aCloneRef, aNewEntry, mBrowsingContext, aCloneChildren);
   } else {
     /* Just pass this along */
@@ -3007,8 +3010,13 @@ nsresult nsDocShell::AddChildSHEntryToParent(nsISHEntry* aNewEntry,
 
 NS_IMETHODIMP
 nsDocShell::RemoveFromSessionHistory() {
-  RefPtr<ChildSHistory> sessionHistory =
-      mBrowsingContext->Top()->GetChildSessionHistory();
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
+  nsCOMPtr<nsIWebNavigation> rootAsWebnav = do_QueryInterface(root);
+  if (!rootAsWebnav) {
+    return NS_OK;
+  }
+  RefPtr<ChildSHistory> sessionHistory = rootAsWebnav->GetSessionHistory();
   if (!sessionHistory) {
     return NS_OK;
   }
@@ -4074,9 +4082,25 @@ nsDocShell::GetCurrentURI(nsIURI** aURI) {
 }
 
 NS_IMETHODIMP
+nsDocShell::InitSessionHistory() {
+  MOZ_ASSERT(!mIsBeingDestroyed);
+
+  // Make sure that we are the root DocShell, and set a handle to root docshell
+  // in the session history.
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
+  if (root != this) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mSessionHistory = new ChildSHistory(this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetSessionHistoryXPCOM(nsISupports** aSessionHistory) {
   NS_ENSURE_ARG_POINTER(aSessionHistory);
-  RefPtr<ChildSHistory> shistory = GetSessionHistory();
+  RefPtr<ChildSHistory> shistory = mSessionHistory;
   shistory.forget(aSessionHistory);
   return NS_OK;
 }
@@ -4297,11 +4321,12 @@ nsDocShell::Destroy() {
     mScriptGlobal = nullptr;
   }
 
-  if (GetSessionHistory()) {
+  if (mSessionHistory) {
     // We want to destroy these content viewers now rather than
     // letting their destruction wait for the session history
     // entries to get garbage collected.  (Bug 488394)
-    GetSessionHistory()->EvictLocalContentViewers();
+    mSessionHistory->EvictLocalContentViewers();
+    mSessionHistory = nullptr;
   }
 
   if (mWillChangeProcess) {
@@ -5470,18 +5495,6 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
     SetDocCurrentStateObj(mLSHE);
 
     SetHistoryEntryAndUpdateBC(Nothing(), Some<nsISHEntry*>(mLSHE));
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
-      mActiveEntry = nullptr;
-      mLoadingEntry.swap(mActiveEntry);
-      if (XRE_IsParentProcess()) {
-        mBrowsingContext->Canonical()->SessionHistoryCommit(mLoadingEntryId);
-      } else {
-        ContentChild* cc = ContentChild::GetSingleton();
-        mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
-                                                 mLoadingEntryId);
-      }
-      mLoadingEntryId = 0;
-    }
   }
 
   bool updateHistory = true;
@@ -7507,13 +7520,13 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
 
     // Be sure to have a correct mLSHE, it may have been cleared by
     // EndPageLoad. See bug 302115.
-    ChildSHistory* shistory = GetSessionHistory();
-    if (shistory && !mLSHE) {
-      int32_t idx = shistory->LegacySHistory()->GetRequestedIndex();
+    if (mSessionHistory && !mLSHE) {
+      int32_t idx = mSessionHistory->LegacySHistory()->GetRequestedIndex();
       if (idx == -1) {
-        idx = shistory->Index();
+        idx = mSessionHistory->Index();
       }
-      shistory->LegacySHistory()->GetEntryAtIndex(idx, getter_AddRefs(mLSHE));
+      mSessionHistory->LegacySHistory()->GetEntryAtIndex(idx,
+                                                         getter_AddRefs(mLSHE));
     }
 
     mLoadType = LOAD_ERROR_PAGE;
@@ -8433,11 +8446,11 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   /* Set the title for the SH entry for this target url. so that
    * SH menus in go/back/forward buttons won't be empty for this.
    */
-  ChildSHistory* shistory = GetSessionHistory();
-  if (shistory) {
-    int32_t index = shistory->Index();
+  if (mSessionHistory) {
+    int32_t index = mSessionHistory->Index();
     nsCOMPtr<nsISHEntry> shEntry;
-    shistory->LegacySHistory()->GetEntryAtIndex(index, getter_AddRefs(shEntry));
+    mSessionHistory->LegacySHistory()->GetEntryAtIndex(index,
+                                                       getter_AddRefs(shEntry));
     NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
     shEntry->SetTitle(mTitle);
   }
@@ -9471,15 +9484,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                "DoURILoad thinks this is a document and InternalLoad does not");
   }
 
-  // FIXME We still have a ton of codepaths that don't pass through
-  //       DocumentLoadListener, so probably need to create session history info
-  //       in more places.
-  if (aLoadState->GetSessionHistoryID() != 0) {
-    mLoadingEntry =
-        MakeUnique<SessionHistoryInfo>(aLoadState->GetSessionHistoryInfo());
-    mLoadingEntryId = aLoadState->GetSessionHistoryID();
-  }
-
   // open a channel for the url
 
   // If we have a pending channel, use the channel we've already created here.
@@ -10091,9 +10095,12 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                          (IsForceReloadType(aLoadType) && IsFrame()));
 
   // Create SH Entry (mLSHE) only if there is a SessionHistory object in the
-  // in the root browsing context.
-  RefPtr<ChildSHistory> rootSH =
-      mBrowsingContext->Top()->GetChildSessionHistory();
+  // current frame or in the root docshell.
+  RefPtr<ChildSHistory> rootSH = mSessionHistory;
+  if (!rootSH) {
+    // Get the handle to SH from the root docshell
+    rootSH = GetRootSessionHistory();
+  }
   if (!rootSH) {
     updateSHistory = false;
     updateGHistory = false;  // XXX Why global history too?
@@ -10196,11 +10203,11 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                                 aPrincipalToInherit, aStoragePrincipalToInherit,
                                 aCsp, aCloneSHChildren, getter_AddRefs(mLSHE));
     }
-  } else if (GetSessionHistory() && mLSHE && mURIResultedInDocument) {
+  } else if (mSessionHistory && mLSHE && mURIResultedInDocument) {
     // Even if we don't add anything to SHistory, ensure the current index
     // points to the same SHEntry as our mLSHE.
 
-    GetSessionHistory()->LegacySHistory()->EnsureCorrectEntryAtCurrIndex(mLSHE);
+    mSessionHistory->LegacySHistory()->EnsureCorrectEntryAtCurrIndex(mLSHE);
   }
 
   // If this is a POST request, we do not want to include this in global
@@ -10710,7 +10717,9 @@ nsresult nsDocShell::AddToSessionHistory(
     NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
 
     RefPtr<ChildSHistory> shistory = webnav->GetSessionHistory();
-    entry = new nsSHEntry(shistory ? shistory->LegacySHistory() : nullptr);
+    entry = CreateSHEntryForDocShell(shistory ? shistory->LegacySHistory()
+                                              : nullptr);
+    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
   }
 
   // Get the post data & referrer
@@ -10837,11 +10846,11 @@ nsresult nsDocShell::AddToSessionHistory(
                 loadReplace, referrerInfo, srcdoc, srcdocEntry, baseURI,
                 saveLayoutState, expired);
 
-  if (root == static_cast<nsIDocShellTreeItem*>(this) && GetSessionHistory()) {
+  if (root == static_cast<nsIDocShellTreeItem*>(this) && mSessionHistory) {
     bool shouldPersist = ShouldAddToSessionHistory(aURI, aChannel);
     Maybe<int32_t> previousEntryIndex;
     Maybe<int32_t> loadedEntryIndex;
-    rv = GetSessionHistory()->LegacySHistory()->AddToRootSessionHistory(
+    rv = mSessionHistory->LegacySHistory()->AddToRootSessionHistory(
         aCloneChildren, mOSHE, mBrowsingContext, entry, mLoadType,
         shouldPersist, &previousEntryIndex, &loadedEntryIndex);
 
@@ -10998,6 +11007,24 @@ void nsDocShell::SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
   if (aOSHE.isSome()) {
     deathGripOldOSHE = SetHistoryEntry(&mOSHE, aOSHE.value());
     MOZ_ASSERT(mOSHE.get() == aOSHE.value());
+  }
+
+  // Do not update the BC if the SH pref is off and we are not a parent process
+  // or if it is discarded
+  if ((!StaticPrefs::fission_sessionHistoryInParent() &&
+       XRE_IsContentProcess()) ||
+      mBrowsingContext->IsDiscarded()) {
+    return;
+  }
+  if (XRE_IsParentProcess()) {
+    // We are in the parent process, thus we can update the entries directly
+    mBrowsingContext->Canonical()->UpdateSHEntries(mLSHE, mOSHE);
+  } else {
+    ContentChild* cc = ContentChild::GetSingleton();
+    // We can't update canonical BC directly, so do it over IPC call
+    cc->SendUpdateSHEntriesInBC(static_cast<SHEntryChild*>(mLSHE.get()),
+                                static_cast<SHEntryChild*>(mOSHE.get()),
+                                mBrowsingContext);
   }
 }
 
@@ -12232,9 +12259,9 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
 
         // If we're performing a history load, locate the correct history entry,
         // and set the relevant bits on our loadState.
-        if (aHistoryIndex >= 0 && self->GetSessionHistory()) {
+        if (aHistoryIndex >= 0 && self->mSessionHistory) {
           nsCOMPtr<nsISHistory> legacySHistory =
-              self->GetSessionHistory()->LegacySHistory();
+              self->mSessionHistory->LegacySHistory();
 
           nsCOMPtr<nsISHEntry> entry;
           nsresult rv = legacySHistory->GetEntryAtIndex(aHistoryIndex,

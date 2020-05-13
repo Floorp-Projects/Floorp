@@ -13,6 +13,11 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'shistory'
 
+IPDL_SOURCES += [
+    'PSHEntry.ipdl',
+    'PSHistory.ipdl',
+]
+
 EXPORTS += [
     'nsSHEntry.h',
     'nsSHEntryShared.h',
@@ -21,15 +26,23 @@ EXPORTS += [
 
 EXPORTS.mozilla.dom += [
     'ChildSHistory.h',
-    'SessionHistoryEntry.h',
+    'MaybeNewPSHEntry.h',
+    'SHEntryChild.h',
+    'SHEntryParent.h',
+    'SHistoryChild.h',
+    'SHistoryParent.h',
 ]
 
 UNIFIED_SOURCES += [
     'ChildSHistory.cpp',
+    'MaybeNewPSHEntry.cpp',
     'nsSHEntry.cpp',
     'nsSHEntryShared.cpp',
     'nsSHistory.cpp',
-    'SessionHistoryEntry.cpp',
+    'SHEntryChild.cpp',
+    'SHEntryParent.cpp',
+    'SHistoryChild.cpp',
+    'SHistoryParent.cpp',
 ]
 
 LOCAL_INCLUDES += [

@@ -18,14 +18,12 @@
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/ContentPlaybackController.h"
-#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsNetUtil.h"
-#include "nsSHistory.h"
 
 using namespace mozilla::ipc;
 
@@ -188,77 +186,19 @@ CanonicalBrowsingContext::GetParentCrossChromeBoundary() {
 }
 
 nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
-  if (!IsTop()) {
-    return Cast(Top())->GetSessionHistory();
+  if (mSessionHistory) {
+    return mSessionHistory;
   }
 
-  // Check GetChildSessionHistory() to make sure that this BrowsingContext has
-  // session history enabled.
-  if (!mSessionHistory && GetChildSessionHistory()) {
-    mSessionHistory = new nsSHistory(this);
-  }
-
-  return mSessionHistory;
-}
-
-static uint64_t gNextHistoryEntryId = 0;
-
-UniquePtr<SessionHistoryInfoAndId>
-CanonicalBrowsingContext::CreateSessionHistoryEntryForLoad(
-    nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
-  MOZ_ASSERT(GetSessionHistory(),
-             "Creating an entry but session history is not enabled for this "
-             "browsing context!");
-  uint64_t id = ++gNextHistoryEntryId;
-  RefPtr<SessionHistoryEntry> entry =
-      new SessionHistoryEntry(GetSessionHistory(), aLoadState, aChannel);
-  mLoadingEntries.AppendElement(SessionHistoryEntryAndId(id, entry));
-  return MakeUnique<SessionHistoryInfoAndId>(
-      id, MakeUnique<SessionHistoryInfo>(entry->GetInfo()));
-}
-
-void CanonicalBrowsingContext::SessionHistoryCommit(
-    uint64_t aSessionHistoryEntryId) {
-  for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
-    if (mLoadingEntries[i].mId == aSessionHistoryEntryId) {
-      RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry.forget();
-      mActiveEntry = mLoadingEntries[i].mEntry;
-      mLoadingEntries.RemoveElementAt(i);
-      if (IsTop()) {
-        GetSessionHistory()->AddEntry(mActiveEntry,
-                                      /* FIXME aPersist = */ true);
-      } else {
-        // FIXME Check if we're replacing before adding a child.
-        // FIXME The old implementations adds it to the parent's mLSHE if there
-        //       is one, need to figure out if that makes sense here (peterv
-        //       doesn't think it would).
-        if (oldActiveEntry) {
-          // FIXME Need to figure out the right value for aCloneChildren.
-          GetSessionHistory()->AddChildSHEntryHelper(oldActiveEntry,
-                                                     mActiveEntry, Top(), true);
-        } else {
-          SessionHistoryEntry* parentEntry =
-              static_cast<CanonicalBrowsingContext*>(GetParent())->mActiveEntry;
-          if (parentEntry) {
-            // FIXME The docshell code sometime uses -1 for aChildOffset!
-            // FIXME Using IsInProcess for aUseRemoteSubframes isn't quite
-            //       right, but aUseRemoteSubframes should be going away.
-            parentEntry->AddChild(mActiveEntry, Children().Length() - 1,
-                                  IsInProcess());
-          }
-        }
-      }
-      Group()->EachParent([&](ContentParent* aParent) {
-        // FIXME Should we return the length to the one process that committed
-        //       as an async return value? Or should this use synced fields?
-        Unused << aParent->SendHistoryCommitLength(
-            Top(), GetSessionHistory()->GetCount());
-      });
-      return;
+  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(GetDocShell());
+  if (webNav) {
+    RefPtr<ChildSHistory> shistory = webNav->GetSessionHistory();
+    if (shistory) {
+      return shistory->LegacySHistory();
     }
   }
-  // FIXME Should we throw an error if we don't find an entry for
-  // aSessionHistoryEntryId?
+
+  return nullptr;
 }
 
 JSObject* CanonicalBrowsingContext::WrapObject(

@@ -11,7 +11,6 @@
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
-#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientChannelHelper.h"
@@ -20,7 +19,6 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/net/CookieJarSettings.h"
-#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "mozilla/net/UrlClassifierCommon.h"
@@ -532,11 +530,6 @@ bool DocumentLoadListener::Open(
   mTiming = aTiming;
   mSrcdocData = aLoadState->SrcdocData();
   mBaseURI = aLoadState->BaseURI();
-  if (StaticPrefs::fission_sessionHistoryInParent() &&
-      browsingContext->GetSessionHistory()) {
-    mSessionHistoryInfo =
-        browsingContext->CreateSessionHistoryEntryForLoad(aLoadState, mChannel);
-  }
 
   if (auto* ctx = GetBrowsingContext()) {
     ctx->StartDocumentLoad(this);
@@ -1160,11 +1153,6 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.baseUri() = mBaseURI;
   aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
   aArgs.loadStateLoadType() = mLoadStateLoadType;
-  if (mSessionHistoryInfo) {
-    aArgs.sessionHistoryInfo().emplace(
-        mSessionHistoryInfo->mId, MakeUnique<mozilla::dom::SessionHistoryInfo>(
-                                      *mSessionHistoryInfo->mInfo));
-  }
 }
 
 bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
