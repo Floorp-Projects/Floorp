@@ -70,7 +70,7 @@ OggDemuxer::nsAutoOggSyncState::nsAutoOggSyncState(rlbox_sandbox_ogg& aSandbox)
     : mSandbox(aSandbox) {
   tainted_ogg<ogg_sync_state*> state =
       mSandbox.malloc_in_sandbox<ogg_sync_state>();
-  MOZ_ASSERT(state != nullptr);
+  MOZ_RELEASE_ASSERT(state != nullptr);
   mState = state.to_opaque();
   sandbox_invoke(mSandbox, ogg_sync_init, mState);
 }
@@ -891,7 +891,7 @@ void OggDemuxer::DemuxUntilPacketAvailable(TrackInfo::TrackType aType,
   while (!aState->IsPacketReady()) {
     OGG_DEBUG("no packet yet, reading some more");
     tainted_ogg<ogg_page*> page = mSandbox->malloc_in_sandbox<ogg_page>();
-    MOZ_ASSERT(page != nullptr);
+    MOZ_RELEASE_ASSERT(page != nullptr);
     auto clean_page = MakeScopeExit([&] { mSandbox->free_in_sandbox(page); });
     if (!ReadOggPage(aType, page.to_opaque())) {
       OGG_DEBUG("no more pages to read in resource?");
@@ -1560,7 +1560,7 @@ struct nsDemuxerAutoOggSyncState {
   explicit nsDemuxerAutoOggSyncState(rlbox_sandbox_ogg& aSandbox)
       : mSandbox(aSandbox) {
     mState = mSandbox.malloc_in_sandbox<ogg_sync_state>();
-    MOZ_ASSERT(mState != nullptr);
+    MOZ_RELEASE_ASSERT(mState != nullptr);
     sandbox_invoke(mSandbox, ogg_sync_init, mState);
   }
   ~nsDemuxerAutoOggSyncState() {
