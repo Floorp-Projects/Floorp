@@ -18,7 +18,7 @@ import {
   getSourceActorsForThread,
 } from "../selectors";
 
-function addThreads(
+async function addThreads(
   { dispatch, client, getState }: ThunkArgs,
   addedThreads: ThreadList
 ) {
@@ -26,15 +26,17 @@ function addThreads(
   dispatch(({ type: "INSERT_THREADS", cx, threads: addedThreads }: Action));
 
   // Fetch the sources and install breakpoints on any new workers.
-  // NOTE: This runs in the background and fails quietly because it is
-  // pretty easy for sources to throw during the fetch if their thread
-  // shuts down, which would cause test failures.
-  for (const thread of addedThreads) {
-    client
-      .fetchThreadSources(thread.actor)
-      .then(sources => dispatch(newGeneratedSources(sources)))
-      .catch(e => console.error(e));
-  }
+  await Promise.all(addedThreads.map(async thread => {
+    try {
+      const sources = await client.fetchThreadSources(thread.actor);
+      await dispatch(newGeneratedSources(sources));
+    } catch (e) {
+      // NOTE: This fails quietly because it is pretty easy for sources to
+      // throw during the fetch if their thread shuts down,
+      // which would cause test failures.
+      console.error(e);
+    }
+  }));
 }
 
 function removeThreads(
