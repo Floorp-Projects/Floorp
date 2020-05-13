@@ -663,7 +663,17 @@
   args:
     obj: ObjId
 
-- name: StoreTypedElement
+- name: StoreTypedArrayElement
+  shared: true
+  transpile: false
+  args:
+    obj: ObjId
+    elementType: ScalarTypeImm
+    index: Int32Id
+    rhs: RawId
+    handleOOB: BoolImm
+
+- name: StoreTypedObjectElement
   shared: true
   transpile: false
   args:
@@ -672,7 +682,6 @@
     elementType: ScalarTypeImm
     index: Int32Id
     rhs: RawId
-    handleOOB: BoolImm
 
 - name: CallNativeSetter
   shared: false

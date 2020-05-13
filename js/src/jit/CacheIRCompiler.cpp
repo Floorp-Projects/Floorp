@@ -3774,6 +3774,24 @@ bool CacheIRCompiler::emitStoreTypedElement(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
+                                                 Scalar::Type elementType,
+                                                 Int32OperandId indexId,
+                                                 uint32_t rhsId,
+                                                 bool handleOOB) {
+  return emitStoreTypedElement(objId, TypedThingLayout::TypedArray, elementType,
+                               indexId, rhsId, handleOOB);
+}
+
+bool CacheIRCompiler::emitStoreTypedObjectElement(ObjOperandId objId,
+                                                  TypedThingLayout layout,
+                                                  Scalar::Type elementType,
+                                                  Int32OperandId indexId,
+                                                  uint32_t rhsId) {
+  return emitStoreTypedElement(objId, layout, elementType, indexId, rhsId,
+                               false);
+}
+
 static bool CanNurseryAllocateBigInt(JSContext* cx) {
   JS::Zone* zone = cx->zone();
   return zone->runtimeFromAnyThread()->gc.nursery().canAllocateBigInts() &&
@@ -3935,7 +3953,6 @@ bool CacheIRCompiler::emitLoadTypedElementResult(ObjOperandId objId,
 
 bool CacheIRCompiler::emitLoadTypedArrayElementResult(ObjOperandId objId,
                                                       Int32OperandId indexId,
-
                                                       Scalar::Type elementType,
                                                       bool handleOOB) {
   return emitLoadTypedElementResult(
