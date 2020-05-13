@@ -324,7 +324,10 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             sample.dispose();
         }
 
-        private void onFormatChanged(final MediaFormat format) {
+        private synchronized void onFormatChanged(final MediaFormat format) {
+            if (mStopped) {
+                return;
+            }
             try {
                 mCallbacks.onOutputFormatChanged(new FormatParam(format));
             } catch (RemoteException re) {
