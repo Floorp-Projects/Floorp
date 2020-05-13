@@ -249,3 +249,46 @@ add_task(async function test_cookies_background() {
     await extension.unload();
   }
 });
+
+add_task(async function test_cookies_contentScript() {
+  server.registerPathHandler("/empty", (request, response) => {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.setHeader("Content-Type", "text/html; charset=utf-8", false);
+    response.write("<html><body></body></html>");
+  });
+
+  async function contentScript() {
+    let res = await fetch("http://example.org/checkCookies");
+    browser.test.assertEq(location.origin + "/ready", res.url, "request OK");
+    browser.test.sendMessage("fetch-done");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          run_at: "document_end",
+          js: ["contentscript.js"],
+          matches: ["*://*/*"],
+        },
+      ],
+    },
+    files: {
+      "contentscript.js": contentScript,
+    },
+  });
+
+  await extension.startup();
+
+  let cookiesPromise = promiseLoadedCookies();
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.org/empty"
+  );
+  await extension.awaitMessage("fetch-done");
+
+  // Let's check the cookies received during the last loading.
+  Assert.equal(await cookiesPromise, "none=a; lax=b; strict=c");
+  await contentPage.close();
+
+  await extension.unload();
+});
