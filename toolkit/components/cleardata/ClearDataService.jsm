@@ -511,10 +511,7 @@ const QuotaCleaner = {
                 promises.push(
                   new Promise((aResolve, aReject) => {
                     let clearRequest = Services.qms.clearStoragesForPrincipal(
-                      principal,
-                      null,
-                      null,
-                      true
+                      principal
                     );
                     clearRequest.callback = () => {
                       if (clearRequest.resultCode == Cr.NS_OK) {
