@@ -326,7 +326,6 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
                    recordsToBeCleanedUp.release(),
                    MemoryUse::FinalizationRegistryRecordVector);
   registry->initReservedSlot(IsQueuedForCleanupSlot, BooleanValue(false));
-  registry->initReservedSlot(IsCleanupJobActiveSlot, BooleanValue(false));
 
   if (!cx->runtime()->gc.addFinalizationRegistry(cx, registry)) {
     return false;
@@ -439,10 +438,6 @@ bool FinalizationRegistryObject::isQueuedForCleanup() const {
   return getReservedSlot(IsQueuedForCleanupSlot).toBoolean();
 }
 
-bool FinalizationRegistryObject::isCleanupJobActive() const {
-  return getReservedSlot(IsCleanupJobActiveSlot).toBoolean();
-}
-
 void FinalizationRegistryObject::queueRecordToBeCleanedUp(
     FinalizationRecordObject* record) {
   AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -454,11 +449,6 @@ void FinalizationRegistryObject::queueRecordToBeCleanedUp(
 void FinalizationRegistryObject::setQueuedForCleanup(bool value) {
   MOZ_ASSERT(value != isQueuedForCleanup());
   setReservedSlot(IsQueuedForCleanupSlot, BooleanValue(value));
-}
-
-void FinalizationRegistryObject::setCleanupJobActive(bool value) {
-  MOZ_ASSERT(value != isCleanupJobActive());
-  setReservedSlot(IsCleanupJobActiveSlot, BooleanValue(value));
 }
 
 // FinalizationRegistry.prototype.register(target, heldValue [, unregisterToken
@@ -705,11 +695,7 @@ bool FinalizationRegistryObject::cleanupSome(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // 1. Let finalizationRegistry be the this value.
-  // 2. If Type(finalizationRegistry) is not Object, throw a TypeError
-  //    exception.
-  // 3. If finalizationRegistry does not have [[Cells]] and
-  //    [[IsFinalizationRegistryCleanupJobActive]] internal slots, throw a
-  //    TypeError exception.
+  // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   if (!args.thisv().isObject() ||
       !args.thisv().toObject().is<FinalizationRegistryObject>()) {
     JS_ReportErrorNumberASCII(
@@ -718,17 +704,10 @@ bool FinalizationRegistryObject::cleanupSome(JSContext* cx, unsigned argc,
     return false;
   }
 
-  // 4. If finalizationRegistry.[[IsFinalizationRegistryCleanupJobActive]] is
-  //    true, throw a TypeError exception.
   RootedFinalizationRegistryObject registry(
       cx, &args.thisv().toObject().as<FinalizationRegistryObject>());
-  if (registry->isCleanupJobActive()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_BAD_CLEANUP_STATE);
-    return false;
-  }
 
-  // 5. If callback is not undefined and IsCallable(callback) is false, throw a
+  // 3. If callback is not undefined and IsCallable(callback) is false, throw a
   //    TypeError exception.
   RootedObject cleanupCallback(cx);
   if (!args.get(0).isUndefined()) {
@@ -746,24 +725,6 @@ bool FinalizationRegistryObject::cleanupSome(JSContext* cx, unsigned argc,
   return true;
 }
 
-/* static */
-bool FinalizationRegistryObject::hasRegisteredRecordsToBeCleanedUp(
-    HandleFinalizationRegistryObject registry) {
-  FinalizationRecordVector* records = registry->recordsToBeCleanedUp();
-  size_t initialLength = records->length();
-  if (initialLength == 0) {
-    return false;
-  }
-
-  for (FinalizationRecordObject* record : *records) {
-    if (record->isActive()) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 // CleanupFinalizationRegistry ( finalizationRegistry [ , callback ] )
 // https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-registry
 /* static */
@@ -772,20 +733,7 @@ bool FinalizationRegistryObject::cleanupQueuedRecords(
     HandleObject callbackArg) {
   MOZ_ASSERT(cx->compartment() == registry->compartment());
 
-  // 2. If CheckForEmptyCells(finalizationRegistry) is false, return.
-  if (!hasRegisteredRecordsToBeCleanedUp(registry)) {
-    return true;
-  }
-
-  // 3. Let iterator be
-  //    !CreateFinalizationRegistryCleanupIterator(finalizationRegistry).
-  Rooted<FinalizationIteratorObject*> iterator(
-      cx, FinalizationIteratorObject::create(cx, registry));
-  if (!iterator) {
-    return false;
-  }
-
-  // 4. If callback is undefined, set callback to
+  // 2. If callback is undefined, set callback to
   //    finalizationRegistry.[[CleanupCallback]].
   RootedValue callback(cx);
   if (callbackArg) {
@@ -796,193 +744,34 @@ bool FinalizationRegistryObject::cleanupQueuedRecords(
     callback.setObject(*cleanupCallback);
   }
 
-  // 5. Set finalizationRegistry.[[IsFinalizationRegistryCleanupJobActive]] to
-  //    true.
-  registry->setCleanupJobActive(true);
-
-  FinalizationRecordVector* records = registry->recordsToBeCleanedUp();
-#ifdef DEBUG
-  size_t initialLength = records->length();
-#endif
-
-  // 6. Let result be Call(callback, undefined, iterator).
-  RootedValue iteratorVal(cx, ObjectValue(*iterator));
-  RootedValue rval(cx);
-  bool ok = Call(cx, callback, UndefinedHandleValue, iteratorVal, &rval);
-
-  // Remove records that were iterated over.
-  size_t index = iterator->index();
-  MOZ_ASSERT(index <= records->length());
-  MOZ_ASSERT(initialLength <= records->length());
-  if (index > 0) {
-    records->erase(records->begin(), records->begin() + index);
-  }
-
-  // 7. Set finalizationRegistry.[[IsFinalizationRegistryCleanupJobActive]] to
-  //    false.
-  registry->setCleanupJobActive(false);
-
-  // 8. Set iterator.[[FinalizationRegistry]] to empty.
-  iterator->clearFinalizationRegistry();
-
-  return ok;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// FinalizationIteratorObject
-
-const JSClass FinalizationIteratorObject::class_ = {
-    "FinalizationRegistryCleanupIterator",
-    JSCLASS_HAS_RESERVED_SLOTS(SlotCount), JS_NULL_CLASS_OPS,
-    JS_NULL_CLASS_SPEC};
-
-const JSFunctionSpec FinalizationIteratorObject::methods_[] = {
-    JS_FN(js_next_str, next, 0, 0), JS_FS_END};
-
-const JSPropertySpec FinalizationIteratorObject::properties_[] = {
-    JS_STRING_SYM_PS(toStringTag, "FinalizationRegistry Cleanup Iterator",
-                     JSPROP_READONLY),
-    JS_PS_END};
-
-/* static */
-bool GlobalObject::initFinalizationIteratorProto(JSContext* cx,
-                                                 Handle<GlobalObject*> global) {
-  Rooted<JSObject*> base(
-      cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
-  if (!base) {
-    return false;
-  }
-  RootedPlainObject proto(
-      cx, GlobalObject::createBlankPrototypeInheriting<PlainObject>(cx, base));
-  if (!proto) {
-    return false;
-  }
-  if (!JS_DefineFunctions(cx, proto, FinalizationIteratorObject::methods_) ||
-      !JS_DefineProperties(cx, proto,
-                           FinalizationIteratorObject::properties_)) {
-    return false;
-  }
-  global->setReservedSlot(FINALIZATION_ITERATOR_PROTO, ObjectValue(*proto));
-  return true;
-}
-
-/* static */ FinalizationIteratorObject* FinalizationIteratorObject::create(
-    JSContext* cx, HandleFinalizationRegistryObject registry) {
-  MOZ_ASSERT(registry);
-
-  RootedObject proto(cx, GlobalObject::getOrCreateFinalizationIteratorPrototype(
-                             cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
-  FinalizationIteratorObject* iterator =
-      NewObjectWithGivenProto<FinalizationIteratorObject>(cx, proto);
-  if (!iterator) {
-    return nullptr;
-  }
-
-  iterator->initReservedSlot(FinalizationRegistrySlot, ObjectValue(*registry));
-  iterator->initReservedSlot(IndexSlot, Int32Value(0));
-
-  return iterator;
-}
-
-FinalizationRegistryObject* FinalizationIteratorObject::finalizationRegistry()
-    const {
-  Value value = getReservedSlot(FinalizationRegistrySlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-  return &value.toObject().as<FinalizationRegistryObject>();
-}
-
-size_t FinalizationIteratorObject::index() const {
-  int32_t i = getReservedSlot(IndexSlot).toInt32();
-  MOZ_ASSERT(i >= 0);
-  return size_t(i);
-}
-
-void FinalizationIteratorObject::setIndex(size_t i) {
-  MOZ_ASSERT(i <= INT32_MAX);
-  setReservedSlot(IndexSlot, Int32Value(int32_t(i)));
-}
-
-void FinalizationIteratorObject::clearFinalizationRegistry() {
-  MOZ_ASSERT(finalizationRegistry());
-  setReservedSlot(FinalizationRegistrySlot, UndefinedValue());
-}
-
-// %FinalizationRegistryCleanupIteratorPrototype%.next()
-// https://tc39.es/proposal-weakrefs/#sec-%finalizationregistrycleanupiterator%.next
-/* static */
-bool FinalizationIteratorObject::next(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  // 1. Let iterator be the this value.
-  // 2. If Type(iterator) is not Object, throw a TypeError exception.
-  // 3. If iterator does not have a [[FinalizationRegistry]] internal slot,
-  //    throw a TypeError exception.
-  if (!args.thisv().isObject() ||
-      !args.thisv().toObject().is<FinalizationIteratorObject>()) {
-    JS_ReportErrorNumberASCII(
-        cx, GetErrorMessage, nullptr, JSMSG_NOT_A_FINALIZATION_ITERATOR,
-        "Receiver of FinalizationRegistryCleanupIterator.next call");
-    return false;
-  }
-
-  RootedFinalizationIteratorObject iterator(
-      cx, &args.thisv().toObject().as<FinalizationIteratorObject>());
-
-  // 4. If iterator.[[FinalizationRegistry]] is empty, throw a TypeError
-  //    exception.
-  // 5. Let finalizationRegistry be iterator.[[FinalizationRegistry]].
-  RootedFinalizationRegistryObject registry(cx,
-                                            iterator->finalizationRegistry());
-  if (!registry) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_STALE_FINALIZATION_REGISTRY_ITERATOR);
-    return false;
-  }
-
-  // 8. If finalizationRegistry.[[Cells]] contains a Record cell such that
-  //    cell.[[Target]] is empty,
+  // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that
+  //    cell.[[WeakRefTarget]] is empty, then an implementation may perform the
+  //    following steps,
   //    a. Choose any such cell.
   //    b. Remove cell from finalizationRegistry.[[Cells]].
-  //    c. Return CreateIterResultObject(cell.[[HeldValue]], false).
+  //    c. Perform ? Call(callback, undefined, « cell.[[HeldValue]] »).
+
+  RootedValue heldValue(cx);
+  RootedValue rval(cx);
   FinalizationRecordVector* records = registry->recordsToBeCleanedUp();
-  size_t index = iterator->index();
-  MOZ_ASSERT(index <= records->length());
+  FinalizationRecordSet* activeRecords = registry->activeRecords();
+  while (!records->empty()) {
+    FinalizationRecordObject* record = records->popCopy();
 
-  // Advance until we find a record that hasn't been unregistered.
-  while (index < records->length() && index < INT32_MAX &&
-         !(*records)[index]->isActive()) {
-    index++;
-    iterator->setIndex(index);
-  }
-
-  if (index < records->length() && index < INT32_MAX) {
-    RootedFinalizationRecordObject record(cx, (*records)[index]);
-    RootedValue heldValue(cx, record->heldValue());
-    PlainObject* result = CreateIterResultObject(cx, heldValue, false);
-    if (!result) {
-      return false;
+    // Skip over records that have been unregistered.
+    if (!record->isActive()) {
+      continue;
     }
 
-    registry->activeRecords()->remove(record);
+    heldValue.set(record->heldValue());
+
+    activeRecords->remove(record);
     record->clear();
-    iterator->setIndex(index + 1);
 
-    args.rval().setObject(*result);
-    return true;
+    if (!Call(cx, callback, UndefinedHandleValue, heldValue, &rval)) {
+      return false;
+    }
   }
 
-  // 9. Otherwise, return CreateIterResultObject(undefined, true).
-  PlainObject* result = CreateIterResultObject(cx, UndefinedHandleValue, true);
-  if (!result) {
-    return false;
-  }
-
-  args.rval().setObject(*result);
   return true;
 }
