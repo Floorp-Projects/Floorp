@@ -545,16 +545,9 @@ async function selectTreeItem(ids) {
 
   // The item exists but is not selected... select it.
   info(`Selecting "${ids}".`);
-  if (ids.length > 1) {
-    const updated = gUI.once("store-objects-updated");
-    gUI.tree.selectedItem = ids;
-    await updated;
-  } else {
-    // If the length of the IDs array is 1, a storage type
-    // gets selected and no 'store-objects-updated' event
-    // will be fired in that case.
-    gUI.tree.selectedItem = ids;
-  }
+  const updated = gUI.once("store-objects-updated");
+  gUI.tree.selectedItem = ids;
+  await updated;
 }
 
 /**
