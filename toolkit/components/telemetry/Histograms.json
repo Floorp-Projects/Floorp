@@ -12337,9 +12337,9 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 5,
-    "description": "Action taken by user through prompt for modifying a login. (0=Prompt displayed [always recorded], 1=Update login)",
+    "description": "Action taken by user through prompt for modifying a login. (0=Prompt displayed [always recorded], 1=Update login, 2=Don't update, 3=Remove saved login)",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733, 1545172],
+    "bug_numbers": [1454733, 1545172, 1226236],
     "releaseChannelCollection": "opt-out",
     "record_into_store": ["main", "pre-account"]
   },
