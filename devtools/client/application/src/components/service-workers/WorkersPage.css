@@ -15,3 +15,7 @@
  *  |                     Link to about:debugging |
  *  +---------------------------------------------+
  */
+
+ .app-page--workers {
+   grid-template-rows: 1fr auto;
+ }

@@ -17,6 +17,9 @@
 .registration__header {
   display: grid;
   grid-template-columns: 1fr auto;
+  /* make the row min height the same size of the Unregister button,
+     so we avoid a shifting movement when the button is not displayed */
+  grid-template-rows: minmax(calc(var(--base-unit) * 6), auto);
   grid-column-gap: calc(4 * var(--base-unit));
   align-items: center;
 }
