@@ -238,18 +238,16 @@ struct ModuleEnvironment {
     if (one == two) {
       return true;
     }
-    // Anything's a subtype of AnyRef.
-    if (two.isAnyRef()) {
-      return true;
-    }
-    // NullRef is a subtype of nullable types.
-    if (one.isNullRef()) {
-      return two.isNullable();
-    }
 #if defined(ENABLE_WASM_GC)
-    // Struct One is a subtype of struct Two if Two is a prefix of One.
-    if (gcTypesEnabled() && isStructType(one) && isStructType(two)) {
-      return isStructPrefixOf(two, one);
+    if (gcTypesEnabled()) {
+      // Structs are subtypes of AnyRef.
+      if (isStructType(one) && two.isAnyRef()) {
+        return true;
+      }
+      // Struct One is a subtype of struct Two if Two is a prefix of One.
+      if (isStructType(one) && isStructType(two)) {
+        return isStructPrefixOf(two, one);
+      }
     }
 #endif
     return false;
