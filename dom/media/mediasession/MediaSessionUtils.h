@@ -21,15 +21,15 @@ inline void NotfiyMediaSessionCreationOrDeconstruction(
     return;
   }
 
-  RefPtr<MediaController> controller =
+  RefPtr<IMediaInfoUpdater> updater =
       aContext->Canonical()->GetMediaController();
-  if (!controller) {
+  if (!updater) {
     return;
   }
   if (aIsCreated) {
-    controller->NotifySessionCreated(aContext->Id());
+    updater->NotifySessionCreated(aContext->Id());
   } else {
-    controller->NotifySessionDestroyed(aContext->Id());
+    updater->NotifySessionDestroyed(aContext->Id());
   }
 }
 

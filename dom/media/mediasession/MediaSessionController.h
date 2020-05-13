@@ -58,6 +58,19 @@ class IMediaInfoUpdater {
   // specific media session.
   virtual void SetDeclaredPlaybackState(uint64_t aSessionContextId,
                                         MediaSessionPlaybackState aState) = 0;
+
+  // Use these methods to update controller's media session list. We'd use it
+  // when media session is created/destroyed in the content process.
+  virtual void NotifySessionCreated(uint64_t aSessionContextId) = 0;
+  virtual void NotifySessionDestroyed(uint64_t aSessionContextId) = 0;
+
+  // Use this method to update the metadata for the specific media session.
+  virtual void UpdateMetadata(uint64_t aSessionContextId,
+                              const Maybe<MediaMetadataBase>& aMetadata) = 0;
+
+  // Use this method to update if the media in content process is being used in
+  // Picture-in-Picture mode.
+  virtual void SetIsInPictureInPictureMode(bool aIsInPictureInPictureMode) = 0;
 };
 
 /**
@@ -89,17 +102,10 @@ class MediaSessionController : public IMediaInfoUpdater {
                                  MediaAudibleState aState) override;
   void SetDeclaredPlaybackState(uint64_t aSessionContextId,
                                 MediaSessionPlaybackState aState) override;
-
-  // Use these functions to ensure that we can track all existing media session
-  // in the same tab when media session is created or destroyed in the content
-  // process.
-  void NotifySessionCreated(uint64_t aSessionContextId);
-  void NotifySessionDestroyed(uint64_t aSessionContextId);
-
-  // Use this function to store the media metadata when media session updated
-  // its metadata in the content process.
+  void NotifySessionCreated(uint64_t aSessionContextId) override;
+  void NotifySessionDestroyed(uint64_t aSessionContextId) override;
   void UpdateMetadata(uint64_t aSessionContextId,
-                      const Maybe<MediaMetadataBase>& aMetadata);
+                      const Maybe<MediaMetadataBase>& aMetadata) override;
 
   // Return active media session's metadata if active media session exists and
   // it has already set its metadata. Otherwise, return default media metadata
