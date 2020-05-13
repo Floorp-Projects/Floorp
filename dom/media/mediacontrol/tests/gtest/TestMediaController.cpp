@@ -15,32 +15,32 @@ using namespace mozilla::dom;
 TEST(MediaController, DefaultValueCheck)
 {
   RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
-  ASSERT_TRUE(controller->ControlledMediaNum() == 0);
+  ASSERT_TRUE(!controller->IsAnyMediaBeingControlled());
   ASSERT_TRUE(controller->Id() == CONTROLLER_ID);
   ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::None);
   ASSERT_TRUE(!controller->IsAudible());
 }
 
-TEST(MediaController, NotifyMediaPlaybackChanged)
+TEST(MediaController, IsAnyMediaBeingControlled)
 {
   RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
-  ASSERT_TRUE(controller->ControlledMediaNum() == 0);
+  ASSERT_TRUE(!controller->IsAnyMediaBeingControlled());
 
   controller->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
                                          MediaPlaybackState::eStarted);
-  ASSERT_TRUE(controller->ControlledMediaNum() == 1);
+  ASSERT_TRUE(controller->IsAnyMediaBeingControlled());
 
   controller->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
                                          MediaPlaybackState::eStarted);
-  ASSERT_TRUE(controller->ControlledMediaNum() == 2);
+  ASSERT_TRUE(controller->IsAnyMediaBeingControlled());
 
   controller->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
                                          MediaPlaybackState::eStopped);
-  ASSERT_TRUE(controller->ControlledMediaNum() == 1);
+  ASSERT_TRUE(controller->IsAnyMediaBeingControlled());
 
   controller->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
                                          MediaPlaybackState::eStopped);
-  ASSERT_TRUE(controller->ControlledMediaNum() == 0);
+  ASSERT_TRUE(!controller->IsAnyMediaBeingControlled());
 }
 
 TEST(MediaController, ActiveAndDeactiveController)
