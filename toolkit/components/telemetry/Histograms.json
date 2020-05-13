@@ -14205,6 +14205,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "The average number of dropped frames per sec in OpenVR, sent when user exits WebVR content."
   },
+  "WEBXR_API_MODE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["fxr-telemetry@mozilla.com", "dmu@mozilla.com"],
+    "bug_numbers": [1635872],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "labels": ["WebXR", "WebVR"],
+    "description": "Determine what API users use to enter the web immersive mode."
+  },
   "URLCLASSIFIER_UI_EVENTS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
