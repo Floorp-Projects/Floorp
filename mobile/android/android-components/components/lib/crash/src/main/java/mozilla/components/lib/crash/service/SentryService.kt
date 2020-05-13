@@ -90,13 +90,18 @@ class SentryService(
 
     override fun report(crash: Crash.NativeCodeCrash): String? {
         if (sendEventForNativeCrashes) {
+            val level = when (crash.isFatal) {
+                true -> Event.Level.FATAL
+                else -> Event.Level.ERROR
+            }
+
             crash.breadcrumbs.forEach {
                 client.context.recordBreadcrumb(it.toSentryBreadcrumb())
             }
 
             val eventBuilder = EventBuilder()
                 .withMessage(createMessage(crash))
-                .withLevel(Event.Level.INFO)
+                .withLevel(level)
 
             client.sendEvent(eventBuilder)
             client.context.clearBreadcrumbs()
