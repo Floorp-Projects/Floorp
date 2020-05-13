@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaSessionController.h"
+#include "MediaStatusManager.h"
 
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/MediaControlUtils.h"
@@ -16,13 +16,13 @@
 #  include "nsIFaviconService.h"
 #endif  // MOZ_PLACES
 
-mozilla::LazyLogModule gMediaSession("MediaSession");
+extern mozilla::LazyLogModule gMediaControlLog;
 
 // avoid redefined macro in unified build
 #undef LOG
-#define LOG(msg, ...)                     \
-  MOZ_LOG(gMediaSession, LogLevel::Debug, \
-          ("MediaSessionController=%p, " msg, this, ##__VA_ARGS__))
+#define LOG(msg, ...)                        \
+  MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
+          ("MediaStatusManager=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
@@ -40,18 +40,18 @@ static bool IsMetadataEmpty(const Maybe<MediaMetadataBase>& aMetadata) {
          metadata.mAlbum.IsEmpty() && metadata.mArtwork.IsEmpty();
 }
 
-MediaSessionController::MediaSessionController(uint64_t aBrowsingContextId)
+MediaStatusManager::MediaStatusManager(uint64_t aBrowsingContextId)
     : mTopLevelBrowsingContextId(aBrowsingContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
-                        "MediaSessionController only runs on Chrome process!");
+                        "MediaStatusManager only runs on Chrome process!");
 }
 
-void MediaSessionController::NotifyMediaAudibleChanged(
-    uint64_t aBrowsingContextId, MediaAudibleState aState) {
-  mMediaStatusDelegate.UpdateMediaAudibleState(aBrowsingContextId, aState);
+void MediaStatusManager::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
+                                                   MediaAudibleState aState) {
+  mPlaybackStatusDelegate.UpdateMediaAudibleState(aBrowsingContextId, aState);
 }
 
-void MediaSessionController::NotifySessionCreated(uint64_t aBrowsingContextId) {
+void MediaStatusManager::NotifySessionCreated(uint64_t aBrowsingContextId) {
   if (mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
     return;
   }
@@ -61,8 +61,7 @@ void MediaSessionController::NotifySessionCreated(uint64_t aBrowsingContextId) {
   UpdateActiveMediaSessionContextId();
 }
 
-void MediaSessionController::NotifySessionDestroyed(
-    uint64_t aBrowsingContextId) {
+void MediaStatusManager::NotifySessionDestroyed(uint64_t aBrowsingContextId) {
   if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
     return;
   }
@@ -71,7 +70,7 @@ void MediaSessionController::NotifySessionDestroyed(
   UpdateActiveMediaSessionContextId();
 }
 
-void MediaSessionController::UpdateMetadata(
+void MediaStatusManager::UpdateMetadata(
     uint64_t aBrowsingContextId, const Maybe<MediaMetadataBase>& aMetadata) {
   if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
     return;
@@ -97,7 +96,7 @@ void MediaSessionController::UpdateMetadata(
   }
 }
 
-void MediaSessionController::UpdateActiveMediaSessionContextId() {
+void MediaStatusManager::UpdateActiveMediaSessionContextId() {
   // If there is a media session created from top level browsing context, it
   // would always be chosen as an active media session. Otherwise, we would
   // check if we have an active media session already. If we do have, it would
@@ -141,7 +140,7 @@ void MediaSessionController::UpdateActiveMediaSessionContextId() {
       *mActiveMediaSessionContextId);
 }
 
-MediaMetadataBase MediaSessionController::CreateDefaultMetadata() const {
+MediaMetadataBase MediaStatusManager::CreateDefaultMetadata() const {
   MediaMetadataBase metadata;
   metadata.mTitle = GetDefaultTitle();
   metadata.mArtwork.AppendElement()->mSrc = GetDefaultFaviconURL();
@@ -152,7 +151,7 @@ MediaMetadataBase MediaSessionController::CreateDefaultMetadata() const {
   return metadata;
 }
 
-nsString MediaSessionController::GetDefaultTitle() const {
+nsString MediaStatusManager::GetDefaultTitle() const {
   RefPtr<CanonicalBrowsingContext> bc =
       CanonicalBrowsingContext::Get(mTopLevelBrowsingContextId);
   if (!bc) {
@@ -187,7 +186,7 @@ nsString MediaSessionController::GetDefaultTitle() const {
   return defaultTitle;
 }
 
-nsString MediaSessionController::GetDefaultFaviconURL() const {
+nsString MediaStatusManager::GetDefaultFaviconURL() const {
 #ifdef MOZ_PLACES
   nsCOMPtr<nsIURI> faviconURI;
   nsresult rv = NS_NewURI(getter_AddRefs(faviconURI),
@@ -213,7 +212,7 @@ nsString MediaSessionController::GetDefaultFaviconURL() const {
   return EmptyString();
 }
 
-void MediaSessionController::SetDeclaredPlaybackState(
+void MediaStatusManager::SetDeclaredPlaybackState(
     uint64_t aBrowsingContextId, MediaSessionPlaybackState aState) {
   if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
     return;
@@ -226,8 +225,8 @@ void MediaSessionController::SetDeclaredPlaybackState(
   UpdateActualPlaybackState();
 }
 
-MediaSessionPlaybackState
-MediaSessionController::GetCurrentDeclaredPlaybackState() const {
+MediaSessionPlaybackState MediaStatusManager::GetCurrentDeclaredPlaybackState()
+    const {
   if (!mActiveMediaSessionContextId) {
     return MediaSessionPlaybackState::None;
   }
@@ -235,28 +234,27 @@ MediaSessionController::GetCurrentDeclaredPlaybackState() const {
       .mDeclaredPlaybackState;
 }
 
-void MediaSessionController::NotifyMediaPlaybackChanged(
-    uint64_t aBrowsingContextId, MediaPlaybackState aState) {
+void MediaStatusManager::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
+                                                    MediaPlaybackState aState) {
   LOG("UpdateMediaPlaybackState %s for context %" PRId64,
       ToMediaPlaybackStateStr(aState), aBrowsingContextId);
-  const bool oldPlaying = mMediaStatusDelegate.IsPlaying();
-  mMediaStatusDelegate.UpdateMediaPlaybackState(aBrowsingContextId, aState);
+  const bool oldPlaying = mPlaybackStatusDelegate.IsPlaying();
+  mPlaybackStatusDelegate.UpdateMediaPlaybackState(aBrowsingContextId, aState);
 
   // Playback state doesn't change, we don't need to update the guessed playback
   // state. This is used to prevent the state from changing from `none` to
   // `paused` when receiving `MediaPlaybackState::eStarted`.
-  if (mMediaStatusDelegate.IsPlaying() == oldPlaying) {
+  if (mPlaybackStatusDelegate.IsPlaying() == oldPlaying) {
     return;
   }
-  if (mMediaStatusDelegate.IsPlaying()) {
+  if (mPlaybackStatusDelegate.IsPlaying()) {
     SetGuessedPlayState(MediaSessionPlaybackState::Playing);
   } else {
     SetGuessedPlayState(MediaSessionPlaybackState::Paused);
   }
 }
 
-void MediaSessionController::SetGuessedPlayState(
-    MediaSessionPlaybackState aState) {
+void MediaStatusManager::SetGuessedPlayState(MediaSessionPlaybackState aState) {
   if (aState == mGuessedPlaybackState) {
     return;
   }
@@ -265,7 +263,7 @@ void MediaSessionController::SetGuessedPlayState(
   UpdateActualPlaybackState();
 }
 
-void MediaSessionController::UpdateActualPlaybackState() {
+void MediaStatusManager::UpdateActualPlaybackState() {
   // The way to compute the actual playback state is based on the spec.
   // https://w3c.github.io/mediasession/#actual-playback-state
   MediaSessionPlaybackState newState =
@@ -281,7 +279,7 @@ void MediaSessionController::UpdateActualPlaybackState() {
   HandleActualPlaybackStateChanged();
 }
 
-MediaMetadataBase MediaSessionController::GetCurrentMediaMetadata() const {
+MediaMetadataBase MediaStatusManager::GetCurrentMediaMetadata() const {
   // If we don't have active media session, active media session doesn't have
   // media metadata, or we're in private browsing mode, then we should create a
   // default metadata which is using website's title and favicon as title and
@@ -299,7 +297,7 @@ MediaMetadataBase MediaSessionController::GetCurrentMediaMetadata() const {
   return CreateDefaultMetadata();
 }
 
-void MediaSessionController::FillMissingTitleAndArtworkIfNeeded(
+void MediaStatusManager::FillMissingTitleAndArtworkIfNeeded(
     MediaMetadataBase& aMetadata) const {
   // If the metadata doesn't set its title and artwork properly, we would like
   // to use default title and favicon instead in order to prevent showing
@@ -312,7 +310,7 @@ void MediaSessionController::FillMissingTitleAndArtworkIfNeeded(
   }
 }
 
-bool MediaSessionController::IsInPrivateBrowsing() const {
+bool MediaStatusManager::IsInPrivateBrowsing() const {
   RefPtr<CanonicalBrowsingContext> bc =
       CanonicalBrowsingContext::Get(mTopLevelBrowsingContextId);
   if (!bc) {
@@ -325,20 +323,20 @@ bool MediaSessionController::IsInPrivateBrowsing() const {
   return nsContentUtils::IsInPrivateBrowsing(element->OwnerDoc());
 }
 
-MediaSessionPlaybackState MediaSessionController::GetState() const {
+MediaSessionPlaybackState MediaStatusManager::GetState() const {
   return mActualPlaybackState;
 }
 
-bool MediaSessionController::IsMediaAudible() const {
-  return mMediaStatusDelegate.IsAudible();
+bool MediaStatusManager::IsMediaAudible() const {
+  return mPlaybackStatusDelegate.IsAudible();
 }
 
-bool MediaSessionController::IsMediaPlaying() const {
+bool MediaStatusManager::IsMediaPlaying() const {
   return mActualPlaybackState == MediaSessionPlaybackState::Playing;
 }
 
-bool MediaSessionController::IsAnyMediaBeingControlled() const {
-  return mMediaStatusDelegate.IsAnyMediaBeingControlled();
+bool MediaStatusManager::IsAnyMediaBeingControlled() const {
+  return mPlaybackStatusDelegate.IsAnyMediaBeingControlled();
 }
 
 }  // namespace dom

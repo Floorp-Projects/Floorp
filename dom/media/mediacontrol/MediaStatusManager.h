@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_MEDIA_MEDIASESSION_MEDIASESSIONCONTROLLER_H_
-#define DOM_MEDIA_MEDIASESSION_MEDIASESSIONCONTROLLER_H_
+#ifndef DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_
+#define DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_
 
 #include "mozilla/dom/MediaMetadata.h"
 #include "mozilla/dom/MediaSessionBinding.h"
@@ -74,26 +74,30 @@ class IMediaInfoUpdater {
 };
 
 /**
- * MediaSessionController is used to track all alive media sessions within a tab
+ * MediaStatusManager would decide the media related status which can represents
+ * the whole tab. The status includes the playback status, tab's metadata and
+ * the active media session ID if it exists.
+ *
+ * We would use `IMediaInfoUpdater` methods to update the media playback related
+ * information and then use `MediaPlaybackStatus` to determine the final
+ * playback state.
+ *
+ * The metadata would be the one from the active media session, or the default
+ * one. This class would determine which media session is an active media
+ * session [1] whithin a tab. It tracks all alive media sessions within a tab
  * and store their metadata which could be used to show on the virtual media
  * control interface. In addition, we can use it to get the current media
- * metadata even if there is no media session existing.
- *
- * When media session is created in the content process, we would notify
- * MediaSessionController in the parent process to tell it in which browsing
- * context media session is created. If there are multiple media sessions
- * existing in the same tab, MediaSessionController would take a resbonsibility
- * to decide which media session should be an active media session. However,
- * the meaning of active media session here is not equal to the definition from
- * the spec [1]. We just choose the session which is the active one inside the
- * tab, the global active media session among different tabs would be selected
- * in other place, which is related to how we select media controller.
+ * metadata even if there is no media session existing. However, the meaning of
+ * active media session here is not equal to the definition from the spec [1].
+ * We just choose the session which is the active one inside the tab, the global
+ * active media session among different tabs would be the one inside the main
+ * controller which is determined by MediaControlService.
  *
  * [1] https://w3c.github.io/mediasession/#active-media-session
  */
-class MediaSessionController : public IMediaInfoUpdater {
+class MediaStatusManager : public IMediaInfoUpdater {
  public:
-  explicit MediaSessionController(uint64_t aBrowsingContextId);
+  explicit MediaStatusManager(uint64_t aBrowsingContextId);
 
   // IMediaInfoUpdater's methods
   void NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
@@ -124,7 +128,7 @@ class MediaSessionController : public IMediaInfoUpdater {
   MediaSessionPlaybackState GetState() const;
 
  protected:
-  ~MediaSessionController() = default;
+  ~MediaStatusManager() = default;
   virtual void HandleActualPlaybackStateChanged() = 0;
 
   uint64_t mTopLevelBrowsingContextId;
@@ -170,10 +174,10 @@ class MediaSessionController : public IMediaInfoUpdater {
 
   nsDataHashtable<nsUint64HashKey, MediaSessionInfo> mMediaSessionInfoMap;
   MediaEventProducer<MediaMetadataBase> mMetadataChangedEvent;
-  MediaPlaybackStatus mMediaStatusDelegate;
+  MediaPlaybackStatus mPlaybackStatusDelegate;
 };
 
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // DOM_MEDIA_MEDIASESSION_MEDIASESSIONCONTROLLER_H_
+#endif  // DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_
