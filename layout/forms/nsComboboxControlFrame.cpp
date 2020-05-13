@@ -1504,8 +1504,9 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     if (window && window->ShouldShowFocusRing()) {
       nsPresContext* presContext = PresContext();
       const nsStyleDisplay* disp = StyleDisplay();
-      if ((!IsThemed(disp) || !presContext->Theme()->ThemeDrawsFocusForWidget(
-                                  disp->mAppearance)) &&
+      if ((!IsThemed(disp) ||
+           presContext->Theme()->ThemeWantsButtonInnerFocusRing(
+               disp->mAppearance)) &&
           mDisplayFrame && IsVisibleForPainting()) {
         aLists.Content()->AppendNewToTop<nsDisplayComboboxFocus>(aBuilder,
                                                                  this);
