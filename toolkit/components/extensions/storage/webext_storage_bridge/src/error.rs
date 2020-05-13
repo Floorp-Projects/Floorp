@@ -6,11 +6,12 @@ use std::{error, fmt, result, str::Utf8Error, string::FromUtf16Error};
 
 use golden_gate::Error as GoldenGateError;
 use nserror::{
-    nsresult, NS_ERROR_ALREADY_INITIALIZED, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG,
-    NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NOT_INITIALIZED, NS_ERROR_UNEXPECTED,
+    nsresult, NS_ERROR_ALREADY_INITIALIZED, NS_ERROR_DOM_QUOTA_EXCEEDED_ERR, NS_ERROR_FAILURE,
+    NS_ERROR_INVALID_ARG, NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NOT_INITIALIZED, NS_ERROR_UNEXPECTED,
 };
 use serde_json::error::Error as JsonError;
 use webext_storage::error::Error as WebextStorageError;
+use webext_storage::error::ErrorKind as WebextStorageErrorKind;
 
 /// A specialized `Result` type for extension storage operations.
 pub type Result<T> = result::Result<T, Error>;
@@ -81,7 +82,10 @@ impl From<Error> for nsresult {
     fn from(error: Error) -> nsresult {
         match error {
             Error::Nsresult(result) => result,
-            Error::WebextStorage(_) => NS_ERROR_FAILURE,
+            Error::WebextStorage(e) => match e.kind() {
+                WebextStorageErrorKind::QuotaError(_) => NS_ERROR_DOM_QUOTA_EXCEEDED_ERR,
+                _ => NS_ERROR_FAILURE,
+            },
             Error::GoldenGate(error) => error.into(),
             Error::MalformedString(_) => NS_ERROR_INVALID_ARG,
             Error::AlreadyConfigured => NS_ERROR_ALREADY_INITIALIZED,

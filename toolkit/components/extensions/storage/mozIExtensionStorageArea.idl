@@ -12,6 +12,16 @@ interface nsIVariant;
 // API.
 [scriptable, uuid(d8eb3ff1-9b4b-435a-99ca-5b8cbaba2420)]
 interface mozIExtensionStorageArea : nsISupports {
+    // These constants are exposed by the rust crate, but it's not worth the
+    // effort of jumping through the hoops to get them exposed to the JS
+    // code in a sane way - so we just duplicate them here. We should consider a
+    // test that checks they match the rust code.
+    // This interface is agnostic WRT the area, so we prefix the constants with
+    // the area - it's the consumer of this interface which knows what to use.
+    const unsigned long SYNC_QUOTA_BYTES = 102400;
+    const unsigned long SYNC_QUOTA_BYTES_PER_ITEM = 8192;
+    const unsigned long SYNC_MAX_ITEMS = 512;
+
     // Sets one or more key-value pairs specified in `json` for the
     // `extensionId`. If the `callback` implements
     // `mozIExtensionStorageListener`, its `onChange`
@@ -25,6 +35,9 @@ interface mozIExtensionStorageArea : nsISupports {
     // an array of string key names, a single string key name, or an object
     // where the properties are the key names, and the values are the defaults
     // if the key name doesn't exist in the storage area.
+    //
+    // If `get()` fails due to the quota being exceeded, the exception will
+    // have a result code of NS_ERROR_DOM_QUOTA_EXCEEDED_ERR (==0x80530016)
     void get(in AUTF8String extensionId,
              in AUTF8String key,
              in mozIExtensionStorageCallback callback);
@@ -41,6 +54,11 @@ interface mozIExtensionStorageArea : nsISupports {
     // method will be called with all removed key-value pairs.
     void clear(in AUTF8String extensionId,
                in mozIExtensionStorageCallback callback);
+
+    // Gets the number of bytes in use for the specified keys.
+    void getBytesInUse(in AUTF8String extensionId,
+                       in AUTF8String keys,
+                       in mozIExtensionStorageCallback callback);
 };
 
 // A configurable storage area has additional methods for setting up and tearing

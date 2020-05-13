@@ -198,6 +198,29 @@ impl StorageSyncArea {
         )
     }
 
+    xpcom_method!(
+        getBytesInUse => GetBytesInUse(
+            ext_id: *const ::nsstring::nsACString,
+            keys: *const ::nsstring::nsACString,
+            callback: *const mozIExtensionStorageCallback
+        )
+    );
+    /// Obtains the count of bytes in use for the specified key or for all keys.
+    fn getBytesInUse(
+        &self,
+        ext_id: &nsACString,
+        keys: &nsACString,
+        callback: &mozIExtensionStorageCallback,
+    ) -> Result<()> {
+        self.dispatch(
+            StorageOp::GetBytesInUse {
+                ext_id: str::from_utf8(&*ext_id)?.into(),
+                keys: serde_json::from_str(str::from_utf8(&*keys)?)?,
+            },
+            callback,
+        )
+    }
+
     xpcom_method!(teardown => Teardown(callback: *const mozIExtensionStorageCallback));
     /// Tears down the storage area, closing the backing database connection.
     fn teardown(&self, callback: &mozIExtensionStorageCallback) -> Result<()> {
