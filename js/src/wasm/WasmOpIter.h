@@ -437,6 +437,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readF64Const(double* f64);
   MOZ_MUST_USE bool readRefFunc(uint32_t* funcTypeIndex);
   MOZ_MUST_USE bool readRefNull();
+  MOZ_MUST_USE bool readRefIsNull(Value* input);
   MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, ValueVector* argValues);
   MOZ_MUST_USE bool readCallIndirect(uint32_t* funcTypeIndex,
                                      uint32_t* tableIndex, Value* callee,
@@ -486,6 +487,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readStructNarrow(ValType* inputType, ValType* outputType,
                                      Value* ptr);
   MOZ_MUST_USE bool readValType(ValType* type);
+  MOZ_MUST_USE bool readRefType(RefType* type);
   MOZ_MUST_USE bool readReferenceType(ValType* type, const char* const context);
 
 #ifdef ENABLE_WASM_SIMD
@@ -1688,13 +1690,36 @@ template <typename Policy>
 inline bool OpIter<Policy>::readRefNull() {
   MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
 
-  return push(RefType::null());
+  RefType type;
+  if (!readRefType(&type)) {
+    return false;
+  }
+  return push(type);
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readRefIsNull(Value* input) {
+  MOZ_ASSERT(Classify(op_) == OpKind::Conversion);
+
+  RefType type;
+  if (!readRefType(&type)) {
+    return false;
+  }
+  if (!popWithType(type, input)) {
+    return false;
+  }
+  return push(ValType::I32);
 }
 
 template <typename Policy>
 inline bool OpIter<Policy>::readValType(ValType* type) {
   return d_.readValType(env_.types, env_.refTypesEnabled(),
                         env_.gcTypesEnabled(), type);
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readRefType(RefType* type) {
+  return d_.readRefType(env_.types, env_.gcTypesEnabled(), type);
 }
 
 template <typename Policy>

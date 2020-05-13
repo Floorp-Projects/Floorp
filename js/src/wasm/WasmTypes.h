@@ -386,7 +386,6 @@ class RefType {
     }
   }
 #endif
-
   explicit RefType(Kind kind) : ptc_(PackTypeCode(TypeCode(kind))) {
     MOZ_ASSERT(isValid());
   }
@@ -398,6 +397,7 @@ class RefType {
   }
 
  public:
+  RefType() : ptc_(InvalidPackedTypeCode()) {}
   explicit RefType(PackedTypeCode ptc) : ptc_(ptc) { MOZ_ASSERT(isValid()); }
 
   static RefType fromTypeCode(TypeCode tc) {
