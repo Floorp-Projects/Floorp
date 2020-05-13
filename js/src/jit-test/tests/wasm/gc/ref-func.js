@@ -11,7 +11,7 @@ wasmFullPass(`
 		(elem declare $run)
 		(func $run (result i32)
 			ref.func $run
-			ref.is_null
+			ref.is_null func
 		)
 		(export "run" (func $run))
 	)
@@ -95,9 +95,9 @@ assertEq(validFuncRefText('(elem 0 (i32.const 0) func $referenced)', 'funcref') 
 assertEq(validFuncRefText('(elem func $referenced)', 'funcref') instanceof WebAssembly.Instance, true);
 assertEq(validFuncRefText('(elem declare $referenced)', 'funcref') instanceof WebAssembly.Instance, true);
 
-// also when the segment is passive or active 'anyref'
-assertEq(validFuncRefText('(elem 0 (i32.const 0) anyref (ref.func $referenced))', 'anyref') instanceof WebAssembly.Instance, true);
-assertEq(validFuncRefText('(elem anyref (ref.func $referenced))', 'anyref') instanceof WebAssembly.Instance, true);
+// also when the segment is passive or active 'funcref'
+assertEq(validFuncRefText('(elem 0 (i32.const 0) funcref (ref.func $referenced))', 'funcref') instanceof WebAssembly.Instance, true);
+assertEq(validFuncRefText('(elem funcref (ref.func $referenced))', 'funcref') instanceof WebAssembly.Instance, true);
 
 // referenced function cannot be forward declared via start section or export
 assertErrorMessage(() => validFuncRefText('(start $referenced)', 'funcref'),
@@ -190,7 +190,7 @@ checkPassiveElemSegment("end", /failed to read end of initializer expression/);
            (elem (i32.const 3) $m)
            (elem (i32.const 6) $m)
            (elem (i32.const 8) $m)
-           (elem funcref (ref.func $f) (ref.null) (ref.func $g) (ref.null) (ref.func $h))
+           (elem funcref (ref.func $f) (ref.null func) (ref.func $g) (ref.null func) (ref.func $h))
            (func $m)
            (func $f)
            (func $g)

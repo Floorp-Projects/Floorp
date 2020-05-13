@@ -30,7 +30,7 @@ function checkInvalid(body, errorMessage) {
                          (field $left (mut (ref opt $wabbit)))
                          (field $right (mut (ref opt $wabbit)))))
 
-          (global $g (mut (ref opt $wabbit)) (ref.null))
+          (global $g (mut (ref opt $wabbit)) (ref.null opt $wabbit))
 
           (global $k (mut i32) (i32.const 0))
 
@@ -42,7 +42,7 @@ function checkInvalid(body, errorMessage) {
                 (local.set $tmp (global.get $k))
                 (global.set $k (i32.add (local.get $tmp) (i32.const 1)))
                 (if (result (ref opt $wabbit)) (i32.le_s (local.get $n) (i32.const 2))
-                    (struct.new $wabbit (local.get $tmp) (ref.null) (ref.null))
+                    (struct.new $wabbit (local.get $tmp) (ref.null opt $wabbit) (ref.null opt $wabbit))
                     (block (result (ref opt $wabbit))
                       (struct.new $wabbit
                                   (local.get $tmp)
@@ -53,7 +53,7 @@ function checkInvalid(body, errorMessage) {
                 (call $accum (global.get $g)))
 
           (func $accum (param $w (ref opt $wabbit)) (result i32)
-                (if (result i32) (ref.is_null (local.get $w))
+                (if (result i32) (ref.is_null opt $wabbit (local.get $w))
                     (i32.const 0)
                     (i32.add (struct.get $wabbit 0 (local.get $w))
                              (i32.sub (call $accum (struct.get $wabbit 1 (local.get $w)))
@@ -64,7 +64,7 @@ function checkInvalid(body, errorMessage) {
 
           (func $reverse (param $w (ref opt $wabbit))
                 (local $tmp (ref opt $wabbit))
-                (if (i32.eqz (ref.is_null (local.get $w)))
+                (if (i32.eqz (ref.is_null opt $wabbit (local.get $w)))
                     (block
                      (struct.set $wabbit 0 (local.get $w) (i32.mul (i32.const 2) (struct.get $wabbit 0 (local.get $w))))
                      (local.set $tmp (struct.get $wabbit 1 (local.get $w)))
@@ -77,7 +77,7 @@ function checkInvalid(body, errorMessage) {
                 (call $pr (global.get $g)))
 
           (func $pr (param $w (ref opt $wabbit))
-                (if (i32.eqz (ref.is_null (local.get $w)))
+                (if (i32.eqz (ref.is_null opt $wabbit (local.get $w)))
                     (block
                      (call $print_lp)
                      (call $print_int (struct.get $wabbit 0 (local.get $w)))
@@ -130,7 +130,7 @@ assertEq(wasmEvalText(
       (func $f (param $p (ref opt $node)) (result (ref opt $node2))
        (struct.narrow (ref opt $node) (ref opt $node2) (local.get $p)))
       (func (export "test") (result anyref)
-       (call $f (ref.null))))`).exports.test(),
+       (call $f (ref.null opt $node))))`).exports.test(),
          null);
 
 // struct.narrow: if the downcast succeeds we get the original pointer
@@ -181,7 +181,7 @@ assertEq(wasmEvalText(
 
       (func (export "test") (result i32)
        (local $n (ref opt $node))
-       (local.set $n (struct.new $node2a (i32.const 0) (ref.null)))
+       (local.set $n (struct.new $node2a (i32.const 0) (ref.null opt $node)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -197,7 +197,7 @@ assertEq(wasmEvalText(
 
       (func (export "test") (result i32)
        (local $n (ref opt $node))
-       (local.set $n (struct.new $node2a (i32.const 0) (ref.null)))
+       (local.set $n (struct.new $node2a (i32.const 0) (ref.null opt $node2a)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          0);
 
@@ -262,7 +262,7 @@ assertEq(wasmEvalText(
           (func (export "make") (param $n i32) (result anyref)
            (struct.new $node (local.get $n)))
           (func (export "coerce") (param $p anyref) (result i32)
-           (ref.is_null (struct.narrow anyref (ref opt $node) (local.get $p)))))`;
+           (ref.is_null opt $node (struct.narrow anyref (ref opt $node) (local.get $p)))))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(txt));
     let ins1 = new WebAssembly.Instance(mod).exports;
     let ins2 = new WebAssembly.Instance(mod).exports;
@@ -390,6 +390,7 @@ assertErrorMessage(() => wasmEvalText(
 checkInvalid(funcBody({locals:[],
                        body:[
                            RefNullCode,
+                           AnyrefCode,
                            GcPrefix, StructNarrow, I32Code, AnyrefCode,
                            DropCode
                        ]}),
@@ -398,6 +399,7 @@ checkInvalid(funcBody({locals:[],
 checkInvalid(funcBody({locals:[],
                        body:[
                            RefNullCode,
+                           AnyrefCode,
                            GcPrefix, StructNarrow, AnyrefCode, I32Code,
                            DropCode
                        ]}),
@@ -431,7 +433,7 @@ assertErrorMessage(function() {
         `(module
           (type $node (struct (field i32)))
           (func (export "test")
-           (drop (call $f (ref.null))))
+           (drop (call $f (ref.null opt $node))))
           (func $f (param $p (ref opt $node)) (result i32)
            (struct.get $node 0 (local.get $p))))`);
     ins.exports.test();
@@ -446,7 +448,7 @@ assertErrorMessage(function() {
         `(module
           (type $node (struct (field (mut i32))))
           (func (export "test")
-           (call $f (ref.null)))
+           (call $f (ref.null opt $node)))
           (func $f (param $p (ref opt $node))
            (struct.set $node 0 (local.get $p) (i32.const 0))))`);
     ins.exports.test();

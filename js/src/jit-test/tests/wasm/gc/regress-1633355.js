@@ -13,13 +13,13 @@ let bin = wasmTextToBinary(`
         (field $left (mut (ref opt $wabbit)))
         (field $right (mut (ref opt $wabbit)))
      ))
-     (global $g (mut (ref opt $wabbit)) (ref.null))
+     (global $g (mut (ref opt $wabbit)) (ref.null opt $wabbit))
      (func (export "init") (param $n i32)
        (global.set $g (call $make (local.get $n)))
      )
      (func $make (param $n i32) (result (ref opt $wabbit))
        (local $tmp i32)
-       (struct.new $wabbit (local.get $tmp) (ref.null) (ref.null))
+       (struct.new $wabbit (local.get $tmp) (ref.null opt $wabbit) (ref.null opt $wabbit))
      )
 `);
 let mod = new WebAssembly.Module(bin);
