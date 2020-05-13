@@ -31,7 +31,6 @@
 #include "mozilla/dom/WorkletGlobalScope.h"
 
 #include "jsfriendapi.h"
-#include "js/Exception.h"  // JS::ExceptionStack
 #include "js/StructuredClone.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
@@ -550,21 +549,18 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
       ar.emplace(aCx, &unwrapped.toObject());
     }
 
-    JS::ErrorReportBuilder report(aCx);
+    js::ErrorReport report(aCx);
     RefPtr<Exception> exn;
     if (unwrapped.isObject() &&
         (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, &unwrapped, exn)) ||
          NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &unwrapped, exn)))) {
       xpcReport->Init(aCx, exn, isChrome, innerWindowID);
-    } else {
-      JS::ExceptionStack exnStack(aCx, unwrapped, nullptr);
-      if (!report.init(aCx, exnStack, JS::ErrorReportBuilder::NoSideEffects)) {
-        JS_ClearPendingException(aCx);
-        return;
-      }
-
+    } else if (report.init(aCx, unwrapped, js::ErrorReport::NoSideEffects)) {
       xpcReport->Init(report.report(), report.toStringResult().c_str(),
                       isChrome, innerWindowID);
+    } else {
+      JS_ClearPendingException(aCx);
+      return;
     }
   }
 

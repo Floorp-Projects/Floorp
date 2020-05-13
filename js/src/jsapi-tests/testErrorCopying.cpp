@@ -22,8 +22,8 @@ BEGIN_TEST(testErrorCopying_columnCopied) {
   JS::ExceptionStack exnStack(cx);
   CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
-  JS::ErrorReportBuilder report(cx);
-  CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects));
+  js::ErrorReport report(cx);
+  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
 
   CHECK_EQUAL(report.report()->column, 28u);
   return true;

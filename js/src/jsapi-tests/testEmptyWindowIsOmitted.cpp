@@ -113,8 +113,8 @@ bool testOmittedWindow(const CharT (&chars)[N], unsigned expectedErrorNumber,
   JS::ExceptionStack exnStack(cx);
   CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
-  JS::ErrorReportBuilder report(cx);
-  CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects));
+  js::ErrorReport report(cx);
+  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
 
   const auto* errorReport = report.report();
 
