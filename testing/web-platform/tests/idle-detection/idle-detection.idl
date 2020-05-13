@@ -1,16 +1,16 @@
 dictionary IdleOptions {
-  [EnforceRange] unsigned long threshold = 60000;
+  [EnforceRange] unsigned long threshold;
+  AbortSignal signal;
 };
 
 [
   SecureContext,
-  Constructor(optional IdleOptions options),
   Exposed=(Window,Worker)
 ] interface IdleDetector : EventTarget {
+  constructor();
   readonly attribute IdleState state;
   attribute EventHandler onchange;
-  Promise<any> start();
-  void stop();
+  Promise<any> start(optional IdleOptions options = {});
 };
 
 [
