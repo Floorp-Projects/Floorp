@@ -114,6 +114,18 @@ inline const char* ToMediaPlaybackStateStr(MediaPlaybackState aState) {
   }
 }
 
+inline const char* ToMediaAudibleStateStr(MediaAudibleState aState) {
+  switch (aState) {
+    case MediaAudibleState::eInaudible:
+      return "inaudible";
+    case MediaAudibleState::eAudible:
+      return "audible";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid audible state.");
+      return "Unknown";
+  }
+}
+
 BrowsingContext* GetAliveTopBrowsingContext(BrowsingContext* aBC);
 
 }  // namespace dom
