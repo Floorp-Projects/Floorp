@@ -11616,8 +11616,7 @@ void CodeGenerator::visitGetPropertyCacheV(LGetPropertyCacheV* ins) {
   ConstantOrRegister id = toConstantOrRegister(ins, LGetPropertyCacheV::Id,
                                                ins->mir()->idval()->type());
   TypedOrValueRegister output(ToOutValue(ins));
-  Register maybeTemp =
-      ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
+  Register maybeTemp = ToTempRegisterOrInvalid(ins->temp());
 
   addGetPropertyCache(ins, liveRegs, value, id, output, maybeTemp,
                       IonGetPropertyICFlags(ins->mir()));
@@ -11633,8 +11632,7 @@ void CodeGenerator::visitGetPropertyCacheT(LGetPropertyCacheT* ins) {
                                                ins->mir()->idval()->type());
   TypedOrValueRegister output(ins->mir()->type(),
                               ToAnyRegister(ins->getDef(0)));
-  Register maybeTemp =
-      ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
+  Register maybeTemp = ToTempRegisterOrInvalid(ins->temp());
 
   addGetPropertyCache(ins, liveRegs, value, id, output, maybeTemp,
                       IonGetPropertyICFlags(ins->mir()));
@@ -12090,8 +12088,7 @@ void CodeGenerator::visitUnboxObjectOrNull(LUnboxObjectOrNull* lir) {
 
 void CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir) {
   Register elements = ToRegister(lir->elements());
-  Register temp =
-      lir->temp()->isBogusTemp() ? InvalidReg : ToRegister(lir->temp());
+  Register temp = ToTempRegisterOrInvalid(lir->temp());
   AnyRegister out = ToAnyRegister(lir->output());
 
   const MLoadUnboxedScalar* mir = lir->mir();
