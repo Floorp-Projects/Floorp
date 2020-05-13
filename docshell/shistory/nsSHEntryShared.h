@@ -53,8 +53,9 @@ class SHEntrySharedParentState {
 
   void NotifyListenersContentViewerEvicted();
 
- protected:
   explicit SHEntrySharedParentState(nsISHistory* aSHistory);
+
+ protected:
   explicit SHEntrySharedParentState(SHEntrySharedParentState* aDuplicate)
       : SHEntrySharedParentState(aDuplicate->mSHistory) {}
   explicit SHEntrySharedParentState(nsIWeakReference* aSHistory);

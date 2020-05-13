@@ -8,11 +8,13 @@
 #define nsDocShellLoadState_h__
 
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/SessionHistoryEntry.h"
 
 // Helper Classes
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsDocShellLoadTypes.h"
+#include "nsTArrayForwardDeclare.h"
 
 class nsIContentSecurityPolicy;
 class nsIInputStream;
@@ -126,6 +128,12 @@ class nsDocShellLoadState final {
   nsISHEntry* SHEntry() const;
 
   void SetSHEntry(nsISHEntry* aSHEntry);
+
+  const mozilla::dom::SessionHistoryInfo& GetSessionHistoryInfo() const;
+  uint64_t GetSessionHistoryID() const;
+
+  void SetSessionHistoryInfo(
+      const mozilla::dom::SessionHistoryInfoAndId& aIdAndInfo);
 
   const nsString& Target() const;
 
@@ -341,6 +349,9 @@ class nsDocShellLoadState final {
 
   // Active Session History entry (if loading from SH)
   nsCOMPtr<nsISHEntry> mSHEntry;
+
+  // Session history info for the load
+  mozilla::dom::SessionHistoryInfoAndId mSessionHistoryInfo;
 
   // Target for load, like _content, _blank etc.
   nsString mTarget;
