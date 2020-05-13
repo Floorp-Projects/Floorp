@@ -16,7 +16,9 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.HashMap;
 import java.util.Map;
 
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient;
 import mozilla.components.service.glean.config.Configuration;
+import mozilla.components.service.glean.net.ConceptFetchHttpUploader;
 
 @RunWith(RobolectricTestRunner.class)
 public class GleanFromJavaTest {
@@ -28,15 +30,18 @@ public class GleanFromJavaTest {
     public void testInitGleanWithDefaults() {
         Context context = ApplicationProvider.getApplicationContext();
         WorkManagerTestInitHelper.initializeTestWorkManager(context);
-        Glean.INSTANCE.initialize(context, true);
+        ConceptFetchHttpUploader httpClient = ConceptFetchHttpUploader.fromClient(new HttpURLConnectionClient());
+        Configuration config = new Configuration(httpClient);
+        Glean.INSTANCE.initialize(context, true, config);
     }
 
     @Test
     public void testInitGleanWithConfiguration() {
         Context context = ApplicationProvider.getApplicationContext();
         WorkManagerTestInitHelper.initializeTestWorkManager(context);
+        ConceptFetchHttpUploader httpClient = ConceptFetchHttpUploader.fromClient(new HttpURLConnectionClient());
         Configuration config =
-                new Configuration(Configuration.DEFAULT_TELEMETRY_ENDPOINT, "test-channel");
+                new Configuration(httpClient, Configuration.DEFAULT_TELEMETRY_ENDPOINT, "test-channel");
         Glean.INSTANCE.initialize(context, true, config);
     }
 

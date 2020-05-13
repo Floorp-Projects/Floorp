@@ -33,12 +33,11 @@ object Glean {
      * @param uploadEnabled A [Boolean] that determines the initial state of the uploader
      * @param configuration A Glean [Configuration] object with global settings.
      */
-    @JvmOverloads
     @MainThread
     fun initialize(
         applicationContext: Context,
         uploadEnabled: Boolean,
-        configuration: Configuration = Configuration()
+        configuration: Configuration
     ) {
         GleanCore.initialize(
             applicationContext = applicationContext,

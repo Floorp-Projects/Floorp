@@ -14,9 +14,11 @@ import mozilla.components.concept.fetch.isClientError
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.telemetry.glean.net.HeadersList
-import mozilla.telemetry.glean.net.PingUploader
+import mozilla.telemetry.glean.net.PingUploader as CorePingUploader
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+
+typealias PingUploader = CorePingUploader
 
 /**
  * A simple ping Uploader, which implements a "send once" policy, never
@@ -33,6 +35,16 @@ class ConceptFetchHttpUploader(
         const val DEFAULT_CONNECTION_TIMEOUT = 10000L
         // The timeout, in milliseconds, to use when reading from the server.
         const val DEFAULT_READ_TIMEOUT = 30000L
+
+        /**
+         * Export a constructor that is usable from Java.
+         *
+         * This looses the lazyness of creating the `client`.
+         */
+        @JvmStatic
+        fun fromClient(client: Client): ConceptFetchHttpUploader {
+            return ConceptFetchHttpUploader(lazy { client })
+        }
     }
 
     /**

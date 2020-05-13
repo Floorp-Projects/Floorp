@@ -6,8 +6,12 @@ package org.mozilla.samples.browser
 
 import android.app.Application
 import mozilla.components.browser.session.Session
+import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.facts.processor.LogFactProcessor
 import mozilla.components.support.base.log.Log
@@ -31,10 +35,12 @@ class SampleApplication : Application() {
             return
         }
 
+        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() as Client })
+        val config = Configuration(httpClient = httpClient)
         // IMPORTANT: the following lines initialize the Glean SDK but disable upload
         // of pings. If, for testing purposes, upload is required to be on, change the
         // next line to `uploadEnabled = true`.
-        Glean.initialize(applicationContext, uploadEnabled = false)
+        Glean.initialize(applicationContext, uploadEnabled = false, configuration = config)
 
         Facts.registerProcessor(LogFactProcessor())
 

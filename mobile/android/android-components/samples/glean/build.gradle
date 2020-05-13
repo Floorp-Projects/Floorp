@@ -50,6 +50,7 @@ dependencies {
     implementation project(':service-glean')
     implementation project(':service-experiments')
     implementation project(':support-base')
+    implementation project(':lib-fetch-httpurlconnection')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
