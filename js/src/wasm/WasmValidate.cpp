@@ -1297,7 +1297,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         if (!env.refTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
-        CHECK(iter.readConversion(RefType::any(), ValType::I32, &nothing));
+        Nothing nothing;
+        CHECK(iter.readRefIsNull(&nothing));
       }
 #endif
       case uint16_t(Op::ThreadPrefix): {
@@ -2281,11 +2282,16 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
     }
 #endif
     case uint16_t(Op::RefNull): {
-      if (!expected.isReference()) {
+      MOZ_ASSERT_IF(env->isStructType(expected), env->gcTypesEnabled());
+      RefType initType;
+      if (!d.readRefType(env->types, env->gcTypesEnabled(), &initType)) {
+        return false;
+      }
+      if (!expected.isReference() ||
+          !env->isRefSubtypeOf(ValType(initType), ValType(expected))) {
         return d.fail(
             "type mismatch: initializer type and expected type don't match");
       }
-      MOZ_ASSERT_IF(env->isStructType(expected), env->gcTypesEnabled());
       *init = InitExpr::fromConstant(LitVal(expected, AnyRef::null()));
       break;
     }
@@ -2765,7 +2771,9 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
             initType = RefType::func();
             break;
           case uint16_t(Op::RefNull):
-            initType = RefType::null();
+            if (!d.readRefType(env->types, env->gcTypesEnabled(), &initType)) {
+              return false;
+            }
             needIndex = false;
             break;
           default:
