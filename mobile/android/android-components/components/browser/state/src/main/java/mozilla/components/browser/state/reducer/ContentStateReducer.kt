@@ -111,6 +111,12 @@ internal object ContentStateReducer {
             is ContentAction.UpdateForwardNavigationStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(canGoForward = action.canGoForward)
             }
+            is ContentAction.UpdateWebAppManifestAction -> updateContentState(state, action.sessionId) {
+                it.copy(webAppManifest = action.webAppManifest)
+            }
+            is ContentAction.RemoveWebAppManifestAction -> updateContentState(state, action.sessionId) {
+                it.copy(webAppManifest = null)
+            }
         }
     }
 }

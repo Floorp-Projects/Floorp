@@ -19,6 +19,9 @@ permalink: /changelog/
     `val config = Configuration(httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() as Client }))`.
     See [PR #6875](https://github.com/mozilla-mobile/android-components/pull/6875) for details and full code examples.
 
+* **browser-store**
+  * Added `webAppManifest` property to `ContentState`.
+
 # 41.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v40.0.0...v41.0.0)
@@ -54,7 +57,7 @@ permalink: /changelog/
     * The minimum and maximum values of a timing distribution can now be controlled by the `time_unit` parameter. See [bug 1630997](https://bugzilla.mozilla.org/show_bug.cgi?id=1630997) for more details.
 
 * **feature-accounts**
-  *  ⚠️ **This is a breaking change**: Refactored component to use `browser-state` instead of `browser-session`. The `FxaWebChannelFeature`  now requires a `BrowserStore` instance instead of a `SessionManager`.    
+  *  ⚠️ **This is a breaking change**: Refactored component to use `browser-state` instead of `browser-session`. The `FxaWebChannelFeature`  now requires a `BrowserStore` instance instead of a `SessionManager`.
 
 * **browser-toolbar**
   * It will only be animated for vertical scrolls inside the EngineView. Not for horizontal scrolls. Not for zoom gestures.
@@ -109,11 +112,11 @@ permalink: /changelog/
 * **feature-syncedtabs**
   * Moved `SyncedTabsFeature` to `SyncedTabsStorage`.
   * ⚠️ **This is a breaking change**: The new `SyncedTabsFeature` now orchestrates the correct state needed for consumers to handle by implementing the `SyncedTabsView`.
-  
+
 * **browser-thumbnails**
   * 🆕 New component for capturing browser thumbnails.
   * `ThumbnailsFeature` will be deprecated for the new `BrowserThumbnails` in a future.
-  
+
 # 39.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v38.0.0...v39.0.0)
@@ -185,7 +188,7 @@ permalink: /changelog/
 
 * **Developer ergonomics**
   * Improved autoPublication workflow. See https://mozac.org/contributing/testing-components-inside-app for updated documentation.
-  
+
 * **browser-search**
   * Added `getSearchTemplate` to reconstruct the user-entered search engine url template
 

@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.ext.joinBlocking
@@ -558,5 +559,45 @@ class ContentActionTest {
 
         assertFalse(tab.content.canGoForward)
         assertFalse(otherTab.content.canGoForward)
+    }
+
+    @Test
+    fun `UpdateWebAppManifestAction updates web app manifest`() {
+        val manifest = WebAppManifest(
+            name = "Mozilla",
+            startUrl = "https://mozilla.org"
+        )
+
+        assertNotEquals(manifest, tab.content.webAppManifest)
+        assertNotEquals(manifest, otherTab.content.webAppManifest)
+
+        store.dispatch(
+            ContentAction.UpdateWebAppManifestAction(tab.id, manifest)
+        ).joinBlocking()
+
+        assertEquals(manifest, tab.content.webAppManifest)
+        assertNotEquals(manifest, otherTab.content.webAppManifest)
+    }
+
+    @Test
+    fun `RemoveWebAppManifestAction removes web app manifest`() {
+        val manifest = WebAppManifest(
+            name = "Mozilla",
+            startUrl = "https://mozilla.org"
+        )
+
+        assertNotEquals(manifest, tab.content.webAppManifest)
+
+        store.dispatch(
+            ContentAction.UpdateWebAppManifestAction(tab.id, manifest)
+        ).joinBlocking()
+
+        assertEquals(manifest, tab.content.webAppManifest)
+
+        store.dispatch(
+            ContentAction.RemoveWebAppManifestAction(tab.id)
+        ).joinBlocking()
+
+        assertNull(tab.content.webAppManifest)
     }
 }

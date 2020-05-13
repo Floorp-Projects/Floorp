@@ -22,6 +22,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.search.SearchRequest
@@ -269,6 +270,16 @@ sealed class ContentAction : BrowserAction() {
      * Updates the [ContentState] of the given [sessionId] to indicate whether or not a forward navigation is possible.
      */
     data class UpdateForwardNavigationStateAction(val sessionId: String, val canGoForward: Boolean) : ContentAction()
+
+    /**
+     * Updates the [WebAppManifest] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateWebAppManifestAction(val sessionId: String, val webAppManifest: WebAppManifest) : ContentAction()
+
+    /**
+     * Removes the [WebAppManifest] of the [ContentState] with the given [sessionId].
+     */
+    data class RemoveWebAppManifestAction(val sessionId: String) : ContentAction()
 }
 
 /**

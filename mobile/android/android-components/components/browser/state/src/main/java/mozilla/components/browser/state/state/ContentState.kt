@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.window.WindowRequest
@@ -37,6 +38,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property layoutInDisplayCutoutMode the display layout cutout mode state.
  * @property canGoBack whether or not there's an history item to navigate back to.
  * @property canGoForward whether or not there's an history item to navigate forward to.
+ * @property webAppManifest the Web App Manifest for the currently visited page (or null).
  */
 data class ContentState(
     val url: String,
@@ -57,5 +59,6 @@ data class ContentState(
     val fullScreen: Boolean = false,
     val layoutInDisplayCutoutMode: Int = 0,
     val canGoBack: Boolean = false,
-    val canGoForward: Boolean = false
+    val canGoForward: Boolean = false,
+    val webAppManifest: WebAppManifest? = null
 )
