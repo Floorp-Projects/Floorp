@@ -593,7 +593,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
             if (!global.type().isAnyRef() && !v.isObjectOrNull()) {
               return ThrowBadImportType(cx, import.field.get(),
                                         "Object-or-null value required for "
-                                        "non-anyref reference type");
+                                        "non-externref reference type");
             }
           }
 
@@ -2440,7 +2440,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       StringEqualsLiteral(elementLinearStr, "funcref")) {
     tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
-  } else if (StringEqualsLiteral(elementLinearStr, "anyref")) {
+  } else if (StringEqualsLiteral(elementLinearStr, "externref")) {
     if (!ReftypesAvailable(cx)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_BAD_ELEMENT);
@@ -2912,7 +2912,7 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
              StringEqualsLiteral(typeLinearStr, "funcref")) {
     globalType = RefType::func();
   } else if (ReftypesAvailable(cx) &&
-             StringEqualsLiteral(typeLinearStr, "anyref")) {
+             StringEqualsLiteral(typeLinearStr, "externref")) {
     globalType = RefType::any();
 #endif
   } else {

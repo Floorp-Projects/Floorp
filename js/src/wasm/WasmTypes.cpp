@@ -1018,7 +1018,7 @@ UniqueChars wasm::ToString(ValType type) {
     case ValType::Ref:
       switch (type.refTypeKind()) {
         case RefType::Any:
-          literal = "anyref";
+          literal = "externref";
           break;
         case RefType::Func:
           literal = "funcref";

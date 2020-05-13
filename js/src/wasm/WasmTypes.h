@@ -698,7 +698,7 @@ static inline const char* ToCString(ValType type) {
     case ValType::Ref:
       switch (type.refTypeKind()) {
         case RefType::Any:
-          return "anyref";
+          return "externref";
         case RefType::Func:
           return "funcref";
         case RefType::TypeIndex:
