@@ -136,6 +136,10 @@ Isolate* CreateIsolate(JSContext* cx) {
   return isolate.release();
 }
 
+void DestroyIsolate(Isolate* isolate) {
+  js_delete(isolate);
+}
+
 static size_t ComputeColumn(const Latin1Char* begin, const Latin1Char* end) {
   return PointerRangeSize(begin, end);
 }
