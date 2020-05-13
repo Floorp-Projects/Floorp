@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/WindowContext.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIAutoplay.h"
 #include "nsContentUtils.h"
@@ -37,21 +38,6 @@ static const uint32_t sPOLICY_STICKY_ACTIVATION = 0;
 static const uint32_t sPOLICY_TRANSIENT_ACTIVATION = 1;
 static const uint32_t sPOLICY_USER_INPUT_DEPTH = 2;
 
-static Document* ApproverDocOf(const Document& aDocument) {
-  nsCOMPtr<nsIDocShell> ds = aDocument.GetDocShell();
-  if (!ds) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  ds->GetInProcessSameTypeRootTreeItem(getter_AddRefs(rootTreeItem));
-  if (!rootTreeItem) {
-    return nullptr;
-  }
-
-  return rootTreeItem->GetDocument();
-}
-
 static bool IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow) {
   // Pages which have been granted permission to capture WebRTC camera or
   // microphone or screen are assumed to be trusted, and are allowed to
@@ -70,19 +56,13 @@ static bool IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow) {
                                                NS_LITERAL_CSTRING("screen")));
 }
 
-static uint32_t SiteAutoplayPerm(const Document* aDocument) {
-  if (!aDocument) {
+static uint32_t SiteAutoplayPerm(nsPIDOMWindowInner* aWindow) {
+  if (!aWindow || !aWindow->GetBrowsingContext()) {
     return nsIPermissionManager::DENY_ACTION;
   }
-  nsIPrincipal* principal = aDocument->NodePrincipal();
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  NS_ENSURE_TRUE(permMgr, nsIPermissionManager::DENY_ACTION);
-
-  uint32_t perm;
-  nsresult rv = permMgr->TestExactPermissionFromPrincipal(
-      principal, NS_LITERAL_CSTRING("autoplay-media"), &perm);
-  NS_ENSURE_SUCCESS(rv, nsIPermissionManager::DENY_ACTION);
-  return perm;
+  return aWindow->GetBrowsingContext()
+      ->GetTopWindowContext()
+      ->GetAutoplayPermission();
 }
 
 static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
@@ -117,12 +97,7 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return true;
   }
 
-  Document* approver = ApproverDocOf(*currentDoc);
-  if (!approver) {
-    return false;
-  }
-
-  if (approver->IsExtensionPage()) {
+  if (currentDoc->IsExtensionPage()) {
     AUTOPLAY_LOG("Allow autoplay as in extension document.");
     return true;
   }
@@ -239,13 +214,12 @@ static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
     return IsGVAutoplayRequestAllowed(aElement);
   }
 #endif
-  Document* approver = ApproverDocOf(*aElement.OwnerDoc());
-
   bool isInaudible = IsMediaElementInaudible(aElement);
   bool isUsingAutoplayModel = IsAllowedToPlayByBlockingModel(aElement);
 
   uint32_t defaultBehaviour = DefaultAutoplayBehaviour();
-  uint32_t sitePermission = SiteAutoplayPerm(approver);
+  uint32_t sitePermission =
+      SiteAutoplayPerm(aElement.OwnerDoc()->GetInnerWindow());
 
   AUTOPLAY_LOG(
       "IsAllowedToPlayInternal, isInaudible=%d,"
@@ -309,10 +283,7 @@ bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
   }
 
   nsPIDOMWindowInner* window = aContext.GetParentObject();
-  Document* approver = aContext.GetParentObject()
-                           ? ApproverDocOf(*(window->GetExtantDoc()))
-                           : nullptr;
-  uint32_t sitePermission = SiteAutoplayPerm(approver);
+  uint32_t sitePermission = SiteAutoplayPerm(window);
 
   if (sitePermission == nsIPermissionManager::ALLOW_ACTION) {
     AUTOPLAY_LOG(
