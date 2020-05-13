@@ -42,10 +42,9 @@ class TabsTrayPresenter(
     }
 
     private suspend fun collect(flow: Flow<BrowserState>) {
-        flow.map { state -> state.toTabs(tabsFilter) }
+        flow.map { it.toTabs(tabsFilter) }
             .ifChanged()
             .collect { tabs ->
-
                 // Do not invoke the callback on start if this is the initial state.
                 if (tabs.list.isEmpty() && this.tabs != null) {
                     closeTabsTray.invoke()

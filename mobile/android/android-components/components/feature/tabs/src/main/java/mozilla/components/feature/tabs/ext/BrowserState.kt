@@ -5,14 +5,22 @@
 package mozilla.components.feature.tabs.ext
 
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.tabstray.Tabs
+
+private fun BrowserState.mediaStateForTab(tab: TabSessionState): MediaState.State =
+    if (media.aggregate.activeTabId == tab.id) {
+        media.aggregate.state
+    } else {
+        MediaState.State.NONE
+    }
 
 internal fun BrowserState.toTabs(
     tabsFilter: (TabSessionState) -> Boolean = { true }
 ) = Tabs(
     list = tabs
         .filter(tabsFilter)
-        .map { it.toTab() },
+        .map { it.toTab(mediaStateForTab(it)) },
     selectedIndex = tabs.indexOfFirst { it.id == selectedTabId }
 )
