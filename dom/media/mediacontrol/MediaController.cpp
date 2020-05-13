@@ -122,16 +122,17 @@ void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
   if (mShutdown) {
     return;
   }
-  mMediaStatus.UpdateMediaPlaybackState(aBrowsingContextId, aState);
+  MediaSessionController::NotifyMediaPlaybackChanged(aBrowsingContextId,
+                                                     aState);
 
   // Update controller's status according to the media status.
   if (ShouldActivateController()) {
     Activate();
   } else if (ShouldDeactivateController()) {
     Deactivate();
-  } else if (mMediaStatus.IsPlaying()) {
+  } else if (IsMediaPlaying()) {
     SetGuessedPlayState(MediaSessionPlaybackState::Playing);
-  } else if (!mMediaStatus.IsPlaying()) {
+  } else if (!IsMediaPlaying()) {
     SetGuessedPlayState(MediaSessionPlaybackState::Paused);
   }
 }
@@ -143,7 +144,7 @@ void MediaController::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
   }
 
   bool oldAudible = IsAudible();
-  mMediaStatus.UpdateMediaAudibleState(aBrowsingContextId, aState);
+  MediaSessionController::NotifyMediaAudibleChange(aBrowsingContextId, aState);
   if (IsAudible() == oldAudible) {
     return;
   }
@@ -249,11 +250,7 @@ MediaSessionPlaybackState MediaController::GetState() const {
 
 bool MediaController::IsAudible() const {
   return mGuessedPlaybackState == MediaSessionPlaybackState::Playing &&
-         mMediaStatus.IsAudible();
-}
-
-bool MediaController::IsAnyMediaBeingControlled() const {
-  return mMediaStatus.IsAnyMediaBeingControlled();
+         IsMediaAudible();
 }
 
 }  // namespace dom
