@@ -901,7 +901,7 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
       behavior !=
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
     // Let's check if this is a 3rd party context.
-    if (!nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr, aURI)) {
+    if (!AntiTrackingUtils::IsThirdPartyWindow(aWindow, aURI)) {
       LOG(("Our window isn't a third-party window"));
       return true;
     }
@@ -949,8 +949,7 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
              nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
     if (nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow)) {
       // fall through
-    } else if (nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr,
-                                                           aURI)) {
+    } else if (AntiTrackingUtils::IsThirdPartyWindow(aWindow, aURI)) {
       LOG(("We're in the third-party context, storage should be partitioned"));
       // fall through, but remember that we're partitioning.
       blockedReason = nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
@@ -1160,8 +1159,7 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     if (classifiedChannel &&
         classifiedChannel->IsThirdPartyTrackingResource()) {
       // fall through
-    } else if (nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel,
-                                                           aURI)) {
+    } else if (AntiTrackingUtils::IsThirdPartyChannel(aChannel)) {
       LOG(("We're in the third-party context, storage should be partitioned"));
       // fall through but remember that we're partitioning.
       blockedReason = nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
@@ -1273,8 +1271,7 @@ bool ContentBlocking::ApproximateAllowAccessForWithoutChannel(
     return true;
   }
 
-  if (!nsContentUtils::IsThirdPartyWindowOrChannel(aFirstPartyWindow, nullptr,
-                                                   aURI)) {
+  if (!AntiTrackingUtils::IsThirdPartyWindow(aFirstPartyWindow, aURI)) {
     LOG(("Our window isn't a third-party window"));
     return true;
   }
