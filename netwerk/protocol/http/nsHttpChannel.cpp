@@ -6461,6 +6461,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   Unused << mLoadInfo->SetHasStoragePermission(
       AntiTrackingUtils::HasStoragePermissionInParent(this));
 
+  AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(this);
+
   static bool sRCWNInited = false;
   if (!sRCWNInited) {
     sRCWNInited = true;

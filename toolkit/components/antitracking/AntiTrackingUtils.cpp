@@ -531,3 +531,38 @@ AntiTrackingUtils::GetTopWindowExcludingExtensionAccessibleContentFrames(
   }
   return prev.forget();
 }
+
+/* static */
+void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  RefPtr<BrowsingContext> bc;
+  loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+
+  // In xpcshell-tests we don't always have a browsingContext.
+  if (!bc) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  Unused << aChannel->GetURI(getter_AddRefs(uri));
+
+  RefPtr<WindowGlobalParent> topWindow =
+      GetTopWindowExcludingExtensionAccessibleContentFrames(bc->Canonical(),
+                                                            uri);
+
+  if (NS_WARN_IF(!topWindow)) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> topWindowPrincipal = topWindow->DocumentPrincipal();
+  if (topWindowPrincipal && !topWindowPrincipal->GetIsNullPrincipal()) {
+    auto* basePrin = BasePrincipal::Cast(topWindowPrincipal);
+    bool isThirdParty = true;
+    basePrin->IsThirdPartyURI(uri, &isThirdParty);
+
+    loadInfo->SetIsThirdPartyContextToTopWindow(isThirdParty);
+  }
+}
