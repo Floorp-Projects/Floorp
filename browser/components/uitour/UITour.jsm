@@ -46,8 +46,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "ReaderParent",
-  "resource:///modules/ReaderParent.jsm"
+  "AboutReaderParent",
+  "resource:///actors/AboutReaderParent.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -662,14 +662,14 @@ var UITour = {
       }
 
       case "forceShowReaderIcon": {
-        ReaderParent.forceShowReaderIcon(browser);
+        AboutReaderParent.forceShowReaderIcon(browser);
         break;
       }
 
       case "toggleReaderMode": {
         let targetPromise = this.getTarget(window, "readerMode-urlBar");
         targetPromise.then(target => {
-          ReaderParent.toggleReaderMode({ target: target.node });
+          AboutReaderParent.toggleReaderMode({ target: target.node });
         });
         break;
       }
