@@ -355,6 +355,11 @@ bool WarpCacheIRTranspiler::emitTruncateDoubleToUInt32(
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitGuardToInt32ModUint32(ValOperandId valId,
+                                                      Int32OperandId resultId) {
+  return emitTruncateDoubleToUInt32(valId, resultId);
+}
+
 bool WarpCacheIRTranspiler::emitLoadInt32Result(Int32OperandId valId) {
   MDefinition* val = getOperand(valId);
   MOZ_ASSERT(val->type() == MIRType::Int32);
