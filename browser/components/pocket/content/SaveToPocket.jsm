@@ -264,7 +264,9 @@ var SaveToPocket = {
 
   _readerButtonData: {
     id: "pocket-button",
-    label: gStrings.GetStringFromName("readerView.savetopocket.label"),
+    label: gStrings.formatStringFromName("readerView.savetopocket.label", [
+      "Pocket",
+    ]),
     image: "chrome://global/skin/reader/pocket.svg",
     width: 16,
     height: 16,
