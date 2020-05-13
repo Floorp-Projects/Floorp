@@ -8,8 +8,8 @@
 <script>
 onload = function() {
   test(function() {
-    assert_equals(document.body.offsetHeight, 100);
-  }, "body height is 100");
+    assert_equals(document.body.clientHeight, document.documentElement.clientHeight);
+  }, "body height should match documentElement due to min-height: auto");
 };
 </script>
-<body style="width: 100px; aspect-ratio: 1/1; min-height: 0;">
+<body style="width: 100px; aspect-ratio: 1/1;">
