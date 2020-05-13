@@ -679,25 +679,15 @@ var snapshotFormatters = {
     let featureLog = data.featureLog;
     delete data.featureLog;
 
-    let features = [];
-    for (let feature of featureLog.features) {
-      // Only add interesting decisions - ones that were not automatic based on
-      // all.js/StaticPrefs defaults.
-      if (feature.log.length > 1 || feature.log[0].status != "available") {
-        features.push(feature);
-      }
-    }
-
-    if (features.length) {
-      for (let feature of features) {
+    if (featureLog.features.length) {
+      for (let feature of featureLog.features) {
         let trs = [];
         for (let entry of feature.log) {
-          if (entry.type == "default" && entry.status == "available") {
-            continue;
-          }
-
           let contents;
-          if (entry.message.length && entry.message[0] == "#") {
+          if (!entry.hasOwnProperty("message")) {
+            // This is a default entry.
+            contents = entry.status + " by " + entry.type;
+          } else if (entry.message.length && entry.message[0] == "#") {
             // This is a failure ID. See nsIGfxInfo.idl.
             let m = /#BLOCKLIST_FEATURE_FAILURE_BUG_(\d+)/.exec(entry.message);
             if (m) {
