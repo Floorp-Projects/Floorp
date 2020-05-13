@@ -54,7 +54,13 @@ void TransmitPermissionsAndBlobURLsForPrincipalInfo(
   AssertIsOnMainThread();
   MOZ_ASSERT(aContentParent);
 
-  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aPrincipalInfo);
+  auto principalOrErr = PrincipalInfoToPrincipal(aPrincipalInfo);
+
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   aContentParent->TransmitBlobURLsForPrincipal(principal);
 

@@ -6,8 +6,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
 import os
-
 import six
+
 
 here = os.path.join(os.path.dirname(__file__))
 

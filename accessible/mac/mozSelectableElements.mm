@@ -22,6 +22,34 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+- (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  if ([attribute isEqualToString:NSAccessibilitySelectedChildrenAttribute]) {
+    return YES;
+  }
+
+  return [super accessibilityIsAttributeSettable:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+}
+
+- (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if ([attribute isEqualToString:NSAccessibilitySelectedChildrenAttribute] &&
+      [value isKindOfClass:[NSArray class]]) {
+    for (id child in [self selectableChildren]) {
+      BOOL selected = [value indexOfObjectIdenticalTo:child] != NSNotFound;
+      [child setSelected:selected];
+    }
+  } else {
+    [super accessibilitySetValue:value forAttribute:attribute];
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 - (id)accessibilityAttributeValue:(NSString*)attribute {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
   if ([attribute isEqualToString:NSAccessibilitySelectedChildrenAttribute]) {
@@ -35,7 +63,7 @@
 /**
  * Return the mozAccessibles that are selectable.
  */
-- (id)selectableChildren {
+- (NSArray*)selectableChildren {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [[self children]
@@ -50,33 +78,80 @@
 /**
  * Return the mozAccessibles that are actually selected.
  */
-- (id)selectedChildren {
+- (NSArray*)selectedChildren {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [[self children]
       filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(mozAccessible* child,
                                                                         NSDictionary* bindings) {
         // Return mozSelectableChildAccessibles that have are selected (truthy value).
-        return
-            [child isKindOfClass:[mozSelectableChildAccessible class]] && [[child value] boolValue];
+        return [child isKindOfClass:[mozSelectableChildAccessible class]] &&
+               [(mozSelectableChildAccessible*)child isSelected];
       }]];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (id)value {
-  // The value of a selectable is its selected child. In the case
-  // of multiple selections this will return the first one.
-  return [[self selectedChildren] firstObject];
 }
 
 @end
 
 @implementation mozSelectableChildAccessible
 
-- (id)value {
-  // Retuens true if item is selected.
-  return [NSNumber numberWithBool:[self stateWithMask:states::SELECTED] != 0];
+- (id)accessibilityAttributeValue:(NSString*)attribute {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  if ([attribute isEqualToString:NSAccessibilitySelectedAttribute]) {
+    return [NSNumber numberWithBool:[self isSelected]];
+  }
+
+  return [super accessibilityAttributeValue:attribute];
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  if ([attribute isEqualToString:NSAccessibilitySelectedAttribute]) {
+    return YES;
+  }
+
+  return [super accessibilityIsAttributeSettable:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+}
+
+- (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if ([attribute isEqualToString:NSAccessibilitySelectedAttribute]) {
+    [self setSelected:[value boolValue]];
+  } else {
+    [super accessibilitySetValue:value forAttribute:attribute];
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (BOOL)isSelected {
+  return [self stateWithMask:states::SELECTED] != 0;
+}
+
+- (void)setSelected:(BOOL)selected {
+  // Get SELECTABLE and UNAVAILABLE state.
+  uint64_t state = [self stateWithMask:(states::SELECTABLE | states::UNAVAILABLE)];
+  if ((state & states::SELECTABLE) == 0 || (state & states::UNAVAILABLE) != 0) {
+    // The object is either not selectable or is unavailable. Don't do anything.
+    return;
+  }
+
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    accWrap->SetSelected(selected);
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    proxy->SetSelected(selected);
+  }
+
+  // We need to invalidate the state because the accessibility service
+  // may check the selected attribute synchornously and not wait for
+  // selection events.
+  [self invalidateState];
 }
 
 @end
@@ -84,7 +159,6 @@
 @implementation mozTabGroupAccessible
 
 - (NSArray*)accessibilityAttributeNames {
-  // standard attributes that are shared and supported by root accessible (AXMain) elements.
   static NSMutableArray* attributes = nil;
 
   if (!attributes) {
@@ -103,6 +177,12 @@
   return [super accessibilityAttributeValue:attribute];
 }
 
+- (id)value {
+  // The value of a tab group is its selected child. In the case
+  // of multiple selections this will return the first one.
+  return [[self selectedChildren] firstObject];
+}
+
 @end
 
 @implementation mozTabAccessible
@@ -117,6 +197,56 @@
   }
 
   return [super accessibilityActionDescription:action];
+}
+
+- (id)value {
+  // Retuens 1 if item is selected, 0 if not.
+  return [NSNumber numberWithBool:[self isSelected]];
+}
+
+@end
+
+@implementation mozListboxAccessible
+
+- (BOOL)ignoreChild:(mozAccessible*)child {
+  if (!child || child->mRole == roles::GROUPING) {
+    return YES;
+  }
+
+  return [super ignoreChild:child];
+}
+
+- (BOOL)disableChild:(mozAccessible*)child {
+  return ![child isKindOfClass:[mozSelectableChildAccessible class]];
+}
+
+- (NSArray*)accessibilityAttributeNames {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  static NSMutableArray* attributes = nil;
+
+  if (!attributes) {
+    attributes = [[super accessibilityAttributeNames] mutableCopy];
+    // VoiceOver uses the availability of AXOrientation to make
+    // an object an interaction group. The actual return value does
+    // not matter.
+    [attributes addObject:NSAccessibilityOrientationAttribute];
+  }
+
+  return attributes;
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+@end
+
+@implementation mozOptionAccessible
+
+- (NSString*)title {
+  return @"";
+}
+
+- (id)value {
+  // Swap title and value of option so it behaves more like a AXStaticText.
+  return [super title];
 }
 
 @end

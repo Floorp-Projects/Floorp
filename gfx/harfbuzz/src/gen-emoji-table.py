@@ -1,13 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from __future__ import print_function, division, absolute_import
 import sys
 import os.path
 from collections import OrderedDict
 import packTab
 
 if len (sys.argv) != 2:
-	print("usage: ./gen-emoji-table.py emoji-data.txt", file=sys.stderr)
+	print("""usage: ./gen-emoji-table.py emoji-data.txt
+
+Input file, as of Unicode 12:
+* https://www.unicode.org/Public/emoji/12.0/emoji-data.txt""", file=sys.stderr)
 	sys.exit (1)
 
 f = open(sys.argv[1])

@@ -8,7 +8,14 @@
 
 const TEST_URI =
   "data:text/html;charset=utf8," +
-  "<script>console.log({a:1},100,{b:1},'foo',false,null,undefined);</script>";
+  `<script>
+    console.log({a:1}, 100, {b:1}, 'foo', false, null, undefined);
+
+    var error = new Error("oh my");
+    error.customProperty = {code: 500, message: "Internal Server Error"};
+    error.name = "CustomServerError";
+    console.info(error);
+  </script>`;
 
 add_task(async function() {
   // Should be removed when sidebar work is complete
@@ -16,7 +23,7 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const message = findMessage(hud, "foo");
+  const message = await waitFor(() => findMessage(hud, "Object { a: 1 }"));
   const [objectA, objectB] = message.querySelectorAll(
     ".object-inspector .objectBox-object"
   );
@@ -76,6 +83,30 @@ add_task(async function() {
   sidebarText = hud.ui.document.querySelector(".sidebar-contents").textContent;
 
   ok(sidebarText.includes("b: 1"), "Sidebar contents shown for {b:1}");
+
+  info("Showing sidebar for Error object");
+  const errorMsg = findMessage(hud, "CustomServerError:");
+  await showSidebarWithContextMenu(hud, errorMsg, false);
+
+  sidebarContents = hud.ui.document.querySelector(".sidebar-contents");
+  objectInspector = sidebarContents.querySelector(".object-inspector");
+  oiNodes = objectInspector.querySelectorAll(".node");
+  if (oiNodes.length === 1) {
+    // If this is the case, we wait for the properties to be fetched and displayed.
+    await waitForNodeMutation(objectInspector, {
+      childList: true,
+    });
+  }
+  sidebarText = hud.ui.document.querySelector(".sidebar-contents").textContent;
+  is(
+    oiNodes[0].textContent,
+    "CustomServerError",
+    "First node has expected content"
+  );
+  ok(
+    sidebarText.includes(`customProperty:`),
+    "Sidebar contents shown for the error object"
+  );
 
   info("Checking context menu entry is disabled for number");
   const numberContextMenuEnabled = await isContextMenuEntryEnabled(hud, number);

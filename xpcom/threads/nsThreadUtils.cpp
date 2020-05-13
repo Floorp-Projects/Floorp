@@ -32,6 +32,13 @@
 #  include <sys/prctl.h>
 #endif
 
+static LazyLogModule sEventDispatchAndRunLog("events");
+#ifdef LOG1
+#  undef LOG1
+#endif
+#define LOG1(args) \
+  MOZ_LOG(sEventDispatchAndRunLog, mozilla::LogLevel::Error, args)
+
 using namespace mozilla;
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
@@ -337,7 +344,9 @@ class IdleRunnableWrapper final : public IdleRunnable {
   static void TimedOut(nsITimer* aTimer, void* aClosure) {
     RefPtr<IdleRunnableWrapper> runnable =
         static_cast<IdleRunnableWrapper*>(aClosure);
+    LogRunnable::Run log(runnable);
     runnable->Run();
+    runnable = nullptr;
   }
 
   void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override {
@@ -601,6 +610,24 @@ size_t GetNumberOfProcessors() {
   MOZ_ASSERT(procs > 0);
   return static_cast<size_t>(procs);
 }
+
+template <typename T>
+void LogTaskBase<T>::LogDispatch(T* aEvent) {
+  LOG1(("DISP %p", aEvent));
+}
+
+template <typename T>
+LogTaskBase<T>::Run::Run(T* aEvent, bool aWillRunAgain)
+    : mEvent(aEvent), mWillRunAgain(aWillRunAgain) {
+  LOG1(("EXEC %p", mEvent));
+}
+
+template <typename T>
+LogTaskBase<T>::Run::~Run() {
+  LOG1((mWillRunAgain ? "INTERRUPTED %p" : "DONE %p", mEvent));
+}
+
+template class LogTaskBase<nsIRunnable>;
 
 }  // namespace mozilla
 

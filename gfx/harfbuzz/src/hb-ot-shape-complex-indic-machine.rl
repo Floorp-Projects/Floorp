@@ -76,7 +76,7 @@ complex_syllable_tail = (halant_group.cn)* medial_group halant_or_matra_group sy
 consonant_syllable =	(Repha|CS)? cn complex_syllable_tail;
 vowel_syllable =	reph? V.n? (ZWJ | complex_syllable_tail);
 standalone_cluster =	((Repha|CS)? PLACEHOLDER | reph? DOTTEDCIRCLE).n? complex_syllable_tail;
-symbol_cluster = 	symbol syllable_tail;
+symbol_cluster =	symbol syllable_tail;
 broken_cluster =	reph? n? complex_syllable_tail;
 other =			any;
 

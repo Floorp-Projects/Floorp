@@ -72,8 +72,7 @@ void WebRenderBridgeChild::DoDestroy() {
 }
 
 void WebRenderBridgeChild::AddWebRenderParentCommand(
-    const WebRenderParentCommand& aCmd, wr::RenderRoot aRenderRoot) {
-  MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default);
+    const WebRenderParentCommand& aCmd) {
   mParentCommands.AppendElement(aCmd);
 }
 
@@ -181,31 +180,26 @@ void WebRenderBridgeChild::ProcessWebRenderParentCommands() {
   MOZ_ASSERT(!mDestroyed);
 
   if (!mParentCommands.IsEmpty()) {
-    this->SendParentCommands(mParentCommands, wr::RenderRoot::Default);
+    this->SendParentCommands(mParentCommands);
     mParentCommands.Clear();
   }
 }
 
 void WebRenderBridgeChild::AddPipelineIdForAsyncCompositable(
-    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
-    wr::RenderRoot aRenderRoot) {
+    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
   AddWebRenderParentCommand(
-      OpAddPipelineIdForCompositable(aPipelineId, aHandle, /* isAsync */ true),
-      aRenderRoot);
+      OpAddPipelineIdForCompositable(aPipelineId, aHandle, /* isAsync */ true));
 }
 
 void WebRenderBridgeChild::AddPipelineIdForCompositable(
-    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
-    wr::RenderRoot aRenderRoot) {
-  AddWebRenderParentCommand(
-      OpAddPipelineIdForCompositable(aPipelineId, aHandle, /* isAsync */ false),
-      aRenderRoot);
+    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
+  AddWebRenderParentCommand(OpAddPipelineIdForCompositable(
+      aPipelineId, aHandle, /* isAsync */ false));
 }
 
 void WebRenderBridgeChild::RemovePipelineIdForCompositable(
-    const wr::PipelineId& aPipelineId, wr::RenderRoot aRenderRoot) {
-  AddWebRenderParentCommand(OpRemovePipelineIdForCompositable(aPipelineId),
-                            aRenderRoot);
+    const wr::PipelineId& aPipelineId) {
+  AddWebRenderParentCommand(OpRemovePipelineIdForCompositable(aPipelineId));
 }
 
 wr::ExternalImageId WebRenderBridgeChild::GetNextExternalImageId() {
@@ -215,9 +209,8 @@ wr::ExternalImageId WebRenderBridgeChild::GetNextExternalImageId() {
   return id.value();
 }
 
-void WebRenderBridgeChild::ReleaseTextureOfImage(const wr::ImageKey& aKey,
-                                                 wr::RenderRoot aRenderRoot) {
-  AddWebRenderParentCommand(OpReleaseTextureOfImage(aKey), aRenderRoot);
+void WebRenderBridgeChild::ReleaseTextureOfImage(const wr::ImageKey& aKey) {
+  AddWebRenderParentCommand(OpReleaseTextureOfImage(aKey));
 }
 
 struct FontFileDataSink {
@@ -442,8 +435,7 @@ bool WebRenderBridgeChild::DestroyInTransaction(
 }
 
 void WebRenderBridgeChild::RemoveTextureFromCompositable(
-    CompositableClient* aCompositable, TextureClient* aTexture,
-    const Maybe<wr::RenderRoot>& aRenderRoot) {
+    CompositableClient* aCompositable, TextureClient* aTexture) {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aTexture);
   MOZ_ASSERT(aTexture->GetIPDLActor());
@@ -454,16 +446,14 @@ void WebRenderBridgeChild::RemoveTextureFromCompositable(
     return;
   }
 
-  AddWebRenderParentCommand(
-      CompositableOperation(aCompositable->GetIPCHandle(),
-                            OpRemoveTexture(nullptr, aTexture->GetIPDLActor())),
-      *aRenderRoot);
+  AddWebRenderParentCommand(CompositableOperation(
+      aCompositable->GetIPCHandle(),
+      OpRemoveTexture(nullptr, aTexture->GetIPDLActor())));
 }
 
 void WebRenderBridgeChild::UseTextures(
     CompositableClient* aCompositable,
-    const nsTArray<TimedTextureClient>& aTextures,
-    const Maybe<wr::RenderRoot>& aRenderRoot) {
+    const nsTArray<TimedTextureClient>& aTextures) {
   MOZ_ASSERT(aCompositable);
 
   if (!aCompositable->IsConnected()) {
@@ -486,8 +476,7 @@ void WebRenderBridgeChild::UseTextures(
         t.mTextureClient);
   }
   AddWebRenderParentCommand(CompositableOperation(aCompositable->GetIPCHandle(),
-                                                  OpUseTexture(textures)),
-                            *aRenderRoot);
+                                                  OpUseTexture(textures)));
 }
 
 void WebRenderBridgeChild::UseComponentAlphaTextures(

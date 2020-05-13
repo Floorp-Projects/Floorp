@@ -580,7 +580,9 @@ function update_pixel_difference_text() {
       differenceText = `Maximum difference per channel ${maxPerChannel}, ${numPixels} pixels differ`;
     }
   }
-  ID("pixel-differences").textContent = differenceText;
+  // Disable this for now, because per bug 1633504, the numbers may be
+  // inaccurate and dependent on the browser's configuration.
+  // ID("pixel-differences").textContent = differenceText;
 }
 
 function get_pixel_differences() {

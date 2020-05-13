@@ -22,3 +22,7 @@ src:*/mfbt/lz4/lz4.c
 src:*/media/libogg/src/ogg_framing.c
 # mochitest gl2c dom/canvas/test/webgl-conf/generated/test_2_conformance2__reading__read-pixels-pack-parameters.html
 src:*/dom/canvas/WebGLContextGL.cpp
+# reftest J1
+src:*/js/src/builtin/TypedObject.cpp
+# jittest Jit6
+src:*/js/src/jit/x86-shared/Assembler-x86-shared.h

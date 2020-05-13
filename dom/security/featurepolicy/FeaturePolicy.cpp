@@ -119,6 +119,17 @@ void FeaturePolicy::AppendToDeclaredAllowInAncestorChain(
   mDeclaredFeaturesInAncestorChain.AppendElement(aFeature);
 }
 
+bool FeaturePolicy::IsSameOriginAsSrc(nsIPrincipal* aPrincipal) const {
+  MOZ_ASSERT(aPrincipal);
+
+  if (!mSrcOrigin) {
+    return false;
+  }
+
+  return BasePrincipal::Cast(mSrcOrigin)
+      ->Subsumes(aPrincipal, BasePrincipal::ConsiderDocumentDomain);
+}
+
 void FeaturePolicy::SetDeclaredPolicy(Document* aDocument,
                                       const nsAString& aPolicyString,
                                       nsIPrincipal* aSelfOrigin,

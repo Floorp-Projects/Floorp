@@ -30,7 +30,6 @@ AsyncImagePipelineManager::ForwardingExternalImage::~ForwardingExternalImage() {
 
 AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
     : mInitialised(false),
-      mRenderRoot(wr::RenderRoot::Default),
       mIsChanged(false),
       mUseExternalImage(false),
       mFilter(wr::ImageRendering::Auto),
@@ -134,8 +133,7 @@ WebRenderBridgeParent* AsyncImagePipelineManager::GetWrBridge(
 }
 
 void AsyncImagePipelineManager::AddAsyncImagePipeline(
-    const wr::PipelineId& aPipelineId, WebRenderImageHost* aImageHost,
-    wr::RenderRoot aRenderRoot) {
+    const wr::PipelineId& aPipelineId, WebRenderImageHost* aImageHost) {
   if (mDestroyed) {
     return;
   }
@@ -144,7 +142,6 @@ void AsyncImagePipelineManager::AddAsyncImagePipeline(
 
   MOZ_ASSERT(!mAsyncImagePipelines.Get(id));
   AsyncImagePipeline* holder = new AsyncImagePipeline();
-  holder->mRenderRoot = aRenderRoot;
   holder->mImageHost = aImageHost;
   mAsyncImagePipelines.Put(id, holder);
   AddPipeline(aPipelineId, /* aWrBridge */ nullptr);
@@ -419,7 +416,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
 
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn,
-    wr::TransactionBuilder& aTxnForImageBridge, wr::RenderRoot aRenderRoot) {
+    wr::TransactionBuilder& aTxnForImageBridge) {
   AsyncImagePipeline* pipeline =
       mAsyncImagePipelines.Get(wr::AsUint64(aPipelineId));
   if (!pipeline) {

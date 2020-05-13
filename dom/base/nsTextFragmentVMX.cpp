@@ -40,11 +40,11 @@ int32_t FirstNon8Bit(const char16_t* str, const char16_t* end) {
 
     // Construct a vector of shorts.
 #if __LITTLE_ENDIAN__
-    register const vector unsigned short gtcompare =
+    const vector unsigned short gtcompare =
         reinterpret_cast<vector unsigned short>(
             vec_mergel(vec_splat_s8(-1), vec_splat_s8(0)));
 #else
-    register const vector unsigned short gtcompare =
+    const vector unsigned short gtcompare =
         reinterpret_cast<vector unsigned short>(
             vec_mergel(vec_splat_s8(0), vec_splat_s8(-1)));
 #endif
@@ -53,7 +53,7 @@ int32_t FirstNon8Bit(const char16_t* str, const char16_t* end) {
     i2 = i * sizeof(char16_t);
 
     while (1) {
-      register vector unsigned short vect;
+      vector unsigned short vect;
 
       // Check one VMX register (8 unichars) at a time. The vec_any_gt
       // intrinsic does exactly what we want. This loop is manually unrolled;

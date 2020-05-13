@@ -50,6 +50,7 @@ namespace dom {
     nsINode* mCurrent;                                                   \
   };                                                                     \
   class name_ : public Inclusive##name_ {                                \
+   public:                                                               \
     using Super = Inclusive##name_;                                      \
     explicit name_(const nsINode& aNode)                                 \
         : Inclusive##name_(aNode.method_()) {}                           \

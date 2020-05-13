@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-use std::marker::PhantomData;
 use std::time::Duration;
 
 /// Typesafe way to manage server timestamps without accidentally mixing them up with
@@ -75,23 +74,9 @@ impl serde::ser::Serialize for ServerTimestamp {
     }
 }
 
-struct TimestampVisitor(PhantomData<ServerTimestamp>);
-
-impl<'de> serde::de::Visitor<'de> for TimestampVisitor {
-    type Value = ServerTimestamp;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str("a floating point number")
-    }
-
-    fn visit_f64<E: serde::de::Error>(self, value: f64) -> Result<Self::Value, E> {
-        Ok(ServerTimestamp::from_float_seconds(value))
-    }
-}
-
 impl<'de> serde::de::Deserialize<'de> for ServerTimestamp {
-    fn deserialize<D: serde::de::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        deserializer.deserialize_f64(TimestampVisitor(PhantomData))
+    fn deserialize<D: serde::de::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        f64::deserialize(d).map(Self::from_float_seconds)
     }
 }
 
@@ -118,8 +103,16 @@ mod test {
         let ser = serde_json::to_string(&ts).unwrap();
         assert_eq!("123.456".to_string(), ser);
 
-        // test deserialize
+        // test deserialize of float
         let ts: ServerTimestamp = serde_json::from_str(&ser).unwrap();
         assert_eq!(ServerTimestamp(123_456), ts);
+
+        // test deserialize of whole number
+        let ts: ServerTimestamp = serde_json::from_str("123").unwrap();
+        assert_eq!(ServerTimestamp(123_000), ts);
+
+        // test deserialize of negative number
+        let ts: ServerTimestamp = serde_json::from_str("-123").unwrap();
+        assert_eq!(ServerTimestamp(0), ts);
     }
 }

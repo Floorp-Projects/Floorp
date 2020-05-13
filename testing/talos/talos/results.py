@@ -434,16 +434,15 @@ class BrowserLogResults(object):
 
         self.mainthread_io(counter_results)
 
-        if not set(counters).union(set(mainthread_counters))\
+        if not set(counters).union(set(mainthread_counters)) \
                 .intersection(counter_results.keys()):
             # no xperf counters to accumulate
             return
 
         filename = 'etl_output_thread_stats.csv'
         if not os.path.exists(filename):
-            print("Warning: we are looking for xperf results file %s, and"
-                  " didn't find it" % filename)
-            return
+            raise utils.TalosError("Error: we are looking for xperf results file %s,"
+                                   " and didn't find it" % filename)
 
         contents = open(filename).read()
         lines = contents.splitlines()
@@ -473,9 +472,8 @@ class BrowserLogResults(object):
         if (set(mainthread_counters).intersection(counter_results.keys())):
             filename = 'etl_output.csv'
             if not os.path.exists(filename):
-                print("Warning: we are looking for xperf results file"
-                      " %s, and didn't find it" % filename)
-                return
+                raise utils.TalosError("Error: we are looking for xperf results file"
+                                       " %s, and didn't find it" % filename)
 
             contents = open(filename).read()
             lines = contents.splitlines()
@@ -491,7 +489,7 @@ class BrowserLogResults(object):
                 values = dict(zip(header, row))
                 for i, mainthread_counter in enumerate(mainthread_counters):
                     if int(values[mainthread_counter_keys[i]]) > 0:
-                        counter_results.setdefault(mainthread_counter, [])\
+                        counter_results.setdefault(mainthread_counter, []) \
                             .append([int(values[mainthread_counter_keys[i]]),
                                      values['filename']])
 

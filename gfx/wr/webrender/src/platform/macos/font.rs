@@ -662,18 +662,20 @@ impl FontContext {
                 cg_context.set_text_matrix(&CG_AFFINE_TRANSFORM_IDENTITY);
             }
 
-            if extra_strikes > 0 {
-                let strikes = 1 + extra_strikes;
-                let glyphs = vec![glyph; strikes];
-                let origins = (0..strikes).map(|i| {
-                    CGPoint {
-                        x: draw_origin.x + i as f64 * pixel_step,
-                        y: draw_origin.y,
-                    }
-                }).collect::<Vec<_>>();
-                ct_font.draw_glyphs(&glyphs, &origins, cg_context.clone());
-            } else {
-                ct_font.draw_glyphs(&[glyph], &[draw_origin], cg_context.clone());
+            ct_font.draw_glyphs(&[glyph], &[draw_origin], cg_context.clone());
+
+            // We'd like to render all the strikes in a single ct_font.draw_glyphs call,
+            // passing an array of glyph IDs and an array of origins, but unfortunately
+            // with some fonts, Core Text may inappropriately pixel-snap the rasterization,
+            // such that the strikes overprint instead of being offset. Rendering the
+            // strikes with individual draw_glyphs calls avoids this.
+            // (See https://bugzilla.mozilla.org/show_bug.cgi?id=1633397 for details.)
+            for i in 1 ..= extra_strikes {
+                let origin = CGPoint {
+                    x: draw_origin.x + i as f64 * pixel_step,
+                    y: draw_origin.y,
+                };
+                ct_font.draw_glyphs(&[glyph], &[origin], cg_context.clone());
             }
         }
 

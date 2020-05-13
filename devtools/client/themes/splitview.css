@@ -67,11 +67,3 @@
 .loading .splitview-nav-container {
   border-inline-end: 1px solid var(--theme-splitter-color);
 }
-
-.splitview-main > .devtools-toolbarbutton {
-  font-size: 11px;
-  padding: 0 8px;
-  width: auto;
-  min-width: 48px;
-  min-height: 0;
-}

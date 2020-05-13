@@ -19,7 +19,6 @@ function handleRequest(request, response) {
   }
 
   function writeSuggestions(query, completions = []) {
-    let result = [query, completions];
     let jsonString = JSON.stringify([query, completions]);
 
     // This script must be evaluated as UTF-8 for this to write out the bytes of
@@ -28,6 +27,20 @@ function handleRequest(request, response) {
     // will break the "I ❤️" case further down.
     let stringOfUtf8Bytes = convertToUtf8(jsonString);
 
+    response.write(stringOfUtf8Bytes);
+  }
+
+  /**
+   * Sends `data` as suggestions directly. This is useful when testing rich
+   * suggestions, which do not conform to the object shape sent by
+   * writeSuggestions.
+   *
+   * @param {array} data
+   */
+  function writeSuggestionsDirectly(data) {
+    let jsonString = JSON.stringify(data);
+    let stringOfUtf8Bytes = convertToUtf8(jsonString);
+    response.setHeader("Content-Type", "application/json", false);
     response.write(stringOfUtf8Bytes);
   }
 
@@ -49,6 +62,70 @@ function handleRequest(request, response) {
     writeSuggestions(q, ["Mozilla", "modern", "mom"]);
   } else if (q && q.startsWith("I ❤️")) {
     writeSuggestions(q, ["I ❤️ Mozilla"]);
+  } else if (q && q.startsWith("tailjunk ")) {
+    writeSuggestionsDirectly([
+      q,
+      [q + " normal", q + " tail 1", q + " tail 2"],
+      [],
+      {
+        "google:irrelevantparameter": [],
+        "google:badformat": {
+          "google:suggestdetail": [
+            {},
+            { mp: "… ", t: "tail 1" },
+            { mp: "… ", t: "tail 2" },
+          ],
+        },
+      },
+    ]);
+  } else if (q && q.startsWith("tailjunk few ")) {
+    writeSuggestionsDirectly([
+      q,
+      [q + " normal", q + " tail 1", q + " tail 2"],
+      [],
+      {
+        "google:irrelevantparameter": [],
+        "google:badformat": {
+          "google:suggestdetail": [{ mp: "… ", t: "tail 1" }],
+        },
+      },
+    ]);
+  } else if (q && q.startsWith("tailalt ")) {
+    writeSuggestionsDirectly([
+      q,
+      [q + " normal", q + " tail 1", q + " tail 2"],
+      {
+        "google:suggestdetail": [
+          {},
+          { mp: "… ", t: "tail 1" },
+          { mp: "… ", t: "tail 2" },
+        ],
+      },
+    ]);
+  } else if (q && q.startsWith("tail ")) {
+    writeSuggestionsDirectly([
+      q,
+      [q + " normal", q + " tail 1", q + " tail 2"],
+      [],
+      {
+        "google:irrelevantparameter": [],
+        "google:suggestdetail": [
+          {},
+          { mp: "… ", t: "tail 1" },
+          { mp: "… ", t: "tail 2" },
+        ],
+      },
+    ]);
+  } else if (q && q.startsWith("richempty ")) {
+    writeSuggestionsDirectly([
+      q,
+      [q + " normal", q + " tail 1", q + " tail 2"],
+      [],
+      {
+        "google:irrelevantparameter": [],
+        "google:suggestdetail": [],
+      },
+    ]);
   } else if (q && q.startsWith("letter ")) {
     let letters = [];
     for (let charCode = "A".charCodeAt(); charCode <= "Z".charCodeAt(); charCode++) {

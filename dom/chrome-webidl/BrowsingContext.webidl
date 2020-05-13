@@ -100,6 +100,10 @@ interface BrowsingContext {
   // Extension to give chrome JS the ability to set a maxTouchPoints override
   // while in RDM.
   void setRDMPaneMaxTouchPoints(octet maxTouchPoints);
+
+  // The watchedByDevTools flag indicates whether or not DevTools are currently
+  // debugging this browsing context.
+  [SetterThrows] attribute boolean watchedByDevTools;
 };
 
 BrowsingContext includes LoadContextMixin;

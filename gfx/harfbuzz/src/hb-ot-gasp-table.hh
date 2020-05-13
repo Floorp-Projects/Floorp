@@ -48,8 +48,8 @@ struct GaspRange
   }
 
   public:
-  HBUINT16 	rangeMaxPPEM;	/* Upper limit of range, in PPEM */
-  HBUINT16 	rangeGaspBehavior;
+  HBUINT16	rangeMaxPPEM;	/* Upper limit of range, in PPEM */
+  HBUINT16	rangeGaspBehavior;
 				/* Flags describing desired rasterizer behavior. */
   public:
   DEFINE_SIZE_STATIC (4);

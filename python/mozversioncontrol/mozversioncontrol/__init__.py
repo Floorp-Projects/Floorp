@@ -323,7 +323,8 @@ class HgRepository(Repository):
 
     def get_commit_time(self):
         return int(self._run(
-            'parent', '--template', '{word(0, date|hgdate)}').strip())
+            'log', '--rev', 'heads(ancestors(.) and not draft())',
+            '--template', '{word(0, date|hgdate)}', '--limit', '1').strip())
 
     def sparse_checkout_present(self):
         # We assume a sparse checkout is enabled if the .hg/sparse file
@@ -424,7 +425,7 @@ class HgRepository(Repository):
     def push_to_try(self, message):
         try:
             subprocess.check_call((self._tool, 'push-to-try', '-m', message), cwd=self.path,
-                                  env=self._env)
+                                  env=ensure_subprocess_env(self._env))
         except subprocess.CalledProcessError:
             try:
                 self._run('showconfig', 'extensions.push-to-try')

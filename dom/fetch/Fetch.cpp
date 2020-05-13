@@ -543,7 +543,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
     }
 
     UniquePtr<SerializedStackHolder> stack;
-    if (worker->IsWatchedByDevtools()) {
+    if (worker->IsWatchedByDevTools()) {
       stack = GetCurrentStackForNetMonitor(cx);
     }
 

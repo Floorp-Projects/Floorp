@@ -59,6 +59,10 @@ class WebConsoleConnectionProxy {
       return this._connecter;
     }
 
+    if (!this.target.client) {
+      return Promise.reject("target was destroyed");
+    }
+
     this.target.on("will-navigate", this._onTabWillNavigate);
     this.target.on("navigate", this._onTabNavigated);
 
@@ -82,7 +86,7 @@ class WebConsoleConnectionProxy {
 
       this._addWebConsoleFrontEventListeners();
 
-      if (!this.webConsoleFront.hasNativeConsoleAPI) {
+      if (this.webConsoleFront && !this.webConsoleFront.hasNativeConsoleAPI) {
         await this.webConsoleUI.logWarningAboutReplacedAPI();
       }
     })();
@@ -108,12 +112,20 @@ class WebConsoleConnectionProxy {
     return this._connecter;
   }
 
+  getConnectionPromise() {
+    return this._connecter;
+  }
+
   /**
    * Attach to the Web Console actor.
    * @private
    * @returns Promise
    */
   _attachConsole() {
+    if (!this.webConsoleFront) {
+      return null;
+    }
+
     const listeners = ["NetworkActivity"];
     // Enable the forwarding of console messages to the parent process
     // when we open the Browser Console or Toolbox without fission support. If Fission
@@ -131,6 +143,10 @@ class WebConsoleConnectionProxy {
    * @private
    */
   _addWebConsoleFrontEventListeners() {
+    if (!this.webConsoleFront) {
+      return;
+    }
+
     this.webConsoleFront.on("networkEvent", this._onNetworkEvent);
     this.webConsoleFront.on("networkEventUpdate", this._onNetworkEventUpdate);
     this.webConsoleFront.on(
@@ -168,13 +184,20 @@ class WebConsoleConnectionProxy {
    * @returns An array of network messages.
    */
   _getNetworkMessages() {
+    if (!this.webConsoleFront) {
+      return [];
+    }
+
     return Array.from(this.webConsoleFront.getNetworkEvents());
   }
 
   _clearLogpointMessages(logpointId) {
-    if (this.webConsoleUI) {
-      this.webConsoleUI.wrapper.dispatchClearLogpointMessages(logpointId);
+    // Some message might try to update while we are closing the toolbox.
+    if (!this.webConsoleUI?.wrapper) {
+      return;
     }
+
+    this.webConsoleUI.wrapper.dispatchClearLogpointMessages(logpointId);
   }
 
   /**
@@ -186,9 +209,6 @@ class WebConsoleConnectionProxy {
    *        The network request information.
    */
   _onNetworkEvent(networkInfo) {
-    if (!this.webConsoleUI) {
-      return;
-    }
     this.dispatchMessageAdd(networkInfo);
   }
 
@@ -201,9 +221,6 @@ class WebConsoleConnectionProxy {
    *        The update response received from the server.
    */
   _onNetworkEventUpdate(response) {
-    if (!this.webConsoleUI) {
-      return;
-    }
     this.dispatchMessageUpdate(response.networkInfo, response);
   }
 
@@ -231,6 +248,10 @@ class WebConsoleConnectionProxy {
    *        The message received from the server.
    */
   _onTabNavigated(packet) {
+    // Some message might try to update while we are closing the toolbox.
+    if (!this.webConsoleUI) {
+      return;
+    }
     this.webConsoleUI.handleTabNavigated(packet);
   }
 
@@ -242,6 +263,10 @@ class WebConsoleConnectionProxy {
    *        The message received from the server.
    */
   _onTabWillNavigate(packet) {
+    // Some message might try to update while we are closing the toolbox.
+    if (!this.webConsoleUI) {
+      return;
+    }
     this.webConsoleUI.handleTabWillNavigate(packet);
   }
 
@@ -249,6 +274,10 @@ class WebConsoleConnectionProxy {
    * Dispatch a message add on the new frontend and emit an event for tests.
    */
   dispatchMessageAdd(packet) {
+    // Some message might try to update while we are closing the toolbox.
+    if (!this.webConsoleUI?.wrapper) {
+      return;
+    }
     this.webConsoleUI.wrapper.dispatchMessageAdd(packet);
   }
 
@@ -256,6 +285,10 @@ class WebConsoleConnectionProxy {
    * Batched dispatch of messages.
    */
   dispatchMessagesAdd(packets) {
+    // Some message might try to update while we are closing the toolbox.
+    if (!this.webConsoleUI?.wrapper) {
+      return;
+    }
     this.webConsoleUI.wrapper.dispatchMessagesAdd(packets);
   }
 
@@ -264,7 +297,7 @@ class WebConsoleConnectionProxy {
    */
   dispatchMessageUpdate(networkInfo, response) {
     // Some message might try to update while we are closing the toolbox.
-    if (!this.webConsoleUI) {
+    if (!this.webConsoleUI?.wrapper) {
       return;
     }
     this.webConsoleUI.wrapper.dispatchMessageUpdate(networkInfo, response);

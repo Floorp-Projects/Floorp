@@ -80,10 +80,6 @@ enum CheckboxValue {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (BOOL)accessibilityIsIgnored {
-  return ![self getGeckoAccessible] && ![self getProxyAccessible];
-}
-
 - (BOOL)hasPopup {
   return ([self stateWithMask:states::HASPOPUP] != 0);
 }

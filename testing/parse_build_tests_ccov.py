@@ -50,7 +50,7 @@ def main():
         assert os.path.isdir(ignore_dir_abs), '{} is not a directory'.format(ignore_dir_abs)
         assert ignore_dir_abs.startswith(buildconfig.topsrcdir), '{} should start with {}'.format(ignore_dir_abs, buildconfig.topsrcdir)
 
-        grcov_command += ['--ignore-dir', os.path.relpath(ignore_dir_abs, buildconfig.topsrcdir) + '*']
+        grcov_command += ['--ignore', os.path.relpath(ignore_dir_abs, buildconfig.topsrcdir) + '*']
 
     if buildconfig.substs['OS_TARGET'] == 'Linux':
         gcc_dir = os.path.join(os.environ['MOZ_FETCHES_DIR'], 'gcc')

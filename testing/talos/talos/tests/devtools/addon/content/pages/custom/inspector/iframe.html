@@ -60,6 +60,18 @@
       }`;
     }
 
+    let CSS_VARIABLES_COUNT = 300;
+    let manyCSSVariablesDeclarations = "";
+    for (i = 0; i < CSS_VARIABLES_COUNT; i++) {
+      manyCSSVariablesDeclarations += `
+      --variable-${i}: ${i};
+      content: var(--variable-${i});
+      `
+    }
+    let manyCSSVariables = `.many-css-variables {
+      ${manyCSSVariablesDeclarations}
+    }`
+
     let expandManyChildren = new Array(100).join("  <div attr='my-attr'>content</div>\n");
 
     let maxBalancedDepth = 8;
@@ -80,6 +92,7 @@
     let style = document.createElement("style");
     style.type = "text/css";
     style.appendChild(document.createTextNode(manyCssRules));
+    style.appendChild(document.createTextNode(manyCSSVariables));
     document.head.appendChild(style);
 
     var tpl = document.createElement('template');
@@ -94,6 +107,7 @@
          <!-- Elements for custom.inspector.manyrules tests -->
          <div class="no-css-rules"></div>
          <div class="many-css-rules"></div>
+         <div class="many-css-variables"></div>
          <div class="expand-many-children">
          ${expandManyChildren}
          </div>

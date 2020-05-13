@@ -106,10 +106,9 @@ bool ClientInfo::IsPrivateBrowsing() const {
   }
 }
 
-nsCOMPtr<nsIPrincipal> ClientInfo::GetPrincipal() const {
+Result<nsCOMPtr<nsIPrincipal>, nsresult> ClientInfo::GetPrincipal() const {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIPrincipal> ref = PrincipalInfoToPrincipal(PrincipalInfo());
-  return ref;
+  return PrincipalInfoToPrincipal(PrincipalInfo());
 }
 
 const Maybe<mozilla::ipc::CSPInfo>& ClientInfo::GetCspInfo() const {

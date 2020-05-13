@@ -87,6 +87,11 @@ function initRow(aPartId) {
     }
 
     setRadioState(aPartId, state);
+
+    checkbox.disabled = Services.prefs.prefIsLocked(
+      "network.cookie.cookieBehavior"
+    );
+
     return;
   }
 
@@ -106,6 +111,28 @@ function initRow(aPartId) {
   }
 
   setRadioState(aPartId, state);
+
+  switch (aPartId) {
+    case "install":
+      checkbox.disabled = !Services.policies.isAllowed("xpinstall");
+      break;
+    case "popup":
+      checkbox.disabled = Services.prefs.prefIsLocked(
+        "dom.disable_open_during_load"
+      );
+      break;
+    case "autoplay-media":
+      checkbox.disabled = Services.prefs.prefIsLocked("media.autoplay.default");
+      break;
+    case "geo":
+    case "desktop-notification":
+    case "camera":
+    case "microphone":
+      checkbox.disabled = Services.prefs.prefIsLocked(
+        "permissions.default." + aPartId
+      );
+      break;
+  }
 }
 
 function createRow(aPartId) {

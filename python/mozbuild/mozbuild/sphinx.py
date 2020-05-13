@@ -102,6 +102,13 @@ def special_reference(v, func, typ, doc):
 def format_module(m):
     lines = []
 
+    lines.extend([
+        '.. note::',
+        "   moz.build files' implementation includes a ``Path`` class.",
+    ])
+    path_docstring_minus_summary = prepare_docstring(m.Path.__doc__)[2:]
+    lines.extend(['   ' + line for line in path_docstring_minus_summary])
+
     for subcontext, cls in sorted(m.SUBCONTEXTS.items()):
         lines.extend([
             '.. _mozbuild_subcontext_%s:' % subcontext,

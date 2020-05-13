@@ -118,11 +118,27 @@ In general `chardetng` prefers to do negative matching (rule out possibilities f
 - [ ] Make Lithuanian and Latvian detection on generic domains a lot more accurate (likely requires looking at trigrams).
 - [x] Tune Central European detection.
 - [ ] Tune the penalties applied to confusable encodings on non-generic TLDs to make detection of confusable encodings possible on non-generic TLDs.
-- [ ] Reduce the binary size by not storing the scoring for implausible-next-to-alphabetic character classes.
-- [ ] Reduce the binary size by classifying ASCII algorithmically.
+- [x] Reduce the binary size by not storing the scoring for implausible-next-to-alphabetic character classes.
+- [ ] ~Reduce the binary size by classifying ASCII algorithmically.~
 - [ ] Reduce the binary size by not storing the scores for C1 controls.
 
 ## Release Notes
+
+### 0.1.9
+
+* Fix a bug in ASCII prefix skipping. (Was introduced in 0.1.7.)
+
+### 0.1.8
+
+* Avoid detecting English with no-break spaces as GBK or EUC-KR.
+
+### 0.1.7
+
+* Avoid misdetecting windows-1252 English as windows-1254.
+* Avoid misdetecting windows-1252 English as IBM866.
+* Improve Chinese and Japanese detection by not giving single-byte encodings score for letter next to digit.
+* Improve Italian, Portuguese, Castilian, Catalan, and Galician detection by taking into account ordinal indicator use.
+* Reduce lookup table size.
 
 ### 0.1.6
 

@@ -93,10 +93,10 @@ const mozilla::ipc::PrincipalInfo& ServiceWorkerDescriptor::PrincipalInfo()
   return mData->principalInfo();
 }
 
-nsCOMPtr<nsIPrincipal> ServiceWorkerDescriptor::GetPrincipal() const {
+Result<nsCOMPtr<nsIPrincipal>, nsresult> ServiceWorkerDescriptor::GetPrincipal()
+    const {
   AssertIsOnMainThread();
-  nsCOMPtr<nsIPrincipal> ref = PrincipalInfoToPrincipal(mData->principalInfo());
-  return ref;
+  return PrincipalInfoToPrincipal(mData->principalInfo());
 }
 
 const nsCString& ServiceWorkerDescriptor::Scope() const {

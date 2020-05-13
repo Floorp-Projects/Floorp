@@ -45,8 +45,9 @@
 
     for (uint32_t j = 0; j < numRows; j++) {
       Accessible* cell = table->CellAt(j, mIndex);
-      if (cell) {
-        [mChildren addObject:GetNativeFromGeckoAccessible(cell)];
+      mozAccessible* nativeCell = cell ? GetNativeFromGeckoAccessible(cell) : nil;
+      if ([nativeCell isAccessibilityElement]) {
+        [mChildren addObject:nativeCell];
       }
     }
 
@@ -55,8 +56,9 @@
 
     for (uint32_t j = 0; j < numRows; j++) {
       ProxyAccessible* cell = proxy->TableCellAt(j, mIndex);
-      if (cell) {
-        [mChildren addObject:GetNativeFromProxy(cell)];
+      mozAccessible* nativeCell = cell ? GetNativeFromProxy(cell) : nil;
+      if ([nativeCell isAccessibilityElement]) {
+        [mChildren addObject:nativeCell];
       }
     }
   }
@@ -66,8 +68,8 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (BOOL)accessibilityIsIgnored {
-  return NO;
+- (BOOL)isAccessibilityElement {
+  return YES;
 }
 
 - (void)invalidateChildren {
@@ -219,7 +221,9 @@
       for (uint32_t i = 0; i < totalCount; i++) {
         if (accWrap->GetChildAt(i)->IsTableRow()) {
           mozAccessible* curNative = GetNativeFromGeckoAccessible(accWrap->GetChildAt(i));
-          if (curNative) [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+          if ([curNative isAccessibilityElement]) {
+            [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+          }
         }
       }
       return nativeArray;
@@ -239,7 +243,9 @@
       for (uint32_t i = 0; i < totalCount; i++) {
         if (proxy->ChildAt(i)->IsTableRow()) {
           mozAccessible* curNative = GetNativeFromProxy(proxy->ChildAt(i));
-          if (curNative) [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+          if ([curNative isAccessibilityElement]) {
+            [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+          }
         }
       }
       return nativeArray;

@@ -170,11 +170,11 @@ bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          SourceExtent extent, CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
-                         FunctionAsyncKind asyncKind, JSAtom* explicitName,
+                         FunctionAsyncKind asyncKind, JSAtom* atom,
                          FunctionFlags flags, size_t index)
     : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives, extent),
       traceLink_(traceListHead),
-      explicitName_(explicitName),
+      atom_(atom),
       funcDataIndex_(index),
       flags_(flags),
       emitBytecode(false),
@@ -203,7 +203,7 @@ JSFunction* FunctionBox::createFunction(JSContext* cx) {
     return nullptr;
   }
 
-  RootedAtom atom(cx, explicitName());
+  RootedAtom atom(cx, displayAtom());
   gc::AllocKind allocKind = flags_.isExtended()
                                 ? gc::AllocKind::FUNCTION_EXTENDED
                                 : gc::AllocKind::FUNCTION;
@@ -363,8 +363,8 @@ void FunctionBox::trace(JSTracer* trc) {
   if (enclosingScope_) {
     enclosingScope_.trace(trc);
   }
-  if (explicitName_) {
-    TraceRoot(trc, &explicitName_, "funbox-explicitName");
+  if (atom_) {
+    TraceRoot(trc, &atom_, "funbox-atom");
   }
 }
 

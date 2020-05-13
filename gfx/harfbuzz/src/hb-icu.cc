@@ -54,7 +54,21 @@
  * @short_description: ICU integration
  * @include: hb-icu.h
  *
- * Functions for using HarfBuzz with the ICU library to provide Unicode data.
+ * Functions for using HarfBuzz with the International Components for Unicode
+ * (ICU) library. HarfBuzz supports using ICU to provide Unicode data, by attaching
+ * ICU functions to the virtual methods in a #hb_unicode_funcs_t function
+ * structure.
+ **/
+
+/**
+ * hb_icu_script_to_script:
+ * @script: The UScriptCode identifier to query
+ *
+ * Fetches the #hb_script_t script that corresponds to the
+ * specified UScriptCode identifier.
+ *
+ * Return value: the #hb_script_t script found
+ *
  **/
 
 hb_script_t
@@ -66,6 +80,16 @@ hb_icu_script_to_script (UScriptCode script)
   return hb_script_from_string (uscript_getShortName (script), -1);
 }
 
+/**
+ * hb_icu_script_from_script:
+ * @script: The #hb_script_t script to query
+ *
+ * Fetches the UScriptCode identifier that corresponds to the
+ * specified #hb_script_t script.
+ *
+ * Return value: the UScriptCode identifier found
+ *
+ **/
 UScriptCode
 hb_icu_script_from_script (hb_script_t script)
 {
@@ -350,6 +374,16 @@ void free_static_icu_funcs ()
 }
 #endif
 
+/**
+ * hb_icu_get_unicode_funcs:
+ *
+ * Fetches a Unicode-functions structure that is populated
+ * with the appropriate ICU function for each method.
+ *
+ * Return value: (transfer none): a pointer to the #hb_unicode_funcs_t Unicode-functions structure
+ *
+ * Since: 0.9.38
+ **/
 hb_unicode_funcs_t *
 hb_icu_get_unicode_funcs ()
 {
