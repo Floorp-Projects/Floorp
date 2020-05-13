@@ -22,8 +22,8 @@
 namespace mozilla {
 namespace dom {
 
-MediaController::MediaController(uint64_t aContextId)
-    : MediaSessionController(aContextId) {
+MediaController::MediaController(uint64_t aBrowsingContextId)
+    : MediaSessionController(aBrowsingContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "MediaController only runs on Chrome process!");
   LOG("Create controller %" PRId64, Id());
@@ -84,7 +84,7 @@ void MediaController::Stop() {
       MediaControlKeysEvent::eStop);
 }
 
-uint64_t MediaController::Id() const { return mTopLevelBCId; }
+uint64_t MediaController::Id() const { return mTopLevelBrowsingContextId; }
 
 bool MediaController::IsAudible() const { return IsMediaAudible(); }
 
