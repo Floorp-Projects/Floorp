@@ -58,10 +58,9 @@ void MediaSession::SetPlaybackState(
     return;
   }
   // This would only happen when we disable e10s.
-  if (RefPtr<MediaController> controller =
+  if (RefPtr<IMediaInfoUpdater> updater =
           currentBC->Canonical()->GetMediaController()) {
-    controller->SetDeclaredPlaybackState(currentBC->Id(),
-                                         mDeclaredPlaybackState);
+    updater->SetDeclaredPlaybackState(currentBC->Id(), mDeclaredPlaybackState);
   }
 }
 
