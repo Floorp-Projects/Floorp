@@ -5,7 +5,7 @@
 // @flow
 
 import { prepareSourcePayload, createThread, createFrame } from "./create";
-import { updateTargets } from "./targets";
+import { updateTargets, attachTarget } from "./targets";
 import { clientEvents } from "./events";
 
 import Reps from "devtools-reps";
@@ -470,6 +470,19 @@ async function fetchThreads() {
   );
 }
 
+async function attachThread(targetFront: Target) {
+  const options = {
+    breakpoints,
+    eventBreakpoints,
+    observeAsmJS: true,
+  };
+
+  await attachTarget(targetFront, targets, options);
+  const threadFront: ThreadFront = await targetFront.getFront("thread");
+
+  return createThread(threadFront.actorID, targetFront);
+}
+
 function getMainThread() {
   return currentThreadFront().actor;
 }
@@ -557,6 +570,7 @@ const clientCommands = {
   checkIfAlreadyPaused,
   registerSourceActor,
   fetchThreads,
+  attachThread,
   getMainThread,
   sendPacket,
   setSkipPausing,
