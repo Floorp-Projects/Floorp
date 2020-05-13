@@ -274,6 +274,7 @@
   border-radius: calc(var(--track-size) / 2);
   margin: 0;
   background: none;
+  outline: none;
 }
 
 .bufferBar {
