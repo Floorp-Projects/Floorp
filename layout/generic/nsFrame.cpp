@@ -2625,18 +2625,12 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  // We don't display outline-style: auto on themed frames that have their own
-  // focus indicators.
-  if (outline.mOutlineStyle.IsAuto()) {
-    auto* disp = StyleDisplay();
-    // FIXME(emilio): The range special-case is needed because <input
-    // type=range> displays its own outline with ::-moz-focus-outer, and this
-    // would show two outlines instead of one.
-    if (IsThemed(disp) &&
-        (PresContext()->Theme()->ThemeDrawsFocusForWidget(disp->mAppearance) ||
-         disp->mAppearance != StyleAppearance::Range)) {
-      return;
-    }
+  // We don't display outline-style: auto on themed frames.
+  //
+  // TODO(emilio): Maybe we want a theme hook to say which frames can handle it
+  // themselves. Non-native theme probably will want this.
+  if (outline.mOutlineStyle.IsAuto() && IsThemed()) {
+    return;
   }
 
   aLists.Outlines()->AppendNewToTop<nsDisplayOutline>(aBuilder, this);
