@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Svc } = ChromeUtils.import("resource://services-sync/util.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -355,6 +356,19 @@ AddonUtilsInternal.prototype = {
         return false;
       }
     }
+
+    // Policy prevents either installing this addon or any addon
+    if (
+      Services.policies &&
+      (!Services.policies.mayInstallAddon(addon) ||
+        !Services.policies.isAllowed("xpinstall"))
+    ) {
+      this._log.info(
+        `Skipping install of "${addon.id}" due to enterprise policy`
+      );
+      return false;
+    }
+
     this._log.info(`Add-on "${addon.id}" is able to be installed`);
     return true;
   },
