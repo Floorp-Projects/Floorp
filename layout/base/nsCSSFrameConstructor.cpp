@@ -6379,8 +6379,8 @@ void nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(
 // FIXME(emilio, bug 1410020): This function assumes that the flattened tree
 // parent of all the appended children is the same, which, afaict, is not
 // necessarily true.
-bool nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
-                                                 nsIContent* aChild) {
+void nsCSSFrameConstructor::ConstructLazily(Operation aOperation,
+                                            nsIContent* aChild) {
   MOZ_ASSERT(aChild->GetParent());
 
   // We can construct lazily; just need to set suitable bits in the content
@@ -6388,7 +6388,7 @@ bool nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
   Element* parent = aChild->GetFlattenedTreeParentElement();
   if (!parent) {
     // Not part of the flat tree, nothing to do.
-    return true;
+    return;
   }
 
   if (Servo_Element_IsDisplayNone(parent)) {
@@ -6397,7 +6397,7 @@ bool nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     // FIXME(emilio): This should be an assert, except for weird <frameset>
     // stuff that does its own frame construction. Such an assert would fire in
     // layout/style/crashtests/1411478.html, for example.
-    return true;
+    return;
   }
 
   // Set NODE_NEEDS_FRAME on the new nodes.
@@ -6423,8 +6423,6 @@ bool nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   CheckBitsForLazyFrameConstruction(parent);
   parent->NoteDescendantsNeedFramesForServo();
-
-  return true;
 }
 
 void nsCSSFrameConstructor::IssueSingleInsertNofications(
@@ -6627,14 +6625,9 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   }
 
   if (aInsertionKind == InsertionKind::Async) {
-    if (MaybeConstructLazily(CONTENTAPPEND, aFirstNewContent)) {
-      LazilyStyleNewChildRange(aFirstNewContent, nullptr);
-      return;
-    }
-    // We couldn't construct lazily. Make Servo eagerly traverse the new content
-    // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
-    // styles are up-to-date already).
-    StyleNewChildRange(aFirstNewContent, nullptr);
+    ConstructLazily(CONTENTAPPEND, aFirstNewContent);
+    LazilyStyleNewChildRange(aFirstNewContent, nullptr);
+    return;
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
@@ -6985,14 +6978,9 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   }
 
   if (aInsertionKind == InsertionKind::Async) {
-    if (MaybeConstructLazily(CONTENTINSERT, aStartChild)) {
-      LazilyStyleNewChildRange(aStartChild, aEndChild);
-      return;
-    }
-    // We couldn't construct lazily. Make Servo eagerly traverse the new content
-    // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
-    // styles are up-to-date already).
-    StyleNewChildRange(aStartChild, aEndChild);
+    ConstructLazily(CONTENTINSERT, aStartChild);
+    LazilyStyleNewChildRange(aStartChild, aEndChild);
+    return;
   }
 
   bool isAppend, isRangeInsertSafe;
