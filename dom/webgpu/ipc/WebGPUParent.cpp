@@ -685,7 +685,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
   RefPtr<PresentationData> data = lookup->second.get();
   mCanvasMap.erase(AsUint64(aExternalId));
   data->mTextureHost = nullptr;
-  layers::BufferTextureHost::DestroyRenderTexture(aExternalId);
+  layers::TextureHost::DestroyRenderTexture(aExternalId);
 
   data->mBuffersLock.Lock();
   for (const auto bid : data->mUnassignedBufferIds) {
@@ -707,7 +707,7 @@ ipc::IPCResult WebGPUParent::RecvShutdown() {
   mTimer.Stop();
   for (const auto& p : mCanvasMap) {
     const wr::ExternalImageId extId = {p.first};
-    layers::BufferTextureHost::DestroyRenderTexture(extId);
+    layers::TextureHost::DestroyRenderTexture(extId);
   }
   mCanvasMap.clear();
   ffi::wgpu_server_poll_all_devices(mContext, true);
