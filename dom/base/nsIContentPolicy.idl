@@ -107,11 +107,9 @@ interface nsIContentPolicy : nsISupports
    */
   const nsContentPolicyType TYPE_REFRESH = 8;
 
-  /**
-   * Indicates an XBL binding request, triggered either by -moz-binding CSS
-   * property.
+  /*
+   * XXX: nsContentPolicyType = 9 used to inicate an XBL binding request.
    */
-  const nsContentPolicyType TYPE_XBL = 9;
 
   /**
    * Indicates a ping triggered by a click on <A PING="..."> element.

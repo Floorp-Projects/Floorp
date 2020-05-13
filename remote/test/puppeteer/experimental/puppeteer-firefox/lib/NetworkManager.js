@@ -106,7 +106,6 @@ const causeToResourceType = {
   TYPE_DOCUMENT: 'document',
   TYPE_SUBDOCUMENT: 'document',
   TYPE_REFRESH: 'document',
-  TYPE_XBL: 'other',
   TYPE_PING: 'other',
   TYPE_XMLHTTPREQUEST: 'xhr',
   TYPE_OBJECT_SUBREQUEST: 'other',

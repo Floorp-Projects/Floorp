@@ -299,7 +299,6 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
       return nsIContentSecurityPolicy::OBJECT_SRC_DIRECTIVE;
 
-    case nsIContentPolicy::TYPE_XBL:
     case nsIContentPolicy::TYPE_DTD:
     case nsIContentPolicy::TYPE_OTHER:
     case nsIContentPolicy::TYPE_SPECULATIVE:
