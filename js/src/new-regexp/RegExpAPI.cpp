@@ -34,7 +34,7 @@ using mozilla::AssertedCast;
 using mozilla::Maybe;
 using mozilla::PointerRangeSize;
 
-using frontend::TokenStream;
+using frontend::DummyTokenStream;
 using frontend::TokenStreamAnyChars;
 
 using v8::internal::FlatStringReader;
@@ -385,7 +385,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
     if (!RegExpParser::ParseRegExp(cx->isolate, &zone, &patternBytes, flags,
                                    &data)) {
       JS::CompileOptions options(cx);
-      TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
+      DummyTokenStream dummyTokenStream(cx, options);
       ReportSyntaxError(dummyTokenStream, data, pattern);
       return false;
     }
