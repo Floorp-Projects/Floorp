@@ -365,3 +365,17 @@ already_AddRefed<BasePrincipal> ExpandedPrincipal::FromProperties(
 
   return expandedPrincipal.forget();
 }
+
+NS_IMETHODIMP
+ExpandedPrincipal::IsThirdPartyURI(nsIURI* aURI, bool* aRes) {
+  nsresult rv;
+  for (const auto& principal : mPrincipals) {
+    rv = Cast(principal)->IsThirdPartyURI(aURI, aRes);
+    if (NS_WARN_IF(NS_FAILED(rv)) || !*aRes) {
+      return rv;
+    }
+  }
+
+  *aRes = true;
+  return NS_OK;
+}

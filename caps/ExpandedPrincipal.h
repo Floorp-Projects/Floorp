@@ -47,6 +47,7 @@ class ExpandedPrincipal : public nsIExpandedPrincipal,
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
+  NS_IMETHOD IsThirdPartyURI(nsIURI* uri, bool* aRes) override;
   virtual bool AddonHasPermission(const nsAtom* aPerm) override;
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
