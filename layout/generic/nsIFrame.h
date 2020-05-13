@@ -4487,6 +4487,24 @@ class nsIFrame : public nsQueryFrame {
   bool HasDisplayItem(nsDisplayItemBase* aItem);
   bool HasDisplayItem(uint32_t aKey);
 
+  static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
+                               const nsDisplayList& aList,
+                               bool aDumpHtml = false);
+  static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
+                               const nsDisplayList& aList,
+                               std::stringstream& aStream,
+                               bool aDumpHtml = false);
+  static void PrintDisplayItem(nsDisplayListBuilder* aBuilder,
+                               nsDisplayItem* aItem, std::stringstream& aStream,
+                               uint32_t aIndent = 0, bool aDumpSublist = false,
+                               bool aDumpHtml = false);
+#ifdef MOZ_DUMP_PAINTING
+  static void PrintDisplayListSet(nsDisplayListBuilder* aBuilder,
+                                  const nsDisplayListSet& aSet,
+                                  std::stringstream& aStream,
+                                  bool aDumpHtml = false);
+#endif
+
   bool ForceDescendIntoIfVisible() const { return mForceDescendIntoIfVisible; }
   void SetForceDescendIntoIfVisible(bool aForce) {
     mForceDescendIntoIfVisible = aForce;

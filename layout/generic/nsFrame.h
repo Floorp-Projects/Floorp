@@ -411,26 +411,6 @@ class nsFrame : public nsIFrame {
   static void ShowEventTargetFrameBorder(bool aEnable);
   static bool GetShowEventTargetFrameBorder();
 #endif
-
-  static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
-                               const nsDisplayList& aList,
-                               bool aDumpHtml = false) {
-    std::stringstream ss;
-    PrintDisplayList(aBuilder, aList, ss, aDumpHtml);
-    fprintf_stderr(stderr, "%s", ss.str().c_str());
-  }
-  static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
-                               const nsDisplayList& aList,
-                               std::stringstream& aStream,
-                               bool aDumpHtml = false);
-  static void PrintDisplayItem(nsDisplayListBuilder* aBuilder,
-                               nsDisplayItem* aItem, std::stringstream& aStream,
-                               uint32_t aIndent = 0, bool aDumpSublist = false,
-                               bool aDumpHtml = false);
-  static void PrintDisplayListSet(nsDisplayListBuilder* aBuilder,
-                                  const nsDisplayListSet& aList,
-                                  std::stringstream& aStream,
-                                  bool aDumpHtml = false);
 };
 
 #endif /* nsFrame_h___ */
