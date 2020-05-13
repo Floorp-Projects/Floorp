@@ -18,6 +18,7 @@
 #include "mozilla/dom/XRInputSourceArray.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/WebXRBinding.h"
 #include "nsServiceManagerUtils.h"
 
@@ -107,7 +108,11 @@ void VRDisplayClient::MakePresentationGenerationCurrent() {
 
 gfx::VRAPIMode VRDisplayClient::GetXRAPIMode() const { return mAPIMode; }
 
-void VRDisplayClient::SetXRAPIMode(gfx::VRAPIMode aMode) { mAPIMode = aMode; }
+void VRDisplayClient::SetXRAPIMode(gfx::VRAPIMode aMode) {
+  mAPIMode = aMode;
+  Telemetry::Accumulate(Telemetry::WEBXR_API_MODE,
+                        static_cast<uint32_t>(mAPIMode));
+}
 
 void VRDisplayClient::FireEvents() {
   RefPtr<VRManagerChild> vm = VRManagerChild::Get();
