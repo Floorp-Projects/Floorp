@@ -277,23 +277,28 @@ struct MOZ_RAII AutoPrepareFocusRange {
     range->SetIsGenerated(false);
     aSelection->mAnchorFocusRange = range;
 
-    // Remove all generated ranges (including the old mAnchorFocusRange).
-    RefPtr<nsPresContext> presContext = aSelection->GetPresContext();
-    size_t i = len;
-    while (i--) {
-      range = aSelection->mStyledRanges.mRanges[i].mRange;
-      if (range->IsGenerated()) {
-        range->UnregisterSelection();
-        aSelection->SelectFrames(presContext, range, false);
-        aSelection->mStyledRanges.mRanges.RemoveElementAt(i);
-      }
-    }
+    RemoveGeneratedRanges(*aSelection);
+
     if (aSelection->mFrameSelection) {
       aSelection->mFrameSelection->InvalidateDesiredCaretPos();
     }
   }
 
  private:
+  static void RemoveGeneratedRanges(Selection& aSelection) {
+    RefPtr<nsPresContext> presContext = aSelection.GetPresContext();
+    nsTArray<StyledRange>& ranges = aSelection.mStyledRanges.mRanges;
+    size_t i = ranges.Length();
+    while (i--) {
+      nsRange* range = ranges[i].mRange;
+      if (range->IsGenerated()) {
+        range->UnregisterSelection();
+        aSelection.SelectFrames(presContext, range, false);
+        ranges.RemoveElementAt(i);
+      }
+    }
+  }
+
   /**
    * @aParam aSelectionChangeReasons can be multiple of the reasons defined in
              nsISelectionListener.idl.
