@@ -62,7 +62,7 @@ def files(data):
     resources["file_2"] = _create_temp_files(json_2, json.dumps(data["data_2"]))
 
     txt_3 = dirs["resources"] / "file_3.txt"
-    resources["file_3"] = _create_temp_files(txt_3, json.dumps(data["data_3"]))
+    resources["file_3"] = _create_temp_files(txt_3, str(data["data_3"]))
 
     output = dirs["output"] / "output.json"
 
