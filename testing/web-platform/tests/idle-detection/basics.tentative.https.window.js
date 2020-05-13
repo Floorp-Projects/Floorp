@@ -9,17 +9,17 @@ promise_setup(async t => {
 })
 
 promise_test(async t => {
-  let status = new IdleDetector();
-  let watcher = new EventWatcher(t, status, ["change"]);
+  let detector = new IdleDetector();
+  let watcher = new EventWatcher(t, detector, ["change"]);
   let initial_state = watcher.wait_for("change");
 
-  await status.start();
+  await detector.start();
   await initial_state;
 
-  assert_true(['active', 'idle'].includes(status.state.user),
-                'status has a valid user state');
-  assert_true(['locked', 'unlocked'].includes(status.state.screen),
-                'status has a valid screen state');
+  assert_true(['active', 'idle'].includes(detector.userState),
+                'has a valid user state');
+  assert_true(['locked', 'unlocked'].includes(detector.screenState),
+                'has a valid screen state');
 }, 'start() basics');
 
 promise_test(async t => {
