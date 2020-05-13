@@ -82,13 +82,11 @@ class MediaController final
   void Shutdown();
 
   bool IsAudible() const;
-  MediaSessionPlaybackState GetState() const;
-
-  void SetDeclaredPlaybackState(uint64_t aSessionContextId,
-                                MediaSessionPlaybackState aState) override;
 
  private:
   ~MediaController();
+
+  void HandleActualPlaybackStateChanged() override;
 
   void UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent aEvent);
@@ -99,32 +97,9 @@ class MediaController final
   bool ShouldActivateController() const;
   bool ShouldDeactivateController() const;
 
-  void SetGuessedPlayState(MediaSessionPlaybackState aState);
-
-  // Whenever the declared playback state (from media session controller) or the
-  // guessed playback state changes, we should recompute actual playback state
-  // to know if we need to update the virtual control interface.
-  void UpdateActualPlaybackState();
-
   bool mIsRegisteredToService = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;
-
-  // This state can match to the `guessed playback state` in the spec [1], it
-  // indicates if we have any media element playing within the tab which this
-  // controller belongs to. But currently we only take media elements into
-  // account, which is different from the way the spec recommends. In addition,
-  // We don't support web audio and plugin and not consider audible state of
-  // media.
-  // [1] https://w3c.github.io/mediasession/#guessed-playback-state
-  MediaSessionPlaybackState mGuessedPlaybackState =
-      MediaSessionPlaybackState::None;
-
-  // This playback state would be the final playback which can be used to know
-  // if the controller is playing or not.
-  // https://w3c.github.io/mediasession/#actual-playback-state
-  MediaSessionPlaybackState mActualPlaybackState =
-      MediaSessionPlaybackState::None;
 };
 
 }  // namespace dom
