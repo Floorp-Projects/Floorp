@@ -101,6 +101,10 @@ class AntiTrackingUtils final {
   static already_AddRefed<dom::WindowGlobalParent>
   GetTopWindowExcludingExtensionAccessibleContentFrames(
       dom::CanonicalBrowsingContext* aBrowsingContext, nsIURI* aURIBeingLoaded);
+
+  // Given a channel, compute and set the IsThirdPartyContextToTopWindow for
+  // this channel. This function is supposed to be called in the parent process.
+  static void ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel);
 };
 
 }  // namespace mozilla
