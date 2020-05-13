@@ -94,6 +94,7 @@ LoadInfo::LoadInfo(
       mFrameBrowsingContextID(0),
       mInitialSecurityCheckDone(false),
       mIsThirdPartyContext(false),
+      mIsThirdPartyContextToTopWindow(true),
       mIsFormSubmission(false),
       mSendCSPViolationEvents(true),
       mRequestBlockingReason(BLOCKING_REASON_NONE),
@@ -370,6 +371,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mFrameBrowsingContextID(0),
       mInitialSecurityCheckDone(false),
       mIsThirdPartyContext(false),  // NB: TYPE_DOCUMENT implies !third-party.
+      mIsThirdPartyContextToTopWindow(true),
       mIsFormSubmission(false),
       mSendCSPViolationEvents(true),
       mRequestBlockingReason(BLOCKING_REASON_NONE),
@@ -475,6 +477,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mFrameBrowsingContextID(0),
       mInitialSecurityCheckDone(false),
       mIsThirdPartyContext(false),  // NB: TYPE_DOCUMENT implies !third-party.
+      mIsThirdPartyContextToTopWindow(true),
       mIsFormSubmission(false),
       mSendCSPViolationEvents(true),
       mRequestBlockingReason(BLOCKING_REASON_NONE),
@@ -562,6 +565,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       // if the load got blocked earlier.
       mInitialSecurityCheckDone(true),
       mIsThirdPartyContext(false),
+      mIsThirdPartyContextToTopWindow(true),
       mIsFormSubmission(false),
       mSendCSPViolationEvents(true),
       mRequestBlockingReason(BLOCKING_REASON_NONE),
@@ -756,6 +760,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mFrameBrowsingContextID(rhs.mFrameBrowsingContextID),
       mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone),
       mIsThirdPartyContext(rhs.mIsThirdPartyContext),
+      mIsThirdPartyContextToTopWindow(rhs.mIsThirdPartyContextToTopWindow),
       mIsFormSubmission(rhs.mIsFormSubmission),
       mSendCSPViolationEvents(rhs.mSendCSPViolationEvents),
       mOriginAttributes(rhs.mOriginAttributes),
@@ -808,8 +813,8 @@ LoadInfo::LoadInfo(
     uint64_t aTopOuterWindowID, uint64_t aFrameOuterWindowID,
     uint64_t aBrowsingContextID, uint64_t aFrameBrowsingContextID,
     bool aInitialSecurityCheckDone, bool aIsThirdPartyContext,
-    bool aIsFormSubmission, bool aSendCSPViolationEvents,
-    const OriginAttributes& aOriginAttributes,
+    bool aIsThirdPartyContextToTopWindow, bool aIsFormSubmission,
+    bool aSendCSPViolationEvents, const OriginAttributes& aOriginAttributes,
     RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
     RedirectHistoryArray& aRedirectChain,
     nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
@@ -862,6 +867,7 @@ LoadInfo::LoadInfo(
       mFrameBrowsingContextID(aFrameBrowsingContextID),
       mInitialSecurityCheckDone(aInitialSecurityCheckDone),
       mIsThirdPartyContext(aIsThirdPartyContext),
+      mIsThirdPartyContextToTopWindow(aIsThirdPartyContextToTopWindow),
       mIsFormSubmission(aIsFormSubmission),
       mSendCSPViolationEvents(aSendCSPViolationEvents),
       mOriginAttributes(aOriginAttributes),
@@ -1090,6 +1096,20 @@ LoadInfo::GetSecurityMode(uint32_t* aFlags) {
 NS_IMETHODIMP
 LoadInfo::GetIsInThirdPartyContext(bool* aIsInThirdPartyContext) {
   *aIsInThirdPartyContext = mIsThirdPartyContext;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsThirdPartyContextToTopWindow(
+    bool* aIsThirdPartyContextToTopWindow) {
+  *aIsThirdPartyContextToTopWindow = mIsThirdPartyContextToTopWindow;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsThirdPartyContextToTopWindow(
+    bool aIsThirdPartyContextToTopWindow) {
+  mIsThirdPartyContextToTopWindow = aIsThirdPartyContextToTopWindow;
   return NS_OK;
 }
 

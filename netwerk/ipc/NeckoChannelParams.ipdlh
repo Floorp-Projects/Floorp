@@ -100,6 +100,7 @@ struct LoadInfoArgs
   uint64_t                    frameBrowsingContextID;
   bool                        initialSecurityCheckDone;
   bool                        isInThirdPartyContext;
+  bool                        isThirdPartyContextToTopWindow;
   bool                        isFormSubmission;
   bool                        sendCSPViolationEvents;
   OriginAttributes            originAttributes;
@@ -219,6 +220,8 @@ struct ParentLoadInfoForwarderArgs
   uint32_t requestBlockingReason;
 
   bool hasStoragePermission;
+
+  bool isThirdPartyContextToTopWindow;
 
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder
