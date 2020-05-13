@@ -114,7 +114,7 @@ void ContentMediaController::NotifyPlaybackStateChanged(
     // media would be run in the content process.
     if (RefPtr<MediaController> controller =
             bc->Canonical()->GetMediaController()) {
-      controller->NotifyMediaPlaybackChanged(aState);
+      controller->NotifyMediaPlaybackChanged(bc->Id(), aState);
     }
   }
 }
@@ -142,7 +142,7 @@ void ContentMediaController::NotifyAudibleStateChanged(
     // media would be run in the content process.
     if (RefPtr<MediaController> controller =
             bc->Canonical()->GetMediaController()) {
-      controller->NotifyMediaAudibleChanged(aState);
+      controller->NotifyMediaAudibleChanged(bc->Id(), aState);
     }
   }
 }

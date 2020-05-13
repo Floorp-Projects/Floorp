@@ -119,7 +119,8 @@ void MediaController::Shutdown() {
   mShutdown = true;
 }
 
-void MediaController::NotifyMediaPlaybackChanged(MediaPlaybackState aState) {
+void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
+                                                 MediaPlaybackState aState) {
   if (mShutdown) {
     return;
   }
@@ -134,7 +135,8 @@ void MediaController::NotifyMediaPlaybackChanged(MediaPlaybackState aState) {
   }
 }
 
-void MediaController::NotifyMediaAudibleChanged(MediaAudibleState aState) {
+void MediaController::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
+                                                MediaAudibleState aState) {
   if (mShutdown) {
     return;
   }
