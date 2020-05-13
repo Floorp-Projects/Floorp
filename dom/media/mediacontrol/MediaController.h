@@ -76,7 +76,7 @@ class MediaController final
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaController, override);
 
-  explicit MediaController(uint64_t aContextId);
+  explicit MediaController(uint64_t aBrowsingContextId);
 
   // IMediaController's methods
   void Focus() override;
@@ -108,15 +108,11 @@ class MediaController final
 
  private:
   ~MediaController();
-
   void HandleActualPlaybackStateChanged() override;
-
   void UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent aEvent);
-
   void Activate();
   void Deactivate();
-
   bool ShouldActivateController() const;
   bool ShouldDeactivateController() const;
 

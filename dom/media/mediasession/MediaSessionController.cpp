@@ -41,7 +41,7 @@ static bool IsMetadataEmpty(const Maybe<MediaMetadataBase>& aMetadata) {
 }
 
 MediaSessionController::MediaSessionController(uint64_t aBrowsingContextId)
-    : mTopLevelBCId(aBrowsingContextId) {
+    : mTopLevelBrowsingContextId(aBrowsingContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "MediaSessionController only runs on Chrome process!");
 }
@@ -51,39 +51,39 @@ void MediaSessionController::NotifyMediaAudibleChanged(
   mMediaStatusDelegate.UpdateMediaAudibleState(aBrowsingContextId, aState);
 }
 
-void MediaSessionController::NotifySessionCreated(uint64_t aSessionContextId) {
-  if (mMediaSessionInfoMap.Contains(aSessionContextId)) {
+void MediaSessionController::NotifySessionCreated(uint64_t aBrowsingContextId) {
+  if (mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
     return;
   }
 
-  LOG("Session %" PRId64 " has been created", aSessionContextId);
-  mMediaSessionInfoMap.Put(aSessionContextId, MediaSessionInfo::EmptyInfo());
+  LOG("Session %" PRId64 " has been created", aBrowsingContextId);
+  mMediaSessionInfoMap.Put(aBrowsingContextId, MediaSessionInfo::EmptyInfo());
   UpdateActiveMediaSessionContextId();
 }
 
 void MediaSessionController::NotifySessionDestroyed(
-    uint64_t aSessionContextId) {
-  if (!mMediaSessionInfoMap.Contains(aSessionContextId)) {
+    uint64_t aBrowsingContextId) {
+  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
     return;
   }
-  LOG("Session %" PRId64 " has been destroyed", aSessionContextId);
-  mMediaSessionInfoMap.Remove(aSessionContextId);
+  LOG("Session %" PRId64 " has been destroyed", aBrowsingContextId);
+  mMediaSessionInfoMap.Remove(aBrowsingContextId);
   UpdateActiveMediaSessionContextId();
 }
 
 void MediaSessionController::UpdateMetadata(
-    uint64_t aSessionContextId, const Maybe<MediaMetadataBase>& aMetadata) {
-  if (!mMediaSessionInfoMap.Contains(aSessionContextId)) {
+    uint64_t aBrowsingContextId, const Maybe<MediaMetadataBase>& aMetadata) {
+  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
     return;
   }
 
-  MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aSessionContextId);
+  MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aBrowsingContextId);
   if (IsMetadataEmpty(aMetadata)) {
-    LOG("Reset metadata for session %" PRId64, aSessionContextId);
+    LOG("Reset metadata for session %" PRId64, aBrowsingContextId);
     info->mMetadata.reset();
   } else {
     LOG("Update metadata for session %" PRId64 " title=%s artist=%s album=%s",
-        aSessionContextId, NS_ConvertUTF16toUTF8((*aMetadata).mTitle).get(),
+        aBrowsingContextId, NS_ConvertUTF16toUTF8((*aMetadata).mTitle).get(),
         NS_ConvertUTF16toUTF8(aMetadata->mArtist).get(),
         NS_ConvertUTF16toUTF8(aMetadata->mAlbum).get());
     info->mMetadata = aMetadata;
@@ -154,7 +154,7 @@ MediaMetadataBase MediaSessionController::CreateDefaultMetadata() const {
 
 nsString MediaSessionController::GetDefaultTitle() const {
   RefPtr<CanonicalBrowsingContext> bc =
-      CanonicalBrowsingContext::Get(mTopLevelBCId);
+      CanonicalBrowsingContext::Get(mTopLevelBrowsingContextId);
   if (!bc) {
     return EmptyString();
   }
@@ -214,11 +214,11 @@ nsString MediaSessionController::GetDefaultFaviconURL() const {
 }
 
 void MediaSessionController::SetDeclaredPlaybackState(
-    uint64_t aSessionContextId, MediaSessionPlaybackState aState) {
-  if (!mMediaSessionInfoMap.Contains(aSessionContextId)) {
+    uint64_t aBrowsingContextId, MediaSessionPlaybackState aState) {
+  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
     return;
   }
-  MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aSessionContextId);
+  MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aBrowsingContextId);
   LOG("SetDeclaredPlaybackState from %s to %s",
       ToMediaSessionPlaybackStateStr(info->mDeclaredPlaybackState),
       ToMediaSessionPlaybackStateStr(aState));
@@ -314,7 +314,7 @@ void MediaSessionController::FillMissingTitleAndArtworkIfNeeded(
 
 bool MediaSessionController::IsInPrivateBrowsing() const {
   RefPtr<CanonicalBrowsingContext> bc =
-      CanonicalBrowsingContext::Get(mTopLevelBCId);
+      CanonicalBrowsingContext::Get(mTopLevelBrowsingContextId);
   if (!bc) {
     return false;
   }
