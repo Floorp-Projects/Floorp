@@ -476,9 +476,9 @@ static void PrintSingleError(JSContext* cx, FILE* file,
   fflush(file);
 }
 
-JS_PUBLIC_API void JS::PrintError(JSContext* cx, FILE* file,
-                                  JS::ConstUTF8CharsZ toStringResult,
-                                  JSErrorReport* report, bool reportWarnings) {
+static void PrintErrorImpl(JSContext* cx, FILE* file,
+                           JS::ConstUTF8CharsZ toStringResult,
+                           JSErrorReport* report, bool reportWarnings) {
   MOZ_ASSERT(report);
 
   /* Conditionally ignore reported warnings. */
@@ -498,6 +498,18 @@ JS_PUBLIC_API void JS::PrintError(JSContext* cx, FILE* file,
                        PrintErrorKind::Note);
     }
   }
+}
+
+JS_PUBLIC_API void JS::PrintError(JSContext* cx, FILE* file,
+                                  JSErrorReport* report, bool reportWarnings) {
+  PrintErrorImpl(cx, file, JS::ConstUTF8CharsZ(), report, reportWarnings);
+}
+
+JS_PUBLIC_API void JS::PrintError(JSContext* cx, FILE* file,
+                                  const JS::ErrorReportBuilder& builder,
+                                  bool reportWarnings) {
+  PrintErrorImpl(cx, file, builder.toStringResult(), builder.report(),
+                 reportWarnings);
 }
 
 void js::ReportIsNotDefined(JSContext* cx, HandleId id) {
