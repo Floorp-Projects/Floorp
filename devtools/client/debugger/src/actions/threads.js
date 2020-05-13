@@ -5,6 +5,8 @@
 // @flow
 
 import { differenceBy } from "lodash";
+import type { Target } from "../client/firefox/types";
+import type { Thread, ThreadList, ActorId } from "../types";
 import type { Action, ThunkArgs } from "./types";
 import { removeSourceActors } from "./source-actors";
 import { newGeneratedSources } from "./sources";
@@ -16,10 +18,66 @@ import {
   getSourceActorsForThread,
 } from "../selectors";
 
-import type { ActorId } from "../types";
+function addThreads(
+  { dispatch, client, getState }: ThunkArgs,
+  addedThreads: ThreadList
+) {
+  const cx = getContext(getState());
+  dispatch(({ type: "INSERT_THREADS", cx, threads: addedThreads }: Action));
+
+  // Fetch the sources and install breakpoints on any new workers.
+  // NOTE: This runs in the background and fails quietly because it is
+  // pretty easy for sources to throw during the fetch if their thread
+  // shuts down, which would cause test failures.
+  for (const thread of addedThreads) {
+    client
+      .fetchThreadSources(thread.actor)
+      .then(sources => dispatch(newGeneratedSources(sources)))
+      .catch(e => console.error(e));
+  }
+}
+
+function removeThreads(
+  { dispatch, client, getState }: ThunkArgs,
+  removedThreads: ThreadList
+) {
+  const cx = getContext(getState());
+  const sourceActors = getSourceActorsForThread(
+    getState(),
+    removedThreads.map(t => t.actor)
+  );
+  dispatch(removeSourceActors(sourceActors));
+  dispatch(
+    ({
+      type: "REMOVE_THREADS",
+      cx,
+      threads: removedThreads.map(t => t.actor),
+    }: Action)
+  );
+}
+
+export function addTarget(targetFront: Target) {
+  return async function(args: ThunkArgs) {
+    const { client } = args;
+    const thread = await client.attachThread(targetFront);
+    return addThreads(args, [thread]);
+  };
+}
+export function removeTarget(targetFront: Target) {
+  return async function(args: ThunkArgs) {
+    const { getState } = args;
+    const currentThreads = getThreads(getState());
+    const { actorID } = targetFront.threadFront;
+    const thread: void | Thread = currentThreads.find(t => t.actor == actorID);
+    if (thread) {
+      return removeThreads(args, [thread]);
+    }
+  };
+}
 
 export function updateThreads() {
-  return async function({ dispatch, getState, client }: ThunkArgs) {
+  return async function(args: ThunkArgs) {
+    const { dispatch, getState, client } = args;
     const cx = getContext(getState());
     const threads = await client.fetchThreads();
 
@@ -28,32 +86,10 @@ export function updateThreads() {
     const addedThreads = differenceBy(threads, currentThreads, t => t.actor);
     const removedThreads = differenceBy(currentThreads, threads, t => t.actor);
     if (removedThreads.length > 0) {
-      const sourceActors = getSourceActorsForThread(
-        getState(),
-        removedThreads.map(t => t.actor)
-      );
-      dispatch(removeSourceActors(sourceActors));
-      dispatch(
-        ({
-          type: "REMOVE_THREADS",
-          cx,
-          threads: removedThreads.map(t => t.actor),
-        }: Action)
-      );
+      removeThreads(args, removedThreads);
     }
     if (addedThreads.length > 0) {
-      dispatch(({ type: "INSERT_THREADS", cx, threads: addedThreads }: Action));
-
-      // Fetch the sources and install breakpoints on any new workers.
-      // NOTE: This runs in the background and fails quietly because it is
-      // pretty easy for sources to throw during the fetch if their thread
-      // shuts down, which would cause test failures.
-      for (const thread of addedThreads) {
-        client
-          .fetchThreadSources(thread.actor)
-          .then(sources => dispatch(newGeneratedSources(sources)))
-          .catch(e => console.error(e));
-      }
+      await addThreads(args, addedThreads);
     }
 
     // Update the status of any service workers.
