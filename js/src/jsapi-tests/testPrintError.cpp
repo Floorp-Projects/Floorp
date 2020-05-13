@@ -47,12 +47,11 @@ BEGIN_TEST(testPrintError_Works) {
 
   CHECK(!execDontReport("throw null;", "testPrintError_Works.js", 3));
 
-  JS::RootedValue exception(cx);
-  CHECK(JS_GetPendingException(cx, &exception));
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
   JS::ErrorReportBuilder builder(cx);
-  CHECK(builder.init(cx, exception, JS::ErrorReportBuilder::NoSideEffects));
+  CHECK(builder.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects));
   JS::PrintError(cx, buf.stream(), builder.toStringResult(), builder.report(),
                  false);
 
@@ -108,12 +107,11 @@ BEGIN_TEST(testPrintError_UTF16CodePoints) {
 
   CHECK(!execDontReport(utf8code, "testPrintError_UTF16CodePoints.js", 1));
 
-  JS::RootedValue exception(cx);
-  CHECK(JS_GetPendingException(cx, &exception));
-  JS_ClearPendingException(cx);
+  JS::ExceptionStack exnStack(cx);
+  CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
   JS::ErrorReportBuilder builder(cx);
-  CHECK(builder.init(cx, exception, JS::ErrorReportBuilder::NoSideEffects));
+  CHECK(builder.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects));
   JS::PrintError(cx, buf.stream(), builder.toStringResult(), builder.report(),
                  false);
 
