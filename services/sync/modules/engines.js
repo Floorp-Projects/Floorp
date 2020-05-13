@@ -6,6 +6,7 @@ var EXPORTED_SYMBOLS = [
   "EngineManager",
   "SyncEngine",
   "Tracker",
+  "LegacyTracker",
   "Store",
   "Changeset",
 ];
@@ -46,16 +47,15 @@ function ensureDirectory(path) {
   return OS.File.makeDir(basename, { from: OS.Constants.Path.profileDir });
 }
 
-/*
+/**
  * Trackers are associated with a single engine and deal with
  * listening for changes to their particular data type.
  *
- * There are two things they keep track of:
- * 1) A score, indicating how urgently the engine wants to sync
- * 2) A list of IDs for all the changed items that need to be synced
- * and updating their 'score', indicating how urgently they
- * want to sync.
- *
+ * The base `Tracker` only supports listening for changes, and bumping the score
+ * to indicate how urgently the engine wants to sync. It does not persist any
+ * data. Engines that track changes directly in the storage layer (like
+ * bookmarks, bridged engines, addresses, and credit cards) or only upload a
+ * single record (tabs and preferences) should subclass `Tracker`.
  */
 function Tracker(name, engine) {
   if (!engine) {
@@ -63,24 +63,28 @@ function Tracker(name, engine) {
   }
 
   name = name || "Unnamed";
-  this.name = this.file = name.toLowerCase();
+  this.name = name.toLowerCase();
   this.engine = engine;
 
   this._log = Log.repository.getLogger(`Sync.Engine.${name}.Tracker`);
 
   this._score = 0;
-  this._ignored = [];
-  this._storage = new JSONFile({
-    path: Utils.jsonFilePath("changes/" + this.file),
-    dataPostProcessor: json => this._dataPostProcessor(json),
-    beforeSave: () => this._beforeSave(),
-  });
-  this.ignoreAll = false;
 
   this.asyncObserver = Async.asyncObserver(this, this._log);
 }
 
 Tracker.prototype = {
+  // New-style trackers use change sources to filter out changes made by Sync in
+  // observer notifications, so we don't want to let the engine ignore all
+  // changes during a sync.
+  get ignoreAll() {
+    return false;
+  },
+
+  // Define an empty setter so that the engine doesn't throw a `TypeError`
+  // setting a read-only property.
+  set ignoreAll(value) {},
+
   /*
    * Score can be called as often as desired to decide which engines to sync
    *
@@ -95,16 +99,6 @@ Tracker.prototype = {
     return this._score;
   },
 
-  // Default to an empty object if the file doesn't exist.
-  _dataPostProcessor(json) {
-    return (typeof json == "object" && json) || {};
-  },
-
-  // Ensure the Weave storage directory exists before writing the file.
-  _beforeSave() {
-    return ensureDirectory(this._storage.path);
-  },
-
   set score(value) {
     this._score = value;
     Observers.notify("weave:engine:score:updated", this.name);
@@ -115,7 +109,131 @@ Tracker.prototype = {
     this._score = 0;
   },
 
-  persistChangedIDs: true,
+  // Unsupported, and throws a more descriptive error to ensure callers aren't
+  // accidentally using persistence.
+  async getChangedIDs() {
+    throw new TypeError("This tracker doesn't store changed IDs");
+  },
+
+  // Also unsupported.
+  async addChangedID(id, when) {
+    throw new TypeError("Can't add changed ID to this tracker");
+  },
+
+  // Ditto.
+  async removeChangedID(...ids) {
+    throw new TypeError("Can't remove changed IDs from this tracker");
+  },
+
+  // This method is called at various times, so we override with a no-op
+  // instead of throwing.
+  clearChangedIDs() {},
+
+  _now() {
+    return Date.now() / 1000;
+  },
+
+  _isTracking: false,
+
+  start() {
+    if (!this.engineIsEnabled()) {
+      return;
+    }
+    this._log.trace("start().");
+    if (!this._isTracking) {
+      this.onStart();
+      this._isTracking = true;
+    }
+  },
+
+  async stop() {
+    this._log.trace("stop().");
+    if (this._isTracking) {
+      await this.asyncObserver.promiseObserversComplete();
+      this.onStop();
+      this._isTracking = false;
+    }
+  },
+
+  // Override these in your subclasses.
+  onStart() {},
+  onStop() {},
+  async observe(subject, topic, data) {},
+
+  engineIsEnabled() {
+    if (!this.engine) {
+      // Can't tell -- we must be running in a test!
+      return true;
+    }
+    return this.engine.enabled;
+  },
+
+  /**
+   * Starts or stops listening for changes depending on the associated engine's
+   * enabled state.
+   *
+   * @param {Boolean} engineEnabled Whether the engine was enabled.
+   */
+  async onEngineEnabledChanged(engineEnabled) {
+    if (engineEnabled == this._isTracking) {
+      return;
+    }
+
+    if (engineEnabled) {
+      this.start();
+    } else {
+      await this.stop();
+      this.clearChangedIDs();
+    }
+  },
+
+  async finalize() {
+    await this.stop();
+  },
+};
+
+/*
+ * A tracker that persists a list of IDs for all changed items that need to be
+ * synced. This is 🚨 _extremely deprecated_ 🚨 and only kept around for current
+ * engines. ⚠️ Please **don't use it** for new engines! ⚠️
+ *
+ * Why is this kind of external change tracking deprecated? Because it causes
+ * consistency issues due to missed notifications, interrupted syncs, and the
+ * tracker's view of what changed diverging from the data store's.
+ */
+function LegacyTracker(name, engine) {
+  Tracker.call(this, name, engine);
+
+  this._ignored = [];
+  this.file = this.name;
+  this._storage = new JSONFile({
+    path: Utils.jsonFilePath("changes/" + this.file),
+    dataPostProcessor: json => this._dataPostProcessor(json),
+    beforeSave: () => this._beforeSave(),
+  });
+  this._ignoreAll = false;
+}
+
+LegacyTracker.prototype = {
+  __proto__: Tracker.prototype,
+
+  get ignoreAll() {
+    return this._ignoreAll;
+  },
+
+  set ignoreAll(value) {
+    this._ignoreAll = value;
+  },
+
+  // Default to an empty object if the file doesn't exist.
+  _dataPostProcessor(json) {
+    return (typeof json == "object" && json) || {};
+  },
+
+  // Ensure the Weave storage directory exists before writing the file.
+  _beforeSave() {
+    return ensureDirectory(this._storage.path);
+  },
 
   async getChangedIDs() {
     await this._storage.load();
@@ -123,10 +241,6 @@ Tracker.prototype = {
   },
 
   _saveChangedIDs() {
-    if (!this.persistChangedIDs) {
-      this._log.debug("Not saving changedIDs.");
-      return;
-    }
     this._storage.saveSoon();
   },
 
@@ -196,72 +310,20 @@ Tracker.prototype = {
         delete changedIDs[id];
       }
     }
-    await this._saveChangedIDs();
+    this._saveChangedIDs();
     return true;
   },
 
-  async clearChangedIDs() {
+  clearChangedIDs() {
     this._log.trace("Clearing changed ID list");
     this._storage.data = {};
-    await this._saveChangedIDs();
-  },
-
-  _now() {
-    return Date.now() / 1000;
-  },
-
-  _isTracking: false,
-
-  start() {
-    if (!this.engineIsEnabled()) {
-      return;
-    }
-    this._log.trace("start().");
-    if (!this._isTracking) {
-      this.onStart();
-      this._isTracking = true;
-    }
-  },
-
-  async stop() {
-    this._log.trace("stop().");
-    if (this._isTracking) {
-      await this.asyncObserver.promiseObserversComplete();
-      this.onStop();
-      this._isTracking = false;
-    }
-  },
-
-  // Override these in your subclasses.
-  onStart() {},
-  onStop() {},
-  async observe(subject, topic, data) {},
-
-  engineIsEnabled() {
-    if (!this.engine) {
-      // Can't tell -- we must be running in a test!
-      return true;
-    }
-    return this.engine.enabled;
-  },
-
-  async onEngineEnabledChanged(engineEnabled) {
-    if (engineEnabled == this._isTracking) {
-      return;
-    }
-
-    if (engineEnabled) {
-      this.start();
-    } else {
-      await this.stop();
-      await this.clearChangedIDs();
-    }
+    this._saveChangedIDs();
   },
 
   async finalize() {
     // Persist all pending tracked changes to disk, and wait for the final write
     // to finish.
-    await this.stop();
+    await super.finalize();
     this._saveChangedIDs();
     await this._storage.finalize();
   },
@@ -720,10 +782,7 @@ function SyncEngine(name, service) {
     this,
     "_enabled",
     `services.sync.engine.${this.prefName}`,
-    false,
-    (data, previous, latest) =>
-      // We do not await on the promise onEngineEnabledChanged returns.
-      this._tracker.onEngineEnabledChanged(latest)
+    false
   );
   XPCOMUtils.defineLazyPreferenceGetter(
     this,
@@ -768,6 +827,8 @@ function SyncEngine(name, service) {
   // Additionally, we use this as the set of items to upload for bookmark
   // repair reponse, which has similar constraints.
   this._needWeakUpload = new Map();
+
+  this.asyncObserver = Async.asyncObserver(this, this._log);
 }
 
 // Enumeration to define approaches to handling bad records.
@@ -840,6 +901,7 @@ SyncEngine.prototype = {
   async initialize() {
     await this._toFetchStorage.load();
     await this._previousFailedStorage.load();
+    Svc.Prefs.observe(`engine.${this.prefName}`, this.asyncObserver);
     this._log.debug("SyncEngine initialized", this.name);
   },
 
@@ -896,6 +958,18 @@ SyncEngine.prototype = {
   // Returns a promise
   stopTracking() {
     return this._tracker.stop();
+  },
+
+  // Listens for engine enabled state changes, and updates the tracker's state.
+  // This is an async observer because the tracker waits on all its async
+  // observers to finish when it's stopped.
+  async observe(subject, topic, data) {
+    if (
+      topic == "nsPref:changed" &&
+      data == `services.sync.engine.${this.prefName}`
+    ) {
+      await this._tracker.onEngineEnabledChanged(this._enabled);
+    }
   },
 
   async sync() {
@@ -1117,7 +1191,7 @@ SyncEngine.prototype = {
     this._modified.replace(initialChanges);
     // Clear the tracker now. If the sync fails we'll add the ones we failed
     // to upload back.
-    await this._tracker.clearChangedIDs();
+    this._tracker.clearChangedIDs();
     this._tracker.resetScore();
 
     this._log.info(
@@ -2113,7 +2187,7 @@ SyncEngine.prototype = {
     this._tracker.ignoreAll = true;
     await this._store.wipe();
     this._tracker.ignoreAll = false;
-    await this._tracker.clearChangedIDs();
+    this._tracker.clearChangedIDs();
   },
 
   /**
@@ -2126,6 +2200,8 @@ SyncEngine.prototype = {
   },
 
   async finalize() {
+    Svc.Prefs.ignore(`engine.${this.prefName}`, this.asyncObserver);
+    await this.asyncObserver.promiseObserversComplete();
     await this._tracker.finalize();
     await this._toFetchStorage.finalize();
     await this._previousFailedStorage.finalize();

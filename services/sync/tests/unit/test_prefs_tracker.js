@@ -10,9 +10,6 @@ add_task(async function run_test() {
   let engine = Service.engineManager.get("prefs");
   let tracker = engine._tracker;
 
-  // Don't write out by default.
-  tracker.persistChangedIDs = false;
-
   let prefs = new Preferences();
 
   try {

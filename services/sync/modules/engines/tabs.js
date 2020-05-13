@@ -276,6 +276,10 @@ TabStore.prototype = {
   async update(record) {
     this._log.trace("Ignoring tab updates as local ones win");
   },
+
+  async trackRemainingChanges() {
+    this._tracker.modified = true;
+  },
 };
 
 function TabTracker(name, engine) {

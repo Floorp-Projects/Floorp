@@ -17,9 +17,6 @@ add_task(async function setup() {
   await Service.engineManager.register(HistoryEngine);
   engine = Service.engineManager.get("history");
   tracker = engine._tracker;
-
-  // Don't write out by default.
-  tracker.persistChangedIDs = false;
 });
 
 async function verifyTrackerEmpty() {
@@ -78,7 +75,6 @@ add_task(async function test_not_tracking() {
 add_task(async function test_start_tracking() {
   _("Add hook for save completion.");
   let savePromise = new Promise((resolve, reject) => {
-    tracker.persistChangedIDs = true;
     let save = tracker._storage._save;
     tracker._storage._save = async function() {
       try {
@@ -87,8 +83,6 @@ add_task(async function test_start_tracking() {
       } catch (ex) {
         reject(ex);
       } finally {
-        // Turn this back off.
-        tracker.persistChangedIDs = false;
         tracker._storage._save = save;
       }
     };

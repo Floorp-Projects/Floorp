@@ -359,14 +359,27 @@ PrefStore.prototype = {
   async wipe() {
     this._log.trace("Ignoring wipe request");
   },
+
+  async trackRemainingChanges() {
+    this._tracker.modified = true;
+  },
 };
 
 function PrefTracker(name, engine) {
   Tracker.call(this, name, engine);
+  this._ignoreAll = false;
   Svc.Obs.add("profile-before-change", this.asyncObserver);
 }
 PrefTracker.prototype = {
   __proto__: Tracker.prototype,
+
+  get ignoreAll() {
+    return this._ignoreAll;
+  },
+
+  set ignoreAll(value) {
+    this._ignoreAll = value;
+  },
 
   get modified() {
     return Svc.Prefs.get("engine.prefs.modified", false);

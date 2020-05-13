@@ -4,8 +4,7 @@
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function test_tracker_basics() {
-  let tracker = new Tracker("Tracker", Service);
-  tracker.persistChangedIDs = false;
+  let tracker = new LegacyTracker("Tracker", Service);
 
   let id = "the_id!";
 
@@ -35,10 +34,8 @@ add_task(async function test_tracker_basics() {
 });
 
 add_task(async function test_tracker_persistence() {
-  let tracker = new Tracker("Tracker", Service);
+  let tracker = new LegacyTracker("Tracker", Service);
   let id = "abcdef";
-
-  tracker.persistChangedIDs = true;
 
   let promiseSave = new Promise((resolve, reject) => {
     let save = tracker._storage._save;
@@ -57,5 +54,4 @@ add_task(async function test_tracker_persistence() {
 
   let json = await Utils.jsonLoad("changes/tracker", tracker);
   Assert.equal(5, json[id]);
-  tracker.persistChangedIDs = false;
 });

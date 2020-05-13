@@ -11,8 +11,6 @@ add_task(async function run_test() {
   let engine = new FormEngine(Service);
   await engine.initialize();
   let tracker = engine._tracker;
-  // Don't do asynchronous writes.
-  tracker.persistChangedIDs = false;
 
   let changes = await tracker.getChangedIDs();
   do_check_empty(changes);

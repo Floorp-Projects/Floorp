@@ -11,7 +11,7 @@ var EXPORTED_SYMBOLS = [
   "RotaryTracker",
 ];
 
-const { Store, SyncEngine, Tracker } = ChromeUtils.import(
+const { Store, SyncEngine, LegacyTracker } = ChromeUtils.import(
   "resource://services-sync/engines.js"
 );
 const { CryptoWrapper } = ChromeUtils.import(
@@ -93,11 +93,10 @@ RotaryStore.prototype = {
 };
 
 function RotaryTracker(name, engine) {
-  Tracker.call(this, name, engine);
+  LegacyTracker.call(this, name, engine);
 }
 RotaryTracker.prototype = {
-  __proto__: Tracker.prototype,
-  persistChangedIDs: false,
+  __proto__: LegacyTracker.prototype,
 };
 
 function RotaryEngine(service) {
