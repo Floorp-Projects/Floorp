@@ -112,7 +112,7 @@ function continueTest() {
     } else {
       type = typeABCDEF;
     }
-    var expectedHTML = "<div>abc</div><div>def</div>";
+    var expectedHTML = "<div>abc</div><div>def<br></div>";
     var expectedText = "abc\ndef";
     testLineBreak(div, type, expectedText, expectedHTML, doNextTest);
   }
