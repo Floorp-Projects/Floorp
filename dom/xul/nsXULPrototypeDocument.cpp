@@ -440,9 +440,7 @@ void nsXULPrototypeDocument::TraceProtos(JSTracer* aTrc) {
   }
 }
 
-void nsXULPrototypeDocument::SetIsL10nCached(bool aIsCached) {
-  mWasL10nCached = aIsCached;
-}
+void nsXULPrototypeDocument::SetIsL10nCached() { mWasL10nCached = true; }
 
 void nsXULPrototypeDocument::RebuildPrototypeFromElement(
     nsXULPrototypeElement* aPrototype, Element* aElement, bool aDeep) {
