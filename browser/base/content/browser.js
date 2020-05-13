@@ -9101,6 +9101,8 @@ var ConfirmationHint = {
       this._panel.setAttribute("hidearrow", "true");
     }
 
+    this._panel.setAttribute("data-message-id", messageId);
+
     // The timeout value used here allows the panel to stay open for
     // 1.5s second after the text transition (duration=120ms) has finished.
     // If there is a description, we show for 4s after the text transition.
@@ -9139,6 +9141,7 @@ var ConfirmationHint = {
     if (this.__panel) {
       this._panel.removeAttribute("hidearrow");
       this._animationBox.removeAttribute("animate");
+      this._panel.removeAttribute("data-message-id");
     }
   },
 
