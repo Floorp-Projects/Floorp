@@ -11,6 +11,10 @@ const {
   writeStubsToFile,
 } = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
 
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
+
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
 const STUB_FILE = "consoleApi.js";
@@ -62,23 +66,33 @@ async function generateConsoleApiStubs() {
   const stubs = new Map();
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  const target = hud.currentTarget;
-  const webConsoleFront = await target.getFront("console");
+  const resourceWatcher = new ResourceWatcher(hud.targetList);
+
+  // The resource-watcher only supports a single call to watch/unwatch per
+  // instance, so we attach a unique watch callback, which will forward the
+  // resource to `handleConsoleMessage`, dynamically updated for each command.
+  let handleConsoleMessage = function() {};
+
+  const onConsoleMessage = ({ resource }) => {
+    handleConsoleMessage(resource);
+  };
+  await resourceWatcher.watch(
+    [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+    onConsoleMessage
+  );
 
   for (const { keys, code } of getCommands()) {
     const received = new Promise(resolve => {
       let i = 0;
-      const listener = async res => {
+      handleConsoleMessage = async res => {
         const callKey = keys[i];
 
         stubs.set(callKey, getCleanedPacket(callKey, res));
 
         if (++i === keys.length) {
-          webConsoleFront.off("consoleAPICall", listener);
           resolve();
         }
       };
-      webConsoleFront.on("consoleAPICall", listener);
     });
 
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(
@@ -95,6 +109,11 @@ async function generateConsoleApiStubs() {
 
     await received;
   }
+
+  resourceWatcher.unwatch(
+    [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+    onConsoleMessage
+  );
 
   // We have everything we want, we can freeze the console to avoid communication
   // with the server.
