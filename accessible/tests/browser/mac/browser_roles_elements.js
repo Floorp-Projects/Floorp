@@ -14,7 +14,7 @@ loadScripts(
 /**
  * Test different HTML elements for their roles and subroles
  */
-function testRoleAndSubRole(accDoc, id, axRole, axSubRole) {
+function testRoleAndSubRole(accDoc, id, axRole, axSubRole, axRoleDescription) {
   let el = getNativeInterface(accDoc, id);
   if (axRole) {
     is(
@@ -28,6 +28,13 @@ function testRoleAndSubRole(accDoc, id, axRole, axSubRole) {
       el.getAttributeValue("AXSubrole"),
       axSubRole,
       "Subrole for " + id + " is " + axSubRole
+    );
+  }
+  if (axRoleDescription) {
+    is(
+      el.getAttributeValue("AXRoleDescription"),
+      axRoleDescription,
+      "Subrole for " + id + " is " + axRoleDescription
     );
   }
 }
@@ -105,10 +112,16 @@ addAccessibleTask(
 
     // ARIA widget roles
     testRoleAndSubRole(accDoc, "alert", null, "AXApplicationAlert");
-    testRoleAndSubRole(accDoc, "alertdialog", null, "AXApplicationAlertDialog");
+    testRoleAndSubRole(
+      accDoc,
+      "alertdialog",
+      "AXGroup",
+      "AXApplicationAlertDialog",
+      "alert dialog"
+    );
     testRoleAndSubRole(accDoc, "article", null, "AXDocumentArticle");
     testRoleAndSubRole(accDoc, "code", "AXGroup", "AXCodeStyleGroup");
-    testRoleAndSubRole(accDoc, "dialog", null, "AXApplicationDialog");
+    testRoleAndSubRole(accDoc, "dialog", null, "AXApplicationDialog", "dialog");
     testRoleAndSubRole(accDoc, "ariaDocument", null, "AXDocument");
     testRoleAndSubRole(accDoc, "log", null, "AXApplicationLog");
     testRoleAndSubRole(accDoc, "marquee", null, "AXApplicationMarquee");
