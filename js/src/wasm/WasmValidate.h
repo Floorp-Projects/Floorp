@@ -743,6 +743,51 @@ class Decoder {
     }
     return true;
   }
+#ifdef ENABLE_WASM_REFTYPES
+  MOZ_MUST_USE bool readRefType(uint32_t numTypes, bool gcTypesEnabled,
+                                RefType* type) {
+    static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
+    uint8_t code;
+    if (!readFixedU8(&code)) {
+      return false;
+    }
+    switch (code) {
+      case uint8_t(TypeCode::FuncRef):
+      case uint8_t(TypeCode::AnyRef):
+        *type = RefType::fromTypeCode(TypeCode(code));
+        return true;
+#  ifdef ENABLE_WASM_GC
+      case uint8_t(TypeCode::OptRef): {
+        if (!gcTypesEnabled) {
+          return fail("(optref T) types not enabled");
+        }
+        uint32_t typeIndex;
+        if (!readVarU32(&typeIndex)) {
+          return false;
+        }
+        if (typeIndex >= numTypes) {
+          return fail("ref index out of range");
+        }
+        *type = RefType::fromTypeIndex(typeIndex);
+        return true;
+      }
+#  endif
+      default:
+        return fail("bad type");
+    }
+  }
+  MOZ_MUST_USE bool readRefType(const TypeDefVector& types, bool gcTypesEnabled,
+                                RefType* type) {
+    if (!readRefType(types.length(), gcTypesEnabled, type)) {
+      return false;
+    }
+    if (type->kind() == RefType::TypeIndex &&
+        !types[type->typeIndex()].isStructType()) {
+      return fail("type index does not reference a struct type");
+    }
+    return true;
+  }
+#endif
   MOZ_MUST_USE bool readOp(OpBytes* op) {
     static_assert(size_t(Op::Limit) == 256, "fits");
     uint8_t u8;

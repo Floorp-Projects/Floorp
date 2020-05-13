@@ -3855,7 +3855,7 @@ static bool EmitRefNull(FunctionCompiler& f) {
 
 static bool EmitRefIsNull(FunctionCompiler& f) {
   MDefinition* input;
-  if (!f.iter().readConversion(RefType::any(), ValType::I32, &input)) {
+  if (!f.iter().readRefIsNull(&input)) {
     return false;
   }
 

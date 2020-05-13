@@ -7956,7 +7956,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   MOZ_MUST_USE bool emitRefFunc();
   MOZ_MUST_USE bool emitRefNull();
-  void emitRefIsNull();
+  MOZ_MUST_USE bool emitRefIsNull();
 
   MOZ_MUST_USE bool emitAtomicCmpXchg(ValType type, Scalar::Type viewType);
   MOZ_MUST_USE bool emitAtomicLoad(ValType type, Scalar::Type viewType);
@@ -11289,12 +11289,22 @@ bool BaseCompiler::emitRefNull() {
   return true;
 }
 
-void BaseCompiler::emitRefIsNull() {
+bool BaseCompiler::emitRefIsNull() {
+  Nothing nothing;
+  if (!iter_.readRefIsNull(&nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
   RegPtr r = popRef();
   RegI32 rd = narrowPtr(r);
 
   masm.cmpPtrSet(Assembler::Equal, r, ImmWord(NULLREF_VALUE), rd);
   pushI32(rd);
+  return true;
 }
 
 bool BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType) {
@@ -14120,8 +14130,7 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitRefNull());
         break;
       case uint16_t(Op::RefIsNull):
-        CHECK_NEXT(
-            dispatchConversion(emitRefIsNull, RefType::any(), ValType::I32));
+        CHECK_NEXT(emitRefIsNull());
         break;
 #endif
 
