@@ -11,8 +11,8 @@ function ccwToObject() {
 }
 
 function newRegistry() {
-  return new FinalizationRegistry(value => {
-    heldValues.push(value);
+  return new FinalizationRegistry(iterator => {
+    heldValues.push(...iterator);
   });
 }
 
@@ -20,7 +20,7 @@ function ccwToRegistry() {
   let global = newGlobal({newCompartment: true});
   global.heldValues = heldValues;
   return global.eval(
-    `new FinalizationRegistry(value => heldValues.push(value))`);
+    `new FinalizationRegistry(iterator => heldValues.push(...iterator))`);
 }
 
 function incrementalGC() {

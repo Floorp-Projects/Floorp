@@ -2,8 +2,8 @@
 
 gczeal(4);
 let heldValues = [];
-registry = new FinalizationRegistry(value => {
-    heldValues.push(value);
+registry = new FinalizationRegistry(iterator => {
+    heldValues.push(...iterator);
 });
 registry.register({}, 42);
 gc();
