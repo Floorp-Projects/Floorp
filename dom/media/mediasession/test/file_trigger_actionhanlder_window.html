@@ -15,11 +15,11 @@ var triggeredActionNums = 0;
 nextWindowMessage().then(
   async (event) => {
     const testInfo = event.data;
+    await createSession(testInfo);
     // Media session would only become active if there is any media currently
     // playing. Non-active media session won't receive any actions. Therefore,
     // we start media playback before testing media session.
-    await startMediaPlayback();
-    await createSession(testInfo);
+    await startMediaPlayback(testInfo);
     for (const action of gMediaSessionActions) {
       await waitUntilActionHandlerTriggered(action, testInfo);
     }
@@ -29,21 +29,32 @@ nextWindowMessage().then(
 /**
  * The following are helper functions
  */
-async function startMediaPlayback() {
+async function startMediaPlayback({shouldCreateFrom}) {
   info(`wait until media starts playing`);
-  const video = document.getElementById("testVideo");
-  await video.play();
-  // As we can't observe `main-media-controller-playback-changed` notification,
-  // which can only be observed in the chrome process. Therefore, we use a
-  // workaround instead which is to wait for a while to ensure that the
-  // controller has already been created in the chrome process.
-  let timeupdatecount = 0;
-  await new Promise(r => video.ontimeupdate = () => {
-    if (++timeupdatecount == 3) {
-      video.ontimeupdate = null;
-      r();
-    }
-  });
+  if (shouldCreateFrom == "main-frame") {
+    const video = document.getElementById("testVideo");
+    await video.play();
+    // As we can't observe `media-displayed-playback-changed` notification,
+    // that can only be observed in the chrome process. Therefore, we use a
+    // workaround instead which is to wait for a while to ensure that the
+    // controller has already been created in the chrome process.
+    let timeupdatecount = 0;
+    await new Promise(r => video.ontimeupdate = () => {
+      if (++timeupdatecount == 3) {
+        video.ontimeupdate = null;
+        r();
+      }
+    });
+  } else {
+    const iframe = document.getElementById("childFrame");
+    iframe.contentWindow.postMessage("play", "*");
+    await new Promise(r => {
+      window.onmessage = event => {
+        is(event.data, "played", `media started playing in child-frame`);
+        r();
+      };
+    });
+  }
 }
 
 async function createSession({shouldCreateFrom, origin}) {
