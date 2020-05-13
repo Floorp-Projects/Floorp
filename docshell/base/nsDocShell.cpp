@@ -198,7 +198,7 @@
 #include "nsSandboxFlags.h"
 #include "nsSHEntry.h"
 #include "nsSHistory.h"
-#include "SHEntryChild.h"
+#include "nsSHEntry.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsSubDocumentFrame.h"
 #include "nsView.h"
@@ -10688,9 +10688,7 @@ nsresult nsDocShell::AddToSessionHistory(
     NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
 
     RefPtr<ChildSHistory> shistory = webnav->GetSessionHistory();
-    entry = CreateSHEntryForDocShell(shistory ? shistory->LegacySHistory()
-                                              : nullptr);
-    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+    entry = new nsSHEntry(shistory ? shistory->LegacySHistory() : nullptr);
   }
 
   // Get the post data & referrer
@@ -10978,24 +10976,6 @@ void nsDocShell::SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
   if (aOSHE.isSome()) {
     deathGripOldOSHE = SetHistoryEntry(&mOSHE, aOSHE.value());
     MOZ_ASSERT(mOSHE.get() == aOSHE.value());
-  }
-
-  // Do not update the BC if the SH pref is off and we are not a parent process
-  // or if it is discarded
-  if ((!StaticPrefs::fission_sessionHistoryInParent() &&
-       XRE_IsContentProcess()) ||
-      mBrowsingContext->IsDiscarded()) {
-    return;
-  }
-  if (XRE_IsParentProcess()) {
-    // We are in the parent process, thus we can update the entries directly
-    mBrowsingContext->Canonical()->UpdateSHEntries(mLSHE, mOSHE);
-  } else {
-    ContentChild* cc = ContentChild::GetSingleton();
-    // We can't update canonical BC directly, so do it over IPC call
-    cc->SendUpdateSHEntriesInBC(static_cast<SHEntryChild*>(mLSHE.get()),
-                                static_cast<SHEntryChild*>(mOSHE.get()),
-                                mBrowsingContext);
   }
 }
 
