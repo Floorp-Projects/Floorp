@@ -1328,9 +1328,12 @@ class Vendor(MachCommandBase):
     @CommandArgument('--ignore-modified', action='store_true',
                      help='Ignore modified files in current checkout',
                      default=False)
-    @CommandArgument('--build-peers-said-large-imports-were-ok', action='store_true',
-                     help='Permit overly-large files to be added to the repository',
-                     default=False)
+    @CommandArgument(
+        '--build-peers-said-large-imports-were-ok', action='store_true',
+        help=('Permit overly-large files to be added to the repository. '
+              'To get permission to set this, raise a question in the #build '
+              'channel at https://chat.mozilla.org.'),
+        default=False)
     def vendor_rust(self, **kwargs):
         from mozbuild.vendor_rust import VendorRust
         vendor_command = self._spawn(VendorRust)
