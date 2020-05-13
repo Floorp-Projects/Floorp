@@ -196,9 +196,9 @@ void MediaSession::NotifyMetadataUpdated() {
     return;
   }
   // This would only happen when we disable e10s.
-  if (RefPtr<MediaController> controller =
+  if (RefPtr<IMediaInfoUpdater> updater =
           currentBC->Canonical()->GetMediaController()) {
-    controller->UpdateMetadata(currentBC->Id(), metadata);
+    updater->UpdateMetadata(currentBC->Id(), metadata);
   }
 }
 

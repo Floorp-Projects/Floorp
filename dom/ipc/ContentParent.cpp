@@ -5886,9 +5886,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyUpdateMediaMetadata(
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
-  if (RefPtr<MediaController> controller =
+  if (RefPtr<IMediaInfoUpdater> updater =
           aContext.get_canonical()->GetMediaController()) {
-    controller->UpdateMetadata(aContext.ContextId(), aMetadata);
+    updater->UpdateMetadata(aContext.ContextId(), aMetadata);
   }
   return IPC_OK();
 }
