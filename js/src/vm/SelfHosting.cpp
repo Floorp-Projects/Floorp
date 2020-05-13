@@ -49,7 +49,6 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Date.h"
-#include "js/ErrorReport.h"  // JS::PrintError
 #include "js/Exception.h"
 #include "js/Modules.h"  // JS::GetModulePrivate
 #include "js/PropertySpec.h"
@@ -109,7 +108,7 @@ using mozilla::Maybe;
 static void selfHosting_WarningReporter(JSContext* cx, JSErrorReport* report) {
   MOZ_ASSERT(report->isWarning());
 
-  JS::PrintError(cx, stderr, report, true);
+  PrintError(cx, stderr, JS::ConstUTF8CharsZ(), report, true);
 }
 
 static bool intrinsic_ToObject(JSContext* cx, unsigned argc, Value* vp) {
@@ -2595,14 +2594,14 @@ static void MaybePrintAndClearPendingException(JSContext* cx, FILE* file) {
     return;
   }
 
-  JS::ErrorReportBuilder report(cx);
-  if (!report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
-    fprintf(file, "out of memory initializing JS::ErrorReportBuilder\n");
+  ErrorReport report(cx);
+  if (!report.init(cx, exnStack, js::ErrorReport::WithSideEffects)) {
+    fprintf(file, "out of memory initializing ErrorReport\n");
     return;
   }
 
   MOZ_ASSERT(!report.report()->isWarning());
-  JS::PrintError(cx, file, report, true);
+  PrintError(cx, file, report.toStringResult(), report.report(), true);
 }
 
 class MOZ_STACK_CLASS AutoSelfHostingErrorReporter {

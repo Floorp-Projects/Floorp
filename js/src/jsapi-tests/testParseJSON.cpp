@@ -301,8 +301,8 @@ inline bool Error(JSContext* cx, const char (&input)[N], uint32_t expectedLine,
   JS::ExceptionStack exnStack(cx);
   CHECK(StealPendingExceptionStack(cx, &exnStack));
 
-  JS::ErrorReportBuilder report(cx);
-  CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects));
+  js::ErrorReport report(cx);
+  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
   CHECK(report.report()->errorNumber == JSMSG_JSON_BAD_PARSE);
 
   UniqueChars lineAndColumnASCII =

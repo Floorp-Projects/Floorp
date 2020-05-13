@@ -1036,6 +1036,13 @@ extern void DestroyContext(JSContext* cx);
 extern void ReportUsageErrorASCII(JSContext* cx, HandleObject callee,
                                   const char* msg);
 
+// Writes a full report to a file descriptor.
+// Does nothing for JSErrorReport which are warnings, unless
+// reportWarnings is set.
+extern void PrintError(JSContext* cx, FILE* file,
+                       JS::ConstUTF8CharsZ toStringResult,
+                       JSErrorReport* report, bool reportWarnings);
+
 extern void ReportIsNotDefined(JSContext* cx, HandlePropertyName name);
 
 extern void ReportIsNotDefined(JSContext* cx, HandleId id);

@@ -28,8 +28,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/Conversions.h"
-#include "js/ErrorReport.h"  // JS::PrintError
-#include "js/Exception.h"    // JS::ExceptionStack
+#include "js/Exception.h"  // JS::ExceptionStack
 #include "js/SavedFrameAPI.h"
 #include "js/UniquePtr.h"
 #include "js/Value.h"
@@ -288,7 +287,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   // cannot construct the Error constructor without self-hosted code. Just
   // print the error to stderr to help debugging.
   if (cx->realm()->isSelfHostingRealm()) {
-    JS::PrintError(cx, stderr, reportp, true);
+    PrintError(cx, stderr, JS::ConstUTF8CharsZ(), reportp, true);
     return;
   }
 
@@ -351,7 +350,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   cx->setPendingException(errValue, nstack);
 }
 
-using SniffingBehavior = JS::ErrorReportBuilder::SniffingBehavior;
+using SniffingBehavior = js::ErrorReport::SniffingBehavior;
 
 static bool IsDuckTypedErrorObject(JSContext* cx, HandleObject exnObject,
                                    const char** filename_strp) {
@@ -465,21 +464,25 @@ static JSString* ErrorReportToString(JSContext* cx, HandleObject exn,
   return FormatErrorMessage(cx, name, message);
 }
 
-JS::ErrorReportBuilder::ErrorReportBuilder(JSContext* cx)
-    : reportp(nullptr), exnObject(cx) {}
+ErrorReport::ErrorReport(JSContext* cx) : reportp(nullptr), exnObject(cx) {}
 
-JS::ErrorReportBuilder::~ErrorReportBuilder() = default;
+ErrorReport::~ErrorReport() = default;
 
-bool JS::ErrorReportBuilder::init(JSContext* cx,
-                                  const JS::ExceptionStack& exnStack,
-                                  SniffingBehavior sniffingBehavior) {
+bool ErrorReport::init(JSContext* cx, const JS::ExceptionStack& exnStack,
+                       SniffingBehavior sniffingBehavior) {
+  return init(cx, exnStack.exception(), sniffingBehavior, exnStack.stack());
+}
+
+bool ErrorReport::init(JSContext* cx, HandleValue exn,
+                       SniffingBehavior sniffingBehavior,
+                       HandleObject fallbackStack) {
   MOZ_ASSERT(!cx->isExceptionPending());
   MOZ_ASSERT(!reportp);
 
-  if (exnStack.exception().isObject()) {
+  if (exn.isObject()) {
     // Because ToString below could error and an exception object could become
     // unrooted, we must root our exception object, if any.
-    exnObject = &exnStack.exception().toObject();
+    exnObject = &exn.toObject();
     reportp = ErrorFromException(cx, exnObject);
   }
 
@@ -489,10 +492,9 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
   RootedString str(cx);
   if (reportp) {
     str = ErrorReportToString(cx, exnObject, reportp, sniffingBehavior);
-  } else if (exnStack.exception().isSymbol()) {
+  } else if (exn.isSymbol()) {
     RootedValue strVal(cx);
-    if (js::SymbolDescriptiveString(cx, exnStack.exception().toSymbol(),
-                                    &strVal)) {
+    if (js::SymbolDescriptiveString(cx, exn.toSymbol(), &strVal)) {
       str = strVal.toString();
     } else {
       str = nullptr;
@@ -500,7 +502,7 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
   } else if (exnObject && sniffingBehavior == NoSideEffects) {
     str = cx->names().Object;
   } else {
-    str = js::ToString<CanGC>(cx, exnStack.exception());
+    str = ToString<CanGC>(cx, exn);
   }
 
   if (!str) {
@@ -543,7 +545,7 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
     {
       AutoClearPendingException acpe(cx);
       if (JS_GetProperty(cx, exnObject, filename_str, &val)) {
-        RootedString tmp(cx, js::ToString<CanGC>(cx, val));
+        RootedString tmp(cx, ToString<CanGC>(cx, val));
         if (tmp) {
           filename = JS_EncodeStringToUTF8(cx, tmp);
         }
@@ -612,8 +614,7 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
     //
     // but without the reporting bits.  Instead it just puts all
     // the stuff we care about in our ownedReport and message_.
-    if (!populateUncaughtExceptionReportUTF8(cx, exnStack.stack(),
-                                             utf8Message)) {
+    if (!populateUncaughtExceptionReportUTF8(cx, fallbackStack, utf8Message)) {
       // Just give up.  We're out of memory or something; not much we can
       // do here.
       return false;
@@ -625,24 +626,24 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
   return true;
 }
 
-bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8(
-    JSContext* cx, HandleObject stack, ...) {
+bool ErrorReport::populateUncaughtExceptionReportUTF8(
+    JSContext* cx, HandleObject fallbackStack, ...) {
   va_list ap;
-  va_start(ap, stack);
-  bool ok = populateUncaughtExceptionReportUTF8VA(cx, stack, ap);
+  va_start(ap, fallbackStack);
+  bool ok = populateUncaughtExceptionReportUTF8VA(cx, fallbackStack, ap);
   va_end(ap);
   return ok;
 }
 
-bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
-    JSContext* cx, HandleObject stack, va_list ap) {
+bool ErrorReport::populateUncaughtExceptionReportUTF8VA(
+    JSContext* cx, HandleObject fallbackStack, va_list ap) {
   new (&ownedReport) JSErrorReport();
   ownedReport.isWarning_ = false;
   ownedReport.errorNumber = JSMSG_UNCAUGHT_EXCEPTION;
 
   bool skippedAsync;
   RootedSavedFrame frame(
-      cx, UnwrapSavedFrame(cx, cx->realm()->principals(), stack,
+      cx, UnwrapSavedFrame(cx, cx->realm()->principals(), fallbackStack,
                            SavedFrameSelfHosted::Exclude, skippedAsync));
   if (frame) {
     filename = StringToNewUTF8CharsZ(cx, *frame->getSource());
