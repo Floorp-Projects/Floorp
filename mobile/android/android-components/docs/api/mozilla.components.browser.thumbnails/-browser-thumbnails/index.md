@@ -2,27 +2,27 @@
 
 # BrowserThumbnails
 
-`class BrowserThumbnails : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/BrowserThumbnails.kt#L25)
+`class BrowserThumbnails : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/BrowserThumbnails.kt#L32)
 
 Feature implementation for automatically taking thumbnails of sites.
 The feature will take a screenshot when the page finishes loading,
-and will add it to the [Session.thumbnail](../../mozilla.components.browser.session/-session/thumbnail.md) property.
+and will add it to the [ContentState.thumbnail](../../mozilla.components.browser.state.state/-content-state/thumbnail.md) property.
 
 If the OS is under low memory conditions, the screenshot will be not taken.
-Ideally, this should be used in conjunction with [SessionManager.onLowMemory](../../mozilla.components.browser.session/-session-manager/on-low-memory.md) to allow
-free up some [Session.thumbnail](../../mozilla.components.browser.session/-session/thumbnail.md) from memory.
+Ideally, this should be used in conjunction with `SessionManager.onLowMemory` to allow
+free up some [ContentState.thumbnail](../../mozilla.components.browser.state.state/-content-state/thumbnail.md) from memory.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BrowserThumbnails(context: <ERROR CLASS>, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Feature implementation for automatically taking thumbnails of sites. The feature will take a screenshot when the page finishes loading, and will add it to the [Session.thumbnail](../../mozilla.components.browser.session/-session/thumbnail.md) property. |
+| [&lt;init&gt;](-init-.md) | `BrowserThumbnails(context: <ERROR CLASS>, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`)`<br>Feature implementation for automatically taking thumbnails of sites. The feature will take a screenshot when the page finishes loading, and will add it to the [ContentState.thumbnail](../../mozilla.components.browser.state.state/-content-state/thumbnail.md) property. |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts observing the selected session to listen for when a session finish loading. |
+| [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts observing the selected session to listen for when a session finishes loading. |
 | [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stops observing the selected session. |
 
 ### Extension Functions

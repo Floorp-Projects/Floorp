@@ -80,6 +80,7 @@ $dokka.location:mozilla.components.support.test.file$loadResourceAsString(kotlin
 $dokka.location:mozilla.components.support.utils.ext$toNullablePair(kotlin.Pair((mozilla.components.support.utils.ext.toNullablePair.T, mozilla.components.support.utils.ext.toNullablePair.U)))mozilla.components.support.utils.ext/kotlin.-pair/to-nullable-pair.md
 mozilla.components
 mozilla.components.browser.awesomebar
+mozilla.components.browser.awesomebar.facts
 mozilla.components.browser.awesomebar.layout
 mozilla.components.browser.awesomebar.transform
 mozilla.components.browser.domains
