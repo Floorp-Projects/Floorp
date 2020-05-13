@@ -5797,7 +5797,7 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaPlaybackChanged(
   }
   if (RefPtr<MediaController> controller =
           aContext.get_canonical()->GetMediaController()) {
-    controller->NotifyMediaPlaybackChanged(aState);
+    controller->NotifyMediaPlaybackChanged(aContext.ContextId(), aState);
   }
   return IPC_OK();
 }
@@ -5809,7 +5809,7 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
   }
   if (RefPtr<MediaController> controller =
           aContext.get_canonical()->GetMediaController()) {
-    controller->NotifyMediaAudibleChanged(aState);
+    controller->NotifyMediaAudibleChanged(aContext.ContextId(), aState);
   }
   return IPC_OK();
 }

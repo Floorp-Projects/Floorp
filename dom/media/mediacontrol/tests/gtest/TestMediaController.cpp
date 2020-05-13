@@ -10,6 +10,7 @@
 using namespace mozilla::dom;
 
 #define CONTROLLER_ID 0
+#define FAKE_CONTEXT_ID 0
 
 TEST(MediaController, DefaultValueCheck)
 {
@@ -25,16 +26,20 @@ TEST(MediaController, NotifyMediaPlaybackChanged)
   RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
   ASSERT_TRUE(controller->ControlledMediaNum() == 0);
 
-  controller->NotifyMediaPlaybackChanged(MediaPlaybackState::eStarted);
+  controller->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
+                                         MediaPlaybackState::eStarted);
   ASSERT_TRUE(controller->ControlledMediaNum() == 1);
 
-  controller->NotifyMediaPlaybackChanged(MediaPlaybackState::eStarted);
+  controller->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
+                                         MediaPlaybackState::eStarted);
   ASSERT_TRUE(controller->ControlledMediaNum() == 2);
 
-  controller->NotifyMediaPlaybackChanged(MediaPlaybackState::eStopped);
+  controller->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
+                                         MediaPlaybackState::eStopped);
   ASSERT_TRUE(controller->ControlledMediaNum() == 1);
 
-  controller->NotifyMediaPlaybackChanged(MediaPlaybackState::eStopped);
+  controller->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
+                                         MediaPlaybackState::eStopped);
   ASSERT_TRUE(controller->ControlledMediaNum() == 0);
 }
 
@@ -46,10 +51,12 @@ TEST(MediaController, ActiveAndDeactiveController)
   RefPtr<MediaController> controller1 =
       new MediaController(FIRST_CONTROLLER_ID);
 
-  controller1->NotifyMediaPlaybackChanged(MediaPlaybackState::eStarted);
+  controller1->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
+                                          MediaPlaybackState::eStarted);
   ASSERT_TRUE(service->GetActiveControllersNum() == 1);
 
-  controller1->NotifyMediaPlaybackChanged(MediaPlaybackState::eStopped);
+  controller1->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
+                                          MediaPlaybackState::eStopped);
   ASSERT_TRUE(service->GetActiveControllersNum() == 0);
 }
 
@@ -57,14 +64,15 @@ class FakeControlledMedia final {
  public:
   explicit FakeControlledMedia(MediaController* aController)
       : mController(aController) {
-    mController->NotifyMediaPlaybackChanged(MediaPlaybackState::eStarted);
+    mController->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
+                                            MediaPlaybackState::eStarted);
   }
 
   void SetPlaying(MediaPlaybackState aState) {
     if (mPlaybackState == aState) {
       return;
     }
-    mController->NotifyMediaPlaybackChanged(aState);
+    mController->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID, aState);
     mPlaybackState = aState;
   }
 
@@ -72,15 +80,17 @@ class FakeControlledMedia final {
     if (mAudibleState == aState) {
       return;
     }
-    mController->NotifyMediaAudibleChanged(aState);
+    mController->NotifyMediaAudibleChanged(FAKE_CONTEXT_ID, aState);
     mAudibleState = aState;
   }
 
   ~FakeControlledMedia() {
     if (mPlaybackState == MediaPlaybackState::ePlayed) {
-      mController->NotifyMediaPlaybackChanged(MediaPlaybackState::ePaused);
+      mController->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
+                                              MediaPlaybackState::ePaused);
     }
-    mController->NotifyMediaPlaybackChanged(MediaPlaybackState::eStopped);
+    mController->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
+                                            MediaPlaybackState::eStopped);
   }
 
  private:
