@@ -189,6 +189,34 @@ web-platform-tests-wdspec:
             linux.*64-asan/opt: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
+    fetches:
+        toolchain:
+            by-test-platform:
+                linux.*64.*:
+                    - linux64-geckodriver
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                linux.*32.*:
+                    - linux32-geckodriver
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                macosx.*:
+                    - macosx64-geckodriver
+                    - macosx64-minidump-stackwalk
+                    - macosx64-fix-stacks
+                win.*-32.*:
+                    - win32-geckodriver
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks
+                win.*-64.*:
+                    - win64-geckodriver
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks
+                default:
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                    - linux64-geckodriver
+
 
 web-platform-tests-wdspec-headless:
     description: "Web platform webdriver-spec headless run"
@@ -210,6 +238,33 @@ web-platform-tests-wdspec-headless:
                     - --test-type=wdspec
                     - --setpref=toolkit.asyncshutdown.log=true
                     - --headless
+    fetches:
+        toolchain:
+            by-test-platform:
+                linux.*64.*:
+                    - linux64-geckodriver
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                linux.*32.*:
+                    - linux32-geckodriver
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                macosx.*:
+                    - macosx64-geckodriver
+                    - macosx64-minidump-stackwalk
+                    - macosx64-fix-stacks
+                win.*-32.*:
+                    - win32-geckodriver
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks
+                win.*-64.*:
+                    - win64-geckodriver
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks
+                default:
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                    - linux64-geckodriver
 
 web-platform-tests-crashtest:
     description: "Web platform crashtests run"
