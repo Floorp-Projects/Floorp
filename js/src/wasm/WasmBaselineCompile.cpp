@@ -14518,7 +14518,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorVariableShiftWithTemp(ShiftRightUI64x2));
           case uint32_t(SimdOp::V128Bitselect):
             CHECK_NEXT(emitBitselect());
-          case uint32_t(SimdOp::V8x16ShuffleLegacy):
           case uint32_t(SimdOp::V8x16Shuffle):
             CHECK_NEXT(emitVectorShuffle());
           case uint32_t(SimdOp::V128Const): {
