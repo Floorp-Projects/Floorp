@@ -208,12 +208,12 @@ impl<'a> ElemPayload<'a> {
             let func = parser.parens(|p| match p.parse::<Option<kw::item>>()? {
                 Some(_) => {
                     if parser.peek::<ast::LParen>() {
-                        parser.parens(parse_ref_func)
+                        parser.parens(|p| parse_ref_func(p, ty))
                     } else {
-                        parse_ref_func(parser)
+                        parse_ref_func(parser, ty)
                     }
                 }
-                None => parse_ref_func(p),
+                None => parse_ref_func(parser, ty),
             })?;
             exprs.push(func);
         }
@@ -221,10 +221,14 @@ impl<'a> ElemPayload<'a> {
     }
 }
 
-fn parse_ref_func<'a>(parser: Parser<'a>) -> Result<Option<ast::Index<'a>>> {
+fn parse_ref_func<'a>(parser: Parser<'a>, ty: ast::TableElemType) -> Result<Option<ast::Index<'a>>> {
     let mut l = parser.lookahead1();
     if l.peek::<kw::ref_null>() {
         parser.parse::<kw::ref_null>()?;
+        let null_ty: ast::RefType = parser.parse()?;
+        if null_ty != ty.into() {
+            return Err(parser.error("elem segment item doesn't match elem segment type"));
+        }
         Ok(None)
     } else if l.peek::<kw::ref_func>() {
         parser.parse::<kw::ref_func>()?;

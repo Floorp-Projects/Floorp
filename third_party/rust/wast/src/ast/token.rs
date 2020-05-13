@@ -12,6 +12,11 @@ pub struct Span {
 }
 
 impl Span {
+    /// Construct a `Span` from a byte offset in the source file.
+    pub fn from_offset(offset: usize) -> Self {
+        Span { offset }
+    }
+
     /// Returns the line/column information of this span within `text`.
     /// Line and column numbers are 0-indexed. User presentation is typically
     /// 1-indexed, but 0-indexing is appropriate for internal use with

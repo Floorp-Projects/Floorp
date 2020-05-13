@@ -348,6 +348,8 @@ pub mod kw {
     custom_keyword!(exn);
     custom_keyword!(exnref);
     custom_keyword!(export);
+    custom_keyword!(r#extern = "extern");
+    custom_keyword!(externref);
     custom_keyword!(eq);
     custom_keyword!(eqref);
     custom_keyword!(f32);
