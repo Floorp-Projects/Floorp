@@ -8,6 +8,8 @@
 #include "mozilla/dom/ChildSHistoryBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/SHEntryChild.h"
+#include "mozilla/dom/SHistoryChild.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "nsComponentManagerUtils.h"
 #include "nsSHEntry.h"
@@ -18,29 +20,24 @@
 namespace mozilla {
 namespace dom {
 
-ChildSHistory::ChildSHistory(BrowsingContext* aBrowsingContext)
-    : mBrowsingContext(aBrowsingContext) {}
-
-void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
-  if (!aIsInProcess) {
-    mHistory = nullptr;
-
-    return;
+static already_AddRefed<nsISHistory> CreateSHistory(nsDocShell* aDocShell) {
+  if (XRE_IsContentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
+    return do_AddRef(static_cast<SHistoryChild*>(
+        ContentChild::GetSingleton()->SendPSHistoryConstructor(
+            aDocShell->GetBrowsingContext())));
   }
 
-  if (mHistory) {
-    return;
-  }
-
-  mHistory = new nsSHistory(mBrowsingContext);
+  nsCOMPtr<nsISHistory> history =
+      new nsSHistory(aDocShell->GetBrowsingContext(), aDocShell->HistoryID());
+  return history.forget();
 }
 
-int32_t ChildSHistory::Count() {
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
-    return mLength;
-  }
-  return mHistory->GetCount();
-}
+ChildSHistory::ChildSHistory(nsDocShell* aDocShell)
+    : mDocShell(aDocShell), mHistory(CreateSHistory(aDocShell)) {}
+
+ChildSHistory::~ChildSHistory() {}
+
+int32_t ChildSHistory::Count() { return mHistory->GetCount(); }
 
 int32_t ChildSHistory::Index() {
   int32_t index;
@@ -68,19 +65,7 @@ void ChildSHistory::Go(int32_t aOffset, ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
-    nsCOMPtr<nsISHistory> shistory = mHistory;
-    ContentChild::GetSingleton()->SendHistoryGo(
-        mBrowsingContext, index.value(),
-        [shistory](int32_t&& aRequestedIndex) {
-          // FIXME Should probably only do this for non-fission.
-          shistory->InternalSetRequestedIndex(aRequestedIndex);
-        },
-        [](mozilla::ipc::
-               ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
-  } else {
-    aRv = mHistory->GotoIndex(index.value());
-  }
+  aRv = mHistory->GotoIndex(index.value());
 }
 
 void ChildSHistory::AsyncGo(int32_t aOffset) {
@@ -102,10 +87,7 @@ void ChildSHistory::EvictLocalContentViewers() {
   mHistory->EvictAllContentViewers();
 }
 
-nsISHistory* ChildSHistory::LegacySHistory() {
-  MOZ_RELEASE_ASSERT(mHistory);
-  return mHistory;
-}
+nsISHistory* ChildSHistory::LegacySHistory() { return mHistory; }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChildSHistory)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -115,7 +97,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ChildSHistory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ChildSHistory)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ChildSHistory, mBrowsingContext, mHistory)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ChildSHistory, mDocShell, mHistory)
 
 JSObject* ChildSHistory::WrapObject(JSContext* cx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -123,7 +105,26 @@ JSObject* ChildSHistory::WrapObject(JSContext* cx,
 }
 
 nsISupports* ChildSHistory::GetParentObject() const {
-  return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+  // We want to get the BrowserChildMessageManager, which is the
+  // messageManager on mDocShell.
+  RefPtr<ContentFrameMessageManager> mm;
+  if (mDocShell) {
+    mm = mDocShell->GetMessageManager();
+  }
+  // else we must be unlinked... can that happen here?
+  return ToSupports(mm);
+}
+
+already_AddRefed<nsISHEntry> CreateSHEntryForDocShell(nsISHistory* aSHistory) {
+  uint64_t sharedID = SHEntryChildShared::CreateSharedID();
+  if (XRE_IsContentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
+    return do_AddRef(static_cast<SHEntryChild*>(
+        ContentChild::GetSingleton()->SendPSHEntryConstructor(
+            static_cast<SHistoryChild*>(aSHistory), sharedID)));
+  }
+
+  nsCOMPtr<nsISHEntry> entry = new nsLegacySHEntry(aSHistory, sharedID);
+  return entry.forget();
 }
 
 }  // namespace dom

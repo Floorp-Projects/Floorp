@@ -21,23 +21,21 @@
 
 namespace dom = mozilla::dom;
 
-namespace {
-uint64_t gSHEntrySharedID = 0;
-}  // namespace
-
 namespace mozilla {
 namespace dom {
 
-SHEntrySharedParentState::SHEntrySharedParentState(nsISHistory* aSHistory)
-    : SHEntrySharedParentState(
-          nsWeakPtr(do_GetWeakReference(aSHistory)).get()) {}
+SHEntrySharedParentState::SHEntrySharedParentState(nsISHistory* aSHistory,
+                                                   uint64_t aID)
+    : SHEntrySharedParentState(nsWeakPtr(do_GetWeakReference(aSHistory)).get(),
+                               aID) {}
 
-SHEntrySharedParentState::SHEntrySharedParentState(nsIWeakReference* aSHistory)
+SHEntrySharedParentState::SHEntrySharedParentState(nsIWeakReference* aSHistory,
+                                                   uint64_t aID)
     : mDocShellID({0}),
       mViewerBounds(0, 0, 0, 0),
       mCacheKey(0),
       mLastTouched(0),
-      mID(++gSHEntrySharedID),
+      mID(aID),
       mSHistory(aSHistory),
       mIsFrameNavigation(false),
       mSticky(true),
@@ -69,8 +67,12 @@ void dom::SHEntrySharedParentState::NotifyListenersContentViewerEvicted() {
   }
 }
 
+dom::SHEntrySharedChildState::SHEntrySharedChildState()
+    : mSaveLayoutState(true) {}
+
 void SHEntrySharedChildState::CopyFrom(SHEntrySharedChildState* aEntry) {
   mChildShells.AppendObjects(aEntry->mChildShells);
+  mSaveLayoutState = aEntry->mSaveLayoutState;
 }
 
 }  // namespace dom
@@ -100,8 +102,9 @@ NS_IMPL_QUERY_INTERFACE(nsSHEntryShared, nsIBFCacheEntry, nsIMutationObserver)
 NS_IMPL_ADDREF_INHERITED(nsSHEntryShared, dom::SHEntrySharedParentState)
 NS_IMPL_RELEASE_INHERITED(nsSHEntryShared, dom::SHEntrySharedParentState)
 
-already_AddRefed<nsSHEntryShared> nsSHEntryShared::Duplicate() {
-  RefPtr<nsSHEntryShared> newEntry = new nsSHEntryShared(this);
+already_AddRefed<nsSHEntryShared> nsSHEntryShared::Duplicate(
+    uint64_t aNewSharedID) {
+  RefPtr<nsSHEntryShared> newEntry = new nsSHEntryShared(this, aNewSharedID);
 
   newEntry->dom::SHEntrySharedParentState::CopyFrom(this);
   newEntry->dom::SHEntrySharedChildState::CopyFrom(this);

@@ -13,11 +13,10 @@
 #include "mozilla/MozPromise.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-
-class nsISHistory;
+#include "nsISHistory.h"
+#include "nsISHEntry.h"
 
 namespace mozilla {
 namespace net {
@@ -26,19 +25,10 @@ class DocumentLoadListener;
 
 namespace dom {
 
+class WindowGlobalParent;
 class BrowserParent;
 class MediaController;
-struct SessionHistoryInfoAndId;
-class SessionHistoryEntry;
 class WindowGlobalParent;
-
-struct SessionHistoryEntryAndId {
-  SessionHistoryEntryAndId(uint64_t aId, SessionHistoryEntry* aEntry)
-      : mId(aId), mEntry(aEntry) {}
-
-  uint64_t mId;
-  RefPtr<SessionHistoryEntry> mEntry;
-};
 
 // CanonicalBrowsingContext is a BrowsingContext living in the parent
 // process, with whatever extra data that a BrowsingContext in the
@@ -93,10 +83,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   already_AddRefed<CanonicalBrowsingContext> GetParentCrossChromeBoundary();
 
   nsISHistory* GetSessionHistory();
-  UniquePtr<SessionHistoryInfoAndId> CreateSessionHistoryEntryForLoad(
-      nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
-  void SessionHistoryCommit(uint64_t aSessionHistoryEntryId);
-
+  void SetSessionHistory(nsISHistory* aSHistory) {
+    mSessionHistory = aSHistory;
+  }
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
@@ -140,6 +129,25 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   bool AttemptLoadURIInParent(nsDocShellLoadState* aLoadState,
                               uint32_t* aLoadIdentifier);
+
+  bool HasHistoryEntry(nsISHEntry* aEntry) const {
+    return aEntry && (aEntry == mOSHE || aEntry == mLSHE);
+  }
+
+  void UpdateSHEntries(nsISHEntry* aNewLSHE, nsISHEntry* aNewOSHE) {
+    mLSHE = aNewLSHE;
+    mOSHE = aNewOSHE;
+  }
+
+  void SwapHistoryEntries(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry) {
+    if (aOldEntry == mOSHE) {
+      mOSHE = aNewEntry;
+    }
+
+    if (aOldEntry == mLSHE) {
+      mLSHE = aNewEntry;
+    }
+  }
 
  protected:
   // Called when the browsing context is being discarded.
@@ -214,8 +222,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   RefPtr<net::DocumentLoadListener> mCurrentLoad;
 
-  nsTArray<SessionHistoryEntryAndId> mLoadingEntries;
-  RefPtr<SessionHistoryEntry> mActiveEntry;
+  // These are being mirrored from docshell
+  nsCOMPtr<nsISHEntry> mOSHE;
+  nsCOMPtr<nsISHEntry> mLSHE;
 };
 
 }  // namespace dom

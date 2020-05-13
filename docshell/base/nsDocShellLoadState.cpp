@@ -6,6 +6,8 @@
 
 #include "nsDocShellLoadState.h"
 #include "nsIDocShell.h"
+#include "SHEntryParent.h"
+#include "SHEntryChild.h"
 #include "nsDocShell.h"
 #include "nsISHEntry.h"
 #include "nsIURIFixup.h"
@@ -133,6 +135,14 @@ nsDocShellLoadState::nsDocShellLoadState(
   mHeadersStream = aLoadState.HeadersStream();
   mSrcdocData = aLoadState.SrcdocData();
   mLoadIdentifier = aLoadState.LoadIdentifier();
+  if (!aLoadState.SHEntry() || !StaticPrefs::fission_sessionHistoryInParent()) {
+    return;
+  }
+  if (XRE_IsParentProcess()) {
+    mSHEntry = static_cast<LegacySHEntry*>(aLoadState.SHEntry());
+  } else {
+    mSHEntry = static_cast<SHEntryChild*>(aLoadState.SHEntry());
+  }
 }
 
 nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
@@ -486,20 +496,6 @@ nsISHEntry* nsDocShellLoadState::SHEntry() const { return mSHEntry; }
 
 void nsDocShellLoadState::SetSHEntry(nsISHEntry* aSHEntry) {
   mSHEntry = aSHEntry;
-}
-
-void nsDocShellLoadState::SetSessionHistoryInfo(
-    const mozilla::dom::SessionHistoryInfoAndId& aIdAndInfo) {
-  mSessionHistoryInfo = aIdAndInfo;
-}
-
-uint64_t nsDocShellLoadState::GetSessionHistoryID() const {
-  return mSessionHistoryInfo.mId;
-}
-
-const mozilla::dom::SessionHistoryInfo&
-nsDocShellLoadState::GetSessionHistoryInfo() const {
-  return *mSessionHistoryInfo.mInfo;
 }
 
 const nsString& nsDocShellLoadState::Target() const { return mTarget; }
@@ -881,5 +877,18 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.SrcdocData() = mSrcdocData;
   loadState.ResultPrincipalURI() = mResultPrincipalURI;
   loadState.LoadIdentifier() = mLoadIdentifier;
+  if (!mSHEntry || !StaticPrefs::fission_sessionHistoryInParent()) {
+    // Without the pref, we don't have an actor for shentry and thus
+    // we can't serialize it. We could write custom (de)serializers,
+    // but a session history rewrite is on the way anyway.
+    return loadState;
+  }
+  if (XRE_IsParentProcess()) {
+    loadState.SHEntry() = static_cast<CrossProcessSHEntry*>(
+        static_cast<LegacySHEntry*>(mSHEntry.get()));
+  } else {
+    loadState.SHEntry() = static_cast<CrossProcessSHEntry*>(
+        static_cast<SHEntryChild*>(mSHEntry.get()));
+  }
   return loadState;
 }

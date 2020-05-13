@@ -1,0 +1,123 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PSHistory;
+
+include DOMTypes;
+include PresState;
+
+using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
+using refcounted class nsDocShellLoadState from "mozilla/dom/DocShellMessageUtils.h";
+using struct nsID from "nsID.h";
+using nsIntRect from "nsRect.h";
+
+namespace mozilla {
+namespace dom {
+
+sync protocol PSHEntry {
+  // IPDLParamTraits<dom::CrossProcessSHEntry*>::Write relies on PContent being
+  // the manager.
+  manager PContent;
+
+parent:
+  sync GetURI() returns (nsIURI uri);
+  async SetURI(nsIURI uri);
+  sync GetOriginalURI() returns (nsIURI originalUri);
+  async SetOriginalURI(nsIURI originalUri);
+  sync GetResultPrincipalURI() returns (nsIURI resultPrincipalUri);
+  async SetResultPrincipalURI(nsIURI resultPrincipalUri);
+  sync GetLoadReplace() returns (bool loadReplace);
+  async SetLoadReplace(bool loadReplace);
+  sync GetTitle() returns (nsString title);
+  async SetTitle(nsString title);
+  sync GetIsSubFrame() returns (bool isSubFrame);
+  async SetIsSubFrame(bool isSubFrame);
+  sync GetReferrerInfo() returns (nsIReferrerInfo referrerInfo);
+  async SetReferrerInfo(nsIReferrerInfo referrerInfo);
+  sync GetSticky() returns (bool sticky);
+  async SetSticky(bool sticky);
+  sync GetPostData() returns (nsIInputStream postData);
+  async SetPostData(nsIInputStream postData);
+  sync GetParent() returns (CrossProcessSHEntry parentEntry);
+  async SetParent(nullable PSHEntry parentEntry);
+  sync GetLoadType() returns (uint32_t loadType);
+  async SetLoadType(uint32_t loadType);
+  sync GetID() returns (uint32_t id);
+  async SetID(uint32_t id);
+  sync GetCacheKey() returns (uint32_t cacheKey);
+  async SetCacheKey(uint32_t cacheKey);
+  sync GetExpirationStatus() returns (bool expirationStatus);
+  async SetExpirationStatus(bool expirationStatus);
+  sync GetContentType() returns (nsCString contentType);
+  async SetContentType(nsCString contentType);
+  sync GetURIWasModified() returns (bool uriWasModified);
+  async SetURIWasModified(bool uriWasModified);
+  sync GetTriggeringPrincipal() returns (nsIPrincipal triggeringPrincipal);
+  async SetTriggeringPrincipal(nsIPrincipal triggeringPrincipal);
+  sync GetPrincipalToInherit() returns (nsIPrincipal principalToInherit);
+  async SetPrincipalToInherit(nsIPrincipal principalToInherit);
+  sync GetStoragePrincipalToInherit()
+    returns (nsIPrincipal storagePrincipalToInherit);
+  async SetStoragePrincipalToInherit(nsIPrincipal storagePrincipalToInherit);
+  sync GetCsp() returns (nsIContentSecurityPolicy csp);
+  async SetCsp(nsIContentSecurityPolicy csp);
+  sync GetStateData() returns (ClonedMessageData stateData);
+  async SetStateData(ClonedMessageData stateData);
+  sync GetDocshellID() returns (nsID docshellId);
+  async SetDocshellID(nsID docshellId);
+  sync GetIsSrcdocEntry() returns (bool isSrcdocEntry);
+  sync GetSrcdocData() returns (nsString srcdocData);
+  async SetSrcdocData(nsString srcdocData);
+  sync GetBaseURI() returns (nsIURI baseUri);
+  async SetBaseURI(nsIURI baseUri);
+  sync GetScrollRestorationIsManual() returns (bool scrollRestorationIsManual);
+  async SetScrollRestorationIsManual(bool scrollRestorationIsManual);
+  sync GetLoadedInThisProcess() returns (bool loadedInThisProcess);
+  sync GetLastTouched() returns (uint32_t lastTouched);
+  async SetLastTouched(uint32_t lastTouched);
+  sync GetChildCount() returns (int32_t childCount);
+  sync GetPersist() returns (bool persist);
+  async SetPersist(bool persist);
+  async SetScrollPosition(int32_t x, int32_t y);
+  sync GetScrollPosition() returns (int32_t x, int32_t y);
+  sync GetViewerBounds() returns (nsIntRect bounds);
+  async SetViewerBounds(nsIntRect bounds);
+  async Create(nsIURI URI, nsString title, nsIInputStream inputStream,
+               uint32_t cacheKey, nsCString contentType,
+               nsIPrincipal triggeringPrincipal, nsIPrincipal principalToInherit,
+               nsIPrincipal storagePrincipalToInherit,
+               nsIContentSecurityPolicy csp, nsID docshellID,
+               bool dynamicCreation, nsIURI originalUri, nsIURI resultPrincipalURI,
+               bool loadReplace, nsIReferrerInfo referrerInfo,
+               nsString srcdoc, bool srcdocEntry, nsIURI baseURI,
+               bool saveLayoutState, bool expired);
+  sync HasDetachedEditor() returns (bool hasDetachedEditor);
+  sync IsDynamicallyAdded() returns (bool isDynamicallyAdded);
+  sync HasDynamicallyAddedChild() returns (bool hasDynamicallyAddedChild);
+  sync AdoptBFCacheEntry(PSHEntry entry) returns (nsresult result);
+  async AbandonBFCacheEntry(uint64_t aNewSharedID);
+  sync SharesDocumentWith(PSHEntry entry) returns (bool sharesDocumentWith,
+                                                   nsresult result);
+  async SetLoadTypeAsHistory();
+  sync AddChild(nullable PSHEntry childEntry, int32_t offset, bool useRemoteSubframes) returns (nsresult result);
+  sync RemoveChild(PSHEntry childEntry) returns (nsresult result);
+  sync GetChildAt(int32_t index) returns (CrossProcessSHEntry childEntry);
+  sync GetChildSHEntryIfHasNoDynamicallyAddedChild(int32_t childOffset) returns (CrossProcessSHEntry childEntry);
+  sync ReplaceChild(PSHEntry newChildEntry) returns (nsresult result);
+  async ClearEntry(uint64_t aNewSharedID);
+  sync CreateLoadInfo() returns (nsDocShellLoadState loadState);
+  sync Clone() returns (CrossProcessSHEntry result);
+  sync SyncTreesForSubframeNavigation(nullable PSHEntry entry, MaybeDiscardedBrowsingContext BC,
+                                     MaybeDiscardedBrowsingContext ignoreBC)
+                        returns (SwapEntriesDocshellData[] entriesToUpdate);
+
+  async UpdateLayoutHistoryState(bool scrollPositionOnly,
+                                 nsCString[] keys, PresState[] states);
+
+  sync __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

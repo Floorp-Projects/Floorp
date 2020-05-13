@@ -2132,7 +2132,8 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   if (mIsTopLevelContent && mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
       !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disablehistory)) {
     // XXX(nika): Set this up more explicitly?
-    mPendingBrowsingContext->InitSessionHistory();
+    nsresult rv = docShell->InitSessionHistory();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Apply sandbox flags even if our owner is not an iframe, as this copies

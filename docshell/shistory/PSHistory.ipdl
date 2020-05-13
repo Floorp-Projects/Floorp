@@ -1,0 +1,88 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PSHEntry;
+
+include DOMTypes;
+
+using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
+using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
+using refcounted class nsDocShellLoadState from "mozilla/dom/DocShellMessageUtils.h";
+
+using struct nsID from "nsID.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+struct LoadSHEntryData
+{
+  CrossProcessSHEntry shEntry;
+  MaybeDiscardedBrowsingContext browsingContext;
+  nsDocShellLoadState loadState;
+};
+
+union LoadSHEntryResult {
+  nsresult;
+  LoadSHEntryData[];
+};
+
+sync protocol PSHistory {
+  // IPDLParamTraits<dom::CrossProcessSHEntry*>::Write relies on PContent being
+  // the manager.
+  manager PContent;
+
+parent:
+  sync GetCount() returns (int32_t count);
+  sync GetIndex() returns (int32_t index);
+  sync SetIndex(int32_t index) returns (nsresult result);
+  sync GetRequestedIndex() returns (int32_t index);
+  async InternalSetRequestedIndex(int32_t index);
+  sync GetEntryAtIndex(int32_t index) returns (nsresult result, CrossProcessSHEntry entry);
+  sync PurgeHistory(int32_t numEntries) returns (nsresult result);
+  sync ReloadCurrentEntry() returns (LoadSHEntryResult load);
+  sync GotoIndex(int32_t index) returns (LoadSHEntryResult load);
+  sync GetIndexOfEntry(PSHEntry entry) returns (int32_t index);
+  sync AddEntry(PSHEntry entry, bool persist) returns (nsresult result, int32_t entriesPurged);
+  async UpdateIndex();
+  sync ReplaceEntry(int32_t index, PSHEntry entry) returns (nsresult result);
+  sync NotifyOnHistoryReload() returns (bool ok);
+  async EvictOutOfRangeContentViewers(int32_t index);
+  async EvictAllContentViewers();
+  async RemoveDynEntries(int32_t index, PSHEntry entry);
+  sync RemoveEntries(nsID[] ids, int32_t index) returns (bool didRemove);
+  async RemoveFrameEntries(PSHEntry entry);
+  sync Reload(uint32_t reloadFlags) returns (LoadSHEntryResult load);
+  sync GetAllEntries() returns (CrossProcessSHEntry[] entries);
+  sync FindEntryForBFCache(uint64_t sharedID, bool includeCurrentEntry)
+    returns (CrossProcessSHEntry entries, int32_t startIndex);
+  async Evict(PSHEntry[] entry);
+  async EnsureCorrectEntryAtCurrIndex(PSHEntry entry);
+  async EvictContentViewersOrReplaceEntry(nullable PSHEntry newSHEntry, bool replace);
+  async NotifyListenersContentViewerEvicted(uint32_t numEvicted);
+  // See below for some explanation
+  sync AddToRootSessionHistory(bool cloneChildren, nullable PSHEntry OSHE, MaybeDiscardedBrowsingContext BC, PSHEntry entry,
+                                uint32_t loadType, bool shouldPersist) returns (int32_t? previousEntryIndex, int32_t? loadedEntryIndex,
+                                SwapEntriesDocshellData[] entriesToUpdate, int32_t entriesPurged, nsresult result);
+  // In CloneAndReplaceChild and SetChildHistoryEntry methods (which get called within this
+  // and above function) there are calls to SwapHistoryEntries to update entries in the docshell.
+  // We don't have access to the docshell in the parent
+  // process so we have to either wait to update the docshell or update it via an IPC call.
+  // We pass in the ChildID of the process who invoked the IPC to make decisions
+  // about whether we should update entries in the docshell via an IPC call -
+  // if the caller is a process different from where the docshell lives.
+  // Else, we return entries that we need to update in entriesToUpdate array
+  // and update the docshell with such entries in the child process.
+  sync AddChildSHEntryHelper(PSHEntry cloneRef, PSHEntry newEntry, MaybeDiscardedBrowsingContext BC,
+                             bool cloneChildren) returns (SwapEntriesDocshellData[] entriesToUpdate,
+                             int32_t entriesPurged, CrossProcessSHEntry entry, nsresult result);
+  async __delete__();
+
+child:
+  async ReloadCurrentEntryFromChild();
+};
+
+} // namespace dom
+} // namespace mozilla
