@@ -45,7 +45,6 @@ String GLEAN_LIBRARY_FORUNITTESTS = "org.mozilla.telemetry:glean-forUnitTests:${
 dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
-    implementation Dependencies.androidx_lifecycle_extensions
     implementation Dependencies.androidx_work_runtime
     
     api GLEAN_LIBRARY

@@ -49,8 +49,7 @@ dependencies {
     implementation Dependencies.kotlin_coroutines
 
     implementation Dependencies.androidx_paging
-    implementation Dependencies.androidx_lifecycle_extensions
-    kapt Dependencies.androidx_lifecycle_compiler
+    implementation Dependencies.androidx_lifecycle_livedata
 
     implementation Dependencies.androidx_room_runtime
     kapt Dependencies.androidx_room_compiler
