@@ -46,9 +46,15 @@ Windows dependencies
 #. Download and install `Visual Studio. <https://visualstudio.microsoft.com/downloads/>`__
 #. Finally download the `MozillaBuild Package. <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`__ Installation directory should be:
 
-.. code-block:: shell
+    .. code-block:: shell
 
-    $ c:\mozilla-build\
+        $ c:\mozilla-build\
+
+#. Before moving on to the next steps, make sure to fulfill the `Windows prerequisites <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites>`__
+
+.. note::
+
+    All the commands of this tutorial must be run in the shell provided with the MozillaBuild Package (start-shell.bat)
 
 `More
 information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites>`__
