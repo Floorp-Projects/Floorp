@@ -686,10 +686,17 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   display: flex;
   flex-direction: column;
   border-radius: 4px;
-  color: #FFFFFF;
   text-align: center;
-  padding: 19px 10px;
   margin-inline-end: 15px;
+}
+
+.monitor-block a {
+  color: #FFFFFF;
+  padding: 19px 0px;
+}
+
+.monitor-block a:hover {
+  text-decoration: none;
 }
 
 .email {
@@ -742,7 +749,8 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 .info-text {
   font-size: 0.75em;
   line-height: 13px;
-  margin-block-start: 5px;
+  margin: 0 10px;
+  display: inline-block;
 }
 
 .number-of-breaches.block {

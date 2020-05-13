@@ -161,31 +161,37 @@
               <div id="monitor-body-content">
                 <div class="monitor-info-wrapper">
                   <div class="monitor-block email">
-                    <span class="monitor-stat">
-                      <img class="icon-med" src="chrome://browser/skin/mail.svg"/>
-                      <span data-type="stored-emails">
-                        <!-- Display number of stored emails here. -->
+                    <a target="_blank" data-l10n-id="monitor-emails-tooltip">
+                      <span class="monitor-stat">
+                        <img class="icon-med" src="chrome://browser/skin/mail.svg"/>
+                        <span data-type="stored-emails">
+                          <!-- Display number of stored emails here. -->
+                        </span>
                       </span>
-                    </span>
-                    <span id="info-monitored-addresses" class="info-text"></span>
+                      <span id="info-monitored-addresses" class="info-text"></span>
+                    </a>
                   </div>
                   <div class="monitor-block breaches">
-                    <span class="monitor-stat">
-                      <img class="icon-med" src="chrome://browser/skin/fxa/avatar.svg"/>
-                      <span data-type="known-breaches">
-                        <!-- Display number of known breaches here. -->
+                    <a target="_blank" data-l10n-id="monitor-breaches-tooltip"> 
+                      <span class="monitor-stat">
+                        <img class="icon-med" src="chrome://browser/skin/fxa/avatar.svg"/>
+                        <span data-type="known-breaches">
+                          <!-- Display number of known breaches here. -->
+                        </span>
                       </span>
-                    </span>
-                    <span id="info-known-breaches" class="info-text"></span>
+                      <span id="info-known-breaches" class="info-text"></span>
+                    </a>
                   </div>
                   <div class="monitor-block passwords">
-                    <span class="monitor-stat">
+                    <a target="_blank" data-l10n-id="monitor-passwords-tooltip">
+                      <span class="monitor-stat">
                         <img class="icon-med" src="chrome://browser/skin/login.svg"/>
                         <span data-type="exposed-passwords">
                           <!-- Display number of exposed passwords here. -->
                         </span>
-                    </span>
-                    <span id="info-exposed-passwords" class="info-text"></span>
+                      </span>
+                      <span id="info-exposed-passwords" class="info-text"></span>
+                    </a>
                   </div>
                 </div>
                 <div id="full-report-link" class="monitor-view-full-report" data-l10n-id="full-report-link">
