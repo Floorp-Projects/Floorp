@@ -66,6 +66,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
+#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -5469,6 +5470,18 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
     SetDocCurrentStateObj(mLSHE);
 
     SetHistoryEntryAndUpdateBC(Nothing(), Some<nsISHEntry*>(mLSHE));
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      mActiveEntry = nullptr;
+      mLoadingEntry.swap(mActiveEntry);
+      if (XRE_IsParentProcess()) {
+        mBrowsingContext->Canonical()->SessionHistoryCommit(mLoadingEntryId);
+      } else {
+        ContentChild* cc = ContentChild::GetSingleton();
+        mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
+                                                 mLoadingEntryId);
+      }
+      mLoadingEntryId = 0;
+    }
   }
 
   bool updateHistory = true;
@@ -9456,6 +9469,15 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   } else {
     MOZ_ASSERT(contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
                "DoURILoad thinks this is a document and InternalLoad does not");
+  }
+
+  // FIXME We still have a ton of codepaths that don't pass through
+  //       DocumentLoadListener, so probably need to create session history info
+  //       in more places.
+  if (aLoadState->GetSessionHistoryID() != 0) {
+    mLoadingEntry =
+        MakeUnique<SessionHistoryInfo>(aLoadState->GetSessionHistoryInfo());
+    mLoadingEntryId = aLoadState->GetSessionHistoryID();
   }
 
   // open a channel for the url

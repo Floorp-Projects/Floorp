@@ -496,6 +496,20 @@ void nsDocShellLoadState::SetSHEntry(nsISHEntry* aSHEntry) {
   mSHEntry = aSHEntry;
 }
 
+void nsDocShellLoadState::SetSessionHistoryInfo(
+    const mozilla::dom::SessionHistoryInfoAndId& aIdAndInfo) {
+  mSessionHistoryInfo = aIdAndInfo;
+}
+
+uint64_t nsDocShellLoadState::GetSessionHistoryID() const {
+  return mSessionHistoryInfo.mId;
+}
+
+const mozilla::dom::SessionHistoryInfo&
+nsDocShellLoadState::GetSessionHistoryInfo() const {
+  return *mSessionHistoryInfo.mInfo;
+}
+
 const nsString& nsDocShellLoadState::Target() const { return mTarget; }
 
 void nsDocShellLoadState::SetTarget(const nsAString& aTarget) {

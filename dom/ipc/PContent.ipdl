@@ -1577,6 +1577,9 @@ parent:
      */
     async AbortOtherOrientationPendingPromises(MaybeDiscardedBrowsingContext aContext);
 
+    async HistoryCommit(MaybeDiscardedBrowsingContext aContext,
+                        uint64_t aSessionHistoryEntryID);
+
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
                       uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
