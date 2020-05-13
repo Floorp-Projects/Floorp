@@ -11,11 +11,13 @@
 #include "vm/JSContext-inl.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"  // mozilla::ConvertUtf16ToUtf8
 
 #include <stdarg.h>
 #include <string.h>
@@ -354,7 +356,33 @@ enum class PrintErrorKind { Error, Warning, Note };
 static void PrintErrorLine(FILE* file, const char* prefix,
                            JSErrorReport* report) {
   if (const char16_t* linebuf = report->linebuf()) {
-    size_t n = report->linebufLength();
+    UniqueChars line;
+    size_t n;
+    {
+      size_t linebufLen = report->linebufLength();
+
+      // This function is only used for shell command-line sorts of stuff where
+      // where performance doesn't really matter, so just encode into max-sized
+      // memory.
+      mozilla::CheckedInt<size_t> utf8Len(linebufLen);
+      utf8Len *= 3;
+      if (utf8Len.isValid()) {
+        line = UniqueChars(js_pod_malloc<char>(utf8Len.value()));
+        if (line) {
+          n = mozilla::ConvertUtf16toUtf8({linebuf, linebufLen},
+                                          {line.get(), utf8Len.value()});
+        }
+      }
+    }
+
+    const char* utf8buf;
+    if (line) {
+      utf8buf = line.get();
+    } else {
+      static const char unavailableStr[] = "<context unavailable>";
+      utf8buf = unavailableStr;
+      n = mozilla::ArrayLength(unavailableStr) - 1;
+    }
 
     fputs(":\n", file);
     if (prefix) {
@@ -362,7 +390,7 @@ static void PrintErrorLine(FILE* file, const char* prefix,
     }
 
     for (size_t i = 0; i < n; i++) {
-      fputc(static_cast<char>(linebuf[i]), file);
+      fputc(utf8buf[i], file);
     }
 
     // linebuf usually ends with a newline. If not, add one here.
