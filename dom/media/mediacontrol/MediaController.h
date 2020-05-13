@@ -68,10 +68,7 @@ class MediaController final
                                   MediaPlaybackState aState) override;
   void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
                                  MediaAudibleState aState) override;
-
-  // If any of controlled media is being used in Picture-In-Picture mode, then
-  // this function should be callled and set the value.
-  void SetIsInPictureInPictureMode(bool aIsInPictureInPictureMode);
+  void SetIsInPictureInPictureMode(bool aIsInPictureInPictureMode) override;
 
   // Reture true if any of controlled media is being used in Picture-In-Picture
   // mode.
