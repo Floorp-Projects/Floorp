@@ -31,7 +31,6 @@ promise_test(async (t) => {
 
   idl_array.add_objects({
     IdleDetector: ['idle'],
-    IdleState: ['idle.state']
   });
 
   idl_array.test();
