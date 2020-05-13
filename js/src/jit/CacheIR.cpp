@@ -1814,10 +1814,12 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
   }
 
   maybeEmitIdGuard(id);
-  // Emit all the normal guards for calling this native,
-  // but specialize callNativeGetterResult.
+  // Emit all the normal guards for calling this native, but specialize
+  // callNativeGetterResult. Also store the getter itself to enable
+  // AddCacheIRGetPropFunction to read it from the IC stub, which is needed for
+  // Ion-inlining.
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
-  writer.loadTypedArrayLengthResult(objId);
+  writer.loadTypedArrayLengthResult(objId, &fun);
   writer.returnFromIC();
 
   trackAttached("TypedArrayLength");
