@@ -97,7 +97,7 @@ class nsXULPrototypeDocument final : public nsISerializable {
 
   bool WasL10nCached() { return mWasL10nCached; };
 
-  void SetIsL10nCached(bool aIsCached);
+  void SetIsL10nCached();
   void RebuildPrototypeFromElement(nsXULPrototypeElement* aPrototype,
                                    mozilla::dom::Element* aElement, bool aDeep);
   void RebuildL10nPrototype(mozilla::dom::Element* aElement, bool aDeep);
