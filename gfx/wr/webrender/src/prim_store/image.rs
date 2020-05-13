@@ -76,6 +76,7 @@ pub struct Image {
     pub stretch_size: SizeKey,
     pub tile_spacing: SizeKey,
     pub color: ColorU,
+    pub sub_rect: Option<DeviceIntRect>,
     pub image_rendering: ImageRendering,
     pub alpha_type: AlphaType,
 }
@@ -121,6 +122,7 @@ pub struct ImageData {
     pub color: ColorF,
     pub source: ImageSource,
     pub image_rendering: ImageRendering,
+    pub sub_rect: Option<DeviceIntRect>,
     pub alpha_type: AlphaType,
 }
 
@@ -132,6 +134,7 @@ impl From<Image> for ImageData {
             stretch_size: image.stretch_size.into(),
             tile_spacing: image.tile_spacing.into(),
             source: ImageSource::Default,
+            sub_rect: image.sub_rect,
             image_rendering: image.image_rendering,
             alpha_type: image.alpha_type,
         }
@@ -169,6 +172,18 @@ impl ImageData {
                         };
                     }
 
+                    // Work out whether this image is a normal / simple type, or if
+                    // we need to pre-render it to the render task cache.
+                    if let Some(rect) = self.sub_rect {
+                        // We don't properly support this right now.
+                        debug_assert!(!is_tiled);
+                        self.source = ImageSource::Cache {
+                            // Size in device-pixels we need to allocate in render task cache.
+                            size: rect.size,
+                            handle: None,
+                        };
+                    }
+
                     let mut is_opaque = image_properties.descriptor.is_opaque();
                     let request = ImageRequest {
                         key: self.key,
@@ -196,7 +211,7 @@ impl ImageData {
 
                             let image_cache_key = ImageCacheKey {
                                 request,
-                                texel_rect: None,
+                                texel_rect: self.sub_rect,
                             };
                             let target_kind = if image_properties.descriptor.format.bytes_per_pixel() == 1 {
                                 RenderTargetKind::Alpha
@@ -328,6 +343,7 @@ impl CreateShadow for Image {
             tile_spacing: self.tile_spacing,
             stretch_size: self.stretch_size,
             key: self.key,
+            sub_rect: self.sub_rect,
             image_rendering: self.image_rendering,
             alpha_type: self.alpha_type,
             color: shadow.color.into(),
