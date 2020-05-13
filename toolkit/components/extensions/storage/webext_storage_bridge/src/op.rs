@@ -34,6 +34,8 @@ pub enum StorageOp {
     Remove { ext_id: String, keys: JsonValue },
     /// Clear all keys and values for an extension.
     Clear { ext_id: String },
+    /// Returns the bytes in use for the specified, or all, keys.
+    GetBytesInUse { ext_id: String, keys: JsonValue },
 }
 
 impl StorageOp {
@@ -45,6 +47,7 @@ impl StorageOp {
             StorageOp::Set { .. } => "webext_storage::set",
             StorageOp::Remove { .. } => "webext_storage::remove",
             StorageOp::Clear { .. } => "webext_storage::clear",
+            StorageOp::GetBytesInUse { .. } => "webext_storage::get_bytes_in_use",
         }
     }
 }
@@ -142,6 +145,9 @@ impl StorageTask {
             }
             StorageOp::Clear { ext_id } => {
                 StorageResult::with_changes(self.store()?.get()?.clear(&ext_id)?)
+            }
+            StorageOp::GetBytesInUse { ext_id, keys } => {
+                StorageResult::with_value(self.store()?.get()?.get_bytes_in_use(&ext_id, keys)?)
             }
         }?)
     }
