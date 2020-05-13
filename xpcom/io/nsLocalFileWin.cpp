@@ -6,7 +6,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/TextUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Utf8.h"
 
@@ -60,6 +59,7 @@
 #include "mozilla/WidgetUtils.h"
 
 using namespace mozilla;
+using mozilla::FilePreferences::kDevicePathSpecifier;
 using mozilla::FilePreferences::kPathSeparator;
 
 #define CHECK_mWorkingPath()                                     \
@@ -80,19 +80,7 @@ using mozilla::FilePreferences::kPathSeparator;
 #  define DRIVE_REMOTE 4
 #endif
 
-constexpr auto kDevicePathSpecifier = NS_LITERAL_STRING("\\\\?\\");
-
 namespace {
-
-bool StartsWithDiskDesignatorAndBackslash(const nsAString& aAbsolutePath) {
-  // aAbsolutePath can only be (in regular expression):
-  // UNC path: ^\\\\.*
-  // A single backslash: ^\\.*
-  // A disk designator with a backslash: ^[A-Za-z]:\\.*
-  return aAbsolutePath.Length() >= 3 && IsAsciiAlpha(aAbsolutePath.CharAt(0)) &&
-         aAbsolutePath.CharAt(1) == L':' &&
-         aAbsolutePath.CharAt(2) == kPathSeparator;
-}
 
 nsresult NewLocalFile(const nsAString& aPath, bool aFollowLinks,
                       bool aUseDOSDevicePathSyntax, nsIFile** aResult) {
@@ -990,7 +978,7 @@ nsLocalFile::InitWithPath(const nsAString& aFilePath) {
   // Prepend the "\\?\" prefix if the useDOSDevicePathSyntax is set and the path
   // starts with a disk designator and backslash.
   if (mUseDOSDevicePathSyntax &&
-      StartsWithDiskDesignatorAndBackslash(mWorkingPath)) {
+      FilePreferences::StartsWithDiskDesignatorAndBackslash(mWorkingPath)) {
     mWorkingPath = kDevicePathSpecifier + mWorkingPath;
   }
 
@@ -1525,8 +1513,9 @@ nsLocalFile::SetLeafName(const nsAString& aLeafName) {
 
 NS_IMETHODIMP
 nsLocalFile::GetPath(nsAString& aResult) {
-  MOZ_ASSERT_IF(mUseDOSDevicePathSyntax,
-                !StartsWithDiskDesignatorAndBackslash(mWorkingPath));
+  MOZ_ASSERT_IF(
+      mUseDOSDevicePathSyntax,
+      !FilePreferences::StartsWithDiskDesignatorAndBackslash(mWorkingPath));
   aResult = mWorkingPath;
   return NS_OK;
 }
@@ -2952,8 +2941,9 @@ nsLocalFile::GetTarget(nsAString& aResult) {
   aResult.Truncate();
   Resolve();
 
-  MOZ_ASSERT_IF(mUseDOSDevicePathSyntax,
-                !StartsWithDiskDesignatorAndBackslash(mResolvedPath));
+  MOZ_ASSERT_IF(
+      mUseDOSDevicePathSyntax,
+      !FilePreferences::StartsWithDiskDesignatorAndBackslash(mResolvedPath));
 
   aResult = mResolvedPath;
   return NS_OK;
@@ -3075,7 +3065,7 @@ nsLocalFile::SetUseDOSDevicePathSyntax(bool aUseDOSDevicePathSyntax) {
       mWorkingPath = Substring(mWorkingPath, kDevicePathSpecifier.Length());
     }
   } else {
-    if (StartsWithDiskDesignatorAndBackslash(mWorkingPath)) {
+    if (FilePreferences::StartsWithDiskDesignatorAndBackslash(mWorkingPath)) {
       MakeDirty();
       // Prepend the prefix
       mWorkingPath = kDevicePathSpecifier + mWorkingPath;
