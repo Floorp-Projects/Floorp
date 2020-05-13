@@ -123,6 +123,7 @@ const ORG_ORIGIN = `https://${ORG_DOMAIN}`;
 const COM_DOMAIN = "example.org";
 const COM_ORIGIN = `https://${COM_DOMAIN}`;
 const LH_DOMAIN = "localhost";
+const FOO_DOMAIN = "foo.com";
 
 add_task(async function test_deleteFromHost() {
   const sites = [
@@ -137,6 +138,11 @@ add_task(async function test_deleteFromHost() {
     {
       args: [LH_DOMAIN, true, Ci.nsIClearDataService.CLEAR_DOM_QUOTA],
       origin: `http://${LH_DOMAIN}:8000`,
+    },
+    {
+      args: [FOO_DOMAIN, true, Ci.nsIClearDataService.CLEAR_DOM_QUOTA],
+      origin: `http://${FOO_DOMAIN}`,
+      originAttributes: { userContextId: 1 },
     },
   ];
 
