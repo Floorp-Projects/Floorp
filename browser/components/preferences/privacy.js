@@ -1933,11 +1933,11 @@ var gPrivacyPane = {
    */
   async changeMasterPassword() {
     // Require OS authentication before the user can set a Master Password.
-    // OS reauthenticate functionality is not available on Linux yet (bug 1614874)
+    // OS reauthenticate functionality is not available on Linux yet (bug 1527745)
     if (
       !LoginHelper.isMasterPasswordSet() &&
       OS_AUTH_ENABLED &&
-      AppConstants.platform != "linux"
+      OSKeyStore.canReauth()
     ) {
       let messageId =
         "master-password-os-auth-dialog-message-" + AppConstants.platform;
