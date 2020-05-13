@@ -108,8 +108,6 @@
 #include "mozilla/dom/PresentationParent.h"
 #include "mozilla/dom/ProcessMessageManager.h"
 #include "mozilla/dom/PushNotifier.h"
-#include "mozilla/dom/SHEntryParent.h"
-#include "mozilla/dom/SHistoryParent.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
@@ -5669,25 +5667,6 @@ bool ContentParent::DeallocPSessionStorageObserverParent(
   return mozilla::dom::DeallocPSessionStorageObserverParent(aActor);
 }
 
-PSHEntryParent* ContentParent::AllocPSHEntryParent(PSHistoryParent* aSHistory,
-                                                   uint64_t aSharedID) {
-  return SHistoryParent::CreateEntry(this, aSHistory, aSharedID);
-}
-
-void ContentParent::DeallocPSHEntryParent(PSHEntryParent* aEntry) {
-  delete static_cast<SHEntryParent*>(aEntry);
-}
-
-PSHistoryParent* ContentParent::AllocPSHistoryParent(
-    const MaybeDiscarded<BrowsingContext>& aContext) {
-  MOZ_ASSERT(!aContext.IsNull());
-  return new SHistoryParent(aContext.GetMaybeDiscarded()->Canonical());
-}
-
-void ContentParent::DeallocPSHistoryParent(PSHistoryParent* aActor) {
-  delete static_cast<SHistoryParent*>(aActor);
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvMaybeReloadPlugins() {
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
   pluginHost->ReloadPlugins();
@@ -5844,35 +5823,6 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyPictureInPictureModeChanged(
           aContext.get_canonical()->GetMediaController()) {
     controller->SetIsInPictureInPictureMode(aEnabled);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvUpdateSHEntriesInBC(
-    PSHEntryParent* aNewLSHE, PSHEntryParent* aNewOSHE,
-    const MaybeDiscarded<BrowsingContext>& aMaybeContext) {
-  if (aMaybeContext.IsNullOrDiscarded()) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ParentIPC: Trying to update a browsing context that does not "
-             "exist or has been discarded"));
-    return IPC_OK();
-  }
-  auto aContext = aMaybeContext.get()->Canonical();
-  MOZ_ASSERT(aContext);
-  if (!aContext->IsOwnedByProcess(ChildID())) {
-    // We are trying to update a child BrowsingContext in another child
-    // process. This is illegal since the owner of the BrowsingContext
-    // is the proccess with the in-process docshell, which is tracked
-    // by OwnerProcessId.
-    MOZ_DIAGNOSTIC_ASSERT(
-        false,
-        "Trying to update a child BrowsingContext in another child process");
-    return IPC_OK();
-  }
-  SHEntryParent* newLSHEparent = static_cast<SHEntryParent*>(aNewLSHE);
-  SHEntryParent* newOSHEparent = static_cast<SHEntryParent*>(aNewOSHE);
-  nsISHEntry* lshe = newLSHEparent ? newLSHEparent->mEntry.get() : nullptr;
-  nsISHEntry* oshe = newOSHEparent ? newOSHEparent->mEntry.get() : nullptr;
-  aContext->UpdateSHEntries(lshe, oshe);
   return IPC_OK();
 }
 

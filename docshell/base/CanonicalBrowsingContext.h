@@ -130,25 +130,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   bool AttemptLoadURIInParent(nsDocShellLoadState* aLoadState,
                               uint32_t* aLoadIdentifier);
 
-  bool HasHistoryEntry(nsISHEntry* aEntry) const {
-    return aEntry && (aEntry == mOSHE || aEntry == mLSHE);
-  }
-
-  void UpdateSHEntries(nsISHEntry* aNewLSHE, nsISHEntry* aNewOSHE) {
-    mLSHE = aNewLSHE;
-    mOSHE = aNewOSHE;
-  }
-
-  void SwapHistoryEntries(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry) {
-    if (aOldEntry == mOSHE) {
-      mOSHE = aNewEntry;
-    }
-
-    if (aOldEntry == mLSHE) {
-      mLSHE = aNewEntry;
-    }
-  }
-
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -221,10 +202,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   RefPtr<MediaController> mTabMediaController;
 
   RefPtr<net::DocumentLoadListener> mCurrentLoad;
-
-  // These are being mirrored from docshell
-  nsCOMPtr<nsISHEntry> mOSHE;
-  nsCOMPtr<nsISHEntry> mLSHE;
 };
 
 }  // namespace dom
