@@ -20,6 +20,8 @@ class nsIURI;
 namespace mozilla {
 namespace dom {
 class BrowsingContext;
+class CanonicalBrowsingContext;
+class WindowGlobalParent;
 }  // namespace dom
 
 class AntiTrackingUtils final {
@@ -90,6 +92,15 @@ class AntiTrackingUtils final {
   // Retruns the cookie behavior of the given browsingContext,
   // return BEHAVIOR_REJECT when fail.
   static uint32_t GetCookieBehavior(dom::BrowsingContext* aBrowsingContext);
+
+  // Returns the top-level global window parent. But we would stop at the
+  // content window which is loaded by addons and consider this window as a top.
+  //
+  // Note that this is the parent-process implementation of
+  // nsGlobalWindowOuter::GetTopExcludingExtensionAccessibleContentFrames
+  static already_AddRefed<dom::WindowGlobalParent>
+  GetTopWindowExcludingExtensionAccessibleContentFrames(
+      dom::CanonicalBrowsingContext* aBrowsingContext, nsIURI* aURIBeingLoaded);
 };
 
 }  // namespace mozilla
