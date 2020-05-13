@@ -11,6 +11,10 @@ const {
   writeStubsToFile,
 } = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
 
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
+
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
 const STUB_FILE = "pageError.js";
@@ -63,9 +67,25 @@ add_task(async function() {
 async function generatePageErrorStubs() {
   const stubs = new Map();
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  const webConsoleFront = await toolbox.target.getFront("console");
+  const resourceWatcher = new ResourceWatcher(toolbox.targetList);
+
+  // The resource-watcher only supports a single call to watch/unwatch per
+  // instance, so we attach a unique watch callback, which will forward the
+  // resource to `handleErrorMessage`, dynamically updated for each command.
+  let handleErrorMessage = function() {};
+
+  const onErrorMessageAvailable = ({ resource }) => {
+    handleErrorMessage(resource);
+  };
+  await resourceWatcher.watch(
+    [resourceWatcher.TYPES.ERROR_MESSAGES],
+    onErrorMessageAvailable
+  );
+
   for (const [key, code] of getCommands()) {
-    const onPageError = webConsoleFront.once("pageError");
+    const onPageError = new Promise(resolve => {
+      handleErrorMessage = packet => resolve(packet);
+    });
 
     // On e10s, the exception is triggered in child process
     // and is ignored by test harness

@@ -10,6 +10,10 @@ const {
   writeStubsToFile,
 } = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
 
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
+
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-css-message.html";
 const STUB_FILE = "cssMessage.js";
@@ -60,12 +64,26 @@ add_task(async function() {
 async function generateCssMessageStubs() {
   const stubs = new Map();
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  const webConsoleFront = await toolbox.target.getFront("console");
+  const resourceWatcher = new ResourceWatcher(toolbox.targetList);
+
+  // The resource-watcher only supports a single call to watch/unwatch per
+  // instance, so we attach a unique watch callback, which will forward the
+  // resource to `handleErrorMessage`, dynamically updated for each command.
+  let handleErrorMessage = function() {};
+
+  const onErrorMessageAvailable = ({ resource }) => {
+    handleErrorMessage(resource);
+  };
+
+  /* CSS errors are considered as pageError on the server */
+  await resourceWatcher.watch(
+    [resourceWatcher.TYPES.ERROR_MESSAGES],
+    onErrorMessageAvailable
+  );
 
   for (const code of getCommands()) {
     const received = new Promise(resolve => {
-      /* CSS errors are considered as pageError on the server */
-      webConsoleFront.once("pageError", function onPacket(packet) {
+      handleErrorMessage = function(packet) {
         info(
           "Received css message: pageError " +
             JSON.stringify(packet, null, "\t")
@@ -74,7 +92,7 @@ async function generateCssMessageStubs() {
         const key = packet.pageError.errorMessage;
         stubs.set(key, getCleanedPacket(key, packet));
         resolve();
-      });
+      };
     });
 
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(
@@ -88,6 +106,11 @@ async function generateCssMessageStubs() {
 
     await received;
   }
+
+  resourceWatcher.unwatch(
+    [resourceWatcher.TYPES.ERROR_MESSAGES],
+    onErrorMessageAvailable
+  );
 
   await closeTabAndToolbox().catch(() => {});
   return stubs;
