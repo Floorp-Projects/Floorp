@@ -29,10 +29,6 @@ public class AnnotationProcessor {
             "// will cause your build to fail.\n" +
             "\n";
 
-    private static final StringBuilder headerFile = new StringBuilder(GENERATED_COMMENT);
-    private static final StringBuilder implementationFile = new StringBuilder(GENERATED_COMMENT);
-    private static final StringBuilder nativesFile = new StringBuilder(GENERATED_COMMENT);
-
     public static void main(String[] args) {
         // We expect a list of jars on the commandline. If missing, whinge about it.
         if (args.length < 2) {
@@ -41,9 +37,6 @@ public class AnnotationProcessor {
         }
 
         final String OUTPUT_PREFIX = args[0];
-        final String SOURCE_FILE = OUTPUT_PREFIX + "JNIWrappers.cpp";
-        final String HEADER_FILE = OUTPUT_PREFIX + "JNIWrappers.h";
-        final String NATIVES_FILE = OUTPUT_PREFIX + "JNINatives.h";
 
         System.out.println("Processing annotations...");
 
@@ -55,66 +48,80 @@ public class AnnotationProcessor {
         // Start the clock!
         long s = System.currentTimeMillis();
 
+        int ret = 0;
+
         // Get an iterator over the classes in the jar files given...
         Iterator<ClassWithOptions> jarClassIterator = IterableJarLoadingURLClassLoader.getIteratorOverJars(jars);
 
-        headerFile.append(
-                "#ifndef " + getHeaderGuardName(HEADER_FILE) + "\n" +
-                "#define " + getHeaderGuardName(HEADER_FILE) + "\n" +
-                "\n" +
-                "#ifndef MOZ_PREPROCESSOR\n" +
-                "#include \"mozilla/jni/Refs.h\"\n" +
-                "#endif\n" +
-                "\n" +
-                "namespace mozilla {\n" +
-                "namespace java {\n" +
-                "\n");
-
-        implementationFile.append(
-                "#ifndef MOZ_PREPROCESSOR\n" +
-                "#include \"" + HEADER_FILE + "\"\n" +
-                "#include \"mozilla/jni/Accessors.h\"\n" +
-                "#endif\n" +
-                "\n" +
-                "namespace mozilla {\n" +
-                "namespace java {\n" +
-                "\n");
-
-        nativesFile.append(
-                "#ifndef " + getHeaderGuardName(NATIVES_FILE) + "\n" +
-                "#define " + getHeaderGuardName(NATIVES_FILE) + "\n" +
-                "\n" +
-                "#ifndef MOZ_PREPROCESSOR\n" +
-                "#include \"" + HEADER_FILE + "\"\n" +
-                "#include \"mozilla/jni/Natives.h\"\n" +
-                "#endif\n" +
-                "\n" +
-                "namespace mozilla {\n" +
-                "namespace java {\n" +
-                "\n");
-
         while (jarClassIterator.hasNext()) {
-            generateClass(jarClassIterator.next());
+            final ClassWithOptions annotatedClass = jarClassIterator.next();
+            if (!annotatedClass.hasGenerated()) {
+                continue;
+            }
+
+            final String sourceFileName = OUTPUT_PREFIX + annotatedClass.generatedName + "JNIWrappers.cpp";
+            final String headerFileName = OUTPUT_PREFIX + annotatedClass.generatedName + "JNIWrappers.h";
+            final String nativesFileName = OUTPUT_PREFIX + annotatedClass.generatedName + "JNINatives.h";
+
+            final StringBuilder headerFile = new StringBuilder(GENERATED_COMMENT);
+            final StringBuilder implementationFile = new StringBuilder(GENERATED_COMMENT);
+            final StringBuilder nativesFile = new StringBuilder(GENERATED_COMMENT);
+
+            headerFile.append(
+                    "#ifndef " + getHeaderGuardName(headerFileName) + "\n" +
+                    "#define " + getHeaderGuardName(headerFileName) + "\n" +
+                    "\n" +
+                    "#ifndef MOZ_PREPROCESSOR\n" +
+                    "#include \"mozilla/jni/Refs.h\"\n" +
+                    "#endif\n" +
+                    "\n" +
+                    "namespace mozilla {\n" +
+                    "namespace java {\n" +
+                    "\n");
+
+            implementationFile.append(
+                    "#ifndef MOZ_PREPROCESSOR\n" +
+                    "#include \"" + headerFileName + "\"\n" +
+                    "#include \"mozilla/jni/Accessors.h\"\n" +
+                    "#endif\n" +
+                    "\n" +
+                    "namespace mozilla {\n" +
+                    "namespace java {\n" +
+                    "\n");
+
+            nativesFile.append(
+                    "#ifndef " + getHeaderGuardName(nativesFileName) + "\n" +
+                    "#define " + getHeaderGuardName(nativesFileName) + "\n" +
+                    "\n" +
+                    "#ifndef MOZ_PREPROCESSOR\n" +
+                    "#include \"" + headerFileName + "\"\n" +
+                    "#include \"mozilla/jni/Natives.h\"\n" +
+                    "#endif\n" +
+                    "\n" +
+                    "namespace mozilla {\n" +
+                    "namespace java {\n" +
+                    "\n");
+
+            generateClass(annotatedClass, headerFile, implementationFile, nativesFile);
+
+            implementationFile.append(
+                    "} /* java */\n" +
+                    "} /* mozilla */\n");
+
+            headerFile.append(
+                    "} /* java */\n" +
+                    "} /* mozilla */\n" +
+                    "#endif // " + getHeaderGuardName(headerFileName) + "\n");
+
+            nativesFile.append(
+                    "} /* java */\n" +
+                    "} /* mozilla */\n" +
+                    "#endif // " + getHeaderGuardName(nativesFileName) + "\n");
+
+            ret |= writeOutputFile(sourceFileName, implementationFile);
+            ret |= writeOutputFile(headerFileName, headerFile);
+            ret |= writeOutputFile(nativesFileName, nativesFile);
         }
-
-        implementationFile.append(
-                "} /* java */\n" +
-                "} /* mozilla */\n");
-
-        headerFile.append(
-                "} /* java */\n" +
-                "} /* mozilla */\n" +
-                "#endif // " + getHeaderGuardName(HEADER_FILE) + "\n");
-
-        nativesFile.append(
-                "} /* java */\n" +
-                "} /* mozilla */\n" +
-                "#endif // " + getHeaderGuardName(NATIVES_FILE) + "\n");
-
-        int ret = 0;
-        ret |= writeOutputFile(SOURCE_FILE, implementationFile);
-        ret |= writeOutputFile(HEADER_FILE, headerFile);
-        ret |= writeOutputFile(NATIVES_FILE, nativesFile);
 
         long e = System.currentTimeMillis();
         System.out.println("Annotation processing complete in " + (e - s) + "ms");
@@ -122,15 +129,14 @@ public class AnnotationProcessor {
         System.exit(ret);
     }
 
-    private static void generateClass(final ClassWithOptions annotatedClass) {
+    private static void generateClass(final ClassWithOptions annotatedClass,
+                                      final StringBuilder headerFile,
+                                      final StringBuilder implementationFile,
+                                      final StringBuilder nativesFile) {
         // Get an iterator over the appropriately generated methods of this class
         final GeneratableElementIterator methodIterator
                 = new GeneratableElementIterator(annotatedClass);
         final ClassWithOptions[] innerClasses = methodIterator.getInnerClasses();
-
-        if (!methodIterator.hasNext() && innerClasses.length == 0) {
-            return;
-        }
 
         final CodeGenerator generatorInstance = new CodeGenerator(annotatedClass);
         generatorInstance.generateClasses(innerClasses);
@@ -159,7 +165,7 @@ public class AnnotationProcessor {
         nativesFile.append(generatorInstance.getNativesFileContents());
 
         for (ClassWithOptions innerClass : innerClasses) {
-            generateClass(innerClass);
+            generateClass(innerClass, headerFile, implementationFile, nativesFile);
         }
     }
 
