@@ -182,7 +182,7 @@ ROLE(CHART,
 ROLE(DIALOG,
      "dialog",
      ATK_ROLE_DIALOG,
-     NSAccessibilityWindowRole,  //There's a dialog subrole.
+     NSAccessibilityGroupRole,  //There's a dialog subrole.
      ROLE_SYSTEM_DIALOG,
      ROLE_SYSTEM_DIALOG,
      java::SessionAccessibility::CLASSNAME_DIALOG,
