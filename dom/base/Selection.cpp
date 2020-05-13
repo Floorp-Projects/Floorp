@@ -404,7 +404,7 @@ void Selection::SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel,
  * a table element isn't selected.
  */
 // TODO: Figure out TableSelectionMode::Column and TableSelectionMode::AllCells
-static nsresult GetTableSelectionType(const nsRange& aRange,
+static nsresult GetTableSelectionMode(const nsRange& aRange,
                                       TableSelectionMode* aTableSelectionType) {
   if (!aTableSelectionType) {
     return NS_ERROR_NULL_POINTER;
@@ -467,7 +467,7 @@ MOZ_CAN_RUN_SCRIPT static nsresult GetTableCellLocationFromRange(
   *aRow = 0;
   *aCol = 0;
 
-  nsresult result = GetTableSelectionType(aRange, aSelectionType);
+  nsresult result = GetTableSelectionMode(aRange, aSelectionType);
   if (NS_FAILED(result)) return result;
 
   // Don't fail if range does not point to a single table cell,
@@ -477,7 +477,7 @@ MOZ_CAN_RUN_SCRIPT static nsresult GetTableCellLocationFromRange(
   }
 
   // Get the child content (the cell) pointed to by starting node of range
-  // We do minimal checking since GetTableSelectionType assures
+  // We do minimal checking since GetTableSelectionMode assures
   // us that this really is a table cell
   nsCOMPtr<nsIContent> child = aRange.GetChildAtStartOffset();
   if (!child) return NS_ERROR_FAILURE;
