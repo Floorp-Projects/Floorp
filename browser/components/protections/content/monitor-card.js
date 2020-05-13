@@ -15,6 +15,12 @@ const MONITOR_SIGN_IN_URL = RPMGetStringPref(
 const HOW_IT_WORKS_URL_PREF = RPMGetFormatURLPref(
   "browser.contentblocking.report.monitor.how_it_works.url"
 );
+const MONITOR_PREFERENCES_URL = RPMGetFormatURLPref(
+  "browser.contentblocking.report.monitor.preferences_url"
+);
+const MONITOR_HOME_PAGE_URL = RPMGetFormatURLPref(
+  "browser.contentblocking.report.monitor.home_page_url"
+);
 
 export default class MonitorClass {
   constructor(document) {
@@ -35,6 +41,19 @@ export default class MonitorClass {
     monitorAboutLink.addEventListener("click", () => {
       this.doc.sendTelemetryEvent("click", "mtr_about_link");
     });
+
+    const storedEmailLink = this.doc.querySelector(".monitor-block.email a");
+    storedEmailLink.href = MONITOR_PREFERENCES_URL;
+
+    const knownBreachesLink = this.doc.querySelector(
+      ".monitor-block.breaches a"
+    );
+    knownBreachesLink.href = MONITOR_HOME_PAGE_URL;
+
+    const exposedPasswordsLink = this.doc.querySelector(
+      ".monitor-block.passwords a"
+    );
+    exposedPasswordsLink.href = MONITOR_HOME_PAGE_URL;
   }
 
   /**
