@@ -1307,14 +1307,16 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   nsCOMPtr<nsIHttpChannel> newHttpChannel = do_QueryInterface(aNewChannel);
   if (newHttpChannel) {
     uint32_t responseCode = 0;
-    nsAutoCString method;
-    mRequest->GetMethod(method);
     bool rewriteToGET = false;
     if (oldHttpChannel &&
         NS_SUCCEEDED(oldHttpChannel->GetResponseStatus(&responseCode))) {
+      nsAutoCString method;
+      mRequest->GetMethod(method);
+
       // Fetch 4.4.11
       rewriteToGET =
-          (responseCode <= 302 && method.LowerCaseEqualsASCII("post")) ||
+          ((responseCode == 301 || responseCode == 302) &&
+           method.LowerCaseEqualsASCII("post")) ||
           (responseCode == 303 && !method.LowerCaseEqualsASCII("get") &&
            !method.LowerCaseEqualsASCII("head"));
     }
