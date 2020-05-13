@@ -128,7 +128,7 @@ class CrashReporter(
                 }
             }
 
-            logger.info("Crash report submitted to ${services.size} telemetry services")
+            logger.info("Crash report submitted to ${telemetryServices.size} telemetry services")
             withContext(Dispatchers.Main) {
                 then()
             }
