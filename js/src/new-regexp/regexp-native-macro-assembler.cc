@@ -280,10 +280,14 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
   if (mode_ == UC16 && ignore_case) {
     // We call a helper function for case-insensitive non-latin1 strings.
 
-    // Save volatile regs. temp1_ and temp2_ don't need to be saved.
+    // Save volatile regs. temp1_, temp2_, and current_character_
+    // don't need to be saved.  current_position_ needs to be saved
+    // even if it's non-volatile, because we modify it to use as an argument.
     LiveGeneralRegisterSet volatileRegs(GeneralRegisterSet::Volatile());
+    volatileRegs.addUnchecked(current_position_);
     volatileRegs.takeUnchecked(temp1_);
     volatileRegs.takeUnchecked(temp2_);
+    volatileRegs.takeUnchecked(current_character_);
     masm_.PushRegsInMask(volatileRegs);
 
     // Parameters are
