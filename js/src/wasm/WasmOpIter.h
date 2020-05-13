@@ -569,9 +569,11 @@ inline bool OpIter<Policy>::checkIsSubtypeOf(ValType actual, ValType expected) {
     return true;
   }
 
+  UniqueChars actualText = ToString(actual);
+  UniqueChars expectedText = ToString(expected);
   UniqueChars error(
       JS_smprintf("type mismatch: expression has type %s but expected %s",
-                  ToCString(actual), ToCString(expected)));
+                  actualText.get(), expectedText.get()));
   if (!error) {
     return false;
   }

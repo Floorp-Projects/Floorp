@@ -996,3 +996,37 @@ void wasm::DebugCodegen(DebugChannel channel, const char* fmt, ...) {
   va_end(ap);
 #endif
 }
+
+UniqueChars wasm::ToString(ValType type) {
+  const char* literal = nullptr;
+  switch (type.kind()) {
+    case ValType::I32:
+      literal = "i32";
+      break;
+    case ValType::I64:
+      literal = "i64";
+      break;
+    case ValType::V128:
+      literal = "v128";
+      break;
+    case ValType::F32:
+      literal = "f32";
+      break;
+    case ValType::F64:
+      literal = "f64";
+      break;
+    case ValType::Ref:
+      switch (type.refTypeKind()) {
+        case RefType::Any:
+          literal = "anyref";
+          break;
+        case RefType::Func:
+          literal = "funcref";
+          break;
+        case RefType::TypeIndex:
+          return JS_smprintf("optref %d", type.refType().typeIndex());
+      }
+      break;
+  }
+  return JS_smprintf("%s", literal);
+}
