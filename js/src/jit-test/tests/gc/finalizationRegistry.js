@@ -61,9 +61,36 @@ let registry = new FinalizationRegistry(x => 0);
 assertEq(Object.getPrototypeOf(registry), proto);
 assertEq(Object.getOwnPropertyNames(registry).length, 0);
 
+// Get a cleanup iterator.
+let iterator;
+registry = new FinalizationRegistry(it => iterator = it);
+registry.register({}, 0);
+gc();
+drainJobQueue();
+assertEq(typeof registry, 'object');
+assertEq(typeof iterator, 'object');
+
+// 3.5.2 The %FinalizationRegistryCleanupIteratorPrototype% Object
+let arrayIterator = [][Symbol.iterator]();
+let iteratorProto = arrayIterator.__proto__.__proto__;
+proto = iterator.__proto__;
+assertEq(typeof proto, "object");
+assertEq(proto.__proto__, iteratorProto);
+
+// 3.5.2.1 %FinalizationRegistryCleanupIteratorPrototype%.next()
+assertEq(proto.hasOwnProperty("next"), true);
+assertEq(typeof proto.next, "function");
+
+// 3.5.2.2 %FinalizationRegistryCleanupIteratorPrototype% [ @@toStringTag ]
+assertEq(proto[Symbol.toStringTag], "FinalizationRegistry Cleanup Iterator");
+checkPropertyDescriptor(proto, Symbol.toStringTag, false, false, true);
+
+// 3.5.3 Properties of FinalizationRegistry Cleanup Iterator Instances
+assertEq(Object.getOwnPropertyNames(iterator).length, 0);
+
 let heldValues = [];
-registry = new FinalizationRegistry(value => {
-  heldValues.push(value);
+registry = new FinalizationRegistry(iterator => {
+  heldValues.push(...iterator);
 });
 
 // Test a single target.
@@ -90,8 +117,8 @@ for (let i = 0; i < 100; i++) {
 // Test a single object in multiple registries
 heldValues = [];
 let heldValues2 = [];
-let registry2 = new FinalizationRegistry(value => {
-  heldValues2.push(value);
+let registry2 = new FinalizationRegistry(iterator => {
+  heldValues2.push(...iterator);
 });
 {
   let object = {};
@@ -169,8 +196,8 @@ class MyRegistry extends FinalizationRegistry {
     super(callback);
   }
 }
-let r2 = new MyRegistry(value => {
-  heldValues.push(value);
+let r2 = new MyRegistry(iterator => {
+  heldValues.push(...iterator);
 });
 heldValues = [];
 r2.register({}, 42);
@@ -179,9 +206,26 @@ drainJobQueue();
 assertEq(heldValues.length, 1);
 assertEq(heldValues[0], 42);
 
+// Test trying to use iterator after the callback.
+iterator = undefined;
+let r3 = new FinalizationRegistry(i => iterator = i);
+r3.register({}, 1);
+gc();
+drainJobQueue();
+assertEq(typeof iterator, 'object');
+assertThrowsTypeError(() => iterator.next());
+
+// Test trying to use the wrong iterator inside the callback.
+let r4 = new FinalizationRegistry(x => {
+  assertThrowsTypeError(() => iterator.next());
+});
+r4.register({}, 1);
+gc();
+drainJobQueue();
+
 // Test cleanupSome.
 heldValues = [];
-let r5 = new FinalizationRegistry(v => heldValues.push(v));
+let r5 = new FinalizationRegistry(i => heldValues = [...i]);
 r5.register({}, 1);
 r5.register({}, 2);
 r5.register({}, 3);
@@ -195,29 +239,15 @@ assertEq(heldValues[2], 3);
 
 // Test trying to call cleanupSome in callback.
 let r6 = new FinalizationRegistry(x => {
-  r6.cleanupSome();
+  assertThrowsTypeError(() => r6.cleanupSome());
 });
 r6.register({}, 1);
 gc();
 drainJobQueue();
 
-// Test trying to call cleanupSome in callback with multiple values.
-let callbackCounter7 = 0;
-let r7 = new FinalizationRegistry(x => {
-  callbackCounter7++;
-  r7.cleanupSome();
-});
-r7.register({}, 1);
-r7.register({}, 2);
-r7.register({}, 3);
-r7.register({}, 4);
-gc();
-drainJobQueue();
-assertEq(callbackCounter7, 4);
-
 // Test that targets don't keep the finalization registry alive.
 let target = {};
-registry = new FinalizationRegistry(value => undefined);
+registry = new FinalizationRegistry(iterator => undefined);
 registry.register(target, 1);
 let weakRef = new WeakRef(registry);
 registry = undefined;
@@ -229,7 +259,7 @@ assertEq(typeof target, 'object');
 
 // Test that targets don't keep the finalization registry alive when also
 // used as the unregister token.
-registry = new FinalizationRegistry(value => undefined);
+registry = new FinalizationRegistry(iterator => undefined);
 registry.register(target, 1, target);
 weakRef = new WeakRef(registry);
 registry = undefined;
@@ -241,8 +271,8 @@ assertEq(typeof target, 'object');
 
 // Test that cleanup doesn't happen if the finalization registry dies.
 heldValues = [];
-new FinalizationRegistry(value => {
-  heldValues.push(value);
+new FinalizationRegistry(iterator => {
+  heldValues.push(...iterator);
 }).register({}, 1);
 gc();
 drainJobQueue();

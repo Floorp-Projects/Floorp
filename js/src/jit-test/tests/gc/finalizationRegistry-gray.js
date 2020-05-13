@@ -2,7 +2,7 @@
 
 // Test gray finalization registry is correctly barrired.
 target = {};
-registry = new FinalizationRegistry(value => undefined);
+registry = new FinalizationRegistry(iterator => undefined);
 registry.register(target, 1);
 grayRoot()[0] = registry;
 registry = undefined;

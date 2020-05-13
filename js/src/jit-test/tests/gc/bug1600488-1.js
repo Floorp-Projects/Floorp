@@ -1,9 +1,9 @@
 // |jit-test| --enable-weak-refs
 
 const token = {};
-let cleanedUpValue;
-const finalizationRegistry = new FinalizationRegistry(value => {
-  cleanedUpValue = value;
+let iterated;
+const finalizationRegistry = new FinalizationRegistry(items => {
+    iterated = items.next().value;
 });
 {
     let object = {};
@@ -12,5 +12,5 @@ const finalizationRegistry = new FinalizationRegistry(value => {
 }
 gc();
 finalizationRegistry.cleanupSome();
-assertEq(cleanedUpValue, token);
+assertEq(iterated, token);
 assertEq(finalizationRegistry.unregister(token), false);

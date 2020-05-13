@@ -115,6 +115,7 @@ class GlobalObject : public NativeObject {
     IMPORT_ENTRY_PROTO,
     EXPORT_ENTRY_PROTO,
     REQUESTED_MODULE_PROTO,
+    FINALIZATION_ITERATOR_PROTO,
     REGEXP_STATICS,
     RUNTIME_CODEGEN_ENABLED,
     INTRINSICS,
@@ -547,6 +548,12 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_TypedArray).toObject();
   }
 
+  static JSObject* getOrCreateFinalizationIteratorPrototype(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    return getOrCreateObject(cx, global, FINALIZATION_ITERATOR_PROTO,
+                             initFinalizationIteratorProto);
+  }
+
  private:
   using ObjectInitOp = bool (*)(JSContext*, Handle<GlobalObject*>);
 
@@ -845,6 +852,10 @@ class GlobalObject : public NativeObject {
   // Implemented in builtin/TypedObject.cpp
   static bool initTypedObjectModule(JSContext* cx,
                                     Handle<GlobalObject*> global);
+
+  // Implemented in builtin/FinalizationRegistry.cpp
+  static bool initFinalizationIteratorProto(JSContext* cx,
+                                            Handle<GlobalObject*> global);
 
   static bool initStandardClasses(JSContext* cx, Handle<GlobalObject*> global);
   static bool initSelfHostingBuiltins(JSContext* cx,

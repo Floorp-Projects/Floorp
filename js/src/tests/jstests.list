@@ -412,6 +412,14 @@ skip script test262/intl402/ListFormat/constructor/constructor/proto-from-ctor-r
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1362154
 skip script test262/built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js
 
+# https://github.com/tc39/proposal-weakrefs/pull/187
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1629796
+skip script test262/built-ins/FinalizationRegistry/gc-has-one-chance-to-call-cleanupCallback.js
+skip script test262/built-ins/FinalizationRegistry/prototype/cleanupSome/holdings-multiple-values.js
+skip script test262/built-ins/FinalizationRegistry/prototype/cleanupSome/cleanup-prevented-with-reference.js
+skip script test262/built-ins/FinalizationRegistry/prototype/cleanupSome/reentrancy.js
+skip script test262/built-ins/FinalizationRegistry/prototype/unregister/unregister-cleaned-up-cell.js
+
 # Depends upon the SharedArrayBuffer constructor being defined as a global
 # property -- and right now, it's only defined for cross-site-isolated pages
 # that request it using COOP/COEP.
