@@ -138,7 +138,7 @@
 
 - name: GuardToInt32ModUint32
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: ValId
     result: Int32Id
