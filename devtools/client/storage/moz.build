@@ -6,10 +6,6 @@
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
-DIRS += [
-    'utils',
-]
-
 DevToolsModules(
     'panel.js',
     'ui.js',
