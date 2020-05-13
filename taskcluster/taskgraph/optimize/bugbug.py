@@ -51,6 +51,9 @@ class BugBugPushSchedules(OptimizationStrategy):
         self.fallback = fallback
 
     def should_remove_task(self, task, params, importance):
+        if params['project'] not in ("autoland", "try"):
+            return False
+
         branch = urlsplit(params['head_repository']).path.strip('/')
         rev = params['head_rev']
         try:
