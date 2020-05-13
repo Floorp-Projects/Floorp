@@ -56,16 +56,16 @@ class IMediaInfoUpdater {
 
   // Use this method to update media session's declared playback state for the
   // specific media session.
-  virtual void SetDeclaredPlaybackState(uint64_t aSessionContextId,
+  virtual void SetDeclaredPlaybackState(uint64_t aBrowsingContextId,
                                         MediaSessionPlaybackState aState) = 0;
 
   // Use these methods to update controller's media session list. We'd use it
   // when media session is created/destroyed in the content process.
-  virtual void NotifySessionCreated(uint64_t aSessionContextId) = 0;
-  virtual void NotifySessionDestroyed(uint64_t aSessionContextId) = 0;
+  virtual void NotifySessionCreated(uint64_t aBrowsingContextId) = 0;
+  virtual void NotifySessionDestroyed(uint64_t aBrowsingContextId) = 0;
 
   // Use this method to update the metadata for the specific media session.
-  virtual void UpdateMetadata(uint64_t aSessionContextId,
+  virtual void UpdateMetadata(uint64_t aBrowsingContextId,
                               const Maybe<MediaMetadataBase>& aMetadata) = 0;
 
   // Use this method to update if the media in content process is being used in
@@ -127,7 +127,7 @@ class MediaSessionController : public IMediaInfoUpdater {
   ~MediaSessionController() = default;
   virtual void HandleActualPlaybackStateChanged() = 0;
 
-  uint64_t mTopLevelBCId;
+  uint64_t mTopLevelBrowsingContextId;
   Maybe<uint64_t> mActiveMediaSessionContextId;
 
  private:
