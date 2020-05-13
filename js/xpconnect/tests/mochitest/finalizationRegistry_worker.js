@@ -19,27 +19,27 @@ onmessage = (event) => {
 
 function startTest() {
   // Registry with no registered objects.
-  let registry1 = new FinalizationRegistry(i => holdings1 = [...i]);
+  let registry1 = new FinalizationRegistry(v => { holdings1.push(v); });
 
   // Registry with three registered objects.
-  let registry2 = new FinalizationRegistry(i => holdings2 = [...i]);
+  let registry2 = new FinalizationRegistry(v => { holdings2.push(v); });
   registry2.register({}, 1);
   registry2.register({}, 2);
   registry2.register({}, 3);
 
   // Registry with registered object that is then unregistered.
-  let registry3 = new FinalizationRegistry(i => holdings3 = [...i]);
+  let registry3 = new FinalizationRegistry(v => { holdings3.push(v); });
   let token3 = {}
   registry3.register({}, 1, token3);
   registry3.unregister(token3);
 
   // Registry with registered object that doesn't die.
-  let registry4 = new FinalizationRegistry(i => holdings4 = [...i]);
+  let registry4 = new FinalizationRegistry(v => { holdings4.push(v); });
   let object4 = {};
   registry4.register(object4, 1);
 
   // Registry observing cyclic JS data structure.
-  let registry5 = new FinalizationRegistry(i => holdings5 = [...i]);
+  let registry5 = new FinalizationRegistry(v => { holdings5.push(v); });
   registry5.register(makeJSCycle(4), 5);
 
   const { gc } = getJSTestingFunctions();
