@@ -1286,6 +1286,10 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext,
       uint64_t aSessionHistoryEntryID);
 
+  mozilla::ipc::IPCResult RecvHistoryGo(
+      const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
+      HistoryGoResolver&& aResolveRequestedIndex);
+
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();

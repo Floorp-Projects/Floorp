@@ -35,7 +35,12 @@ void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
   mHistory = new nsSHistory(mBrowsingContext);
 }
 
-int32_t ChildSHistory::Count() { return mHistory->GetCount(); }
+int32_t ChildSHistory::Count() {
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    return mLength;
+  }
+  return mHistory->GetCount();
+}
 
 int32_t ChildSHistory::Index() {
   int32_t index;
@@ -63,7 +68,19 @@ void ChildSHistory::Go(int32_t aOffset, ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  aRv = mHistory->GotoIndex(index.value());
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    nsCOMPtr<nsISHistory> shistory = mHistory;
+    ContentChild::GetSingleton()->SendHistoryGo(
+        mBrowsingContext, index.value(),
+        [shistory](int32_t&& aRequestedIndex) {
+          // FIXME Should probably only do this for non-fission.
+          shistory->InternalSetRequestedIndex(aRequestedIndex);
+        },
+        [](mozilla::ipc::
+               ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
+  } else {
+    aRv = mHistory->GotoIndex(index.value());
+  }
 }
 
 void ChildSHistory::AsyncGo(int32_t aOffset) {

@@ -148,6 +148,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
     RefPtr<nsDocShellLoadState> mLoadState;
   };
 
+  static void LoadURIs(nsTArray<LoadEntryResult>& aLoadResults);
+
   // If this doesn't return an error then either aLoadResult is set to nothing,
   // in which case the caller should ignore the load, or it returns a valid
   // LoadEntryResult in aLoadResult which the caller should use to do the load.
