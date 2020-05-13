@@ -56,7 +56,10 @@ typedef MALLOC_USABLE_SIZE_CONST_PTR void* usable_ptr_t;
 
 typedef size_t arena_id_t;
 
-#define ARENA_FLAG_RANDOMIZE_SMALL 1
+#define ARENA_FLAG_RANDOMIZE_SMALL_MASK 0x3
+#define ARENA_FLAG_RANDOMIZE_SMALL_DEFAULT 0
+#define ARENA_FLAG_RANDOMIZE_SMALL_ENABLED 1
+#define ARENA_FLAG_RANDOMIZE_SMALL_DISABLED 2
 
 typedef struct arena_params_s {
   size_t mMaxDirty;

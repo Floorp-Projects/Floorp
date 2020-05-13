@@ -103,7 +103,7 @@ void js::InitMallocAllocator() {
   MallocArena = moz_create_arena();
 
   arena_params_t params;
-  params.mFlags |= ARENA_FLAG_RANDOMIZE_SMALL;
+  params.mFlags |= ARENA_FLAG_RANDOMIZE_SMALL_ENABLED;
   ArrayBufferContentsArena = moz_create_arena_with_params(&params);
   StringBufferArena = moz_create_arena_with_params(&params);
 }
