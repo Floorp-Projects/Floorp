@@ -3,13 +3,10 @@ package org.mozilla.fenix.components.searchengine
 import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
-import android.graphics.Bitmap
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.just
-import io.mockk.mockk
 import io.mockk.mockkObject
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -85,7 +82,7 @@ class FenixSearchEngineProviderTest {
 
     @Test
     fun `GIVEN sharedprefs contains installed engines WHEN installedSearchEngineIdentifiers THEN defaultEngines + customEngines ids are returned`() = runBlockingTest {
-        val sp = testContext.getSharedPreferences(FenixSearchEngineProvider.PREF_FILE, Context.MODE_PRIVATE)
+        val sp = testContext.getSharedPreferences(FenixSearchEngineProvider.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE)
         sp.edit().putStringSet(fenixSearchEngineProvider.localeAwareInstalledEnginesKey(), persistedInstalledEngines).apply()
 
         val expectedStored = persistedInstalledEngines

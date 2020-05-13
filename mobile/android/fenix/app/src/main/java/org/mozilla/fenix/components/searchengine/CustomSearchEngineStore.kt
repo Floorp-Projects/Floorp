@@ -124,6 +124,6 @@ object CustomSearchEngineStore {
         }
     }
 
-    const val PREF_KEY_CUSTOM_SEARCH_ENGINES = "pref_custom_search_engines"
+    private const val PREF_KEY_CUSTOM_SEARCH_ENGINES = "pref_custom_search_engines"
     const val PREF_FILE_SEARCH_ENGINES = "custom-search-engines"
 }

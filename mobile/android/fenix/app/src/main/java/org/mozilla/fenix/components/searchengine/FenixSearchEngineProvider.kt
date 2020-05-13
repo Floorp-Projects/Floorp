@@ -183,7 +183,7 @@ open class FenixSearchEngineProvider(
     }
 
     private fun prefs(context: Context) = context.getSharedPreferences(
-        PREF_FILE,
+        PREF_FILE_SEARCH_ENGINES,
         Context.MODE_PRIVATE
     )
 
@@ -229,7 +229,7 @@ open class FenixSearchEngineProvider(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     companion object {
         val BUNDLED_SEARCH_ENGINES = listOf("reddit", "youtube")
-        const val PREF_FILE = "fenix-search-engine-provider"
+        const val PREF_FILE_SEARCH_ENGINES = "fenix-search-engine-provider"
         const val INSTALLED_ENGINES_KEY = "fenix-installed-search-engines"
         const val CURRENT_LOCALE_KEY = "fenix-current-locale"
     }

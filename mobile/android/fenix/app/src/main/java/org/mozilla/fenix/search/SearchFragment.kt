@@ -47,6 +47,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
+import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.hideToolbar
@@ -130,7 +131,8 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         awesomeBarView = AwesomeBarView(view.scrollable_area, searchInteractor,
             view.findViewById(R.id.awesomeBar))
-        setShortcutsChangedListener()
+        setShortcutsChangedListener(CustomSearchEngineStore.PREF_FILE_SEARCH_ENGINES)
+        setShortcutsChangedListener(FenixSearchEngineProvider.PREF_FILE_SEARCH_ENGINES)
 
         view.scrollView.setOnScrollChangeListener {
                 _: NestedScrollView, _: Int, _: Int, _: Int, _: Int ->
@@ -168,14 +170,12 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         return (speechIntent.resolveActivity(requireContext().packageManager) != null)
     }
 
-    private fun setShortcutsChangedListener() {
+    private fun setShortcutsChangedListener(preferenceFileName: String) {
         requireContext().getSharedPreferences(
-            CustomSearchEngineStore.PREF_FILE_SEARCH_ENGINES,
+            preferenceFileName,
             Context.MODE_PRIVATE
-        ).registerOnSharedPreferenceChangeListener(viewLifecycleOwner) { _, key ->
-            if (key == CustomSearchEngineStore.PREF_KEY_CUSTOM_SEARCH_ENGINES) {
-                awesomeBarView.update(searchStore.state)
-            }
+        ).registerOnSharedPreferenceChangeListener(viewLifecycleOwner) { _, _ ->
+            awesomeBarView.update(searchStore.state)
         }
     }
 
