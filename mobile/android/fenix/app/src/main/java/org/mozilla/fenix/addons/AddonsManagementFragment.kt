@@ -27,6 +27,7 @@ import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
 import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
+import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -38,7 +39,7 @@ import org.mozilla.fenix.theme.ThemeManager
 /**
  * Fragment use for managing add-ons.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
     AddonsManagerAdapterDelegate {
     /**
@@ -167,6 +168,11 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
         return findPreviousDialogFragment() != null
     }
 
+    private fun hasExistingAddonInstallationDialogFragment(): Boolean {
+        return parentFragmentManager.findFragmentByTag(INSTALLATION_DIALOG_FRAGMENT_TAG)
+            as? AddonInstallationDialogFragment != null
+    }
+
     private fun showPermissionDialog(addon: Addon) {
         if (!isInstallationInProgress && !hasExistingPermissionDialogFragment()) {
             val dialog = PermissionsDialogFragment.newInstance(
@@ -190,6 +196,45 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
         }
     }
 
+    private fun showInstallationDialog(addon: Addon) {
+        if (!isInstallationInProgress && !hasExistingAddonInstallationDialogFragment()) {
+            val addonCollectionProvider = requireContext().components.addonCollectionProvider
+
+            val dialog = AddonInstallationDialogFragment.newInstance(
+                addon = addon,
+                addonCollectionProvider = addonCollectionProvider,
+                promptsStyling = AddonInstallationDialogFragment.PromptsStyling(
+                    gravity = Gravity.BOTTOM,
+                    shouldWidthMatchParent = true,
+                    confirmButtonBackgroundColor = ThemeManager.resolveAttribute(
+                        R.attr.accent,
+                        requireContext()
+                    ),
+                    confirmButtonTextColor = ThemeManager.resolveAttribute(
+                        R.attr.contrastText,
+                        requireContext()
+                    ),
+                    confirmButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()
+                ),
+                onConfirmButtonClicked = { _, allowInPrivateBrowsing ->
+                    if (allowInPrivateBrowsing) {
+                        requireContext().components.addonManager.setAddonAllowedInPrivateBrowsing(
+                            addon,
+                            allowInPrivateBrowsing,
+                            onSuccess = {
+                                runIfFragmentIsAttached {
+                                    adapter?.updateAddon(it)
+                                }
+                            }
+                        )
+                    }
+                }
+            )
+
+            dialog.show(parentFragmentManager, INSTALLATION_DIALOG_FRAGMENT_TAG)
+        }
+    }
+
     private val onPositiveButtonClicked: ((Addon) -> Unit) = { addon ->
         addonProgressOverlay?.visibility = View.VISIBLE
 
@@ -202,18 +247,11 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
         requireContext().components.addonManager.installAddon(
             addon,
             onSuccess = {
-                this@AddonsManagementFragment.view?.let { view ->
-                    val rootView = activity?.getRootView() ?: view
-                    showSnackBar(
-                        rootView,
-                        getString(
-                            R.string.mozac_feature_addons_successfully_installed,
-                            it.translatedName
-                        )
-                    )
+                runIfFragmentIsAttached {
+                    isInstallationInProgress = false
                     adapter?.updateAddon(it)
                     addonProgressOverlay?.visibility = View.GONE
-                    isInstallationInProgress = false
+                    showInstallationDialog(it)
                 }
             },
             onError = { _, _ ->
@@ -245,5 +283,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
 
     companion object {
         private const val PERMISSIONS_DIALOG_FRAGMENT_TAG = "ADDONS_PERMISSIONS_DIALOG_FRAGMENT"
+        private const val INSTALLATION_DIALOG_FRAGMENT_TAG = "ADDONS_INSTALLATION_DIALOG_FRAGMENT"
     }
 }
