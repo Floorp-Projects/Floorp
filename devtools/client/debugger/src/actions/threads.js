@@ -10,6 +10,7 @@ import type { Thread, ThreadList, ActorId } from "../types";
 import type { Action, ThunkArgs } from "./types";
 import { removeSourceActors } from "./source-actors";
 import { newGeneratedSources } from "./sources";
+import { validateContext } from "../utils/context";
 
 import {
   getContext,
@@ -26,17 +27,20 @@ async function addThreads(
   dispatch(({ type: "INSERT_THREADS", cx, threads: addedThreads }: Action));
 
   // Fetch the sources and install breakpoints on any new workers.
-  await Promise.all(addedThreads.map(async thread => {
-    try {
-      const sources = await client.fetchThreadSources(thread.actor);
-      await dispatch(newGeneratedSources(sources));
-    } catch (e) {
-      // NOTE: This fails quietly because it is pretty easy for sources to
-      // throw during the fetch if their thread shuts down,
-      // which would cause test failures.
-      console.error(e);
-    }
-  }));
+  await Promise.all(
+    addedThreads.map(async thread => {
+      try {
+        const sources = await client.fetchThreadSources(thread.actor);
+        validateContext(getState(), cx);
+        await dispatch(newGeneratedSources(sources));
+      } catch (e) {
+        // NOTE: This fails quietly because it is pretty easy for sources to
+        // throw during the fetch if their thread shuts down,
+        // which would cause test failures.
+        console.error(e);
+      }
+    })
+  );
 }
 
 function removeThreads(
@@ -60,8 +64,10 @@ function removeThreads(
 
 export function addTarget(targetFront: Target) {
   return async function(args: ThunkArgs) {
-    const { client } = args;
+    const { client, getState } = args;
+    const cx = getContext(getState());
     const thread = await client.attachThread(targetFront);
+    validateContext(getState(), cx);
     return addThreads(args, [thread]);
   };
 }
@@ -82,6 +88,7 @@ export function updateThreads() {
     const { dispatch, getState, client } = args;
     const cx = getContext(getState());
     const threads = await client.fetchThreads();
+    validateContext(getState(), cx);
 
     const currentThreads = getThreads(getState());
 
