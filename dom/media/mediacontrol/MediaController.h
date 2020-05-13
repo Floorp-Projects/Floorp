@@ -10,7 +10,7 @@
 #include "ContentMediaController.h"
 #include "MediaEventSource.h"
 #include "MediaPlaybackStatus.h"
-#include "mozilla/dom/MediaSessionController.h"
+#include "MediaStatusManager.h"
 #include "mozilla/LinkedList.h"
 #include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
@@ -71,7 +71,7 @@ class IMediaController {
  */
 class MediaController final
     : public IMediaController,
-      public MediaSessionController,
+      public MediaStatusManager,
       public LinkedListElement<RefPtr<MediaController>> {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaController, override);

@@ -23,7 +23,7 @@ namespace mozilla {
 namespace dom {
 
 MediaController::MediaController(uint64_t aBrowsingContextId)
-    : MediaSessionController(aBrowsingContextId) {
+    : MediaStatusManager(aBrowsingContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "MediaController only runs on Chrome process!");
   LOG("Create controller %" PRId64, Id());
@@ -128,8 +128,7 @@ void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
   if (mShutdown) {
     return;
   }
-  MediaSessionController::NotifyMediaPlaybackChanged(aBrowsingContextId,
-                                                     aState);
+  MediaStatusManager::NotifyMediaPlaybackChanged(aBrowsingContextId, aState);
 
   // Update controller's status according to the media status.
   if (ShouldActivateController()) {
@@ -146,7 +145,7 @@ void MediaController::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
   }
 
   bool oldAudible = IsAudible();
-  MediaSessionController::NotifyMediaAudibleChange(aBrowsingContextId, aState);
+  MediaStatusManager::NotifyMediaAudibleChanged(aBrowsingContextId, aState);
   if (IsAudible() == oldAudible) {
     return;
   }
