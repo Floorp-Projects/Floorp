@@ -4204,24 +4204,15 @@ bool nsNativeThemeCocoa::WidgetIsContainer(StyleAppearance aAppearance) {
 }
 
 bool nsNativeThemeCocoa::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::Textarea:
-    case StyleAppearance::Textfield:
-    case StyleAppearance::Searchfield:
-    case StyleAppearance::NumberInput:
-    case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton:
-    case StyleAppearance::Button:
-    case StyleAppearance::MozMacHelpButton:
-    case StyleAppearance::MozMacDisclosureButtonOpen:
-    case StyleAppearance::MozMacDisclosureButtonClosed:
-    case StyleAppearance::Radio:
-    case StyleAppearance::Range:
-    case StyleAppearance::Checkbox:
-      return true;
-    default:
-      return false;
-  }
+  if (aAppearance == StyleAppearance::MenulistButton || aAppearance == StyleAppearance::Button ||
+      aAppearance == StyleAppearance::MozMacHelpButton ||
+      aAppearance == StyleAppearance::MozMacDisclosureButtonOpen ||
+      aAppearance == StyleAppearance::MozMacDisclosureButtonClosed ||
+      aAppearance == StyleAppearance::Radio || aAppearance == StyleAppearance::Range ||
+      aAppearance == StyleAppearance::Checkbox)
+    return true;
+
+  return false;
 }
 
 bool nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker() { return false; }

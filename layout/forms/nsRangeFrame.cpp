@@ -261,11 +261,8 @@ void nsRangeFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  // FIXME(emilio): This is using ThemeWantsButtonInnerFocusRing even though
-  // it's painting the ::-moz-focus-outer pseudo-class... But why is
-  // ::-moz-focus-outer useful, instead of outline?
-  if (IsThemed(disp) && !PresContext()->Theme()->ThemeWantsButtonInnerFocusRing(
-                            disp->mAppearance)) {
+  if (IsThemed(disp) &&
+      PresContext()->Theme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
     return;  // the native theme displays its own visual indication of focus
   }
 
