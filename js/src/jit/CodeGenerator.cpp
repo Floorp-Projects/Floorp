@@ -4755,11 +4755,9 @@ void CodeGenerator::visitTruncateBigIntToInt64(LTruncateBigIntToInt64* lir) {
   masm.loadBigInt64(operand, output);
 }
 
-void CodeGenerator::visitInt64ToBigInt(LInt64ToBigInt* lir) {
-  Register64 input = ToRegister64(lir->input());
-  Register temp = ToRegister(lir->temp());
-  Register output = ToRegister(lir->output());
-
+void CodeGenerator::emitCreateBigInt(LInstruction* lir, Scalar::Type type,
+                                     Register64 input, Register output,
+                                     Register maybeTemp) {
 #if JS_BITS_PER_WORD == 32
   using Fn = BigInt* (*)(JSContext*, uint32_t, uint32_t);
   auto args = ArgList(input.low, input.high);
@@ -4768,12 +4766,46 @@ void CodeGenerator::visitInt64ToBigInt(LInt64ToBigInt* lir) {
   auto args = ArgList(input);
 #endif
 
-  OutOfLineCode* ool = oolCallVM<Fn, jit::CreateBigIntFromInt64>(
-      lir, args, StoreRegisterTo(output));
+  OutOfLineCode* ool;
+  if (type == Scalar::BigInt64) {
+    ool = oolCallVM<Fn, jit::CreateBigIntFromInt64>(lir, args,
+                                                    StoreRegisterTo(output));
+  } else {
+    MOZ_ASSERT(type == Scalar::BigUint64);
+    ool = oolCallVM<Fn, jit::CreateBigIntFromUint64>(lir, args,
+                                                     StoreRegisterTo(output));
+  }
 
-  masm.newGCBigInt(output, temp, ool->entry(), bigIntsCanBeInNursery());
-  masm.initializeBigInt64(Scalar::BigInt64, output, input);
+  if (maybeTemp != InvalidReg) {
+    masm.newGCBigInt(output, maybeTemp, ool->entry(), bigIntsCanBeInNursery());
+  } else {
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(input);
+    regs.take(output);
+
+    Register temp = regs.takeAny();
+
+    masm.push(temp);
+
+    Label fail, ok;
+    masm.newGCBigInt(output, temp, &fail, bigIntsCanBeInNursery());
+    masm.pop(temp);
+    masm.jump(&ok);
+    masm.bind(&fail);
+    masm.pop(temp);
+    masm.jump(ool->entry());
+    masm.bind(&ok);
+  }
+  masm.initializeBigInt64(type, output, input);
   masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitInt64ToBigInt(LInt64ToBigInt* lir) {
+  Register64 input = ToRegister64(lir->input());
+  Register temp = ToRegister(lir->temp());
+  Register output = ToRegister(lir->output());
+
+  emitCreateBigInt(lir, Scalar::BigInt64, input, output, temp);
 }
 
 void CodeGenerator::visitTypeBarrierV(LTypeBarrierV* lir) {
@@ -12104,27 +12136,7 @@ void CodeGenerator::visitLoadUnboxedBigInt(LLoadUnboxedBigInt* lir) {
     masm.load64(source, temp64);
   }
 
-#if JS_BITS_PER_WORD == 32
-  using Fn = BigInt* (*)(JSContext*, uint32_t, uint32_t);
-  auto args = ArgList(temp64.low, temp64.high);
-#else
-  using Fn = BigInt* (*)(JSContext*, uint64_t);
-  auto args = ArgList(temp64);
-#endif
-
-  OutOfLineCode* ool;
-  if (storageType == Scalar::BigInt64) {
-    ool = oolCallVM<Fn, jit::CreateBigIntFromInt64>(lir, args,
-                                                    StoreRegisterTo(out));
-  } else {
-    MOZ_ASSERT(storageType == Scalar::BigUint64);
-    ool = oolCallVM<Fn, jit::CreateBigIntFromUint64>(lir, args,
-                                                     StoreRegisterTo(out));
-  }
-
-  masm.newGCBigInt(out, temp, ool->entry(), bigIntsCanBeInNursery());
-  masm.initializeBigInt64(storageType, out, temp64);
-  masm.bind(ool->rejoin());
+  emitCreateBigInt(lir, storageType, temp64, out, temp);
 }
 
 void CodeGenerator::visitLoadTypedArrayElementHole(
@@ -12196,28 +12208,7 @@ void CodeGenerator::visitLoadTypedArrayElementHoleBigInt(
   masm.load64(source, temp64);
 
   Register bigInt = out.scratchReg();
-
-#if JS_BITS_PER_WORD == 32
-  using Fn = BigInt* (*)(JSContext*, uint32_t, uint32_t);
-  auto args = ArgList(temp64.low, temp64.high);
-#else
-  using Fn = BigInt* (*)(JSContext*, uint64_t);
-  auto args = ArgList(temp64);
-#endif
-
-  OutOfLineCode* ool;
-  if (arrayType == Scalar::BigInt64) {
-    ool = oolCallVM<Fn, jit::CreateBigIntFromInt64>(lir, args,
-                                                    StoreRegisterTo(bigInt));
-  } else {
-    MOZ_ASSERT(arrayType == Scalar::BigUint64);
-    ool = oolCallVM<Fn, jit::CreateBigIntFromUint64>(lir, args,
-                                                     StoreRegisterTo(bigInt));
-  }
-
-  masm.newGCBigInt(bigInt, temp, ool->entry(), bigIntsCanBeInNursery());
-  masm.initializeBigInt64(arrayType, bigInt, temp64);
-  masm.bind(ool->rejoin());
+  emitCreateBigInt(lir, arrayType, temp64, bigInt, temp);
 
   masm.tagValue(JSVAL_TYPE_BIGINT, bigInt, out);
   masm.jump(&done);
