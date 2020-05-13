@@ -460,8 +460,9 @@ license file's hash.
 
 {files}
 
-Please find a way to reduce the sizes of these files or talk to a build
-peer about the particular large files you are adding.
+If you can't reduce the size of these files, talk to a build peer (on the #build
+channel at https://chat.mozilla.org) about the particular large files you are
+adding.
 
 The changes from `mach vendor rust` will NOT be added to version control.
 

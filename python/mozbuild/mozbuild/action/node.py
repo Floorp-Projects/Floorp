@@ -20,7 +20,8 @@ in SCRIPT_ALLOWLIST in python/mozbuild/mozbuild/action/node.py.
 Using NodeJS from moz.build is currently in beta, and node
 scripts to be executed need to be added to the allowlist and
 reviewed by a build peer so that we can get a better sense of
-how support should evolve.
+how support should evolve. (To consult a build peer, raise a
+question in the #build channel at https://chat.mozilla.org.)
 '''
 
 
