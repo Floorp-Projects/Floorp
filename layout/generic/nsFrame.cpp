@@ -7295,6 +7295,15 @@ Matrix4x4Flagged nsIFrame::GetTransformMatrix(ViewportType aViewportType,
                                 nsDisplayTransform::OFFSET_BY_ORIGIN);
     }
 
+    // The offset from a zoomed content root to its parent (e.g. from
+    // a canvas frame to a scroll frame) is in layout coordinates, so
+    // apply it before applying any layout-to-visual transform.
+    *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(this);
+    nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
+    /* Combine the raw transform with a translation to our parent. */
+    result.PostTranslate(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
+                         NSAppUnitsToFloatPixels(delta.y, scaleFactor), 0.0f);
+
     if (zoomedContentRoot) {
       Matrix4x4 layoutToVisual;
       ScrollableLayerGuid::ViewID targetScrollId =
@@ -7313,12 +7322,6 @@ Matrix4x4Flagged nsIFrame::GetTransformMatrix(ViewportType aViewportType,
       }
       result = result * layoutToVisual;
     }
-
-    *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(this);
-    nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
-    /* Combine the raw transform with a translation to our parent. */
-    result.PostTranslate(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
-                         NSAppUnitsToFloatPixels(delta.y, scaleFactor), 0.0f);
 
     return result;
   }
