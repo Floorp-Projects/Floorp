@@ -143,7 +143,7 @@ def push_to_try(method, msg, try_task_config=None,
                 push=True, closed_tree=False, files_to_change=None):
     check_working_directory(push)
 
-    if try_task_config and method not in ('auto', 'empty'):
+    if try_task_config and method not in ('auto', 'empty', 'release'):
         display_push_estimates(try_task_config)
 
     # Format the commit message

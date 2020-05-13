@@ -873,9 +873,16 @@ static bool RegisterScriptPathWithModuleLoader(JSContext* cx,
     return false;
   }
 
-  RootedObject infoObject(cx, JS_NewPlainObject(cx));
-  if (!infoObject) {
-    return false;
+  RootedObject infoObject(cx);
+
+  Value val = JS::GetScriptPrivate(script);
+  if (val.isUndefined()) {
+    infoObject = JS_NewPlainObject(cx);
+    if (!infoObject) {
+      return false;
+    }
+  } else {
+    infoObject = val.toObjectOrNull();
   }
 
   RootedValue pathValue(cx, StringValue(path));
@@ -1924,7 +1931,15 @@ static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
     return false;
   }
   if (v.isObject()) {
-    options.setElement(&v.toObject());
+    RootedObject infoObject(cx, JS_NewPlainObject(cx));
+    RootedValue elementValue(cx, v);
+    if (!JS_WrapValue(cx, &elementValue)) {
+      return false;
+    }
+    if (!JS_DefineProperty(cx, infoObject, "element", elementValue, 0)) {
+      return false;
+    }
+    options.setPrivateValue(ObjectValue(*infoObject));
   }
 
   if (!JS_GetProperty(cx, opts, "elementAttributeName", &v)) {
@@ -4124,6 +4139,23 @@ static void DestroyShellCompartmentPrivate(JSFreeOp* fop,
 static void SetWorkerContextOptions(JSContext* cx);
 static bool ShellBuildId(JS::BuildIdCharVector* buildId);
 
+JSObject* GetElementCallback(JSContext* cx, JS::HandleValue value) {
+  RootedValue privateValue(cx, value);
+  if (!privateValue.isObject()) {
+    return nullptr;
+  }
+
+  RootedObject infoObject(cx, privateValue.toObjectOrNull());
+  AutoRealm ar(cx, infoObject);
+
+  RootedValue elementValue(cx);
+  if (!JS_GetProperty(cx, infoObject, "element", &elementValue)) {
+    return nullptr;
+  }
+
+  return elementValue.toObjectOrNull();
+}
+
 static void WorkerMain(WorkerInput* input) {
   MOZ_ASSERT(input->parentRuntime);
 
@@ -4156,6 +4188,7 @@ static void WorkerMain(WorkerInput* input) {
   js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
   JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
   JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
+  JS::SetGetElementCallback(cx, &GetElementCallback);
 
   js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
 
@@ -11765,6 +11798,7 @@ int main(int argc, char** argv, char** envp) {
   JS_SetSecurityCallbacks(cx, &ShellPrincipals::securityCallbacks);
   JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
   JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
+  JS::SetGetElementCallback(cx, &GetElementCallback);
 
   js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
 

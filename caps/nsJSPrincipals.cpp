@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIPrincipal.h"
 #include "xpcpublic.h"
 #include "nsString.h"
 #include "nsJSPrincipals.h"
@@ -305,14 +306,15 @@ bool nsJSPrincipals::ReadKnownPrincipalType(JSContext* aCx,
     return false;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> prin = PrincipalInfoToPrincipal(info, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  auto principalOrErr = PrincipalInfoToPrincipal(info);
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
     return false;
   }
 
-  *aOutPrincipals = get(prin.forget().take());
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+
+  *aOutPrincipals = get(principal.forget().take());
   return true;
 }
 

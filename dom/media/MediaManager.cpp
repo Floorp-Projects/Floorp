@@ -678,6 +678,17 @@ class GetUserMediaWindowListener {
     return result;
   }
 
+  void GetDevices(
+      const RefPtr<MediaManager::MediaDeviceSetRefCnt>& aOutDevices) {
+    for (auto& l : mActiveListeners) {
+      if (RefPtr<MediaDevice> device = l->GetAudioDevice()) {
+        aOutDevices->AppendElement(device);
+      } else if (RefPtr<MediaDevice> device = l->GetVideoDevice()) {
+        aOutDevices->AppendElement(device);
+      }
+    }
+  }
+
   uint64_t WindowID() const { return mWindowID; }
 
   PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
@@ -1909,10 +1920,12 @@ MediaManager::MediaManager(UniquePtr<base::Thread> aMediaThread)
       webrtc::EchoCancellation::SuppressionLevel::kModerateSuppression;
   mPrefs.mAgc = webrtc::GainControl::Mode::kAdaptiveDigital;
   mPrefs.mNoise = webrtc::NoiseSuppression::Level::kModerate;
+  mPrefs.mRoutingMode = webrtc::EchoControlMobile::RoutingMode::kSpeakerphone;
 #else
   mPrefs.mAec = 0;
   mPrefs.mAgc = 0;
   mPrefs.mNoise = 0;
+  mPrefs.mRoutingMode = 0;
 #endif
   mPrefs.mFullDuplex = false;
   mPrefs.mChannels = 0;  // max channels default
@@ -1927,14 +1940,14 @@ MediaManager::MediaManager(UniquePtr<base::Thread> aMediaThread)
   }
   LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s,"
       "agc: %s, hpf: %s, noise: %s, aec level: %d, agc level: %d, noise level: "
-      "%d,"
+      "%d, aec mobile routing mode: %d,"
       "%sfull_duplex, extended aec %s, delay_agnostic %s "
       "channels %d",
       __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
       mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
       mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAec,
-      mPrefs.mAgc, mPrefs.mNoise, mPrefs.mFullDuplex ? "" : "not ",
-      mPrefs.mExtendedFilter ? "on" : "off",
+      mPrefs.mAgc, mPrefs.mNoise, mPrefs.mRoutingMode,
+      mPrefs.mFullDuplex ? "" : "not ", mPrefs.mExtendedFilter ? "on" : "off",
       mPrefs.mDelayAgnostic ? "on" : "off", mPrefs.mChannels);
 }
 
@@ -3487,6 +3500,8 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPref(aBranch, "media.getusermedia.aec", aData, &mPrefs.mAec);
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
+  GetPref(aBranch, "media.getusermedia.aecm_output_routing", aData,
+          &mPrefs.mRoutingMode);
   GetPrefBool(aBranch, "media.getusermedia.aec_extended_filter", aData,
               &mPrefs.mExtendedFilter);
   GetPrefBool(aBranch, "media.getusermedia.aec_aec_delay_agnostic", aData,
@@ -3851,11 +3866,10 @@ struct CaptureWindowStateData {
 };
 
 NS_IMETHODIMP
-MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
-                                      uint16_t* aCamera, uint16_t* aMicrophone,
-                                      uint16_t* aScreen, uint16_t* aWindow,
-                                      uint16_t* aBrowser,
-                                      bool aIncludeDescendants) {
+MediaManager::MediaCaptureWindowState(
+    nsIDOMWindow* aCapturedWindow, uint16_t* aCamera, uint16_t* aMicrophone,
+    uint16_t* aScreen, uint16_t* aWindow, uint16_t* aBrowser,
+    nsTArray<RefPtr<nsIMediaDevice>>& aDevices, bool aIncludeDescendants) {
   MOZ_ASSERT(NS_IsMainThread());
 
   CaptureState camera = CaptureState::Off;
@@ -3863,12 +3877,13 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
   CaptureState screen = CaptureState::Off;
   CaptureState window = CaptureState::Off;
   CaptureState browser = CaptureState::Off;
+  auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
 
   nsCOMPtr<nsPIDOMWindowInner> piWin = do_QueryInterface(aCapturedWindow);
   if (piWin) {
     auto combineCaptureState =
-        [&camera, &microphone, &screen, &window,
-         &browser](const RefPtr<GetUserMediaWindowListener>& aListener) {
+        [&camera, &microphone, &screen, &window, &browser,
+         &devices](const RefPtr<GetUserMediaWindowListener>& aListener) {
           camera = CombineCaptureState(
               camera, aListener->CapturingSource(MediaSourceEnum::Camera));
           microphone = CombineCaptureState(
@@ -3880,6 +3895,8 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
               window, aListener->CapturingSource(MediaSourceEnum::Window));
           browser = CombineCaptureState(
               browser, aListener->CapturingSource(MediaSourceEnum::Browser));
+
+          aListener->GetDevices(devices);
         };
 
     if (aIncludeDescendants) {
@@ -3899,6 +3916,9 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
   *aScreen = FromCaptureState(screen);
   *aWindow = FromCaptureState(window);
   *aBrowser = FromCaptureState(browser);
+  for (auto& device : *devices) {
+    aDevices.AppendElement(device);
+  }
 
   LOG("%s: window %" PRIu64 " capturing %s %s %s %s %s", __FUNCTION__,
       piWin ? piWin->WindowID() : -1,

@@ -100,9 +100,7 @@ var gGestureSupport = {
         break;
       case "MozMagnifyGestureStart":
         aEvent.preventDefault();
-        let pinchPref =
-          AppConstants.platform == "win" ? def(25, 0) : def(150, 1);
-        this._setupGesture(aEvent, "pinch", pinchPref, "out", "in");
+        this._setupGesture(aEvent, "pinch", def(25, 0), "out", "in");
         break;
       case "MozRotateGestureStart":
         aEvent.preventDefault();

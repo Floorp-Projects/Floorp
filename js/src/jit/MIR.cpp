@@ -1684,7 +1684,7 @@ const JSJitInfo* MCallDOMNative::getJitInfo() const {
 }
 
 MDefinition* MStringLength::foldsTo(TempAllocator& alloc) {
-  if (type() == MIRType::Int32 && string()->isConstant()) {
+  if (string()->isConstant()) {
     JSAtom* atom = &string()->toConstant()->toString()->asAtom();
     return MConstant::New(alloc, Int32Value(atom->length()));
   }
@@ -5610,7 +5610,7 @@ MDefinition* MTypedArrayIndexToInt32::foldsTo(TempAllocator& alloc) {
 MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
   MDefinition* input = value();
   if (input->isBox()) {
-    input = input->getOperand(0);
+    input = input->toBox()->input();
   }
 
   if (input->definitelyType({MIRType::Null, MIRType::Undefined})) {
@@ -5620,6 +5620,40 @@ MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
   if (!input->mightBeType(MIRType::Null) &&
       !input->mightBeType(MIRType::Undefined)) {
     return MConstant::New(alloc, BooleanValue(false));
+  }
+
+  return this;
+}
+
+MDefinition* MGuardValue::foldsTo(TempAllocator& alloc) {
+  if (MConstant* cst = value()->maybeConstantValue()) {
+    if (cst->toJSValue() == expected()) {
+      return value();
+    }
+  }
+
+  return this;
+}
+
+MDefinition* MGuardNullOrUndefined::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = value();
+  if (input->isBox()) {
+    input = input->toBox()->input();
+  }
+
+  if (input->definitelyType({MIRType::Null, MIRType::Undefined})) {
+    return value();
+  }
+
+  return this;
+}
+
+MDefinition* MGuardSpecificAtom::foldsTo(TempAllocator& alloc) {
+  if (str()->isConstant()) {
+    JSAtom* cstAtom = &str()->toConstant()->toString()->asAtom();
+    if (cstAtom == atom()) {
+      return str();
+    }
   }
 
   return this;

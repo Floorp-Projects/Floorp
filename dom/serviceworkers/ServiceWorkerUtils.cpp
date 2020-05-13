@@ -9,6 +9,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
+#include "nsCOMPtr.h"
+#include "nsIPrincipal.h"
 #include "nsIURL.h"
 
 namespace mozilla {
@@ -71,8 +73,8 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
   MOZ_DIAGNOSTIC_ASSERT(aScopeURI);
   MOZ_DIAGNOSTIC_ASSERT(aScriptURI);
 
-  nsCOMPtr<nsIPrincipal> principal = aClientInfo.GetPrincipal();
-  if (NS_WARN_IF(!principal)) {
+  auto principalOrErr = aClientInfo.GetPrincipal();
+  if (NS_WARN_IF(principalOrErr.isErr())) {
     aRv.ThrowInvalidStateError("Can't make security decisions about Client");
     return;
   }
@@ -115,6 +117,8 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
     aRv.ThrowSecurityError("Non-empty fragment on script URL");
     return;
   }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   // Unfortunately we don't seem to have an obvious window id here; in
   // particular ClientInfo does not have one.

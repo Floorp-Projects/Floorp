@@ -303,6 +303,9 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 // should be opened in new tabs by default.
 pref("browser.urlbar.openintab", false);
 
+// If true, we show tail suggestions when available.
+pref("browser.urlbar.richSuggestions.tail", false);
+
 // This is disabled until Bug 1340663 figures out the remaining requirements.
 pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
@@ -595,13 +598,8 @@ pref("browser.gesture.swipe.left", "Browser:BackOrBackDuplicate");
 pref("browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate");
 pref("browser.gesture.swipe.up", "cmd_scrollTop");
 pref("browser.gesture.swipe.down", "cmd_scrollBottom");
-#ifdef XP_MACOSX
-  pref("browser.gesture.pinch.latched", true);
-  pref("browser.gesture.pinch.threshold", 150);
-#else
-  pref("browser.gesture.pinch.latched", false);
-  pref("browser.gesture.pinch.threshold", 25);
-#endif
+pref("browser.gesture.pinch.latched", false);
+pref("browser.gesture.pinch.threshold", 25);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   // Enabled for touch input display zoom.
   pref("browser.gesture.pinch.out", "cmd_fullZoomEnlarge");
@@ -2261,13 +2259,17 @@ pref("devtools.responsive.metaViewport.enabled", true);
 // The user agent of the viewport.
 pref("devtools.responsive.userAgent", "");
 
-// Show the custom user agent input and browser embedded RDM UI in
-// Nightly builds.
+// Show the custom user agent input only in Nightly.
 #if defined(NIGHTLY_BUILD)
   pref("devtools.responsive.showUserAgentInput", true);
-  pref("devtools.responsive.browserUI.enabled", true);
 #else
   pref("devtools.responsive.showUserAgentInput", false);
+#endif
+
+// Show the RDM browser UI in Nightly or DevEdition builds.
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
+  pref("devtools.responsive.browserUI.enabled", true);
+#else
   pref("devtools.responsive.browserUI.enabled", false);
 #endif
 

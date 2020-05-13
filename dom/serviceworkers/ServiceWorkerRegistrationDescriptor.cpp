@@ -119,11 +119,10 @@ ServiceWorkerRegistrationDescriptor::PrincipalInfo() const {
   return mData->principalInfo();
 }
 
-nsCOMPtr<nsIPrincipal> ServiceWorkerRegistrationDescriptor::GetPrincipal()
-    const {
+Result<nsCOMPtr<nsIPrincipal>, nsresult>
+ServiceWorkerRegistrationDescriptor::GetPrincipal() const {
   AssertIsOnMainThread();
-  nsCOMPtr<nsIPrincipal> ref = PrincipalInfoToPrincipal(mData->principalInfo());
-  return ref;
+  return PrincipalInfoToPrincipal(mData->principalInfo());
 }
 
 const nsCString& ServiceWorkerRegistrationDescriptor::Scope() const {

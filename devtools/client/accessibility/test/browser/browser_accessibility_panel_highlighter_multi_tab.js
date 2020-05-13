@@ -6,6 +6,8 @@
 const TEST_URI = '<h1 id="h1">header</h1><p id="p">paragraph</p>';
 
 add_task(async function() {
+  Services.prefs.setBoolPref("devtools.accessibility.auto-init.enabled", false);
+
   const { toolbox: toolbox1 } = await addTestTab(buildURL(TEST_URI));
   const { toolbox: toolbox2 } = await addTestTab(buildURL(TEST_URI));
   const options = await openOptions(toolbox2);
@@ -33,15 +35,23 @@ add_task(async function() {
   await toggleAccessibility(options);
   await toggleAccessibility(options);
 
-  const panel = await toolbox2.selectTool("accessibility");
-  await disableAccessibilityInspector({
-    panel,
-    win: panel.panelWin,
-    doc: panel.panelWin.document,
-  });
+  const { accessibilityProxy, panelWin } = await toolbox2.selectTool(
+    "accessibility"
+  );
+  // Disable accessibility service through the panel and wait for the shutdown
+  // event.
+  const shutdown = accessibilityProxy.accessibilityFront.once("shutdown");
+  const disableButton = await BrowserTestUtils.waitForCondition(
+    () => panelWin.document.getElementById("accessibility-disable-button"),
+    "Wait for the disable button."
+  );
+  EventUtils.sendMouseEvent({ type: "click" }, disableButton, panelWin);
+  await shutdown;
 
   await checkHighlighted(toolbox1, false);
   await checkHighlighted(toolbox2, false);
+
+  Services.prefs.clearUserPref("devtools.accessibility.auto-init.enabled");
 });
 
 async function openOptions(toolbox) {

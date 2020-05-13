@@ -39,6 +39,7 @@ pytoml==0.1.10
 redo==2.0.3
 requests==2.9.1
 responses==0.10.6
+sentry-sdk==0.14.3
 six==1.13.0
 virtualenv==16.7.8
 voluptuous==0.11.5

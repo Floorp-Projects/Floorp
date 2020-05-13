@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "chardetng"
-version = "0.1.6"
+version = "0.1.9"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "A character encoding detector for legacy Web content"
 homepage = "https://docs.rs/chardetng/"
@@ -21,7 +21,7 @@ documentation = "https://docs.rs/chardetng/"
 readme = "README.md"
 keywords = ["encoding", "web", "unicode", "charset"]
 categories = ["text-processing", "encoding", "web-programming", "internationalization"]
-license = "MIT/Apache-2.0"
+license = "Apache-2.0 OR MIT"
 repository = "https://github.com/hsivonen/chardetng"
 [dependencies.encoding_rs]
 version = "0.8.17"

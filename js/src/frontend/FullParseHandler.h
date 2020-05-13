@@ -1061,7 +1061,7 @@ class FullParseHandler {
     // These entries are either JSAtom* or nullptr, so use the 'asCell()'
     // accessor which is faster.
     gc::Cell* cell = gcthings[lazyClosedOverBindingIndex++].asCell();
-    MOZ_ASSERT_IF(cell, cell->is<JSAtom>());
+    MOZ_ASSERT_IF(cell, cell->as<JSString>()->isAtom());
     return static_cast<JSAtom*>(cell);
   }
 };

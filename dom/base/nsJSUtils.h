@@ -226,10 +226,6 @@ class nsJSUtils {
                                 JS::CompileOptions& aCompileOptions,
                                 JS::MutableHandle<JSObject*> aModule);
 
-  static nsresult InitModuleSourceElement(JSContext* aCx,
-                                          JS::Handle<JSObject*> aModule,
-                                          nsIScriptElement* aElement);
-
   static nsresult ModuleInstantiate(JSContext* aCx,
                                     JS::Handle<JSObject*> aModule);
 

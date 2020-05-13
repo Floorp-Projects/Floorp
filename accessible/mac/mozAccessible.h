@@ -107,6 +107,9 @@ static const uintptr_t IS_PROXY = 1;
 
 - (BOOL)isEnabled;
 
+// should a child be disabled
+- (BOOL)disableChild:(mozAccessible*)child;
+
 // information about focus.
 - (BOOL)isFocused;
 - (BOOL)canBeFocused;
@@ -136,6 +139,17 @@ static const uintptr_t IS_PROXY = 1;
 // Invalidate cached state.
 - (void)invalidateState;
 
+// This is called by isAccessibilityElement. If a subclass wants
+// to alter the isAccessibilityElement return value, it should
+// override this and not isAccessibilityElement directly.
+- (BOOL)ignoreWithParent:(mozAccessible*)parent;
+
+// Should the child be ignored. This allows subclasses to determine
+// what kinds of accessibles are valid children. This causes the child
+// to be skipped, but the unignored descendants will be added to the
+// container in the default children getter.
+- (BOOL)ignoreChild:(mozAccessible*)child;
+
 #pragma mark -
 
 // makes ourselves "expired". after this point, we might be around if someone
@@ -153,9 +167,8 @@ static const uintptr_t IS_PROXY = 1;
 
 // ---- NSAccessibility methods ---- //
 
-// whether to skip this element when traversing the accessibility
-// hierarchy.
-- (BOOL)accessibilityIsIgnored;
+// whether to include this element in the platform's tree
+- (BOOL)isAccessibilityElement;
 
 // called by third-parties to determine the deepest child element under the mouse
 - (id)accessibilityHitTest:(NSPoint)point;
@@ -169,11 +182,6 @@ static const uintptr_t IS_PROXY = 1;
 
 // value for the specified attribute
 - (id)accessibilityAttributeValue:(NSString*)attribute;
-
-// gets the array length of specified attribute values. Added
-// here to have a lighter way to get the child count instead
-// of constructing a full array.
-- (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute;
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute;
 - (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute;

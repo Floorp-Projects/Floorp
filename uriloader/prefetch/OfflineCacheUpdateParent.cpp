@@ -12,6 +12,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
+#include "nsDebug.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
 #include "nsNetUtil.h"
@@ -75,15 +76,18 @@ nsresult OfflineCacheUpdateParent::Schedule(
     const CookieJarSettingsArgs& aCookieJarSettingsArgs) {
   LOG(("OfflineCacheUpdateParent::RecvSchedule [%p]", this));
 
-  nsresult rv;
-
   RefPtr<nsOfflineCacheUpdate> update;
   if (!aManifestURI) {
     return NS_ERROR_FAILURE;
   }
 
-  mLoadingPrincipal = PrincipalInfoToPrincipal(aLoadingPrincipalInfo, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  auto loadingPrincipalOrErr = PrincipalInfoToPrincipal(aLoadingPrincipalInfo);
+
+  if (NS_WARN_IF(loadingPrincipalOrErr.isErr())) {
+    return loadingPrincipalOrErr.unwrapErr();
+  }
+
+  mLoadingPrincipal = loadingPrincipalOrErr.unwrap();
 
   nsOfflineCacheUpdateService* service =
       nsOfflineCacheUpdateService::EnsureService();
@@ -93,7 +97,8 @@ nsresult OfflineCacheUpdateParent::Schedule(
 
   bool offlinePermissionAllowed = false;
 
-  rv = service->OfflineAppAllowed(mLoadingPrincipal, &offlinePermissionAllowed);
+  nsresult rv =
+      service->OfflineAppAllowed(mLoadingPrincipal, &offlinePermissionAllowed);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!offlinePermissionAllowed) {

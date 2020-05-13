@@ -105,7 +105,7 @@ test_iterator (Iter it)
 template <typename Iterable,
 	  hb_requires (hb_is_iterable (Iterable))>
 static void
-test_iterable (const Iterable &lst = Null(Iterable))
+test_iterable (const Iterable &lst = Null (Iterable))
 {
   for (auto _ : lst)
     (void) _;

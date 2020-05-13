@@ -635,7 +635,7 @@ _hb_directwrite_shape_full (hb_shape_plan_t    *shape_plan,
   bool isRightToLeft = HB_DIRECTION_IS_BACKWARD (buffer->props.direction);
 
   const wchar_t localeName[20] = {0};
-  if (buffer->props.language != nullptr)
+  if (buffer->props.language)
     mbstowcs ((wchar_t*) localeName,
 	      hb_language_to_string (buffer->props.language), 20);
 

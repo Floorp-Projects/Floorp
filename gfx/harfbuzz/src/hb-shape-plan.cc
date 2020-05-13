@@ -257,7 +257,7 @@ bail:
 hb_shape_plan_t *
 hb_shape_plan_get_empty ()
 {
-  return const_cast<hb_shape_plan_t *> (&Null(hb_shape_plan_t));
+  return const_cast<hb_shape_plan_t *> (&Null (hb_shape_plan_t));
 }
 
 /**

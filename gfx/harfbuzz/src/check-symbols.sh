@@ -4,10 +4,11 @@ LC_ALL=C
 export LC_ALL
 
 test -z "$srcdir" && srcdir=.
+test -z "$builddir" && builddir=.
 test -z "$libs" && libs=.libs
 stat=0
 
-IGNORED_SYMBOLS='_fini\|_init\|_fdata\|_ftext\|_fbss\|__bss_start\|__bss_start__\|__bss_end__\|_edata\|_end\|_bss_end__\|__end__\|__gcov_.*\|llvm_.*'
+IGNORED_SYMBOLS='_fini\|_init\|_fdata\|_ftext\|_fbss\|__bss_start\|__bss_start__\|__bss_end__\|_edata\|_end\|_bss_end__\|__end__\|__gcov_.*\|llvm_.*\|flush_fn_list\|writeout_fn_list'
 
 if which nm 2>/dev/null >/dev/null; then
 	:
@@ -26,7 +27,7 @@ for soname in harfbuzz harfbuzz-subset harfbuzz-icu harfbuzz-gobject; do
 		symprefix=
 		if test $suffix = dylib; then symprefix=_; fi
 
-		EXPORTED_SYMBOLS=`nm "$so" | grep ' [BCDGINRST] .' | grep -v " $symprefix\\($IGNORED_SYMBOLS\\>\\)" | cut -d' ' -f3 | c++filt`
+		EXPORTED_SYMBOLS=`nm "$so" | grep ' [BCDGIRST] .' | grep -v " $symprefix\\($IGNORED_SYMBOLS\\>\\)" | cut -d' ' -f3 | c++filt`
 
 		prefix=$symprefix`basename "$so" | sed 's/libharfbuzz/hb/; s/-/_/g; s/[.].*//'`
 
@@ -36,7 +37,7 @@ for soname in harfbuzz harfbuzz-subset harfbuzz-icu harfbuzz-gobject; do
 			stat=1
 		fi
 
-		def=$soname.def
+		def=$builddir/$soname.def
 		if ! test -f "$def"; then
 			echo "'$def' not found; skipping"
 		else
@@ -47,9 +48,9 @@ for soname in harfbuzz harfbuzz-subset harfbuzz-icu harfbuzz-gobject; do
 				# cheat: copy the last line from the def file!
 				tail -n1 "$def"
 			} | c++filt | diff "$def" - >&2 || stat=1
-		fi
 
-		tested=true
+			tested=true
+		fi
 	done
 done
 if ! $tested; then

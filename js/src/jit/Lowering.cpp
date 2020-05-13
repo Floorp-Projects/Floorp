@@ -3870,6 +3870,7 @@ void LIRGenerator::visitGuardSpecificAtom(MGuardSpecificAtom* ins) {
   auto* guard = new (alloc()) LGuardSpecificAtom(useRegister(ins->str()));
   assignSnapshot(guard, Bailout_SpecificAtomGuard);
   add(guard, ins);
+  redefine(ins, ins->str());
 }
 
 void LIRGenerator::visitGuardShape(MGuardShape* ins) {
@@ -3957,6 +3958,7 @@ void LIRGenerator::visitGuardValue(MGuardValue* ins) {
   auto* lir = new (alloc()) LGuardValue(useBox(ins->value()));
   assignSnapshot(lir, Bailout_ValueGuard);
   add(lir, ins);
+  redefine(ins, ins->value());
 }
 
 void LIRGenerator::visitGuardNullOrUndefined(MGuardNullOrUndefined* ins) {
@@ -3964,6 +3966,7 @@ void LIRGenerator::visitGuardNullOrUndefined(MGuardNullOrUndefined* ins) {
   auto* lir = new (alloc()) LGuardNullOrUndefined(useBox(ins->value()));
   assignSnapshot(lir, Bailout_NullOrUndefinedGuard);
   add(lir, ins);
+  redefine(ins, ins->value());
 }
 
 void LIRGenerator::visitAssertRange(MAssertRange* ins) {

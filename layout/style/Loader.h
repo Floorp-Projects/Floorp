@@ -206,7 +206,7 @@ class Loader final {
       nsIURI*, SheetParsingMode = eAuthorSheetFeatures,
       UseSystemPrincipal = UseSystemPrincipal::No);
 
-  enum class IsPreload {
+  enum class IsPreload : uint8_t {
     No,
     // This is a speculative load initiated by a <link rel=stylesheet> tag
     // scanned by the parser, or @import rules found in a <style> tag.
@@ -398,7 +398,7 @@ class Loader final {
 
   // Note: LoadSheet is responsible for setting the sheet to complete on
   // failure.
-  nsresult LoadSheet(SheetLoadData&, SheetState, IsPreload);
+  nsresult LoadSheet(SheetLoadData&, SheetState);
 
   enum class AllowAsyncParse {
     Yes,

@@ -4,6 +4,7 @@
 #include "hb-buffer-serialize.cc"
 #include "hb-buffer.cc"
 #include "hb-common.cc"
+#include "hb-draw.cc"
 #include "hb-face.cc"
 #include "hb-fallback-shape.cc"
 #include "hb-font.cc"

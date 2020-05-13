@@ -185,8 +185,8 @@ add_task(async function testUsePersistentPermissionsFirstParty() {
   });
 });
 
-// Test that we should prompt if we are in unsafe permission delegation. The
-// prompt popup should include both first and third party origin.
+// Test that we do not prompt for maybe unsafe permission delegation if the
+// origin of the page is the original src origin.
 add_task(async function testPromptInMaybeUnsafePermissionDelegation() {
   await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function(
     browser
@@ -194,8 +194,7 @@ add_task(async function testPromptInMaybeUnsafePermissionDelegation() {
     // Persistent allow top level origin
     PermissionTestUtils.add(uri, "geo", Perms.ALLOW_ACTION);
 
-    await checkGeolocation(browser, "frameAllowsAll", PromptResult.PROMPT);
-    await checkNotificationBothOrigins(uri.host, "example.org");
+    await checkGeolocation(browser, "frameAllowsAll", PromptResult.ALLOW);
 
     SitePermissions.removeFromPrincipal(null, "geo", browser);
     PermissionTestUtils.remove(uri, "geo");
@@ -205,27 +204,24 @@ add_task(async function testPromptInMaybeUnsafePermissionDelegation() {
 // Test that we should prompt if we are in unsafe permission delegation and
 // change location to origin which is not explicitly trusted. The prompt popup
 // should include both first and third party origin.
-add_task(async function testPromptChangeLocatioUnsafePermissionDelegation() {
+add_task(async function testPromptChangeLocationUnsafePermissionDelegation() {
   await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function(
     browser
   ) {
     // Persistent allow top level origin
     PermissionTestUtils.add(uri, "geo", Perms.ALLOW_ACTION);
 
-    // Request change location.
-    await ContentTask.spawn(browser, { host: uri.host }, async function(args) {
-      let frame = content.document.getElementById("frameAllowsAll");
-      await new Promise(resolve => {
-        function listener() {
-          frame.removeEventListener("load", listener, true);
-          resolve();
-        }
-        frame.addEventListener("load", listener, true);
-
-        frame.contentWindow.location =
-          "https://test1.example.com/browser/browser/base/content/test/permissions/permissions.html";
-      });
+    let iframe = await SpecialPowers.spawn(browser, [], () => {
+      return content.document.getElementById("frameAllowsAll").browsingContext;
     });
+
+    let otherURI =
+      "https://test1.example.com/browser/browser/base/content/test/permissions/permissions.html";
+    let loaded = BrowserTestUtils.browserLoaded(browser, true, otherURI);
+    await SpecialPowers.spawn(iframe, [otherURI], async function(_otherURI) {
+      content.location = _otherURI;
+    });
+    await loaded;
 
     await checkGeolocation(browser, "frameAllowsAll", PromptResult.PROMPT);
     await checkNotificationBothOrigins(uri.host, "test1.example.com");
@@ -242,9 +238,23 @@ add_task(async function testExplicitlyAllowedInChain() {
     // Persistent allow top level origin
     PermissionTestUtils.add(uri, "geo", Perms.ALLOW_ACTION);
 
-    const iframeAncestor = await SpecialPowers.spawn(browser, [], () => {
+    let iframeAncestor = await SpecialPowers.spawn(browser, [], () => {
       return content.document.getElementById("frameAncestor").browsingContext;
     });
+
+    let iframe = await SpecialPowers.spawn(iframeAncestor, [], () => {
+      return content.document.getElementById("frameAllowsAll").browsingContext;
+    });
+
+    // Change location to check that we actually look at the ancestor chain
+    // instead of just considering the "same origin as src" rule.
+    let otherURI =
+      "https://test2.example.com/browser/browser/base/content/test/permissions/permissions.html";
+    let loaded = BrowserTestUtils.browserLoaded(browser, true, otherURI);
+    await SpecialPowers.spawn(iframe, [otherURI], async function(_otherURI) {
+      content.location = _otherURI;
+    });
+    await loaded;
 
     await checkGeolocation(
       iframeAncestor,

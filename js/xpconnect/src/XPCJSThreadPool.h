@@ -22,7 +22,7 @@ class HelperThreadTaskHandler : public Runnable {
  public:
   NS_IMETHOD Run() override {
     mOffThreadTask->runTask();
-    Unused << mOffThreadTask.release();
+    mOffThreadTask.reset();
     return NS_OK;
   }
   explicit HelperThreadTaskHandler(js::UniquePtr<RunnableTask> task)

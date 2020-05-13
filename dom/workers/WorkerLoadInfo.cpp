@@ -91,7 +91,7 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mXHRParamsAllowed(false),
       mPrincipalIsSystem(false),
       mPrincipalIsAddonOrExpandedAddon(false),
-      mWatchedByDevtools(false),
+      mWatchedByDevTools(false),
       mStorageAccess(StorageAccess::eDeny),
       mFirstPartyStorageAccessGranted(false),
       mServiceWorkersTestingInWindow(false),

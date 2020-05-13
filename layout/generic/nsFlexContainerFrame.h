@@ -113,6 +113,11 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
+  bool IsFrameOfType(uint32_t aFlags) const override {
+    return nsContainerFrame::IsFrameOfType(
+        aFlags & ~(nsIFrame::eCanContainOverflowContainers));
+  }
+
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
 
@@ -490,8 +495,9 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                                   children of this fragment in this frame's
    *                                   coordinate space (as returned by
    *                                   ReflowChildren()).
-   * @param aAreChildrenComplete true if all the children being reflowed are
-   *                             complete; false otherwise.
+   * @param aAnyChildIncomplete true if any child being reflowed is incomplete;
+   *                            false otherwise (as returned by
+   *                            ReflowChildren()).
    * @param aFlexContainerAscent the flex container's ascent, if one has been
    *                             determined from its children. (If there are no
    *                             children, pass nscoord_MIN to synthesize a
@@ -502,7 +508,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
       nsReflowStatus& aStatus, const mozilla::LogicalSize& aContentBoxSize,
       const mozilla::LogicalMargin& aBorderPadding,
       const nscoord aConsumedBSize, const bool aMayNeedNextInFlow,
-      const nscoord aMaxBlockEndEdgeOfChildren, const bool aAreChildrenComplete,
+      const nscoord aMaxBlockEndEdgeOfChildren, const bool aAnyChildIncomplete,
       nscoord aFlexContainerAscent, nsTArray<FlexLine>& aLines,
       const FlexboxAxisTracker& aAxisTracker);
 
@@ -518,8 +524,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * @param aBorderPadding the border and padding for this frame (possibly with
    *                       some sides skipped as-appropriate, if we're in a
    *                       continuation chain).
-   * @param aConsumedBSize the sum of our content block-size consumed by our
-   *                       prev-in-flows.
+   * @param aSumOfPrevInFlowsChildrenBlockSize See the comment for
+   *                                           SumOfChildrenBlockSizeProperty.
    * @param aFlexContainerAscent [in/out] initially, the "tentative" flex
    *                             container ascent computed in DoFlexLayout; or,
    *                             nscoord_MIN if the ascent hasn't been
@@ -528,15 +534,17 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                             flex item (if there are any flex items).
    * @return nscoord the maximum block-end edge of children of this fragment in
    *                 flex container's coordinate space.
-   * @return bool true if the children are all complete; false otherwise.
+   * @return bool true if any child being reflowed is incomplete; false
+   *              otherwise.
    */
   std::tuple<nscoord, bool> ReflowChildren(
       const ReflowInput& aReflowInput, const nscoord aContentBoxMainSize,
       const nscoord aContentBoxCrossSize,
       const mozilla::LogicalSize& aAvailableSizeForItems,
       const mozilla::LogicalMargin& aBorderPadding,
-      const nscoord aConsumedBSize, nscoord& aFlexContainerAscent,
-      nsTArray<FlexLine>& aLines, nsTArray<nsIFrame*>& aPlaceholders,
+      const nscoord aSumOfPrevInFlowsChildrenBlockSize,
+      nscoord& aFlexContainerAscent, nsTArray<FlexLine>& aLines,
+      nsTArray<nsIFrame*>& aPlaceholders,
       const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis);
 
   /**

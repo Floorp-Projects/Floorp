@@ -155,7 +155,7 @@ struct CPAL
   private:
   const CPALV1Tail& v1 () const
   {
-    if (version == 0) return Null(CPALV1Tail);
+    if (version == 0) return Null (CPALV1Tail);
     return StructAfter<CPALV1Tail> (*this);
   }
 

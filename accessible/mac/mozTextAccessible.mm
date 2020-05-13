@@ -49,10 +49,6 @@ inline NSString* ToNSString(id aValue) {
 
 @implementation mozTextAccessible
 
-- (BOOL)accessibilityIsIgnored {
-  return ![self getGeckoAccessible] && ![self getProxyAccessible];
-}
-
 - (NSArray*)accessibilityAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 

@@ -39,7 +39,8 @@ body.high-contrast #progress_background {
 
 /* In high contrast mode, fill the entire progress bar with its border. */
 body.high-contrast #progress_bar {
-  border: 12px solid;
+  /* This border should be the height of progress_background. */
+  border-top: 24px solid;
   box-sizing: border-box;
 }
 

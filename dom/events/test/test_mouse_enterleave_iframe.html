@@ -122,17 +122,21 @@ function waitForEnterLeaveEvents(aEnterTarget, aLeaveTarget) {
   });
 }
 
+function moveMouseToInitialPosition() {
+  return new Promise((aResolve) => {
+    let start = document.getElementById("start");
+    let startRect = start.getBoundingClientRect();
+    synthesizeNativeMouseMove(start, startRect.width / 2, startRect.height / 2,
+                              aResolve);
+  });
+}
+
 add_task(async function init() {
   // Wait for focus before starting tests.
   await SimpleTest.promiseFocus();
 
   // Move mouse to initial position.
-  await new Promise((aResolve) => {
-    let start = document.getElementById("div");
-    let startRect = start.getBoundingClientRect();
-    synthesizeNativeMouseMove(start, startRect.width / 2, startRect.height / 2,
-                              aResolve);
-  });
+  await moveMouseToInitialPosition();
 });
 
 add_task(async function testMouseEnterLeave() {
@@ -158,5 +162,10 @@ add_task(async function testMouseEnterLeave() {
                          waitForMessage(iframe, "mouseleave")]);
   synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
   await promise;
+
+  // Move mouse back to initial position. This is to prevent unexpected
+  // mouseleave event in initial steps for test-verify which runs same test
+  // multiple times. 
+  await moveMouseToInitialPosition();
 });
 </script>

@@ -428,7 +428,8 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     microphone = {},
     screen = {},
     window = {},
-    browser = {};
+    browser = {},
+    devices = {};
   MediaManagerService.mediaCaptureWindowState(
     aContentWindow,
     camera,
@@ -436,6 +437,7 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     screen,
     window,
     browser,
+    devices,
     false
   );
 
@@ -453,6 +455,18 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     return {};
   }
 
+  let serializedDevices = [];
+  if (Array.isArray(devices.value)) {
+    serializedDevices = devices.value.map(device => {
+      return {
+        type: device.type,
+        mediaSource: device.mediaSource,
+        rawId: device.rawId,
+        scary: device.scary,
+      };
+    });
+  }
+
   return {
     camera: camera.value,
     microphone: microphone.value,
@@ -460,6 +474,7 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     window: window.value,
     browser: browser.value,
     documentURI: aContentWindow.document.documentURI,
+    devices: serializedDevices,
   };
 }
 

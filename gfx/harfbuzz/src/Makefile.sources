@@ -35,6 +35,8 @@ HB_BASE_sources = \
 	hb-config.hh \
 	hb-debug.hh \
 	hb-dispatch.hh \
+	hb-draw.cc \
+	hb-draw.hh \
 	hb-face.cc \
 	hb-face.hh \
 	hb-fallback-shape.cc \
@@ -57,6 +59,7 @@ HB_BASE_sources = \
 	hb-ot-cff-common.hh \
 	hb-ot-cff1-table.cc \
 	hb-ot-cff1-table.hh \
+	hb-ot-cff1-std-str.hh \
 	hb-ot-cff2-table.cc \
 	hb-ot-cff2-table.hh \
 	hb-ot-cmap-table.hh \
@@ -192,6 +195,7 @@ HB_BASE_headers = \
 	hb-buffer.h \
 	hb-common.h \
 	hb-deprecated.h \
+	hb-draw.h \
 	hb-face.h \
 	hb-font.h \
 	hb-map.h \

@@ -125,6 +125,8 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
   event = tracedRunnable.forget();
 #endif
 
+  LogRunnable::LogDispatch(event.get());
+
   if (aFlags & DISPATCH_SYNC) {
     nsCOMPtr<nsIEventTarget> current = GetCurrentThreadEventTarget();
     if (NS_WARN_IF(!current)) {

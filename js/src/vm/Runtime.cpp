@@ -323,6 +323,11 @@ void JSRuntime::setTelemetryCallback(
   rt->telemetryCallback = callback;
 }
 
+void JSRuntime::setElementCallback(JSRuntime* rt,
+                                   JSGetElementCallback callback) {
+  rt->getElementCallback = callback;
+}
+
 void JSRuntime::setUseCounter(JSObject* obj, JSUseCounter counter) {
   if (useCounterCallback) {
     (*useCounterCallback)(obj, counter);

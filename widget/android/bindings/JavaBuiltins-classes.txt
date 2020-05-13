@@ -12,6 +12,9 @@ booleanValue =
 # because some Integer values are cached.
 valueOf(I)Ljava/lang/Integer; =
 
+[java.lang.Long = skip:true]
+valueOf(J)Ljava/lang/Long; =
+
 [java.lang.Number = skip:true]
 # Use doubleValue() for unboxing Double/Float/Long.
 doubleValue =

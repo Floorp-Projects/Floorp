@@ -297,8 +297,8 @@ class CodeCoverageMixin(SingleTestMixin):
             os.path.join(self.grcov_dir, self.grcov_bin),
             '-t', output_format,
             '-p', self.prefix,
-            '--ignore-dir', 'gcc*',
-            '--ignore-dir', 'vs2017_*',
+            '--ignore', 'gcc*',
+            '--ignore', 'vs2017_*',
             os.path.join(self.grcov_dir, 'target.code-coverage-gcno.zip'), gcov_dir
         ]
 

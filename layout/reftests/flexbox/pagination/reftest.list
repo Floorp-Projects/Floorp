@@ -39,3 +39,34 @@ fuzzy-if(Android&&webrender,0-128,0-10) == flexbox-empty-2d.html flexbox-empty-2
 == flexbox-unbreakable-child-3c-wrap.html flexbox-unbreakable-child-3-ref.html
 == flexbox-unbreakable-child-3d.html      flexbox-unbreakable-child-3-ref.html
 == flexbox-unbreakable-child-3d-wrap.html flexbox-unbreakable-child-3-ref.html
+
+# Tests for how we fragment flex items in a single-line column flex container.
+== flexbox-single-column-1a.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1b.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1c.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1d.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1e.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1f.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1g.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1h.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1i.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1j.html flexbox-single-column-1-ref.html
+== flexbox-single-column-2.html flexbox-single-column-2-ref.html
+== flexbox-single-column-3a.html flexbox-single-column-3-ref.html
+== flexbox-single-column-3b.html flexbox-single-column-3-ref.html
+== flexbox-single-column-4.html flexbox-single-column-4-ref.html
+== flexbox-single-column-5.html flexbox-single-column-5-ref.html
+
+# Tests for how we fragment flex items in a single-line row flex container.
+== flexbox-single-row-1a.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1b.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1c.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1d.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1e.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1f.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1g.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1h.html flexbox-single-row-1-ref.html
+== flexbox-single-row-2.html flexbox-single-row-2-ref.html
+== flexbox-single-row-3a.html flexbox-single-row-3-ref.html
+== flexbox-single-row-3b.html flexbox-single-row-3-ref.html
+== flexbox-single-row-4.html flexbox-single-row-4-ref.html

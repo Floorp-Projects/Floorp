@@ -6,6 +6,7 @@
 
 interface nsIArray;
 interface nsIDOMWindow;
+interface nsIMediaDevice;
 
 %{C++
 #define NS_MEDIAMANAGERSERVICE_CID {0xabc622ea, 0x9655, 0x4123, {0x80, 0xd9, 0x22, 0x62, 0x1b, 0xdd, 0x54, 0x65}}
@@ -33,6 +34,7 @@ interface nsIMediaManagerService : nsISupports
                                out unsigned short aScreenShare,
                                out unsigned short aWindowShare,
                                out unsigned short aBrowserShare,
+                               out Array<nsIMediaDevice> devices,
                                in boolean aIncludeDescendants);
 
   /* Clear per-orgin list of persistent DeviceIds stored for enumerateDevices

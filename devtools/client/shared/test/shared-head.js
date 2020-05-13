@@ -238,9 +238,13 @@ function loadFrameScriptUtils(browser = gBrowser.selectedBrowser) {
 }
 
 Services.prefs.setBoolPref("devtools.inspector.three-pane-enabled", true);
+// Disable this preference to reduce exceptions related to pending `listWorkers`
+// requests occuring after a process is created/destroyed. See Bug 1620983.
+Services.prefs.setBoolPref("dom.ipc.processPrelaunch.enabled", false);
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.inspector.three-pane-enabled");
+  Services.prefs.clearUserPref("dom.ipc.processPrelaunch.enabled");
   Services.prefs.clearUserPref("devtools.toolbox.host");
   Services.prefs.clearUserPref("devtools.toolbox.previousHost");
   Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");

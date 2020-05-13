@@ -79,7 +79,7 @@ def pytest_generate_tests(metafunc):
     elif all(fixture in metafunc.fixturenames for fixture in ('shared_name', 'shared_preset')):
         preset_path = os.path.join(push.build.topsrcdir, 'tools', 'tryselect', 'try_presets.yml')
         with open(preset_path, 'r') as fh:
-            presets = yaml.safe_load(fh).items()
+            presets = list(yaml.safe_load(fh).items())
 
         ids = [p[0] for p in presets]
 

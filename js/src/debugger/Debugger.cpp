@@ -3620,9 +3620,10 @@ bool DebugAPI::edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
       return frame->generatorScript() == &dst.as<BaseScript>() &&
              dbg->generatorFrames.hasEntry(genObj, src);
     }
-    return dst.is<AbstractGeneratorObject>() &&
-           dbg->generatorFrames.hasEntry(&dst.as<AbstractGeneratorObject>(),
-                                         src);
+    return dst.is<JSObject>() &&
+           dst.as<JSObject>().is<AbstractGeneratorObject>() &&
+           dbg->generatorFrames.hasEntry(
+               &dst.as<JSObject>().as<AbstractGeneratorObject>(), src);
   }
   if (src->is<DebuggerObject>()) {
     return dst.is<JSObject>() &&

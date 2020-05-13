@@ -12,16 +12,6 @@
   overflow: auto;
 }
 
-.statistics-panel .devtools-toolbarbutton.back-button {
-  min-width: 4em;
-  margin: 0;
-  padding: 0;
-  border-radius: 0;
-  border-top: none;
-  border-bottom: none;
-  border-inline-start: none;
-}
-
 .statistics-panel .back-button {
   height: -moz-fit-content;
   position: absolute;

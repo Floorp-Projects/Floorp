@@ -889,6 +889,11 @@ void APZCCallbackHelper::NotifyPinchGesture(
   }
 
   WidgetSimpleGestureEvent event(true, msg, aWidget);
+  // XXX mDelta for the eMagnifyGesture event is supposed to be the
+  // cumulative magnification over the entire gesture (per docs in
+  // SimpleGestureEvent.webidl) but currently APZ just sends us a zero
+  // aSpanChange for that event, so the mDelta is wrong. Nothing relies
+  // on that currently, but we might want to fix it at some point.
   event.mDelta = aSpanChange;
   event.mModifiers = aModifiers;
   DispatchWidgetEvent(event);

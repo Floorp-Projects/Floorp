@@ -27,8 +27,8 @@ var previousSuggestionsFn;
  * @param {function} fn
  *   A function that that a search string and returns an array of strings that
  *   will be used as search suggestions.
- *   Note: `fn` should return > 1 suggestion in most cases. Otherwise, you may
- *         encounter unexceptede behaviour with UrlbarProviderSuggestion's
+ *   Note: `fn` should return > 0 suggestions in most cases. Otherwise, you may
+ *         encounter unexpected behaviour with UrlbarProviderSuggestion's
  *         _lastLowResultsSearchSuggestion safeguard.
  */
 function setSuggestionsFn(fn) {
@@ -1247,9 +1247,13 @@ add_task(async function avoid_url_suggestions() {
   await cleanUpSuggestions();
 });
 
-add_task(async function restrict_suggestions_after_low_results() {
+add_task(async function restrict_suggestions_after_no_results() {
+  // We don't fetch suggestions if a query with a length over
+  // maxCharsForSearchSuggestions returns 0 results. We set it to 4 here to
+  // avoid constructing a 100+ character string.
+  Services.prefs.setIntPref("browser.urlbar.maxCharsForSearchSuggestions", 4);
   setSuggestionsFn(searchStr => {
-    return [searchStr + "s"];
+    return [];
   });
 
   const query = "hello";
@@ -1258,10 +1262,6 @@ add_task(async function restrict_suggestions_after_low_results() {
     context,
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        suggestion: `${query}s`,
-      }),
     ],
   });
 
@@ -1270,12 +1270,13 @@ add_task(async function restrict_suggestions_after_low_results() {
     context,
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
-      // Because the previous search only returned one suggestion, we will not
-      // fetch suggestions for this query that is just a longer version of the
+      // Because the previous search returned no suggestions, we will not fetch
+      // suggestions for this query that is just a longer version of the
       // previous query.
     ],
   });
 
+  Services.prefs.clearUserPref("browser.urlbar.maxCharsForSearchSuggestions");
   await cleanUpSuggestions();
 });
 

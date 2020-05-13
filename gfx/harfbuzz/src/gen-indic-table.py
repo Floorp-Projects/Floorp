@@ -1,11 +1,14 @@
-#!/usr/bin/env python
-
-from __future__ import print_function, division, absolute_import
+#!/usr/bin/env python3
 
 import io, sys
 
 if len (sys.argv) != 4:
-	print ("usage: ./gen-indic-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt Blocks.txt", file=sys.stderr)
+	print ("""usage: ./gen-indic-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt Blocks.txt
+
+Input files, as of Unicode 12:
+* https://unicode.org/Public/UCD/latest/ucd/IndicSyllabicCategory.txt
+* https://unicode.org/Public/UCD/latest/ucd/IndicPositionalCategory.txt
+* https://unicode.org/Public/UCD/latest/ucd/Blocks.txt""", file=sys.stderr)
 	sys.exit (1)
 
 ALLOWED_SINGLES = [0x00A0, 0x25CC]

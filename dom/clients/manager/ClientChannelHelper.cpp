@@ -264,12 +264,13 @@ nsresult AddClientChannelHelperInternal(nsIChannel* aChannel,
   // Only allow the initial ClientInfo to be set if the current channel
   // principal matches.
   if (initialClientInfo.isSome()) {
-    nsCOMPtr<nsIPrincipal> initialPrincipal = PrincipalInfoToPrincipal(
-        initialClientInfo.ref().PrincipalInfo(), nullptr);
+    auto initialPrincipalOrErr =
+        PrincipalInfoToPrincipal(initialClientInfo.ref().PrincipalInfo());
 
     bool equals = false;
-    rv = initialPrincipal ? initialPrincipal->Equals(channelPrincipal, &equals)
-                          : NS_ERROR_FAILURE;
+    rv = initialPrincipalOrErr.isErr() ? initialPrincipalOrErr.unwrapErr()
+                                       : initialPrincipalOrErr.unwrap()->Equals(
+                                             channelPrincipal, &equals);
     if (NS_FAILED(rv) || !equals) {
       initialClientInfo.reset();
     }
@@ -278,13 +279,14 @@ nsresult AddClientChannelHelperInternal(nsIChannel* aChannel,
   // Only allow the reserved ClientInfo to be set if the current channel
   // principal matches.
   if (reservedClientInfo.isSome()) {
-    nsCOMPtr<nsIPrincipal> reservedPrincipal = PrincipalInfoToPrincipal(
-        reservedClientInfo.ref().PrincipalInfo(), nullptr);
+    auto reservedPrincipalOrErr =
+        PrincipalInfoToPrincipal(reservedClientInfo.ref().PrincipalInfo());
 
     bool equals = false;
-    rv = reservedPrincipal
-             ? reservedPrincipal->Equals(channelPrincipal, &equals)
-             : NS_ERROR_FAILURE;
+    rv = reservedPrincipalOrErr.isErr()
+             ? reservedPrincipalOrErr.unwrapErr()
+             : reservedPrincipalOrErr.unwrap()->Equals(channelPrincipal,
+                                                       &equals);
     if (NS_FAILED(rv) || !equals) {
       reservedClientInfo.reset();
     }

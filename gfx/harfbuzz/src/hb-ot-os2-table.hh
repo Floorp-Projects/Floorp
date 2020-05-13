@@ -216,19 +216,20 @@ struct OS2
 					  uint16_t *min_cp, /* OUT */
 					  uint16_t *max_cp  /* OUT */)
   {
-    *min_cp = codepoints->get_min ();
-    *max_cp = codepoints->get_max ();
+    *min_cp = hb_min (0xFFFFu, codepoints->get_min ());
+    *max_cp = hb_min (0xFFFFu, codepoints->get_max ());
   }
 
   /* https://github.com/Microsoft/Font-Validator/blob/520aaae/OTFontFileVal/val_OS2.cs#L644-L681 */
-  enum font_page_t {
-    HEBREW_FONT_PAGE		= 0xB100, // Hebrew Windows 3.1 font page
-    SIMP_ARABIC_FONT_PAGE	= 0xB200, // Simplified Arabic Windows 3.1 font page
-    TRAD_ARABIC_FONT_PAGE	= 0xB300, // Traditional Arabic Windows 3.1 font page
-    OEM_ARABIC_FONT_PAGE	= 0xB400, // OEM Arabic Windows 3.1 font page
-    SIMP_FARSI_FONT_PAGE	= 0xBA00, // Simplified Farsi Windows 3.1 font page
-    TRAD_FARSI_FONT_PAGE	= 0xBB00, // Traditional Farsi Windows 3.1 font page
-    THAI_FONT_PAGE		= 0xDE00  // Thai Windows 3.1 font page
+  enum font_page_t
+  {
+    FONT_PAGE_HEBREW		= 0xB100, /* Hebrew Windows 3.1 font page */
+    FONT_PAGE_SIMP_ARABIC	= 0xB200, /* Simplified Arabic Windows 3.1 font page */
+    FONT_PAGE_TRAD_ARABIC	= 0xB300, /* Traditional Arabic Windows 3.1 font page */
+    FONT_PAGE_OEM_ARABIC	= 0xB400, /* OEM Arabic Windows 3.1 font page */
+    FONT_PAGE_SIMP_FARSI	= 0xBA00, /* Simplified Farsi Windows 3.1 font page */
+    FONT_PAGE_TRAD_FARSI	= 0xBB00, /* Traditional Farsi Windows 3.1 font page */
+    FONT_PAGE_THAI		= 0xDE00  /* Thai Windows 3.1 font page */
   };
   font_page_t get_font_page () const
   { return (font_page_t) (version == 0 ? fsSelection & 0xFF00 : 0); }

@@ -40,14 +40,15 @@ add_task(async function() {
   ok(toolbox.target.title.includes(NEW_TAB_TITLE), "Target's title updated.");
   is(urlInput.value, NEW_TAB_URL, "Input url updated.");
 
-  info("Remove the about:debugging tab.");
-  await removeTab(tab);
-
-  info("Remove the about:devtools-toolbox tab.");
-  await removeTab(devtoolsTab);
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
 
   info("Remove the background tab");
   await removeTab(debug_tab);
+  await waitUntil(() => !findDebugTargetByText("NEW_TAB_TITLE", document));
+  await waitForRequestsToSettle(window.AboutDebugging.store);
+
+  info("Remove the about:debugging tab.");
+  await removeTab(tab);
 });
 
 /**
