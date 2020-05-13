@@ -12,6 +12,8 @@ import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isDataUri
+import mozilla.components.concept.fetch.isBlobUri
+import mozilla.components.concept.fetch.Response.Companion.SUCCESS
 
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoWebExecutor
@@ -60,7 +62,7 @@ class GeckoViewFetchClient(
                 fetchFlags += GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS
             }
             val webResponse = executor.fetch(webRequest, fetchFlags).poll(readTimeOutMillis)
-            webResponse?.toResponse() ?: throw IOException("Fetch failed with null response")
+            webResponse?.toResponse(request.isBlobUri()) ?: throw IOException("Fetch failed with null response")
         } catch (e: TimeoutException) {
             throw SocketTimeoutException()
         } catch (e: WebRequestError) {
@@ -107,11 +109,15 @@ private fun WebRequest.Builder.addBodyFrom(request: Request): WebRequest.Builder
     return this
 }
 
-private fun WebResponse.toResponse(): Response {
+@VisibleForTesting
+internal fun WebResponse.toResponse(isBlobUri: Boolean): Response {
     val headers = translateHeaders(this)
+    // We use the same API for blobs and HTTP requests, but blobs won't receive a status code.
+    // If no exception is thrown we assume success.
+    val status = if (isBlobUri) SUCCESS else statusCode
     return Response(
         uri,
-        statusCode,
+        status,
         headers,
             body?.let {
                 Response.Body(it, headers["Content-Type"])
