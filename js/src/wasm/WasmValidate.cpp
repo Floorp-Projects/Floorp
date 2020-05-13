@@ -2280,6 +2280,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       break;
     }
 #endif
+#ifdef ENABLE_WASM_REFTYPES
     case uint16_t(Op::RefNull): {
       MOZ_ASSERT_IF(env->isStructType(expected), env->gcTypesEnabled());
       RefType initType;
@@ -2308,6 +2309,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       *init = InitExpr::fromRefFunc(i);
       break;
     }
+#endif
     case uint16_t(Op::GetGlobal): {
       uint32_t i;
       const GlobalDescVector& globals = env->globals;
