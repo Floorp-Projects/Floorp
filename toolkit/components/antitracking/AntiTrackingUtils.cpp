@@ -256,6 +256,15 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
 
+  auto policyType = loadInfo->GetExternalContentPolicyType();
+
+  // The channel is for the document load of the top-level window. The top-level
+  // window should always has 'hasStoragePermission' flag as false. So, we can
+  // return here directly.
+  if (policyType == nsIContentPolicy::TYPE_DOCUMENT) {
+    return false;
+  }
+
   nsresult rv =
       loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -269,28 +278,37 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
 
   // We only need to check the storage permission if the cookie behavior is
   // BEHAVIOR_REJECT_TRACKER, BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN or
-  // BEHAVIOR_REJECT_FOREIGN. Because ContentBlocking wouldn't update or check
-  // the storage permission if the cookie behavior is not belongs to these two.
+  // BEHAVIOR_REJECT_FOREIGN with exceptions. Because ContentBlocking wouldn't
+  // update or check the storage permission if the cookie behavior is not
+  // belongs to these three.
   if (!net::CookieJarSettings::IsRejectThirdPartyContexts(cookieBehavior)) {
     return false;
   }
 
-  nsCOMPtr<nsIPrincipal> targetPrincipal =
+  RefPtr<BrowsingContext> bc;
+  rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(bc));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !bc) {
+    return false;
+  }
+
+  uint64_t targetWindowId =
       (cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
        rejectForeignWithExceptions)
-          ? loadInfo->GetTopLevelStorageAreaPrincipal()
-          : loadInfo->GetTopLevelPrincipal();
+          ? GetTopLevelStorageAreaWindowId(bc)
+          : GetTopLevelAntiTrackingWindowId(bc);
+  nsCOMPtr<nsIPrincipal> targetPrincipal;
 
-  if (!targetPrincipal) {
-    if (loadInfo->GetTopLevelPrincipal()) {
-      // We can only get here if the cookieBehavior is BEHAVIOR_REJECT_TRACKER,
-      // the TopLevelStorageAreaPrincipal is null and there is a
-      // TopLevelPrincipal. In this case, the channel is for the top-level
-      // window. So, we can return from here.
+  if (targetWindowId) {
+    RefPtr<WindowGlobalParent> wgp =
+        WindowGlobalParent::GetByInnerWindowId(targetWindowId);
+
+    if (NS_WARN_IF(!wgp)) {
       return false;
     }
 
-    // We try to use the loading principal if there is no TopLevelPrincipal.
+    targetPrincipal = wgp->DocumentPrincipal();
+  } else {
+    // We try to use the loading principal if there is no AntiTrackingWindowId.
     targetPrincipal = loadInfo->GetLoadingPrincipal();
   }
 
