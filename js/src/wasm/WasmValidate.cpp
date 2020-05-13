@@ -1085,8 +1085,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::V128Bitselect):
             CHECK(iter.readVectorSelect(&nothing, &nothing, &nothing));
 
-          case uint32_t(SimdOp::V8x16Shuffle):
-          case uint32_t(SimdOp::V8x16ShuffleLegacy): {
+          case uint32_t(SimdOp::V8x16Shuffle): {
             V128 mask;
             CHECK(iter.readVectorShuffle(&nothing, &nothing, &mask));
           }
