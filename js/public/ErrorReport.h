@@ -284,18 +284,14 @@ struct MOZ_STACK_CLASS JS_PUBLIC_API ErrorReportBuilder {
    * it has one.)
    *
    * Otherwise various attempts are made to derive JSErrorReport information
-   * from |exn| and from the current execution state.  This process is
+   * from |exnStack| and from the current execution state.  This process is
    * *definitely* inconsistent with any standard, and particulars of the
    * behavior implemented here generally shouldn't be relied upon.
    *
-   * To fill in information such as file-name or line number the (optional)
-   * stack for the pending exception can be used. For this first SavedFrame
-   * is used.
-   *
    * If the value of |sniffingBehavior| is |WithSideEffects|, some of these
-   * attempts *may* invoke user-configurable behavior when |exn| is an object:
-   * converting |exn| to a string, detecting and getting properties on |exn|,
-   * accessing |exn|'s prototype chain, and others are possible.  Users *must*
+   * attempts *may* invoke user-configurable behavior when the exception is an
+   * object: converting it to a string, detecting and getting its properties,
+   * accessing its prototype chain, and others are possible.  Users *must*
    * tolerate |ErrorReportBuilder::init| potentially having arbitrary effects.
    * Any exceptions thrown by these operations will be caught and silently
    * ignored, and "default" values will be substituted into the JSErrorReport.
@@ -307,10 +303,6 @@ struct MOZ_STACK_CLASS JS_PUBLIC_API ErrorReportBuilder {
    * Unlike some functions involved in error handling, this function adheres
    * to the usual JSAPI return value error behavior.
    */
-  bool init(JSContext* cx, JS::HandleValue exn,
-            SniffingBehavior sniffingBehavior,
-            JS::HandleObject fallbackStack = nullptr);
-
   bool init(JSContext* cx, const JS::ExceptionStack& exnStack,
             SniffingBehavior sniffingBehavior);
 
@@ -326,9 +318,9 @@ struct MOZ_STACK_CLASS JS_PUBLIC_API ErrorReportBuilder {
   // Returns false if we fail to actually populate the ErrorReport
   // for some reason (probably out of memory).
   bool populateUncaughtExceptionReportUTF8(JSContext* cx,
-                                           JS::HandleObject fallbackStack, ...);
+                                           JS::HandleObject stack, ...);
   bool populateUncaughtExceptionReportUTF8VA(JSContext* cx,
-                                             JS::HandleObject fallbackStack,
+                                             JS::HandleObject stack,
                                              va_list ap);
 
   // Reports exceptions from add-on scopes to telemetry.
