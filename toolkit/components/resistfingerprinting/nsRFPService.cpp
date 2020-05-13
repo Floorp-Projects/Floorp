@@ -699,6 +699,13 @@ static uint32_t GetSpoofedVersion() {
   // until ESR 104±1 in 2022. :) We have a debug assert above to catch if the
   // spoofed version doesn't match the actual ESR version then.
   // We infer the last and closest ESR version based on this rule.
+
+  if (firefoxVersion < 78) {
+    // 68 is the last ESR version from the old six-week release cadence. After
+    // 78 we can assume the four-week new release cadence.
+    return 68;
+  }
+
   uint32_t spoofedVersion =
       firefoxVersion - ((firefoxVersion - kKnownEsrVersion) % 13);
 
