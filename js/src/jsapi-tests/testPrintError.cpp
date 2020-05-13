@@ -52,8 +52,7 @@ BEGIN_TEST(testPrintError_Works) {
 
   JS::ErrorReportBuilder builder(cx);
   CHECK(builder.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects));
-  JS::PrintError(cx, buf.stream(), builder.toStringResult(), builder.report(),
-                 false);
+  JS::PrintError(cx, buf.stream(), builder, false);
 
   CHECK(buf.contains("testPrintError_Works.js:3:1 uncaught exception: null\n"));
 
@@ -72,7 +71,7 @@ static bool warningSuccess;
 
 static void warningReporter(JSContext* cx, JSErrorReport* report) {
   AutoStreamBuffer buf;
-  JS::PrintError(cx, buf.stream(), JS::ConstUTF8CharsZ(), report, false);
+  JS::PrintError(cx, buf.stream(), report, false);
   warningSuccess = buf.contains("");
 }
 END_TEST(testPrintError_SkipWarning)
@@ -90,7 +89,7 @@ static bool warningSuccess;
 
 static void warningReporter(JSContext* cx, JSErrorReport* report) {
   AutoStreamBuffer buf;
-  JS::PrintError(cx, buf.stream(), JS::ConstUTF8CharsZ(), report, true);
+  JS::PrintError(cx, buf.stream(), report, true);
   warningSuccess = buf.contains("warning: warning message\n");
 }
 END_TEST(testPrintError_PrintWarning)
@@ -112,8 +111,7 @@ BEGIN_TEST(testPrintError_UTF16CodePoints) {
 
   JS::ErrorReportBuilder builder(cx);
   CHECK(builder.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects));
-  JS::PrintError(cx, buf.stream(), builder.toStringResult(), builder.report(),
-                 false);
+  JS::PrintError(cx, buf.stream(), builder, false);
 
   CHECK(buf.contains(
       "testPrintError_UTF16CodePoints.js:3:4 SyntaxError: illegal character:\n"

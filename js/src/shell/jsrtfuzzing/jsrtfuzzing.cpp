@@ -43,8 +43,7 @@ static void CrashOnPendingException() {
       fprintf(stderr, "out of memory initializing JS::ErrorReportBuilder\n");
       fflush(stderr);
     } else {
-      JS::PrintError(gCx, stderr, report.toStringResult(), report.report(),
-                     js::shell::reportWarnings);
+      JS::PrintError(gCx, stderr, report, js::shell::reportWarnings);
       if (!js::shell::PrintStackTrace(gCx, exnStack.stack())) {
         fputs("(Unable to print stack trace)\n", stderr);
       }
