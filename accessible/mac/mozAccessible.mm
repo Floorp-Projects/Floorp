@@ -1139,6 +1139,7 @@ struct RoleDescrMap {
 static const RoleDescrMap sRoleDescrMap[] = {
     {@"AXApplicationAlert", NS_LITERAL_STRING("alert")},
     {@"AXApplicationAlertDialog", NS_LITERAL_STRING("alertDialog")},
+    {@"AXApplicationDialog", NS_LITERAL_STRING("dialog")},
     {@"AXApplicationLog", NS_LITERAL_STRING("log")},
     {@"AXApplicationMarquee", NS_LITERAL_STRING("marquee")},
     {@"AXApplicationStatus", NS_LITERAL_STRING("status")},
