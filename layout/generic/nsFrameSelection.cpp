@@ -224,10 +224,9 @@ struct MOZ_RAII AutoPrepareFocusRange {
     if (aSelection->mFrameSelection->IsUserSelectionReason()) {
       mUserSelect.emplace(aSelection);
     }
-    bool userSelection = aSelection->mUserInitiated;
 
     nsTArray<StyledRange>& ranges = aSelection->mStyledRanges.mRanges;
-    if (!userSelection || aMultiRangeSelection) {
+    if (!aSelection->mUserInitiated || aMultiRangeSelection) {
       // Scripted command or the user is starting a new explicit multi-range
       // selection.
       for (StyledRange& entry : ranges) {
