@@ -104,6 +104,18 @@ TRRLoadInfo::GetIsInThirdPartyContext(bool* aIsInThirdPartyContext) {
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetIsThirdPartyContextToTopWindow(
+    bool* aIsThirdPartyContextToTopWindow) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetIsThirdPartyContextToTopWindow(
+    bool aIsThirdPartyContextToTopWindow) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::GetCookiePolicy(uint32_t* aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
