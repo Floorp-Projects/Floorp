@@ -62,132 +62,6 @@ enum MixedContentHSTSState {
   MCB_HSTS_ACTIVE_WITH_HSTS = 3
 };
 
-// Fired at the document that attempted to load mixed content.  The UI could
-// handle this event, for example, by displaying an info bar that offers the
-// choice to reload the page with mixed content permitted.
-class nsMixedContentEvent : public Runnable {
- public:
-  nsMixedContentEvent(nsISupports* aContext, MixedContentTypes aType,
-                      bool aRootHasSecureConnection)
-      : mozilla::Runnable("nsMixedContentEvent"),
-        mContext(aContext),
-        mType(aType),
-        mRootHasSecureConnection(aRootHasSecureConnection) {}
-
-  NS_IMETHOD Run() override {
-    NS_ASSERTION(mContext,
-                 "You can't call this runnable without a requesting context");
-
-    // To update the security UI in the tab with the blocked mixed content, call
-    // nsDocLoader::OnSecurityChange.
-
-    // Mixed content was allowed and is about to load; get the document and
-    // set the approriate flag to true if we are about to load Mixed Active
-    // Content.
-    nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(mContext);
-    if (!docShell) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIDocShell> rootShell =
-        docShell->GetBrowsingContext()->Top()->GetDocShell();
-    if (!rootShell) {
-      return NS_OK;
-    }
-
-    // now get the document from sameTypeRoot
-    nsCOMPtr<Document> rootDoc = rootShell->GetDocument();
-    NS_ASSERTION(rootDoc,
-                 "No root document from document shell root tree item.");
-
-    nsDocShell* nativeDocShell = nsDocShell::Cast(docShell);
-    uint32_t state = nsIWebProgressListener::STATE_IS_BROKEN;
-    nsCOMPtr<nsISecureBrowserUI> securityUI;
-    rootShell->GetSecurityUI(getter_AddRefs(securityUI));
-    // If there is no securityUI, document doesn't have a security state to
-    // update.  But we still want to set the document flags, so we don't return
-    // early.
-    if (securityUI) {
-      nsresult stateRV = securityUI->GetState(&state);
-      MOZ_ASSERT(NS_SUCCEEDED(stateRV));
-    }
-
-    if (mType == eMixedScript) {
-      // See if the pref will change here. If it will, only then do we need to
-      // call OnSecurityChange() to update the UI.
-      if (rootDoc->GetHasMixedActiveContentLoaded()) {
-        return NS_OK;
-      }
-      rootDoc->SetHasMixedActiveContentLoaded(true);
-
-      // Bug 1182551 - before changing the security state to broken, check
-      // that the root is actually secure.
-      if (mRootHasSecureConnection) {
-        // reset state security flag
-        state = state >> 4 << 4;
-        // set state security flag to broken, since there is mixed content
-        state |= nsIWebProgressListener::STATE_IS_BROKEN;
-
-        // If mixed display content is loaded, make sure to include that in
-        // the state.
-        if (rootDoc->GetHasMixedDisplayContentLoaded()) {
-          state |= nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
-        }
-
-        state |= nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
-      } else {
-        // root not secure, mixed active content loaded in an https subframe
-        state |= nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
-      }
-    } else if (mType == eMixedDisplay) {
-      // See if the pref will change here. If it will, only then do we need to
-      // call OnSecurityChange() to update the UI.
-      if (rootDoc->GetHasMixedDisplayContentLoaded()) {
-        return NS_OK;
-      }
-      rootDoc->SetHasMixedDisplayContentLoaded(true);
-
-      // Bug 1182551 - before changing the security state to broken, check
-      // that the root is actually secure.
-      if (mRootHasSecureConnection) {
-        // reset state security flag
-        state = state >> 4 << 4;
-        // set state security flag to broken, since there is mixed content
-        state |= nsIWebProgressListener::STATE_IS_BROKEN;
-
-        // If mixed active content is loaded, make sure to include that in the
-        // state.
-        if (rootDoc->GetHasMixedActiveContentLoaded()) {
-          state |= nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
-        }
-
-        state |= nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
-      } else {
-        // root not secure, mixed display content loaded in an https subframe
-        state |= nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
-      }
-    }
-
-    // Update the security UI in the tab with the mixed content changes.
-    if (securityUI) {
-      nativeDocShell->nsDocLoader::OnSecurityChange(mContext, state);
-    }
-
-    return NS_OK;
-  }
-
- private:
-  // The requesting context for the content load. Generally, a DOM node from
-  // the document that caused the load.
-  nsCOMPtr<nsISupports> mContext;
-
-  // The type of mixed content detected, e.g. active or display
-  const MixedContentTypes mType;
-
-  // Indicates whether the top level load is https or not.
-  bool mRootHasSecureConnection;
-};
-
 nsMixedContentBlocker::~nsMixedContentBlocker() = default;
 
 NS_IMPL_ISUPPORTS(nsMixedContentBlocker, nsIContentPolicy, nsIChannelEventSink)
@@ -1037,10 +911,62 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
                            eUserOverride, requestingLocation);
 
-    // Fire the event from a script runner as it is unsafe to run script
-    // from within ShouldLoad
-    nsContentUtils::AddScriptRunner(new nsMixedContentEvent(
-        requestingContext, classification, rootHasSecureConnection));
+    if (classification == eMixedScript) {
+      // See if the pref will change here. If it will, only then do we need to
+      // call OnSecurityChange() to update the UI.
+      if (rootDoc->GetHasMixedActiveContentLoaded()) {
+        return NS_OK;
+      }
+      rootDoc->SetHasMixedActiveContentLoaded(true);
+
+      // Bug 1182551 - before changing the security state to broken, check
+      // that the root is actually secure.
+      if (rootHasSecureConnection) {
+        // reset state security flag
+        state = state >> 4 << 4;
+        // set state security flag to broken, since there is mixed content
+        state |= nsIWebProgressListener::STATE_IS_BROKEN;
+
+        // If mixed display content is loaded, make sure to include that in
+        // the state.
+        if (rootDoc->GetHasMixedDisplayContentLoaded()) {
+          state |= nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
+        }
+
+        state |= nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
+      } else {
+        // root not secure, mixed active content loaded in an https subframe
+        state |= nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
+      }
+    } else if (classification == eMixedDisplay) {
+      // See if the pref will change here. If it will, only then do we need to
+      // call OnSecurityChange() to update the UI.
+      if (rootDoc->GetHasMixedDisplayContentLoaded()) {
+        return NS_OK;
+      }
+      rootDoc->SetHasMixedDisplayContentLoaded(true);
+
+      // Bug 1182551 - before changing the security state to broken, check
+      // that the root is actually secure.
+      if (rootHasSecureConnection) {
+        // reset state security flag
+        state = state >> 4 << 4;
+        // set state security flag to broken, since there is mixed content
+        state |= nsIWebProgressListener::STATE_IS_BROKEN;
+
+        // If mixed active content is loaded, make sure to include that in the
+        // state.
+        if (rootDoc->GetHasMixedActiveContentLoaded()) {
+          state |= nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
+        }
+
+        state |= nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
+      } else {
+        // root not secure, mixed display content loaded in an https subframe
+        state |= nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
+      }
+    }
+
     *aDecision = ACCEPT;
     return NS_OK;
   }
