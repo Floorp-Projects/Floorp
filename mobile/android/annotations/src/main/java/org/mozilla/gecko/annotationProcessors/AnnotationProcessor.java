@@ -50,6 +50,12 @@ public class AnnotationProcessor {
 
         int ret = 0;
 
+        final String unifiedHeaderFileName = OUTPUT_PREFIX + "JNIWrappers.h";
+        final String unifiedNativesFileName = OUTPUT_PREFIX + "JNINatives.h";
+
+        final StringBuilder unifiedHeaderFile = new StringBuilder(GENERATED_COMMENT);
+        final StringBuilder unifiedNativesFile = new StringBuilder(GENERATED_COMMENT);
+
         // Get an iterator over the classes in the jar files given...
         Iterator<ClassWithOptions> jarClassIterator = IterableJarLoadingURLClassLoader.getIteratorOverJars(jars);
 
@@ -62,6 +68,9 @@ public class AnnotationProcessor {
             final String sourceFileName = OUTPUT_PREFIX + annotatedClass.generatedName + "JNIWrappers.cpp";
             final String headerFileName = OUTPUT_PREFIX + annotatedClass.generatedName + "JNIWrappers.h";
             final String nativesFileName = OUTPUT_PREFIX + annotatedClass.generatedName + "JNINatives.h";
+
+            unifiedHeaderFile.append("#include \"" + headerFileName + "\"\n"); // annotatedClass.generatedName + "JNIWrappers.h\"\n");
+            unifiedNativesFile.append("#include \"" + nativesFileName + "\"\n"); // annotatedClass.generatedName + "JNINatives.h\"\n");
 
             final StringBuilder headerFile = new StringBuilder(GENERATED_COMMENT);
             final StringBuilder implementationFile = new StringBuilder(GENERATED_COMMENT);
@@ -122,6 +131,9 @@ public class AnnotationProcessor {
             ret |= writeOutputFile(headerFileName, headerFile);
             ret |= writeOutputFile(nativesFileName, nativesFile);
         }
+
+        ret |= writeOutputFile(unifiedHeaderFileName, unifiedHeaderFile);
+        ret |= writeOutputFile(unifiedNativesFileName, unifiedNativesFile);
 
         long e = System.currentTimeMillis();
         System.out.println("Annotation processing complete in " + (e - s) + "ms");
