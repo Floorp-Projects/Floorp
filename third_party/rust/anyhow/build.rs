@@ -1,7 +1,7 @@
 use std::env;
 use std::fs;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
+use std::process::{Command, ExitStatus, Stdio};
 
 // This code exercises the surface area that we expect of the std Backtrace
 // type. If the current toolchain is able to compile it, we go ahead and use
@@ -50,6 +50,7 @@ fn compile_probe() -> Option<ExitStatus> {
     let probefile = Path::new(&out_dir).join("probe.rs");
     fs::write(&probefile, PROBE).ok()?;
     Command::new(rustc)
+        .stderr(Stdio::null())
         .arg("--edition=2018")
         .arg("--crate-name=anyhow_build")
         .arg("--crate-type=lib")

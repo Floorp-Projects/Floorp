@@ -38,9 +38,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.28"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9a60d744a80c30fcb657dfe2c1b22bcb3e814c1a1e3674f32bf5820b570fbff"
+checksum = "2494382e9ba43995f3c56359e518641f450f5c36feeb4632a75cde2ec297c867"
 
 [[package]]
 name = "app_units"
@@ -1249,7 +1249,7 @@ checksum = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e3670c45716b496b550178cc5ed48fbdede816d3#e3670c45716b496b550178cc5ed48fbdede816d3"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "failure",
 ]
@@ -2196,7 +2196,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e3670c45716b496b550178cc5ed48fbdede816d3#e3670c45716b496b550178cc5ed48fbdede816d3"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 
 [[package]]
 name = "intl-memoizer"
@@ -3127,7 +3127,7 @@ dependencies = [
 [[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e3670c45716b496b550178cc5ed48fbdede816d3#e3670c45716b496b550178cc5ed48fbdede816d3"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 
 [[package]]
 name = "nsstring"
@@ -4294,7 +4294,7 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e3670c45716b496b550178cc5ed48fbdede816d3#e3670c45716b496b550178cc5ed48fbdede816d3"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "ffi-support",
  "interrupt-support",
@@ -4491,7 +4491,7 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e3670c45716b496b550178cc5ed48fbdede816d3#e3670c45716b496b550178cc5ed48fbdede816d3"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "base64 0.12.0",
  "rand",
@@ -4502,7 +4502,7 @@ dependencies = [
 [[package]]
 name = "sync15-traits"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e3670c45716b496b550178cc5ed48fbdede816d3#e3670c45716b496b550178cc5ed48fbdede816d3"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "failure",
  "ffi-support",
@@ -5118,7 +5118,7 @@ checksum = "078775d0255232fb988e6fccf26ddc9d1ac274299aaedcedce21c6f72cc533ce"
 [[package]]
 name = "viaduct"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e3670c45716b496b550178cc5ed48fbdede816d3#e3670c45716b496b550178cc5ed48fbdede816d3"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "failure",
  "failure_derive",
@@ -5234,7 +5234,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=e3670c45716b496b550178cc5ed48fbdede816d3#e3670c45716b496b550178cc5ed48fbdede816d3"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "error-support",
  "failure",
