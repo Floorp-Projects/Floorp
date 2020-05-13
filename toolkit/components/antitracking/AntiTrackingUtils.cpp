@@ -15,6 +15,7 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/PermissionManager.h"
+#include "mozIThirdPartyUtil.h"
 #include "nsIChannel.h"
 #include "nsIPermission.h"
 #include "nsIURI.h"
@@ -565,4 +566,46 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
 
     loadInfo->SetIsThirdPartyContextToTopWindow(isThirdParty);
   }
+}
+
+/* static */
+bool AntiTrackingUtils::IsThirdPartyChannel(nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+
+  // We assume that the channel is a third-party by default.
+  bool thirdParty = true;
+
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  if (!thirdPartyUtil) {
+    return thirdParty;
+  }
+
+  // Check that if the channel is a third-party to its parent.
+  nsresult rv =
+      thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &thirdParty);
+  if (NS_FAILED(rv)) {
+    // Assume third-party in case of failure
+    thirdParty = true;
+  }
+
+  // We check the top-level window to prevent the top-level navigation from
+  // being detected as third-party.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  return thirdParty && loadInfo->GetIsThirdPartyContextToTopWindow();
+}
+
+/* static */
+bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
+                                           nsIURI* aURI) {
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aURI);
+
+  // We assume that the window is foreign to the URI by default.
+  bool thirdParty = true;
+
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  Unused << thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(), aURI,
+                                               &thirdParty);
+
+  return thirdParty;
 }
