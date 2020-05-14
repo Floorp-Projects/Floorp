@@ -50,6 +50,10 @@ PER_PROJECT_PARAMETERS = {
         'target_tasks_method': 'try_tasks',
     },
 
+    'kaios-try': {
+        'target_tasks_method': 'try_tasks',
+    },
+
     'ash': {
         'target_tasks_method': 'default',
     },
@@ -104,6 +108,10 @@ PER_PROJECT_PARAMETERS = {
 
     'pine': {
         'target_tasks_method': 'pine_tasks',
+    },
+
+    'kaios': {
+        'target_tasks_method': 'kaios_tasks',
     },
 
     # the default parameters are used for projects that do not match above.
