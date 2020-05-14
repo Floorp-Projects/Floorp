@@ -1,6 +1,4 @@
 // META: global=window,dedicatedworker,sharedworker,serviceworker
-// META: script=/resources/testdriver.js
-// META: script=/resources/testdriver-vendor.js
 'use strict';
 
 promise_test(async testCase => {
@@ -8,7 +6,6 @@ promise_test(async testCase => {
 }, 'self.getScreens is present');
 
 promise_test(async testCase => {
-  await test_driver.set_permission({name: 'window-placement'}, 'granted');
   const screens = await self.getScreens();
   assert_greater_than(screens.length, 0);
 
@@ -30,10 +27,4 @@ promise_test(async testCase => {
   assert_equals(typeof screens[0].scaleFactor, 'number');
   assert_equals(typeof screens[0].id, 'string');
   assert_equals(typeof screens[0].touchSupport, 'boolean');
-}, 'self.getScreens returns at least 1 Screen with permission granted');
-
-promise_test(async testCase => {
-  await test_driver.set_permission({name: 'window-placement'}, 'denied');
-  const screens = await self.getScreens();
-  assert_equals(screens.length, 0);
-}, 'self.getScreens returns no Screen objects with permission denied');
+}, 'self.getScreens returns at least 1 Screen');

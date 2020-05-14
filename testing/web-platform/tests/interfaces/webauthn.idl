@@ -55,7 +55,7 @@ dictionary PublicKeyCredentialCreationOptions {
     unsigned long                                timeout;
     sequence<PublicKeyCredentialDescriptor>      excludeCredentials = [];
     AuthenticatorSelectionCriteria               authenticatorSelection;
-    DOMString                                    attestation = "none";
+    AttestationConveyancePreference              attestation = "none";
     AuthenticationExtensionsClientInputs         extensions;
 };
 
@@ -93,8 +93,7 @@ enum ResidentKeyRequirement {
 enum AttestationConveyancePreference {
     "none",
     "indirect",
-    "direct",
-    "enterprise"
+    "direct"
 };
 
 dictionary PublicKeyCredentialRequestOptions {

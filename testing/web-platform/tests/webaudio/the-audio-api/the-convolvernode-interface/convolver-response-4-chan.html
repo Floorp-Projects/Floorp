@@ -14,11 +14,6 @@
       // Test various convolver configurations when the convolver response has
       // a four channels.
 
-      // This is somewhat arbitrary.  It is the minimum value for which tests
-      // pass with both FFmpeg and KISS FFT implementations for 256 points.
-      // The value was similar for each implementation.
-      const absoluteThreshold = 3 * Math.pow(2, -22);
-
       // Fairly arbitrary sample rate, except that we want the rate to be a
       // power of two so that 1/sampleRate is exactly respresentable as a
       // single-precision float.
@@ -98,12 +93,7 @@
             description: '5.1->2 downmix producing 2-channel output'
           },
           (task, should) => {
-            // Scale tolerance by maximum amplitude expected in down-mix
-            // output.
-            let threshold = (1.0 + Math.sqrt(0.5) * 2) * absoluteThreshold;
-
-            fourChannelResponseTest({numberOfInputs: 6, prefix: '5.1',
-                                     absoluteThreshold: threshold}, should)
+            fourChannelResponseTest({numberOfInputs: 6, prefix: '5.1'}, should)
                 .then(() => task.done());
           });
 
@@ -297,15 +287,12 @@
           let expected0 = audioBuffer.getChannelData(2);
           let expected1 = audioBuffer.getChannelData(3);
 
-          let threshold = options.absoluteThreshold ?
-              options.absoluteThreshold : absoluteThreshold;
-
           // Verify that each output channel of the convolver matches
           // the delayed signal from the reference
           should(actual0, options.prefix + ': Channel 0')
-              .beCloseToArray(expected0, {absoluteThreshold: threshold});
+              .beEqualToArray(expected0);
           should(actual1, options.prefix + ': Channel 1')
-              .beCloseToArray(expected1, {absoluteThreshold: threshold});
+              .beEqualToArray(expected1);
         });
       }
 

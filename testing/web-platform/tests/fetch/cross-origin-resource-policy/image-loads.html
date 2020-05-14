@@ -16,7 +16,6 @@ const noCors = false;
 
 function loadImage(url, shoudLoad, corsMode, title)
 {
-    const testDiv = document.getElementById("testDiv");
     promise_test(() => {
         const img = new Image();
         if (corsMode)

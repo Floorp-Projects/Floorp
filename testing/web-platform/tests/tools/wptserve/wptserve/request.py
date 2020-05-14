@@ -1,13 +1,13 @@
 import base64
 import cgi
+from six.moves.http_cookies import BaseCookie
+from six import BytesIO, binary_type, text_type, iteritems, PY3
 import tempfile
 
-from six import BytesIO, binary_type, iteritems, PY3
-from six.moves.http_cookies import BaseCookie
 from six.moves.urllib.parse import parse_qsl, urlsplit
 
 from . import stash
-from .utils import HTTPException, isomorphic_encode, isomorphic_decode
+from .utils import HTTPException
 
 missing = object()
 
@@ -219,23 +219,22 @@ class Request(object):
     MultiDict representing the parameters supplied with the request.
     Note that these may be present on non-GET requests; the name is
     chosen to be familiar to users of other systems such as PHP.
-    Both keys and values are binary strings.
 
     .. attribute:: POST
 
     MultiDict representing the request body parameters. Most parameters
     are present as string values, but file uploads have file-like
-    values. All string values (including keys) have binary type.
+    values.
 
     .. attribute:: cookies
 
-    A Cookies object representing cookies sent with the request with a
+    Cookies object representing cookies sent with the request with a
     dictionary-like interface.
 
     .. attribute:: auth
 
-    An instance of Authentication with username and password properties
-    representing any credentials supplied using HTTP authentication.
+    Object with username and password properties representing any
+    credentials supplied using HTTP authentication.
 
     .. attribute:: server
 
@@ -249,12 +248,8 @@ class Request(object):
         self.protocol_version = request_handler.protocol_version
         self.method = request_handler.command
 
-        # Keys and values in raw headers are native strings.
-        self._headers = None
-        self.raw_headers = request_handler.headers
-
         scheme = request_handler.server.scheme
-        host = self.raw_headers.get("Host")
+        host = request_handler.headers.get("Host")
         port = request_handler.server.server_address[1]
 
         if host is None:
@@ -267,17 +262,22 @@ class Request(object):
         self.url_base = "/"
 
         if self.request_path.startswith(scheme + "://"):
-            self.url = self.request_path
+            self.url = request_handler.path
         else:
-            # TODO(#23362): Stop using native strings for URLs.
-            self.url = "%s://%s:%s%s" % (
-                scheme, host, port, self.request_path)
+            self.url = "%s://%s:%s%s" % (scheme,
+                                      host,
+                                      port,
+                                      self.request_path)
         self.url_parts = urlsplit(self.url)
+
+        self.raw_headers = request_handler.headers
 
         self.request_line = request_handler.raw_requestline
 
+        self._headers = None
+
         self.raw_input = InputFile(request_handler.rfile,
-                                   int(self.raw_headers.get("Content-Length", 0)))
+                                   int(self.headers.get("Content-Length", 0)))
 
         self._body = None
 
@@ -297,24 +297,19 @@ class Request(object):
             params = parse_qsl(self.url_parts.query, keep_blank_values=True)
             self._GET = MultiDict()
             for key, value in params:
-                self._GET.add(isomorphic_encode(key), isomorphic_encode(value))
+                self._GET.add(key, value)
         return self._GET
 
     @property
     def POST(self):
         if self._POST is None:
-            # Work out the post parameters
+            #Work out the post parameters
             pos = self.raw_input.tell()
             self.raw_input.seek(0)
-            kwargs = {
-                "fp": self.raw_input,
-                "environ": {"REQUEST_METHOD": self.method},
-                "headers": self.raw_headers,
-                "keep_blank_values": True,
-            }
-            if PY3:
-                kwargs["encoding"] = "iso-8859-1"
-            fs = cgi.FieldStorage(**kwargs)
+            fs = cgi.FieldStorage(fp=self.raw_input,
+                                  environ={"REQUEST_METHOD": self.method},
+                                  headers=self.raw_headers,
+                                  keep_blank_values=True)
             self._POST = MultiDict.from_field_storage(fs)
             self.raw_input.seek(pos)
         return self._POST
@@ -322,12 +317,14 @@ class Request(object):
     @property
     def cookies(self):
         if self._cookies is None:
-            parser = BinaryCookieParser()
+            parser = BaseCookie()
             cookie_headers = self.headers.get("cookie", b"")
+            if PY3:
+                cookie_headers = cookie_headers.decode("iso-8859-1")
             parser.load(cookie_headers)
             cookies = Cookies()
             for key, value in iteritems(parser):
-                cookies[isomorphic_encode(key)] = CookieValue(value)
+                cookies[key] = CookieValue(value)
             self._cookies = cookies
         return self._cookies
 
@@ -360,6 +357,24 @@ class H2Request(Request):
         super(H2Request, self).__init__(request_handler)
 
 
+def _maybe_encode(s):
+    """Encodes a text-type string into binary data using iso-8859-1.
+
+    Returns `str` in Python 2 and `bytes` in Python 3. The function is a no-op
+    if the argument already has a binary type.
+    """
+    if isinstance(s, binary_type):
+        return s
+
+    # Python 3 assumes iso-8859-1 when parsing headers, which will garble text
+    # with non ASCII characters. We try to encode the text back to binary.
+    # https://github.com/python/cpython/blob/273fc220b25933e443c82af6888eb1871d032fb8/Lib/http/client.py#L213
+    if isinstance(s, text_type):
+        return s.encode("iso-8859-1")
+
+    raise TypeError("Unexpected value in RequestHeaders: %r" % s)
+
+
 class RequestHeaders(dict):
     """Read-only dictionary-like API for accessing request headers.
 
@@ -369,7 +384,7 @@ class RequestHeaders(dict):
     """
     def __init__(self, items):
         for header in items.keys():
-            key = isomorphic_encode(header).lower()
+            key = _maybe_encode(header).lower()
             # get all headers with the same name
             values = items.getallmatchingheaders(header)
             if len(values) > 1:
@@ -379,21 +394,22 @@ class RequestHeaders(dict):
                 for value in values:
                     # getallmatchingheaders returns raw header lines, so
                     # split to get name, value
-                    multiples.append(isomorphic_encode(value).split(b':', 1)[1].strip())
+                    multiples.append(_maybe_encode(value).split(b':', 1)[1].strip())
                 headers = multiples
             else:
-                headers = [isomorphic_encode(items[header])]
+                headers = [_maybe_encode(items[header])]
             dict.__setitem__(self, key, headers)
+
 
     def __getitem__(self, key):
         """Get all headers of a certain (case-insensitive) name. If there is
         more than one, the values are returned comma separated"""
-        key = isomorphic_encode(key)
+        key = _maybe_encode(key)
         values = dict.__getitem__(self, key.lower())
         if len(values) == 1:
             return values[0]
         else:
-            return b", ".join(values)
+            return ", ".join(values)
 
     def __setitem__(self, name, value):
         raise Exception
@@ -414,7 +430,7 @@ class RequestHeaders(dict):
     def get_list(self, key, default=missing):
         """Get all the header values for a particular field name as
         a list"""
-        key = isomorphic_encode(key)
+        key = _maybe_encode(key)
         try:
             return dict.__getitem__(self, key.lower())
         except KeyError:
@@ -424,7 +440,7 @@ class RequestHeaders(dict):
                 raise
 
     def __contains__(self, key):
-        key = isomorphic_encode(key)
+        key = _maybe_encode(key)
         return dict.__contains__(self, key.lower())
 
     def iteritems(self):
@@ -434,7 +450,6 @@ class RequestHeaders(dict):
     def itervalues(self):
         for item in self:
             yield self[item]
-
 
 class CookieValue(object):
     """Representation of cookies.
@@ -509,8 +524,9 @@ class CookieValue(object):
 
 
 class MultiDict(dict):
-    """Dictionary type that holds multiple values for each key"""
-    # TODO: this should perhaps also order the keys
+    """Dictionary type that holds multiple values for each
+    key"""
+    #TODO: this should perhaps also order the keys
     def __init__(self):
         pass
 
@@ -525,6 +541,7 @@ class MultiDict(dict):
 
     def __getitem__(self, key):
         """Get the first value with a given key"""
+        #TODO: should this instead be the last value?
         return self.first(key)
 
     def first(self, key, default=missing):
@@ -567,10 +584,6 @@ class MultiDict(dict):
 
     @classmethod
     def from_field_storage(cls, fs):
-        """Construct a MultiDict from a cgi.FieldStorage
-
-        Note that all keys and values are binary strings.
-        """
         self = cls()
         if fs.list is None:
             return self
@@ -581,46 +594,13 @@ class MultiDict(dict):
 
             for value in values:
                 if not value.filename:
-                    value = isomorphic_encode(value.value)
-                else:
-                    assert isinstance(value, cgi.FieldStorage)
-                self.add(isomorphic_encode(key), value)
+                    value = value.value
+                self.add(key, value)
         return self
 
 
-class BinaryCookieParser(BaseCookie):
-    """A subclass of BaseCookie that returns values in binary strings
-
-    This is not intended to store the cookies; use Cookies instead.
-    """
-    def value_decode(self, val):
-        """Decode value from network to (real_value, coded_value).
-
-        Override BaseCookie.value_decode.
-        """
-        return isomorphic_encode(val), val
-
-    def value_encode(self, val):
-        raise NotImplementedError('BinaryCookieParser is not for setting cookies')
-
-    def load(self, rawdata):
-        """Load cookies from a binary string.
-
-        This overrides and calls BaseCookie.load. Unlike BaseCookie.load, it
-        does not accept dictionaries.
-        """
-        assert isinstance(rawdata, binary_type)
-        if PY3:
-            # BaseCookie.load expects a native string, which in Python 3 is text.
-            rawdata = isomorphic_decode(rawdata)
-        super(BinaryCookieParser, self).load(rawdata)
-
-
 class Cookies(MultiDict):
-    """MultiDict specialised for Cookie values
-
-    Keys and values are binary strings.
-    """
+    """MultiDict specialised for Cookie values"""
     def __init__(self):
         pass
 

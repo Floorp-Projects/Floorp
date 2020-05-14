@@ -101,7 +101,7 @@ let testFunction = function(session, fakeDeviceController, t) {
 
   // Make our input source disappear after one frame, and wait an additional
   // frame for that disappearance to propogate.
-  requestSkipAnimationFrame(session, (time, xrFrame) => {
+  session.requestAnimationFrame((time, xrFrame) => {
     input_source.disconnect();
     session.requestAnimationFrame((time, xrFrame) => {});
   });
