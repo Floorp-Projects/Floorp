@@ -392,8 +392,8 @@ MDefinition* MInstruction::foldsToStore(TempAllocator& alloc) {
     case Opcode::StoreFixedSlot:
       value = store->toStoreFixedSlot()->value();
       break;
-    case Opcode::StoreSlot:
-      value = store->toStoreSlot()->value();
+    case Opcode::StoreDynamicSlot:
+      value = store->toStoreDynamicSlot()->value();
       break;
     case Opcode::StoreElement:
       value = store->toStoreElement()->value();
@@ -4963,9 +4963,10 @@ bool MWasmLoadGlobalCell::congruentTo(const MDefinition* ins) const {
   return congruentIfOperandsEqual(other);
 }
 
-MDefinition::AliasType MLoadSlot::mightAlias(const MDefinition* def) const {
-  if (def->isStoreSlot()) {
-    const MStoreSlot* store = def->toStoreSlot();
+MDefinition::AliasType MLoadDynamicSlot::mightAlias(
+    const MDefinition* def) const {
+  if (def->isStoreDynamicSlot()) {
+    const MStoreDynamicSlot* store = def->toStoreDynamicSlot();
     if (store->slot() != slot()) {
       return AliasType::NoAlias;
     }
@@ -4979,13 +4980,13 @@ MDefinition::AliasType MLoadSlot::mightAlias(const MDefinition* def) const {
   return AliasType::MayAlias;
 }
 
-HashNumber MLoadSlot::valueHash() const {
+HashNumber MLoadDynamicSlot::valueHash() const {
   HashNumber hash = MDefinition::valueHash();
   hash = addU32ToHash(hash, slot_);
   return hash;
 }
 
-MDefinition* MLoadSlot::foldsTo(TempAllocator& alloc) {
+MDefinition* MLoadDynamicSlot::foldsTo(TempAllocator& alloc) {
   if (MDefinition* def = foldsToStore(alloc)) {
     return def;
   }
@@ -4994,12 +4995,12 @@ MDefinition* MLoadSlot::foldsTo(TempAllocator& alloc) {
 }
 
 #ifdef JS_JITSPEW
-void MLoadSlot::printOpcode(GenericPrinter& out) const {
+void MLoadDynamicSlot::printOpcode(GenericPrinter& out) const {
   MDefinition::printOpcode(out);
   out.printf(" %u", slot());
 }
 
-void MStoreSlot::printOpcode(GenericPrinter& out) const {
+void MStoreDynamicSlot::printOpcode(GenericPrinter& out) const {
   PrintOpcodeName(out, op());
   out.printf(" ");
   getOperand(0)->printName(out);
@@ -5251,7 +5252,7 @@ MDefinition::AliasType MGetPropertyPolymorphic::mightAlias(
   // Allow hoisting this instruction if the store does not write to a
   // slot read by this instruction.
 
-  if (!store->isStoreFixedSlot() && !store->isStoreSlot()) {
+  if (!store->isStoreFixedSlot() && !store->isStoreDynamicSlot()) {
     return AliasType::MayAlias;
   }
 
@@ -5267,13 +5268,14 @@ MDefinition::AliasType MGetPropertyPolymorphic::mightAlias(
           store->toStoreFixedSlot()->slot() != slot) {
         continue;
       }
-      if (store->isStoreSlot()) {
+      if (store->isStoreDynamicSlot()) {
         continue;
       }
     } else {
       // Dynamic slot.
       uint32_t slot = shape->slot() - shape->numFixedSlots();
-      if (store->isStoreSlot() && store->toStoreSlot()->slot() != slot) {
+      if (store->isStoreDynamicSlot() &&
+          store->toStoreDynamicSlot()->slot() != slot) {
         continue;
       }
       if (store->isStoreFixedSlot()) {

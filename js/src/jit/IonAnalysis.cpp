@@ -3650,7 +3650,7 @@ static bool TryOptimizeLoadObjectOrNull(MDefinition* def,
         break;
       case MDefinition::Opcode::StoreFixedSlot:
         break;
-      case MDefinition::Opcode::StoreSlot:
+      case MDefinition::Opcode::StoreDynamicSlot:
         break;
       case MDefinition::Opcode::ToObjectOrNull:
         if (!eliminateList.append(ndef->toToObjectOrNull())) {
@@ -3681,7 +3681,7 @@ static bool TryOptimizeLoadObjectOrNull(MDefinition* def,
   bool foundUse = false;
   for (MUseDefIterator iter(def); iter; ++iter) {
     MDefinition* ndef = iter.def();
-    if (!ndef->isStoreFixedSlot() && !ndef->isStoreSlot()) {
+    if (!ndef->isStoreFixedSlot() && !ndef->isStoreDynamicSlot()) {
       foundUse = true;
       break;
     }
@@ -3786,7 +3786,7 @@ bool jit::EliminateRedundantChecks(MIRGraph& graph) {
           }
           break;
         case MDefinition::Opcode::LoadFixedSlot:
-        case MDefinition::Opcode::LoadSlot:
+        case MDefinition::Opcode::LoadDynamicSlot:
           if (!TryOptimizeLoadObjectOrNull(def, &eliminateList)) {
             return false;
           }
@@ -3841,8 +3841,8 @@ static bool NeedsKeepAlive(MInstruction* slotsOrElements, MInstruction* use) {
       case MDefinition::Opcode::Constant:
       case MDefinition::Opcode::KeepAliveObject:
       case MDefinition::Opcode::Unbox:
-      case MDefinition::Opcode::LoadSlot:
-      case MDefinition::Opcode::StoreSlot:
+      case MDefinition::Opcode::LoadDynamicSlot:
+      case MDefinition::Opcode::StoreDynamicSlot:
       case MDefinition::Opcode::LoadFixedSlot:
       case MDefinition::Opcode::StoreFixedSlot:
       case MDefinition::Opcode::LoadElement:
