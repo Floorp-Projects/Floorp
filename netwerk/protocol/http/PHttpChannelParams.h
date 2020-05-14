@@ -218,6 +218,8 @@ struct ParamTraits<mozilla::net::nsHttpRequestHead> {
   }
 };
 
+// Note that the code below MUST be synchronized with the code in
+// nsHttpRequestHead's copy constructor.
 template <>
 struct ParamTraits<mozilla::net::nsHttpResponseHead> {
   typedef mozilla::net::nsHttpResponseHead paramType;
@@ -230,9 +232,15 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead> {
     WriteParam(aMsg, aParam.mContentLength);
     WriteParam(aMsg, aParam.mContentType);
     WriteParam(aMsg, aParam.mContentCharset);
+    WriteParam(aMsg, aParam.mCacheControlPublic);
     WriteParam(aMsg, aParam.mCacheControlPrivate);
     WriteParam(aMsg, aParam.mCacheControlNoStore);
     WriteParam(aMsg, aParam.mCacheControlNoCache);
+    WriteParam(aMsg, aParam.mCacheControlImmutable);
+    WriteParam(aMsg, aParam.mCacheControlStaleWhileRevalidateSet);
+    WriteParam(aMsg, aParam.mCacheControlStaleWhileRevalidate);
+    WriteParam(aMsg, aParam.mCacheControlMaxAgeSet);
+    WriteParam(aMsg, aParam.mCacheControlMaxAge);
     WriteParam(aMsg, aParam.mPragmaNoCache);
   }
 
@@ -246,9 +254,16 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead> {
         !ReadParam(aMsg, aIter, &aResult->mContentLength) ||
         !ReadParam(aMsg, aIter, &aResult->mContentType) ||
         !ReadParam(aMsg, aIter, &aResult->mContentCharset) ||
+        !ReadParam(aMsg, aIter, &aResult->mCacheControlPublic) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlPrivate) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlNoStore) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlNoCache) ||
+        !ReadParam(aMsg, aIter, &aResult->mCacheControlImmutable) ||
+        !ReadParam(aMsg, aIter,
+                   &aResult->mCacheControlStaleWhileRevalidateSet) ||
+        !ReadParam(aMsg, aIter, &aResult->mCacheControlStaleWhileRevalidate) ||
+        !ReadParam(aMsg, aIter, &aResult->mCacheControlMaxAgeSet) ||
+        !ReadParam(aMsg, aIter, &aResult->mCacheControlMaxAge) ||
         !ReadParam(aMsg, aIter, &aResult->mPragmaNoCache))
       return false;
 
