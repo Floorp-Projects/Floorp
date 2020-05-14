@@ -2783,6 +2783,12 @@ void SVGTextFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_SVG_TEXT);
 
   mMutationObserver = new MutationObserver(this);
+
+  if (mState & NS_FRAME_IS_NONDISPLAY) {
+    // We're inserting a new <text> element into a non-display context.
+    // Ensure that we get reflowed.
+    ScheduleReflowSVGNonDisplayText(IntrinsicDirty::StyleChange);
+  }
 }
 
 void SVGTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,

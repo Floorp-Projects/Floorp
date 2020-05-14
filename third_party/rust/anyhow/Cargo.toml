@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "anyhow"
-version = "1.0.28"
+version = "1.0.30"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Flexible concrete Error type built on std::error::Error"
 documentation = "https://docs.rs/anyhow"
@@ -41,5 +41,3 @@ features = ["diff"]
 [features]
 default = ["std"]
 std = []
-[badges.travis-ci]
-repository = "dtolnay/anyhow"

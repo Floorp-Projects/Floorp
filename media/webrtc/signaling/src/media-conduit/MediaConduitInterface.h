@@ -246,6 +246,8 @@ class MediaSessionConduit {
   virtual bool GetRTCPSenderReport(unsigned int* packetsSent,
                                    uint64_t* bytesSent) = 0;
 
+  virtual void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
+
   virtual uint64_t CodecPluginID() = 0;
 
   virtual void SetPCHandle(const std::string& aPCHandle) = 0;
@@ -601,8 +603,6 @@ class AudioSessionConduit : public MediaSessionConduit {
 
   virtual bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
                               int lengthMs, int attenuationDb) = 0;
-
-  virtual void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
 };
 }  // namespace mozilla
 #endif

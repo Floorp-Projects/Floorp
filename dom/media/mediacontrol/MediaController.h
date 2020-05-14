@@ -9,7 +9,8 @@
 
 #include "ContentMediaController.h"
 #include "MediaEventSource.h"
-#include "mozilla/dom/MediaSessionController.h"
+#include "MediaPlaybackStatus.h"
+#include "MediaStatusManager.h"
 #include "mozilla/LinkedList.h"
 #include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
@@ -19,6 +20,30 @@ namespace dom {
 
 class BrowsingContext;
 enum class MediaControlKeysEvent : uint32_t;
+
+/**
+ * IMediaController is an interface which includes control related methods and
+ * methods used to know its playback state.
+ */
+class IMediaController {
+ public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  // Focus the window currently playing media.
+  virtual void Focus() = 0;
+  virtual void Play() = 0;
+  virtual void Pause() = 0;
+  virtual void Stop() = 0;
+  virtual void PrevTrack() = 0;
+  virtual void NextTrack() = 0;
+  virtual void SeekBackward() = 0;
+  virtual void SeekForward() = 0;
+
+  // Return the ID of the top level browsing context within a tab.
+  virtual uint64_t Id() const = 0;
+  virtual bool IsAudible() const = 0;
+  virtual bool IsPlaying() const = 0;
+};
 
 /**
  * MediaController is a class, which is used to control all media within a tab.
@@ -45,26 +70,33 @@ enum class MediaControlKeysEvent : uint32_t;
  * controller from `MediaControlService`.
  */
 class MediaController final
-    : public MediaSessionController,
+    : public IMediaController,
+      public MediaStatusManager,
       public LinkedListElement<RefPtr<MediaController>> {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaController, override);
 
-  explicit MediaController(uint64_t aContextId);
+  explicit MediaController(uint64_t aBrowsingContextId);
 
-  // Focus the window currently playing media.
-  void Focus();
-  void Play();
-  void Pause();
-  void Stop();
-  void PrevTrack();
-  void NextTrack();
-  void SeekBackward();
-  void SeekForward();
+  // IMediaController's methods
+  void Focus() override;
+  void Play() override;
+  void Pause() override;
+  void Stop() override;
+  void PrevTrack() override;
+  void NextTrack() override;
+  void SeekBackward() override;
+  void SeekForward() override;
+  uint64_t Id() const override;
+  bool IsAudible() const override;
+  bool IsPlaying() const override;
 
-  // If any of controlled media is being used in Picture-In-Picture mode, then
-  // this function should be callled and set the value.
-  void SetIsInPictureInPictureMode(bool aIsInPictureInPictureMode);
+  // IMediaInfoUpdater's methods
+  void NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
+                                  MediaPlaybackState aState) override;
+  void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
+                                 MediaAudibleState aState) override;
+  void SetIsInPictureInPictureMode(bool aIsInPictureInPictureMode) override;
 
   // Reture true if any of controlled media is being used in Picture-In-Picture
   // mode.
@@ -74,60 +106,19 @@ class MediaController final
   // then calling any its method won't take any effect.
   void Shutdown();
 
-  bool IsAudible() const;
-  uint64_t ControlledMediaNum() const;
-  MediaSessionPlaybackState GetState() const;
-
-  void SetDeclaredPlaybackState(uint64_t aSessionContextId,
-                                MediaSessionPlaybackState aState) override;
-
-  // These methods are only being used to notify the state changes of controlled
-  // media in ContentParent or MediaControlUtils.
-  void NotifyMediaPlaybackChanged(MediaPlaybackState aState);
-  void NotifyMediaAudibleChanged(MediaAudibleState aState);
-
  private:
   ~MediaController();
-
+  void HandleActualPlaybackStateChanged() override;
   void UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent aEvent);
-  void IncreaseControlledMediaNum();
-  void DecreaseControlledMediaNum();
-  void IncreasePlayingControlledMediaNum();
-  void DecreasePlayingControlledMediaNum();
-
   void Activate();
   void Deactivate();
+  bool ShouldActivateController() const;
+  bool ShouldDeactivateController() const;
 
-  void SetGuessedPlayState(MediaSessionPlaybackState aState);
-
-  // Whenever the declared playback state (from media session controller) or the
-  // guessed playback state changes, we should recompute actual playback state
-  // to know if we need to update the virtual control interface.
-  void UpdateActualPlaybackState();
-
-  MediaAudibleState mAudibleState = MediaAudibleState::eInaudible;
   bool mIsRegisteredToService = false;
-  int64_t mControlledMediaNum = 0;
-  int64_t mPlayingControlledMediaNum = 0;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;
-
-  // This state can match to the `guessed playback state` in the spec [1], it
-  // indicates if we have any media element playing within the tab which this
-  // controller belongs to. But currently we only take media elements into
-  // account, which is different from the way the spec recommends. In addition,
-  // We don't support web audio and plugin and not consider audible state of
-  // media.
-  // [1] https://w3c.github.io/mediasession/#guessed-playback-state
-  MediaSessionPlaybackState mGuessedPlaybackState =
-      MediaSessionPlaybackState::None;
-
-  // This playback state would be the final playback which can be used to know
-  // if the controller is playing or not.
-  // https://w3c.github.io/mediasession/#actual-playback-state
-  MediaSessionPlaybackState mActualPlaybackState =
-      MediaSessionPlaybackState::None;
 };
 
 }  // namespace dom

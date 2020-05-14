@@ -726,16 +726,6 @@ html:-moz-focusring {
   outline-style: none;
 }
 
-input:not([type="file"]):-moz-focusring,
-button:-moz-focusring,
-select:-moz-focusring,
-button:-moz-focusring,
-textarea:-moz-focusring {
-  /* These elements can handle outline themselves when themed, so we use
-   * outline-style: auto and skip rendering the outline only when themed */
-  outline-style: auto;
-}
-
 /* hidden elements */
 base, basefont, datalist, head, meta, script, style, title,
 noembed, param, template {

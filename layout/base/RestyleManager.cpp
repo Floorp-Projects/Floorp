@@ -1500,27 +1500,11 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
 
       if (!(frame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED)) {
         // Frame can not be transformed, and thus a change in transform will
-        // have no effect and we should not use the
-        // nsChangeHint_UpdatePostTransformOverflow hint.
-        hint &= ~nsChangeHint_UpdatePostTransformOverflow;
-      }
-
-      if ((hint & nsChangeHint_UpdateTransformLayer) &&
-          !(frame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED) &&
-          frame->HasAnimationOfTransform()) {
-        // If we have an nsChangeHint_UpdateTransformLayer hint but no
-        // corresponding frame bit, we most likely have a transform animation
-        // that was added or updated after this frame was created (otherwise
-        // we would have set the frame bit when we initialized the frame)
-        // and which sets the transform to 'none' (otherwise we would have set
-        // the frame bit when we got the nsChangeHint_AddOrRemoveTransform
-        // hint).
-        //
-        // In that case we should set the frame bit.
-        for (nsIFrame* cont = frame; cont;
-             cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-          cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
-        }
+        // have no effect and we should not use either
+        // nsChangeHint_UpdatePostTransformOverflow or
+        // nsChangeHint_UpdateTransformLayerhint.
+        hint &= ~(nsChangeHint_UpdatePostTransformOverflow |
+                  nsChangeHint_UpdateTransformLayer);
       }
 
       if (hint & nsChangeHint_AddOrRemoveTransform) {

@@ -280,7 +280,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
 void RTCRtpReceiver::GetContributingSources(
     nsTArray<RTCRtpContributingSource>& aSources) {
   // Duplicate code...
-  if (mPipeline && mPipeline->Conduit() && !mPipeline->IsVideo()) {
+  if (mPipeline && mPipeline->Conduit()) {
     RefPtr<AudioSessionConduit> conduit(
         static_cast<AudioSessionConduit*>(mPipeline->Conduit()));
     nsTArray<dom::RTCRtpSourceEntry> sources;
@@ -296,7 +296,7 @@ void RTCRtpReceiver::GetContributingSources(
 void RTCRtpReceiver::GetSynchronizationSources(
     nsTArray<dom::RTCRtpSynchronizationSource>& aSources) {
   // Duplicate code...
-  if (mPipeline && mPipeline->Conduit() && !mPipeline->IsVideo()) {
+  if (mPipeline && mPipeline->Conduit()) {
     RefPtr<AudioSessionConduit> conduit(
         static_cast<AudioSessionConduit*>(mPipeline->Conduit()));
     nsTArray<dom::RTCRtpSourceEntry> sources;

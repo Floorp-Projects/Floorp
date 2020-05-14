@@ -11,13 +11,11 @@ var EXPORTED_SYMBOLS = ["TestWindowChild"];
 class TestWindowChild extends JSWindowActorChild {
   constructor() {
     super();
+    this.sawActorCreated = false;
   }
 
   actorCreated() {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
-    Services.obs.notifyObservers(null, "test-window-actor-child-created");
+    this.sawActorCreated = true;
   }
 
   receiveMessage(aMessage) {

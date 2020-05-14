@@ -2518,7 +2518,7 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
       mAuthorRequestHeaders.Set("accept", NS_LITERAL_CSTRING("*/*"));
     }
 
-    mAuthorRequestHeaders.ApplyToChannel(httpChannel);
+    mAuthorRequestHeaders.ApplyToChannel(httpChannel, false);
 
     if (!IsSystemXHR()) {
       nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
@@ -3249,13 +3249,26 @@ nsresult XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result) {
   NS_ASSERTION(mNewRedirectChannel, "mNewRedirectChannel not set in callback");
 
   if (NS_SUCCEEDED(result)) {
+    bool rewriteToGET = false;
+    nsCOMPtr<nsIHttpChannel> oldHttpChannel = GetCurrentHttpChannel();
+    if (uint32_t responseCode = 0;
+        oldHttpChannel &&
+        NS_SUCCEEDED(oldHttpChannel->GetResponseStatus(&responseCode))) {
+      // Fetch 4.4.11
+      rewriteToGET =
+          ((responseCode == 301 || responseCode == 302) &&
+           mRequestMethod.LowerCaseEqualsASCII("post")) ||
+          (responseCode == 303 && !mRequestMethod.LowerCaseEqualsASCII("get") &&
+           !mRequestMethod.LowerCaseEqualsASCII("head"));
+    }
+
     mChannel = mNewRedirectChannel;
 
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
-    if (httpChannel) {
+    nsCOMPtr<nsIHttpChannel> newHttpChannel(do_QueryInterface(mChannel));
+    if (newHttpChannel) {
       // Ensure all original headers are duplicated for the new channel (bug
       // #553888)
-      mAuthorRequestHeaders.ApplyToChannel(httpChannel);
+      mAuthorRequestHeaders.ApplyToChannel(newHttpChannel, rewriteToGET);
     }
   } else {
     mErrorLoad = ErrorType::eRedirect;
@@ -3940,15 +3953,22 @@ void RequestHeaders::MergeOrSet(const nsACString& aName,
 
 void RequestHeaders::Clear() { mHeaders.Clear(); }
 
-void RequestHeaders::ApplyToChannel(nsIHttpChannel* aHttpChannel) const {
+void RequestHeaders::ApplyToChannel(nsIHttpChannel* aChannel,
+                                    bool aStripRequestBodyHeader) const {
   for (const RequestHeader& header : mHeaders) {
+    if (aStripRequestBodyHeader &&
+        (header.mName.LowerCaseEqualsASCII("content-type") ||
+         header.mName.LowerCaseEqualsASCII("content-encoding") ||
+         header.mName.LowerCaseEqualsASCII("content-language") ||
+         header.mName.LowerCaseEqualsASCII("content-location"))) {
+      continue;
+    }
     if (header.mValue.IsEmpty()) {
-      DebugOnly<nsresult> rv =
-          aHttpChannel->SetEmptyRequestHeader(header.mName);
+      DebugOnly<nsresult> rv = aChannel->SetEmptyRequestHeader(header.mName);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     } else {
       DebugOnly<nsresult> rv =
-          aHttpChannel->SetRequestHeader(header.mName, header.mValue, false);
+          aChannel->SetRequestHeader(header.mName, header.mValue, false);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }

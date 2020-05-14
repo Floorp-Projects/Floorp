@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "hashbrown"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 build = "build.rs"
 exclude = [".travis.yml", "bors.toml", "/ci/*"]
@@ -75,7 +75,7 @@ version = "1"
 
 [features]
 ahash-compile-time-rng = ["ahash/compile-time-rng"]
-default = ["ahash", "ahash-compile-time-rng", "inline-more"]
+default = ["ahash", "inline-more"]
 inline-more = []
 nightly = []
 raw = []

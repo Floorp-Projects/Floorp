@@ -4415,7 +4415,10 @@ class nsIFrame : public nsQueryFrame {
   }
 
   bool MayHaveTransformAnimation() const { return mMayHaveTransformAnimation; }
-  void SetMayHaveTransformAnimation() { mMayHaveTransformAnimation = true; }
+  void SetMayHaveTransformAnimation() {
+    AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
+    mMayHaveTransformAnimation = true;
+  }
   bool MayHaveOpacityAnimation() const { return mMayHaveOpacityAnimation; }
   void SetMayHaveOpacityAnimation() { mMayHaveOpacityAnimation = true; }
 
@@ -4486,6 +4489,24 @@ class nsIFrame : public nsQueryFrame {
   bool HasDisplayItems();
   bool HasDisplayItem(nsDisplayItemBase* aItem);
   bool HasDisplayItem(uint32_t aKey);
+
+  static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
+                               const nsDisplayList& aList,
+                               bool aDumpHtml = false);
+  static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
+                               const nsDisplayList& aList,
+                               std::stringstream& aStream,
+                               bool aDumpHtml = false);
+  static void PrintDisplayItem(nsDisplayListBuilder* aBuilder,
+                               nsDisplayItem* aItem, std::stringstream& aStream,
+                               uint32_t aIndent = 0, bool aDumpSublist = false,
+                               bool aDumpHtml = false);
+#ifdef MOZ_DUMP_PAINTING
+  static void PrintDisplayListSet(nsDisplayListBuilder* aBuilder,
+                                  const nsDisplayListSet& aSet,
+                                  std::stringstream& aStream,
+                                  bool aDumpHtml = false);
+#endif
 
   bool ForceDescendIntoIfVisible() const { return mForceDescendIntoIfVisible; }
   void SetForceDescendIntoIfVisible(bool aForce) {

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<style>
+span {
+  width: 100px;
+  height: 100px;
+  background-color: red;
+}
+</style>
+<script>
+window.onload = function() {
+  let body = document.getElementsByTagName("body")[0];
+  let o_0 = document.createElement("span");
+  body.appendChild(o_0);
+  o_0.animate([{ "padding": "57pt", "transform": "none" },
+               { "padding": "57pt", "transform": "rotate(90deg)" }] , 10000);
+  body.appendChild(document.createElement("colgroup"));
+  document.documentElement.classList.remove("reftest-wait");
+};
+</script>
+</head>
+<body></body>
+</html>

@@ -291,8 +291,7 @@ class MOZ_STACK_CLASS IonBuilder {
 
   MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
 
-  MInstruction* addShapeGuard(MDefinition* obj, Shape* const shape,
-                              BailoutKind bailoutKind);
+  MInstruction* addShapeGuard(MDefinition* obj, Shape* const shape);
   MInstruction* addGroupGuard(MDefinition* obj, ObjectGroup* group,
                               BailoutKind bailoutKind);
   MInstruction* addSharedTypedArrayGuard(MDefinition* obj);

@@ -523,9 +523,10 @@ void AutoJSAPI::ReportException() {
         xpc::FindExceptionStackForConsoleReport(inner, exnStack.exception(),
                                                 exnStack.stack(), &stack,
                                                 &stackGlobal);
-        JS::Rooted<Maybe<JS::Value>> exception(cx(),
-                                               Some(exnStack.exception()));
-        xpcReport->LogToConsoleWithStack(inner, exception, stack, stackGlobal);
+        // This error is not associated with a specific window,
+        // so omit the exception value to mitigate potential leaks.
+        xpcReport->LogToConsoleWithStack(inner, JS::NothingHandleValue, stack,
+                                         stackGlobal);
       }
     } else {
       // On a worker or worklet, we just use the error reporting mechanism and

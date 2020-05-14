@@ -9,7 +9,6 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 EXPORTS.mozilla.dom += [
     'MediaMetadata.h',
     'MediaSession.h',
-    'MediaSessionController.h',
     'MediaSessionIPCUtils.h',
     'MediaSessionUtils.h',
 ]
@@ -17,7 +16,6 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'MediaMetadata.cpp',
     'MediaSession.cpp',
-    'MediaSessionController.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

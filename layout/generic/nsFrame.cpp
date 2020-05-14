@@ -2550,9 +2550,9 @@ bool nsIFrame::CanBeDynamicReflowRoot() const {
  * Refreshes each content's frame
  *********************************************************/
 
-void nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
-                                      nsDisplayList* aList,
-                                      uint16_t aContentType) {
+void nsContainerFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
+                                               nsDisplayList* aList,
+                                               uint16_t aContentType) {
   if (!IsSelected() || !IsVisibleForPainting()) {
     return;
   }
@@ -2625,12 +2625,18 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  // We don't display outline-style: auto on themed frames.
-  //
-  // TODO(emilio): Maybe we want a theme hook to say which frames can handle it
-  // themselves. Non-native theme probably will want this.
-  if (outline.mOutlineStyle.IsAuto() && IsThemed()) {
-    return;
+  // We don't display outline-style: auto on themed frames that have their own
+  // focus indicators.
+  if (outline.mOutlineStyle.IsAuto()) {
+    auto* disp = StyleDisplay();
+    // FIXME(emilio): The range special-case is needed because <input
+    // type=range> displays its own outline with ::-moz-focus-outer, and this
+    // would show two outlines instead of one.
+    if (IsThemed(disp) &&
+        (PresContext()->Theme()->ThemeDrawsFocusForWidget(disp->mAppearance) ||
+         disp->mAppearance != StyleAppearance::Range)) {
+      return;
+    }
   }
 
   aLists.Outlines()->AppendNewToTop<nsDisplayOutline>(aBuilder, this);
@@ -6350,7 +6356,7 @@ LogicalSize nsIFrame::ComputeSize(gfxContext* aRenderingContext,
   return result;
 }
 
-LogicalSize nsFrame::ComputeSizeWithIntrinsicDimensions(
+LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     gfxContext* aRenderingContext, WritingMode aWM,
     const IntrinsicSize& aIntrinsicSize, const AspectRatio& aIntrinsicRatio,
     const LogicalSize& aCBSize, const LogicalSize& aMargin,
@@ -6757,7 +6763,8 @@ nsRect nsIFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
   return GetVisualOverflowRect();
 }
 
-nsRect nsFrame::ComputeSimpleTightBounds(DrawTarget* aDrawTarget) const {
+nsRect nsContainerFrame::ComputeSimpleTightBounds(
+    DrawTarget* aDrawTarget) const {
   if (StyleOutline()->ShouldPaintOutline() || StyleBorder()->HasBorder() ||
       !StyleBackground()->IsTransparent(this) ||
       StyleDisplay()->HasAppearance()) {
@@ -6965,7 +6972,7 @@ void nsIFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
   }
 }
 
-void nsFrame::PushDirtyBitToAbsoluteFrames() {
+void nsContainerFrame::PushDirtyBitToAbsoluteFrames() {
   if (!(GetStateBits() & NS_FRAME_IS_DIRTY)) {
     return;  // No dirty bit to push.
   }
@@ -7998,9 +8005,9 @@ void nsIFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
 //  the Viewport, GFXScroll, ScrollPort, and Canvas
 #define MAX_FRAME_DEPTH (MAX_REFLOW_DEPTH + 4)
 
-bool nsFrame::IsFrameTreeTooDeep(const ReflowInput& aReflowInput,
-                                 ReflowOutput& aMetrics,
-                                 nsReflowStatus& aStatus) {
+bool nsContainerFrame::IsFrameTreeTooDeep(const ReflowInput& aReflowInput,
+                                          ReflowOutput& aMetrics,
+                                          nsReflowStatus& aStatus) {
   if (aReflowInput.mReflowDepth > MAX_FRAME_DEPTH) {
     NS_WARNING("frame tree too deep; setting zero size and returning");
     AddStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE);
@@ -10117,8 +10124,8 @@ uint32_t nsIFrame::GetDepthInFrameTree() const {
   return result;
 }
 
-void nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
-                                    nsIFrame* aChildFrame) {
+void nsContainerFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
+                                             nsIFrame* aChildFrame) {
   if (StyleDisplay()->IsContainLayout() &&
       IsFrameOfType(eSupportsContainLayoutAndPaint)) {
     // If we have layout containment and are not a non-atomic, inline-level
@@ -10136,7 +10143,8 @@ void nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
   }
 }
 
-bool nsFrame::ShouldAvoidBreakInside(const ReflowInput& aReflowInput) const {
+bool nsContainerFrame::ShouldAvoidBreakInside(
+    const ReflowInput& aReflowInput) const {
   const auto* disp = StyleDisplay();
   return !aReflowInput.mFlags.mIsTopOfPage &&
          StyleBreakWithin::Avoid == disp->mBreakInside &&
@@ -11583,16 +11591,20 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     nsIFrame* touchActionFrame = this;
     if (nsIScrollableFrame* scrollFrame =
             nsLayoutUtils::GetScrollableFrameFor(this)) {
-      touchActionFrame = do_QueryFrame(scrollFrame);
-      // On scrollframes, stop inheriting the pan-x and pan-y flags; instead,
-      // reset them back to zero to allow panning on the scrollframe unless we
-      // encounter an element that disables it that's inside the scrollframe.
-      // This is equivalent to the |considerPanning| variable in
-      // TouchActionHelper.cpp, but for a top-down traversal.
-      CompositorHitTestInfo panMask(
-          CompositorHitTestFlags::eTouchActionPanXDisabled,
-          CompositorHitTestFlags::eTouchActionPanYDisabled);
-      inheritedTouchAction -= panMask;
+      ScrollStyles ss = scrollFrame->GetScrollStyles();
+      if (ss.mVertical != StyleOverflow::Hidden ||
+          ss.mHorizontal != StyleOverflow::Hidden) {
+        touchActionFrame = do_QueryFrame(scrollFrame);
+        // On scrollframes, stop inheriting the pan-x and pan-y flags; instead,
+        // reset them back to zero to allow panning on the scrollframe unless we
+        // encounter an element that disables it that's inside the scrollframe.
+        // This is equivalent to the |considerPanning| variable in
+        // TouchActionHelper.cpp, but for a top-down traversal.
+        CompositorHitTestInfo panMask(
+            CompositorHitTestFlags::eTouchActionPanXDisabled,
+            CompositorHitTestFlags::eTouchActionPanYDisabled);
+        inheritedTouchAction -= panMask;
+      }
     }
 
     result += inheritedTouchAction;
