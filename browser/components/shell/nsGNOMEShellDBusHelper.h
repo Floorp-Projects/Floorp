@@ -19,6 +19,8 @@
 #define DBUS_BUS_NAME "org.mozilla.Firefox.SearchProvider"
 #define DBUS_OBJECT_PATH "/org/mozilla/Firefox/SearchProvider"
 
+class nsGNOMEShellHistorySearchResult;
+
 DBusHandlerResult DBusIntrospect(DBusConnection* aConnection,
                                  DBusMessage* aMsg);
 DBusHandlerResult DBusHandleInitialResultSet(
