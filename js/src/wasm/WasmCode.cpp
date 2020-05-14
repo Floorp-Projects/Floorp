@@ -935,12 +935,10 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
   cursor = SerializePodVector(cursor, funcNames);
   cursor = filename.serialize(cursor);
   cursor = sourceMapURL.serialize(cursor);
-  cursor = WriteScalar(cursor, uint8_t(omitsBoundsChecks));
   return cursor;
 }
 
 /* static */ const uint8_t* Metadata::deserialize(const uint8_t* cursor) {
-  uint8_t scalarOmitsBoundsChecks = 0;
   (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
       (cursor = DeserializeVector(cursor, &funcTypeIds)) &&
       (cursor = DeserializePodVector(cursor, &globals)) &&
@@ -948,12 +946,10 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
       (cursor = ReadBytes(cursor, &moduleName, sizeof(moduleName))) &&
       (cursor = DeserializePodVector(cursor, &funcNames)) &&
       (cursor = filename.deserialize(cursor)) &&
-      (cursor = sourceMapURL.deserialize(cursor)) &&
-      (cursor = ReadScalar<uint8_t>(cursor, &scalarOmitsBoundsChecks));
+      (cursor = sourceMapURL.deserialize(cursor));
   debugEnabled = false;
   debugFuncArgTypes.clear();
   debugFuncReturnTypes.clear();
-  omitsBoundsChecks = !!scalarOmitsBoundsChecks;
   return cursor;
 }
 
