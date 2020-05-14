@@ -8176,6 +8176,13 @@
   value: true
   mirror: always
 
+# Whether canvas extraction should result in random data. If false, canvas
+# extraction results in all-white, opaque pixel data.
+- name: privacy.resistFingerprinting.randomDataOnCanvasExtract
+  type: bool
+  value: true
+  mirror: always
+
 # The log level for browser console messages logged in RFPHelper.jsm. Change to
 # 'All' and restart to see the messages.
 - name: privacy.resistFingerprinting.jsmloglevel
