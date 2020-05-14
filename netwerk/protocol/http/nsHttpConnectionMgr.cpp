@@ -5721,5 +5721,9 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
 
 nsHttpConnectionMgr* nsHttpConnectionMgr::AsHttpConnectionMgr() { return this; }
 
+HttpConnectionMgrParent* nsHttpConnectionMgr::AsHttpConnectionMgrParent() {
+  return nullptr;
+}
+
 }  // namespace net
 }  // namespace mozilla

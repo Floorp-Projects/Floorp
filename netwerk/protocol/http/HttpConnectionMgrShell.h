@@ -21,6 +21,7 @@ class nsHttpConnectionInfo;
 class HttpConnectionBase;
 class nsHttpConnectionMgr;
 class NullHttpTransaction;
+class HttpConnectionMgrParent;
 
 //----------------------------------------------------------------------------
 // Abstract base class for HTTP connection manager in chrome process
@@ -165,6 +166,7 @@ class HttpConnectionMgrShell : public nsISupports {
       nsIHttpUpgradeListener* aUpgradeListener) = 0;
 
   virtual nsHttpConnectionMgr* AsHttpConnectionMgr() = 0;
+  virtual HttpConnectionMgrParent* AsHttpConnectionMgrParent() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionMgrShell,
@@ -215,7 +217,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionMgrShell,
   virtual nsresult CompleteUpgrade(HttpTransactionShell* aTrans,             \
                                    nsIHttpUpgradeListener* aUpgradeListener) \
       override;                                                              \
-  nsHttpConnectionMgr* AsHttpConnectionMgr() override;
+  nsHttpConnectionMgr* AsHttpConnectionMgr() override;                       \
+  HttpConnectionMgrParent* AsHttpConnectionMgrParent() override;
 
 }  // namespace net
 }  // namespace mozilla
