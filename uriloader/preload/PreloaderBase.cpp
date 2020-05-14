@@ -146,7 +146,10 @@ void PreloaderBase::NotifyUsage() {
 
 void PreloaderBase::NotifyRestart(dom::Document* aDocument,
                                   PreloaderBase* aNewPreloader) {
-  aDocument->Preloads().DeregisterPreload(&mKey);
+  if (aDocument) {
+    aDocument->Preloads().DeregisterPreload(&mKey);
+  }
+
   mKey = PreloadHashKey();
 
   if (aNewPreloader) {
