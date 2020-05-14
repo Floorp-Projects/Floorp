@@ -42,8 +42,8 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
       cookieJarSettings = net::CookieJarSettings::Create();
     }
 
-    RefPtr<XMLHttpRequestMainThread> req = new XMLHttpRequestMainThread();
-    req->Construct(principal->GetPrincipal(), global, cookieJarSettings, false);
+    RefPtr<XMLHttpRequestMainThread> req = new XMLHttpRequestMainThread(global);
+    req->Construct(principal->GetPrincipal(), cookieJarSettings, false);
     req->InitParameters(aParams.mMozAnon, aParams.mMozSystem);
     return req.forget();
   }
