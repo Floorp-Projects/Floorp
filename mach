@@ -22,7 +22,6 @@ py2commands="
     cramtest
     crashtest
     devtools-css-db
-    file-info
     firefox-ui-functional
     geckodriver
     geckodriver-test
