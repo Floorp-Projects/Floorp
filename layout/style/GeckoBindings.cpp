@@ -486,8 +486,7 @@ bool Gecko_GetAnimationRule(const Element* aElement,
     return false;
   }
   nsPresContext* presContext = doc->GetPresContext();
-  if (!presContext || !presContext->IsDynamic()) {
-    // For print or print preview, ignore animations.
+  if (!presContext) {
     return false;
   }
 

@@ -178,6 +178,14 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
   // to the new content process.
   void Anonymize(nsIURI* aFinalURI);
 
+  inline already_AddRefed<nsDOMNavigationTiming> CloneNavigationTime(
+      nsDocShell* aDocShell) const {
+    RefPtr<nsDOMNavigationTiming> timing = new nsDOMNavigationTiming(aDocShell);
+    timing->mNavigationStartHighRes = mNavigationStartHighRes;
+    timing->mNavigationStart = mNavigationStart;
+    return timing.forget();
+  }
+
  private:
   friend class nsDocShell;
   nsDOMNavigationTiming(nsDocShell* aDocShell, nsDOMNavigationTiming* aOther);
