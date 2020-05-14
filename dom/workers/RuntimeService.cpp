@@ -2219,8 +2219,9 @@ WorkerThreadPrimaryRunnable::Run() {
   auto failureCleanup = MakeScopeExit([&]() {
     // The creation of threadHelper above is the point at which a worker is
     // considered to have run, because the `mPreStartRunnables` are all
-    // re-dispatched after `mThread` is set.
-    mWorkerPrivate->ScheduleDeletion(WorkerPrivate::WorkerRan);
+    // re-dispatched after `mThread` is set.  We need to let the WorkerPrivate
+    // know so it can clean up the various event loops and delete the worker.
+    mWorkerPrivate->RunLoopNeverRan();
   });
 
   mWorkerPrivate->AssertIsOnWorkerThread();

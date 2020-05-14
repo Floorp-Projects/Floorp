@@ -214,6 +214,22 @@ class WorkerPrivate : public RelativeTimeline {
     return std::move(mDefaultLocale);
   }
 
+  /**
+   * Invoked by WorkerThreadPrimaryRunnable::Run if it already called
+   * SetWorkerPrivateInWorkerThread but has to bail out on initialization before
+   * calling DoRunLoop because PBackground failed to initialize or something
+   * like that.  Note that there's currently no point earlier than this that
+   * failure can be reported.
+   *
+   * When this happens, the worker will need to be deleted, plus the call to
+   * SetWorkerPrivateInWorkerThread will have scheduled all the
+   * mPreStartRunnables which need to be cleaned up after, as well as any
+   * scheduled control runnables.  We're somewhat punting on debugger runnables
+   * for now, which may leak, but the intent is to moot this whole scenario via
+   * shutdown blockers, so we don't want the extra complexity right now.
+   */
+  void RunLoopNeverRan();
+
   MOZ_CAN_RUN_SCRIPT
   void DoRunLoop(JSContext* aCx);
 
