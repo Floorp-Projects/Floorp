@@ -272,14 +272,8 @@ void DOMEventTargetHelper::MaybeDontKeepAlive() {
 }
 
 void DOMEventTargetHelper::BindToOwnerInternal(nsIGlobalObject* aOwner) {
-  if (mParentObject) {
-    mParentObject->RemoveEventTargetObject(this);
-    if (mOwnerWindow) {
-      mOwnerWindow = nullptr;
-    }
-    mParentObject = nullptr;
-    mHasOrHasHadOwnerWindow = false;
-  }
+  MOZ_ASSERT(!mParentObject);
+
   if (aOwner) {
     mParentObject = aOwner;
     aOwner->AddEventTargetObject(this);
