@@ -1,6 +1,8 @@
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { NodeServer, HttpServer } = ChromeUtils.import(
+  "resource://testing-common/httpd.js"
+);
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
