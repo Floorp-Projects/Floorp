@@ -167,6 +167,8 @@ struct TransformData {
   float inheritedYScale;
   // True if the parent has perspective transform
   bool hasPerspectiveParent;
+  // True if the animation should be snapped to the pixel grid
+  bool snapToGrid;
   MotionPathData? motionPathData;
 };
 

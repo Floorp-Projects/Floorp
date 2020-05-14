@@ -897,7 +897,12 @@ class Layer {
      * This layer is hidden if the backface of the layer is visible
      * to user.
      */
-    CONTENT_BACKFACE_HIDDEN = 0x80
+    CONTENT_BACKFACE_HIDDEN = 0x80,
+
+    /**
+     * This layer should be snapped to the pixel grid.
+     */
+    CONTENT_SNAP_TO_GRID = 0x100
   };
   /**
    * CONSTRUCTION PHASE ONLY
