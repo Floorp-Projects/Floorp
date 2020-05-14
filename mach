@@ -51,7 +51,6 @@ py2commands="
     release-history
     remote
     repackage
-    robocop
     rusttests
     static-analysis
     talos-test
