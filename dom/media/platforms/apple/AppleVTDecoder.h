@@ -75,6 +75,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   RefPtr<DecodePromise> ProcessDrain();
   void ProcessShutdown();
   void ProcessDecode(MediaRawData* aSample);
+  void MaybeResolveBufferedFrames();
 
   void AssertOnTaskQueueThread() {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
