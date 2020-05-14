@@ -487,9 +487,11 @@ nsresult Selection::MaybeAddTableCellRange(nsRange& aRange, bool* aDidAddRange,
     mFrameSelection->mTableSelection.mMode = tableMode;
   }
 
-  *aDidAddRange = true;
-  return AddRangesForSelectableNodes(&aRange, aOutIndex,
-                                     DispatchSelectstartEvent::Maybe);
+  result = AddRangesForSelectableNodes(&aRange, aOutIndex,
+                                       DispatchSelectstartEvent::Maybe);
+
+  *aDidAddRange = *aOutIndex != -1;
+  return result;
 }
 
 Selection::Selection(SelectionType aSelectionType,
