@@ -73,6 +73,7 @@ LoadInfo::LoadInfo(
       mContextForTopLevelLoad(nullptr),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
+      mTriggeringSandboxFlags(0),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(LoadTainting::Basic),
       mBlockAllMixedContent(false),
@@ -350,6 +351,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mContextForTopLevelLoad(do_GetWeakReference(aContextForTopLevelLoad)),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
+      mTriggeringSandboxFlags(0),
       mInternalContentPolicyType(nsIContentPolicy::TYPE_DOCUMENT),
       mTainting(LoadTainting::Basic),
       mBlockAllMixedContent(false),
@@ -456,6 +458,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mContextForTopLevelLoad(nullptr),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
+      mTriggeringSandboxFlags(0),
       mInternalContentPolicyType(nsIContentPolicy::TYPE_DOCUMENT),
       mTainting(LoadTainting::Basic),
       mBlockAllMixedContent(false),
@@ -737,6 +740,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mContextForTopLevelLoad(rhs.mContextForTopLevelLoad),
       mSecurityFlags(rhs.mSecurityFlags),
       mSandboxFlags(rhs.mSandboxFlags),
+      mTriggeringSandboxFlags(rhs.mTriggeringSandboxFlags),
       mInternalContentPolicyType(rhs.mInternalContentPolicyType),
       mTainting(rhs.mTainting),
       mBlockAllMixedContent(rhs.mBlockAllMixedContent),
@@ -802,9 +806,9 @@ LoadInfo::LoadInfo(
     const Maybe<ClientInfo>& aInitialClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController,
     nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags,
-    nsContentPolicyType aContentPolicyType, LoadTainting aTainting,
-    bool aBlockAllMixedContent, bool aUpgradeInsecureRequests,
-    bool aBrowserUpgradeInsecureRequests,
+    uint32_t aTriggeringSandboxFlags, nsContentPolicyType aContentPolicyType,
+    LoadTainting aTainting, bool aBlockAllMixedContent,
+    bool aUpgradeInsecureRequests, bool aBrowserUpgradeInsecureRequests,
     bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
     bool aAllowInsecureRedirectToDataURI, bool aBypassCORSChecks,
     bool aSkipContentPolicyCheckForWebRequest,
@@ -844,6 +848,7 @@ LoadInfo::LoadInfo(
       mLoadingContext(do_GetWeakReference(aLoadingContext)),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
+      mTriggeringSandboxFlags(aTriggeringSandboxFlags),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(aTainting),
       mBlockAllMixedContent(aBlockAllMixedContent),
@@ -1079,6 +1084,18 @@ LoadInfo::GetSecurityFlags(nsSecurityFlags* aResult) {
 NS_IMETHODIMP
 LoadInfo::GetSandboxFlags(uint32_t* aResult) {
   *aResult = mSandboxFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetTriggeringSandboxFlags(uint32_t* aResult) {
+  *aResult = mTriggeringSandboxFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetTriggeringSandboxFlags(uint32_t aFlags) {
+  mTriggeringSandboxFlags = aFlags;
   return NS_OK;
 }
 

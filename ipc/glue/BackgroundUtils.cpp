@@ -512,6 +512,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       sandboxedLoadingPrincipalInfo, topLevelPrincipalInfo,
       topLevelStorageAreaPrincipalInfo, optionalResultPrincipalURI,
       aLoadInfo->GetSecurityFlags(), aLoadInfo->GetSandboxFlags(),
+      aLoadInfo->GetTriggeringSandboxFlags(),
       aLoadInfo->InternalContentPolicyType(),
       static_cast<uint32_t>(aLoadInfo->GetTainting()),
       aLoadInfo->GetBlockAllMixedContent(),
@@ -737,7 +738,7 @@ nsresult LoadInfoArgsToLoadInfo(
       topLevelStorageAreaPrincipal, resultPrincipalURI, cookieJarSettings,
       cspToInherit, clientInfo, reservedClientInfo, initialClientInfo,
       controller, loadInfoArgs.securityFlags(), loadInfoArgs.sandboxFlags(),
-      loadInfoArgs.contentPolicyType(),
+      loadInfoArgs.triggeringSandboxFlags(), loadInfoArgs.contentPolicyType(),
       static_cast<LoadTainting>(loadInfoArgs.tainting()),
       loadInfoArgs.blockAllMixedContent(),
       loadInfoArgs.upgradeInsecureRequests(),
@@ -810,6 +811,7 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetHasValidUserGestureActivation(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
       aLoadInfo->GetParserCreatedScript(),
+      aLoadInfo->GetTriggeringSandboxFlags(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(),
@@ -847,6 +849,10 @@ nsresult MergeParentLoadInfoForwarder(
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadInfo->SetHttpsOnlyStatus(aForwarderArgs.httpsOnlyStatus());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aLoadInfo->SetTriggeringSandboxFlags(
+      aForwarderArgs.triggeringSandboxFlags());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadInfo->SetHasValidUserGestureActivation(

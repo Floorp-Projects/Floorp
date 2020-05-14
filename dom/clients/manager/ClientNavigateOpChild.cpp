@@ -248,7 +248,7 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(url);
   loadState->SetTriggeringPrincipal(principal);
-
+  loadState->SetTriggeringSandboxFlags(doc->GetSandboxFlags());
   loadState->SetCsp(doc->GetCsp());
 
   auto referrerInfo = MakeRefPtr<ReferrerInfo>(*doc);
