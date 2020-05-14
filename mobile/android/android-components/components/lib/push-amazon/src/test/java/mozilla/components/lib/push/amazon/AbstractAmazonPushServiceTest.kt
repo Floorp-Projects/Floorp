@@ -12,6 +12,12 @@ import com.amazon.device.messaging.ADMMessageHandlerBase
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_BODY
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_CHANNEL_ID
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_CRYPTO_KEY
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_ENCODING
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_SALT
+import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -61,11 +67,11 @@ class AbstractAmazonPushServiceTest {
     fun `new encrypted messages are passed to the processor`() {
         val messageIntent = Intent()
         val bundleExtra = Bundle()
-        bundleExtra.putString("chid", "1234")
-        bundleExtra.putString("body", "contents")
-        bundleExtra.putString("con", "encoding")
-        bundleExtra.putString("enc", "salt")
-        bundleExtra.putString("cryptokey", "dh256")
+        bundleExtra.putString(MESSAGE_KEY_CHANNEL_ID, "1234")
+        bundleExtra.putString(MESSAGE_KEY_BODY, "contents")
+        bundleExtra.putString(MESSAGE_KEY_ENCODING, "encoding")
+        bundleExtra.putString(MESSAGE_KEY_SALT, "salt")
+        bundleExtra.putString(MESSAGE_KEY_CRYPTO_KEY, "dh256")
 
         val captor = argumentCaptor<EncryptedPushMessage>()
         messageIntent.putExtras(bundleExtra)
@@ -99,19 +105,22 @@ class AbstractAmazonPushServiceTest {
     }
 
     @Test
-    fun `malformed message exception handled with the processor`() {
+    fun `malformed message exception should not be thrown`() {
         val messageIntent = Intent()
         val bundleExtra = Bundle()
-        bundleExtra.putString("con", "qu2to2")
+        bundleExtra.putString(MESSAGE_KEY_CHANNEL_ID, "1234")
 
-        val captor = argumentCaptor<PushError>()
+        val captor = argumentCaptor<EncryptedPushMessage>()
         messageIntent.putExtras(bundleExtra)
         service.onMessage(messageIntent)
 
-        verify(processor).onError(captor.capture())
+        verify(processor, never()).onError(any())
+        verify(processor).onMessageReceived(captor.capture())
 
-        assertTrue(captor.value is PushError.MalformedMessage)
-        assertTrue(captor.value.message.contains("NoSuchElementException"))
+        assertEquals("1234", captor.value.channelId)
+        assertEquals("aes128gcm", captor.value.encoding)
+        assertEquals("", captor.value.salt)
+        assertEquals("", captor.value.cryptoKey)
     }
 
     @Test

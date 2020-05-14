@@ -14,6 +14,11 @@ import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.push.PushService
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_BODY
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_CHANNEL_ID
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_CRYPTO_KEY
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_ENCODING
+import mozilla.components.concept.push.PushService.Companion.MESSAGE_KEY_SALT
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -56,20 +61,18 @@ abstract class AbstractAmazonPushService : ADMMessageHandlerBase("AbstractAmazon
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     public override fun onMessage(intent: Intent) {
         intent.extras?.let {
-            val message = try {
-                EncryptedPushMessage(
-                    channelId = it.getStringWithException("chid"),
-                    encoding = it.getStringWithException("con"),
-                    body = it.getString("body"),
-                    salt = it.getString("enc"),
-                    cryptoKey = it.getString("cryptokey")
-                )
-            } catch (e: NoSuchElementException) {
-                PushProcessor.requireInstance.onError(
-                    PushError.MalformedMessage("parsing encrypted message failed: $e")
-                )
+            // This is not an AutoPush message we can handle.
+            if (!it.containsKey(MESSAGE_KEY_CHANNEL_ID)) {
                 return
             }
+
+            val message = EncryptedPushMessage(
+                channelId = it.getStringWithException(MESSAGE_KEY_CHANNEL_ID),
+                encoding = it.getString(MESSAGE_KEY_ENCODING),
+                body = it.getString(MESSAGE_KEY_BODY),
+                salt = it.getString(MESSAGE_KEY_SALT),
+                cryptoKey = it.getString(MESSAGE_KEY_CRYPTO_KEY)
+            )
 
             // In case of any errors, let the PushProcessor handle this exception. Instead of crashing
             // here, just drop the message on the floor. This is fine, since we don't really need to

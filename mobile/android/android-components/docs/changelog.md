@@ -59,6 +59,9 @@ permalink: /changelog/
 * **feature-accounts**
   *  ⚠️ **This is a breaking change**: Refactored component to use `browser-state` instead of `browser-session`. The `FxaWebChannelFeature`  now requires a `BrowserStore` instance instead of a `SessionManager`.
 
+* **lib-push-fcm**, **lib-push-adm**, **concept-push**
+  * Allow nullable encoding values in push messsages. If they are null, we attempt to use `aes128gcm` for encoding.
+
 * **browser-toolbar**
   * It will only be animated for vertical scrolls inside the EngineView. Not for horizontal scrolls. Not for zoom gestures.
 

@@ -85,10 +85,10 @@ data class EncryptedPushMessage(
         operator fun invoke(
             channelId: String,
             body: String?,
-            encoding: String,
+            encoding: String?,
             salt: String? = null,
             cryptoKey: String? = null
-        ) = EncryptedPushMessage(channelId, body, encoding, salt ?: "", cryptoKey ?: "")
+        ) = EncryptedPushMessage(channelId, body, encoding ?: "aes128gcm", salt ?: "", cryptoKey ?: "")
     }
 }
 
