@@ -141,8 +141,7 @@ class WebRenderBridgeParent final
   mozilla::ipc::IPCResult RecvUpdateResources(
       nsTArray<OpUpdateResource>&& aUpdates,
       nsTArray<RefCountedShmem>&& aSmallShmems,
-      nsTArray<ipc::Shmem>&& aLargeShmems,
-      const wr::RenderRoot& aRenderRoot) override;
+      nsTArray<ipc::Shmem>&& aLargeShmems) override;
   mozilla::ipc::IPCResult RecvSetDisplayList(
       nsTArray<RenderRootDisplayListData>&& aDisplayLists,
       nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,

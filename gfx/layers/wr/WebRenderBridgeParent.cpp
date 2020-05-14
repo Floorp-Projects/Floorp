@@ -958,15 +958,11 @@ void WebRenderBridgeParent::ObserveSharedSurfaceRelease(
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
     nsTArray<OpUpdateResource>&& aResourceUpdates,
     nsTArray<RefCountedShmem>&& aSmallShmems,
-    nsTArray<ipc::Shmem>&& aLargeShmems, const wr::RenderRoot& aRenderRoot) {
+    nsTArray<ipc::Shmem>&& aLargeShmems) {
   if (mDestroyed) {
     wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
     wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
     return IPC_OK();
-  }
-
-  if (!RenderRootIsValid(aRenderRoot)) {
-    return IPC_FAIL(this, "Received an invalid renderRoot");
   }
 
   if (!mRenderRoot) {

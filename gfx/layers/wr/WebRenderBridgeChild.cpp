@@ -84,7 +84,7 @@ void WebRenderBridgeChild::BeginTransaction() {
 }
 
 void WebRenderBridgeChild::UpdateResources(
-    wr::IpcResourceUpdateQueue& aResources, wr::RenderRoot aRenderRoot) {
+    wr::IpcResourceUpdateQueue& aResources) {
   if (!IPCOpen()) {
     aResources.Clear();
     return;
@@ -100,7 +100,7 @@ void WebRenderBridgeChild::UpdateResources(
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
   this->SendUpdateResources(resourceUpdates, smallShmems,
-                            std::move(largeShmems), aRenderRoot);
+                            std::move(largeShmems));
 }
 
 bool WebRenderBridgeChild::EndTransaction(
@@ -249,8 +249,7 @@ void WebRenderBridgeChild::PushGlyphs(
     const wr::GlyphOptions* aGlyphOptions) {
   MOZ_ASSERT(aFont);
 
-  Maybe<wr::WrFontInstanceKey> key =
-      GetFontKeyForScaledFont(aFont, aBuilder.GetRenderRoot());
+  Maybe<wr::WrFontInstanceKey> key = GetFontKeyForScaledFont(aFont);
   MOZ_ASSERT(key.isSome());
 
   if (key.isSome()) {
@@ -260,8 +259,7 @@ void WebRenderBridgeChild::PushGlyphs(
 }
 
 Maybe<wr::FontInstanceKey> WebRenderBridgeChild::GetFontKeyForScaledFont(
-    gfx::ScaledFont* aScaledFont, wr::RenderRoot aRenderRoot,
-    wr::IpcResourceUpdateQueue* aResources) {
+    gfx::ScaledFont* aScaledFont, wr::IpcResourceUpdateQueue* aResources) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aScaledFont);
   MOZ_ASSERT(aScaledFont->CanSerialize());
@@ -275,8 +273,8 @@ Maybe<wr::FontInstanceKey> WebRenderBridgeChild::GetFontKeyForScaledFont(
       aResources ? Nothing() : Some(wr::IpcResourceUpdateQueue(this));
   aResources = resources.ptrOr(aResources);
 
-  Maybe<wr::FontKey> fontKey = GetFontKeyForUnscaledFont(
-      aScaledFont->GetUnscaledFont(), aRenderRoot, aResources);
+  Maybe<wr::FontKey> fontKey =
+      GetFontKeyForUnscaledFont(aScaledFont->GetUnscaledFont(), aResources);
   if (fontKey.isNothing()) {
     return Nothing();
   }
@@ -294,7 +292,7 @@ Maybe<wr::FontInstanceKey> WebRenderBridgeChild::GetFontKeyForScaledFont(
       options.ptrOr(nullptr), platformOptions.ptrOr(nullptr),
       Range<const FontVariation>(variations.data(), variations.size()));
   if (resources.isSome()) {
-    UpdateResources(resources.ref(), aRenderRoot);
+    UpdateResources(resources.ref());
   }
 
   mFontInstanceKeys.Put(aScaledFont, instanceKey);
@@ -303,8 +301,7 @@ Maybe<wr::FontInstanceKey> WebRenderBridgeChild::GetFontKeyForScaledFont(
 }
 
 Maybe<wr::FontKey> WebRenderBridgeChild::GetFontKeyForUnscaledFont(
-    gfx::UnscaledFont* aUnscaled, wr::RenderRoot aRenderRoot,
-    wr::IpcResourceUpdateQueue* aResources) {
+    gfx::UnscaledFont* aUnscaled, wr::IpcResourceUpdateQueue* aResources) {
   MOZ_ASSERT(!mDestroyed);
 
   wr::FontKey fontKey = {wr::IdNamespace{0}, 0};
@@ -324,7 +321,7 @@ Maybe<wr::FontKey> WebRenderBridgeChild::GetFontKeyForUnscaledFont(
     }
 
     if (resources.isSome()) {
-      UpdateResources(resources.ref(), aRenderRoot);
+      UpdateResources(resources.ref());
     }
 
     mFontKeys.Put(aUnscaled, fontKey);

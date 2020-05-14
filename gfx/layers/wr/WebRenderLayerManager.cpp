@@ -378,8 +378,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
       resourceUpdates.ReplaceResources(
           std::move(mStateManager.mAsyncResourceUpdates.ref()));
     } else {
-      WrBridge()->UpdateResources(mStateManager.mAsyncResourceUpdates.ref(),
-                                  mStateManager.GetRenderRoot());
+      WrBridge()->UpdateResources(mStateManager.mAsyncResourceUpdates.ref());
     }
     mStateManager.mAsyncResourceUpdates.reset();
   }
@@ -522,7 +521,7 @@ void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
 void WebRenderLayerManager::DiscardImages() {
   wr::IpcResourceUpdateQueue resources(WrBridge());
   mStateManager.DiscardImagesInTransaction(resources);
-  WrBridge()->UpdateResources(resources, wr::RenderRoot::Default);
+  WrBridge()->UpdateResources(resources);
 }
 
 void WebRenderLayerManager::DiscardLocalImages() {

@@ -24,7 +24,6 @@ using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_
 using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MaybeIdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageKeyPair from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::RenderRoot from "mozilla/webrender/WebRenderTypes.h";
 using moveonly mozilla::layers::RenderRootDisplayListData from "mozilla/layers/RenderRootTypes.h";
 using moveonly mozilla::layers::RenderRootUpdates from "mozilla/layers/RenderRootTypes.h";
 using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
@@ -62,8 +61,7 @@ parent:
                          CompositionPayload[] payloads);
   async SetFocusTarget(FocusTarget focusTarget);
   async UpdateResources(OpUpdateResource[] aResourceUpdates,
-                        RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
-                        RenderRoot aRenderRoot);
+                        RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture);
   async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
