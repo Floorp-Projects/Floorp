@@ -56,11 +56,15 @@ def _get(graph_config, alias, level, release_level):
     worker_config['provisioner'] = evaluate_keyed_by(
         worker_config['provisioner'],
         "worker-type alias {} field provisioner".format(alias),
-        {"level": level}).format(level=level, alias=alias)
+        {"level": level}).format(**{
+            "trust-domain": graph_config['trust-domain'], "level": level, "alias": alias,
+        })
     worker_config['worker-type'] = evaluate_keyed_by(
         worker_config['worker-type'],
         "worker-type alias {} field worker-type".format(alias),
-        {"level": level, 'release-level': release_level}).format(level=level, alias=alias)
+        {"level": level, 'release-level': release_level}).format(**{
+            "trust-domain": graph_config['trust-domain'], "level": level, "alias": alias,
+        })
 
     return worker_config
 
