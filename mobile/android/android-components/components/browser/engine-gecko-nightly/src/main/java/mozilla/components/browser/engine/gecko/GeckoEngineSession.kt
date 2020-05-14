@@ -600,6 +600,7 @@ class GeckoEngineSession(
 
         override fun onFirstContentfulPaint(session: GeckoSession) {
             firstContentfulPaint = true
+            notifyObservers { onFirstContentfulPaint() }
         }
 
         override fun onContextMenu(

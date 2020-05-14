@@ -501,6 +501,20 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverHandlesFirstContentfulPaint() {
+        val session = Session("")
+        val store = mock(BrowserStore::class.java)
+        whenever(store.state).thenReturn(mock())
+        val observer = EngineObserver(session, store)
+
+        observer.onFirstContentfulPaint()
+        verify(store).dispatch(ContentAction.UpdateFirstContentfulPaintStateAction(
+            session.id,
+            true
+        ))
+    }
+
+    @Test
     fun `onMediaAdded will subscribe to media and add it to store`() {
         val store = BrowserStore()
 

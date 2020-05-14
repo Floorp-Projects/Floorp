@@ -117,6 +117,9 @@ internal object ContentStateReducer {
             is ContentAction.RemoveWebAppManifestAction -> updateContentState(state, action.sessionId) {
                 it.copy(webAppManifest = null)
             }
+            is ContentAction.UpdateFirstContentfulPaintStateAction -> updateContentState(state, action.sessionId) {
+                it.copy(firstContentfulPaint = action.firstContentfulPaint)
+            }
         }
     }
 }

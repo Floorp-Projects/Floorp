@@ -267,6 +267,14 @@ sealed class ContentAction : BrowserAction() {
     data class UpdateBackNavigationStateAction(val sessionId: String, val canGoBack: Boolean) : ContentAction()
 
     /**
+     * Updates the [ContentState] of the given [sessionId] to indicate whether the first contentful paint has happened.
+     */
+    data class UpdateFirstContentfulPaintStateAction(
+        val sessionId: String,
+        val firstContentfulPaint: Boolean
+    ) : ContentAction()
+
+    /**
      * Updates the [ContentState] of the given [sessionId] to indicate whether or not a forward navigation is possible.
      */
     data class UpdateForwardNavigationStateAction(val sessionId: String, val canGoForward: Boolean) : ContentAction()

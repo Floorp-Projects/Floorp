@@ -39,6 +39,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property canGoBack whether or not there's an history item to navigate back to.
  * @property canGoForward whether or not there's an history item to navigate forward to.
  * @property webAppManifest the Web App Manifest for the currently visited page (or null).
+ * @property firstContentfulPaint whether or not the first contentful paint has happened.
  */
 data class ContentState(
     val url: String,
@@ -60,5 +61,6 @@ data class ContentState(
     val layoutInDisplayCutoutMode: Int = 0,
     val canGoBack: Boolean = false,
     val canGoForward: Boolean = false,
-    val webAppManifest: WebAppManifest? = null
+    val webAppManifest: WebAppManifest? = null,
+    val firstContentfulPaint: Boolean = false
 )

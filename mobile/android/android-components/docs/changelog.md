@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-state**
+  * Adds `firstContentfulPaint` to `ContentState` to know if first contentful paint has happened.
+
 * **service-glean**
   * ⚠️ **This is a breaking change**: Glean's configuration now requires explicitly setting an http client. Users need to pass one at construction.
     A default `lib-fetch-httpurlconnection` implementation is available.
