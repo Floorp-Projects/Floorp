@@ -62,14 +62,20 @@ class Runtime extends ContentProcessDomain {
     this._onContextCreated = this._onContextCreated.bind(this);
     this._onContextDestroyed = this._onContextDestroyed.bind(this);
     // TODO Bug 1602083
-    this.contextObserver.on("context-created", this._onContextCreated);
-    this.contextObserver.on("context-destroyed", this._onContextDestroyed);
+    this.session.contextObserver.on("context-created", this._onContextCreated);
+    this.session.contextObserver.on(
+      "context-destroyed",
+      this._onContextDestroyed
+    );
   }
 
   destructor() {
     this.disable();
-    this.contextObserver.off("context-created", this._onContextCreated);
-    this.contextObserver.off("context-destroyed", this._onContextDestroyed);
+    this.session.contextObserver.off("context-created", this._onContextCreated);
+    this.session.contextObserver.off(
+      "context-destroyed",
+      this._onContextDestroyed
+    );
     super.destructor();
   }
 

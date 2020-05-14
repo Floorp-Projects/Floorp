@@ -13,6 +13,12 @@ const { DomainCache } = ChromeUtils.import(
   "chrome://remote/content/domains/DomainCache.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContextObserver",
+  "chrome://remote/content/observers/ContextObserver.jsm"
+);
+
 class ContentProcessSession {
   constructor(messageManager, browsingContext, content, docShell) {
     this.messageManager = messageManager;
@@ -29,9 +35,20 @@ class ContentProcessSession {
   }
 
   destructor() {
+    this._contextObserver?.destructor();
+
     this.messageManager.removeMessageListener("remote:request", this);
     this.messageManager.removeMessageListener("remote:destroy", this);
     this.domains.clear();
+  }
+
+  get contextObserver() {
+    if (!this._contextObserver) {
+      this._contextObserver = new ContextObserver(
+        this.docShell.chromeEventHandler
+      );
+    }
+    return this._contextObserver;
   }
 
   // Domain event listener
