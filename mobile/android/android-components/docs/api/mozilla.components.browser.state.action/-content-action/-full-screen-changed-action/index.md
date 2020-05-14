@@ -2,7 +2,7 @@
 
 # FullScreenChangedAction
 
-`data class FullScreenChangedAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L253)
+`data class FullScreenChangedAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L254)
 
 Updates the [fullScreenEnabled](full-screen-enabled.md) with the given [sessionId](session-id.md).
 

@@ -2,7 +2,7 @@
 
 # ConceptFetchHttpUploader
 
-`class ConceptFetchHttpUploader : PingUploader` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L26)
+`class ConceptFetchHttpUploader : `[`PingUploader`](../-ping-uploader.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L28)
 
 A simple ping Uploader, which implements a "send once" policy, never
 storing or attempting to send the ping again. This uses Android Component's
@@ -26,6 +26,12 @@ storing or attempting to send the ping again. This uses Android Component's
 |---|---|
 | [DEFAULT_CONNECTION_TIMEOUT](-d-e-f-a-u-l-t_-c-o-n-n-e-c-t-i-o-n_-t-i-m-e-o-u-t.md) | `const val DEFAULT_CONNECTION_TIMEOUT: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
 | [DEFAULT_READ_TIMEOUT](-d-e-f-a-u-l-t_-r-e-a-d_-t-i-m-e-o-u-t.md) | `const val DEFAULT_READ_TIMEOUT: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
+
+### Companion Object Functions
+
+| Name | Summary |
+|---|---|
+| [fromClient](from-client.md) | `fun fromClient(client: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`): `[`ConceptFetchHttpUploader`](./index.md)<br>Export a constructor that is usable from Java. |
 
 ### Extension Functions
 

@@ -2,7 +2,7 @@
 
 # PromptConfiguration
 
-`data class PromptConfiguration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L271)
+`data class PromptConfiguration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L279)
 
 Configuration for the crash reporter prompt.
 

@@ -2,12 +2,12 @@
 
 # channel
 
-`val channel: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L24)
+`val channel: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L26)
 
-the release channel the application is on, if known. This will be
+(optional )the release channel the application is on, if known. This will be
     sent along with all the pings, in the `client_info` section.
 
 ### Property
 
-`channel` - the release channel the application is on, if known. This will be
+`channel` - (optional )the release channel the application is on, if known. This will be
     sent along with all the pings, in the `client_info` section.
