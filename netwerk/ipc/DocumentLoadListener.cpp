@@ -1253,7 +1253,9 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
   bool isCOOPSwitch = HasCrossOriginOpenerPolicyMismatch();
   nsILoadInfo::CrossOriginOpenerPolicy coop =
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
-  if (RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel)) {
+  if (!browsingContext->IsTop()) {
+    coop = browsingContext->Top()->GetOpenerPolicy();
+  } else if (RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel)) {
     MOZ_ALWAYS_SUCCEEDS(httpChannel->GetCrossOriginOpenerPolicy(&coop));
   }
 
