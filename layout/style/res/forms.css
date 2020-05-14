@@ -214,8 +214,8 @@ textarea::-moz-text-control-preview {
   white-space: pre-wrap !important;
 }
 
-input:-moz-read-write,
-textarea:-moz-read-write {
+input:read-write,
+textarea:read-write {
   -moz-user-modify: read-write !important;
 }
 
@@ -1061,8 +1061,8 @@ input[type="time"] {
 
 input[type="date"]:disabled,
 input[type="time"]:disabled,
-input[type="date"]:-moz-read-only,
-input[type="time"]:-moz-read-only {
+input[type="date"]:read-only,
+input[type="time"]:read-only {
   color: GrayText;
 }
 

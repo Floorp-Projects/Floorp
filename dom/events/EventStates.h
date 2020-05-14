@@ -228,11 +228,12 @@ class EventStates {
 #define NS_EVENT_STATE_INRANGE NS_DEFINE_EVENT_STATE_MACRO(27)
 // Content value is out-of-range.
 #define NS_EVENT_STATE_OUTOFRANGE NS_DEFINE_EVENT_STATE_MACRO(28)
-// These two are temporary (see bug 302188)
 // Content is read-only.
-#define NS_EVENT_STATE_MOZ_READONLY NS_DEFINE_EVENT_STATE_MACRO(29)
+// TODO(emilio): This is always the inverse of READWRITE. With some style system
+// work we could remove one of the two bits.
+#define NS_EVENT_STATE_READONLY NS_DEFINE_EVENT_STATE_MACRO(29)
 // Content is editable.
-#define NS_EVENT_STATE_MOZ_READWRITE NS_DEFINE_EVENT_STATE_MACRO(30)
+#define NS_EVENT_STATE_READWRITE NS_DEFINE_EVENT_STATE_MACRO(30)
 // Content is the default one (meaning depends of the context).
 #define NS_EVENT_STATE_DEFAULT NS_DEFINE_EVENT_STATE_MACRO(31)
 // Content is a submit control and the form isn't valid.
