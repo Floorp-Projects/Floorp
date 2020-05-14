@@ -275,8 +275,11 @@ var UrlbarUtils = {
    *
    * @param {array} tokens The tokens to search for.
    * @param {string} str The string to match against.
-   * @param {boolean} highlightType If HIGHLIGHT.SUGGESTED, return a list of all
-   *   the token string non-matches. Otherwise, return matches.
+   * @param {boolean} highlightType
+   *   One of the HIGHLIGHT values:
+   *     TYPED: match ranges matching the tokens; or
+   *     SUGGESTED: match ranges for words not matching the tokens and the
+   *                endings of words that start with a token.
    * @returns {array} An array: [
    *            [matchIndex_0, matchLength_0],
    *            [matchIndex_1, matchLength_1],
@@ -289,7 +292,7 @@ var UrlbarUtils = {
     str = str.toLocaleLowerCase();
     // To generate non-overlapping ranges, we start from a 0-filled array with
     // the same length of the string, and use it as a collision marker, setting
-    // 1 where a token matches.
+    // 1 where the text should be highlighted.
     let hits = new Array(str.length).fill(
       highlightType == this.HIGHLIGHT.SUGGESTED ? 1 : 0
     );
@@ -308,6 +311,20 @@ var UrlbarUtils = {
         if (index < 0) {
           break;
         }
+
+        if (highlightType == UrlbarUtils.HIGHLIGHT.SUGGESTED) {
+          // We de-emphasize the match only if it's preceded by a space, thus
+          // it's a perfect match or the beginning of a longer word.
+          let previousSpaceIndex = str.lastIndexOf(" ", index) + 1;
+          if (index != previousSpaceIndex) {
+            index += needle.length;
+            // We found the token but we won't de-emphasize it, because it's not
+            // after a word boundary.
+            found = true;
+            continue;
+          }
+        }
+
         hits.fill(
           highlightType == this.HIGHLIGHT.SUGGESTED ? 0 : 1,
           index,
@@ -335,6 +352,13 @@ var UrlbarUtils = {
         while (index < str.length) {
           let hay = str.substr(index, needle.length);
           if (compareIgnoringDiacritics(needle, hay) === 0) {
+            if (highlightType == UrlbarUtils.HIGHLIGHT.SUGGESTED) {
+              let previousSpaceIndex = str.lastIndexOf(" ", index) + 1;
+              if (index != previousSpaceIndex) {
+                index += needle.length;
+                continue;
+              }
+            }
             hits.fill(
               highlightType == this.HIGHLIGHT.SUGGESTED ? 0 : 1,
               index,
