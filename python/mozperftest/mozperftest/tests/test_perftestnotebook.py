@@ -36,7 +36,9 @@ def test_parse_file_grouping(ptnbs):
     # If file_grouping is a directory string.
     ptnb = ptnbs["ptnb_str"]
     expected_path = ptnb.file_groups["group_1"]
-    expected_files = [f.resolve().as_posix() for f in pathlib.Path(expected_path).iterdir()]
+    expected_files = [
+        f.resolve().as_posix() for f in pathlib.Path(expected_path).iterdir()
+    ]
     _check_files_created(ptnb, expected_files)
 
 
