@@ -2595,9 +2595,9 @@ static void MaybePrintAndClearPendingException(JSContext* cx, FILE* file) {
     return;
   }
 
-  ErrorReport report(cx);
-  if (!report.init(cx, exnStack, js::ErrorReport::WithSideEffects)) {
-    fprintf(file, "out of memory initializing ErrorReport\n");
+  JS::ErrorReportBuilder report(cx);
+  if (!report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
+    fprintf(file, "out of memory initializing JS::ErrorReportBuilder\n");
     return;
   }
 

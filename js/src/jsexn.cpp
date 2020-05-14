@@ -351,7 +351,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   cx->setPendingException(errValue, nstack);
 }
 
-using SniffingBehavior = js::ErrorReport::SniffingBehavior;
+using SniffingBehavior = JS::ErrorReportBuilder::SniffingBehavior;
 
 static bool IsDuckTypedErrorObject(JSContext* cx, HandleObject exnObject,
                                    const char** filename_strp) {
@@ -465,18 +465,20 @@ static JSString* ErrorReportToString(JSContext* cx, HandleObject exn,
   return FormatErrorMessage(cx, name, message);
 }
 
-ErrorReport::ErrorReport(JSContext* cx) : reportp(nullptr), exnObject(cx) {}
+JS::ErrorReportBuilder::ErrorReportBuilder(JSContext* cx)
+    : reportp(nullptr), exnObject(cx) {}
 
-ErrorReport::~ErrorReport() = default;
+JS::ErrorReportBuilder::~ErrorReportBuilder() = default;
 
-bool ErrorReport::init(JSContext* cx, const JS::ExceptionStack& exnStack,
-                       SniffingBehavior sniffingBehavior) {
+bool JS::ErrorReportBuilder::init(JSContext* cx,
+                                  const JS::ExceptionStack& exnStack,
+                                  SniffingBehavior sniffingBehavior) {
   return init(cx, exnStack.exception(), sniffingBehavior, exnStack.stack());
 }
 
-bool ErrorReport::init(JSContext* cx, HandleValue exn,
-                       SniffingBehavior sniffingBehavior,
-                       HandleObject fallbackStack) {
+bool JS::ErrorReportBuilder::init(JSContext* cx, HandleValue exn,
+                                  SniffingBehavior sniffingBehavior,
+                                  HandleObject fallbackStack) {
   MOZ_ASSERT(!cx->isExceptionPending());
   MOZ_ASSERT(!reportp);
 
@@ -503,7 +505,7 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
   } else if (exnObject && sniffingBehavior == NoSideEffects) {
     str = cx->names().Object;
   } else {
-    str = ToString<CanGC>(cx, exn);
+    str = js::ToString<CanGC>(cx, exn);
   }
 
   if (!str) {
@@ -546,7 +548,7 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
     {
       AutoClearPendingException acpe(cx);
       if (JS_GetProperty(cx, exnObject, filename_str, &val)) {
-        RootedString tmp(cx, ToString<CanGC>(cx, val));
+        RootedString tmp(cx, js::ToString<CanGC>(cx, val));
         if (tmp) {
           filename = JS_EncodeStringToUTF8(cx, tmp);
         }
@@ -627,7 +629,7 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
   return true;
 }
 
-bool ErrorReport::populateUncaughtExceptionReportUTF8(
+bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8(
     JSContext* cx, HandleObject fallbackStack, ...) {
   va_list ap;
   va_start(ap, fallbackStack);
@@ -636,7 +638,7 @@ bool ErrorReport::populateUncaughtExceptionReportUTF8(
   return ok;
 }
 
-bool ErrorReport::populateUncaughtExceptionReportUTF8VA(
+bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
     JSContext* cx, HandleObject fallbackStack, va_list ap) {
   new (&ownedReport) JSErrorReport();
   ownedReport.isWarning_ = false;
