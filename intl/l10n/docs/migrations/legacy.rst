@@ -314,13 +314,19 @@ This can be obtained by calling :python:`REPLACE` with
   __ https://projectfluent.org/fluent/guide/terms.html
 
 
-Removing Unnecessary Whitespaces in Translations
+Trimming Unnecessary Whitespaces in Translations
 ------------------------------------------------
 
-It’s not uncommon to have lines with unnecessary leading or trailing spaces in
-DTDs. These are not meaningful, don’t have practical results on the way the
-string is displayed in products, and are added only for formatting reasons. For
-example, consider this string:
+.. note::
+
+  This section was updated in May 2020 to reflect the change to the default
+  behavior: legacy translations are now trimmed, unless the :python:`trim`
+  parameter is set explicitly.
+
+It’s not uncommon to have strings with unnecessary leading or trailing spaces
+in legacy translations. These are not meaningful, don’t have practical results
+on the way the string is displayed in products, and are added mostly for
+formatting reasons. For example, consider this DTD string:
 
 
 .. code-block:: DTD
@@ -330,26 +336,30 @@ example, consider this string:
                               And some are omitted because they require query strings.">
 
 
-If migrated as is, it would result in:
+By default, the :python:`COPY`, :python:`REPLACE`, and :python:`PLURALS`
+transforms will strip the leading and trailing whitespace from each line of the
+translation, as well as the empty leading and trailing lines. The above string
+will be migrated as the following Fluent message, despite copious indentation
+on the second and the third line in the original:
 
 
 .. code-block:: fluent
 
   about-about-note =
       This is a list of “about” pages for your convenience.<br/>
-                                  Some of them might be confusing. Some are for diagnostic purposes only.<br/>
-                                  And some are omitted because they require query strings.
+      Some of them might be confusing. Some are for diagnostic purposes only.<br/>
+      And some are omitted because they require query strings.
 
 
-This can be avoided by trimming the migrated string, with :python:`trim:"True"`
-or :python:`trim=True`, depending on the context:
+To disable the default trimming behavior, set :python:`trim:"False"` or
+:python:`trim=False`, depending on the context:
 
 
 .. code-block:: python
 
   transforms_from(
   """
-  about-about-note = { COPY("toolkit/chrome/global/aboutAbout.dtd", "aboutAbout.note", trim:"True") }
+  about-about-note = { COPY("toolkit/chrome/global/aboutAbout.dtd", "aboutAbout.note", trim:"False") }
   """)
 
   FTL.Message(
@@ -360,17 +370,9 @@ or :python:`trim=True`, depending on the context:
           {
               "&brandShortName;": TERM_REFERENCE("-brand-short-name")
           },
-          trim=True
+          trim=False
       )
   ),
-
-
-.. attention::
-
-  Trimming whitespaces should only be done when migrating strings from DTDs,
-  not for other file formats, and when it’s clear that the context makes
-  whitespaces irrelevant. A counter example would be the use of a string in
-  combination with :js:`white-space: pre`.
 
 
 Concatenating Strings
@@ -378,15 +380,15 @@ Concatenating Strings
 
 It's best practice to only expose complete phrases to localization, and to avoid
 stitching localized strings together in code. With `DTD` and `properties`,
-there were little options. So when migrating Fluent, you'll find
+there were few options. So when migrating to Fluent, you'll find
 it quite common to concatenate multiple strings coming from `DTD` and
 `properties`, for example to create sentences with HTML markup. It’s possible to
 concatenate strings and text elements in a migration recipe using the
 :python:`CONCAT` Transform.
 
-Note that, in case of simple migrations using :python:`transforms_from`, the
+Note that in case of simple migrations using :python:`transforms_from`, the
 concatenation is carried out implicitly by using the Fluent syntax interleaved
-with COPY() transform calls to define the migration recipe.
+with :python:`COPY()` transform calls to define the migration recipe.
 
 Consider the following example:
 
@@ -451,6 +453,19 @@ value for the FTL message.
   text, for example adding spaces or punctuation. Each language has its own
   rules, and this might result in poor migrated strings. In case of doubt,
   always ask for feedback.
+
+
+When more than 1 element is passed in to concatenate, :python:`CONCAT`
+disables whitespace trimming described in the section above on all legacy
+Transforms passed into it: :python:`COPY`, :python:`REPLACE`, and
+:python:`PLURALS`, unless the :python:`trim` parameters has been set
+explicitly on them. This helps ensure that spaces around segments are not
+lost during the concatenation.
+
+When only a single element is passed into :python:`CONCAT`, however, the
+trimming behavior is not altered, and follows the rules described in the
+previous section. This is meant to make :python:`CONCAT(COPY())` equivalent
+to a bare :python:`COPY()`.
 
 
 Plural Strings
