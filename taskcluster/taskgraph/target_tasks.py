@@ -910,3 +910,15 @@ def target_tasks_system_symbols(full_task_graph, parameters, graph_config):
     for name, task in six.iteritems(full_task_graph.tasks):
         if task.kind == "system-symbols-upload":
             yield name
+
+
+@_target_task('perftest')
+def target_tasks_perftest(full_task_graph, parameters, graph_config):
+    """
+    Select perftest tasks we want to run daily
+    """
+    for name, task in six.iteritems(full_task_graph.tasks):
+        if task.kind != "perftest":
+            continue
+        if task.attributes.get('cron', False):
+            yield name

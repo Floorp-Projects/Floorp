@@ -38,6 +38,7 @@ def setup_env(options):
 def test_perfherder():
     options = {
         "perfherder": True,
+        "perfherder-stats": True,
         "perfherder-prefix": "",
         "perfherder-metrics": ["firstPaint"],
     }
@@ -124,6 +125,35 @@ def test_perfherder_metrics_filtering():
                 m(metadata)
 
             assert not pathlib.Path(output, "perfherder-data.json").exists()
+
+
+def test_perfherder_exlude_stats():
+    options = {
+        "perfherder": True,
+        "perfherder-prefix": "",
+        "perfherder-metrics": ["firstPaint"],
+    }
+
+    metrics, metadata, env = setup_env(options)
+
+    with temp_file() as output:
+        env.set_arg("output", output)
+        with metrics as m, silence():
+            m(metadata)
+        output_file = metadata.get_output()
+        with open(output_file) as f:
+            output = json.loads(f.read())
+
+    # Check some numbers in our data
+    assert len(output["suites"]) == 1
+    assert len(output["suites"][0]["subtests"]) == 1
+    assert output["suites"][0]["value"] > 0
+
+    # Check if only one firstPaint metric was obtained
+    assert (
+        "browserScripts.timings.firstPaint"
+        == output["suites"][0]["subtests"][0]["name"]
+    )
 
 
 if __name__ == "__main__":

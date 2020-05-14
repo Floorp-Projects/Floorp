@@ -260,3 +260,13 @@ jobs:
           - mozilla-central
       when:
           - {hour: 0, minute: 0}
+
+    - name: perftest
+      job:
+          type: decision-task
+          treeherder-symbol: perftest
+          target-tasks-method: perftest
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 12, minute: 00}
