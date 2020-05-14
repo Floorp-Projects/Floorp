@@ -127,6 +127,10 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
                                JS::Handle<JSObject*> aGivenProto) override {
     return mozilla::dom::XMLHttpRequest_Binding::Wrap(aCx, this, aGivenProto);
   }
+
+ protected:
+  explicit XMLHttpRequest(nsIGlobalObject* aGlobalObject)
+      : XMLHttpRequestEventTarget(aGlobalObject) {}
 };
 
 }  // namespace dom

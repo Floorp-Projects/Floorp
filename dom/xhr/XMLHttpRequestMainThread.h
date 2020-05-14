@@ -210,16 +210,15 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
     ENUM_MAX
   };
 
-  XMLHttpRequestMainThread();
+  explicit XMLHttpRequestMainThread(nsIGlobalObject* aGlobalObject);
 
-  void Construct(nsIPrincipal* aPrincipal, nsIGlobalObject* aGlobalObject,
+  void Construct(nsIPrincipal* aPrincipal,
                  nsICookieJarSettings* aCookieJarSettings, bool aForWorker,
                  nsIURI* aBaseURI = nullptr, nsILoadGroup* aLoadGroup = nullptr,
                  PerformanceStorage* aPerformanceStorage = nullptr,
                  nsICSPEventListener* aCSPEventListener = nullptr) {
     MOZ_ASSERT(aPrincipal);
     mPrincipal = aPrincipal;
-    BindToOwner(aGlobalObject);
     mBaseURI = aBaseURI;
     mLoadGroup = aLoadGroup;
     mCookieJarSettings = aCookieJarSettings;
