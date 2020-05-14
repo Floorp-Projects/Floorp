@@ -873,10 +873,14 @@ nsresult TRR::DohDecode(nsCString& aHost) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    // We check if the qname matches the host or the FQDN version of the host
-    if (qname.Equals(aHost) ||
-        (aHost.Length() == qname.Length() + 1 && aHost.Last() == '.' &&
-         StringBeginsWith(aHost, qname))) {
+    // We check if the qname is a case-insensitive match for the host or the
+    // FQDN version of the host
+    bool responseMatchesQuestion =
+        (qname.Length() == aHost.Length() ||
+         (aHost.Length() == qname.Length() + 1 && aHost.Last() == '.')) &&
+        qname.Compare(aHost.BeginReading(), true, qname.Length()) == 0;
+
+    if (responseMatchesQuestion) {
       // RDATA
       // - A (TYPE 1):  4 bytes
       // - AAAA (TYPE 28): 16 bytes
