@@ -49,6 +49,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Date.h"
+#include "js/ErrorReport.h"  // JS::PrintError
 #include "js/Exception.h"
 #include "js/Modules.h"  // JS::GetModulePrivate
 #include "js/PropertySpec.h"
@@ -108,7 +109,7 @@ using mozilla::Maybe;
 static void selfHosting_WarningReporter(JSContext* cx, JSErrorReport* report) {
   MOZ_ASSERT(report->isWarning());
 
-  PrintError(cx, stderr, JS::ConstUTF8CharsZ(), report, true);
+  JS::PrintError(cx, stderr, JS::ConstUTF8CharsZ(), report, true);
 }
 
 static bool intrinsic_ToObject(JSContext* cx, unsigned argc, Value* vp) {
@@ -2601,7 +2602,7 @@ static void MaybePrintAndClearPendingException(JSContext* cx, FILE* file) {
   }
 
   MOZ_ASSERT(!report.report()->isWarning());
-  PrintError(cx, file, report.toStringResult(), report.report(), true);
+  JS::PrintError(cx, file, report.toStringResult(), report.report(), true);
 }
 
 class MOZ_STACK_CLASS AutoSelfHostingErrorReporter {

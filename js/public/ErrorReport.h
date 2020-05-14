@@ -265,4 +265,15 @@ class JSErrorReport : public JSErrorBase {
   void freeLinebuf();
 };
 
+namespace JS {
+
+// Writes a full report to a file descriptor. Does nothing for JSErrorReports
+// which are warnings, unless reportWarnings is set.
+extern JS_PUBLIC_API void PrintError(JSContext* cx, FILE* file,
+                                     ConstUTF8CharsZ toStringResult,
+                                     JSErrorReport* report,
+                                     bool reportWarnings);
+
+}  // namespace JS
+
 #endif /* js_ErrorReport_h */
