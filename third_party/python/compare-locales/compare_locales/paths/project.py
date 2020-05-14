@@ -9,6 +9,10 @@ from .matcher import Matcher
 import six
 
 
+class ExcludeError(ValueError):
+    pass
+
+
 class ProjectConfig(object):
     '''Abstraction of l10n project configuration data.
     '''
@@ -30,6 +34,7 @@ class ProjectConfig(object):
         self._all_locales = None
         self.environ = {}
         self.children = []
+        self.excludes = []
         self._cache = None
 
     def same(self, other):
@@ -112,7 +117,19 @@ class ProjectConfig(object):
 
     def add_child(self, child):
         self._all_locales = None  # clear cache
+        if child.excludes:
+            raise ExcludeError(
+                'Included configs cannot declare their own excludes.'
+            )
         self.children.append(child)
+
+    def exclude(self, child):
+        for config in child.configs:
+            if config.excludes:
+                raise ExcludeError(
+                    'Excluded configs cannot declare their own excludes.'
+                )
+        self.excludes.append(child)
 
     def set_locales(self, locales, deep=False):
         self._all_locales = None  # clear cache
@@ -168,6 +185,8 @@ class ProjectConfig(object):
             return self._cache
         self._cache = self.FilterCache(locale)
         for paths in self.paths:
+            if 'locales' in paths and locale not in paths['locales']:
+                continue
             self._cache.l10n_paths.append(paths['l10n'].with_env({
                 "locale": locale
             }))
@@ -180,6 +199,11 @@ class ProjectConfig(object):
         return self._cache
 
     def _filter(self, l10n_file, entity=None):
+        if any(
+            exclude.filter(l10n_file) == 'error'
+            for exclude in self.excludes
+        ):
+            return
         actions = set(
             child._filter(l10n_file, entity=entity)
             for child in self.children)

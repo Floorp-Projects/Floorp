@@ -22,10 +22,10 @@ click==7.0 \
     --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13 \
     --hash=sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7 \
     # via pip-tools
-compare-locales==7.2.5 \
-    --hash=sha256:9d332ac3cb389724b02d725f724b54393b39499cf70fefcd8267b15b1e5ec281 \
-    --hash=sha256:af035b6c2e53689a815e8a0d104a51359b2d45cf5109595348eda03e68ff9bec \
-    # via -r requirements-mach-vendor-python.in
+compare-locales==8.0.0 \
+    --hash=sha256:077b007bd2c025284f73994970e7fada7fbdcbb4199ff010e378b305dee6d469 \
+    --hash=sha256:ee02bdad012cdc9f6c6df24d7518ba2c5084f6bac0d176b4826156accc8d48d6 \
+    # via -r requirements-mach-vendor-python.in, fluent.migrate
 cookies==2.2.1 \
     --hash=sha256:15bee753002dff684987b8df8c235288eb8d45f8191ae056254812dfd42c81d3 \
     --hash=sha256:d6b698788cae4cfa4e62ef8643a9ca332b79bd96cb314294b864ae8d7eb3ee8e \
@@ -41,10 +41,14 @@ ecdsa==0.15 \
 esprima==4.0.1 \
     --hash=sha256:08db1a876d3c2910db9cfaeb83108193af5411fc3a3a66ebefacd390d21323ee \
     # via -r requirements-mach-vendor-python.in
-fluent.syntax==0.15.1 \
-    --hash=sha256:3d3c95b9de82df498172d9447576e787e809b753c6f7f5acf64a9ef8d7782c81 \
-    --hash=sha256:e95bb3abfe7cf51b2c6d1e92d57335f07c737ba57bbbba18e57618bd15f78d4b \
-    # via compare-locales
+fluent.migrate==0.9 \
+    --hash=sha256:735c86816ef7b7b03b32ff9985685f2d99cb0ed135351e4760a85236538f0beb \
+    --hash=sha256:d42a001bd7292cef400e63f3d77c0c813a6a6162e7bd2dfa14eb01172d21e788 \
+    # via -r requirements-mach-vendor-python.in
+fluent.syntax==0.17.0 \
+    --hash=sha256:ac3db2f77d62b032fdf1f17ef5c390b7801a9e9fb58d41eca3825c0d47b88d79 \
+    --hash=sha256:e26be470aeebe4badd84f7bb0b648414e0f2ef95d26e5336d634af99e402ea61 \
+    # via compare-locales, fluent.migrate
 jsmin==2.1.0 \
     --hash=sha256:5d07bf0251a4128e5e8e8eef603849b6b5741c337bff087731a248f9cc774f56 \
     # via -r requirements-mach-vendor-python.in

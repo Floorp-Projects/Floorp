@@ -62,6 +62,18 @@ def get_transform(body, ident):
             return transform
 
 
+def skeleton(node):
+    """Create a skeleton copy of the given node.
+
+    For localizable entries, the value is None and the attributes are {}.
+    That's not a valid Fluent entry, so it requires further manipulation to
+    set values and/or attributes.
+    """
+    if isinstance(node, LOCALIZABLE_ENTRIES):
+        return type(node)(id=node.id.clone(), value=None)
+    return node.clone()
+
+
 def ftl(code):
     """Nicer indentation for FTL code.
 

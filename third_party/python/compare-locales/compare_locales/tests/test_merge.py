@@ -150,10 +150,17 @@ class TestDefines(unittest.TestCase, ContentMixin):
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 1,
                     'changed_w': 2,
                     'unchanged': 1,
-                    'unchanged_w': 1
+                    'unchanged_w': 1,
+                    'keys': 0,
                 }},
              'details': {}
              }
@@ -189,10 +196,17 @@ class TestDefines(unittest.TestCase, ContentMixin):
             {
                 'summary':
                     {None: {
+                        'errors': 0,
+                        'warnings': 0,
                         'missing': 1,
                         'missing_w': 2,
+                        'report': 0,
+                        'obsolete': 0,
+                        'changed': 0,
+                        'changed_w': 0,
                         'unchanged': 1,
-                        'unchanged_w': 1
+                        'unchanged_w': 1,
+                        'keys': 0,
                     }},
                 'details':
                     {
@@ -238,8 +252,18 @@ eff = lEff word
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 3,
-                    'changed_w': 5
+                    'changed_w': 5,
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
+
                 }},
              'details': {}
              }
@@ -265,10 +289,17 @@ eff = effVal""")
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 2,
+                    'missing_w': 2,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 1,
                     'changed_w': 1,
-                    'missing': 2,
-                    'missing_w': 2
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.properties': [
@@ -297,8 +328,17 @@ eff = effVal""")
             cc.observers.toJSON(),
             {'summary':
                 {None: {
-                    'missingInFiles': 3,
-                    'missing_w': 3
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 3,
+                    'missing_w': 3,
+                    'report': 0,
+                    'obsolete': 0,
+                    'changed': 0,
+                    'changed_w': 0,
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.properties': [
@@ -326,11 +366,17 @@ eff = leffVal
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 1,
+                    'warnings': 0,
+                    'missing': 1,
+                    'missing_w': 1,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 2,
                     'changed_w': 3,
-                    'errors': 1,
-                    'missing': 1,
-                    'missing_w': 1
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.properties': [
@@ -364,11 +410,17 @@ eff = leffVal
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 1,
                     'changed': 1,
                     'changed_w': 1,
-                    'obsolete': 1,
                     'unchanged': 1,
-                    'unchanged_w': 1
+                    'unchanged_w': 1,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.properties': [
@@ -422,8 +474,15 @@ bar = duplicated bar
                 {None: {
                     'errors': 1,
                     'warnings': 1,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 3,
-                    'changed_w': 6
+                    'changed_w': 6,
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.properties': [
@@ -465,8 +524,17 @@ class TestDTD(unittest.TestCase, ContentMixin):
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 3,
-                    'changed_w': 3
+                    'changed_w': 3,
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }},
              'details': {}
              }
@@ -492,10 +560,17 @@ class TestDTD(unittest.TestCase, ContentMixin):
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 2,
+                    'missing_w': 2,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 1,
                     'changed_w': 1,
-                    'missing': 2,
-                    'missing_w': 2
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.dtd': [
@@ -529,10 +604,16 @@ class TestDTD(unittest.TestCase, ContentMixin):
             {'summary':
                 {None: {
                     'errors': 1,
+                    'warnings': 0,
                     'missing': 1,
                     'missing_w': 1,
+                    'report': 0,
+                    'obsolete': 0,
+                    'changed': 0,
+                    'changed_w': 0,
                     'unchanged': 2,
-                    'unchanged_w': 2
+                    'unchanged_w': 2,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.dtd': [
@@ -567,9 +648,17 @@ class TestDTD(unittest.TestCase, ContentMixin):
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
                     'warnings': 1,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
+                    'changed': 0,
+                    'changed_w': 0,
                     'unchanged': 2,
-                    'unchanged_w': 2
+                    'unchanged_w': 2,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.dtd': [
@@ -597,11 +686,17 @@ class TestDTD(unittest.TestCase, ContentMixin):
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
                     'warnings': 1,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
+                    'changed': 1,
+                    'changed_w': 2,
                     'unchanged': 2,
                     'unchanged_w': 2,
-                    'changed': 1,
-                    'changed_w': 2
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.dtd': [
@@ -658,8 +753,17 @@ bar = lBar
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 3,
-                    'changed_w': 3
+                    'changed_w': 3,
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }},
              'details': {}
              }
@@ -697,10 +801,17 @@ eff = lEff
                 },
                 'summary': {
                     None: {
-                        'changed': 2,
-                        'changed_w': 2,
+                        'errors': 0,
+                        'warnings': 0,
                         'missing': 2,
                         'missing_w': 2,
+                        'report': 0,
+                        'obsolete': 0,
+                        'changed': 2,
+                        'changed_w': 2,
+                        'unchanged': 0,
+                        'unchanged_w': 0,
+                        'keys': 0,
                     }
                 }
             }
@@ -748,11 +859,17 @@ eff = lEff {
                 },
                 'summary': {
                     None: {
-                        'changed': 1,
-                        'changed_w': 1,
+                        'errors': 3,
+                        'warnings': 0,
                         'missing': 2,
                         'missing_w': 2,
-                        'errors': 3
+                        'report': 0,
+                        'obsolete': 0,
+                        'changed': 1,
+                        'changed_w': 1,
+                        'unchanged': 0,
+                        'unchanged_w': 0,
+                        'keys': 0,
                     }
                 }
             }
@@ -793,8 +910,17 @@ foo = Localized { bar }
                 'details': {},
                 'summary': {
                     None: {
+                        'errors': 0,
+                        'warnings': 0,
+                        'missing': 0,
+                        'missing_w': 0,
+                        'report': 0,
+                        'obsolete': 0,
                         'changed': 1,
-                        'changed_w': 1
+                        'changed_w': 1,
+                        'unchanged': 0,
+                        'unchanged_w': 0,
+                        'keys': 0,
                     }
                 }
             }
@@ -850,9 +976,17 @@ baz = Localized { qux }
                 },
                 'summary': {
                     None: {
+                        'errors': 0,
+                        'warnings': 4,
+                        'missing': 0,
+                        'missing_w': 0,
+                        'report': 0,
+                        'obsolete': 0,
                         'changed': 3,
                         'changed_w': 3,
-                        'warnings': 4
+                        'unchanged': 0,
+                        'unchanged_w': 0,
+                        'keys': 0,
                     }
                 }
             }
@@ -899,7 +1033,19 @@ eff = lEff
                     ],
                 },
                 'summary': {
-                    None: {'changed': 3, 'changed_w': 5, 'errors': 2}
+                    None: {
+                        'errors': 2,
+                        'warnings': 0,
+                        'missing': 0,
+                        'missing_w': 0,
+                        'report': 0,
+                        'obsolete': 0,
+                        'changed': 3,
+                        'changed_w': 5,
+                        'unchanged': 0,
+                        'unchanged_w': 0,
+                        'keys': 0,
+                    }
                 }
             }
         )
@@ -955,10 +1101,17 @@ eff = lEff
                 },
                 'summary': {
                     None: {
-                        'changed': 4,
-                        'changed_w': 4,
+                        'errors': 0,
+                        'warnings': 0,
                         'missing': 1,
                         'missing_w': 1,
+                        'report': 0,
+                        'obsolete': 0,
+                        'changed': 4,
+                        'changed_w': 4,
+                        'unchanged': 0,
+                        'unchanged_w': 0,
+                        'keys': 0,
                     }
                 }
             }
@@ -1003,7 +1156,19 @@ bar = lBar
                     ]
                 },
                 'summary': {
-                    None: {'changed': 2, 'changed_w': 4, 'errors': 2}
+                    None: {
+                        'errors': 2,
+                        'warnings': 0,
+                        'missing': 0,
+                        'missing_w': 0,
+                        'report': 0,
+                        'obsolete': 0,
+                        'changed': 2,
+                        'changed_w': 4,
+                        'unchanged': 0,
+                        'unchanged_w': 0,
+                        'keys': 0,
+                    }
                 }
             }
         )
@@ -1040,8 +1205,17 @@ bar = lBar
                 'details': {},
                 'summary': {
                     None: {
+                        'errors': 0,
+                        'warnings': 0,
+                        'missing': 0,
+                        'missing_w': 0,
+                        'report': 0,
+                        'obsolete': 0,
                         'changed': 2,
                         'changed_w': 2,
+                        'unchanged': 0,
+                        'unchanged_w': 0,
+                        'keys': 0,
                     }
                 }
             }
@@ -1074,10 +1248,17 @@ bar = barVal
                 'details': {},
                 'summary': {
                     None: {
+                        'errors': 0,
+                        'warnings': 0,
+                        'missing': 0,
+                        'missing_w': 0,
+                        'report': 0,
+                        'obsolete': 0,
                         'changed': 1,
                         'changed_w': 1,
                         'unchanged': 1,
                         'unchanged_w': 1,
+                        'keys': 0,
                     }
                 }
             }
@@ -1111,8 +1292,17 @@ bar = lBar
                 'details': {},
                 'summary': {
                     None: {
+                        'errors': 0,
+                        'warnings': 0,
+                        'missing': 0,
+                        'missing_w': 0,
+                        'report': 0,
+                        'obsolete': 0,
                         'changed': 2,
                         'changed_w': 2,
+                        'unchanged': 0,
+                        'unchanged_w': 0,
+                        'keys': 0,
                     }
                 }
             }
@@ -1144,8 +1334,15 @@ bar = duplicated bar
                 {None: {
                     'errors': 1,
                     'warnings': 1,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 3,
-                    'changed_w': 6
+                    'changed_w': 6,
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.ftl': [
@@ -1174,9 +1371,17 @@ bar = duplicated bar
             cc.observers.toJSON(),
             {'summary':
                 {None: {
+                    'errors': 0,
                     'warnings': 3,
+                    'missing': 0,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
                     'changed': 1,
-                    'changed_w': 2
+                    'changed_w': 2,
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }},
              'details': {
                  'l10n.ftl': [

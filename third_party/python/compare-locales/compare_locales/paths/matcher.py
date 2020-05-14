@@ -33,7 +33,7 @@ class Matcher(object):
     uses that to transform l10n and en-US paths back and forth.
     '''
 
-    def __init__(self, pattern_or_other, env={}, root=None):
+    def __init__(self, pattern_or_other, env={}, root=None, encoding=None):
         '''Create regular expression similar to mozpath.match().
         '''
         parser = PatternParser()
@@ -50,12 +50,14 @@ class Matcher(object):
             self.env.update(real_env)
             if root is not None:
                 self.pattern.root = root
+            self.encoding = other.encoding
             return
         self.env = real_env
         pattern = pattern_or_other
         self.pattern = parser.parse(pattern)
         if root is not None:
             self.pattern.root = root
+        self.encoding = encoding
 
     def with_env(self, environ):
         return Matcher(self, environ)
@@ -64,7 +66,10 @@ class Matcher(object):
     def prefix(self):
         subpattern = Pattern(self.pattern[:self.pattern.prefix_length])
         subpattern.root = self.pattern.root
-        return subpattern.expand(self.env)
+        prefix = subpattern.expand(self.env)
+        if self.encoding is not None:
+            prefix = prefix.encode(self.encoding)
+        return prefix
 
     def match(self, path):
         '''Test the given path against this matcher and its environment.
@@ -77,6 +82,8 @@ class Matcher(object):
         if m is None:
             return None
         d = m.groupdict()
+        if self.encoding is not None:
+            d = {key: value.decode(self.encoding) for key, value in d.items()}
         if 'android_locale' in d and 'locale' not in d:
             # map android_locale to locale code
             locale = d['android_locale']
@@ -94,9 +101,10 @@ class Matcher(object):
     def _cache_regex(self):
         if self._cached_re is not None:
             return
-        self._cached_re = re.compile(
-            self.pattern.regex_pattern(self.env) + '$'
-        )
+        pattern = self.pattern.regex_pattern(self.env) + '$'
+        if self.encoding is not None:
+            pattern = pattern.encode(self.encoding)
+        self._cached_re = re.compile(pattern)
 
     def sub(self, other, path):
         '''
@@ -108,11 +116,14 @@ class Matcher(object):
             return None
         env = {}
         env.update(
-            (key, Literal(value))
+            (key, Literal(value if value is not None else ''))
             for key, value in m.items()
         )
         env.update(other.env)
-        return other.pattern.expand(env)
+        path = other.pattern.expand(env)
+        if self.encoding is not None:
+            path = path.encode(self.encoding)
+        return path
 
     def concat(self, other):
         '''Concat two Matcher objects.
@@ -164,6 +175,8 @@ class Matcher(object):
                     continue
                 if self.env[k] != other.env[k]:
                     return False
+        if self.encoding != other.encoding:
+            return False
         return True
 
 

@@ -403,5 +403,179 @@ msg = { $val ->
         )
 
 
+class CSSStyleTest(BaseHelper):
+    file = File('foo.ftl', 'foo.ftl')
+    refContent = b'''\
+simple =
+    .style = width:1px
+select =
+    .style = {PLATFORM() ->
+        [windows] width:1px
+       *[unix] max-width:1px
+    }
+ref =
+    .style = {simple.style}
+broken =
+    .style = 28em
+'''
+
+    def test_simple(self):
+        self._test(dedent_ftl(
+            '''\
+            simple =
+                .style = width:2px
+            '''),
+            tuple())
+        self._test(dedent_ftl(
+            '''\
+            simple =
+                .style = max-width:2px
+            '''),
+            (
+                (
+                    'warning', 0,
+                    'width only in reference, max-width only in l10n', 'fluent'
+                ),
+            ))
+        self._test(dedent_ftl(
+            '''\
+            simple =
+                .style = stuff
+            '''),
+            (
+                (
+                    'error', 0,
+                    'reference is a CSS spec', 'fluent'
+                ),
+            ))
+        # Cover the current limitations of only plain strings
+        self._test(dedent_ftl(
+            '''\
+            simple =
+                .style = {"width:3px"}
+            '''),
+            tuple())
+
+    def test_select(self):
+        self._test(dedent_ftl(
+            '''\
+            select =
+                .style = width:2px
+            '''),
+            (
+                (
+                    'warning', 0,
+                    'width only in l10n', 'fluent'
+                ),
+            ))
+        self._test(dedent_ftl(
+            '''\
+            select =
+                .style = max-width:2px
+            '''),
+            (
+                (
+                    'warning', 0,
+                    'max-width only in l10n', 'fluent'
+                ),
+            ))
+        self._test(dedent_ftl(
+            '''\
+            select =
+                .style = stuff
+            '''),
+            (
+                (
+                    'error', 0,
+                    'reference is a CSS spec', 'fluent'
+                ),
+            ))
+        # Cover the current limitations of only plain strings
+        self._test(dedent_ftl(
+            '''\
+            select =
+                .style = {"width:1px"}
+            '''),
+            tuple())
+
+    def test_ref(self):
+        self._test(dedent_ftl(
+            '''\
+            ref =
+                .style = width:2px
+            '''),
+            (
+                (
+                    'warning', 0,
+                    'width only in l10n', 'fluent'
+                ),
+                (
+                    'warning', 0,
+                    'Missing message reference: simple.style', 'fluent'
+                ),
+            ))
+        self._test(dedent_ftl(
+            '''\
+            ref =
+                .style = max-width:2px
+            '''),
+            (
+                (
+                    'warning', 0,
+                    'max-width only in l10n', 'fluent'
+                ),
+                (
+                    'warning', 0,
+                    'Missing message reference: simple.style', 'fluent'
+                ),
+            ))
+        self._test(dedent_ftl(
+            '''\
+            ref =
+                .style = stuff
+            '''),
+            (
+                (
+                    'error', 0,
+                    'reference is a CSS spec', 'fluent'
+                ),
+                (
+                    'warning', 0,
+                    'Missing message reference: simple.style', 'fluent'
+                ),
+            ))
+        # Cover the current limitations of only plain strings
+        self._test(dedent_ftl(
+            '''\
+            ref =
+                .style = {"width:1px"}
+            '''),
+            (
+                (
+                    'warning', 0,
+                    'Missing message reference: simple.style', 'fluent'
+                ),
+            ))
+
+    def test_broken(self):
+        self._test(dedent_ftl(
+            '''\
+            broken =
+                .style = 27em
+            '''),
+            (('error', 0, 'reference is a CSS spec', 'fluent'),))
+        self._test(dedent_ftl(
+            '''\
+            broken =
+                .style = width: 27em
+            '''),
+            (
+                (
+                    'warning', 0,
+                    'width only in l10n', 'fluent'
+                ),
+            ))
+
+
 if __name__ == '__main__':
     unittest.main()
