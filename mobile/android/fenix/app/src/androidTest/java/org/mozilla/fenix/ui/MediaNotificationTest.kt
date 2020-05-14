@@ -72,6 +72,9 @@ class MediaNotificationTest {
         notificationShade {
             verifySystemNotificationGone(videoTestPage.title)
         }
+
+        // close notification shade before the next test
+        mDevice.pressBack()
     }
 
     @Test
@@ -102,6 +105,9 @@ class MediaNotificationTest {
         notificationShade {
             verifySystemNotificationGone(audioTestPage.title)
         }
+
+        // close notification shade before the next test
+        mDevice.pressBack()
     }
 
     @Test
@@ -152,5 +158,8 @@ class MediaNotificationTest {
         notificationShade {
             verifySystemNotificationGone("A site is playing media")
         }
+
+        // close notification shade before the next test
+        mDevice.pressBack()
     }
 }
