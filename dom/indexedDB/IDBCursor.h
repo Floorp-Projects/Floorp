@@ -52,7 +52,7 @@ class IDBCursor : public nsISupports, public nsWrapperCache {
   using Type = IDBCursorType;
 
  protected:
-  InitializedOnce<const NotNull<indexedDB::BackgroundCursorChildBase*>>
+  InitializedOnceNotNull<indexedDB::BackgroundCursorChildBase* const>
       mBackgroundActor;
 
   // TODO: mRequest could be made const if Bug 1575173 is resolved. It is
@@ -241,7 +241,7 @@ class IDBTypedCursor : public IDBCursor {
     // initialized that in the constructor from that type. We just want to avoid
     // having a second typed field.
     return *static_cast<indexedDB::BackgroundCursorChild<CursorType>*>(
-        mBackgroundActor->get());
+        *mBackgroundActor);
   }
 
   bool IsSourceDeleted() const;
