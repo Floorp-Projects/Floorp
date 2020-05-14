@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGNOMEShellSearchProvider.h"
-#include "nsGNOMEShellDBusHelper.h"
 
 #include "nsPrintfCString.h"
 #include "RemoteUtils.h"
@@ -174,6 +173,49 @@ static void appendStringDictionary(DBusMessageIter* aIter, const char* aKey,
   dbus_message_iter_close_container(aIter, &iterDict);
 }
 
+/*
+  "icon-data": a tuple of type (iiibiiay) describing a pixbuf with width,
+              height, rowstride, has-alpha,
+              bits-per-sample, channels,
+              image data
+*/
+static void DBusAppendIcon(GnomeHistoryIcon* aIcon, DBusMessageIter* aIter) {
+  DBusMessageIter iterDict, iterVar, iterStruct;
+  dbus_message_iter_open_container(aIter, DBUS_TYPE_DICT_ENTRY, nullptr,
+                                   &iterDict);
+  const char* key = "icon-data";
+  dbus_message_iter_append_basic(&iterDict, DBUS_TYPE_STRING, &key);
+  dbus_message_iter_open_container(&iterDict, DBUS_TYPE_VARIANT, "(iiibiiay)",
+                                   &iterVar);
+  dbus_message_iter_open_container(&iterVar, DBUS_TYPE_STRUCT, nullptr,
+                                   &iterStruct);
+
+  int width = aIcon->GetWidth();
+  int height = aIcon->GetHeight();
+  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &width);
+  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &height);
+  int rowstride = width * 4;
+  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &rowstride);
+  int hasAlpha = true;
+  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_BOOLEAN, &hasAlpha);
+  int bitsPerSample = 8;
+  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &bitsPerSample);
+  int channels = 4;
+  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &channels);
+
+  DBusMessageIter iterArray;
+  dbus_message_iter_open_container(&iterStruct, DBUS_TYPE_ARRAY, "y",
+                                   &iterArray);
+  unsigned char* array = aIcon->GetData();
+  dbus_message_iter_append_fixed_array(&iterArray, DBUS_TYPE_BYTE, &array,
+                                       width * height * 4);
+  dbus_message_iter_close_container(&iterStruct, &iterArray);
+
+  dbus_message_iter_close_container(&iterVar, &iterStruct);
+  dbus_message_iter_close_container(&iterDict, &iterVar);
+  dbus_message_iter_close_container(aIter, &iterDict);
+}
+
 /* Appends history search results to the DBUS reply.
 
   We can return those fields at GetResultMetas:
@@ -188,11 +230,14 @@ static void appendStringDictionary(DBusMessageIter* aIter, const char* aKey,
   "description": an optional short description (1-2 lines)
 */
 static void DBusAppendResultID(
-    nsCOMPtr<nsINavHistoryContainerResultNode> aHistResultContainer,
+    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
     DBusMessageIter* aIter, const char* aID) {
+  nsCOMPtr<nsINavHistoryContainerResultNode> container =
+      aSearchResult->GetSearchResultContainer();
+
+  int index = DBusGetIndexFromIDKey(aID);
   nsCOMPtr<nsINavHistoryResultNode> child;
-  aHistResultContainer->GetChild(DBusGetIndexFromIDKey(aID),
-                                 getter_AddRefs(child));
+  container->GetChild(index, getter_AddRefs(child));
   nsAutoCString title;
   if (NS_FAILED(child->GetTitle(title))) {
     return;
@@ -207,7 +252,13 @@ static void DBusAppendResultID(
   const char* titleStr = title.get();
   appendStringDictionary(aIter, "id", aID);
   appendStringDictionary(aIter, "name", titleStr);
-  appendStringDictionary(aIter, "gicon", "text-html");
+
+  GnomeHistoryIcon* icon = aSearchResult->GetHistoryIcon(index);
+  if (icon) {
+    DBusAppendIcon(icon, aIter);
+  } else {
+    appendStringDictionary(aIter, "gicon", "text-html");
+  }
 }
 
 /* Search the web for: "searchTerm" to the DBUS reply.
@@ -265,8 +316,7 @@ DBusHandlerResult DBusHandleResultMetas(
                   KEYWORD_SEARCH_STRING_LEN) == 0) {
         DBusAppendSearchID(&iterArray2, stringArray[i]);
       } else {
-        DBusAppendResultID(aSearchResult->GetSearchResultContainer(),
-                           &iterArray2, stringArray[i]);
+        DBusAppendResultID(aSearchResult, &iterArray2, stringArray[i]);
       }
       dbus_message_iter_close_container(&iterArray, &iterArray2);
     }
