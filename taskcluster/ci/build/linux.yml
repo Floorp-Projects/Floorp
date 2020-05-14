@@ -1277,7 +1277,7 @@ linux64-ccov/opt:
         need-xvfb: true
     fetches:
         toolchain:
-            - linux64-clang-9
+            - linux64-clang
             - linux64-rust
             - linux64-gcc-7
             - linux64-cbindgen
