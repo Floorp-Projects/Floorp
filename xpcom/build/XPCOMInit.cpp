@@ -743,7 +743,7 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
   // down, any remaining objects that could be holding NSS resources (should)
   // have been released, so we can safely shut down NSS.
   if (NSS_IsInitialized()) {
-    nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
+    nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
     if (NSS_Shutdown() != SECSuccess) {
       // If you're seeing this crash and/or warning, some NSS resources are
       // still in use (see bugs 1417680 and 1230312). Set the environment

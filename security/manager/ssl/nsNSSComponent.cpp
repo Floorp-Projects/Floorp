@@ -17,6 +17,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/PublicSSL.h"
@@ -37,6 +38,7 @@
 #include "nsIFile.h"
 #include "nsILocalFileWin.h"
 #include "nsIObserverService.h"
+#include "nsIOService.h"
 #include "nsIPrompt.h"
 #include "nsIProperties.h"
 #include "nsITokenPasswordDialogs.h"
@@ -1369,7 +1371,7 @@ nsresult CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
         bool cipherEnabled =
             Preferences::GetBool(cp[i].pref, cp[i].enabledByDefault);
         SSL_CipherPrefSetDefault(cp[i].id, cipherEnabled);
-        nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
+        nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
         break;
       }
     }
@@ -2376,6 +2378,21 @@ nsNSSComponent::GetDefaultCertVerifier(SharedCertVerifier** result) {
 
 // static
 void nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (mozilla::net::nsIOService::UseSocketProcess()) {
+    if (mozilla::net::gIOService) {
+      mozilla::net::gIOService->CallOrWaitForSocketProcess([]() {
+        Unused << mozilla::net::SocketProcessParent::GetSingleton()
+                      ->SendClearSessionCache();
+      });
+    }
+  }
+  DoClearSSLExternalAndInternalSessionCache();
+}
+
+// static
+void nsNSSComponent::DoClearSSLExternalAndInternalSessionCache() {
   SSL_ClearSessionCache();
   mozilla::net::SSLTokensCache::Clear();
 }
