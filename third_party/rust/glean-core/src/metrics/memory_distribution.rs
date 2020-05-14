@@ -2,15 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::collections::HashMap;
-
-use serde::Serialize;
-
 use crate::error_recording::{record_error, ErrorType};
 use crate::histogram::{Functional, Histogram};
 use crate::metrics::memory_unit::MemoryUnit;
-use crate::metrics::Metric;
-use crate::metrics::MetricType;
+use crate::metrics::{DistributionData, Metric, MetricType};
 use crate::storage::StorageManager;
 use crate::CommonMetricData;
 use crate::Glean;
@@ -34,18 +29,11 @@ pub struct MemoryDistributionMetric {
     memory_unit: MemoryUnit,
 }
 
-/// A serializable representation of a snapshotted histogram.
-#[derive(Debug, Serialize)]
-pub struct Snapshot {
-    values: HashMap<u64, u64>,
-    sum: u64,
-}
-
 /// Create a snapshot of the histogram.
 ///
 /// The snapshot can be serialized into the payload format.
-pub(crate) fn snapshot(hist: &Histogram<Functional>) -> Snapshot {
-    Snapshot {
+pub(crate) fn snapshot(hist: &Histogram<Functional>) -> DistributionData {
+    DistributionData {
         // **Caution**: This cannot use `Histogram::snapshot_values` and needs to use the more
         // specialized snapshot function.
         values: hist.snapshot(),
@@ -171,7 +159,7 @@ impl MemoryDistributionMetric {
 
         if num_too_log_samples > 0 {
             let msg = format!(
-                "Accumulated {} samples longer than 10 minutes",
+                "Accumulated {} samples larger than 1TB",
                 num_too_log_samples
             );
             record_error(
@@ -189,17 +177,13 @@ impl MemoryDistributionMetric {
     /// Get the currently stored value as an integer.
     ///
     /// This doesn't clear the stored value.
-    pub fn test_get_value(
-        &self,
-        glean: &Glean,
-        storage_name: &str,
-    ) -> Option<Histogram<Functional>> {
+    pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<DistributionData> {
         match StorageManager.snapshot_metric(
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
         ) {
-            Some(Metric::MemoryDistribution(hist)) => Some(hist),
+            Some(Metric::MemoryDistribution(hist)) => Some(snapshot(&hist)),
             _ => None,
         }
     }
@@ -215,6 +199,6 @@ impl MemoryDistributionMetric {
         storage_name: &str,
     ) -> Option<String> {
         self.test_get_value(glean, storage_name)
-            .map(|hist| serde_json::to_string(&snapshot(&hist)).unwrap())
+            .map(|snapshot| serde_json::to_string(&snapshot).unwrap())
     }
 }

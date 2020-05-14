@@ -39,7 +39,7 @@ pub enum ErrorType {
 }
 
 impl ErrorType {
-    /// The error type's metric name
+    /// The error type's metric id
     pub fn as_str(&self) -> &'static str {
         match self {
             ErrorType::InvalidValue => "invalid_value",
@@ -101,7 +101,7 @@ fn get_error_metric_for_metric(meta: &CommonMetricData, error: ErrorType) -> Cou
 /// * meta - The metric's meta data
 /// * error -  The error type to record
 /// * message - The message to log. This message is not sent with the ping.
-///             It does not need to include the metric name, as that is automatically prepended to the message.
+///             It does not need to include the metric id, as that is automatically prepended to the message.
 ///  * num_errors - The number of errors of the same type to report.
 pub fn record_error<O: Into<Option<i32>>>(
     glean: &Glean,

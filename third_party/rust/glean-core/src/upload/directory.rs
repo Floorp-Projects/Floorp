@@ -9,7 +9,6 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
-use log;
 use serde_json::Value as JsonValue;
 use uuid::Uuid;
 
@@ -79,7 +78,7 @@ impl PingDirectoryManager {
         };
         match fs::remove_file(&path) {
             Err(e) => log::error!("Error deleting file {}. {}", path.display(), e),
-            _ => log::info!("Files was deleted {}", path.display()),
+            _ => log::info!("File was deleted {}", path.display()),
         };
     }
 
@@ -89,12 +88,12 @@ impl PingDirectoryManager {
     ///
     /// ## Arguments
     ///
-    /// * `uuid` - The UUID of the ping file to be processed
-    pub fn process_file(&self, uuid: &str) -> Option<PingRequest> {
-        let path = match self.get_file_path(uuid) {
+    /// * `document_id` - The UUID of the ping file to be processed
+    pub fn process_file(&self, document_id: &str) -> Option<PingRequest> {
+        let path = match self.get_file_path(document_id) {
             Some(path) => path,
             None => {
-                log::error!("Cannot find ping file to process {}", uuid);
+                log::error!("Cannot find ping file to process {}", document_id);
                 return None;
             }
         };
@@ -114,20 +113,20 @@ impl PingDirectoryManager {
         let mut lines = BufReader::new(file).lines();
         if let (Some(Ok(path)), Some(Ok(body))) = (lines.next(), lines.next()) {
             if let Ok(parsed_body) = serde_json::from_str::<JsonValue>(&body) {
-                return Some(PingRequest::new(uuid, &path, parsed_body));
+                return Some(PingRequest::new(document_id, &path, parsed_body));
             } else {
                 log::warn!(
                     "Error processing ping file: {}. Can't parse ping contents as JSON.",
-                    uuid
+                    document_id
                 );
             }
         } else {
             log::warn!(
                 "Error processing ping file: {}. Ping file is not formatted as expected.",
-                uuid
+                document_id
             );
         }
-        self.delete_file(uuid);
+        self.delete_file(document_id);
         None
     }
 
@@ -179,7 +178,7 @@ impl PingDirectoryManager {
             // We might not be able to get the modified date for a given file,
             // in which case we just put it at the end.
             if let (Ok(a), Ok(b)) = (a, b) {
-                a.partial_cmp(b).unwrap()
+                a.cmp(b)
             } else {
                 Ordering::Less
             }
@@ -203,13 +202,13 @@ impl PingDirectoryManager {
         result
     }
 
-    /// Get the path for a ping file based on its uuid.
+    /// Get the path for a ping file based on its document_id.
     ///
     /// Will look for files in each ping directory until something is found.
     /// If nothing is found, returns `None`.
-    fn get_file_path(&self, uuid: &str) -> Option<PathBuf> {
+    fn get_file_path(&self, document_id: &str) -> Option<PathBuf> {
         for dir in &self.pings_dirs {
-            let path = dir.join(uuid);
+            let path = dir.join(document_id);
             if path.exists() {
                 return Some(path);
             }

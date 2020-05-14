@@ -54,6 +54,9 @@ pub enum ErrorKind {
     /// Unknown error
     Utf8Error,
 
+    /// Glean not initialized
+    NotInitialized,
+
     #[doc(hidden)]
     __NonExhaustive,
 }
@@ -75,6 +78,13 @@ impl Error {
             kind: ErrorKind::Utf8Error,
         }
     }
+
+    /// Indicates an error that no global Glean object is initialized
+    pub fn not_initialized() -> Error {
+        Error {
+            kind: ErrorKind::NotInitialized,
+        }
+    }
 }
 
 impl std::error::Error for Error {}
@@ -92,7 +102,8 @@ impl Display for Error {
             MemoryUnit(m) => write!(f, "MemoryUnit conversion from {} failed", m),
             HistogramType(h) => write!(f, "HistogramType conversion from {} failed", h),
             OsString(s) => write!(f, "OsString conversion from {:?} failed", s),
-            Utf8Error => write!(f, "Invalid  UTF-8 byte sequence in string."),
+            Utf8Error => write!(f, "Invalid  UTF-8 byte sequence in string"),
+            NotInitialized => write!(f, "Global Glean object missing"),
             __NonExhaustive => write!(f, "Unknown error"),
         }
     }

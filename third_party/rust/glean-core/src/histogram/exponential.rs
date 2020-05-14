@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 
 use super::{Bucketing, Histogram};
 
+use crate::util::floating_point_context::FloatingPointContext;
+
 /// Create the possible ranges in an exponential distribution from `min` to `max` with
 /// `bucket_count` buckets.
 ///
@@ -19,6 +21,9 @@ use super::{Bucketing, Histogram};
 /// That means values in a bucket `i` are `bucket[i] <= value < bucket[i+1]`.
 /// It will always contain an underflow bucket (`< 1`).
 fn exponential_range(min: u64, max: u64, bucket_count: usize) -> Vec<u64> {
+    // Set the FPU control flag to the required state within this function
+    let _fpc = FloatingPointContext::new();
+
     let log_max = (max as f64).ln();
 
     let mut ranges = Vec::with_capacity(bucket_count);

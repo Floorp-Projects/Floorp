@@ -132,9 +132,9 @@ impl Database {
             let store = self.get_store(Lifetime::Ping);
             let mut iter = unwrap_or!(store.iter_start(&reader), return);
 
-            while let Some(Ok((metric_name, value))) = iter.next() {
-                let metric_name = match str::from_utf8(metric_name) {
-                    Ok(metric_name) => metric_name.to_string(),
+            while let Some(Ok((metric_id, value))) = iter.next() {
+                let metric_id = match str::from_utf8(metric_id) {
+                    Ok(metric_id) => metric_id.to_string(),
                     _ => continue,
                 };
                 let metric: Metric = match value.expect("Value missing in iteration") {
@@ -142,7 +142,7 @@ impl Database {
                     _ => continue,
                 };
 
-                data.insert(metric_name, metric);
+                data.insert(metric_id, metric);
             }
         }
     }
@@ -164,7 +164,7 @@ impl Database {
     ///   a given labeled metric. If not provided, the entire storage for the given lifetime
     ///   will be iterated over.
     /// * `transaction_fn`: Called for each entry being iterated over. It is
-    ///   passed two arguments: `(metric_name: &[u8], metric: &Metric)`.
+    ///   passed two arguments: `(metric_id: &[u8], metric: &Metric)`.
     ///
     /// ## Panics
     ///
@@ -204,17 +204,17 @@ impl Database {
             return
         );
 
-        while let Some(Ok((metric_name, value))) = iter.next() {
-            if !metric_name.starts_with(iter_start.as_bytes()) {
+        while let Some(Ok((metric_id, value))) = iter.next() {
+            if !metric_id.starts_with(iter_start.as_bytes()) {
                 break;
             }
 
-            let metric_name = &metric_name[len..];
+            let metric_id = &metric_id[len..];
             let metric: Metric = match value.expect("Value missing in iteration") {
                 rkv::Value::Blob(blob) => unwrap_or!(bincode::deserialize(blob), continue),
                 _ => continue,
             };
-            transaction_fn(metric_name, &metric);
+            transaction_fn(metric_id, &metric);
         }
     }
 
@@ -436,12 +436,12 @@ impl Database {
             let mut metrics = Vec::new();
             {
                 let mut iter = store.iter_from(&writer, &storage_name)?;
-                while let Some(Ok((metric_name, _))) = iter.next() {
-                    if let Ok(metric_name) = std::str::from_utf8(metric_name) {
-                        if !metric_name.starts_with(&storage_name) {
+                while let Some(Ok((metric_id, _))) = iter.next() {
+                    if let Ok(metric_id) = std::str::from_utf8(metric_id) {
+                        if !metric_id.starts_with(&storage_name) {
                             break;
                         }
-                        metrics.push(metric_name.to_owned());
+                        metrics.push(metric_id.to_owned());
                     }
                 }
             }
@@ -465,7 +465,7 @@ impl Database {
     ///
     /// * `lifetime` - the lifetime of the storage in which to look for the metric.
     /// * `storage_name` - the name of the storage to store/fetch data from.
-    /// * `metric_key` - the metric key/name.
+    /// * `metric_id` - the metric category + name.
     ///
     /// ## Return value
     ///
@@ -481,9 +481,9 @@ impl Database {
         &self,
         lifetime: Lifetime,
         storage_name: &str,
-        metric_name: &str,
+        metric_id: &str,
     ) -> Result<()> {
-        let final_key = Self::get_storage_key(storage_name, Some(metric_name));
+        let final_key = Self::get_storage_key(storage_name, Some(metric_id));
 
         // Lifetime::Ping data is not persisted to disk if
         // Glean has `delay_ping_lifetime_io` set to true
@@ -622,9 +622,9 @@ mod test {
 
         // Verify that the data is correctly recorded.
         let mut found_metrics = 0;
-        let mut snapshotter = |metric_name: &[u8], metric: &Metric| {
+        let mut snapshotter = |metric_id: &[u8], metric: &Metric| {
             found_metrics += 1;
-            let metric_id = String::from_utf8_lossy(metric_name).into_owned();
+            let metric_id = String::from_utf8_lossy(metric_id).into_owned();
             assert_eq!(test_metric_id, metric_id);
             match metric {
                 Metric::String(s) => assert_eq!(test_value, s),
@@ -657,9 +657,9 @@ mod test {
 
         // Verify that the data is correctly recorded.
         let mut found_metrics = 0;
-        let mut snapshotter = |metric_name: &[u8], metric: &Metric| {
+        let mut snapshotter = |metric_id: &[u8], metric: &Metric| {
             found_metrics += 1;
-            let metric_id = String::from_utf8_lossy(metric_name).into_owned();
+            let metric_id = String::from_utf8_lossy(metric_id).into_owned();
             assert_eq!(test_metric_id, metric_id);
             match metric {
                 Metric::String(s) => assert_eq!(test_value, s),
@@ -695,9 +695,9 @@ mod test {
 
         // Verify that the data is correctly recorded.
         let mut found_metrics = 0;
-        let mut snapshotter = |metric_name: &[u8], metric: &Metric| {
+        let mut snapshotter = |metric_id: &[u8], metric: &Metric| {
             found_metrics += 1;
-            let metric_id = String::from_utf8_lossy(metric_name).into_owned();
+            let metric_id = String::from_utf8_lossy(metric_id).into_owned();
             assert_eq!(test_metric_id, metric_id);
             match metric {
                 Metric::String(s) => assert_eq!(test_value, s),
@@ -743,10 +743,10 @@ mod test {
         // Take a snapshot for the data, all the lifetimes.
         {
             let mut snapshot: HashMap<String, String> = HashMap::new();
-            let mut snapshotter = |metric_name: &[u8], metric: &Metric| {
-                let metric_name = String::from_utf8_lossy(metric_name).into_owned();
+            let mut snapshotter = |metric_id: &[u8], metric: &Metric| {
+                let metric_id = String::from_utf8_lossy(metric_id).into_owned();
                 match metric {
-                    Metric::String(s) => snapshot.insert(metric_name, s.to_string()),
+                    Metric::String(s) => snapshot.insert(metric_id, s.to_string()),
                     _ => panic!("Unexpected data found"),
                 };
             };
@@ -767,10 +767,10 @@ mod test {
         // Take a snapshot again and check that we're only clearing the Ping lifetime.
         {
             let mut snapshot: HashMap<String, String> = HashMap::new();
-            let mut snapshotter = |metric_name: &[u8], metric: &Metric| {
-                let metric_name = String::from_utf8_lossy(metric_name).into_owned();
+            let mut snapshotter = |metric_id: &[u8], metric: &Metric| {
+                let metric_id = String::from_utf8_lossy(metric_id).into_owned();
                 match metric {
-                    Metric::String(s) => snapshot.insert(metric_name, s.to_string()),
+                    Metric::String(s) => snapshot.insert(metric_id, s.to_string()),
                     _ => panic!("Unexpected data found"),
                 };
             };
@@ -823,9 +823,9 @@ mod test {
         // Verify that "telemetry_test.single_metric_retain" is still around for all lifetimes.
         for lifetime in lifetimes.iter() {
             let mut found_metrics = 0;
-            let mut snapshotter = |metric_name: &[u8], metric: &Metric| {
+            let mut snapshotter = |metric_id: &[u8], metric: &Metric| {
                 found_metrics += 1;
-                let metric_id = String::from_utf8_lossy(metric_name).into_owned();
+                let metric_id = String::from_utf8_lossy(metric_id).into_owned();
                 assert_eq!(format!("{}_retain", metric_id_pattern), metric_id);
                 match metric {
                     Metric::String(s) => assert_eq!("retain", s),
