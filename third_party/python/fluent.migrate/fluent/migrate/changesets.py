@@ -27,7 +27,7 @@ def convert_blame_to_changesets(blame_json):
         }
 
     It will be transformed into a list of changesets which can be fed into
-    `MergeContext.serialize_changeset`:
+    `InternalContext.serialize_changeset`:
 
         [
             {

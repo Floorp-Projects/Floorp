@@ -40,6 +40,7 @@ class TOMLParser(object):
         self.processPaths(ctx)
         self.processFilters(ctx)
         self.processIncludes(ctx)
+        self.processExcludes(ctx)
         self.processLocales(ctx)
         return self.asConfig(ctx)
 
@@ -101,15 +102,23 @@ class TOMLParser(object):
             ctx.pc.add_rules(rule)
 
     def processIncludes(self, ctx):
+        for child in self._processChild(ctx, 'includes'):
+            ctx.pc.add_child(child)
+
+    def processExcludes(self, ctx):
+        for child in self._processChild(ctx, 'excludes'):
+            ctx.pc.exclude(child)
+
+    def _processChild(self, ctx, field):
         assert ctx.data is not None
-        if 'includes' not in ctx.data:
+        if field not in ctx.data:
             return
-        for include in ctx.data['includes']:
-            # resolve include['path'] against our root and env
+        for child_config in ctx.data[field]:
+            # resolve child_config['path'] against our root and env
             p = mozpath.normpath(
                 expand(
                     ctx.pc.root,
-                    include['path'],
+                    child_config['path'],
                     ctx.pc.environ
                 )
             )
@@ -125,7 +134,7 @@ class TOMLParser(object):
                     .getLogger('compare-locales.io')
                     .error('%s: %s', e.strerror, e.filename))
                 continue
-            ctx.pc.add_child(child)
+            yield child
 
     def asConfig(self, ctx):
         return ctx.pc

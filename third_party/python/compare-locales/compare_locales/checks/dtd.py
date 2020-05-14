@@ -9,10 +9,10 @@ from xml import sax
 import six
 
 from compare_locales.parser import DTDParser
-from .base import Checker
+from .base import Checker, CSSCheckMixin
 
 
-class DTDChecker(Checker):
+class DTDChecker(Checker, CSSCheckMixin):
     """Tests to run on DTD files.
 
     Uses xml.sax for the heavy lifting of xml parsing.
@@ -68,11 +68,6 @@ class DTDChecker(Checker):
     num = re.compile('^%s$' % numPattern)
     lengthPattern = '%s(em|px|ch|cm|in)' % numPattern
     length = re.compile('^%s$' % lengthPattern)
-    spec = re.compile(r'((?:min\-)?(?:width|height))[ \t\r\n]*:[ \t\r\n]*%s' %
-                      lengthPattern)
-    style = re.compile(
-        r'^%(spec)s[ \t\r\n]*(;[ \t\r\n]*%(spec)s[ \t\r\n]*)*;?$' %
-        {'spec': spec.pattern})
 
     def check(self, refEnt, l10nEnt):
         """Try to parse the refvalue inside a dummy element, and keep
@@ -177,28 +172,9 @@ class DTDChecker(Checker):
         # just a length, width="100em"
         if self.length.match(refValue) and not self.length.match(l10nValue):
             yield ('error', 0, 'reference is a CSS length', 'css')
-        # real CSS spec, style="width:100px;"
-        if self.style.match(refValue):
-            if not self.style.match(l10nValue):
-                yield ('error', 0, 'reference is a CSS spec', 'css')
-            else:
-                # warn if different properties or units
-                refMap = dict((s, u) for s, _, u in
-                              self.spec.findall(refValue))
-                msgs = []
-                for s, _, u in self.spec.findall(l10nValue):
-                    if s not in refMap:
-                        msgs.insert(0, '%s only in l10n' % s)
-                        continue
-                    else:
-                        ru = refMap.pop(s)
-                        if u != ru:
-                            msgs.append("units for %s don't match "
-                                        "(%s != %s)" % (s, u, ru))
-                for s in six.iterkeys(refMap):
-                    msgs.insert(0, '%s only in reference' % s)
-                if msgs:
-                    yield ('warning', 0, ', '.join(msgs), 'css')
+        # Check for actual CSS style attribute values
+        for t in self.maybe_style(refValue, l10nValue):
+            yield t
 
         if self.extra_tests is not None and 'android-dtd' in self.extra_tests:
             for t in self.processAndroidContent(self.texthandler.textcontent):

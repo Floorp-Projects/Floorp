@@ -244,19 +244,17 @@ class ContentComparer:
                 l10n, merge_file, missings, skips, l10n_ctx,
                 p.capabilities, p.encoding)
 
-        stats = {}
-        for cat, value in (
-                ('missing', missing),
-                ('missing_w', missing_w),
-                ('report', report),
-                ('obsolete', obsolete),
-                ('changed', changed),
-                ('changed_w', changed_w),
-                ('unchanged', unchanged),
-                ('unchanged_w', unchanged_w),
-                ('keys', keys)):
-            if value:
-                stats[cat] = value
+        stats = {
+            'missing': missing,
+            'missing_w': missing_w,
+            'report': report,
+            'obsolete': obsolete,
+            'changed': changed,
+            'changed_w': changed_w,
+            'unchanged': unchanged,
+            'unchanged_w': unchanged_w,
+            'keys': keys,
+        }
         self.observers.updateStats(l10n, stats)
         pass
 
@@ -294,7 +292,7 @@ class ContentComparer:
             return
         # strip parse errors
         entities = [e for e in entities if not isinstance(e, parser.Junk)]
-        self.observers.updateStats(missing, {'missingInFiles': len(entities)})
+        self.observers.updateStats(missing, {'missing': len(entities)})
         missing_w = 0
         for e in entities:
             missing_w += e.count_words()

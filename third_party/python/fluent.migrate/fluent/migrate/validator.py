@@ -21,6 +21,20 @@ class BadContextAPIException(Exception):
     pass
 
 
+def process_assign(node, context):
+    if isinstance(node.value, ast.Str):
+        val = node.value.s
+    elif isinstance(node.value, ast.Name):
+        val = context.get(node.value.id)
+    elif isinstance(node.value, ast.Call):
+        val = node.value
+    if val is None:
+        return
+    for target in node.targets:
+        if isinstance(target, ast.Name):
+            context[target.id] = val
+
+
 class Validator(object):
     """Validate a migration recipe
 
@@ -55,16 +69,7 @@ class Validator(object):
                 migrate_func = top_level
                 details = self.inspect_migrate(migrate_func, global_assigns)
             if isinstance(top_level, ast.Assign):
-                val = None
-                if isinstance(top_level.value, ast.Str):
-                    val = top_level.value.s
-                elif isinstance(top_level.value, ast.Name):
-                    val = global_assigns.get(top_level.value.id)
-                if val is None:
-                    continue
-                for target in top_level.targets:
-                    if isinstance(target, ast.Name):
-                        global_assigns[target.id] = val
+                process_assign(top_level, global_assigns)
             if isinstance(top_level, (ast.Import, ast.ImportFrom)):
                 if 'module' in top_level._fields:
                     module = top_level.module
@@ -102,8 +107,7 @@ class Validator(object):
         visitor = MigrateAnalyzer(ctx_var, global_assigns)
         visitor.visit(migrate_func)
         return {
-            'sources': visitor.sources,
-            'references': visitor.targets,
+            'references': visitor.references,
             'issues': visitor.issues,
         }
 
@@ -118,6 +122,9 @@ def full_name(node, global_assigns):
     return '.'.join(reversed(leafs))
 
 
+PATH_TYPES = six.string_types + (ast.Call,)
+
+
 class MigrateAnalyzer(ast.NodeVisitor):
     def __init__(self, ctx_var, global_assigns):
         super(MigrateAnalyzer, self).__init__()
@@ -125,19 +132,23 @@ class MigrateAnalyzer(ast.NodeVisitor):
         self.global_assigns = global_assigns
         self.depth = 0
         self.issues = []
-        self.targets = set()
-        self.sources = set()
+        self.references = set()
 
     def generic_visit(self, node):
         self.depth += 1
         super(MigrateAnalyzer, self).generic_visit(node)
         self.depth -= 1
 
+    def visit_Assign(self, node):
+        if self.depth == 1:
+            process_assign(node, self.global_assigns)
+        self.generic_visit(node)
+
     def visit_Attribute(self, node):
         if isinstance(node.value, ast.Name) and node.value.id == self.ctx_var:
             if node.attr not in (
-                'maybe_add_localization',
                 'add_transforms',
+                'locale',
             ):
                 raise BadContextAPIException(
                     'Unexpected attribute access on {}.{}'.format(
@@ -161,8 +172,6 @@ class MigrateAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
     def call_ctx(self, node):
-        if node.func.attr == 'maybe_add_localization':
-            return self.call_maybe_add_localization(node)
         if node.func.attr == 'add_transforms':
             return self.call_add_transforms(node)
         raise BadContextAPIException(
@@ -171,71 +180,39 @@ class MigrateAnalyzer(ast.NodeVisitor):
             )
         )
 
-    def call_maybe_add_localization(self, node):
-        self.issues.append({
-            'msg': (
-                'Calling {}.maybe_add_localization is not required'
-            ).format(self.ctx_var),
-            'line': node.lineno
-        })
-        args_msg = (
-            'Expected arguments to {}.maybe_add_localization: '
-            'str'
-        ).format(self.ctx_var)
-        if not self.check_arguments(node, ((ast.Str, ast.Name),)):
-            raise BadContextAPIException(args_msg)
-        path = node.args[0]
-        if isinstance(path, ast.Str):
-            path = path.s
-        if isinstance(path, ast.Name):
-            path = self.global_assigns.get(path.id)
-        if not isinstance(path, six.string_types):
-            self.issues.append({
-                'msg': args_msg,
-                'line': node.args[0].lineno
-            })
-            return
-        if path != mozpath.normpath(path):
-            self.issues.append({
-                'msg': (
-                    'Argument to {}.maybe_add_localization needs to be a '
-                    'normalized path: "{}"'
-                ).format(self.ctx_var, path),
-                'line': node.args[0].lineno
-            })
-        else:
-            self.sources.add(path)
-
     def call_add_transforms(self, node):
         args_msg = (
             'Expected arguments to {}.add_transforms: '
-            'path, path, list'
+            'target_ftl_path, reference_ftl_path, list_of_transforms'
         ).format(self.ctx_var)
-        if not self.check_arguments(
-            node,
-            ((ast.Str, ast.Name), (ast.Str, ast.Name), (ast.List, ast.Call))
-        ):
+        ref_msg = (
+            'Expected second argument to {}.add_transforms: '
+            'reference should be string or variable with string value'
+        ).format(self.ctx_var)
+        # Just check call signature here, check actual types below
+        if not self.check_arguments(node, (ast.AST, ast.AST, ast.AST)):
             self.issues.append({
                 'msg': args_msg,
                 'line': node.lineno,
             })
             return
-        in_target, in_reference = [
-            n.s if isinstance(n, ast.Str) else self.global_assigns.get(n.id)
-            for n in node.args[:2]
-        ]
-        if (
-            isinstance(in_target, six.string_types) and
-            isinstance(in_reference, six.string_types) and
-            in_target == in_reference
-        ):
-            self.targets.add(in_target)
-        else:
+        in_reference = node.args[1]
+        if isinstance(in_reference, ast.Name):
+            in_reference = self.global_assigns.get(in_reference.id)
+        if isinstance(in_reference, ast.Str):
+            in_reference = in_reference.s
+        if not isinstance(in_reference, six.string_types):
             self.issues.append({
-                'msg': args_msg,
-                'line': node.lineno,
+                'msg': ref_msg,
+                'line': node.args[1].lineno,
             })
-        self.generic_visit(node)
+            return
+        self.references.add(in_reference)
+        # Checked node.args[1].
+        # There's not a lot we can say about our target path,
+        # ignoring that.
+        # For our transforms, we want more checks.
+        self.generic_visit(node.args[2])
 
     def call_transform(self, node, dotted):
         module, called = dotted.rsplit('.', 1)
@@ -259,13 +236,11 @@ class MigrateAnalyzer(ast.NodeVisitor):
             path = path.s
         if isinstance(path, ast.Name):
             path = self.global_assigns.get(path.id)
-        if not isinstance(path, six.string_types):
+        if not isinstance(path, PATH_TYPES):
             self.issues.append({
                 'msg': bad_args,
                 'line': node.lineno
             })
-            return
-        self.sources.add(path)
 
     def call_helpers_transforms_from(self, node):
         args_msg = (
@@ -288,7 +263,9 @@ class MigrateAnalyzer(ast.NodeVisitor):
                 v = v.s
             if isinstance(v, ast.Name):
                 v = self.global_assigns.get(v.id)
-            if not isinstance(v, six.string_types):
+            if isinstance(v, ast.Call):
+                v = 'determined at runtime'
+            if not isinstance(v, PATH_TYPES):
                 msg = 'Bad keyword arg {} to transforms_from'.format(
                     keyword.arg
                 )
@@ -315,7 +292,6 @@ class MigrateAnalyzer(ast.NodeVisitor):
             'msg': issue,
             'line': node.lineno,
         } for issue in set(ti.issues))
-        self.sources.update(ti.sources)
 
     def check_arguments(
         self, node, argspec, check_kwargs=True, allow_more=False
@@ -338,7 +314,6 @@ class MigrateAnalyzer(ast.NodeVisitor):
 class TransformsInspector(FTL.Visitor):
     def __init__(self):
         super(TransformsInspector, self).__init__()
-        self.sources = set()
         self.issues = []
 
     def generic_visit(self, node):
@@ -350,8 +325,6 @@ class TransformsInspector(FTL.Visitor):
                 self.issues.append(
                     'Source "{}" needs to be a normalized path'.format(src)
                 )
-            else:
-                self.sources.add(src)
         super(TransformsInspector, self).generic_visit(node)
 
 

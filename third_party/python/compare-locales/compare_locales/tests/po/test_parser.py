@@ -128,7 +128,7 @@ msgstr ""
                 (Whitespace, '\n'),
                 (('reference 1', None), 'translated string'),
                 (Whitespace, '\n'),
-                (('reference 2', None), ''),
+                (('reference 2', None), 'reference 2'),
                 (Whitespace, '\n'),
             )
         )

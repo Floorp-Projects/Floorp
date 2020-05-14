@@ -65,4 +65,6 @@ def get_error_message(code, args):
         return 'Unbalanced closing brace in TextElement.'
     if code == 'E0028':
         return 'Expected an inline expression'
+    if code == 'E0029':
+        return 'Expected simple expression as selector'
     return code

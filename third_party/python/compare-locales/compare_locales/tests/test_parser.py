@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+import pkg_resources
 import shutil
 import tempfile
 import textwrap
@@ -87,3 +88,31 @@ class TestUniversalNewlines(unittest.TestCase):
         self.assertEqual(
             self.parser.ctx.contents,
             'one\ntwo\nthree\n')
+
+
+class TestPlugins(unittest.TestCase):
+    def setUp(self):
+        self.old_working_set_state = pkg_resources.working_set.__getstate__()
+        distribution = pkg_resources.Distribution(__file__)
+        entry_point = pkg_resources.EntryPoint.parse(
+            'test_parser = compare_locales.tests.test_parser:DummyParser',
+            dist=distribution
+        )
+        distribution._ep_map = {
+            'compare_locales.parsers': {
+                'test_parser': entry_point
+            }
+        }
+        pkg_resources.working_set.add(distribution)
+
+    def tearDown(self):
+        pkg_resources.working_set.__setstate__(self.old_working_set_state)
+
+    def test_dummy_parser(self):
+        p = parser.getParser('some/weird/file.ext')
+        self.assertIsInstance(p, DummyParser)
+
+
+class DummyParser(parser.Parser):
+    def use(self, path):
+        return path.endswith('weird/file.ext')
