@@ -188,7 +188,7 @@ void AppleVTDecoder::ProcessDecode(MediaRawData* aSample) {
     MonitorAutoLock mon(mMonitor);
     // Smile and nod
     NS_WARNING("Decoder synchronously dropped frame");
-    mPromise.ResolveIfExists(DecodedData(), __func__);
+    MaybeResolveBufferedFrames();
     return;
   }
 
@@ -303,6 +303,20 @@ static void PlatformCallback(void* decompressionOutputRefCon,
   decoder->OutputFrame(image, *frameRef);
 }
 
+void AppleVTDecoder::MaybeResolveBufferedFrames() {
+  mMonitor.AssertCurrentThreadOwns();
+
+  if (mPromise.IsEmpty()) {
+    return;
+  }
+
+  DecodedData results;
+  while (mReorderQueue.Length() > mMaxRefFrames) {
+    results.AppendElement(mReorderQueue.Pop());
+  }
+  mPromise.Resolve(std::move(results), __func__);
+}
+
 // Copy and return a decoded frame.
 void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
                                  AppleVTDecoder::AppleFrameRef aFrameRef) {
@@ -321,7 +335,7 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     // Image was dropped by decoder or none return yet.
     // We need more input to continue.
     MonitorAutoLock mon(mMonitor);
-    mPromise.Resolve(DecodedData(), __func__);
+    MaybeResolveBufferedFrames();
     return;
   }
 
@@ -433,11 +447,7 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
   // in composition order.
   MonitorAutoLock mon(mMonitor);
   mReorderQueue.Push(data);
-  DecodedData results;
-  while (mReorderQueue.Length() > mMaxRefFrames) {
-    results.AppendElement(mReorderQueue.Pop());
-  }
-  mPromise.Resolve(std::move(results), __func__);
+  MaybeResolveBufferedFrames();
 
   LOG("%llu decoded frames queued",
       static_cast<unsigned long long>(mReorderQueue.Length()));
