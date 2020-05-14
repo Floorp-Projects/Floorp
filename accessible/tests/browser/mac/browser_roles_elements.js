@@ -128,7 +128,7 @@ addAccessibleTask(
     testRoleAndSubRole(accDoc, "ariaMath", null, "AXDocumentMath");
     testRoleAndSubRole(accDoc, "note", null, "AXDocumentNote");
     testRoleAndSubRole(accDoc, "ariaRegion", null, "AXLandmarkRegion");
-    testRoleAndSubRole(accDoc, "ariaStatus", null, "AXApplicationStatus");
+    testRoleAndSubRole(accDoc, "ariaStatus", "AXGroup", "AXApplicationStatus");
     testRoleAndSubRole(accDoc, "switch", "AXCheckBox", "AXSwitch");
     testRoleAndSubRole(accDoc, "timer", null, "AXApplicationTimer");
     testRoleAndSubRole(accDoc, "tooltip", null, "AXUserInterfaceTooltip");

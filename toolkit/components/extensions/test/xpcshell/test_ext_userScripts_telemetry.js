@@ -39,6 +39,11 @@ add_task(async function test_userScripts_telemetry() {
     browser.test.sendMessage("userScript-registered");
   }
 
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
   let testExtensionDef = {
     manifest: {
       permissions: ["http://*/*/file_sample.html"],

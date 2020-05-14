@@ -277,8 +277,8 @@ BEGIN_TEST(testArrayBuffer_serializeExternal) {
   JS::ExceptionStack exnStack(cx);
   CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
-  js::ErrorReport report(cx);
-  CHECK(report.init(cx, exnStack, js::ErrorReport::NoSideEffects));
+  JS::ErrorReportBuilder report(cx);
+  CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects));
 
   CHECK_EQUAL(report.report()->errorNumber,
               static_cast<unsigned int>(JSMSG_SC_NOT_TRANSFERABLE));

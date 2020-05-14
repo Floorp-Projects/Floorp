@@ -3340,7 +3340,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
         // then we want disable async animations for the rest of the preserve-3d
         // (especially ancestors).
         if ((extend3DContext || combines3DTransformWithAncestors) &&
-            decision.mDecision == nsDisplayTransform::PrerenderDecision::No &&
             decision.mHasAnimations) {
           aBuilder->SavePreserves3DAllowAsyncAnimation(false);
         }

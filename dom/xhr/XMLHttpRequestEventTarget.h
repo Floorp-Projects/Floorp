@@ -17,7 +17,8 @@ class XMLHttpRequestEventTarget : public DOMEventTargetHelper {
   explicit XMLHttpRequestEventTarget(DOMEventTargetHelper* aOwner)
       : DOMEventTargetHelper(aOwner) {}
 
-  XMLHttpRequestEventTarget() = default;
+  explicit XMLHttpRequestEventTarget(nsIGlobalObject* aGlobalObject)
+      : DOMEventTargetHelper(aGlobalObject) {}
 
   virtual ~XMLHttpRequestEventTarget() = default;
 
