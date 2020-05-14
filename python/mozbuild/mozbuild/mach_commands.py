@@ -231,8 +231,9 @@ class Clobber(MachCommandBase):
 
         if 'python' in what:
             if conditions.is_hg(self):
-                cmd = ['hg', 'purge', '--all', '-I', 'glob:**.py[cdo]',
-                       '-I', 'path:python/', '-I', 'path:third_party/python/']
+                cmd = ['hg', '--config', 'extensions.purge=', 'purge', '--all',
+                       '-I', 'glob:**.py[cdo]', '-I', 'path:python/', '-I',
+                       'path:third_party/python/']
             elif conditions.is_git(self):
                 cmd = ['git', 'clean', '-f', '-x', '*.py[cdo]', 'python/',
                        'third_party/python/']
