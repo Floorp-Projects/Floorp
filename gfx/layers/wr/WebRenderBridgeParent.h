@@ -277,8 +277,7 @@ class WebRenderBridgeParent final
    */
   void ScheduleForcedGenerateFrame();
 
-  void NotifyDidSceneBuild(const nsTArray<wr::RenderRoot>& aRenderRoots,
-                           RefPtr<const wr::WebRenderPipelineInfo> aInfo);
+  void NotifyDidSceneBuild(RefPtr<const wr::WebRenderPipelineInfo> aInfo);
 
   wr::Epoch UpdateWebRender(
       CompositorVsyncScheduler* aScheduler, RefPtr<wr::WebRenderAPI>&& aApi,

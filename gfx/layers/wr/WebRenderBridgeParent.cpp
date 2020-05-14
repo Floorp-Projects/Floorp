@@ -2410,7 +2410,6 @@ void WebRenderBridgeParent::NotifySceneBuiltForEpoch(
 }
 
 void WebRenderBridgeParent::NotifyDidSceneBuild(
-    const nsTArray<wr::RenderRoot>& aRenderRoots,
     RefPtr<const wr::WebRenderPipelineInfo> aInfo) {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
   if (!mCompositorScheduler) {
