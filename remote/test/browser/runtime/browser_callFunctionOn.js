@@ -20,7 +20,7 @@ add_task(async function FunctionDeclarationMissing({ client }) {
 add_task(async function functionDeclarationInvalidTypes({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   for (const functionDeclaration of [null, true, 1, [], {}]) {
     let errorThrown = "";
@@ -37,7 +37,7 @@ add_task(async function functionDeclarationGetCurrentLocation({ client }) {
   const { Runtime } = client;
 
   await loadURL(TEST_DOC);
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration: "() => location.href",
@@ -49,7 +49,7 @@ add_task(async function functionDeclarationGetCurrentLocation({ client }) {
 add_task(async function argumentsInvalidTypes({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   for (const args of [null, true, 1, "foo", {}]) {
     let errorThrown = "";
@@ -69,7 +69,7 @@ add_task(async function argumentsInvalidTypes({ client }) {
 add_task(async function argumentsPrimitiveTypes({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   for (const args of [null, true, 1, "foo", {}]) {
     let errorThrown = "";
@@ -89,7 +89,7 @@ add_task(async function argumentsPrimitiveTypes({ client }) {
 add_task(async function awaitPromiseInvalidTypes({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   for (const awaitPromise of [null, 1, "foo", [], {}]) {
     let errorThrown = "";
@@ -109,7 +109,7 @@ add_task(async function awaitPromiseInvalidTypes({ client }) {
 add_task(async function awaitPromiseResolve({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration: "() => Promise.resolve(42)",
@@ -125,7 +125,7 @@ add_task(async function awaitPromiseResolve({ client }) {
 add_task(async function awaitPromiseDelayedResolve({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration: "() => new Promise(r => setTimeout(() => r(42), 0))",
@@ -140,7 +140,7 @@ add_task(async function awaitPromiseDelayedResolve({ client }) {
 add_task(async function awaitPromiseReject({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { exceptionDetails } = await Runtime.callFunctionOn({
     functionDeclaration: "() => Promise.reject(42)",
@@ -158,7 +158,7 @@ add_task(async function awaitPromiseReject({ client }) {
 add_task(async function awaitPromiseDelayedReject({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { exceptionDetails } = await Runtime.callFunctionOn({
     functionDeclaration:
@@ -176,7 +176,7 @@ add_task(async function awaitPromiseDelayedReject({ client }) {
 add_task(async function awaitPromiseResolveWithoutWait({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration: "() => Promise.resolve(42)",
@@ -193,7 +193,7 @@ add_task(async function awaitPromiseResolveWithoutWait({ client }) {
 add_task(async function awaitPromiseDelayedResolveWithoutWait({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration: "() => new Promise(r => setTimeout(() => r(42), 0))",
@@ -210,7 +210,7 @@ add_task(async function awaitPromiseDelayedResolveWithoutWait({ client }) {
 add_task(async function awaitPromiseRejectWithoutWait({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration: "() => Promise.reject(42)",
@@ -227,7 +227,7 @@ add_task(async function awaitPromiseRejectWithoutWait({ client }) {
 add_task(async function awaitPromiseDelayedRejectWithoutWait({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration:
@@ -309,7 +309,7 @@ add_task(async function objectIdInvalidTypes({ client }) {
 add_task(async function objectId({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   // First create an object
   const { result } = await Runtime.callFunctionOn({
@@ -336,7 +336,7 @@ add_task(async function objectId({ client }) {
 add_task(async function objectIdArgumentReference({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   // First create a remote JS object
   const { result } = await Runtime.callFunctionOn({
@@ -402,7 +402,7 @@ add_task(async function objectIdArgumentReference({ client }) {
 add_task(async function exceptionDetailsJavascriptError({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { exceptionDetails } = await Runtime.callFunctionOn({
     functionDeclaration: "doesNotExists()",
@@ -421,7 +421,7 @@ add_task(async function exceptionDetailsJavascriptError({ client }) {
 add_task(async function exceptionDetailsThrowError({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { exceptionDetails } = await Runtime.callFunctionOn({
     functionDeclaration: "() => { throw new Error('foo') }",
@@ -440,7 +440,7 @@ add_task(async function exceptionDetailsThrowError({ client }) {
 add_task(async function exceptionDetailsThrowValue({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { exceptionDetails } = await Runtime.callFunctionOn({
     functionDeclaration: "() => { throw 'foo' }",
