@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGNOMEShellSearchProvider.h"
-#include "nsGNOMEShellDBusHelper.h"
 
 #include "nsIWidget.h"
 #include "nsToolkitCompsCID.h"
@@ -14,9 +13,112 @@
 #include "RemoteUtils.h"
 #include "base/message_loop.h"  // for MessageLoop
 #include "base/task.h"          // for NewRunnableMethod, etc
+#include "nsIServiceManager.h"
+#include "nsNetCID.h"
+#include "nsIIOService.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
+
+#include "imgIContainer.h"
+#include "imgITools.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
+
+using namespace mozilla;
+using namespace mozilla::gfx;
+
+class AsyncFaviconDataReady final : public nsIFaviconDataCallback {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFAVICONDATACALLBACK
+
+  AsyncFaviconDataReady(RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
+                        int aIconIndex, int aTimeStamp)
+      : mSearchResult(aSearchResult),
+        mIconIndex(aIconIndex),
+        mTimeStamp(aTimeStamp){};
+
+ private:
+  ~AsyncFaviconDataReady() {}
+
+  RefPtr<nsGNOMEShellHistorySearchResult> mSearchResult;
+  int mIconIndex;
+  int mTimeStamp;
+};
+
+NS_IMPL_ISUPPORTS(AsyncFaviconDataReady, nsIFaviconDataCallback)
+
+// Inspired by SurfaceToPackedBGRA
+static UniquePtr<uint8_t[]> SurfaceToPackedRGBA(DataSourceSurface* aSurface) {
+  IntSize size = aSurface->GetSize();
+  CheckedInt<size_t> bufferSize =
+      CheckedInt<size_t>(size.width * 4) * CheckedInt<size_t>(size.height);
+  if (!bufferSize.isValid()) {
+    return nullptr;
+  }
+  UniquePtr<uint8_t[]> imageBuffer(new (std::nothrow)
+                                       uint8_t[bufferSize.value()]);
+  if (!imageBuffer) {
+    return nullptr;
+  }
+
+  DataSourceSurface::MappedSurface map;
+  if (!aSurface->Map(DataSourceSurface::MapType::READ, &map)) {
+    return nullptr;
+  }
+
+  // Convert BGRA to RGBA
+  uint32_t* aSrc = (uint32_t*)map.mData;
+  uint32_t* aDst = (uint32_t*)imageBuffer.get();
+  for (int i = 0; i < size.width * size.height; i++, aDst++, aSrc++) {
+    *aDst = *aSrc & 0xff00ff00;
+    *aDst |= (*aSrc & 0xff) << 16;
+    *aDst |= (*aSrc & 0xff0000) >> 16;
+  }
+
+  aSurface->Unmap();
+
+  return imageBuffer;
+}
+
+NS_IMETHODIMP
+AsyncFaviconDataReady::OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
+                                  const uint8_t* aData,
+                                  const nsACString& aMimeType,
+                                  uint16_t aWidth) {
+  // This is a callback from some previous search so we don't want it
+  if (mTimeStamp != mSearchResult->GetTimeStamp() || !aData || !aDataLen) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Decode the image from the format it was returned to us in (probably PNG)
+  nsCOMPtr<imgIContainer> container;
+  nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
+  nsresult rv = imgtool->DecodeImageFromBuffer(
+      reinterpret_cast<const char*>(aData), aDataLen, aMimeType,
+      getter_AddRefs(container));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<SourceSurface> surface = container->GetFrame(
+      imgIContainer::FRAME_FIRST,
+      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
+
+  if (!surface || surface->GetFormat() != SurfaceFormat::B8G8R8A8) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Allocate a new buffer that we own.
+  RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
+  UniquePtr<uint8_t[]> data = SurfaceToPackedRGBA(dataSurface);
+  if (!data) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mSearchResult->SetHistoryIcon(mTimeStamp, std::move(data),
+                                surface->GetSize().width,
+                                surface->GetSize().height, mIconIndex);
+  return NS_OK;
+}
 
 DBusHandlerResult nsGNOMEShellSearchProvider::HandleSearchResultSet(
     DBusMessage* aMsg, bool aInitialSearch) {
@@ -179,7 +281,7 @@ bool nsGNOMEShellSearchProvider::SetSearchResult(
 static void DispatchSearchResults(
     RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
     nsCOMPtr<nsINavHistoryContainerResultNode> aHistResultContainer) {
-  aSearchResult->SetSearchResultContainer(aHistResultContainer);
+  aSearchResult->ReceiveSearchResultContainer(aHistResultContainer);
 }
 
 nsresult nsGNOMEShellHistoryService::QueryHistory(
@@ -242,7 +344,7 @@ static void DBusGetIDKeyForURI(int aIndex, nsAutoCString& aUri,
   aIDKey = nsPrintfCString("%.2d:%s", aIndex, aUri.get());
 }
 
-void nsGNOMEShellHistorySearchResult::SendDBusSearchResultReply() {
+void nsGNOMEShellHistorySearchResult::HandleSearchResultReply() {
   MOZ_ASSERT(mReply);
 
   uint32_t childCount = 0;
@@ -254,6 +356,11 @@ void nsGNOMEShellHistorySearchResult::SendDBusSearchResultReply() {
   dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "s", &iterArray);
 
   if (NS_SUCCEEDED(rv) && childCount > 0) {
+    // Obtain the favicon service and get the favicon for the specified page
+    nsCOMPtr<nsIFaviconService> favIconSvc(
+        do_GetService("@mozilla.org/browser/favicon-service;1"));
+    nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
+
     if (childCount > MAX_SEARCH_RESULTS_NUM) {
       childCount = MAX_SEARCH_RESULTS_NUM;
     }
@@ -270,6 +377,12 @@ void nsGNOMEShellHistorySearchResult::SendDBusSearchResultReply() {
 
       nsAutoCString uri;
       child->GetUri(uri);
+
+      nsCOMPtr<nsIURI> iconIri;
+      ios->NewURI(uri, nullptr, nullptr, getter_AddRefs(iconIri));
+      nsCOMPtr<nsIFaviconDataCallback> callback =
+          new AsyncFaviconDataReady(this, i, mTimeStamp);
+      favIconSvc->GetFaviconDataForPage(iconIri, callback, 0);
 
       nsAutoCString idKey;
       DBusGetIDKeyForURI(i, uri, idKey);
@@ -292,12 +405,34 @@ void nsGNOMEShellHistorySearchResult::SendDBusSearchResultReply() {
   mReply = nullptr;
 }
 
-void nsGNOMEShellHistorySearchResult::SetSearchResultContainer(
+void nsGNOMEShellHistorySearchResult::ReceiveSearchResultContainer(
     nsCOMPtr<nsINavHistoryContainerResultNode> aHistResultContainer) {
+  // Propagate search results to nsGNOMEShellSearchProvider.
+  // SetSearchResult() checks this is up-to-date search (our time stamp matches
+  // latest requested search timestamp).
   if (mSearchProvider->SetSearchResult(this)) {
     mHistResultContainer = aHistResultContainer;
-    SendDBusSearchResultReply();
+    HandleSearchResultReply();
   }
+}
+
+void nsGNOMEShellHistorySearchResult::SetHistoryIcon(int aTimeStamp,
+                                                     UniquePtr<uint8_t[]> aData,
+                                                     int aWidth, int aHeight,
+                                                     int aIconIndex) {
+  MOZ_ASSERT(mTimeStamp == aTimeStamp);
+  MOZ_RELEASE_ASSERT(aIconIndex < MAX_SEARCH_RESULTS_NUM);
+  mHistoryIcons[aIconIndex].Set(mTimeStamp, std::move(aData), aWidth, aHeight);
+}
+
+GnomeHistoryIcon* nsGNOMEShellHistorySearchResult::GetHistoryIcon(
+    int aIconIndex) {
+  MOZ_RELEASE_ASSERT(aIconIndex < MAX_SEARCH_RESULTS_NUM);
+  if (mHistoryIcons[aIconIndex].GetTimeStamp() == mTimeStamp &&
+      mHistoryIcons[aIconIndex].IsLoaded()) {
+    return mHistoryIcons + aIconIndex;
+  }
+  return nullptr;
 }
 
 nsGNOMEShellHistoryService* GetGNOMEShellHistoryService() {

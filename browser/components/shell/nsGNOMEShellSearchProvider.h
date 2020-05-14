@@ -12,8 +12,36 @@
 #include "nsINavHistoryService.h"
 #include "nsUnixRemoteServer.h"
 #include "nsCOMPtr.h"
+#include "mozilla/UniquePtr.h"
+#include "nsGNOMEShellDBusHelper.h"
 
 class nsGNOMEShellSearchProvider;
+
+class GnomeHistoryIcon {
+ public:
+  GnomeHistoryIcon() : mTimeStamp(-1), mWidth(0), mHeight(0){};
+
+  // From which search is this icon
+  void Set(int aTimeStamp, mozilla::UniquePtr<uint8_t[]> aData, int aWidth,
+           int aHeight) {
+    mTimeStamp = aTimeStamp;
+    mWidth = aWidth;
+    mHeight = aHeight;
+    mData = std::move(aData);
+  }
+
+  bool IsLoaded() { return mData && mWidth > 0 && mHeight > 0; }
+  int GetTimeStamp() { return mTimeStamp; }
+  uint8_t* GetData() { return mData.get(); }
+  int GetWidth() { return mWidth; }
+  int GetHeight() { return mHeight; }
+
+ private:
+  int mTimeStamp;
+  mozilla::UniquePtr<uint8_t[]> mData;
+  int mWidth;
+  int mHeight;
+};
 
 // nsGNOMEShellHistorySearchResult is a container with contains search results
 // which are files asynchronously by nsGNOMEShellHistoryService.
@@ -34,11 +62,16 @@ class nsGNOMEShellHistorySearchResult : public nsUnixRemoteServer {
     mSearchTerm = nsAutoCString(aSearchTerm);
   }
   DBusConnection* GetDBusConnection() { return mConnection; }
-  int GetTimeStamp() { return mTimeStamp; }
   void SetTimeStamp(int aTimeStamp) { mTimeStamp = aTimeStamp; }
+  int GetTimeStamp() { return mTimeStamp; }
   nsAutoCString& GetSearchTerm() { return mSearchTerm; }
-  void SetSearchResultContainer(
+
+  // Receive (asynchronously) history search results from history service.
+  // This is called asynchronously by nsGNOMEShellHistoryService
+  // when we have search results available.
+  void ReceiveSearchResultContainer(
       nsCOMPtr<nsINavHistoryContainerResultNode> aHistResultContainer);
+
   nsCOMPtr<nsINavHistoryContainerResultNode> GetSearchResultContainer() {
     return mHistResultContainer;
   }
@@ -46,8 +79,12 @@ class nsGNOMEShellHistorySearchResult : public nsUnixRemoteServer {
     nsUnixRemoteServer::HandleCommandLine(aBuffer, aTimestamp);
   }
 
+  void SetHistoryIcon(int aTimeStamp, mozilla::UniquePtr<uint8_t[]> aData,
+                      int aWidth, int aHeight, int aIconIndex);
+  GnomeHistoryIcon* GetHistoryIcon(int aIconIndex);
+
  private:
-  void SendDBusSearchResultReply();
+  void HandleSearchResultReply();
 
   ~nsGNOMEShellHistorySearchResult() = default;
 
@@ -58,6 +95,7 @@ class nsGNOMEShellHistorySearchResult : public nsUnixRemoteServer {
   DBusMessage* mReply;
   DBusConnection* mConnection;
   int mTimeStamp;
+  GnomeHistoryIcon mHistoryIcons[MAX_SEARCH_RESULTS_NUM];
 };
 
 class nsGNOMEShellHistoryService {
