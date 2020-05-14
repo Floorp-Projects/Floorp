@@ -240,6 +240,7 @@ interface nsITableEditor : nsISupports
    *                            column.  If colspan is set to 2 or more, the
    *                            start column index is used.
    */
+  [can_run_script]
   void getCellIndexes(in Element aCellElement,
                       out long aRowIndex, out long aColumnIndex);
 
@@ -415,6 +416,7 @@ interface nsITableEditor : nsISupports
     *     TableSelectionMode::Column   All cells are in 1 or more columns
     *                              and in each column, all cells are selected
     */
+  [can_run_script]
   uint32_t getSelectedCellsType(in Element aElement);
 
   /**
@@ -452,6 +454,7 @@ interface nsITableEditor : nsISupports
    *                     range of Selection.  Even if this is not found,
    *                     this returns null, not throwing exception.
    */
+  [can_run_script]
   Element getFirstSelectedCellInTable(out long aRowIndex, out long aColIndex);
 
   /**
