@@ -11,6 +11,7 @@ from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
 
 
 _TRY_PLATFORMS = {"g5": "perftest-android-hw-g5", "p2": "perftest-android-hw-p2"}
+ON_TRY = "MOZ_AUTOMATION" in os.environ
 
 
 def get_perftest_parser():
@@ -71,65 +72,89 @@ class Perftest(MachCommandBase):
 
 @CommandProvider
 class PerftestTests(MachCommandBase):
-    def _run_script(self, script, *args):
+    def _run_python_script(self, module, *args, **kw):
         """Used to run the scripts in isolation.
 
         Coverage needs to run in isolation so it's not
         reimporting modules and produce wrong coverage info.
         """
-        script = str(script.resolve())
-        args = [script] + list(args)
+        display = kw.pop("display", False)
+        args = [self.virtualenv_manager.python_path, "-m", module] + list(args)
+        sys.stdout.write("=> %s " % kw.pop("label", module))
+        sys.stdout.flush()
         try:
-            return subprocess.check_call(args) == 0
-        except subprocess.CalledProcessError:
+            output = subprocess.check_output(args, stderr=subprocess.STDOUT)
+            if display:
+                print()
+                for line in output.split(b"\n"):
+                    print(line.decode("utf8"))
+            sys.stdout.write("[OK]\n")
+            sys.stdout.flush()
+            return True
+        except subprocess.CalledProcessError as e:
+            for line in e.output.split(b"\n"):
+                print(line.decode("utf8"))
+            sys.stdout.write("[FAILED]\n")
+            sys.stdout.flush()
             return False
 
     @Command(
-        "perftest-test",
-        category="testing",
-        conditions=[partial(conditions.is_buildapp_in, apps=["firefox", "android"])],
-        description="Run perftest tests",
+        "perftest-test", category="testing", description="Run perftest tests",
     )
     def run_tests(self, **kwargs):
         MachCommandBase._activate_virtualenv(self)
 
-        from mozperftest.utils import install_package
-
-        for name in ("pytest", "coverage", "black", "flake8"):
-            install_package(self.virtualenv_manager, name)
-
         from pathlib import Path
+        from mozperftest.runner import _setup_path
+        from mozperftest.utils import install_package, temporary_env
 
-        HERE = Path(__file__).parent.resolve()
-        tests = HERE / "tests"
-        venv_bin = Path(self.virtualenv_manager.virtualenv_root) / "bin"
-        pytest = venv_bin / "pytest"
-        coverage = venv_bin / "coverage"
-        black = venv_bin / "black"
-        flake8 = venv_bin / "flake8"
+        # include in sys.path all deps
+        _setup_path()
 
-        # formatting the code with black
-        assert self._run_script(black, str(HERE))
+        try:
+            import black  # noqa
+        except ImportError:
+            # install the tests scripts in the virtualenv
+            # this step will be removed once Bug 1635573 is done
+            # so we don't have to hit pypi or our internal mirror at all
+            pydeps = Path(self.topsrcdir, "third_party", "python")
+
+            for name in (
+                # installing pyrsistent and attrs so we don't pick newer ones
+                str(pydeps / "pyrsistent"),
+                str(pydeps / "attrs"),
+                "coverage",
+                "black",
+                "flake8",
+            ):
+                install_package(self.virtualenv_manager, name)
+
+        here = Path(__file__).parent.resolve()
+        if not ON_TRY:
+            # formatting the code with black
+            assert self._run_python_script("black", str(here))
 
         # checking flake8 correctness
-        assert self._run_script(flake8, str(HERE))
+        assert self._run_python_script("flake8", str(here))
 
         # running pytest with coverage
-        old_value = os.environ.get("COVERAGE_RCFILE")
-        os.environ["COVERAGE_RCFILE"] = str(HERE / ".coveragerc")
-
         # coverage is done in three steps:
         # 1/ coverage erase => erase any previous coverage data
-        # 2/ coverae run pytest ... => run the tests and collect info
+        # 2/ coverage run pytest ... => run the tests and collect info
         # 3/ coverage report => generate the report
-        try:
-            assert self._run_script(coverage, "erase")
-            args = ["run", str(pytest.resolve()), "-xs", str(tests.resolve())]
-            assert self._run_script(coverage, *args)
-            if not self._run_script(coverage, "report"):
+        tests = here / "tests"
+        import pytest
+
+        with temporary_env(COVERAGE_RCFILE=str(here / ".coveragerc")):
+            assert self._run_python_script(
+                "coverage", "erase", label="remove old coverage data"
+            )
+            args = [
+                "run",
+                pytest.__file__,
+                "-xs",
+                str(tests.resolve()),
+            ]
+            assert self._run_python_script("coverage", *args, label="running tests")
+            if not self._run_python_script("coverage", "report", display=True):
                 raise ValueError("Coverage is too low!")
-        finally:
-            if old_value is not None:
-                os.environ["COVERAGE_RCFILE"] = old_value
-            else:
-                del os.environ["COVERAGE_RCFILE"]

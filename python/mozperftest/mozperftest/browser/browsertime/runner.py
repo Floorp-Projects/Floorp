@@ -137,10 +137,11 @@ class BrowsertimeRunner(NodeRunner):
                 package_json_path=package_json_path,
             )
 
-            if not re.search("/tarball/[a-f0-9]{40}$", install_url):
+            expr = r"/tarball/[a-f0-9]{40}$"
+            if not re.search(expr, install_url):
                 raise ValueError(
-                    "New upstream URL does not end with /tarball/[a-f0-9]{40}: '{}'".format(
-                        install_url
+                    "New upstream URL does not end with {}: '{}'".format(
+                        expr[:-1], install_url
                     )
                 )
 

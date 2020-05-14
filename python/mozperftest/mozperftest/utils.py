@@ -9,19 +9,45 @@ import random
 from io import StringIO
 from redo import retry
 import requests
+from collections import defaultdict
 
 
 RETRY_SLEEP = 10
 
 
 @contextlib.contextmanager
-def silence():
+def silence(layer=None):
+    if layer is None:
+        to_patch = (MachLogger,)
+    else:
+        to_patch = (MachLogger, layer)
+
+    meths = ("info", "debug", "warning", "error", "log")
+    patched = defaultdict(dict)
+
+    def _vacuum(*args, **kw):
+        pass
+
+    for obj in to_patch:
+        for meth in meths:
+            if not hasattr(obj, meth):
+                continue
+            patched[obj][meth] = getattr(obj, meth)
+            setattr(obj, meth, _vacuum)
+
     oldout, olderr = sys.stdout, sys.stderr
     try:
         sys.stdout, sys.stderr = StringIO(), StringIO()
+        sys.stdout.fileno = sys.stderr.fileno = lambda: -1
         yield
     finally:
         sys.stdout, sys.stderr = oldout, olderr
+        for obj, meths in patched.items():
+            for name, old_func in meths.items():
+                try:
+                    setattr(obj, name, old_func)
+                except Exception:
+                    pass
 
 
 def host_platform():
@@ -77,7 +103,8 @@ def install_package(virtualenv_manager, package):
         if site_packages.startswith(venv_site_lib):
             # already installed in this venv, we can skip
             return
-    virtualenv_manager._run_pip(["install", package])
+    with silence():
+        virtualenv_manager._run_pip(["install", package])
 
 
 def build_test_list(tests, randomized=False):
@@ -129,3 +156,19 @@ def download_file(url, target, retry_sleep=RETRY_SLEEP, attempts=3):
         sleeptime=retry_sleep,
         jitter=0,
     )
+
+
+@contextlib.contextmanager
+def temporary_env(**env):
+    old = {}
+    for key, value in env.items():
+        old[key] = os.environ.get(key)
+        os.environ[key] = value
+    try:
+        yield
+    finally:
+        for key, value in old.items():
+            if value is None:
+                del os.environ[key]
+            else:
+                os.environ[key] = value
