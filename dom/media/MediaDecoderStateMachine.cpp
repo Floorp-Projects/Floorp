@@ -666,23 +666,25 @@ class MediaDecoderStateMachine::DecodingState
   // decoded. These two fields store how many video frames and audio
   // samples we must consume before are considered to be finished prerolling.
   TimeUnit AudioPrerollThreshold() const {
-    return mMaster->mAmpleAudioThreshold / 2;
+    return (mMaster->mAmpleAudioThreshold / 2)
+        .MultDouble(mMaster->mPlaybackRate);
   }
 
   uint32_t VideoPrerollFrames() const {
-    return mMaster->GetAmpleVideoFrames() / 2;
+    return std::min<uint32_t>(
+        (mMaster->GetAmpleVideoFrames() / 2) * mMaster->mPlaybackRate + 1,
+        sVideoQueueDefaultSize);
   }
 
   bool DonePrerollingAudio() {
     return !mMaster->IsAudioDecoding() ||
-           mMaster->GetDecodedAudioDuration() >=
-               AudioPrerollThreshold().MultDouble(mMaster->mPlaybackRate);
+           mMaster->GetDecodedAudioDuration() >= AudioPrerollThreshold();
   }
 
   bool DonePrerollingVideo() {
     return !mMaster->IsVideoDecoding() ||
            static_cast<uint32_t>(mMaster->VideoQueue().GetSize()) >=
-               VideoPrerollFrames() * mMaster->mPlaybackRate + 1;
+               VideoPrerollFrames();
   }
 
   void MaybeStopPrerolling() {
