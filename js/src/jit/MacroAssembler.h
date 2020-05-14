@@ -2117,11 +2117,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // All lanes true
 
-  inline void allTrueInt8x16(FloatRegister src, Register dest) DEFINED_ON(x64);
+  inline void allTrueInt8x16(FloatRegister src, Register dest)
+      DEFINED_ON(x86_shared);
 
-  inline void allTrueInt16x8(FloatRegister src, Register dest) DEFINED_ON(x64);
+  inline void allTrueInt16x8(FloatRegister src, Register dest)
+      DEFINED_ON(x86_shared);
 
-  inline void allTrueInt32x4(FloatRegister src, Register dest) DEFINED_ON(x64);
+  inline void allTrueInt32x4(FloatRegister src, Register dest)
+      DEFINED_ON(x86_shared);
 
   // Comparisons (integer and floating-point)
 
