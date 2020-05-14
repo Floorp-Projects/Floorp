@@ -91,7 +91,7 @@ class WebRenderTextureHost : public TextureHost {
   void CreateRenderTextureHost(const SurfaceDescriptor& aDesc,
                                TextureHost* aTexture);
 
-  RefPtr<TextureHost> mWrappedTextureHost;
+  const RefPtr<TextureHost> mWrappedTextureHost;
   wr::ExternalImageId mExternalImageId;
 };
 
