@@ -5,7 +5,7 @@ Try server, usually just referred to as try, is the easiest way to test a change
 checking anything into a core repository. The change will undergo the same kinds of builds and tests
 as if it had landed on a regular integration branch, but will not get merged with mozilla-central.
 
-Try is just another mercurial repository (like inbound, autoland or mozilla-central) with a few key
+Try is just another mercurial repository (like autoland or mozilla-central) with a few key
 differences:
 
     1. Pushing new heads is allowed.
