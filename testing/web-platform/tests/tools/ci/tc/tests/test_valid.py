@@ -42,13 +42,11 @@ def test_verify_payload():
     """Verify that the decision task produces tasks with a valid payload"""
     from tools.ci.tc.decision import decide
 
-    r = requests.get("https://community-tc.services.mozilla.com/schemas/queue/v1/create-task-request.json")
-    r.raise_for_status()
-    create_task_schema = r.json()
+    create_task_schema = requests.get(
+        "https://raw.githubusercontent.com/taskcluster/taskcluster/blob/master/services/queue/schemas/v1/create-task-request.yml")
+    create_task_schema = yaml.safe_load(create_task_schema.content)
 
-    r = requests.get("https://raw.githubusercontent.com/taskcluster/taskcluster/master/workers/docker-worker/schemas/v1/payload.json")
-    r.raise_for_status()
-    payload_schema = r.json()
+    payload_schema = requests.get("https://raw.githubusercontent.com/taskcluster/docker-worker/master/schemas/v1/payload.json").json()
 
     jobs = ["lint",
             "manifest_upload",
@@ -134,8 +132,7 @@ def test_verify_payload():
       'tools/wpt/ tests (Python 3.6)',
       'tools/wpt/ tests (Python 3.8)',
       'resources/ tests',
-      'infrastructure/ tests',
-      'infrastructure/ tests (Python 3)'}),
+      'infrastructure/ tests'}),
     # More tests are affected in the actual PR but it shouldn't affect the scheduled tasks
     ("pr_event_tests_affected.json", True, {"layout-instability/clip-negative-bottom-margin.html",
                                             "layout-instability/composited-element-movement.html"},

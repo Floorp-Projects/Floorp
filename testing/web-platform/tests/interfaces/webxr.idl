@@ -174,7 +174,7 @@ interface XRInputSourceArray {
 };
 
 [SecureContext, Exposed=Window]
-interface XRLayer : EventTarget {};
+interface XRLayer {};
 
 typedef (WebGLRenderingContext or
          WebGL2RenderingContext) XRWebGLRenderingContext;

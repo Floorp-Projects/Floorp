@@ -1,6 +1,24 @@
 dictionary IdleOptions {
-  [EnforceRange] unsigned long threshold;
-  AbortSignal signal;
+  unsigned long threshold;
+};
+
+[
+  SecureContext,
+  Constructor(optional IdleOptions options),
+  Exposed=(Window,Worker)
+] interface IdleDetector : EventTarget {
+  readonly attribute IdleState state;
+  attribute EventHandler onchange;
+  Promise<any> start();
+  void stop();
+};
+
+[
+  SecureContext,
+  Exposed=(Window,Worker)
+] interface IdleState {
+  readonly attribute UserIdleState user;
+  readonly attribute ScreenIdleState screen;
 };
 
 enum UserIdleState {
@@ -11,15 +29,4 @@ enum UserIdleState {
 enum ScreenIdleState {
     "locked",
     "unlocked"
-};
-
-[
-  SecureContext,
-  Exposed=(Window,Worker)
-] interface IdleDetector : EventTarget {
-  constructor();
-  readonly attribute UserIdleState? userState;
-  readonly attribute ScreenIdleState? screenState;
-  attribute EventHandler onchange;
-  Promise<any> start(optional IdleOptions options = {});
 };

@@ -1,21 +1,18 @@
 from collections import OrderedDict
 from datetime import datetime, timedelta
-from io import BytesIO
-import json
-import socket
-import uuid
-
-from hpack.struct import HeaderTuple
-from hyperframe.frame import HeadersFrame, DataFrame, ContinuationFrame
-from six import binary_type, text_type, integer_types, itervalues, PY3
 from six.moves.http_cookies import BaseCookie, Morsel
-
+import json
+import uuid
+import socket
 from .constants import response_codes, h2_headers
 from .logger import get_logger
-from .utils import isomorphic_decode, isomorphic_encode
+from io import BytesIO
+
+from six import binary_type, text_type, integer_types, itervalues, PY3
+from hyperframe.frame import HeadersFrame, DataFrame, ContinuationFrame
+from hpack.struct import HeaderTuple
 
 missing = object()
-
 
 class Response(object):
     """Object representing the response to a HTTP request
@@ -82,6 +79,7 @@ class Response(object):
         self.headers = ResponseHeaders()
         self.content = []
 
+
     @property
     def status(self):
         return self._status
@@ -101,8 +99,8 @@ class Response(object):
         """Set a cookie to be sent with a Set-Cookie header in the
         response
 
-        :param name: name of the cookie (a binary string)
-        :param value: value of the cookie (a binary string, or None)
+        :param name: String name of the cookie
+        :param value: String value of the cookie
         :param max_age: datetime.timedelta int representing the time (in seconds)
                         until the cookie expires
         :param path: String path to which the cookie applies
@@ -115,20 +113,14 @@ class Response(object):
                         time or interval from now when the cookie expires
 
         """
-        # TODO(Python 3): Convert other parameters (e.g. path) to bytes, too.
-        if value is None:
-            value = b''
-            max_age = 0
-            expires = timedelta(days=-1)
-
-        if PY3:
-            name = isomorphic_decode(name)
-            value = isomorphic_decode(value)
-
         days = {i+1: name for i, name in enumerate(["jan", "feb", "mar",
                                                     "apr", "may", "jun",
                                                     "jul", "aug", "sep",
                                                     "oct", "nov", "dec"])}
+        if value is None:
+            value = ''
+            max_age = 0
+            expires = timedelta(days=-1)
 
         if isinstance(expires, timedelta):
             expires = datetime.utcnow() + expires
@@ -162,14 +154,11 @@ class Response(object):
 
     def unset_cookie(self, name):
         """Remove a cookie from those that are being sent with the response"""
-        if PY3:
-            name = isomorphic_decode(name)
         cookies = self.headers.get("Set-Cookie")
         parser = BaseCookie()
         for cookie in cookies:
             if PY3:
-                # BaseCookie.load expects a text string.
-                cookie = isomorphic_decode(cookie)
+                cookie = cookie.decode("iso-8859-1")
             parser.load(cookie)
 
         if name in parser.keys():
@@ -308,10 +297,24 @@ class MultipartPart(object):
 
 
 def _maybe_encode(s):
-    """Encode a string or an int into binary data using isomorphic_encode()."""
+    """Encodes a text-type string into binary data using iso-8859-1.
+
+    Returns `str` in Python 2 and `bytes` in Python 3. The function is a no-op
+    if the argument already has a binary type.
+    """
+    if isinstance(s, binary_type):
+        return s
+
+    # Python 3 assumes iso-8859-1 when parsing headers, which will garble text
+    # with non ASCII characters. We try to encode the text back to binary.
+    # https://github.com/python/cpython/blob/273fc220b25933e443c82af6888eb1871d032fb8/Lib/http/client.py#L213
+    if isinstance(s, text_type):
+        return s.encode("iso-8859-1")
+
     if isinstance(s, integer_types):
         return b"%i" % (s,)
-    return isomorphic_encode(s)
+
+    raise TypeError("Unexpected value in ResponseHeaders: %r" % s)
 
 
 class ResponseHeaders(object):

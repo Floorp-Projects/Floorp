@@ -17,9 +17,7 @@ runPropertyTests('text-decoration-thickness', [
   { syntax: 'auto' },
   {
     syntax: '<length>',
-  },
-  {
-    syntax: '<percentage>',
+    specified: assert_is_equal_with_range_handling
   },
 ]);
 

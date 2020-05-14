@@ -18,25 +18,15 @@ function xr_promise_test(name, func, properties) {
     // Perform any required test setup:
     xr_debug(name, 'setup');
 
-    if (!navigator.xr.test) {
-      if (isChromiumBased) {
-        // Chrome setup
-        await loadChromiumResources();
-      } else if (isWebKitBased) {
-        // WebKit setup
-        await setupWebKitWebXRTestAPI();
-      }
+    if (isChromiumBased) {
+      // Chrome setup
+      await loadChromiumResources;
+      xr_debug = navigator.xr.test.Debug;
     }
 
-    // Either the test api needs to be polyfilled and it's not set up above, or
-    // something happened to one of the known polyfills and it failed to be
-    // setup properly. Either way, the fact that xr_promise_test is being used
-    // means that the tests expect navigator.xr.test to be set. By rejecting now
-    // we can hopefully provide a clearer indication of what went wrong.
-    if (!navigator.xr.test) {
-      // We can't use assert_true here because it causes the wpt testharness
-      // to treat this as a test page and not as a test.
-      return Promise.reject("No navigator.xr.test object found, even after attempted load");
+    if (isWebKitBased) {
+      // WebKit setup
+      await setupWebKitWebXRTestAPI;
     }
 
     // Ensure that any devices are disconnected when done. If this were done in
@@ -52,18 +42,6 @@ function xr_promise_test(name, func, properties) {
     xr_debug(name, 'main');
     return func(t);
   }, name, properties);
-}
-
-// A utility function for waiting one animation frame before running the callback
-//
-// This is only needed after calling FakeXRDevice methods outside of an animation frame
-//
-// This is so that we can paper over the potential race allowed by the "next animation frame"
-// concept https://immersive-web.github.io/webxr-test-api/#xrsession-next-animation-frame
-function requestSkipAnimationFrame(session, callback) {
- session.requestAnimationFrame(() => {
-  session.requestAnimationFrame(callback);
- });
 }
 
 // A test function which runs through the common steps of requesting a session.
@@ -185,7 +163,13 @@ function forEachWebxrObject(callback) {
 }
 
 // Code for loading test API in Chromium.
-function loadChromiumResources() {
+let loadChromiumResources = Promise.resolve().then(() => {
+  if (!isChromiumBased) {
+    // Do nothing on non-Chromium-based browsers or when the Mojo bindings are
+    // not present in the global namespace.
+    return;
+  }
+
   let chromiumResources = [
     '/gen/layout_test_data/mojo/public/js/mojo_bindings.js',
     '/gen/mojo/public/mojom/base/time.mojom.js',
@@ -221,17 +205,18 @@ function loadChromiumResources() {
       document.head.appendChild(script);
   });
 
-  chain = chain.then(() => {
-    xr_debug = navigator.xr.test.Debug;
-  });
-
   return chain;
-}
+});
 
-function setupWebKitWebXRTestAPI() {
+let setupWebKitWebXRTestAPI = Promise.resolve().then(() => {
+  if (!isWebKitBased) {
+    // Do nothing on non-WebKit-based browsers.
+    return;
+  }
+
   // WebKit setup. The internals object is used by the WebKit test runner
   // to provide JS access to internal APIs. In this case it's used to
   // ensure that XRTest is only exposed to wpt tests.
   navigator.xr.test = internals.xrTest;
   return Promise.resolve();
-}
+});

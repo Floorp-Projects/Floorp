@@ -6,24 +6,25 @@ WPT_ROOT=$SCRIPT_DIR/../..
 cd $WPT_ROOT
 
 test_infrastructure() {
-    PY3_FLAG="$2"
-    TERM=dumb ./wpt $PY3_FLAG run --log-mach - --yes --manifest ~/meta/MANIFEST.json --metadata infrastructure/metadata/ --install-fonts $1 $PRODUCT infrastructure/
+    local ARGS="";
+    if [ $PRODUCT == "firefox" ]; then
+        ARGS="--binary=~/build/firefox/firefox"
+    else
+        ARGS=$1
+    fi
+    TERM=dumb ./wpt run --log-mach - --yes --manifest ~/meta/MANIFEST.json --metadata infrastructure/metadata/ --install-fonts $ARGS $PRODUCT infrastructure/
 }
 
 main() {
-    if [[ $# -eq 1 && "$1" = "--py3" ]]; then
-        PRODUCTS=( "chrome" )
-    else
-        PRODUCTS=( "firefox" "chrome" )
-    fi
+    PRODUCTS=( "firefox" "chrome" )
     ./wpt manifest --rebuild -p ~/meta/MANIFEST.json
     for PRODUCT in "${PRODUCTS[@]}"; do
         if [[ "$PRODUCT" == "chrome" ]]; then
-            test_infrastructure "--binary=$(which google-chrome-unstable) --channel dev" "$1"
+            test_infrastructure "--binary=$(which google-chrome-unstable) --channel dev"
         else
-            test_infrastructure "--binary=~/build/firefox/firefox"
+            test_infrastructure
         fi
     done
 }
 
-main $1
+main

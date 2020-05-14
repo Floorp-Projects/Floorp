@@ -1,7 +1,6 @@
 <!doctype html>
 <meta charset=utf-8>
 <title>RTCPeerConnection Simulcast Tests - getStats</title>
-<meta name="timeout" content="long">
 <script src="../third_party/sdp/sdp.js"></script>
 <script src="simulcast.js"></script>
 <script src="../RTCPeerConnection-helper.js"></script>
@@ -15,7 +14,44 @@ promise_test(async t => {
   const pc2 = new RTCPeerConnection();
   t.add_cleanup(() => pc2.close());
 
-  await negotiateSimulcastAndWaitForVideo(t, rids, pc1, pc2);
+  exchangeIceCandidates(pc1, pc2);
+
+  const metadataToBeLoaded = [];
+  pc2.ontrack = (e) => {
+    const stream = e.streams[0];
+    const v = document.createElement('video');
+    v.autoplay = true;
+    v.srcObject = stream;
+    v.id = stream.id
+    metadataToBeLoaded.push(new Promise((resolve) => {
+        v.addEventListener('loadedmetadata', () => {
+            resolve();
+        });
+    }));
+  };
+
+  // Use getUserMedia as getNoiseStream does not have enough entropy to ramp-up.
+  const stream = await navigator.mediaDevices.getUserMedia({video: {width: 1280, height: 720}});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  pc1.addTransceiver(stream.getVideoTracks()[0], {
+    streams: [stream],
+    sendEncodings: rids.map(rid => {rid}),
+  });
+
+  const offer = await pc1.createOffer();
+  await pc1.setLocalDescription(offer),
+  await pc2.setRemoteDescription({
+    type: 'offer',
+    sdp: swapRidAndMidExtensionsInSimulcastOffer(offer, rids),
+  });
+  const answer = await pc2.createAnswer();
+  await pc2.setLocalDescription(answer);
+  await pc1.setRemoteDescription({
+    type: 'answer',
+    sdp: swapRidAndMidExtensionsInSimulcastAnswer(answer, pc1.localDescription, rids),
+  });
+  assert_equals(metadataToBeLoaded.length, 3);
+  await Promise.all(metadataToBeLoaded);
 
   const outboundStats = [];
   const senderStats = await pc1.getSenders()[0].getStats();
@@ -24,8 +60,6 @@ promise_test(async t => {
       outboundStats.push(stat);
     }
   });
-  assert_equals(outboundStats.length, 3, "getStats result should contain three layers");
-  const statsRids = outboundStats.map(stat => parseInt(stat.rid, 10));
-  assert_array_equals(rids, statsRids.sort(), "getStats result should match the rids provided");
-}, 'Simulcast getStats results');
+  assert_equals(outboundStats.length, 3);
+}, 'Simulcast getStats contains as many outbound-rtp reports as spatial layers');
 </script>

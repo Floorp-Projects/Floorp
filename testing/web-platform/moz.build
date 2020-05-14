@@ -97,6 +97,9 @@ with Files("tests/**"):
 with Files("tests/LICENSE"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
+with Files("tests/lint.whitelist"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
 with Files("tests/testharness_runner.html"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 

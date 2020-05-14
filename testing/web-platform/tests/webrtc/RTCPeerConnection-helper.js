@@ -443,7 +443,7 @@ const trackFactories = {
     return dst.stream.getAudioTracks()[0];
   },
 
-  video({width = 640, height = 480, signal = null} = {}) {
+  video({width = 640, height = 480} = {}) {
     const canvas = Object.assign(
       document.createElement("canvas"), {width, height}
     );
@@ -454,12 +454,8 @@ const trackFactories = {
     setInterval(() => {
       ctx.fillStyle = `rgb(${count%255}, ${count*count%255}, ${count%255})`;
       count += 1;
+
       ctx.fillRect(0, 0, width, height);
-      // If signal is set, add a constant-color box to the video frame.
-      if (signal !== null) {
-        ctx.fillStyle = `rgb(${signal}, ${signal}, ${signal})`;
-        ctx.fillRect(10, 10, 20, 20);
-      }
     }, 100);
 
     if (document.body) {
@@ -474,40 +470,13 @@ const trackFactories = {
   }
 };
 
-// Get the signal from a video element inserted by createNoiseStream
-function getVideoSignal(v) {
-  if (v.videoWidth < 21 || v.videoHeight < 21) {
-    return null;
-  }
-  const canvas = new OffscreenCanvas(v.videoWidth, v.videoHeight);
-  let context = canvas.getContext('2d');
-  context.drawImage(v, 0, 0, v.videoWidth, v.videoHeight);
-  // Extract pixel value at position 20, 20
-  let pixel = context.getImageData(20, 20, 1, 1);
-  return (pixel.data[0] + pixel.data[1] + pixel.data[2]) / 3;
-}
-
-function detectSignal(t, v, value) {
-  return new Promise((resolve) => {
-    let check = () => {
-      const signal = getVideoSignal(v);
-      if (signal !== null && signal < value + 1 && signal > value - 1) {
-        resolve();
-      } else {
-        t.step_timeout(check, 100);
-      }
-    }
-    check();
-  });
-}
-
 // Generate a MediaStream bearing the specified tracks.
 //
 // @param {object} [caps]
 // @param {boolean} [caps.audio] - flag indicating whether the generated stream
 //                                 should include an audio track
 // @param {boolean} [caps.video] - flag indicating whether the generated stream
-//                                 should include a video track, or parameters for video
+//                                 should include a video track
 async function getNoiseStream(caps = {}) {
   if (!trackFactories.canCreate(caps)) {
     return navigator.mediaDevices.getUserMedia(caps);
@@ -519,7 +488,7 @@ async function getNoiseStream(caps = {}) {
   }
 
   if (caps.video) {
-    tracks.push(trackFactories.video(caps.video));
+    tracks.push(trackFactories.video());
   }
 
   return new MediaStream(tracks);

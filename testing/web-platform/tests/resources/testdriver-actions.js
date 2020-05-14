@@ -130,9 +130,9 @@
     /**
      * Add a new pointer input source with the given name
      *
-     * @param {String} type - Name of the pointer source
+     * @param {String} type - Name of the key source
      * @param {String} pointerType - Type of pointing device
-     * @param {Bool} set - Set source as the default pointer source
+     * @param {Bool} set - Set source as the default key source
      * @returns {Actions}
      */
     addPointer: function(name, pointerType="mouse", set=true) {

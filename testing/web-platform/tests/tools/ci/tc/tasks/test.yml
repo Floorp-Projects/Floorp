@@ -4,7 +4,7 @@ components:
     workerType: ci
     schedulerId: taskcluster-github
     deadline: "24 hours"
-    image: webplatformtests/wpt:0.37
+    image: webplatformtests/wpt:0.36
     maxRunTime: 7200
     artifacts:
       public/results:
@@ -230,7 +230,6 @@ tasks:
               --
               --channel=${vars.channel}
               --verify
-              --verify-no-chaos-mode
 
         - wpt-${vars.browser}-${vars.channel}-results:
             use:
@@ -448,31 +447,6 @@ tasks:
         oom-killer: true
         browser:
           - firefox
-          - chrome
-        channel: experimental
-        xvfb: true
-        hosts: false
-      schedule-if:
-        run-job:
-          - wptrunner_infrastructure
-
-  - infrastructure/ tests (Python 3):
-      description: >-
-        Smoketests for wptrunner
-      vars:
-        channel: nightly
-      use:
-        - wpt-base
-        - trigger-pr
-      command: ./tools/ci/ci_wptrunner_infrastructure.sh --py3
-      install:
-        - python3-pip
-        - libnss3-tools
-        - libappindicator1
-        - fonts-liberation
-      options:
-        oom-killer: true
-        browser:
           - chrome
         channel: experimental
         xvfb: true

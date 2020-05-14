@@ -54,7 +54,7 @@ function testFunction(session, fakeDeviceController, t) {
   };
 
   const LOCAL_POINTER_TRANSFORM = {
-    position: [1.01, 2.02, 3.03],
+    position: [0.01, 0.02, 0.03],
     orientation: [0, 0, 0, 1]
   }
 
@@ -67,7 +67,7 @@ function testFunction(session, fakeDeviceController, t) {
   });
 
   return new Promise((resolve, reject) => {
-    requestSkipAnimationFrame(session, (time, frame) => {
+    session.requestAnimationFrame((time, frame) => {
       let input_source = session.inputSources[0];
 
       session.requestReferenceSpace('bounded-floor').then((referenceSpace) => {

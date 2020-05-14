@@ -1504,7 +1504,7 @@ interface ElementInternals {
 
   readonly attribute HTMLFormElement? form;
 
-  void setValidity(optional ValidityStateFlags flags = {},
+  void setValidity(ValidityStateFlags flags,
                    optional DOMString message,
                    optional HTMLElement anchor);
   readonly attribute boolean willValidate;
