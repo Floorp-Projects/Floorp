@@ -640,7 +640,7 @@ class BackgroundCursorChildBase : public PBackgroundIDBCursorChild {
  private:
   NS_DECL_OWNINGTHREAD
  protected:
-  InitializedOnce<const NotNull<IDBRequest*>> mRequest;
+  InitializedOnceNotNull<IDBRequest* const> mRequest;
   Maybe<IDBTransaction&> mTransaction;
 
   // These are only set while a request is in progress.
@@ -685,7 +685,7 @@ class BackgroundCursorChild final : public BackgroundCursorChildBase {
   friend class BackgroundTransactionChild;
   friend class BackgroundVersionChangeTransactionChild;
 
-  InitializedOnce<const NotNull<SourceType*>> mSource;
+  InitializedOnceNotNull<SourceType* const> mSource;
   IDBCursorImpl<CursorType>* mCursor;
 
   std::deque<CursorData<CursorType>> mCachedResponses, mDelayedResponses;
