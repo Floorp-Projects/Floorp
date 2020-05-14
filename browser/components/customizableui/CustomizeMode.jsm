@@ -647,7 +647,7 @@ CustomizeMode.prototype = {
           "customizationending",
           cleanupCustomizationExit
         );
-        resolve();
+        resolve(animationNode);
       }
 
       // Wait until the next frame before setting the class to ensure
@@ -674,8 +674,9 @@ CustomizeMode.prototype = {
       aNode = aNode.firstElementChild;
     }
     let widgetAnimationPromise = this._promiseWidgetAnimationOut(aNode);
+    let animationNode;
     if (widgetAnimationPromise) {
-      await widgetAnimationPromise;
+      animationNode = await widgetAnimationPromise;
     }
 
     let widgetToAdd = aNode.id;
@@ -701,12 +702,8 @@ CustomizeMode.prototype = {
       }
     }
 
-    if (widgetAnimationPromise) {
-      if (aNode.parentNode && aNode.parentNode.id.startsWith("wrapper-")) {
-        aNode.parentNode.classList.remove("animate-out");
-      } else {
-        aNode.classList.remove("animate-out");
-      }
+    if (animationNode) {
+      animationNode.classList.remove("animate-out");
     }
   },
 
@@ -716,8 +713,9 @@ CustomizeMode.prototype = {
       aNode = aNode.firstElementChild;
     }
     let widgetAnimationPromise = this._promiseWidgetAnimationOut(aNode);
+    let animationNode;
     if (widgetAnimationPromise) {
-      await widgetAnimationPromise;
+      animationNode = await widgetAnimationPromise;
     }
 
     let panel = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
@@ -734,12 +732,8 @@ CustomizeMode.prototype = {
       }
     }
 
-    if (widgetAnimationPromise) {
-      if (aNode.parentNode && aNode.parentNode.id.startsWith("wrapper-")) {
-        aNode.parentNode.classList.remove("animate-out");
-      } else {
-        aNode.classList.remove("animate-out");
-      }
+    if (animationNode) {
+      animationNode.classList.remove("animate-out");
     }
     if (!this.window.gReduceMotion) {
       let overflowButton = this.$("nav-bar-overflow-button");
@@ -766,8 +760,9 @@ CustomizeMode.prototype = {
       aNode = aNode.firstElementChild;
     }
     let widgetAnimationPromise = this._promiseWidgetAnimationOut(aNode);
+    let animationNode;
     if (widgetAnimationPromise) {
-      await widgetAnimationPromise;
+      animationNode = await widgetAnimationPromise;
     }
 
     CustomizableUI.removeWidgetFromArea(aNode.id);
@@ -782,12 +777,8 @@ CustomizeMode.prototype = {
         this._showDownloadsAutoHidePanel();
       }
     }
-    if (widgetAnimationPromise) {
-      if (aNode.parentNode && aNode.parentNode.id.startsWith("wrapper-")) {
-        aNode.parentNode.classList.remove("animate-out");
-      } else {
-        aNode.classList.remove("animate-out");
-      }
+    if (animationNode) {
+      animationNode.classList.remove("animate-out");
     }
   },
 

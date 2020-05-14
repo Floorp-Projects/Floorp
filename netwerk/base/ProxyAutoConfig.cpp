@@ -397,14 +397,13 @@ class MOZ_STACK_CLASS AutoPACErrorReporter {
     if (!JS_IsExceptionPending(mCx)) {
       return;
     }
-    JS::RootedValue exn(mCx);
-    if (!JS_GetPendingException(mCx, &exn)) {
+    JS::ExceptionStack exnStack(mCx);
+    if (!JS::StealPendingExceptionStack(mCx, &exnStack)) {
       return;
     }
-    JS_ClearPendingException(mCx);
 
-    js::ErrorReport report(mCx);
-    if (!report.init(mCx, exn, js::ErrorReport::WithSideEffects)) {
+    JS::ErrorReportBuilder report(mCx);
+    if (!report.init(mCx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
       JS_ClearPendingException(mCx);
       return;
     }

@@ -207,8 +207,9 @@ void WorkletNodeEngine::SendProcessorError(AudioNodeTrack* aTrack,
 
   JS::ExceptionStack exnStack(aCx);
   if (JS::StealPendingExceptionStack(aCx, &exnStack)) {
-    js::ErrorReport jsReport(aCx);
-    if (!jsReport.init(aCx, exnStack, js::ErrorReport::WithSideEffects)) {
+    JS::ErrorReportBuilder jsReport(aCx);
+    if (!jsReport.init(aCx, exnStack,
+                       JS::ErrorReportBuilder::WithSideEffects)) {
       ProcessorErrorDetails details;
       details.mMessage.Assign(u"Unknown processor error");
       SendErrorToMainThread(aTrack, details);

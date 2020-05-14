@@ -106,6 +106,7 @@
 #include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Debug.h"
 #include "js/Equality.h"                 // JS::SameValue
+#include "js/ErrorReport.h"              // JS::PrintError
 #include "js/Exception.h"                // JS::StealPendingExceptionStack
 #include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
 #include "js/GCVector.h"
@@ -3842,8 +3843,8 @@ static bool CreateErrorReport(JSContext* cx, unsigned argc, Value* vp) {
 
   // We don't have a stack here, so just initialize with null.
   JS::ExceptionStack exnStack(cx, args.get(0), nullptr);
-  js::ErrorReport report(cx);
-  if (!report.init(cx, exnStack, js::ErrorReport::WithSideEffects)) {
+  JS::ErrorReportBuilder report(cx);
+  if (!report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
     return false;
   }
 
@@ -8812,7 +8813,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 
     JS_FN_HELP("createErrorReport", CreateErrorReport, 1, 0,
 "createErrorReport(value)",
-"  Create an js::ErrorReport object from the given value and serialize\n"
+"  Create an JS::ErrorReportBuilder object from the given value and serialize\n"
 "  to an object."),
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -9730,9 +9731,9 @@ js::shell::AutoReportException::~AutoReportException() {
   }
 
   ShellContext* sc = GetShellContext(cx);
-  js::ErrorReport report(cx);
-  if (!report.init(cx, exnStack, js::ErrorReport::WithSideEffects)) {
-    fprintf(stderr, "out of memory initializing ErrorReport\n");
+  JS::ErrorReportBuilder report(cx);
+  if (!report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
+    fprintf(stderr, "out of memory initializing JS::ErrorReportBuilder\n");
     fflush(stderr);
     JS_ClearPendingException(cx);
     return;
@@ -9741,7 +9742,7 @@ js::shell::AutoReportException::~AutoReportException() {
   MOZ_ASSERT(!report.report()->isWarning());
 
   FILE* fp = ErrorFilePointer();
-  PrintError(cx, fp, report.toStringResult(), report.report(), reportWarnings);
+  JS::PrintError(cx, fp, report, reportWarnings);
   JS_ClearPendingException(cx);
 
   if (!PrintStackTrace(cx, exnStack.stack())) {
@@ -9781,7 +9782,7 @@ void js::shell::WarningReporter(JSContext* cx, JSErrorReport* report) {
   }
 
   // Print the warning.
-  PrintError(cx, fp, JS::ConstUTF8CharsZ(), report, reportWarnings);
+  JS::PrintError(cx, fp, report, reportWarnings);
 }
 
 static bool global_enumerate(JSContext* cx, JS::HandleObject obj,

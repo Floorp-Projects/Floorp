@@ -394,26 +394,24 @@ void runTestFromPath(JSContext* cx, const char* path) {
     if (binParsed.isOk() && !txtParsed) {
       fprintf(stderr, "Text file parsing failed: ");
 
-      js::ErrorReport report(cx);
-      if (!report.init(cx, txtExn, js::ErrorReport::WithSideEffects)) {
+      JS::ErrorReportBuilder report(cx);
+      if (!report.init(cx, txtExn, JS::ErrorReportBuilder::WithSideEffects)) {
         MOZ_CRASH("Couldn't report txtExn");
       }
 
-      PrintError(cx, stderr, report.toStringResult(), report.report(),
-                 /* reportWarnings */ true);
+      PrintError(cx, stderr, report, /* reportWarnings */ true);
       MOZ_CRASH("Binary parser accepted a file that text parser rejected");
     }
 
     if (binParsed.isErr() && txtParsed) {
       fprintf(stderr, "Binary file parsing failed: ");
 
-      js::ErrorReport report(cx);
-      if (!report.init(cx, binExn, js::ErrorReport::WithSideEffects)) {
+      JS::ErrorReportBuilder report(cx);
+      if (!report.init(cx, binExn, JS::ErrorReportBuilder::WithSideEffects)) {
         MOZ_CRASH("Couldn't report binExn");
       }
 
-      PrintError(cx, stderr, report.toStringResult(), report.report(),
-                 /* reportWarnings */ true);
+      PrintError(cx, stderr, report, /* reportWarnings */ true);
       MOZ_CRASH("Binary parser rejected a file that text parser accepted");
     }
 

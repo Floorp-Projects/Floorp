@@ -186,8 +186,10 @@ static void AddLoadFlags(nsIRequest* request, nsLoadFlags newFlags) {
 
 bool XMLHttpRequestMainThread::sDontWarnAboutSyncXHR = false;
 
-XMLHttpRequestMainThread::XMLHttpRequestMainThread()
-    : mResponseBodyDecodedPos(0),
+XMLHttpRequestMainThread::XMLHttpRequestMainThread(
+    nsIGlobalObject* aGlobalObject)
+    : XMLHttpRequest(aGlobalObject),
+      mResponseBodyDecodedPos(0),
       mResponseType(XMLHttpRequestResponseType::_empty),
       mRequestObserver(nullptr),
       mState(XMLHttpRequest_Binding::UNSENT),

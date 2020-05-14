@@ -168,7 +168,7 @@ add_task(async function test_bundled_experiments() {
     {
       isPrivileged: false,
       temporarilyInstalled: false,
-      shouldHaveExperiments: false,
+      shouldHaveExperiments: AppConstants.MOZ_APP_NAME == "thunderbird",
     },
   ];
 
