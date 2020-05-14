@@ -2250,8 +2250,8 @@ void ScriptExecutorRunnable::LogExceptionToConsole(
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
   MOZ_ASSERT(!mScriptLoader.mRv.Failed());
 
-  js::ErrorReport report(aCx);
-  if (!report.init(aCx, exn, js::ErrorReport::WithSideEffects)) {
+  JS::ErrorReportBuilder report(aCx);
+  if (!report.init(aCx, exn, JS::ErrorReportBuilder::WithSideEffects)) {
     JS_ClearPendingException(aCx);
     return;
   }
