@@ -1210,6 +1210,53 @@ void MacroAssembler::shuffleInt8x16(uint8_t lanes[16], FloatRegister rhs,
       lhsDest, rhs, lhsDest, mozilla::Some(temp), mozilla::Nothing(), lanes);
 }
 
+// All lanes true
+
+void MacroAssembler::allTrueInt8x16(FloatRegister src, Register dest) {
+  ScratchSimd128Scope xtmp(*this);
+  // xtmp is all-00h
+  vpxor(xtmp, xtmp, xtmp);
+  // Set FFh if byte==0 otherwise 00h
+  // Operand ordering constraint: lhs==output
+  vpcmpeqb(Operand(src), xtmp, xtmp);
+  // Get all bytes' high bits
+  vpmovmskb(xtmp, dest);
+  // Now set dest to 1 if it is zero, otherwise to zero.
+  testl(dest, dest);
+  setCC(Zero, dest);
+  movzbl(dest, dest);
+}
+
+void MacroAssembler::allTrueInt16x8(FloatRegister src, Register dest) {
+  ScratchSimd128Scope xtmp(*this);
+  // xtmp is all-00h
+  vpxor(xtmp, xtmp, xtmp);
+  // Set FFFFh if byte==0 otherwise 0000h
+  // Operand ordering constraint: lhs==output
+  vpcmpeqw(Operand(src), xtmp, xtmp);
+  // Get all bytes' high bits
+  vpmovmskb(xtmp, dest);
+  // Now set dest to 1 if it is zero, otherwise to zero.
+  testl(dest, dest);
+  setCC(Zero, dest);
+  movzbl(dest, dest);
+}
+
+void MacroAssembler::allTrueInt32x4(FloatRegister src, Register dest) {
+  ScratchSimd128Scope xtmp(*this);
+  // xtmp is all-00h
+  vpxor(xtmp, xtmp, xtmp);
+  // Set FFFFFFFFh if byte==0 otherwise 00000000h
+  // Operand ordering constraint: lhs==output
+  vpcmpeqd(Operand(src), xtmp, xtmp);
+  // Get all bytes' high bits
+  vpmovmskb(xtmp, dest);
+  // Now set dest to 1 if it is zero, otherwise to zero.
+  testl(dest, dest);
+  setCC(Zero, dest);
+  movzbl(dest, dest);
+}
+
 // Swizzle - permute with variable indices
 
 void MacroAssembler::swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest,
