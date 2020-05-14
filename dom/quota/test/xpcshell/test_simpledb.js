@@ -3,4 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-loadScript("dom/quota/test/common/test_simpledb.js");
+const commonScriptPath = "dom/quota/test/common/test_simpledb.js";
+
+loadScript(commonScriptPath);
+loadChildScript(commonScriptPath);
