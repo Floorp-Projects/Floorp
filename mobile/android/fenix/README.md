@@ -152,6 +152,17 @@ To push without running the pre-push hook (e.g. doc updates):
 git push <remote> --no-verify
 ```
 
+Note: If while pushing you encounter this error "Could not initialize class org.codehaus.groovy.runtime.InvokerHelper" and are currently on Java14 then downgrading your Java version to Java13 or lower can resolve the issue
+
+Steps to downgrade Java Version on Mac with Brew: 
+1. Install Homebrew (https://brew.sh/)
+2. run ```brew update```
+3. To uninstall your current java version, run ```sudo rm -fr /Library/Java/JavaVirtualMachines/<jdk-version>```
+4. run ```brew tap homebrew/cask-versions```
+5. run ```brew search java```
+6. If you see java11, then run ```brew install java11```
+7. Verify java-version by running ```java -version```
+
 ## local.properties helpers
 There are multiple helper flags available via `local.properties` that will help speed up local development workflow
 when working across multiple layers of the dependency stack - specifically, with android-components, geckoview or application-services.
