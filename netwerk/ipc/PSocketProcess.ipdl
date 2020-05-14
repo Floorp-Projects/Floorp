@@ -105,6 +105,7 @@ child:
                                    uint32_t maxBytesPerSecond);
   async PAltSvcTransaction(HttpConnectionInfoCloneArgs aConnInfo,
                            uint32_t aCaps);
+  async ClearSessionCache();
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
