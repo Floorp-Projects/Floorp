@@ -48,8 +48,6 @@ class DOMEventTargetHelper : public dom::EventTarget,
         mOwnerWindow(nullptr),
         mHasOrHasHadOwnerWindow(false),
         mIsKeptAlive(false) {
-    // Be careful not to call the virtual BindToOwner() in a
-    // constructor.
     nsIGlobalObject* global = aWindow ? aWindow->AsGlobal() : nullptr;
     BindToOwnerInternal(global);
   }
@@ -58,8 +56,6 @@ class DOMEventTargetHelper : public dom::EventTarget,
         mOwnerWindow(nullptr),
         mHasOrHasHadOwnerWindow(false),
         mIsKeptAlive(false) {
-    // Be careful not to call the virtual BindToOwner() in a
-    // constructor.
     BindToOwnerInternal(aGlobalObject);
   }
   explicit DOMEventTargetHelper(DOMEventTargetHelper* aOther)
@@ -67,8 +63,6 @@ class DOMEventTargetHelper : public dom::EventTarget,
         mOwnerWindow(nullptr),
         mHasOrHasHadOwnerWindow(false),
         mIsKeptAlive(false) {
-    // Be careful not to call the virtual BindToOwner() in a
-    // constructor.
     if (!aOther) {
       BindToOwnerInternal(static_cast<nsIGlobalObject*>(nullptr));
       return;
@@ -150,19 +144,6 @@ class DOMEventTargetHelper : public dom::EventTarget,
   // Returns the document associated with this event target, if that document is
   // the current document of its browsing context.  Will return null otherwise.
   mozilla::dom::Document* GetDocumentIfCurrent() const;
-
-  // DETH subclasses may override the BindToOwner(nsIGlobalObject*) method
-  // to take action when dynamically binding to a new global.  This is only
-  // called on rebind since virtual methods cannot be called from the
-  // constructor.  The other BindToOwner() methods will call into this
-  // method.
-  //
-  // NOTE: Any overrides of BindToOwner() *must* invoke
-  //       DOMEventTargetHelper::BindToOwner(aOwner).
-  virtual void BindToOwner(nsIGlobalObject* aOwner);
-
-  void BindToOwner(nsPIDOMWindowInner* aOwner);
-  void BindToOwner(DOMEventTargetHelper* aOther);
 
   virtual void DisconnectFromOwner();
   using EventTarget::GetParentObject;

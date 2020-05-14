@@ -97,30 +97,6 @@ DOMEventTargetHelper::~DOMEventTargetHelper() {
   ReleaseWrapper(this);
 }
 
-void DOMEventTargetHelper::BindToOwner(nsPIDOMWindowInner* aOwner) {
-  // Make sure to bind via BindToOwner(nsIGlobalObject*) so
-  // subclasses can override the method to perform additional
-  // actions.
-  nsIGlobalObject* global = aOwner ? aOwner->AsGlobal() : nullptr;
-  BindToOwner(global);
-}
-
-void DOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner) {
-  BindToOwnerInternal(aOwner);
-}
-
-void DOMEventTargetHelper::BindToOwner(DOMEventTargetHelper* aOther) {
-  // Make sure to bind via BindToOwner(nsIGlobalObject*) so
-  // subclasses can override the method to perform additional
-  // actions.
-  if (!aOther) {
-    BindToOwner(static_cast<nsIGlobalObject*>(nullptr));
-    return;
-  }
-  BindToOwner(aOther->GetParentObject());
-  mHasOrHasHadOwnerWindow = aOther->HasOrHasHadOwner();
-}
-
 void DOMEventTargetHelper::DisconnectFromOwner() {
   if (mParentObject) {
     mParentObject->RemoveEventTargetObject(this);
