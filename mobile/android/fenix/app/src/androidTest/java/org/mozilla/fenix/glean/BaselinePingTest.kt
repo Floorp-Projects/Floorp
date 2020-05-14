@@ -14,8 +14,11 @@ import androidx.test.uiautomator.UiSelector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
+import mozilla.components.concept.fetch.Client
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.service.glean.testing.GleanTestLocalServer
 import org.json.JSONObject
 import org.junit.Assert.assertTrue
@@ -44,6 +47,10 @@ class BaselinePingTest {
         @BeforeClass
         @JvmStatic
         fun setupOnce() {
+            val httpClient = ConceptFetchHttpUploader(lazy {
+                GeckoViewFetchClient(ApplicationProvider.getApplicationContext()) as Client
+            })
+
             // Fenix does not initialize the Glean SDK in tests/debug builds, but this test
             // requires Glean to be initialized so we need to do it manually. Additionally,
             // we need to do this on the main thread, as the Glean SDK requires it.
@@ -51,7 +58,7 @@ class BaselinePingTest {
                 Glean.initialize(
                     ApplicationProvider.getApplicationContext(),
                     true,
-                    Configuration()
+                    Configuration(httpClient = httpClient)
                 )
             }
         }
