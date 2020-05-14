@@ -50,6 +50,7 @@ class CollectionTest {
         mockWebServer.shutdown()
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun verifyCreateFirstCollectionFlowItems() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -257,6 +258,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
     @Test
     fun selectTabOnLongTapTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
