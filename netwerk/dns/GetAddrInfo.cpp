@@ -15,6 +15,7 @@
 #include "prerror.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_network.h"
 
 #ifdef DNSQUERY_AVAILABLE
 // There is a bug in windns.h where the type of parameter ppQueryResultsSet for
@@ -228,6 +229,10 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
                      uint16_t aFlags, AddrInfo** aAddrInfo, bool aGetTtl) {
   if (NS_WARN_IF(aHost.IsEmpty()) || NS_WARN_IF(!aAddrInfo)) {
     return NS_ERROR_NULL_POINTER;
+  }
+
+  if (StaticPrefs::network_dns_disabled()) {
+    return NS_ERROR_UNKNOWN_HOST;
   }
 
 #ifdef DNSQUERY_AVAILABLE
