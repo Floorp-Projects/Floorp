@@ -1052,6 +1052,13 @@ class nsLayoutUtils {
   static void PostTranslate(Matrix4x4& aTransform, const nsPoint& aOrigin,
                             float aAppUnitsPerPixel, bool aRounded);
 
+  /*
+   * Whether the frame should snap to grid. This will end up being passed
+   * as the aRounded parameter in PostTranslate above. SVG frames should
+   * not have their translation rounded.
+   */
+  static bool ShouldSnapToGrid(const nsIFrame* aFrame);
+
   /**
    * Get the border-box of aElement's primary frame, transformed it to be
    * relative to aFrame.

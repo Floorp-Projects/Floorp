@@ -639,7 +639,7 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
         if (!transformData.hasPerspectiveParent()) {
           nsLayoutUtils::PostTranslate(transform, transformData.origin(),
                                        transformData.appUnitsPerDevPixel(),
-                                       true);
+                                       transformData.snapToGrid());
         }
 
         transform.PostScale(transformData.inheritedXScale(),

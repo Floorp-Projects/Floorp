@@ -4900,13 +4900,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       NS_ASSERTION(!ownLayer->AsPaintedLayer(),
                    "Should never have created a dedicated Painted layer!");
 
-      if (item->BackfaceIsHidden()) {
-        ownLayer->SetContentFlags(ownLayer->GetContentFlags() |
-                                  Layer::CONTENT_BACKFACE_HIDDEN);
-      } else {
-        ownLayer->SetContentFlags(ownLayer->GetContentFlags() &
-                                  ~Layer::CONTENT_BACKFACE_HIDDEN);
-      }
+      SetBackfaceHiddenForLayer(item->BackfaceIsHidden(), ownLayer);
 
       nsRect invalid;
       if (item->IsInvalid(invalid)) {
@@ -6332,6 +6326,9 @@ already_AddRefed<ContainerLayer> FrameLayerBuilder::BuildContainerLayerFor(
       flags &= ~Layer::CONTENT_COMPONENT_ALPHA;
       flags |= Layer::CONTENT_OPAQUE;
     }
+  }
+  if (nsLayoutUtils::ShouldSnapToGrid(aContainerFrame)) {
+    flags |= Layer::CONTENT_SNAP_TO_GRID;
   }
   containerLayer->SetContentFlags(flags);
   // If aContainerItem is non-null some BuildContainerLayer further up the

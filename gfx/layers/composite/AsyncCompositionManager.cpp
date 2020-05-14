@@ -561,8 +561,10 @@ static Matrix4x4 FrameTransformToTransformInDevice(
   // for it to be added here.
   if (!aLayer->GetParent() ||
       !aLayer->GetParent()->GetTransformIsPerspective()) {
-    nsLayoutUtils::PostTranslate(transformInDevice, aTransformData.origin(),
-                                 aTransformData.appUnitsPerDevPixel(), true);
+    nsLayoutUtils::PostTranslate(
+        transformInDevice, aTransformData.origin(),
+        aTransformData.appUnitsPerDevPixel(),
+        aLayer->GetContentFlags() & Layer::CONTENT_SNAP_TO_GRID);
   }
 
   if (ContainerLayer* c = aLayer->AsContainerLayer()) {
