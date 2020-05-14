@@ -633,7 +633,6 @@ impl SceneBuilderThread {
                     list_data,
                     preserve_frame_state,
                 } => {
-                    rebuild_scene = true;
                     let built_display_list =
                         BuiltDisplayList::from_data(list_data, list_descriptor);
                     let display_list_len = built_display_list.data().len();
@@ -644,6 +643,11 @@ impl SceneBuilderThread {
                     if self.removed_pipelines.contains(&pipeline_id) {
                         continue;
                     }
+
+                    // Note: We could further reduce the amount of unnecessary scene
+                    // building by keeping track of which pipelines are used by the
+                    // scene (bug 1490751).
+                    rebuild_scene = true;
 
                     scene.set_display_list(
                         pipeline_id,
@@ -669,8 +673,10 @@ impl SceneBuilderThread {
                     }
                 }
                 SceneMsg::SetRootPipeline(pipeline_id) => {
-                    rebuild_scene = true;
-                    scene.set_root_pipeline_id(pipeline_id);
+                    if scene.root_pipeline_id != Some(pipeline_id) {
+                        rebuild_scene = true;
+                        scene.set_root_pipeline_id(pipeline_id);
+                    }
                 }
                 SceneMsg::RemovePipeline(pipeline_id) => {
                     scene.remove_pipeline(pipeline_id);
