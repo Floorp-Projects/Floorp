@@ -18,7 +18,7 @@ let testFunction = function(session, fakeDeviceController, t) {
       profiles: ["foo", "bar"]
     });
 
-    requestSkipAnimationFrame(session, (time, xrFrame) => {
+    session.requestAnimationFrame((time, xrFrame) => {
       let renderState = session.renderState;
       let sources = session.inputSources;
 

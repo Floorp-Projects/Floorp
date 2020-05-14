@@ -18,7 +18,8 @@ from .utils import call, get, untar, unzip
 uname = platform.uname()
 
 # the rootUrl for the firefox-ci deployment of Taskcluster
-FIREFOX_CI_ROOT_URL = 'https://firefox-ci-tc.services.mozilla.com'
+# (after November 9, https://firefox-ci-tc.services.mozilla.com/)
+FIREFOX_CI_ROOT_URL = 'https://taskcluster.net'
 
 
 def _get_fileversion(binary, logger=None):
@@ -46,15 +47,6 @@ def get_ext(filename):
     if name.endswith(".tar"):
         ext = ".tar%s" % ext
     return ext
-
-
-def get_taskcluster_artifact(index, path):
-    TC_INDEX_BASE = FIREFOX_CI_ROOT_URL + "/api/index/v1/"
-
-    resp = get(TC_INDEX_BASE + "task/%s/artifacts/%s" % (index, path))
-    resp.raise_for_status()
-
-    return resp
 
 
 class Browser(object):
@@ -182,7 +174,7 @@ class Firefox(Browser):
         url = "https://download.mozilla.org/?product=%s&os=%s&lang=en-US" % (product[channel],
                                                                              os_builds[os_key])
         self.logger.info("Downloading Firefox from %s" % url)
-        resp = get(url)
+        resp = requests.get(url)
 
         filename = None
 
@@ -421,32 +413,32 @@ class Firefox(Browser):
         return find_executable(os.path.join(dest, "geckodriver"))
 
     def install_geckodriver_nightly(self, dest):
+        import tarfile
+        import mozdownload
         self.logger.info("Attempting to install webdriver from nightly")
-
-        platform_bits = ("64" if uname[4] == "x86_64" else
-                         ("32" if self.platform == "win" else ""))
-        tc_platform = "%s%s" % (self.platform, platform_bits)
-
-        archive_ext = ".zip" if uname[0] == "Windows" else ".tar.gz"
-        archive_name = "public/geckodriver%s" % archive_ext
-
         try:
-            resp = get_taskcluster_artifact(
-                "gecko.v2.mozilla-central.latest.geckodriver.%s" % tc_platform,
-                archive_name)
-        except Exception:
-            self.logger.info("Geckodriver download failed")
+            s = mozdownload.DailyScraper(branch="mozilla-central",
+                                         extension="common.tests.tar.gz",
+                                         destination=dest)
+            package_path = s.download()
+        except mozdownload.errors.NotFoundError:
             return
 
-        if archive_ext == ".zip":
-            unzip(resp.raw, dest)
-        else:
-            untar(resp.raw, dest)
-
-        exe_ext = ".exe" if uname[0] == "Windows" else ""
-        path = os.path.join(dest, "geckodriver%s" % exe_ext)
-
-        self.logger.info("Extracted geckodriver to %s" % path)
+        try:
+            exe_suffix = ".exe" if uname[0] == "Windows" else ""
+            with tarfile.open(package_path, "r") as f:
+                try:
+                    member = f.getmember("bin%sgeckodriver%s" % (os.path.sep,
+                                                                 exe_suffix))
+                except KeyError:
+                    return
+                # Remove bin/ from the path.
+                member.name = os.path.basename(member.name)
+                f.extractall(members=[member], path=dest)
+                path = os.path.join(dest, member.name)
+            self.logger.info("Extracted geckodriver to %s" % path)
+        finally:
+            os.unlink(package_path)
 
         return path
 
@@ -469,10 +461,24 @@ class FirefoxAndroid(Browser):
         if dest is None:
             dest = os.pwd
 
+        if FIREFOX_CI_ROOT_URL == 'https://taskcluster.net':
+            # NOTE: this condition can be removed after November 9, 2019
+            TC_QUEUE_BASE = "https://queue.taskcluster.net/v1/"
+            TC_INDEX_BASE = "https://index.taskcluster.net/v1/"
+        else:
+            TC_QUEUE_BASE = FIREFOX_CI_ROOT_URL + "/api/queue/v1/"
+            TC_INDEX_BASE = FIREFOX_CI_ROOT_URL + "/api/index/v1/"
 
-        resp = get_taskcluster_artifact(
-            "gecko.v2.mozilla-central.latest.mobile.android-x86_64-opt",
-            "public/build/geckoview-androidTest.apk")
+
+        resp = requests.get(TC_INDEX_BASE +
+                            "task/gecko.v2.mozilla-central.latest.mobile.android-x86_64-opt")
+        resp.raise_for_status()
+        index = resp.json()
+        task_id = index["taskId"]
+
+        resp = requests.get(TC_QUEUE_BASE + "task/%s/artifacts/%s" %
+                            (task_id, "public/build/geckoview-androidTest.apk"))
+        resp.raise_for_status()
 
         filename = "geckoview-androidTest.apk"
         if rename:

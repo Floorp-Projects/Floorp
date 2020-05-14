@@ -17,72 +17,87 @@
     //     gchild=child-two.html
     //   ]
     // ]
-    let consumption_test = async_test("Consumption test");
+    let test_parent_initial = async_test("Parent frame initial state");
+    let test_parent_final = async_test("Parent frame final state");
+
+    let test_child1_initial = async_test("Child1 frame initial state");
+    let test_child1_final = async_test("Child1 frame final state");
+
+    let test_child_so_initial = async_test("Child2 frame initial state");
+    let test_child_so_final = async_test("Child2 frame final state");
+
+    let test_gchild_initial = async_test("Grandchild frame initial state");
+    let test_gchild_final = async_test("Grand child frame final state");
 
     let num_children_to_load = 3;
     let num_children_to_report = 3;
 
     function finishLoadPhase() {
-        assert_true(num_children_to_load == 0);
-
-        test(() => {
+        test_parent_initial.step(() => {
+            assert_true(num_children_to_load == 0);
             assert_false(navigator.userActivation.isActive);
             assert_false(navigator.userActivation.hasBeenActive);
-        }, "Parent frame initial state");
+        });
+        test_parent_initial.done();
 
         test_driver.click(document.getElementById("child-so"));
     }
 
     function finishReportPhase() {
-        assert_true(num_children_to_report == 0);
-
-        test(() => {
+        test_parent_final.step(() => {
+            assert_true(num_children_to_report == 0);
             assert_false(navigator.userActivation.isActive);
             assert_true(navigator.userActivation.hasBeenActive);
-        }, "Parent frame final state");
-
-        consumption_test.done();
+        });
+        test_parent_final.done();
+        // End of all tests.
     }
 
     window.addEventListener("message", event => {
         var msg = JSON.parse(event.data);
 
         if (msg.type == 'child-one-loaded') {
-            test(() => {
+            test_child1_initial.step(() => {
                 assert_false(msg.isActive);
                 assert_false(msg.hasBeenActive);
-            }, "Child1 frame initial state");
+            });
+            test_child1_initial.done();
         } else if (msg.type == 'child-sameorigin-loaded') {
-            test(() => {
+            test_child_so_initial.step(() => {
                 assert_false(msg.isActive);
                 assert_false(msg.hasBeenActive);
-            }, "Child2 frame initial state");
+            });
+            test_child_so_initial.done();
         } else if (msg.type == 'child-two-loaded') {
-            test(() => {
+            test_gchild_initial.step(() => {
                 assert_false(msg.isActive);
                 assert_false(msg.hasBeenActive);
-            }, "Grandchild frame initial state");
+            });
+            test_gchild_initial.done();
         } else if (msg.type == 'child-one-report') {
-            test(() => {
+            test_child1_final.step(() => {
                 assert_false(msg.isActive);
                 assert_true(msg.hasBeenActive);
-            }, "Child1 frame final state");
+            });
+            test_child1_final.done();
         } else if (msg.type == 'child-sameorigin-report') {
             // This msg was triggered by a user click followed by a window.open().
-            test(() => {
+            test_child_so_final.step(() => {
                 assert_false(msg.isActive);
                 assert_true(msg.hasBeenActive);
-            }, "Child2 frame final state");
+            });
+            test_child_so_final.done();
 
             // Ask remaining frames to report states.
             let ask_report = JSON.stringify({"type": "report"});
             frames[0].postMessage(ask_report, "*");
             frames[1].frames[0].postMessage(ask_report, "*");
         } else if (msg.type == 'child-two-report') {
-            test(() => {
+            test_gchild_final.step(() => {
                 assert_false(msg.isActive);
                 assert_true(msg.hasBeenActive);
-            }, "Grand child frame final state");
+            });
+            test_gchild_final.done();
         }
 
         // Phase switching.

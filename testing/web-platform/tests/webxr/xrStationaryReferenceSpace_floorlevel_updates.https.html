@@ -36,7 +36,9 @@ let testFunction = function(session, fakeDeviceController, t) {
 
           // Need to request one animation frame for the new stage transform to
           // propagate before we check that it's what we expect.
-          requestSkipAnimationFrame(session, onFrame);
+          session.requestAnimationFrame(() => {
+            session.requestAnimationFrame(onFrame);
+          });
         });
       }
 
@@ -56,7 +58,9 @@ let testFunction = function(session, fakeDeviceController, t) {
 
       // Need to wait one frame for the removal to propagate before we check that
       // everything is at the expected emulated position.
-      requestSkipAnimationFrame(session, onFirstFrame);
+      session.requestAnimationFrame(() => {
+        session.requestAnimationFrame(onFirstFrame);
+      });
     }));
 };
 

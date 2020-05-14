@@ -20,17 +20,7 @@ export function insertIframe(hostname, header) {
 // that sending such a message will result in a message back.
 export async function sendWasmModule(frameWindow) {
   frameWindow.postMessage(await createWasmModule(), "*");
-  return waitForMessage(frameWindow);
-}
-
-export async function sendWasmModuleBetween(frameWindow, indexIntoParentFrameOfDestination) {
-  frameWindow.postMessage({ command: "send WASM module", indexIntoParentFrameOfDestination }, "*");
-  return waitForMessage(frameWindow);
-}
-
-export async function accessDocumentBetween(frameWindow, indexIntoParentFrameOfDestination) {
-  frameWindow.postMessage({ command: "access document", indexIntoParentFrameOfDestination }, "*");
-  return waitForMessage(frameWindow);
+  return waitForMessage();
 }
 
 // This function is coupled to ./send-origin-isolation-header.py, which ensures
@@ -44,19 +34,13 @@ export async function setBothDocumentDomains(frameWindow) {
   document.domain = document.domain;
 
   frameWindow.postMessage({ command: "set document.domain", newDocumentDomain: document.domain }, "*");
-  const whatHappened = await waitForMessage(frameWindow);
+  const whatHappened = await waitForMessage();
   assert_equals(whatHappened, "document.domain is set");
 }
 
-function waitForMessage(expectedSource) {
+function waitForMessage() {
   return new Promise(resolve => {
-    const handler = e => {
-      if (e.source === expectedSource) {
-        resolve(e.data);
-        window.removeEventListener("message", handler);
-      }
-    };
-    window.addEventListener("message", handler);
+    window.addEventListener("message", e => resolve(e.data), { once: true });
   });
 }
 

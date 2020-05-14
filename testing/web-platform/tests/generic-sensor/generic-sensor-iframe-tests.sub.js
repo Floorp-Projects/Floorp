@@ -4,17 +4,18 @@ async function send_message_to_iframe(iframe, message, reply) {
   }
 
   return new Promise((resolve, reject) => {
-    window.addEventListener('message', (e) => {
+    let messageHandler = e => {
       if (e.data.command !== message.command) {
-        reject(`Expected reply with command '${message.command}', got '${e.data.command}' instead`);
         return;
       }
+      window.removeEventListener('message', messageHandler);
       if (e.data.result === reply) {
         resolve();
       } else {
-        reject(`Got unexpected reply '${e.data.result}' to command '${message.command}', expected '${reply}'`);
+        reject();
       }
-    }, { once: true });
+    }
+    window.addEventListener('message', messageHandler);
     iframe.contentWindow.postMessage(message, '*');
   });
 }

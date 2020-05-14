@@ -1212,7 +1212,7 @@ policies and contribution forms [3].
                  } else {
                      assert(same_value(actual[p], expected[p]), "assert_object_equals", description,
                                                        "property ${p} expected ${expected} got ${actual}",
-                                                       {p:p, expected:expected[p], actual:actual[p]});
+                                                       {p:p, expected:expected, actual:actual});
                  }
              }
              for (p in expected) {
@@ -1867,10 +1867,23 @@ policies and contribution forms [3].
      */
     function assert_implements_optional(condition, description) {
         if (!condition) {
-            throw new OptionalFeatureUnsupportedError(description);
+            // Due to the difficulty of changing logging statuses, we re-use
+            // the PRECONDITION_FAILED status for assert_implements_optional.
+            // See the RFC: https://github.com/web-platform-tests/rfcs/pull/48
+            //
+            // TODO(smcgruer): Once assert_precondition is removed, rename the
+            // exception and move this comment to where PRECONDITION_FAILED is used.
+            throw new PreconditionFailedError(description);
         }
     }
     expose(assert_implements_optional, "assert_implements_optional")
+
+    function assert_precondition(precondition, description) {
+        if (!precondition) {
+            throw new PreconditionFailedError(description);
+        }
+    }
+    expose(assert_precondition, "assert_precondition");
 
     function Test(name, properties)
     {
@@ -1977,7 +1990,7 @@ policies and contribution forms [3].
             if (this.phase >= this.phases.HAS_RESULT) {
                 return;
             }
-            var status = e instanceof OptionalFeatureUnsupportedError ? this.PRECONDITION_FAILED : this.FAIL;
+            var status = e instanceof PreconditionFailedError ? this.PRECONDITION_FAILED : this.FAIL;
             var message = String((typeof e === "object" && e !== null) ? e.message : e);
             var stack = e.stack ? e.stack : null;
 
@@ -2563,7 +2576,7 @@ policies and contribution forms [3].
             try {
                 func();
             } catch (e) {
-                this.status.status = e instanceof OptionalFeatureUnsupportedError ? this.status.PRECONDITION_FAILED : this.status.ERROR;
+                this.status.status = e instanceof PreconditionFailedError ? this.status.PRECONDITION_FAILED : this.status.ERROR;
                 this.status.message = String(e);
                 this.status.stack = e.stack ? e.stack : null;
                 this.complete();
@@ -3105,14 +3118,14 @@ policies and contribution forms [3].
         status_text_harness[harness_status.OK] = "OK";
         status_text_harness[harness_status.ERROR] = "Error";
         status_text_harness[harness_status.TIMEOUT] = "Timeout";
-        status_text_harness[harness_status.PRECONDITION_FAILED] = "Optional Feature Unsupported";
+        status_text_harness[harness_status.PRECONDITION_FAILED] = "Precondition Failed";
 
         var status_text = {};
         status_text[Test.prototype.PASS] = "Pass";
         status_text[Test.prototype.FAIL] = "Fail";
         status_text[Test.prototype.TIMEOUT] = "Timeout";
         status_text[Test.prototype.NOTRUN] = "Not Run";
-        status_text[Test.prototype.PRECONDITION_FAILED] = "Optional Feature Unsupported";
+        status_text[Test.prototype.PRECONDITION_FAILED] = "Precondition Failed";
 
         var status_number = {};
         forEach(tests,
@@ -3494,12 +3507,12 @@ policies and contribution forms [3].
         return lines.slice(i).join("\n");
     }
 
-    function OptionalFeatureUnsupportedError(message)
+    function PreconditionFailedError(message)
     {
         AssertionError.call(this, message);
     }
-    OptionalFeatureUnsupportedError.prototype = Object.create(AssertionError.prototype);
-    expose(OptionalFeatureUnsupportedError, "OptionalFeatureUnsupportedError");
+    PreconditionFailedError.prototype = Object.create(AssertionError.prototype);
+    expose(PreconditionFailedError, "PreconditionFailedError");
 
     function make_message(function_name, description, error, substitutions)
     {
@@ -3729,17 +3742,17 @@ policies and contribution forms [3].
 
     if (global_scope.addEventListener) {
         var error_handler = function(error, message, stack) {
-            var optional_unsupported = error instanceof OptionalFeatureUnsupportedError;
+            var precondition_failed = error instanceof PreconditionFailedError;
             if (tests.file_is_test) {
                 var test = tests.tests[0];
                 if (test.phase >= test.phases.HAS_RESULT) {
                     return;
                 }
-                var status = optional_unsupported ? test.PRECONDITION_FAILED : test.FAIL;
+                var status = precondition_failed ? test.PRECONDITION_FAILED : test.FAIL;
                 test.set_status(status, message, stack);
                 test.phase = test.phases.HAS_RESULT;
             } else if (!tests.allow_uncaught_exception) {
-                var status = optional_unsupported ? tests.status.PRECONDITION_FAILED : tests.status.ERROR;
+                var status = precondition_failed ? tests.status.PRECONDITION_FAILED : tests.status.ERROR;
                 tests.status.status = status;
                 tests.status.message = message;
                 tests.status.stack = stack;
@@ -3855,11 +3868,11 @@ tr.notrun > td:first-child {\
     color:blue;\
 }\
 \
-tr.optionalunsupported > td:first-child {\
+tr.preconditionfailed > td:first-child {\
     color:blue;\
 }\
 \
-.pass > td:first-child, .fail > td:first-child, .timeout > td:first-child, .notrun > td:first-child, .optionalunsupported > td:first-child {\
+.pass > td:first-child, .fail > td:first-child, .timeout > td:first-child, .notrun > td:first-child, .preconditionfailed > td:first-child {\
     font-variant:small-caps;\
 }\
 \

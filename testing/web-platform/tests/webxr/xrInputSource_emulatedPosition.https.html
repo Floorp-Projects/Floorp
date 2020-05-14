@@ -53,7 +53,7 @@ let testFunction =
       }
 
       // Can only request input poses in an xr frame.
-      requestSkipAnimationFrame(session, CheckPositionNotEmulated);
+      session.requestAnimationFrame(CheckPositionNotEmulated);
     });
   });
 
