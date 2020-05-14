@@ -36,7 +36,6 @@ RenderRootStateManager::GetWebRenderUserDataTable() {
 
 wr::IpcResourceUpdateQueue& RenderRootStateManager::AsyncResourceUpdates() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_IsParentProcess() || mRenderRoot == wr::RenderRoot::Default);
 
   if (!mAsyncResourceUpdates) {
     mAsyncResourceUpdates.emplace(WrBridge());

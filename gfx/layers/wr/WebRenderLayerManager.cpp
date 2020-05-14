@@ -42,7 +42,6 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
       mWebRenderCommandBuilder(this),
       mLastDisplayListSize(0) {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
-  mStateManager.mRenderRoot = wr::RenderRoot::Default;
   mStateManager.mLayerManager = this;
 
   if (XRE_IsContentProcess() &&
