@@ -16,7 +16,6 @@
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/LayersTypes.h"        // for LayersBackend
-#include "mozilla/layers/TextureForwarder.h"
 
 namespace mozilla {
 namespace dom {
@@ -82,6 +81,7 @@ class VRManagerChild : public PVRManagerChild {
 
   static bool IsCreated();
   static bool IsPresenting();
+  static TimeStamp GetIdleDeadlineHint(TimeStamp aDefault);
 
   PVRLayerChild* CreateVRLayer(uint32_t aDisplayID, nsIEventTarget* aTarget,
                                uint32_t aGroup);

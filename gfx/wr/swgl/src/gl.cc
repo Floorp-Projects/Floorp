@@ -2411,7 +2411,8 @@ static inline WideRGBA8 blend_pixels_RGBA8(PackedRGBA8 pdst, WideRGBA8 src) {
     case BLEND_KEY(GL_ONE, GL_ZERO):
       return src;
     case BLEND_KEY(GL_ONE_MINUS_DST_ALPHA, GL_ONE, GL_ZERO, GL_ONE):
-      return dst + ((src - muldiv255(src, alphas(src))) & RGB_MASK);
+      // src*(1-dst.a) + dst*1 = src - src*dst.a + dst
+      return dst + ((src - muldiv255(src, alphas(dst))) & RGB_MASK);
     case BLEND_KEY(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR):
       // src*k + (1-src)*dst = src*k + dst - src*dst = dst + src*(k - dst)
       // use addlow for signed overflow

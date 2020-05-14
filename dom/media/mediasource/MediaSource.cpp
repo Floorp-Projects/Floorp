@@ -37,6 +37,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBridge.h"
+#  include "mozilla/java/HardwareCodecCapabilityUtilsWrappers.h"
 #endif
 
 struct JSContext;

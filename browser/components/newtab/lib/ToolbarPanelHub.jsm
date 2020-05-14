@@ -60,7 +60,7 @@ class _ToolbarPanelHub {
     await waitForInitialized;
     // Enable the application menu button so that the user can access
     // the panel outside of the toolbar button
-    this.enableAppmenuButton();
+    await this.enableAppmenuButton();
 
     this.state = {
       protectionPanelMessageSeen: Services.prefs.getBoolPref(

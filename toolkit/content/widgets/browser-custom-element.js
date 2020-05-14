@@ -331,8 +331,6 @@
 
       this._remoteWebProgress = null;
 
-      this._contentTitle = "";
-
       this._characterSet = "";
 
       this._mayEnableCharacterEncodingMenu = null;
@@ -730,7 +728,7 @@
 
     get contentTitle() {
       return this.isRemoteBrowser
-        ? this._contentTitle
+        ? this.browsingContext.currentWindowGlobal?.documentTitle
         : this.contentDocument.title;
     }
 
@@ -1220,7 +1218,6 @@
         this._csp = null;
 
         this.messageManager.addMessageListener("Browser:Init", this);
-        this.messageManager.addMessageListener("DOMTitleChanged", this);
 
         let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
         let { RemoteWebProgressManager } = ChromeUtils.import(jsm, {});
@@ -1346,9 +1343,6 @@
           case "Browser:Init":
             this._outerWindowID = data.outerWindowID;
             break;
-          case "DOMTitleChanged":
-            this._contentTitle = data.title;
-            break;
           default:
             break;
         }
@@ -1422,7 +1416,6 @@
 
         this._remoteWebNavigation._currentURI = aLocation;
         this._documentURI = aDocumentURI;
-        this._contentTitle = aTitle;
         this._contentPrincipal = aContentPrincipal;
         this._contentStoragePrincipal = aContentStoragePrincipal;
         this._csp = aCSP;
@@ -1817,7 +1810,6 @@
             "_securityUI",
             "_documentURI",
             "_documentContentType",
-            "_contentTitle",
             "_characterSet",
             "_mayEnableCharacterEncodingMenu",
             "_charsetAutodetected",

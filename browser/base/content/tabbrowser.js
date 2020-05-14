@@ -57,7 +57,6 @@
       window.messageManager.addMessageListener("contextmenu", this);
 
       if (gMultiProcessBrowser) {
-        messageManager.addMessageListener("DOMTitleChanged", this);
         messageManager.addMessageListener("DOMWindowClose", this);
         messageManager.addMessageListener("Browser:Init", this);
       } else {
@@ -5123,17 +5122,6 @@
       let browser = aMessage.target;
 
       switch (aMessage.name) {
-        case "DOMTitleChanged": {
-          let tab = this.getTabForBrowser(browser);
-          if (!tab || tab.hasAttribute("pending")) {
-            return undefined;
-          }
-          let titleChanged = this.setTabTitle(tab);
-          if (titleChanged && !tab.selected && !tab.hasAttribute("busy")) {
-            tab.setAttribute("titlechanged", "true");
-          }
-          break;
-        }
         case "contextmenu": {
           openContextMenu(aMessage);
           break;
@@ -5288,8 +5276,6 @@
       window.removeEventListener("framefocusrequested", this);
 
       if (gMultiProcessBrowser) {
-        let messageManager = window.getGroupMessageManager("browsers");
-        messageManager.removeMessageListener("DOMTitleChanged", this);
         window.messageManager.removeMessageListener("contextmenu", this);
 
         if (this._switcher) {
@@ -5346,6 +5332,29 @@
           // to close the entire window. Calling preventDefault is our way of
           // saying we took care of this close request by closing the tab.
           event.preventDefault();
+        }
+      });
+
+      this.addEventListener("pagetitlechanged", event => {
+        let browser = event.target;
+        let tab = this.getTabForBrowser(browser);
+        if (!tab || tab.hasAttribute("pending")) {
+          return;
+        }
+
+        // Ignore empty title changes on internal pages. This prevents the title
+        // from changing while Fluent is populating the (initially-empty) title
+        // element.
+        if (
+          !browser.contentTitle &&
+          browser.contentPrincipal.isSystemPrincipal
+        ) {
+          return;
+        }
+
+        let titleChanged = this.setTabTitle(tab);
+        if (titleChanged && !tab.selected && !tab.hasAttribute("busy")) {
+          tab.setAttribute("titlechanged", "true");
         }
       });
 
@@ -5435,47 +5444,6 @@
         },
         true
       );
-
-      this.addEventListener("DOMTitleChanged", event => {
-        if (!event.isTrusted) {
-          return;
-        }
-
-        var contentWin = event.target.defaultView;
-        if (contentWin != contentWin.top) {
-          return;
-        }
-
-        let browser = contentWin.docShell.chromeEventHandler;
-        var tab = this.getTabForBrowser(browser);
-        if (!tab || tab.hasAttribute("pending")) {
-          return;
-        }
-
-        if (!browser.docShell) {
-          return;
-        }
-        // Ensure `docShell.document` (an nsIWebNavigation idl prop) is there:
-        browser.docShell.QueryInterface(Ci.nsIWebNavigation);
-        if (event.target != browser.docShell.document) {
-          return;
-        }
-
-        // Ignore empty title changes on internal pages. This prevents the title
-        // from changing while Fluent is populating the (initially-empty) title
-        // element.
-        if (
-          !browser.contentTitle &&
-          browser.contentPrincipal.isSystemPrincipal
-        ) {
-          return;
-        }
-
-        var titleChanged = this.setTabTitle(tab);
-        if (titleChanged && !tab.selected && !tab.hasAttribute("busy")) {
-          tab.setAttribute("titlechanged", "true");
-        }
-      });
 
       let onTabCrashed = event => {
         if (!event.isTrusted || !event.isTopFrame) {

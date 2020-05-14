@@ -1,0 +1,34 @@
+<html>
+<head>
+</head>
+<body>
+<div id="main">
+	<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="mySvg" width="400" height="800">
+		<defs>
+			<pattern id="pattern1" x="30" y="10" width="30" height="30" patternUnits="userSpaceOnUse" >
+					<text id="idText1" x="15" y="15" font-size="20">1</text>
+			</pattern>
+		</defs>
+		<rect id="idRect1" fill="url(#pattern1)" width="300" height="200"/> 
+	</svg>
+</div>
+<script>
+document.body.offsetHeight;
+
+var pattern = document.getElementById('pattern1');
+var text = document.getElementById('idText1');
+pattern.removeChild(text);
+
+var svgNS = "http://www.w3.org/2000/svg";
+var newText = document.createElementNS(svgNS,"text");
+newText.setAttributeNS(null,"id",'idText1');     
+newText.setAttributeNS(null,"x",15);     
+newText.setAttributeNS(null,"y",15); 
+newText.setAttributeNS(null,"font-size","20");
+
+var textNode = document.createTextNode('x');
+newText.appendChild(textNode);
+pattern.appendChild(newText);
+</script>
+</body>
+</html>

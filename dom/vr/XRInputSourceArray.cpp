@@ -38,6 +38,14 @@ void XRInputSourceArray::Update(XRSession* aSession) {
 
   XRInputSourcesChangeEventInit addInit;
   nsTArray<RefPtr<XRInputSource>> removedInputs;
+  if (NS_WARN_IF(!addInit.mAdded.SetCapacity(gfx::kVRControllerMaxCount,
+                                             mozilla::fallible))) {
+    MOZ_ASSERT(false,
+               "'add' sequence in XRInputSourcesChangeEventInit SetCapacity() "
+               "failed.");
+    return;
+  }
+
   for (int32_t i = 0; i < gfx::kVRControllerMaxCount; ++i) {
     const gfx::VRControllerState& controllerState =
         displayClient->GetDisplayInfo().mControllerState[i];
@@ -72,7 +80,10 @@ void XRInputSourceArray::Update(XRSession* aSession) {
       addInit.mCancelable = false;
       addInit.mSession = aSession;
       if (!addInit.mAdded.AppendElement(*inputSource, mozilla::fallible)) {
-        mozalloc_handle_oom(0);
+        MOZ_ASSERT(false,
+                   "'add' sequence in XRInputSourcesChangeEventInit "
+                   "AppendElement() failed, it might be due to the"
+                   "wrong size when SetCapacity().");
       }
     }
     // If added, updating the current controller states.
@@ -107,16 +118,23 @@ void XRInputSourceArray::DispatchInputSourceRemovedEvent(
   }
 
   XRInputSourcesChangeEventInit init;
+  if (NS_WARN_IF(
+          !init.mRemoved.SetCapacity(aInputs.Length(), mozilla::fallible))) {
+    MOZ_ASSERT(false,
+               "'removed' sequence in XRInputSourcesChangeEventInit "
+               "SetCapacity() failed.");
+    return;
+  }
   for (const auto& input : aInputs) {
     input->SetGamepadIsConnected(false, aSession);
     init.mBubbles = false;
     init.mCancelable = false;
     init.mSession = aSession;
     if (!init.mRemoved.AppendElement(*input, mozilla::fallible)) {
-      // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which might
-      // involve multiple reallocations) and potentially crashing here,
-      // SetCapacity could be called outside the loop once.
-      mozalloc_handle_oom(0);
+      MOZ_ASSERT(false,
+                 "'removed' sequence in XRInputSourcesChangeEventInit "
+                 "AppendElement() failed, it might be due to the"
+                 "wrong size when SetCapacity().");
     }
   }
 
