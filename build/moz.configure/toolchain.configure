@@ -2065,6 +2065,9 @@ def select_linker(linker, c_compiler, developer_options, enable_gold,
         # specific to it on stderr when it fails to process --version.
         env = dict(os.environ)
         env['LD_PRINT_OPTIONS'] = '1'
+        # Some locales might not print out the strings we are looking for, so
+        # ensure consistent output.
+        env['LC_ALL'] = 'C'
         retcode, stdout, stderr = get_cmd_output(*cmd, env=env)
         if retcode == 1 and 'Logging ld64 options' in stderr:
             kind = 'ld64'
