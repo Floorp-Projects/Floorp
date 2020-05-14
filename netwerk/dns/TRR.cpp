@@ -919,6 +919,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
               return rv;
             }
             if (!qname.IsEmpty()) {
+              ToLowerCase(qname);
               mCname = qname;
               LOG(("TRR::DohDecode CNAME host %s => %s\n", host.get(),
                    mCname.get()));
