@@ -271,7 +271,7 @@ void DOMEventTargetHelper::MaybeDontKeepAlive() {
   }
 }
 
-void DOMEventTargetHelper::BindToOwnerInternal(nsIGlobalObject* aOwner) {
+void DOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner) {
   MOZ_ASSERT(!mParentObject);
 
   if (aOwner) {
