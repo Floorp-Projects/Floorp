@@ -115,16 +115,23 @@ class FrameStatistics {
   // Can be called on any thread.
   uint64_t GetTotalFrames() const {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    return mFrameStatisticsData.mPresentedFrames + GetDroppedFrames();
+    return GetTotalFrames(mFrameStatisticsData);
+  }
+
+  static uint64_t GetTotalFrames(const FrameStatisticsData& aData) {
+    return aData.mPresentedFrames + GetDroppedFrames(aData);
   }
 
   // Returns the number of frames that have been skipped because they have
   // missed their composition deadline.
   uint64_t GetDroppedFrames() const {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    return mFrameStatisticsData.mDroppedDecodedFrames +
-           mFrameStatisticsData.mDroppedSinkFrames +
-           mFrameStatisticsData.mDroppedCompositorFrames;
+    return GetDroppedFrames(mFrameStatisticsData);
+  }
+
+  static uint64_t GetDroppedFrames(const FrameStatisticsData& aData) {
+    return aData.mDroppedDecodedFrames + aData.mDroppedSinkFrames +
+           aData.mDroppedCompositorFrames;
   }
 
   // Increments the parsed and decoded frame counters by the passed in counts.
