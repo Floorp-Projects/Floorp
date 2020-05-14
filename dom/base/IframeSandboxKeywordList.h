@@ -26,4 +26,3 @@ SANDBOX_KEYWORD("allow-popups-to-escape-sandbox", allowpopupstoescapesandbox,
 SANDBOX_KEYWORD("allow-presentation", allowpresentation, SANDBOXED_PRESENTATION)
 SANDBOX_KEYWORD("allow-storage-access-by-user-activation",
                 allowstorageaccessbyuseractivatetion, SANDBOXED_STORAGE_ACCESS)
-SANDBOX_KEYWORD("allow-downloads", allowdownloads, SANDBOXED_ALLOW_DOWNLOADS)
