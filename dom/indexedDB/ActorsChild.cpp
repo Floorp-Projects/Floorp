@@ -194,180 +194,153 @@ class MOZ_STACK_CLASS AutoSetCurrentTransaction final {
   }
 };
 
-class MOZ_STACK_CLASS ResultHelper final {
-  const RefPtr<IDBRequest> mRequest;
-  const AutoSetCurrentTransaction mAutoTransaction;
-  const SafeRefPtr<IDBTransaction> mTransaction;
+template <typename T>
+void SetResultAndDispatchSuccessEvent(
+    const RefPtr<IDBRequest>& aRequest,
+    const SafeRefPtr<IDBTransaction>& aTransaction, T* aPtr,
+    RefPtr<Event> aEvent = nullptr);
 
-  mozilla::Variant<
-      IDBDatabase*, IDBCursor*, IDBMutableFile*, StructuredCloneReadInfoChild*,
-      nsTArray<StructuredCloneReadInfoChild>*, const Key*, const nsTArray<Key>*,
-      const uint64_t*, const JS::Handle<JS::Value>*>
-      mResult;
+namespace detail {
+void DispatchSuccessEvent(const RefPtr<IDBRequest>& aRequest,
+                          const SafeRefPtr<IDBTransaction>& aTransaction,
+                          const RefPtr<Event>& aEvent);
 
- public:
-  template <typename T>
-  ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               T* aResult)
-      : mRequest(aRequest),
-        mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
-        mTransaction(std::move(aTransaction)),
-        mResult(aResult) {
-    MOZ_ASSERT(aRequest);
-    MOZ_ASSERT(aResult);
+template <class T>
+std::enable_if_t<std::is_same_v<T, IDBDatabase> ||
+                     std::is_same_v<T, IDBCursor> ||
+                     std::is_same_v<T, IDBMutableFile>,
+                 nsresult>
+GetResult(JSContext* aCx, T* aDOMObject, JS::MutableHandle<JS::Value> aResult) {
+  if (!aDOMObject) {
+    aResult.setNull();
+    return NS_OK;
   }
 
-  nsresult operator()(JSContext* aCx,
-                      JS::MutableHandle<JS::Value> aResult) const {
-    MOZ_ASSERT(aCx);
-    MOZ_ASSERT(mRequest);
-
-    return mResult.match(
-        [aCx, aResult](auto* aPtr) { return GetResult(aCx, aPtr, aResult); });
+  const bool ok = GetOrCreateDOMReflector(aCx, aDOMObject, aResult);
+  if (NS_WARN_IF(!ok)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  void DispatchSuccessEvent(RefPtr<Event> aEvent = nullptr);
+  return NS_OK;
+}
 
- private:
-  template <class T>
-  static std::enable_if_t<std::is_same_v<T, IDBDatabase> ||
-                              std::is_same_v<T, IDBCursor> ||
-                              std::is_same_v<T, IDBMutableFile>,
-                          nsresult>
-  GetResult(JSContext* aCx, T* aDOMObject,
-            JS::MutableHandle<JS::Value> aResult) {
-    if (!aDOMObject) {
-      aResult.setNull();
-      return NS_OK;
-    }
+nsresult GetResult(JSContext* aCx, const JS::Handle<JS::Value>* aValue,
+                   JS::MutableHandle<JS::Value> aResult) {
+  aResult.set(*aValue);
+  return NS_OK;
+}
 
-    const bool ok = GetOrCreateDOMReflector(aCx, aDOMObject, aResult);
-    if (NS_WARN_IF(!ok)) {
+nsresult GetResult(JSContext* aCx, const uint64_t* aValue,
+                   JS::MutableHandle<JS::Value> aResult) {
+  aResult.set(JS::NumberValue(*aValue));
+  return NS_OK;
+}
+
+nsresult GetResult(JSContext* aCx, StructuredCloneReadInfoChild&& aCloneInfo,
+                   JS::MutableHandle<JS::Value> aResult) {
+  const bool ok =
+      IDBObjectStore::DeserializeValue(aCx, std::move(aCloneInfo), aResult);
+
+  if (NS_WARN_IF(!ok)) {
+    return NS_ERROR_DOM_DATA_CLONE_ERR;
+  }
+
+  return NS_OK;
+}
+
+nsresult GetResult(JSContext* aCx, StructuredCloneReadInfoChild* aCloneInfo,
+                   JS::MutableHandle<JS::Value> aResult) {
+  return GetResult(aCx, std::move(*aCloneInfo), aResult);
+}
+
+nsresult GetResult(JSContext* aCx,
+                   nsTArray<StructuredCloneReadInfoChild>* aCloneInfos,
+                   JS::MutableHandle<JS::Value> aResult) {
+  JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
+  if (NS_WARN_IF(!array)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  if (!aCloneInfos->IsEmpty()) {
+    const uint32_t count = aCloneInfos->Length();
+
+    if (NS_WARN_IF(!JS::SetArrayLength(aCx, array, count))) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    return NS_OK;
-  }
+    for (uint32_t index = 0; index < count; index++) {
+      auto& cloneInfo = aCloneInfos->ElementAt(index);
 
-  static nsresult GetResult(JSContext* aCx, const JS::Handle<JS::Value>* aValue,
-                            JS::MutableHandle<JS::Value> aResult) {
-    aResult.set(*aValue);
-    return NS_OK;
-  }
+      JS::Rooted<JS::Value> value(aCx);
 
-  static nsresult GetResult(JSContext* aCx, const uint64_t* aValue,
-                            JS::MutableHandle<JS::Value> aResult) {
-    aResult.set(JS::NumberValue(*aValue));
-    return NS_OK;
-  }
+      const nsresult rv = GetResult(aCx, std::move(cloneInfo), &value);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-  static nsresult GetResult(JSContext* aCx,
-                            StructuredCloneReadInfoChild* aCloneInfo,
-                            JS::MutableHandle<JS::Value> aResult) {
-    return GetResult(aCx, std::move(*aCloneInfo), aResult);
-  }
-
-  static nsresult GetResult(JSContext* aCx,
-                            StructuredCloneReadInfoChild&& aCloneInfo,
-                            JS::MutableHandle<JS::Value> aResult) {
-    const bool ok =
-        IDBObjectStore::DeserializeValue(aCx, std::move(aCloneInfo), aResult);
-
-    if (NS_WARN_IF(!ok)) {
-      return NS_ERROR_DOM_DATA_CLONE_ERR;
-    }
-
-    return NS_OK;
-  }
-
-  static nsresult GetResult(JSContext* aCx,
-                            nsTArray<StructuredCloneReadInfoChild>* aCloneInfos,
-                            JS::MutableHandle<JS::Value> aResult) {
-    JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
-    if (NS_WARN_IF(!array)) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-
-    if (!aCloneInfos->IsEmpty()) {
-      const uint32_t count = aCloneInfos->Length();
-
-      if (NS_WARN_IF(!JS::SetArrayLength(aCx, array, count))) {
+      if (NS_WARN_IF(
+              !JS_DefineElement(aCx, array, index, value, JSPROP_ENUMERATE))) {
         IDB_REPORT_INTERNAL_ERR();
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
-
-      for (uint32_t index = 0; index < count; index++) {
-        auto& cloneInfo = aCloneInfos->ElementAt(index);
-
-        JS::Rooted<JS::Value> value(aCx);
-
-        const nsresult rv = GetResult(aCx, std::move(cloneInfo), &value);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        if (NS_WARN_IF(!JS_DefineElement(aCx, array, index, value,
-                                         JSPROP_ENUMERATE))) {
-          IDB_REPORT_INTERNAL_ERR();
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-        }
-      }
     }
-
-    aResult.setObject(*array);
-    return NS_OK;
   }
 
-  static nsresult GetResult(JSContext* aCx, const Key* aKey,
-                            JS::MutableHandle<JS::Value> aResult) {
-    const nsresult rv = aKey->ToJSVal(aCx, aResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+  aResult.setObject(*array);
+  return NS_OK;
+}
+
+nsresult GetResult(JSContext* aCx, const Key* aKey,
+                   JS::MutableHandle<JS::Value> aResult) {
+  const nsresult rv = aKey->ToJSVal(aCx, aResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult GetResult(JSContext* aCx, const nsTArray<Key>* aKeys,
+                   JS::MutableHandle<JS::Value> aResult) {
+  JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
+  if (NS_WARN_IF(!array)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  static nsresult GetResult(JSContext* aCx, const nsTArray<Key>* aKeys,
-                            JS::MutableHandle<JS::Value> aResult) {
-    JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
-    if (NS_WARN_IF(!array)) {
+  if (!aKeys->IsEmpty()) {
+    const uint32_t count = aKeys->Length();
+
+    if (NS_WARN_IF(!JS::SetArrayLength(aCx, array, count))) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    if (!aKeys->IsEmpty()) {
-      const uint32_t count = aKeys->Length();
+    for (uint32_t index = 0; index < count; index++) {
+      const Key& key = aKeys->ElementAt(index);
+      MOZ_ASSERT(!key.IsUnset());
 
-      if (NS_WARN_IF(!JS::SetArrayLength(aCx, array, count))) {
+      JS::Rooted<JS::Value> value(aCx);
+
+      const nsresult rv = GetResult(aCx, &key, &value);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      if (NS_WARN_IF(
+              !JS_DefineElement(aCx, array, index, value, JSPROP_ENUMERATE))) {
         IDB_REPORT_INTERNAL_ERR();
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
-
-      for (uint32_t index = 0; index < count; index++) {
-        const Key& key = aKeys->ElementAt(index);
-        MOZ_ASSERT(!key.IsUnset());
-
-        JS::Rooted<JS::Value> value(aCx);
-
-        const nsresult rv = GetResult(aCx, &key, &value);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        if (NS_WARN_IF(!JS_DefineElement(aCx, array, index, value,
-                                         JSPROP_ENUMERATE))) {
-          IDB_REPORT_INTERNAL_ERR();
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-        }
-      }
     }
-
-    aResult.setObject(*array);
-    return NS_OK;
   }
-};
+
+  aResult.setObject(*array);
+  return NS_OK;
+}
+}  // namespace detail
 
 class PermissionRequestMainProcessHelper final : public PermissionRequestBase {
   BackgroundFactoryRequestChild* mActor;
@@ -545,7 +518,7 @@ void DispatchErrorEvent(
   MOZ_ASSERT(aEvent);
 
   // XXX This is redundant if we are called from
-  // ResultHelper::DispatchSuccessEvent.
+  // DispatchSuccessEvent.
   Maybe<AutoSetCurrentTransaction> asct;
   if (aTransaction) {
     asct.emplace(SomeRef(*aTransaction));
@@ -598,45 +571,65 @@ void DispatchErrorEvent(
   }
 }
 
-void ResultHelper::DispatchSuccessEvent(RefPtr<Event> aEvent) {
-  AUTO_PROFILER_LABEL("IndexedDB:DispatchSuccessEvent", DOM);
+template <typename T>
+void SetResultAndDispatchSuccessEvent(
+    const RefPtr<IDBRequest>& aRequest,
+    const SafeRefPtr<IDBTransaction>& aTransaction, T* aPtr,
+    RefPtr<Event> aEvent) {
+  MOZ_ASSERT(aRequest);
+  MOZ_ASSERT(aPtr);
 
-  MOZ_ASSERT(mRequest);
-  mRequest->AssertIsOnOwningThread();
+  const auto autoTransaction = AutoSetCurrentTransaction{
+      aTransaction ? SomeRef(*aTransaction) : Nothing()};
 
-  if (mTransaction && mTransaction->IsAborted()) {
-    DispatchErrorEvent(mRequest, mTransaction->AbortCode(), mTransaction);
+  AUTO_PROFILER_LABEL("IndexedDB:SetResultAndDispatchSuccessEvent", DOM);
+
+  aRequest->AssertIsOnOwningThread();
+
+  if (aTransaction && aTransaction->IsAborted()) {
+    DispatchErrorEvent(aRequest, aTransaction->AbortCode(), aTransaction);
     return;
   }
 
   if (!aEvent) {
-    aEvent = CreateGenericEvent(mRequest, nsDependentString(kSuccessEventType),
+    aEvent = CreateGenericEvent(aRequest, nsDependentString(kSuccessEventType),
                                 eDoesNotBubble, eNotCancelable);
   }
   MOZ_ASSERT(aEvent);
 
-  mRequest->SetResult(*this);
+  aRequest->SetResult(
+      [aPtr](JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
+        MOZ_ASSERT(aCx);
+        return detail::GetResult(aCx, aPtr, aResult);
+      });
 
-  if (mTransaction && mTransaction->IsInactive()) {
-    mTransaction->TransitionToActive();
+  detail::DispatchSuccessEvent(aRequest, aTransaction, aEvent);
+}
+
+namespace detail {
+void DispatchSuccessEvent(const RefPtr<IDBRequest>& aRequest,
+                          const SafeRefPtr<IDBTransaction>& aTransaction,
+                          const RefPtr<Event>& aEvent) {
+  if (aTransaction && aTransaction->IsInactive()) {
+    aTransaction->TransitionToActive();
   }
 
-  if (mTransaction) {
+  if (aTransaction) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-        "Firing %s event", "%s", mTransaction->LoggingSerialNumber(),
-        mRequest->LoggingSerialNumber(),
+        "Firing %s event", "%s", aTransaction->LoggingSerialNumber(),
+        aRequest->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
   } else {
     IDB_LOG_MARK_CHILD_REQUEST("Firing %s event", "%s",
-                               mRequest->LoggingSerialNumber(),
+                               aRequest->LoggingSerialNumber(),
                                IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
   }
 
-  MOZ_ASSERT_IF(mTransaction && !mTransaction->WasExplicitlyCommitted(),
-                mTransaction->IsActive() && !mTransaction->IsAborted());
+  MOZ_ASSERT_IF(aTransaction && !aTransaction->WasExplicitlyCommitted(),
+                aTransaction->IsActive() && !aTransaction->IsAborted());
 
   IgnoredErrorResult rv;
-  mRequest->DispatchEvent(*aEvent, rv);
+  aRequest->DispatchEvent(*aEvent, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return;
   }
@@ -644,17 +637,18 @@ void ResultHelper::DispatchSuccessEvent(RefPtr<Event> aEvent) {
   WidgetEvent* const internalEvent = aEvent->WidgetEventPtr();
   MOZ_ASSERT(internalEvent);
 
-  if (mTransaction && mTransaction->IsActive()) {
-    mTransaction->TransitionToInactive();
+  if (aTransaction && aTransaction->IsActive()) {
+    aTransaction->TransitionToInactive();
 
     if (internalEvent->mFlags.mExceptionWasRaised) {
-      mTransaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+      aTransaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
     } else {
       // To handle upgrade transaction.
-      mTransaction->CommitIfNotStarted();
+      aTransaction->CommitIfNotStarted();
     }
   }
 }
+}  // namespace detail
 
 PRFileDesc* GetFileDescriptorFromStream(nsIInputStream* aStream) {
   MOZ_ASSERT(aStream);
@@ -1418,9 +1412,7 @@ bool BackgroundFactoryRequestChild::HandleResponse(
     // Instead we fire an error event with AbortErr.
     DispatchErrorEvent(mRequest, NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
   } else {
-    ResultHelper helper(mRequest, nullptr, database);
-
-    helper.DispatchSuccessEvent();
+    SetResultAndDispatchSuccessEvent(mRequest, nullptr, database);
   }
 
   databaseActor->ReleaseDOMObject();
@@ -1433,14 +1425,13 @@ bool BackgroundFactoryRequestChild::HandleResponse(
     const DeleteDatabaseRequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
-  ResultHelper helper(mRequest, nullptr, &JS::UndefinedHandleValue);
-
   RefPtr<Event> successEvent = IDBVersionChangeEvent::Create(
       mRequest, nsDependentString(kSuccessEventType),
       aResponse.previousVersion());
   MOZ_ASSERT(successEvent);
 
-  helper.DispatchSuccessEvent(std::move(successEvent));
+  SetResultAndDispatchSuccessEvent(mRequest, nullptr, &JS::UndefinedHandleValue,
+                                   std::move(successEvent));
 
   MOZ_ASSERT(!mDatabaseActor);
 
@@ -1789,9 +1780,8 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
       aRequestedVersion);
   MOZ_ASSERT(upgradeNeededEvent);
 
-  ResultHelper helper(request, std::move(transaction), mDatabase);
-
-  helper.DispatchSuccessEvent(std::move(upgradeNeededEvent));
+  SetResultAndDispatchSuccessEvent(request, transaction, mDatabase,
+                                   std::move(upgradeNeededEvent));
 
   return IPC_OK();
 }
@@ -1950,9 +1940,7 @@ bool BackgroundDatabaseRequestChild::HandleResponse(
       static_cast<IDBMutableFile*>(mutableFileActor->GetDOMObject());
   MOZ_ASSERT(mutableFile);
 
-  ResultHelper helper(mRequest, nullptr, mutableFile);
-
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(mRequest, nullptr, mutableFile);
 
   mutableFileActor->ReleaseDOMObject();
 
@@ -2437,17 +2425,13 @@ void BackgroundRequestChild::HandleResponse(nsresult aResponse) {
 void BackgroundRequestChild::HandleResponse(const Key& aResponse) {
   AssertIsOnOwningThread();
 
-  ResultHelper helper(mRequest, AcquireTransaction(), &aResponse);
-
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(mRequest, AcquireTransaction(), &aResponse);
 }
 
 void BackgroundRequestChild::HandleResponse(const nsTArray<Key>& aResponse) {
   AssertIsOnOwningThread();
 
-  ResultHelper helper(mRequest, AcquireTransaction(), &aResponse);
-
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(mRequest, AcquireTransaction(), &aResponse);
 }
 
 void BackgroundRequestChild::HandleResponse(
@@ -2458,9 +2442,8 @@ void BackgroundRequestChild::HandleResponse(
       std::move(aResponse), mTransaction->Database(),
       [this] { return std::move(*GetNextCloneData()); });
 
-  ResultHelper helper(mRequest, AcquireTransaction(), &cloneReadInfo);
-
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(mRequest, AcquireTransaction(),
+                                   &cloneReadInfo);
 }
 
 void BackgroundRequestChild::HandleResponse(
@@ -2486,26 +2469,22 @@ void BackgroundRequestChild::HandleResponse(
         });
   }
 
-  ResultHelper helper(mRequest, AcquireTransaction(), &cloneReadInfos);
-
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(mRequest, AcquireTransaction(),
+                                   &cloneReadInfos);
 }
 
 void BackgroundRequestChild::HandleResponse(JS::Handle<JS::Value> aResponse) {
   AssertIsOnOwningThread();
 
-  ResultHelper helper(mRequest, AcquireTransaction(),
-                      const_cast<const JS::Handle<JS::Value>*>(&aResponse));
-
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(
+      mRequest, AcquireTransaction(),
+      const_cast<const JS::Handle<JS::Value>*>(&aResponse));
 }
 
 void BackgroundRequestChild::HandleResponse(const uint64_t aResponse) {
   AssertIsOnOwningThread();
 
-  ResultHelper helper(mRequest, AcquireTransaction(), &aResponse);
-
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(mRequest, AcquireTransaction(), &aResponse);
 }
 
 nsresult BackgroundRequestChild::HandlePreprocess(
@@ -3184,12 +3163,12 @@ void BackgroundCursorChild<CursorType>::CompleteContinueRequestFromCache() {
       GetRequest()->LoggingSerialNumber(),
       mDelayedResponses.size() + mCachedResponses.size());
 
-  ResultHelper helper(GetRequest(),
-                      mTransaction ? SafeRefPtr{&mTransaction.ref(),
-                                                AcquireStrongRefFromRawPtr{}}
-                                   : nullptr,
-                      cursor.get());
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(
+      GetRequest(),
+      mTransaction
+          ? SafeRefPtr{&mTransaction.ref(), AcquireStrongRefFromRawPtr{}}
+          : nullptr,
+      cursor.get());
 
   mTransaction->OnRequestFinished(/* aRequestCompletedSuccessfully */ true);
 }
@@ -3292,12 +3271,12 @@ void BackgroundCursorChild<CursorType>::HandleResponse(
     mCursor->Reset();
   }
 
-  ResultHelper helper(GetRequest(),
-                      mTransaction ? SafeRefPtr{&mTransaction.ref(),
-                                                AcquireStrongRefFromRawPtr{}}
-                                   : nullptr,
-                      &JS::NullHandleValue);
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(
+      GetRequest(),
+      mTransaction
+          ? SafeRefPtr{&mTransaction.ref(), AcquireStrongRefFromRawPtr{}}
+          : nullptr,
+      &JS::NullHandleValue);
 
   if (!mCursor) {
     MOZ_ALWAYS_SUCCEEDS(this->GetActorEventTarget()->Dispatch(
@@ -3348,7 +3327,7 @@ void BackgroundCursorChild<CursorType>::HandleMultipleCursorResponses(
   MOZ_ASSERT_IF(aResponses.Length() > 1, mCachedResponses.empty());
 
   // If a new cursor is created, we need to keep a reference to it until the
-  // ResultHelper creates a DOM Binding.
+  // SetResultAndDispatchSuccessEvent creates a DOM Binding.
   RefPtr<IDBCursor> strongNewCursor;
 
   bool isFirst = true;
@@ -3383,12 +3362,12 @@ void BackgroundCursorChild<CursorType>::HandleMultipleCursorResponses(
     }
   }
 
-  ResultHelper helper(GetRequest(),
-                      mTransaction ? SafeRefPtr{&mTransaction.ref(),
-                                                AcquireStrongRefFromRawPtr{}}
-                                   : nullptr,
-                      static_cast<IDBCursor*>(mCursor));
-  helper.DispatchSuccessEvent();
+  SetResultAndDispatchSuccessEvent(
+      GetRequest(),
+      mTransaction
+          ? SafeRefPtr{&mTransaction.ref(), AcquireStrongRefFromRawPtr{}}
+          : nullptr,
+      static_cast<IDBCursor*>(mCursor));
 }
 
 template <IDBCursorType CursorType>
