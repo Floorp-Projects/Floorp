@@ -9,14 +9,19 @@ const cssPropertiesCompatData = require("devtools/client/inspector/compatibility
 
 const mdnCompatibility = new MDNCompatibility(cssPropertiesCompatData);
 
-const FIREFOX_69 = {
-  id: "firefox",
-  version: "69",
-};
-
 const FIREFOX_1 = {
   id: "firefox",
   version: "1",
+};
+
+const FIREFOX_60 = {
+  id: "firefox",
+  version: "60",
+};
+
+const FIREFOX_69 = {
+  id: "firefox",
+  version: "69",
 };
 
 const SAFARI_13 = {
@@ -113,6 +118,21 @@ const TEST_DATA = [
     ],
     browsers: [FIREFOX_69, SAFARI_13],
     expectedIssues: [],
+  },
+  {
+    description: "Test for a property defined with prefix",
+    declarations: [{ name: "-moz-binding" }],
+    browsers: [FIREFOX_1, FIREFOX_60, FIREFOX_69],
+    expectedIssues: [
+      {
+        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        property: "-moz-binding",
+        url: "https://developer.mozilla.org/docs/Web/CSS/-moz-binding",
+        deprecated: true,
+        experimental: false,
+        unsupportedBrowsers: [FIREFOX_69],
+      },
+    ],
   },
 ];
 
