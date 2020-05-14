@@ -45,6 +45,8 @@
 #include "nsIRedirectHistoryEntry.h"
 #include "nsOSHelperAppService.h"
 #include "nsOSHelperAppServiceChild.h"
+#include "nsSandboxFlags.h"
+#include "nsIConsoleService.h"
 
 // used to access our datastore of user-configured helper applications
 #include "nsIHandlerService.h"
@@ -1533,6 +1535,32 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   }
 
   if (mBrowsingContext) {
+    nsCOMPtr<nsILoadInfo> loadinfo = aChannel->LoadInfo();
+    uint32_t triggeringFlags = loadinfo->GetTriggeringSandboxFlags();
+    uint32_t currentflags = mBrowsingContext->SandboxFlags();
+
+    if ((triggeringFlags & SANDBOXED_ALLOW_DOWNLOADS) ||
+        (currentflags & SANDBOXED_ALLOW_DOWNLOADS)) {
+      // If we encounter a download from within a sandboxed iframe, we
+      // cancel the request if dom.block_download_in_sandboxed_iframes is
+      // prefed on. Otherwise we log a warning that downloads within sandboxed
+      // iframes will be blocked soon.
+      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
+
+      if (StaticPrefs::dom_block_download_in_sandboxed_iframes()) {
+        mCanceled = true;
+        request->Cancel(NS_ERROR_ABORT);
+
+        if (httpChannel) {
+          LogMessageToConsole(httpChannel, "IframeSandboxBlockedDownload");
+        }
+        return NS_OK;
+      }
+      if (httpChannel) {
+        LogMessageToConsole(httpChannel, "IframeSandboxDeprecatedDownload");
+      }
+    }
+
     mMaybeCloseWindowHelper = new MaybeCloseWindowHelper(mBrowsingContext);
     mMaybeCloseWindowHelper->SetShouldCloseWindow(mShouldCloseWindow);
 
@@ -1931,6 +1959,43 @@ nsExternalAppHandler::OnDataAvailable(nsIRequest* request,
     }
   }
   return rv;
+}
+
+void nsExternalAppHandler::LogMessageToConsole(nsIHttpChannel* aChannel,
+                                               const char* aMsg) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  uint64_t windowID = 0;
+  rv = aChannel->GetTopLevelContentWindowId(&windowID);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+  if (!windowID) {
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    rv = aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    if (loadGroup) {
+      windowID = nsContentUtils::GetInnerWindowID(loadGroup);
+    }
+  }
+
+  nsAutoString localizedMsg;
+  AutoTArray<nsString, 0> params;
+  rv = nsContentUtils::FormatLocalizedString(
+      nsContentUtils::eSECURITY_PROPERTIES, aMsg, params, localizedMsg);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsContentUtils::ReportToConsoleByWindowID(
+      localizedMsg, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
+      windowID, uri);
 }
 
 NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest* request,
