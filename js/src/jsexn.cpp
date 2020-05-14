@@ -28,7 +28,8 @@
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/Conversions.h"
-#include "js/Exception.h"  // JS::ExceptionStack
+#include "js/ErrorReport.h"  // JS::PrintError
+#include "js/Exception.h"    // JS::ExceptionStack
 #include "js/SavedFrameAPI.h"
 #include "js/UniquePtr.h"
 #include "js/Value.h"
@@ -287,7 +288,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   // cannot construct the Error constructor without self-hosted code. Just
   // print the error to stderr to help debugging.
   if (cx->realm()->isSelfHostingRealm()) {
-    PrintError(cx, stderr, JS::ConstUTF8CharsZ(), reportp, true);
+    JS::PrintError(cx, stderr, JS::ConstUTF8CharsZ(), reportp, true);
     return;
   }
 
