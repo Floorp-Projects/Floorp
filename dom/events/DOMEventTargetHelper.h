@@ -49,14 +49,14 @@ class DOMEventTargetHelper : public dom::EventTarget,
         mHasOrHasHadOwnerWindow(false),
         mIsKeptAlive(false) {
     nsIGlobalObject* global = aWindow ? aWindow->AsGlobal() : nullptr;
-    BindToOwnerInternal(global);
+    BindToOwner(global);
   }
   explicit DOMEventTargetHelper(nsIGlobalObject* aGlobalObject)
       : mParentObject(nullptr),
         mOwnerWindow(nullptr),
         mHasOrHasHadOwnerWindow(false),
         mIsKeptAlive(false) {
-    BindToOwnerInternal(aGlobalObject);
+    BindToOwner(aGlobalObject);
   }
   explicit DOMEventTargetHelper(DOMEventTargetHelper* aOther)
       : mParentObject(nullptr),
@@ -64,10 +64,10 @@ class DOMEventTargetHelper : public dom::EventTarget,
         mHasOrHasHadOwnerWindow(false),
         mIsKeptAlive(false) {
     if (!aOther) {
-      BindToOwnerInternal(static_cast<nsIGlobalObject*>(nullptr));
+      BindToOwner(static_cast<nsIGlobalObject*>(nullptr));
       return;
     }
-    BindToOwnerInternal(aOther->GetParentObject());
+    BindToOwner(aOther->GetParentObject());
     mHasOrHasHadOwnerWindow = aOther->HasOrHasHadOwner();
   }
 
@@ -182,7 +182,7 @@ class DOMEventTargetHelper : public dom::EventTarget,
   void IgnoreKeepAliveIfHasListenersFor(const nsAString& aType);
   void IgnoreKeepAliveIfHasListenersFor(nsAtom* aType);
 
-  void BindToOwnerInternal(nsIGlobalObject* aOwner);
+  void BindToOwner(nsIGlobalObject* aOwner);
 
  private:
   // The parent global object.  The global will clear this when
