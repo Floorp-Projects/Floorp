@@ -5,8 +5,6 @@
 mod common;
 use crate::common::*;
 
-use iso8601;
-
 use glean_core::metrics::*;
 use glean_core::ping::PingMaker;
 use glean_core::{CommonMetricData, Glean, Lifetime};

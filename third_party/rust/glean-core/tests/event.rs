@@ -180,6 +180,12 @@ fn test_sending_of_event_ping_when_it_fills_up() {
     let (url, json) = &get_queued_pings(glean.get_data_path()).unwrap()[0];
     assert!(url.starts_with(format!("/submit/{}/events/", glean.get_application_id()).as_str()));
     assert_eq!(500, json["events"].as_array().unwrap().len());
+    assert_eq!(
+        "max_capacity",
+        json["ping_info"].as_object().unwrap()["reason"]
+            .as_str()
+            .unwrap()
+    );
 
     for i in 0..500 {
         let event = &json["events"].as_array().unwrap()[i];

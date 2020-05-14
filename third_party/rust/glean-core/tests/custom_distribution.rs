@@ -42,11 +42,11 @@ mod linear {
 
             metric.accumulate_samples_signed(&glean, vec![50]);
 
-            let val = metric
+            let snapshot = metric
                 .test_get_value(&glean, "store1")
                 .expect("Value should be stored");
 
-            assert_eq!(val.sum(), 50);
+            assert_eq!(snapshot.sum, 50);
         }
 
         // Make a new Glean instance here, which should force reloading of the data from disk
@@ -128,20 +128,19 @@ mod linear {
         // negative values to not trigger error reporting.
         metric.accumulate_samples_signed(&glean, [1, 2, 3].to_vec());
 
-        let val = metric
+        let snapshot = metric
             .test_get_value(&glean, "store1")
             .expect("Value should be stored");
 
-        // Check that we got the right sum and number of samples.
-        assert_eq!(val.sum(), 6);
-        assert_eq!(val.count(), 3);
+        // Check that we got the right sum of samples.
+        assert_eq!(snapshot.sum, 6);
 
         // We should get a sample in 3 buckets.
         // These numbers are a bit magic, but they correspond to
         // `hist.sample_to_bucket_minimum(i * kb)` for `i = 1..=3`.
-        assert_eq!(1, val.values()[&1]);
-        assert_eq!(1, val.values()[&2]);
-        assert_eq!(1, val.values()[&3]);
+        assert_eq!(1, snapshot.values[&1]);
+        assert_eq!(1, snapshot.values[&2]);
+        assert_eq!(1, snapshot.values[&3]);
 
         // No errors should be reported.
         assert!(test_get_num_recorded_errors(
@@ -175,20 +174,19 @@ mod linear {
         // Accumulate the samples.
         metric.accumulate_samples_signed(&glean, [-1, 1, 2, 3].to_vec());
 
-        let val = metric
+        let snapshot = metric
             .test_get_value(&glean, "store1")
             .expect("Value should be stored");
 
-        // Check that we got the right sum and number of samples.
-        assert_eq!(val.sum(), 6);
-        assert_eq!(val.count(), 3);
+        // Check that we got the right sum of samples.
+        assert_eq!(snapshot.sum, 6);
 
         // We should get a sample in 3 buckets.
         // These numbers are a bit magic, but they correspond to
         // `hist.sample_to_bucket_minimum(i * kb)` for `i = 1..=3`.
-        assert_eq!(1, val.values()[&1]);
-        assert_eq!(1, val.values()[&2]);
-        assert_eq!(1, val.values()[&3]);
+        assert_eq!(1, snapshot.values[&1]);
+        assert_eq!(1, snapshot.values[&2]);
+        assert_eq!(1, snapshot.values[&3]);
 
         // 1 error should be reported.
         assert_eq!(
@@ -255,11 +253,11 @@ mod exponential {
 
             metric.accumulate_samples_signed(&glean, vec![50]);
 
-            let val = metric
+            let snapshot = metric
                 .test_get_value(&glean, "store1")
                 .expect("Value should be stored");
 
-            assert_eq!(val.sum(), 50);
+            assert_eq!(snapshot.sum, 50);
         }
 
         // Make a new Glean instance here, which should force reloading of the data from disk
@@ -341,20 +339,19 @@ mod exponential {
         // negative values to not trigger error reporting.
         metric.accumulate_samples_signed(&glean, [1, 2, 3].to_vec());
 
-        let val = metric
+        let snapshot = metric
             .test_get_value(&glean, "store1")
             .expect("Value should be stored");
 
-        // Check that we got the right sum and number of samples.
-        assert_eq!(val.sum(), 6);
-        assert_eq!(val.count(), 3);
+        // Check that we got the right sum of samples.
+        assert_eq!(snapshot.sum, 6);
 
         // We should get a sample in 3 buckets.
         // These numbers are a bit magic, but they correspond to
         // `hist.sample_to_bucket_minimum(i * kb)` for `i = 1..=3`.
-        assert_eq!(1, val.values()[&1]);
-        assert_eq!(1, val.values()[&2]);
-        assert_eq!(1, val.values()[&3]);
+        assert_eq!(1, snapshot.values[&1]);
+        assert_eq!(1, snapshot.values[&2]);
+        assert_eq!(1, snapshot.values[&3]);
 
         // No errors should be reported.
         assert!(test_get_num_recorded_errors(
@@ -388,20 +385,19 @@ mod exponential {
         // Accumulate the samples.
         metric.accumulate_samples_signed(&glean, [-1, 1, 2, 3].to_vec());
 
-        let val = metric
+        let snapshot = metric
             .test_get_value(&glean, "store1")
             .expect("Value should be stored");
 
-        // Check that we got the right sum and number of samples.
-        assert_eq!(val.sum(), 6);
-        assert_eq!(val.count(), 3);
+        // Check that we got the right sum of samples.
+        assert_eq!(snapshot.sum, 6);
 
         // We should get a sample in 3 buckets.
         // These numbers are a bit magic, but they correspond to
         // `hist.sample_to_bucket_minimum(i * kb)` for `i = 1..=3`.
-        assert_eq!(1, val.values()[&1]);
-        assert_eq!(1, val.values()[&2]);
-        assert_eq!(1, val.values()[&3]);
+        assert_eq!(1, snapshot.values[&1]);
+        assert_eq!(1, snapshot.values[&2]);
+        assert_eq!(1, snapshot.values[&3]);
 
         // 1 error should be reported.
         assert_eq!(

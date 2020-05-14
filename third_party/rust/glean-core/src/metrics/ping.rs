@@ -28,8 +28,9 @@ impl PingType {
     /// ## Arguments
     ///
     /// * `name` - The name of the ping.
-    /// * `include_client_id` - Whether to include the client ID in the assembled ping when.
-    /// sending.
+    /// * `include_client_id` - Whether to include the client ID in the assembled ping when submitting.
+    /// * `send_if_empty` - Whether the ping should be sent empty or not.
+    /// * `reason_codes` - The valid reason codes for this ping.
     pub fn new<A: Into<String>>(
         name: A,
         include_client_id: bool,

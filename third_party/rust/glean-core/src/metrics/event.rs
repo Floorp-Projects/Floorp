@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use serde_json::{json, Value as JsonValue};
 
 use crate::error_recording::{record_error, ErrorType};
-use crate::event_database::RecordedEventData;
+use crate::event_database::RecordedEvent;
 use crate::metrics::MetricType;
 use crate::util::truncate_string_at_boundary_with_error;
 use crate::CommonMetricData;
@@ -116,11 +116,7 @@ impl EventMetric {
     /// Get the vector of currently stored events for this event metric.
     ///
     /// This doesn't clear the stored value.
-    pub fn test_get_value(
-        &self,
-        glean: &Glean,
-        store_name: &str,
-    ) -> Option<Vec<RecordedEventData>> {
+    pub fn test_get_value(&self, glean: &Glean, store_name: &str) -> Option<Vec<RecordedEvent>> {
         glean.event_storage().test_get_value(&self.meta, store_name)
     }
 

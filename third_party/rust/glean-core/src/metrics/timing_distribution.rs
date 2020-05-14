@@ -4,13 +4,10 @@
 
 use std::collections::HashMap;
 
-use serde::Serialize;
-
 use crate::error_recording::{record_error, ErrorType};
 use crate::histogram::{Functional, Histogram};
 use crate::metrics::time_unit::TimeUnit;
-use crate::metrics::Metric;
-use crate::metrics::MetricType;
+use crate::metrics::{DistributionData, Metric, MetricType};
 use crate::storage::StorageManager;
 use crate::CommonMetricData;
 use crate::Glean;
@@ -21,8 +18,13 @@ const LOG_BASE: f64 = 2.0;
 // The buckets per each order of magnitude of the logarithm.
 const BUCKETS_PER_MAGNITUDE: f64 = 8.0;
 
-// Maximum time of 10 minutes in nanoseconds. This maximum means we
-// retain a maximum of 313 buckets.
+// Maximum time, which means we retain a maximum of 316 buckets.
+// It is automatically adjusted based on the `time_unit` parameter
+// so that:
+//
+// - `nanosecond`: 10 minutes
+// - `microsecond`: ~6.94 days
+// - `millisecond`: ~19 years
 const MAX_SAMPLE_TIME: u64 = 1000 * 1000 * 1000 * 60 * 10;
 
 /// Identifier for a running timer.
@@ -98,18 +100,11 @@ pub struct TimingDistributionMetric {
     timings: Timings,
 }
 
-/// A serializable representation of a snapshotted histogram with a time unit.
-#[derive(Debug, Serialize)]
-pub struct Snapshot {
-    values: HashMap<u64, u64>,
-    sum: u64,
-}
-
 /// Create a snapshot of the histogram with a time unit.
 ///
 /// The snapshot can be serialized into the payload format.
-pub(crate) fn snapshot(hist: &Histogram<Functional>) -> Snapshot {
-    Snapshot {
+pub(crate) fn snapshot(hist: &Histogram<Functional>) -> DistributionData {
+    DistributionData {
         // **Caution**: This cannot use `Histogram::snapshot_values` and needs to use the more
         // specialized snapshot function.
         values: hist.snapshot(),
@@ -174,11 +169,23 @@ impl TimingDistributionMetric {
             Ok(duration) => duration,
         };
 
-        if duration > MAX_SAMPLE_TIME {
-            let msg = "Sample is longer than 10 minutes";
+        let min_sample_time = self.time_unit.as_nanos(1);
+        let max_sample_time = self.time_unit.as_nanos(MAX_SAMPLE_TIME);
+
+        duration = if duration < min_sample_time {
+            // If measurement is less than the minimum, just truncate. This is
+            // not recorded as an error.
+            min_sample_time
+        } else if duration > max_sample_time {
+            let msg = format!(
+                "Sample is longer than the max for a time_unit of {:?} ({} ns)",
+                self.time_unit, max_sample_time
+            );
             record_error(glean, &self.meta, ErrorType::InvalidOverflow, msg, None);
-            duration = MAX_SAMPLE_TIME;
-        }
+            max_sample_time
+        } else {
+            duration
+        };
 
         if !self.should_record(glean) {
             return;
@@ -236,6 +243,7 @@ impl TimingDistributionMetric {
     pub fn accumulate_samples_signed(&mut self, glean: &Glean, samples: Vec<i64>) {
         let mut num_negative_samples = 0;
         let mut num_too_long_samples = 0;
+        let max_sample_time = self.time_unit.as_nanos(MAX_SAMPLE_TIME);
 
         glean.storage().record_with(glean, &self.meta, |old_value| {
             let mut hist = match old_value {
@@ -247,12 +255,19 @@ impl TimingDistributionMetric {
                 if sample < 0 {
                     num_negative_samples += 1;
                 } else {
-                    let sample = sample as u64;
-                    let mut sample = self.time_unit.as_nanos(sample);
-                    if sample > MAX_SAMPLE_TIME {
+                    let mut sample = sample as u64;
+
+                    // Check the range prior to converting the incoming unit to
+                    // nanoseconds, so we can compare against the constant
+                    // MAX_SAMPLE_TIME.
+                    if sample == 0 {
+                        sample = 1;
+                    } else if sample > MAX_SAMPLE_TIME {
                         num_too_long_samples += 1;
                         sample = MAX_SAMPLE_TIME;
                     }
+
+                    sample = self.time_unit.as_nanos(sample);
 
                     hist.accumulate(sample);
                 }
@@ -273,8 +288,8 @@ impl TimingDistributionMetric {
 
         if num_too_long_samples > 0 {
             let msg = format!(
-                "Accumulated {} samples longer than 10 minutes",
-                num_too_long_samples
+                "{} samples are longer than the maximum of {}",
+                num_too_long_samples, max_sample_time
             );
             record_error(
                 glean,
@@ -291,17 +306,13 @@ impl TimingDistributionMetric {
     /// Get the currently stored value as an integer.
     ///
     /// This doesn't clear the stored value.
-    pub fn test_get_value(
-        &self,
-        glean: &Glean,
-        storage_name: &str,
-    ) -> Option<Histogram<Functional>> {
+    pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<DistributionData> {
         match StorageManager.snapshot_metric(
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
         ) {
-            Some(Metric::TimingDistribution(hist)) => Some(hist),
+            Some(Metric::TimingDistribution(hist)) => Some(snapshot(&hist)),
             _ => None,
         }
     }
@@ -317,7 +328,7 @@ impl TimingDistributionMetric {
         storage_name: &str,
     ) -> Option<String> {
         self.test_get_value(glean, storage_name)
-            .map(|hist| serde_json::to_string(&snapshot(&hist)).unwrap())
+            .map(|snapshot| serde_json::to_string(&snapshot).unwrap())
     }
 }
 

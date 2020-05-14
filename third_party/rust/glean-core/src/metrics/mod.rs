@@ -4,6 +4,8 @@
 
 //! The different metric types supported by the Glean SDK to handle data.
 
+use std::collections::HashMap;
+
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
@@ -26,6 +28,7 @@ mod timespan;
 mod timing_distribution;
 mod uuid;
 
+pub use crate::event_database::RecordedEvent;
 use crate::histogram::{Functional, Histogram, PrecomputedExponential, PrecomputedLinear};
 use crate::util::get_iso_time_string;
 use crate::CommonMetricData;
@@ -56,6 +59,18 @@ pub use self::timespan::TimespanMetric;
 pub use self::timing_distribution::TimerId;
 pub use self::timing_distribution::TimingDistributionMetric;
 pub use self::uuid::UuidMetric;
+
+/// A snapshot of all buckets and the accumulated sum of a distribution.
+#[derive(Debug, Serialize)]
+pub struct DistributionData {
+    /// A map containig the bucket index mapped to the accumulated count.
+    ///
+    /// This can contain buckets with a count of `0`.
+    pub values: HashMap<u64, u64>,
+
+    /// The accumulated sum of all the samples in the distribution.
+    pub sum: u64,
+}
 
 /// The available metrics.
 ///

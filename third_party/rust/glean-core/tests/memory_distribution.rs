@@ -46,11 +46,11 @@ fn serializer_should_correctly_serialize_memory_distribution() {
 
         metric.accumulate(&glean, 100_000);
 
-        let val = metric
+        let snapshot = metric
             .test_get_value(&glean, "store1")
             .expect("Value should be stored");
 
-        assert_eq!(val.sum(), 100_000 * kb);
+        assert_eq!(snapshot.sum, 100_000 * kb);
     }
 
     // Make a new Glean instance here, which should force reloading of the data from disk
@@ -126,22 +126,21 @@ fn the_accumulate_samples_api_correctly_stores_memory_values() {
     // negative values to not trigger error reporting.
     metric.accumulate_samples_signed(&glean, [1, 2, 3].to_vec());
 
-    let val = metric
+    let snapshot = metric
         .test_get_value(&glean, "store1")
         .expect("Value should be stored");
 
     let kb = 1024;
 
-    // Check that we got the right sum and number of samples.
-    assert_eq!(val.sum(), 6 * kb);
-    assert_eq!(val.count(), 3);
+    // Check that we got the right sum of samples.
+    assert_eq!(snapshot.sum, 6 * kb);
 
     // We should get a sample in 3 buckets.
     // These numbers are a bit magic, but they correspond to
     // `hist.sample_to_bucket_minimum(i * kb)` for `i = 1..=3`.
-    assert_eq!(1, val.values()[&1023]);
-    assert_eq!(1, val.values()[&2047]);
-    assert_eq!(1, val.values()[&3024]);
+    assert_eq!(1, snapshot.values[&1023]);
+    assert_eq!(1, snapshot.values[&2047]);
+    assert_eq!(1, snapshot.values[&3024]);
 
     // No errors should be reported.
     assert!(test_get_num_recorded_errors(
@@ -172,22 +171,21 @@ fn the_accumulate_samples_api_correctly_handles_negative_values() {
     // Accumulate the samples.
     metric.accumulate_samples_signed(&glean, [-1, 1, 2, 3].to_vec());
 
-    let val = metric
+    let snapshot = metric
         .test_get_value(&glean, "store1")
         .expect("Value should be stored");
 
     let kb = 1024;
 
-    // Check that we got the right sum and number of samples.
-    assert_eq!(val.sum(), 6 * kb);
-    assert_eq!(val.count(), 3);
+    // Check that we got the right sum of samples.
+    assert_eq!(snapshot.sum, 6 * kb);
 
     // We should get a sample in 3 buckets.
     // These numbers are a bit magic, but they correspond to
     // `hist.sample_to_bucket_minimum(i * kb)` for `i = 1..=3`.
-    assert_eq!(1, val.values()[&1023]);
-    assert_eq!(1, val.values()[&2047]);
-    assert_eq!(1, val.values()[&3024]);
+    assert_eq!(1, snapshot.values[&1023]);
+    assert_eq!(1, snapshot.values[&2047]);
+    assert_eq!(1, snapshot.values[&3024]);
 
     // 1 error should be reported.
     assert_eq!(
