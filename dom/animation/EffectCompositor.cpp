@@ -107,6 +107,12 @@ bool EffectCompositor::AllowCompositorAnimationsOnFrame(
 bool FindAnimationsForCompositor(
     const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
     nsTArray<RefPtr<dom::Animation>>* aMatches /*out*/) {
+  // Do not process any animations on the compositor when in print or print
+  // preview.
+  if (aFrame->PresContext()->IsPrintingOrPrintPreview()) {
+    return false;
+  }
+
   MOZ_ASSERT(
       aPropertySet.IsSubsetOf(LayerAnimationInfo::GetCSSPropertiesFor(
           DisplayItemType::TYPE_TRANSFORM)) ||
@@ -428,8 +434,6 @@ bool EffectCompositor::GetServoAnimationRule(
     const dom::Element* aElement, PseudoStyleType aPseudoType,
     CascadeLevel aCascadeLevel, RawServoAnimationValueMap* aAnimationValues) {
   MOZ_ASSERT(aAnimationValues);
-  MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),
-             "Should not be in print preview");
   // Gecko_GetAnimationRule should have already checked this
   MOZ_ASSERT(nsContentUtils::GetPresShellForContent(aElement),
              "Should not be trying to run animations on elements in documents"

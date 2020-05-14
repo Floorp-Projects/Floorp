@@ -1420,7 +1420,7 @@ bool KeyframeEffect::CanThrottle() const {
     return false;
   }
 
-  nsIFrame* frame = GetStyleFrame();
+  nsIFrame* const frame = GetStyleFrame();
   if (!frame) {
     // There are two possible cases here.
     // a) No target element
@@ -1429,6 +1429,11 @@ bool KeyframeEffect::CanThrottle() const {
     // In either case we can throttle the animation because there is no
     // need to update on the main thread.
     return true;
+  }
+
+  // Do not throttle any animations during print preview.
+  if (frame->PresContext()->IsPrintingOrPrintPreview()) {
+    return false;
   }
 
   if (CanThrottleIfNotVisible(*frame)) {
