@@ -56,7 +56,7 @@ add_task(async function testPlayPause() {
  * The following are helper functions.
  */
 function generateMediaControlKeyEvent(event) {
-  const playbackStateChanged = waitUntilMainMediaControllerPlaybackChanged();
+  const playbackStateChanged = waitUntilDisplayedPlaybackChanged();
   ChromeUtils.generateMediaControlKeysTestEvent(event);
   return playbackStateChanged;
 }

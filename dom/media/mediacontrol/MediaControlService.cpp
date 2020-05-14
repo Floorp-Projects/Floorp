@@ -317,12 +317,6 @@ void MediaControlService::ControllerManager::MainControllerPlaybackStateChanged(
     MediaSessionPlaybackState aState) {
   MOZ_ASSERT(NS_IsMainThread());
   mSource->SetPlaybackState(aState);
-  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
-    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
-      obs->NotifyObservers(nullptr, "main-media-controller-playback-changed",
-                           nullptr);
-    }
-  }
 }
 
 void MediaControlService::ControllerManager::MainControllerMetadataChanged(
