@@ -169,6 +169,7 @@ class Fifo {
     rear_.eraseIf(pred);
     erased += rearLength - rear_.length();
 
+    fixup();
     return erased;
   }
 
