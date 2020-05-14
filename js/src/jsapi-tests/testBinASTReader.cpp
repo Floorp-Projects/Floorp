@@ -399,8 +399,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
         MOZ_CRASH("Couldn't report txtExn");
       }
 
-      PrintError(cx, stderr, report.toStringResult(), report.report(),
-                 /* reportWarnings */ true);
+      PrintError(cx, stderr, report, /* reportWarnings */ true);
       MOZ_CRASH("Binary parser accepted a file that text parser rejected");
     }
 
@@ -412,8 +411,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
         MOZ_CRASH("Couldn't report binExn");
       }
 
-      PrintError(cx, stderr, report.toStringResult(), report.report(),
-                 /* reportWarnings */ true);
+      PrintError(cx, stderr, report, /* reportWarnings */ true);
       MOZ_CRASH("Binary parser rejected a file that text parser accepted");
     }
 

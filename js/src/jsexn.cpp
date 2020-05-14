@@ -288,7 +288,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   // cannot construct the Error constructor without self-hosted code. Just
   // print the error to stderr to help debugging.
   if (cx->realm()->isSelfHostingRealm()) {
-    JS::PrintError(cx, stderr, JS::ConstUTF8CharsZ(), reportp, true);
+    JS::PrintError(cx, stderr, reportp, true);
     return;
   }
 
