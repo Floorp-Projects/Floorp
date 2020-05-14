@@ -5200,7 +5200,7 @@ AbortReasonOr<MInstruction*> IonBuilder::createCallObject(MDefinition* callee,
         current->add(slots);
       }
       current->add(
-          MStoreSlot::New(alloc(), slots, slot - numFixedSlots, param));
+          MStoreDynamicSlot::New(alloc(), slots, slot - numFixedSlots, param));
     } else {
       current->add(MStoreFixedSlot::New(alloc(), callObj, slot, param));
     }
@@ -5380,7 +5380,8 @@ MDefinition* IonBuilder::createThisScriptedBaseline(MDefinition* callee) {
   MOZ_ASSERT(shape->numFixedSlots() == 0, "Must be a dynamic slot");
   MSlots* slots = MSlots::New(alloc(), callee);
   current->add(slots);
-  MLoadSlot* prototype = MLoadSlot::New(alloc(), slots, shape->slot());
+  MLoadDynamicSlot* prototype =
+      MLoadDynamicSlot::New(alloc(), slots, shape->slot());
   current->add(prototype);
   MDefinition* protoConst = constant(ObjectValue(*proto));
   MGuardObjectIdentity* guard =
@@ -10261,7 +10262,7 @@ AbortReasonOr<Ok> IonBuilder::loadSlot(MDefinition* obj, size_t slot,
   MSlots* slots = MSlots::New(alloc(), obj);
   current->add(slots);
 
-  MLoadSlot* load = MLoadSlot::New(alloc(), slots, slot - nfixed);
+  MLoadDynamicSlot* load = MLoadDynamicSlot::New(alloc(), slots, slot - nfixed);
   current->add(load);
   current->push(load);
 
@@ -10292,7 +10293,8 @@ AbortReasonOr<Ok> IonBuilder::storeSlot(
   MSlots* slots = MSlots::New(alloc(), obj);
   current->add(slots);
 
-  MStoreSlot* store = MStoreSlot::New(alloc(), slots, slot - nfixed, value);
+  MStoreDynamicSlot* store =
+      MStoreDynamicSlot::New(alloc(), slots, slot - nfixed, value);
   current->add(store);
   current->push(value);
   if (needsBarrier) {
@@ -10720,7 +10722,7 @@ AbortReasonOr<Ok> IonBuilder::getPropTryDefiniteSlot(bool* emitted,
     MInstruction* slots = MSlots::New(alloc(), obj);
     current->add(slots);
 
-    load = MLoadSlot::New(alloc(), slots, slot - nfixed);
+    load = MLoadDynamicSlot::New(alloc(), slots, slot - nfixed);
   }
 
   if (barrier == BarrierKind::NoBarrier) {
@@ -11578,9 +11580,9 @@ AbortReasonOr<Ok> IonBuilder::setPropTryDefiniteSlot(bool* emitted,
     MInstruction* slots = MSlots::New(alloc(), obj);
     current->add(slots);
 
-    store = MStoreSlot::New(alloc(), slots, slot - nfixed, value);
+    store = MStoreDynamicSlot::New(alloc(), slots, slot - nfixed, value);
     if (writeBarrier) {
-      store->toStoreSlot()->setNeedsBarrier();
+      store->toStoreDynamicSlot()->setNeedsBarrier();
     }
   }
 
@@ -12202,7 +12204,7 @@ MDefinition* IonBuilder::getAliasedVar(EnvironmentCoordinate ec) {
     current->add(slots);
 
     uint32_t slot = EnvironmentObject::nonExtensibleDynamicSlotIndex(ec);
-    load = MLoadSlot::New(alloc(), slots, slot);
+    load = MLoadDynamicSlot::New(alloc(), slots, slot);
   }
 
   current->add(load);
@@ -12233,7 +12235,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_setaliasedvar(EnvironmentCoordinate ec) {
     current->add(slots);
 
     uint32_t slot = EnvironmentObject::nonExtensibleDynamicSlotIndex(ec);
-    store = MStoreSlot::NewBarriered(alloc(), slots, slot, rval);
+    store = MStoreDynamicSlot::NewBarriered(alloc(), slots, slot, rval);
   }
 
   current->add(store);
@@ -12601,7 +12603,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_instanceof() {
     MOZ_ASSERT(shape->numFixedSlots() == 0, "Must be a dynamic slot");
     MSlots* slots = MSlots::New(alloc(), rhs);
     current->add(slots);
-    MLoadSlot* prototype = MLoadSlot::New(alloc(), slots, slot);
+    MLoadDynamicSlot* prototype = MLoadDynamicSlot::New(alloc(), slots, slot);
     current->add(prototype);
     MConstant* protoConst =
         MConstant::NewConstraintlessObject(alloc(), protoObject);

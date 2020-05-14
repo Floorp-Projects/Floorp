@@ -2643,10 +2643,11 @@ void LIRGenerator::visitMaybeCopyElementsForWrite(
   assignSafepoint(check, ins);
 }
 
-void LIRGenerator::visitLoadSlot(MLoadSlot* ins) {
+void LIRGenerator::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
   switch (ins->type()) {
     case MIRType::Value:
-      defineBox(new (alloc()) LLoadSlotV(useRegisterAtStart(ins->slots())),
+      defineBox(new (alloc())
+                    LLoadDynamicSlotV(useRegisterAtStart(ins->slots())),
                 ins);
       break;
 
@@ -2655,8 +2656,8 @@ void LIRGenerator::visitLoadSlot(MLoadSlot* ins) {
       MOZ_CRASH("typed load must have a payload");
 
     default:
-      define(new (alloc())
-                 LLoadSlotT(useRegisterForTypedLoad(ins->slots(), ins->type())),
+      define(new (alloc()) LLoadDynamicSlotT(
+                 useRegisterForTypedLoad(ins->slots(), ins->type())),
              ins);
       break;
   }
@@ -2715,19 +2716,19 @@ void LIRGenerator::visitWasmReinterpret(MWasmReinterpret* ins) {
   }
 }
 
-void LIRGenerator::visitStoreSlot(MStoreSlot* ins) {
+void LIRGenerator::visitStoreDynamicSlot(MStoreDynamicSlot* ins) {
   LInstruction* lir;
 
   switch (ins->value()->type()) {
     case MIRType::Value:
       lir = new (alloc())
-          LStoreSlotV(useRegister(ins->slots()), useBox(ins->value()));
+          LStoreDynamicSlotV(useRegister(ins->slots()), useBox(ins->value()));
       add(lir, ins);
       break;
 
     case MIRType::Double:
-      add(new (alloc())
-              LStoreSlotT(useRegister(ins->slots()), useRegister(ins->value())),
+      add(new (alloc()) LStoreDynamicSlotT(useRegister(ins->slots()),
+                                           useRegister(ins->value())),
           ins);
       break;
 
@@ -2735,8 +2736,8 @@ void LIRGenerator::visitStoreSlot(MStoreSlot* ins) {
       MOZ_CRASH("Float32 shouldn't be stored in a slot.");
 
     default:
-      add(new (alloc()) LStoreSlotT(useRegister(ins->slots()),
-                                    useRegisterOrConstant(ins->value())),
+      add(new (alloc()) LStoreDynamicSlotT(useRegister(ins->slots()),
+                                           useRegisterOrConstant(ins->value())),
           ins);
       break;
   }

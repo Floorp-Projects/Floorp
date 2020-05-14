@@ -382,7 +382,7 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
         current->add(slots);
       }
       uint32_t dynamicSlot = slot - numFixedSlots;
-      current->add(MStoreSlot::New(alloc(), slots, dynamicSlot, param));
+      current->add(MStoreDynamicSlot::New(alloc(), slots, dynamicSlot, param));
     } else {
       current->add(MStoreFixedSlot::New(alloc(), callObj, slot, param));
     }
@@ -1535,7 +1535,7 @@ bool WarpBuilder::build_GetAliasedVar(BytecodeLocation loc) {
     current->add(slots);
 
     uint32_t slot = EnvironmentObject::nonExtensibleDynamicSlotIndex(ec);
-    load = MLoadSlot::New(alloc(), slots, slot);
+    load = MLoadDynamicSlot::New(alloc(), slots, slot);
   }
 
   current->add(load);
@@ -1558,7 +1558,7 @@ bool WarpBuilder::build_SetAliasedVar(BytecodeLocation loc) {
     current->add(slots);
 
     uint32_t slot = EnvironmentObject::nonExtensibleDynamicSlotIndex(ec);
-    store = MStoreSlot::NewBarriered(alloc(), slots, slot, val);
+    store = MStoreDynamicSlot::NewBarriered(alloc(), slots, slot, val);
   }
 
   current->add(store);
@@ -2308,7 +2308,8 @@ MInstruction* WarpBuilder::buildLoadSlot(MDefinition* obj,
   MSlots* slots = MSlots::New(alloc(), obj);
   current->add(slots);
 
-  MLoadSlot* load = MLoadSlot::New(alloc(), slots, slot - numFixedSlots);
+  MLoadDynamicSlot* load =
+      MLoadDynamicSlot::New(alloc(), slots, slot - numFixedSlots);
   current->add(load);
   return load;
 }

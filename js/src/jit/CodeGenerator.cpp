@@ -4251,7 +4251,7 @@ void CodeGenerator::visitSlots(LSlots* lir) {
   masm.loadPtr(slots, ToRegister(lir->output()));
 }
 
-void CodeGenerator::visitLoadSlotT(LLoadSlotT* lir) {
+void CodeGenerator::visitLoadDynamicSlotT(LLoadDynamicSlotT* lir) {
   Register base = ToRegister(lir->slots());
   int32_t offset = lir->mir()->slot() * sizeof(js::Value);
   AnyRegister result = ToAnyRegister(lir->output());
@@ -4259,7 +4259,7 @@ void CodeGenerator::visitLoadSlotT(LLoadSlotT* lir) {
   masm.loadUnboxedValue(Address(base, offset), lir->mir()->type(), result);
 }
 
-void CodeGenerator::visitLoadSlotV(LLoadSlotV* lir) {
+void CodeGenerator::visitLoadDynamicSlotV(LLoadDynamicSlotV* lir) {
   ValueOperand dest = ToOutValue(lir);
   Register base = ToRegister(lir->input());
   int32_t offset = lir->mir()->slot() * sizeof(js::Value);
@@ -4267,7 +4267,7 @@ void CodeGenerator::visitLoadSlotV(LLoadSlotV* lir) {
   masm.loadValue(Address(base, offset), dest);
 }
 
-void CodeGenerator::visitStoreSlotT(LStoreSlotT* lir) {
+void CodeGenerator::visitStoreDynamicSlotT(LStoreDynamicSlotT* lir) {
   Register base = ToRegister(lir->slots());
   int32_t offset = lir->mir()->slot() * sizeof(js::Value);
   Address dest(base, offset);
@@ -4294,11 +4294,11 @@ void CodeGenerator::visitStoreSlotT(LStoreSlotT* lir) {
   }
 }
 
-void CodeGenerator::visitStoreSlotV(LStoreSlotV* lir) {
+void CodeGenerator::visitStoreDynamicSlotV(LStoreDynamicSlotV* lir) {
   Register base = ToRegister(lir->slots());
   int32_t offset = lir->mir()->slot() * sizeof(Value);
 
-  const ValueOperand value = ToValue(lir, LStoreSlotV::Value);
+  const ValueOperand value = ToValue(lir, LStoreDynamicSlotV::Value);
 
   if (lir->mir()->needsBarrier()) {
     emitPreBarrier(Address(base, offset));
