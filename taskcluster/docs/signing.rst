@@ -150,7 +150,7 @@ Signing scriptworker workerTypes
 --------------------------------
 
 The `depsigning`_ pool handles all of the dep signing. These are heavily in use
-on try, mozilla-inbound, and autoland, but also other branches. These verify
+on try and autoland, but also other branches. These verify
 the `chain of trust` artifact but not its signature, and they don't have a
 gpg key to sign their own chain of trust artifact. This is by design; the chain
 of trust should and will break if a production scriptworker is downstream from
