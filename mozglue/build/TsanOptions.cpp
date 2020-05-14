@@ -285,6 +285,10 @@ extern "C" const char* __tsan_default_suppressions() {
          // by TSan because libGL is not instrumented.
          "mutex:GLContextGLX::~GLContextGLX\n"
 
+         // Bug 1637707
+         // Cannot suppress library because it is unloaded later
+         "mutex:libEGL_mesa.so\n"
+
          // Probably false positives in Rust code
          "race:third_party/rust/parking_lot_core/*\n"
 
