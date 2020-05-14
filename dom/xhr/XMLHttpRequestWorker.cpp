@@ -765,9 +765,9 @@ bool Proxy::Init() {
     return false;
   }
 
-  mXHR = new XMLHttpRequestMainThread();
+  mXHR = new XMLHttpRequestMainThread(ownerWindow ? ownerWindow->AsGlobal()
+                                                  : nullptr);
   mXHR->Construct(mWorkerPrivate->GetPrincipal(),
-                  ownerWindow ? ownerWindow->AsGlobal() : nullptr,
                   mWorkerPrivate->CookieJarSettings(), true,
                   mWorkerPrivate->GetBaseURI(), mWorkerPrivate->GetLoadGroup(),
                   mWorkerPrivate->GetPerformanceStorage(),
@@ -1355,8 +1355,10 @@ void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
   }
 }
 
-XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate)
-    : mWorkerPrivate(aWorkerPrivate),
+XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate,
+                                           nsIGlobalObject* aGlobalObject)
+    : XMLHttpRequest(aGlobalObject),
+      mWorkerPrivate(aWorkerPrivate),
       mResponseType(XMLHttpRequestResponseType::_empty),
       mStateData(new StateData()),
       mResponseData(new ResponseData()),
@@ -1428,8 +1430,8 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequestWorker::Construct(
     return nullptr;
   }
 
-  RefPtr<XMLHttpRequestWorker> xhr = new XMLHttpRequestWorker(workerPrivate);
-  xhr->BindToOwner(global);
+  RefPtr<XMLHttpRequestWorker> xhr =
+      new XMLHttpRequestWorker(workerPrivate, global);
 
   if (workerPrivate->XHRParamsAllowed()) {
     if (aParams.mMozSystem)
