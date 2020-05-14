@@ -140,8 +140,6 @@ class ContentDelegateTest : BaseSessionTest() {
     @IgnoreCrash
     @Test fun killContent() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
-        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
-                equalTo(false))
 
         killAllContentProcesses()
         mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
