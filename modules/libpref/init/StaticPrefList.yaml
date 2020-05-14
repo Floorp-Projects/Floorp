@@ -1433,6 +1433,12 @@
   value: true
   mirror: always
 
+# Block all downloads in iframes with the sandboxed attribute
+- name: dom.block_download_in_sandboxed_iframes
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Block multiple window.open() per single event.
 - name: dom.block_multiple_popups
   type: bool

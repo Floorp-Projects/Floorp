@@ -116,5 +116,12 @@ const unsigned long SANDBOXED_PRESENTATION = 0x4000;
  */
 const unsigned long SANDBOXED_STORAGE_ACCESS = 0x8000;
 
-const unsigned long SANDBOX_ALL_FLAGS = 0xFFFF;
+/**
+ * This flag disables content from initiating or instantiating downloads,
+ * whether through downloading hyperlinks or through navigation that gets
+ * handled as a download.
+ */
+const unsigned long SANDBOXED_ALLOW_DOWNLOADS = 0x10000;
+
+const unsigned long SANDBOX_ALL_FLAGS = 0xFFFFFF;
 #endif
