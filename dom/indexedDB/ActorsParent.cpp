@@ -4660,9 +4660,9 @@ class DatabaseConnection final {
   class UpdateRefcountFunction;
 
  private:
-  InitializedOnceNotNull<const nsCOMPtr<mozIStorageConnection>>
+  InitializedOnce<const NotNull<nsCOMPtr<mozIStorageConnection>>>
       mStorageConnection;
-  InitializedOnceNotNull<const SafeRefPtr<FileManager>> mFileManager;
+  InitializedOnce<const NotNull<SafeRefPtr<FileManager>>> mFileManager;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
       mCachedStatements;
   RefPtr<UpdateRefcountFunction> mUpdateRefcountFunction;
@@ -4967,7 +4967,7 @@ class ConnectionPool final {
   };
 
   struct IdleDatabaseInfo final : public IdleResource {
-    InitializedOnceNotNull<DatabaseInfo* const> mDatabaseInfo;
+    InitializedOnce<const NotNull<DatabaseInfo*>> mDatabaseInfo;
 
    public:
     explicit IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo);
@@ -5619,7 +5619,7 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
     Completed
   };
 
-  InitializedOnceNotNull<const SafeRefPtr<TransactionBase>> mTransaction;
+  InitializedOnce<const NotNull<SafeRefPtr<TransactionBase>>> mTransaction;
   InternalState mInternalState = InternalState::Initial;
   bool mWaitingForContinue = false;
   const bool mTransactionIsAborted;
@@ -7390,7 +7390,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
   class StoredFileInfo final {
-    InitializedOnceNotNull<const SafeRefPtr<FileInfo>> mFileInfo;
+    InitializedOnce<const NotNull<SafeRefPtr<FileInfo>>> mFileInfo;
     // Either nothing, a file actor or a non-Blob-backed inputstream to write to
     // disk.
     using FileActorOrInputStream =
@@ -7532,7 +7532,7 @@ void ObjectStoreAddOrPutRequestOp::StoredFileInfo::AssertInvariants() const {
 
 ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
     SafeRefPtr<FileInfo> aFileInfo)
-    : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
+    : mFileInfo{WrapNotNull(std::move(aFileInfo))}, mFileActorOrInputStream {
   Nothing {}
 }
 #ifdef DEBUG
@@ -7547,7 +7547,7 @@ ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
 
 ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
     SafeRefPtr<FileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor)
-    : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
+    : mFileInfo{WrapNotNull(std::move(aFileInfo))}, mFileActorOrInputStream {
   std::move(aFileActor)
 }
 #ifdef DEBUG
@@ -7562,7 +7562,7 @@ ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
 
 ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
     SafeRefPtr<FileInfo> aFileInfo, nsCOMPtr<nsIInputStream> aInputStream)
-    : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
+    : mFileInfo{WrapNotNull(std::move(aFileInfo))}, mFileActorOrInputStream {
   std::move(aInputStream)
 }
 #ifdef DEBUG
@@ -7947,7 +7947,7 @@ class CursorBase : public PBackgroundIDBCursorParent {
   // This should only be touched on the PBackground thread to check whether
   // the objectStore has been deleted. Holding these saves a hash lookup for
   // every call to continue()/advance().
-  InitializedOnceNotNull<const RefPtr<FullObjectStoreMetadata>>
+  InitializedOnce<const NotNull<RefPtr<FullObjectStoreMetadata>>>
       mObjectStoreMetadata;
 
   const IndexOrObjectStoreId mObjectStoreId;
@@ -7995,7 +7995,7 @@ class IndexCursorBase : public CursorBase {
                   ConstructFromTransactionBase aConstructionTag)
       : CursorBase{std::move(aTransaction), std::move(aObjectStoreMetadata),
                    aDirection, aConstructionTag},
-        mIndexMetadata(std::move(aIndexMetadata)),
+        mIndexMetadata(WrapNotNull(std::move(aIndexMetadata))),
         mIndexId((*mIndexMetadata)->mCommonMetadata.id()),
         mUniqueIndex((*mIndexMetadata)->mCommonMetadata.unique()),
         mLocale((*mIndexMetadata)->mCommonMetadata.locale()) {}
@@ -8006,7 +8006,7 @@ class IndexCursorBase : public CursorBase {
   // This should only be touched on the PBackground thread to check whether
   // the index has been deleted. Holding these saves a hash lookup for every
   // call to continue()/advance().
-  InitializedOnceNotNull<const RefPtr<FullIndexMetadata>> mIndexMetadata;
+  InitializedOnce<const NotNull<RefPtr<FullIndexMetadata>>> mIndexMetadata;
   const IndexOrObjectStoreId mIndexId;
   const bool mUniqueIndex;
   const nsCString
@@ -8068,7 +8068,7 @@ class ValueCursorBase {
   explicit ValueCursorBase(TransactionBase* const aTransaction)
       : mDatabase(aTransaction->GetDatabasePtr()),
         mFileManager(mDatabase->GetFileManagerPtr()),
-        mBackgroundParent(aTransaction->GetBackgroundParent()) {
+        mBackgroundParent(WrapNotNull(aTransaction->GetBackgroundParent())) {
     MOZ_ASSERT(mDatabase);
     MOZ_ASSERT(mFileManager);
   }
@@ -8080,7 +8080,7 @@ class ValueCursorBase {
   const SafeRefPtr<Database> mDatabase;
   const SafeRefPtr<FileManager> mFileManager;
 
-  InitializedOnceNotNull<PBackgroundParent* const> mBackgroundParent;
+  InitializedOnce<const NotNull<PBackgroundParent*>> mBackgroundParent;
 };
 
 class KeyCursorBase {
@@ -9075,11 +9075,11 @@ class DEBUGThreadSlower final : public nsIThreadObserver {
 class MOZ_STACK_CLASS FileHelper final {
   const SafeRefPtr<FileManager> mFileManager;
 
-  LazyInitializedOnceNotNull<const nsCOMPtr<nsIFile>> mFileDirectory;
-  LazyInitializedOnceNotNull<const nsCOMPtr<nsIFile>> mJournalDirectory;
+  LazyInitializedOnce<const NotNull<nsCOMPtr<nsIFile>>> mFileDirectory;
+  LazyInitializedOnce<const NotNull<nsCOMPtr<nsIFile>>> mJournalDirectory;
 
   class ReadCallback;
-  LazyInitializedOnceNotNull<const RefPtr<ReadCallback>> mReadCallback;
+  LazyInitializedOnce<const NotNull<RefPtr<ReadCallback>>> mReadCallback;
 
  public:
   explicit FileHelper(SafeRefPtr<FileManager>&& aFileManager)
@@ -10680,8 +10680,8 @@ nsresult FileManager::AsyncDeleteFile(int64_t aFileId) {
 DatabaseConnection::DatabaseConnection(
     nsCOMPtr<mozIStorageConnection> aStorageConnection,
     SafeRefPtr<FileManager> aFileManager)
-    : mStorageConnection(std::move(aStorageConnection)),
-      mFileManager(std::move(aFileManager)),
+    : mStorageConnection(WrapNotNull(std::move(aStorageConnection))),
+      mFileManager(WrapNotNull(std::move(aFileManager))),
       mInReadTransaction(false),
       mInWriteTransaction(false)
 #ifdef DEBUG
@@ -13180,7 +13180,7 @@ ConnectionPool::IdleDatabaseInfo::IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo)
           (aDatabaseInfo->mIdle
                ? TimeDuration::FromMilliseconds(kConnectionIdleMaintenanceMS)
                : TimeDuration::FromMilliseconds(kConnectionIdleCloseMS))),
-      mDatabaseInfo(aDatabaseInfo) {
+      mDatabaseInfo(WrapNotNull(aDatabaseInfo)) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabaseInfo);
 
@@ -16057,7 +16057,7 @@ CursorBase::CursorBase(SafeRefPtr<TransactionBase> aTransaction,
                        const Direction aDirection,
                        const ConstructFromTransactionBase /*aConstructionTag*/)
     : mTransaction(std::move(aTransaction)),
-      mObjectStoreMetadata(std::move(aObjectStoreMetadata)),
+      mObjectStoreMetadata(WrapNotNull(std::move(aObjectStoreMetadata))),
       mObjectStoreId((*mObjectStoreMetadata)->mCommonMetadata.id()),
       mDirection(aDirection),
       mMaxExtraCount(IndexedDatabaseManager::MaxPreloadExtraRecords()),
@@ -16243,7 +16243,6 @@ void ValueCursorBase::ProcessFiles(CursorResponse& aResponse,
                  aResponse.type() ==
                      CursorResponse::TArrayOfIndexCursorResponse);
       MOZ_ASSERT(this->mDatabase);
-      MOZ_ASSERT(*this->mBackgroundParent);
 
       auto res = SerializeStructuredCloneFiles((*this->mBackgroundParent),
                                                this->mDatabase, files,
@@ -22884,7 +22883,7 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
     SafeRefPtr<TransactionBase> aTransaction)
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aTransaction->GetLoggingInfo()->NextRequestSN()),
-      mTransaction(std::move(aTransaction)),
+      mTransaction(WrapNotNull(std::move(aTransaction))),
       mTransactionIsAborted((*mTransaction)->IsAborted()),
       mTransactionLoggingSerialNumber((*mTransaction)->LoggingSerialNumber()) {
   MOZ_ASSERT(LoggingSerialNumber());
@@ -22894,7 +22893,7 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
     SafeRefPtr<TransactionBase> aTransaction, uint64_t aLoggingSerialNumber)
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aLoggingSerialNumber),
-      mTransaction(std::move(aTransaction)),
+      mTransaction(WrapNotNull(std::move(aTransaction))),
       mTransactionIsAborted((*mTransaction)->IsAborted()),
       mTransactionLoggingSerialNumber((*mTransaction)->LoggingSerialNumber()) {}
 
@@ -27612,8 +27611,8 @@ nsresult FileHelper::Init() {
   MOZ_ASSERT(NS_SUCCEEDED(journalDirectory->IsDirectory(&isDirectory)));
   MOZ_ASSERT(isDirectory);
 
-  mFileDirectory.init(std::move(fileDirectory));
-  mJournalDirectory.init(std::move(journalDirectory));
+  mFileDirectory.init(WrapNotNullUnchecked(std::move(fileDirectory)));
+  mJournalDirectory.init(WrapNotNullUnchecked(std::move(journalDirectory)));
 
   return NS_OK;
 }
@@ -27621,13 +27620,13 @@ nsresult FileHelper::Init() {
 nsCOMPtr<nsIFile> FileHelper::GetFile(const FileInfo& aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
-  return mFileManager->GetFileForId(*mFileDirectory, aFileInfo.Id());
+  return mFileManager->GetFileForId(mFileDirectory->get(), aFileInfo.Id());
 }
 
 nsCOMPtr<nsIFile> FileHelper::GetJournalFile(const FileInfo& aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
-  return mFileManager->GetFileForId(*mJournalDirectory, aFileInfo.Id());
+  return mFileManager->GetFileForId(mJournalDirectory->get(), aFileInfo.Id());
 }
 
 nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
@@ -27800,7 +27799,7 @@ nsresult FileHelper::SyncRead(nsIInputStream& aInputStream, char* const aBuffer,
   }
 
   if (!mReadCallback) {
-    mReadCallback.init(new ReadCallback());
+    mReadCallback.init(MakeNotNull<RefPtr<ReadCallback>>());
   }
 
   // We just need any thread with an event loop for receiving the
