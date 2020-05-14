@@ -95,7 +95,6 @@ class ParentImpl final : public BackgroundParentImpl {
 
  private:
   class ShutdownObserver;
-  class ForceCloseBackgroundActorsRunnable;
   class ConnectActorRunnable;
   class CreateActorHelper;
 
@@ -545,25 +544,6 @@ class ParentImpl::ShutdownObserver final : public nsIObserver {
 
  private:
   ~ShutdownObserver() { AssertIsOnMainThread(); }
-};
-
-class ParentImpl::ForceCloseBackgroundActorsRunnable final : public Runnable {
-  nsTArray<ParentImpl*>* mActorArray;
-
- public:
-  explicit ForceCloseBackgroundActorsRunnable(
-      nsTArray<ParentImpl*>* aActorArray)
-      : Runnable("Background::ParentImpl::ForceCloseBackgroundActorsRunnable"),
-        mActorArray(aActorArray) {
-    AssertIsInMainOrSocketProcess();
-    AssertIsOnMainThread();
-    MOZ_ASSERT(aActorArray);
-  }
-
- private:
-  ~ForceCloseBackgroundActorsRunnable() = default;
-
-  NS_DECL_NSIRUNNABLE
 };
 
 class ParentImpl::ConnectActorRunnable final : public Runnable {
@@ -1367,10 +1347,24 @@ void ParentImpl::ShutdownTimerCallback(nsITimer* aTimer, void* aClosure) {
   // finished.
   sLiveActorCount++;
 
-  nsCOMPtr<nsIRunnable> forceCloseRunnable =
-      new ForceCloseBackgroundActorsRunnable(closure->mLiveActors);
-  MOZ_ALWAYS_SUCCEEDS(
-      closure->mThread->Dispatch(forceCloseRunnable, NS_DISPATCH_NORMAL));
+  InvokeAsync(closure->mThread, __func__,
+              [liveActors = closure->mLiveActors]() {
+                MOZ_ASSERT(liveActors);
+
+                if (!liveActors->IsEmpty()) {
+                  // Copy the array since calling Close() could mutate the
+                  // actual array.
+                  nsTArray<ParentImpl*> actorsToClose(liveActors->Clone());
+                  for (ParentImpl* actor : actorsToClose) {
+                    actor->Close();
+                  }
+                }
+                return GenericPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__, []() {
+        MOZ_ASSERT(sLiveActorCount);
+        sLiveActorCount--;
+      });
 }
 
 void ParentImpl::Destroy() {
@@ -1441,33 +1435,6 @@ ParentImpl::ShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
   ChildImpl::Shutdown();
 
   ShutdownBackgroundThread();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentImpl::ForceCloseBackgroundActorsRunnable::Run() {
-  AssertIsInMainOrSocketProcess();
-  MOZ_ASSERT(mActorArray);
-
-  if (NS_IsMainThread()) {
-    MOZ_ASSERT(sLiveActorCount);
-    sLiveActorCount--;
-    return NS_OK;
-  }
-
-  AssertIsOnBackgroundThread();
-
-  if (!mActorArray->IsEmpty()) {
-    // Copy the array since calling Close() could mutate the actual array.
-    nsTArray<ParentImpl*> actorsToClose(mActorArray->Clone());
-
-    for (uint32_t index = 0; index < actorsToClose.Length(); index++) {
-      actorsToClose[index]->Close();
-    }
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
   return NS_OK;
 }
