@@ -333,7 +333,6 @@ void nsIOService::OnTLSPrefChange(const char* aPref, void* aSelf) {
              pref.EqualsLiteral("security.pki.name_matching_mode")) {
     SetValidationOptionsCommon();
   }
-  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
 }
 
 nsresult nsIOService::InitializeCaptivePortalService() {

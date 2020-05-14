@@ -31,6 +31,7 @@
 #include "nsHttpHandler.h"
 #include "nsIDNSService.h"
 #include "nsIHttpActivityObserver.h"
+#include "nsNSSComponent.h"
 #include "nsThreadManager.h"
 #include "ProcessUtils.h"
 #include "SocketProcessBridgeParent.h"
@@ -401,6 +402,13 @@ Maybe<RefPtr<BackgroundDataBridgeParent>>
 SocketProcessChild::GetAndRemoveDataBridge(uint64_t aChannelId) {
   MutexAutoLock lock(mMutex);
   return mBackgroundDataBridgeMap.GetAndRemove(aChannelId);
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvClearSessionCache() {
+  if (EnsureNSSInitializedChromeOrContent()) {
+    nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
+  }
+  return IPC_OK();
 }
 
 }  // namespace net

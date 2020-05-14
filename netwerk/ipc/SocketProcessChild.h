@@ -104,6 +104,8 @@ class SocketProcessChild final
   Maybe<RefPtr<BackgroundDataBridgeParent>> GetAndRemoveDataBridge(
       uint64_t aChannelId);
 
+  mozilla::ipc::IPCResult RecvClearSessionCache();
+
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();
