@@ -146,6 +146,7 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    'HttpChannelParams.ipdlh',
     'PAltDataOutputStream.ipdl',
     'PAltService.ipdl',
     'PAltSvcTransaction.ipdl',
