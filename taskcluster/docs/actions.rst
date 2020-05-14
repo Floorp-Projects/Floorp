@@ -31,7 +31,7 @@ Python function of your devising.
 Creating a Callback Action
 --------------------------
 
-.. note:
+.. note::
 
     You can generate ``actions.json`` on the command line with ``./mach taskgraph actions``.
 

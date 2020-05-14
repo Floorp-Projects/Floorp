@@ -35,7 +35,7 @@ the target task set is almost the entire task graph, so targeted tasks are
 considered for optimization. This behavior is controlled with the
 ``optimize_target_tasks`` parameter.
 
-.. note:
+.. note::
 
     Because it is a mix of "what the push author wanted" and "what should run
     when necessary", try pushes with the old option syntax (``-b do -p all``,

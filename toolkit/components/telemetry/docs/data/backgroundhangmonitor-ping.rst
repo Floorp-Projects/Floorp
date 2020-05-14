@@ -44,7 +44,7 @@ Structure:
       }
     }
 
-.. note: :
+.. note::
 
   Hangs are collected whenever the current runnable takes over 128ms.
 
