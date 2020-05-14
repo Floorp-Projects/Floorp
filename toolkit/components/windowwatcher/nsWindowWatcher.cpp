@@ -1152,9 +1152,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     loadState->SetSourceBrowsingContext(parentBC);
     loadState->SetHasValidUserGestureActivation(
         parentBC && parentBC->HasValidTransientUserGestureActivation());
-    if (parentBC) {
-      loadState->SetTriggeringSandboxFlags(parentBC->GetSandboxFlags());
-    }
 
     if (subjectPrincipal) {
       loadState->SetTriggeringPrincipal(subjectPrincipal);
