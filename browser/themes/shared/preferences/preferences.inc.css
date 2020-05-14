@@ -837,12 +837,6 @@ image.update-throbber {
   overflow-y: auto;
 }
 
-@media (prefers-reduced-motion) {
-  .navigation {
-    border-inline-end: 1px solid var(--in-content-border-color);
-  }
-}
-
 .face-sad {
   list-style-image: url("chrome://browser/skin/preferences/face-sad.svg");
   width: 20px;
