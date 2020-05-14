@@ -995,12 +995,6 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
         // This is a lower priority request and we are swamped, so refuse it.
         rv = NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
 
-        // Check if DNS resolution is disabled.
-      } else if (StaticPrefs::network_dns_disabled()) {
-        LOG(("  DNS resolution disabled: dropping request for host [%s].\n",
-             host.get()));
-        rv = NS_ERROR_UNKNOWN_HOST;
-
         // Check if the offline flag is set.
       } else if (flags & RES_OFFLINE) {
         LOG(("  Offline request for host [%s]; ignoring.\n", host.get()));
@@ -1252,7 +1246,7 @@ nsresult nsHostResolver::TrrLookup_unlocked(nsHostRecord* rec, TRR* pushedTRR) {
 // returns error if no TRR resolve is issued
 // it is impt this is not called while a native lookup is going on
 nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
-  if (Mode() == MODE_TRROFF) {
+  if (Mode() == MODE_TRROFF || StaticPrefs::network_dns_disabled()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
@@ -1391,6 +1385,10 @@ void nsHostResolver::AssertOnQ(nsHostRecord* rec,
 }
 
 nsresult nsHostResolver::NativeLookup(nsHostRecord* aRec) {
+  if (StaticPrefs::network_dns_disabled()) {
+    return NS_ERROR_UNKNOWN_HOST;
+  }
+
   // Only A/AAAA request are resolve natively.
   MOZ_ASSERT(aRec->IsAddrRecord());
   mLock.AssertCurrentThreadOwns();
