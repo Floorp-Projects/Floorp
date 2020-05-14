@@ -7,6 +7,7 @@ package mozilla.components.feature.qr
 import android.Manifest.permission.CAMERA
 import android.content.Context
 import androidx.annotation.MainThread
+import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -29,12 +30,16 @@ typealias OnScanResult = (result: String) -> Unit
  * need to be requested before a QR scan can be performed. Once the request
  * is completed, [onPermissionsResult] needs to be invoked. This feature
  * will request [android.Manifest.permission.CAMERA].
+ * @property scanMessage (Optional) String resource for an optional message
+ * to be laid out below the QR scan viewfinder
  */
 class QrFeature(
     private val context: Context,
     private val fragmentManager: FragmentManager,
     private val onScanResult: OnScanResult = { },
-    override val onNeedToRequestPermissions: OnNeedToRequestPermissions = { }
+    override val onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
+    @StringRes
+    private var scanMessage: Int? = null
 ) : LifecycleAwareFeature, UserInteractionHandler, PermissionsFeature {
     private var containerViewId: Int = 0
 
@@ -75,7 +80,7 @@ class QrFeature(
 
         return if (context.isPermissionGranted(CAMERA)) {
             fragmentManager.beginTransaction()
-                .add(containerViewId, QrFragment.newInstance(scanCompleteListener), QR_FRAGMENT_TAG)
+                .add(containerViewId, QrFragment.newInstance(scanCompleteListener, scanMessage), QR_FRAGMENT_TAG)
                 .commit()
             true
         } else {

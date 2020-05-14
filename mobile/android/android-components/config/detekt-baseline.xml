@@ -460,7 +460,6 @@
     <ID>UndocumentedPublicFunction:Providers.kt$BaseDomainAutocompleteProvider$fun initialize(context: Context)</ID>
     <ID>UndocumentedPublicFunction:Providers.kt$DomainAutocompleteProvider$fun getAutocompleteSuggestion(query: String): DomainAutocompleteResult?</ID>
     <ID>UndocumentedPublicFunction:PublicSuffixListLoader.kt$PublicSuffixListLoader$fun load(context: Context): PublicSuffixListData</ID>
-    <ID>UndocumentedPublicFunction:QrFragment.kt$QrFragment.Companion$fun newInstance(listener: OnScanCompleteListener): QrFragment</ID>
     <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onColorSchemeChanged(scheme: ColorScheme)</ID>
     <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onFontChanged(font: FontType)</ID>
     <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onFontSizeDecreased(): Int</ID>

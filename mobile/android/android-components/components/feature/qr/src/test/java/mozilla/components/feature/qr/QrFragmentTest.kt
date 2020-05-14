@@ -10,6 +10,7 @@ import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.media.Image
 import android.util.Size
+import android.view.View
 import androidx.fragment.app.FragmentActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.zxing.BarcodeFormat
@@ -18,6 +19,7 @@ import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
 import mozilla.components.feature.qr.QrFragment.Companion.chooseOptimalSize
 import mozilla.components.feature.qr.views.AutoFitTextureView
+import mozilla.components.feature.qr.views.CustomViewFinder
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -79,8 +81,12 @@ class QrFragmentTest {
     @Test
     fun `onViewCreated sets initial state`() {
         val qrFragment = QrFragment.newInstance(mock())
-        val view: AutoFitTextureView = mock()
-        whenever(view.findViewById<AutoFitTextureView>(anyInt())).thenReturn(mock())
+        val view: View = mock()
+        val textureView: AutoFitTextureView = mock()
+        val viewFinder: CustomViewFinder = mock()
+
+        whenever(view.findViewById<AutoFitTextureView>(R.id.texture)).thenReturn(textureView)
+        whenever(view.findViewById<CustomViewFinder>(R.id.view_finder)).thenReturn(viewFinder)
 
         qrFragment.onViewCreated(view, mock())
         assertEquals(QrFragment.STATE_FIND_QRCODE, QrFragment.qrState)
