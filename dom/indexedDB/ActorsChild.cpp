@@ -194,7 +194,7 @@ class MOZ_STACK_CLASS AutoSetCurrentTransaction final {
   }
 };
 
-class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
+class MOZ_STACK_CLASS ResultHelper final {
   const RefPtr<IDBRequest> mRequest;
   const AutoSetCurrentTransaction mAutoTransaction;
   const SafeRefPtr<IDBTransaction> mTransaction;
@@ -217,8 +217,8 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     MOZ_ASSERT(aResult);
   }
 
-  virtual nsresult GetResult(JSContext* aCx,
-                             JS::MutableHandle<JS::Value> aResult) override {
+  nsresult operator()(JSContext* aCx,
+                      JS::MutableHandle<JS::Value> aResult) const {
     MOZ_ASSERT(aCx);
     MOZ_ASSERT(mRequest);
 
@@ -615,7 +615,7 @@ void ResultHelper::DispatchSuccessEvent(RefPtr<Event> aEvent) {
   }
   MOZ_ASSERT(aEvent);
 
-  mRequest->SetResultCallback(this);
+  mRequest->SetResult(*this);
 
   if (mTransaction && mTransaction->IsInactive()) {
     mTransaction->TransitionToActive();
