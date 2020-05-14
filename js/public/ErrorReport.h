@@ -306,9 +306,9 @@ struct MOZ_STACK_CLASS JS_PUBLIC_API ErrorReportBuilder {
   bool init(JSContext* cx, const JS::ExceptionStack& exnStack,
             SniffingBehavior sniffingBehavior);
 
-  JSErrorReport* report() { return reportp; }
+  JSErrorReport* report() const { return reportp; }
 
-  const JS::ConstUTF8CharsZ toStringResult() { return toStringResult_; }
+  const JS::ConstUTF8CharsZ toStringResult() const { return toStringResult_; }
 
  private:
   // More or less an equivalent of JS_ReportErrorNumber/js::ReportErrorNumberVA
@@ -348,8 +348,11 @@ struct MOZ_STACK_CLASS JS_PUBLIC_API ErrorReportBuilder {
 // Writes a full report to a file descriptor. Does nothing for JSErrorReports
 // which are warnings, unless reportWarnings is set.
 extern JS_PUBLIC_API void PrintError(JSContext* cx, FILE* file,
-                                     ConstUTF8CharsZ toStringResult,
                                      JSErrorReport* report,
+                                     bool reportWarnings);
+
+extern JS_PUBLIC_API void PrintError(JSContext* cx, FILE* file,
+                                     const JS::ErrorReportBuilder& builder,
                                      bool reportWarnings);
 
 }  // namespace JS
