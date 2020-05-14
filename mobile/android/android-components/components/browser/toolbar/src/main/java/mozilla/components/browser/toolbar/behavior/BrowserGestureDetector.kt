@@ -83,12 +83,17 @@ internal class BrowserGestureDetector(
             // The lower the values the higher the sensitivity.
             // Values of 0 here would mean all swipe events will be treated as pinch/spread to zoom gestures,
             // in our context effectively meaning no scrolling, only zooming.
-            listOf(
-                javaClass.getDeclaredField("mSpanSlop"),
-                javaClass.getDeclaredField("mMinSpan")
-            ).forEach { field ->
-                field.isAccessible = true
-                field.set(this, (field.get(this) as Int) / 2)
+            try {
+                listOf(
+                    javaClass.getDeclaredField("mSpanSlop"),
+                    javaClass.getDeclaredField("mMinSpan")
+                ).forEach { field ->
+                    field.isAccessible = true
+                    field.set(this, (field.get(this) as Int) / 2)
+                }
+            } catch (e: ReflectiveOperationException) {
+                // Seems like some OEMs made some breaking changes in the framework.
+                // no-op
             }
         }
     }
