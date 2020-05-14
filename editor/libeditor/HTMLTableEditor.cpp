@@ -2667,7 +2667,8 @@ NS_IMETHODIMP HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
   // as well as the "non-contiguous" cells, so user can see what happened.
 
   ErrorResult error;
-  CellAndIndexes firstSelectedCell(*this, *SelectionRefPtr(), error);
+  CellAndIndexes firstSelectedCell(*this, MOZ_KnownLive(*SelectionRefPtr()),
+                                   error);
   if (error.Failed()) {
     NS_WARNING("CellAndIndexes failed");
     return EditorBase::ToGenericNSResult(error.StealNSResult());
@@ -3427,7 +3428,7 @@ NS_IMETHODIMP HTMLEditor::GetCellIndexes(Element* aCellElement,
     // Use cell element which contains anchor of Selection when aCellElement is
     // nullptr.
     ErrorResult error;
-    CellIndexes cellIndexes(*this, *SelectionRefPtr(), error);
+    CellIndexes cellIndexes(*this, MOZ_KnownLive(*SelectionRefPtr()), error);
     if (error.Failed()) {
       return EditorBase::ToGenericNSResult(error.StealNSResult());
     }
@@ -4063,7 +4064,7 @@ NS_IMETHODIMP HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
   *aCellElement = nullptr;
 
   ErrorResult error;
-  CellAndIndexes result(*this, *SelectionRefPtr(), error);
+  CellAndIndexes result(*this, MOZ_KnownLive(*SelectionRefPtr()), error);
   if (error.Failed()) {
     NS_WARNING("CellAndIndexes failed");
     return EditorBase::ToGenericNSResult(error.StealNSResult());
@@ -4092,7 +4093,8 @@ void HTMLEditor::CellAndIndexes::Update(HTMLEditor& aHTMLEditor,
   }
 
   const RefPtr<PresShell> presShell{aHTMLEditor.GetPresShell()};
-  mIndexes.Update(*mElement, presShell, aRv);
+  const RefPtr<Element> element{mElement};
+  mIndexes.Update(*element, presShell, aRv);
   NS_WARNING_ASSERTION(!aRv.Failed(), "CellIndexes::Update() failed");
 }
 
