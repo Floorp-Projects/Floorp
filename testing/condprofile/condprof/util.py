@@ -202,10 +202,12 @@ def download_file(url, target=None):
     if target is None:
         target = url.split("/")[-1]
 
+    logger.info("Checking for existence of: %s" % target)
     if os.path.exists(target):
         # XXX for now, reusing downloads without checking them
         # when we don't have an .etag file
         if etag is None or not os.path.exists(target + ".etag"):
+            logger.info("No existing etag downloads.")
             return target
         with open(target + ".etag") as f:
             current_etag = f.read()
@@ -215,6 +217,16 @@ def download_file(url, target=None):
             return target
         else:
             logger.info("Changed!")
+    else:
+        logger.info("Could not find an existing archive.")
+        # Add some debugging logs for the directory content
+        try:
+            archivedir = os.path.dirname(target)
+            logger.info(
+                "Content in cache directory %s: %s" % (archivedir, os.listdir(archivedir))
+            )
+        except Exception:
+            logger.info("Failed to list cache directory contents")
 
     logger.info("Downloading %s" % url)
     req = requests.get(url, stream=True, timeout=DOWNLOAD_TIMEOUT)
