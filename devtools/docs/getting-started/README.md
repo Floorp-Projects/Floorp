@@ -8,7 +8,7 @@ DevTools is a complex web app, but if you're familiar with either HTML/CSS or Ja
 - Set up your dev environment
 - Write the patch and get it reviewed
 
-Feel free to ask questions at any point on the [DevTools Slack](https://devtools-html-slack.herokuapp.com/).
+Feel free to ask questions at any point on [Matrix](https://chat.mozilla.org/#/room/#devtools:mozilla.org).
 
 ## Claim a bug
 
@@ -20,7 +20,7 @@ Claim the bug by creating a Bugzilla account and posting a comment on the bug’
 
 Follow the steps of Firefox’s [contributor guide](https://firefox-source-docs.mozilla.org/contributing/how_to_contribute_firefox.html) to install and run Firefox locally. During installation, follow the steps for “Artifact Mode.” 
 
-If you run into errors about missing libraries, search the web to learn how to install whatever is missing. If you get stuck, ask for help on [Slack](https://devtools-html-slack.herokuapp.com/).
+If you run into errors about missing libraries, search the web to learn how to install whatever is missing. If you get stuck, ask for help on [Matrix](https://chat.mozilla.org/#/room/#devtools:mozilla.org).
 
 ## Write the patch and get it reviewed
 

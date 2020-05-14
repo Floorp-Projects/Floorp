@@ -81,8 +81,6 @@ If you have any questions about the code, features, planning, the active team is
 - engineering: Belén Albeza (:ladybenko)
 - engineering: Daisuke Akatsuka (:daisuke)
 - engineering: Julian Descottes (:jdescottes)
-- engineering: Ola Gasidlo (:ola))
-- engineering management: Soledad Penadés (:sole)
 - product management: Harald Kischner (:digitarald)
 
-You can find us on [Slack](https://devtools-html-slack.herokuapp.com/) or IRC on #devtools at irc.mozilla.org.
+You can find us on [Matrix](https://chat.mozilla.org/#/room/#devtools:mozilla.org).
