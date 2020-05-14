@@ -19,6 +19,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
@@ -97,7 +98,6 @@ class ParentImpl final : public BackgroundParentImpl {
 
  private:
   class ShutdownObserver;
-  class RequestMessageLoopRunnable;
   class ShutdownBackgroundThreadRunnable;
   class ForceCloseBackgroundActorsRunnable;
   class ConnectActorRunnable;
@@ -135,10 +135,6 @@ class ParentImpl final : public BackgroundParentImpl {
   // This exists so that that [Assert]IsOnBackgroundThread() can continue to
   // work during shutdown.
   static Atomic<PRThread*> sBackgroundPRThread;
-
-  // This is only modified on the main thread. It is null if the thread does not
-  // exist or is shutting down.
-  static MessageLoop* sBackgroundThreadMessageLoop;
 
   // This is only modified on the main thread. It maintains a count of live
   // actors so that the background thread can be shut down when it is no longer
@@ -555,26 +551,6 @@ class ParentImpl::ShutdownObserver final : public nsIObserver {
   ~ShutdownObserver() { AssertIsOnMainThread(); }
 };
 
-class ParentImpl::RequestMessageLoopRunnable final : public Runnable {
-  nsCOMPtr<nsIThread> mTargetThread;
-  MessageLoop* mMessageLoop;
-
- public:
-  explicit RequestMessageLoopRunnable(nsIThread* aTargetThread)
-      : Runnable("Background::ParentImpl::RequestMessageLoopRunnable"),
-        mTargetThread(aTargetThread),
-        mMessageLoop(nullptr) {
-    AssertIsInMainOrSocketProcess();
-    AssertIsOnMainThread();
-    MOZ_ASSERT(aTargetThread);
-  }
-
- private:
-  ~RequestMessageLoopRunnable() = default;
-
-  NS_DECL_NSIRUNNABLE
-};
-
 class ParentImpl::ShutdownBackgroundThreadRunnable final : public Runnable {
  public:
   ShutdownBackgroundThreadRunnable()
@@ -845,8 +821,6 @@ nsTArray<ParentImpl*>* ParentImpl::sLiveActorsForBackgroundThread;
 StaticRefPtr<nsITimer> ParentImpl::sShutdownTimer;
 
 Atomic<PRThread*> ParentImpl::sBackgroundPRThread;
-
-MessageLoop* ParentImpl::sBackgroundThreadMessageLoop = nullptr;
 
 uint64_t ParentImpl::sLiveActorCount = 0;
 
@@ -1325,7 +1299,15 @@ bool ParentImpl::CreateBackgroundThread() {
   }
 
   nsCOMPtr<nsIThread> thread;
-  if (NS_FAILED(NS_NewNamedThread("IPDL Background", getter_AddRefs(thread)))) {
+  if (NS_FAILED(NS_NewNamedThread(
+          "IPDL Background", getter_AddRefs(thread),
+          NS_NewRunnableFunction("Background::ParentImpl::CreateBackgroundThreadRunnable", []() {
+            DebugOnly<PRThread*> oldBackgroundThread =
+                sBackgroundPRThread.exchange(PR_GetCurrentThread());
+
+            MOZ_ASSERT_IF(oldBackgroundThread,
+                          PR_GetCurrentThread() != oldBackgroundThread);
+          })))) {
     NS_WARNING("NS_NewNamedThread failed!");
     return false;
   }
@@ -1334,19 +1316,9 @@ bool ParentImpl::CreateBackgroundThread() {
   // use direct task
   // dispatching with MozPromise, which is similar (but not
   // identical to) the microtask semantics of JS promises.
-  RefPtr<AbstractThread> abstractThread =
-      AbstractThread::CreateXPCOMThreadWrapper(
-          thread, false /* require tail dispatch */);
-
-  nsCOMPtr<nsIRunnable> messageLoopRunnable =
-      new RequestMessageLoopRunnable(thread);
-  if (NS_FAILED(thread->Dispatch(messageLoopRunnable, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Failed to dispatch RequestMessageLoopRunnable!");
-    return false;
-  }
-
+  sBackgroundAbstractThread = AbstractThread::CreateXPCOMThreadWrapper(
+      thread, false /* require tail dispatch */);
   sBackgroundThread = thread.forget();
-  sBackgroundAbstractThread = abstractThread.forget();
 
   sLiveActorsForBackgroundThread = new nsTArray<ParentImpl*>(1);
 
@@ -1492,52 +1464,6 @@ ParentImpl::ShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
   ChildImpl::Shutdown();
 
   ShutdownBackgroundThread();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentImpl::RequestMessageLoopRunnable::Run() {
-  AssertIsInMainOrSocketProcess();
-  MOZ_ASSERT(mTargetThread);
-
-  if (NS_IsMainThread()) {
-    MOZ_ASSERT(mMessageLoop);
-
-    if (!sBackgroundThread ||
-        !SameCOMIdentity(mTargetThread.get(), sBackgroundThread.get())) {
-      return NS_OK;
-    }
-
-    MOZ_ASSERT(!sBackgroundThreadMessageLoop);
-    sBackgroundThreadMessageLoop = mMessageLoop;
-
-    return NS_OK;
-  }
-
-#ifdef DEBUG
-  {
-    bool correctThread;
-    MOZ_ASSERT(NS_SUCCEEDED(mTargetThread->IsOnCurrentThread(&correctThread)));
-    MOZ_ASSERT(correctThread);
-  }
-#endif
-
-  DebugOnly<PRThread*> oldBackgroundThread =
-      sBackgroundPRThread.exchange(PR_GetCurrentThread());
-
-  MOZ_ASSERT_IF(oldBackgroundThread,
-                PR_GetCurrentThread() != oldBackgroundThread);
-
-  MOZ_ASSERT(!mMessageLoop);
-
-  mMessageLoop = MessageLoop::current();
-  MOZ_ASSERT(mMessageLoop);
-
-  if (NS_FAILED(NS_DispatchToMainThread(this))) {
-    NS_WARNING("Failed to dispatch RequestMessageLoopRunnable to main thread!");
-    return NS_ERROR_FAILURE;
-  }
 
   return NS_OK;
 }
