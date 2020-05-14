@@ -521,9 +521,13 @@ class nsWindow::NPZCSupport final
         WheelDeltaAdjustmentStrategy::eNone);
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
+    int32_t ret =
+        !result.mTargetIsRoot || result.mHitRegionWithApzAwareListeners
+            ? INPUT_RESULT_HANDLED_CONTENT
+            : INPUT_RESULT_HANDLED;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-      return INPUT_RESULT_HANDLED;
+      return ret;
     }
 
     PostInputEvent([input, result](nsWindow* window) {
@@ -531,16 +535,11 @@ class nsWindow::NPZCSupport final
       window->ProcessUntransformedAPZEvent(&wheelEvent, result);
     });
 
-    if (result.mHitRegionWithApzAwareListeners) {
-      return INPUT_RESULT_HANDLED_CONTENT;
-    }
-
     switch (result.mStatus) {
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return result.mTargetIsRoot ? INPUT_RESULT_HANDLED
-                                    : INPUT_RESULT_HANDLED_CONTENT;
+        return ret;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
         return INPUT_RESULT_UNHANDLED;
@@ -646,9 +645,13 @@ class nsWindow::NPZCSupport final
                      GetEventTimeStamp(aTime), GetModifiers(aMetaState));
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
+    int32_t ret =
+        !result.mTargetIsRoot || result.mHitRegionWithApzAwareListeners
+            ? INPUT_RESULT_HANDLED_CONTENT
+            : INPUT_RESULT_HANDLED;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-      return INPUT_RESULT_HANDLED;
+      return ret;
     }
 
     PostInputEvent([input, result](nsWindow* window) {
@@ -656,16 +659,11 @@ class nsWindow::NPZCSupport final
       window->ProcessUntransformedAPZEvent(&mouseEvent, result);
     });
 
-    if (result.mHitRegionWithApzAwareListeners) {
-      return INPUT_RESULT_HANDLED_CONTENT;
-    }
-
     switch (result.mStatus) {
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return result.mTargetIsRoot ? INPUT_RESULT_HANDLED
-                                    : INPUT_RESULT_HANDLED_CONTENT;
+        return ret;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
         return INPUT_RESULT_UNHANDLED;
@@ -774,9 +772,13 @@ class nsWindow::NPZCSupport final
     }
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
+    int32_t ret =
+        !result.mTargetIsRoot || result.mHitRegionWithApzAwareListeners
+            ? INPUT_RESULT_HANDLED_CONTENT
+            : INPUT_RESULT_HANDLED;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-      return INPUT_RESULT_HANDLED;
+      return ret;
     }
 
     // Dispatch APZ input event on Gecko thread.
@@ -786,16 +788,11 @@ class nsWindow::NPZCSupport final
       window->DispatchHitTest(touchEvent);
     });
 
-    if (result.mHitRegionWithApzAwareListeners) {
-      return INPUT_RESULT_HANDLED_CONTENT;
-    }
-
     switch (result.mStatus) {
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return result.mTargetIsRoot ? INPUT_RESULT_HANDLED
-                                    : INPUT_RESULT_HANDLED_CONTENT;
+        return ret;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
         return INPUT_RESULT_UNHANDLED;
