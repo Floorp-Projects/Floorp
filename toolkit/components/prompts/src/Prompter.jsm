@@ -1011,21 +1011,12 @@ class ModalPrompter {
     if (browsingContext && domWin) {
       throw new Error("Pass either browsingContext or domWin");
     }
-    this.browsingContext = browsingContext;
-    this._domWin = domWin;
 
-    if (this._domWin) {
+    if (domWin) {
       // We have a domWin, get the associated browsing context
-      this.browsingContext = BrowsingContext.getFromWindow(this._domWin);
-    } else if (this.browsingContext) {
-      // We have a browsingContext, get the associated dom window
-      if (this.browsingContext.window) {
-        this._domWin = this.browsingContext.window;
-      } else {
-        this._domWin =
-          this.browsingContext.embedderElement &&
-          this.browsingContext.embedderElement.ownerGlobal;
-      }
+      this.browsingContext = BrowsingContext.getFromWindow(domWin);
+    } else {
+      this.browsingContext = browsingContext;
     }
 
     // Use given modal type or fallback to default
@@ -1048,16 +1039,12 @@ class ModalPrompter {
       return;
     }
 
-    // If we have a chrome window and the browsing context isn't embedded
-    // in a browser, we can't use tab/content prompts.
-    // Or if we don't allow tab or content prompts, override modalType
-    // argument to use window prompts
+    // We can't use content / tab prompts if they are disabled by pref,
+    // or we are not given a parent.
     if (
+      !ModalPrompter.tabModalEnabled ||
       !this.browsingContext ||
-      !this._domWin ||
-      (this._domWin.isChromeWindow &&
-        !this.browsingContext.top.embedderElement) ||
-      !ModalPrompter.tabModalEnabled
+      !this.browsingContext.isContent
     ) {
       modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
 
@@ -1116,44 +1103,59 @@ class ModalPrompter {
       args.modalType = this.modalType;
     }
 
-    args.browsingContext = this.browsingContext;
+    const IS_CONTENT =
+      Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
     let actor;
     try {
-      actor = this._domWin.windowGlobalChild.getActor("Prompt");
-    } catch (error) {
-      Cu.reportError(error);
+      if (IS_CONTENT) {
+        // When in the content, get the PromptChild actor.
+        actor = this.browsingContext.window.windowGlobalChild.getActor(
+          "Prompt"
+        );
+      } else {
+        // When in the parent, get the PromptParent actor.
+        actor = this.browsingContext.currentWindowGlobal.getActor("Prompt");
+      }
+    } catch (_) {
       // We can't get the prompt actor, fallback to window prompt.
-      this.openWindowPrompt(this._domWin, args);
+      let parentWin;
+      // If given a chrome BC we can try to get its window
+      if (!this.browsingContext.isContent && this.browsingContext.window) {
+        parentWin = this.browsingContext.window;
+      } else {
+        // Try to get the window which is the browsers parent
+        parentWin = this.browsingContext.top?.embedderElement?.ownerGlobal;
+      }
+      this.openWindowPrompt(parentWin, args);
       return args;
     }
 
-    let docShell =
-      (this.browsingContext && this.browsingContext.docShell) ||
-      this._domWin.docShell;
-    let inPermitUnload =
-      docShell.contentViewer && docShell.contentViewer.inPermitUnload;
-    let eventDetail = Cu.cloneInto(
-      {
-        tabPrompt: this.modalType != Ci.nsIPrompt.MODAL_TYPE_WINDOW,
-        inPermitUnload,
-      },
-      this._domWin
-    );
-    PromptUtils.fireDialogEvent(
-      this._domWin,
-      "DOMWillOpenModalDialog",
-      null,
-      eventDetail
-    );
+    if (IS_CONTENT) {
+      args.promptPrincipal = this.browsingContext.window?.document.nodePrincipal;
 
-    let windowUtils =
-      Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT &&
-      this._domWin.windowUtils;
+      let docShell = this.browsingContext.docShell;
+      let inPermitUnload = docShell?.contentViewer?.inPermitUnload;
+      args.inPermitUnload = inPermitUnload;
+      let eventDetail = Cu.cloneInto(
+        {
+          tabPrompt: this.modalType != Ci.nsIPrompt.MODAL_TYPE_WINDOW,
+          inPermitUnload,
+        },
+        this.browsingContext.window
+      );
+      PromptUtils.fireDialogEvent(
+        this.browsingContext.window,
+        "DOMWillOpenModalDialog",
+        null,
+        eventDetail
+      );
 
-    // Put content windows in the modal state while the prompt is open.
-    if (windowUtils) {
-      windowUtils.enterModalState();
+      // Put content window in the modal state while the prompt is open.
+      let windowUtils = this.browsingContext.window?.windowUtils;
+      if (windowUtils) {
+        windowUtils.enterModalState();
+      }
     }
 
     // It is technically possible for multiple prompts to be sent from a single
@@ -1166,25 +1168,40 @@ class ModalPrompter {
         .generateUUID()
         .toString();
 
-    args.promptPrincipal = this._domWin.document.nodePrincipal;
-    args.inPermitUnload = inPermitUnload;
     args._remoteId = id;
 
     let returnedArgs;
-
     try {
-      returnedArgs = await actor.sendQuery("Prompt:Open", args);
-      if (returnedArgs && returnedArgs.promptAborted) {
+      if (IS_CONTENT) {
+        // If we're in the content process, send a message to the PromptParent
+        // window actor.
+        returnedArgs = await actor.sendQuery("Prompt:Open", args);
+      } else {
+        // If we're in the parent process we already have the parent actor.
+        // We can call its message handler directly.
+        returnedArgs = await actor.receiveMessage({
+          name: "Prompt:Open",
+          data: args,
+        });
+      }
+
+      if (returnedArgs?.promptAborted) {
         throw Components.Exception(
           "prompt aborted by user",
           Cr.NS_ERROR_NOT_AVAILABLE
         );
       }
     } finally {
-      if (windowUtils) {
-        windowUtils.leaveModalState();
+      if (IS_CONTENT) {
+        let windowUtils = this.browsingContext.window?.windowUtils;
+        if (windowUtils) {
+          windowUtils.leaveModalState();
+        }
+        PromptUtils.fireDialogEvent(
+          this.browsingContext.window,
+          "DOMModalDialogClosed"
+        );
       }
-      PromptUtils.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
     }
     return returnedArgs;
   }
