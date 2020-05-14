@@ -248,6 +248,8 @@
     <string name="preferences_show_search_shortcuts">Show search shortcuts</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Show search suggestions</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Show voice search</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Show in private sessions</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -1360,4 +1362,8 @@
     <string name="edit">Edit</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Password required</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Voice search</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Speak now</string>
 </resources>

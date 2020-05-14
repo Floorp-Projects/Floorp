@@ -87,6 +87,7 @@
     <string name="pref_key_search_bookmarks" translatable="false">pref_key_search_bookmarks</string>
     <string name="pref_key_show_search_suggestions_in_private" translatable="false">pref_key_show_search_suggestions_in_private</string>
     <string name="pref_key_show_search_suggestions_in_private_onboarding" translatable="false">pref_key_show_search_suggestions_in_privateonboarding</string>
+    <string name="pref_key_show_voice_search" translatable="false">pref_key_show_voice_search</string>
 
 
     <!-- Site Permissions Settings -->

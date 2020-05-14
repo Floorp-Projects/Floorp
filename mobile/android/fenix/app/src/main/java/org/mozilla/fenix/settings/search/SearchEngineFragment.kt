@@ -60,6 +60,11 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         val searchEngineListPreference =
             findPreference<SearchEngineListPreference>(getPreferenceKey(R.string.pref_key_search_engine_list))
 
+        val showVoiceSearchPreference =
+            findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_voice_search))?.apply {
+                isChecked = context.settings().shouldShowVoiceSearch
+            }
+
         searchEngineListPreference?.reload(requireContext())
         searchSuggestionsPreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showSearchShortcuts?.onPreferenceChangeListener = SharedPreferenceUpdater()
@@ -67,6 +72,7 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         showBookmarkSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showClipboardSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
         searchSuggestionsInPrivatePreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showVoiceSearchPreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
 
         searchSuggestionsPreference?.setOnPreferenceClickListener {
             if (!searchSuggestionsPreference.isChecked) {
