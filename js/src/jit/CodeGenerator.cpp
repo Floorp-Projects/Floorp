@@ -11442,37 +11442,43 @@ void CodeGenerator::visitLoadFixedSlotT(LLoadFixedSlotT* ins) {
                         type, result);
 }
 
+template <typename T>
+static void EmitLoadAndUnbox(MacroAssembler& masm, const T& src, MIRType type,
+                             bool fallible, AnyRegister dest, Label* fail) {
+  if (type == MIRType::Double) {
+    MOZ_ASSERT(dest.isFloat());
+    masm.ensureDouble(src, dest.fpu(), fail);
+    return;
+  }
+  if (fallible) {
+    switch (type) {
+      case MIRType::Int32:
+        masm.branchTestInt32(Assembler::NotEqual, src, fail);
+        break;
+      case MIRType::Boolean:
+        masm.branchTestBoolean(Assembler::NotEqual, src, fail);
+        break;
+      default:
+        MOZ_CRASH("Unexpected MIRType");
+    }
+  }
+  masm.loadUnboxedValue(src, type, dest);
+}
+
 void CodeGenerator::visitLoadFixedSlotAndUnbox(LLoadFixedSlotAndUnbox* ins) {
   const MLoadFixedSlotAndUnbox* mir = ins->mir();
   MIRType type = mir->type();
-  const Register input = ToRegister(ins->getOperand(0));
+  Register input = ToRegister(ins->object());
   AnyRegister result = ToAnyRegister(ins->output());
   size_t slot = mir->slot();
 
   Address address(input, NativeObject::getFixedSlotOffset(slot));
+
   Label bail;
-  if (type == MIRType::Double) {
-    MOZ_ASSERT(result.isFloat());
-    masm.ensureDouble(address, result.fpu(), &bail);
-    if (mir->fallible()) {
-      bailoutFrom(&bail, ins->snapshot());
-    }
-    return;
-  }
+  EmitLoadAndUnbox(masm, address, type, mir->fallible(), result, &bail);
   if (mir->fallible()) {
-    switch (type) {
-      case MIRType::Int32:
-        masm.branchTestInt32(Assembler::NotEqual, address, &bail);
-        break;
-      case MIRType::Boolean:
-        masm.branchTestBoolean(Assembler::NotEqual, address, &bail);
-        break;
-      default:
-        MOZ_CRASH("Given MIRType cannot be unboxed.");
-    }
     bailoutFrom(&bail, ins->snapshot());
   }
-  masm.loadUnboxedValue(address, type, result);
 }
 
 void CodeGenerator::visitStoreFixedSlotV(LStoreFixedSlotV* ins) {

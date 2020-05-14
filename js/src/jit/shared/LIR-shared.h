@@ -4813,6 +4813,8 @@ class LLoadFixedSlotAndUnbox : public LInstructionHelper<1, 1, 0> {
     setOperand(0, object);
   }
 
+  const LAllocation* object() { return getOperand(0); }
+
   const MLoadFixedSlotAndUnbox* mir() const {
     return mir_->toLoadFixedSlotAndUnbox();
   }
