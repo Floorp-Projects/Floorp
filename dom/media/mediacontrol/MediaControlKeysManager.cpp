@@ -102,12 +102,6 @@ void MediaControlKeysManager::SetPlaybackState(
   }
   mPlaybackState = aState;
   LOG_INFO("playbackState=%s", ToMediaSessionPlaybackStateStr(mPlaybackState));
-  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
-    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
-      obs->NotifyObservers(nullptr, "media-displayed-playback-changed",
-                           nullptr);
-    }
-  }
 }
 
 MediaSessionPlaybackState MediaControlKeysManager::GetPlaybackState() const {
@@ -126,12 +120,6 @@ void MediaControlKeysManager::SetMediaMetadata(
            NS_ConvertUTF16toUTF8(mMetadata.mTitle).get(),
            NS_ConvertUTF16toUTF8(mMetadata.mArtist).get(),
            NS_ConvertUTF16toUTF8(mMetadata.mAlbum).get());
-  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
-    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
-      obs->NotifyObservers(nullptr, "media-displayed-metadata-changed",
-                           nullptr);
-    }
-  }
 }
 
 }  // namespace dom

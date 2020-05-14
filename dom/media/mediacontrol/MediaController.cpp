@@ -129,7 +129,13 @@ void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
     return;
   }
   MediaStatusManager::NotifyMediaPlaybackChanged(aBrowsingContextId, aState);
-  UpdateActivatedStateIfNeeded();
+
+  // Update controller's status according to the media status.
+  if (ShouldActivateController()) {
+    Activate();
+  } else if (ShouldDeactivateController()) {
+    Deactivate();
+  }
 }
 
 void MediaController::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
@@ -143,7 +149,6 @@ void MediaController::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
   if (IsAudible() == oldAudible) {
     return;
   }
-  UpdateActivatedStateIfNeeded();
 
   // Request the audio focus amongs different controllers that could cause
   // pausing other audible controllers if we enable the audio focus management.
@@ -158,7 +163,7 @@ void MediaController::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
 
 bool MediaController::ShouldActivateController() const {
   MOZ_ASSERT(!mShutdown);
-  return IsAnyMediaBeingControlled() && IsAudible() && !mIsRegisteredToService;
+  return IsAnyMediaBeingControlled() && !mIsRegisteredToService;
 }
 
 bool MediaController::ShouldDeactivateController() const {
@@ -214,14 +219,6 @@ void MediaController::HandleActualPlaybackStateChanged() {
 
 bool MediaController::IsInPictureInPictureMode() const {
   return mIsInPictureInPictureMode;
-}
-
-void MediaController::UpdateActivatedStateIfNeeded() {
-  if (ShouldActivateController()) {
-    Activate();
-  } else if (ShouldDeactivateController()) {
-    Deactivate();
-  }
 }
 
 }  // namespace dom
