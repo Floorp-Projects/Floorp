@@ -89,7 +89,7 @@ class ContextObserver {
         this.emit("context-created", { windowId: id, window });
         // Delay script-loaded to allow context cleanup to happen first
         executeSoon(() => {
-          this.emit("script-loaded");
+          this.emit("script-loaded", { windowId: id, window });
         });
         break;
 
@@ -101,7 +101,7 @@ class ContextObserver {
         // XXX(ochameau) we might have to emit FrameNavigate here to properly handle BF Cache
         // scenario in Page domain events
         this.emit("context-created", { windowId: id, window });
-        this.emit("script-loaded");
+        this.emit("script-loaded", { windowId: id, window });
         break;
 
       case "pagehide":
