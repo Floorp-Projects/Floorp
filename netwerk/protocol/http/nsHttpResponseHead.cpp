@@ -24,6 +24,8 @@ namespace net {
 // nsHttpResponseHead <public>
 //-----------------------------------------------------------------------------
 
+// Note that the code below MUST be synchronized with the IPC
+// serialization/deserialization in PHttpChannelParams.h.
 nsHttpResponseHead::nsHttpResponseHead(const nsHttpResponseHead& aOther)
     : mRecursiveMutex("nsHttpResponseHead.mRecursiveMutex"),
       mInVisitHeaders(false) {
