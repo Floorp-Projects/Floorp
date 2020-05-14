@@ -2870,7 +2870,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
 
             if (rv == NS_OK) {
               script = exec.GetScript();
-              if (JS::GetScriptPrivate(script).isUndefined()) {
+              if (script && JS::GetScriptPrivate(script).isUndefined()) {
                 classicScript->AssociateWithScript(script);
               }
               rv = ExecuteCompiledScript(cx, aRequest, exec);
