@@ -410,7 +410,7 @@ bool WarpCacheIRTranspiler::emitLoadDynamicSlotResult(ObjOperandId objId,
   auto* slots = MSlots::New(alloc(), obj);
   add(slots);
 
-  auto* load = MLoadSlot::New(alloc(), slots, slotIndex);
+  auto* load = MLoadDynamicSlot::New(alloc(), slots, slotIndex);
   add(load);
 
   pushResult(load);
@@ -458,7 +458,7 @@ bool WarpCacheIRTranspiler::emitLoadEnvironmentDynamicSlotResult(
   auto* slots = MSlots::New(alloc(), obj);
   add(slots);
 
-  auto* load = MLoadSlot::New(alloc(), slots, slotIndex);
+  auto* load = MLoadDynamicSlot::New(alloc(), slots, slotIndex);
   add(load);
 
   auto* lexicalCheck = MLexicalCheck::New(alloc(), load);
@@ -619,7 +619,7 @@ bool WarpCacheIRTranspiler::emitStoreDynamicSlot(ObjOperandId objId,
   auto* slots = MSlots::New(alloc(), obj);
   add(slots);
 
-  auto* store = MStoreSlot::NewBarriered(alloc(), slots, slotIndex, rhs);
+  auto* store = MStoreDynamicSlot::NewBarriered(alloc(), slots, slotIndex, rhs);
   addEffectful(store);
   return resumeAfter(store);
 }

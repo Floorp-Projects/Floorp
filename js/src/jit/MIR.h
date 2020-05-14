@@ -9030,10 +9030,11 @@ class MGuardSpecificAtom : public MUnaryInstruction,
 };
 
 // Load from vp[slot] (slots that are not inline in an object).
-class MLoadSlot : public MUnaryInstruction, public SingleObjectPolicy::Data {
+class MLoadDynamicSlot : public MUnaryInstruction,
+                         public SingleObjectPolicy::Data {
   uint32_t slot_;
 
-  MLoadSlot(MDefinition* slots, uint32_t slot)
+  MLoadDynamicSlot(MDefinition* slots, uint32_t slot)
       : MUnaryInstruction(classOpcode, slots), slot_(slot) {
     setResultType(MIRType::Value);
     setMovable();
@@ -9041,7 +9042,7 @@ class MLoadSlot : public MUnaryInstruction, public SingleObjectPolicy::Data {
   }
 
  public:
-  INSTRUCTION_HEADER(LoadSlot)
+  INSTRUCTION_HEADER(LoadDynamicSlot)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, slots))
 
@@ -9049,10 +9050,10 @@ class MLoadSlot : public MUnaryInstruction, public SingleObjectPolicy::Data {
 
   HashNumber valueHash() const override;
   bool congruentTo(const MDefinition* ins) const override {
-    if (!ins->isLoadSlot()) {
+    if (!ins->isLoadDynamicSlot()) {
       return false;
     }
-    if (slot() != ins->toLoadSlot()->slot()) {
+    if (slot() != ins->toLoadDynamicSlot()->slot()) {
       return false;
     }
     return congruentIfOperandsEqual(ins);
@@ -9070,7 +9071,7 @@ class MLoadSlot : public MUnaryInstruction, public SingleObjectPolicy::Data {
   void printOpcode(GenericPrinter& out) const override;
 #endif
 
-  ALLOW_CLONE(MLoadSlot)
+  ALLOW_CLONE(MLoadDynamicSlot)
 };
 
 // Inline call to access a function's environment (scope chain).
@@ -9156,14 +9157,15 @@ class MHomeObject : public MUnaryInstruction, public SingleObjectPolicy::Data {
 };
 
 // Store to vp[slot] (slots that are not inline in an object).
-class MStoreSlot : public MBinaryInstruction,
-                   public MixPolicy<ObjectPolicy<0>, NoFloatPolicy<1>>::Data {
+class MStoreDynamicSlot
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, NoFloatPolicy<1>>::Data {
   uint32_t slot_;
   MIRType slotType_;
   bool needsBarrier_;
 
-  MStoreSlot(MDefinition* slots, uint32_t slot, MDefinition* value,
-             bool barrier)
+  MStoreDynamicSlot(MDefinition* slots, uint32_t slot, MDefinition* value,
+                    bool barrier)
       : MBinaryInstruction(classOpcode, slots, value),
         slot_(slot),
         slotType_(MIRType::Value),
@@ -9172,16 +9174,17 @@ class MStoreSlot : public MBinaryInstruction,
   }
 
  public:
-  INSTRUCTION_HEADER(StoreSlot)
+  INSTRUCTION_HEADER(StoreDynamicSlot)
   NAMED_OPERANDS((0, slots), (1, value))
 
-  static MStoreSlot* New(TempAllocator& alloc, MDefinition* slots,
-                         uint32_t slot, MDefinition* value) {
-    return new (alloc) MStoreSlot(slots, slot, value, false);
+  static MStoreDynamicSlot* New(TempAllocator& alloc, MDefinition* slots,
+                                uint32_t slot, MDefinition* value) {
+    return new (alloc) MStoreDynamicSlot(slots, slot, value, false);
   }
-  static MStoreSlot* NewBarriered(TempAllocator& alloc, MDefinition* slots,
-                                  uint32_t slot, MDefinition* value) {
-    return new (alloc) MStoreSlot(slots, slot, value, true);
+  static MStoreDynamicSlot* NewBarriered(TempAllocator& alloc,
+                                         MDefinition* slots, uint32_t slot,
+                                         MDefinition* value) {
+    return new (alloc) MStoreDynamicSlot(slots, slot, value, true);
   }
 
   uint32_t slot() const { return slot_; }
@@ -9200,7 +9203,7 @@ class MStoreSlot : public MBinaryInstruction,
   void printOpcode(GenericPrinter& out) const override;
 #endif
 
-  ALLOW_CLONE(MStoreSlot)
+  ALLOW_CLONE(MStoreDynamicSlot)
 };
 
 class MGetNameCache : public MUnaryInstruction,
