@@ -43,12 +43,12 @@ class Page extends ContentProcessDomain {
     this._onFrameNavigated = this._onFrameNavigated.bind(this);
     this._onScriptLoaded = this._onScriptLoaded.bind(this);
 
-    this.contextObserver.on("script-loaded", this._onScriptLoaded);
+    this.session.contextObserver.on("script-loaded", this._onScriptLoaded);
   }
 
   destructor() {
     this.setLifecycleEventsEnabled({ enabled: false });
-    this.contextObserver.off("script-loaded", this._onScriptLoaded);
+    this.session.contextObserver.off("script-loaded", this._onScriptLoaded);
     this.disable();
 
     super.destructor();
@@ -59,7 +59,10 @@ class Page extends ContentProcessDomain {
   async enable() {
     if (!this.enabled) {
       this.enabled = true;
-      this.contextObserver.on("frame-navigated", this._onFrameNavigated);
+      this.session.contextObserver.on(
+        "frame-navigated",
+        this._onFrameNavigated
+      );
 
       this.chromeEventHandler.addEventListener("readystatechange", this, {
         mozSystemGroup: true,
@@ -87,7 +90,10 @@ class Page extends ContentProcessDomain {
 
   disable() {
     if (this.enabled) {
-      this.contextObserver.off("frame-navigated", this._onFrameNavigated);
+      this.session.contextObserver.off(
+        "frame-navigated",
+        this._onFrameNavigated
+      );
 
       this.chromeEventHandler.removeEventListener("readystatechange", this, {
         mozSystemGroup: true,
