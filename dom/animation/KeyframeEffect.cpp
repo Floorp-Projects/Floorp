@@ -90,8 +90,22 @@ KeyframeEffect::KeyframeEffect(Document* aDocument,
                                const KeyframeEffectParams& aOptions)
     : AnimationEffect(aDocument, std::move(aTiming)),
       mTarget(std::move(aTarget)),
-      mEffectOptions(aOptions),
-      mCumulativeChangeHint(nsChangeHint(0)) {}
+      mEffectOptions(aOptions) {}
+
+KeyframeEffect::KeyframeEffect(Document* aDocument,
+                               OwningAnimationTarget&& aTarget,
+                               const KeyframeEffect& aOther)
+    : AnimationEffect(aDocument, TimingParams{aOther.SpecifiedTiming()}),
+      mTarget(std::move(aTarget)),
+      mEffectOptions{aOther.IterationComposite(), aOther.Composite(),
+                     mTarget.mPseudoType},
+      mKeyframes(aOther.mKeyframes.Clone()),
+      mProperties(aOther.mProperties.Clone()),
+      mBaseValues(aOther.mBaseValues.Count()) {
+  for (auto iter = aOther.mBaseValues.ConstIter(); !iter.Done(); iter.Next()) {
+    mBaseValues.Put(iter.Key(), RefPtr{iter.Data()});
+  }
+}
 
 JSObject* KeyframeEffect::WrapObject(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -1033,23 +1047,12 @@ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
   // aSource's TimingParams.
   // Note: we don't need to re-throw exceptions since the value specified on
   //       aSource's timing object can be assumed valid.
-  RefPtr<KeyframeEffect> effect = new KeyframeEffect(
-      doc, OwningAnimationTarget(aSource.mTarget),
-      TimingParams(aSource.SpecifiedTiming()), aSource.mEffectOptions);
+  RefPtr<KeyframeEffect> effect =
+      new KeyframeEffect(doc, OwningAnimationTarget{aSource.mTarget}, aSource);
   // Copy cumulative change hint. mCumulativeChangeHint should be the same as
   // the source one because both of targets are the same.
   effect->mCumulativeChangeHint = aSource.mCumulativeChangeHint;
 
-  // Copy aSource's keyframes and animation properties.
-  // Note: We don't call SetKeyframes directly, which might revise the
-  //       computed offsets and rebuild the animation properties.
-  effect->mKeyframes = aSource.mKeyframes.Clone();
-  effect->mProperties = aSource.mProperties.Clone();
-  for (auto iter = aSource.mBaseValues.ConstIter(); !iter.Done(); iter.Next()) {
-    // XXX Should this use non-const Iter() and then pass
-    // std::move(iter.Data())? Otherwise aSource might be a const&...
-    effect->mBaseValues.Put(iter.Key(), RefPtr{iter.Data()});
-  }
   return effect.forget();
 }
 

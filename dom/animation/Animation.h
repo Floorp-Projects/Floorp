@@ -50,6 +50,14 @@ class Animation : public DOMEventTargetHelper,
   explicit Animation(nsIGlobalObject* aGlobal)
       : DOMEventTargetHelper(aGlobal), mAnimationIndex(sNextAnimationIndex++) {}
 
+  // Constructs a copy of |aOther| with a new effect and timeline.
+  // This is only intended to be used while making a static clone of a document
+  // during printing, and does not assume that |aOther| is in the same document
+  // as any of the other arguments.
+  static already_AddRefed<Animation> ClonePausedAnimation(
+      nsIGlobalObject* aGlobal, const Animation& aOther,
+      AnimationEffect& aEffect, AnimationTimeline& aTimeline);
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Animation, DOMEventTargetHelper)
 

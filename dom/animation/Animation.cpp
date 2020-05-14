@@ -83,6 +83,37 @@ class MOZ_RAII AutoMutationBatchForAnimation {
 //
 // ---------------------------------------------------------------------------
 
+/* static */
+already_AddRefed<Animation> Animation::ClonePausedAnimation(
+    nsIGlobalObject* aGlobal, const Animation& aOther, AnimationEffect& aEffect,
+    AnimationTimeline& aTimeline) {
+  RefPtr<Animation> animation = new Animation(aGlobal);
+  // Setup the timing.
+  animation->mTimeline = &aTimeline;
+  const Nullable<TimeDuration> timelineTime =
+      aTimeline.GetCurrentTimeAsDuration();
+  MOZ_ASSERT(!timelineTime.IsNull(), "Timeline not yet set");
+
+  const Nullable<TimeDuration> currentTime = aOther.GetCurrentTimeAsDuration();
+  animation->mHoldTime = currentTime;
+  if (!currentTime.IsNull()) {
+    animation->mPreviousCurrentTime = timelineTime;
+  }
+
+  animation->mPlaybackRate = aOther.mPlaybackRate;
+
+  // Setup the effect's link to this.
+  animation->mEffect = &aEffect;
+  animation->mEffect->SetAnimation(animation);
+
+  // We expect our relevance to be the same as the orginal.
+  animation->mIsRelevant = aOther.mIsRelevant;
+
+  animation->PostUpdate();
+  animation->mTimeline->NotifyAnimationUpdated(*animation);
+  return animation.forget();
+}
+
 NonOwningAnimationTarget Animation::GetTargetForAnimation() const {
   AnimationEffect* effect = GetEffect();
   NonOwningAnimationTarget target;
