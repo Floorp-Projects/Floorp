@@ -1464,7 +1464,10 @@ var CustomizableUIInternal = {
 
     while (++nodeIndex < placements.length) {
       let nextNodeId = placements[nodeIndex];
-      let nextNode = aNode.ownerDocument.getElementById(nextNodeId);
+      // We use aAreaNode here, because if aNode is in a template, its
+      // `ownerDocument` is *not* going to be the browser.xhtml document,
+      // so we cannot rely on it.
+      let nextNode = aAreaNode.ownerDocument.getElementById(nextNodeId);
       // If the next placed widget exists, and is a direct child of the
       // container, or wrapped in a customize mode wrapper (toolbarpaletteitem)
       // inside the container, insert beside it.
@@ -1861,7 +1864,9 @@ var CustomizableUIInternal = {
       return;
     }
 
-    let document = aShortcutNode.ownerDocument;
+    // Use ownerGlobal.document to ensure we get the right doc even for
+    // elements in template tags.
+    let { document } = aShortcutNode.ownerGlobal;
     let shortcutId = aShortcutNode.getAttribute("key");
     let shortcut;
     if (shortcutId) {
@@ -4354,7 +4359,9 @@ var CustomizableUI = {
       "style",
     ];
 
-    let doc = aSubview.ownerDocument;
+    // Use ownerGlobal.document to ensure we get the right doc even for
+    // elements in template tags.
+    let doc = aSubview.ownerGlobal.document;
     let fragment = doc.createDocumentFragment();
     for (let menuChild of aMenuItems) {
       if (menuChild.hidden) {
@@ -4662,7 +4669,7 @@ function XULWidgetSingleWrapper(aWidgetId, aNode, aDocument) {
     }
     if (aNode) {
       // Return the last known node if it's still in the DOM...
-      if (aNode.ownerDocument.contains(aNode)) {
+      if (aNode.isConnected) {
         return aNode;
       }
       // ... or the toolbox
@@ -5293,7 +5300,9 @@ OverflowableToolbar.prototype = {
     while (++loopIndex < placements.length) {
       let nextNodeId = placements[loopIndex];
       if (loopIndex > nodeIndex) {
-        let nextNode = aNode.ownerDocument.getElementById(nextNodeId);
+        // Note that if aNode is in a template, its `ownerDocument` is *not*
+        // going to be the browser.xhtml document, so we cannot rely on it.
+        let nextNode = this._toolbar.ownerDocument.getElementById(nextNodeId);
         // If the node we're inserting can overflow, and the next node
         // in the toolbar is overflown, we should insert this node
         // in the overflow panel before it.

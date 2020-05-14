@@ -223,7 +223,8 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   bool SendInProgress() const { return !!mWorkerRef; }
 
  private:
-  explicit XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate);
+  XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate,
+                       nsIGlobalObject* aGlobalObject);
   ~XMLHttpRequestWorker();
 
   enum ReleaseType { Default, XHRIsGoingAway, WorkerIsGoingAway };

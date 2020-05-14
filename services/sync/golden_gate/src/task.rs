@@ -4,7 +4,7 @@
 
 use std::{
     fmt::Write,
-    mem,
+    mem, result,
     sync::{Arc, Weak},
 };
 
@@ -21,7 +21,7 @@ use xpcom::{
     RefPtr,
 };
 
-use crate::error::{self, BridgedError, Error};
+use crate::error::{BridgedError, Error, Result};
 use crate::ferry::{Ferry, FerryResult};
 
 /// A ferry task sends (or ferries) an operation to a bridged engine on a
@@ -37,7 +37,7 @@ pub struct FerryTask<N: ?Sized + BridgedEngine> {
     engine: Weak<N>,
     ferry: Ferry,
     callback: ThreadPtrHandle<mozIBridgedSyncEngineCallback>,
-    result: AtomicRefCell<Result<FerryResult, N::Error>>,
+    result: AtomicRefCell<result::Result<FerryResult, N::Error>>,
 }
 
 impl<N> FerryTask<N>
@@ -50,7 +50,7 @@ where
     pub fn for_last_sync(
         engine: &Arc<N>,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         Self::with_ferry(engine, Ferry::LastSync, callback)
     }
 
@@ -60,7 +60,7 @@ where
         engine: &Arc<N>,
         last_sync_millis: i64,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         Self::with_ferry(engine, Ferry::SetLastSync(last_sync_millis), callback)
     }
 
@@ -69,7 +69,7 @@ where
     pub fn for_sync_id(
         engine: &Arc<N>,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         Self::with_ferry(engine, Ferry::SyncId, callback)
     }
 
@@ -79,7 +79,7 @@ where
     pub fn for_reset_sync_id(
         engine: &Arc<N>,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         Self::with_ferry(engine, Ferry::ResetSyncId, callback)
     }
 
@@ -91,7 +91,7 @@ where
         engine: &Arc<N>,
         new_sync_id: &nsACString,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         Self::with_ferry(
             engine,
             Ferry::EnsureCurrentSyncId(std::str::from_utf8(new_sync_id)?.into()),
@@ -104,7 +104,7 @@ where
     pub fn for_sync_started(
         engine: &Arc<N>,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         Self::with_ferry(engine, Ferry::SyncStarted, callback)
     }
 
@@ -113,14 +113,11 @@ where
         engine: &Arc<N>,
         incoming_envelopes_json: &[nsCString],
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
-        let incoming_envelopes = incoming_envelopes_json.iter().try_fold(
-            Vec::with_capacity(incoming_envelopes_json.len()),
-            |mut envelopes, envelope| -> error::Result<_> {
-                envelopes.push(serde_json::from_slice(&*envelope)?);
-                Ok(envelopes)
-            },
-        )?;
+    ) -> Result<FerryTask<N>> {
+        let incoming_envelopes = incoming_envelopes_json
+            .iter()
+            .map(|envelope| Ok(serde_json::from_slice(&*envelope)?))
+            .collect::<Result<_>>()?;
         Self::with_ferry(engine, Ferry::StoreIncoming(incoming_envelopes), callback)
     }
 
@@ -132,7 +129,7 @@ where
         server_modified_millis: i64,
         uploaded_ids: &[nsCString],
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         let uploaded_ids = uploaded_ids
             .iter()
             .map(|id| Guid::from_slice(&*id))
@@ -151,7 +148,7 @@ where
     pub fn for_sync_finished(
         engine: &Arc<N>,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         Self::with_ferry(engine, Ferry::SyncFinished, callback)
     }
 
@@ -161,7 +158,7 @@ where
     pub fn for_reset(
         engine: &Arc<N>,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         Self::with_ferry(engine, Ferry::Reset, callback)
     }
 
@@ -170,7 +167,7 @@ where
     pub fn for_wipe(
         engine: &Arc<N>,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         Self::with_ferry(engine, Ferry::Wipe, callback)
     }
 
@@ -181,7 +178,7 @@ where
         engine: &Arc<N>,
         ferry: Ferry,
         callback: &mozIBridgedSyncEngineCallback,
-    ) -> error::Result<FerryTask<N>> {
+    ) -> Result<FerryTask<N>> {
         let name = ferry.name();
         Ok(FerryTask {
             engine: Arc::downgrade(engine),
@@ -195,7 +192,7 @@ where
     }
 
     /// Dispatches the task to the given thread `target`.
-    pub fn dispatch(self, target: &nsIEventTarget) -> Result<(), Error> {
+    pub fn dispatch(self, target: &nsIEventTarget) -> Result<()> {
         let runnable = TaskRunnable::new(self.ferry.name(), Box::new(self))?;
         // `may_block` schedules the task on the I/O thread pool, since we
         // expect most operations to wait on I/O.
@@ -211,7 +208,7 @@ where
 {
     /// Runs the task on the background thread. This is split out into its own
     /// method to make error handling easier.
-    fn inner_run(&self) -> Result<FerryResult, N::Error> {
+    fn inner_run(&self) -> result::Result<FerryResult, N::Error> {
         let engine = match self.engine.upgrade() {
             Some(outer) => outer,
             None => return Err(Error::DidNotRun(self.ferry.name()).into()),
@@ -264,7 +261,7 @@ where
         *self.result.borrow_mut() = self.inner_run();
     }
 
-    fn done(&self) -> Result<(), nsresult> {
+    fn done(&self) -> result::Result<(), nsresult> {
         let callback = self.callback.get().unwrap();
         match mem::replace(
             &mut *self.result.borrow_mut(),
@@ -287,7 +284,7 @@ where
 pub struct ApplyTask<N: ?Sized + BridgedEngine> {
     engine: Weak<N>,
     callback: ThreadPtrHandle<mozIBridgedSyncEngineApplyCallback>,
-    result: AtomicRefCell<Result<Vec<String>, N::Error>>,
+    result: AtomicRefCell<result::Result<Vec<String>, N::Error>>,
 }
 
 impl<N> ApplyTask<N>
@@ -301,7 +298,7 @@ where
     }
 
     /// Runs the task on the background thread.
-    fn inner_run(&self) -> Result<Vec<String>, N::Error> {
+    fn inner_run(&self) -> result::Result<Vec<String>, N::Error> {
         let engine = match self.engine.upgrade() {
             Some(outer) => outer,
             None => return Err(Error::DidNotRun(Self::name()).into()),
@@ -310,13 +307,10 @@ where
             envelopes: outgoing_envelopes,
             ..
         } = engine.apply()?;
-        let outgoing_envelopes_json = outgoing_envelopes.iter().try_fold(
-            Vec::with_capacity(outgoing_envelopes.len()),
-            |mut envelopes, envelope| {
-                envelopes.push(serde_json::to_string(envelope)?);
-                Ok(envelopes)
-            },
-        )?;
+        let outgoing_envelopes_json = outgoing_envelopes
+            .iter()
+            .map(|envelope| Ok(serde_json::to_string(envelope)?))
+            .collect::<Result<_>>()?;
         Ok(outgoing_envelopes_json)
     }
 }
@@ -331,7 +325,7 @@ where
     pub fn new(
         engine: &Arc<N>,
         callback: &mozIBridgedSyncEngineApplyCallback,
-    ) -> error::Result<ApplyTask<N>> {
+    ) -> Result<ApplyTask<N>> {
         Ok(ApplyTask {
             engine: Arc::downgrade(engine),
             callback: ThreadPtrHolder::new(
@@ -343,7 +337,7 @@ where
     }
 
     /// Dispatches the task to the given thread `target`.
-    pub fn dispatch(self, target: &nsIEventTarget) -> Result<(), Error> {
+    pub fn dispatch(self, target: &nsIEventTarget) -> Result<()> {
         let runnable = TaskRunnable::new(Self::name(), Box::new(self))?;
         runnable.dispatch_with_options(target, DispatchOptions::default().may_block(true))?;
         Ok(())
@@ -359,7 +353,7 @@ where
         *self.result.borrow_mut() = self.inner_run();
     }
 
-    fn done(&self) -> Result<(), nsresult> {
+    fn done(&self) -> result::Result<(), nsresult> {
         let callback = self.callback.get().unwrap();
         match mem::replace(
             &mut *self.result.borrow_mut(),
