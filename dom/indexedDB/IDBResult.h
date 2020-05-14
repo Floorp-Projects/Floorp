@@ -33,8 +33,8 @@ struct OkType<void> final {};
 
 template <IDBSpecialValue Value>
 using SpecialConstant = std::integral_constant<IDBSpecialValue, Value>;
-using FailureType = detail::SpecialConstant<IDBSpecialValue::Failure>;
-using InvalidType = detail::SpecialConstant<IDBSpecialValue::Invalid>;
+using FailureType = SpecialConstant<IDBSpecialValue::Failure>;
+using InvalidType = SpecialConstant<IDBSpecialValue::Invalid>;
 struct ExceptionType final {};
 struct VoidType final {};
 }  // namespace detail
@@ -78,26 +78,25 @@ template <typename T, IDBSpecialValue... S>
 class IDBResultBase {
   // This assertion ensures that permutations of the set of possible special
   // values don't create distinct types.
-  static_assert(detail::IsSortedSet<S...>::value,
+  static_assert(IsSortedSet<S...>::value,
                 "special value list must be sorted and unique");
 
   template <typename R, IDBSpecialValue... U>
   friend class IDBResultBase;
 
  protected:
-  using ValueType = detail::OkType<T>;
+  using ValueType = OkType<T>;
 
  public:
   // Construct a normal result. Use the Ok function to create an object of type
   // ValueType.
   MOZ_IMPLICIT IDBResultBase(const ValueType& aValue) : mVariant(aValue) {}
 
-  MOZ_IMPLICIT IDBResultBase(detail::ExceptionType)
-      : mVariant(detail::ExceptionType{}) {}
+  MOZ_IMPLICIT IDBResultBase(ExceptionType) : mVariant(ExceptionType{}) {}
 
   template <IDBSpecialValue Special>
-  MOZ_IMPLICIT IDBResultBase(detail::SpecialConstant<Special>)
-      : mVariant(detail::SpecialConstant<Special>{}) {}
+  MOZ_IMPLICIT IDBResultBase(SpecialConstant<Special>)
+      : mVariant(SpecialConstant<Special>{}) {}
 
   // Construct an IDBResult from another IDBResult whose set of possible special
   // values is a subset of this one's.
@@ -109,29 +108,28 @@ class IDBResultBase {
   // Test whether the result is a normal return value. The choice of the first
   // parameter's type makes it possible to write `result.Is(Ok, rv)`, promoting
   // readability and uniformity with other functions in the overload set.
-  bool Is(detail::OkType<void> (*)(), const ErrorResult& aRv) const {
+  bool Is(OkType<void> (*)(), const ErrorResult& aRv) const {
     AssertConsistency(aRv);
     return mVariant.template is<ValueType>();
   }
 
-  bool Is(detail::ExceptionType, const ErrorResult& aRv) const {
+  bool Is(ExceptionType, const ErrorResult& aRv) const {
     AssertConsistency(aRv);
-    return mVariant.template is<detail::ExceptionType>();
+    return mVariant.template is<ExceptionType>();
   }
 
   template <IDBSpecialValue Special>
-  bool Is(detail::SpecialConstant<Special>, const ErrorResult& aRv) const {
+  bool Is(SpecialConstant<Special>, const ErrorResult& aRv) const {
     AssertConsistency(aRv);
-    return mVariant.template is<detail::SpecialConstant<Special>>();
+    return mVariant.template is<SpecialConstant<Special>>();
   }
 
  protected:
   void AssertConsistency(const ErrorResult& aRv) const {
-    MOZ_ASSERT(aRv.Failed() == mVariant.template is<detail::ExceptionType>());
+    MOZ_ASSERT(aRv.Failed() == mVariant.template is<ExceptionType>());
   }
 
-  using VariantType =
-      Variant<ValueType, detail::ExceptionType, detail::SpecialConstant<S>...>;
+  using VariantType = Variant<ValueType, ExceptionType, SpecialConstant<S>...>;
 
   VariantType mVariant;
 };
