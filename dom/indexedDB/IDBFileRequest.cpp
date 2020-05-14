@@ -64,27 +64,6 @@ void IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal) {
   DispatchTrustedEvent(event);
 }
 
-void IDBFileRequest::SetResultCallback(ResultCallback* aCallback) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aCallback);
-
-  AutoJSAPI autoJS;
-  if (NS_WARN_IF(!autoJS.Init(GetOwnerGlobal()))) {
-    FireError(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-    return;
-  }
-
-  JSContext* cx = autoJS.cx();
-
-  JS::Rooted<JS::Value> result(cx);
-  nsresult rv = aCallback->GetResult(cx, &result);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FireError(rv);
-  } else {
-    FireSuccess(result);
-  }
-}
-
 NS_IMPL_ADDREF_INHERITED(IDBFileRequest, DOMRequest)
 NS_IMPL_RELEASE_INHERITED(IDBFileRequest, DOMRequest)
 
