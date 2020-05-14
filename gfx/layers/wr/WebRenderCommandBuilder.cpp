@@ -636,7 +636,7 @@ struct DIGroup {
               for (auto& scaled : aScaledFonts) {
                 Maybe<wr::FontInstanceKey> key =
                     aWrManager->WrBridge()->GetFontKeyForScaledFont(
-                        scaled, aBuilder.GetRenderRoot(), &aResources);
+                        scaled, &aResources);
                 if (key.isNothing()) {
                   validFonts = false;
                   break;
@@ -2246,7 +2246,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                 for (auto& scaled : aScaledFonts) {
                   Maybe<wr::FontInstanceKey> key =
                       mManager->WrBridge()->GetFontKeyForScaledFont(
-                          scaled, aBuilder.GetRenderRoot(), &aResources);
+                          scaled, &aResources);
                   if (key.isNothing()) {
                     validFonts = false;
                     break;
@@ -2478,8 +2478,8 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
 
               for (auto& scaled : aScaledFonts) {
                 Maybe<wr::FontInstanceKey> key =
-                    mManager->WrBridge()->GetFontKeyForScaledFont(
-                        scaled, aBuilder.GetRenderRoot(), &aResources);
+                    mManager->WrBridge()->GetFontKeyForScaledFont(scaled,
+                                                                  &aResources);
                 if (key.isNothing()) {
                   validFonts = false;
                   break;

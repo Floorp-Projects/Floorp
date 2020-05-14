@@ -67,8 +67,7 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
   void AddWebRenderParentCommand(const WebRenderParentCommand& aCmd);
   bool HasWebRenderParentCommands() { return !mParentCommands.IsEmpty(); }
 
-  void UpdateResources(wr::IpcResourceUpdateQueue& aResources,
-                       wr::RenderRoot aRenderRoot);
+  void UpdateResources(wr::IpcResourceUpdateQueue& aResources);
   void BeginTransaction();
   bool EndTransaction(nsTArray<RenderRootDisplayListData>& aRenderRoots,
                       TransactionId aTransactionId, bool aContainsSVGroup,
@@ -145,10 +144,10 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
                   const wr::GlyphOptions* aGlyphOptions = nullptr);
 
   Maybe<wr::FontInstanceKey> GetFontKeyForScaledFont(
-      gfx::ScaledFont* aScaledFont, wr::RenderRoot aRenderRoot,
+      gfx::ScaledFont* aScaledFont,
       wr::IpcResourceUpdateQueue* aResources = nullptr);
   Maybe<wr::FontKey> GetFontKeyForUnscaledFont(
-      gfx::UnscaledFont* aUnscaledFont, wr::RenderRoot aRenderRoot,
+      gfx::UnscaledFont* aUnscaledFont,
       wr::IpcResourceUpdateQueue* aResources = nullptr);
   void RemoveExpiredFontKeys(wr::IpcResourceUpdateQueue& aResources);
 
