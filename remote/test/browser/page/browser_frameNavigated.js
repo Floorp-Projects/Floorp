@@ -6,6 +6,9 @@
 // Test the Page navigation events
 
 const INITIAL_DOC = toDataURL("default-test-page");
+const IFRAME_DOC = toDataURL(
+  `<iframe src="data:text/html,somecontent"></iframe>`
+);
 const RANDOM_ID_DOC = toDataURL(
   `<script>window.randomId = Math.random() + "-" + Date.now();</script>`
 );
@@ -13,7 +16,7 @@ const RANDOM_ID_DOC = toDataURL(
 const promises = new Set();
 const resolutions = new Map();
 
-add_task(async function({ client }) {
+add_task(async function pageWithoutFrame({ client }) {
   await loadURL(INITIAL_DOC);
 
   const { Page } = client;
@@ -91,6 +94,28 @@ add_task(async function({ client }) {
     randomId3,
     randomId2,
     "Test tab randomId has been updated after reload"
+  );
+});
+
+add_task(async function pageWithSingleFrame({ client }) {
+  const { Page } = client;
+
+  await Page.enable();
+
+  // Store all frameNavigated events in an array
+  const frameNavigatedEvents = [];
+  Page.frameNavigated(e => frameNavigatedEvents.push(e));
+
+  info("Navigate to a page containing an iframe");
+  const onStoppedLoading = Page.frameStoppedLoading();
+  const { frameId } = await Page.navigate({ url: IFRAME_DOC });
+  await onStoppedLoading;
+
+  is(frameNavigatedEvents.length, 2, "Received 2 frameNavigated events");
+  is(
+    frameNavigatedEvents[0].frame.id,
+    frameId,
+    "Received the correct frameId for the frameNavigated event"
   );
 });
 
