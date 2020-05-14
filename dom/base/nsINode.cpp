@@ -3273,6 +3273,12 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
   if (aDeep && aNode->IsElement()) {
     if (aClone) {
       if (clone->OwnerDoc()->IsStaticDocument()) {
+        // Clone any animations to the node in the static document, including
+        // the current timing. They will need to be paused later after the new
+        // document's pres shell gets initialized.
+        clone->AsElement()->CloneAnimationsFrom(*aNode->AsElement());
+
+        // Clone the Shadow DOM
         ShadowRoot* originalShadowRoot = aNode->AsElement()->GetShadowRoot();
         if (originalShadowRoot) {
           RefPtr<ShadowRoot> newShadowRoot =
