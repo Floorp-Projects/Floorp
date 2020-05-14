@@ -900,69 +900,20 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
   IDBFileRequest* const mFileRequest;
   AutoSetCurrentFileHandle mAutoFileHandle;
 
-  union {
-    File* mFile;
-    const nsCString* mString;
-    const FileRequestMetadata* mMetadata;
-    const JS::Handle<JS::Value>* mJSValHandle;
-  } mResult;
-
-  enum {
-    ResultTypeFile,
-    ResultTypeString,
-    ResultTypeMetadata,
-    ResultTypeJSValHandle,
-  } mResultType;
+  mozilla::Variant<File*, const nsCString*, const FileRequestMetadata*,
+                   const JS::Handle<JS::Value>*>
+      mResult;
 
  public:
+  template <typename T>
   FileHandleResultHelper(IDBFileRequest* aFileRequest,
-                         IDBFileHandle* aFileHandle, File* aResult)
+                         IDBFileHandle* aFileHandle, T* aResult)
       : mFileRequest(aFileRequest),
         mAutoFileHandle(aFileHandle),
-        mResultType(ResultTypeFile) {
+        mResult(aResult) {
     MOZ_ASSERT(aFileRequest);
     MOZ_ASSERT(aFileHandle);
     MOZ_ASSERT(aResult);
-
-    mResult.mFile = aResult;
-  }
-
-  FileHandleResultHelper(IDBFileRequest* aFileRequest,
-                         IDBFileHandle* aFileHandle, const nsCString* aResult)
-      : mFileRequest(aFileRequest),
-        mAutoFileHandle(aFileHandle),
-        mResultType(ResultTypeString) {
-    MOZ_ASSERT(aFileRequest);
-    MOZ_ASSERT(aFileHandle);
-    MOZ_ASSERT(aResult);
-
-    mResult.mString = aResult;
-  }
-
-  FileHandleResultHelper(IDBFileRequest* aFileRequest,
-                         IDBFileHandle* aFileHandle,
-                         const FileRequestMetadata* aResult)
-      : mFileRequest(aFileRequest),
-        mAutoFileHandle(aFileHandle),
-        mResultType(ResultTypeMetadata) {
-    MOZ_ASSERT(aFileRequest);
-    MOZ_ASSERT(aFileHandle);
-    MOZ_ASSERT(aResult);
-
-    mResult.mMetadata = aResult;
-  }
-
-  FileHandleResultHelper(IDBFileRequest* aFileRequest,
-                         IDBFileHandle* aFileHandle,
-                         const JS::Handle<JS::Value>* aResult)
-      : mFileRequest(aFileRequest),
-        mAutoFileHandle(aFileHandle),
-        mResultType(ResultTypeJSValHandle) {
-    MOZ_ASSERT(aFileRequest);
-    MOZ_ASSERT(aFileHandle);
-    MOZ_ASSERT(aResult);
-
-    mResult.mJSValHandle = aResult;
   }
 
   IDBFileRequest* FileRequest() const { return mFileRequest; }
@@ -974,30 +925,21 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
     MOZ_ASSERT(aCx);
     MOZ_ASSERT(mFileRequest);
 
-    switch (mResultType) {
-      case ResultTypeFile:
-        return GetResult(aCx, mResult.mFile, aResult);
-
-      case ResultTypeString:
-        return GetResult(aCx, mResult.mString, aResult);
-
-      case ResultTypeMetadata:
-        return GetResult(aCx, mResult.mMetadata, aResult);
-
-      case ResultTypeJSValHandle:
-        aResult.set(*mResult.mJSValHandle);
-        return NS_OK;
-
-      default:
-        MOZ_CRASH("Unknown result type!");
-    }
-
-    MOZ_CRASH("Should never get here!");
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunused-lambda-capture"
+#endif
+    return mResult.match([aCx, aResult, this](auto* aPtr) {
+      return GetResult(aCx, aPtr, aResult);
+    });
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
   }
 
  private:
-  nsresult GetResult(JSContext* aCx, File* aFile,
-                     JS::MutableHandle<JS::Value> aResult) {
+  static nsresult GetResult(JSContext* aCx, File* aFile,
+                            JS::MutableHandle<JS::Value> aResult) {
     const bool ok = GetOrCreateDOMReflector(aCx, aFile, aResult);
     if (NS_WARN_IF(!ok)) {
       return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
@@ -1045,8 +987,9 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
     return NS_OK;
   }
 
-  nsresult GetResult(JSContext* aCx, const FileRequestMetadata* aMetadata,
-                     JS::MutableHandle<JS::Value> aResult) {
+  static nsresult GetResult(JSContext* aCx,
+                            const FileRequestMetadata* aMetadata,
+                            JS::MutableHandle<JS::Value> aResult) {
     JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
     if (NS_WARN_IF(!obj)) {
       return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
@@ -1075,6 +1018,12 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
     }
 
     aResult.setObject(*obj);
+    return NS_OK;
+  }
+
+  static nsresult GetResult(JSContext* aCx, const JS::Handle<JS::Value>* aValue,
+                            JS::MutableHandle<JS::Value> aResult) {
+    aResult.set(*aValue);
     return NS_OK;
   }
 };
@@ -3781,7 +3730,7 @@ void BackgroundFileRequestChild::HandleResponse(
 }
 
 void BackgroundFileRequestChild::HandleResponse(
-    JS::Handle<JS::Value> aResponse) {
+    const JS::Handle<JS::Value> aResponse) {
   AssertIsOnOwningThread();
 
   FileHandleResultHelper helper(mFileRequest, mFileHandle, &aResponse);
