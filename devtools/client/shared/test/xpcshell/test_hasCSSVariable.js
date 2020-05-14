@@ -52,4 +52,10 @@ function run_test() {
     !hasCSSVariable("--color", "--color"),
     "Did not find --color variable in --color"
   );
+
+  info("Variable with whitespace");
+  ok(
+    hasCSSVariable("var( --color )", "--color"),
+    "Found --color variable in var( --color )"
+  );
 }
