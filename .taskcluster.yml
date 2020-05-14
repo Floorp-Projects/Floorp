@@ -128,10 +128,6 @@ tasks:
                 - $if: 'repository.project == "try"'
                   then:
                     "notify.email.${ownerEmail}.on-completed"
-                # These are the old index routes for the decision task.
-                # They are still here so external tools that referenced them continue to work.
-                - "index.gecko.v2.${repository.project}.latest.firefox.decision"
-                - "index.gecko.v2.${repository.project}.revision.${push.revision}.firefox.decision"
               else:
                 $if: 'tasks_for == "action"'
                 then:
@@ -150,8 +146,6 @@ tasks:
                   - "notify.email.ciduty+exceptioncron@mozilla.com.on-exception"
                   - "notify.email.sheriffs+failedcron@mozilla.org.on-failed"
                   - "notify.email.sheriffs+exceptioncron@mozilla.org.on-exception"
-                # These are the old index routes for the decision task.
-                - "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
 
         scopes:
           $if: 'tasks_for == "hg-push"'
