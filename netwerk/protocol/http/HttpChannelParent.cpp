@@ -1520,18 +1520,9 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   rv = NS_OK;
   if (mIPCClosed ||
       !SendOnStartRequest(
-          args.channelStatus(), *responseHead, useResponseHead,
+          *responseHead, useResponseHead,
           cleanedUpRequest ? cleanedUpRequestHeaders : requestHead->Headers(),
-          args.loadInfoForwarder(), args.isFromCache(), args.isRacing(),
-          args.cacheEntryAvailable(), args.cacheEntryId(),
-          args.cacheFetchCount(), args.cacheExpirationTime(),
-          args.cachedCharset(), args.securityInfoSerialization(),
-          args.selfAddr(), args.peerAddr(), args.redirectCount(),
-          args.cacheKey(), args.altDataType(), args.altDataLength(),
-          args.deliveringAltData(), args.applyConversion(),
-          args.isResolvedByTRR(), args.timing(), args.allRedirectsSameOrigin(),
-          args.multiPartID(), args.isLastPartOfMultiPart(),
-          args.openerPolicy())) {
+          args)) {
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();
