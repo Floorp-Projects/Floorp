@@ -152,7 +152,7 @@ flatpak build-finish build                                      \
 
 flatpak build-export --disable-sandbox --no-update-summary --exclude='/share/runtime/langpack/*/*' repo build "$FLATPAK_BRANCH"
 flatpak build-export --disable-sandbox --no-update-summary --metadata=metadata.locale --files=files/share/runtime/langpack repo build "$FLATPAK_BRANCH"
-flatpak build-update-repo repo
+flatpak build-update-repo --generate-static-deltas repo
 tar cvfJ flatpak.tar.xz repo
 
 mv -- flatpak.tar.xz "$TARGET_TAR_XZ_FULL_PATH"
