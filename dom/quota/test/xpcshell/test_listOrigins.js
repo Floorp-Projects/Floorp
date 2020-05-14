@@ -3,8 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-loadChildScript("dom/quota/test/xpcshell/test_listOrigins.js");
-
 async function testSteps() {
   const origins = [
     "https://example.com",
