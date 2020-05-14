@@ -1,0 +1,50 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+include IPCServiceWorkerDescriptor;
+include NeckoChannelParams;
+
+include "mozilla/net/NeckoMessageUtils.h";
+
+using class mozilla::net::nsHttpHeaderArray from "nsHttpHeaderArray.h";
+using mozilla::net::NetAddr from "mozilla/net/DNS.h";
+using nsILoadInfo::CrossOriginOpenerPolicy from "nsILoadInfo.h";
+
+namespace mozilla {
+namespace net {
+
+struct HttpChannelOnStartRequestArgs
+{
+  nsresult channelStatus;
+  ParentLoadInfoForwarderArgs loadInfoForwarder;
+  bool isFromCache;
+  bool isRacing;
+  bool cacheEntryAvailable;
+  uint64_t cacheEntryId;
+  int32_t cacheFetchCount;
+  uint32_t cacheExpirationTime;
+  nsCString cachedCharset;
+  nsCString securityInfoSerialization;
+  NetAddr selfAddr;
+  NetAddr peerAddr;
+  uint8_t redirectCount;
+  uint32_t cacheKey;
+  nsCString altDataType;
+  int64_t altDataLength;
+  bool deliveringAltData;
+  bool applyConversion;
+  bool isResolvedByTRR;
+  ResourceTimingStructArgs timing;
+  bool allRedirectsSameOrigin;
+  uint32_t? multiPartID;
+  bool isLastPartOfMultiPart;
+  CrossOriginOpenerPolicy openerPolicy;
+};
+
+} // namespace ipc
+} // namespace mozilla
