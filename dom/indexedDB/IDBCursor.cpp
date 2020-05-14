@@ -28,7 +28,7 @@ namespace dom {
 using namespace indexedDB;
 
 IDBCursor::IDBCursor(BackgroundCursorChildBase* const aBackgroundActor)
-    : mBackgroundActor(aBackgroundActor),
+    : mBackgroundActor(WrapNotNull(aBackgroundActor)),
       mRequest(aBackgroundActor->GetRequest()),
       mTransaction(&mRequest->MutableTransactionRef()),
       mCachedKey(JS::UndefinedValue()),
