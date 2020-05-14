@@ -3336,6 +3336,7 @@ void HTMLMediaElement::SetVolumeInternal() {
 
   NotifyAudioPlaybackChanged(
       AudioChannelService::AudibleChangedReasons::eVolumeChanged);
+  StartListeningMediaControlEventIfNeeded();
 }
 
 void HTMLMediaElement::SetMuted(bool aMuted) {
@@ -7227,6 +7228,7 @@ void HTMLMediaElement::SetAudibleState(bool aAudible) {
     mIsAudioTrackAudible = aAudible;
     NotifyAudioPlaybackChanged(
         AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
+    StartListeningMediaControlEventIfNeeded();
   }
 }
 
@@ -7315,6 +7317,7 @@ void HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo) {
     mAudioChannelWrapper->AudioCaptureTrackChangeIfNeeded();
   }
   UpdateWakeLock();
+  StartListeningMediaControlEventIfNeeded();
 }
 
 void HTMLMediaElement::AudioCaptureTrackChange(bool aCapture) {
@@ -7752,6 +7755,17 @@ void HTMLMediaElement::NotifyMediaControlPlaybackStateChanged() {
 void HTMLMediaElement::StartListeningMediaControlEventIfNeeded() {
   if (mPaused) {
     MEDIACONTROL_LOG("Not listening because media is paused");
+    return;
+  }
+
+  // This includes cases such like `video is muted`, `video has zero volume`,
+  // `video's audio track is still inaudible` and `tab is muted by audio channel
+  // (tab sound indicator)`, all these cases would make media inaudible.
+  // `ComputedVolume()` would return the final volume applied the affection made
+  // by audio channel, which is used to detect if the tab is muted by audio
+  // channel.
+  if (!IsAudible() || ComputedVolume() == 0.0f) {
+    MEDIACONTROL_LOG("Not listening because media is inaudible");
     return;
   }
 
