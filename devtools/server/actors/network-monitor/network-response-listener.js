@@ -503,9 +503,22 @@ NetworkResponseListener.prototype = {
 
     this.receivedData = "";
 
+    let id;
+    let reason;
+
+    try {
+      const properties = this.request.QueryInterface(Ci.nsIPropertyBag);
+      reason = this.request.loadInfo.requestBlockingReason;
+      id = properties.getProperty("cancelledByExtension");
+    } catch (err) {
+      // "cancelledByExtension" doesn't have to be available.
+    }
+
     this.httpActivity.owner.addResponseContent(response, {
       discardResponseBody: this.httpActivity.discardResponseBody,
       truncated: this.truncated,
+      blockedReason: reason,
+      blockingExtension: id,
     });
 
     this._wrappedNotificationCallbacks = null;

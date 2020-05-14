@@ -149,6 +149,8 @@ const networkEventSpec = generateActorSpec({
       encoding: Option(1, "string"),
       transferredSize: Option(1, "number"),
       discardResponseBody: Option(1, "boolean"),
+      blockedReason: Option(1, "number"),
+      blockingExtension: Option(1, "string"),
     },
 
     "network-event-update:event-timings": {
