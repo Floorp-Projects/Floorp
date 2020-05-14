@@ -448,9 +448,9 @@ static void PrintSingleError(JSContext* cx, FILE* file,
   fflush(file);
 }
 
-void js::PrintError(JSContext* cx, FILE* file,
-                    JS::ConstUTF8CharsZ toStringResult, JSErrorReport* report,
-                    bool reportWarnings) {
+JS_PUBLIC_API void JS::PrintError(JSContext* cx, FILE* file,
+                                  JS::ConstUTF8CharsZ toStringResult,
+                                  JSErrorReport* report, bool reportWarnings) {
   MOZ_ASSERT(report);
 
   /* Conditionally ignore reported warnings. */
