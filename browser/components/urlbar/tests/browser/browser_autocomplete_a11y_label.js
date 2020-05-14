@@ -105,9 +105,9 @@ add_task(async function searchSuggestions() {
   );
   // The first expected search is the search term itself since the heuristic
   // result will come before the search suggestions.
-  // The extra space is here due to bug 1550644.
+  // The extra spaces are here due to bug 1550644.
   let searchTerm = "foo ";
-  let expectedSearches = [searchTerm, "foofoo ", "foo bar"];
+  let expectedSearches = [searchTerm, "foo foo", "foo bar"];
   for (let i = 0; i < length; i++) {
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
     if (result.type === UrlbarUtils.RESULT_TYPE.SEARCH) {
