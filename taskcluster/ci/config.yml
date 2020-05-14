@@ -416,17 +416,17 @@ taskgraph: {}
 workers:
     aliases:
         b-linux.*:
-            provisioner: 'gecko-{level}'
+            provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
             os: linux
             worker-type: '{alias}'
         b-win2012:
-            provisioner: 'gecko-{level}'
+            provisioner: '{trust-domain}-{level}'
             implementation: generic-worker
             os: windows
             worker-type: '{alias}'
         images:
-            provisioner: 'gecko-{level}'
+            provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
             os: linux
             worker-type: '{alias}'
@@ -436,8 +436,8 @@ workers:
             os: scriptworker
             worker-type:
                 by-release-level:
-                    production: gecko-3-balrog
-                    staging: gecko-1-balrog
+                    production: '{trust-domain}-3-balrog'
+                    staging: '{trust-domain}-1-balrog'
         bouncer:
             provisioner: scriptworker-k8s
             # Note that this implementation doesn't correspond with an
@@ -446,29 +446,29 @@ workers:
             os: scriptworker
             worker-type:
                 by-release-level:
-                    production: gecko-3-bouncer
-                    staging: gecko-1-bouncer
+                    production: '{trust-domain}-3-bouncer'
+                    staging: '{trust-domain}-1-bouncer'
         beetmover:
             provisioner: scriptworker-k8s
             implementation: beetmover
             os: scriptworker
             worker-type:
                 by-release-level:
-                    production: gecko-3-beetmover
-                    staging: gecko-1-beetmover
+                    production: '{trust-domain}-3-beetmover'
+                    staging: '{trust-domain}-1-beetmover'
         linux-depsigning:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing
             os: linux
-            worker-type: gecko-t-signing
+            worker-type: '{trust-domain}-t-signing'
         linux-signing:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing
             os: linux
             worker-type:
                 by-release-level:
-                    production: gecko-3-signing
-                    staging: gecko-t-signing
+                    production: '{trust-domain}-3-signing'
+                    staging: '{trust-domain}-t-signing'
         mac-depsigning:
             provisioner: scriptworker-prov-v1
             implementation: scriptworker-signing
@@ -493,13 +493,13 @@ workers:
             os: scriptworker
             worker-type:
                 by-release-level:
-                    production: gecko-3-tree
-                    staging: gecko-1-tree
+                    production: '{trust-domain}-3-tree'
+                    staging: '{trust-domain}-1-tree'
         tree-dev:
             provisioner: scriptworker-k8s
             implementation: treescript
             os: scriptworker
-            worker-type: gecko-1-tree-dev
+            worker-type: '{trust-domain}-1-tree-dev'
         t-ap.*:
             provisioner: proj-autophone
             implementation: script-engine-autophone
@@ -511,7 +511,7 @@ workers:
             os: linux-bitbar
             worker-type: 'gecko-{alias}'
         t-linux(-large|-xlarge|-xlarge-source|-metal):
-            provisioner: 'gecko-t'
+            provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
             worker-type: '{alias}'
@@ -538,8 +538,8 @@ workers:
         t-linux-xlarge-pgo:
             provisioner:
                 by-level:
-                    '3': 'gecko-{level}'
-                    default: 'gecko-t'
+                    '3': '{trust-domain}-{level}'
+                    default: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
             worker-type: 't-linux-xlarge'
@@ -560,7 +560,7 @@ workers:
                     '3': 'gecko-{level}-t-osx-1014'
                     default: 'gecko-t-osx-1014'
         t-win10-64(|-gpu-s|-source):
-            provisioner: 'gecko-t'
+            provisioner: '{trust-domain}-t'
             implementation: generic-worker
             os: windows
             worker-type: '{alias}'
@@ -570,7 +570,7 @@ workers:
             os: windows
             worker-type: 'gecko-{alias}'
         t-win7-32(|-gpu):
-            provisioner: 'gecko-t'
+            provisioner: '{trust-domain}-t'
             implementation: generic-worker
             os: windows
             worker-type: '{alias}'
@@ -585,7 +585,7 @@ workers:
             os: none
             worker-type: succeed
         misc:
-            provisioner: gecko-t
+            provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
             worker-type: misc
