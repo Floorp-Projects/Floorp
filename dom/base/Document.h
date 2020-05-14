@@ -3779,8 +3779,11 @@ class Document : public nsINode,
    * of the document is completed.
    *
    * It unblocks the load event if translation was blocking it.
+   *
+   * If the `aL10nCached` is set to `true`, and the document has
+   * a prototype, it will set the `isL10nCached` flag on it.
    */
-  void InitialTranslationCompleted();
+  void InitialTranslationCompleted(bool aL10nCached);
 
   /**
    * Returns whether the document allows localization.
