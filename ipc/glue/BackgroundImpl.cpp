@@ -95,7 +95,6 @@ class ParentImpl final : public BackgroundParentImpl {
 
  private:
   class ShutdownObserver;
-  class ConnectActorRunnable;
   class CreateActorHelper;
 
   struct MOZ_STACK_CLASS TimerCallbackClosure {
@@ -544,31 +543,6 @@ class ParentImpl::ShutdownObserver final : public nsIObserver {
 
  private:
   ~ShutdownObserver() { AssertIsOnMainThread(); }
-};
-
-class ParentImpl::ConnectActorRunnable final : public Runnable {
-  RefPtr<ParentImpl> mActor;
-  Endpoint<PBackgroundParent> mEndpoint;
-  nsTArray<ParentImpl*>* mLiveActorArray;
-
- public:
-  ConnectActorRunnable(ParentImpl* aActor,
-                       Endpoint<PBackgroundParent>&& aEndpoint,
-                       nsTArray<ParentImpl*>* aLiveActorArray)
-      : Runnable("Background::ParentImpl::ConnectActorRunnable"),
-        mActor(aActor),
-        mEndpoint(std::move(aEndpoint)),
-        mLiveActorArray(aLiveActorArray) {
-    AssertIsInMainOrSocketProcess();
-    AssertIsOnMainThread();
-    MOZ_ASSERT(mEndpoint.IsValid());
-    MOZ_ASSERT(aLiveActorArray);
-  }
-
- private:
-  ~ConnectActorRunnable() { AssertIsInMainOrSocketProcess(); }
-
-  NS_DECL_NSIRUNNABLE
 };
 
 class ParentImpl::CreateActorHelper final : public Runnable {
@@ -1133,17 +1107,24 @@ bool ParentImpl::Alloc(ContentParent* aContent,
 
   RefPtr<ParentImpl> actor = new ParentImpl(aContent);
 
-  nsCOMPtr<nsIRunnable> connectRunnable = new ConnectActorRunnable(
-      actor, std::move(aEndpoint), sLiveActorsForBackgroundThread);
-
-  if (NS_FAILED(
-          sBackgroundThread->Dispatch(connectRunnable, NS_DISPATCH_NORMAL))) {
+  if (NS_FAILED(sBackgroundThread->Dispatch(NS_NewRunnableFunction(
+          "Background::ParentImpl::ConnectActorRunnable",
+          [actor, endpoint = std::move(aEndpoint),
+           liveActorArray = sLiveActorsForBackgroundThread]() mutable {
+            MOZ_ASSERT(endpoint.IsValid());
+            MOZ_ASSERT(liveActorArray);
+            // Transfer ownership to ipc. If Open() fails then we
+            // will release this reference in Destroy.
+            if (!endpoint.Bind(do_AddRef(actor).take())) {
+              actor->Destroy();
+              return;
+            }
+            actor->SetLiveActorArray(liveActorArray);
+          })))) {
     NS_WARNING("Failed to dispatch connect runnable!");
 
     MOZ_ASSERT(sLiveActorCount);
     sLiveActorCount--;
-
-    return false;
   }
 
   return true;
@@ -1435,28 +1416,6 @@ ParentImpl::ShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
   ChildImpl::Shutdown();
 
   ShutdownBackgroundThread();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentImpl::ConnectActorRunnable::Run() {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-
-  // Transfer ownership to this thread. If Open() fails then we will release
-  // this reference in Destroy.
-  ParentImpl* actor;
-  mActor.forget(&actor);
-
-  Endpoint<PBackgroundParent> endpoint = std::move(mEndpoint);
-
-  if (!endpoint.Bind(actor)) {
-    actor->Destroy();
-    return NS_ERROR_FAILURE;
-  }
-
-  actor->SetLiveActorArray(mLiveActorArray);
 
   return NS_OK;
 }
