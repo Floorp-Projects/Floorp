@@ -98,7 +98,6 @@ class ParentImpl final : public BackgroundParentImpl {
 
  private:
   class ShutdownObserver;
-  class ShutdownBackgroundThreadRunnable;
   class ForceCloseBackgroundActorsRunnable;
   class ConnectActorRunnable;
   class CreateActorHelper;
@@ -549,20 +548,6 @@ class ParentImpl::ShutdownObserver final : public nsIObserver {
 
  private:
   ~ShutdownObserver() { AssertIsOnMainThread(); }
-};
-
-class ParentImpl::ShutdownBackgroundThreadRunnable final : public Runnable {
- public:
-  ShutdownBackgroundThreadRunnable()
-      : Runnable("Background::ParentImpl::ShutdownBackgroundThreadRunnable") {
-    AssertIsInMainOrSocketProcess();
-    AssertIsOnMainThread();
-  }
-
- private:
-  ~ShutdownBackgroundThreadRunnable() = default;
-
-  NS_DECL_NSIRUNNABLE
 };
 
 class ParentImpl::ForceCloseBackgroundActorsRunnable final : public Runnable {
@@ -1367,10 +1352,18 @@ void ParentImpl::ShutdownBackgroundThread() {
       MOZ_ALWAYS_SUCCEEDS(shutdownTimer->Cancel());
     }
 
-    // Dispatch this runnable to unregister the thread from the profiler.
-    nsCOMPtr<nsIRunnable> shutdownRunnable =
-        new ShutdownBackgroundThreadRunnable();
-    MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL));
+    // Dispatch this runnable to unregister the PR thread from the profiler.
+    MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(
+        NS_NewRunnableFunction(
+            "Background::ParentImpl::ShutdownBackgroundThreadRunnable",
+            []() {
+              // It is possible that another background thread was created while
+              // this thread was shutting down. In that case we can't assert
+              // anything about sBackgroundPRThread and we should not modify it
+              // here.
+              sBackgroundPRThread.compareExchange(PR_GetCurrentThread(),
+                                                  nullptr);
+            })));
 
     MOZ_ALWAYS_SUCCEEDS(thread->Shutdown());
   }
@@ -1464,18 +1457,6 @@ ParentImpl::ShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
   ChildImpl::Shutdown();
 
   ShutdownBackgroundThread();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentImpl::ShutdownBackgroundThreadRunnable::Run() {
-  AssertIsInMainOrSocketProcess();
-
-  // It is possible that another background thread was created while this thread
-  // was shutting down. In that case we can't assert anything about
-  // sBackgroundPRThread and we should not modify it here.
-  sBackgroundPRThread.compareExchange(PR_GetCurrentThread(), nullptr);
 
   return NS_OK;
 }
