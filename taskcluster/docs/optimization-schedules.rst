@@ -43,7 +43,7 @@ But we can configure mac-only files such as ``CoreLocationLocationProvider.mm`` 
 It is also possible to define a file as affecting an inclusive component and nothing else.
 For example, the source code and configuration for the Python linting tasks does not affect any tasks other than linting.
 
-.. note:
+.. note::
 
     Most unit test suite tasks are allocated to components for their platform family and for the test suite.
     This indicates that if a platform family is affected (for example, ``android``) then the builds for that platform should execute as well as the full test suite.
