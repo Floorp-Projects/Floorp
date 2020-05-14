@@ -203,11 +203,11 @@ var unmatched = {};
 
 WasmHelpers._normalizeStack = (stack, preciseStacks) => {
     var wasmFrameTypes = [
-        {re:/^jit call to int64 wasm function$/,                          sub:"i64>"},
+        {re:/^jit call to int64(?: or v128)? wasm function$/,             sub:"i64>"},
         {re:/^out-of-line coercion for jit entry arguments \(in wasm\)$/, sub:"ool>"},
         {re:/^wasm-function\[(\d+)\] \(.*\)$/,                            sub:"$1"},
-        {re:/^(fast|slow) exit trampoline (to native )?\(in wasm\)$/,     sub:"<"},
-        {re:/^call to[ asm.js]? native (.*) \(in wasm\)$/,                sub:"$1"},
+        {re:/^(fast|slow) exit trampoline (?:to native )?\(in wasm\)$/,   sub:"<"},
+        {re:/^call to(?: asm.js)? native (.*) \(in wasm\)$/,              sub:"$1"},
         {re:/ \(in wasm\)$/,                                              sub:""}
     ];
 
