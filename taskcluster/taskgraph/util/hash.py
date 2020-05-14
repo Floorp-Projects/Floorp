@@ -40,6 +40,8 @@ def hash_paths(base_path, patterns):
         else:
             raise Exception('%s did not match anything' % pattern)
     for path in sorted(files.keys()):
+        if path.endswith(('.pyc', '.pyd', '.pyo')):
+            continue
         h.update(six.ensure_binary('{} {}\n'.format(
             hash_path(mozpath.abspath(mozpath.join(base_path, path))),
             mozpath.normsep(path)
