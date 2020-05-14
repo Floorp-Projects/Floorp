@@ -417,8 +417,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="library_reading_list">Tabdart n tɣuṛi</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Nadi</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Tamkarḍit</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Iɣewwaṛen</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1263,6 +1261,14 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Rmed akken ad teǧǧeḍ asemɣer neɣ asemẓi s sin n yiḍudan ula deg yismal web i yessewḥalen aya.</string>
+
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Isem (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Aseqdec aneggaru</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Umuɣ n usemyizwer n yinekcam</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Rnu amsedday n unadi</string>

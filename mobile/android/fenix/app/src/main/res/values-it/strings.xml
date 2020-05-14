@@ -427,8 +427,6 @@
     <string name="library_reading_list">Elenco lettura</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Cerca</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Libreria</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Impostazioni</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1291,6 +1289,13 @@
 
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Attiva per consentire la funzione “Pizzica per lo zoom“, anche sui siti web che impediscono questo gesto.</string>
+
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nome (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Ultimo utilizzo</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordina il menu delle credenziali di accesso</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Aggiungi motore di ricerca</string>
