@@ -377,7 +377,7 @@ class Runtime extends ContentProcessDomain {
       window,
       contextName = "",
       isDefault = true,
-      contextType = options.contextType || "default",
+      contextType = "default",
     } = options;
 
     if (windowId === undefined) {
