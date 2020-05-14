@@ -125,5 +125,17 @@ add_task(async function test_trr_casing() {
   ]);
   await new TRRDNSListener("a.test.com", "8.8.8.8");
 
+  await trrServer.registerDoHAnswers("CAPITAL.COM", "A", [
+    {
+      name: "capital.com",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "2.2.2.2",
+    },
+  ]);
+  await new TRRDNSListener("CAPITAL.COM", "2.2.2.2");
+  await new TRRDNSListener("CAPITAL.COM.", "2.2.2.2");
+
   await trrServer.stop();
 });
