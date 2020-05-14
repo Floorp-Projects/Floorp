@@ -745,20 +745,6 @@ void AudioContext::DisconnectFromOwner() {
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
-void AudioContext::BindToOwner(nsIGlobalObject* aNew) {
-  auto scopeExit =
-      MakeScopeExit([&] { DOMEventTargetHelper::BindToOwner(aNew); });
-
-  if (GetOwner()) {
-    GetOwner()->RemoveAudioContext(this);
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> newWindow = do_QueryInterface(aNew);
-  if (newWindow) {
-    newWindow->AddAudioContext(this);
-  }
-}
-
 void AudioContext::Shutdown() {
   // Avoid resend the Telemetry data.
   if (!mIsShutDown) {
