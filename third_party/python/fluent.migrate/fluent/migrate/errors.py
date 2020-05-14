@@ -1,3 +1,7 @@
+class SkipTransform(RuntimeError):
+    pass
+
+
 class MigrationError(ValueError):
     pass
 

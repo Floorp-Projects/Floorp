@@ -10,7 +10,7 @@ import sys
 import hglib
 import six
 
-from fluent.migrate.context import MergeContext
+from fluent.migrate.context import MigrationContext
 from fluent.migrate.errors import MigrationError
 from fluent.migrate.changesets import convert_blame_to_changesets
 from fluent.migrate.blame import Blame
@@ -25,8 +25,8 @@ def dont_write_bytecode():
 
 
 class Migrator(object):
-    def __init__(self, language, reference_dir, localization_dir, dry_run):
-        self.language = language
+    def __init__(self, locale, reference_dir, localization_dir, dry_run):
+        self.locale = locale
         self.reference_dir = reference_dir
         self.localization_dir = localization_dir
         self.dry_run = dry_run
@@ -45,11 +45,11 @@ class Migrator(object):
 
     def run(self, migration):
         print('\nRunning migration {} for {}'.format(
-            migration.__name__, self.language))
+            migration.__name__, self.locale))
 
         # For each migration create a new context.
-        ctx = MergeContext(
-            self.language, self.reference_dir, self.localization_dir
+        ctx = MigrationContext(
+            self.locale, self.reference_dir, self.localization_dir
         )
 
         try:
@@ -57,7 +57,7 @@ class Migrator(object):
             migration.migrate(ctx)
         except MigrationError as e:
             print('  Skipping migration {} for {}:\n    {}'.format(
-                migration.__name__, self.language, e))
+                migration.__name__, self.locale, e))
             return
 
         # Keep track of how many changesets we're committing.
@@ -125,9 +125,9 @@ class Migrator(object):
             print('    WARNING: hg commit failed ({})'.format(err))
 
 
-def main(lang, reference_dir, localization_dir, migrations, dry_run):
+def main(locale, reference_dir, localization_dir, migrations, dry_run):
     """Run migrations and commit files with the result."""
-    migrator = Migrator(lang, reference_dir, localization_dir, dry_run)
+    migrator = Migrator(locale, reference_dir, localization_dir, dry_run)
 
     for migration in migrations:
         migrator.run(migration)
@@ -144,8 +144,8 @@ def cli():
         help='migrations to run (Python modules)'
     )
     parser.add_argument(
-        '--lang', type=str,
-        help='target language code'
+        '--locale', '--lang', type=str,
+        help='target locale code (--lang is deprecated)'
     )
     parser.add_argument(
         '--reference-dir', type=str,
@@ -172,7 +172,7 @@ def cli():
         migrations = map(importlib.import_module, args.migrations)
 
     main(
-        lang=args.lang,
+        locale=args.locale,
         reference_dir=args.reference_dir,
         localization_dir=args.localization_dir,
         migrations=migrations,

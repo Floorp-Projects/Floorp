@@ -10,7 +10,7 @@ from collections import defaultdict
 from fluent.syntax import ast as ftl
 from fluent.syntax.serializer import serialize_variant_key
 
-from .base import Checker
+from .base import Checker, CSSCheckMixin
 from compare_locales import plurals
 
 
@@ -26,10 +26,26 @@ MSGS = {
     'obsolete-attribute': 'Obsolete attribute: {name}',
     'duplicate-variant': 'Variant key "{name}" is duplicated',
     'missing-plural': 'Plural categories missing: {categories}',
+    'plain-message': '{message}',
 }
 
 
-class ReferenceMessageVisitor(ftl.Visitor):
+def pattern_variants(pattern):
+    """Get variants of plain text of a pattern.
+
+    For now, just return simple text patterns.
+    This can be improved to allow for SelectExpressions
+    of simple text patterns, or even nested expressions, and Literals.
+    Variants with Variable-, Message-, or TermReferences should be ignored.
+    """
+    elements = pattern.elements
+    if len(elements) == 1:
+        if isinstance(elements[0], ftl.TextElement):
+            return [elements[0].value]
+    return []
+
+
+class ReferenceMessageVisitor(ftl.Visitor, CSSCheckMixin):
     def __init__(self):
         # References to Messages, their Attributes, and Terms
         # Store reference name and type
@@ -42,6 +58,9 @@ class ReferenceMessageVisitor(ftl.Visitor):
         self.message_has_value = False
         # Map attribute names to positions
         self.attribute_positions = {}
+        # Map of CSS style attribute properties and units
+        self.css_styles = None
+        self.css_errors = None
 
     def generic_visit(self, node):
         if isinstance(
@@ -62,6 +81,14 @@ class ReferenceMessageVisitor(ftl.Visitor):
         self.refs = self.entry_refs[node.id.name]
         super(ReferenceMessageVisitor, self).generic_visit(node)
         self.refs = old_refs
+        if node.id.name != 'style':
+            return
+        text_values = pattern_variants(node.value)
+        if not text_values:
+            self.css_styles = 'skip'
+            return
+        # right now, there's just one possible text value
+        self.css_styles, self.css_errors = self.parse_css_spec(text_values[0])
 
     def visit_SelectExpression(self, node):
         # optimize select expressions to only go through the variants
@@ -142,8 +169,9 @@ class GenericL10nChecks(object):
                         )
                     )
         # Check for plural categories
-        if self.locale in plurals.CATEGORIES_BY_LOCALE:
-            known_plurals = set(plurals.CATEGORIES_BY_LOCALE[self.locale])
+        known_plurals = plurals.get_plural(self.locale)
+        if known_plurals:
+            known_plurals = set(known_plurals)
             # Ask for known plurals, but check for plurals w/out `other`.
             # `other` is used for all kinds of things.
             check_plurals = known_plurals.copy()
@@ -214,6 +242,19 @@ class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
         self.reference_refs = self.reference.entry_refs[node.id.name]
         super(L10nMessageVisitor, self).visit_Attribute(node)
         self.reference_refs = old_reference_refs
+        if node.id.name != 'style' or self.css_styles == 'skip':
+            return
+        ref_styles = self.reference.css_styles
+        if ref_styles in ('skip', None):
+            # Reference is complex, l10n isn't.
+            # Let's still validate the css spec.
+            ref_styles = {}
+        for cat, msg, pos, _ in self.check_style(
+            ref_styles,
+            self.css_styles,
+            self.css_errors
+        ):
+            self.messages.append((cat, msg, pos))
 
     def visit_SelectExpression(self, node):
         super(L10nMessageVisitor, self).visit_SelectExpression(node)

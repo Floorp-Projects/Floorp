@@ -91,7 +91,17 @@ class TestObserver(unittest.TestCase):
         self.assertDictEqual(obs.toJSON(), {
             'summary': {
                 'de': {
-                    'missing': 15
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 15,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
+                    'changed': 0,
+                    'changed_w': 0,
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }
             },
             'details': {
@@ -112,7 +122,17 @@ class TestObserver(unittest.TestCase):
         self.assertDictEqual(obs.toJSON(), {
             'summary': {
                 'de': {
-                    'missing': 15
+                    'errors': 0,
+                    'warnings': 0,
+                    'missing': 15,
+                    'missing_w': 0,
+                    'report': 0,
+                    'obsolete': 0,
+                    'changed': 0,
+                    'changed_w': 0,
+                    'unchanged': 0,
+                    'unchanged_w': 0,
+                    'keys': 0,
                 }
             },
             'details': {

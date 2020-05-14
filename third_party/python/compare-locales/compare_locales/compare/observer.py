@@ -20,7 +20,19 @@ class Observer(object):
         for quiet=2, skip missing and obsolete files. For quiet=3,
         skip warnings and errors.
         '''
-        self.summary = defaultdict(lambda: defaultdict(int))
+        self.summary = defaultdict(lambda: {
+            "errors": 0,
+            "warnings": 0,
+            "missing": 0,
+            "missing_w": 0,
+            "report": 0,
+            "obsolete": 0,
+            "changed": 0,
+            "changed_w": 0,
+            "unchanged": 0,
+            "unchanged_w": 0,
+            "keys": 0,
+        })
         self.details = Tree(list)
         self.quiet = quiet
         self.filter = filter
@@ -164,20 +176,12 @@ class ObserverList(Observer):
         if len(self.observers) > 1:
             # add ourselves if there's more than one project
             for loc, lst in summaries.items():
-                lst.append(self.summary.get(loc, {}))
-        # normalize missing and missingInFiles -> missing
-        for summarylist in summaries.values():
-            for summary in summarylist:
-                if 'missingInFiles' in summary:
-                    summary['missing'] = (
-                        summary.get('missing', 0)
-                        + summary.pop('missingInFiles')
-                    )
+                lst.append(self.summary[loc])
         keys = (
             'errors',
             'warnings',
             'missing', 'missing_w',
-            'obsolete', 'obsolete_w',
+            'obsolete',
             'changed', 'changed_w',
             'unchanged', 'unchanged_w',
             'keys',
@@ -192,7 +196,7 @@ class ObserverList(Observer):
             segment = [''] * len(keys)
             for summary in summaries:
                 for row, key in enumerate(keys):
-                    segment[row] += ' {:6}'.format(summary.get(key, ''))
+                    segment[row] += ' {:6}'.format(summary.get(key) or '')
 
             out += [
                 lead + row
@@ -201,8 +205,7 @@ class ObserverList(Observer):
             ]
 
             total = sum([summaries[-1].get(k, 0)
-                         for k in ['changed', 'unchanged', 'report', 'missing',
-                                   'missingInFiles']
+                         for k in ['changed', 'unchanged', 'report', 'missing']
                          ])
             rate = 0
             if total:

@@ -24,7 +24,11 @@ class PoEntityMixin(object):
 
     @property
     def val(self):
-        return self.stringlist_val
+        return (
+            self.stringlist_val
+            if self.stringlist_val
+            else self.stringlist_key[0]
+        )
 
     @property
     def key(self):
@@ -33,7 +37,7 @@ class PoEntityMixin(object):
     @property
     def localized(self):
         # gettext denotes a non-localized string by an empty value
-        return bool(self.val)
+        return bool(self.stringlist_val)
 
     def __repr__(self):
         return self.key[0]

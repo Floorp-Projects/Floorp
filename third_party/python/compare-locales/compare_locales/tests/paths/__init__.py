@@ -5,6 +5,8 @@
 
 from __future__ import absolute_import
 
+from collections import defaultdict
+import six
 import tempfile
 from compare_locales.paths import (
     ProjectConfig, File, ProjectFiles, TOMLParser
@@ -21,6 +23,9 @@ class Rooted(object):
     def path(self, leaf=''):
         return self.root + leaf
 
+    def leaf(self, path):
+        return mozpath.relpath(path, self.root)
+
 
 class SetupMixin(object):
     def setUp(self):
@@ -36,18 +41,64 @@ class SetupMixin(object):
         self.cfg.set_locales(['de'])
 
 
-class MockNode(object):
-    def __init__(self, name):
-        self.name = name
+class MockOS(object):
+    '''Mock `os.path.isfile` and `os.walk` based on a list of files.
+    '''
+    def __init__(self, root, paths):
+        self.root = root
         self.files = []
         self.dirs = {}
+        if not paths:
+            return
+        if isinstance(paths[0], six.string_types):
+            paths = [
+                mozpath.split(path)
+                for path in sorted(paths)
+            ]
+        child_paths = defaultdict(list)
+        for segs in paths:
+            if len(segs) == 1:
+                self.files.append(segs[0])
+            else:
+                child_paths[segs[0]].append(segs[1:])
+        for root, leafs in child_paths.items():
+            self.dirs[root] = MockOS(mozpath.join(self.root, root), leafs)
 
-    def walk(self):
-        subdirs = sorted(self.dirs)
-        if self.name is not None:
-            yield self.name, subdirs, self.files
+    def find(self, dir_path):
+        relpath = mozpath.relpath(dir_path, self.root)
+        if relpath.startswith('..'):
+            return None
+        if relpath in ('', '.'):
+            return self
+        segs = mozpath.split(relpath)
+        node = self
+        while segs:
+            seg = segs.pop(0)
+            if seg not in node.dirs:
+                return None
+            node = node.dirs[seg]
+        return node
+
+    def isfile(self, path):
+        dirname = mozpath.dirname(path)
+        if dirname:
+            node = self.find(dirname)
+        else:
+            node = self
+        return node and mozpath.basename(path) in node.files
+
+    def walk(self, path=None):
+        if path is None:
+            node = self
+        else:
+            node = self.find(path)
+            if node is None:
+                return
+        subdirs = sorted(node.dirs)
+        if node.root is not None:
+            yield node.root, subdirs, node.files
         for subdir in subdirs:
-            child = self.dirs[subdir]
+            child = node.dirs[subdir]
             for tpl in child.walk():
                 yield tpl
 
@@ -56,25 +107,18 @@ class MockProjectFiles(ProjectFiles):
     def __init__(self, mocks, locale, projects, mergebase=None):
         (super(MockProjectFiles, self)
             .__init__(locale, projects, mergebase=mergebase))
-        self.mocks = mocks
+        root = mozpath.commonprefix(mocks)
+        files = [mozpath.relpath(f, root) for f in mocks]
+        self.mocks = MockOS(root, files)
 
     def _isfile(self, path):
-        return path in self.mocks
+        return self.mocks.isfile(path)
 
     def _walk(self, base):
         base = mozpath.normpath(base)
-        local_files = [
-            mozpath.split(mozpath.relpath(f, base))
-            for f in self.mocks if f.startswith(base)
-        ]
-        root = MockNode(base)
-        for segs in local_files:
-            node = root
-            for n, seg in enumerate(segs[:-1]):
-                if seg not in node.dirs:
-                    node.dirs[seg] = MockNode('/'.join([base] + segs[:n+1]))
-                node = node.dirs[seg]
-            node.files.append(segs[-1])
+        root = self.mocks.find(base)
+        if not root:
+            return
         for tpl in root.walk():
             yield tpl
 
