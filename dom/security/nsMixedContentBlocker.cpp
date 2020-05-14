@@ -749,7 +749,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     }
   }
 
-  uint32_t state = nsIWebProgressListener::STATE_IS_BROKEN;
   nsCOMPtr<nsISecureBrowserUI> securityUI;
   rootShell->GetSecurityUI(getter_AddRefs(securityUI));
   // If there is no securityUI, document doesn't have a security state.
@@ -758,7 +757,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     *aDecision = nsIContentPolicy::ACCEPT;
     return NS_OK;
   }
-  MOZ_ALWAYS_SUCCEEDS(securityUI->GetState(&state));
 
   OriginAttributes originAttributes;
   if (loadingPrincipal) {
@@ -807,17 +805,12 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   }
 
   uint32_t newState = 0;
-  bool broken = false;
-
   // If the content is display content, and the pref says display content should
   // be blocked, block it.
   if (classification == eMixedDisplay) {
     if (!StaticPrefs::security_mixed_content_block_display_content() ||
         allowMixedContent) {
       *aDecision = nsIContentPolicy::ACCEPT;
-      if (rootHasSecureConnection) {
-        broken = true;
-      }
       // User has overriden the pref and the root is not https;
       // mixed display content was allowed on an https subframe.
       newState |= nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
@@ -832,11 +825,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     if (!StaticPrefs::security_mixed_content_block_active_content() ||
         allowMixedContent) {
       *aDecision = nsIContentPolicy::ACCEPT;
-
-      if (rootHasSecureConnection) {
-        broken = true;
-      }
-
       // User has already overriden the pref and the root is not https;
       // mixed active content was allowed on an https subframe.
       newState |= nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
@@ -890,7 +878,10 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     rootDoc->SetHasMixedDisplayContentBlocked(true);
   }
 
-  if (broken) {
+  uint32_t state = nsIWebProgressListener::STATE_IS_BROKEN;
+  MOZ_ALWAYS_SUCCEEDS(securityUI->GetState(&state));
+
+  if (*aDecision == nsIContentPolicy::ACCEPT && rootHasSecureConnection) {
     // reset state security flag
     state = state >> 4 << 4;
     // set state security flag to broken, since there is mixed content
