@@ -975,7 +975,11 @@ impl AsyncPropertySampler for SamplerCallback {
         unsafe { apz_register_sampler(self.window_id) }
     }
 
-    fn sample(&self, _document_id: DocumentId, epochs_being_rendered: &FastHashMap<PipelineId, Epoch>) -> Vec<FrameMsg> {
+    fn sample(
+        &self,
+        _document_id: DocumentId,
+        epochs_being_rendered: &FastHashMap<PipelineId, Epoch>,
+    ) -> Vec<FrameMsg> {
         let mut transaction = Transaction::new();
         unsafe {
             apz_sample_transforms(
