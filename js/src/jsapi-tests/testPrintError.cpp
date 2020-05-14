@@ -98,3 +98,35 @@ static void warningReporter(JSContext* cx, JSErrorReport* report) {
 END_TEST(testPrintError_PrintWarning)
 
 bool cls_testPrintError_PrintWarning::warningSuccess = false;
+
+#define BURRITO "\xF0\x9F\x8C\xAF"
+
+BEGIN_TEST(testPrintError_UTF16CodePoints) {
+  AutoStreamBuffer buf;
+
+  static const char utf8code[] =
+      "function f() {\n  var x = `\n" BURRITO "`; " BURRITO "; } f();";
+
+  CHECK(!execDontReport(utf8code, "testPrintError_UTF16CodePoints.js", 1));
+
+  JS::RootedValue exception(cx);
+  CHECK(JS_GetPendingException(cx, &exception));
+  JS_ClearPendingException(cx);
+
+  js::ErrorReport report(cx);
+  CHECK(report.init(cx, exception,
+                    js::ErrorReport::SniffingBehavior::NoSideEffects));
+  JS::PrintError(cx, buf.stream(), report.toStringResult(), report.report(),
+                 false);
+
+  CHECK(buf.contains(
+      "testPrintError_UTF16CodePoints.js:3:4 SyntaxError: illegal character:\n"
+      "testPrintError_UTF16CodePoints.js:3:4 " BURRITO "`; " BURRITO
+      "; } f();\n"
+      "testPrintError_UTF16CodePoints.js:3:4 .....^\n"));
+
+  return true;
+}
+END_TEST(testPrintError_UTF16CodePoints)
+
+#undef BURRITO
