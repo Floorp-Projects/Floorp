@@ -457,14 +457,18 @@ class Runtime extends ContentProcessDomain {
       ctx.destructor();
       this.contexts.delete(ctx.id);
       this.contextsByWindow.get(ctx.windowId).delete(ctx);
+
       if (this.enabled) {
         this.emit("Runtime.executionContextDestroyed", {
           executionContextId: ctx.id,
         });
       }
+
       if (this.contextsByWindow.get(ctx.windowId).size == 0) {
         this.contextsByWindow.delete(ctx.windowId);
-        this.emit("Runtime.executionContextsCleared");
+        if (this.enabled) {
+          this.emit("Runtime.executionContextsCleared");
+        }
       }
     }
   }
