@@ -211,9 +211,21 @@ either Raptor or browsertime."""
     def is_localhost(self):
         return self.config.get("host") in ("localhost", "127.0.0.1")
 
+    @property
+    def conditioned_profile_copy(self):
+        """Returns a copy of the original conditioned profile that was created."""
+        condprof_copy = os.path.join(self._get_temp_dir(), "profile")
+        shutil.copytree(self.conditioned_profile_dir, condprof_copy)
+        LOG.info("Created a conditioned-profile copy: %s" % condprof_copy)
+        return condprof_copy
+
     def get_conditioned_profile(self):
         """Downloads a platform-specific conditioned profile, using the
         condprofile client API; returns a self.conditioned_profile_dir"""
+        if self.conditioned_profile_dir:
+            # We already have a directory, so provide a copy that
+            # will get deleted after it's done with
+            return self.conditioned_profile_copy
 
         # create a temp file to help ensure uniqueness
         temp_download_dir = self._get_temp_dir()
@@ -285,20 +297,19 @@ either Raptor or browsertime."""
             raise OSError
 
         LOG.info(
-            "self.conditioned_profile_dir is now set: {}".format(
+            "Original self.conditioned_profile_dir is now set: {}".format(
                 self.conditioned_profile_dir
             )
         )
-        return self.conditioned_profile_dir
+        return self.conditioned_profile_copy
 
     def build_browser_profile(self):
         if not self.using_condprof or self.config['app'] in ['chrome', 'chromium', 'chrome-m']:
             self.profile = create_profile(self.profile_class)
         else:
-            self.get_conditioned_profile()
             # use mozprofile to create a profile for us, from our conditioned profile's path
             self.profile = create_profile(
-                self.profile_class, profile=self.conditioned_profile_dir
+                self.profile_class, profile=self.get_conditioned_profile()
             )
         # Merge extra profile data from testing/profiles
         with open(os.path.join(self.profile_data_dir, "profiles.json"), "r") as fh:
