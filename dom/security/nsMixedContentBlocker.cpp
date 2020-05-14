@@ -820,14 +820,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
                              eUserOverride, requestingLocation);
       *aDecision = nsIContentPolicy::ACCEPT;
-      // See if mixed display content has already loaded on the page or if the
-      // state needs to be updated here. If mixed display hasn't loaded
-      // previously, then we need to call OnSecurityChange() to update the UI.
-      if (rootDoc->GetHasMixedDisplayContentLoaded()) {
-        return NS_OK;
-      }
-      rootDoc->SetHasMixedDisplayContentLoaded(true);
-
       if (rootHasSecureConnection) {
         broken = true;
       }
@@ -838,11 +830,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
       LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
                              eBlocked, requestingLocation);
-      if (rootDoc->GetHasMixedDisplayContentBlocked()) {
-        return NS_OK;
-      }
-
-      rootDoc->SetHasMixedDisplayContentBlocked(true);
       newState |= nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
     }
   } else {
@@ -854,12 +841,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
                              eUserOverride, requestingLocation);
       *aDecision = nsIContentPolicy::ACCEPT;
-      // See if the state will change here. If it will, only then do we need to
-      // call OnSecurityChange() to update the UI.
-      if (rootDoc->GetHasMixedActiveContentLoaded()) {
-        return NS_OK;
-      }
-      rootDoc->SetHasMixedActiveContentLoaded(true);
 
       if (rootHasSecureConnection) {
         broken = true;
@@ -874,17 +855,44 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
       LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
                              eBlocked, requestingLocation);
-      // See if the pref will change here. If it will, only then do we need to
-      // call OnSecurityChange() to update the UI.
-      if (rootDoc->GetHasMixedActiveContentBlocked()) {
-        return NS_OK;
-      }
-      rootDoc->SetHasMixedActiveContentBlocked(true);
-
       // The user has not overriden the pref, so make sure they still have an
       // option by calling nativeDocShell which will invoke the doorhanger
       newState |= nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
     }
+  }
+
+  // Check if the new flags we computed match the current state on the doc.
+  // This is really painful, and life would be eaiser if the doc had the same
+  // flags instead of bools.
+  bool stateChanged =
+      ((newState & nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT) ==
+       rootDoc->GetHasMixedActiveContentLoaded()) ||
+      ((newState &
+        nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT) ==
+       rootDoc->GetHasMixedActiveContentBlocked()) ||
+      ((newState &
+        nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT) ==
+       rootDoc->GetHasMixedDisplayContentLoaded()) ||
+      ((newState &
+        nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT) ==
+       rootDoc->GetHasMixedDisplayContentBlocked());
+
+  if (!stateChanged) {
+    return NS_OK;
+  }
+
+  // Copy the new state onto the Document flags.
+  if (newState & nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT) {
+    rootDoc->SetHasMixedActiveContentLoaded(true);
+  }
+  if (newState & nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+    rootDoc->SetHasMixedActiveContentBlocked(true);
+  }
+  if (newState & nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT) {
+    rootDoc->SetHasMixedDisplayContentLoaded(true);
+  }
+  if (newState & nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT) {
+    rootDoc->SetHasMixedDisplayContentBlocked(true);
   }
 
   if (broken) {
