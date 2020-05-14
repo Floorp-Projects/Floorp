@@ -2,4 +2,4 @@
 
 # CHOOSE_WHAT_TO_SYNC
 
-`CHOOSE_WHAT_TO_SYNC` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FxaWebChannelFeature.kt#L38)
+`CHOOSE_WHAT_TO_SYNC` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FxaWebChannelFeature.kt#L43)

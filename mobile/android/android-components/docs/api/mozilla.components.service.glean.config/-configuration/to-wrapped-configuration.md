@@ -2,7 +2,7 @@
 
 # toWrappedConfiguration
 
-`fun toWrappedConfiguration(): Configuration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L39)
+`fun toWrappedConfiguration(): Configuration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L40)
 
 Convert the Android Components configuration object to the Glean SDK
 configuration object.

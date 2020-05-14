@@ -2,12 +2,12 @@
 
 # serverEndpoint
 
-`val serverEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L23)
+`val serverEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L25)
 
-the server pings are sent to. Please note that this is
+(optional) the server pings are sent to. Please note that this is
     is only meant to be changed for tests.
 
 ### Property
 
-`serverEndpoint` - the server pings are sent to. Please note that this is
+`serverEndpoint` - (optional) the server pings are sent to. Please note that this is
     is only meant to be changed for tests.

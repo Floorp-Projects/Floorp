@@ -16,6 +16,16 @@ the [PushProcessor](../-push-processor/index.md) to manage their lifecycle.
 | [start](start.md) | `abstract fun start(context: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts the push service. |
 | [stop](stop.md) | `abstract fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stops the push service. |
 
+### Companion Object Properties
+
+| Name | Summary |
+|---|---|
+| [MESSAGE_KEY_BODY](-m-e-s-s-a-g-e_-k-e-y_-b-o-d-y.md) | `const val MESSAGE_KEY_BODY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Message key for the body in a push message. |
+| [MESSAGE_KEY_CHANNEL_ID](-m-e-s-s-a-g-e_-k-e-y_-c-h-a-n-n-e-l_-i-d.md) | `const val MESSAGE_KEY_CHANNEL_ID: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Message key for "channel ID" in a push message. |
+| [MESSAGE_KEY_CRYPTO_KEY](-m-e-s-s-a-g-e_-k-e-y_-c-r-y-p-t-o_-k-e-y.md) | `const val MESSAGE_KEY_CRYPTO_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Message key for "cryptoKey" in a push message. |
+| [MESSAGE_KEY_ENCODING](-m-e-s-s-a-g-e_-k-e-y_-e-n-c-o-d-i-n-g.md) | `const val MESSAGE_KEY_ENCODING: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Message key for encoding in a push message. |
+| [MESSAGE_KEY_SALT](-m-e-s-s-a-g-e_-k-e-y_-s-a-l-t.md) | `const val MESSAGE_KEY_SALT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Message key for encryption salt in a push message. |
+
 ### Extension Functions
 
 | Name | Summary |

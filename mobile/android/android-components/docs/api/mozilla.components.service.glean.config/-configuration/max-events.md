@@ -2,10 +2,10 @@
 
 # maxEvents
 
-`val maxEvents: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L25)
+`val maxEvents: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L27)
 
-the number of events to store before the events ping is sent
+(optional) the number of events to store before the events ping is sent
 
 ### Property
 
-`maxEvents` - the number of events to store before the events ping is sent
+`maxEvents` - (optional) the number of events to store before the events ping is sent

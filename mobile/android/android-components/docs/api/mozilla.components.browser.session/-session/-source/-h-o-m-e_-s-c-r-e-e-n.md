@@ -2,7 +2,7 @@
 
 # HOME_SCREEN
 
-`HOME_SCREEN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L154)
+`HOME_SCREEN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L156)
 
 User interacted with the home screen
 

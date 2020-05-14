@@ -519,6 +519,7 @@
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.feature.session.PictureInPictureFeature](../mozilla.components.feature.session/-picture-in-picture-feature/index.md) | A simple implementation of Picture-in-picture mode if on a supported platform. |
 | [mozilla.components.service.glean.private.PingType](../mozilla.components.service.glean.private/-ping-type.md) |  |
+| [mozilla.components.service.glean.net.PingUploader](../mozilla.components.service.glean.net/-ping-uploader.md) |  |
 | [mozilla.components.support.test.robolectric.shadow.PixelCopyShadow](../mozilla.components.support.test.robolectric.shadow/-pixel-copy-shadow/index.md) | Shadow for [PixelCopy](#) API. |
 | [mozilla.components.browser.storage.sync.PlacesBookmarksStorage](../mozilla.components.browser.storage.sync/-places-bookmarks-storage/index.md) | Implementation of the [BookmarksStorage](../mozilla.components.concept.storage/-bookmarks-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
 | [mozilla.components.browser.storage.sync.PlacesHistoryStorage](../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
