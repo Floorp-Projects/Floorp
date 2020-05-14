@@ -198,8 +198,8 @@ bool testBadUtf8(const char (&chars)[N], unsigned errorNumber,
   JS::ExceptionStack exnStack(cx);
   CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
-  js::ErrorReport report(cx);
-  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
+  JS::ErrorReportBuilder report(cx);
+  CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects));
 
   const auto* errorReport = report.report();
 
@@ -281,8 +281,8 @@ bool testContext(const char (&chars)[N],
   JS::ExceptionStack exnStack(cx);
   CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
 
-  js::ErrorReport report(cx);
-  CHECK(report.init(cx, exnStack, js::ErrorReport::WithSideEffects));
+  JS::ErrorReportBuilder report(cx);
+  CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects));
 
   const auto* errorReport = report.report();
 

@@ -38,9 +38,9 @@ static void CrashOnPendingException() {
     JS::ExceptionStack exnStack(gCx);
     (void)JS::StealPendingExceptionStack(gCx, &exnStack);
 
-    js::ErrorReport report(gCx);
-    if (!report.init(gCx, exnStack, js::ErrorReport::WithSideEffects)) {
-      fprintf(stderr, "out of memory initializing ErrorReport\n");
+    JS::ErrorReportBuilder report(gCx);
+    if (!report.init(gCx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
+      fprintf(stderr, "out of memory initializing JS::ErrorReportBuilder\n");
       fflush(stderr);
     } else {
       JS::PrintError(gCx, stderr, report.toStringResult(), report.report(),
