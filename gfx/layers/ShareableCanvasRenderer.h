@@ -39,8 +39,7 @@ class ShareableCanvasRenderer : public CopyableCanvasRenderer {
   void ClearCachedResources() override;
   void Destroy() override;
 
-  void UpdateCompositableClient(
-      wr::RenderRoot aRenderRoot = wr::RenderRoot::Default);
+  void UpdateCompositableClient();
 
   const TextureFlags& Flags() const { return mFlags; }
 
