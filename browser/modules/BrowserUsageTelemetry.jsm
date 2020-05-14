@@ -119,19 +119,21 @@ const URLBAR_SELECTED_RESULT_METHODS = {
 const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
 
 function getOpenTabsAndWinsCounts() {
+  let loadedTabCount = 0;
   let tabCount = 0;
   let winCount = 0;
 
   for (let win of Services.wm.getEnumerator("navigator:browser")) {
     winCount++;
     tabCount += win.gBrowser.tabs.length;
+    for (const tab of win.gBrowser.tabs) {
+      if (tab.getAttribute("pending") !== "true") {
+        loadedTabCount += 1;
+      }
+    }
   }
 
-  return { tabCount, winCount };
-}
-
-function getTabCount() {
-  return getOpenTabsAndWinsCounts().tabCount;
+  return { loadedTabCount, tabCount, winCount };
 }
 
 function getPinnedTabsCount() {
@@ -264,7 +266,7 @@ let URICountListener = {
     Services.telemetry.scalarAdd(TOTAL_URI_COUNT_SCALAR_NAME, 1);
 
     // Update tab count
-    BrowserUsageTelemetry._recordTabCount();
+    BrowserUsageTelemetry._recordTabCounts(getOpenTabsAndWinsCounts());
 
     // Unique domains should be aggregated by (eTLD + 1): x.test.com and y.test.com
     // are counted once as test.com.
@@ -332,6 +334,7 @@ let BrowserUsageTelemetry = {
 
   init() {
     this._lastRecordTabCount = 0;
+    this._lastRecordLoadedTabCount = 0;
     this._setupAfterRestore();
     this._inited = true;
   },
@@ -384,7 +387,7 @@ let BrowserUsageTelemetry = {
   handleEvent(event) {
     switch (event.type) {
       case "TabOpen":
-        this._onTabOpen();
+        this._onTabOpen(getOpenTabsAndWinsCounts());
         break;
       case "TabPinned":
         this._onTabPinned();
@@ -398,6 +401,9 @@ let BrowserUsageTelemetry = {
         // |URICountListener| know about them.
         let browser = event.target.linkedBrowser;
         URICountListener.addRestoredURI(browser, browser.currentURI);
+
+        const { loadedTabCount } = getOpenTabsAndWinsCounts();
+        this._recordTabCounts({ loadedTabCount });
         break;
     }
   },
@@ -686,17 +692,14 @@ let BrowserUsageTelemetry = {
 
   /**
    * Updates the tab counts.
-   * @param {Number} [newTabCount=0] The count of the opened tabs across all windows. This
-   *        is computed manually if not provided.
+   * @param {Object} [counts] The counts returned by `getOpenTabsAndWindowCounts`.
    */
-  _onTabOpen(tabCount = 0) {
-    // Use the provided tab count if available. Otherwise, go on and compute it.
-    tabCount = tabCount || getOpenTabsAndWinsCounts().tabCount;
+  _onTabOpen({ tabCount, loadedTabCount }) {
     // Update the "tab opened" count and its maximum.
     Services.telemetry.scalarAdd(TAB_OPEN_EVENT_COUNT_SCALAR_NAME, 1);
     Services.telemetry.scalarSetMaximum(MAX_TAB_COUNT_SCALAR_NAME, tabCount);
 
-    this._recordTabCount(tabCount);
+    this._recordTabCounts({ tabCount, loadedTabCount });
   },
 
   _onTabPinned(target) {
@@ -742,22 +745,41 @@ let BrowserUsageTelemetry = {
 
       // We won't receive the "TabOpen" event for the first tab within a new window.
       // Account for that.
-      this._onTabOpen(counts.tabCount);
+      this._onTabOpen(counts);
     };
     win.addEventListener("load", onLoad);
   },
 
-  _recordTabCount(tabCount) {
+  /**
+   * Record telemetry about the given tab counts.
+   *
+   * Telemetry for each count will only be recorded if the value isn't
+   * `undefined`.
+   *
+   * @param {object} [counts] The tab counts to register with telemetry.
+   * @param {number} [counts.tabCount] The number of tabs in all browsers.
+   * @param {number} [counts.loadedTabCount] The number of loaded (i.e., not
+   *                                         pending) tabs in all browsers.
+   */
+  _recordTabCounts({ tabCount, loadedTabCount }) {
     let currentTime = Date.now();
     if (
-      currentTime >
-      this._lastRecordTabCount + MINIMUM_TAB_COUNT_INTERVAL_MS
+      tabCount !== undefined &&
+      currentTime > this._lastRecordTabCount + MINIMUM_TAB_COUNT_INTERVAL_MS
     ) {
-      if (tabCount === undefined) {
-        tabCount = getTabCount();
-      }
       Services.telemetry.getHistogramById("TAB_COUNT").add(tabCount);
       this._lastRecordTabCount = currentTime;
+    }
+
+    if (
+      loadedTabCount !== undefined &&
+      currentTime >
+        this._lastRecordLoadedTabCount + MINIMUM_TAB_COUNT_INTERVAL_MS
+    ) {
+      Services.telemetry
+        .getHistogramById("LOADED_TAB_COUNT")
+        .add(loadedTabCount);
+      this._lastRecordLoadedTabCount = currentTime;
     }
   },
 };
