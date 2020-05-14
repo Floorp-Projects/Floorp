@@ -837,18 +837,6 @@ image.update-throbber {
   overflow-y: auto;
 }
 
-@media (prefers-reduced-motion) {
-  /* Setting border-inline-end on .navigation makes it a focusable element */
-  .navigation {
-    content: "";
-    width: 1px;
-    height: 100%;
-    background-color: var(--in-content-border-color);
-    inset-inline-end: 0;
-    position: absolute;
-  }
-}
-
 .face-sad {
   list-style-image: url("chrome://browser/skin/preferences/face-sad.svg");
   width: 20px;
