@@ -895,8 +895,7 @@ class MOZ_STACK_CLASS AutoSetCurrentFileHandle final {
   IDBFileHandle* FileHandle() const { return mFileHandle; }
 };
 
-class MOZ_STACK_CLASS FileHandleResultHelper final
-    : public IDBFileRequest::ResultCallback {
+class MOZ_STACK_CLASS FileHandleResultHelper final {
   IDBFileRequest* const mFileRequest;
   AutoSetCurrentFileHandle mAutoFileHandle;
 
@@ -920,8 +919,8 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
 
   IDBFileHandle* FileHandle() const { return mAutoFileHandle.FileHandle(); }
 
-  virtual nsresult GetResult(JSContext* aCx,
-                             JS::MutableHandle<JS::Value> aResult) override {
+  nsresult operator()(JSContext* aCx,
+                      JS::MutableHandle<JS::Value> aResult) const {
     MOZ_ASSERT(aCx);
     MOZ_ASSERT(mFileRequest);
 
@@ -949,7 +948,7 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
   }
 
   nsresult GetResult(JSContext* aCx, const nsCString* aString,
-                     JS::MutableHandle<JS::Value> aResult) {
+                     JS::MutableHandle<JS::Value> aResult) const {
     const nsCString& data = *aString;
 
     nsresult rv;
@@ -1064,7 +1063,7 @@ void DispatchFileHandleSuccessEvent(FileHandleResultHelper* aResultHelper) {
 
   MOZ_ASSERT(fileHandle->IsOpen());
 
-  fileRequest->SetResultCallback(aResultHelper);
+  fileRequest->SetResult(*aResultHelper);
 
   MOZ_ASSERT(fileHandle->IsOpen() || fileHandle->IsAborted());
 }
