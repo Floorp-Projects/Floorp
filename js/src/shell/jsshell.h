@@ -97,7 +97,6 @@ extern int sArgc;
 extern char** sArgv;
 
 // Shell state set once at startup.
-extern bool enableDeferredMode;
 extern bool enableCodeCoverage;
 extern bool enableDisassemblyDumps;
 extern bool offthreadCompilation;
