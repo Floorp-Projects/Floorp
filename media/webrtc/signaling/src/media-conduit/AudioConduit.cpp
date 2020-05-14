@@ -878,14 +878,13 @@ bool WebrtcAudioConduit::SendRtp(const uint8_t* data, size_t len,
   CSFLogDebug(LOGTAG, "%s: len %lu", __FUNCTION__, (unsigned long)len);
 
   ReentrantMonitorAutoEnter enter(mTransportMonitor);
-  // XXX(pkerr) - the PacketOptions are being ignored. This parameter was added
-  // along with the Call API update in the webrtc.org codebase. The only field
-  // in it is the packet_id, which is used when the header extension for
-  // TransportSequenceNumber is being used, which we don't.
-  (void)options;
   if (mTransmitterTransport &&
       (mTransmitterTransport->SendRtpPacket(data, len) == NS_OK)) {
     CSFLogDebug(LOGTAG, "%s Sent RTP Packet ", __FUNCTION__);
+    if (options.packet_id >= 0) {
+      int64_t now_ms = PR_Now() / 1000;
+      mCall->Call()->OnSentPacket({options.packet_id, now_ms});
+    }
     return true;
   }
   CSFLogError(LOGTAG, "%s RTP Packet Send Failed ", __FUNCTION__);
