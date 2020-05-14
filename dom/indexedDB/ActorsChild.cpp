@@ -199,133 +199,22 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
   const AutoSetCurrentTransaction mAutoTransaction;
   const SafeRefPtr<IDBTransaction> mTransaction;
 
-  union {
-    IDBDatabase* mDatabase;
-    IDBCursor* mCursor;
-    IDBMutableFile* mMutableFile;
-    StructuredCloneReadInfoChild* mStructuredClone;
-    nsTArray<StructuredCloneReadInfoChild>* mStructuredCloneArray;
-    const Key* mKey;
-    const nsTArray<Key>* mKeyArray;
-    uint64_t mUInt64Value;
-    const JS::Handle<JS::Value>* mJSValHandle;
-  } mResult;
-
-  enum {
-    ResultTypeDatabase,
-    ResultTypeCursor,
-    ResultTypeMutableFile,
-    ResultTypeStructuredClone,
-    ResultTypeStructuredCloneArray,
-    ResultTypeKey,
-    ResultTypeKeyArray,
-    ResultTypeUInt64,
-    ResultTypeJSValHandle,
-  } mResultType;
+  mozilla::Variant<
+      IDBDatabase*, IDBCursor*, IDBMutableFile*, StructuredCloneReadInfoChild*,
+      nsTArray<StructuredCloneReadInfoChild>*, const Key*, const nsTArray<Key>*,
+      const uint64_t*, const JS::Handle<JS::Value>*>
+      mResult;
 
  public:
+  template <typename T>
   ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               IDBDatabase* aResult)
+               T* aResult)
       : mRequest(aRequest),
         mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
         mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeDatabase) {
+        mResult(aResult) {
     MOZ_ASSERT(aRequest);
     MOZ_ASSERT(aResult);
-
-    mResult.mDatabase = aResult;
-  }
-
-  ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               IDBCursor* aResult)
-      : mRequest(aRequest),
-        mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
-        mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeCursor) {
-    MOZ_ASSERT(aRequest);
-
-    mResult.mCursor = aResult;
-  }
-
-  ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               IDBMutableFile* aResult)
-      : mRequest(aRequest),
-        mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
-        mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeMutableFile) {
-    MOZ_ASSERT(aRequest);
-
-    mResult.mMutableFile = aResult;
-  }
-
-  ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               StructuredCloneReadInfoChild* aResult)
-      : mRequest(aRequest),
-        mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
-        mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeStructuredClone) {
-    MOZ_ASSERT(aRequest);
-    MOZ_ASSERT(aResult);
-
-    mResult.mStructuredClone = aResult;
-  }
-
-  ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               nsTArray<StructuredCloneReadInfoChild>* aResult)
-      : mRequest(aRequest),
-        mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
-        mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeStructuredCloneArray) {
-    MOZ_ASSERT(aRequest);
-    MOZ_ASSERT(aResult);
-
-    mResult.mStructuredCloneArray = aResult;
-  }
-
-  ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               const Key* aResult)
-      : mRequest(aRequest),
-        mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
-        mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeKey) {
-    MOZ_ASSERT(aRequest);
-    MOZ_ASSERT(aResult);
-
-    mResult.mKey = aResult;
-  }
-
-  ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               const nsTArray<Key>* aResult)
-      : mRequest(aRequest),
-        mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
-        mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeKeyArray) {
-    MOZ_ASSERT(aRequest);
-    MOZ_ASSERT(aResult);
-
-    mResult.mKeyArray = aResult;
-  }
-
-  ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               const uint64_t aResult)
-      : mRequest(aRequest),
-        mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
-        mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeUInt64) {
-    MOZ_ASSERT(aRequest);
-
-    mResult.mUInt64Value = aResult;
-  }
-
-  ResultHelper(IDBRequest* aRequest, SafeRefPtr<IDBTransaction> aTransaction,
-               const JS::Handle<JS::Value>* aResult)
-      : mRequest(aRequest),
-        mAutoTransaction(aTransaction ? SomeRef(*aTransaction) : Nothing()),
-        mTransaction(std::move(aTransaction)),
-        mResultType(ResultTypeJSValHandle) {
-    MOZ_ASSERT(aRequest);
-
-    mResult.mJSValHandle = aResult;
   }
 
   virtual nsresult GetResult(JSContext* aCx,
@@ -333,52 +222,18 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     MOZ_ASSERT(aCx);
     MOZ_ASSERT(mRequest);
 
-    switch (mResultType) {
-      case ResultTypeDatabase:
-        return GetResult(aCx, mResult.mDatabase, aResult);
-
-      case ResultTypeCursor:
-        return GetResult(aCx, mResult.mCursor, aResult);
-
-      case ResultTypeMutableFile:
-        return GetResult(aCx, mResult.mMutableFile, aResult);
-
-      case ResultTypeStructuredClone:
-        return GetResult(aCx, std::move(*mResult.mStructuredClone), aResult);
-
-      case ResultTypeStructuredCloneArray:
-        return GetResult(aCx, std::move(*mResult.mStructuredCloneArray),
-                         aResult);
-
-      case ResultTypeKey:
-        return GetResult(aCx, mResult.mKey, aResult);
-
-      case ResultTypeKeyArray:
-        return GetResult(aCx, mResult.mKeyArray, aResult);
-
-      case ResultTypeUInt64:
-        aResult.set(JS::NumberValue(mResult.mUInt64Value));
-        return NS_OK;
-
-      case ResultTypeJSValHandle:
-        aResult.set(*mResult.mJSValHandle);
-        return NS_OK;
-
-      default:
-        MOZ_CRASH("Unknown result type!");
-    }
-
-    MOZ_CRASH("Should never get here!");
+    return mResult.match(
+        [aCx, aResult](auto* aPtr) { return GetResult(aCx, aPtr, aResult); });
   }
 
   void DispatchSuccessEvent(RefPtr<Event> aEvent = nullptr);
 
  private:
   template <class T>
-  std::enable_if_t<std::is_same_v<T, IDBDatabase> ||
-                       std::is_same_v<T, IDBCursor> ||
-                       std::is_same_v<T, IDBMutableFile>,
-                   nsresult>
+  static std::enable_if_t<std::is_same_v<T, IDBDatabase> ||
+                              std::is_same_v<T, IDBCursor> ||
+                              std::is_same_v<T, IDBMutableFile>,
+                          nsresult>
   GetResult(JSContext* aCx, T* aDOMObject,
             JS::MutableHandle<JS::Value> aResult) {
     if (!aDOMObject) {
@@ -395,8 +250,27 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     return NS_OK;
   }
 
-  nsresult GetResult(JSContext* aCx, StructuredCloneReadInfoChild&& aCloneInfo,
-                     JS::MutableHandle<JS::Value> aResult) {
+  static nsresult GetResult(JSContext* aCx, const JS::Handle<JS::Value>* aValue,
+                            JS::MutableHandle<JS::Value> aResult) {
+    aResult.set(*aValue);
+    return NS_OK;
+  }
+
+  static nsresult GetResult(JSContext* aCx, const uint64_t* aValue,
+                            JS::MutableHandle<JS::Value> aResult) {
+    aResult.set(JS::NumberValue(*aValue));
+    return NS_OK;
+  }
+
+  static nsresult GetResult(JSContext* aCx,
+                            StructuredCloneReadInfoChild* aCloneInfo,
+                            JS::MutableHandle<JS::Value> aResult) {
+    return GetResult(aCx, std::move(*aCloneInfo), aResult);
+  }
+
+  static nsresult GetResult(JSContext* aCx,
+                            StructuredCloneReadInfoChild&& aCloneInfo,
+                            JS::MutableHandle<JS::Value> aResult) {
     const bool ok =
         IDBObjectStore::DeserializeValue(aCx, std::move(aCloneInfo), aResult);
 
@@ -407,17 +281,17 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     return NS_OK;
   }
 
-  nsresult GetResult(JSContext* aCx,
-                     nsTArray<StructuredCloneReadInfoChild>&& aCloneInfos,
-                     JS::MutableHandle<JS::Value> aResult) {
+  static nsresult GetResult(JSContext* aCx,
+                            nsTArray<StructuredCloneReadInfoChild>* aCloneInfos,
+                            JS::MutableHandle<JS::Value> aResult) {
     JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
     if (NS_WARN_IF(!array)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    if (!aCloneInfos.IsEmpty()) {
-      const uint32_t count = aCloneInfos.Length();
+    if (!aCloneInfos->IsEmpty()) {
+      const uint32_t count = aCloneInfos->Length();
 
       if (NS_WARN_IF(!JS::SetArrayLength(aCx, array, count))) {
         IDB_REPORT_INTERNAL_ERR();
@@ -425,7 +299,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
       }
 
       for (uint32_t index = 0; index < count; index++) {
-        auto& cloneInfo = aCloneInfos.ElementAt(index);
+        auto& cloneInfo = aCloneInfos->ElementAt(index);
 
         JS::Rooted<JS::Value> value(aCx);
 
@@ -446,8 +320,8 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     return NS_OK;
   }
 
-  nsresult GetResult(JSContext* aCx, const Key* aKey,
-                     JS::MutableHandle<JS::Value> aResult) {
+  static nsresult GetResult(JSContext* aCx, const Key* aKey,
+                            JS::MutableHandle<JS::Value> aResult) {
     const nsresult rv = aKey->ToJSVal(aCx, aResult);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -455,8 +329,8 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     return NS_OK;
   }
 
-  nsresult GetResult(JSContext* aCx, const nsTArray<Key>* aKeys,
-                     JS::MutableHandle<JS::Value> aResult) {
+  static nsresult GetResult(JSContext* aCx, const nsTArray<Key>* aKeys,
+                            JS::MutableHandle<JS::Value> aResult) {
     JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
     if (NS_WARN_IF(!array)) {
       IDB_REPORT_INTERNAL_ERR();
@@ -2672,15 +2546,16 @@ void BackgroundRequestChild::HandleResponse(
 void BackgroundRequestChild::HandleResponse(JS::Handle<JS::Value> aResponse) {
   AssertIsOnOwningThread();
 
-  ResultHelper helper(mRequest, AcquireTransaction(), &aResponse);
+  ResultHelper helper(mRequest, AcquireTransaction(),
+                      const_cast<const JS::Handle<JS::Value>*>(&aResponse));
 
   helper.DispatchSuccessEvent();
 }
 
-void BackgroundRequestChild::HandleResponse(uint64_t aResponse) {
+void BackgroundRequestChild::HandleResponse(const uint64_t aResponse) {
   AssertIsOnOwningThread();
 
-  ResultHelper helper(mRequest, AcquireTransaction(), aResponse);
+  ResultHelper helper(mRequest, AcquireTransaction(), &aResponse);
 
   helper.DispatchSuccessEvent();
 }
@@ -3365,7 +3240,7 @@ void BackgroundCursorChild<CursorType>::CompleteContinueRequestFromCache() {
                       mTransaction ? SafeRefPtr{&mTransaction.ref(),
                                                 AcquireStrongRefFromRawPtr{}}
                                    : nullptr,
-                      cursor);
+                      cursor.get());
   helper.DispatchSuccessEvent();
 
   mTransaction->OnRequestFinished(/* aRequestCompletedSuccessfully */ true);
@@ -3564,7 +3439,7 @@ void BackgroundCursorChild<CursorType>::HandleMultipleCursorResponses(
                       mTransaction ? SafeRefPtr{&mTransaction.ref(),
                                                 AcquireStrongRefFromRawPtr{}}
                                    : nullptr,
-                      mCursor);
+                      static_cast<IDBCursor*>(mCursor));
   helper.DispatchSuccessEvent();
 }
 
