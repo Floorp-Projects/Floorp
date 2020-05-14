@@ -128,7 +128,7 @@ echo "EXECUTE TEST(S)"
 echo
 # Note that if --local-results-dir is "results", timestamped sub-directory will
 # contain the results. For any other value, the directory itself will have the results.
-$JAVA_BIN -jar $FLANK_BIN android run \
+set -o pipefail && $JAVA_BIN -jar $FLANK_BIN android run \
 	--config=$flank_template \
 	--max-test-shards=$num_shards \
 	--app=$APK_APP --test=$APK_TEST \
