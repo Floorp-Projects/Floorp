@@ -481,6 +481,15 @@ def target_tasks_pine(full_task_graph, parameters, graph_config):
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
 
 
+@_target_task('kaios_tasks')
+def target_tasks_kaios(full_task_graph, parameters, graph_config):
+    """The set of tasks to run for kaios integration"""
+    def filter(task):
+        # We disable everything in central, and adjust downstream.
+        return False
+    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+
+
 @_target_task('ship_geckoview')
 def target_tasks_ship_geckoview(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to ship geckoview nightly. The
