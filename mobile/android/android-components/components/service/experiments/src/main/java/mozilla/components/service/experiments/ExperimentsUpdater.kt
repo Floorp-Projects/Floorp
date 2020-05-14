@@ -106,7 +106,7 @@ internal class ExperimentsUpdater(
                 configuration.kintoEndpoint,
                 EXPERIMENTS_BUCKET_NAME,
                 EXPERIMENTS_COLLECTION_NAME,
-                configuration.httpClient.value
+                configuration.httpClient
         )
     }
 

@@ -6,8 +6,8 @@ package org.mozilla.samples.glean
 
 import android.app.Application
 import android.content.Intent
-import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.service.experiments.Configuration as ExperimentsConfig
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
@@ -32,14 +32,15 @@ class GleanApplication : Application() {
 
         // Initialize the Glean library. Ideally, this is the first thing that
         // must be done right after enabling logging.
-        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() as Client })
+        val client by lazy { HttpURLConnectionClient() }
+        val httpClient = ConceptFetchHttpUploader.fromClient(client)
         val config = Configuration(httpClient = httpClient)
         Glean.initialize(applicationContext, uploadEnabled = true, configuration = config)
 
         // Initialize the Experiments library and pass in the callback that will generate a
         // broadcast Intent to signal the application that experiments have been updated. This is
         // only relevant to the experiments library, aside from recording the experiment in Glean.
-        Experiments.initialize(applicationContext) {
+        Experiments.initialize(applicationContext, ExperimentsConfig(httpClient = client)) {
             val intent = Intent()
             intent.action = "org.mozilla.samples.glean.experiments.updated"
             sendBroadcast(intent)
