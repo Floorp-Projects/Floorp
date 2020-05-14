@@ -918,7 +918,7 @@ class RemoteWorkerChild::SharedWorkerOp : public RemoteWorkerChild::Op {
               mOp.get_RemoteWorkerPortIdentifierOp().portIdentifier());
 
       if (NS_WARN_IF(!r->Dispatch())) {
-        aOwner->ErrorPropagation(NS_ERROR_FAILURE);
+        aOwner->ErrorPropagationDispatch(NS_ERROR_FAILURE);
       }
     } else if (mOp.type() == RemoteWorkerOp::TRemoteWorkerAddWindowIDOp) {
       aOwner->mWindowIDs.AppendElement(
