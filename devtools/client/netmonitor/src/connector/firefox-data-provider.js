@@ -84,6 +84,7 @@ class FirefoxDataProvider {
       isThirdPartyTrackingResource,
       referrerPolicy,
       blockedReason,
+      blockingExtension,
       channelId,
     } = data;
 
@@ -114,6 +115,7 @@ class FirefoxDataProvider {
           isThirdPartyTrackingResource,
           referrerPolicy,
           blockedReason,
+          blockingExtension,
           channelId,
         },
         true
@@ -361,6 +363,7 @@ class FirefoxDataProvider {
       isThirdPartyTrackingResource,
       referrerPolicy,
       blockedReason,
+      blockingExtension,
       channelId,
     } = networkInfo;
 
@@ -375,6 +378,7 @@ class FirefoxDataProvider {
       isThirdPartyTrackingResource,
       referrerPolicy,
       blockedReason,
+      blockingExtension,
       channelId,
     });
 
@@ -415,6 +419,8 @@ class FirefoxDataProvider {
           contentSize: networkInfo.response.bodySize,
           transferredSize: networkInfo.response.transferredSize,
           mimeType: networkInfo.response.content.mimeType,
+          blockingExtension: packet.blockingExtension,
+          blockedReason: packet.blockedReason,
         });
         break;
       case "eventTimings":

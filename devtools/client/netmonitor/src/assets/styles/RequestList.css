@@ -260,7 +260,6 @@
 
 .requests-security-state-icon {
   display: inline-block;
-  width: 16px;
   height: 16px;
   background-position: center;
   background-repeat: no-repeat;
@@ -271,12 +270,14 @@
 
 .security-state-secure {
   background-image: url(chrome://devtools/skin/images/security-state-secure.svg);
+  width: 16px;
 }
 
 .security-state-weak {
   /* Shift icon to the right (in both LTR and RTL directions) to align the
    * padlock shape with other padlock icons. */
   position: relative;
+  width: 16px;
   left: 2px;
   background-image: url(chrome://devtools/skin/images/security-state-weak.svg);
   stroke: var(--theme-icon-warning-color);
@@ -284,11 +285,13 @@
 
 .security-state-insecure {
   background-image: url(chrome://devtools/skin/images/security-state-insecure.svg);
+  width: 16px;
   stroke: var(--theme-icon-error-color);
 }
 
 .security-state-broken {
   background-image: url(chrome://devtools/skin/images/error-small.svg);
+  width: 16px;
   fill: var(--theme-icon-error-color);
 }
 
