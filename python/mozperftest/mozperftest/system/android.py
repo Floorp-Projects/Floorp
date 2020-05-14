@@ -10,11 +10,24 @@ from mozperftest.utils import download_file
 
 
 _ROOT_URL = "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-_FENNEC_BUILDS = "project.mobile.fenix.v2.fennec-nightly.latest/artifacts/public/build/"
+_FENIX_FENNEC_BUILDS = (
+    "project.mobile.fenix.v2.fennec-nightly.latest/artifacts/public/build/"
+)
+_GV_BUILDS = "gecko.v2.mozilla-central.nightly.latest.mobile.android-"
+
 _PERMALINKS = {
-    "fennec_nightly_armeabi_v7a": _ROOT_URL
-    + _FENNEC_BUILDS
-    + "armeabi-v7a/geckoNightly/target.apk"
+    "fenix_fennec_nightly_armeabi_v7a": _ROOT_URL
+    + _FENIX_FENNEC_BUILDS
+    + "armeabi-v7a/geckoNightly/target.apk",
+    "fenix_fennec_nightly_arm64_v8a": _ROOT_URL
+    + _FENIX_FENNEC_BUILDS
+    + "arm64-v8a/geckoNightly/target.apk",
+    "gve_nightly_aarch64": _ROOT_URL
+    + _GV_BUILDS
+    + "aarch64-opt/artifacts/public/build/geckoview_example.apk",
+    "gve_nightly_api16": _ROOT_URL
+    + _GV_BUILDS
+    + "api-16-opt/artifacts/public/build/geckoview_example.apk",
 }
 
 

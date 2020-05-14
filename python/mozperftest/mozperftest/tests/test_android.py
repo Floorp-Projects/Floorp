@@ -52,7 +52,7 @@ def test_android_failure():
 @mock.patch("mozperftest.system.android.ADBDevice")
 def test_android_apk_alias(device):
     args = {
-        "android-install-apk": ["fennec_nightly_armeabi_v7a"],
+        "android-install-apk": ["fenix_fennec_nightly_armeabi_v7a"],
         "android": True,
         "android-app-name": "org.mozilla.fenned_aurora",
     }

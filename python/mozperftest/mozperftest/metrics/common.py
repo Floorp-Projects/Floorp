@@ -140,7 +140,11 @@ class MetricsStorage(object):
         return self.stddata
 
     def filtered_metrics(
-        self, group_name="firefox", transformer="SingleJsonRetriever", metrics=None
+        self,
+        group_name="firefox",
+        transformer="SingleJsonRetriever",
+        metrics=None,
+        exclude=None,
     ):
 
         """Filters the metrics to only those that were requested by `metrics`.
@@ -160,12 +164,16 @@ class MetricsStorage(object):
         )
         if not metrics:
             return results
+        if not exclude:
+            exclude = []
 
         filtered = {}
         for data_type, data_info in results.items():
             newresults = []
             for res in data_info:
-                if any([met in res["subtest"] for met in metrics]):
+                if any([met in res["subtest"] for met in metrics]) and not any(
+                    [met in res["subtest"] for met in exclude]
+                ):
                     newresults.append(res)
             filtered[data_type] = newresults
 
@@ -183,6 +191,7 @@ def filtered_metrics(
     transformer="SingleJsonRetriever",
     metrics=None,
     settings=False,
+    exclude=None,
 ):
     """Returns standardized data extracted from the metadata instance.
 
@@ -197,7 +206,7 @@ def filtered_metrics(
         storage = _metrics[key]
 
     results = storage.filtered_metrics(
-        group_name=group_name, transformer=transformer, metrics=metrics
+        group_name=group_name, transformer=transformer, metrics=metrics, exclude=exclude
     )
 
     if settings:
