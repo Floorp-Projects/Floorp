@@ -147,6 +147,7 @@ treeherder:
         'condprof': 'Conditioned Profile Builder'
         'doc': 'Documentation'
         'GhS': 'GitHub Synchronization'
+        'perftest': 'Performance tests'
 
 index:
     products:

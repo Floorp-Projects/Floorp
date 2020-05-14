@@ -36,6 +36,11 @@ class Perfherder(Layer):
             "default": [],
             "help": "The metrics that should be retrieved from the data.",
         },
+        "stats": {
+            "action": "store_true",
+            "default": False,
+            "help": "If set, browsertime statistics will be reported.",
+        },
     }
 
     def __call__(self, metadata):
@@ -56,9 +61,20 @@ class Perfherder(Layer):
         prefix = self.get_arg("prefix")
         output = self.get_arg("output")
 
+        # XXX Make an arugment for exclusions from metrics
+        # (or go directly to regex's for metrics)
+        exclusions = None
+        if not self.get_arg("stats"):
+            exclusions = ["statistics."]
+
         # Get filtered metrics
         results, fullsettings = filtered_metrics(
-            metadata, output, prefix, metrics=self.get_arg("metrics"), settings=True
+            metadata,
+            output,
+            prefix,
+            metrics=self.get_arg("metrics"),
+            settings=True,
+            exclude=exclusions,
         )
 
         if not any([results[name] for name in results]):
