@@ -48,7 +48,10 @@ fn with_glean_mut<F, R>(f: F) -> R
 where
     F: Fn(&mut Glean) -> R,
 {
-    let mut glean = global_glean().lock().unwrap();
+    let mut glean = global_glean()
+        .expect("Global Glean not initialized")
+        .lock()
+        .unwrap();
     f(&mut glean)
 }
 
