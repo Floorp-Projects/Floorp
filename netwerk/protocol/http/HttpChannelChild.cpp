@@ -391,22 +391,9 @@ void HttpChannelChild::AssociateApplicationCache(const nsCString& aGroupID,
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
-    const nsresult& aChannelStatus, const nsHttpResponseHead& aResponseHead,
-    const bool& aUseResponseHead, const nsHttpHeaderArray& aRequestHeaders,
-    const ParentLoadInfoForwarderArgs& aLoadInfoForwarder,
-    const bool& aIsFromCache, const bool& aIsRacing,
-    const bool& aCacheEntryAvailable, const uint64_t& aCacheEntryId,
-    const int32_t& aCacheFetchCount, const uint32_t& aCacheExpirationTime,
-    const nsCString& aCachedCharset,
-    const nsCString& aSecurityInfoSerialization, const NetAddr& aSelfAddr,
-    const NetAddr& aPeerAddr, const int16_t& aRedirectCount,
-    const uint32_t& aCacheKey, const nsCString& aAltDataType,
-    const int64_t& aAltDataLen, const bool& aDeliveringAltData,
-    const bool& aApplyConversion, const bool& aIsResolvedByTRR,
-    const ResourceTimingStructArgs& aTiming,
-    const bool& aAllRedirectsSameOrigin, const Maybe<uint32_t>& aMultiPartID,
-    const bool& aIsLastPartOfMultiPart,
-    const nsILoadInfo::CrossOriginOpenerPolicy& aOpenerPolicy) {
+    const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
+    const nsHttpHeaderArray& aRequestHeaders,
+    const HttpChannelOnStartRequestArgs& aArgs) {
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -418,27 +405,11 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
       !mDivertingToParent,
       "mDivertingToParent should be unset before OnStartRequest!");
 
-  mRedirectCount = aRedirectCount;
-
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this,
-      [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aResponseHead,
-       aUseResponseHead, aRequestHeaders, aLoadInfoForwarder, aIsFromCache,
-       aIsRacing, aCacheEntryAvailable, aCacheEntryId, aCacheFetchCount,
-       aCacheExpirationTime, aCachedCharset, aSecurityInfoSerialization,
-       aSelfAddr, aPeerAddr, aCacheKey, aAltDataType, aAltDataLen,
-       aDeliveringAltData, aApplyConversion, aIsResolvedByTRR, aTiming,
-       aAllRedirectsSameOrigin, aMultiPartID, aIsLastPartOfMultiPart,
-       aOpenerPolicy]() {
-        self->OnStartRequest(
-            aChannelStatus, aResponseHead, aUseResponseHead, aRequestHeaders,
-            aLoadInfoForwarder, aIsFromCache, aIsRacing, aCacheEntryAvailable,
-            aCacheEntryId, aCacheFetchCount, aCacheExpirationTime,
-            aCachedCharset, aSecurityInfoSerialization, aSelfAddr, aPeerAddr,
-            aCacheKey, aAltDataType, aAltDataLen, aDeliveringAltData,
-            aApplyConversion, aIsResolvedByTRR, aTiming,
-            aAllRedirectsSameOrigin, aMultiPartID, aIsLastPartOfMultiPart,
-            aOpenerPolicy);
+      this, [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
+             aUseResponseHead, aRequestHeaders, aArgs]() {
+        self->OnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
+                             aArgs);
       }));
 
   {
@@ -452,7 +423,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     // We don't need to notify the background channel if this is a multipart
     // stream, since all messages will be sent over the main-thread IPDL in
     // that case.
-    if (mBgChild && !aMultiPartID) {
+    if (mBgChild && !aArgs.multiPartID()) {
       MOZ_RELEASE_ASSERT(gSocketTransportService);
       DebugOnly<nsresult> rv = gSocketTransportService->Dispatch(
           NewRunnableMethod(
@@ -479,21 +450,9 @@ static void ResourceTimingStructArgsToTimingsStruct(
 }
 
 void HttpChannelChild::OnStartRequest(
-    const nsresult& aChannelStatus, const nsHttpResponseHead& aResponseHead,
-    const bool& aUseResponseHead, const nsHttpHeaderArray& aRequestHeaders,
-    const ParentLoadInfoForwarderArgs& aLoadInfoForwarder,
-    const bool& aIsFromCache, const bool& aIsRacing,
-    const bool& aCacheEntryAvailable, const uint64_t& aCacheEntryId,
-    const int32_t& aCacheFetchCount, const uint32_t& aCacheExpirationTime,
-    const nsCString& aCachedCharset,
-    const nsCString& aSecurityInfoSerialization, const NetAddr& aSelfAddr,
-    const NetAddr& aPeerAddr, const uint32_t& aCacheKey,
-    const nsCString& aAltDataType, const int64_t& aAltDataLen,
-    const bool& aDeliveringAltData, const bool& aApplyConversion,
-    const bool& aIsResolvedByTRR, const ResourceTimingStructArgs& aTiming,
-    const bool& aAllRedirectsSameOrigin, const Maybe<uint32_t>& aMultiPartID,
-    const bool& aIsLastPartOfMultiPart,
-    const nsILoadInfo::CrossOriginOpenerPolicy& aOpenerPolicy) {
+    const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
+    const nsHttpHeaderArray& aRequestHeaders,
+    const HttpChannelOnStartRequestArgs& aArgs) {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -513,10 +472,10 @@ void HttpChannelChild::OnStartRequest(
     return;
   }
 
-  mComputedCrossOriginOpenerPolicy = aOpenerPolicy;
+  mComputedCrossOriginOpenerPolicy = aArgs.openerPolicy();
 
   if (!mCanceled && NS_SUCCEEDED(mStatus)) {
-    mStatus = aChannelStatus;
+    mStatus = aArgs.channelStatus();
   }
 
   // Cookies headers should not be visible to the child process
@@ -526,38 +485,38 @@ void HttpChannelChild::OnStartRequest(
   if (aUseResponseHead && !mCanceled)
     mResponseHead = MakeUnique<nsHttpResponseHead>(aResponseHead);
 
-  if (!aSecurityInfoSerialization.IsEmpty()) {
-    nsresult rv = NS_DeserializeObject(aSecurityInfoSerialization,
-                                       getter_AddRefs(mSecurityInfo));
+  if (!aArgs.securityInfoSerialization().IsEmpty()) {
+    [[maybe_unused]] nsresult rv = NS_DeserializeObject(
+        aArgs.securityInfoSerialization(), getter_AddRefs(mSecurityInfo));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                           "Deserializing security info should not fail");
-    Unused << rv;  // So we don't get an unused error in release builds.
   }
 
-  ipc::MergeParentLoadInfoForwarder(aLoadInfoForwarder, mLoadInfo);
+  ipc::MergeParentLoadInfoForwarder(aArgs.loadInfoForwarder(), mLoadInfo);
 
-  mIsFromCache = aIsFromCache;
-  mIsRacing = aIsRacing;
-  mCacheEntryAvailable = aCacheEntryAvailable;
-  mCacheEntryId = aCacheEntryId;
-  mCacheFetchCount = aCacheFetchCount;
-  mCacheExpirationTime = aCacheExpirationTime;
-  mCachedCharset = aCachedCharset;
-  mSelfAddr = aSelfAddr;
-  mPeerAddr = aPeerAddr;
+  mIsFromCache = aArgs.isFromCache();
+  mIsRacing = aArgs.isRacing();
+  mCacheEntryAvailable = aArgs.cacheEntryAvailable();
+  mCacheEntryId = aArgs.cacheEntryId();
+  mCacheFetchCount = aArgs.cacheFetchCount();
+  mCacheExpirationTime = aArgs.cacheExpirationTime();
+  mCachedCharset = aArgs.cachedCharset();
+  mSelfAddr = aArgs.selfAddr();
+  mPeerAddr = aArgs.peerAddr();
 
-  mAvailableCachedAltDataType = aAltDataType;
-  mDeliveringAltData = aDeliveringAltData;
-  mAltDataLength = aAltDataLen;
-  mResolvedByTRR = aIsResolvedByTRR;
+  mRedirectCount = aArgs.redirectCount();
+  mAvailableCachedAltDataType = aArgs.altDataType();
+  mDeliveringAltData = aArgs.deliveringAltData();
+  mAltDataLength = aArgs.altDataLength();
+  mResolvedByTRR = aArgs.isResolvedByTRR();
 
-  SetApplyConversion(aApplyConversion);
+  SetApplyConversion(aArgs.applyConversion());
 
   mAfterOnStartRequestBegun = true;
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  mCacheKey = aCacheKey;
+  mCacheKey = aArgs.cacheKey();
 
   // replace our request headers with what actually got sent in the parent
   mRequestHead.SetHeaders(aRequestHeaders);
@@ -569,12 +528,12 @@ void HttpChannelChild::OnStartRequest(
 
   mTracingEnabled = false;
 
-  ResourceTimingStructArgsToTimingsStruct(aTiming, mTransactionTimings);
+  ResourceTimingStructArgsToTimingsStruct(aArgs.timing(), mTransactionTimings);
 
-  mAllRedirectsSameOrigin = aAllRedirectsSameOrigin;
+  mAllRedirectsSameOrigin = aArgs.allRedirectsSameOrigin();
 
-  mMultiPartID = aMultiPartID;
-  mIsLastPartOfMultiPart = aIsLastPartOfMultiPart;
+  mMultiPartID = aArgs.multiPartID();
+  mIsLastPartOfMultiPart = aArgs.isLastPartOfMultiPart();
 
   DoOnStartRequest(this, nullptr);
 }
@@ -1155,8 +1114,7 @@ void HttpChannelChild::OnStopRequest(
   if (mMultiPartID) {
     LOG(
         ("HttpChannelChild::OnStopRequest  - Expecting future parts on a "
-         "multipart channel"
-         "postpone cleaning up."));
+         "multipart channel postpone cleaning up."));
     return;
   }
 
@@ -1277,8 +1235,7 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   if (mMultiPartID) {
     LOG(
         ("HttpChannelChild::DoOnStopRequest  - Expecting future parts on a "
-         "multipart channel"
-         "not releasing listeners."));
+         "multipart channel not releasing listeners."));
     mOnStopRequestCalled = false;
     mOnStartRequestCalled = false;
     return;

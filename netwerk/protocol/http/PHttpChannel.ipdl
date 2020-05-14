@@ -104,33 +104,10 @@ parent:
   async __delete__();
 
 child:
-  async OnStartRequest(nsresult            channelStatus,
-                       nsHttpResponseHead  responseHead,
+  async OnStartRequest(nsHttpResponseHead  responseHead,
                        bool                useResponseHead,
                        nsHttpHeaderArray   requestHeaders,
-                       ParentLoadInfoForwarderArgs loadInfoForwarder,
-                       bool                isFromCache,
-                       bool                isRacing,
-                       bool                cacheEntryAvailable,
-                       uint64_t            cacheEntryId,
-                       int32_t             cacheFetchCount,
-                       uint32_t            cacheExpirationTime,
-                       nsCString           cachedCharset,
-                       nsCString           securityInfoSerialization,
-                       NetAddr             selfAddr,
-                       NetAddr             peerAddr,
-                       int16_t             redirectCount,
-                       uint32_t            cacheKey,
-                       nsCString           altDataType,
-                       int64_t             altDataLength,
-                       bool                deliveringAltData,
-                       bool                applyConversion,
-                       bool                isResolvedByTRR,
-                       ResourceTimingStructArgs timing,
-                       bool                allRedirectsSameOrigin,
-                       uint32_t?           multiPartID,
-                       bool                isLastPartOfMultiPart,
-                       CrossOriginOpenerPolicy openerPolicy);
+                       HttpChannelOnStartRequestArgs args);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message
