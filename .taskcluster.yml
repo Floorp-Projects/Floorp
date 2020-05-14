@@ -63,6 +63,7 @@ tasks:
           $if: 'repository.project == "try"'
           then: {$fromNow: '28 days'}
           else: {$fromNow: '1 year'}
+        trust_domain: gecko
       in:
         taskId: {$if: 'tasks_for != "action"', then: '${ownTaskId}'}
         taskGroupId:
@@ -71,7 +72,7 @@ tasks:
             '${action.taskGroupId}'
           else:
             '${ownTaskId}' # same as taskId; this is how automation identifies a decision tsak
-        schedulerId: 'gecko-level-${repository.level}'
+        schedulerId: '${trust_domain}-level-${repository.level}'
 
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 day'}
@@ -96,7 +97,7 @@ tasks:
                   name: "Decision Task for cron job ${cron.job_name}"
                   description: 'Created by a [cron task](https://tools.taskcluster.net/tasks/${cron.task_id})'
 
-        provisionerId: "gecko-${repository.level}"
+        provisionerId: "${trust_domain}-${repository.level}"
         workerType: "decision"
 
         tags:
@@ -119,9 +120,9 @@ tasks:
             - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
             - $if: 'tasks_for == "hg-push"'
               then:
-                - "index.gecko.v2.${repository.project}.latest.taskgraph.decision"
-                - "index.gecko.v2.${repository.project}.revision.${push.revision}.taskgraph.decision"
-                - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
+                - "index.${trust_domain}.v2.${repository.project}.latest.taskgraph.decision"
+                - "index.${trust_domain}.v2.${repository.project}.revision.${push.revision}.taskgraph.decision"
+                - "index.${trust_domain}.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
                 - "notify.email.${ownerEmail}.on-failed"
                 - "notify.email.${ownerEmail}.on-exception"
                 # Send a notification email if the push comes from try
@@ -131,14 +132,14 @@ tasks:
               else:
                 $if: 'tasks_for == "action"'
                 then:
-                - "index.gecko.v2.${repository.project}.revision.${push.revision}.taskgraph.actions.${ownTaskId}"
-                - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
+                - "index.${trust_domain}.v2.${repository.project}.revision.${push.revision}.taskgraph.actions.${ownTaskId}"
+                - "index.${trust_domain}.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
                 else:  # cron
-                - "index.gecko.v2.${repository.project}.latest.taskgraph.decision-${cron.job_name}"
-                - "index.gecko.v2.${repository.project}.revision.${push.revision}.taskgraph.decision-${cron.job_name}"
-                - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision-${cron.job_name}"
+                - "index.${trust_domain}.v2.${repository.project}.latest.taskgraph.decision-${cron.job_name}"
+                - "index.${trust_domain}.v2.${repository.project}.revision.${push.revision}.taskgraph.decision-${cron.job_name}"
+                - "index.${trust_domain}.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision-${cron.job_name}"
                 # list each cron task on this revision, so actions can find them
-                - 'index.gecko.v2.${repository.project}.revision.${push.revision}.cron.${ownTaskId}'
+                - 'index.${trust_domain}.v2.${repository.project}.revision.${push.revision}.cron.${ownTaskId}'
                 # BUG 1500166 Notify ciduty by email if a nightly hook fails
                 - $if: 'repository.project != "try"'
                   then:
@@ -152,7 +153,7 @@ tasks:
           then:
             - 'assume:repo:${repoUrl[8:]}:branch:default'
             - 'queue:route:notify.email.${ownerEmail}.*'
-            - 'in-tree:hook-action:project-gecko/in-tree-action-${repository.level}-*'
+            - 'in-tree:hook-action:project-${trust_domain}/in-tree-action-${repository.level}-*'
           else:
             $if: 'tasks_for == "action"'
             then:
@@ -211,7 +212,7 @@ tasks:
                   ACTION_CALLBACK: '${action.cb_name}'
 
           cache:
-            gecko-level-${repository.level}-checkouts-sparse-v2: /builds/worker/checkouts
+            "${trust_domain}-level-${repository.level}-checkouts-sparse-v2": /builds/worker/checkouts
 
           features:
             taskclusterProxy: true
