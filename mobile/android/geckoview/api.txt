@@ -1439,6 +1439,7 @@ package org.mozilla.geckoview {
     method @UiThread public void setTabDelegate(@Nullable WebExtension.TabDelegate);
     field public final long flags;
     field @NonNull public final String id;
+    field public final boolean isBuiltIn;
     field @NonNull public final String location;
     field @Nullable public final WebExtension.MetaData metaData;
   }
