@@ -44,6 +44,18 @@ body {
   overflow: hidden auto;
 }
 
+@media (prefers-reduced-motion) {
+  /* Setting border-inline-end on #sidebar makes it a focusable element */
+  #sidebar::after {
+    content: "";
+    width: 1px;
+    height: 100%;
+    background-color: var(--in-content-border-color);
+    inset-inline-end: 0;
+    position: absolute;
+  }
+}
+
 #categories {
   display: flex;
   flex-direction: column;
