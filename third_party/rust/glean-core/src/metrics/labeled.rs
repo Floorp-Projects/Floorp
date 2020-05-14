@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::Regex;
 
 use crate::common_metric_data::CommonMetricData;
@@ -13,29 +13,27 @@ use crate::Glean;
 const MAX_LABELS: usize = 16;
 const OTHER_LABEL: &str = "__other__";
 const MAX_LABEL_LENGTH: usize = 61;
-lazy_static! {
-    /// This regex is used for matching against labels and should allow for dots, underscores,
-    /// and/or hyphens. Labels are also limited to starting with either a letter or an
-    /// underscore character.
-    /// Some examples of good and bad labels:
-    ///
-    /// Good:
-    /// * `this.is.fine`
-    /// * `this_is_fine_too`
-    /// * `this.is_still_fine`
-    /// * `thisisfine`
-    /// * `_.is_fine`
-    /// * `this.is-fine`
-    /// * `this-is-fine`
-    /// Bad:
-    /// * `this.is.not_fine_due_tu_the_length_being_too_long_i_thing.i.guess`
-    /// * `1.not_fine`
-    /// * `this.$isnotfine`
-    /// * `-.not_fine`
-    static ref LABEL_REGEX: Regex = Regex::new(
-        "^[a-z_][a-z0-9_-]{0,29}(\\.[a-z_][a-z0-9_-]{0,29})*$"
-    ).unwrap();
-}
+
+/// This regex is used for matching against labels and should allow for dots, underscores,
+/// and/or hyphens. Labels are also limited to starting with either a letter or an
+/// underscore character.
+/// Some examples of good and bad labels:
+///
+/// Good:
+/// * `this.is.fine`
+/// * `this_is_fine_too`
+/// * `this.is_still_fine`
+/// * `thisisfine`
+/// * `_.is_fine`
+/// * `this.is-fine`
+/// * `this-is-fine`
+/// Bad:
+/// * `this.is.not_fine_due_tu_the_length_being_too_long_i_thing.i.guess`
+/// * `1.not_fine`
+/// * `this.$isnotfine`
+/// * `-.not_fine`
+static LABEL_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new("^[a-z_][a-z0-9_-]{0,29}(\\.[a-z_][a-z0-9_-]{0,29})*$").unwrap());
 
 /// A labeled metric.
 ///

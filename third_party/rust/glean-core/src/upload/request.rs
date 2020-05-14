@@ -7,20 +7,20 @@
 use std::collections::HashMap;
 
 use chrono::prelude::{DateTime, Utc};
-use serde_json::Value as JsonValue;
+use serde_json::{self, Value as JsonValue};
 
 /// Represents a request to upload a ping.
 #[derive(PartialEq, Debug, Clone)]
 pub struct PingRequest {
     /// The Job ID to identify this request,
     /// this is the same as the ping UUID.
-    pub uuid: String,
+    pub document_id: String,
     /// The path for the server to upload the ping to.
     pub path: String,
     /// The body of the request.
     pub body: JsonValue,
     /// A map with all the headers to be sent with the request.
-    pub headers: HashMap<String, String>,
+    pub headers: HashMap<&'static str, String>,
 }
 
 impl PingRequest {
@@ -28,15 +28,16 @@ impl PingRequest {
     ///
     /// Automatically creates the default request headers.
     /// Clients may add more headers such as `userAgent` to this list.
-    pub fn new(uuid: &str, path: &str, body: JsonValue) -> Self {
+    pub fn new(document_id: &str, path: &str, body: JsonValue) -> Self {
         Self {
-            uuid: uuid.into(),
+            document_id: document_id.into(),
             path: path.into(),
             body,
             headers: Self::create_request_headers(),
         }
     }
 
+    /// Verifies if current request is for a deletion-request ping.
     pub fn is_deletion_request(&self) -> bool {
         // The path format should be `/submit/<app_id>/<ping_name>/<schema_version/<doc_id>`
         self.path
@@ -47,19 +48,16 @@ impl PingRequest {
     }
 
     /// Creates the default request headers.
-    fn create_request_headers() -> HashMap<String, String> {
+    fn create_request_headers() -> HashMap<&'static str, String> {
         let mut headers = HashMap::new();
         let date: DateTime<Utc> = Utc::now();
-        headers.insert("Date".to_string(), date.to_string());
-        headers.insert("X-Client-Type".to_string(), "Glean".to_string());
+        headers.insert("Date", date.to_string());
+        headers.insert("X-Client-Type", "Glean".to_string());
         headers.insert(
-            "Content-Type".to_string(),
+            "Content-Type",
             "application/json; charset=utf-8".to_string(),
         );
-        headers.insert(
-            "X-Client-Version".to_string(),
-            env!("CARGO_PKG_VERSION").to_string(),
-        );
+        headers.insert("X-Client-Version", crate::GLEAN_VERSION.to_string());
         headers
     }
 }

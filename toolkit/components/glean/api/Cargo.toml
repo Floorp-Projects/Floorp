@@ -7,7 +7,7 @@ publish = false
 
 [dependencies]
 chrono = "0.4.10"
-glean-core = "25.1.0"
+glean-core = "30.0.0"
 log = "0.4"
 once_cell = "1.2.0"
 uuid = { version = "0.8.1", features = ["v4"] }

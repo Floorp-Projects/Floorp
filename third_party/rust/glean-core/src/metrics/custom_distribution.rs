@@ -2,14 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::collections::HashMap;
-
-use serde::Serialize;
-
 use crate::error_recording::{record_error, ErrorType};
 use crate::histogram::{Bucketing, Histogram, HistogramType};
-use crate::metrics::Metric;
-use crate::metrics::MetricType;
+use crate::metrics::{DistributionData, Metric, MetricType};
 use crate::storage::StorageManager;
 use crate::CommonMetricData;
 use crate::Glean;
@@ -26,18 +21,11 @@ pub struct CustomDistributionMetric {
     histogram_type: HistogramType,
 }
 
-/// A serializable representation of a snapshotted histogram.
-#[derive(Debug, Serialize)]
-pub struct Snapshot {
-    values: HashMap<u64, u64>,
-    sum: u64,
-}
-
 /// Create a snapshot of the histogram.
 ///
 /// The snapshot can be serialized into the payload format.
-pub(crate) fn snapshot<B: Bucketing>(hist: &Histogram<B>) -> Snapshot {
-    Snapshot {
+pub(crate) fn snapshot<B: Bucketing>(hist: &Histogram<B>) -> DistributionData {
+    DistributionData {
         values: hist.snapshot_values(),
         sum: hist.sum(),
     }
@@ -161,19 +149,15 @@ impl CustomDistributionMetric {
     /// Get the currently stored histogram.
     ///
     /// This doesn't clear the stored value.
-    pub fn test_get_value(
-        &self,
-        glean: &Glean,
-        storage_name: &str,
-    ) -> Option<Histogram<Box<dyn Bucketing>>> {
+    pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<DistributionData> {
         match StorageManager.snapshot_metric(
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
         ) {
             // Boxing the value, in order to return either of the possible buckets
-            Some(Metric::CustomDistributionExponential(hist)) => Some(hist.boxed()),
-            Some(Metric::CustomDistributionLinear(hist)) => Some(hist.boxed()),
+            Some(Metric::CustomDistributionExponential(hist)) => Some(snapshot(&hist)),
+            Some(Metric::CustomDistributionLinear(hist)) => Some(snapshot(&hist)),
             _ => None,
         }
     }
@@ -189,6 +173,6 @@ impl CustomDistributionMetric {
         storage_name: &str,
     ) -> Option<String> {
         self.test_get_value(glean, storage_name)
-            .map(|hist| serde_json::to_string(&snapshot(&hist)).unwrap())
+            .map(|snapshot| serde_json::to_string(&snapshot).unwrap())
     }
 }
