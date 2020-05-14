@@ -1089,28 +1089,19 @@ void wr_schedule_render(mozilla::wr::WrWindowId aWindowId) {
 }
 
 static void NotifyDidSceneBuild(RefPtr<layers::CompositorBridgeParent> aBridge,
-                                const nsTArray<wr::RenderRoot>& aRenderRoots,
                                 RefPtr<const wr::WebRenderPipelineInfo> aInfo) {
-  aBridge->NotifyDidSceneBuild(aRenderRoots, aInfo);
+  aBridge->NotifyDidSceneBuild(aInfo);
 }
 
 void wr_finished_scene_build(mozilla::wr::WrWindowId aWindowId,
-                             const mozilla::wr::WrDocumentId* aDocumentIds,
-                             size_t aDocumentIdsCount,
                              mozilla::wr::WrPipelineInfo* aInfo) {
   RefPtr<mozilla::layers::CompositorBridgeParent> cbp = mozilla::layers::
       CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
   RefPtr<wr::WebRenderPipelineInfo> info = new wr::WebRenderPipelineInfo();
   info->Raw() = std::move(*aInfo);
   if (cbp) {
-    nsTArray<wr::RenderRoot> renderRoots;
-    renderRoots.SetLength(aDocumentIdsCount);
-    for (size_t i = 0; i < aDocumentIdsCount; ++i) {
-      renderRoots[i] = wr::RenderRootFromId(aDocumentIds[i]);
-    }
-    layers::CompositorThread()->Dispatch(
-        NewRunnableFunction("NotifyDidSceneBuild", &NotifyDidSceneBuild, cbp,
-                            std::move(renderRoots), info));
+    layers::CompositorThread()->Dispatch(NewRunnableFunction(
+        "NotifyDidSceneBuild", &NotifyDidSceneBuild, cbp, info));
   }
 }
 
