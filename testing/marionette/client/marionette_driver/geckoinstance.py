@@ -44,8 +44,6 @@ class GeckoInstance(object):
         "apz.content_response_timeout": 60000,
 
         # Do not send Firefox health reports to the production server
-        # removed in Firefox 59
-        "datareporting.healthreport.about.reportUrl": "http://%(server)s/dummy/abouthealthreport/",
         "datareporting.healthreport.documentServerURI": "http://%(server)s/dummy/healthreport/",
 
         # Do not show datareporting policy notifications which can interfer with tests
