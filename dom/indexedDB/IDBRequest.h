@@ -13,6 +13,7 @@
 #include "mozilla/dom/IDBRequestBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
+#include "ReportInternalError.h"
 #include "SafeRefPtr.h"
 
 #define PRIVATE_IDBREQUEST_IID                       \
@@ -63,8 +64,6 @@ class IDBRequest : public DOMEventTargetHelper {
   bool mHaveResultOrErrorCode;
 
  public:
-  class ResultCallback;
-
   [[nodiscard]] static RefPtr<IDBRequest> Create(
       JSContext* aCx, IDBDatabase* aDatabase,
       SafeRefPtr<IDBTransaction> aTransaction);
@@ -90,7 +89,55 @@ class IDBRequest : public DOMEventTargetHelper {
 
   void Reset();
 
-  void SetResultCallback(ResultCallback* aCallback);
+  template <typename ResultCallback>
+  void SetResult(const ResultCallback& aCallback) {
+    AssertIsOnOwningThread();
+    MOZ_ASSERT(!mHaveResultOrErrorCode);
+    MOZ_ASSERT(mResultVal.isUndefined());
+    MOZ_ASSERT(!mError);
+
+    // Already disconnected from the owner.
+    if (!GetOwnerGlobal()) {
+      SetError(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      return;
+    }
+
+    // See this global is still valid.
+    if (NS_WARN_IF(NS_FAILED(CheckCurrentGlobalCorrectness()))) {
+      SetError(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      return;
+    }
+
+    AutoJSAPI autoJS;
+    if (!autoJS.Init(GetOwnerGlobal())) {
+      IDB_WARNING("Failed to initialize AutoJSAPI!");
+      SetError(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      return;
+    }
+
+    JSContext* cx = autoJS.cx();
+
+    JS::Rooted<JS::Value> result(cx);
+    nsresult rv = aCallback(cx, &result);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // This can only fail if the structured clone contains a mutable file
+      // and the child is not in the main thread and main process.
+      // In that case CreateAndWrapMutableFile() returns false which shows up
+      // as NS_ERROR_DOM_DATA_CLONE_ERR here.
+      MOZ_ASSERT(rv == NS_ERROR_DOM_DATA_CLONE_ERR);
+
+      // We are not setting a result or an error object here since we want to
+      // throw an exception when the 'result' property is being touched.
+      return;
+    }
+
+    mError = nullptr;
+
+    mResultVal = result;
+    mozilla::HoldJSObjects(this);
+
+    mHaveResultOrErrorCode = true;
+  }
 
   void SetError(nsresult aRv);
 
@@ -186,15 +233,6 @@ class IDBRequest : public DOMEventTargetHelper {
   void InitMembers();
 
   void ConstructResult();
-};
-
-class NS_NO_VTABLE IDBRequest::ResultCallback {
- public:
-  virtual nsresult GetResult(JSContext* aCx,
-                             JS::MutableHandle<JS::Value> aResult) = 0;
-
- protected:
-  ResultCallback() = default;
 };
 
 class IDBOpenDBRequest final : public IDBRequest {
