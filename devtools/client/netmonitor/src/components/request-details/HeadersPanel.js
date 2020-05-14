@@ -537,8 +537,10 @@ class HeadersPanel extends Component {
       return div({ className: "empty-notice" }, HEADERS_EMPTY_TEXT);
     }
 
-    const items = [
-      {
+    const items = [];
+
+    if (responseHeaders?.headers.length) {
+      items.push({
         component: PropertiesView,
         componentProps: {
           object: this.getProperties(responseHeaders, RESPONSE_HEADERS),
@@ -564,8 +566,11 @@ class HeadersPanel extends Component {
           filterText,
           targetSearchResult
         ),
-      },
-      {
+      });
+    }
+
+    if (requestHeaders?.headers.length) {
+      items.push({
         component: PropertiesView,
         componentProps: {
           object: this.getProperties(requestHeaders, REQUEST_HEADERS),
@@ -591,8 +596,8 @@ class HeadersPanel extends Component {
           filterText,
           targetSearchResult
         ),
-      },
-    ];
+      });
+    }
 
     if (uploadHeaders?.headers.length) {
       items.push({

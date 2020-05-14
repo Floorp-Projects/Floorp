@@ -316,10 +316,6 @@
   cursor: pointer;
 }
 
-.network-monitor .accordion-header-label {
-  color: var(--theme-icon-dimmed-color)
-}
-
 .network-monitor .raw-headers-toggle .headers-summary-label {
   color: var(--theme-toolbar-color);
 }
