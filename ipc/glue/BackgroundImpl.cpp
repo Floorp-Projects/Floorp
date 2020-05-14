@@ -93,9 +93,6 @@ void AssertIsNotOnMainThread() { THREADSAFETY_ASSERT(!NS_IsMainThread()); }
 class ParentImpl final : public BackgroundParentImpl {
   friend class mozilla::ipc::BackgroundParent;
 
- public:
-  class CreateCallback;
-
  private:
   class ShutdownObserver;
   class ForceCloseBackgroundActorsRunnable;
@@ -621,19 +618,6 @@ class ParentImpl::CreateActorHelper final : public Runnable {
   nsresult RunOnMainThread();
 
   NS_DECL_NSIRUNNABLE
-};
-
-class NS_NO_VTABLE ParentImpl::CreateCallback {
- public:
-  NS_INLINE_DECL_REFCOUNTING(CreateCallback)
-
-  virtual void Success(already_AddRefed<ParentImpl> aActor,
-                       MessageLoop* aMessageLoop) = 0;
-
-  virtual void Failure() = 0;
-
- protected:
-  virtual ~CreateCallback() = default;
 };
 
 // -----------------------------------------------------------------------------
