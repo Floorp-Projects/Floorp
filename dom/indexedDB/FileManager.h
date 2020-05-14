@@ -68,7 +68,7 @@ class FileManager final : public FileManagerBase<FileManager>,
 
   bool EnforcingQuota() const { return mEnforcingQuota; }
 
-  nsresult Init(nsIFile* aDirectory, mozIStorageConnection& aConnection);
+  nsresult Init(nsIFile* aDirectory, mozIStorageConnection* aConnection);
 
   [[nodiscard]] nsCOMPtr<nsIFile> GetDirectory();
 

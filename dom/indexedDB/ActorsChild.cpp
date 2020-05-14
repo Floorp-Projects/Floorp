@@ -3128,7 +3128,7 @@ BackgroundRequestChild::PreprocessHelper::OnFileMetadataReady(
 
 BackgroundCursorChildBase::BackgroundCursorChildBase(IDBRequest* const aRequest,
                                                      const Direction aDirection)
-    : mRequest(WrapNotNull(aRequest)),
+    : mRequest(aRequest),
       mTransaction(aRequest->MaybeTransactionRef()),
       mStrongRequest(aRequest),
       mDirection(aDirection) {
@@ -3140,7 +3140,7 @@ BackgroundCursorChild<CursorType>::BackgroundCursorChild(IDBRequest* aRequest,
                                                          SourceType* aSource,
                                                          Direction aDirection)
     : BackgroundCursorChildBase(aRequest, aDirection),
-      mSource(WrapNotNull(aSource)),
+      mSource(aSource),
       mCursor(nullptr),
       mInFlightResponseInvalidationNeeded(false) {
   aSource->AssertIsOnOwningThread();
