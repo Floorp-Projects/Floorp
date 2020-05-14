@@ -140,7 +140,10 @@ tasks:
                                         $if: 'tasks_for == "action"'
                                         then:
                                             name: "Action: ${action.title}"
-                                            description: '${action.description}'
+                                            description: |
+                                                ${action.description}
+
+                                                Action triggered by clientID `${clientId}`
                                         else:
                                             name: "Decision Task for cron job ${cron.job_name}"
                                             description: 'Created by a [cron task](https://firefox-ci-tc.services.mozilla.com/tasks/${cron.task_id})'
@@ -324,6 +327,7 @@ tasks:
                                                 taskGroupId: '${action.taskGroupId}'
                                                 taskId: {$eval: 'taskId'}
                                                 input: {$eval: 'input'}
+                                                clientId: {$eval: 'clientId'}
                                   - $if: 'tasks_for == "cron"'
                                     then:
                                         cron: {$json: {$eval: 'cron'}}
