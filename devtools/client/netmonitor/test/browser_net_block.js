@@ -28,17 +28,34 @@ add_task(async function() {
   // Capture normal request
   let normalRequestState;
   let normalRequestSize;
+  let normalHeadersSectionSize;
+  let normalFirstHeaderSectionTitle;
   {
-    const firstRequest = document.querySelectorAll(".request-list-item")[0];
-    const waitForHeaders = waitUntil(() =>
-      document.querySelector(".headers-overview")
+    // Wait for the response and request header sections
+    const waitForHeaderSections = waitForDOM(
+      document,
+      "#headers-panel .accordion-item",
+      2
     );
+
+    const firstRequest = document.querySelectorAll(".request-list-item")[0];
     EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
-    await waitForHeaders;
+
+    await waitForHeaderSections;
+
+    const headerSections = document.querySelectorAll(
+      "#headers-panel .accordion-item"
+    );
     normalRequestState = getSelectedRequest(store.getState());
     normalRequestSize = firstRequest.querySelector(".requests-list-transferred")
       .textContent;
+    normalHeadersSectionSize = headerSections.length;
+    normalFirstHeaderSectionTitle = headerSections[0].querySelector(
+      ".accordion-header-label"
+    ).textContent;
+
     info("Captured normal request");
+
     // Mark as blocked
     EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
     const contextBlock = getContextMenuItem(
@@ -67,14 +84,34 @@ add_task(async function() {
   // Capture blocked request, then unblock
   let blockedRequestState;
   let blockedRequestSize;
+  let blockedHeadersSectionSize;
+  let blockedFirstHeaderSectionTitle;
   {
+    const waitForHeaderSections = waitForDOM(
+      document,
+      "#headers-panel .accordion-item",
+      1
+    );
+
     const firstRequest = document.querySelectorAll(".request-list-item")[0];
+    EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
+
+    await waitForHeaderSections;
+
+    const headerSections = document.querySelectorAll(
+      "#headers-panel .accordion-item"
+    );
     blockedRequestSize = firstRequest.querySelector(
       ".requests-list-transferred"
     ).textContent;
-    EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
     blockedRequestState = getSelectedRequest(store.getState());
+    blockedHeadersSectionSize = headerSections.length;
+    blockedFirstHeaderSectionTitle = headerSections[0].querySelector(
+      ".accordion-header-label"
+    ).textContent;
+
     info("Captured blocked request");
+
     // Mark as unblocked
     EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
     const contextUnblock = getContextMenuItem(
@@ -113,11 +150,21 @@ add_task(async function() {
 
   ok(!normalRequestState.blockedReason, "Normal request is not blocked");
   ok(!normalRequestSize.includes("Blocked"), "Normal request has a size");
+  ok(normalHeadersSectionSize == 2, "Both header sections are showing");
+  ok(
+    normalFirstHeaderSectionTitle.includes("Response"),
+    "The response header section is visible for normal requests"
+  );
 
   ok(blockedRequestState.blockedReason, "Blocked request is blocked");
   ok(
     blockedRequestSize.includes("Blocked"),
     "Blocked request shows reason as size"
+  );
+  ok(blockedHeadersSectionSize == 1, "Only one header section is showing");
+  ok(
+    blockedFirstHeaderSectionTitle.includes("Request"),
+    "The response header section is not visible for blocked requests"
   );
 
   ok(!unblockedRequestState.blockedReason, "Unblocked request is not blocked");
