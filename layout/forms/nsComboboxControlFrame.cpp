@@ -1476,7 +1476,7 @@ class nsDisplayComboboxFocus : public nsPaintedDisplayItem {
   }
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayComboboxFocus)
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("ComboboxFocus", TYPE_COMBOBOX_FOCUS)
 };
 
@@ -1502,11 +1502,10 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   if (Document* doc = mContent->GetComposedDoc()) {
     nsPIDOMWindowOuter* window = doc->GetWindow();
     if (window && window->ShouldShowFocusRing()) {
-      nsPresContext* presContext = PresContext();
+      nsPresContext* pc = PresContext();
       const nsStyleDisplay* disp = StyleDisplay();
-      if ((!IsThemed(disp) ||
-           presContext->Theme()->ThemeWantsButtonInnerFocusRing(
-               disp->mAppearance)) &&
+      if (IsThemed(disp) &&
+          pc->Theme()->ThemeWantsButtonInnerFocusRing(disp->mAppearance) &&
           mDisplayFrame && IsVisibleForPainting()) {
         aLists.Content()->AppendNewToTop<nsDisplayComboboxFocus>(aBuilder,
                                                                  this);
