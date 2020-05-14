@@ -11,6 +11,7 @@
 #include "ServiceWorker.h"
 #include "ServiceWorkerManager.h"
 #include "js/Conversions.h"
+#include "js/Exception.h"  // JS::ExceptionStack, JS::StealPendingExceptionStack
 #include "js/TypeDecls.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/ErrorResult.h"
@@ -500,16 +501,14 @@ class MOZ_STACK_CLASS AutoCancel {
     MOZ_ASSERT(!aRv.Failed());
 
     // Let's take the pending exception.
-    JS::Rooted<JS::Value> exn(aCx);
-    if (!JS_GetPendingException(aCx, &exn)) {
+    JS::ExceptionStack exnStack(aCx);
+    if (!JS::StealPendingExceptionStack(aCx, &exnStack)) {
       return;
     }
 
-    JS_ClearPendingException(aCx);
-
     // Converting the exception in a JS::ErrorReportBuilder.
     JS::ErrorReportBuilder report(aCx);
-    if (!report.init(aCx, exn, JS::ErrorReportBuilder::WithSideEffects)) {
+    if (!report.init(aCx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
       JS_ClearPendingException(aCx);
       return;
     }

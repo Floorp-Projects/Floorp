@@ -8,6 +8,7 @@
 
 #include <utility>
 
+#include "js/Exception.h"  // JS::ExceptionStack, JS::StealPendingExceptionStack
 #include "jsapi.h"
 
 #include "nsCOMPtr.h"
@@ -1051,16 +1052,14 @@ class MOZ_STACK_CLASS FetchEventOp::AutoCancel {
     MOZ_ASSERT(!aRv.Failed());
 
     // Let's take the pending exception.
-    JS::Rooted<JS::Value> exn(aCx);
-    if (!JS_GetPendingException(aCx, &exn)) {
+    JS::ExceptionStack exnStack(aCx);
+    if (!JS::StealPendingExceptionStack(aCx, &exnStack)) {
       return;
     }
 
-    JS_ClearPendingException(aCx);
-
     // Converting the exception in a JS::ErrorReportBuilder.
     JS::ErrorReportBuilder report(aCx);
-    if (!report.init(aCx, exn, JS::ErrorReportBuilder::WithSideEffects)) {
+    if (!report.init(aCx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
       JS_ClearPendingException(aCx);
       return;
     }
