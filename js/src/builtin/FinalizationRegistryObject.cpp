@@ -158,7 +158,7 @@ const JSClassOps FinalizationRegistrationsObject::classOps_ = {
 /* static */
 FinalizationRegistrationsObject* FinalizationRegistrationsObject::create(
     JSContext* cx) {
-  auto records = cx->make_unique<FinalizationRecordVector>(cx->zone());
+  auto records = cx->make_unique<WeakFinalizationRecordVector>(cx->zone());
   if (!records) {
     return nullptr;
   }
