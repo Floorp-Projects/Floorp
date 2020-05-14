@@ -5,6 +5,8 @@
 
 "use strict";
 
+loadChildScript("dom/quota/test/xpcshell/test_originWithCaret.js");
+
 async function testSteps() {
   Assert.throws(
     () => {
