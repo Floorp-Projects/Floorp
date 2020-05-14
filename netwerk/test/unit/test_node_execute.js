@@ -5,6 +5,8 @@
 
 "use strict";
 
+const { NodeServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+
 add_task(async function test_execute() {
   function f() {
     return "bla";
