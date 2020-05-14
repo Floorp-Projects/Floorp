@@ -142,11 +142,16 @@ void AppShutdown::Init(AppShutdownMode aMode) {
 }
 
 void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
-  if (aPhase == sFastShutdownPhase) {
-    StopLateWriteChecks();
+  // For writes which we want to ensure are recorded, we don't want to trip
+  // the late write checking code. Anything that writes to disk and which
+  // we don't want to skip should be listed out explicitly in this section.
+  if (aPhase == sFastShutdownPhase || aPhase == sLateWriteChecksPhase) {
     if (auto* cache = scache::StartupCache::GetSingletonNoInit()) {
       cache->EnsureShutdownWriteComplete();
     }
+  }
+  if (aPhase == sFastShutdownPhase) {
+    StopLateWriteChecks();
     RecordShutdownEndTimeStamp();
     MaybeDoRestart();
 
