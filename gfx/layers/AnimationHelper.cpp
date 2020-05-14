@@ -314,10 +314,11 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
     // Initialize animation value with base style.
     RefPtr<RawServoAnimationValue> currValue = group.mBaseStyle;
 
-    CanSkipCompose canSkipCompose = aPropertyAnimationGroups.Length() == 1 &&
-                                            group.mAnimations.Length() == 1
-                                        ? CanSkipCompose::IfPossible
-                                        : CanSkipCompose::No;
+    CanSkipCompose canSkipCompose =
+        aPreviousValue && aPropertyAnimationGroups.Length() == 1 &&
+                group.mAnimations.Length() == 1
+            ? CanSkipCompose::IfPossible
+            : CanSkipCompose::No;
 
     MOZ_ASSERT(
         !group.mAnimations.IsEmpty() ||
