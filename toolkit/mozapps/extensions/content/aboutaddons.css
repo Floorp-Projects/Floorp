@@ -44,12 +44,6 @@ body {
   overflow: hidden auto;
 }
 
-@media (prefers-reduced-motion) {
-  #sidebar {
-    border-inline-end: 1px solid var(--in-content-border-color);
-  }
-}
-
 #categories {
   display: flex;
   flex-direction: column;
