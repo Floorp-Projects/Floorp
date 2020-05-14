@@ -113,10 +113,12 @@ class Emulation extends Domain {
       );
     }
 
+    const { browsingContext } = this.session.target;
+
     if (userAgent.length == 0) {
-      await this.executeInChild("_setCustomUserAgent", null);
+      browsingContext.customUserAgent = null;
     } else if (this._isValidHTTPRequestHeaderValue(userAgent)) {
-      await this.executeInChild("_setCustomUserAgent", userAgent);
+      browsingContext.customUserAgent = userAgent;
     } else {
       throw new TypeError("Invalid characters found in userAgent");
     }
