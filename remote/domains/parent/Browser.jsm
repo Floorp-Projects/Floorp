@@ -20,7 +20,7 @@ class Browser extends Domain {
       "@mozilla.org/network/protocol;1?name=http"
     ].getService(Ci.nsIHttpProtocolHandler);
     return {
-      protocolVersion: "1",
+      protocolVersion: "1.3",
       product: (isHeadless ? "Headless " : "") + "Firefox",
       revision: "1",
       userAgent,
