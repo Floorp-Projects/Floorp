@@ -31,6 +31,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/Exception.h"
 #include "js/SourceText.h"
 #include "nsError.h"
 #include "nsContentPolicyUtils.h"
@@ -2250,8 +2251,9 @@ void ScriptExecutorRunnable::LogExceptionToConsole(
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
   MOZ_ASSERT(!mScriptLoader.mRv.Failed());
 
+  JS::ExceptionStack exnStack(aCx, exn, nullptr);
   JS::ErrorReportBuilder report(aCx);
-  if (!report.init(aCx, exn, JS::ErrorReportBuilder::WithSideEffects)) {
+  if (!report.init(aCx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
     JS_ClearPendingException(aCx);
     return;
   }
