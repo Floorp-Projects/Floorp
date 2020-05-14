@@ -600,4 +600,3 @@ fails-if(Android) != mask-resource.html about:blank # The image the test uses is
 == 1570363-1.html 1570363-1-ref.html
 
 fuzzy-if(webrender,0-1,0-92) fuzzy-if(!webrender,0-2,0-7882) == mask-opacity-invalidation-1.html mask-opacity-invalidation-1-ref.html # clip-path mask/opacity optimization
-== transform-animation-on-path.html transform-animation-on-path-ref.html
