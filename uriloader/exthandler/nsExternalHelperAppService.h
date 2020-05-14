@@ -24,6 +24,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIChannel.h"
 #include "nsIBackgroundFileSaver.h"
+#include "nsIHttpChannel.h"
 
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
@@ -439,6 +440,8 @@ class nsExternalAppHandler final : public nsIStreamListener,
    */
   void SendStatusChange(ErrorType type, nsresult aStatus, nsIRequest* aRequest,
                         const nsString& path);
+
+  void LogMessageToConsole(nsIHttpChannel* aChannel, const char* aMsg);
 
   /**
    * Set in nsHelperDlgApp.js. This is always null after the user has chosen an
