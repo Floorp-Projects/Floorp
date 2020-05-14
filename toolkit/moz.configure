@@ -964,15 +964,18 @@ set_config('ENABLE_MARIONETTE', marionette)
 # Turn off geckodriver for build configs we don't handle yet,
 # but allow --enable-geckodriver to override when compile environment is available.
 # --disable-tests implies disabling geckodriver.
+# Disable building in CI
 
-@depends('--enable-tests', target, cross_compiling, hazard_analysis, asan)
-def geckodriver_default(enable_tests, target, cross_compile, hazard, asan):
+@depends('--enable-tests', target, cross_compiling, hazard_analysis, asan, 'MOZ_AUTOMATION')
+def geckodriver_default(enable_tests, target, cross_compile, hazard, asan, automation):
     if not enable_tests:
         return False
     # geckodriver depends on winapi 0.2.8, which doesn't work with AArch64.
     if target.os == 'WINNT' and target.cpu == 'aarch64':
         return False
     if hazard or target.os == 'Android' or (asan and cross_compile):
+        return False
+    if automation:
         return False
     return True
 
