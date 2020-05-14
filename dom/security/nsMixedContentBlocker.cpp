@@ -844,39 +844,12 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
                              : eUserOverride,
                          requestingLocation);
 
-  // Check if the new flags we computed match the current state on the doc.
-  // This is really painful, and life would be eaiser if the doc had the same
-  // flags instead of bools.
-  bool stateChanged =
-      ((newState & nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT) ==
-       rootDoc->GetHasMixedActiveContentLoaded()) ||
-      ((newState &
-        nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT) ==
-       rootDoc->GetHasMixedActiveContentBlocked()) ||
-      ((newState &
-        nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT) ==
-       rootDoc->GetHasMixedDisplayContentLoaded()) ||
-      ((newState &
-        nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT) ==
-       rootDoc->GetHasMixedDisplayContentBlocked());
-
-  if (!stateChanged) {
+  if (rootDoc->GetMixedContentFlags() == newState) {
     return NS_OK;
   }
 
   // Copy the new state onto the Document flags.
-  if (newState & nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT) {
-    rootDoc->SetHasMixedActiveContentLoaded(true);
-  }
-  if (newState & nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
-    rootDoc->SetHasMixedActiveContentBlocked(true);
-  }
-  if (newState & nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT) {
-    rootDoc->SetHasMixedDisplayContentLoaded(true);
-  }
-  if (newState & nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT) {
-    rootDoc->SetHasMixedDisplayContentBlocked(true);
-  }
+  rootDoc->AddMixedContentFlags(newState);
 
   uint32_t state = nsIWebProgressListener::STATE_IS_BROKEN;
   MOZ_ALWAYS_SUCCEEDS(securityUI->GetState(&state));
