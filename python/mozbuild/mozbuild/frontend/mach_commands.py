@@ -228,18 +228,18 @@ class MozbuildFileCommands(MachCommandBase):
 
         components_json = os.path.join(out_dir, 'components.json')
         print('Writing %s' % components_json)
-        with open(components_json, 'wb') as fh:
+        with open(components_json, 'w') as fh:
             json.dump(component_by_path, fh, sort_keys=True, indent=2)
 
         missing_json = os.path.join(out_dir, 'missing.json')
         print('Writing %s' % missing_json)
-        with open(missing_json, 'wb') as fh:
+        with open(missing_json, 'w') as fh:
             json.dump({'missing': sorted(missing_component)}, fh, indent=2)
 
         indexed_components_json = os.path.join(out_dir,
                                                'components-normalized.json')
         print('Writing %s' % indexed_components_json)
-        with open(indexed_components_json, 'wb') as fh:
+        with open(indexed_components_json, 'w') as fh:
             # Don't indent so file is as small as possible.
             json.dump(normalized_component, fh, sort_keys=True)
 
