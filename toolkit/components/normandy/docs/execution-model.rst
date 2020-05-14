@@ -52,7 +52,7 @@ incompatible as to be harmful. For example, some changes to filter expression
 handling cannot be detected by filter expressions, and so older clients that
 receive filters using these new features would break.
 
-.. note:
+.. note::
 
     Capabilities were first introduced in Firefox 70. Clients prior to this
     do not check capabilities, and run all recipes provided. To accommodate
