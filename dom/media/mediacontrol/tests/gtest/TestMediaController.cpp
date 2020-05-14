@@ -43,23 +43,6 @@ TEST(MediaController, IsAnyMediaBeingControlled)
   ASSERT_TRUE(!controller->IsAnyMediaBeingControlled());
 }
 
-TEST(MediaController, ActiveAndDeactiveController)
-{
-  RefPtr<MediaControlService> service = MediaControlService::GetService();
-  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
-
-  RefPtr<MediaController> controller1 =
-      new MediaController(FIRST_CONTROLLER_ID);
-
-  controller1->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
-                                          MediaPlaybackState::eStarted);
-  ASSERT_TRUE(service->GetActiveControllersNum() == 1);
-
-  controller1->NotifyMediaPlaybackChanged(FAKE_CONTEXT_ID,
-                                          MediaPlaybackState::eStopped);
-  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
-}
-
 class FakeControlledMedia final {
  public:
   explicit FakeControlledMedia(MediaController* aController)
@@ -98,6 +81,30 @@ class FakeControlledMedia final {
   MediaAudibleState mAudibleState = MediaAudibleState::eInaudible;
   RefPtr<MediaController> mController;
 };
+
+TEST(MediaController, ActiveAndDeactiveController)
+{
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
+
+  RefPtr<MediaController> controller = new MediaController(FIRST_CONTROLLER_ID);
+
+  // In order to check active control number after FakeControlledMedia
+  // destroyed.
+  {
+    FakeControlledMedia fakeMedia(controller);
+    fakeMedia.SetPlaying(MediaPlaybackState::ePlayed);
+    ASSERT_TRUE(service->GetActiveControllersNum() == 0);
+
+    fakeMedia.SetAudible(MediaAudibleState::eAudible);
+    ASSERT_TRUE(service->GetActiveControllersNum() == 1);
+
+    fakeMedia.SetAudible(MediaAudibleState::eInaudible);
+    ASSERT_TRUE(service->GetActiveControllersNum() == 1);
+  }
+
+  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
+}
 
 TEST(MediaController, AudibleChanged)
 {
