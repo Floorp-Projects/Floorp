@@ -247,7 +247,9 @@ class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
     return *this;
   }
   ZoneAllocPolicy& operator=(ZoneAllocPolicy&& other) {
+    MOZ_ASSERT(this != &other);
     zone()->unregisterNonGCMemory(this, MemoryUse::ZoneAllocPolicy);
+    zone_ = other.zone();
     zone()->moveOtherMemory(this, &other, MemoryUse::ZoneAllocPolicy);
     other.zone_ = nullptr;
     return *this;
