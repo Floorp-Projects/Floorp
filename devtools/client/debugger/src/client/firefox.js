@@ -86,16 +86,7 @@ async function onTargetAvailable({
     targetFront.isWebExtension
   );
 
-  // Fetch the sources for all the targets
-  //
-  // In Firefox, we need to initially request all of the sources. This
-  // usually fires off individual `newSource` notifications as the
-  // debugger finds them, but there may be existing sources already in
-  // the debugger (if it's paused already, or if loading the page from
-  // bfcache) so explicity fire `newSource` events for all returned
-  // sources.
-  const sources = await clientCommands.fetchSources();
-  await actions.newGeneratedSources(sources);
+  await actions.addTarget(targetFront);
 
   await clientCommands.checkIfAlreadyPaused();
 }
@@ -106,6 +97,7 @@ function onTargetDestroyed({ targetFront, isTopLevel }): void {
     targetFront.off("navigate", actions.navigated);
     removeEventsTopTarget(targetFront);
   }
+  actions.removeTarget(targetFront);
 }
 
 export { clientCommands, clientEvents };

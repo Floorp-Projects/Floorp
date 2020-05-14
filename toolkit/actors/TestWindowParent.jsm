@@ -12,13 +12,11 @@ class TestWindowParent extends JSWindowActorParent {
   constructor() {
     super();
     this.wrappedJSObject = this;
+    this.sawActorCreated = false;
   }
 
   actorCreated() {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
-    Services.obs.notifyObservers(null, "test-window-actor-parent-created");
+    this.sawActorCreated = true;
   }
 
   receiveMessage(aMessage) {

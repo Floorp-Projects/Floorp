@@ -16,6 +16,7 @@ ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
+  AboutReaderParent: "resource:///actors/AboutReaderParent.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   NewTabPagePreloading: "resource:///modules/NewTabPagePreloading.jsm",
@@ -60,7 +61,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   // TODO (Bug 1529552): Remove once old urlbar code goes away.
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
-  ReaderParent: "resource:///modules/ReaderParent.jsm",
   RFPHelper: "resource://gre/modules/RFPHelper.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
@@ -5284,7 +5284,7 @@ var XULBrowserWindow = {
     }
     Services.obs.notifyObservers(null, "touchbar-location-change", location);
     UpdateBackForwardCommands(gBrowser.webNavigation);
-    ReaderParent.updateReaderButton(gBrowser.selectedBrowser);
+    AboutReaderParent.updateReaderButton(gBrowser.selectedBrowser);
 
     if (!gMultiProcessBrowser) {
       // Bug 1108553 - Cannot rotate images with e10s
@@ -5887,9 +5887,13 @@ var TabsProgressListener = {
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
       // Reader mode cares about history.pushState and friends.
       // FIXME: The content process should manage this directly (bug 1445351).
-      aBrowser.messageManager.sendAsyncMessage("Reader:PushState", {
-        isArticle: aBrowser.isArticle,
-      });
+      aBrowser.sendMessageToActor(
+        "Reader:PushState",
+        {
+          isArticle: aBrowser.isArticle,
+        },
+        "AboutReader"
+      );
       return;
     }
 
@@ -9101,6 +9105,8 @@ var ConfirmationHint = {
       this._panel.setAttribute("hidearrow", "true");
     }
 
+    this._panel.setAttribute("data-message-id", messageId);
+
     // The timeout value used here allows the panel to stay open for
     // 1.5s second after the text transition (duration=120ms) has finished.
     // If there is a description, we show for 4s after the text transition.
@@ -9139,6 +9145,7 @@ var ConfirmationHint = {
     if (this.__panel) {
       this._panel.removeAttribute("hidearrow");
       this._animationBox.removeAttribute("animate");
+      this._panel.removeAttribute("data-message-id");
     }
   },
 

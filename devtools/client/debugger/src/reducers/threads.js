@@ -54,7 +54,11 @@ export default function update(
     case "INSERT_THREADS":
       return {
         ...state,
-        threads: [...state.threads, ...action.threads],
+        threads: [
+          ...state.threads,
+          // This excludes the mainThread from being added in the list of threads. This change will also go away in the next set because the main thread will be in this list.
+          ...action.threads.filter(thread => thread.type != "mainThread"),
+        ],
       };
     case "REMOVE_THREADS":
       const { threads } = action;

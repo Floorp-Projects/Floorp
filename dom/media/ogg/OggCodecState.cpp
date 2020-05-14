@@ -84,7 +84,7 @@ OggCodecState::OggCodecState(rlbox_sandbox_ogg* aSandbox,
   MOZ_COUNT_CTOR(OggCodecState);
   tainted_ogg<ogg_stream_state*> state =
       mSandbox->malloc_in_sandbox<ogg_stream_state>();
-  MOZ_ASSERT(state != nullptr);
+  MOZ_RELEASE_ASSERT(state != nullptr);
   rlbox::memset(*mSandbox, state, 0, sizeof(ogg_stream_state));
   mState = state.to_opaque();
 }

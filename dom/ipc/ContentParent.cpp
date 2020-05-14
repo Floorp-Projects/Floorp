@@ -5795,9 +5795,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaPlaybackChanged(
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
-  if (RefPtr<MediaController> controller =
+  if (RefPtr<IMediaInfoUpdater> updater =
           aContext.get_canonical()->GetMediaController()) {
-    controller->NotifyMediaPlaybackChanged(aState);
+    updater->NotifyMediaPlaybackChanged(aContext.ContextId(), aState);
   }
   return IPC_OK();
 }
@@ -5807,9 +5807,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
-  if (RefPtr<MediaController> controller =
+  if (RefPtr<IMediaInfoUpdater> updater =
           aContext.get_canonical()->GetMediaController()) {
-    controller->NotifyMediaAudibleChanged(aState);
+    updater->NotifyMediaAudibleChanged(aContext.ContextId(), aState);
   }
   return IPC_OK();
 }
@@ -5886,9 +5886,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyUpdateMediaMetadata(
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
-  if (RefPtr<MediaController> controller =
+  if (RefPtr<IMediaInfoUpdater> updater =
           aContext.get_canonical()->GetMediaController()) {
-    controller->UpdateMetadata(aContext.ContextId(), aMetadata);
+    updater->UpdateMetadata(aContext.ContextId(), aMetadata);
   }
   return IPC_OK();
 }
@@ -5900,9 +5900,9 @@ ContentParent::RecvNotifyMediaSessionPlaybackStateChanged(
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
-  if (RefPtr<MediaController> controller =
+  if (RefPtr<IMediaInfoUpdater> updater =
           aContext.get_canonical()->GetMediaController()) {
-    controller->SetDeclaredPlaybackState(aContext.ContextId(), aPlaybackState);
+    updater->SetDeclaredPlaybackState(aContext.ContextId(), aPlaybackState);
   }
   return IPC_OK();
 }

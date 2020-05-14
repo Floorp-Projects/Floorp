@@ -95,7 +95,7 @@
 //! improved as a follow up).
 
 use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
-use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
+use api::{PropertyBinding, PropertyBindingId, FilterPrimitive};
 use api::{DebugFlags, RasterSpace, ImageKey, ColorF, ColorU, PrimitiveFlags};
 use api::{ImageRendering, ColorDepth, YuvColorSpace, YuvFormat};
 use api::units::*;
@@ -183,8 +183,9 @@ pub enum SubpixelMode {
     /// Subpixel AA text cannot be drawn on this surface
     Deny,
     /// Subpixel AA can be drawn on this surface, if not intersecting
-    /// with the excluded regions
+    /// with the excluded regions, and inside the allowed rect.
     Conditional {
+        allowed_rect: PictureRect,
         excluded_rects: Vec<PictureRect>,
     },
 }
@@ -2484,7 +2485,6 @@ impl TileCacheInstance {
         // Reset the opaque rect + subpixel mode, as they are calculated
         // during the prim dependency checks.
         self.backdrop = BackdropInfo::empty();
-        self.subpixel_mode = SubpixelMode::Allow;
 
         self.map_local_to_surface = SpaceMapper::new(
             self.spatial_node_index,
@@ -3476,29 +3476,6 @@ impl TileCacheInstance {
                     generation: resource_cache.get_image_generation(border_data.request.key),
                 });
             }
-            PrimitiveInstanceKind::TextRun { data_handle, .. } => {
-                // Only do these checks if we haven't already disabled subpx
-                // text rendering for this slice.
-                if self.subpixel_mode == SubpixelMode::Allow && !self.is_opaque() {
-                    let run_data = &data_stores.text_run[data_handle];
-
-                    // Only care about text runs that have requested subpixel rendering.
-                    // This is conservative - it may still end up that a subpx requested
-                    // text run doesn't get subpx for other reasons (e.g. glyph size).
-                    let subpx_requested = match run_data.font.render_mode {
-                        FontRenderMode::Subpixel => true,
-                        FontRenderMode::Alpha | FontRenderMode::Mono => false,
-                    };
-
-                    // If a text run is on a child surface, the subpx mode will be
-                    // correctly determined as we recurse through pictures in take_context.
-                    if on_picture_surface
-                        && subpx_requested
-                        && !self.backdrop.opaque_rect.contains_rect(&pic_clip_rect) {
-                        self.subpixel_mode = SubpixelMode::Deny;
-                    }
-                }
-            }
             PrimitiveInstanceKind::Clear { .. } => {
                 backdrop_candidate = Some(BackdropInfo {
                     opaque_rect: pic_clip_rect,
@@ -3540,6 +3517,7 @@ impl TileCacheInstance {
             }
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
+            PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::Backdrop { .. } => {
                 // These don't contribute dependencies
             }
@@ -3659,6 +3637,47 @@ impl TileCacheInstance {
         pt.end_level();
     }
 
+    fn calculate_subpixel_mode(&self) -> SubpixelMode {
+        // If the overall tile cache is known opaque, subpixel AA is allowed everywhere
+        if self.is_opaque() {
+            return SubpixelMode::Allow;
+        }
+
+        // If we didn't find any valid opaque backdrop, no subpixel AA allowed
+        if !self.backdrop.opaque_rect.is_well_formed_and_nonempty() {
+            return SubpixelMode::Deny;
+        }
+
+        // If the opaque backdrop rect covers the entire tile cache surface,
+        // we can allow subpixel AA anywhere, skipping the per-text-run tests
+        // later on during primitive preparation.
+        if self.backdrop.opaque_rect.contains_rect(&self.local_rect) {
+            return SubpixelMode::Allow;
+        }
+
+        // If none of the simple cases above match, we need to build a list
+        // of excluded rects (compositor surfaces) and a valid inclusion rect
+        // (known opaque area) where we can support subpixel AA.
+        // TODO(gw): In future, it may make sense to have > 1 inclusion rect,
+        //           but this handles the common cases.
+        // TODO(gw): If a text run gets animated such that it's moving in a way that is
+        //           sometimes intersecting with the video rect, this can result in subpixel
+        //           AA flicking on/off for that text run. It's probably very rare, but
+        //           something we should handle in future.
+
+        let excluded_rects = self.external_surfaces
+            .iter()
+            .map(|s| {
+                s.local_rect
+            })
+            .collect();
+
+        SubpixelMode::Conditional {
+            allowed_rect: self.backdrop.opaque_rect,
+            excluded_rects,
+        }
+    }
+
     /// Apply any updates after prim dependency updates. This applies
     /// any late tile invalidations, and sets up the dirty rect and
     /// set of tile blits.
@@ -3668,27 +3687,7 @@ impl TileCacheInstance {
         frame_state: &mut FrameVisibilityState,
     ) {
         self.dirty_region.clear();
-
-        // Update subpixel mode if compositor surfaces are present. If we have some compositor
-        // surfaces, and subpixel AA mode is allowed, switch the subpixel mode to conditional,
-        // and include rects of any compositor surfaces as excluded rects where subpixel AA
-        // is not allowed.
-        // TODO(gw): If a text run gets animated such that it's moving in a way that is
-        //           sometimes intersecting with the video rect, this can result in subpixel
-        //           AA flicking on/off for that text run. It's probably very rare, but
-        //           something we should handle in future.
-        if !self.external_surfaces.is_empty() && self.subpixel_mode == SubpixelMode::Allow {
-            let excluded_rects = self.external_surfaces
-                .iter()
-                .map(|s| {
-                    s.local_rect
-                })
-                .collect();
-
-            self.subpixel_mode = SubpixelMode::Conditional {
-                excluded_rects,
-            };
-        }
+        self.subpixel_mode = self.calculate_subpixel_mode();
 
         let map_pic_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
@@ -5689,15 +5688,17 @@ impl PicturePrimitive {
                 // Both parent and this surface unconditionally allow subpixel AA
                 SubpixelMode::Allow
             }
-            (SubpixelMode::Allow, SubpixelMode::Conditional { excluded_rects }) => {
+            (SubpixelMode::Allow, SubpixelMode::Conditional { allowed_rect, excluded_rects }) => {
                 // Parent allows, but we are conditional subpixel AA
                 SubpixelMode::Conditional {
-                    excluded_rects: excluded_rects,
+                    allowed_rect,
+                    excluded_rects,
                 }
             }
-            (SubpixelMode::Conditional { excluded_rects }, SubpixelMode::Allow) => {
+            (SubpixelMode::Conditional { allowed_rect, excluded_rects }, SubpixelMode::Allow) => {
                 // Propagate conditional subpixel mode to child pictures that allow subpixel AA
                 SubpixelMode::Conditional {
+                    allowed_rect: *allowed_rect,
                     excluded_rects: excluded_rects.clone(),
                 }
             }

@@ -12337,9 +12337,9 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 5,
-    "description": "Action taken by user through prompt for modifying a login. (0=Prompt displayed [always recorded], 1=Update login)",
+    "description": "Action taken by user through prompt for modifying a login. (0=Prompt displayed [always recorded], 1=Update login, 2=Don't update, 3=Remove saved login)",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733, 1545172],
+    "bug_numbers": [1454733, 1545172, 1226236],
     "releaseChannelCollection": "opt-out",
     "record_into_store": ["main", "pre-account"]
   },
@@ -14204,6 +14204,17 @@
     "n_buckets": 100,
     "releaseChannelCollection": "opt-out",
     "description": "The average number of dropped frames per sec in OpenVR, sent when user exits WebVR content."
+  },
+  "WEBXR_API_MODE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["fxr-telemetry@mozilla.com", "dmu@mozilla.com"],
+    "bug_numbers": [1635872],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "labels": ["WebXR", "WebVR"],
+    "description": "Determine what API users use to enter the web immersive mode."
   },
   "URLCLASSIFIER_UI_EVENTS": {
     "record_in_processes": ["main", "content"],

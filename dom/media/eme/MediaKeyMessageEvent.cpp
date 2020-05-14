@@ -81,7 +81,7 @@ already_AddRefed<MediaKeyMessageEvent> MediaKeyMessageEvent::Constructor(
                                aEventInitDict.mMessage.Obj());
   e->mMessage = JS::CopyArrayBuffer(aGlobal.Context(), buffer);
   if (!e->mMessage) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv.NoteJSContextException(aGlobal.Context());
     return nullptr;
   }
   e->mMessageType = aEventInitDict.mMessageType;
@@ -97,7 +97,7 @@ void MediaKeyMessageEvent::GetMessage(JSContext* cx,
     mMessage = ArrayBuffer::Create(cx, this, mRawMessage.Length(),
                                    mRawMessage.Elements());
     if (!mMessage) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      aRv.NoteJSContextException(cx);
       return;
     }
     mRawMessage.Clear();

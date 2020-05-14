@@ -299,6 +299,14 @@ panelview {
   animation-timing-function: steps(18);
 }
 
+#confirmation-hint[data-message-id="loginRemoved"] #confirmation-hint-checkmark-image {
+  background-image: url("chrome://global/skin/icons/delete.svg");
+  background-size: contain;
+  -moz-context-properties: fill;
+  fill: #FFF;
+  animation: none;
+}
+
 #confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image:-moz-locale-dir(rtl) {
   animation-name: confirmation-hint-checkmark-animation-rtl;
   transform: translateX(252px);

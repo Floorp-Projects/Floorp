@@ -187,7 +187,7 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
   MDefinition* def = getOperand(objId);
   Shape* shape = shapeStubField(shapeOffset);
 
-  auto* ins = MGuardShape::New(alloc(), def, shape, Bailout_ShapeGuard);
+  auto* ins = MGuardShape::New(alloc(), def, shape);
   add(ins);
 
   setOperand(objId, ins);

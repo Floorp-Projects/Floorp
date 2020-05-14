@@ -2601,7 +2601,17 @@ bool nsNativeThemeWin::WidgetIsContainer(StyleAppearance aAppearance) {
 }
 
 bool nsNativeThemeWin::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
-  return false;
+  switch (aAppearance) {
+    case StyleAppearance::Menulist:
+    case StyleAppearance::MenulistButton:
+    case StyleAppearance::MenulistTextfield:
+    case StyleAppearance::Textarea:
+    case StyleAppearance::Textfield:
+    case StyleAppearance::NumberInput:
+      return true;
+    default:
+      return false;
+  }
 }
 
 bool nsNativeThemeWin::ThemeNeedsComboboxDropmarker() { return true; }

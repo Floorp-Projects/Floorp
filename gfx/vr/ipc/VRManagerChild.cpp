@@ -22,6 +22,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/layers/SyncObject.h"
+#include "mozilla/layers/TextureForwarder.h"
 
 using namespace mozilla::dom;
 
@@ -35,6 +36,9 @@ namespace gfx {
 
 static StaticRefPtr<VRManagerChild> sVRManagerChildSingleton;
 static StaticRefPtr<VRManagerParent> sVRManagerParentSingleton;
+
+static TimeStamp sMostRecentFrameEnd;
+static TimeDuration sAverageFrameInterval;
 
 void ReleaseVRManagerParentSingleton() { sVRManagerParentSingleton = nullptr; }
 
@@ -89,6 +93,16 @@ bool VRManagerChild::IsPresenting() {
     result |= display->IsPresenting();
   }
   return result;
+}
+
+TimeStamp VRManagerChild::GetIdleDeadlineHint(TimeStamp aDefault) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!VRManagerChild::IsCreated() || sMostRecentFrameEnd.IsNull()) {
+    return aDefault;
+  }
+
+  TimeStamp idleEnd = sMostRecentFrameEnd + sAverageFrameInterval;
+  return idleEnd < aDefault ? idleEnd : aDefault;
 }
 
 /* static */
@@ -404,6 +418,19 @@ void VRManagerChild::RunFrameRequestCallbacks() {
   mozilla::TimeDuration duration = nowTime - mStartTimeStamp;
   DOMHighResTimeStamp timeStamp = duration.ToMilliseconds();
 
+  if (!sMostRecentFrameEnd.IsNull()) {
+    TimeDuration frameInterval = nowTime - sMostRecentFrameEnd;
+    if (sAverageFrameInterval.IsZero()) {
+      sAverageFrameInterval = frameInterval;
+    } else {
+      // Calculate the average interval between frame end and next frame start.
+      // Apply some smoothing to make it more stable.
+      const double smooth = 0.9;
+      sAverageFrameInterval = sAverageFrameInterval.MultDouble(smooth) +
+                              frameInterval.MultDouble(1.0 - smooth);
+    }
+  }
+
   nsTArray<XRFrameRequest> callbacks;
   callbacks.AppendElements(mFrameRequestCallbacks);
   mFrameRequestCallbacks.Clear();
@@ -411,6 +438,10 @@ void VRManagerChild::RunFrameRequestCallbacks() {
     // The FrameRequest copied into the on-stack array holds a strong ref to its
     // mCallback and there's nothing that can drop that ref until we return.
     MOZ_KnownLive(callback.mCallback)->Call(timeStamp);
+  }
+
+  if (IsPresenting()) {
+    sMostRecentFrameEnd = TimeStamp::Now();
   }
 }
 
@@ -449,6 +480,11 @@ void VRManagerChild::FireDOMVRDisplayPresentChangeEvent(uint32_t aDisplayID) {
   nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(
       "gfx::VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal", this,
       &VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal, aDisplayID));
+
+  if (!IsPresenting()) {
+    sMostRecentFrameEnd = TimeStamp();
+    sAverageFrameInterval = 0;
+  }
 }
 
 void VRManagerChild::FireDOMVRDisplayMountedEventInternal(uint32_t aDisplayID) {

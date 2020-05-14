@@ -112,9 +112,9 @@ void ContentMediaController::NotifyPlaybackStateChanged(
   } else {
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
-    if (RefPtr<MediaController> controller =
+    if (RefPtr<IMediaInfoUpdater> updater =
             bc->Canonical()->GetMediaController()) {
-      controller->NotifyMediaPlaybackChanged(aState);
+      updater->NotifyMediaPlaybackChanged(bc->Id(), aState);
     }
   }
 }
@@ -140,9 +140,9 @@ void ContentMediaController::NotifyAudibleStateChanged(
   } else {
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
-    if (RefPtr<MediaController> controller =
+    if (RefPtr<IMediaInfoUpdater> updater =
             bc->Canonical()->GetMediaController()) {
-      controller->NotifyMediaAudibleChanged(aState);
+      updater->NotifyMediaAudibleChanged(bc->Id(), aState);
     }
   }
 }
@@ -167,9 +167,9 @@ void ContentMediaController::NotifyPictureInPictureModeChanged(
   } else {
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
-    if (RefPtr<MediaController> controller =
+    if (RefPtr<IMediaInfoUpdater> updater =
             bc->Canonical()->GetMediaController()) {
-      controller->SetIsInPictureInPictureMode(aEnabled);
+      updater->SetIsInPictureInPictureMode(aEnabled);
     }
   }
 }

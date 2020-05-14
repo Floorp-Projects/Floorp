@@ -301,6 +301,11 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
     getState,
     client,
   }: ThunkArgs): Promise<Array<Source>> => {
+    // bails early for unnecessary calls to newGeneratedSources. This simplifies the reducers which still create a new state, but don't need to.
+    if (sourceInfo.length == 0) {
+      return [];
+    }
+
     const resultIds = [];
     const newSourcesObj = {};
     const newSourceActors: Array<SourceActor> = [];

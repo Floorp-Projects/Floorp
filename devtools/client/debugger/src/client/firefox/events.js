@@ -61,8 +61,6 @@ function setupEvents(dependencies: Dependencies): void {
   actions = dependencies.actions;
   sourceQueue.initialize(actions);
 
-  devToolsClient.mainRoot.on("processListChanged", threadListChanged);
-
   workersListener = new WorkersListener(devToolsClient.mainRoot);
 
   threadFrontListeners = new WeakMap();
@@ -70,7 +68,6 @@ function setupEvents(dependencies: Dependencies): void {
 
 function setupEventsTopTarget(targetFront: Target): void {
   targetFront.on("workerListChanged", threadListChanged);
-  addThreadEventListeners(targetFront.threadFront);
 
   if (features.windowlessServiceWorkers || attachAllTargets(targetFront)) {
     workersListener.addListener(threadListChanged);

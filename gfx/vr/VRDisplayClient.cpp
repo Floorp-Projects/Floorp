@@ -18,6 +18,7 @@
 #include "mozilla/dom/XRInputSourceArray.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/WebXRBinding.h"
 #include "nsServiceManagerUtils.h"
 
@@ -107,7 +108,11 @@ void VRDisplayClient::MakePresentationGenerationCurrent() {
 
 gfx::VRAPIMode VRDisplayClient::GetXRAPIMode() const { return mAPIMode; }
 
-void VRDisplayClient::SetXRAPIMode(gfx::VRAPIMode aMode) { mAPIMode = aMode; }
+void VRDisplayClient::SetXRAPIMode(gfx::VRAPIMode aMode) {
+  mAPIMode = aMode;
+  Telemetry::Accumulate(Telemetry::WEBXR_API_MODE,
+                        static_cast<uint32_t>(mAPIMode));
+}
 
 void VRDisplayClient::FireEvents() {
   RefPtr<VRManagerChild> vm = VRManagerChild::Get();
@@ -142,12 +147,6 @@ void VRDisplayClient::FireEvents() {
     vm->NotifyPresentationGenerationChanged(mDisplayInfo.mDisplayID);
   }
 
-  // Check if we need to trigger VRDisplay.requestAnimationFrame
-  if (mLastEventFrameId != mDisplayInfo.mFrameId) {
-    mLastEventFrameId = mDisplayInfo.mFrameId;
-    StartFrame();
-  }
-
   // In WebXR spec, Gamepad instances returned by an XRInputSource's gamepad
   // attribute MUST NOT be included in the array returned by
   // navigator.getGamepads().
@@ -160,6 +159,12 @@ void VRDisplayClient::FireEvents() {
     if (inputs) {
       inputs->Update(session);
     }
+  }
+
+  // Check if we need to trigger VRDisplay.requestAnimationFrame
+  if (mLastEventFrameId != mDisplayInfo.mFrameId) {
+    mLastEventFrameId = mDisplayInfo.mFrameId;
+    StartFrame();
   }
 }
 
