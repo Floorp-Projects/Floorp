@@ -101,6 +101,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
       isThirdPartyTrackingResource: actor.isThirdPartyTrackingResource,
       referrerPolicy: actor.referrerPolicy,
       blockedReason: actor.blockedReason,
+      blockingExtension: actor.blockingExtension,
       channelId: actor.channelId,
     };
     this._networkRequests.set(actor.actor, networkInfo);

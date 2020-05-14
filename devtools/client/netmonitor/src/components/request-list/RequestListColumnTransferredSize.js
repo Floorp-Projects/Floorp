@@ -47,6 +47,7 @@ class RequestListColumnTransferredSize extends Component {
   render() {
     const {
       blockedReason,
+      blockingExtension,
       fromCache,
       fromServiceWorker,
       status,
@@ -55,7 +56,9 @@ class RequestListColumnTransferredSize extends Component {
     } = this.props.item;
     let text;
 
-    if (blockedReason) {
+    if (blockedReason && blockingExtension) {
+      text = L10N.getFormatStr("networkMenu.blockedby", blockingExtension);
+    } else if (blockedReason) {
       text =
         BLOCKED_REASON_MESSAGES[blockedReason] ||
         L10N.getStr("networkMenu.blocked2");

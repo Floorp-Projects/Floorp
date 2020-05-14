@@ -218,6 +218,7 @@ const UPDATE_PROPS = [
   "isThirdPartyTrackingResource",
   "referrerPolicy",
   "blockedReason",
+  "blockingExtension",
   "channelId",
 ];
 
@@ -523,6 +524,9 @@ const BLOCKED_REASON_MESSAGES = {
   2004: "Tracking",
   2005: "Blocked",
   2006: "Harmful",
+  2007: "Cryptomining",
+  2008: "Fingerprinting",
+  2009: "Socialtracking",
   3001: "Mixed Block",
   4000: "CSP",
   4001: "CSP No Data Protocol",
@@ -532,6 +536,7 @@ const BLOCKED_REASON_MESSAGES = {
   4005: "CSP Web Browser",
   4006: "CSP Preload",
   5000: "Not same-origin",
+  6000: "Blocked By Extension",
 };
 
 const general = {
