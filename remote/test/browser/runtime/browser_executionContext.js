@@ -21,22 +21,23 @@ add_task(async function({ client }) {
   await testReload(client, context4);
 });
 
-add_task(async function testRuntimeNotEnabled({ client }) {
+add_task(async function noEventsWhenRuntimeDomainDisabled({ client }) {
   const { Runtime } = client;
-  await Runtime.disable();
-  const sentinel = "timeout resolved";
-  const created = Runtime.executionContextCreated().then(() => {
-    return "executionContextCreated";
-  });
-  const destroyed = Runtime.executionContextDestroyed().then(() => {
-    return "executionContextCreated";
-  });
-  const timeout = timeoutPromise(1000).then(() => {
-    return sentinel;
-  });
+
+  const history = recordContextEvents(Runtime, 0);
   await loadURL(TEST_DOC);
-  const result = await Promise.race([created, destroyed, timeout]);
-  is(result, sentinel, "No Runtime events emitted while Runtime is disabled");
+  await assertEventOrder({ history, expectedEvents: [] });
+});
+
+add_task(async function noEventsAfterRuntimeDomainDisabled({ client }) {
+  const { Runtime } = client;
+
+  await Runtime.enable();
+  await Runtime.disable();
+
+  const history = recordContextEvents(Runtime, 0);
+  await loadURL(TEST_DOC);
+  await assertEventOrder({ history, expectedEvents: [] });
 });
 
 async function testRuntimeEnable({ Runtime }) {
