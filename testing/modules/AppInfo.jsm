@@ -29,11 +29,8 @@ let origRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(
  *   lastAppVersion:  nsIXULRuntime.lastAppVersion
  *
  *   crashReporter:   nsICrashReporter interface is implemented if true
- *   extraProps:      extra properties added to XULAppInfo
  */
 var newAppInfo = function(options = {}) {
-  let extraProps = "extraProps" in options ? options.extraProps : {};
-
   let appInfo = {
     // nsIXULAppInfo
     vendor: "Mozilla",
@@ -77,10 +74,6 @@ var newAppInfo = function(options = {}) {
       this.annotations[key] = data;
     };
     interfaces.push(Ci.nsICrashReporter);
-  }
-
-  for (let key of Object.keys(extraProps)) {
-    appInfo.browserTabsRemoteAutostart = extraProps[key];
   }
 
   appInfo.QueryInterface = ChromeUtils.generateQI(interfaces);
