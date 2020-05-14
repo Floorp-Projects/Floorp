@@ -6,6 +6,7 @@ import mock
 from mozperftest.tests.support import get_running_env, requests_content
 from mozperftest.environment import SYSTEM
 from mozperftest.system.android import DeviceError
+from mozperftest.utils import silence
 
 
 class FakeDevice:
@@ -30,7 +31,7 @@ def test_android():
 
     mach_cmd, metadata, env = get_running_env(**args)
     system = env.layers[SYSTEM]
-    with system as android:
+    with system as android, silence(system):
         android(metadata)
 
 
@@ -44,7 +45,7 @@ def test_android_failure():
 
     mach_cmd, metadata, env = get_running_env(**args)
     system = env.layers[SYSTEM]
-    with system as android, pytest.raises(DeviceError):
+    with system as android, silence(system), pytest.raises(DeviceError):
         android(metadata)
 
 
@@ -59,7 +60,7 @@ def test_android_apk_alias(device):
 
     mach_cmd, metadata, env = get_running_env(**args)
     system = env.layers[SYSTEM]
-    with system as android:
+    with system as android, silence(system):
         android(metadata)
     # XXX really ?
     assert device.mock_calls[1][1][0].endswith("target.apk")

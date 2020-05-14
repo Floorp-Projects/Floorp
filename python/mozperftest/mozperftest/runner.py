@@ -135,7 +135,7 @@ def run_tests(mach_cmd, **kwargs):
         env.run_hook("after_runs")
 
 
-def main():
+def main(argv=sys.argv[1:]):
     """Used when the runner is directly called from the shell
     """
     _setup_path()
@@ -150,7 +150,7 @@ def main():
     config.state_dir = get_state_dir()
     mach_cmd = MachCommandBase(config)
     parser = PerftestArgumentParser(description="vanilla perftest")
-    args = parser.parse_args()
+    args = parser.parse_args(args=argv)
     run_tests(mach_cmd, **dict(args._get_kwargs()))
 
 

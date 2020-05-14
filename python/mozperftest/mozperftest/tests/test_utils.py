@@ -36,7 +36,7 @@ def get_raise(*args, **kw):
 
 @mock.patch("mozperftest.utils.requests.get", new=get_raise)
 def test_download_file_fails():
-    with temp_file() as target, pytest.raises(Exception):
+    with temp_file() as target, silence(), pytest.raises(Exception):
         download_file("http://I don't exist", Path(target), retry_sleep=0.1)
 
 

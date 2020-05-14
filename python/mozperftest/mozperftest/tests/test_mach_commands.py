@@ -17,8 +17,10 @@ Registrar.commands_by_category = {"testing": set()}
 
 
 from mozperftest.environment import MachEnvironment  # noqa
-from mozperftest.mach_commands import Perftest, PerftestTests  # noqa
+from mozperftest.mach_commands import Perftest, PerftestTests, ON_TRY  # noqa
+from mozperftest import mach_commands  # noqa
 from mozperftest.tests.support import EXAMPLE_TESTS_DIR  # noqa
+from mozperftest.utils import temporary_env, silence  # noqa
 
 
 class _TestMachEnvironment(MachEnvironment):
@@ -54,7 +56,7 @@ def _get_command(klass=Perftest):
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase._activate_virtualenv")
 def test_command(mocked_func):
-    with _get_command() as test:
+    with _get_command() as test, silence(test):
         test.run_perftest(tests=[EXAMPLE_TESTS_DIR], flavor="script")
         # XXX add assertions
 
@@ -62,18 +64,26 @@ def test_command(mocked_func):
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase._activate_virtualenv")
 def test_doc_flavor(mocked_func):
-    with _get_command() as test:
+    with _get_command() as test, silence(test):
         test.run_perftest(tests=[EXAMPLE_TESTS_DIR], flavor="doc")
 
 
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase._activate_virtualenv")
-@mock.patch("mozperftest.mach_commands.PerftestTests._run_script")
+@mock.patch("mozperftest.mach_commands.PerftestTests._run_python_script")
 def test_test_runner(*mocked):
-    if platform.system() == "Darwin":
+    if platform.system() == "Darwin" and ON_TRY:
         return
-    with _get_command(PerftestTests) as test:
+
+    # simulating on try to run the paths parser
+    old = mach_commands.ON_TRY
+    mach_commands.ON_TRY = True
+    with _get_command(PerftestTests) as test, silence(test), temporary_env(
+        MOZ_AUTOMATION="1"
+    ):
         test.run_tests(tests=[EXAMPLE_TESTS_DIR])
+
+    mach_commands.ON_TRY = old
 
 
 if __name__ == "__main__":
