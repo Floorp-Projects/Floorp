@@ -361,7 +361,7 @@ static bool IsEditorNode(const nsINode* aNode) {
   }
 
   auto* element = Element::FromNode(aNode);
-  return element && element->State().HasState(NS_EVENT_STATE_MOZ_READWRITE);
+  return element && element->State().HasState(NS_EVENT_STATE_READWRITE);
 }
 
 bool Selection::IsEditorSelection() const {
