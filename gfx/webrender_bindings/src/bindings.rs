@@ -528,8 +528,6 @@ extern "C" {
     // NOTE: This moves away from pipeline_info.
     fn wr_finished_scene_build(
         window_id: WrWindowId,
-        document_id_array: *const WrDocumentId,
-        document_id_count: usize,
         pipeline_info: &mut WrPipelineInfo,
     );
 
@@ -922,7 +920,7 @@ impl SceneBuilderHooks for APZCallbacks {
         }
     }
 
-    fn post_scene_swap(&self, document_ids: &Vec<DocumentId>, info: PipelineInfo, sceneswap_time: u64) {
+    fn post_scene_swap(&self, _document_ids: &Vec<DocumentId>, info: PipelineInfo, sceneswap_time: u64) {
         let mut info = WrPipelineInfo::new(&info);
         unsafe {
             record_telemetry_time(TelemetryProbe::SceneSwapTime, sceneswap_time);
@@ -932,7 +930,7 @@ impl SceneBuilderHooks for APZCallbacks {
         // After a scene swap we should schedule a render for the next vsync,
         // otherwise there's no guarantee that the new scene will get rendered
         // anytime soon
-        unsafe { wr_finished_scene_build(self.window_id, document_ids.as_ptr(), document_ids.len(), &mut info) }
+        unsafe { wr_finished_scene_build(self.window_id, &mut info) }
         unsafe {
             gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char);
         }
