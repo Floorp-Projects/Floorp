@@ -388,10 +388,6 @@ WebRenderBridgeParent::~WebRenderBridgeParent() {
   }
 }
 
-bool WebRenderBridgeParent::RenderRootIsValid(wr::RenderRoot aRenderRoot) {
-  return aRenderRoot == wr::RenderRoot::Default;
-}
-
 void WebRenderBridgeParent::RemoveDeferredPipeline(wr::PipelineId aPipelineId) {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
   mPipelineRenderRoots.Remove(wr::AsUint64(aPipelineId));
@@ -441,9 +437,6 @@ bool WebRenderBridgeParent::HandleDeferredPipelineData(
   for (auto& entry : aDeferredData) {
     bool success = entry.match(
         [&](RenderRootDisplayListData& data) {
-          // We ensure this with RenderRootIsValid before calling
-          // PushDeferredPipelineData:
-          MOZ_ASSERT(data.mRenderRoot == wr::RenderRoot::Default);
           wr::Epoch wrEpoch = GetNextWrEpoch();
           bool validTransaction = data.mIdNamespace == mIdNamespace;
 
@@ -457,9 +450,6 @@ bool WebRenderBridgeParent::HandleDeferredPipelineData(
           return true;
         },
         [&](RenderRootUpdates& data) {
-          // We ensure this with RenderRootIsValid before calling
-          // PushDeferredPipelineData:
-          MOZ_ASSERT(data.mRenderRoot == wr::RenderRoot::Default);
           bool scheduleComposite;
           if (!ProcessEmptyTransactionUpdates(data, &scheduleComposite)) {
             return false;
@@ -1271,11 +1261,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   if (aDisplayLists.Length() == 0) {
     return IPC_FAIL(this, "Must send at least one RenderRootDisplayListData.");
   }
-  for (auto& displayList : aDisplayLists) {
-    if (!RenderRootIsValid(displayList.mRenderRoot)) {
-      return IPC_FAIL(this, "Received an invalid renderRoot");
-    }
-  }
 
   if (!IsRootWebRenderBridgeParent()) {
     CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aTxnURL);
@@ -1473,13 +1458,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
       DestroyActor(op);
     }
     return IPC_OK();
-  }
-
-  // Guard against malicious content processes
-  for (auto& update : aRenderRootUpdates) {
-    if (!RenderRootIsValid(update.mRenderRoot)) {
-      return IPC_FAIL(this, "Received an invalid renderRoot");
-    }
   }
 
   if (!IsRootWebRenderBridgeParent()) {
