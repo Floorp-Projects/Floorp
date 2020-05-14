@@ -595,19 +595,15 @@ nsresult nsHttpHandler::InitConnectionMgr() {
   }
 
   if (nsIOService::UseSocketProcess() && XRE_IsParentProcess()) {
-    if (!gIOService->SocketProcessReady()) {
-      gIOService->CallOrWaitForSocketProcess(
-          []() { Unused << gHttpHandler->InitConnectionMgr(); });
-      return NS_OK;
-    }
-
-    RefPtr<HttpConnectionMgrParent> connMgr = new HttpConnectionMgrParent();
-    if (!SocketProcessParent::GetSingleton()->SendPHttpConnectionMgrConstructor(
-            connMgr)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mConnMgr = connMgr;
+    mConnMgr = new HttpConnectionMgrParent();
+    RefPtr<nsHttpHandler> self = this;
+    auto task = [self]() {
+      HttpConnectionMgrParent* parent =
+          self->mConnMgr->AsHttpConnectionMgrParent();
+      Unused << SocketProcessParent::GetSingleton()
+                    ->SendPHttpConnectionMgrConstructor(parent);
+    };
+    gIOService->CallOrWaitForSocketProcess(std::move(task));
   } else {
     MOZ_ASSERT(XRE_IsSocketProcess() || !nsIOService::UseSocketProcess());
     mConnMgr = new nsHttpConnectionMgr();
