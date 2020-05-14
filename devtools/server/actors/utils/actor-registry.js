@@ -263,6 +263,14 @@ const ActorRegistry = {
         type: { target: true },
       }
     );
+    this.registerModule(
+      "devtools/server/actors/network-monitor/eventsource-actor",
+      {
+        prefix: "eventSource",
+        constructor: "EventSourceActor",
+        type: { target: true },
+      }
+    );
     this.registerModule("devtools/server/actors/manifest", {
       prefix: "manifest",
       constructor: "ManifestActor",
