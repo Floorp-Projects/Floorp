@@ -23,5 +23,5 @@ async function enableRuntime(client) {
   ok(context.auxData.isDefault, "The execution context is the default one");
   ok(!!context.auxData.frameId, "The execution context has a frame id set");
 
-  return context.id;
+  return context;
 }

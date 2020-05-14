@@ -178,7 +178,7 @@ add_task(async function contextIdSpecified({ client }) {
   const { Runtime } = client;
 
   await loadURL(TEST_DOC);
-  const contextId = await enableRuntime(client);
+  const { id: contextId } = await enableRuntime(client);
 
   const { result } = await Runtime.evaluate({
     expression: "location.href",

@@ -6,7 +6,7 @@
 add_task(async function returnAsObjectTypes({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const expressions = [
     { expression: "({foo:true})", type: "object", subtype: null },
@@ -64,7 +64,7 @@ add_task(async function returnAsObjectTypes({ client }) {
 add_task(async function returnAsObjectDifferentObjectIds({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const expressions = [{}, "document"];
   for (const expression of expressions) {
@@ -87,7 +87,7 @@ add_task(async function returnAsObjectDifferentObjectIds({ client }) {
 add_task(async function returnAsObjectPrimitiveTypes({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const expressions = [42, "42", true, 4.2];
   for (const expression of expressions) {
@@ -103,7 +103,7 @@ add_task(async function returnAsObjectPrimitiveTypes({ client }) {
 add_task(async function returnAsObjectNotSerializable({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const notSerializableNumbers = {
     number: ["-0", "NaN", "Infinity", "-Infinity"],
@@ -134,7 +134,7 @@ add_task(async function returnAsObjectNotSerializable({ client }) {
 add_task(async function returnAsObjectNull({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration: "() => null",
@@ -155,7 +155,7 @@ add_task(async function returnAsObjectNull({ client }) {
 add_task(async function returnAsObjectUndefined({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration: "() => undefined",
@@ -173,7 +173,7 @@ add_task(async function returnAsObjectUndefined({ client }) {
 add_task(async function returnByValueInvalidTypes({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   for (const returnByValue of [null, 1, "foo", [], {}]) {
     let errorThrown = "";
@@ -193,7 +193,7 @@ add_task(async function returnByValueInvalidTypes({ client }) {
 add_task(async function returnByValue({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const values = [
     null,
@@ -230,7 +230,7 @@ add_task(async function returnByValue({ client }) {
 add_task(async function returnByValueNotSerializable({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const notSerializableNumbers = {
     number: ["-0", "NaN", "Infinity", "-Infinity"],
@@ -262,7 +262,7 @@ add_task(async function returnByValueNotSerializable({ client }) {
 add_task(async function returnByValueUndefined({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const { result } = await Runtime.callFunctionOn({
     functionDeclaration: "() => {}",
@@ -282,7 +282,7 @@ add_task(async function returnByValueUndefined({ client }) {
 add_task(async function returnByValueArguments({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const values = [
     42,
@@ -320,7 +320,7 @@ add_task(async function returnByValueArguments({ client }) {
 add_task(async function returnByValueArgumentsNotSerializable({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   const notSerializableNumbers = {
     number: ["-0", "NaN", "Infinity", "-Infinity"],
@@ -352,7 +352,7 @@ add_task(async function returnByValueArgumentsNotSerializable({ client }) {
 add_task(async function returnByValueArgumentsSymbol({ client }) {
   const { Runtime } = client;
 
-  const executionContextId = await enableRuntime(client);
+  const { id: executionContextId } = await enableRuntime(client);
 
   let errorThrown = "";
   try {
