@@ -377,12 +377,13 @@ class Network extends Domain {
   }
 
   _onRequest(eventName, httpChannel, data) {
+    const wrappedChannel = ChannelWrapper.get(httpChannel);
     const topFrame = getLoadContext(httpChannel).topFrameElement;
     const request = {
       url: httpChannel.URI.spec,
       urlFragment: undefined,
       method: httpChannel.requestMethod,
-      headers: [],
+      headers: headersAsObject(data.headers),
       postData: undefined,
       hasPostData: false,
       mixedContentType: undefined,
@@ -390,32 +391,18 @@ class Network extends Domain {
       referrerPolicy: undefined,
       isLinkPreload: false,
     };
-    let loaderId = undefined;
-    let causeType = Ci.nsIContentPolicy.TYPE_OTHER;
-    let causeUri = topFrame.currentURI.spec;
-    if (httpChannel.loadInfo) {
-      causeType = httpChannel.loadInfo.externalContentPolicyType;
-      const { loadingPrincipal } = httpChannel.loadInfo;
-      if (loadingPrincipal && loadingPrincipal.URI) {
-        causeUri = loadingPrincipal.URI.spec;
-      }
-      if (causeType == Ci.nsIContentPolicy.TYPE_DOCUMENT) {
-        // Puppeteer expect this specialy of CDP where loaderId = requestId
-        // for the toplevel document request
-        loaderId = String(httpChannel.channelId);
-      }
-    }
     this.emit("Network.requestWillBeSent", {
-      requestId: String(httpChannel.channelId),
-      loaderId,
-      documentURL: causeUri,
+      requestId: data.requestId,
+      loaderId: data.loaderId,
+      documentURL: wrappedChannel.documentURL || httpChannel.URI.spec,
       request,
-      timestamp: undefined,
+      timestamp: Date.now() / 1000,
       wallTime: undefined,
       initiator: undefined,
       redirectResponse: undefined,
-      type: LOAD_CAUSE_STRINGS[causeType] || "unknown",
-      frameId: topFrame.browsingContext.id.toString(),
+      type: LOAD_CAUSE_STRINGS[data.cause] || "unknown",
+      // Bug 1637363 - Add subframe support
+      frameId: topFrame.browsingContext?.id.toString(),
       hasUserGesture: undefined,
     });
   }
@@ -438,4 +425,39 @@ function getLoadContext(httpChannel) {
     }
   } catch (e) {}
   return loadContext;
+}
+
+/**
+ * Given a array of possibly repeating header names, merge the values for
+ * duplicate headers into a comma-separated list, or in some cases a
+ * newline-separated list.
+ *
+ * e.g. { "Cache-Control": "no-cache,no-store" }
+ *
+ * Based on
+ * https://hg.mozilla.org/mozilla-central/file/56c09d42f411246e407fe30418c27e67a6a44d29/netwerk/protocol/http/nsHttpHeaderArray.h
+ *
+ * @param {Array} headers
+ *    Array of {name, value}
+ * @returns {Object}
+ *    Object where each key is a header name.
+ */
+function headersAsObject(headers) {
+  const rv = {};
+  headers.forEach(({ name, value }) => {
+    name = name.toLowerCase();
+    if (rv[name]) {
+      const separator = [
+        "set-cookie",
+        "www-authenticate",
+        "proxy-authenticate",
+      ].includes(name)
+        ? "\n"
+        : ",";
+      rv[name] += `${separator}${value}`;
+    } else {
+      rv[name] = value;
+    }
+  });
+  return rv;
 }
