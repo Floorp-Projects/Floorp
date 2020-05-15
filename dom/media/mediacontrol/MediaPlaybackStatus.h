@@ -27,6 +27,13 @@ namespace dom {
  *
  * Use `UpdateMediaXXXState()` to update controlled media status, and use
  * `IsXXX()` methods to acquire the playback status of the tab.
+ *
+ * As we know each context's audible state, we can decide which context should
+ * owns the audio focus when multiple contexts are all playing audible media at
+ * the same time. In that cases, the latest context that plays media would own
+ * the audio focus. When the context owning the audio focus is destroyed, we
+ * would see if there is another other context still playing audible media, and
+ * switch the audio focus to another context.
  */
 class MediaPlaybackStatus final {
  public:
@@ -36,6 +43,8 @@ class MediaPlaybackStatus final {
   bool IsPlaying() const;
   bool IsAudible() const;
   bool IsAnyMediaBeingControlled() const;
+
+  Maybe<uint64_t> GetAudioFocusOwnerContextId() const;
 
  private:
   /**
@@ -90,8 +99,15 @@ class MediaPlaybackStatus final {
   ContextMediaInfo& GetNotNullContextInfo(uint64_t aContextId);
   void DestroyContextInfo(uint64_t aContextId);
 
+  void ChooseNewContextToOwnAudioFocus();
+  void SetOwningAudioFocusContextId(Maybe<uint64_t>&& aContextId);
+  bool IsContextOwningAudioFocus(uint64_t aContextId) const;
+  bool ShouldRequestAudioFocusForInfo(const ContextMediaInfo& aInfo) const;
+  bool ShouldAbandonAudioFocusForInfo(const ContextMediaInfo& aInfo) const;
+
   // This contains all the media status of browsing contexts within a tab.
   nsDataHashtable<nsUint64HashKey, UniquePtr<ContextMediaInfo>> mContextInfoMap;
+  Maybe<uint64_t> mOwningAudioFocusContextId;
 };
 
 }  // namespace dom
