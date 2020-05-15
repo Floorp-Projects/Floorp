@@ -1080,6 +1080,8 @@ void Statistics::sendGCTelemetry() {
                           t(phaseTimes[Phase::COMPACT]));
   }
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_ROOTS_MS, t(markRootsTotal));
+  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_ROOTS_US,
+                        markRootsTotal.ToMicroseconds());
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_GRAY_MS, t(markGrayTotal));
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_WEAK_MS, t(markWeakTotal));
   runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL, nonincremental());
