@@ -176,6 +176,13 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
             NS_LITERAL_CSTRING("INTEL_BATTERY_REQUIRES_DCOMP"));
       }
     }
+
+    int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate();
+    if (maxRefreshRate >= 60) {
+      mFeatureWrQualified->Disable(FeatureStatus::Blocked,
+                                   "Monitor refresh rate too high",
+                                   NS_LITERAL_CSTRING("REFRESH_RATE_TOO_HIGH"));
+    }
   }
 
   return guarded;
