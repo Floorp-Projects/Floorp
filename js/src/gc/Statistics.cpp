@@ -1096,11 +1096,6 @@ void Statistics::sendGCTelemetry() {
                           uint32_t(lastSlice.resetReason));
   }
 
-  TimeDuration sccTotal, sccLongest;
-  sccDurations(&sccTotal, &sccLongest);
-  runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
-  runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS, t(sccLongest));
-
   TimeDuration total, longest;
   gcDuration(&total, &longest);
 
