@@ -6,7 +6,9 @@
 
 #include "Hal.h"
 
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/GeckoProcessManagerWrappers.h"
+#include "mozilla/java/GeckoProcessTypeWrappers.h"
+#include "mozilla/java/ServiceAllocatorWrappers.h"
 
 /**
  * Bucket the Gecko HAL process priority level into one of the three Android

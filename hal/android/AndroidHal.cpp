@@ -8,6 +8,7 @@
 #include "WindowIdentifier.h"
 #include "AndroidBridge.h"
 #include "mozilla/dom/network/Constants.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 #include "nsIScreenManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
