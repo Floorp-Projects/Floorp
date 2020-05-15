@@ -170,21 +170,38 @@ menuitem.bookmark-item {
   background-color: #ff0039;
 }
 
-/* Location bar */
+/* Address bar */
 
 %include ../shared/urlbar-searchbar.inc.css
+
+#urlbar,
+#searchbar {
+  font-size: 1.05em;
+}
+
+@supports -moz-bool-pref("browser.urlbar.update2.expandTextOnFocus") {
+  #urlbar[breakout-extend] {
+    font-size: 1.14em;
+  }
+}
 
 #urlbar:not(:-moz-lwtheme):not([focused="true"]) > #urlbar-background,
 #searchbar:not(:-moz-lwtheme):not(:focus-within) {
   border-color: ThreeDShadow;
 }
 
-/* Identity box */
-
 %include ../shared/identity-block/identity-block.inc.css
-
 %include ../shared/notification-icons.inc.css
 %include ../shared/addon-notification.inc.css
+
+/* Address bar results view */
+
+%include ../shared/urlbarView.inc.css
+
+:root {
+  --urlbar-popup-url-color: -moz-nativehyperlinktext;
+  --urlbar-popup-action-color: -moz-nativehyperlinktext;
+}
 
 /* Translation infobar */
 
@@ -265,24 +282,6 @@ notification[value="translation"] menulist::part(dropmarker) {
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid ThreeDShadow;
-}
-
-%include ../shared/urlbar-autocomplete.inc.css
-
-:root {
-  --urlbar-popup-url-color: -moz-nativehyperlinktext;
-  --urlbar-popup-action-color: -moz-nativehyperlinktext;
-}
-
-#urlbar,
-#searchbar {
-  font-size: 1.05em;
-}
-
-@supports -moz-bool-pref("browser.urlbar.update2.expandTextOnFocus") {
-  #urlbar[breakout-extend] {
-    font-size: 1.14em;
-  }
 }
 
 /* Bookmarking panel */
