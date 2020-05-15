@@ -983,12 +983,24 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "81",
     "kind": "linear",
     "low": 1000,
     "high": 1000000,
     "n_buckets": 100,
     "bug_numbers": [1475896],
+    "description": "The number of objects marked per ms during GC."
+  },
+  "GC_MARK_RATE_2": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 300000,
+    "n_buckets": 50,
+    "bug_numbers": [1475896, 1637318],
     "description": "The number of objects marked per ms during GC."
   },
   "GC_TIME_BETWEEN_S": {

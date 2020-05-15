@@ -1074,6 +1074,7 @@ void Statistics::sendGCTelemetry() {
   runtime->addTelemetry(JS_TELEMETRY_GC_PREPARE_MS, t(prepareTotal));
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_MS, t(markTotal));
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_RATE, markRate);
+  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_RATE_2, markRate);
   runtime->addTelemetry(JS_TELEMETRY_GC_SWEEP_MS, t(phaseTimes[Phase::SWEEP]));
   if (gc->didCompactZones()) {
     runtime->addTelemetry(JS_TELEMETRY_GC_COMPACT_MS,
