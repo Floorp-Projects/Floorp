@@ -302,7 +302,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void SetWindowTransform(const mozilla::gfx::Matrix& aTransform) override;
   virtual void SetWindowMouseTransparent(bool aIsTransparent) override;
   virtual void SetShowsToolbarButton(bool aShow) override;
-  virtual void SetShowsFullScreenButton(bool aShow) override;
   virtual void SetWindowAnimationType(WindowAnimationType aType) override;
   virtual void SetDrawsTitle(bool aDrawTitle) override;
   virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) override;
@@ -387,8 +386,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   bool mModal;
   bool mFakeModal;
 
-  // Only true on 10.7+ if SetShowsFullScreenButton(true) is called.
-  bool mSupportsNativeFullScreen;
   // Whether we are currently using native fullscreen. It could be false because
   // we are in the DOM fullscreen where we do not use the native fullscreen.
   bool mInNativeFullScreenMode;
