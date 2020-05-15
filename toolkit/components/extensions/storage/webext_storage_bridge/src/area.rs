@@ -4,6 +4,7 @@
 
 use std::{
     cell::{Ref, RefCell},
+    convert::TryInto,
     ffi::OsString,
     mem, str,
     sync::Arc,
@@ -14,6 +15,7 @@ use moz_task::{self, DispatchOptions, TaskRunnable};
 use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsCString, nsString};
 use thin_vec::ThinVec;
+use webext_storage::STORAGE_VERSION;
 use xpcom::{
     interfaces::{
         mozIBridgedSyncEngineApplyCallback, mozIBridgedSyncEngineCallback,
@@ -293,7 +295,7 @@ impl StorageSyncArea {
 
     xpcom_method!(get_storage_version => GetStorageVersion() -> i32);
     fn get_storage_version(&self) -> Result<i32> {
-        Ok(1)
+        Ok(STORAGE_VERSION.try_into().unwrap())
     }
 
     xpcom_method!(
