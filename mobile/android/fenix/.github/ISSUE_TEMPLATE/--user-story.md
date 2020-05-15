@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 ## User Story
-- As a user, I want … so I can do … 
+- As a user, I want … so I can do … (keep it problem-centric)
 
 ## Dependencies
 - List dependencies on other issues/teams etc.

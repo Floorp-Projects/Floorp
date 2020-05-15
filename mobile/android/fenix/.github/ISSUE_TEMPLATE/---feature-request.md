@@ -6,8 +6,10 @@ labels: "🌟 feature request"
 assignees: ''
 
 ---
-### Why/User Benefit/User Problem
 
-### What/Requirements
+### What is the user problem or growth opportunity you want to see solved?
 
-### Acceptance Criteria (how do I know when I’m done?)
+### How do you know that this problem exists today? Why is this important?
+
+### Who will benefit from it?
+
