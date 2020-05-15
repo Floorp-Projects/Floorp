@@ -3438,6 +3438,8 @@ impl Renderer {
                     "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
                     frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
 
+                self.device.gl().flush();  // early start on gpu cache updates
+
                 self.draw_frame(
                     frame,
                     device_size,
@@ -6068,6 +6070,7 @@ impl Renderer {
                     );
                 }
             }
+            self.device.gl().flush();
         }
 
         if let Some(device_size) = device_size {
