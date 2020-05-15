@@ -3602,6 +3602,11 @@ class nsIFrame : public nsQueryFrame {
                                  bool* aOutJumpedLine,
                                  bool* aOutMovedOverNonSelectableText);
 
+  nsresult GetFrameFromDirection(const nsPeekOffsetStruct& aPos,
+                                 nsIFrame** aOutFrame, int32_t* aOutOffset,
+                                 bool* aOutJumpedLine,
+                                 bool* aOutMovedOverNonSelectableText);
+
   /**
    * Called to see if the children of the frame are visible from indexstart to
    * index end. This does not change any state. Returns true only if the indexes
