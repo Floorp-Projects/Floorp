@@ -777,6 +777,10 @@ class MDefinition : public MNode {
 
   bool hasUses() const { return !uses_.empty(); }
 
+  // If this MDefinition has a single use (ignoring MResumePoints), returns that
+  // use's definition. Else returns nullptr.
+  MDefinition* maybeSingleDefUse() const;
+
   void addUse(MUse* use) {
     MOZ_ASSERT(use->producer() == this);
     uses_.pushFront(use);
