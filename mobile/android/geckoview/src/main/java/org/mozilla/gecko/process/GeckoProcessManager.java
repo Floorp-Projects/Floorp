@@ -138,7 +138,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             return builder.toString();
         }
 
-        private GeckoResult<IChildProcess> completeFailedBind(@NonNull final Throwable e) {
+        private GeckoResult<IChildProcess> completeFailedBind(@NonNull final ServiceAllocator.BindException e) {
             XPCOMEventTarget.assertOnLauncherThread();
             Log.e(LOGTAG, "Failed bind", e);
 
@@ -168,9 +168,9 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             mPendingBind = new GeckoResult<>();
             try {
                 if (!bindService()) {
-                    return completeFailedBind(new RuntimeException(buildLogMsg("Cannot connect to process")));
+                    throw new ServiceAllocator.BindException(buildLogMsg("Cannot connect to process"));
                 }
-            } catch (RuntimeException e) {
+            } catch (final ServiceAllocator.BindException e) {
                 return completeFailedBind(e);
             }
 
@@ -311,7 +311,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         private ChildConnection getExistingContentConnection(@NonNull final Selector selector) {
             XPCOMEventTarget.assertOnLauncherThread();
             if (selector.getType() != GeckoProcessType.CONTENT) {
-                throw new RuntimeException("Selector is not for content!");
+                throw new IllegalArgumentException("Selector is not for content!");
             }
 
             return mContentPids.get(Integer.valueOf(selector.getPid()));
