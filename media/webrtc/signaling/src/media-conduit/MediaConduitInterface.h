@@ -44,6 +44,7 @@ enum class MediaSessionConduitLocalDirection : int { kSend, kRecv };
 
 class VideoSessionConduit;
 class AudioSessionConduit;
+class RtpRtcpConfig;
 
 using RtpExtList = std::vector<webrtc::RtpExtension>;
 
@@ -450,7 +451,8 @@ class VideoSessionConduit : public MediaSessionConduit {
    *
    */
   virtual MediaConduitErrorCode ConfigureSendMediaCodec(
-      const VideoCodecConfig* sendSessionConfig) = 0;
+      const VideoCodecConfig* sendSessionConfig,
+      const RtpRtcpConfig& aRtpRtcpConfig) = 0;
 
   /**
    * Function to configurelist of receive codecs for the video session
@@ -460,7 +462,8 @@ class VideoSessionConduit : public MediaSessionConduit {
    *
    */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
-      const std::vector<UniquePtr<VideoCodecConfig>>& recvCodecConfigList) = 0;
+      const std::vector<UniquePtr<VideoCodecConfig>>& recvCodecConfigList,
+      const RtpRtcpConfig& aRtpRtcpConfig) = 0;
 
   /**
    * These methods allow unit tests to double-check that the

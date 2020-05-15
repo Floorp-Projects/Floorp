@@ -536,6 +536,13 @@ nsresult SdpHelper::CopyStickyParams(const SdpMediaSection& source,
                                                   sourceAttrs.GetMid()));
   }
 
+  // Keep RTCP mode setting
+  if (sourceAttrs.HasAttribute(SdpAttribute::kRtcpRsizeAttribute) &&
+      source.GetMediaType() == SdpMediaSection::kVideo) {
+    destAttrs.SetAttribute(
+        new SdpFlagAttribute(SdpAttribute::kRtcpRsizeAttribute));
+  }
+
   return NS_OK;
 }
 
