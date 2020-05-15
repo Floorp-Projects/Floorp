@@ -256,11 +256,9 @@ class NetworkObserver {
       return;
     }
     httpChannel.QueryInterface(Ci.nsIHttpChannelInternal);
-    const headers = [];
-    httpChannel.visitResponseHeaders({
-      visitHeader: (name, value) => headers.push({ name, value }),
-    });
-
+    const causeType = httpChannel.loadInfo
+      ? httpChannel.loadInfo.externalContentPolicyType
+      : Ci.nsIContentPolicy.TYPE_OTHER;
     let remoteIPAddress = undefined;
     let remotePort = undefined;
     try {
@@ -273,11 +271,19 @@ class NetworkObserver {
       requestId: requestId(httpChannel),
       securityDetails: getSecurityDetails(httpChannel),
       fromCache,
-      headers,
+      headers: responseHeaders(httpChannel),
+      requestHeaders: requestHeaders(httpChannel),
       remoteIPAddress,
       remotePort,
       status: httpChannel.responseStatus,
       statusText: httpChannel.responseStatusText,
+      cause: causeType,
+      causeString: causeTypeToString(causeType),
+      // clients expect loaderId == requestId for document navigation
+      loaderId:
+        causeType == Ci.nsIContentPolicy.TYPE_DOCUMENT
+          ? requestId(httpChannel)
+          : undefined,
     });
   }
 
@@ -427,6 +433,14 @@ function requestId(httpChannel) {
 function requestHeaders(httpChannel) {
   const headers = [];
   httpChannel.visitRequestHeaders({
+    visitHeader: (name, value) => headers.push({ name, value }),
+  });
+  return headers;
+}
+
+function responseHeaders(httpChannel) {
+  const headers = [];
+  httpChannel.visitResponseHeaders({
     visitHeader: (name, value) => headers.push({ name, value }),
   });
   return headers;

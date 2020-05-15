@@ -51,6 +51,7 @@ class Network extends Domain {
     this.enabled = false;
 
     this._onRequest = this._onRequest.bind(this);
+    this._onResponse = this._onResponse.bind(this);
   }
 
   destructor() {
@@ -68,6 +69,7 @@ class Network extends Domain {
       this.session.target.browser
     );
     this.session.networkObserver.on("request", this._onRequest);
+    this.session.networkObserver.on("response", this._onResponse);
   }
 
   disable() {
@@ -78,6 +80,7 @@ class Network extends Domain {
       this.session.target.browser
     );
     this.session.networkObserver.off("request", this._onRequest);
+    this.session.networkObserver.off("response", this._onResponse);
     this.enabled = false;
   }
 
@@ -404,6 +407,38 @@ class Network extends Domain {
       // Bug 1637363 - Add subframe support
       frameId: topFrame.browsingContext?.id.toString(),
       hasUserGesture: undefined,
+    });
+  }
+
+  _onResponse(eventName, httpChannel, data) {
+    const wrappedChannel = ChannelWrapper.get(httpChannel);
+    const topFrame = getLoadContext(httpChannel).topFrameElement;
+    const headers = headersAsObject(data.headers);
+    this.emit("Network.responseReceived", {
+      requestId: data.requestId,
+      loaderId: data.loaderId,
+      timestamp: Date.now() / 1000,
+      type: LOAD_CAUSE_STRINGS[data.cause] || "unknown",
+      response: {
+        url: httpChannel.URI.spec,
+        status: data.status,
+        statusText: data.statusText,
+        headers,
+        mimeType: wrappedChannel.contentType,
+        requestHeaders: headersAsObject(data.requestHeaders),
+        connectionReused: undefined,
+        connectionId: undefined,
+        remoteIPAddress: data.remoteIPAddress,
+        remotePort: data.remotePort,
+        fromDiskCache: data.fromCache,
+        encodedDataLength: undefined,
+        protocol: httpChannel.protocolVersion,
+        securityDetails: data.securityDetails,
+        // unknown, neutral, insecure, secure, info, insecure-broken
+        securityState: "unknown",
+      },
+      // Bug 1637363 - Add subframe support
+      frameId: topFrame.browsingContext?.id.toString(),
     });
   }
 }
