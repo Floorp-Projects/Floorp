@@ -13,6 +13,7 @@
 #include "mozilla/Logging.h"
 
 #include "AndroidBridge.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 
 namespace java = mozilla::java;
 
