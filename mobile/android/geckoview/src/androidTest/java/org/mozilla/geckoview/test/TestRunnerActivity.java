@@ -323,7 +323,14 @@ public class TestRunnerActivity extends Activity {
                     @Override
                     public GeckoResult<GeckoSession> onNewTab(WebExtension source,
                                                               WebExtension.CreateTabDetails details) {
-                        GeckoSession newSession = createSession();
+                        GeckoSessionSettings settings = null;
+                        if (details.cookieStoreId != null) {
+                            settings = new GeckoSessionSettings.Builder()
+                                    .contextId(details.cookieStoreId)
+                                    .build();
+                        }
+
+                        GeckoSession newSession = createSession(settings);
                         if (details.active == Boolean.TRUE) {
                             webExtensionController().setTabActive(mActiveSession, false);
                             mActiveSession = newSession;

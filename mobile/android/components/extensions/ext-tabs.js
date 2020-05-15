@@ -309,6 +309,7 @@ this.tabs = class extends ExtensionAPI {
 
         async create({
           active,
+          cookieStoreId,
           discarded,
           index,
           openInReaderMode,
@@ -334,6 +335,7 @@ this.tabs = class extends ExtensionAPI {
             extensionId: context.extension.id,
             createProperties: {
               active,
+              cookieStoreId,
               discarded,
               index,
               openInReaderMode,

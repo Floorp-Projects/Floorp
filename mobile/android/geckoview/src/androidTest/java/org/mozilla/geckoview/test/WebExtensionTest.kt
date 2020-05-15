@@ -32,6 +32,8 @@ class WebExtensionTest : BaseSessionTest() {
     companion object {
         private const val TABS_CREATE_BACKGROUND: String =
                 "resource://android/assets/web_extensions/tabs-create/"
+        private const val TABS_CREATE_2_BACKGROUND: String =
+                "resource://android/assets/web_extensions/tabs-create-2/"
         private const val TABS_CREATE_REMOVE_BACKGROUND: String =
                 "resource://android/assets/web_extensions/tabs-create-remove/"
         private const val TABS_ACTIVATE_REMOVE_BACKGROUND: String =
@@ -528,6 +530,34 @@ class WebExtensionTest : BaseSessionTest() {
         }
 
         tabsExtension = sessionRule.waitForResult(controller.installBuiltIn(TABS_CREATE_BACKGROUND))
+        tabsExtension.setTabDelegate(tabDelegate)
+        sessionRule.waitForResult(tabsCreateResult)
+
+        sessionRule.waitForResult(controller.uninstall(tabsExtension))
+    }
+
+    // This test
+    // - Listen for a new tab request from a web extension
+    // - Registers a web extension
+    // - Extension requests creation of new tab with a cookie store id.
+    // - Waits for onNewTab request
+    // - Verify that request came from right extension
+    @Test
+    fun testBrowserTabsCreateWithCookieStoreId() {
+        val tabsCreateResult = GeckoResult<Void>()
+        var tabsExtension: WebExtension? = null
+        val tabDelegate = object : WebExtension.TabDelegate {
+            override fun onNewTab(source: WebExtension, details: WebExtension.CreateTabDetails): GeckoResult<GeckoSession> {
+                assertEquals(details.url, "https://www.mozilla.org/en-US/")
+                assertEquals(details.active, true)
+                assertEquals(details.cookieStoreId, "1")
+                assertEquals(tabsExtension!!, source)
+                tabsCreateResult.complete(null)
+                return GeckoResult.fromValue(null)
+            }
+        }
+
+        tabsExtension = sessionRule.waitForResult(controller.installBuiltIn(TABS_CREATE_2_BACKGROUND))
         tabsExtension.setTabDelegate(tabDelegate)
         sessionRule.waitForResult(tabsCreateResult)
 
