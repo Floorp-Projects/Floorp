@@ -248,7 +248,6 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
   if (mStateManager.mAsyncResourceUpdates || !mPendingScrollUpdates.IsEmpty() ||
       WrBridge()->HasWebRenderParentCommands()) {
     auto updates = renderRootUpdates.AppendElement();
-    updates->mRenderRoot = wr::RenderRoot::Default;
     updates->mPaintSequenceNumber = mPaintSequenceNumber;
     if (mStateManager.mAsyncResourceUpdates) {
       mStateManager.mAsyncResourceUpdates->Flush(updates->mResourceUpdates,
@@ -400,7 +399,6 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     AUTO_PROFILER_TRACING_MARKER("Paint", "ForwardDPTransaction", GRAPHICS);
     nsTArray<RenderRootDisplayListData> renderRootDLs;
     auto renderRootDL = renderRootDLs.AppendElement();
-    renderRootDL->mRenderRoot = wr::RenderRoot::Default;
     builder.Finalize(*renderRootDL);
     mLastDisplayListSize = renderRootDL->mDL->mCapacity;
     resourceUpdates.Flush(renderRootDL->mResourceUpdates,
