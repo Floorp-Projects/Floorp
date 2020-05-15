@@ -2594,6 +2594,9 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_GC_BUDGET_MS:
       Telemetry::Accumulate(Telemetry::GC_BUDGET_MS, sample);
       break;
+    case JS_TELEMETRY_GC_BUDGET_MS_2:
+      Telemetry::Accumulate(Telemetry::GC_BUDGET_MS_2, sample);
+      break;
     case JS_TELEMETRY_GC_BUDGET_OVERRUN:
       Telemetry::Accumulate(Telemetry::GC_BUDGET_OVERRUN, sample);
       break;
