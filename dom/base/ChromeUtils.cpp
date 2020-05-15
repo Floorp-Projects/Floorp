@@ -946,7 +946,6 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                     thread->mCpuUser = entry.cpuUser;
                     thread->mCpuKernel = entry.cpuKernel;
                     thread->mTid = entry.tid;
-                    thread->mName.Assign(entry.name);
                   }
                   procInfo.mThreads = std::move(threads);
 
