@@ -25,8 +25,7 @@ class SharedWorkerManager;
 class SharedWorkerParent;
 class UniqueMessagePortId;
 
-class SharedWorkerService final
-    : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
+class SharedWorkerService final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWorkerService);
 
@@ -51,8 +50,8 @@ class SharedWorkerService final
   void RemoveWorkerManagerOnMainThread(SharedWorkerManager* aManager);
 
  private:
-  SharedWorkerService();
-  ~SharedWorkerService();
+  SharedWorkerService() = default;
+  ~SharedWorkerService() = default;
 
   void ErrorPropagationOnMainThread(nsIEventTarget* aBackgroundEventTarget,
                                     SharedWorkerParent* aActor,
