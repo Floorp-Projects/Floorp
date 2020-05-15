@@ -4147,7 +4147,7 @@ bool nsGlobalWindowInner::ShouldShowFocusRing() {
   }
 
   nsCOMPtr<nsPIWindowRoot> root = GetTopWindowRoot();
-  return root ? root->ShowFocusRings() : false;
+  return root && root->ShowFocusRings();
 }
 
 bool nsGlobalWindowInner::TakeFocus(bool aFocus, uint32_t aFocusMethod) {

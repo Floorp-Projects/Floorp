@@ -23,9 +23,8 @@ class nsWindowRoot final : public nsPIWindowRoot {
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  virtual mozilla::EventListenerManager* GetExistingListenerManager()
-      const override;
-  virtual mozilla::EventListenerManager* GetOrCreateListenerManager() override;
+  mozilla::EventListenerManager* GetExistingListenerManager() const override;
+  mozilla::EventListenerManager* GetOrCreateListenerManager() override;
 
   bool ComputeDefaultWantsUntrusted(mozilla::ErrorResult& aRv) final;
 
@@ -39,47 +38,40 @@ class nsWindowRoot final : public nsPIWindowRoot {
 
   // nsPIWindowRoot
 
-  virtual nsPIDOMWindowOuter* GetWindow() override;
+  nsPIDOMWindowOuter* GetWindow() override;
 
-  virtual nsresult GetControllers(bool aForVisibleWindow,
-                                  nsIControllers** aResult) override;
-  virtual nsresult GetControllerForCommand(const char* aCommand,
-                                           bool aForVisibleWindow,
-                                           nsIController** _retval) override;
+  nsresult GetControllers(bool aForVisibleWindow,
+                          nsIControllers** aResult) override;
+  nsresult GetControllerForCommand(const char* aCommand, bool aForVisibleWindow,
+                                   nsIController** _retval) override;
 
-  virtual void GetEnabledDisabledCommands(
+  void GetEnabledDisabledCommands(
       nsTArray<nsCString>& aEnabledCommands,
       nsTArray<nsCString>& aDisabledCommands) override;
 
-  virtual already_AddRefed<nsINode> GetPopupNode() override;
-  virtual void SetPopupNode(nsINode* aNode) override;
+  already_AddRefed<nsINode> GetPopupNode() override;
+  void SetPopupNode(nsINode* aNode) override;
 
-  virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget) override {
+  void SetParentTarget(mozilla::dom::EventTarget* aTarget) override {
     mParent = aTarget;
   }
-  virtual mozilla::dom::EventTarget* GetParentTarget() override {
-    return mParent;
-  }
-  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() override;
-  virtual nsIGlobalObject* GetOwnerGlobal() const override;
+  mozilla::dom::EventTarget* GetParentTarget() override { return mParent; }
+  nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() override;
+  nsIGlobalObject* GetOwnerGlobal() const override;
 
   nsIGlobalObject* GetParentObject();
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsWindowRoot)
 
-  virtual void AddBrowser(nsIRemoteTab* aBrowser) override;
-  virtual void RemoveBrowser(nsIRemoteTab* aBrowser) override;
-  virtual void EnumerateBrowsers(BrowserEnumerator aEnumFunc,
-                                 void* aArg) override;
+  void AddBrowser(nsIRemoteTab* aBrowser) override;
+  void RemoveBrowser(nsIRemoteTab* aBrowser) override;
+  void EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) override;
 
-  virtual bool ShowFocusRings() override { return mShowFocusRings; }
+  bool ShowFocusRings() override { return mShowFocusRings; }
 
-  virtual void SetShowFocusRings(bool aEnable) override {
-    mShowFocusRings = aEnable;
-  }
+  void SetShowFocusRings(bool aEnable) override { mShowFocusRings = aEnable; }
 
  protected:
   virtual ~nsWindowRoot();
