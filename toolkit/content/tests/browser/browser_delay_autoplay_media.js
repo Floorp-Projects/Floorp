@@ -111,7 +111,7 @@ add_task(async function resume_delayed_media_when_enable_blocking_autoplay() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-      ["media.autoplay.blocking_policy", 0],
+      ["media.autoplay.enabled.user-gestures-needed", true],
     ],
   });
 

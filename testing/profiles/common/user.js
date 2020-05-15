@@ -58,7 +58,7 @@ user_pref("xpinstall.signatures.required", false);
 user_pref("services.settings.server", "http://localhost/remote-settings-dummy/v1");
 // Ensure autoplay is enabled for all platforms.
 user_pref("media.autoplay.default", 0); // 0=Allowed, 1=Blocked, 2=Prompt
-user_pref("media.autoplay.blocking_policy", 0);
+user_pref("media.autoplay.enabled.user-gestures-needed", true);
 user_pref("media.autoplay.ask-permission", false);
 user_pref("media.autoplay.block-webaudio", false);
 user_pref("media.allowed-to-play.enabled", true);

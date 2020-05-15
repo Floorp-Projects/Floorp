@@ -20,7 +20,7 @@ function setTestingPreferences(defaultSetting) {
   return SpecialPowers.pushPrefEnv({
     set: [
       ["media.autoplay.default", defaultValue],
-      ["media.autoplay.blocking_policy", 0],
+      ["media.autoplay.enabled.user-gestures-needed", true],
       ["media.autoplay.block-event.enabled", true],
     ],
   });
