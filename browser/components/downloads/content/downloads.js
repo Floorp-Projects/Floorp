@@ -1070,7 +1070,7 @@ DownloadsViewItem.prototype = {
   },
 
   downloadsCmd_open() {
-    this.download.launch().catch(Cu.reportError);
+    DownloadsCommon.openDownload(this.download).catch(Cu.reportError);
 
     // We explicitly close the panel here to give the user the feedback that
     // their click has been received, and we're handling the action.
