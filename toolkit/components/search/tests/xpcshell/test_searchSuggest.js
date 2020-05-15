@@ -347,6 +347,18 @@ add_task(async function empty_rich_results() {
   Assert.ok(!result.remote[2].tail);
 });
 
+add_task(async function tail_offset_index() {
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch("tail tail 1 t", false, getEngine);
+  Assert.equal(result.term, "tail tail 1 t");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 3);
+  Assert.equal(result.remote[1].value, "tail tail 1 t tail 1");
+  Assert.equal(result.remote[1].matchPrefix, "… ");
+  Assert.equal(result.remote[1].tail, "tail 1");
+  Assert.equal(result.remote[1].tailOffsetIndex, 14);
+});
+
 add_task(async function fetch_twice_in_a_row() {
   // Two entries since the first will match the first fetch but not the second.
   await updateSearchHistory("bump", "delay local");
