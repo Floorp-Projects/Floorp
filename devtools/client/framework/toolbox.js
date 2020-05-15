@@ -722,8 +722,8 @@ Toolbox.prototype = {
    * This method will be called for the top-level target, as well as any potential
    * additional targets we may care about.
    */
-  async _onTargetAvailable({ targetFront }) {
-    if (targetFront.isTopLevel) {
+  async _onTargetAvailable({ type, targetFront, isTopLevel }) {
+    if (isTopLevel) {
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
       targetFront.on("will-navigate", this._onWillNavigate);
@@ -736,19 +736,19 @@ Toolbox.prototype = {
       });
     }
 
-    await this._attachTarget(targetFront);
+    await this._attachTarget({ type, targetFront, isTopLevel });
 
     if (this.hostType !== Toolbox.HostType.PAGE) {
       await this.store.dispatch(registerTarget(targetFront));
     }
 
-    if (targetFront.isTopLevel) {
+    if (isTopLevel) {
       this.emit("top-target-attached");
     }
   },
 
-  _onTargetDestroyed({ targetFront }) {
-    if (targetFront.isTopLevel) {
+  _onTargetDestroyed({ type, targetFront, isTopLevel }) {
+    if (isTopLevel) {
       this.detachTarget();
     }
 
@@ -764,7 +764,7 @@ Toolbox.prototype = {
    * And we listen for thread actor events in order to update toolbox UI when
    * we hit a breakpoint.
    */
-  async _attachTarget(targetFront) {
+  async _attachTarget({ type, targetFront, isTopLevel }) {
     await targetFront.attach();
 
     // Start tracking network activity on toolbox open for targets such as tabs.
@@ -775,13 +775,10 @@ Toolbox.prototype = {
     // already tracked by the content process targets. At least in the context
     // of the Browser Toolbox.
     // We would have to revisit that for the content toolboxes.
-    if (
-      targetFront.isTopLevel ||
-      targetFront.targetType != TargetList.TYPES.FRAME
-    ) {
+    if (isTopLevel || type != TargetList.TYPES.FRAME) {
       const threadFront = await this._attachAndResumeThread(targetFront);
       this._startThreadFrontListeners(threadFront);
-      if (targetFront.isTopLevel) {
+      if (isTopLevel) {
         this._threadFront = threadFront;
       }
     }

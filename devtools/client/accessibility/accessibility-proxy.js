@@ -307,8 +307,8 @@ class AccessibilityProxy {
       : this.accessibilityEventsMap;
   }
 
-  async _onTargetAvailable({ targetFront }) {
-    if (targetFront.isTopLevel) {
+  async _onTargetAvailable({ targetFront, isTopLevel }) {
+    if (isTopLevel) {
       await this._updateTarget(targetFront);
     }
   }

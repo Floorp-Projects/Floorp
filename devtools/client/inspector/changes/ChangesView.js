@@ -126,26 +126,26 @@ class ChangesView {
     changesFront.off("clear-changes", this.onClearChanges);
   }
 
-  async onTargetAvailable({ targetFront }) {
+  async onTargetAvailable({ type, targetFront, isTopLevel }) {
     targetFront.watchFronts(
       "changes",
       this.onChangesFrontAvailable,
       this.onChangesFrontDestroyed
     );
 
-    if (targetFront.isTopLevel) {
+    if (isTopLevel) {
       targetFront.on("will-navigate", this.onClearChanges);
     }
   }
 
-  async onTargetDestroyed({ targetFront }) {
+  async onTargetDestroyed({ type, targetFront, isTopLevel }) {
     targetFront.unwatchFronts(
       "changes",
       this.onChangesFrontAvailable,
       this.onChangesFrontDestroyed
     );
 
-    if (targetFront.isTopLevel) {
+    if (isTopLevel) {
       targetFront.off("will-navigate", this.onClearChanges);
     }
   }

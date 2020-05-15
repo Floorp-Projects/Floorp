@@ -4,8 +4,14 @@
 
 "use strict";
 
-module.exports = async function({ targetList, targetFront, onAvailable }) {
-  if (!targetFront.isTopLevel) {
+module.exports = async function({
+  targetList,
+  targetType,
+  targetFront,
+  isTopLevel,
+  onAvailable,
+}) {
+  if (!isTopLevel) {
     return;
   }
 

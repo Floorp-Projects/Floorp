@@ -279,10 +279,10 @@ class StorageUI {
     );
   }
 
-  async _onTargetAvailable({ targetFront }) {
+  async _onTargetAvailable({ type, targetFront, isTopLevel }) {
     // Only support top level target and navigation to new processes.
     // i.e. ignore additional targets created for remote <iframes>
-    if (!targetFront.isTopLevel) {
+    if (!isTopLevel) {
       return;
     }
 
@@ -324,10 +324,10 @@ class StorageUI {
     }
   }
 
-  _onTargetDestroyed({ targetFront }) {
+  _onTargetDestroyed({ type, targetFront, isTopLevel }) {
     // Only support top level target and navigation to new processes.
     // i.e. ignore additional targets created for remote <iframes>
-    if (!targetFront.isTopLevel) {
+    if (!isTopLevel) {
       return;
     }
 

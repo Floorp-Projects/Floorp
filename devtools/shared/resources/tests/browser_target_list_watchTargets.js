@@ -45,22 +45,22 @@ async function testWatchTargets(mainRoot) {
     "Check that onAvailable is called for processes already created *before* the call to watchTargets"
   );
   const targets = new Set();
-  const onAvailable = ({ targetFront }) => {
+  const onAvailable = ({ type, targetFront, isTopLevel }) => {
     if (targets.has(targetFront)) {
       ok(false, "The same target is notified multiple times via onAvailable");
     }
     is(
-      targetFront.targetType,
+      type,
       TargetList.TYPES.PROCESS,
       "We are only notified about process targets"
     );
     ok(
-      targetFront == target ? targetFront.isTopLevel : !targetFront.isTopLevel,
-      "isTopLevel property is correct"
+      targetFront == target ? isTopLevel : !isTopLevel,
+      "isTopLevel argument is correct"
     );
     targets.add(targetFront);
   };
-  const onDestroyed = ({ targetFront }) => {
+  const onDestroyed = ({ type, targetFront, isTopLevel }) => {
     if (!targets.has(targetFront)) {
       ok(
         false,
@@ -68,12 +68,12 @@ async function testWatchTargets(mainRoot) {
       );
     }
     is(
-      targetFront.targetType,
+      type,
       TargetList.TYPES.PROCESS,
       "We are only notified about process targets"
     );
     ok(
-      !targetFront.isTopLevel,
+      !isTopLevel,
       "We are not notified about the top level target destruction"
     );
     targets.delete(targetFront);
@@ -105,7 +105,7 @@ async function testWatchTargets(mainRoot) {
   );
   const previousTargets = new Set(targets);
   const onProcessCreated = new Promise(resolve => {
-    const onAvailable2 = ({ targetFront }) => {
+    const onAvailable2 = ({ type, targetFront, isTopLevel }) => {
       if (previousTargets.has(targetFront)) {
         return;
       }
@@ -130,7 +130,7 @@ async function testWatchTargets(mainRoot) {
   // Assert that onDestroyed is called for destroyed processes
   const onProcessDestroyed = new Promise(resolve => {
     const onAvailable3 = () => {};
-    const onDestroyed3 = ({ targetFront }) => {
+    const onDestroyed3 = ({ type, targetFront, isTopLevel }) => {
       resolve(targetFront);
       targetList.unwatchTargets(
         [TargetList.TYPES.PROCESS],
@@ -185,25 +185,22 @@ async function testContentProcessTarget(mainRoot) {
   // as listening for additional target is only enable for the parent process target.
   // See bug 1593928.
   const targets = new Set();
-  const onAvailable = ({ targetFront }) => {
+  const onAvailable = ({ type, targetFront, isTopLevel }) => {
     if (targets.has(targetFront)) {
       // This may fail if the top level target is reported by LegacyImplementation
       // to TargetList and emits an available event for it.
       ok(false, "The same target is notified multiple times via onAvailable");
     }
     is(
-      targetFront.targetType,
+      type,
       TargetList.TYPES.PROCESS,
       "We are only notified about process targets"
     );
     is(targetFront, target, "This is the existing top level target");
-    ok(
-      targetFront.isTopLevel,
-      "We are only notified about the top level target"
-    );
+    ok(isTopLevel, "We are only notified about the top level target");
     targets.add(targetFront);
   };
-  const onDestroyed = _ => {
+  const onDestroyed = ({ type, targetFront, isTopLevel }) => {
     ok(false, "onDestroyed should never be called in this test");
   };
   await targetList.watchTargets(
@@ -238,7 +235,7 @@ async function testThrowingInOnAvailable(mainRoot) {
   );
   const targets = new Set();
   let thrown = false;
-  const onAvailable = ({ targetFront }) => {
+  const onAvailable = ({ type, targetFront, isTopLevel }) => {
     if (!thrown) {
       thrown = true;
       throw new Error("Force an exception when processing the first target");

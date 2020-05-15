@@ -126,16 +126,16 @@ window.Application = {
     targetFront.off("navigate", this.handleOnNavigate);
   },
 
-  onTargetAvailable({ targetFront }) {
-    if (!targetFront.isTopLevel) {
+  onTargetAvailable({ targetFront, isTopLevel }) {
+    if (!isTopLevel) {
       return; // ignore target frames that are not top level for now
     }
 
     this.setupTarget(targetFront);
   },
 
-  onTargetDestroyed({ targetFront }) {
-    if (!targetFront.isTopLevel) {
+  onTargetDestroyed({ targetFront, isTopLevel }) {
+    if (!isTopLevel) {
       return; // ignore target frames that are not top level for now
     }
 

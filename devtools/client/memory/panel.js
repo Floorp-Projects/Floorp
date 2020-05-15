@@ -44,8 +44,8 @@ MemoryPanel.prototype = {
     return this;
   },
 
-  async _onTargetAvailable({ targetFront }) {
-    if (targetFront.isTopLevel) {
+  async _onTargetAvailable({ targetFront, isTopLevel }) {
+    if (isTopLevel) {
       const front = await targetFront.getFront("memory");
       await front.attach();
       this.initializer.updateFront(front);

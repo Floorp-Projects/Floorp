@@ -59,7 +59,7 @@ class WalkerEventListener {
     );
   }
 
-  async _onTargetAvailable({ targetFront }) {
+  async _onTargetAvailable({ type, targetFront, isTopLevel }) {
     const inspectorFront = await targetFront.getFront("inspector");
     const { walker } = inspectorFront;
     for (const [name, listener] of Object.entries(this._listenerMap)) {
@@ -67,7 +67,7 @@ class WalkerEventListener {
     }
   }
 
-  _onTargetDestroyed({ targetFront }) {
+  _onTargetDestroyed({ type, targetFront, isTopLevel }) {
     const inspectorFront = targetFront.getCachedFront("inspector");
     if (inspectorFront) {
       const { walker } = inspectorFront;
