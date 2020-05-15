@@ -88,6 +88,7 @@ class nsScriptErrorBase : public nsIScriptError {
   mozilla::Atomic<bool> mInitializedOnMainThread;
   bool mIsFromPrivateWindow;
   bool mIsFromChromeContext;
+  bool mIsPromiseRejection;
 };
 
 class nsScriptError final : public nsScriptErrorBase {

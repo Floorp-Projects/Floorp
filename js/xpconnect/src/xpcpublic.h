@@ -584,8 +584,13 @@ class ErrorReport : public ErrorBase {
   uint64_t mWindowID;
   bool mIsWarning;
   bool mIsMuted;
+  bool mIsPromiseRejection;
 
-  ErrorReport() : mWindowID(0), mIsWarning(false), mIsMuted(false) {}
+  ErrorReport()
+      : mWindowID(0),
+        mIsWarning(false),
+        mIsMuted(false),
+        mIsPromiseRejection(false) {}
 
   void Init(JSErrorReport* aReport, const char* aToStringResult, bool aIsChrome,
             uint64_t aWindowID);
