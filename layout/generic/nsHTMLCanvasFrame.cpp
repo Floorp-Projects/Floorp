@@ -126,7 +126,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         RefPtr<WebRenderCanvasData> canvasData =
             aManager->CommandBuilder()
                 .CreateOrRecycleWebRenderUserData<WebRenderCanvasData>(
-                    this, aBuilder.GetRenderRoot(), &isRecycled);
+                    this, &isRecycled);
         nsHTMLCanvasFrame* canvasFrame =
             static_cast<nsHTMLCanvasFrame*>(mFrame);
         if (!canvasFrame->UpdateWebRenderCanvasData(aDisplayListBuilder,
@@ -198,7 +198,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         RefPtr<WebRenderLocalCanvasData> canvasData =
             aManager->CommandBuilder()
                 .CreateOrRecycleWebRenderUserData<WebRenderLocalCanvasData>(
-                    this, aBuilder.GetRenderRoot(), &isRecycled);
+                    this, &isRecycled);
         if (!canvasContext->UpdateWebRenderLocalCanvasData(canvasData)) {
           return true;
         }
@@ -256,7 +256,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         RefPtr<WebRenderCanvasData> canvasData =
             aManager->CommandBuilder()
                 .CreateOrRecycleWebRenderUserData<WebRenderCanvasData>(
-                    this, aBuilder.GetRenderRoot(), &isRecycled);
+                    this, &isRecycled);
         if (!canvasFrame->UpdateWebRenderCanvasData(aDisplayListBuilder,
                                                     canvasData)) {
           canvasData->ClearImageContainer();
