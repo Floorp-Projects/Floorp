@@ -11,6 +11,7 @@
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/Unused.h"
 #include "nsBaseWidget.h"
 #if defined(MOZ_WIDGET_ANDROID)
