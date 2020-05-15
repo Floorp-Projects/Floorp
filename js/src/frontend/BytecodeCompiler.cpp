@@ -151,8 +151,7 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
 
   using Base::createSourceAndParser;
 
-  JSScript* compileScript(CompilationInfo& compilationInfo,
-                          HandleObject environment, SharedContext* sc);
+  JSScript* compileScript(CompilationInfo& compilationInfo, SharedContext* sc);
 };
 
 /* If we're on main thread, tell the Debugger about a newly compiled script.
@@ -185,7 +184,7 @@ static JSScript* CreateGlobalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
-  if (!compiler.compileScript(compilationInfo, nullptr, &globalsc)) {
+  if (!compiler.compileScript(compilationInfo, &globalsc)) {
     return nullptr;
   }
 
@@ -233,7 +232,6 @@ JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
 template <typename Unit>
 static JSScript* CreateEvalScript(CompilationInfo& compilationInfo,
                                   EvalSharedContext& evalsc,
-                                  JS::Handle<JSObject*> environment,
                                   SourceText<Unit>& srcBuf) {
   AutoAssertReportedException assertException(compilationInfo.cx);
   LifoAllocScope allocScope(&compilationInfo.cx->tempLifoAlloc());
@@ -243,7 +241,7 @@ static JSScript* CreateEvalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
-  if (!compiler.compileScript(compilationInfo, environment, &evalsc)) {
+  if (!compiler.compileScript(compilationInfo, &evalsc)) {
     return nullptr;
   }
 
@@ -257,9 +255,8 @@ static JSScript* CreateEvalScript(CompilationInfo& compilationInfo,
 
 JSScript* frontend::CompileEvalScript(CompilationInfo& compilationInfo,
                                       EvalSharedContext& evalsc,
-                                      JS::Handle<JSObject*> environment,
                                       JS::SourceText<char16_t>& srcBuf) {
-  return CreateEvalScript(compilationInfo, evalsc, environment, srcBuf);
+  return CreateEvalScript(compilationInfo, evalsc, srcBuf);
 }
 
 template <typename Unit>
@@ -450,8 +447,7 @@ void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
 
 template <typename Unit>
 JSScript* frontend::ScriptCompiler<Unit>::compileScript(
-    CompilationInfo& compilationInfo, HandleObject environment,
-    SharedContext* sc) {
+    CompilationInfo& compilationInfo, SharedContext* sc) {
   assertSourceParserAndScriptCreated(compilationInfo);
 
   TokenStreamPosition startPosition(compilationInfo.keepAtoms,

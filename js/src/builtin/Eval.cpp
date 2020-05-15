@@ -339,7 +339,7 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     frontend::EvalSharedContext evalsc(cx, env, compilationInfo, enclosing,
                                        compilationInfo.directives, extent);
     RootedScript compiled(
-        cx, frontend::CompileEvalScript(compilationInfo, evalsc, env, srcBuf));
+        cx, frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf));
     if (!compiled) {
       return false;
     }
@@ -446,7 +446,7 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
     frontend::EvalSharedContext evalsc(cx, env, compilationInfo, enclosing,
                                        compilationInfo.directives, extent);
     JSScript* compiled =
-        frontend::CompileEvalScript(compilationInfo, evalsc, env, srcBuf);
+        frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf);
     if (!compiled) {
       return false;
     }
