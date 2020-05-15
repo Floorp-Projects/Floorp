@@ -645,12 +645,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       tail: {
         type: "string",
       },
-      tailPrefix: {
-        type: "string",
-      },
-      tailOffsetIndex: {
-        type: "number",
-      },
       title: {
         type: "string",
       },
