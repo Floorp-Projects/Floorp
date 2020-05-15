@@ -787,21 +787,8 @@ var DownloadIntegration = {
     // No custom application chosen, let's launch the file with the default
     // handler. First, let's try to launch it through the MIME service.
     if (mimeInfo) {
-      const PDF_CONTENT_TYPE = "application/pdf";
-      // Open PDFs internally unless explicitly configured to do otherwise
-      if (
-        mimeInfo.type == PDF_CONTENT_TYPE &&
-        !mimeInfo.alwaysAskBeforeHandling &&
-        mimeInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally
-        // TODO: also preview for save to disk and always ask file actions?
-      ) {
-        DownloadUIHelper.loadFileIn(file, {
-          isPrivate: aDownload.source.isPrivate,
-        });
-        return;
-      }
-
       mimeInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
+
       try {
         this.launchFile(file, mimeInfo);
         return;
