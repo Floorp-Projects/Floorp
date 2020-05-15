@@ -159,7 +159,7 @@ bool WindowContext::CanSet(FieldIndex<IDX_IsSecureContext>,
                            ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);
 }
-    
+
 bool WindowContext::CanSet(FieldIndex<IDX_AutoplayPermission>,
                            const uint32_t& aValue, ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);
