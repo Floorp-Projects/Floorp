@@ -92,8 +92,6 @@ Build Platforms
    Android 8.0 Pixel2 AArch64 WebRender, , 
    Android 8.0 Pixel2 AArch64 Nightly, ,
    Android, ,
-   Packages, ,
-   Other, ,
 
 Testing configurations
 ----------------------
@@ -163,7 +161,7 @@ or prevening some classes of errors (memory, threading, etc).
    Diffoscope, Mike Hommey, Make sure the build remains reproducible
    Linting, "| Sylvestre Ledru
    | Andrew Halberstadt", "| Identify :ref:`code quality` earlier
-   | Also contains some Bugzilla and :ref:`Documentation jobs<Managing Documentation>`"
+   | Also contains some Bugzilla and :ref:`Documentation jobs <Managing Documentation>`"
 
 
 
@@ -191,6 +189,8 @@ Others
    :header: "Platform", "Owner", "Why?"
    :widths: 20, 40, 40
 
-   Fetch, ,
    Docker Images, ,
+   Fetch, ,
+   Packages, ,
    Toolchains, ,
+   Other, ,
