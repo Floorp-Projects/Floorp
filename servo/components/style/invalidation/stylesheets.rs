@@ -18,7 +18,6 @@ use crate::stylesheets::{CssRule, StylesheetInDocument};
 use crate::Atom;
 use crate::CaseSensitivityExt;
 use crate::LocalName as SelectorLocalName;
-use fallible::FallibleHashSet;
 use fxhash::FxHasher;
 use selectors::attr::CaseSensitivity;
 use selectors::parser::{Component, LocalName, Selector};

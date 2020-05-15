@@ -9,8 +9,8 @@ use crate::element_state::{DocumentState, ElementState};
 use crate::selector_map::{MaybeCaseInsensitiveHashMap, PrecomputedHashMap, SelectorMap, SelectorMapEntry};
 use crate::selector_parser::SelectorImpl;
 use crate::{Atom, LocalName, Namespace};
-use fallible::{FallibleVec, FallibleHashMap};
-use hashbrown::CollectionAllocErr;
+use fallible::FallibleVec;
+use hashglobe::FailedAllocationError;
 use selectors::attr::NamespaceConstraint;
 use selectors::parser::{Combinator, Component};
 use selectors::parser::{Selector, SelectorIter};
@@ -33,7 +33,7 @@ use smallvec::SmallVec;
 /// We generate a Dependency for both |a _ b:X _| and |a _ b:X _ c _ d:Y _|,
 /// even though those selectors may not appear on their own in any stylesheet.
 /// This allows us to quickly scan through the dependency sites of all style
-/// rules and determine the maximum effect that a given state or attribute
+/// rules and determine the maximum effect that a given state or attributef
 /// change may have on the style of elements in the document.
 #[derive(Clone, Debug, MallocSizeOf)]
 pub struct Dependency {
@@ -241,7 +241,7 @@ impl InvalidationMap {
         &mut self,
         selector: &Selector<SelectorImpl>,
         quirks_mode: QuirksMode,
-    ) -> Result<(), CollectionAllocErr> {
+    ) -> Result<(), FailedAllocationError> {
         debug!("InvalidationMap::note_selector({:?})", selector);
 
         let mut document_state = DocumentState::empty();
@@ -322,7 +322,7 @@ struct SelectorDependencyCollector<'a> {
     compound_state: PerCompoundState,
 
     /// The allocation error, if we OOM.
-    alloc_error: &'a mut Option<CollectionAllocErr>,
+    alloc_error: &'a mut Option<FailedAllocationError>,
 }
 
 impl<'a> SelectorDependencyCollector<'a> {
