@@ -79,6 +79,7 @@ struct LoadInfoArgs
   URIParams?                  resultPrincipalURI;
   uint32_t                    securityFlags;
   uint32_t                    sandboxFlags;
+  uint32_t                    triggeringSandboxFlags;
   uint32_t                    contentPolicyType;
   uint32_t                    tainting;
   bool                        blockAllMixedContent;
@@ -205,6 +206,9 @@ struct ParentLoadInfoForwarderArgs
   // Only ever returns true if the loadinfo is of TYPE_SCRIPT and
   // the script was created by the HTML parser.
   bool parserCreatedScript;
+
+  // Sandbox Flags of the Document that triggered the load
+  uint32_t triggeringSandboxFlags;
 
   // We must also note that the tainting value was explicitly set
   // by the service worker.

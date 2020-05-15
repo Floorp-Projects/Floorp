@@ -271,6 +271,10 @@ struct DocShellLoadStateInit
 
   MaybeDiscardedBrowsingContext SourceBrowsingContext;
 
+  // The TriggineringSandboxFlags are the SandboxFlags of the entity
+  // responsible for causing the load to occur.
+  uint32_t TriggeringSandboxFlags;
+
   nsCString? OriginalURIString;
   int32_t? CancelContentJSEpoch;
 
