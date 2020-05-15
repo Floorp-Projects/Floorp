@@ -3,14 +3,16 @@ from mock import MagicMock
 import contextlib
 import shutil
 import os
+from pathlib import Path
 
 from mozperftest.metadata import Metadata
 from mozperftest.environment import MachEnvironment
 
 
-HERE = os.path.dirname(__file__)
-EXAMPLE_TESTS_DIR = os.path.join(HERE, "samples")
+HERE = Path(__file__).parent
+EXAMPLE_TESTS_DIR = os.path.join(HERE, "data", "samples")
 EXAMPLE_TEST = os.path.join(EXAMPLE_TESTS_DIR, "perftest_example.js")
+BT_DATA = Path(HERE, "data", "browsertime-results", "browsertime.json")
 
 
 @contextlib.contextmanager

@@ -36,6 +36,7 @@ def test_layer():
 
     with _TestLayer(env, mach) as layer:
         layer.info("info")
+        layer.warning("warning")
         layer.debug("debug")
         assert layer.get_arg("test")
         assert layer.get_arg("arg1") == "ok"
@@ -64,6 +65,7 @@ def test_layers():
         assert len(layers.layers) == 2
         layers.info("info")
         layers.debug("debug")
+        layers.warning("warning")
         assert layers.get_arg("--test2")
         assert layers.get_arg("test-arg1") == "ok"
         layers.set_arg("test-arg1", "two")

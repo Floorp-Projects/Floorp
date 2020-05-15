@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from argparse import ArgumentParser, SUPPRESS
+from argparse import ArgumentParser
 import os
 import mozlog
 import copy
@@ -107,11 +107,6 @@ class PerftestArgumentParser(ArgumentParser):
         for name, options in Options.args.items():
             if "default" in options and isinstance(options["default"], list):
                 options["default"] = []
-            if "suppress" in options:
-                if options["suppress"]:
-                    options["help"] = SUPPRESS
-                del options["suppress"]
-
             self.add_argument(name, **options)
 
         mozlog.commandline.add_logging_group(self)
