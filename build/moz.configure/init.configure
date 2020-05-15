@@ -685,9 +685,6 @@ def split_triplet(triplet, allow_msvc=False):
     elif os.startswith('darwin'):
         canonical_kernel = 'Darwin'
         canonical_os = 'OSX'
-    elif os.startswith('ios'):
-        canonical_kernel = 'Darwin'
-        canonical_os = 'iOS'
     elif os.startswith('dragonfly'):
         canonical_os = canonical_kernel = 'DragonFly'
     elif os.startswith('freebsd'):
@@ -920,10 +917,6 @@ def host_for_sub_configure(host):
 @depends(target)
 def target_for_sub_configure(target):
     target_alias = target.alias
-    # old-configure does plenty of tests against $target and $target_os
-    # and expects darwin for iOS, so make it happy.
-    if target.os == 'iOS':
-        target_alias = target_alias.replace('-ios', '-darwin')
     return '--target=%s' % target_alias
 
 
@@ -1007,15 +1000,6 @@ def target_is_darwin(target):
 
 
 set_define('XP_DARWIN', target_is_darwin)
-
-
-@depends(target)
-def target_is_ios(target):
-    if target.kernel == 'Darwin' and target.os == 'iOS':
-        return True
-
-
-set_define('XP_IOS', target_is_ios)
 
 
 @depends(target)

@@ -161,7 +161,7 @@ set_define('MOZ_JACK', depends_if(jack)(lambda _: True))
 # ==============================================================
 @depends(target)
 def pulseaudio_default(target):
-    return target.os not in ('WINNT', 'OSX', 'iOS', 'Android', 'OpenBSD')
+    return target.os not in ('WINNT', 'OSX', 'Android', 'OpenBSD')
 
 option('--enable-pulseaudio', env='MOZ_PULSEAUDIO', default=pulseaudio_default,
        help='{Enable|Disable} PulseAudio audio backend.')
@@ -224,8 +224,6 @@ def toolkit_choices(target):
         return ('cairo-windows',)
     elif target.os == 'OSX':
         return ('cairo-cocoa',)
-    elif target.os == 'iOS':
-        return ('cairo-uikit',)
     elif target.os == 'Android':
         return ('cairo-android',)
     else:
@@ -540,7 +538,7 @@ set_define('MOZ_OMX', openmax)
 @depends(target)
 def eme_choices(target):
     if (target.kernel in ('Darwin', 'WINNT', 'Linux') and
-        target.os not in ('Android', 'iOS') and
+        target.os != 'Android' and
         target.cpu in ('x86', 'x86_64')):
         return ('widevine',)
     if target.kernel == 'WINNT' and target.cpu == 'aarch64':
@@ -738,13 +736,6 @@ set_define('MOZ_APP_SYSTEM_HEADERS', app_system_headers)
 
 # Printing
 # ==============================================================
-@depends(target)
-def ios_disable_printing(target):
-    if target.os == 'iOS':
-        return False
-
-imply_option('--enable-printing', ios_disable_printing, reason='--target')
-
 option('--disable-printing', help='Disable printing support')
 
 @depends('--disable-printing')

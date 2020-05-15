@@ -77,12 +77,6 @@ fi
 
 MOZ_ANDROID_NDK
 
-case "$target" in
-*-apple-darwin*)
-    MOZ_IOS_SDK
-    ;;
-esac
-
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================

@@ -51,8 +51,7 @@ elif CONFIG['OS_TARGET'] == 'Darwin':
         '/nsprpub/pr/src/md/unix/darwin.c',
         '/nsprpub/pr/src/md/unix/os_Darwin.s',
     ]
-    if not CONFIG['MOZ_IOS']:
-        DEFINES['HAVE_CRT_EXTERNS_H'] = True
+    DEFINES['HAVE_CRT_EXTERNS_H'] = True
 elif CONFIG['OS_TARGET'] == 'SunOS':
     DEFINES['HAVE_FCNTL_FILE_LOCKING'] = True
     DEFINES['HAVE_SOCKLEN_T'] = True
