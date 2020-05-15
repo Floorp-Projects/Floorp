@@ -255,13 +255,6 @@
     sym: SymbolId
     expected: SymbolField
 
-- name: GuardSpecificInt32Immediate
-  shared: true
-  transpile: false
-  args:
-    integer: Int32Id
-    expected: Int32Imm
-
 - name: GuardSpecificNativeFunction
   shared: true
   transpile: false
