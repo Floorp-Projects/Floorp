@@ -133,7 +133,7 @@
             android:title="@string/preferences_addons" />
 
         <androidx.preference.SwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:icon="@drawable/ic_info"
             android:key="@string/pref_key_leakcanary"
             android:title="@string/preference_leakcanary"

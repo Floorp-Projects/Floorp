@@ -13,7 +13,7 @@ class DebugFenixApplication : FenixApplication() {
 
     override fun setupLeakCanary() {
         val isEnabled = PreferenceManager.getDefaultSharedPreferences(this)
-            .getBoolean(getPreferenceKey(R.string.pref_key_leakcanary), false)
+            .getBoolean(getPreferenceKey(R.string.pref_key_leakcanary), true)
 
         updateLeakCanaryState(isEnabled)
     }

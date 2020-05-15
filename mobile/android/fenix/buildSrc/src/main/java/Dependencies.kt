@@ -7,7 +7,7 @@ object Versions {
     const val coroutines = "1.3.3"
     const val android_gradle_plugin = "3.5.0"
     const val sentry = "1.7.10"
-    const val leakcanary = "2.2"
+    const val leakcanary = "2.3"
     const val leanplum = "5.2.3"
     const val osslicenses_plugin = "0.9.5"
     const val osslicenses_library = "17.0.0"
