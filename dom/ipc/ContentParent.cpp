@@ -606,6 +606,8 @@ static bool sCreatedFirstContentProcess = false;
 static uint64_t gContentChildID = 1;
 
 static const char* sObserverTopics[] = {
+    "xpcom-shutdown",
+    "profile-before-change",
     NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC,
     NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC,
     NS_IPC_CAPTIVE_PORTAL_SET_STATE,
@@ -1365,8 +1367,6 @@ void ContentParent::Init() {
     }
   }
 
-  AddShutdownBlockers();
-
   // Flush any pref updates that happened during launch and weren't
   // included in the blobs set up in BeginSubprocessLaunch.
   for (const Pref& pref : mQueuedPrefs) {
@@ -1613,8 +1613,6 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   // Signal shutdown completion regardless of error state, so we can
   // finish waiting in the xpcom-shutdown/profile-before-change observer.
   mIPCOpen = false;
-
-  RemoveShutdownBlockers();
 
   if (mHangMonitorActor) {
     ProcessHangMonitor::RemoveProcess(mHangMonitorActor);
@@ -2878,77 +2876,30 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ContentParent)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionErrorCallback)
-  NS_INTERFACE_MAP_ENTRY(nsIAsyncShutdownBlocker)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentParent)
 NS_INTERFACE_MAP_END
 
-// Async shutdown blocker
-NS_IMETHODIMP
-ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
-  // Make sure that our process will get scheduled.
-  ProcessPriorityManager::SetProcessPriority(this, PROCESS_PRIORITY_FOREGROUND);
-
-  // Okay to call ShutDownProcess multiple times.
-  ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
-  MarkAsDead();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ContentParent::GetName(nsAString& aName) {
-  aName.AssignLiteral("ContentParent: remoteType=");
-  aName.Append(RemoteTypePrefix(mRemoteType));
-  aName.AppendPrintf(" id=%p", this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ContentParent::GetState(nsIPropertyBag** aResult) {
-  *aResult = nullptr;
-  return NS_OK;
-}
-
-static StaticRefPtr<nsIAsyncShutdownClient> sXPCOMShutdownClient;
-static StaticRefPtr<nsIAsyncShutdownClient> sProfileBeforeChangeClient;
-
-static void InitClients() {
-  if (!sXPCOMShutdownClient) {
-    nsresult rv;
-    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
-
-    nsCOMPtr<nsIAsyncShutdownClient> client;
-    rv = svc->GetXpcomWillShutdown(getter_AddRefs(client));
-    sXPCOMShutdownClient = client.forget();
-    ClearOnShutdown(&sXPCOMShutdownClient);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "XPCOMShutdown shutdown blocker");
-
-    rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
-    sProfileBeforeChangeClient = client.forget();
-    ClearOnShutdown(&sProfileBeforeChangeClient);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
-                       "profileBeforeChange shutdown blocker");
-  }
-}
-
-void ContentParent::AddShutdownBlockers() {
-  InitClients();
-
-  sXPCOMShutdownClient->AddBlocker(this, NS_LITERAL_STRING(__FILE__), __LINE__,
-                                   EmptyString());
-  sProfileBeforeChangeClient->AddBlocker(this, NS_LITERAL_STRING(__FILE__),
-                                         __LINE__, EmptyString());
-}
-
-void ContentParent::RemoveShutdownBlockers() {
-  Unused << sXPCOMShutdownClient->RemoveBlocker(this);
-  Unused << sProfileBeforeChangeClient->RemoveBlocker(this);
-}
-
 NS_IMETHODIMP
 ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aData) {
+  if (mSubprocess && (!strcmp(aTopic, "profile-before-change") ||
+                      !strcmp(aTopic, "xpcom-shutdown"))) {
+    // Make sure that our process will get scheduled.
+    ProcessPriorityManager::SetProcessPriority(this,
+                                               PROCESS_PRIORITY_FOREGROUND);
+
+    // Okay to call ShutDownProcess multiple times.
+    ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
+    MarkAsDead();
+
+    // Wait for shutdown to complete, so that we receive any shutdown
+    // data (e.g. telemetry) from the child before we quit.
+    // This loop terminate prematurely based on mForceKillTimer.
+    SpinEventLoopUntil([&]() { return !mIPCOpen || mCalledKillHard; });
+    NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
+  }
+
   if (IsDead() || !mSubprocess) {
     return NS_OK;
   }
@@ -3398,8 +3349,6 @@ void ContentParent::KillHard(const char* aReason) {
   }
   mCalledKillHard = true;
   mForceKillTimer = nullptr;
-
-  RemoveShutdownBlockers();
 
   GeneratePairedMinidump(aReason);
 
