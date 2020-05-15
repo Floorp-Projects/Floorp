@@ -1618,9 +1618,8 @@ class MediaTrackGraphShutDownRunnable : public Runnable {
       // mGraph is no longer needed, so delete it.
       mGraph->Destroy();
     } else {
-      // The graph is not empty.  We must be in a forced shutdown, either for
-      // process shutdown or a non-realtime graph that has finished
-      // processing. Some later AppendMessage will detect that the graph has
+      // The graph is not empty.  We must be in a forced shutdown.
+      // Some later AppendMessage will detect that the graph has
       // been emptied, and delete it.
       NS_ASSERTION(mGraph->mForceShutDownReceived, "Not in forced shutdown?");
       mGraph->LifecycleStateRef() =
@@ -3129,12 +3128,10 @@ MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(
   return graph;
 }
 
-void MediaTrackGraph::DestroyNonRealtimeInstance(MediaTrackGraph* aGraph) {
+void MediaTrackGraph::ForceShutDown() {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
-  MOZ_ASSERT(aGraph->IsNonRealtime(),
-             "Should not destroy the global graph here");
 
-  MediaTrackGraphImpl* graph = static_cast<MediaTrackGraphImpl*>(aGraph);
+  MediaTrackGraphImpl* graph = static_cast<MediaTrackGraphImpl*>(this);
 
   graph->ForceShutDown();
 }
