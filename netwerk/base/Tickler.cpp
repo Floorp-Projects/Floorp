@@ -12,8 +12,8 @@
 #  include "nsThreadUtils.h"
 #  include "prnetdb.h"
 
+#  include "mozilla/java/GeckoAppShellWrappers.h"
 #  include "mozilla/jni/Utils.h"
-#  include "GeneratedJNIWrappers.h"
 
 namespace mozilla {
 namespace net {
