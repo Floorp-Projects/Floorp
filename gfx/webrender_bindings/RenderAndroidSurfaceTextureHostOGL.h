@@ -31,13 +31,6 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
   virtual void PrepareForUse() override;
   virtual void NotifyNotUsed() override;
 
-  void DetachedFromGLContext();
-
-  virtual RenderAndroidSurfaceTextureHostOGL*
-  AsRenderAndroidSurfaceTextureHostOGL() override {
-    return this;
-  }
-
  private:
   virtual ~RenderAndroidSurfaceTextureHostOGL();
   void DeleteTextureHandle();

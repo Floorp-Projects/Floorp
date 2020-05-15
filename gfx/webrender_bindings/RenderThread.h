@@ -264,9 +264,6 @@ class RenderThread final {
   bool IsHandlingWebRenderError();
 
   /// Can only be called from the render thread.
-  void NotifyAllAndroidSurfaceTexturesDetatched();
-
-  /// Can only be called from the render thread.
   void HandlePrepareForUse();
 
   size_t RendererCount();
