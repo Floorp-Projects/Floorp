@@ -433,6 +433,15 @@ class experimental(object):
     }
     """Disperse tests across platforms, medium confidence threshold."""
 
+    bugbug_disperse_high = {
+        'test': Any(
+            'skip-unless-schedules',
+            Any('bugbug-high', 'platform-disperse'),
+            split_args=tuple
+        ),
+    }
+    """Disperse tests across platforms, high confidence threshold."""
+
     bugbug_reduced = {
         'test': Any('skip-unless-schedules', 'bugbug-reduced', split_args=tuple),
     }
