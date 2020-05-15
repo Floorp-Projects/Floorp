@@ -11,7 +11,7 @@ const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
 const accountsBundle = Services.strings.createBundle(
   "chrome://browser/locale/accounts.properties"
 );
-const DEVICES_URL = "http://localhost/devices";
+const DEVICES_URL = "https://example.com/devices";
 
 let expectedBody;
 
