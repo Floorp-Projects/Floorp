@@ -238,7 +238,6 @@ CHUNK_SUITES_BLACKLIST = (
     'test-verify',
     'test-verify-gpu',
     'test-verify-wpt',
-    'web-platform-tests',
     'web-platform-tests-backlog',
     'web-platform-tests-crashtest',
     'web-platform-tests-reftest',
