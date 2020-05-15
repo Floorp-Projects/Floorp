@@ -99,7 +99,6 @@ already_AddRefed<nsDocShellLoadState> LocationBase::CheckURL(
     principal->CreateReferrerInfo(referrerPolicy, getter_AddRefs(referrerInfo));
   }
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
-  loadState->SetTriggeringSandboxFlags(doc->GetSandboxFlags());
   loadState->SetCsp(doc->GetCsp());
   if (referrerInfo) {
     loadState->SetReferrerInfo(referrerInfo);
