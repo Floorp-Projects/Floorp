@@ -711,6 +711,18 @@
     "releaseChannelCollection": "opt-out",
     "description": "Longest GC slice in a GC (ms)"
   },
+  "GC_PREPARE_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "Time spent running JS GC preparation phase (ms)",
+    "bug_numbers": [1637642]
+  },
   "GC_MARK_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
