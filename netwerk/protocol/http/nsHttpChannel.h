@@ -618,6 +618,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Needed because calling openAlternativeOutputStream needs a reference
   // to the cache entry.
   nsCOMPtr<nsICacheEntry> mAltDataCacheEntry;
+
+  nsCOMPtr<nsIURI> mCacheEntryURI;
+  nsCString mCacheIdExtension;
+
   // We must close mCacheInputStream explicitly to avoid leaks.
   AutoClose<nsIInputStream> mCacheInputStream;
   RefPtr<nsInputStreamPump> mCachePump;
@@ -809,6 +813,11 @@ class nsHttpChannel final : public HttpBaseChannel,
   // with the cache fetch, and proceeds to do so.
   nsresult MaybeRaceCacheWithNetwork();
 
+  // Creates a new cache entry when network wins the race to ensure we have
+  // the latest version of the resource in the cache. Otherwise we might return
+  // an old content when navigating back in history.
+  void MaybeCreateCacheEntryWhenRCWN();
+
   nsresult TriggerNetworkWithDelay(uint32_t aDelay);
   nsresult TriggerNetwork();
   void CancelNetworkRequest(nsresult aStatus);
@@ -827,8 +836,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   // SetupTransaction removed conditional headers and decisions made in
   // OnCacheEntryCheck are no longer valid.
   bool mIgnoreCacheEntry;
-  // Lock preventing OnCacheEntryCheck and SetupTransaction being called at
-  // the same time.
+  // Lock preventing SetupTransaction/MaybeCreateCacheEntryWhenRCWN and
+  // OnCacheEntryCheck being called at the same time.
   mozilla::Mutex mRCWNLock;
 
   TimeStamp mNavigationStartTimeStamp;
