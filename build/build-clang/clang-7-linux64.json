@@ -10,7 +10,7 @@
     "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
     "patches": [
       "static-llvm-symbolizer.patch",
-      "find_symbolizer_linux.patch",
+      "find_symbolizer_linux-clang-9.patch",
       "rename_gcov_flush_7.patch",
       "critical_section_on_gcov_flush-rG02ce9d8ef5a8.patch",
       "r350774.patch",
