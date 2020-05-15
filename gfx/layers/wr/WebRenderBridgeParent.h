@@ -367,7 +367,7 @@ class WebRenderBridgeParent final
                                         bool aValidTransaction,
                                         bool aObserveLayersUpdate);
 
-  bool SetDisplayList(wr::RenderRoot aRenderRoot, const LayoutDeviceRect& aRect,
+  bool SetDisplayList(const LayoutDeviceRect& aRect,
                       const wr::LayoutSize& aContentSize, ipc::ByteBuf&& aDL,
                       const wr::BuiltDisplayListDescriptor& aDLDesc,
                       const nsTArray<OpUpdateResource>& aResourceUpdates,
@@ -378,11 +378,10 @@ class WebRenderBridgeParent final
                       bool aValidTransaction, bool aObserveLayersUpdate);
 
   void UpdateAPZFocusState(const FocusTarget& aFocus);
-  void UpdateAPZScrollData(const wr::Epoch& aEpoch, WebRenderScrollData&& aData,
-                           wr::RenderRoot aRenderRoot);
+  void UpdateAPZScrollData(const wr::Epoch& aEpoch,
+                           WebRenderScrollData&& aData);
   void UpdateAPZScrollOffsets(ScrollUpdatesMap&& aUpdates,
-                              uint32_t aPaintSequenceNumber,
-                              wr::RenderRoot aRenderRoot);
+                              uint32_t aPaintSequenceNumber);
 
   bool UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
                        const nsTArray<RefCountedShmem>& aSmallShmems,
