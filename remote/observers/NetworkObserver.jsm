@@ -237,7 +237,13 @@ class NetworkObserver {
       headers: requestHeaders(httpChannel),
       method: httpChannel.requestMethod,
       isNavigationRequest: httpChannel.isMainDocumentChannel,
-      cause: causeTypeToString(causeType),
+      cause: causeType,
+      causeString: causeTypeToString(causeType),
+      // clients expect loaderId == requestId for document navigation
+      loaderId:
+        causeType == Ci.nsIContentPolicy.TYPE_DOCUMENT
+          ? requestId(httpChannel)
+          : undefined,
     });
   }
 
@@ -415,7 +421,7 @@ function getLoadContext(httpChannel) {
 }
 
 function requestId(httpChannel) {
-  return httpChannel.channelId + "";
+  return String(httpChannel.channelId);
 }
 
 function requestHeaders(httpChannel) {
