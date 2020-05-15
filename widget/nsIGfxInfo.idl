@@ -204,6 +204,11 @@ interface nsIGfxInfo : nsISupports
   // only useful on X11
   [noscript, notxpcom] void GetData();
 
+  /**
+   * Maximum refresh rate among detected monitors. -1 if unknown.
+   */
+  [noscript, notxpcom] long GetMaxRefreshRate();
+
   [implicit_jscontext]
   jsval getInfo();
 
