@@ -1498,6 +1498,7 @@
             "abmr.net",
             "akamai.com",
             "edgesuite.net",
+            "go-mpulse.net",
             "imiclk.com"
         ]
     },
@@ -1532,6 +1533,14 @@
         ],
         "resources": [
             "aloodo.com"
+        ]
+    },
+    "AlterGeo": {
+        "properties": [
+            "altergeo.ru"
+        ],
+        "resources": [
+            "altergeo.ru"
         ]
     },
     "Amadesa": {
@@ -4557,6 +4566,7 @@
             "internalfb.com",
             "messenger.com",
             "oculus.com",
+            "whatsapp.com",
             "workplace.com"
         ],
         "resources": [
@@ -5143,8 +5153,10 @@
             "abc.xyz",
             "admeld.com",
             "blogger.com",
+            "blogspot.com",
             "crashlytics.com",
             "google-melange.com",
+            "google.ac",
             "google.ad",
             "google.ae",
             "google.al",
@@ -5337,8 +5349,11 @@
             "google.vg",
             "google.vu",
             "google.ws",
+            "googlesource.com",
             "ingress.com",
+            "nest.com",
             "panoramio.com",
+            "pinpoint-dot-chromeperf.appspot.com",
             "youtube.com"
         ],
         "resources": [
@@ -5355,7 +5370,204 @@
             "gmail.com",
             "gmodules.com",
             "google-analytics.com",
+            "google.ac",
+            "google.ad",
+            "google.ae",
+            "google.al",
+            "google.am",
+            "google.as",
+            "google.at",
+            "google.az",
+            "google.ba",
+            "google.be",
+            "google.bf",
+            "google.bg",
+            "google.bi",
+            "google.bj",
+            "google.bs",
+            "google.bt",
+            "google.by",
+            "google.ca",
+            "google.cat",
+            "google.cc",
+            "google.cd",
+            "google.cf",
+            "google.cg",
+            "google.ch",
+            "google.ci",
+            "google.cl",
+            "google.cm",
+            "google.cn",
+            "google.co.ao",
+            "google.co.bw",
+            "google.co.ck",
+            "google.co.cr",
+            "google.co.id",
+            "google.co.il",
+            "google.co.in",
+            "google.co.jp",
+            "google.co.ke",
+            "google.co.kr",
+            "google.co.ls",
+            "google.co.ma",
+            "google.co.mz",
+            "google.co.nz",
+            "google.co.th",
+            "google.co.tz",
+            "google.co.ug",
+            "google.co.uk",
+            "google.co.uz",
+            "google.co.ve",
+            "google.co.vi",
+            "google.co.za",
+            "google.co.zm",
+            "google.co.zw",
             "google.com",
+            "google.com.af",
+            "google.com.ag",
+            "google.com.ai",
+            "google.com.ar",
+            "google.com.au",
+            "google.com.bd",
+            "google.com.bh",
+            "google.com.bn",
+            "google.com.bo",
+            "google.com.br",
+            "google.com.bz",
+            "google.com.co",
+            "google.com.cu",
+            "google.com.cy",
+            "google.com.do",
+            "google.com.ec",
+            "google.com.eg",
+            "google.com.et",
+            "google.com.fj",
+            "google.com.gh",
+            "google.com.gi",
+            "google.com.gt",
+            "google.com.hk",
+            "google.com.jm",
+            "google.com.kh",
+            "google.com.kw",
+            "google.com.lb",
+            "google.com.lc",
+            "google.com.ly",
+            "google.com.mm",
+            "google.com.mt",
+            "google.com.mx",
+            "google.com.my",
+            "google.com.na",
+            "google.com.nf",
+            "google.com.ng",
+            "google.com.ni",
+            "google.com.np",
+            "google.com.om",
+            "google.com.pa",
+            "google.com.pe",
+            "google.com.pg",
+            "google.com.ph",
+            "google.com.pk",
+            "google.com.pr",
+            "google.com.py",
+            "google.com.qa",
+            "google.com.sa",
+            "google.com.sb",
+            "google.com.sg",
+            "google.com.sl",
+            "google.com.sv",
+            "google.com.tj",
+            "google.com.tn",
+            "google.com.tr",
+            "google.com.tw",
+            "google.com.ua",
+            "google.com.uy",
+            "google.com.vc",
+            "google.com.vn",
+            "google.cv",
+            "google.cz",
+            "google.de",
+            "google.dj",
+            "google.dk",
+            "google.dm",
+            "google.dz",
+            "google.ee",
+            "google.es",
+            "google.fi",
+            "google.fm",
+            "google.fr",
+            "google.ga",
+            "google.ge",
+            "google.gf",
+            "google.gg",
+            "google.gl",
+            "google.gm",
+            "google.gp",
+            "google.gr",
+            "google.gy",
+            "google.hn",
+            "google.hr",
+            "google.ht",
+            "google.hu",
+            "google.ie",
+            "google.im",
+            "google.io",
+            "google.iq",
+            "google.is",
+            "google.it",
+            "google.je",
+            "google.jo",
+            "google.kg",
+            "google.ki",
+            "google.kz",
+            "google.la",
+            "google.li",
+            "google.lk",
+            "google.lt",
+            "google.lu",
+            "google.lv",
+            "google.md",
+            "google.me",
+            "google.mg",
+            "google.mk",
+            "google.ml",
+            "google.mn",
+            "google.ms",
+            "google.mu",
+            "google.mv",
+            "google.mw",
+            "google.ne",
+            "google.nl",
+            "google.no",
+            "google.nr",
+            "google.nu",
+            "google.pl",
+            "google.pn",
+            "google.ps",
+            "google.pt",
+            "google.ro",
+            "google.rs",
+            "google.ru",
+            "google.rw",
+            "google.sc",
+            "google.se",
+            "google.sh",
+            "google.si",
+            "google.sk",
+            "google.sm",
+            "google.sn",
+            "google.so",
+            "google.st",
+            "google.td",
+            "google.tg",
+            "google.tk",
+            "google.tl",
+            "google.tm",
+            "google.tn",
+            "google.to",
+            "google.tt",
+            "google.vg",
+            "google.vu",
+            "google.ws",
             "googleadservices.com",
             "googleapis.com",
             "googlemail.com",
@@ -5403,6 +5615,14 @@
         ],
         "resources": [
             "graphenedigitalanalytics.in"
+        ]
+    },
+    "Graphnium": {
+        "properties": [
+            "graphinium.com"
+        ],
+        "resources": [
+            "crm4d.com"
         ]
     },
     "Gravity": {
@@ -6039,6 +6259,15 @@
             "iperceptions.com"
         ]
     },
+    "IponWeb": {
+        "properties": [
+            "iponweb.com"
+        ],
+        "resources": [
+            "iponweb.com",
+            "iponweb.net"
+        ]
+    },
     "iPROM": {
         "properties": [
             "centraliprom.com",
@@ -6578,6 +6807,15 @@
         ],
         "resources": [
             "liverail.com"
+        ]
+    },
+    "LiveRamp": {
+        "properties": [
+            "liveramp.com"
+        ],
+        "resources": [
+            "liveramp.com",
+            "tvpixel.com"
         ]
     },
     "LKQD": {
@@ -7230,49 +7468,113 @@
     },
     "Microsoft": {
         "properties": [
+            "acompli.net",
+            "aka.ms",
+            "azure.com",
+            "azure.net",
+            "azurerms.com",
             "bing.com",
+            "cloudappsecurity.com",
             "gamesforwindows.com",
             "getgamesmart.com",
+            "gfx.ms",
             "healthvault.com",
+            "hockeyapp.net",
             "ieaddons.com",
             "iegallery.com",
             "live.com",
             "microsoft.com",
             "microsoftalumni.com",
             "microsoftalumni.org",
+            "microsoftazuread-sso.com",
+            "microsoftedgeinsiders.com",
+            "microsoftonline-p.com",
+            "microsoftonline-p.net",
+            "microsoftonline.com",
             "microsoftstore.com",
+            "microsoftstream.com",
+            "msappproxy.net",
+            "msft.net",
+            "msftidentity.com",
+            "msidentity.com",
             "msn.com",
+            "o365weve.com",
+            "oaspapps.com",
             "office.com",
+            "office365.com",
             "officelive.com",
+            "onedrive.com",
+            "onenote.com",
             "outlook.com",
+            "outlookmobile.com",
+            "phonefactor.net",
             "s-msn.com",
+            "sfx.ms",
             "sharepoint.com",
             "skype.com",
+            "skypeforbusiness.com",
+            "staffhub.ms",
+            "sway-extensions.com",
+            "sway.com",
+            "trafficmanager.net",
+            "virtualearth.net",
+            "visualstudio.com",
+            "windows.net",
+            "windowsazure.com",
             "windowsphone.com",
             "worldwidetelescope.org",
-            "xbox.com"
+            "wunderlist.com",
+            "xbox.com",
+            "yammer.com"
         ],
         "resources": [
+            "aadrm.com",
             "adbureau.net",
             "adecn.com",
             "aquantive.com",
+            "aspnetcdn.com",
+            "assets-yammer.com",
+            "azure.com",
+            "azureedge.net",
             "bing.com",
+            "cloudapp.net",
             "gamesforwindows.com",
             "getgamesmart.com",
+            "gfx.ms",
             "healthvault.com",
             "live.com",
             "microsoft.com",
+            "microsoftazuread-sso.com",
+            "microsoftonline-p.com",
+            "microsoftonline-p.net",
+            "microsoftonline.com",
             "microsoftstore.com",
             "msads.net",
+            "msauthimages.net",
+            "msecnd.net",
+            "msedge.net",
             "msndirect.com",
+            "msocdn.com",
             "netconversions.com",
+            "oaspapps.com",
             "office.com",
+            "office.net",
             "officelive.com",
+            "onenote.net",
+            "onestore.ms",
+            "onmicrosoft.com",
             "outlook.com",
             "roiservice.com",
             "s-msn.com",
+            "sfbassets.com",
             "sharepoint.com",
-            "skype.com"
+            "skype.com",
+            "skypeassets.com",
+            "sway-cdn.com",
+            "sway-extensions.com",
+            "windows.net",
+            "windowsazure.com",
+            "yammerusercontent.com"
         ]
     },
     "Millennial Media": {
@@ -7769,6 +8071,7 @@
     "Neustar": {
         "properties": [
             "adadvisor.net",
+            "home.neustar",
             "neustar.biz"
         ],
         "resources": [
@@ -7989,6 +8292,14 @@
         "resources": [
             "behavioralengine.com",
             "onaudience.com"
+        ]
+    },
+    "Onclusive": {
+        "properties": [
+            "onclusive.com"
+        ],
+        "resources": [
+            "airpr.com"
         ]
     },
     "OneAd": {
@@ -8325,6 +8636,14 @@
         "resources": [
             "lzjl.com",
             "paypopup.com"
+        ]
+    },
+    "PebblePost": {
+        "properties": [
+            "pebblepost.com"
+        ],
+        "resources": [
+            "pbbl.co"
         ]
     },
     "Peer39": {
@@ -8918,12 +9237,10 @@
     },
     "Rapleaf": {
         "properties": [
-            "liveramp.com",
             "rapleaf.com",
             "rlcdn.com"
         ],
         "resources": [
-            "liveramp.com",
             "rapleaf.com",
             "rlcdn.com"
         ]
@@ -9032,6 +9349,14 @@
         "resources": [
             "researchnow.com",
             "valuedopinions.co.uk"
+        ]
+    },
+    "ResolutionMedia": {
+        "properties": [
+            "nonstoppartner.net"
+        ],
+        "resources": [
+            "nonstoppartner.net"
         ]
     },
     "Resolution Media": {
@@ -9739,14 +10064,6 @@
             "snoobi.fi"
         ]
     },
-    "Soasta": {
-        "properties": [
-            "go-mpulse.net"
-        ],
-        "resources": [
-            "go-mpulse.net"
-        ]
-    },
     "SocialChorus": {
         "properties": [
             "socialchorus.com"
@@ -10250,6 +10567,14 @@
             "tailsweep.com"
         ]
     },
+    "Taleria": {
+        "properties": [
+            "telaria.com"
+        ],
+        "resources": [
+            "freeskreen.com"
+        ]
+    },
     "Tapad": {
         "properties": [
             "tapad.com"
@@ -10646,6 +10971,14 @@
             "trafmag.com"
         ]
     },
+    "Traverse": {
+        "properties": [
+            "traversedata.com"
+        ],
+        "resources": [
+            "traversedlp.com"
+        ]
+    },
     "Travora Media": {
         "properties": [
             "travoramedia.com"
@@ -10971,14 +11304,6 @@
         ],
         "resources": [
             "uservoice.com"
-        ]
-    },
-    "USocial": {
-        "properties": [
-            "usocial.pro"
-        ],
-        "resources": [
-            "usocial.pro"
         ]
     },
     "V12 Data": {
@@ -11334,6 +11659,14 @@
         "resources": [
             "contentwidgets.net",
             "wahoha.com"
+        ]
+    },
+    "Wayfair": {
+        "properties": [
+            "wayfair.com"
+        ],
+        "resources": [
+            "wayfair.com"
         ]
     },
     "WebAds": {
