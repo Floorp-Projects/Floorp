@@ -9,7 +9,14 @@
 
 var EXPORTED_SYMBOLS = ["Logger"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 var Logger = {
   _foStream: null,
@@ -78,15 +85,15 @@ var Logger = {
     return this.AssertTrue(!bool, msg, showPotentialError);
   },
 
-  AssertEqual(val1, val2, msg) {
-    if (val1 != val2) {
+  AssertEqual(got, expected, msg) {
+    if (!ObjectUtils.deepEqual(got, expected)) {
       throw new Error(
         "ASSERTION FAILED! " +
           msg +
           "; expected " +
-          JSON.stringify(val2) +
+          JSON.stringify(expected) +
           ", got " +
-          JSON.stringify(val1)
+          JSON.stringify(got)
       );
     }
   },
