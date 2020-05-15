@@ -62,22 +62,22 @@ async function testProcesses(targetList, target) {
 
   // Assert that watchTargets will call the create callback for all existing frames
   const targets = new Set();
-  const onAvailable = ({ targetFront }) => {
+  const onAvailable = ({ type, targetFront, isTopLevel }) => {
     if (targets.has(targetFront)) {
       ok(false, "The same target is notified multiple times via onAvailable");
     }
     is(
-      targetFront.targetType,
+      type,
       TargetList.TYPES.PROCESS,
       "We are only notified about process targets"
     );
     ok(
-      targetFront == target ? targetFront.isTopLevel : !targetFront.isTopLevel,
-      "isTopLevel property is correct"
+      targetFront == target ? isTopLevel : !isTopLevel,
+      "isTopLevel argument is correct"
     );
     targets.add(targetFront);
   };
-  const onDestroyed = ({ targetFront }) => {
+  const onDestroyed = ({ type, targetFront, isTopLevel }) => {
     if (!targets.has(targetFront)) {
       ok(
         false,
@@ -85,12 +85,12 @@ async function testProcesses(targetList, target) {
       );
     }
     is(
-      targetFront.targetType,
+      type,
       TargetList.TYPES.PROCESS,
       "We are only notified about process targets"
     );
     ok(
-      !targetFront.isTopLevel,
+      !isTopLevel,
       "We are never notified about the top level target destruction"
     );
     targets.delete(targetFront);
@@ -115,7 +115,7 @@ async function testProcesses(targetList, target) {
   const previousTargets = new Set(targets);
   // Assert that onAvailable is called for processes created *after* the call to watchTargets
   const onProcessCreated = new Promise(resolve => {
-    const onAvailable2 = ({ targetFront }) => {
+    const onAvailable2 = ({ type, targetFront, isTopLevel }) => {
       if (previousTargets.has(targetFront)) {
         return;
       }
@@ -139,7 +139,7 @@ async function testProcesses(targetList, target) {
   // Assert that onDestroyed is called for destroyed processes
   const onProcessDestroyed = new Promise(resolve => {
     const onAvailable3 = () => {};
-    const onDestroyed3 = ({ targetFront }) => {
+    const onDestroyed3 = ({ type, targetFront, isTopLevel }) => {
       resolve(targetFront);
       targetList.unwatchTargets(
         [TargetList.TYPES.PROCESS],
