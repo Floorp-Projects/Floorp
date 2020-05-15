@@ -1,4 +1,4 @@
-// Copyright 2012-2014 The Rust Project Developers. See the COPYRIGHT
+// Copyright 2012-2018 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // http://rust-lang.org/COPYRIGHT.
 //
@@ -14,11 +14,9 @@
 //! are O(highest integer key).
 
 // optional serde support
-#[cfg(feature = "eders")]
-extern crate serde;
-#[cfg(feature = "eders")]
+#[cfg(feature = "serde")]
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 
 use self::Entry::*;
 
@@ -63,7 +61,7 @@ use std::vec;
 /// months.clear();
 /// assert!(months.is_empty());
 /// ```
-#[cfg_attr(feature = "eders", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct VecMap<V> {
     n: usize,
     v: Vec<Option<V>>,
@@ -191,6 +189,29 @@ impl<V> VecMap<V> {
         }
     }
 
+    /// Trims the `VecMap` of any excess capacity.
+    ///
+    /// The collection may reserve more space to avoid frequent reallocations.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vec_map::VecMap;
+    /// let mut map: VecMap<&str> = VecMap::with_capacity(10);
+    /// map.shrink_to_fit();
+    /// assert_eq!(map.capacity(), 0);
+    /// ```
+    pub fn shrink_to_fit(&mut self) {
+        // strip off trailing `None`s
+        if let Some(idx) = self.v.iter().rposition(Option::is_some) {
+            self.v.truncate(idx + 1);
+        } else {
+            self.v.clear();
+        }
+
+        self.v.shrink_to_fit()
+    }
+
     /// Returns an iterator visiting all keys in ascending order of the keys.
     /// The iterator's element type is `usize`.
     pub fn keys(&self) -> Keys<V> {
@@ -201,6 +222,12 @@ impl<V> VecMap<V> {
     /// The iterator's element type is `&'r V`.
     pub fn values(&self) -> Values<V> {
         Values { iter: self.iter() }
+    }
+
+    /// Returns an iterator visiting all values in ascending order of the keys.
+    /// The iterator's element type is `&'r mut V`.
+    pub fn values_mut(&mut self) -> ValuesMut<V> {
+        ValuesMut { iter_mut: self.iter_mut() }
     }
 
     /// Returns an iterator visiting all key-value pairs in ascending order of the keys.
@@ -446,10 +473,7 @@ impl<V> VecMap<V> {
     /// ```
     pub fn get(&self, key: usize) -> Option<&V> {
         if key < self.v.len() {
-            match self.v[key] {
-              Some(ref value) => Some(value),
-              None => None
-            }
+            self.v[key].as_ref()
         } else {
             None
         }
@@ -488,10 +512,7 @@ impl<V> VecMap<V> {
     /// ```
     pub fn get_mut(&mut self, key: usize) -> Option<&mut V> {
         if key < self.v.len() {
-            match *(&mut self.v[key]) {
-              Some(ref mut value) => Some(value),
-              None => None
-            }
+            self.v[key].as_mut()
         } else {
             None
         }
@@ -581,6 +602,34 @@ impl<V> VecMap<V> {
                 map: self,
                 index: key,
             })
+        }
+    }
+
+    /// Retains only the elements specified by the predicate.
+    ///
+    /// In other words, remove all pairs `(k, v)` such that `f(&k, &mut v)` returns `false`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vec_map::VecMap;
+    ///
+    /// let mut map: VecMap<usize> = (0..8).map(|x|(x, x*10)).collect();
+    /// map.retain(|k, _| k % 2 == 0);
+    /// assert_eq!(map.len(), 4);
+    /// ```
+    pub fn retain<F>(&mut self, mut f: F)
+        where F: FnMut(usize, &mut V) -> bool
+    {
+        for (i, e) in self.v.iter_mut().enumerate() {
+            let remove = match *e {
+                Some(ref mut value) => !f(i, value),
+                None => false,
+            };
+            if remove {
+                *e = None;
+                self.n -= 1;
+            }
         }
     }
 }
@@ -742,7 +791,7 @@ impl<'a, T> IntoIterator for &'a mut VecMap<T> {
     type Item = (usize, &'a mut T);
     type IntoIter = IterMut<'a, T>;
 
-    fn into_iter(mut self) -> IterMut<'a, T> {
+    fn into_iter(self) -> IterMut<'a, T> {
         self.iter_mut()
     }
 }
@@ -801,19 +850,13 @@ macro_rules! iterator {
             #[inline]
             fn next(&mut self) -> Option<$elem> {
                 while self.front < self.back {
-                    match self.iter.next() {
-                        Some(elem) => {
-                            match elem$(. $getter ())+ {
-                                Some(x) => {
-                                    let index = self.front;
-                                    self.front += 1;
-                                    self.yielded += 1;
-                                    return Some((index, x));
-                                },
-                                None => {},
-                            }
+                    if let Some(elem) = self.iter.next() {
+                        if let Some(x) = elem$(. $getter ())+ {
+                            let index = self.front;
+                            self.front += 1;
+                            self.yielded += 1;
+                            return Some((index, x));
                         }
-                        _ => ()
                     }
                     self.front += 1;
                 }
@@ -834,17 +877,11 @@ macro_rules! double_ended_iterator {
             #[inline]
             fn next_back(&mut self) -> Option<$elem> {
                 while self.front < self.back {
-                    match self.iter.next_back() {
-                        Some(elem) => {
-                            match elem$(. $getter ())+ {
-                                Some(x) => {
-                                    self.back -= 1;
-                                    return Some((self.back, x));
-                                },
-                                None => {},
-                            }
+                    if let Some(elem) = self.iter.next_back() {
+                        if let Some(x) = elem$(. $getter ())+ {
+                            self.back -= 1;
+                            return Some((self.back, x));
                         }
-                        _ => ()
                     }
                     self.back -= 1;
                 }
@@ -922,6 +959,11 @@ impl<'a, V> Clone for Values<'a, V> {
     }
 }
 
+/// An iterator over the values of a map.
+pub struct ValuesMut<'a, V: 'a> {
+    iter_mut: IterMut<'a, V>,
+}
+
 /// A consuming iterator over the key-value pairs of a map.
 pub struct IntoIter<V> {
     n: usize,
@@ -973,6 +1015,19 @@ impl<'a, V> ExactSizeIterator for Values<'a, V> {}
 
 impl<'a, V> DoubleEndedIterator for Values<'a, V> {
     fn next_back(&mut self) -> Option<(&'a V)> { self.iter.next_back().map(|e| e.1) }
+}
+
+impl<'a, V> Iterator for ValuesMut<'a, V> {
+    type Item = &'a mut V;
+
+    fn next(&mut self) -> Option<(&'a mut V)> { self.iter_mut.next().map(|e| e.1) }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.iter_mut.size_hint() }
+}
+
+impl<'a, V> ExactSizeIterator for ValuesMut<'a, V> {}
+
+impl<'a, V> DoubleEndedIterator for ValuesMut<'a, V> {
+    fn next_back(&mut self) -> Option<&'a mut V> { self.iter_mut.next_back().map(|e| e.1) }
 }
 
 impl<V> Iterator for IntoIter<V> {
@@ -1027,7 +1082,8 @@ fn assert_properties() {
 mod test {
     use super::VecMap;
     use super::Entry::{Occupied, Vacant};
-    use std::hash::{Hash, Hasher, SipHasher};
+    use std::hash::{Hash, Hasher};
+    use std::collections::hash_map::DefaultHasher;
 
     #[test]
     fn test_get_mut() {
@@ -1406,7 +1462,7 @@ mod test {
     #[test]
     fn test_hash() {
         fn hash<T: Hash>(t: &T) -> u64 {
-            let mut s = SipHasher::new();
+            let mut s = DefaultHasher::new();
             t.hash(&mut s);
             s.finish()
         }
@@ -1535,11 +1591,33 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "eders")]
+    #[cfg(feature = "serde")]
     fn test_serde() {
         use serde::{Serialize, Deserialize};
         fn impls_serde_traits<'de, S: Serialize + Deserialize<'de>>() {}
 
         impls_serde_traits::<VecMap<u32>>();
+    }
+
+    #[test]
+    fn test_retain() {
+        let mut map = VecMap::new();
+        map.insert(1, "one");
+        map.insert(2, "two");
+        map.insert(3, "three");
+        map.retain(|k, v| match k {
+            1 => false,
+            2 => {
+                *v = "two changed";
+                true
+            },
+            3 => false,
+            _ => panic!(),
+        });
+
+        assert_eq!(map.len(), 1);
+        assert_eq!(map.get(1), None);
+        assert_eq!(map[2], "two changed");
+        assert_eq!(map.get(3), None);
     }
 }
