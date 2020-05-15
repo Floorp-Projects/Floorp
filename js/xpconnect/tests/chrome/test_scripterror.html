@@ -58,12 +58,14 @@ async function run() {
         throw test;
     });
     hasExpectedProperties(message, test);
+    is(message.isPromiseRejection, false, "not a rejected promise");
 
     // Now test as uncaught promise rejection
     message = await awaitScriptError(function testName() {
         Promise.reject(test);
     });
     hasExpectedProperties(message, test);
+    is(message.isPromiseRejection, true, "is a rejected promise");
   }
 
   SimpleTest.finish();

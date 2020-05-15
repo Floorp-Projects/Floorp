@@ -88,6 +88,11 @@ interface nsIScriptError : nsIConsoleMessage
 
     readonly attribute boolean isFromChromeContext;
 
+    // Error created from a Promise rejection.
+    readonly attribute boolean isPromiseRejection;
+
+    [noscript] void initIsPromiseRejection(in bool isPromiseRejection);
+
     // The "exception" value generated when an uncaught exception is thrown
     // by JavaScript. This can be any value, e.g.
     // - an Error object (`throw new Error("foobar"`)
