@@ -239,6 +239,8 @@ wrappers! {
 
     fn __lxstat(ver: c_int, path: *const c_char, buf: *mut libc::stat) -> c_int;
     fn __lxstat64(ver: c_int, path: *const c_char, buf: *mut libc::stat64) -> c_int;
+    fn __fxstatat(ver: c_int, fd: c_int, path: *const c_char, buf: *mut libc::stat, flag: c_int) -> c_int;
+    fn __fxstatat64(ver: c_int, fd: c_int, path: *const c_char, buf: *mut libc::stat64, flag: c_int) -> c_int;
 
     fn access(path: *const c_char, mode: c_int) -> c_int;
 
