@@ -23,6 +23,7 @@ enum class FunctionSyntaxKind : uint8_t {
 
   // Method of a class or object. Field initializers also desugar to methods.
   Method,
+  FieldInitializer,
 
   ClassConstructor,
   DerivedClassConstructor,
