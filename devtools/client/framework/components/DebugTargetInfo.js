@@ -264,6 +264,28 @@ class DebugTargetInfo extends PureComponent {
     );
   }
 
+  renderReloadButton() {
+    const { L10N, debugTargetData } = this.props;
+    const { targetType } = debugTargetData;
+
+    if (targetType !== DEBUG_TARGET_TYPES.TAB) {
+      return null;
+    }
+
+    return dom.button(
+      {
+        className: "iconized-label reload-button qa-reload-button",
+        onClick: () => {
+          this.props.toolbox.target.reload();
+        },
+      },
+      dom.img({
+        src: "chrome://browser/skin/reload.svg",
+        alt: L10N.getStr("toolbox.debugTargetInfo.reload"),
+      })
+    );
+  }
+
   render() {
     return dom.header(
       {
@@ -272,6 +294,7 @@ class DebugTargetInfo extends PureComponent {
       this.shallRenderConnection() ? this.renderConnection() : null,
       this.renderRuntime(),
       this.renderTargetTitle(),
+      this.renderReloadButton(),
       this.renderTargetURI()
     );
   }
