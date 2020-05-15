@@ -1065,6 +1065,8 @@ void Statistics::sendGCTelemetry() {
   TimeDuration prepareTotal = SumPhase(PhaseKind::PREPARE, phaseTimes);
   TimeDuration markTotal = SumPhase(PhaseKind::MARK, phaseTimes);
   TimeDuration markRootsTotal = SumPhase(PhaseKind::MARK_ROOTS, phaseTimes);
+  TimeDuration markWeakTotal = phaseTimes[Phase::SWEEP_MARK_WEAK] +
+                               phaseTimes[Phase::SWEEP_MARK_GRAY_WEAK];
   size_t markCount = gc->marker.getMarkCount();
   double markRate = markCount / t(markTotal);
   runtime->addTelemetry(JS_TELEMETRY_GC_PREPARE_MS, t(prepareTotal));
@@ -1078,6 +1080,7 @@ void Statistics::sendGCTelemetry() {
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_ROOTS_MS, t(markRootsTotal));
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_GRAY_MS,
                         t(phaseTimes[Phase::SWEEP_MARK_GRAY]));
+  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_WEAK_MS, t(markWeakTotal));
   runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL, nonincremental());
   if (nonincremental()) {
     runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL_REASON,
