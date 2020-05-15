@@ -1106,8 +1106,7 @@ void WebRenderBridgeParent::UpdateAPZFocusState(const FocusTarget& aFocus) {
 }
 
 void WebRenderBridgeParent::UpdateAPZScrollData(const wr::Epoch& aEpoch,
-                                                WebRenderScrollData&& aData,
-                                                wr::RenderRoot aRenderRoot) {
+                                                WebRenderScrollData&& aData) {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
     return;
@@ -1120,8 +1119,7 @@ void WebRenderBridgeParent::UpdateAPZScrollData(const wr::Epoch& aEpoch,
 }
 
 void WebRenderBridgeParent::UpdateAPZScrollOffsets(
-    ScrollUpdatesMap&& aUpdates, uint32_t aPaintSequenceNumber,
-    wr::RenderRoot aRenderRoot) {
+    ScrollUpdatesMap&& aUpdates, uint32_t aPaintSequenceNumber) {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
     return;
@@ -1152,9 +1150,8 @@ void WebRenderBridgeParent::SetAPZSampleTime() {
 }
 
 bool WebRenderBridgeParent::SetDisplayList(
-    wr::RenderRoot aRenderRoot, const LayoutDeviceRect& aRect,
-    const wr::LayoutSize& aContentSize, ipc::ByteBuf&& aDL,
-    const wr::BuiltDisplayListDescriptor& aDLDesc,
+    const LayoutDeviceRect& aRect, const wr::LayoutSize& aContentSize,
+    ipc::ByteBuf&& aDL, const wr::BuiltDisplayListDescriptor& aDLDesc,
     const nsTArray<OpUpdateResource>& aResourceUpdates,
     const nsTArray<RefCountedShmem>& aSmallShmems,
     const nsTArray<ipc::Shmem>& aLargeShmems, const TimeStamp& aTxnStartTime,
@@ -1212,13 +1209,11 @@ bool WebRenderBridgeParent::ProcessRenderRootDisplayListData(
   // sent to WebRender, so that the UpdateHitTestingTree call is guaranteed to
   // be in the updater queue at the time that the scene swap completes.
   if (aDisplayList.mScrollData) {
-    UpdateAPZScrollData(aWrEpoch, std::move(aDisplayList.mScrollData.ref()),
-                        aDisplayList.mRenderRoot);
+    UpdateAPZScrollData(aWrEpoch, std::move(aDisplayList.mScrollData.ref()));
   }
 
   MOZ_ASSERT(aDisplayList.mRenderRoot == wr::RenderRoot::Default ||
              IsRootWebRenderBridgeParent());
-  auto renderRoot = aDisplayList.mRenderRoot;
 
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
   if (aValidTransaction) {
@@ -1232,7 +1227,7 @@ bool WebRenderBridgeParent::ProcessRenderRootDisplayListData(
   }
 
   if (aDisplayList.mDL &&
-      !SetDisplayList(renderRoot, aDisplayList.mRect, aDisplayList.mContentSize,
+      !SetDisplayList(aDisplayList.mRect, aDisplayList.mContentSize,
                       std::move(aDisplayList.mDL.ref()), aDisplayList.mDLDesc,
                       aDisplayList.mResourceUpdates, aDisplayList.mSmallShmems,
                       aDisplayList.mLargeShmems, aTxnStartTime, txn, aWrEpoch,
@@ -1392,7 +1387,7 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
 
   if (!aUpdates.mScrollUpdates.IsEmpty()) {
     UpdateAPZScrollOffsets(std::move(aUpdates.mScrollUpdates),
-                           aUpdates.mPaintSequenceNumber, aUpdates.mRenderRoot);
+                           aUpdates.mPaintSequenceNumber);
   }
 
   // Update WrEpoch for UpdateResources() and ProcessWebRenderParentCommands().
