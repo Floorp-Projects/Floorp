@@ -89,6 +89,15 @@ export function toggleInlinePreview(toggleValue: boolean) {
   };
 }
 
+export function toggleSourceMapsEnabled(toggleValue: boolean) {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    dispatch({
+      type: "TOGGLE_SOURCE_MAPS_ENABLED",
+      value: toggleValue,
+    });
+  };
+}
+
 export function showSource(cx: Context, sourceId: SourceId) {
   return ({ dispatch, getState }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);

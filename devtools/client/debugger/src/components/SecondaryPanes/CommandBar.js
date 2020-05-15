@@ -9,7 +9,7 @@ import React, { Component } from "react";
 
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
-import { features, javascriptPrefs } from "../../utils/prefs";
+import { features, javascriptPrefs, prefs } from "../../utils/prefs";
 import {
   getIsWaitingOnBreak,
   getSkipPausing,
@@ -98,6 +98,8 @@ type Props = {
   breakOnNext: typeof actions.breakOnNext,
   pauseOnExceptions: typeof actions.pauseOnExceptions,
   toggleSkipPausing: typeof actions.toggleSkipPausing,
+  toggleInlinePreview: typeof actions.toggleInlinePreview,
+  toggleSourceMapsEnabled: typeof actions.toggleSourceMapsEnabled,
 };
 
 class CommandBar extends Component<Props> {
@@ -263,6 +265,24 @@ class CommandBar extends Component<Props> {
             javascriptPrefs.enableJavaScript = !javascriptPrefs.enableJavaScript;
           }}
         />
+        <MenuItem
+          key="debugger-settings-menu-item-disable-inline-previews"
+          checked={!features.inlinePreview}
+          label={L10N.getStr("inlinePreview.disable.label")}
+          tooltip={L10N.getStr("inlinePreview.disable.tooltip")}
+          onClick={() =>
+            this.props.toggleInlinePreview(!features.inlinePreview)
+          }
+        />
+        <MenuItem
+          key="debugger-settings-menu-item-disable-sourcemaps"
+          checked={!prefs.clientSourceMapsEnabled}
+          label={L10N.getStr("settings.disableSourceMaps.label")}
+          tooltip={L10N.getStr("settings.disableSourceMaps.tooltip")}
+          onClick={() =>
+            this.props.toggleSourceMapsEnabled(!prefs.clientSourceMapsEnabled)
+          }
+        />
       </MenuList>
     );
   }
@@ -303,4 +323,6 @@ export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
   breakOnNext: actions.breakOnNext,
   pauseOnExceptions: actions.pauseOnExceptions,
   toggleSkipPausing: actions.toggleSkipPausing,
+  toggleInlinePreview: actions.toggleInlinePreview,
+  toggleSourceMapsEnabled: actions.toggleSourceMapsEnabled,
 })(CommandBar);
