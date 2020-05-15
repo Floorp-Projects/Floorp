@@ -568,7 +568,9 @@ size_t RTPSender::SendPadData(size_t bytes,
         if (last_timestamp_time_ms_ > 0) {
           timestamp +=
               (now_ms - last_timestamp_time_ms_) * kTimestampTicksPerMs;
-          capture_time_ms += (now_ms - last_timestamp_time_ms_);
+          if (capture_time_ms > 0) {
+            capture_time_ms += (now_ms - last_timestamp_time_ms_);
+          }
         }
         if (!ssrc_rtx_) {
           RTC_LOG(LS_ERROR) << "RTX SSRC unset.";
