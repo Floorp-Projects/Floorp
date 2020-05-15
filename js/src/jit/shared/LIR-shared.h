@@ -4820,6 +4820,40 @@ class LLoadFixedSlotAndUnbox : public LInstructionHelper<1, 1, 0> {
   }
 };
 
+class LLoadDynamicSlotAndUnbox : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(LoadDynamicSlotAndUnbox)
+
+  explicit LLoadDynamicSlotAndUnbox(const LAllocation& slots)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, slots);
+  }
+
+  const LAllocation* slots() { return getOperand(0); }
+
+  const MLoadDynamicSlotAndUnbox* mir() const {
+    return mir_->toLoadDynamicSlotAndUnbox();
+  }
+};
+
+class LLoadElementAndUnbox : public LInstructionHelper<1, 2, 0> {
+ public:
+  LIR_HEADER(LoadElementAndUnbox)
+
+  LLoadElementAndUnbox(const LAllocation& elements, const LAllocation& index)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+  }
+
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+
+  const MLoadElementAndUnbox* mir() const {
+    return mir_->toLoadElementAndUnbox();
+  }
+};
+
 // Store a boxed value to an object's fixed slot.
 class LStoreFixedSlotV : public LInstructionHelper<0, 1 + BOX_PIECES, 0> {
  public:

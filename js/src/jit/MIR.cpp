@@ -1843,29 +1843,7 @@ MDefinition* MUnbox::foldsTo(TempAllocator& alloc) {
     }
   }
 
-  if (!input()->isLoadFixedSlot()) {
-    return this;
-  }
-  MLoadFixedSlot* load = input()->toLoadFixedSlot();
-  if (load->type() != MIRType::Value) {
-    return this;
-  }
-  if (type() != MIRType::Boolean && !IsNumberType(type())) {
-    return this;
-  }
-  // Only optimize if the load comes immediately before the unbox, so it's
-  // safe to copy the load's dependency field.
-  MInstructionIterator iter(load->block()->begin(load));
-  ++iter;
-  if (*iter != this) {
-    return this;
-  }
-
-  MLoadFixedSlotAndUnbox* ins = MLoadFixedSlotAndUnbox::New(
-      alloc, load->object(), load->slot(), mode(), type(), bailoutKind());
-  // As GVN runs after the Alias Analysis, we have to set the dependency by hand
-  ins->setDependency(load->dependency());
-  return ins;
+  return this;
 }
 
 #ifdef JS_JITSPEW
