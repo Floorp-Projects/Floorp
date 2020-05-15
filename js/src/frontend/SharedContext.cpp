@@ -30,7 +30,6 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
       allowSuperCall_(false),
       allowArguments_(true),
       inWith_(false),
-      needsThisTDZChecks_(false),
       localStrict(false),
       hasExplicitUseStrict_(false) {
   // Compute the script kind "input" flags.
@@ -101,13 +100,15 @@ void SharedContext::computeThisBinding(Scope* scope) {
         continue;
       }
 
-      // Derived class constructors (including nested arrow functions and
-      // eval) need TDZ checks when accessing |this|.
+      // Derived class constructors (and their nested arrow functions and evals)
+      // use ThisBinding::DerivedConstructor, which ensures TDZ checks happen
+      // when accessing |this|.
       if (fun->isDerivedClassConstructor()) {
-        needsThisTDZChecks_ = true;
+        thisBinding_ = ThisBinding::DerivedConstructor;
+      } else {
+        thisBinding_ = ThisBinding::Function;
       }
 
-      thisBinding_ = ThisBinding::Function;
       return;
     }
   }
@@ -253,7 +254,6 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     allowSuperProperty_ = sc->allowSuperProperty();
     allowSuperCall_ = sc->allowSuperCall();
     allowArguments_ = sc->allowArguments();
-    needsThisTDZChecks_ = sc->needsThisTDZChecks();
     thisBinding_ = sc->thisBinding();
   } else {
     allowNewTarget_ = true;
@@ -269,15 +269,15 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
           enclosing->findInnermostStatement<ParseContext::ClassStatement>();
       MOZ_ASSERT(stmt);
       stmt->constructorBox = this;
-
-      if (kind == FunctionSyntaxKind::DerivedClassConstructor) {
-        setDerivedClassConstructor();
-        allowSuperCall_ = true;
-        needsThisTDZChecks_ = true;
-      }
     }
 
-    thisBinding_ = ThisBinding::Function;
+    if (kind == FunctionSyntaxKind::DerivedClassConstructor) {
+      setDerivedClassConstructor();
+      allowSuperCall_ = true;
+      thisBinding_ = ThisBinding::DerivedConstructor;
+    } else {
+      thisBinding_ = ThisBinding::Function;
+    }
   }
 
   // We inherit the parse goal from our top-level.
@@ -305,10 +305,10 @@ void FunctionBox::initWithEnclosingScope(JSFunction* fun) {
     if (isDerivedClassConstructor()) {
       setDerivedClassConstructor();
       allowSuperCall_ = true;
-      needsThisTDZChecks_ = true;
+      thisBinding_ = ThisBinding::DerivedConstructor;
+    } else {
+      thisBinding_ = ThisBinding::Function;
     }
-
-    thisBinding_ = ThisBinding::Function;
   } else {
     computeAllowSyntax(enclosingScope);
     computeThisBinding(enclosingScope);
