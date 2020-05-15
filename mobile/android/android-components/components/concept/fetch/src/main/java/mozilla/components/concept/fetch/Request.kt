@@ -154,3 +154,8 @@ data class Request(
  * Checks whether or not the request is for a data URI.
  */
 fun Request.isDataUri() = url.startsWith("data:")
+
+/**
+ * Checks whether or not the request is for a data blob.
+ */
+fun Request.isBlobUri() = url.startsWith("blob:")

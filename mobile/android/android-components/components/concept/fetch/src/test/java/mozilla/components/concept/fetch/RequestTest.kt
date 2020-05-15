@@ -7,6 +7,8 @@ package mozilla.components.concept.fetch
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doThrow
@@ -168,6 +170,17 @@ class RequestTest {
         } finally {
             verify(stream).close()
         }
+    }
+
+    @Test
+    fun `Is a blob Request`() {
+        var request = Request(url = "blob:https://mdn.mozillademos.org/d518464c-5075-9046")
+
+        assertTrue(request.isBlobUri())
+
+        request = Request(url = "https://mdn.mozillademos.org/d518464c-5075-9046")
+
+        assertFalse(request.isBlobUri())
     }
 }
 
