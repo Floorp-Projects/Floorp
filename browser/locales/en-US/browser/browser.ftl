@@ -251,7 +251,7 @@ urlbar-switch-to-tab =
 urlbar-extension =
   .value = Extension:
 
-urlbar-go-end-cap =
+urlbar-go-button =
   .tooltiptext = Go to the address in the Location Bar
 urlbar-page-action-button =
   .tooltiptext = Page actions
