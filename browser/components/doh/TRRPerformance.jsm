@@ -59,21 +59,9 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 // The list of participating TRRs.
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "kTRRs",
-  "network.trr.resolvers",
-  null,
-  null,
-  val =>
-    val
-      ? JSON.parse(val).map(trr => trr.url)
-      : [
-          "https://mozilla.cloudflare-dns.com/dns-query",
-          "https://trr.dns.nextdns.io/",
-          "https://doh.xfinity.com/dns-query",
-        ]
-);
+const kTRRs = JSON.parse(
+  Services.prefs.getDefaultBranch("").getCharPref("network.trr.resolvers")
+).map(trr => trr.url);
 
 // The canonical domain whose subdomains we will be resolving.
 XPCOMUtils.defineLazyPreferenceGetter(
