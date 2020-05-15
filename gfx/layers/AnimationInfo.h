@@ -12,6 +12,7 @@
 #include "mozilla/Array.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/FunctionRef.h"
+#include "mozilla/layers/AnimationStorageData.h"
 #include "mozilla/layers/LayersMessages.h"  // for TransformData
 
 struct RawServoAnimationValue;
@@ -85,15 +86,15 @@ class AnimationInfo final {
   // always return an empty array on the compositor thread.
   AnimationArray& GetAnimations() { return mAnimations; }
   nsTArray<PropertyAnimationGroup>& GetPropertyAnimationGroups() {
-    return mPropertyAnimationGroups;
+    return mStorageData.mAnimation;
   }
   const Maybe<TransformData>& GetTransformData() const {
-    return mTransformData;
+    return mStorageData.mTransformData;
   }
   bool ApplyPendingUpdatesForThisTransaction();
   bool HasTransformAnimation() const;
 
-  gfx::Path* CachedMotionPath() { return mCachedMotionPath; }
+  gfx::Path* CachedMotionPath() { return mStorageData.mCachedMotionPath; }
 
   // In case of continuation, |aFrame| must be the first or the last
   // continuation frame, otherwise this function might return Nothing().
@@ -153,17 +154,7 @@ class AnimationInfo final {
 
   uint64_t mCompositorAnimationsId;
   // The extracted data produced by AnimationHelper::ExtractAnimations().
-  //
-  // Each entry in the array represents an animation list for one property.  For
-  // transform-like properties (e.g. transform, rotate etc.), there may be
-  // multiple entries depending on how many transform-like properties we have.
-  // Note: we don't use AnimationStorageData here becuase including
-  // AnimationHelper.h causes build errors (because other modules may include
-  // this file but cannot see LayersMessages.h).
-  nsTArray<PropertyAnimationGroup> mPropertyAnimationGroups;
-  Maybe<TransformData> mTransformData;
-  // For motion path. We cached the gfx path for optimization.
-  RefPtr<gfx::Path> mCachedMotionPath;
+  AnimationStorageData mStorageData;
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
   Maybe<uint64_t> mAnimationGeneration;
