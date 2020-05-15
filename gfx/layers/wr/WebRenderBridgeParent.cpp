@@ -361,8 +361,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
 
-  mRenderRoot = Some(wr::RenderRoot::Default);
-
   UpdateDebugFlags();
   UpdateQualitySettings();
 }
@@ -518,8 +516,6 @@ bool WebRenderBridgeParent::MaybeHandleDeferredPipelineDataForPipeline(
     if (!wrbp) {
       return true;
     }
-    MOZ_ASSERT(wrbp->mRenderRoot.refOr(aRenderRoot) == aRenderRoot);
-    wrbp->mRenderRoot = Some(aRenderRoot);
 
     if (auto entry = mPipelineDeferredUpdates.Lookup(key)) {
       wrbp->HandleDeferredPipelineData(entry.Data(), aTxnStartTime);
@@ -558,16 +554,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEnsureConnected(
   MOZ_ASSERT(mIdNamespace.mHandle != 0);
   *aTextureFactoryIdentifier = GetTextureFactoryIdentifier();
   *aMaybeIdNamespace = Some(mIdNamespace);
-
-  if (!mRenderRoot) {
-    RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent();
-    if (!root) {
-      return IPC_FAIL(this, "Root WRBP is missing (shutting down?)");
-    }
-    if (auto p = root->mPipelineRenderRoots.Lookup(wr::AsUint64(mPipelineId))) {
-      mRenderRoot.emplace(p.Data());
-    }
-  }
 
   return IPC_OK();
 }
@@ -955,15 +941,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
     return IPC_OK();
   }
 
-  if (!mRenderRoot) {
-    PushDeferredPipelineData(AsVariant(ResourceUpdates{
-        std::move(aResourceUpdates),
-        std::move(aSmallShmems),
-        std::move(aLargeShmems),
-    }));
-    return IPC_OK();
-  }
-
   wr::TransactionBuilder txn;
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
@@ -1090,11 +1067,6 @@ WebRenderBridgeParent::GetRootWebRenderBridgeParent() const {
 }
 
 void WebRenderBridgeParent::UpdateAPZFocusState(const FocusTarget& aFocus) {
-  if (!mRenderRoot) {
-    PushDeferredPipelineData(AsVariant(aFocus));
-    return;
-  }
-
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
     return;
@@ -1297,18 +1269,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     }
   }
 
-  if (!mRenderRoot) {
-    // Only non-root WRBPs will ever have an unresolved mRenderRoot
-    MOZ_ASSERT(!IsRootWebRenderBridgeParent());
-    if (aDisplayLists.Length() != 1) {
-      return IPC_FAIL(this,
-                      "Well-behaved content processes must only send a DL for "
-                      "a single renderRoot");
-    }
-    PushDeferredPipelineData(AsVariant(std::move(aDisplayLists[0])));
-    aDisplayLists.Clear();
-  }
-
   for (auto& displayList : aDisplayLists) {
     if (IsRootWebRenderBridgeParent()) {
       if (!MaybeHandleDeferredPipelineData(displayList.mRenderRoot,
@@ -1324,7 +1284,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 
       for (auto pipelineId : displayList.mRemotePipelineIds) {
         auto id = wr::AsUint64(pipelineId);
-        root->mPipelineRenderRoots.Put(id, *mRenderRoot);
+        root->mPipelineRenderRoots.Put(id, wr::RenderRoot::Default);
         mChildPipelines.PutEntry(id);
       }
     }
@@ -1467,18 +1427,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(
       this, &aToDestroy);
 
-  if (!mRenderRoot && aRenderRootUpdates.Length() > 0) {
-    // Only non-root WRBPs will ever have an unresolved mRenderRoot
-    MOZ_ASSERT(!IsRootWebRenderBridgeParent());
-    if (aRenderRootUpdates.Length() != 1) {
-      return IPC_FAIL(this,
-                      "Well-behaved content processes must only send a DL for "
-                      "a single renderRoot");
-    }
-    PushDeferredPipelineData(AsVariant(std::move(aRenderRootUpdates[0])));
-    aRenderRootUpdates.Clear();
-  }
-
   UpdateAPZFocusState(aFocusTarget);
 
   bool scheduleAnyComposite = false;
@@ -1541,13 +1489,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetFocusTarget(
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
     nsTArray<WebRenderParentCommand>&& aCommands) {
   if (mDestroyed) {
-    return IPC_OK();
-  }
-
-  if (!mRenderRoot) {
-    PushDeferredPipelineData(AsVariant(ParentCommands{
-        std::move(aCommands),
-    }));
     return IPC_OK();
   }
 
@@ -1944,21 +1885,15 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
     return IPC_OK();
   }
 
-  if (mRenderRoot) {
-    // Clear resources
-    wr::TransactionBuilder txn;
-    txn.SetLowPriority(true);
-    txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
-    txn.Notify(wr::Checkpoint::SceneBuilt,
-               MakeUnique<ScheduleObserveLayersUpdate>(
-                   mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch,
-                   false));
-    mApi->SendTransaction(txn);
-  } else {
-    if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
-      root->RemoveDeferredPipeline(mPipelineId);
-    }
-  }
+  // Clear resources
+  wr::TransactionBuilder txn;
+  txn.SetLowPriority(true);
+  txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
+  txn.Notify(
+      wr::Checkpoint::SceneBuilt,
+      MakeUnique<ScheduleObserveLayersUpdate>(
+          mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch, false));
+  mApi->SendTransaction(txn);
 
   // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();
