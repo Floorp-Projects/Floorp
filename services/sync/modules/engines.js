@@ -1852,7 +1852,7 @@ SyncEngine.prototype = {
         // the batch is complete, however we want to remember success/failure
         // indicators for when that happens.
         if (!resp.success) {
-          this._log.debug("Uploading records failed: " + resp);
+          this._log.debug(`Uploading records failed: ${resp.status}`);
           resp.failureCode =
             resp.status == 412 ? ENGINE_BATCH_INTERRUPTED : ENGINE_UPLOAD_FAIL;
           throw resp;

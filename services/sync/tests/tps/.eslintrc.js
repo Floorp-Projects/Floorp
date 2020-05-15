@@ -11,6 +11,7 @@ module.exports = {
     CreditCards: false,
     EnableEngines: false,
     EnsureTracking: false,
+    ExtStorage: false,
     Formdata: false,
     History: false,
     Login: false,

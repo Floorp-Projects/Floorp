@@ -48,32 +48,26 @@ class DOMEventTargetHelper : public dom::EventTarget,
         mOwnerWindow(nullptr),
         mHasOrHasHadOwnerWindow(false),
         mIsKeptAlive(false) {
-    // Be careful not to call the virtual BindToOwner() in a
-    // constructor.
     nsIGlobalObject* global = aWindow ? aWindow->AsGlobal() : nullptr;
-    BindToOwnerInternal(global);
+    BindToOwner(global);
   }
   explicit DOMEventTargetHelper(nsIGlobalObject* aGlobalObject)
       : mParentObject(nullptr),
         mOwnerWindow(nullptr),
         mHasOrHasHadOwnerWindow(false),
         mIsKeptAlive(false) {
-    // Be careful not to call the virtual BindToOwner() in a
-    // constructor.
-    BindToOwnerInternal(aGlobalObject);
+    BindToOwner(aGlobalObject);
   }
   explicit DOMEventTargetHelper(DOMEventTargetHelper* aOther)
       : mParentObject(nullptr),
         mOwnerWindow(nullptr),
         mHasOrHasHadOwnerWindow(false),
         mIsKeptAlive(false) {
-    // Be careful not to call the virtual BindToOwner() in a
-    // constructor.
     if (!aOther) {
-      BindToOwnerInternal(static_cast<nsIGlobalObject*>(nullptr));
+      BindToOwner(static_cast<nsIGlobalObject*>(nullptr));
       return;
     }
-    BindToOwnerInternal(aOther->GetParentObject());
+    BindToOwner(aOther->GetParentObject());
     mHasOrHasHadOwnerWindow = aOther->HasOrHasHadOwner();
   }
 
@@ -151,19 +145,6 @@ class DOMEventTargetHelper : public dom::EventTarget,
   // the current document of its browsing context.  Will return null otherwise.
   mozilla::dom::Document* GetDocumentIfCurrent() const;
 
-  // DETH subclasses may override the BindToOwner(nsIGlobalObject*) method
-  // to take action when dynamically binding to a new global.  This is only
-  // called on rebind since virtual methods cannot be called from the
-  // constructor.  The other BindToOwner() methods will call into this
-  // method.
-  //
-  // NOTE: Any overrides of BindToOwner() *must* invoke
-  //       DOMEventTargetHelper::BindToOwner(aOwner).
-  virtual void BindToOwner(nsIGlobalObject* aOwner);
-
-  void BindToOwner(nsPIDOMWindowInner* aOwner);
-  void BindToOwner(DOMEventTargetHelper* aOther);
-
   virtual void DisconnectFromOwner();
   using EventTarget::GetParentObject;
   nsIGlobalObject* GetOwnerGlobal() const final { return mParentObject; }
@@ -201,7 +182,7 @@ class DOMEventTargetHelper : public dom::EventTarget,
   void IgnoreKeepAliveIfHasListenersFor(const nsAString& aType);
   void IgnoreKeepAliveIfHasListenersFor(nsAtom* aType);
 
-  void BindToOwnerInternal(nsIGlobalObject* aOwner);
+  void BindToOwner(nsIGlobalObject* aOwner);
 
  private:
   // The parent global object.  The global will clear this when

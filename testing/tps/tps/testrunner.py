@@ -84,6 +84,7 @@ class TPSTestRunner(object):
         'services.sync.testing.tps': True,
         'engine.bookmarks.repair.enabled': False,
         'extensions.experiments.enabled': True,
+        'webextensions.storage.sync.kinto': False,
     }
 
     debug_preferences = {

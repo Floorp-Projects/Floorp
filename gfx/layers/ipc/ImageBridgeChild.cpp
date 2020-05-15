@@ -329,7 +329,7 @@ void ImageBridgeChild::UpdateImageClient(RefPtr<ImageContainer> aContainer) {
   }
 
   BeginTransaction();
-  client->UpdateImage(aContainer, Layer::CONTENT_OPAQUE, Nothing());
+  client->UpdateImage(aContainer, Layer::CONTENT_OPAQUE);
   EndTransaction();
 }
 
@@ -368,8 +368,7 @@ void ImageBridgeChild::UpdateAsyncCanvasRendererNow(
   }
 
   BeginTransaction();
-  // TODO wr::RenderRoot::Unknown
-  aWrapper->GetCanvasClient()->Updated(wr::RenderRoot::Default);
+  aWrapper->GetCanvasClient()->Updated();
   EndTransaction();
 }
 

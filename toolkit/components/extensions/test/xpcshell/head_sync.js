@@ -9,9 +9,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm", this);
 
-var { BaseContext } = ExtensionCommon;
-
-class Context extends BaseContext {
+class KintoExtContext extends ExtensionCommon.BaseContext {
   constructor(principal) {
     super();
     Object.defineProperty(this, "principal", {
@@ -38,7 +36,7 @@ async function withContext(f) {
   const PRINCIPAL1 = ssm.createContentPrincipalFromOrigin(
     "http://www.example.org"
   );
-  const context = new Context(PRINCIPAL1);
+  const context = new KintoExtContext(PRINCIPAL1);
   try {
     await f(context);
   } finally {

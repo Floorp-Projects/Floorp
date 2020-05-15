@@ -21,17 +21,19 @@
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/SdpAttribute.h"
 #include "signaling/src/sdp/SdpMediaSection.h"
-
+#include "signaling/src/media-conduit/RtpRtcpConfig.h"
 namespace mozilla {
 
 class JsepTrackNegotiatedDetails {
  public:
-  JsepTrackNegotiatedDetails() : mTias(0) {}
+  JsepTrackNegotiatedDetails()
+      : mTias(0), mRtpRtcpConf(webrtc::RtcpMode::kCompound) {}
 
   JsepTrackNegotiatedDetails(const JsepTrackNegotiatedDetails& orig)
       : mExtmap(orig.mExtmap),
         mUniquePayloadTypes(orig.mUniquePayloadTypes),
-        mTias(orig.mTias) {
+        mTias(orig.mTias),
+        mRtpRtcpConf(orig.mRtpRtcpConf) {
     for (const auto& encoding : orig.mEncodings) {
       mEncodings.emplace_back(new JsepTrackEncoding(*encoding));
     }
@@ -67,6 +69,8 @@ class JsepTrackNegotiatedDetails {
 
   uint32_t GetTias() const { return mTias; }
 
+  RtpRtcpConfig GetRtpRtcpConfig() const { return mRtpRtcpConf; }
+
  private:
   friend class JsepTrack;
 
@@ -74,6 +78,7 @@ class JsepTrackNegotiatedDetails {
   std::vector<uint8_t> mUniquePayloadTypes;
   std::vector<UniquePtr<JsepTrackEncoding>> mEncodings;
   uint32_t mTias;  // bits per second
+  RtpRtcpConfig mRtpRtcpConf;
 };
 
 class JsepTrack {

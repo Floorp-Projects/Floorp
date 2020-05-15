@@ -248,7 +248,6 @@ option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
 @imports(_from='mozbuild.virtualenv', _import='verify_python_version')
-@imports(_from='mozbuild.virtualenv', _import='PY3')
 @imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
 @imports(_from='six', _import='ensure_text')
@@ -361,30 +360,23 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
 
     python = normsep(manager.python_path)
 
-    # The currently running interpreter could be Python 2 or Python 3. We make the
-    # part of the code that re-executes everything with the virtualenv's Python
-    # conditional on running the same major version as the current interpreter. If we
-    # don't do this then the configure code for the Py 2 and Py 3 virtualenvs could
-    # activate each other from inside the other's virtualenv.  We can't guarantee
-    # how the virtualenvs would interact if that happens.
-    if PY3:
-        if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
-            log.debug("python3: executing as %s, should be running as %s" % (
-                sys.executable, manager.python_path))
-            log.info('Re-executing in the virtualenv')
-            if env_python:
-                del os.environ['PYTHON3']
-            # Homebrew on macOS will change Python's sys.executable to a custom
-            # value which messes with mach's virtualenv handling code. Override
-            # Homebrew's changes with the correct sys.executable value.
-            os.environ['PYTHONEXECUTABLE'] = python
-            # One would prefer to use os.execl, but that's completely borked on
-            # Windows.
-            sys.exit(subprocess.call([python] + sys.argv))
+    if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
+        log.debug("python3: executing as %s, should be running as %s" % (
+            sys.executable, manager.python_path))
+        log.info('Re-executing in the virtualenv')
+        if env_python:
+            del os.environ['PYTHON3']
+        # Homebrew on macOS will change Python's sys.executable to a custom
+        # value which messes with mach's virtualenv handling code. Override
+        # Homebrew's changes with the correct sys.executable value.
+        os.environ['PYTHONEXECUTABLE'] = python
+        # One would prefer to use os.execl, but that's completely borked on
+        # Windows.
+        sys.exit(subprocess.call([python] + sys.argv))
 
-        # We are now in the virtualenv
-        if not distutils.sysconfig.get_python_lib():
-            die('Could not determine python site packages directory')
+    # We are now in the virtualenv
+    if not distutils.sysconfig.get_python_lib():
+        die('Could not determine python site packages directory')
 
     str_version = '.'.join(str(v) for v in version)
 
@@ -693,9 +685,6 @@ def split_triplet(triplet, allow_msvc=False):
     elif os.startswith('darwin'):
         canonical_kernel = 'Darwin'
         canonical_os = 'OSX'
-    elif os.startswith('ios'):
-        canonical_kernel = 'Darwin'
-        canonical_os = 'iOS'
     elif os.startswith('dragonfly'):
         canonical_os = canonical_kernel = 'DragonFly'
     elif os.startswith('freebsd'):
@@ -928,10 +917,6 @@ def host_for_sub_configure(host):
 @depends(target)
 def target_for_sub_configure(target):
     target_alias = target.alias
-    # old-configure does plenty of tests against $target and $target_os
-    # and expects darwin for iOS, so make it happy.
-    if target.os == 'iOS':
-        target_alias = target_alias.replace('-ios', '-darwin')
     return '--target=%s' % target_alias
 
 
@@ -1015,15 +1000,6 @@ def target_is_darwin(target):
 
 
 set_define('XP_DARWIN', target_is_darwin)
-
-
-@depends(target)
-def target_is_ios(target):
-    if target.kernel == 'Darwin' and target.os == 'iOS':
-        return True
-
-
-set_define('XP_IOS', target_is_ios)
 
 
 @depends(target)

@@ -119,8 +119,7 @@ class WebRenderCommandBuilder final {
   // We store the data in frame's property.
   template <class T>
   already_AddRefed<T> CreateOrRecycleWebRenderUserData(
-      nsDisplayItem* aItem, wr::RenderRoot aRenderRoot,
-      bool* aOutIsRecycled = nullptr) {
+      nsDisplayItem* aItem, bool* aOutIsRecycled = nullptr) {
     MOZ_ASSERT(aItem);
     nsIFrame* frame = aItem->Frame();
     if (aOutIsRecycled) {

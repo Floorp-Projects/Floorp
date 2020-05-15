@@ -242,9 +242,12 @@ var TabModalPrompt = class {
     this.Dialog = new tmp.CommonDialog(args, this.ui);
     this.Dialog.onLoad(null);
 
-    // Display the tabprompt title that shows the prompt origin when
+    // For content prompts display the tabprompt title that shows the prompt origin when
     // the prompt origin is not the same as that of the top window.
-    if (!args.showAlertOrigin) {
+    if (
+      args.modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT &&
+      args.showCallerOrigin
+    ) {
       this.ui.infoTitle.removeAttribute("hidden");
     }
 

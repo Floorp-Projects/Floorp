@@ -359,10 +359,13 @@ class MDNCompatibility {
     const version = parseFloat(browser.version);
     const terminal = terms[terms.length - 1];
     const match = terminal.match(/^-\w+-/);
-    const prefix = match ? match[0] : null;
+    const prefix = match ? match[0] : undefined;
+    // There are compat data that are defined with prefix like "-moz-binding".
+    // In this case, we don't have to check the prefix.
+    const isPrefixedData = prefix && !this._getAlias(compatNode, ...terms);
 
     for (const support of supportList) {
-      if ((!support.prefix && !prefix) || support.prefix === prefix) {
+      if (isPrefixedData || support.prefix === prefix) {
         const { version_added: added, version_removed: removed } = support;
         const addedVersion = this._asFloatVersion(
           added === null ? true : added

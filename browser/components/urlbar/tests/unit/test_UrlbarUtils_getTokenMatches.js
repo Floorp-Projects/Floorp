@@ -211,7 +211,11 @@ add_task(function test() {
   }
 });
 
-add_task(function testReverse() {
+/**
+ * Tests suggestion highlighting. Note that suggestions are only highlighted if
+ * the matching token is at the beginning of a word in the matched string.
+ */
+add_task(function testSuggestions() {
   const tests = [
     {
       tokens: ["mozilla", "is", "i"],
@@ -232,12 +236,12 @@ add_task(function testReverse() {
     {
       tokens: ["mo", "zilla"],
       phrase: "mOzIlLa",
-      expected: [],
+      expected: [[2, 5]],
     },
     {
       tokens: ["MO", "ZILLA"],
       phrase: "mozilla",
-      expected: [],
+      expected: [[2, 5]],
     },
     {
       tokens: [""], // Should never happen in practice.
@@ -245,27 +249,30 @@ add_task(function testReverse() {
       expected: [[0, 7]],
     },
     {
-      tokens: ["mo", "om"],
+      tokens: ["mo", "om", "la"],
       phrase: "mozilla mozzarella momo",
       expected: [
         [2, 6],
         [10, 9],
+        [21, 2],
       ],
     },
     {
-      tokens: ["mo", "om"],
+      tokens: ["mo", "om", "la"],
       phrase: "MOZILLA MOZZARELLA MOMO",
       expected: [
         [2, 6],
         [10, 9],
+        [21, 2],
       ],
     },
     {
-      tokens: ["MO", "OM"],
+      tokens: ["MO", "OM", "LA"],
       phrase: "mozilla mozzarella momo",
       expected: [
         [2, 6],
         [10, 9],
+        [21, 2],
       ],
     },
   ];

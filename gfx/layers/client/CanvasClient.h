@@ -67,8 +67,7 @@ class CanvasClient : public CompositableClient {
   virtual void Clear(){};
 
   virtual void Update(gfx::IntSize aSize,
-                      ShareableCanvasRenderer* aCanvasRenderer,
-                      wr::RenderRoot aRenderRoot) = 0;
+                      ShareableCanvasRenderer* aCanvasRenderer) = 0;
 
   bool AddTextureClient(TextureClient* aTexture) override {
     ++mFrameID;
@@ -77,10 +76,9 @@ class CanvasClient : public CompositableClient {
 
   virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) {}
 
-  virtual void UpdateFromTexture(TextureClient* aTexture,
-                                 wr::RenderRoot aRenderRoot) {}
+  virtual void UpdateFromTexture(TextureClient* aTexture) {}
 
-  virtual void Updated(wr::RenderRoot aRenderRoot) {}
+  virtual void Updated() {}
 
  protected:
   int32_t mFrameID;
@@ -101,11 +99,10 @@ class CanvasClient2D : public CanvasClient {
     mBackBuffer = mFrontBuffer = mBufferProviderTexture = nullptr;
   }
 
-  void Update(gfx::IntSize aSize, ShareableCanvasRenderer* aCanvasRenderer,
-              wr::RenderRoot aRenderRoot) override;
+  void Update(gfx::IntSize aSize,
+              ShareableCanvasRenderer* aCanvasRenderer) override;
 
-  void UpdateFromTexture(TextureClient* aBuffer,
-                         wr::RenderRoot aRenderRoot) override;
+  void UpdateFromTexture(TextureClient* aBuffer) override;
 
   bool AddTextureClient(TextureClient* aTexture) override {
     return CanvasClient::AddTextureClient(aTexture);
@@ -151,13 +148,13 @@ class CanvasClientSharedSurface : public CanvasClient {
 
   void Clear() override { ClearSurfaces(); }
 
-  void Update(gfx::IntSize aSize, ShareableCanvasRenderer* aCanvasRenderer,
-              wr::RenderRoot aRenderRoot) override;
+  void Update(gfx::IntSize aSize,
+              ShareableCanvasRenderer* aCanvasRenderer) override;
   void UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer);
 
   void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
 
-  void Updated(wr::RenderRoot aRenderRoot) override;
+  void Updated() override;
 
   void OnDetach() override;
 };
@@ -179,8 +176,8 @@ class CanvasClientBridge final : public CanvasClient {
     return TextureInfo(CompositableType::IMAGE);
   }
 
-  void Update(gfx::IntSize aSize, ShareableCanvasRenderer* aCanvasRenderer,
-              wr::RenderRoot aRenderRoot) override {}
+  void Update(gfx::IntSize aSize,
+              ShareableCanvasRenderer* aCanvasRenderer) override {}
 
   void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
 
@@ -204,8 +201,7 @@ class CanvasClientOOP final : public CanvasClient {
   }
 
   virtual void Update(gfx::IntSize aSize,
-                      ShareableCanvasRenderer* aCanvasRenderer,
-                      wr::RenderRoot aRenderRoot) override;
+                      ShareableCanvasRenderer* aCanvasRenderer) override;
 
   virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) override {
     MOZ_ASSERT_UNREACHABLE("Illegal to call UpdateAsync on CanvasClientOOP");

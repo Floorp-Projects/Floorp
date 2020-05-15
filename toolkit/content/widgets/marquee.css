@@ -22,8 +22,8 @@
 }
 
 /* disable scrolling in contenteditable */
-:host(:-moz-read-write) .horizontalOuterDiv,
-:host(:-moz-read-write) .verticalInnerDiv {
+:host(:read-write) .horizontalOuterDiv,
+:host(:read-write) .verticalInnerDiv {
   margin: 0 !important;
   padding: 0 !important;
 }

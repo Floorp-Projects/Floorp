@@ -7,10 +7,9 @@
 
 include protocol PBackground;
 include NeckoChannelParams;
+include HttpChannelParams;
 
 include "mozilla/net/NeckoMessageUtils.h";
-
-using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 
 namespace mozilla {
 namespace net {

@@ -197,7 +197,7 @@ nsIContent::IMEState nsIContent::GetDesiredIMEState() {
     // Check for the special case where we're dealing with elements which don't
     // have the editable flag set, but are readwrite (such as text controls).
     if (!IsElement() ||
-        !AsElement()->State().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
+        !AsElement()->State().HasState(NS_EVENT_STATE_READWRITE)) {
       return IMEState(IMEState::DISABLED);
     }
   }

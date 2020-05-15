@@ -84,8 +84,11 @@ class DOMLocalization : public intl::Localization {
    *
    * If `aProto` gets passed, it'll be used to cache
    * the localized elements.
+   *
+   * Result is `true` if all translations were applied
+   * successfully, and `false` otherwise.
    */
-  void ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
+  bool ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
                          nsTArray<Nullable<L10nMessage>>& aTranslations,
                          nsXULPrototypeDocument* aProto, ErrorResult& aRv);
 

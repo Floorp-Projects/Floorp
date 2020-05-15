@@ -1673,7 +1673,8 @@ RefPtr<MozPromise<bool, bool, false>> nsWindow::OnLoadRequest(
 
     if (!isNullPrincipal) {
       nsCOMPtr<nsIURI> triggeringUri;
-      aTriggeringPrincipal->GetURI(getter_AddRefs(triggeringUri));
+      BasePrincipal::Cast(aTriggeringPrincipal)
+          ->GetURI(getter_AddRefs(triggeringUri));
       if (triggeringUri) {
         triggeringUri->GetDisplaySpec(triggeringSpec);
       }

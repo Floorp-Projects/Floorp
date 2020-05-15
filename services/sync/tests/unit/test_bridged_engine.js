@@ -150,7 +150,7 @@ add_task(async function test_interface() {
 
     info("Sync the engine");
     // Advance the last sync time to skip the Backstreet Boys...
-    bridge.lastSyncMillis = now + 2;
+    bridge.lastSyncMillis = 1000 * (now + 2);
     await sync_engine_and_validate_telem(engine, false);
 
     let metaGlobal = foo

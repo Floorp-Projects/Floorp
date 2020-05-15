@@ -21,7 +21,7 @@ void NoPrincipalGetURI::registerMatchers(MatchFinder *AstMatcher) {
 void NoPrincipalGetURI::check(const MatchFinder::MatchResult &Result) {
   const auto *MatchedDecl = Result.Nodes.getNodeAs<CXXMemberCallExpr>("id");
   diag(MatchedDecl->getExprLoc(),
-       "nsIPrincipal->GetURI is depricated and will be removed soon. Please "
+       "Principal->GetURI is depricated and will be removed soon. Please "
        "consider using the new helper functions of nsIPrincipal",
-       DiagnosticIDs::Warning);
+       DiagnosticIDs::Error);
 }
