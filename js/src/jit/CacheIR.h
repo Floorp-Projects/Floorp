@@ -1495,9 +1495,11 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   bool getTemplateObjectForNative(HandleFunction calleeFunc,
                                   MutableHandleObject result);
 
-  AttachDecision tryAttachArrayPush();
-  AttachDecision tryAttachArrayJoin();
-  AttachDecision tryAttachIsSuspendedGenerator();
+  void emitNativeCalleeGuard(HandleFunction callee);
+
+  AttachDecision tryAttachArrayPush(HandleFunction callee);
+  AttachDecision tryAttachArrayJoin(HandleFunction callee);
+  AttachDecision tryAttachIsSuspendedGenerator(HandleFunction callee);
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
   AttachDecision tryAttachCallScripted(HandleFunction calleeFunc);
