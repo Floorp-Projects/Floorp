@@ -16,6 +16,7 @@
 
 #include "builtin/MapObject.h"
 #include "js/GCVector.h"
+#include "shell/ModuleLoader.h"
 #include "threading/ConditionVariable.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
@@ -31,6 +32,15 @@
 
 namespace js {
 namespace shell {
+
+// Define use of application-specific slots on the shell's global object.
+enum GlobalAppSlot {
+  GlobalAppSlotModuleRegistry,
+  GlobalAppSlotModuleResolveHook,  // HostResolveImportedModule
+  GlobalAppSlotCount
+};
+static_assert(GlobalAppSlotCount <= JSCLASS_GLOBAL_APPLICATION_SLOTS,
+              "Too many applications slots defined for shell global");
 
 enum JSShellErrNum {
 #define MSG_DEF(name, count, exception, format) name,
@@ -232,7 +242,7 @@ struct ShellContext {
 
   UniquePtr<ProfilingStack> geckoProfilingStack;
 
-  JS::UniqueChars moduleLoadPath;
+  UniquePtr<ModuleLoader> moduleLoader;
 
   UniquePtr<MarkBitObservers> markObservers;
 
@@ -249,6 +259,9 @@ extern ShellContext* GetShellContext(JSContext* cx);
 
 extern MOZ_MUST_USE bool PrintStackTrace(JSContext* cx,
                                          JS::Handle<JSObject*> stackObj);
+
+extern JSObject* CreateScriptPrivate(JSContext* cx,
+                                     HandleString path = nullptr);
 
 } /* namespace shell */
 } /* namespace js */

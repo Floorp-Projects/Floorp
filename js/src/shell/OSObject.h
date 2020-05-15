@@ -14,6 +14,12 @@
 namespace js {
 namespace shell {
 
+#ifdef XP_WIN
+constexpr char PathSeparator = '\\';
+#else
+constexpr char PathSeparator = '/';
+#endif
+
 struct RCFile;
 
 /* Define an os object on the given global object. */
@@ -21,6 +27,8 @@ bool DefineOS(JSContext* cx, JS::HandleObject global, bool fuzzingSafe,
               RCFile** shellOut, RCFile** shellErr);
 
 enum PathResolutionMode { RootRelative, ScriptRelative };
+
+bool IsAbsolutePath(JSLinearString* filename);
 
 JSString* ResolvePath(JSContext* cx, JS::HandleString filenameStr,
                       PathResolutionMode resolveMode);
