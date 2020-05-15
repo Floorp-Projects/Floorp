@@ -88,10 +88,5 @@ WrSpaceAndClipChain RootScrollNodeWithChain() {
   return sacc;
 }
 
-RenderRoot RenderRootFromId(DocumentId id) {
-  MOZ_ASSERT(id.mHandle < kRenderRootCount);
-  return (RenderRoot)id.mHandle;
-}
-
 }  // namespace wr
 }  // namespace mozilla
