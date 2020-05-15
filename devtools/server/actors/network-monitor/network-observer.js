@@ -77,8 +77,14 @@ function matchRequest(channel, filters) {
     !flags.testing &&
     channel.loadInfo &&
     channel.loadInfo.loadingDocument === null &&
-    channel.loadInfo.loadingPrincipal ===
-      Services.scriptSecurityManager.getSystemPrincipal()
+    (channel.loadInfo.loadingPrincipal ===
+      Services.scriptSecurityManager.getSystemPrincipal() ||
+      // StyleEditor loads stylesheets with not the system principal but the content
+      // principal that same as of the document that loaded the stylesheet in order
+      // to take over the context of Private Browsing etc. Thus, in order to restrict
+      // the networking from StyleEditor, we check the loading policy.
+      channel.loadInfo.internalContentPolicyType ===
+        Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET)
   ) {
     return false;
   }
