@@ -7,7 +7,7 @@
 #include "OSPreferences.h"
 #include "mozilla/Preferences.h"
 
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 
 using namespace mozilla::intl;
 
