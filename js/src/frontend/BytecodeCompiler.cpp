@@ -920,7 +920,8 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope, options);
+  CompilationInfo compilationInfo(cx, allocScope, options,
+                                  fun->enclosingScope());
   compilationInfo.initFromLazy(lazy);
 
   Parser<FullParseHandler, Unit> parser(cx, options, units, length,
@@ -1064,7 +1065,7 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope, options);
+  CompilationInfo compilationInfo(cx, allocScope, options, enclosingScope);
   if (!compilationInfo.init(cx)) {
     return false;
   }
