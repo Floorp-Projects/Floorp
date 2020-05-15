@@ -369,19 +369,6 @@ class ProviderSearchSuggestions extends UrlbarProvider {
         continue;
       }
 
-      if (suggestion.entry.tail && suggestion.entry.tailOffsetIndex < 0) {
-        Cu.reportError(
-          `Error in tail suggestion parsing. Value: ${suggestion.entry.value}, tail: ${suggestion.entry.tail}.`
-        );
-        continue;
-      }
-
-      let tail, tailPrefix;
-      if (UrlbarPrefs.get("richSuggestions.tail")) {
-        tail = suggestion.entry.tail;
-        tailPrefix = suggestion.entry.matchPrefix;
-      }
-
       try {
         results.push(
           new UrlbarResult(
@@ -393,9 +380,14 @@ class ProviderSearchSuggestions extends UrlbarProvider {
                 suggestion.entry.value,
                 UrlbarUtils.HIGHLIGHT.SUGGESTED,
               ],
-              tailPrefix,
-              tail: [tail, UrlbarUtils.HIGHLIGHT.SUGGESTED],
-              tailOffsetIndex: suggestion.entry.tailOffsetIndex,
+              tail: [
+                UrlbarPrefs.get("richSuggestions.tail") &&
+                suggestion.entry.matchPrefix &&
+                suggestion.entry.tail
+                  ? suggestion.entry.matchPrefix + suggestion.entry.tail
+                  : undefined,
+                UrlbarUtils.HIGHLIGHT.SUGGESTED,
+              ],
               keyword: [alias ? alias : undefined, UrlbarUtils.HIGHLIGHT.TYPED],
               query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
               isSearchHistory: false,

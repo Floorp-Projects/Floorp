@@ -128,7 +128,7 @@ class UrlbarResult {
           case UrlbarUtils.KEYWORD_OFFER.HIDE:
             return ["", []];
         }
-        if (this.payload.tail && this.payload.tailOffsetIndex >= 0) {
+        if (this.payload.tail) {
           return [this.payload.tail, this.payloadHighlights.tail];
         } else if (this.payload.suggestion) {
           return [this.payload.suggestion, this.payloadHighlights.suggestion];
