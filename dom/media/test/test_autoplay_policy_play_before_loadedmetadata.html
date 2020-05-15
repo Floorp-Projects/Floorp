@@ -20,7 +20,7 @@
         // is called before the video has reached readyState >= HAVE_METADATA.
 
         gTestPrefs.push(["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-          ["media.autoplay.blocking_policy", 0]);
+          ["media.autoplay.enabled.user-gestures-needed", true]);
 
         SpecialPowers.pushPrefEnv({ 'set': gTestPrefs }, () => {
           runTest();
