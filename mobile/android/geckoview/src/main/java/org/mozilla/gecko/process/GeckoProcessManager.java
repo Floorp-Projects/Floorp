@@ -17,7 +17,6 @@ import org.mozilla.geckoview.GeckoResult;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
-import android.os.Process;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.util.ArraySet;
@@ -191,10 +190,6 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             }
 
             unbindService();
-
-            if (mPid != INVALID_PID) {
-                Process.killProcess(mPid);
-            }
 
             return GeckoResult.fromValue(null);
         }
