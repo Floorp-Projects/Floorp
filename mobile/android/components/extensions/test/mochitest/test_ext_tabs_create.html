@@ -17,7 +17,7 @@ add_task(async function() {
     useAddonManager: "permanent",
     manifest: {
       "applications": { "gecko": { "id": "tabs-create@tests.mozilla.org" } },
-      "permissions": ["tabs"],
+      "permissions": ["tabs", "cookies"],
 
       "background": {"page": "bg/background.html"},
     },
@@ -58,6 +58,22 @@ add_task(async function() {
             {
               create: {active: true},
               result: {active: true},
+            },
+            {
+              create: {cookieStoreId: null},
+              result: {cookieStoreId: null},
+            },
+            {
+              create: {cookieStoreId: "firefox-container-1"},
+              result: {cookieStoreId: "firefox-container-1"},
+            },
+            {
+              create: {cookieStoreId: "😅"},
+              result: {cookieStoreId: "😅"},
+            },
+            {
+              create: {cookieStoreId: "漢字"},
+              result: {cookieStoreId: "漢字"},
             },
           ];
 

@@ -22,9 +22,14 @@ exclude: true
   enabling dynamic first party isolation; this will block tracking cookies and
   isolate all other third party cookies by keying them based on the first party
   from which they are accessed.
+- Added `cookieStoreId` field to [`WebExtension.CreateTabDetails`][78.3]. This adds the optional
+  ability to create a tab with a given cookie store ID for its [`contextual identity`][78.4].
+  ([bug 1622500]({{bugzilla}}1622500))
 
 [78.1]: {{javadoc_uri}}/WebExtensionController.html#installBuiltIn-java.lang.String-
 [78.2]: {{javadoc_uri}}/ContentBlocking.CookieBehavior.html#ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
+[78.3]: {{javadoc_uri}}/WebExtension.CreateTabDetails.html
+[78.4]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/contextualIdentities
 
 ## v77
 - Added [`GeckoRuntime.appendAppNotesToCrashReport`][77.1] For adding app notes to the crash report.
@@ -688,4 +693,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 901bd3fab4e89390ffe1d0487f7156b687aec71a
+[api-version]: 5460cbfe03322d19964ce94082ac2ae99af6d791

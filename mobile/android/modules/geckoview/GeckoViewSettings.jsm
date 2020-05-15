@@ -70,6 +70,7 @@ class GeckoViewSettings extends GeckoViewModule {
     debug`onSettingsUpdate: ${settings}`;
 
     this.displayMode = settings.displayMode;
+    this.unsafeSessionContextId = settings.unsafeSessionContextId;
     this.userAgentMode = settings.userAgentMode;
     this.userAgentOverride = settings.userAgentOverride;
     this.sessionContextId = settings.sessionContextId;

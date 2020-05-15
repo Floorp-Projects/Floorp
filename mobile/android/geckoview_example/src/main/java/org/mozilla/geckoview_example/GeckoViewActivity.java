@@ -427,7 +427,7 @@ public class GeckoViewActivity
 
     @Override
     public TabSession openNewTab(WebExtension.CreateTabDetails details) {
-        final TabSession newSession = createSession();
+        final TabSession newSession = createSession(details.cookieStoreId);
         mToolbarView.updateTabCount();
         if (details.active == Boolean.TRUE) {
             setGeckoViewSession(newSession, false);
@@ -812,8 +812,9 @@ public class GeckoViewActivity
         }
     }
 
-    private TabSession createSession() {
-        TabSession session = mTabSessionManager.newSession(new GeckoSessionSettings.Builder()
+    private TabSession createSession(final @Nullable String cookieStoreId) {
+        GeckoSessionSettings.Builder settingsBuilder = new GeckoSessionSettings.Builder();
+        settingsBuilder
                 .usePrivateMode(mUsePrivateBrowsing)
                 .fullAccessibilityTree(mFullAccessibilityTree)
                 .userAgentOverride(mUserAgentOverride)
@@ -823,11 +824,20 @@ public class GeckoViewActivity
                 .userAgentMode(mDesktopMode
                         ? GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
                         : GeckoSessionSettings.USER_AGENT_MODE_MOBILE)
-                .useTrackingProtection(mUseTrackingProtection)
-                .build());
+                .useTrackingProtection(mUseTrackingProtection);
+
+        if (cookieStoreId != null) {
+            settingsBuilder.contextId(cookieStoreId);
+        }
+
+        TabSession session = mTabSessionManager.newSession(settingsBuilder.build());
         connectSession(session);
 
         return session;
+    }
+
+    private TabSession createSession() {
+        return createSession(null);
     }
 
     private void connectSession(GeckoSession session) {
