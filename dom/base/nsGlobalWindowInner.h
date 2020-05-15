@@ -1259,6 +1259,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   bool mNeedsFocus : 1;
   bool mHasFocus : 1;
 
+  // when true, show focus rings for the current focused content only.
+  // This will be reset when another element is focused
+  bool mShowFocusRingForContent : 1;
+
   // true if tab navigation has occurred for this window. Focus rings
   // should be displayed.
   bool mFocusByKeyOccurred : 1;

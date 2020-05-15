@@ -1114,6 +1114,12 @@ nsFocusManager::ParentActivated(mozIDOMWindowProxy* aWindow, bool aActive) {
 
 static bool ShouldMatchFocusVisible(const Element& aElement,
                                     int32_t aFocusFlags) {
+  if (StaticPrefs::browser_display_show_focus_rings()) {
+    // FIXME: Spec is ambiguous about whether we should take platform
+    // conventions into account. This branch does make us account for them.
+    return true;
+  }
+
   switch (nsFocusManager::GetFocusMoveActionCause(aFocusFlags)) {
     case InputContextAction::CAUSE_UNKNOWN:
     case InputContextAction::CAUSE_KEY:
@@ -1136,22 +1142,6 @@ static bool ShouldMatchFocusVisible(const Element& aElement,
   return false;
 }
 
-// On Windows, focus rings are only shown when the FLAG_SHOWRING flag is used.
-static bool ShouldShowFocusRingForElement(Element& aElement, int32_t aFlags) {
-  if (aFlags & nsIFocusManager::FLAG_SHOWRING) {
-    return true;
-  }
-#ifndef XP_WIN
-  if (aFlags & nsIFocusManager::FLAG_BYMOUSE) {
-    return !nsContentUtils::ContentIsLink(&aElement) &&
-           !aElement.IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio);
-  }
-  return true;
-#else
-  return false;
-#endif
-}
-
 /* static */
 void nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
                                             nsIContent* aContentToFocus,
@@ -1159,8 +1149,7 @@ void nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
                                             int32_t aFlags,
                                             bool aGettingFocus) {
   MOZ_ASSERT_IF(aContentToFocus, !aGettingFocus);
-  auto* element = Element::FromNode(aContent);
-  if (!element) {
+  if (!aContent->IsElement()) {
     return;
   }
 
@@ -1172,20 +1161,18 @@ void nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
 
   if (aGettingFocus) {
     EventStates eventStateToAdd = NS_EVENT_STATE_FOCUS;
-    if (aWindowShouldShowFocusRing ||
-        ShouldShowFocusRingForElement(*element, aFlags)) {
+    if (aWindowShouldShowFocusRing) {
       eventStateToAdd |= NS_EVENT_STATE_FOCUSRING;
     }
-    if (aWindowShouldShowFocusRing ||
-        ShouldMatchFocusVisible(*element, aFlags)) {
+    if (ShouldMatchFocusVisible(*aContent->AsElement(), aFlags)) {
       eventStateToAdd |= NS_EVENT_STATE_FOCUS_VISIBLE;
     }
-    element->AddStates(eventStateToAdd);
+    aContent->AsElement()->AddStates(eventStateToAdd);
   } else {
     EventStates eventStateToRemove = NS_EVENT_STATE_FOCUS |
                                      NS_EVENT_STATE_FOCUSRING |
                                      NS_EVENT_STATE_FOCUS_VISIBLE;
-    element->RemoveStates(eventStateToRemove);
+    aContent->AsElement()->RemoveStates(eventStateToRemove);
   }
 
   for (nsIContent* content = aContent; content && content != commonAncestor;

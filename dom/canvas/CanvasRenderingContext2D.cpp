@@ -2917,18 +2917,26 @@ void CanvasRenderingContext2D::DrawFocusIfNeeded(
   }
 }
 
-bool CanvasRenderingContext2D::DrawCustomFocusRing(Element& aElement) {
-  if (!aElement.State().HasState(NS_EVENT_STATE_FOCUSRING)) {
-    return false;
-  }
+bool CanvasRenderingContext2D::DrawCustomFocusRing(
+    mozilla::dom::Element& aElement) {
+  EnsureUserSpacePath();
 
   HTMLCanvasElement* canvas = GetCanvas();
+
   if (!canvas || !aElement.IsInclusiveDescendantOf(canvas)) {
     return false;
   }
 
-  EnsureUserSpacePath();
-  return true;
+  if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
+    // check that the element is focused
+    if (&aElement == fm->GetFocusedElement()) {
+      if (nsPIDOMWindowOuter* window = aElement.OwnerDoc()->GetWindow()) {
+        return window->ShouldShowFocusRing();
+      }
+    }
+  }
+
+  return false;
 }
 
 void CanvasRenderingContext2D::Clip(const CanvasWindingRule& aWinding) {
