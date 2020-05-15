@@ -9,7 +9,6 @@
 #include "PlatformEncoderModule.h"
 #include "TimeUnits.h"
 
-#include "GeneratedJNIWrappers.h"
 #include "JavaCallbacksSupport.h"
 
 #include "mozilla/Maybe.h"

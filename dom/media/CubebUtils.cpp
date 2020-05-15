@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <stdint.h>
 #ifdef MOZ_WIDGET_ANDROID
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/GeckoAppShellWrappers.h"
 #endif
 #ifdef XP_WIN
 #  include "mozilla/mscom/EnsureMTA.h"

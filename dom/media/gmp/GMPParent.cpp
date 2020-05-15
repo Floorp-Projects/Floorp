@@ -33,6 +33,10 @@
 #ifdef XP_WIN
 #  include "WMFDecoderModule.h"
 #endif
+#if defined(MOZ_WIDGET_ANDROID)
+#  include "mozilla/java/GeckoProcessManagerWrappers.h"
+#  include "mozilla/java/GeckoProcessTypeWrappers.h"
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
 using mozilla::ipc::GeckoChildProcessHost;
 

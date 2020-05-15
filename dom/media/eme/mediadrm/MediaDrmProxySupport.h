@@ -8,8 +8,8 @@
 #define MediaDrmProxySupport_H
 
 #include "mozilla/DecryptorProxyCallback.h"
+#include "mozilla/java/MediaDrmProxyWrappers.h"
 #include "mozilla/Logging.h"
-#include "GeneratedJNIWrappers.h"
 #include "nsString.h"
 
 namespace mozilla {

@@ -6,7 +6,8 @@
 
 #include "MediaDrmProxySupport.h"
 #include "mozilla/EMEUtils.h"
-#include "GeneratedJNINatives.h"
+#include "mozilla/java/MediaDrmProxyNatives.h"
+#include "mozilla/java/SessionKeyInfoWrappers.h"
 #include "MediaCodec.h"  // For MediaDrm::KeyStatus
 
 namespace mozilla {
