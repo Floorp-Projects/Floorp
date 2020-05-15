@@ -81,6 +81,16 @@
         return;
       }
 
+      // Ensure we get persisted widths back, if we've been in the palette:
+      let storedWidth = Services.xulStore.getValue(
+        document.documentURI,
+        this.parentNode.id,
+        "width"
+      );
+      if (storedWidth) {
+        this.parentNode.setAttribute("width", storedWidth);
+      }
+
       this._stringBundle = this.querySelector("stringbundle");
       this._textbox = this.querySelector(".searchbar-textbox");
 
