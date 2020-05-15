@@ -1159,14 +1159,14 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 }
 
 bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
-    RenderRootUpdates& aUpdates, bool* aScheduleComposite) {
+    TransactionData& aData, bool* aScheduleComposite) {
   *aScheduleComposite = false;
   wr::TransactionBuilder txn;
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
-  if (!aUpdates.mScrollUpdates.IsEmpty()) {
-    UpdateAPZScrollOffsets(std::move(aUpdates.mScrollUpdates),
-                           aUpdates.mPaintSequenceNumber);
+  if (!aData.mScrollUpdates.IsEmpty()) {
+    UpdateAPZScrollOffsets(std::move(aData.mScrollUpdates),
+                           aData.mPaintSequenceNumber);
   }
 
   // Update WrEpoch for UpdateResources() and ProcessWebRenderParentCommands().
@@ -1174,14 +1174,14 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
   // AsyncImagePipelineManager.
   Unused << GetNextWrEpoch();
 
-  if (!UpdateResources(aUpdates.mResourceUpdates, aUpdates.mSmallShmems,
-                       aUpdates.mLargeShmems, txn)) {
+  if (!UpdateResources(aData.mResourceUpdates, aData.mSmallShmems,
+                       aData.mLargeShmems, txn)) {
     return false;
   }
 
-  if (!aUpdates.mCommands.IsEmpty()) {
+  if (!aData.mCommands.IsEmpty()) {
     mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-    if (!ProcessWebRenderParentCommands(aUpdates.mCommands, txn)) {
+    if (!ProcessWebRenderParentCommands(aData.mCommands, txn)) {
       return false;
     }
   }
@@ -1221,7 +1221,7 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     const FocusTarget& aFocusTarget,
-    nsTArray<RenderRootUpdates>&& aRenderRootUpdates,
+    nsTArray<TransactionData>&& aTransactionData,
     nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
     const TransactionId& aTransactionId, const VsyncId& aVsyncId,
     const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
@@ -1250,9 +1250,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
 
   bool scheduleAnyComposite = false;
 
-  for (auto& update : aRenderRootUpdates) {
+  for (auto& datum : aTransactionData) {
     bool scheduleComposite = false;
-    if (!ProcessEmptyTransactionUpdates(update, &scheduleComposite)) {
+    if (!ProcessEmptyTransactionUpdates(datum, &scheduleComposite)) {
       return IPC_FAIL(this, "Failed to process empty transaction update.");
     }
     scheduleAnyComposite = scheduleAnyComposite || scheduleComposite;
@@ -1289,9 +1289,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     }
   }
 
-  for (auto& update : aRenderRootUpdates) {
-    wr::IpcResourceUpdateQueue::ReleaseShmems(this, update.mSmallShmems);
-    wr::IpcResourceUpdateQueue::ReleaseShmems(this, update.mLargeShmems);
+  for (auto& datum : aTransactionData) {
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, datum.mSmallShmems);
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, datum.mLargeShmems);
   }
   return IPC_OK();
 }

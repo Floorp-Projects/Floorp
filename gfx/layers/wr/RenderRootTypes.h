@@ -31,7 +31,7 @@ struct DisplayListData {
   Maybe<WebRenderScrollData> mScrollData;
 };
 
-struct RenderRootUpdates {
+struct TransactionData {
   nsTArray<WebRenderParentCommand> mCommands;
   nsTArray<OpUpdateResource> mResourceUpdates;
   nsTArray<RefCountedShmem> mSmallShmems;
@@ -55,8 +55,8 @@ struct IPDLParamTraits<mozilla::layers::DisplayListData> {
 };
 
 template <>
-struct IPDLParamTraits<mozilla::layers::RenderRootUpdates> {
-  typedef mozilla::layers::RenderRootUpdates paramType;
+struct IPDLParamTraits<mozilla::layers::TransactionData> {
+  typedef mozilla::layers::TransactionData paramType;
 
   static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam);
 

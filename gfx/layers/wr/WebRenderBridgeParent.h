@@ -152,7 +152,7 @@ class WebRenderBridgeParent final
       nsTArray<CompositionPayload>&& aPayloads) override;
   mozilla::ipc::IPCResult RecvEmptyTransaction(
       const FocusTarget& aFocusTarget,
-      nsTArray<RenderRootUpdates>&& aRenderRootUpdates,
+      nsTArray<TransactionData>&& aTransactionData,
       nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
       const TransactionId& aTransactionId, const VsyncId& aVsyncId,
       const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
@@ -333,7 +333,7 @@ class WebRenderBridgeParent final
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
   virtual ~WebRenderBridgeParent();
 
-  bool ProcessEmptyTransactionUpdates(RenderRootUpdates& aUpdates,
+  bool ProcessEmptyTransactionUpdates(TransactionData& aData,
                                       bool* aScheduleComposite);
 
   bool ProcessDisplayListData(DisplayListData& aDisplayList, wr::Epoch aWrEpoch,
