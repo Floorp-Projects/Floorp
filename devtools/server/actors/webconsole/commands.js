@@ -4,7 +4,7 @@
 
 "use strict";
 
-const validCommands = ["help", "screenshot"];
+const validCommands = ["block", "help", "screenshot", "unblock"];
 
 const COMMAND = "command";
 const KEY = "key";
@@ -16,7 +16,9 @@ const KEY_PREFIX = /^--/;
 // default value for flags
 const DEFAULT_VALUE = true;
 const COMMAND_DEFAULT_FLAG = {
+  block: "url",
   screenshot: "filename",
+  unblock: "url",
 };
 
 /**
