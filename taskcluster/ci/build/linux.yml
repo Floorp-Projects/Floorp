@@ -175,6 +175,56 @@ linux64/debug:
             # this dependency can be removed.
             - linux64-fix-stacks
 
+linux64/codeql-cpp:
+    description: Builds a C++ codeql database
+    treeherder:
+        platform: codeql/all
+        symbol: linux64-cpp
+        tier: 2
+        kind: other
+    worker-type: b-linux-xlarge
+    expires-after: 4 days
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: cpp
+        max-run-time: 86400
+        artifacts:
+            - type: file
+              name: public/codeql/codeql-db-cpp.tar.xz
+              path: /builds/worker/codeql-db-cpp.tar.xz
+    run:
+        using: mozharness
+        actions: [build]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_linux_64_builds.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        job-script: taskcluster/scripts/misc/generate-codeql-db-cpp.sh
+        secrets: false
+        custom-build-variant-cfg: debug
+        mozconfig-variant: debug
+        tooltool-downloads: public
+        need-xvfb: true
+    run-on-projects: []
+    fetches:
+        fetch:
+            - codeql-2.0.3
+        toolchain:
+            - linux64-binutils
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-rust
+            - linux64-rust-size
+            - linux64-nasm
+            - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
+            # `fix-stacks` is needed because xpcshell self tests run as part of
+            # the build step. Once bug 1614626 moves them to the xpcshell task,
+            # this dependency can be removed.
+            - linux64-fix-stacks
+
+
 linux64-plain/debug:
     description: "Linux64 Debug Plain"
     index:
