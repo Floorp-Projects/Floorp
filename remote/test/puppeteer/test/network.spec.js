@@ -94,7 +94,7 @@ module.exports.addTests = function({testRunner, expect, CHROME}) {
     });
   });
 
-  describe_fails_ffox('Response.fromCache', function() {
+  describe('Response.fromCache', function() {
     it('should return |false| for non-cached content', async({page, server}) => {
       const response = await page.goto(server.EMPTY_PAGE);
       expect(response.fromCache()).toBe(false);
@@ -249,7 +249,7 @@ module.exports.addTests = function({testRunner, expect, CHROME}) {
   describe('Network Events', function() {
     it('Page.Events.Request', async({page, server}) => {
       const requests = [];
-      page.on('request', request => requests.push(request));
+      page.on('request', request => !utils.isFavicon(request) && requests.push(request));
       await page.goto(server.EMPTY_PAGE);
       expect(requests.length).toBe(1);
       expect(requests[0].url()).toBe(server.EMPTY_PAGE);
@@ -261,7 +261,7 @@ module.exports.addTests = function({testRunner, expect, CHROME}) {
     });
     it('Page.Events.Response', async({page, server}) => {
       const responses = [];
-      page.on('response', response => responses.push(response));
+      page.on('response', response => !utils.isFavicon(response) && responses.push(response));
       await page.goto(server.EMPTY_PAGE);
       expect(responses.length).toBe(1);
       expect(responses[0].url()).toBe(server.EMPTY_PAGE);
