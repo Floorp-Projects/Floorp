@@ -425,7 +425,6 @@ class HTMLMediaElement::MediaControlEventListener final
       // We have already been stopped, do not notify stop twice.
       return;
     }
-    NotifyMediaStoppedPlaying();
     NotifyPlaybackStateChanged(MediaPlaybackState::eStopped);
 
     // Remove ourselves from media agent, which would stop receiving event.
@@ -508,63 +507,20 @@ class HTMLMediaElement::MediaControlEventListener final
     }
   }
 
-  void UpdateOwnerBrowsingContextIfNeeded() {
-    // Has not notified any information about the owner context yet.
-    if (!IsStarted()) {
-      return;
-    }
-
-    BrowsingContext* currentBC = GetCurrentBrowsingContext();
-    MOZ_ASSERT(currentBC && mOwnerBrowsingContext);
-    // Still in the same browsing context, no need to update.
-    if (currentBC == mOwnerBrowsingContext) {
-      return;
-    }
-    MEDIACONTROL_LOG("Change browsing context from %" PRIu64 " to %" PRIu64,
-                     mOwnerBrowsingContext->Id(), currentBC->Id());
-    // This situation would happen when we start a media in an original browsing
-    // context, then we move it to another browsing context, such as an iframe,
-    // so its owner browsing context would be changed. Therefore, we should
-    // reset the media status for the previous browsing context by calling
-    // `Stop()`, in which the listener would notify `ePaused` (if it's playing)
-    // and `eStop`. Then calls `Start()`, in which the listener would notify
-    // `eStart` to the new browsing context. If the media was playing before,
-    // we would also notify `ePlayed`.
-    bool wasInPlayingState = mState == MediaPlaybackState::ePlayed;
-    Stop();
-    bool rv = Start();
-    MOZ_ASSERT(rv, "Failed to start for new browsing context");
-    if (wasInPlayingState) {
-      NotifyMediaStartedPlaying();
-    }
-  }
-
   BrowsingContext* GetBrowsingContext() const override {
-    return mOwnerBrowsingContext;
+    nsPIDOMWindowInner* window = Owner()->OwnerDoc()->GetInnerWindow();
+    return window ? window->GetBrowsingContext() : nullptr;
   }
 
  private:
   ~MediaControlEventListener() = default;
 
-  // The media can be moved around different browsing context, so this context
-  // might be different from `mOwnerBrowsingContext` that we use to initialize
-  // the `ContentMediaAgent`.
-  BrowsingContext* GetCurrentBrowsingContext() const {
-    nsPIDOMWindowInner* window = Owner()->OwnerDoc()->GetInnerWindow();
-    return window ? window->GetBrowsingContext() : nullptr;
-  }
-
   bool InitMediaAgent() {
     MOZ_ASSERT(NS_IsMainThread());
-    BrowsingContext* currentBC = GetCurrentBrowsingContext();
-    mControlAgent = ContentMediaAgent::Get(currentBC);
+    mControlAgent = ContentMediaAgent::Get(GetBrowsingContext());
     if (!mControlAgent) {
       return false;
     }
-    mOwnerBrowsingContext = currentBC;
-    MOZ_ASSERT(mOwnerBrowsingContext);
-    MEDIACONTROL_LOG("Init agent in browsing context %" PRIu64,
-                     mOwnerBrowsingContext->Id());
     mControlAgent->AddReceiver(this);
     return true;
   }
@@ -596,7 +552,6 @@ class HTMLMediaElement::MediaControlEventListener final
   RefPtr<ContentMediaAgent> mControlAgent;
   bool mIsPictureInPictureEnabled = false;
   bool mIsOwnerAudible = false;
-  BrowsingContext* MOZ_NON_OWNING_REF mOwnerBrowsingContext = nullptr;
 };
 
 class HTMLMediaElement::MediaStreamTrackListener
@@ -3381,6 +3336,7 @@ void HTMLMediaElement::SetVolumeInternal() {
 
   NotifyAudioPlaybackChanged(
       AudioChannelService::AudibleChangedReasons::eVolumeChanged);
+  StartListeningMediaControlEventIfNeeded();
 }
 
 void HTMLMediaElement::SetMuted(bool aMuted) {
@@ -4688,9 +4644,6 @@ nsresult HTMLMediaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
   NotifyDecoderActivityChanges();
-  if (mMediaControlEventListener) {
-    mMediaControlEventListener->UpdateOwnerBrowsingContextIfNeeded();
-  }
 
   return rv;
 }
@@ -7275,6 +7228,7 @@ void HTMLMediaElement::SetAudibleState(bool aAudible) {
     mIsAudioTrackAudible = aAudible;
     NotifyAudioPlaybackChanged(
         AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
+    StartListeningMediaControlEventIfNeeded();
   }
 }
 
@@ -7363,6 +7317,7 @@ void HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo) {
     mAudioChannelWrapper->AudioCaptureTrackChangeIfNeeded();
   }
   UpdateWakeLock();
+  StartListeningMediaControlEventIfNeeded();
 }
 
 void HTMLMediaElement::AudioCaptureTrackChange(bool aCapture) {
@@ -7803,6 +7758,17 @@ void HTMLMediaElement::StartListeningMediaControlEventIfNeeded() {
     return;
   }
 
+  // This includes cases such like `video is muted`, `video has zero volume`,
+  // `video's audio track is still inaudible` and `tab is muted by audio channel
+  // (tab sound indicator)`, all these cases would make media inaudible.
+  // `ComputedVolume()` would return the final volume applied the affection made
+  // by audio channel, which is used to detect if the tab is muted by audio
+  // channel.
+  if (!IsAudible() || ComputedVolume() == 0.0f) {
+    MEDIACONTROL_LOG("Not listening because media is inaudible");
+    return;
+  }
+
   // In order to filter out notification-ish sound, we use this pref to set the
   // eligible media duration to prevent showing media control for those short
   // sound.
@@ -7845,6 +7811,7 @@ void HTMLMediaElement::StartListeningMediaControlEventIfNeeded() {
 
 void HTMLMediaElement::StopListeningMediaControlEventIfNeeded() {
   if (mMediaControlEventListener && mMediaControlEventListener->IsStarted()) {
+    mMediaControlEventListener->NotifyMediaStoppedPlaying();
     mMediaControlEventListener->Stop();
   }
 }
