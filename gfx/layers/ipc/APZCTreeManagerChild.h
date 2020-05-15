@@ -20,7 +20,6 @@ class RemoteCompositorSession;
 class APZCTreeManagerChild : public IAPZCTreeManager,
                              public PAPZCTreeManagerChild {
   friend class PAPZCTreeManagerChild;
-  using TapType = GeckoContentController_TapType;
 
  public:
   APZCTreeManagerChild();
