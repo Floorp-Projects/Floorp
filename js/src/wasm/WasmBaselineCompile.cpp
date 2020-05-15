@@ -1100,6 +1100,8 @@ using ScratchI8 = ScratchI32;
 //         |      |    Register stack result ptr?|    |  |             ||
 //         |      |    Non-arg local             |    |  |             ||
 //         |      |    ...                       |    |  |             ||
+//         |      |    (padding)                 |    |  |             ||
+//         |      |    Tls pointer               |    |  |             ||
 //         |      +------------------------------+    |  |             ||
 //         v      |    (padding)                 |    |  v             ||
 // -------------  +==============================+ currentStackHeight  ||
@@ -1638,6 +1640,9 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
   // Low byte offset of pointer to stack results, if any.
   Maybe<int32_t> stackResultsPtrOffset_;
 
+  // The offset of TLS pointer.
+  uint32_t tlsPointerOffset_;
+
   // Low byte offset of local area for true locals (not parameters).
   uint32_t varLow_;
 
@@ -1653,6 +1658,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
         masm(masm),
         maxFramePushed_(0),
         stackAddOffset_(0),
+        tlsPointerOffset_(UINT32_MAX),
         varLow_(UINT32_MAX),
         varHigh_(UINT32_MAX),
         sp_(masm.getStackPointer()) {}
@@ -1755,7 +1761,12 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     }
     varHigh_ = i.frameSize();
 
-    setLocalSize(AlignBytes(varHigh_, WasmStackAlignment));
+    // Reserve an additional stack slot for the TLS pointer.
+    const uint32_t pointerAlignedVarHigh = AlignBytes(varHigh_, sizeof(void*));
+    const uint32_t localSize = pointerAlignedVarHigh + sizeof(void*);
+    tlsPointerOffset_ = localSize;
+
+    setLocalSize(AlignBytes(localSize, WasmStackAlignment));
 
     if (args.hasSyntheticStackResultPointerArg()) {
       stackResultsPtrOffset_ = Some(i.stackResultPointerOffset());
@@ -1864,6 +1875,14 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     MOZ_ASSERT(stackResultsPtrOffset_.value() > 0);
     masm.storePtr(reg,
                   Address(sp_, stackOffset(stackResultsPtrOffset_.value())));
+  }
+
+  void loadTlsPtr(Register dst) {
+    masm.loadPtr(Address(sp_, stackOffset(tlsPointerOffset_)), dst);
+  }
+
+  void storeTlsPtr(Register tls) {
+    masm.storePtr(tls, Address(sp_, stackOffset(tlsPointerOffset_)));
   }
 
   // An outgoing stack result area pointer is for stack results of callees of
@@ -5208,6 +5227,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     fr.zeroLocals(&ra);
+    fr.storeTlsPtr(WasmTlsReg);
 
     if (env_.debugEnabled()) {
       insertBreakablePoint(CallSiteDesc::EnterFrame);
@@ -5461,14 +5481,14 @@ class BaseCompiler final : public BaseCompilerInterface {
     stackMapGenerator_.framePushedExcludingOutboundCallArgs.reset();
 
     if (call.isInterModule) {
-      masm.loadWasmTlsRegFromFrame();
+      fr.loadTlsPtr(WasmTlsReg);
       masm.loadWasmPinnedRegsFromTls();
       masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
     } else if (call.usesSystemAbi) {
       // On x86 there are no pinned registers, so don't waste time
       // reloading the Tls.
 #ifndef JS_CODEGEN_X86
-      masm.loadWasmTlsRegFromFrame();
+      fr.loadTlsPtr(WasmTlsReg);
       masm.loadWasmPinnedRegsFromTls();
 #endif
     }
@@ -5719,7 +5739,7 @@ class BaseCompiler final : public BaseCompilerInterface {
                                        const ABIArg& instanceArg,
                                        const FunctionCall& call) {
     // Builtin method calls assume the TLS register has been set.
-    masm.loadWasmTlsRegFromFrame();
+    fr.loadTlsPtr(WasmTlsReg);
 
     CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
     return masm.wasmCallBuiltinInstanceMethod(
@@ -5746,7 +5766,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   MOZ_MUST_USE bool addInterruptCheck() {
     ScratchI32 tmp(*this);
-    masm.loadWasmTlsRegFromFrame(tmp);
+    fr.loadTlsPtr(tmp);
     masm.wasmInterruptCheck(tmp, bytecodeOffset());
     return createStackMap("addInterruptCheck");
   }
@@ -6296,7 +6316,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   Address addressOfGlobalVar(const GlobalDesc& global, RegI32 tmp) {
     uint32_t globalToTlsOffset =
         offsetof(TlsData, globalArea) + global.offset();
-    masm.loadWasmTlsRegFromFrame(tmp);
+    fr.loadTlsPtr(tmp);
     if (global.isIndirect()) {
       masm.loadPtr(Address(tmp, globalToTlsOffset), tmp);
       return Address(tmp, 0);
@@ -7560,10 +7580,10 @@ class BaseCompiler final : public BaseCompilerInterface {
     Label skipBarrier;
     ScratchPtr scratch(*this);
 
-    masm.loadWasmTlsRegFromFrame(scratch);
+    fr.loadTlsPtr(scratch);
     EmitWasmPreBarrierGuard(masm, scratch, scratch, valueAddr, &skipBarrier);
 
-    masm.loadWasmTlsRegFromFrame(scratch);
+    fr.loadTlsPtr(scratch);
 #ifdef JS_CODEGEN_ARM64
     // The prebarrier stub assumes the PseudoStackPointer is set up.  It is OK
     // to just move the sp to x28 here because x28 is not being used by the
@@ -9870,7 +9890,7 @@ bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
     }
   }
 
-  masm.loadWasmTlsRegFromFrame();
+  fr.loadTlsPtr(WasmTlsReg);
   return true;
 }
 
@@ -10746,7 +10766,7 @@ void BaseCompiler::pushHeapBase() {
   pushI32(heapBase);
 #elif defined(JS_CODEGEN_X86)
   RegI32 heapBase = needI32();
-  masm.loadWasmTlsRegFromFrame(heapBase);
+  fr.loadTlsPtr(heapBase);
   masm.loadPtr(Address(heapBase, offsetof(TlsData, memoryBase)), heapBase);
   pushI32(heapBase);
 #else
@@ -10758,7 +10778,7 @@ RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
   RegI32 tls;
   if (needTlsForAccess(check)) {
     tls = needI32();
-    masm.loadWasmTlsRegFromFrame(tls);
+    fr.loadTlsPtr(tls);
   }
   return tls;
 }
@@ -10766,7 +10786,7 @@ RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
 RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
                                            RegI32 specific) {
   if (needTlsForAccess(check)) {
-    masm.loadWasmTlsRegFromFrame(specific);
+    fr.loadTlsPtr(specific);
     return specific;
   }
   return RegI32::Invalid();
