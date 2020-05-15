@@ -2,7 +2,7 @@
 
 # QrFragment
 
-`class QrFragment : Fragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFragment.kt#L71)
+`class QrFragment : Fragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFragment.kt#L74)
 
 A [Fragment](#) that displays a QR scanner.
 
@@ -36,7 +36,7 @@ https://github.com/kismkof/camera2basic
 
 | Name | Summary |
 |---|---|
-| [newInstance](new-instance.md) | `fun newInstance(listener: `[`OnScanCompleteListener`](-on-scan-complete-listener/index.md)`): `[`QrFragment`](./index.md) |
+| [newInstance](new-instance.md) | `fun newInstance(listener: `[`OnScanCompleteListener`](-on-scan-complete-listener/index.md)`, scanMessage: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null): `[`QrFragment`](./index.md)<br>Returns a new instance of QR Fragment |
 
 ### Extension Functions
 

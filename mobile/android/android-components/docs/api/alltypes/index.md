@@ -173,6 +173,7 @@
 | [mozilla.components.feature.customtabs.store.CustomTabsServiceState](../mozilla.components.feature.customtabs.store/-custom-tabs-service-state/index.md) | Value type that represents the custom tabs state accessible from both the service and activity. |
 | [mozilla.components.feature.customtabs.store.CustomTabsServiceStore](../mozilla.components.feature.customtabs.store/-custom-tabs-service-store/index.md) |  |
 | [mozilla.components.feature.customtabs.CustomTabsToolbarFeature](../mozilla.components.feature.customtabs/-custom-tabs-toolbar-feature/index.md) | Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig. |
+| [mozilla.components.feature.qr.views.CustomViewFinder](../mozilla.components.feature.qr.views/-custom-view-finder/index.md) | A [View](#) that shows a ViewFinder positioned in center of the camera view and draws an Overlay |
 | [mozilla.components.feature.addons.ui.CustomViewHolder](../mozilla.components.feature.addons.ui/-custom-view-holder/index.md) | A base view holder. |
 | [mozilla.components.concept.engine.DataCleanable](../mozilla.components.concept.engine/-data-cleanable/index.md) | Contract to indicate how objects with the ability to clear data should behave. |
 | [mozilla.components.browser.icons.loader.DataUriIconLoader](../mozilla.components.browser.icons.loader/-data-uri-icon-loader/index.md) | An [IconLoader](../mozilla.components.browser.icons.loader/-icon-loader/index.md) implementation that will base64 decode the image bytes from a data:image uri. |
@@ -282,6 +283,7 @@
 | [org.mozilla.telemetry.measurement.FirstRunProfileDateMeasurement](../org.mozilla.telemetry.measurement/-first-run-profile-date-measurement/index.md) | This measurement will save the timestamp of the first time it was instantiated and report this as profile creation date. |
 | [mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage](../mozilla.components.service.fretboard.storage.flatfile/-flat-file-experiment-storage/index.md) | Class which uses a flat JSON file as an experiment storage mechanism |
 | [kotlin.Float](../mozilla.components.lib.jexl.ext/kotlin.-float/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
+| [kotlin.Float](../mozilla.components.support.ktx.android.util/kotlin.-float/index.md) (extensions in package mozilla.components.support.ktx.android.util) |  |
 | [kotlinx.coroutines.flow.Flow](../mozilla.components.support.ktx.kotlinx.coroutines.flow/kotlinx.coroutines.flow.-flow/index.md) (extensions in package mozilla.components.support.ktx.kotlinx.coroutines.flow) |  |
 | [androidx.fragment.app.Fragment](../mozilla.components.lib.state.ext/androidx.fragment.app.-fragment/index.md) (extensions in package mozilla.components.lib.state.ext) |  |
 | [mozilla.components.service.fretboard.Fretboard](../mozilla.components.service.fretboard/-fretboard/index.md) | Entry point of the library |
