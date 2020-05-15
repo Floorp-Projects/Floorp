@@ -667,8 +667,7 @@
           incrementDropIndex = false;
         }
 
-        let animate = gBrowser.animationsEnabled;
-        if (oldTranslateX && oldTranslateX != newTranslateX && animate) {
+        if (oldTranslateX && oldTranslateX != newTranslateX && !gReduceMotion) {
           for (let tab of movingTabs) {
             tab.setAttribute("tabdrop-samewindow", "true");
             tab.style.transform = "translateX(" + newTranslateX + "px)";
@@ -1518,7 +1517,7 @@
     _groupSelectedTabs(tab) {
       let draggedTabPos = tab._tPos;
       let selectedTabs = gBrowser.selectedTabs;
-      let animate = gBrowser.animationsEnabled;
+      let animate = !gReduceMotion;
 
       tab.groupingTabsData = {
         finished: !animate,
