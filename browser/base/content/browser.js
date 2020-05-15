@@ -2271,6 +2271,11 @@ var gBrowserInit = {
     });
 
     scheduleIdleTask(() => {
+      // Initialize the all tabs menu
+      gTabsPanel.init();
+    });
+
+    scheduleIdleTask(() => {
       // Read prefers-reduced-motion setting
       let reduceMotionQuery = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
