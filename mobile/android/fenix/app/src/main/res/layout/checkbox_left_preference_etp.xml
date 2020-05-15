@@ -8,12 +8,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="66dp"
+    android:minHeight="48dp"
     android:background="?android:selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:paddingTop="@dimen/radio_button_preference_vertical"
-    android:paddingBottom="@dimen/radio_button_preference_vertical">
+    android:paddingTop="@dimen/checkbox_preference_padding_vertical"
+    android:paddingBottom="@dimen/checkbox_preference_padding_vertical">
 
     <LinearLayout
         android:id="@android:id/widget_frame"

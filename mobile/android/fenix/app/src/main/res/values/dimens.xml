@@ -44,6 +44,9 @@
 
     <dimen name="tab_counter_box_width_height">24dp</dimen>
 
+    <!--Preferences-->
+    <dimen name="checkbox_preference_padding_vertical">12dp</dimen>
+
     <!--Quick Settings-->
     <dimen name="quicksettings_item_height">28dp</dimen>
     <dimen name="tracking_protection_item_height">48dp</dimen>
