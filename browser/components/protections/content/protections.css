@@ -27,6 +27,12 @@
   /* Colors for the loading indicator */
   --protection-report-loader-color-stop: #AEAEAE3D;
   --protection-report-loader-gradient-opacity: 0.95;
+
+  --grey-70: #38383D;
+  --grey-90-a60: rgba(12, 12, 13, 0.6);
+
+  --gear-icon-fill: var(--grey-90-a60);
+  --hover-grey-link: var(--grey-70);
 }
 
 body {
@@ -65,15 +71,17 @@ h2 {
 #report-title {
   font-size: 20px;
   font-weight: 300;
-  margin-block-end: 22px;
+  margin-block-end: 20px;
 }
 
 #report-summary {
   color: var(--in-content-deemphasized-text);
   line-height: 26px;
   font-size: 16px;
-  margin-bottom: 31px;
+  margin: 0;
+  margin-bottom: 15px;
 }
+
 #report-content {
   width: 763px;
   margin: 0 auto;
@@ -121,7 +129,7 @@ h2 {
 /* We want to hide certain components depending on its state. */
 .no-logins .monitor-scanned-wrapper,
 .etp-card.custom-not-blocking .card-body,
-.etp-card.custom-not-blocking #protection-details,
+.etp-card.custom-not-blocking #protection-settings,
 #manage-protections,
 .etp-card .icon.dark,
 a.hidden,
@@ -164,6 +172,9 @@ a.hidden,
     --tracker-highlight-color: #39E1BC;
     --fingerprinter-highlight-color: #FFB65E;
     --cryptominer-highlight-color: #BEBECA;
+
+    --gear-icon-fill: rgba(249, 249, 250, 0.60);
+    --hover-grey-link: var(--grey-30)
   }
 
   .etp-card .icon.dark {
@@ -243,36 +254,39 @@ a.hidden,
   display: initial;
 }
 
-#protection-details {
-  margin-block: 24px 0;
-  padding-inline: 24px 3px;
+#protection-settings {
   -moz-context-properties: fill;
-  fill: currentColor;
-  background: url("chrome://global/skin/icons/settings.svg") no-repeat 3px;
+  fill: var(--gear-icon-fill);
+  background: url("chrome://global/skin/icons/settings.svg") no-repeat 0px;
   font-size: 0.75em;
   cursor: default;
   width: max-content;
+  color: var(--in-content-deemphasized-text);
+  margin-block: 6px 0px;
+  font-size: 12px;
+  padding-block: 4px;
+  padding-inline: 24px 4px;
 }
 
-#protection-details:dir(rtl) {
-  background-position-x: right 3px;
+#protection-settings:dir(rtl) {
+  background-position-x: right 0px;
 }
 
-#protection-details:hover,
-#protection-details:focus {
-  background-color: var(--in-content-button-background);
+#protection-settings:hover,
+#protection-settings:focus {
+  text-decoration: underline;
+  color: var(--hover-grey-link);
+  fill: var(--hover-grey-link);
 }
 
-#protection-details:hover:active {
-  background-color: var(--in-content-button-background-hover);
+#protection-settings:hover:active {
+  text-decoration: none;
+  color: var(--in-content-text-color);
+  fill: var(--in-content-text-color);
 }
 
-#protection-details:-moz-focusring {
+#protection-settings:-moz-focusring {
   outline: none;
-}
-
-#protection-details span {
-  font-weight: bold;
 }
 
 .card .card-body {
@@ -584,6 +598,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 .etp-card {
+  margin-top: 31px;
   grid-template-rows: 20% auto auto;
 }
 

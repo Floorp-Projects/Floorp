@@ -818,3 +818,27 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
   BrowserTestUtils.removeTab(tab);
   AboutProtectionsParent.setTestOverride(null);
 });
+
+// Test that clicking on the link to settings in the header properly opens the settings page.
+add_task(async function test_settings_links() {
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  let aboutPreferencesPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:preferences#privacy"
+  );
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const protectionSettings = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("protection-settings");
+    }, "protection-settings link exists");
+
+    protectionSettings.click();
+  });
+  let aboutPreferencesTab = await aboutPreferencesPromise;
+  info("about:preferences#privacy was successfully opened in a new tab");
+  gBrowser.removeTab(aboutPreferencesTab);
+  gBrowser.removeTab(tab);
+});
