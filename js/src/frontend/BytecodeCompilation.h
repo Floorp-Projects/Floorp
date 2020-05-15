@@ -55,7 +55,6 @@ extern JSScript* CompileGlobalScript(CompilationInfo& compilationInfo,
 
 extern JSScript* CompileEvalScript(CompilationInfo& compilationInfo,
                                    EvalSharedContext& evalsc,
-                                   JS::Handle<JSObject*> environment,
                                    JS::SourceText<char16_t>& srcBuf);
 
 extern MOZ_MUST_USE bool CompileLazyFunction(JSContext* cx,
