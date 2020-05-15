@@ -918,6 +918,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       sweepMarkResult(IncrementalProgress::NotFinished),
       startedCompacting(false),
       relocatedArenasToRelease(nullptr),
+      zonesCompacted(0),
 #ifdef JS_GC_ZEAL
       markingValidator(nullptr),
 #endif
@@ -6222,6 +6223,7 @@ void GCRuntime::beginCompactPhase() {
 
   MOZ_ASSERT(!relocatedArenasToRelease);
   startedCompacting = true;
+  zonesCompacted = 0;
 }
 
 IncrementalProgress GCRuntime::compactPhase(JS::GCReason reason,
@@ -6250,6 +6252,7 @@ IncrementalProgress GCRuntime::compactPhase(JS::GCReason reason,
     if (relocateArenas(zone, reason, relocatedArenas, sliceBudget)) {
       updateZonePointersToRelocatedCells(zone);
       relocatedZones.append(zone);
+      zonesCompacted++;
     } else {
       zone->changeGCState(Zone::Compact, Zone::Finished);
     }
