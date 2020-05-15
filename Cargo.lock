@@ -4352,7 +4352,6 @@ dependencies = [
  "euclid",
  "fallible",
  "fxhash",
- "hashbrown",
  "hashglobe",
  "indexmap",
  "itertools",
