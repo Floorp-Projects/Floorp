@@ -139,7 +139,7 @@ bool WebRenderBridgeChild::EndTransaction(
 }
 
 void WebRenderBridgeChild::EndEmptyTransaction(
-    const FocusTarget& aFocusTarget, nsTArray<TransactionData>& transactionData,
+    const FocusTarget& aFocusTarget, Maybe<TransactionData>&& aTransactionData,
     TransactionId aTransactionId, const mozilla::VsyncId& aVsyncId,
     const mozilla::TimeStamp& aVsyncStartTime,
     const mozilla::TimeStamp& aRefreshStartTime,
@@ -149,8 +149,8 @@ void WebRenderBridgeChild::EndEmptyTransaction(
 
   TimeStamp fwdTime = TimeStamp::Now();
 
-  for (auto& datum : transactionData) {
-    datum.mCommands = std::move(mParentCommands);
+  if (aTransactionData) {
+    aTransactionData->mCommands = std::move(mParentCommands);
   }
 
   nsTArray<CompositionPayload> payloads;
@@ -159,7 +159,7 @@ void WebRenderBridgeChild::EndEmptyTransaction(
   }
 
   this->SendEmptyTransaction(
-      aFocusTarget, std::move(transactionData), mDestroyedActors,
+      aFocusTarget, std::move(aTransactionData), mDestroyedActors,
       GetFwdTransactionId(), aTransactionId, aVsyncId, aVsyncStartTime,
       aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime, payloads);
 

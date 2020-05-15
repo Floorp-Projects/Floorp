@@ -1192,8 +1192,7 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
-    const FocusTarget& aFocusTarget,
-    nsTArray<TransactionData>&& aTransactionData,
+    const FocusTarget& aFocusTarget, Maybe<TransactionData>&& aTransactionData,
     nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
     const TransactionId& aTransactionId, const VsyncId& aVsyncId,
     const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
@@ -1222,9 +1221,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
 
   bool scheduleAnyComposite = false;
 
-  for (auto& datum : aTransactionData) {
+  if (aTransactionData) {
     bool scheduleComposite = false;
-    if (!ProcessEmptyTransactionUpdates(datum, &scheduleComposite)) {
+    if (!ProcessEmptyTransactionUpdates(*aTransactionData,
+                                        &scheduleComposite)) {
       return IPC_FAIL(this, "Failed to process empty transaction update.");
     }
     scheduleAnyComposite = scheduleAnyComposite || scheduleComposite;
@@ -1261,9 +1261,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     }
   }
 
-  for (auto& datum : aTransactionData) {
-    wr::IpcResourceUpdateQueue::ReleaseShmems(this, datum.mSmallShmems);
-    wr::IpcResourceUpdateQueue::ReleaseShmems(this, datum.mLargeShmems);
+  if (aTransactionData) {
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this,
+                                              aTransactionData->mSmallShmems);
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this,
+                                              aTransactionData->mLargeShmems);
   }
   return IPC_OK();
 }
