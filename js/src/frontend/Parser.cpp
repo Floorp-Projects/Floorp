@@ -10908,7 +10908,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
         pc_->functionBox()->usesThis = true;
       }
       NameNodeType thisName = null();
-      if (pc_->sc()->thisBinding() == ThisBinding::Function) {
+      if (pc_->sc()->hasFunctionThisBinding()) {
         thisName = newThisName();
         if (!thisName) {
           return null();
