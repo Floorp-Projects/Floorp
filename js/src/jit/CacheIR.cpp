@@ -4819,7 +4819,15 @@ CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
       typeCheckInfo_(cx, /* needsTypeBarrier = */ true),
       cacheIRStubKind_(BaselineCacheIRStubKind::Regular) {}
 
-AttachDecision CallIRGenerator::tryAttachArrayPush() {
+void CallIRGenerator::emitNativeCalleeGuard(HandleFunction callee) {
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
+  ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
+  JSNative native = callee->native();
+  writer.guardSpecificNativeFunction(calleeObjId, native);
+}
+
+AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
   // Only optimize on obj.push(val);
   if (argc_ != 1 || !thisval_.isObject()) {
     return AttachDecision::NoAction;
@@ -4864,11 +4872,8 @@ AttachDecision CallIRGenerator::tryAttachArrayPush() {
   // Ensure argc == 1.
   writer.guardSpecificInt32Immediate(argcId, 1);
 
-  // Guard callee is the |js::array_push| native function.
-  ValOperandId calleeValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
-  ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
-  writer.guardSpecificNativeFunction(calleeObjId, js::array_push);
+  // Guard callee is the 'push' native function.
+  emitNativeCalleeGuard(callee);
 
   // Guard this is an array object.
   ValOperandId thisValId =
@@ -4904,7 +4909,7 @@ AttachDecision CallIRGenerator::tryAttachArrayPush() {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachArrayJoin() {
+AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
   // Only handle argc <= 1.
   if (argc_ > 1) {
     return AttachDecision::NoAction;
@@ -4944,11 +4949,8 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin() {
   // Generate code.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the |js::array_join| native function.
-  ValOperandId calleeValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
-  ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
-  writer.guardSpecificNativeFunction(calleeObjId, js::array_join);
+  // Guard callee is the 'join' native function.
+  emitNativeCalleeGuard(callee);
 
   if (argc_ == 1) {
     // If argcount is 1, guard that the argument is a string.
@@ -4979,7 +4981,7 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin() {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator() {
+AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(HandleFunction callee) {
   // The IsSuspendedGenerator intrinsic is only called in
   // self-hosted code, so it's safe to assume we have a single
   // argument and the callee is our intrinsic.
@@ -5158,11 +5160,11 @@ AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
   // Check for special-cased native functions.
   switch (callee->jitInfo()->inlinableNative) {
     case InlinableNative::ArrayPush:
-      return tryAttachArrayPush();
+      return tryAttachArrayPush(callee);
     case InlinableNative::ArrayJoin:
-      return tryAttachArrayJoin();
+      return tryAttachArrayJoin(callee);
     case InlinableNative::IntrinsicIsSuspendedGenerator:
-      return tryAttachIsSuspendedGenerator();
+      return tryAttachIsSuspendedGenerator(callee);
     default:
       return AttachDecision::NoAction;
   }
