@@ -99,7 +99,9 @@ using mozilla::ScopedPRFileDesc;
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBridge.h"
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/GeckoProcessManagerWrappers.h"
+#  include "mozilla/java/GeckoProcessTypeWrappers.h"
+#  include "mozilla/java/GeckoResultWrappers.h"
 #  include "mozilla/jni/Refs.h"
 #  include "mozilla/jni/Utils.h"
 #endif
