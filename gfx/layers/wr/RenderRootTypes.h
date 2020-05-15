@@ -42,20 +42,6 @@ struct RenderRootUpdates {
   uint32_t mPaintSequenceNumber;
 };
 
-struct ResourceUpdates {
-  nsTArray<OpUpdateResource> mResourceUpdates;
-  nsTArray<RefCountedShmem> mSmallShmems;
-  nsTArray<mozilla::ipc::Shmem> mLargeShmems;
-};
-
-struct ParentCommands {
-  nsTArray<WebRenderParentCommand> mCommands;
-};
-
-typedef Variant<RenderRootDisplayListData, RenderRootUpdates, ResourceUpdates,
-                ParentCommands, FocusTarget>
-    RenderRootDeferredData;
-
 }  // namespace layers
 
 namespace ipc {
