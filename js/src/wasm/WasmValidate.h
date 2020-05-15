@@ -741,7 +741,6 @@ class Decoder {
     }
     return true;
   }
-#ifdef ENABLE_WASM_REFTYPES
   MOZ_MUST_USE bool readRefType(uint32_t numTypes, bool gcTypesEnabled,
                                 RefType* type) {
     static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
@@ -754,7 +753,7 @@ class Decoder {
       case uint8_t(TypeCode::AnyRef):
         *type = RefType::fromTypeCode(TypeCode(code));
         return true;
-#  ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_GC
       case uint8_t(TypeCode::OptRef): {
         if (!gcTypesEnabled) {
           return fail("(optref T) types not enabled");
@@ -769,7 +768,7 @@ class Decoder {
         *type = RefType::fromTypeIndex(typeIndex);
         return true;
       }
-#  endif
+#endif
       default:
         return fail("bad type");
     }
@@ -785,7 +784,6 @@ class Decoder {
     }
     return true;
   }
-#endif
   MOZ_MUST_USE bool readOp(OpBytes* op) {
     static_assert(size_t(Op::Limit) == 256, "fits");
     uint8_t u8;
