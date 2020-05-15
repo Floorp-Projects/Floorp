@@ -1026,7 +1026,7 @@ class MediaTrackGraph {
   AbstractThread* AbstractMainThread();
 
   // Idempotent
-  static void DestroyNonRealtimeInstance(MediaTrackGraph* aGraph);
+  void ForceShutDown();
 
   virtual nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
                                   AudioDataListener* aListener) = 0;
