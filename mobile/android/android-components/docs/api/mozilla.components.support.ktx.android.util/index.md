@@ -12,4 +12,5 @@
 
 | Name | Summary |
 |---|---|
+| [kotlin.Float](kotlin.-float/index.md) |  |
 | [kotlin.Int](kotlin.-int/index.md) |  |

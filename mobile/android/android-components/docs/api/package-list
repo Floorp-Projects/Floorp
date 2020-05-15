@@ -44,7 +44,9 @@ $dokka.location:mozilla.components.support.ktx.android.arch.lifecycle$addObserve
 $dokka.location:mozilla.components.support.ktx.android.org.json$toJSON(kotlin.collections.Map((kotlin.String, )))mozilla.components.support.ktx.android.org.json/kotlin.collections.-map/to-j-s-o-n.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$toJSONArray(kotlin.collections.Iterable((kotlin.Any)))mozilla.components.support.ktx.android.org.json/kotlin.collections.-iterable/to-j-s-o-n-array.md
 $dokka.location:mozilla.components.support.ktx.android.util$dpToFloat(kotlin.Int, )mozilla.components.support.ktx.android.util/kotlin.-int/dp-to-float.md
+$dokka.location:mozilla.components.support.ktx.android.util$dpToPx(kotlin.Float, )mozilla.components.support.ktx.android.util/kotlin.-float/dp-to-px.md
 $dokka.location:mozilla.components.support.ktx.android.util$dpToPx(kotlin.Int, )mozilla.components.support.ktx.android.util/kotlin.-int/dp-to-px.md
+$dokka.location:mozilla.components.support.ktx.android.util$spToPx(kotlin.Float, )mozilla.components.support.ktx.android.util/kotlin.-float/sp-to-px.md
 $dokka.location:mozilla.components.support.ktx.java.io$truncateDirectory(java.io.File)mozilla.components.support.ktx.java.io/java.io.-file/truncate-directory.md
 $dokka.location:mozilla.components.support.ktx.kotlin$ELLIPSIS#kotlin.Char.Companionmozilla.components.support.ktx.kotlin/kotlin.-char/-e-l-l-i-p-s-i-s.md
 $dokka.location:mozilla.components.support.ktx.kotlin$containsAtOffset(kotlin.ByteArray, kotlin.Int, kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/contains-at-offset.md

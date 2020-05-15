@@ -30,4 +30,5 @@
 
 | Name | Summary |
 |---|---|
+| [isBlobUri](is-blob-uri.md) | `fun `[`Request`](-request/index.md)`.isBlobUri(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks whether or not the request is for a data blob. |
 | [isDataUri](is-data-uri.md) | `fun `[`Request`](-request/index.md)`.isDataUri(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks whether or not the request is for a data URI. |
