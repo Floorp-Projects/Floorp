@@ -23,6 +23,9 @@ uint64_t ToNanoSeconds(const FILETIME& aFileTime) {
 
 void AppendThreads(ProcInfo* info) {
   THREADENTRY32 te32;
+  // `GetThreadDescription` is available as of Windows 10.
+  // We attempt to import it dynamically, knowing that it
+  // may be `nullptr`.
   auto getThreadDescription =
       reinterpret_cast<GETTHREADDESCRIPTION>(::GetProcAddress(
           ::GetModuleHandleW(L"Kernel32.dll"), "GetThreadDescription"));
