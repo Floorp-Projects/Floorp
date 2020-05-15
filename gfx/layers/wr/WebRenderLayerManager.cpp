@@ -244,7 +244,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
 
   GetCompositorBridgeChild()->EndCanvasTransaction();
 
-  AutoTArray<RenderRootUpdates, wr::kRenderRootCount> renderRootUpdates;
+  AutoTArray<RenderRootUpdates, 1> renderRootUpdates;
   if (mStateManager.mAsyncResourceUpdates || !mPendingScrollUpdates.IsEmpty() ||
       WrBridge()->HasWebRenderParentCommands()) {
     auto updates = renderRootUpdates.AppendElement();
