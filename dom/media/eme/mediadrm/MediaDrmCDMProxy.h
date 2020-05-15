@@ -9,7 +9,6 @@
 
 #include <jni.h>
 #include "mozilla/jni/Types.h"
-#include "GeneratedJNINatives.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/CDMCaps.h"
 #include "mozilla/dom/MediaKeys.h"
