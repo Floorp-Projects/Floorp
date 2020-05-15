@@ -65,7 +65,7 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
   setFlag(ImmutableFlags::Strict, directives.strict());
 }
 
-void SharedContext::computeAllowSyntax(Scope* scope) {
+void ScopeContext::computeAllowSyntax(Scope* scope) {
   for (ScopeIter si(scope); si; si++) {
     if (si.kind() == ScopeKind::Function) {
       FunctionScope* funScope = &si.scope()->as<FunctionScope>();
@@ -76,15 +76,15 @@ void SharedContext::computeAllowSyntax(Scope* scope) {
         continue;
       }
 
-      allowNewTarget_ = true;
-      allowSuperProperty_ = fun->allowSuperProperty();
+      allowNewTarget = true;
+      allowSuperProperty = fun->allowSuperProperty();
 
       if (fun->isDerivedClassConstructor()) {
-        allowSuperCall_ = true;
+        allowSuperCall = true;
       }
 
       if (fun->isFieldInitializer()) {
-        allowArguments_ = false;
+        allowArguments = false;
       }
 
       return;
@@ -92,7 +92,7 @@ void SharedContext::computeAllowSyntax(Scope* scope) {
   }
 }
 
-void SharedContext::computeThisBinding(Scope* scope, JSObject* environment) {
+void ScopeContext::computeThisBinding(Scope* scope, JSObject* environment) {
   // If the scope-chain is non-syntactic, we may still determine a more precise
   // effective-scope to use instead.
   Scope* effectiveScope = scope;
@@ -127,7 +127,7 @@ void SharedContext::computeThisBinding(Scope* scope, JSObject* environment) {
   // Inspect the scope-chain.
   for (ScopeIter si(effectiveScope); si; si++) {
     if (si.kind() == ScopeKind::Module) {
-      thisBinding_ = ThisBinding::Module;
+      thisBinding = ThisBinding::Module;
       return;
     }
 
@@ -143,37 +143,41 @@ void SharedContext::computeThisBinding(Scope* scope, JSObject* environment) {
       // use ThisBinding::DerivedConstructor, which ensures TDZ checks happen
       // when accessing |this|.
       if (fun->isDerivedClassConstructor()) {
-        thisBinding_ = ThisBinding::DerivedConstructor;
+        thisBinding = ThisBinding::DerivedConstructor;
       } else {
-        thisBinding_ = ThisBinding::Function;
+        thisBinding = ThisBinding::Function;
       }
 
       return;
     }
   }
 
-  thisBinding_ = ThisBinding::Global;
+  thisBinding = ThisBinding::Global;
 }
 
-void SharedContext::computeInWith(Scope* scope) {
+void ScopeContext::computeInWith(Scope* scope) {
   for (ScopeIter si(scope); si; si++) {
     if (si.kind() == ScopeKind::With) {
-      inWith_ = true;
+      inWith = true;
       break;
     }
   }
 }
 
-EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
+EvalSharedContext::EvalSharedContext(JSContext* cx,
                                      CompilationInfo& compilationInfo,
                                      Scope* enclosingScope,
                                      Directives directives, SourceExtent extent)
     : SharedContext(cx, Kind::Eval, compilationInfo, directives, extent),
       enclosingScope_(cx, enclosingScope),
       bindings(cx) {
-  computeAllowSyntax(enclosingScope);
-  computeThisBinding(enclosingScope, enclosingEnv);
-  computeInWith(enclosingScope);
+  // Eval inherits syntax and binding rules from enclosing environment.
+  allowNewTarget_ = compilationInfo.scopeContext.allowNewTarget;
+  allowSuperProperty_ = compilationInfo.scopeContext.allowSuperProperty;
+  allowSuperCall_ = compilationInfo.scopeContext.allowSuperCall;
+  allowArguments_ = compilationInfo.scopeContext.allowArguments;
+  thisBinding_ = compilationInfo.scopeContext.thisBinding;
+  inWith_ = compilationInfo.scopeContext.inWith;
 }
 
 #ifdef DEBUG
@@ -297,15 +301,19 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
   }
 }
 
-void FunctionBox::initWithEnclosingScope(Scope* enclosingScope,
+void FunctionBox::initWithEnclosingScope(ScopeContext& scopeContext,
+                                         Scope* enclosingScope,
                                          FunctionFlags flags,
                                          FunctionSyntaxKind kind) {
   MOZ_ASSERT(enclosingScope);
   enclosingScope_ = AbstractScopePtr(enclosingScope);
 
   if (flags.isArrow()) {
-    computeAllowSyntax(enclosingScope);
-    computeThisBinding(enclosingScope);
+    allowNewTarget_ = scopeContext.allowNewTarget;
+    allowSuperProperty_ = scopeContext.allowSuperProperty;
+    allowSuperCall_ = scopeContext.allowSuperCall;
+    allowArguments_ = scopeContext.allowArguments;
+    thisBinding_ = scopeContext.thisBinding;
   } else {
     allowNewTarget_ = true;
     allowSuperProperty_ = flags.allowSuperProperty();
@@ -324,7 +332,7 @@ void FunctionBox::initWithEnclosingScope(Scope* enclosingScope,
     }
   }
 
-  computeInWith(enclosingScope);
+  inWith_ = scopeContext.inWith;
 }
 
 void FunctionBox::setEnclosingScopeForInnerLazyFunction(

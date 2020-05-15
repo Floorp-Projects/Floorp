@@ -27,6 +27,36 @@ namespace frontend {
 
 using FunctionType = mozilla::Variant<JSFunction*, ScriptStencilBase>;
 
+// ScopeContext hold information derivied from the scope and environment chains
+// to try to avoid the parser needing to traverse VM structures directly.
+struct ScopeContext {
+  // Whether the enclosing scope allows certain syntax. Eval and arrow scripts
+  // inherit this from their enclosing scipt so we track it here.
+  bool allowNewTarget = false;
+  bool allowSuperProperty = false;
+  bool allowSuperCall = false;
+  bool allowArguments = true;
+
+  // The type of binding required for `this` of the top level context, as
+  // indicated by the enclosing scopes of this parse.
+  ThisBinding thisBinding = ThisBinding::Global;
+
+  // Somewhere on the scope chain this parse is embedded within is a 'With'
+  // scope.
+  bool inWith = false;
+
+  explicit ScopeContext(Scope* scope, JSObject* enclosingEnv = nullptr) {
+    computeAllowSyntax(scope);
+    computeThisBinding(scope, enclosingEnv);
+    computeInWith(scope);
+  }
+
+ private:
+  void computeAllowSyntax(Scope* scope);
+  void computeThisBinding(Scope* scope, JSObject* environment = nullptr);
+  void computeInWith(Scope* scope);
+};
+
 // CompilationInfo owns a number of pieces of information about script
 // compilation as well as controls the lifetime of parse nodes and other data by
 // controling the mark and reset of the LifoAlloc.
@@ -39,6 +69,8 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   AutoKeepAtoms keepAtoms;
 
   Directives directives;
+
+  ScopeContext scopeContext;
 
   // List of function contexts for GC tracing. These are allocated in the
   // LifoAlloc and still require tracing.
@@ -76,12 +108,15 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
 
   // Construct a CompilationInfo
   CompilationInfo(JSContext* cx, LifoAllocScope& alloc,
-                  const JS::ReadOnlyCompileOptions& options)
+                  const JS::ReadOnlyCompileOptions& options,
+                  Scope* enclosingScope = nullptr,
+                  JSObject* enclosingEnv = nullptr)
       : JS::CustomAutoRooter(cx),
         cx(cx),
         options(options),
         keepAtoms(cx),
         directives(options.forceStrictMode()),
+        scopeContext(enclosingScope, enclosingEnv),
         script(cx),
         lazy(cx),
         usedNames(cx),

@@ -28,6 +28,7 @@ namespace js {
 namespace frontend {
 
 class ParseContext;
+struct ScopeContext;
 
 enum class StatementKind : uint8_t {
   Label,
@@ -161,10 +162,6 @@ class SharedContext {
   // Alias enum into SharedContext
   using ImmutableFlags = ImmutableScriptFlagsEnum;
 
-  void computeAllowSyntax(Scope* scope);
-  void computeInWith(Scope* scope);
-  void computeThisBinding(Scope* scope, JSObject* environment = nullptr);
-
   MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
     return immutableFlags_.hasFlag(flag);
   }
@@ -282,9 +279,9 @@ class MOZ_STACK_CLASS EvalSharedContext : public SharedContext {
  public:
   Rooted<EvalScope::Data*> bindings;
 
-  EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
-                    CompilationInfo& compilationInfo, Scope* enclosingScope,
-                    Directives directives, SourceExtent extent);
+  EvalSharedContext(JSContext* cx, CompilationInfo& compilationInfo,
+                    Scope* enclosingScope, Directives directives,
+                    SourceExtent extent);
 
   Scope* compilationEnclosingScope() const override { return enclosingScope_; }
 };
@@ -419,8 +416,9 @@ class FunctionBox : public SharedContext {
   }
 
   void initFromLazyFunction(JSFunction* fun);
-  void initWithEnclosingScope(Scope* enclosingScope, FunctionFlags flags,
-                              FunctionSyntaxKind kind);
+
+  void initWithEnclosingScope(ScopeContext& scopeContext, Scope* enclosingScope,
+                              FunctionFlags flags, FunctionSyntaxKind kind);
 
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionFlags flags,

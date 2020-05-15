@@ -998,12 +998,13 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     }
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+    frontend::CompilationInfo compilationInfo(cx, allocScope, options, scope,
+                                              env);
     if (!compilationInfo.init(cx)) {
       return false;
     }
 
-    frontend::EvalSharedContext evalsc(cx, env, compilationInfo, scope,
+    frontend::EvalSharedContext evalsc(cx, compilationInfo, scope,
                                        compilationInfo.directives, extent);
     script = frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf);
     if (!script) {
