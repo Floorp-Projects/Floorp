@@ -61,14 +61,12 @@ Animation* AnimationInfo::AddAnimationForNextTransaction() {
 void AnimationInfo::ClearAnimations() {
   mPendingAnimations = nullptr;
 
-  if (mAnimations.IsEmpty() && mPropertyAnimationGroups.IsEmpty()) {
+  if (mAnimations.IsEmpty() && mStorageData.IsEmpty()) {
     return;
   }
 
   mAnimations.Clear();
-  mPropertyAnimationGroups.Clear();
-  mTransformData.reset();
-  mCachedMotionPath = nullptr;
+  mStorageData.Clear();
 
   mMutated = true;
 }
@@ -86,11 +84,8 @@ void AnimationInfo::SetCompositorAnimations(
     const CompositorAnimations& aCompositorAnimations) {
   mCompositorAnimationsId = aCompositorAnimations.id();
 
-  AnimationStorageData data =
+  mStorageData =
       AnimationHelper::ExtractAnimations(aCompositorAnimations.animations());
-  mPropertyAnimationGroups.SwapElements(data.mAnimation);
-  mTransformData = std::move(data.mTransformData);
-  mCachedMotionPath.swap(data.mCachedMotionPath);
 }
 
 bool AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime) {

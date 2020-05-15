@@ -93,6 +93,7 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla.layers += [
     'AnimationHelper.h',
     'AnimationInfo.h',
+    'AnimationStorageData.h',
     'apz/public/APZInputBridge.h',
     'apz/public/APZSampler.h',
     'apz/public/APZUpdater.h',
