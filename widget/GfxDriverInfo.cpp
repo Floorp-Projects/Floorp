@@ -488,6 +488,29 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0a1b);
       APPEND_DEVICE(0x0a1e);
 
+      // gen7.5 gt3
+      APPEND_DEVICE(0x0422);
+      APPEND_DEVICE(0x0426);
+      APPEND_DEVICE(0x042a);
+      APPEND_DEVICE(0x042b);
+      APPEND_DEVICE(0x042e);
+      APPEND_DEVICE(0x0a22);
+      APPEND_DEVICE(0x0a26);
+      APPEND_DEVICE(0x0a0a);
+      APPEND_DEVICE(0x0a1a);
+      APPEND_DEVICE(0x0a2a);
+      APPEND_DEVICE(0x0a2b);
+      APPEND_DEVICE(0x0a2e);
+      APPEND_DEVICE(0x0c22);
+      APPEND_DEVICE(0x0c26);
+      APPEND_DEVICE(0x0c2c);
+      APPEND_DEVICE(0x0c2b);
+      APPEND_DEVICE(0x0c2e);
+      APPEND_DEVICE(0x0d22);
+      APPEND_DEVICE(0x0d26);
+      APPEND_DEVICE(0x0d2b);
+      APPEND_DEVICE(0x0d2e);
+
       // Gen7 gt2
       APPEND_DEVICE(0x0162);
       APPEND_DEVICE(0x0166);
