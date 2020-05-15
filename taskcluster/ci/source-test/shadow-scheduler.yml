@@ -55,17 +55,6 @@ bugbug_all_high:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug_all_high
 
-bugbug_combined_high:
-    description: Runs the bugbug_combined_high optimization strategy instead of the default.
-    treeherder:
-        symbol: SS(bugbug_combined_high)
-    index:
-        product: source
-        job-name: shadow-scheduler-bugbug_combined_high
-    worker:
-        env:
-            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug_combined_high
-
 bugbug_debug:
     description: Runs the bugbug_debug optimization strategy instead of the default.
     treeherder:
