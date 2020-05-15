@@ -25,14 +25,33 @@ document.addEventListener("DOMContentLoaded", e => {
     "social",
   ];
 
+  let manageProtectionsLink = document.getElementById("protection-settings");
   let manageProtections = document.getElementById("manage-protections");
-  let protectionDetailsEvtHandler = evt => {
+  let protectionSettingsEvtHandler = evt => {
     if (evt.keyCode == evt.DOM_VK_RETURN || evt.type == "click") {
       RPMSendAsyncMessage("OpenContentBlockingPreferences");
+      if (evt.target.id == "protection-settings") {
+        document.sendTelemetryEvent(
+          "click",
+          "settings_link",
+          "header-settings"
+        );
+      } else if (evt.target.id == "manage-protections") {
+        document.sendTelemetryEvent(
+          "click",
+          "settings_link",
+          "custom-card-settings"
+        );
+      }
     }
   };
-  manageProtections.addEventListener("click", protectionDetailsEvtHandler);
-  manageProtections.addEventListener("keypress", protectionDetailsEvtHandler);
+  manageProtectionsLink.addEventListener("click", protectionSettingsEvtHandler);
+  manageProtectionsLink.addEventListener(
+    "keypress",
+    protectionSettingsEvtHandler
+  );
+  manageProtections.addEventListener("click", protectionSettingsEvtHandler);
+  manageProtections.addEventListener("keypress", protectionSettingsEvtHandler);
 
   let cbCategory = RPMGetStringPref("browser.contentblocking.category");
 
@@ -237,6 +256,9 @@ document.addEventListener("DOMContentLoaded", e => {
         .querySelector(".etp-card .card-title")
         .setAttribute("data-l10n-id", "etp-card-title-custom-not-blocking");
       document.querySelector(".etp-card").classList.add("custom-not-blocking");
+
+      // Hide the link to settings from the header, so we are not showing two links.
+      manageProtectionsLink.style.display = "none";
     } else {
       // Hide each type of tab if blocking of that type is off.
       if (!tpEnabled) {

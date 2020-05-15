@@ -505,12 +505,6 @@ add_task(async function checkTelemetryClickEvents() {
   is(events.length, 1, `recorded telemetry for lw_sync_link`);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    // Show all elements, so we can click on them, even though our user is not logged in.
-    let hidden_elements = content.document.querySelectorAll(".hidden");
-    for (let el of hidden_elements) {
-      el.style.display = "block ";
-    }
-
     const mobileAppLink = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("android-mobile-inline-link");
     }, "android-mobile-inline-link exists");
@@ -526,6 +520,53 @@ add_task(async function checkTelemetryClickEvents() {
       e[3] == "mobile_app_link"
   );
   is(events.length, 1, `recorded telemetry for mobile_app_link`);
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const protectionSettings = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("protection-settings");
+    }, "protection-settings link exists");
+
+    protectionSettings.click();
+  });
+
+  events = await waitForTelemetryEventCount(23);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "settings_link" &&
+      e[4] == "header-settings"
+  );
+  is(events.length, 1, `recorded telemetry for settings_link header-settings`);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const customProtectionSettings = await ContentTaskUtils.waitForCondition(
+      () => {
+        return content.document.getElementById("manage-protections");
+      },
+      "manage-protections link exists"
+    );
+    // Show element so we can click on it
+    customProtectionSettings.style.display = "block";
+
+    customProtectionSettings.click();
+  });
+
+  events = await waitForTelemetryEventCount(24);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "settings_link" &&
+      e[4] == "custom-card-settings"
+  );
+  is(
+    events.length,
+    1,
+    `recorded telemetry for settings_link custom-card-settings`
+  );
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await BrowserTestUtils.removeTab(tab);
 });
