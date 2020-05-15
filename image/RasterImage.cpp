@@ -1914,7 +1914,10 @@ OrientedIntRect RasterImage::ToOriented(UnorientedIntRect aRect) const {
   // negation of the given angle.
   Angle angle = Orientation::InvertAngle(UsedOrientation().rotation);
   Rotate(rect, size.ToUnknownSize(), angle);
-  Flip(rect, size.ToUnknownSize(), UsedOrientation().flip);
+
+  // Use mSize instead of size, since after the Rotate call, the size of the
+  // space that rect is in has had its width and height swapped.
+  Flip(rect, mSize.ToUnknownSize(), UsedOrientation().flip);
 
   return OrientedIntRect::FromUnknownRect(rect);
 }
