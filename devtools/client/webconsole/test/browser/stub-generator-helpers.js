@@ -213,7 +213,10 @@ function getCleanedPacket(key, packet) {
       res.pageError.sourceId = existingPacket.pageError.sourceId;
     }
 
-    if (Array.isArray(res.pageError.stacktrace)) {
+    if (
+      Array.isArray(res.pageError.stacktrace) &&
+      Array.isArray(existingPacket.pageError.stacktrace)
+    ) {
       res.pageError.stacktrace = res.pageError.stacktrace.map((frame, i) => {
         const existingFrame = existingPacket.pageError.stacktrace[i];
         if (frame && existingFrame && frame.sourceId) {

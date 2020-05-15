@@ -975,11 +975,11 @@ rawPackets.set(`Promise reject ""`, {
   "pageError": {
     "errorMessage": "uncaught exception: ",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
-    "lineNumber": 0,
-    "columnNumber": 0,
+    "lineNumber": 1,
+    "columnNumber": 9,
     "category": "content javascript",
     "innerWindowID": 6442450946,
     "timeStamp": 1572867483805,
@@ -987,7 +987,37 @@ rawPackets.set(`Promise reject ""`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
@@ -1001,11 +1031,11 @@ rawPackets.set(`Promise reject "tomato"`, {
   "pageError": {
     "errorMessage": "uncaught exception: tomato",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
-    "lineNumber": 0,
-    "columnNumber": 0,
+    "lineNumber": 1,
+    "columnNumber": 9,
     "category": "content javascript",
     "innerWindowID": 6442450946,
     "timeStamp": 1572867483805,
@@ -1013,7 +1043,37 @@ rawPackets.set(`Promise reject "tomato"`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
@@ -1027,11 +1087,11 @@ rawPackets.set(`Promise reject false`, {
   "pageError": {
     "errorMessage": "uncaught exception: false",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
-    "lineNumber": 0,
-    "columnNumber": 0,
+    "lineNumber": 1,
+    "columnNumber": 9,
     "category": "content javascript",
     "innerWindowID": 6442450946,
     "timeStamp": 1572867483805,
@@ -1039,7 +1099,37 @@ rawPackets.set(`Promise reject false`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
@@ -1053,11 +1143,11 @@ rawPackets.set(`Promise reject 0`, {
   "pageError": {
     "errorMessage": "uncaught exception: 0",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
-    "lineNumber": 0,
-    "columnNumber": 0,
+    "lineNumber": 1,
+    "columnNumber": 9,
     "category": "content javascript",
     "innerWindowID": 6442450946,
     "timeStamp": 1572867483805,
@@ -1065,7 +1155,37 @@ rawPackets.set(`Promise reject 0`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
@@ -1079,11 +1199,11 @@ rawPackets.set(`Promise reject null`, {
   "pageError": {
     "errorMessage": "uncaught exception: null",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
-    "lineNumber": 0,
-    "columnNumber": 0,
+    "lineNumber": 1,
+    "columnNumber": 9,
     "category": "content javascript",
     "innerWindowID": 6442450946,
     "timeStamp": 1572867483805,
@@ -1091,7 +1211,37 @@ rawPackets.set(`Promise reject null`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
@@ -1107,11 +1257,11 @@ rawPackets.set(`Promise reject undefined`, {
   "pageError": {
     "errorMessage": "uncaught exception: undefined",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
-    "lineNumber": 0,
-    "columnNumber": 0,
+    "lineNumber": 1,
+    "columnNumber": 9,
     "category": "content javascript",
     "innerWindowID": 6442450946,
     "timeStamp": 1572867483805,
@@ -1119,7 +1269,37 @@ rawPackets.set(`Promise reject undefined`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
@@ -1135,11 +1315,11 @@ rawPackets.set(`Promise reject Symbol`, {
   "pageError": {
     "errorMessage": "uncaught exception: Symbol(potato)",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
-    "lineNumber": 0,
-    "columnNumber": 0,
+    "lineNumber": 1,
+    "columnNumber": 9,
     "category": "content javascript",
     "innerWindowID": 6442450946,
     "timeStamp": 1572867483805,
@@ -1147,7 +1327,37 @@ rawPackets.set(`Promise reject Symbol`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
@@ -1165,11 +1375,11 @@ rawPackets.set(`Promise reject Object`, {
   "pageError": {
     "errorMessage": "uncaught exception: Object",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
-    "lineNumber": 0,
-    "columnNumber": 0,
+    "lineNumber": 1,
+    "columnNumber": 9,
     "category": "content javascript",
     "innerWindowID": 6442450946,
     "timeStamp": 1572867483805,
@@ -1177,7 +1387,37 @@ rawPackets.set(`Promise reject Object`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
@@ -1229,7 +1469,37 @@ rawPackets.set(`Promise reject Error Object`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
@@ -1275,7 +1545,37 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
     "error": true,
     "info": false,
     "private": false,
-    "stacktrace": null,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 5,
+        "columnNumber": 13,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "",
