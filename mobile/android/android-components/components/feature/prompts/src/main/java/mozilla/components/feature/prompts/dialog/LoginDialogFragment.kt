@@ -81,7 +81,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
     override fun shouldDismissOnLoad(): Boolean = false
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return BottomSheetDialog(requireContext(), this.theme).apply {
+        return BottomSheetDialog(requireContext(), R.style.MozDialogStyle).apply {
             setCancelable(true)
             setOnShowListener {
                 val bottomSheet =
