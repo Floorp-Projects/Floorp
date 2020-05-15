@@ -381,164 +381,12 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
       mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {}
 
 WebRenderBridgeParent::~WebRenderBridgeParent() {
-  if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
-    root->RemoveDeferredPipeline(mPipelineId);
-  }
-}
-
-void WebRenderBridgeParent::RemoveDeferredPipeline(wr::PipelineId aPipelineId) {
-  MOZ_ASSERT(IsRootWebRenderBridgeParent());
-  mPipelineRenderRoots.Remove(wr::AsUint64(aPipelineId));
-  if (auto entry = mPipelineDeferredUpdates.Lookup(wr::AsUint64(aPipelineId))) {
-    RefPtr<WebRenderBridgeParent> self = this;
-    for (auto& variant : entry.Data()) {
-      variant.match(
-          [=](RenderRootDisplayListData& x) {
-            wr::IpcResourceUpdateQueue::ReleaseShmems(self, x.mSmallShmems);
-            wr::IpcResourceUpdateQueue::ReleaseShmems(self, x.mLargeShmems);
-          },
-          [=](RenderRootUpdates& x) {
-            wr::IpcResourceUpdateQueue::ReleaseShmems(self, x.mSmallShmems);
-            wr::IpcResourceUpdateQueue::ReleaseShmems(self, x.mLargeShmems);
-          },
-          [=](ResourceUpdates& x) {
-            wr::IpcResourceUpdateQueue::ReleaseShmems(self, x.mSmallShmems);
-            wr::IpcResourceUpdateQueue::ReleaseShmems(self, x.mLargeShmems);
-          },
-          [=](ParentCommands& x) {}, [=](FocusTarget& x) {});
-    }
-    entry.Remove();
-  }
 }
 
 /* static */
 WebRenderBridgeParent* WebRenderBridgeParent::CreateDestroyed(
     const wr::PipelineId& aPipelineId) {
   return new WebRenderBridgeParent(aPipelineId);
-}
-
-void WebRenderBridgeParent::PushDeferredPipelineData(
-    RenderRootDeferredData&& aDeferredData) {
-  MOZ_ASSERT(!IsRootWebRenderBridgeParent());
-  if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
-    uint64_t key = wr::AsUint64(mPipelineId);
-    root->mPipelineDeferredUpdates.LookupForAdd(key)
-        .OrInsert([]() { return nsTArray<RenderRootDeferredData>(); })
-        .AppendElement(std::move(aDeferredData));
-  }
-}
-
-bool WebRenderBridgeParent::HandleDeferredPipelineData(
-    nsTArray<RenderRootDeferredData>& aDeferredData,
-    const TimeStamp& aTxnStartTime) {
-  MOZ_ASSERT(!IsRootWebRenderBridgeParent());
-  for (auto& entry : aDeferredData) {
-    bool success = entry.match(
-        [&](RenderRootDisplayListData& data) {
-          wr::Epoch wrEpoch = GetNextWrEpoch();
-          bool validTransaction = data.mIdNamespace == mIdNamespace;
-
-          if (!ProcessRenderRootDisplayListData(data, wrEpoch, aTxnStartTime,
-                                                validTransaction, false)) {
-            return false;
-          }
-
-          wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mSmallShmems);
-          wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mLargeShmems);
-          return true;
-        },
-        [&](RenderRootUpdates& data) {
-          bool scheduleComposite;
-          if (!ProcessEmptyTransactionUpdates(data, &scheduleComposite)) {
-            return false;
-          }
-          if (scheduleComposite) {
-            ScheduleGenerateFrame();
-          }
-          wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mSmallShmems);
-          wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mLargeShmems);
-          return true;
-        },
-        [&](ResourceUpdates& data) {
-          wr::TransactionBuilder txn;
-          txn.SetLowPriority(!IsRootWebRenderBridgeParent());
-
-          if (!UpdateResources(data.mResourceUpdates, data.mSmallShmems,
-                               data.mLargeShmems, txn)) {
-            return false;
-          }
-
-          mApi->SendTransaction(txn);
-          wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mSmallShmems);
-          wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mLargeShmems);
-          return true;
-        },
-        [&](ParentCommands& data) {
-          wr::TransactionBuilder txn;
-          txn.SetLowPriority(!IsRootWebRenderBridgeParent());
-          if (!ProcessWebRenderParentCommands(data.mCommands, txn)) {
-            return false;
-          }
-
-          mApi->SendTransaction(txn);
-          return true;
-        },
-        [&](FocusTarget& data) {
-          UpdateAPZFocusState(data);
-          return true;
-        });
-
-    if (!success) {
-      return false;
-    }
-  }
-  aDeferredData.Clear();
-  return true;
-}
-
-bool WebRenderBridgeParent::MaybeHandleDeferredPipelineDataForPipeline(
-    wr::RenderRoot aRenderRoot, wr::PipelineId aPipelineId,
-    const TimeStamp& aTxnStartTime) {
-  MOZ_ASSERT(IsRootWebRenderBridgeParent());
-
-  uint64_t key = wr::AsUint64(aPipelineId);
-  auto entry = mPipelineRenderRoots.LookupForAdd(key);
-  if (!entry) {
-    entry.OrInsert([=]() { return aRenderRoot; });
-
-    CompositorBridgeParent::LayerTreeState* lts =
-        CompositorBridgeParent::GetIndirectShadowTree(
-            wr::AsLayersId(aPipelineId));
-    if (!lts) {
-      return true;
-    }
-    RefPtr<WebRenderBridgeParent> wrbp = lts->mWrBridge;
-    if (!wrbp) {
-      return true;
-    }
-
-    if (auto entry = mPipelineDeferredUpdates.Lookup(key)) {
-      wrbp->HandleDeferredPipelineData(entry.Data(), aTxnStartTime);
-      entry.Remove();
-
-      for (auto it = wrbp->mChildPipelines.Iter(); !it.Done(); it.Next()) {
-        if (!MaybeHandleDeferredPipelineDataForPipeline(
-                aRenderRoot, wr::AsPipelineId(it.Get()->GetKey()),
-                aTxnStartTime)) {
-          return false;
-        }
-      }
-    }
-  }
-
-  return true;
-}
-
-bool WebRenderBridgeParent::MaybeHandleDeferredPipelineData(
-    wr::RenderRoot aRenderRoot, const nsTArray<wr::PipelineId>& aPipelineIds,
-    const TimeStamp& aTxnStartTime) {
-  MOZ_ASSERT(IsRootWebRenderBridgeParent());
-  return true;
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEnsureConnected(
@@ -1265,27 +1113,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
         // Ensure the flag is the same on all of them.
         MOZ_RELEASE_ASSERT(scrollData->IsFirstPaint() ==
                            firstNonEmpty->IsFirstPaint());
-      }
-    }
-  }
-
-  for (auto& displayList : aDisplayLists) {
-    if (IsRootWebRenderBridgeParent()) {
-      if (!MaybeHandleDeferredPipelineData(displayList.mRenderRoot,
-                                           displayList.mRemotePipelineIds,
-                                           aTxnStartTime)) {
-        return IPC_FAIL(this, "Failed processing deferred pipeline data");
-      }
-    } else {
-      RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent();
-      if (!root) {
-        return IPC_FAIL(this, "Root WRBP is missing (shutting down?)");
-      }
-
-      for (auto pipelineId : displayList.mRemotePipelineIds) {
-        auto id = wr::AsUint64(pipelineId);
-        root->mPipelineRenderRoots.Put(id, wr::RenderRoot::Default);
-        mChildPipelines.PutEntry(id);
       }
     }
   }
