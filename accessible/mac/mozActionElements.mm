@@ -58,11 +58,6 @@ enum CheckboxValue {
 - (id)accessibilityAttributeValue:(NSString*)attribute {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) {
-    if ([self hasPopup]) return [self children];
-    return nil;
-  }
-
   if ([attribute isEqualToString:NSAccessibilityHasPopupAttribute]) {
     return [NSNumber numberWithBool:[self hasPopup]];
   }
@@ -82,6 +77,80 @@ enum CheckboxValue {
 
 - (BOOL)hasPopup {
   return ([self stateWithMask:states::HASPOPUP] != 0);
+}
+
+@end
+
+@implementation mozPopupButtonAccessible
+- (NSString*)title {
+  // Popup buttons don't have titles.
+  return @"";
+}
+
+- (NSArray*)accessibilityAttributeNames {
+  static NSMutableArray* supportedAttributes = nil;
+  if (!supportedAttributes) {
+    supportedAttributes = [[super accessibilityAttributeNames] mutableCopy];
+    // We need to remove AXHasPopup from a AXPopupButton for it to be reported
+    // as a popup button. Otherwise VO reports it as a button that has a popup
+    // which is not consistent with Safari.
+    [supportedAttributes removeObject:NSAccessibilityHasPopupAttribute];
+    [supportedAttributes addObject:NSAccessibilityValueAttribute];
+  }
+
+  return supportedAttributes;
+}
+
+- (id)accessibilityAttributeValue:(NSString*)attribute {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  if ([attribute isEqualToString:NSAccessibilityHasPopupAttribute]) {
+    // We need to null on AXHasPopup for it to be reported as a popup button.
+    // Otherwise VO reports it as a button that has a popup which is not
+    // consistent with Safari.
+    return nil;
+  }
+
+  return [super accessibilityAttributeValue:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (NSArray*)children {
+  if ([self stateWithMask:states::EXPANDED] == 0) {
+    // If the popup button is collapsed don't return its children.
+    return @[];
+  }
+
+  return [super children];
+}
+
+- (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
+
+  [super stateChanged:state isEnabled:enabled];
+
+  if (state == states::EXPANDED) {
+    // If the EXPANDED state is updated, fire AXMenu events on the
+    // popups child which is the actual menu.
+    if (mozAccessible* popup = (mozAccessible*)[self childAt:0]) {
+      [popup postNotification:(enabled ? @"AXMenuOpened" : @"AXMenuClosed")];
+    }
+  }
+}
+
+- (BOOL)ignoreWithParent:(mozAccessible*)parent {
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    if (accWrap->IsContent() && accWrap->GetContent()->IsXULElement(nsGkAtoms::menulist)) {
+      // The way select elements work is that content has a COMBOBOX accessible, when it is clicked
+      // it expands a COMBOBOX in our top-level main XUL window. The latter COMBOBOX is a stand-in
+      // for the content one while it is expanded.
+      // XXX: VO focus behaves weirdly if we expose the dummy XUL COMBOBOX in the tree.
+      // We are only interested in its menu child.
+      return YES;
+    }
+  }
+
+  return [super ignoreWithParent:parent];
 }
 
 @end
