@@ -1,5 +1,0 @@
-error: unexpected modifier
- --> $DIR/unexpected-modifier.rs:2:10
-  |
-2 |     fn [<:lower x>]() {}
-  |          ^^^^^^
