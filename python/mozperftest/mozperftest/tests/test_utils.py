@@ -8,7 +8,7 @@ import mock
 import pytest
 from pathlib import Path
 
-from mozperftest.utils import host_platform, silence, download_file
+from mozperftest.utils import host_platform, silence, download_file, install_package
 from mozperftest.tests.support import temp_file, requests_content
 
 
@@ -46,6 +46,28 @@ def test_download_file_success():
         download_file("http://content", Path(target), retry_sleep=0.1)
         with open(target) as f:
             assert f.read() == "some content"
+
+
+def _req(package):
+    class Req:
+        location = "nowhere"
+
+        @property
+        def satisfied_by(self):
+            return self
+
+        def check_if_exists(self, **kw):
+            pass
+
+    return Req()
+
+
+@mock.patch("pip._internal.req.constructors.install_req_from_line", new=_req)
+def test_install_package():
+    vem = mock.Mock()
+    vem.bin_path = "someplace"
+    install_package(vem, "foo")
+    vem._run_pip.assert_called()
 
 
 if __name__ == "__main__":
