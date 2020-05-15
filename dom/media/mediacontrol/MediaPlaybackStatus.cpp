@@ -46,11 +46,6 @@ void MediaPlaybackStatus::DestroyContextInfo(uint64_t aContextId) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG("Remove context %" PRIu64, aContextId);
   mContextInfoMap.Remove(aContextId);
-  // If the removed context is owning the audio focus, we would find another
-  // context to take the audio focus if it's possible.
-  if (IsContextOwningAudioFocus(aContextId)) {
-    ChooseNewContextToOwnAudioFocus();
-  }
 }
 
 void MediaPlaybackStatus::UpdateMediaAudibleState(uint64_t aContextId,
@@ -64,11 +59,6 @@ void MediaPlaybackStatus::UpdateMediaAudibleState(uint64_t aContextId,
   } else {
     MOZ_ASSERT(aState == MediaAudibleState::eInaudible);
     info.DecreaseAudibleMediaNum();
-  }
-  if (ShouldRequestAudioFocusForInfo(info)) {
-    SetOwningAudioFocusContextId(Some(aContextId));
-  } else if (ShouldAbandonAudioFocusForInfo(info)) {
-    ChooseNewContextToOwnAudioFocus();
   }
 }
 
@@ -109,47 +99,6 @@ MediaPlaybackStatus::GetNotNullContextInfo(uint64_t aContextId) {
     mContextInfoMap.Put(aContextId, MakeUnique<ContextMediaInfo>(aContextId));
   }
   return *(mContextInfoMap.GetValue(aContextId)->get());
-}
-
-Maybe<uint64_t> MediaPlaybackStatus::GetAudioFocusOwnerContextId() const {
-  return mOwningAudioFocusContextId;
-}
-
-void MediaPlaybackStatus::ChooseNewContextToOwnAudioFocus() {
-  for (auto iter = mContextInfoMap.ConstIter(); !iter.Done(); iter.Next()) {
-    if (iter.Data()->IsAudible()) {
-      SetOwningAudioFocusContextId(Some(iter.Data()->Id()));
-      return;
-    }
-  }
-  // No context is audible, so no one should the own audio focus.
-  SetOwningAudioFocusContextId(Nothing());
-}
-
-void MediaPlaybackStatus::SetOwningAudioFocusContextId(
-    Maybe<uint64_t>&& aContextId) {
-  if (mOwningAudioFocusContextId == aContextId) {
-    return;
-  }
-  mOwningAudioFocusContextId = aContextId;
-}
-
-bool MediaPlaybackStatus::ShouldRequestAudioFocusForInfo(
-    const ContextMediaInfo& aInfo) const {
-  return aInfo.IsAudible() && !IsContextOwningAudioFocus(aInfo.Id());
-}
-
-bool MediaPlaybackStatus::ShouldAbandonAudioFocusForInfo(
-    const ContextMediaInfo& aInfo) const {
-  // The owner becomes inaudible and there is other context still playing, so we
-  // should switch the audio focus to the audible context.
-  return !aInfo.IsAudible() && IsContextOwningAudioFocus(aInfo.Id()) &&
-         IsAudible();
-}
-
-bool MediaPlaybackStatus::IsContextOwningAudioFocus(uint64_t aContextId) const {
-  return mOwningAudioFocusContextId ? *mOwningAudioFocusContextId == aContextId
-                                    : false;
 }
 
 }  // namespace dom

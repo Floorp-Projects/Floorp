@@ -30,7 +30,7 @@ async function createTabAndLoad(url, inputWindow = null) {
  *         and change its playback state.
  */
 function generateMediaControlKeyEvent(event) {
-  const playbackStateChanged = waitUntilDisplayedPlaybackChanged();
+  const playbackStateChanged = waitUntilMainMediaControllerPlaybackChanged();
   ChromeUtils.generateMediaControlKeysTestEvent(event);
   return playbackStateChanged;
 }
@@ -59,7 +59,10 @@ function playMedia(tab, elementId) {
       return video.play();
     }
   );
-  return Promise.all([playPromise, waitUntilDisplayedPlaybackChanged()]);
+  return Promise.all([
+    playPromise,
+    waitUntilMainMediaControllerPlaybackChanged(),
+  ]);
 }
 
 /**
@@ -87,7 +90,10 @@ function pauseMedia(tab, elementId) {
       video.pause();
     }
   );
-  return Promise.all([pausePromise, waitUntilDisplayedPlaybackChanged()]);
+  return Promise.all([
+    pausePromise,
+    waitUntilMainMediaControllerPlaybackChanged(),
+  ]);
 }
 
 /**
@@ -215,56 +221,15 @@ function isCurrentMetadataEqualTo(metadata) {
 }
 
 /**
- * Check if the given tab is using the default metadata. If the tab is being
- * used in the private browsing mode, `isPrivateBrowsing` should be definded in
- * the `options`.
- */
-async function isUsingDefaultMetadata(tab, options = {}) {
-  let metadata = ChromeUtils.getCurrentActiveMediaMetadata();
-  if (options.isPrivateBrowsing) {
-    is(
-      metadata.title,
-      "Firefox is playing media",
-      "Using generic title to not expose sensitive information"
-    );
-  } else {
-    await SpecialPowers.spawn(tab.linkedBrowser, [metadata.title], title => {
-      is(
-        title,
-        content.document.title,
-        "Using website title as a default title"
-      );
-    });
-  }
-  is(metadata.artwork.length, 1, "Default metada contains one artwork");
-  ok(
-    metadata.artwork[0].src.includes("defaultFavicon.svg"),
-    "Using default favicon as a default art work"
-  );
-}
-
-/**
  * Wait until the main media controller changes its playback state, we would
- * observe that by listening for `media-displayed-playback-changed`
+ * observe that by listening for `main-media-controller-playback-changed`
  * notification.
  *
  * @return {Promise}
- *         Resolve when observing `media-displayed-playback-changed`
+ *         Resolve when observing `main-media-controller-playback-changed`
  */
-function waitUntilDisplayedPlaybackChanged() {
-  return BrowserUtils.promiseObserved("media-displayed-playback-changed");
-}
-
-/**
- * Wait until the metadata that would be displayed on the virtual control
- * interface changes. we would observe that by listening for
- * `media-displayed-metadata-changed` notification.
- *
- * @return {Promise}
- *         Resolve when observing `media-displayed-metadata-changed`
- */
-function waitUntilDisplayedMetadataChanged() {
-  return BrowserUtils.promiseObserved("media-displayed-metadata-changed");
+function waitUntilMainMediaControllerPlaybackChanged() {
+  return BrowserUtils.promiseObserved("main-media-controller-playback-changed");
 }
 
 /**
@@ -279,12 +244,9 @@ function waitUntilMainMediaControllerChanged() {
 }
 
 /**
- * Wait until any media controller updates its metadata even if it's not the
- * main controller. The difference between this function and
- * `waitUntilDisplayedMetadataChanged()` is that the changed metadata might come
- * from non-main controller so it won't be show on the virtual control
- * interface. we would observe that by listening for
- * `media-session-controller-metadata-changed` notification.
+ * Wait until the main session controller changes its metadata, we would observe
+ * that by listening for `media-session-controller-metadata-changed`
+ * notification.
  *
  * @return {Promise}
  *         Resolve when observing `media-session-controller-metadata-changed`

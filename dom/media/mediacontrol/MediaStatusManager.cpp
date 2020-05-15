@@ -48,14 +48,7 @@ MediaStatusManager::MediaStatusManager(uint64_t aBrowsingContextId)
 
 void MediaStatusManager::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
                                                    MediaAudibleState aState) {
-  Maybe<uint64_t> oldAudioFocusOwnerId =
-      mPlaybackStatusDelegate.GetAudioFocusOwnerContextId();
   mPlaybackStatusDelegate.UpdateMediaAudibleState(aBrowsingContextId, aState);
-  Maybe<uint64_t> newAudioFocusOwnerId =
-      mPlaybackStatusDelegate.GetAudioFocusOwnerContextId();
-  if (oldAudioFocusOwnerId != newAudioFocusOwnerId) {
-    HandleAudioFocusOwnerChanged(newAudioFocusOwnerId);
-  }
 }
 
 void MediaStatusManager::NotifySessionCreated(uint64_t aBrowsingContextId) {
@@ -63,23 +56,18 @@ void MediaStatusManager::NotifySessionCreated(uint64_t aBrowsingContextId) {
     return;
   }
 
-  LOG("Session %" PRIu64 " has been created", aBrowsingContextId);
+  LOG("Session %" PRId64 " has been created", aBrowsingContextId);
   mMediaSessionInfoMap.Put(aBrowsingContextId, MediaSessionInfo::EmptyInfo());
-  if (IsSessionOwningAudioFocus(aBrowsingContextId)) {
-    SetActiveMediaSessionContextId(aBrowsingContextId);
-  }
+  UpdateActiveMediaSessionContextId();
 }
 
 void MediaStatusManager::NotifySessionDestroyed(uint64_t aBrowsingContextId) {
   if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
     return;
   }
-  LOG("Session %" PRIu64 " has been destroyed", aBrowsingContextId);
+  LOG("Session %" PRId64 " has been destroyed", aBrowsingContextId);
   mMediaSessionInfoMap.Remove(aBrowsingContextId);
-  if (mActiveMediaSessionContextId &&
-      *mActiveMediaSessionContextId == aBrowsingContextId) {
-    ClearActiveMediaSessionContextIdIfNeeded();
-  }
+  UpdateActiveMediaSessionContextId();
 }
 
 void MediaStatusManager::UpdateMetadata(
@@ -90,10 +78,10 @@ void MediaStatusManager::UpdateMetadata(
 
   MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aBrowsingContextId);
   if (IsMetadataEmpty(aMetadata)) {
-    LOG("Reset metadata for session %" PRIu64, aBrowsingContextId);
+    LOG("Reset metadata for session %" PRId64, aBrowsingContextId);
     info->mMetadata.reset();
   } else {
-    LOG("Update metadata for session %" PRIu64 " title=%s artist=%s album=%s",
+    LOG("Update metadata for session %" PRId64 " title=%s artist=%s album=%s",
         aBrowsingContextId, NS_ConvertUTF16toUTF8((*aMetadata).mTitle).get(),
         NS_ConvertUTF16toUTF8(aMetadata->mArtist).get(),
         NS_ConvertUTF16toUTF8(aMetadata->mAlbum).get());
@@ -108,54 +96,48 @@ void MediaStatusManager::UpdateMetadata(
   }
 }
 
-void MediaStatusManager::HandleAudioFocusOwnerChanged(
-    Maybe<uint64_t>& aBrowsingContextId) {
-  // No one is holding the audio focus.
-  if (!aBrowsingContextId) {
-    LOG("No one is owning audio focus");
-    return ClearActiveMediaSessionContextIdIfNeeded();
-  }
-
-  // This owner of audio focus doesn't have media session, so we should deactive
-  // the active session because the active session must own the audio focus.
-  if (!mMediaSessionInfoMap.Contains(*aBrowsingContextId)) {
-    LOG("The owner of audio focus doesn't have media session");
-    return ClearActiveMediaSessionContextIdIfNeeded();
-  }
-
-  // This owner has media session so it should become an active session context.
-  SetActiveMediaSessionContextId(*aBrowsingContextId);
-}
-
-void MediaStatusManager::SetActiveMediaSessionContextId(
-    uint64_t aBrowsingContextId) {
+void MediaStatusManager::UpdateActiveMediaSessionContextId() {
+  // If there is a media session created from top level browsing context, it
+  // would always be chosen as an active media session. Otherwise, we would
+  // check if we have an active media session already. If we do have, it would
+  // still remain as an active session. But if we don't, we would simply choose
+  // arbitrary one as an active session.
+  uint64_t candidateId = 0;
   if (mActiveMediaSessionContextId &&
-      *mActiveMediaSessionContextId == aBrowsingContextId) {
-    LOG("Active session context %" PRIu64 " keeps unchanged",
+      mMediaSessionInfoMap.Contains(*mActiveMediaSessionContextId)) {
+    candidateId = *mActiveMediaSessionContextId;
+  }
+
+  for (auto iter = mMediaSessionInfoMap.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<BrowsingContext> bc = BrowsingContext::Get(iter.Key());
+    // The browsing context which media session belongs to has been detroyed,
+    // and it wasn't be removed correctly via the IPC message. That could happen
+    // if the browsing context was destroyed before ContentPatent receives the
+    // remove message. Therefore, we should remove it and continue to iterate
+    // other elements.
+    if (!bc) {
+      iter.Remove();
+      continue;
+    }
+    if (bc->IsTopContent()) {
+      candidateId = iter.Key();
+      break;
+    }
+    if (!candidateId) {
+      candidateId = iter.Key();
+    }
+  }
+
+  if (mActiveMediaSessionContextId &&
+      *mActiveMediaSessionContextId == candidateId) {
+    LOG("Active session %" PRId64 " keeps unchanged",
         *mActiveMediaSessionContextId);
     return;
   }
-  mActiveMediaSessionContextId = Some(aBrowsingContextId);
-  LOG("context %" PRIu64 " becomes active session context",
+
+  mActiveMediaSessionContextId = Some(candidateId);
+  LOG("Session %" PRId64 " becomes active session",
       *mActiveMediaSessionContextId);
-  mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
-}
-
-void MediaStatusManager::ClearActiveMediaSessionContextIdIfNeeded() {
-  if (!mActiveMediaSessionContextId) {
-    return;
-  }
-  LOG("Clear active session context");
-  mActiveMediaSessionContextId.reset();
-  mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
-}
-
-bool MediaStatusManager::IsSessionOwningAudioFocus(
-    uint64_t aBrowsingContextId) const {
-  Maybe<uint64_t> audioFocusContextId =
-      mPlaybackStatusDelegate.GetAudioFocusOwnerContextId();
-  return audioFocusContextId ? *audioFocusContextId == aBrowsingContextId
-                             : false;
 }
 
 MediaMetadataBase MediaStatusManager::CreateDefaultMetadata() const {
@@ -254,7 +236,7 @@ MediaSessionPlaybackState MediaStatusManager::GetCurrentDeclaredPlaybackState()
 
 void MediaStatusManager::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
                                                     MediaPlaybackState aState) {
-  LOG("UpdateMediaPlaybackState %s for context %" PRIu64,
+  LOG("UpdateMediaPlaybackState %s for context %" PRId64,
       ToMediaPlaybackStateStr(aState), aBrowsingContextId);
   const bool oldPlaying = mPlaybackStatusDelegate.IsPlaying();
   mPlaybackStatusDelegate.UpdateMediaPlaybackState(aBrowsingContextId, aState);
