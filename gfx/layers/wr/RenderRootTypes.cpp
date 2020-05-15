@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace ipc {
 
-void IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Write(
+void IPDLParamTraits<mozilla::layers::DisplayListData>::Write(
     IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
   WriteIPDLParam(aMsg, aActor, aParam.mIdNamespace);
   WriteIPDLParam(aMsg, aActor, aParam.mRect);
@@ -26,7 +26,7 @@ void IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Write(
   WriteIPDLParam(aMsg, aActor, aParam.mScrollData);
 }
 
-bool IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Read(
+bool IPDLParamTraits<mozilla::layers::DisplayListData>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
     paramType* aResult) {
   if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mIdNamespace) &&

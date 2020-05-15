@@ -24,7 +24,7 @@ using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_
 using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MaybeIdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageKeyPair from "mozilla/webrender/WebRenderTypes.h";
-using moveonly mozilla::layers::RenderRootDisplayListData from "mozilla/layers/RenderRootTypes.h";
+using moveonly mozilla::layers::DisplayListData from "mozilla/layers/RenderRootTypes.h";
 using moveonly mozilla::layers::RenderRootUpdates from "mozilla/layers/RenderRootTypes.h";
 using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
@@ -46,7 +46,7 @@ parent:
   async ReleaseCompositable(CompositableHandle compositable);
 
   async DeleteCompositorAnimations(uint64_t[] aIds);
-  async SetDisplayList(RenderRootDisplayListData[] displayLists,
+  async SetDisplayList(DisplayListData[] displayLists,
                        OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
                        bool containsSVGGroup,
                        VsyncId vsyncId, TimeStamp vsyncStartTime,

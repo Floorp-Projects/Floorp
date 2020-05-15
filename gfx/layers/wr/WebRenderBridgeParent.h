@@ -143,7 +143,7 @@ class WebRenderBridgeParent final
       nsTArray<RefCountedShmem>&& aSmallShmems,
       nsTArray<ipc::Shmem>&& aLargeShmems) override;
   mozilla::ipc::IPCResult RecvSetDisplayList(
-      nsTArray<RenderRootDisplayListData>&& aDisplayLists,
+      nsTArray<DisplayListData>&& aDisplayLists,
       nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
       const TransactionId& aTransactionId, const bool& aContainsSVGGroup,
       const VsyncId& aVsyncId, const TimeStamp& aVsyncStartTime,
@@ -336,11 +336,10 @@ class WebRenderBridgeParent final
   bool ProcessEmptyTransactionUpdates(RenderRootUpdates& aUpdates,
                                       bool* aScheduleComposite);
 
-  bool ProcessRenderRootDisplayListData(RenderRootDisplayListData& aDisplayList,
-                                        wr::Epoch aWrEpoch,
-                                        const TimeStamp& aTxnStartTime,
-                                        bool aValidTransaction,
-                                        bool aObserveLayersUpdate);
+  bool ProcessDisplayListData(DisplayListData& aDisplayList, wr::Epoch aWrEpoch,
+                              const TimeStamp& aTxnStartTime,
+                              bool aValidTransaction,
+                              bool aObserveLayersUpdate);
 
   bool SetDisplayList(const LayoutDeviceRect& aRect,
                       const wr::LayoutSize& aContentSize, ipc::ByteBuf&& aDL,
