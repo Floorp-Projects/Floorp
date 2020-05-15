@@ -152,7 +152,7 @@ class WebRenderBridgeParent final
       nsTArray<CompositionPayload>&& aPayloads) override;
   mozilla::ipc::IPCResult RecvEmptyTransaction(
       const FocusTarget& aFocusTarget,
-      nsTArray<TransactionData>&& aTransactionData,
+      Maybe<TransactionData>&& aTransactionData,
       nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
       const TransactionId& aTransactionId, const VsyncId& aVsyncId,
       const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,

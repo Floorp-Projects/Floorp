@@ -40,6 +40,8 @@ struct TransactionData {
   uint32_t mPaintSequenceNumber;
 };
 
+typedef Maybe<TransactionData> MaybeTransactionData;
+
 }  // namespace layers
 
 namespace ipc {
