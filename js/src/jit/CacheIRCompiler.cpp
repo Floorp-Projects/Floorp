@@ -1956,20 +1956,6 @@ bool CacheIRCompiler::emitGuardNotDOMProxy(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardSpecificInt32Immediate(Int32OperandId integerId,
-                                                      int32_t expected) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register reg = allocator.useRegister(masm, integerId);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.branch32(Assembler::NotEqual, reg, Imm32(expected), failure->label());
-  return true;
-}
-
 bool CacheIRCompiler::emitGuardMagicValue(ValOperandId valId,
                                           JSWhyMagic magic) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

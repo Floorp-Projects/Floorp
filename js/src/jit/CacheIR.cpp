@@ -4880,11 +4880,8 @@ AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
 
   // After this point, we can generate code fine.
 
-  // Generate code.
+  // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
-
-  // Ensure argc == 1.
-  writer.guardSpecificInt32Immediate(argcId, 1);
 
   // Guard callee is the 'push' native function.
   emitNativeCalleeGuard(callee);
@@ -4961,6 +4958,8 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
   // hole check manually.
 
   // Generate code.
+
+  // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
   // Guard callee is the 'join' native function.
@@ -5038,9 +5037,8 @@ AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
     return AttachDecision::NoAction;
   }
 
-  // Guard one argument.
+  // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
-  writer.guardSpecificInt32Immediate(argcId, 1);
 
   // Guard callee is the 'charCodeAt' or 'charAt' native function.
   emitNativeCalleeGuard(callee);
