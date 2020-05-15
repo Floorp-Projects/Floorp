@@ -225,8 +225,7 @@ static uint64_t AddAnimationsForWebRender(
 
   RefPtr<WebRenderAnimationData> animationData =
       aManager->CommandBuilder()
-          .CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(
-              aItem, aRenderRoot);
+          .CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(aItem);
   AnimationInfo& animationInfo = animationData->GetAnimationInfo();
   animationInfo.AddAnimationsForDisplayItem(aItem->Frame(), aDisplayListBuilder,
                                             aItem, aItem->GetType(),
@@ -6334,8 +6333,7 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
     // zoom of this content asynchronously as needed.
     RefPtr<WebRenderAPZAnimationData> animationData =
         aManager->CommandBuilder()
-            .CreateOrRecycleWebRenderUserData<WebRenderAPZAnimationData>(
-                this, aBuilder.GetRenderRoot());
+            .CreateOrRecycleWebRenderUserData<WebRenderAPZAnimationData>(this);
     mWrAnimationId = animationData->GetAnimationId();
 
     prop.emplace();

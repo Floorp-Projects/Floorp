@@ -1142,7 +1142,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       // We're going to be starting a new group.
       RefPtr<WebRenderGroupData> groupData =
           aCommandBuilder->CreateOrRecycleWebRenderUserData<WebRenderGroupData>(
-              item, aBuilder.GetRenderRoot());
+              item);
 
       groupData->mFollowingGroup.mInvalidRect.SetEmpty();
 
@@ -1386,8 +1386,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
 
   g.mDisplayListBuilder = aDisplayListBuilder;
   RefPtr<WebRenderGroupData> groupData =
-      CreateOrRecycleWebRenderUserData<WebRenderGroupData>(
-          aWrappingItem, aBuilder.GetRenderRoot());
+      CreateOrRecycleWebRenderUserData<WebRenderGroupData>(aWrappingItem);
 
   bool snapped;
   nsRect groupBounds =
@@ -1828,8 +1827,7 @@ Maybe<wr::ImageKey> WebRenderCommandBuilder::CreateImageKey(
     mozilla::wr::ImageRendering aRendering, const StackingContextHelper& aSc,
     gfx::IntSize& aSize, const Maybe<LayoutDeviceRect>& aAsyncImageBounds) {
   RefPtr<WebRenderImageData> imageData =
-      CreateOrRecycleWebRenderUserData<WebRenderImageData>(
-          aItem, aBuilder.GetRenderRoot());
+      CreateOrRecycleWebRenderUserData<WebRenderImageData>(aItem);
   MOZ_ASSERT(imageData);
 
   if (aContainer->IsAsync()) {
@@ -2091,8 +2089,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
   }
 
   RefPtr<WebRenderFallbackData> fallbackData =
-      CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(
-          aItem, aBuilder.GetRenderRoot());
+      CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
   bool snap;
   nsRect itemBounds = aItem->GetBounds(aDisplayListBuilder, &snap);
@@ -2422,8 +2419,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     nsDisplayListBuilder* aDisplayListBuilder,
     const LayoutDeviceRect& aBounds) {
   RefPtr<WebRenderMaskData> maskData =
-      CreateOrRecycleWebRenderUserData<WebRenderMaskData>(
-          aMaskItem, aBuilder.GetRenderRoot());
+      CreateOrRecycleWebRenderUserData<WebRenderMaskData>(aMaskItem);
 
   if (!maskData) {
     return Nothing();
