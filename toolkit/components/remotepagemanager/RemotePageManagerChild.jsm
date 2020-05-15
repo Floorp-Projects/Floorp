@@ -32,12 +32,6 @@ class ChildMessagePort extends MessagePort {
       defineAs: "RPMRemoveMessageListener",
       allowCallbacks: true,
     });
-    Cu.exportFunction(this.getUpdateChannel.bind(this), window, {
-      defineAs: "RPMGetUpdateChannel",
-    });
-    Cu.exportFunction(this.getFxAccountsEndpoint.bind(this), window, {
-      defineAs: "RPMGetFxAccountsEndpoint",
-    });
 
     // The actor form only needs the functions set up above. The actor
     // will send and receive messages directly.

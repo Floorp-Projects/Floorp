@@ -93,6 +93,10 @@ let RemotePageAccessManager = {
       RPMPrefIsLocked: ["security.tls.version.min"],
       RPMAddToHistogram: ["*"],
     },
+    "about:newinstall": {
+      RPMGetUpdateChannel: ["*"],
+      RPMGetFxAccountsEndpoint: ["*"],
+    },
     "about:plugins": {
       RPMSendQuery: ["RequestPlugins"],
     },
