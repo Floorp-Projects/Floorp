@@ -8183,7 +8183,7 @@
 # Whether canvas extraction should result in random data. If false, canvas
 # extraction results in all-white, opaque pixel data.
 - name: privacy.resistFingerprinting.randomDataOnCanvasExtract
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 
