@@ -31,7 +31,7 @@ add_task(async function noEventsAfterNetworkDomainDisabled({ client }) {
 add_task(async function documentNavigationWithResource({ client }) {
   const { Page, Network } = client;
   await Network.enable();
-  const history = configureHistory(client);
+  const history = configureHistory(client, 2);
 
   const { frameId: frameIdNav } = await Page.navigate({ url: PAGE_URL });
   ok(frameIdNav, "Page.navigate returned a frameId");
@@ -82,11 +82,11 @@ add_task(async function documentNavigationWithResource({ client }) {
   );
 });
 
-function configureHistory(client) {
+function configureHistory(client, total) {
   const REQUEST = "Network.requestWillBeSent";
 
   const { Network } = client;
-  const history = new RecordEvents(4);
+  const history = new RecordEvents(total);
 
   history.addRecorder({
     event: Network.requestWillBeSent,
