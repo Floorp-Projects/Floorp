@@ -335,6 +335,30 @@ add_task(async function testMetadataAfterTabNavigation() {
 /**
  * The following are helper functions.
  */
+async function isUsingDefaultMetadata(tab, options = {}) {
+  let metadata = ChromeUtils.getCurrentActiveMediaMetadata();
+  if (options.isPrivateBrowsing) {
+    is(
+      metadata.title,
+      "Firefox is playing media",
+      "Using generic title to not expose sensitive information"
+    );
+  } else {
+    await SpecialPowers.spawn(tab.linkedBrowser, [metadata.title], title => {
+      is(
+        title,
+        content.document.title,
+        "Using website title as a default title"
+      );
+    });
+  }
+  is(metadata.artwork.length, 1, "Default metada contains one artwork");
+  ok(
+    metadata.artwork[0].src.includes(defaultFaviconName),
+    "Using default favicon as a default art work"
+  );
+}
+
 function setMediaMetadata(tab, metadata) {
   const promise = SpecialPowers.spawn(tab.linkedBrowser, [metadata], data => {
     content.navigator.mediaSession.metadata = new content.MediaMetadata(data);
