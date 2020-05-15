@@ -163,7 +163,7 @@ class SharedContext {
 
   void computeAllowSyntax(Scope* scope);
   void computeInWith(Scope* scope);
-  void computeThisBinding(Scope* scope);
+  void computeThisBinding(Scope* scope, JSObject* environment = nullptr);
 
   MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
     return immutableFlags_.hasFlag(flag);
