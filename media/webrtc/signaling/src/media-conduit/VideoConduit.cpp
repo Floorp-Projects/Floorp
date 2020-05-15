@@ -7,6 +7,7 @@
 #include "plstr.h"
 
 #include "AudioConduit.h"
+#include "RtpRtcpConfig.h"
 #include "VideoConduit.h"
 #include "VideoStreamFactory.h"
 #include "YuvStamper.h"
@@ -822,7 +823,7 @@ static bool CodecsDifferent(const nsTArray<UniquePtr<VideoCodecConfig>>& a,
  * Atomic pointer and swaps.
  */
 MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
-    const VideoCodecConfig* codecConfig) {
+    const VideoCodecConfig* codecConfig, const RtpRtcpConfig& aRtpRtcpConfig) {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
   mUpdateResolution = true;
@@ -927,7 +928,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
 
   mSendStreamConfig.encoder_settings.payload_name = codecConfig->mName;
   mSendStreamConfig.encoder_settings.payload_type = codecConfig->mType;
-  mSendStreamConfig.rtp.rtcp_mode = webrtc::RtcpMode::kCompound;
+  mSendStreamConfig.rtp.rtcp_mode = aRtpRtcpConfig.GetRtcpMode();
   mSendStreamConfig.rtp.max_packet_size = kVideoMtu;
   if (codecConfig->RtxPayloadTypeIsSet()) {
     mSendStreamConfig.rtp.rtx.payload_type = codecConfig->mRTXPayloadType;
@@ -1458,7 +1459,8 @@ MediaConduitErrorCode WebrtcVideoConduit::SetReceiverTransport(
 }
 
 MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
-    const std::vector<UniquePtr<VideoCodecConfig>>& codecConfigList) {
+    const std::vector<UniquePtr<VideoCodecConfig>>& codecConfigList,
+    const RtpRtcpConfig& aRtpRtcpConfig) {
   MOZ_ASSERT(NS_IsMainThread());
 
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
@@ -1562,7 +1564,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     }
 
     // If we fail after here things get ugly
-    mRecvStreamConfig.rtp.rtcp_mode = webrtc::RtcpMode::kCompound;
+    mRecvStreamConfig.rtp.rtcp_mode = aRtpRtcpConfig.GetRtcpMode();
     mRecvStreamConfig.rtp.nack.rtp_history_ms = use_nack_basic ? 1000 : 0;
     mRecvStreamConfig.rtp.remb = use_remb;
     mRecvStreamConfig.rtp.transport_cc = use_transport_cc;

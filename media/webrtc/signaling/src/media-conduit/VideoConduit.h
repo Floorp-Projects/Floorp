@@ -134,7 +134,8 @@ class WebrtcVideoConduit
    * restarting transmission sub-system on the engine.
    */
   MediaConduitErrorCode ConfigureSendMediaCodec(
-      const VideoCodecConfig* codecInfo) override;
+      const VideoCodecConfig* codecInfo,
+      const RtpRtcpConfig& aRtpRtcpConfig) override;
 
   /**
    * Function to configure list of receive codecs for the video session
@@ -147,7 +148,8 @@ class WebrtcVideoConduit
    * restarting transmission sub-system on the engine.
    */
   MediaConduitErrorCode ConfigureRecvMediaCodecs(
-      const std::vector<UniquePtr<VideoCodecConfig>>& codecConfigList) override;
+      const std::vector<UniquePtr<VideoCodecConfig>>& codecConfigList,
+      const RtpRtcpConfig& aRtpRtcpConfig) override;
 
   /**
    * Register Transport for this Conduit. RTP and RTCP frames from the
