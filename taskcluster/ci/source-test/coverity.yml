@@ -5,8 +5,7 @@
 job-defaults:
     # Run only on try and code-review tasks
     # to avoid running Coverity SA on the whole codebase
-    run-on-projects:
-        - try
+    run-on-projects: []
     platform: linux64/opt
     worker-type:
         by-platform:

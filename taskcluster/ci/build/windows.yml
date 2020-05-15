@@ -96,7 +96,7 @@ win32/opt:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -194,7 +194,7 @@ win64-fuzzing/debug:
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/debug.py
         mozconfig-variant: debug-fuzzing
-    run-on-projects: ['trunk', 'try']
+    run-on-projects: ['trunk']
     fetches:
         toolchain:
             - win64-clang-cl
@@ -286,7 +286,7 @@ win64/opt:
                 # another.
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -332,7 +332,7 @@ win64-plain/opt:
             disable_package_metrics: true
             stage_platform: win64
         mozconfig-variant: plain-opt
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - win64-clang-cl
@@ -594,7 +594,7 @@ win64-noopt/debug:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -643,7 +643,7 @@ win32-noopt/debug:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -691,7 +691,7 @@ win32-rusttests/opt:
             build_targets: ['pre-export', 'export', 'recurse_rusttests']
             disable_package_metrics: true
         mozconfig-variant: rusttests
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - win64-clang-cl
@@ -731,7 +731,7 @@ win32-rusttests/debug:
             build_targets: ['pre-export', 'export', 'recurse_rusttests']
             disable_package_metrics: true
         mozconfig-variant: rusttests-debug
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - win64-clang-cl
@@ -768,7 +768,7 @@ win64-rusttests/opt:
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/rusttests_opt.py
         mozconfig-variant: rusttests
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - win64-clang-cl
@@ -805,7 +805,7 @@ win64-rusttests/debug:
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/rusttests_opt.py
         mozconfig-variant: rusttests-debug
-    run-on-projects: ['trunk', 'try']
+    run-on-projects: ['trunk']
     fetches:
         toolchain:
             - win64-clang-cl
@@ -848,7 +848,7 @@ win64-ccov/opt:
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/ccov_opt.py
         mozconfig-variant: code-coverage
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - win64-clang-cl

@@ -32,7 +32,7 @@ sm-mozjs-sys-linux64/debug:
     run:
         using: spidermonkey-mozjs-crate
         spidermonkey-variant: plaindebug
-    run-on-projects: ['integration', 'release', 'try']
+    run-on-projects: ['integration', 'release']
 
 sm-rust-bindings-linux64/debug:
     description: "Build and test the Rust bindings for SpiderMonkey"
@@ -47,7 +47,7 @@ sm-rust-bindings-linux64/debug:
     run:
         using: spidermonkey-rust-bindings
         spidermonkey-variant: plaindebug
-    run-on-projects: ['integration', 'release', 'try']
+    run-on-projects: ['integration', 'release']
 
 sm-plain-linux64/debug:
     description: "Spidermonkey Plain"
@@ -85,7 +85,7 @@ sm-smoosh-linux64/debug:
             - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
-    run-on-projects: ['try', 'central']
+    run-on-projects: ['central']
 
 sm-smoosh-linux64/opt:
     description: "Spidermonkey SmooshMonkey"
@@ -103,7 +103,7 @@ sm-smoosh-linux64/opt:
             - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
-    run-on-projects: ['try', 'central']
+    run-on-projects: ['central']
 
 sm-warp-linux64/debug:
     description: "Spidermonkey WarpBuilder"
@@ -115,7 +115,7 @@ sm-warp-linux64/debug:
         tier: 2
     run:
         spidermonkey-variant: warpdebug
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: [mozilla-central']
 
 sm-nojit-linux64/opt:
     description: "Spidermonkey no JIT"

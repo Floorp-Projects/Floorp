@@ -14,8 +14,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 job-defaults:
-    run-on-projects:
-        - try
+    run-on-projects: []
     treeherder:
         kind: other
         tier: 3
