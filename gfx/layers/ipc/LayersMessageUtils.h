@@ -27,7 +27,7 @@
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/FocusTarget.h"
-#include "mozilla/layers/GeckoContentControllerTypes.h"
+#include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/KeyboardMap.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -715,20 +715,21 @@ struct ParamTraits<mozilla::layers::KeyboardMap> {
   }
 };
 
-template <>
-struct ParamTraits<mozilla::layers::GeckoContentController_TapType>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::layers::GeckoContentController_TapType,
-          mozilla::layers::GeckoContentController_TapType::eSingleTap,
-          mozilla::layers::kHighestGeckoContentController_TapType> {};
+typedef mozilla::layers::GeckoContentController GeckoContentController;
+typedef GeckoContentController::TapType TapType;
 
 template <>
-struct ParamTraits<mozilla::layers::GeckoContentController_APZStateChange>
+struct ParamTraits<TapType> : public ContiguousEnumSerializerInclusive<
+                                  TapType, TapType::eSingleTap,
+                                  GeckoContentController::sHighestTapType> {};
+
+typedef GeckoContentController::APZStateChange APZStateChange;
+
+template <>
+struct ParamTraits<APZStateChange>
     : public ContiguousEnumSerializerInclusive<
-          mozilla::layers::GeckoContentController_APZStateChange,
-          mozilla::layers::GeckoContentController_APZStateChange::
-              eTransformBegin,
-          mozilla::layers::kHighestGeckoContentController_APZStateChange> {};
+          APZStateChange, APZStateChange::eTransformBegin,
+          GeckoContentController::sHighestAPZStateChange> {};
 
 template <>
 struct ParamTraits<mozilla::layers::EventRegionsOverride>
