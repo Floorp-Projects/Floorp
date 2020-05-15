@@ -93,26 +93,6 @@ bool AbstractScopePtr::isArrow() const {
   return scope()->as<FunctionScope>().canonicalFunction()->isArrow();
 }
 
-bool AbstractScopePtr::isClassConstructor() const {
-  MOZ_ASSERT(is<FunctionScope>());
-  if (isScopeCreationData()) {
-    return scopeCreationData().get().isClassConstructor();
-  }
-  return scope()->as<FunctionScope>().canonicalFunction()->isClassConstructor();
-}
-
-const FieldInitializers& AbstractScopePtr::fieldInitializers() const {
-  MOZ_ASSERT(is<FunctionScope>());
-  if (isScopeCreationData()) {
-    return scopeCreationData().get().fieldInitializers();
-  }
-  return scope()
-      ->as<FunctionScope>()
-      .canonicalFunction()
-      ->baseScript()
-      ->getFieldInitializers();
-}
-
 uint32_t AbstractScopePtr::nextFrameSlot() const {
   if (isScopeCreationData()) {
     return scopeCreationData().get().nextFrameSlot();

@@ -9032,25 +9032,22 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
   for (BytecodeEmitter* current = this; current; current = current->parent) {
     if (current->sc->isFunctionBox()) {
       FunctionBox* funbox = current->sc->asFunctionBox();
-      if (funbox->isClassConstructor()) {
-        MOZ_ASSERT(funbox->fieldInitializers->valid);
-        return *funbox->fieldInitializers;
+
+      if (funbox->isArrow()) {
+        continue;
       }
+
+      // If we found a non-arrow / non-constructor we were never allowed to
+      // expect fields in the first place.
+      MOZ_RELEASE_ASSERT(funbox->isClassConstructor());
+
+      MOZ_ASSERT(funbox->fieldInitializers->valid);
+      return *funbox->fieldInitializers;
     }
   }
 
-  for (AbstractScopePtrIter si(innermostScope()); si; si++) {
-    if (si.abstractScopePtr().is<FunctionScope>()) {
-      if (si.abstractScopePtr().isClassConstructor()) {
-        const FieldInitializers& fieldInitializers =
-            si.abstractScopePtr().fieldInitializers();
-        MOZ_ASSERT(fieldInitializers.valid);
-        return fieldInitializers;
-      }
-    }
-  }
-
-  MOZ_CRASH("Constructor for field initializers not found.");
+  MOZ_RELEASE_ASSERT(compilationInfo.scopeContext.fieldInitializers);
+  return *compilationInfo.scopeContext.fieldInitializers;
 }
 
 bool BytecodeEmitter::emitInitializeInstanceFields() {
