@@ -49,12 +49,32 @@
   fill: var(--theme-toolbar-color);
 }
 
-
-/* DebugTargetInfo's renderTargetTitle() component should look like it's in the same
-  section as renderTargetURI() */
-.debug-target-info .debug-target-title {
+.debug-target-info .reload-button {
+  padding: 8px;
+  grid-column-gap: 0;
+  border: 0;
+  background: var(--theme-toolbarbutton-background);
   --border-inline-end-width: 0;
-  padding-inline-end: 0;
+}
+
+.debug-target-info .reload-button:hover {
+  background-color: var(--toolbarbutton-hover-background);
+}
+
+.debug-target-info .reload-button:focus {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3)
+}
+
+.debug-target-info .reload-button:active {
+  background-color: var(--theme-toolbarbutton-active-background);
+}
+
+.debug-target-info .reload-button img {
+  fill: var(--theme-toolbarbutton-color);
+}
+
+.debug-target-info .reload-button:active img {
+  fill: var(--theme-toolbarbutton-active-color);
 }
 
 .debug-target-info .debug-target-url {
