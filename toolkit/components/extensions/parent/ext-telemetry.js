@@ -61,7 +61,7 @@ this.telemetry = class extends ExtensionAPI {
             throw new ExtensionUtils.ExtensionError(ex);
           }
         },
-        submitEncryptedPing(payload) {
+        submitEncryptedPing(payload, options) {
           desktopCheck();
 
           const manifest = extension.manifest;
@@ -71,8 +71,13 @@ this.telemetry = class extends ExtensionAPI {
             );
           }
 
+          if (!(options.schemaName && options.schemaVersion)) {
+            throw new ExtensionUtils.ExtensionError(
+              "Encrypted telemetry pings require schema name and version to be set in options object."
+            );
+          }
+
           try {
-            const options = { useEncryption: true };
             const type = manifest.telemetry.ping_type;
 
             // Optional manifest entries.
@@ -82,11 +87,10 @@ this.telemetry = class extends ExtensionAPI {
             options.addPioneerId = manifest.telemetry.pioneer_id === true;
 
             // Required manifest entries.
+            options.useEncryption = true;
             options.publicKey = manifest.telemetry.public_key.key;
             options.encryptionKeyId = manifest.telemetry.public_key.id;
-            options.schemaName = manifest.telemetry.schemaName;
             options.schemaNamespace = manifest.telemetry.schemaNamespace;
-            options.schemaVersion = manifest.telemetry.schemaVersion;
 
             TelemetryController.submitExternalPing(type, payload, options);
           } catch (ex) {
