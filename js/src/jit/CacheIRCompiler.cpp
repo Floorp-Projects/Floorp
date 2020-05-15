@@ -3157,6 +3157,29 @@ bool CacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
   return true;
 }
 
+bool CacheIRCompiler::emitLoadStringCharCodeResult(StringOperandId strId,
+                                                   Int32OperandId indexId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register str = allocator.useRegister(masm, strId);
+  Register index = allocator.useRegister(masm, indexId);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Bounds check, load string char.
+  masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
+                            scratch1, failure->label());
+  masm.loadStringChar(str, index, scratch1, scratch2, failure->label());
+
+  EmitStoreResult(masm, scratch1, JSVAL_TYPE_INT32, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadArgumentsObjectArgResult(ObjOperandId objId,
                                                        Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
