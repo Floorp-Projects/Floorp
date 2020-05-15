@@ -164,6 +164,28 @@ void ScopeContext::computeInWith(Scope* scope) {
   }
 }
 
+void ScopeContext::computeExternalInitializers(Scope* scope) {
+  for (ScopeIter si(scope); si; si++) {
+    if (si.scope()->is<FunctionScope>()) {
+      FunctionScope& funcScope = si.scope()->as<FunctionScope>();
+      JSFunction* fun = funcScope.canonicalFunction();
+
+      // Arrows can call `super()` on behalf on parent so keep searching.
+      if (fun->isArrow()) {
+        continue;
+      }
+
+      if (fun->isClassConstructor()) {
+        fieldInitializers =
+            mozilla::Some(fun->baseScript()->getFieldInitializers());
+        MOZ_ASSERT(fieldInitializers->valid);
+      }
+
+      break;
+    }
+  }
+}
+
 EvalSharedContext::EvalSharedContext(JSContext* cx,
                                      CompilationInfo& compilationInfo,
                                      Scope* enclosingScope,

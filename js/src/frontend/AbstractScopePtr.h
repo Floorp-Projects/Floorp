@@ -117,8 +117,6 @@ class AbstractScopePtr {
   uint32_t nextFrameSlot() const;
   // Valid iff is<FunctionScope>
   bool isArrow() const;
-  bool isClassConstructor() const;
-  const FieldInitializers& fieldInitializers() const;
 
   bool hasOnChain(ScopeKind kind) const {
     for (AbstractScopePtr it = *this; it; it = it.enclosing()) {

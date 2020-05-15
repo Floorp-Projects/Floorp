@@ -198,12 +198,6 @@ uint32_t ScopeCreationData::nextFrameSlot() const {
 }
 
 bool ScopeCreationData::isArrow() const { return funbox_->isArrow(); }
-bool ScopeCreationData::isClassConstructor() const {
-  return funbox_->isClassConstructor();
-}
-const FieldInitializers& ScopeCreationData::fieldInitializers() const {
-  return *funbox_->fieldInitializers;
-}
 
 void ScriptStencilBase::trace(JSTracer* trc) {
   for (ScriptThingVariant& thing : gcThings) {
