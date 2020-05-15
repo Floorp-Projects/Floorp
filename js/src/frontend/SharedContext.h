@@ -91,8 +91,14 @@ class Directives {
 
 // The kind of this-binding for the current scope. Note that arrow functions
 // have a lexical this-binding so their ThisBinding is the same as the
-// ThisBinding of their enclosing scope and can be any value.
-enum class ThisBinding : uint8_t { Global, Function, Module };
+// ThisBinding of their enclosing scope and can be any value. Derived
+// constructors require TDZ checks when accessing the binding.
+enum class ThisBinding : uint8_t {
+  Global,
+  Module,
+  Function,
+  DerivedConstructor
+};
 
 class GlobalSharedContext;
 class EvalSharedContext;
@@ -141,7 +147,6 @@ class SharedContext {
   bool allowSuperCall_ : 1;
   bool allowArguments_ : 1;
   bool inWith_ : 1;
-  bool needsThisTDZChecks_ : 1;
 
   // See `strict()` below.
   bool localStrict : 1;
@@ -207,6 +212,13 @@ class SharedContext {
   CompilationInfo& compilationInfo() const { return compilationInfo_; }
 
   ThisBinding thisBinding() const { return thisBinding_; }
+  bool hasFunctionThisBinding() const {
+    return thisBinding() == ThisBinding::Function ||
+           thisBinding() == ThisBinding::DerivedConstructor;
+  }
+  bool needsThisTDZChecks() const {
+    return thisBinding() == ThisBinding::DerivedConstructor;
+  }
 
   bool isSelfHosted() const { return selfHosted(); }
   bool allowNewTarget() const { return allowNewTarget_; }
@@ -214,7 +226,6 @@ class SharedContext {
   bool allowSuperCall() const { return allowSuperCall_; }
   bool allowArguments() const { return allowArguments_; }
   bool inWith() const { return inWith_; }
-  bool needsThisTDZChecks() const { return needsThisTDZChecks_; }
 
   bool hasExplicitUseStrict() const { return hasExplicitUseStrict_; }
   void setExplicitUseStrict() { hasExplicitUseStrict_ = true; }

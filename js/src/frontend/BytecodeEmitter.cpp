@@ -5858,7 +5858,7 @@ bool BytecodeEmitter::emitContinue(PropertyName* label) {
 }
 
 bool BytecodeEmitter::emitGetFunctionThis(NameNode* thisName) {
-  MOZ_ASSERT(sc->thisBinding() == ThisBinding::Function);
+  MOZ_ASSERT(sc->hasFunctionThisBinding());
   MOZ_ASSERT(thisName->isName(cx->names().dotThis));
 
   return emitGetFunctionThis(Some(thisName->pn_pos.begin));

@@ -4009,7 +4009,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceThisExpression(
 
   TokenPos pos = tokenizer_->pos(start);
   ParseNode* thisName(nullptr);
-  if (pc_->sc()->thisBinding() == ThisBinding::Function) {
+  if (pc_->sc()->hasFunctionThisBinding()) {
     HandlePropertyName dotThis = cx_->names().dotThis;
     BINJS_TRY(usedNames_.noteUse(cx_, dotThis, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
