@@ -33,7 +33,8 @@ class WindowGlobalInit;
   /* Whether the user has overriden the mixed content blocker to allow \
    * mixed content loads to happen */                                  \
   FIELD(AllowMixedContent, bool)                                       \
-  FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)
+  FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)        \
+  FIELD(AutoplayPermission, uint32_t)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -136,6 +137,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               const bool& aIsThirdPartyTrackingResourceWindow,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsSecureContext>, const bool& aIsSecureContext,
+              ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_AutoplayPermission>, const uint32_t& aValue,
               ContentParent* aSource);
 
   // Overload `DidSet` to get notifications for a particular field being set.
