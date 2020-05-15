@@ -2005,21 +2005,28 @@ void MacroAssembler::moveValue(const Value& src, const ValueOperand& dest) {
 void MacroAssembler::branchValueIsNurseryCell(Condition cond,
                                               const Address& address,
                                               Register temp, Label* label) {
-  MOZ_ASSERT(temp != InvalidReg);
-  loadValue(address, ValueOperand(temp));
-  branchValueIsNurseryCell(cond, ValueOperand(temp), InvalidReg, label);
+  branchValueIsNurseryCellImpl(cond, address, temp, label);
 }
 
 void MacroAssembler::branchValueIsNurseryCell(Condition cond,
                                               ValueOperand value, Register temp,
                                               Label* label) {
+  branchValueIsNurseryCellImpl(cond, value, temp, label);
+}
+
+template <typename T>
+void MacroAssembler::branchValueIsNurseryCellImpl(Condition cond,
+                                                  const T& value, Register temp,
+                                                  Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+  // temp may be InvalidReg, use scratch2 instead.
+  SecondScratchRegisterScope scratch2(*this);
 
   Label done;
   branchTestGCThing(Assembler::NotEqual, value,
                     cond == Assembler::Equal ? &done : label);
 
-  unboxGCThingForGCBarrier(value, temp);
+  unboxGCThingForGCBarrier(value, scratch2);
   orPtr(Imm32(gc::ChunkMask), scratch2);
   load32(Address(scratch2, gc::ChunkLocationOffsetFromLastByte), scratch2);
   branch32(cond, scratch2, Imm32(int32_t(gc::ChunkLocation::Nursery)), label);

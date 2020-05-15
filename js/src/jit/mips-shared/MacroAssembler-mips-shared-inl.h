@@ -779,14 +779,23 @@ void MacroAssembler::branchTestObject(Condition cond, const BaseIndex& address,
 
 void MacroAssembler::branchTestGCThing(Condition cond, const Address& address,
                                        Label* label) {
-  MOZ_ASSERT(cond == Equal || cond == NotEqual);
-  SecondScratchRegisterScope scratch2(*this);
-  Register tag = extractTag(address, scratch2);
-  ma_b(tag, ImmTag(JS::detail::ValueLowerInclGCThingTag), label,
-       (cond == Equal) ? AboveOrEqual : Below);
+  branchTestGCThingImpl(cond, address, label);
 }
+
 void MacroAssembler::branchTestGCThing(Condition cond, const BaseIndex& address,
                                        Label* label) {
+  branchTestGCThingImpl(cond, address, label);
+}
+
+void MacroAssembler::branchTestGCThing(Condition cond,
+                                       const ValueOperand& address,
+                                       Label* label) {
+  branchTestGCThingImpl(cond, address, label);
+}
+
+template <typename T>
+void MacroAssembler::branchTestGCThingImpl(Condition cond, const T& address,
+                                           Label* label) {
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
   SecondScratchRegisterScope scratch2(*this);
   Register tag = extractTag(address, scratch2);

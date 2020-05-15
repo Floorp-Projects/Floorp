@@ -355,6 +355,9 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   void unboxGCThingForGCBarrier(const Address& src, Register dest) {
     unboxObject(src, dest);
   }
+  void unboxGCThingForGCBarrier(const ValueOperand& src, Register dest) {
+    unboxObject(src, dest);
+  }
 
   void notBoolean(const ValueOperand& val) {
     as_xori(val.payloadReg(), val.payloadReg(), 1);
