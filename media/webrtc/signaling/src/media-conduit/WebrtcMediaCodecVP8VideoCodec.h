@@ -7,13 +7,13 @@
 
 #include <jni.h>
 
+#include "mozilla/java/CodecProxyWrappers.h"
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
 
 #include "MediaConduitInterface.h"
 #include "AudioConduit.h"
 #include "VideoConduit.h"
-#include "GeneratedJNIWrappers.h"
 
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 
