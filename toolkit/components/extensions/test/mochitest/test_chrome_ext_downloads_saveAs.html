@@ -16,22 +16,41 @@ const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 const PROMPTLESS_DOWNLOAD_PREF = "browser.download.useDownloadDir";
 
+const DOWNLOAD_FILENAME = "file_download.nonext.txt";
+const DEFAULT_SUBDIR = "subdir";
+
 // We need to be able to distinguish files downloaded by the file picker from
 // files downloaded without it.
 let pickerDir;
+let pbPickerDir; // for incognito downloads
 let defaultDir;
 
 add_task(async function setup() {
+  // Reset DownloadLastDir preferences in case other tests set them.
+  SpecialPowers.Services.obs.notifyObservers(
+    null,
+    "browser:purge-session-history"
+  );
+
+  // Set up temporary directories.
   let downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
   pickerDir = downloadDir.clone();
   pickerDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   info(`Using file picker download directory ${pickerDir.path}`);
+  pbPickerDir = downloadDir.clone();
+  pbPickerDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  info(`Using private browsing file picker download directory ${pbPickerDir.path}`);
   defaultDir = downloadDir.clone();
   defaultDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   info(`Using default download directory ${defaultDir.path}`);
+  let subDir = defaultDir.clone();
+  subDir.append(DEFAULT_SUBDIR);
+  subDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
   isnot(pickerDir.path, defaultDir.path,
         "Should be able to distinguish between files saved with or without the file picker");
+  isnot(pickerDir.path, pbPickerDir.path,
+        "Should be able to distinguish between files saved in and out of private browsing mode");
 
   await SpecialPowers.pushPrefEnv({"set": [
     ["browser.download.folderList", 2],
@@ -41,40 +60,45 @@ add_task(async function setup() {
   SimpleTest.registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
     pickerDir.remove(true);
-    defaultDir.remove(true);
+    pbPickerDir.remove(true);
+    defaultDir.remove(true); // This also removes DEFAULT_SUBDIR.
   });
 });
 
 add_task(async function test_downloads_saveAs() {
   const pickerFile = pickerDir.clone();
-  pickerFile.append("file_download.nonext.txt");
+  pickerFile.append(DOWNLOAD_FILENAME);
+
+  const pbPickerFile = pbPickerDir.clone();
+  pbPickerFile.append(DOWNLOAD_FILENAME);
 
   const defaultFile = defaultDir.clone();
-  defaultFile.append("file_download.nonext.txt");
+  defaultFile.append(DOWNLOAD_FILENAME);
 
   const {MockFilePicker} = SpecialPowers;
   MockFilePicker.init(window);
 
-  MockFilePicker.showCallback = fp => {
-    // On picker 'show' event, choose the filename that was set as the default
-    // and append it to the picker's download directory
-    let file = pickerDir.clone();
+  function mockFilePickerCallback(expectedStartingDir, pickedFile) {
+    return fp => {
+      // Assert that the downloads API correctly sets the starting directory.
+      ok(fp.displayDirectory.equals(expectedStartingDir), "Got the expected FilePicker displayDirectory");
 
-    // Assert that the downloads API configures both default properties.
-    is(fp.defaultString, "file_download.nonext.txt", "Got the expected FilePicker defaultString");
-    is(fp.defaultExtension, "txt", "Got the expected FilePicker defaultExtension");
+      // Assert that the downloads API configures both default properties.
+      is(fp.defaultString, DOWNLOAD_FILENAME, "Got the expected FilePicker defaultString");
+      is(fp.defaultExtension, "txt", "Got the expected FilePicker defaultExtension");
 
-    file.append(fp.defaultString);
-    MockFilePicker.setFiles([file]);
-  };
+      MockFilePicker.setFiles([pickedFile]);
+    };
+  }
 
   function background() {
     const url = URL.createObjectURL(new Blob(["file content"]));
-    browser.test.onMessage.addListener(async (filename, saveAs) => {
+    browser.test.onMessage.addListener(async (filename, saveAs, isPrivate) => {
       try {
         let options = {
           url,
           filename,
+          incognito: isPrivate,
         };
         // Only define the saveAs option if the argument was actually set
         if (saveAs !== undefined) {
@@ -93,40 +117,56 @@ add_task(async function test_downloads_saveAs() {
     browser.test.sendMessage("ready");
   }
 
-  const manifest = {background, manifest: {permissions: ["downloads"]}};
+  const manifest = {
+    background,
+    incognitoOverride: "spanning",
+    manifest: {permissions: ["downloads"]},
+  };
   const extension = ExtensionTestUtils.loadExtension(manifest);
 
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  async function testExpectFilePicker(saveAs) {
-    ok(!pickerFile.exists(), "the file should have been cleaned up properly previously");
+  // options should have the following properties:
+  //   saveAs (Boolean or undefined)
+  //   isPrivate (Boolean)
+  //   fileName (string)
+  //   expectedStartingDir (nsIFile)
+  //   destinationFile (nsIFile)
+  async function testExpectFilePicker(options) {
+    ok(!options.destinationFile.exists(), "the file should have been cleaned up properly previously");
 
+    MockFilePicker.showCallback = mockFilePickerCallback(
+      options.expectedStartingDir,
+      options.destinationFile
+    );
     MockFilePicker.returnValue = MockFilePicker.returnOK;
 
-    extension.sendMessage("file_download.nonext.txt", saveAs);
+    extension.sendMessage(options.fileName, options.saveAs, options.isPrivate);
     let result = await extension.awaitMessage("done");
-    ok(result.ok, `downloads.download() works with saveAs=${saveAs}`);
+    ok(result.ok, `downloads.download() works with saveAs=${options.saveAs}`);
 
-    ok(pickerFile.exists(), "the file exists.");
-    is(pickerFile.fileSize, 12, "downloaded file is the correct size");
-    pickerFile.remove(false);
+    ok(options.destinationFile.exists(), "the file exists.");
+    is(options.destinationFile.fileSize, 12, "downloaded file is the correct size");
+    options.destinationFile.remove(false);
+    MockFilePicker.reset();
 
     // Test the user canceling the save dialog.
     MockFilePicker.returnValue = MockFilePicker.returnCancel;
 
-    extension.sendMessage("file_download.nonext.txt", saveAs);
+    extension.sendMessage(options.fileName, options.saveAs, options.isPrivate);
     result = await extension.awaitMessage("done");
 
     ok(!result.ok, "download rejected if the user cancels the dialog");
     is(result.message, "Download canceled by the user", "with the correct message");
-    ok(!pickerFile.exists(), "file was not downloaded");
+    ok(!options.destinationFile.exists(), "file was not downloaded");
+    MockFilePicker.reset();
   }
 
   async function testNoFilePicker(saveAs) {
     ok(!defaultFile.exists(), "the file should have been cleaned up properly previously");
 
-    extension.sendMessage("file_download.nonext.txt", saveAs);
+    extension.sendMessage(DOWNLOAD_FILENAME, saveAs, false);
     let result = await extension.awaitMessage("done");
     ok(result.ok, `downloads.download() works with saveAs=${saveAs}`);
 
@@ -136,23 +176,68 @@ add_task(async function test_downloads_saveAs() {
   }
 
   info("Testing that saveAs=true uses the file picker as expected");
-  let saveAs = true;
-  await testExpectFilePicker(saveAs);
+  let expectedStartingDir = defaultDir;
+  let fpOptions = {
+    saveAs: true,
+    isPrivate: false,
+    fileName: DOWNLOAD_FILENAME,
+    expectedStartingDir: expectedStartingDir,
+    destinationFile: pickerFile,
+  };
+  await testExpectFilePicker(fpOptions);
+
+  info("Testing that saveas=true reuses last file picker directory");
+  fpOptions.expectedStartingDir = pickerDir;
+  await testExpectFilePicker(fpOptions);
+
+  info("Testing that saveAs=true in PB reuses last directory");
+  let nonPBStartingDir = fpOptions.expectedStartingDir;
+  fpOptions.isPrivate = true;
+  fpOptions.destinationFile = pbPickerFile;
+  await testExpectFilePicker(fpOptions);
+
+  info("Testing that saveAs=true in PB uses a separate last directory");
+  fpOptions.expectedStartingDir = pbPickerDir;
+  await testExpectFilePicker(fpOptions);
+
+  info("Testing that saveAs=true in Permanent PB mode ignores the incognito option");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.privatebrowsing.autostart", true]],
+  });
+  fpOptions.isPrivate = false;
+  fpOptions.expectedStartingDir = pbPickerDir;
+  await testExpectFilePicker(fpOptions);
+
+  info("Testing that saveas=true reuses the non-PB last directory after private download");
+  await SpecialPowers.popPrefEnv();
+  fpOptions.isPrivate = false;
+  fpOptions.expectedStartingDir = nonPBStartingDir;
+  fpOptions.destinationFile = pickerFile;
+  await testExpectFilePicker(fpOptions);
+
+  info("Testing that saveAs=true does not reuse last directory when filename contains a path separator");
+  fpOptions.fileName = DEFAULT_SUBDIR + "/" + DOWNLOAD_FILENAME;
+  let destinationFile = defaultDir.clone();
+  destinationFile.append(DEFAULT_SUBDIR);
+  fpOptions.expectedStartingDir = destinationFile.clone();
+  destinationFile.append(DOWNLOAD_FILENAME);
+  fpOptions.destinationFile = destinationFile;
+  await testExpectFilePicker(fpOptions);
 
   info("Testing that saveAs=false does not use the file picker");
-  saveAs = false;
-  await testNoFilePicker(saveAs);
+  fpOptions.saveAs = false;
+  await testNoFilePicker(fpOptions.saveAs);
 
   // When saveAs is not set, the behavior should be determined by the Firefox
   // pref that normally determines whether the "Save As" prompt should be
   // displayed.
   info(`Testing that the file picker is used when saveAs is not specified ` +
        `but ${PROMPTLESS_DOWNLOAD_PREF} is disabled`);
-  saveAs = undefined;
+  fpOptions.saveAs = undefined;
   await SpecialPowers.pushPrefEnv({"set": [
     [PROMPTLESS_DOWNLOAD_PREF, false],
   ]});
-  await testExpectFilePicker(saveAs);
+  await testExpectFilePicker(fpOptions);
 
   info(`Testing that the file picker is NOT used when saveAs is not ` +
        `specified but ${PROMPTLESS_DOWNLOAD_PREF} is enabled`);
@@ -160,7 +245,7 @@ add_task(async function test_downloads_saveAs() {
   await SpecialPowers.pushPrefEnv({"set": [
     [PROMPTLESS_DOWNLOAD_PREF, true],
   ]});
-  await testNoFilePicker(saveAs);
+  await testNoFilePicker(fpOptions.saveAs);
 
   await extension.unload();
   MockFilePicker.cleanup();
