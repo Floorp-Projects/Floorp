@@ -31,6 +31,9 @@ const nsIFile = Ci.nsIFile;
 var EXPORTED_SYMBOLS = ["DownloadLastDir"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 let nonPrivateLoadContext = Cu.createLoadContext();
 let privateLoadContext = Cu.createPrivateLoadContext();
@@ -85,14 +88,22 @@ function isContentPrefEnabled() {
 
 var gDownloadLastDirFile = readLastDirPref();
 
-function DownloadLastDir(aWindow) {
-  let loadContext = aWindow.docShell.QueryInterface(Ci.nsILoadContext);
-  // Need this in case the real thing has gone away by the time we need it.
-  // We only care about the private browsing state. All the rest of the
-  // load context isn't of interest to the content pref service.
-  this.fakeContext = loadContext.usePrivateBrowsing
-    ? privateLoadContext
-    : nonPrivateLoadContext;
+// aForcePrivate is only used when aWindow is null.
+function DownloadLastDir(aWindow, aForcePrivate) {
+  let isPrivate = false;
+  if (aWindow === null) {
+    isPrivate = aForcePrivate || PrivateBrowsingUtils.permanentPrivateBrowsing;
+  } else {
+    let loadContext = aWindow.docShell.QueryInterface(Ci.nsILoadContext);
+    isPrivate = loadContext.usePrivateBrowsing;
+  }
+
+  // We always use a fake load context because we may not have one (i.e.,
+  // in the aWindow == null case) and because the load context associated
+  // with aWindow may disappear by the time we need it. This approach is
+  // safe because we only care about the private browsing state. All the
+  // rest of the load context isn't of interest to the content pref service.
+  this.fakeContext = isPrivate ? privateLoadContext : nonPrivateLoadContext;
 }
 
 DownloadLastDir.prototype = {
