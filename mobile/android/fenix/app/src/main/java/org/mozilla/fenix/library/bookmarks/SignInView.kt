@@ -21,7 +21,7 @@ class SignInView(
     override val containerView: View?
         get() = container
 
-    private val view: MaterialButton = LayoutInflater.from(container.context)
+    val view: MaterialButton = LayoutInflater.from(container.context)
         .inflate(R.layout.component_sign_in, container, true)
         .findViewById(R.id.bookmark_folders_sign_in)
 

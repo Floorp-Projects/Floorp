@@ -57,6 +57,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     private lateinit var bookmarkStore: BookmarkFragmentStore
     private lateinit var bookmarkView: BookmarkView
+    private lateinit var signInView: SignInView
     private var _bookmarkInteractor: BookmarkFragmentInteractor? = null
     protected val bookmarkInteractor: BookmarkFragmentInteractor
         get() = _bookmarkInteractor!!
@@ -97,6 +98,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         )
 
         bookmarkView = BookmarkView(view.bookmarkLayout, bookmarkInteractor)
+        signInView = SignInView(view.bookmarkLayout, findNavController())
+        signInView.view.visibility = View.GONE
 
         viewLifecycleOwner.lifecycle.addObserver(
             BookmarkDeselectNavigationListener(
@@ -147,7 +150,9 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         if (currentGuid == BookmarkRoot.Root.id &&
             requireComponents.backgroundServices.accountManager.authenticatedAccount() == null
         ) {
-            view?.let { SignInView(it.bookmarkLayout, findNavController()) }
+            signInView.view.visibility = View.VISIBLE
+        } else {
+            signInView.view.visibility = View.GONE
         }
 
         initialJob = loadInitialBookmarkFolder(currentGuid)
