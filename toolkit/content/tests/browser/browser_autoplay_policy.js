@@ -17,7 +17,7 @@ function setupTestPreferences(isAllowedAutoplay, isAllowedMuted) {
     set: [
       ["dom.media.autoplay.autoplay-policy-api", true],
       ["media.autoplay.default", autoplayDefault],
-      ["media.autoplay.enabled.user-gestures-needed", true],
+      ["media.autoplay.blocking_policy", 0],
     ],
   });
 }
