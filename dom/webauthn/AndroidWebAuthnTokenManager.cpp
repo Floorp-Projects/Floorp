@@ -9,8 +9,8 @@
 #include "mozilla/StaticPtr.h"
 
 #include "AndroidWebAuthnTokenManager.h"
-#include "GeneratedJNIWrappers.h"
 #include "JavaBuiltins.h"
+#include "mozilla/java/WebAuthnTokenManagerWrappers.h"
 
 namespace mozilla {
 namespace dom {
