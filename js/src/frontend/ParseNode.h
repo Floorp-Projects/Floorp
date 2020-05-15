@@ -639,6 +639,7 @@ static inline bool IsConstructorKind(FunctionSyntaxKind kind) {
 
 static inline bool IsMethodDefinitionKind(FunctionSyntaxKind kind) {
   return IsConstructorKind(kind) || kind == FunctionSyntaxKind::Method ||
+         kind == FunctionSyntaxKind::FieldInitializer ||
          kind == FunctionSyntaxKind::Getter ||
          kind == FunctionSyntaxKind::Setter;
 }

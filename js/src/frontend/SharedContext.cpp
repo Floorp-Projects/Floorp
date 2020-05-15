@@ -77,7 +77,7 @@ void SharedContext::computeAllowSyntax(Scope* scope) {
       allowNewTarget_ = true;
       allowSuperProperty_ = fun->allowSuperProperty();
       allowSuperCall_ = fun->isDerivedClassConstructor();
-      if (funScope->isFieldInitializer() == IsFieldInitializer::Yes) {
+      if (fun->isFieldInitializer()) {
         allowSuperCall_ = false;
         allowArguments_ = false;
       }
@@ -259,6 +259,11 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     allowNewTarget_ = true;
     allowSuperProperty_ = flags.allowSuperProperty();
 
+    if (kind == FunctionSyntaxKind::FieldInitializer) {
+      setFieldInitializer();
+      allowArguments_ = false;
+    }
+
     if (IsConstructorKind(kind)) {
       auto stmt =
           enclosing->findInnermostStatement<ParseContext::ClassStatement>();
@@ -287,13 +292,6 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
 
     inWith_ = enclosing->findInnermostStatement(isWith);
   }
-}
-
-void FunctionBox::initFieldInitializer(ParseContext* enclosing,
-                                       FunctionFlags flags) {
-  this->initWithEnclosingParseContext(enclosing, flags,
-                                      FunctionSyntaxKind::Method);
-  allowArguments_ = false;
 }
 
 void FunctionBox::initWithEnclosingScope(JSFunction* fun) {

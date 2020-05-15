@@ -399,8 +399,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
       ParseContext::Scope& scope);
   mozilla::Maybe<EvalScope::Data*> newEvalScopeData(ParseContext::Scope& scope);
   mozilla::Maybe<FunctionScope::Data*> newFunctionScopeData(
-      ParseContext::Scope& scope, bool hasParameterExprs,
-      IsFieldInitializer isFieldInitializer);
+      ParseContext::Scope& scope, bool hasParameterExprs);
   mozilla::Maybe<VarScope::Data*> newVarScopeData(ParseContext::Scope& scope);
   mozilla::Maybe<LexicalScope::Data*> newLexicalScopeData(
       ParseContext::Scope& scope);
@@ -502,9 +501,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   bool finishFunctionScopes(bool isStandaloneFunction);
   LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope, Node body,
                                           ScopeKind kind = ScopeKind::Lexical);
-  bool finishFunction(
-      bool isStandaloneFunction = false,
-      IsFieldInitializer isFieldInitializer = IsFieldInitializer::No);
+  bool finishFunction(bool isStandaloneFunction = false);
 
   inline NameNodeType newName(PropertyName* name);
   inline NameNodeType newName(PropertyName* name, TokenPos pos);
@@ -1833,7 +1830,7 @@ mozilla::Maybe<EvalScope::Data*> NewEvalScopeData(JSContext* context,
                                                   ParseContext* pc);
 mozilla::Maybe<FunctionScope::Data*> NewFunctionScopeData(
     JSContext* context, ParseContext::Scope& scope, bool hasParameterExprs,
-    IsFieldInitializer isFieldInitializer, LifoAlloc& alloc, ParseContext* pc);
+    LifoAlloc& alloc, ParseContext* pc);
 mozilla::Maybe<VarScope::Data*> NewVarScopeData(JSContext* context,
                                                 ParseContext::Scope& scope,
                                                 LifoAlloc& alloc,

@@ -751,8 +751,7 @@ static constexpr uint32_t FunctionScopeEnvShapeFlags =
 template <typename ShapeType>
 bool FunctionScope::prepareForScopeCreation(
     JSContext* cx, MutableHandle<UniquePtr<Data>> data, bool hasParameterExprs,
-    IsFieldInitializer isFieldInitializer, bool needsEnvironment,
-    HandleFunction fun, ShapeType envShape) {
+    bool needsEnvironment, HandleFunction fun, ShapeType envShape) {
   BindingIter bi(*data, hasParameterExprs);
   uint32_t shapeFlags = FunctionScopeEnvShapeFlags;
   if (!PrepareScopeData<FunctionScope>(cx, bi, data, &CallObject::class_,
@@ -760,7 +759,6 @@ bool FunctionScope::prepareForScopeCreation(
     return false;
   }
 
-  data->isFieldInitializer = isFieldInitializer;
   data->hasParameterExprs = hasParameterExprs;
   data->canonicalFunction.init(fun);
 
@@ -810,8 +808,7 @@ bool FunctionScope::updateEnvShapeIfRequired(
 /* static */
 FunctionScope* FunctionScope::createWithData(
     JSContext* cx, MutableHandle<UniquePtr<Data>> data, bool hasParameterExprs,
-    IsFieldInitializer isFieldInitializer, bool needsEnvironment,
-    HandleFunction fun, HandleScope enclosing) {
+    bool needsEnvironment, HandleFunction fun, HandleScope enclosing) {
   MOZ_ASSERT(data);
   MOZ_ASSERT(fun->isTenured());
 
@@ -819,8 +816,8 @@ FunctionScope* FunctionScope::createWithData(
   // GCPtr. Destruction of |data| below may trigger calls into the GC.
   RootedShape envShape(cx);
 
-  if (!prepareForScopeCreation(cx, data, hasParameterExprs, isFieldInitializer,
-                               needsEnvironment, fun, &envShape)) {
+  if (!prepareForScopeCreation(cx, data, hasParameterExprs, needsEnvironment,
+                               fun, &envShape)) {
     return nullptr;
   }
 
@@ -891,18 +888,14 @@ XDRResult FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun,
 
     uint8_t needsEnvironment;
     uint8_t hasParameterExprs;
-    uint8_t isFieldInitializer;
     uint32_t nextFrameSlot;
     if (mode == XDR_ENCODE) {
       needsEnvironment = scope->hasEnvironment();
       hasParameterExprs = data->hasParameterExprs;
-      isFieldInitializer =
-          (data->isFieldInitializer == IsFieldInitializer::Yes ? 1 : 0);
       nextFrameSlot = data->nextFrameSlot;
     }
     MOZ_TRY(xdr->codeUint8(&needsEnvironment));
     MOZ_TRY(xdr->codeUint8(&hasParameterExprs));
-    MOZ_TRY(xdr->codeUint8(&isFieldInitializer));
     MOZ_TRY(xdr->codeUint16(&data->nonPositionalFormalStart));
     MOZ_TRY(xdr->codeUint16(&data->varStart));
     MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
@@ -914,10 +907,8 @@ XDRResult FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun,
         MOZ_ASSERT(!data->nextFrameSlot);
       }
 
-      scope.set(createWithData(
-          cx, &uniqueData.ref(), hasParameterExprs,
-          isFieldInitializer ? IsFieldInitializer::Yes : IsFieldInitializer::No,
-          needsEnvironment, fun, enclosing));
+      scope.set(createWithData(cx, &uniqueData.ref(), hasParameterExprs,
+                               needsEnvironment, fun, enclosing));
       if (!scope) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
@@ -1927,9 +1918,7 @@ bool ScopeCreationData::create(JSContext* cx,
 
   Rooted<frontend::EnvironmentShapeCreationData> envShape(cx);
   if (!FunctionScope::prepareForScopeCreation(
-          cx, &data, hasParameterExprs,
-          dataArg ? dataArg->isFieldInitializer : IsFieldInitializer::No,
-          needsEnvironment, fun, &envShape)) {
+          cx, &data, hasParameterExprs, needsEnvironment, fun, &envShape)) {
     return false;
   }
 
