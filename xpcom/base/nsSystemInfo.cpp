@@ -57,7 +57,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBuild.h"
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/GeckoAppShellWrappers.h"
 #  include "mozilla/jni/Utils.h"
 #endif
 

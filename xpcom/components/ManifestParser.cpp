@@ -24,6 +24,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBridge.h"
+#  include "mozilla/java/GeckoAppShellWrappers.h"
 #endif
 
 #include "mozilla/Services.h"
