@@ -27,7 +27,8 @@
     "test_addon_wipe.js": {},
     "test_existing_bookmarks.js": {},
     "test_addresses.js": {},
-    "test_creditcards.js": {}
+    "test_creditcards.js": {},
+    "test_extstorage.js": {}
   }
 }
 
