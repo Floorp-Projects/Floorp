@@ -104,13 +104,17 @@ void gfxScriptItemizer::fixup(Script newScriptCode) {
   }
 }
 
+static inline bool CanMergeWithContext(Script aScript) {
+  return aScript <= Script::INHERITED || aScript == Script::UNKNOWN;
+}
+
 // We regard the current char as having the same script as the in-progress run
-// if either script code is Common or Inherited, or if the run script appears
+// if either script is Common/Inherited/Unknown, or if the run script appears
 // in the character's ScriptExtensions, or if the char is a cluster extender.
 static inline bool SameScript(Script runScript, Script currCharScript,
                               uint32_t aCurrCh) {
-  return runScript <= Script::INHERITED ||
-         currCharScript <= Script::INHERITED || currCharScript == runScript ||
+  return CanMergeWithContext(runScript) ||
+         CanMergeWithContext(currCharScript) || currCharScript == runScript ||
          IsClusterExtender(aCurrCh) || HasScript(aCurrCh, runScript);
 }
 
@@ -188,7 +192,7 @@ bool gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
     }
 
     if (SameScript(scriptCode, sc, ch)) {
-      if (scriptCode <= Script::INHERITED && sc > Script::INHERITED) {
+      if (CanMergeWithContext(scriptCode) && !CanMergeWithContext(sc)) {
         scriptCode = sc;
         fixup(scriptCode);
       }
