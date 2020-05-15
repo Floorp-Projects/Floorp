@@ -5,6 +5,7 @@
 
 #include "AccessibleWrap.h"
 #include "ProxyAccessible.h"
+#include "Platform.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -23,6 +24,14 @@ namespace mozilla {
 namespace a11y {
 
 inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
+  if (!ShouldA11yBeEnabled()) {
+    // If platform a11y is not enabled, don't return represented view.
+    // This is mostly for our mochitest environment because the represented
+    // ChildView checks `ShouldA11yBeEnabled` before proxying accessibility
+    // methods to mozAccessibles.
+    return aObject;
+  }
+
   return [aObject hasRepresentedView] ? [aObject representedView] : aObject;
 }
 
