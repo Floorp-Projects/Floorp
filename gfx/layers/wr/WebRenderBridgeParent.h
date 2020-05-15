@@ -143,12 +143,12 @@ class WebRenderBridgeParent final
       nsTArray<RefCountedShmem>&& aSmallShmems,
       nsTArray<ipc::Shmem>&& aLargeShmems) override;
   mozilla::ipc::IPCResult RecvSetDisplayList(
-      nsTArray<DisplayListData>&& aDisplayLists,
-      nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
-      const TransactionId& aTransactionId, const bool& aContainsSVGGroup,
-      const VsyncId& aVsyncId, const TimeStamp& aVsyncStartTime,
-      const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
-      const nsCString& aTxnURL, const TimeStamp& aFwdTime,
+      DisplayListData&& aDisplayList, nsTArray<OpDestroy>&& aToDestroy,
+      const uint64_t& aFwdTransactionId, const TransactionId& aTransactionId,
+      const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
+      const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
+      const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
+      const TimeStamp& aFwdTime,
       nsTArray<CompositionPayload>&& aPayloads) override;
   mozilla::ipc::IPCResult RecvEmptyTransaction(
       const FocusTarget& aFocusTarget,

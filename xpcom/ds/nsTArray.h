@@ -58,7 +58,6 @@ class Animation;
 class FrameStats;
 struct PropertyAnimationGroup;
 struct TileClient;
-struct DisplayListData;
 struct TransactionData;
 }  // namespace layers
 }  // namespace mozilla
@@ -786,7 +785,6 @@ MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR_FOR_TEMPLATE(mozilla::ipc::Endpoint)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(nsRegion)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(nsIntRegion)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::layers::TileClient)
-MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::layers::DisplayListData)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::layers::TransactionData)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
     mozilla::SerializedStructuredCloneBuffer)
