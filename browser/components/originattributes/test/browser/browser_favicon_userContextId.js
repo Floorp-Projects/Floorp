@@ -266,6 +266,8 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
   // be made for the favicon of allTabs menuitem.
   clearAllImageCaches();
 
+  gTabsPanel.init();
+
   // Make the popup of allTabs showing up and trigger the loading of the favicon.
   let allTabsView = document.getElementById("allTabsMenu-allTabsView");
   let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(
