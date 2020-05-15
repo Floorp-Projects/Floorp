@@ -35,6 +35,7 @@
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
 #include "shell/jsshell.h"
+#include "shell/StringUtils.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "util/Windows.h"
@@ -57,18 +58,8 @@ using js::shell::RCFile;
 namespace js {
 namespace shell {
 
-#ifdef XP_WIN
-const char PathSeparator = '\\';
-#else
-const char PathSeparator = '/';
-#endif
-
-static bool IsAbsolutePath(const UniqueChars& filename) {
-  const char* pathname = filename.get();
-
-  if (pathname[0] == PathSeparator) {
-    return true;
-  }
+bool IsAbsolutePath(JSLinearString* filename) {
+  size_t length = filename->length();
 
 #ifdef XP_WIN
   // On Windows there are various forms of absolute paths (see
@@ -79,16 +70,16 @@ static bool IsAbsolutePath(const UniqueChars& filename) {
   //   "\\..."
   //   "C:\..."
   //
-  // The first two cases are handled by the test above so we only need a test
-  // for the last one here.
+  // The first two cases are handled by the common test below so we only need a
+  // specific test for the last one here.
 
-  if ((strlen(pathname) > 3 && mozilla::IsAsciiAlpha(pathname[0]) &&
-       pathname[1] == ':' && pathname[2] == '\\')) {
+  if (length > 3 && mozilla::IsAsciiAlpha(CharAt(filename, 0)) &&
+      CharAt(filename, 1) == u':' && CharAt(filename, 2) == u'\\') {
     return true;
   }
 #endif
 
-  return false;
+  return length > 0 && CharAt(filename, 0) == PathSeparator;
 }
 
 /*
@@ -109,13 +100,18 @@ JSString* ResolvePath(JSContext* cx, HandleString filenameStr,
 #endif
   }
 
-  UniqueChars filename = JS_EncodeStringToLatin1(cx, filenameStr);
-  if (!filename) {
+  RootedLinearString str(cx, JS_EnsureLinearString(cx, filenameStr));
+  if (!str) {
     return nullptr;
   }
 
-  if (IsAbsolutePath(filename)) {
-    return filenameStr;
+  if (IsAbsolutePath(str)) {
+    return str;
+  }
+
+  UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
+  if (!filename) {
+    return nullptr;
   }
 
   JS::AutoFilename scriptFilename;
@@ -757,12 +753,12 @@ static bool ospath_isAbsolute(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  UniqueChars path = JS_EncodeStringToLatin1(cx, args[0].toString());
-  if (!path) {
+  RootedLinearString str(cx, JS_EnsureLinearString(cx, args[0].toString()));
+  if (!str) {
     return false;
   }
 
-  args.rval().setBoolean(IsAbsolutePath(path));
+  args.rval().setBoolean(IsAbsolutePath(str));
   return true;
 }
 
@@ -786,14 +782,19 @@ static bool ospath_join(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    UniqueChars path = JS_EncodeStringToLatin1(cx, args[i].toString());
-    if (!path) {
+    RootedLinearString str(cx, JS_EnsureLinearString(cx, args[i].toString()));
+    if (!str) {
       return false;
     }
 
-    if (IsAbsolutePath(path)) {
+    if (IsAbsolutePath(str)) {
       MOZ_ALWAYS_TRUE(buffer.resize(0));
     } else if (i != 0) {
+      UniqueChars path = JS_EncodeStringToLatin1(cx, str);
+      if (!path) {
+        return false;
+      }
+
       if (!buffer.append(PathSeparator)) {
         return false;
       }

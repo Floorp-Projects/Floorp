@@ -19,6 +19,7 @@ UNIFIED_SOURCES += [
     'js.cpp',
     'jsoptparse.cpp',
     'jsshell.cpp',
+    'ModuleLoader.cpp',
     'OSObject.cpp',
     'WasmTesting.cpp'
 ]
@@ -38,15 +39,6 @@ LOCAL_INCLUDES += [
 
 OS_LIBS += CONFIG['EDITLINE_LIBS']
 
-# Prepare module loader JS code for embedding
-GeneratedFile('shellmoduleloader.out.h', 'shellmoduleloader.js', 
-              script='../builtin/embedjs.py',
-              entry_point='generate_shellmoduleloader',
-              inputs=[
-                  '../js.msg',
-                  'ModuleLoader.js',
-              ])
-              
 # Place a GDB Python auto-load file next to the shell executable, both in
 # the build directory and in the dist/bin directory.
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
