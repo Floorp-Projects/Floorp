@@ -88,7 +88,6 @@ class BrowserParent final : public PBrowserParent,
                             public TabContext,
                             public LiveResizeListener {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
-  using TapType = GeckoContentController_TapType;
 
   friend class PBrowserParent;
 
