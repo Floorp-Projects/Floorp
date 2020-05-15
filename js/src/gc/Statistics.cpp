@@ -1083,6 +1083,7 @@ void Statistics::sendGCTelemetry() {
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_ROOTS_US,
                         markRootsTotal.ToMicroseconds());
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_GRAY_MS, t(markGrayTotal));
+  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_GRAY_MS_2, t(markGrayTotal));
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_WEAK_MS, t(markWeakTotal));
   runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL, nonincremental());
   if (nonincremental()) {

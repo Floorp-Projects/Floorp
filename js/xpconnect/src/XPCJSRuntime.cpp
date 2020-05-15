@@ -2624,6 +2624,9 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_GC_MARK_GRAY_MS:
       Telemetry::Accumulate(Telemetry::GC_MARK_GRAY_MS, sample);
       break;
+    case JS_TELEMETRY_GC_MARK_GRAY_MS_2:
+      Telemetry::Accumulate(Telemetry::GC_MARK_GRAY_MS_2, sample);
+      break;
     case JS_TELEMETRY_GC_MARK_WEAK_MS:
       Telemetry::Accumulate(Telemetry::GC_MARK_WEAK_MS, sample);
       break;
