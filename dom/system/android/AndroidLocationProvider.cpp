@@ -7,7 +7,7 @@
 #include "Geolocation.h"
 #include "GeolocationPosition.h"
 #include "AndroidLocationProvider.h"
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 
 using namespace mozilla;
 
