@@ -307,11 +307,7 @@ endif
 
 ifeq ($(OS_ARCH),Darwin)
 ifdef SHARED_LIBRARY
-ifdef MOZ_IOS
-_LOADER_PATH := @rpath
-else
 _LOADER_PATH := @executable_path
-endif
 EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name $(_LOADER_PATH)/$(SHARED_LIBRARY) -compatibility_version 1 -current_version 1 -single_module
 endif
 endif
