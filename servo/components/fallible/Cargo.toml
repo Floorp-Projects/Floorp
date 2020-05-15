@@ -12,3 +12,4 @@ path = "lib.rs"
 [dependencies]
 smallvec = "1.0"
 hashbrown = "0.7"
+hashglobe = { path = "../hashglobe" }
