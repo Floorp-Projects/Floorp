@@ -356,7 +356,6 @@ already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
 
   loadInfo->SetHasValidUserGestureActivation(
       aLoadState->HasValidUserGestureActivation());
-  loadInfo->SetTriggeringSandboxFlags(aLoadState->TriggeringSandboxFlags());
 
   return loadInfo.forget();
 }
