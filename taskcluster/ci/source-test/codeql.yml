@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+javascript:
+    description: Builds a JavaScript codeql database
+    platform: codeql/all
+    treeherder:
+        kind: other
+        symbol: linux64-js
+        tier: 2
+    worker-type: b-linux-xlarge
+    expires-after: 4 days
+    worker:
+        docker-image: {in-tree: debian8-amd64-build}
+        max-run-time: 86400
+        artifacts:
+            - type: file
+              name: public/codeql/codeql-db-javascript.tar.xz
+              path: /builds/worker/codeql-db-javascript.tar.xz
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >-
+            taskcluster/scripts/misc/generate-codeql-db-javascript.sh
+    run-on-projects: []
+    fetches:
+        fetch:
+            - codeql-2.0.3
+        toolchain:
+            - linux64-node
