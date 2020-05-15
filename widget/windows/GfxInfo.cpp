@@ -78,14 +78,6 @@ GfxInfo::GetHasBattery(bool* aHasBattery) {
   return NS_OK;
 }
 
-int32_t GfxInfo::GetMaxRefreshRate() {
-  int32_t refreshRate = -1;
-  for (auto displayInfo : mDisplayInfo) {
-    refreshRate = std::max(refreshRate, int32_t(displayInfo.mRefreshRate));
-  }
-  return refreshRate;
-}
-
 #define PIXEL_STRUCT_RGB 1
 #define PIXEL_STRUCT_BGR 2
 
