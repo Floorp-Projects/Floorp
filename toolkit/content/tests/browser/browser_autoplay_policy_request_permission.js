@@ -8,8 +8,14 @@ const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
 
-const VIDEO_PAGE =
+const VIDEO_PAGE_URI =
   "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
+const SAME_ORIGIN_FRAME_URI =
+  "https://example.com/browser/toolkit/content/tests/browser/file_mediaplayback_frame.html";
+const DIFFERENT_ORIGIN_FRAME_URI =
+  "https://example.org/browser/toolkit/content/tests/browser/file_mediaplayback_frame.html";
+
+const gPermissionName = "autoplay-media";
 
 function setTestingPreferences(defaultSetting) {
   info(`set default autoplay setting to '${defaultSetting}'`);
@@ -31,7 +37,7 @@ async function testAutoplayExistingPermission(args) {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url: VIDEO_PAGE,
+      url: VIDEO_PAGE_URI,
     },
     async browser => {
       let promptShowing = () =>
@@ -113,3 +119,153 @@ add_task(async () => {
     mode: "autoplay attribute",
   });
 });
+
+/**
+ * The permission of the main page's domain would determine the final autoplay
+ * result when a page contains multiple iframes which are in the different
+ * domain from the main pages's.
+ * That means we would not check the permission of iframe's domain, even if it
+ * has been set.
+ */
+add_task(async function testExistingPermissionForIframe() {
+  await setTestingPreferences("blocked" /* default setting */);
+  await testAutoplayExistingPermissionForIframe({
+    name: "Prexisting ALLOW for main page with same origin iframe",
+    permissionForParent: Services.perms.ALLOW_ACTION,
+    isIframeDifferentOrgin: true,
+    shouldPlay: true,
+  });
+
+  await testAutoplayExistingPermissionForIframe({
+    name: "Prexisting ALLOW for main page with different origin iframe",
+    permissionForParent: Services.perms.ALLOW_ACTION,
+    isIframeDifferentOrgin: false,
+    shouldPlay: true,
+  });
+
+  await testAutoplayExistingPermissionForIframe({
+    name:
+      "Prexisting ALLOW for main page, prexisting DENY for different origin iframe",
+    permissionForParent: Services.perms.ALLOW_ACTION,
+    permissionForChild: Services.perms.DENY_ACTION,
+    isIframeDifferentOrgin: false,
+    shouldPlay: true,
+  });
+
+  await testAutoplayExistingPermissionForIframe({
+    name:
+      "Prexisting DENY for main page, prexisting ALLOW for different origin iframe",
+    permissionForParent: Services.perms.DENY_ACTION,
+    permissionForChild: Services.perms.ALLOW_ACTION,
+    isIframeDifferentOrgin: false,
+    shouldPlay: false,
+  });
+});
+
+/**
+ * The following are helper functions.
+ */
+async function testAutoplayExistingPermissionForIframe(args) {
+  info(`Start test : ${args.name}`);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: VIDEO_PAGE_URI,
+    },
+    async browser => {
+      setupSitesPermission(browser, args);
+
+      await createIframe(browser, args);
+      await checkAutplayInIframe(browser, args);
+
+      clearSitesPermission(browser, args);
+    }
+  );
+  info(`Finish test : ${args.name}`);
+}
+
+function setupSitesPermission(
+  browser,
+  {
+    isIframeDifferentOrgin,
+    permissionForParent,
+    permissionForChild = Services.perms.UNKNOWN_ACTION,
+  }
+) {
+  info(`setupSitesPermission`);
+  // Set permission for the main page's domain
+  setPermissionForBrowser(browser, browser.currentURI, permissionForParent);
+  if (isIframeDifferentOrgin) {
+    // Set permission for different domain of the iframe
+    setPermissionForBrowser(
+      browser,
+      DIFFERENT_ORIGIN_FRAME_URI,
+      permissionForChild
+    );
+  }
+}
+
+function clearSitesPermission(browser, { isIframeDifferentOrgin }) {
+  info(`clearSitesPermission`);
+  // Clear permission for the main page's domain
+  setPermissionForBrowser(
+    browser,
+    browser.currentURI,
+    Services.perms.UNKNOWN_ACTION
+  );
+  if (isIframeDifferentOrgin) {
+    // Clear permission for different domain of the iframe
+    setPermissionForBrowser(
+      browser,
+      DIFFERENT_ORIGIN_FRAME_URI,
+      Services.perms.UNKNOWN_ACTION
+    );
+  }
+}
+
+function setPermissionForBrowser(browser, uri, permValue) {
+  const promptShowing = () =>
+    PopupNotifications.getNotification(gPermissionName, browser);
+  PermissionTestUtils.add(uri, gPermissionName, permValue);
+  ok(!promptShowing(), "Should not be showing permission prompt yet");
+  is(
+    PermissionTestUtils.testExactPermission(uri, gPermissionName),
+    permValue,
+    "Set permission correctly"
+  );
+}
+
+function createIframe(browser, { isIframeDifferentOrgin }) {
+  const iframeURL = isIframeDifferentOrgin
+    ? DIFFERENT_ORIGIN_FRAME_URI
+    : SAME_ORIGIN_FRAME_URI;
+  return SpecialPowers.spawn(browser, [iframeURL], async url => {
+    info(`Create iframe and wait until it finsihes loading`);
+    const iframe = content.document.createElement("iframe");
+    iframe.src = url;
+    content.document.body.appendChild(iframe);
+    await new Promise(r => (iframe.onload = r));
+  });
+}
+
+function checkAutplayInIframe(browser, args) {
+  return SpecialPowers.spawn(browser, [args], async ({ shouldPlay }) => {
+    info(`check if media in iframe can start playing`);
+    const iframe = content.document.getElementsByTagName("iframe")[0];
+    if (!iframe) {
+      ok(false, `can not get the iframe!`);
+      return;
+    }
+    iframe.contentWindow.postMessage("play", "*");
+    await new Promise(r => {
+      content.onmessage = event => {
+        if (shouldPlay) {
+          is(event.data, "played", `played media in iframe`);
+        } else {
+          is(event.data, "blocked", `blocked media in iframe`);
+        }
+        r();
+      };
+    });
+  });
+}

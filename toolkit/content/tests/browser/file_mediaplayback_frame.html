@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Non-Autoplay page being used in Iframe</title>
+</head>
+<body>
+<video id="video" src="gizmo.mp4" loop></video>
+<script type="text/javascript">
+
+const video = document.getElementById("video");
+const w = window.opener || window.parent;
+
+window.onmessage = async event => {
+  if (event.data == "play") {
+    let rv = await video.play().then(() => true, () => false);
+    w.postMessage(rv ? "played" : "blocked", "*");
+  }
+}
+</script>
+</body>
+</html>
