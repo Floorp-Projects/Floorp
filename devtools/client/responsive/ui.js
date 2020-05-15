@@ -1177,8 +1177,8 @@ class ResponsiveUI {
     return this.browserWindow;
   }
 
-  async onTargetAvailable({ isTopLevel, targetFront }) {
-    if (isTopLevel) {
+  async onTargetAvailable({ targetFront }) {
+    if (targetFront.isTopLevel) {
       this.responsiveFront = await targetFront.getFront("responsive");
       await this.restoreActorState();
     }

@@ -445,8 +445,8 @@ class AnimationInspector {
     this.inspector.store.dispatch(updateSidebarSize(size));
   }
 
-  async onTargetAvailable({ isTopLevel, targetFront }) {
-    if (isTopLevel) {
+  async onTargetAvailable({ targetFront }) {
+    if (targetFront.isTopLevel) {
       this.animationsFront = await targetFront.getFront("animations");
       this.animationsFront.setWalkerActor(this.inspector.walker);
       this.animationsFront.on("mutations", this.onAnimationsMutation);

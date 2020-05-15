@@ -787,8 +787,8 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     super.shutdown();
   }
 
-  async _onTargetAvailable({ targetFront, isTopLevel }) {
-    if (!isTopLevel) {
+  async _onTargetAvailable({ targetFront }) {
+    if (!targetFront.isTopLevel) {
       return;
     }
 
