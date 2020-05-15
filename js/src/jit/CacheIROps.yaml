@@ -236,7 +236,7 @@
 
 - name: GuardSpecificObject
   shared: false
-  transpile: false
+  transpile: true
   args:
     obj: ObjId
     expected: ObjectField
@@ -461,7 +461,7 @@
 
 - name: LoadArgumentFixedSlot
   shared: false
-  transpile: false
+  transpile: true
   custom_writer: true
   args:
     result: ValId
@@ -916,7 +916,7 @@
 
 - name: LoadStringCharCodeResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     str: StringId
     index: Int32Id

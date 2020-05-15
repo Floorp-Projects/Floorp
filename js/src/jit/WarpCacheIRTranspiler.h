@@ -20,6 +20,7 @@ class MDefinition;
 class MInstruction;
 class MIRGenerator;
 class WarpCacheIR;
+class CallInfo;
 
 using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
 
@@ -29,6 +30,13 @@ MOZ_MUST_USE bool TranspileCacheIRToMIR(MIRGenerator& mirGen,
                                         MBasicBlock* current,
                                         const WarpCacheIR* snapshot,
                                         const MDefinitionStackVector& inputs);
+
+// Overload used to pass information for calls to the transpiler.
+MOZ_MUST_USE bool TranspileCacheIRToMIR(MIRGenerator& mirGen,
+                                        BytecodeLocation loc,
+                                        MBasicBlock* current,
+                                        const WarpCacheIR* snapshot,
+                                        const CallInfo& callInfo);
 
 }  // namespace jit
 }  // namespace js
