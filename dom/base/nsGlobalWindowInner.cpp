@@ -11,6 +11,7 @@
 #include "mozilla/MemoryReporting.h"
 
 // Local Includes
+#include "AutoplayPolicy.h"
 #include "Navigator.h"
 #include "nsContentSecurityManager.h"
 #include "nsScreen.h"
@@ -155,6 +156,7 @@
 #include "mozilla/dom/CustomEvent.h"
 #include "nsIScreenManager.h"
 #include "nsICSSDeclaration.h"
+#include "nsIPermission.h"
 
 #include "xpcprivate.h"
 
@@ -317,6 +319,7 @@ static nsGlobalWindowOuter* GetOuterWindowForForwarding(
 
 #define DOM_TOUCH_LISTENER_ADDED "dom-touch-listener-added"
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
+#define PERMISSION_CHANGED_TOPIC "perm-changed"
 
 // Amount of time allowed between alert/prompt/confirm before enabling
 // the stop dialog checkbox.
@@ -877,8 +880,8 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
     // Watch for online/offline status changes so we can fire events. Use
     // a strong reference.
     os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, false);
-
     os->AddObserver(mObserver, MEMORY_PRESSURE_OBSERVER_TOPIC, false);
+    os->AddObserver(mObserver, PERMISSION_CHANGED_TOPIC, false);
   }
 
   Preferences::AddStrongObserver(mObserver, "intl.accept_languages");
@@ -1174,6 +1177,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       os->RemoveObserver(mObserver, MEMORY_PRESSURE_OBSERVER_TOPIC);
+      os->RemoveObserver(mObserver, PERMISSION_CHANGED_TOPIC);
     }
 
     RefPtr<StorageNotifierService> sns = StorageNotifierService::GetOrCreate();
@@ -1540,6 +1544,17 @@ void nsGlobalWindowInner::TraceGlobalJSObject(JSTracer* aTrc) {
   TraceWrapper(aTrc, "active window global");
 }
 
+void nsGlobalWindowInner::UpdateAutoplayPermission() {
+  if (!GetWindowContext()) {
+    return;
+  }
+  uint32_t perm = AutoplayPolicy::GetSiteAutoplayPermission(GetPrincipal());
+  if (GetWindowContext()->GetAutoplayPermission() == perm) {
+    return;
+  }
+  GetWindowContext()->SetAutoplayPermission(perm);
+}
+
 void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
   MOZ_ASSERT(mDoc);
 
@@ -1564,6 +1579,8 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
   if (!mWindowGlobalChild) {
     mWindowGlobalChild = WindowGlobalChild::Create(this);
   }
+
+  UpdateAutoplayPermission();
 
   if (mWindowGlobalChild && GetBrowsingContext()) {
     GetBrowsingContext()->NotifyResetUserGestureActivation();
@@ -4971,6 +4988,20 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIObserver> observer = GetApplicationCache();
     if (observer) observer->Observe(aSubject, aTopic, aData);
 
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aTopic, PERMISSION_CHANGED_TOPIC)) {
+    nsCOMPtr<nsIPermission> perm(do_QueryInterface(aSubject));
+    if (!perm) {
+      return NS_OK;
+    }
+
+    nsAutoCString type;
+    perm->GetType(type);
+    if (type == NS_LITERAL_CSTRING("autoplay-media")) {
+      UpdateAutoplayPermission();
+    }
     return NS_OK;
   }
 

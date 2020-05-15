@@ -362,6 +362,23 @@ DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
 }
 
 /* static */
+uint32_t AutoplayPolicy::GetSiteAutoplayPermission(nsIPrincipal* aPrincipal) {
+  if (!aPrincipal) {
+    return nsIPermissionManager::DENY_ACTION;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  if (!permMgr) {
+    return nsIPermissionManager::DENY_ACTION;
+  }
+
+  uint32_t perm = nsIPermissionManager::DENY_ACTION;
+  permMgr->TestExactPermissionFromPrincipal(
+      aPrincipal, NS_LITERAL_CSTRING("autoplay-media"), &perm);
+  return perm;
+}
+
+/* static */
 bool AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
     const HTMLMediaElement& aElement) {
   return IsMediaElementInaudible(aElement) ||
