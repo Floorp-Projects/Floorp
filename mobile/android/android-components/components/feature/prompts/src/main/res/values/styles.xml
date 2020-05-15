@@ -4,4 +4,8 @@
         <item name="boxStrokeColor">@color/mozacBoxStrokeColor</item>
         <item name="boxStrokeWidth">2dp</item>
     </style>
+    <style name="MozDialogStyle" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
 </resources>
