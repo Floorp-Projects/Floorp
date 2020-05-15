@@ -1,2 +1,0 @@
-# hawk headers have a lot of fields, and we pass them positionally..
-too-many-arguments-threshold = 15

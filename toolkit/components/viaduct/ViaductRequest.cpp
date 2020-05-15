@@ -193,7 +193,6 @@ void ViaductRequest::ClearTimers() {
 }
 
 void ViaductRequest::NotifyMonitor() {
-  MonitorAutoLock lock(mMonitor);
   mDone = true;
   mMonitor.Notify();
 }
