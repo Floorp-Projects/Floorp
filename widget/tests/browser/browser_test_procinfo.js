@@ -8,6 +8,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const MAC = AppConstants.platform == "macosx";
+const HAS_THREAD_NAMES =
+  AppConstants.platform != "win" ||
+  AppConstants.isPlatformAndVersionAtLeast("win", 10);
 const isFissionEnabled = Services.prefs.getBoolPref("fission.autostart");
 
 add_task(async function test_proc_info() {
@@ -29,6 +32,14 @@ add_task(async function test_proc_info() {
 
         for (var x = 0; x < parentProc.threads.length; x++) {
           cpuThreads += parentProc.threads[x].cpuUser;
+        }
+
+        // Under Windows, thread names appeared with Windows 10.
+        if (HAS_THREAD_NAMES) {
+          Assert.ok(
+            parentProc.threads.some(thread => thread.name),
+            "At least one of the threads of the parent process is named"
+          );
         }
 
         for (var i = 0; i < parentProc.children.length; i++) {
