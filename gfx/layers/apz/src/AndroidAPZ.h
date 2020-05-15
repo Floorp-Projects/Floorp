@@ -9,7 +9,7 @@
 
 #include "AsyncPanZoomAnimation.h"
 #include "AsyncPanZoomController.h"
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/StackScrollerWrappers.h"
 
 namespace mozilla {
 namespace layers {

@@ -40,6 +40,7 @@
 #  include <string.h>
 #  include <pthread.h>
 #  include "GeckoVRManager.h"
+#  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #  include "mozilla/layers/CompositorThread.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
