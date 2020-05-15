@@ -36,7 +36,8 @@ nsScriptErrorBase::nsScriptErrorBase()
       mTimeStamp(0),
       mInitializedOnMainThread(false),
       mIsFromPrivateWindow(false),
-      mIsFromChromeContext(false) {}
+      mIsFromChromeContext(false),
+      mIsPromiseRejection(false) {}
 
 nsScriptErrorBase::~nsScriptErrorBase() = default;
 
@@ -405,6 +406,18 @@ nsScriptErrorBase::GetIsFromChromeContext(bool* aIsFromChromeContext) {
     InitializeOnMainThread();
   }
   *aIsFromChromeContext = mIsFromChromeContext;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::GetIsPromiseRejection(bool* aIsPromiseRejection) {
+  *aIsPromiseRejection = mIsPromiseRejection;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::InitIsPromiseRejection(bool aIsPromiseRejection) {
+  mIsPromiseRejection = aIsPromiseRejection;
   return NS_OK;
 }
 

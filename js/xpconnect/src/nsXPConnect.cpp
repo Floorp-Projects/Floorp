@@ -337,6 +337,9 @@ void xpc::ErrorReport::LogToConsoleWithStack(
   rv = errorObject->InitSourceId(mSourceId);
   NS_ENSURE_SUCCESS_VOID(rv);
 
+  rv = errorObject->InitIsPromiseRejection(mIsPromiseRejection);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
   for (size_t i = 0, len = mNotes.Length(); i < len; i++) {
     ErrorNote& note = mNotes[i];
 

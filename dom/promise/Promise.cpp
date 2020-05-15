@@ -571,6 +571,9 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
     }
   }
 
+  // Used to initialize the similarly named nsISciptError attribute.
+  xpcReport->mIsPromiseRejection = true;
+
   // Now post an event to do the real reporting async
   RefPtr<AsyncErrorReporter> event = new AsyncErrorReporter(xpcReport);
   if (win) {
