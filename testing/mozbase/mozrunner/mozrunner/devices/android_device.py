@@ -30,6 +30,8 @@ TRY_URL = 'https://hg.mozilla.org/try/raw-file/default'
 
 MANIFEST_PATH = 'testing/config/tooltool-manifests'
 
+SHORT_TIMEOUT = 10
+
 verbose_logging = False
 devices = {}
 
@@ -189,8 +191,8 @@ def verify_android_device(build_obj, install=InstallIntent.NO, xre=False, debugg
     adb_path = _find_sdk_exe(build_obj.substs, 'adb', False)
     if not adb_path:
         adb_path = 'adb'
-    adbhost = ADBHost(adb=adb_path, verbose=verbose, timeout=10)
-    devices = adbhost.devices(timeout=10)
+    adbhost = ADBHost(adb=adb_path, verbose=verbose, timeout=SHORT_TIMEOUT)
+    devices = adbhost.devices(timeout=SHORT_TIMEOUT)
     if 'device' in [d['state'] for d in devices]:
         device_verified = True
     elif emulator.is_available():
@@ -207,7 +209,7 @@ def verify_android_device(build_obj, install=InstallIntent.NO, xre=False, debugg
             device_verified = True
 
     if device_verified and "DEVICE_SERIAL" not in os.environ:
-        devices = adbhost.devices(timeout=10)
+        devices = adbhost.devices(timeout=SHORT_TIMEOUT)
         for d in devices:
             if d['state'] == 'device':
                 os.environ["DEVICE_SERIAL"] = d['device_serial']
@@ -368,16 +370,15 @@ class AndroidEmulator(object):
         """
            Returns True if the Android emulator is running.
         """
-        from psutil import process_iter
-        for proc in process_iter():
-            try:
-                name = proc.name()
-                # On some platforms, "emulator" may start an emulator with
-                # process name "emulator64-arm" or similar.
-                if name and name.startswith('emulator'):
-                    return True
-            except Exception as e:
-                _log_debug("failed to get process name: %s" % str(e))
+        adb_path = _find_sdk_exe(self.substs, 'adb', False)
+        if not adb_path:
+            adb_path = 'adb'
+        adbhost = ADBHost(adb=adb_path, verbose=verbose_logging, timeout=SHORT_TIMEOUT)
+        devs = adbhost.devices(timeout=SHORT_TIMEOUT)
+        devs = [(d['device_serial'], d['state']) for d in devs]
+        _log_debug(devs)
+        if ('emulator-5554', 'device') in devs:
+            return True
         return False
 
     def is_available(self):
@@ -493,14 +494,14 @@ class AndroidEmulator(object):
         adb_path = _find_sdk_exe(self.substs, 'adb', False)
         if not adb_path:
             adb_path = 'adb'
-        adbhost = ADBHost(adb=adb_path, verbose=verbose_logging, timeout=10)
-        devs = adbhost.devices(timeout=10)
+        adbhost = ADBHost(adb=adb_path, verbose=verbose_logging, timeout=SHORT_TIMEOUT)
+        devs = adbhost.devices(timeout=SHORT_TIMEOUT)
         devs = [(d['device_serial'], d['state']) for d in devs]
         while ('emulator-5554', 'device') not in devs:
             time.sleep(10)
             if self.check_completed():
                 return False
-            devs = adbhost.devices(timeout=10)
+            devs = adbhost.devices(timeout=SHORT_TIMEOUT)
             devs = [(d['device_serial'], d['state']) for d in devs]
         _log_debug("Device status verified.")
 
