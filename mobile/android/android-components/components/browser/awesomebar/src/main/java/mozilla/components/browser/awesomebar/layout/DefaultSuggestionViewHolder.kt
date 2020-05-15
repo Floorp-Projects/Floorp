@@ -9,10 +9,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.awesomebar.R
 import mozilla.components.browser.awesomebar.widget.FlowLayout
 import mozilla.components.concept.awesomebar.AwesomeBar
+
+// This is used for truncating title and description to prevent extreme cases
+// from slowing down UI rendering e.g. in case of a bookmarklet or a data URI.
+// So this is just to make the actual truncation in the view faster which
+// is already using a truncated and "ellipsized" single line for suggestions.
+// https://github.com/mozilla-mobile/android-components/issues/6985
+@VisibleForTesting
+@Suppress("MagicNumber", "TopLevelPropertyNaming")
+internal var MAX_TEXT_LENGTH = 250
 
 internal sealed class DefaultSuggestionViewHolder {
     /**
@@ -35,13 +45,13 @@ internal sealed class DefaultSuggestionViewHolder {
 
             iconView.setImageBitmap(suggestion.icon)
 
-            titleView.text = title
+            titleView.text = title?.take(MAX_TEXT_LENGTH)
 
             if (suggestion.description.isNullOrEmpty()) {
                 descriptionView.visibility = View.GONE
             } else {
                 descriptionView.visibility = View.VISIBLE
-                descriptionView.text = suggestion.description
+                descriptionView.text = suggestion.description?.take(MAX_TEXT_LENGTH)
             }
 
             view.setOnClickListener {
@@ -84,7 +94,7 @@ internal sealed class DefaultSuggestionViewHolder {
 
                     view.setTextColor(awesomeBar.styling.chipTextColor)
                     view.setBackgroundColor(awesomeBar.styling.chipBackgroundColor)
-                    view.text = chip.title
+                    view.text = chip.title.take(MAX_TEXT_LENGTH)
                     view.setOnClickListener {
                         suggestion.onChipClicked?.invoke(chip)
                         selectionListener.invoke()
