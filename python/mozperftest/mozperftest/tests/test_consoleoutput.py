@@ -1,14 +1,10 @@
 #!/usr/bin/env python
-import os
 import mozunit
 import mock
 
-from mozperftest.tests.support import EXAMPLE_TEST, get_running_env, temp_dir
+from mozperftest.tests.support import EXAMPLE_TEST, get_running_env, temp_dir, BT_DATA
 from mozperftest.environment import METRICS
 from mozperftest.utils import silence
-
-
-HERE = os.path.dirname(__file__)
 
 
 @mock.patch("mozperftest.metrics.common.validate_intermediate_results")
@@ -28,9 +24,7 @@ def test_console_output(*mocked):
         mach_cmd.run_process = _run_process
         metrics = env.layers[METRICS]
         env.set_arg("tests", [EXAMPLE_TEST])
-        bt_res = os.path.join(HERE, "browsertime-results", "browsertime.json")
-
-        res = {"name": "name", "results": [bt_res]}
+        res = {"name": "name", "results": [str(BT_DATA)]}
         metadata.add_result(res)
 
         with metrics as console, silence():

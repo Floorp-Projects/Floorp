@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 import json
 import jsonschema
-import os
 import pathlib
 import pytest
 import mozunit
 
 from mozperftest.metrics.exceptions import PerfherderValidDataError
-from mozperftest.tests.support import get_running_env, temp_file, temp_dir, EXAMPLE_TEST
+from mozperftest.tests.support import (
+    get_running_env,
+    temp_file,
+    temp_dir,
+    EXAMPLE_TEST,
+    BT_DATA,
+)
 from mozperftest.environment import METRICS
 from mozperftest.utils import silence
-
-
-HERE = os.path.dirname(__file__)
 
 
 def setup_env(options):
@@ -25,13 +27,7 @@ def setup_env(options):
     mach_cmd.run_process = _run_process
     metrics = env.layers[METRICS]
     env.set_arg("tests", [EXAMPLE_TEST])
-    metadata.add_result(
-        {
-            "results": str(pathlib.Path(HERE, "browsertime-results")),
-            "name": "browsertime",
-        }
-    )
-
+    metadata.add_result({"results": str(BT_DATA), "name": "browsertime"})
     return metrics, metadata, env
 
 

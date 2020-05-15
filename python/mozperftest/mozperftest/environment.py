@@ -108,4 +108,4 @@ class MachEnvironment:
             return
         if not hasattr(self._hooks, name):
             return
-        getattr(self._hooks, name)(self, **kw)
+        return getattr(self._hooks, name)(self, **kw)
