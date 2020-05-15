@@ -320,6 +320,8 @@ async function doTestForAllTabsFavicon(
 
   assertIconIsData(tabInfo.tab);
 
+  gTabsPanel.init();
+
   // Make the popup of allTabs showing up and trigger the loading of the favicon.
   let allTabsView = document.getElementById("allTabsMenu-allTabsView");
   let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(
