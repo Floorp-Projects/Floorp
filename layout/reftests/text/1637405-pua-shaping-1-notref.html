@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+@font-face {
+  font-family: test;
+  src: url(../fonts/JuniusX-Regular.woff2);
+}
+.test {
+  font: 50px test;
+}
+</style>
+<p>Test passes if the first line has the diacritic right-aligned over the m,
+while the second line has it centered:</p>
+<div class=test><span style="display:inline-block">m</span>&#xF03E;</div>
+<div class=test><span style="display:inline-block">m</span>&#xF03E;</div>
