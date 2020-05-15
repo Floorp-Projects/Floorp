@@ -20,7 +20,6 @@ OS = EnumString.subclass(
     'DragonFly',
     'FreeBSD',
     'GNU',
-    'iOS',
     'NetBSD',
     'OpenBSD',
     'OSX',
