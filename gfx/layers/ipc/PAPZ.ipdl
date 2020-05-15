@@ -15,7 +15,7 @@ using struct mozilla::layers::RepaintRequest from "mozilla/layers/RepaintRequest
 using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::MaybeZoomConstraints from "mozilla/layers/ZoomConstraints.h";
-using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
+using mozilla::layers::GeckoContentController_APZStateChange from "mozilla/layers/GeckoContentControllerTypes.h";
 using mozilla::layers::ScrollDirection from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::MatrixMessage from "mozilla/layers/MatrixMessage.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
@@ -60,7 +60,7 @@ child:
 
   async NotifyMozMouseScrollEvent(ViewID aScrollId, nsString aEvent);
 
-  async NotifyAPZStateChange(ScrollableLayerGuid aGuid, APZStateChange aChange, int aArg);
+  async NotifyAPZStateChange(ScrollableLayerGuid aGuid, GeckoContentController_APZStateChange aChange, int aArg);
 
   async NotifyFlushComplete();
 
