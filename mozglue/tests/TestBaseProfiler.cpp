@@ -5,21 +5,22 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BaseProfiler.h"
+
 #include "mozilla/Attributes.h"
-#include "mozilla/BlocksRingBuffer.h"
-#include "mozilla/leb128iterator.h"
-#include "mozilla/ModuloBuffer.h"
-#include "mozilla/PowerOfTwo.h"
-#include "mozilla/ProfileBufferChunk.h"
-#include "mozilla/ProfileBufferChunkManagerSingle.h"
-#include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"
-#include "mozilla/ProfileBufferControlledChunkManager.h"
-#include "mozilla/ProfileChunkedBuffer.h"
-#include "mozilla/Vector.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "BaseProfileJSONWriter.h"
 #  include "BaseProfilerMarkerPayload.h"
+#  include "mozilla/BlocksRingBuffer.h"
+#  include "mozilla/leb128iterator.h"
+#  include "mozilla/ModuloBuffer.h"
+#  include "mozilla/PowerOfTwo.h"
+#  include "mozilla/ProfileBufferChunk.h"
+#  include "mozilla/ProfileBufferChunkManagerSingle.h"
+#  include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"
+#  include "mozilla/ProfileBufferControlledChunkManager.h"
+#  include "mozilla/ProfileChunkedBuffer.h"
+#  include "mozilla/Vector.h"
 #endif  // MOZ_GECKO_PROFILER
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
@@ -39,8 +40,6 @@
 #include <type_traits>
 #include <utility>
 
-using namespace mozilla;
-
 MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
 #if defined(_MSC_VER) || defined(__MINGW32__)
   Sleep(aMilliseconds);
@@ -58,6 +57,10 @@ MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
   }
 #endif
 }
+
+#ifdef MOZ_GECKO_PROFILER
+
+using namespace mozilla;
 
 void TestPowerOfTwoMask() {
   printf("TestPowerOfTwoMask...\n");
@@ -512,10 +515,10 @@ static void TestChunkManagerSingle() {
   // Reference to base class, to exercize virtual methods.
   ProfileBufferChunkManager& cm = cms;
 
-#ifdef DEBUG
+#  ifdef DEBUG
   const char* chunkManagerRegisterer = "TestChunkManagerSingle";
   cm.RegisteredWith(chunkManagerRegisterer);
-#endif  // DEBUG
+#  endif  // DEBUG
 
   const auto maxTotalSize = cm.MaxTotalSize();
   MOZ_RELEASE_ASSERT(maxTotalSize >= ChunkMinBufferBytes);
@@ -664,9 +667,9 @@ static void TestChunkManagerSingle() {
   chunk->MarkDone();
   cm.ForgetUnreleasedChunks();
 
-#ifdef DEBUG
+#  ifdef DEBUG
   cm.DeregisteredFrom(chunkManagerRegisterer);
-#endif  // DEBUG
+#  endif  // DEBUG
 
   printf("TestChunkManagerSingle done\n");
 }
@@ -684,10 +687,10 @@ static void TestChunkManagerWithLocalLimit() {
   // Reference to base class, to exercize virtual methods.
   ProfileBufferChunkManager& cm = cmll;
 
-#ifdef DEBUG
+#  ifdef DEBUG
   const char* chunkManagerRegisterer = "TestChunkManagerWithLocalLimit";
   cm.RegisteredWith(chunkManagerRegisterer);
-#endif  // DEBUG
+#  endif  // DEBUG
 
   MOZ_RELEASE_ASSERT(cm.MaxTotalSize() == MaxTotalBytes,
                      "Max total size should be exactly as given");
@@ -823,9 +826,9 @@ static void TestChunkManagerWithLocalLimit() {
   chunk->MarkDone();
   cm.ForgetUnreleasedChunks();
 
-#ifdef DEBUG
+#  ifdef DEBUG
   cm.DeregisteredFrom(chunkManagerRegisterer);
-#endif  // DEBUG
+#  endif  // DEBUG
 
   printf("TestChunkManagerWithLocalLimit done\n");
 }
@@ -1104,11 +1107,11 @@ static void TestControlledChunkManagerWithLocalLimit() {
   // Reference to controlled chunk manager base class.
   ProfileBufferControlledChunkManager& ccm = cmll;
 
-#ifdef DEBUG
+#  ifdef DEBUG
   const char* chunkManagerRegisterer =
       "TestControlledChunkManagerWithLocalLimit";
   cm.RegisteredWith(chunkManagerRegisterer);
-#endif  // DEBUG
+#  endif  // DEBUG
 
   MOZ_RELEASE_ASSERT(cm.MaxTotalSize() == MaxTotalBytes,
                      "Max total size should be exactly as given");
@@ -1288,9 +1291,9 @@ static void TestControlledChunkManagerWithLocalLimit() {
                      "SetUpdateCallback({}) should have triggered an update");
   MOZ_RELEASE_ASSERT(update.IsFinal());
 
-#ifdef DEBUG
+#  ifdef DEBUG
   cm.DeregisteredFrom(chunkManagerRegisterer);
-#endif  // DEBUG
+#  endif  // DEBUG
 
   printf("TestControlledChunkManagerWithLocalLimit done\n");
 }
@@ -1612,15 +1615,15 @@ static void TestChunkedBuffer() {
   } while (blockIndex);
   MOZ_RELEASE_ASSERT(read > 1);
 
-#ifdef DEBUG
+#  ifdef DEBUG
   // cb.Dump();
-#endif
+#  endif
 
   cb.Clear();
 
-#ifdef DEBUG
+#  ifdef DEBUG
   // cb.Dump();
-#endif
+#  endif
 
   // Start writer threads.
   constexpr int ThreadCount = 32;
@@ -1657,9 +1660,9 @@ static void TestChunkedBuffer() {
     thread.join();
   }
 
-#ifdef DEBUG
+#  ifdef DEBUG
   // cb.Dump();
-#endif
+#  endif
 
   // Reset to out-of-session.
   cb.ResetChunkManager();
@@ -1781,10 +1784,10 @@ static void TestChunkedBufferSingle() {
   MOZ_RELEASE_ASSERT(read == firstIndexToFail - 1,
                      "We should have read up to before the first failure");
 
-#ifdef DEBUG
+#  ifdef DEBUG
   // cbSingle.Dump();
   // cbTarget.Dump();
-#endif
+#  endif
 
   printf("TestChunkedBufferSingle done\n");
 }
@@ -2047,7 +2050,7 @@ void TestModuloBuffer() {
 
     // Compare the two outputs.
     for (uint32_t i = 0; i < TRISize; ++i) {
-#ifdef TEST_MODULOBUFFER_FAILURE_DEBUG
+#  ifdef TEST_MODULOBUFFER_FAILURE_DEBUG
       // Only used when debugging failures.
       if (output[i] != outputCheck[i]) {
         printf(
@@ -2056,15 +2059,15 @@ void TestModuloBuffer() {
             unsigned(aReadFrom), unsigned(aWriteTo), unsigned(aBytes),
             unsigned(i), input, output, outputCheck);
       }
-#endif
+#  endif
       MOZ_RELEASE_ASSERT(output[i] == outputCheck[i]);
     }
 
-#ifdef TEST_MODULOBUFFER_HELPER
+#  ifdef TEST_MODULOBUFFER_HELPER
     // Only used when adding more tests.
     printf("*** from=%u to=%u bytes=%u output: %s\n", unsigned(aReadFrom),
            unsigned(aWriteTo), unsigned(aBytes), output);
-#endif
+#  endif
 
     return std::string(reinterpret_cast<const char*>(output));
   };
@@ -2104,16 +2107,16 @@ void TestBlocksRingBufferAPI() {
     BlocksRingBuffer rb(BlocksRingBuffer::ThreadSafety::WithMutex,
                         &buffer[MBSize], MakePowerOfTwo32<MBSize>());
 
-#define VERIFY_START_END_PUSHED_CLEARED(aStart, aEnd, aPushed, aCleared)  \
-  {                                                                       \
-    BlocksRingBuffer::State state = rb.GetState();                        \
-    MOZ_RELEASE_ASSERT(state.mRangeStart.ConvertToProfileBufferIndex() == \
-                       (aStart));                                         \
-    MOZ_RELEASE_ASSERT(state.mRangeEnd.ConvertToProfileBufferIndex() ==   \
-                       (aEnd));                                           \
-    MOZ_RELEASE_ASSERT(state.mPushedBlockCount == (aPushed));             \
-    MOZ_RELEASE_ASSERT(state.mClearedBlockCount == (aCleared));           \
-  }
+#  define VERIFY_START_END_PUSHED_CLEARED(aStart, aEnd, aPushed, aCleared)  \
+    {                                                                       \
+      BlocksRingBuffer::State state = rb.GetState();                        \
+      MOZ_RELEASE_ASSERT(state.mRangeStart.ConvertToProfileBufferIndex() == \
+                         (aStart));                                         \
+      MOZ_RELEASE_ASSERT(state.mRangeEnd.ConvertToProfileBufferIndex() ==   \
+                         (aEnd));                                           \
+      MOZ_RELEASE_ASSERT(state.mPushedBlockCount == (aPushed));             \
+      MOZ_RELEASE_ASSERT(state.mClearedBlockCount == (aCleared));           \
+    }
 
     // All entries will contain one 32-bit number. The resulting blocks will
     // have the following structure:
@@ -2771,7 +2774,7 @@ void TestBlocksRingBufferSerialization() {
                       &buffer[MBSize], MakePowerOfTwo32<MBSize>());
 
   // Will expect literal string to always have the same address.
-#define THE_ANSWER "The answer is "
+#  define THE_ANSWER "The answer is "
   const char* theAnswer = THE_ANSWER;
 
   rb.PutObjects('0', WrapProfileBufferLiteralCStringPointer(THE_ANSWER), 42,
@@ -2998,8 +3001,6 @@ void TestProfilerDependencies() {
   TestBlocksRingBufferSerialization();
 }
 
-#ifdef MOZ_GECKO_PROFILER
-
 class BaseTestMarkerPayload : public baseprofiler::ProfilerMarkerPayload {
  public:
   explicit BaseTestMarkerPayload(int aData) : mData(aData) {}
@@ -3139,6 +3140,8 @@ void TestProfiler() {
          baseprofiler::profiler_current_process_id(),
          baseprofiler::profiler_current_thread_id());
   // ::SleepMilli(10000);
+
+  TestProfilerDependencies();
 
   TestProfilerMarkerSerialization();
 
@@ -3354,9 +3357,6 @@ int main()
          baseprofiler::profiler_current_thread_id());
   // ::SleepMilli(10000);
 #endif  // MOZ_GECKO_PROFILER
-
-  // Always run tests that don't involve the profiler directly.
-  TestProfilerDependencies();
 
   // Note that there are two `TestProfiler` functions above, depending on
   // whether MOZ_GECKO_PROFILER is #defined.
