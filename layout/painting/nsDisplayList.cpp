@@ -207,7 +207,7 @@ nsCString ActiveScrolledRoot::ToString(
 
 static uint64_t AddAnimationsForWebRender(
     nsDisplayItem* aItem, mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder, wr::RenderRoot aRenderRoot) {
+    nsDisplayListBuilder* aDisplayListBuilder) {
   EffectSet* effects =
       EffectSet::GetEffectSetForFrame(aItem->Frame(), aItem->GetType());
   if (!effects || effects->IsEmpty()) {
@@ -4500,8 +4500,8 @@ bool nsDisplayBackgroundColor::CreateWebRenderCommands(
   uint64_t animationsId = 0;
   // We don't support background-color animations on table elements yet.
   if (GetType() == DisplayItemType::TYPE_BACKGROUND_COLOR) {
-    animationsId = AddAnimationsForWebRender(
-        this, aManager, aDisplayListBuilder, aBuilder.GetRenderRoot());
+    animationsId =
+        AddAnimationsForWebRender(this, aManager, aDisplayListBuilder);
   }
 
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
@@ -6030,8 +6030,8 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
   MOZ_ASSERT(mChildOpacityState != ChildOpacityState::Applied);
   float* opacityForSC = &mOpacity;
 
-  uint64_t animationsId = AddAnimationsForWebRender(
-      this, aManager, aDisplayListBuilder, aBuilder.GetRenderRoot());
+  uint64_t animationsId =
+      AddAnimationsForWebRender(this, aManager, aDisplayListBuilder);
   wr::WrAnimationProperty prop{
       wr::WrAnimationType::Opacity,
       animationsId,
@@ -7991,8 +7991,7 @@ bool nsDisplayTransform::CreateWebRenderCommands(
   uint64_t animationsId =
       mIsTransformSeparator
           ? 0
-          : AddAnimationsForWebRender(this, aManager, aDisplayListBuilder,
-                                      aBuilder.GetRenderRoot());
+          : AddAnimationsForWebRender(this, aManager, aDisplayListBuilder);
   wr::WrAnimationProperty prop{
       wr::WrAnimationType::Transform,
       animationsId,
