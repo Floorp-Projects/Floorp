@@ -162,8 +162,8 @@ AccessibilityPanel.prototype = {
     this._opening.then(() => this.refresh());
   },
 
-  async onTargetAvailable({ targetFront, isTopLevel, isTargetSwitching }) {
-    if (isTopLevel) {
+  async onTargetAvailable({ targetFront, isTargetSwitching }) {
+    if (targetFront.isTopLevel) {
       await this.accessibilityProxy.initializeProxyForPanel(targetFront);
       this.accessibilityProxy.currentTarget.on("navigate", this.onTabNavigated);
     }

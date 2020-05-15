@@ -60,7 +60,7 @@ async function testPreffedOffMainProcess(mainRoot, mainProcess) {
   );
 
   const processTargets = [];
-  const onProcessAvailable = ({ type, targetFront, isTopLevel }) => {
+  const onProcessAvailable = ({ targetFront }) => {
     processTargets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.PROCESS], onProcessAvailable);
@@ -68,13 +68,16 @@ async function testPreffedOffMainProcess(mainRoot, mainProcess) {
   targetList.unwatchTargets([TargetList.TYPES.PROCESS], onProcessAvailable);
 
   const frameTargets = [];
-  const onFrameAvailable = ({ type, targetFront, isTopLevel }) => {
+  const onFrameAvailable = ({ targetFront }) => {
     is(
-      type,
+      targetFront.targetType,
       TargetList.TYPES.FRAME,
       "We are only notified about frame targets"
     );
-    ok(isTopLevel, "We are only notified about the top level target");
+    ok(
+      targetFront.isTopLevel,
+      "We are only notified about the top level target"
+    );
     frameTargets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.FRAME], onFrameAvailable);
@@ -123,13 +126,16 @@ async function testPreffedOffTab(mainRoot) {
   targetList.unwatchTargets([TargetList.TYPES.PROCESS], onProcessAvailable);
 
   const frameTargets = [];
-  const onFrameAvailable = ({ type, targetFront, isTopLevel }) => {
+  const onFrameAvailable = ({ targetFront }) => {
     is(
-      type,
+      targetFront.targetType,
       TargetList.TYPES.FRAME,
       "We are only notified about frame targets"
     );
-    ok(isTopLevel, "We are only notified about the top level target");
+    ok(
+      targetFront.isTopLevel,
+      "We are only notified about the top level target"
+    );
     frameTargets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.FRAME], onFrameAvailable);

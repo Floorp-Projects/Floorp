@@ -4,17 +4,13 @@
 
 "use strict";
 
-module.exports = async function({
-  targetList,
-  targetType,
-  targetFront,
-  isTopLevel,
-  onAvailable,
-}) {
+module.exports = async function({ targetList, targetFront, onAvailable }) {
   // Only allow the top level target and processes.
   // Frames can be ignored as logMessage are never sent to them anyway.
   // Also ignore workers as they are not supported yet. (see bug 1592584)
-  const isAllowed = isTopLevel || targetType === targetList.TYPES.PROCESS;
+  const isAllowed =
+    targetFront.isTopLevel ||
+    targetFront.targetType === targetList.TYPES.PROCESS;
   if (!isAllowed) {
     return;
   }
