@@ -33,7 +33,7 @@
 #endif
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidDecoderModule.h"
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/MediaDrmProxyWrappers.h"
 #endif
 
 namespace mozilla {

@@ -8,7 +8,7 @@
 #define HLSDecoder_h_
 
 #include "MediaDecoder.h"
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/GeckoHLSResourceWrapperWrappers.h"
 
 namespace mozilla {
 
