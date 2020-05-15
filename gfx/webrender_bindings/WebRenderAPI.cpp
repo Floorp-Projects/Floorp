@@ -901,8 +901,7 @@ void DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
                           &aOutDisplayList.dl.inner);
 }
 
-void DisplayListBuilder::Finalize(
-    layers::RenderRootDisplayListData& aOutTransaction) {
+void DisplayListBuilder::Finalize(layers::DisplayListData& aOutTransaction) {
   if (mDisplayItemCache && mDisplayItemCache->IsEnabled()) {
     wr_dp_set_cache_size(mWrState, mDisplayItemCache->CurrentSize());
   }

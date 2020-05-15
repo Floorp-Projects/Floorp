@@ -1018,8 +1018,8 @@ bool WebRenderBridgeParent::SetDisplayList(
   return true;
 }
 
-bool WebRenderBridgeParent::ProcessRenderRootDisplayListData(
-    RenderRootDisplayListData& aDisplayList, wr::Epoch aWrEpoch,
+bool WebRenderBridgeParent::ProcessDisplayListData(
+    DisplayListData& aDisplayList, wr::Epoch aWrEpoch,
     const TimeStamp& aTxnStartTime, bool aValidTransaction,
     bool aObserveLayersUpdate) {
   wr::TransactionBuilder txn;
@@ -1055,13 +1055,12 @@ bool WebRenderBridgeParent::ProcessRenderRootDisplayListData(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
-    nsTArray<RenderRootDisplayListData>&& aDisplayLists,
-    nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
-    const TransactionId& aTransactionId, const bool& aContainsSVGGroup,
-    const VsyncId& aVsyncId, const TimeStamp& aVsyncStartTime,
-    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
-    const nsCString& aTxnURL, const TimeStamp& aFwdTime,
-    nsTArray<CompositionPayload>&& aPayloads) {
+    nsTArray<DisplayListData>&& aDisplayLists, nsTArray<OpDestroy>&& aToDestroy,
+    const uint64_t& aFwdTransactionId, const TransactionId& aTransactionId,
+    const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
+    const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
+    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
+    const TimeStamp& aFwdTime, nsTArray<CompositionPayload>&& aPayloads) {
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
@@ -1071,7 +1070,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 
   // Guard against malicious content processes
   if (aDisplayLists.Length() == 0) {
-    return IPC_FAIL(this, "Must send at least one RenderRootDisplayListData.");
+    return IPC_FAIL(this, "Must send at least one DisplayListData.");
   }
 
   if (!IsRootWebRenderBridgeParent()) {
@@ -1119,10 +1118,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   bool observeLayersUpdate = ShouldParentObserveEpoch();
 
   for (auto& displayList : aDisplayLists) {
-    if (!ProcessRenderRootDisplayListData(displayList, wrEpoch, aTxnStartTime,
-                                          validTransaction,
-                                          observeLayersUpdate)) {
-      return IPC_FAIL(this, "Failed to process RenderRootDisplayListData.");
+    if (!ProcessDisplayListData(displayList, wrEpoch, aTxnStartTime,
+                                validTransaction, observeLayersUpdate)) {
+      return IPC_FAIL(this, "Failed to process DisplayListData.");
     }
   }
 

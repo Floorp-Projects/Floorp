@@ -43,7 +43,7 @@ class CompositorBridgeParent;
 class DisplayItemCache;
 class WebRenderBridgeParent;
 class RenderRootStateManager;
-struct RenderRootDisplayListData;
+struct DisplayListData;
 }  // namespace layers
 
 namespace layout {
@@ -411,7 +411,7 @@ class DisplayListBuilder final {
 
   void Finalize(wr::LayoutSize& aOutContentSizes,
                 wr::BuiltDisplayList& aOutDisplayList);
-  void Finalize(layers::RenderRootDisplayListData& aOutTransaction);
+  void Finalize(layers::DisplayListData& aOutTransaction);
 
   Maybe<wr::WrSpatialId> PushStackingContext(
       const StackingContextParams& aParams, const wr::LayoutRect& aBounds,

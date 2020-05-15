@@ -58,7 +58,7 @@ class Animation;
 class FrameStats;
 struct PropertyAnimationGroup;
 struct TileClient;
-struct RenderRootDisplayListData;
+struct DisplayListData;
 struct RenderRootUpdates;
 }  // namespace layers
 }  // namespace mozilla
@@ -786,8 +786,7 @@ MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR_FOR_TEMPLATE(mozilla::ipc::Endpoint)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(nsRegion)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(nsIntRegion)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::layers::TileClient)
-MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
-    mozilla::layers::RenderRootDisplayListData)
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::layers::DisplayListData)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::layers::RenderRootUpdates)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
     mozilla::SerializedStructuredCloneBuffer)
