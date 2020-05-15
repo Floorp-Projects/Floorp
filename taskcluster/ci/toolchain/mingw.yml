@@ -21,7 +21,6 @@ linux64-mingw32-gcc:
         resources:
             - 'build/unix/build-gcc/build-gcc.sh'
         toolchain-artifact: public/build/mingw32.tar.xz
-    run-on-projects: ['trunk', 'mozilla-esr68']
     fetches:
         fetch:
             - binutils-2.27
@@ -41,7 +40,6 @@ linux64-mingw32-nsis:
             - 'build/unix/build-gcc/build-gcc.sh'
             - 'taskcluster/scripts/misc/build-gcc-mingw32.sh'
         toolchain-artifact: public/build/nsis.tar.xz
-    run-on-projects: ['trunk', 'mozilla-esr68']
     fetches:
         fetch:
             - nsis-3.01
@@ -59,7 +57,6 @@ linux64-mingw-fxc2-x86:
         using: toolchain-script
         script: build-mingw-fxc2-x86.sh
         toolchain-artifact: public/build/fxc2.tar.xz
-    run-on-projects: ['trunk', 'mozilla-esr68']
     fetches:
         fetch:
             - fxc2
