@@ -38,6 +38,10 @@ class AutoplayPolicy {
 
   // Returns whether a given AudioContext is allowed to play.
   static bool IsAllowedToPlay(const AudioContext& aContext);
+
+  // Return the value of the autoplay permissin for given principal. The return
+  // value can be 0=unknown, 1=allow, 2=block audio, 5=block audio and video.
+  static uint32_t GetSiteAutoplayPermission(nsIPrincipal* aPrincipal);
 };
 
 /**

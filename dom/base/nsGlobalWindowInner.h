@@ -1204,6 +1204,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Try to fire the "load" event on our content embedder if we're an iframe.
   void FireFrameLoadEvent();
 
+  void UpdateAutoplayPermission();
+
  public:
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
