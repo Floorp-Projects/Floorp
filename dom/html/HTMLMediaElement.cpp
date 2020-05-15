@@ -425,6 +425,7 @@ class HTMLMediaElement::MediaControlEventListener final
       // We have already been stopped, do not notify stop twice.
       return;
     }
+    NotifyMediaStoppedPlaying();
     NotifyPlaybackStateChanged(MediaPlaybackState::eStopped);
 
     // Remove ourselves from media agent, which would stop receiving event.
@@ -507,20 +508,63 @@ class HTMLMediaElement::MediaControlEventListener final
     }
   }
 
+  void UpdateOwnerBrowsingContextIfNeeded() {
+    // Has not notified any information about the owner context yet.
+    if (!IsStarted()) {
+      return;
+    }
+
+    BrowsingContext* currentBC = GetCurrentBrowsingContext();
+    MOZ_ASSERT(currentBC && mOwnerBrowsingContext);
+    // Still in the same browsing context, no need to update.
+    if (currentBC == mOwnerBrowsingContext) {
+      return;
+    }
+    MEDIACONTROL_LOG("Change browsing context from %" PRIu64 " to %" PRIu64,
+                     mOwnerBrowsingContext->Id(), currentBC->Id());
+    // This situation would happen when we start a media in an original browsing
+    // context, then we move it to another browsing context, such as an iframe,
+    // so its owner browsing context would be changed. Therefore, we should
+    // reset the media status for the previous browsing context by calling
+    // `Stop()`, in which the listener would notify `ePaused` (if it's playing)
+    // and `eStop`. Then calls `Start()`, in which the listener would notify
+    // `eStart` to the new browsing context. If the media was playing before,
+    // we would also notify `ePlayed`.
+    bool wasInPlayingState = mState == MediaPlaybackState::ePlayed;
+    Stop();
+    bool rv = Start();
+    MOZ_ASSERT(rv, "Failed to start for new browsing context");
+    if (wasInPlayingState) {
+      NotifyMediaStartedPlaying();
+    }
+  }
+
   BrowsingContext* GetBrowsingContext() const override {
-    nsPIDOMWindowInner* window = Owner()->OwnerDoc()->GetInnerWindow();
-    return window ? window->GetBrowsingContext() : nullptr;
+    return mOwnerBrowsingContext;
   }
 
  private:
   ~MediaControlEventListener() = default;
 
+  // The media can be moved around different browsing context, so this context
+  // might be different from `mOwnerBrowsingContext` that we use to initialize
+  // the `ContentMediaAgent`.
+  BrowsingContext* GetCurrentBrowsingContext() const {
+    nsPIDOMWindowInner* window = Owner()->OwnerDoc()->GetInnerWindow();
+    return window ? window->GetBrowsingContext() : nullptr;
+  }
+
   bool InitMediaAgent() {
     MOZ_ASSERT(NS_IsMainThread());
-    mControlAgent = ContentMediaAgent::Get(GetBrowsingContext());
+    BrowsingContext* currentBC = GetCurrentBrowsingContext();
+    mControlAgent = ContentMediaAgent::Get(currentBC);
     if (!mControlAgent) {
       return false;
     }
+    mOwnerBrowsingContext = currentBC;
+    MOZ_ASSERT(mOwnerBrowsingContext);
+    MEDIACONTROL_LOG("Init agent in browsing context %" PRIu64,
+                     mOwnerBrowsingContext->Id());
     mControlAgent->AddReceiver(this);
     return true;
   }
@@ -552,6 +596,7 @@ class HTMLMediaElement::MediaControlEventListener final
   RefPtr<ContentMediaAgent> mControlAgent;
   bool mIsPictureInPictureEnabled = false;
   bool mIsOwnerAudible = false;
+  BrowsingContext* MOZ_NON_OWNING_REF mOwnerBrowsingContext = nullptr;
 };
 
 class HTMLMediaElement::MediaStreamTrackListener
@@ -4643,6 +4688,9 @@ nsresult HTMLMediaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
   NotifyDecoderActivityChanges();
+  if (mMediaControlEventListener) {
+    mMediaControlEventListener->UpdateOwnerBrowsingContextIfNeeded();
+  }
 
   return rv;
 }
@@ -7797,7 +7845,6 @@ void HTMLMediaElement::StartListeningMediaControlEventIfNeeded() {
 
 void HTMLMediaElement::StopListeningMediaControlEventIfNeeded() {
   if (mMediaControlEventListener && mMediaControlEventListener->IsStarted()) {
-    mMediaControlEventListener->NotifyMediaStoppedPlaying();
     mMediaControlEventListener->Stop();
   }
 }
