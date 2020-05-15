@@ -11481,6 +11481,45 @@ void CodeGenerator::visitLoadFixedSlotAndUnbox(LLoadFixedSlotAndUnbox* ins) {
   }
 }
 
+void CodeGenerator::visitLoadDynamicSlotAndUnbox(
+    LLoadDynamicSlotAndUnbox* ins) {
+  const MLoadDynamicSlotAndUnbox* mir = ins->mir();
+  MIRType type = mir->type();
+  Register input = ToRegister(ins->slots());
+  AnyRegister result = ToAnyRegister(ins->output());
+  size_t slot = mir->slot();
+
+  Address address(input, slot * sizeof(JS::Value));
+
+  Label bail;
+  EmitLoadAndUnbox(masm, address, type, mir->fallible(), result, &bail);
+  if (mir->fallible()) {
+    bailoutFrom(&bail, ins->snapshot());
+  }
+}
+
+void CodeGenerator::visitLoadElementAndUnbox(LLoadElementAndUnbox* ins) {
+  const MLoadElementAndUnbox* mir = ins->mir();
+  MIRType type = mir->type();
+  Register elements = ToRegister(ins->elements());
+  AnyRegister result = ToAnyRegister(ins->output());
+
+  Label bail;
+  if (ins->index()->isConstant()) {
+    NativeObject::elementsSizeMustNotOverflow();
+    int32_t offset = ToInt32(ins->index()) * sizeof(Value);
+    Address address(elements, offset);
+    EmitLoadAndUnbox(masm, address, type, mir->fallible(), result, &bail);
+  } else {
+    BaseObjectElementIndex address(elements, ToRegister(ins->index()));
+    EmitLoadAndUnbox(masm, address, type, mir->fallible(), result, &bail);
+  }
+
+  if (mir->fallible()) {
+    bailoutFrom(&bail, ins->snapshot());
+  }
+}
+
 void CodeGenerator::visitStoreFixedSlotV(LStoreFixedSlotV* ins) {
   const Register obj = ToRegister(ins->getOperand(0));
   size_t slot = ins->mir()->slot();
