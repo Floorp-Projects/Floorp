@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !wasmReftypesEnabled()
+
 let instance = wasmEvalText(`
   (func $twoRefs (result anyref anyref)
     (ref.null extern)
