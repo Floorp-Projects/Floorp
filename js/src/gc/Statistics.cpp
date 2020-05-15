@@ -1311,6 +1311,7 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
   if (slice.budget.isTimeBudget()) {
     int64_t budget_ms = slice.budget.timeBudget.budget;
     runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS, budget_ms);
+    runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS_2, budget_ms);
     if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
       runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
     }
