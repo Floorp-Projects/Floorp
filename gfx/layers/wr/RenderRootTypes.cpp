@@ -80,7 +80,7 @@ bool ReadScrollUpdates(const IPC::Message* aMsg, PickleIterator* aIter,
   return true;
 }
 
-void IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Write(
+void IPDLParamTraits<mozilla::layers::TransactionData>::Write(
     IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
   WriteIPDLParam(aMsg, aActor, aParam.mCommands);
   WriteIPDLParam(aMsg, aActor, aParam.mResourceUpdates);
@@ -90,7 +90,7 @@ void IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Write(
   WriteIPDLParam(aMsg, aActor, aParam.mPaintSequenceNumber);
 }
 
-bool IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Read(
+bool IPDLParamTraits<mozilla::layers::TransactionData>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
     paramType* aResult) {
   if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&

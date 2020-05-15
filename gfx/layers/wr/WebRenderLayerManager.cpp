@@ -244,24 +244,23 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
 
   GetCompositorBridgeChild()->EndCanvasTransaction();
 
-  AutoTArray<RenderRootUpdates, 1> renderRootUpdates;
+  AutoTArray<TransactionData, 1> transactionData;
   if (mStateManager.mAsyncResourceUpdates || !mPendingScrollUpdates.IsEmpty() ||
       WrBridge()->HasWebRenderParentCommands()) {
-    auto updates = renderRootUpdates.AppendElement();
-    updates->mPaintSequenceNumber = mPaintSequenceNumber;
+    auto datum = transactionData.AppendElement();
+    datum->mPaintSequenceNumber = mPaintSequenceNumber;
     if (mStateManager.mAsyncResourceUpdates) {
-      mStateManager.mAsyncResourceUpdates->Flush(updates->mResourceUpdates,
-                                                 updates->mSmallShmems,
-                                                 updates->mLargeShmems);
+      mStateManager.mAsyncResourceUpdates->Flush(
+          datum->mResourceUpdates, datum->mSmallShmems, datum->mLargeShmems);
     }
-    updates->mScrollUpdates = std::move(mPendingScrollUpdates);
-    for (auto it = updates->mScrollUpdates.Iter(); !it.Done(); it.Next()) {
+    datum->mScrollUpdates = std::move(mPendingScrollUpdates);
+    for (auto it = datum->mScrollUpdates.Iter(); !it.Done(); it.Next()) {
       nsLayoutUtils::NotifyPaintSkipTransaction(/*scroll id=*/it.Key());
     }
   }
 
   Maybe<wr::IpcResourceUpdateQueue> nothing;
-  WrBridge()->EndEmptyTransaction(mFocusTarget, renderRootUpdates,
+  WrBridge()->EndEmptyTransaction(mFocusTarget, transactionData,
                                   mLatestTransactionId,
                                   mTransactionIdAllocator->GetVsyncId(),
                                   mTransactionIdAllocator->GetVsyncStart(),

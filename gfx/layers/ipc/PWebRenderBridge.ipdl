@@ -25,7 +25,7 @@ using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MaybeIdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageKeyPair from "mozilla/webrender/WebRenderTypes.h";
 using moveonly mozilla::layers::DisplayListData from "mozilla/layers/RenderRootTypes.h";
-using moveonly mozilla::layers::RenderRootUpdates from "mozilla/layers/RenderRootTypes.h";
+using moveonly mozilla::layers::TransactionData from "mozilla/layers/RenderRootTypes.h";
 using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
@@ -53,7 +53,7 @@ parent:
                        TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime,
                        CompositionPayload[] payloads);
   async EmptyTransaction(FocusTarget focusTarget,
-                         RenderRootUpdates[] renderRootUpdates,
+                         TransactionData[] transationData,
                          OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
                          VsyncId vsyncId, TimeStamp vsyncStartTime,
                          TimeStamp refreshStartTime, TimeStamp txnStartTime,
