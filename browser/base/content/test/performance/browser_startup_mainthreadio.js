@@ -274,12 +274,6 @@ const startupPhases = {
     },
     {
       // bug 1541246
-      path: "XCurProcD:extensions",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1541246
       path: "UAppData:",
       ignoreIfUnused: true, // sometimes before opening first browser window,
       // sometimes before first paint
@@ -448,11 +442,6 @@ const startupPhases = {
       ignoreIfUnused: true,
       stat: 1,
       close: 1,
-    },
-    {
-      path: "XCurProcD:extensions",
-      condition: WIN,
-      stat: 1,
     },
   ],
 
