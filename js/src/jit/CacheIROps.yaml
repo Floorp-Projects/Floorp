@@ -921,6 +921,13 @@
     str: StringId
     index: Int32Id
 
+- name: LoadStringCharCodeResult
+  shared: true
+  transpile: false
+  args:
+    str: StringId
+    index: Int32Id
+
 - name: LoadStringLengthResult
   shared: true
   transpile: true

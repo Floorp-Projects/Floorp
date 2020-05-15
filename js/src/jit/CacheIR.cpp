@@ -2012,22 +2012,20 @@ AttachDecision GetPropIRGenerator::tryAttachStringLength(ValOperandId valId,
   return AttachDecision::Attach;
 }
 
-AttachDecision GetPropIRGenerator::tryAttachStringChar(ValOperandId valId,
-                                                       ValOperandId indexId) {
-  MOZ_ASSERT(idVal_.isInt32());
-
-  if (!val_.isString()) {
-    return AttachDecision::NoAction;
+static bool CanAttachStringChar(HandleValue val, HandleValue idVal,
+                                StringChar kind) {
+  if (!val.isString() || !idVal.isInt32()) {
+    return false;
   }
 
-  int32_t index = idVal_.toInt32();
+  int32_t index = idVal.toInt32();
   if (index < 0) {
-    return AttachDecision::NoAction;
+    return false;
   }
 
-  JSString* str = val_.toString();
+  JSString* str = val.toString();
   if (size_t(index) >= str->length()) {
-    return AttachDecision::NoAction;
+    return false;
   }
 
   // This follows JSString::getChar, otherwise we fail to attach getChar in a
@@ -2037,14 +2035,30 @@ AttachDecision GetPropIRGenerator::tryAttachStringChar(ValOperandId valId,
 
     // Make sure the left side contains the index.
     if (size_t(index) >= rope->leftChild()->length()) {
-      return AttachDecision::NoAction;
+      return false;
     }
 
     str = rope->leftChild();
   }
 
-  if (!str->isLinear() || str->asLinear().latin1OrTwoByteChar(index) >=
-                              StaticStrings::UNIT_STATIC_LIMIT) {
+  if (!str->isLinear()) {
+    return false;
+  }
+
+  if (kind == StringChar::CodeAt) {
+    return true;
+  }
+
+  // For charAt we need to have StaticString for that code-point.
+  return str->asLinear().latin1OrTwoByteChar(index) <
+         StaticStrings::UNIT_STATIC_LIMIT;
+}
+
+AttachDecision GetPropIRGenerator::tryAttachStringChar(ValOperandId valId,
+                                                       ValOperandId indexId) {
+  MOZ_ASSERT(idVal_.isInt32());
+
+  if (!CanAttachStringChar(val_, idVal_, StringChar::At)) {
     return AttachDecision::NoAction;
   }
 
@@ -4981,7 +4995,8 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(HandleFunction callee) {
+AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(
+    HandleFunction callee) {
   // The IsSuspendedGenerator intrinsic is only called in
   // self-hosted code, so it's safe to assume we have a single
   // argument and the callee is our intrinsic.
@@ -5010,6 +5025,66 @@ AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(HandleFunction cal
 
   trackAttached("IsSuspendedGenerator");
   return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
+                                                    StringChar kind) {
+  // Need one argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!CanAttachStringChar(thisval_, args_[0], kind)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Guard one argument.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+  writer.guardSpecificInt32Immediate(argcId, 1);
+
+  // Guard callee is the 'charCodeAt' or 'charAt' native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard this is a string.
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  StringOperandId strId = writer.guardToString(thisValId);
+
+  // Guard int32 index.
+  ValOperandId indexId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
+
+  // Load string char or code.
+  if (kind == StringChar::CodeAt) {
+    writer.loadStringCharCodeResult(strId, int32IndexId);
+  } else {
+    writer.loadStringCharResult(strId, int32IndexId);
+  }
+
+  writer.returnFromIC();
+
+  // This stub does not need to be monitored, because it always
+  // returns a string for charAt or int32_t for charCodeAt.
+  // The stack typeset will be updated when we attach the stub.
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  if (kind == StringChar::CodeAt) {
+    trackAttached("StringCharCodeAt");
+  } else {
+    trackAttached("StringCharAt");
+  }
+
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachStringCharCodeAt(
+    HandleFunction callee) {
+  return tryAttachStringChar(callee, StringChar::CodeAt);
+}
+
+AttachDecision CallIRGenerator::tryAttachStringCharAt(HandleFunction callee) {
+  return tryAttachStringChar(callee, StringChar::At);
 }
 
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction calleeFunc) {
@@ -5165,6 +5240,10 @@ AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
       return tryAttachArrayJoin(callee);
     case InlinableNative::IntrinsicIsSuspendedGenerator:
       return tryAttachIsSuspendedGenerator(callee);
+    case InlinableNative::StringCharCodeAt:
+      return tryAttachStringCharCodeAt(callee);
+    case InlinableNative::StringCharAt:
+      return tryAttachStringCharAt(callee);
     default:
       return AttachDecision::NoAction;
   }
