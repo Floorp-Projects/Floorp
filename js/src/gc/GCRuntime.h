@@ -505,6 +505,7 @@ class GCRuntime {
   bool isIncrementalGc() const { return isIncremental; }
   bool isFullGc() const { return isFull; }
   bool isCompactingGc() const { return isCompacting; }
+  bool didCompactZones() const { return isCompacting && zonesCompacted; }
 
   bool areGrayBitsValid() const { return grayBitsValid; }
   void setGrayBitsInvalid() { grayBitsValid = false; }
@@ -1074,6 +1075,7 @@ class GCRuntime {
   MainThreadData<bool> startedCompacting;
   MainThreadData<ZoneList> zonesToMaybeCompact;
   MainThreadData<Arena*> relocatedArenasToRelease;
+  MainThreadData<size_t> zonesCompacted;
 
 #ifdef JS_GC_ZEAL
   MainThreadData<MarkingValidator*> markingValidator;
