@@ -258,6 +258,8 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBridge.h"
+#  include "mozilla/java/GeckoProcessManagerWrappers.h"
+#  include "mozilla/java/GeckoProcessTypeWrappers.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
