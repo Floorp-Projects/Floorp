@@ -1021,42 +1021,9 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
     const Maybe<ClientInfo>& aLoadingClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController, uint32_t aSecurityFlags,
     uint32_t aContentPolicyType, uint32_t aSandboxFlags, nsIChannel** result) {
-  // Ideally all callers of NewChannelFromURIWithProxyFlagsInternal provide
-  // the necessary arguments to create a loadinfo.
-  //
-  // Note, historically this could be called with nullptr aLoadingNode,
-  // aLoadingPrincipal, and aTriggeringPrincipal from addons using
-  // newChannelFromURIWithProxyFlags().  This code tried to accomodate
-  // by not creating a LoadInfo in such cases.  Now that both the legacy
-  // addons and that API are gone we could possibly require always creating a
-  // LoadInfo here.  See bug 1432205.
-  nsCOMPtr<nsILoadInfo> loadInfo;
-
-  // TYPE_DOCUMENT loads don't require a loadingNode or principal, but other
-  // types do.
-  if (aLoadingNode || aLoadingPrincipal ||
-      aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
-    loadInfo = new LoadInfo(aLoadingPrincipal, aTriggeringPrincipal,
-                            aLoadingNode, aSecurityFlags, aContentPolicyType,
-                            aLoadingClientInfo, aController, aSandboxFlags);
-  }
-  if (!loadInfo) {
-    JSContext* cx = nsContentUtils::GetCurrentJSContext();
-    // if coming from JS we like to know the JS stack, otherwise
-    // we just assert that we are able to create a valid loadinfo!
-    if (cx) {
-      JS::UniqueChars chars = xpc_PrintJSStack(cx,
-                                               /*showArgs=*/false,
-                                               /*showLocals=*/false,
-                                               /*showThisProps=*/false);
-      nsDependentCString stackTrace(chars.get());
-      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::Bug_1541161,
-                                         stackTrace);
-    }
-    MOZ_DIAGNOSTIC_ASSERT(false,
-                          "Please pass security info when creating a channel");
-    return NS_ERROR_INVALID_ARG;
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = new LoadInfo(
+      aLoadingPrincipal, aTriggeringPrincipal, aLoadingNode, aSecurityFlags,
+      aContentPolicyType, aLoadingClientInfo, aController, aSandboxFlags);
   return NewChannelFromURIWithProxyFlagsInternal(aURI, aProxyURI, aProxyFlags,
                                                  loadInfo, result);
 }
@@ -1066,6 +1033,9 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
     nsILoadInfo* aLoadInfo, nsIChannel** result) {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aURI);
+  // all channel creations must provide a valid loadinfo
+  MOZ_ASSERT(aLoadInfo, "can not create channel without aLoadInfo");
+  NS_ENSURE_ARG_POINTER(aLoadInfo);
 
   nsAutoCString scheme;
   rv = aURI->GetScheme(scheme);
@@ -1090,20 +1060,16 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
   if (NS_FAILED(rv)) return rv;
 
   // Make sure that all the individual protocolhandlers attach a loadInfo.
-  if (aLoadInfo) {
-    // make sure we have the same instance of loadInfo on the newly created
-    // channel
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-    if (aLoadInfo != loadInfo) {
-      MOZ_ASSERT(false, "newly created channel must have a loadinfo attached");
-      return NS_ERROR_UNEXPECTED;
-    }
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  if (aLoadInfo != loadInfo) {
+    MOZ_ASSERT(false, "newly created channel must have a loadinfo attached");
+    return NS_ERROR_UNEXPECTED;
+  }
 
-    // If we're sandboxed, make sure to clear any owner the channel
-    // might already have.
-    if (loadInfo->GetLoadingSandboxed()) {
-      channel->SetOwner(nullptr);
-    }
+  // If we're sandboxed, make sure to clear any owner the channel
+  // might already have.
+  if (loadInfo->GetLoadingSandboxed()) {
+    channel->SetOwner(nullptr);
   }
 
   // Some extensions override the http protocol handler and provide their own
