@@ -9,7 +9,6 @@ import androidx.lifecycle.LiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSiteStorage
 import mozilla.components.support.locale.LocaleManager
@@ -34,8 +33,8 @@ class TopSiteStorage(private val context: Context) {
     /**
      * Adds a new [TopSite].
      */
-    fun addTopSite(title: String, url: String) {
-        storage.addTopSite(title, url)
+    fun addTopSite(title: String, url: String, isDefault: Boolean = false) {
+        storage.addTopSite(title, url, isDefault)
     }
 
     /**
@@ -78,15 +77,12 @@ class TopSiteStorage(private val context: Context) {
                 )
             )
 
-            GlobalScope.launch(Dispatchers.Main) {
-                withContext(Dispatchers.IO) {
-                    topSiteCandidates.forEach {
-                        addTopSite(it.first, it.second)
-                    }
+            GlobalScope.launch(Dispatchers.IO) {
+                topSiteCandidates.forEach { (title, url) ->
+                    addTopSite(title, url, isDefault = true)
                 }
             }
-            context.settings().preferences.edit()
-                .putBoolean(context.getString(R.string.default_top_sites_added), true).apply()
+            context.settings().defaultTopSitesAdded = true
         }
     }
 }

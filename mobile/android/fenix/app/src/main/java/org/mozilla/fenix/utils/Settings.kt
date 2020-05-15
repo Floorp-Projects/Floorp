@@ -439,7 +439,7 @@ class Settings private constructor(
         default = true
     )
 
-    val defaultTopSitesAdded by booleanPreference(
+    var defaultTopSitesAdded by booleanPreference(
         appContext.getPreferenceKey(R.string.default_top_sites_added),
         default = false
     )
