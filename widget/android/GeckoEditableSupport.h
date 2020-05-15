@@ -6,11 +6,12 @@
 #ifndef mozilla_widget_GeckoEditableSupport_h
 #define mozilla_widget_GeckoEditableSupport_h
 
-#include "GeneratedJNIWrappers.h"
 #include "nsAppShell.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
 
+#include "mozilla/java/GeckoEditableChildNatives.h"
+#include "mozilla/java/SessionTextInputWrappers.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/UniquePtr.h"

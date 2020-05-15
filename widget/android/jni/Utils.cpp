@@ -11,8 +11,9 @@
 #include <pthread.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
+#include "mozilla/java/GeckoThreadWrappers.h"
 
-#include "GeneratedJNIWrappers.h"
 #include "AndroidBuild.h"
 #include "nsAppShell.h"
 #include "nsExceptionHandler.h"

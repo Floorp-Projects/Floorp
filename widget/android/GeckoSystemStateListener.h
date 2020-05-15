@@ -6,10 +6,10 @@
 #ifndef GeckoSystemStateListener_h
 #define GeckoSystemStateListener_h
 
-#include "GeneratedJNINatives.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/java/GeckoSystemStateListenerNatives.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
 

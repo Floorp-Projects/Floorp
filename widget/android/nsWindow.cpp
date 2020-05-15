@@ -81,9 +81,16 @@ using mozilla::dom::ContentParent;
 #include "AndroidBridgeUtilities.h"
 #include "AndroidUiThread.h"
 #include "GeckoEditableSupport.h"
-#include "GeneratedJNINatives.h"
 #include "KeyEvent.h"
 #include "MotionEvent.h"
+#include "mozilla/java/EventDispatcherWrappers.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
+#include "mozilla/java/GeckoEditableChildWrappers.h"
+#include "mozilla/java/GeckoResultWrappers.h"
+#include "mozilla/java/GeckoSessionNatives.h"
+#include "mozilla/java/GeckoSystemStateListenerWrappers.h"
+#include "mozilla/java/PanZoomControllerNatives.h"
+#include "mozilla/java/SessionAccessibilityWrappers.h"
 #include "ScreenHelperAndroid.h"
 
 #include "GeckoProfiler.h"  // For AUTO_PROFILER_LABEL

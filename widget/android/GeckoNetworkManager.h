@@ -6,11 +6,11 @@
 #ifndef GeckoNetworkManager_h
 #define GeckoNetworkManager_h
 
-#include "GeneratedJNINatives.h"
 #include "nsAppShell.h"
 #include "nsCOMPtr.h"
 #include "nsINetworkLinkService.h"
 
+#include "mozilla/java/GeckoNetworkManagerNatives.h"
 #include "mozilla/Services.h"
 
 namespace mozilla {

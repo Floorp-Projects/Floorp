@@ -6,7 +6,9 @@
 #ifndef WebExecutorSupport_h__
 #define WebExecutorSupport_h__
 
-#include "GeneratedJNINatives.h"
+#include "mozilla/java/GeckoWebExecutorNatives.h"
+#include "mozilla/java/GeckoResultWrappers.h"
+#include "mozilla/java/WebRequestWrappers.h"
 
 namespace mozilla {
 namespace widget {

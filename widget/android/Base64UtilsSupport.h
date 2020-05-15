@@ -6,8 +6,8 @@
 #ifndef Base64UtilsSupport_h__
 #define Base64UtilsSupport_h__
 
-#include "GeneratedJNINatives.h"
 #include "mozilla/Base64.h"
+#include "mozilla/java/Base64UtilsNatives.h"
 
 namespace mozilla {
 namespace widget {

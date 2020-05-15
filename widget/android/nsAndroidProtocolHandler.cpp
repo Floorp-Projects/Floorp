@@ -10,7 +10,7 @@
 #include "android/log.h"
 #include "nsBaseChannel.h"
 #include "AndroidBridge.h"
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 
 using namespace mozilla;
 

@@ -7,9 +7,8 @@
 #ifndef mozilla_jni_GeckoResultUtils_h
 #define mozilla_jni_GeckoResultUtils_h
 
+#include "mozilla/java/GeckoResultNatives.h"
 #include "mozilla/jni/Conversions.h"
-#include "GeneratedJNIWrappers.h"
-#include "GeneratedJNINatives.h"
 
 namespace mozilla {
 namespace jni {

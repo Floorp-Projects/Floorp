@@ -11,6 +11,8 @@
 #include "gfxFontConstants.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
+#include "mozilla/java/GeckoSystemStateListenerWrappers.h"
 
 using namespace mozilla;
 using mozilla::dom::ContentChild;

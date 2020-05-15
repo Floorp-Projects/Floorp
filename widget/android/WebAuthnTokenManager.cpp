@@ -5,6 +5,8 @@
 
 #include "mozilla/dom/AndroidWebAuthnTokenManager.h"
 
+#include "mozilla/java/WebAuthnTokenManagerNatives.h"
+
 namespace mozilla {
 class WebAuthnTokenManager final
     : public java::WebAuthnTokenManager::Natives<WebAuthnTokenManager> {
