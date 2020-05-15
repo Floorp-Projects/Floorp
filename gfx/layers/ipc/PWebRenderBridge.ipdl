@@ -46,7 +46,7 @@ parent:
   async ReleaseCompositable(CompositableHandle compositable);
 
   async DeleteCompositorAnimations(uint64_t[] aIds);
-  async SetDisplayList(DisplayListData[] displayLists,
+  async SetDisplayList(DisplayListData displayList,
                        OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
                        bool containsSVGGroup,
                        VsyncId vsyncId, TimeStamp vsyncStartTime,

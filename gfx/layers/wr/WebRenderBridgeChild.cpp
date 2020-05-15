@@ -104,7 +104,7 @@ void WebRenderBridgeChild::UpdateResources(
 }
 
 bool WebRenderBridgeChild::EndTransaction(
-    nsTArray<DisplayListData>& aDisplayListData, TransactionId aTransactionId,
+    DisplayListData&& aDisplayListData, TransactionId aTransactionId,
     bool aContainsSVGGroup, const mozilla::VsyncId& aVsyncId,
     const mozilla::TimeStamp& aVsyncStartTime,
     const mozilla::TimeStamp& aRefreshStartTime,
@@ -114,10 +114,8 @@ bool WebRenderBridgeChild::EndTransaction(
 
   TimeStamp fwdTime = TimeStamp::Now();
 
-  for (auto& datum : aDisplayListData) {
-    datum.mCommands = std::move(mParentCommands);
-    datum.mIdNamespace = mIdNamespace;
-  }
+  aDisplayListData.mCommands = std::move(mParentCommands);
+  aDisplayListData.mIdNamespace = mIdNamespace;
 
   nsTArray<CompositionPayload> payloads;
   if (mManager) {

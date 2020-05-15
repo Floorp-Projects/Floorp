@@ -1055,7 +1055,7 @@ bool WebRenderBridgeParent::ProcessDisplayListData(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
-    nsTArray<DisplayListData>&& aDisplayLists, nsTArray<OpDestroy>&& aToDestroy,
+    DisplayListData&& aDisplayList, nsTArray<OpDestroy>&& aToDestroy,
     const uint64_t& aFwdTransactionId, const TransactionId& aTransactionId,
     const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
     const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
@@ -1066,11 +1066,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
       DestroyActor(op);
     }
     return IPC_OK();
-  }
-
-  // Guard against malicious content processes
-  if (aDisplayLists.Length() == 0) {
-    return IPC_FAIL(this, "Must send at least one DisplayListData.");
   }
 
   if (!IsRootWebRenderBridgeParent()) {
@@ -1091,37 +1086,16 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 
   mReceivedDisplayList = true;
 
-  // The IsFirstPaint() flag should be the same for all the non-empty
-  // scrolldata across all the renderroot display lists in a given
-  // transaction. We assert this below. So we can read the flag from any one
-  // of them.
-  Maybe<size_t> firstScrollDataIndex;
-  for (size_t i = 1; i < aDisplayLists.Length(); i++) {
-    auto& scrollData = aDisplayLists[i].mScrollData;
-    if (scrollData) {
-      if (firstScrollDataIndex.isNothing()) {
-        firstScrollDataIndex = Some(i);
-        if (scrollData && scrollData->IsFirstPaint()) {
-          mIsFirstPaint = true;
-        }
-      } else {
-        auto& firstNonEmpty = aDisplayLists[*firstScrollDataIndex].mScrollData;
-        // Ensure the flag is the same on all of them.
-        MOZ_RELEASE_ASSERT(scrollData->IsFirstPaint() ==
-                           firstNonEmpty->IsFirstPaint());
-      }
-    }
+  if (aDisplayList.mScrollData && aDisplayList.mScrollData->IsFirstPaint()) {
+    mIsFirstPaint = true;
   }
 
-  bool validTransaction = aDisplayLists.Length() > 0 &&
-                          aDisplayLists[0].mIdNamespace == mIdNamespace;
+  bool validTransaction = aDisplayList.mIdNamespace == mIdNamespace;
   bool observeLayersUpdate = ShouldParentObserveEpoch();
 
-  for (auto& displayList : aDisplayLists) {
-    if (!ProcessDisplayListData(displayList, wrEpoch, aTxnStartTime,
-                                validTransaction, observeLayersUpdate)) {
-      return IPC_FAIL(this, "Failed to process DisplayListData.");
-    }
+  if (!ProcessDisplayListData(aDisplayList, wrEpoch, aTxnStartTime,
+                              validTransaction, observeLayersUpdate)) {
+    return IPC_FAIL(this, "Failed to process DisplayListData.");
   }
 
   if (!validTransaction && observeLayersUpdate) {
@@ -1150,10 +1124,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     }
   }
 
-  for (auto& displayList : aDisplayLists) {
-    wr::IpcResourceUpdateQueue::ReleaseShmems(this, displayList.mSmallShmems);
-    wr::IpcResourceUpdateQueue::ReleaseShmems(this, displayList.mLargeShmems);
-  }
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mSmallShmems);
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mLargeShmems);
 
   return IPC_OK();
 }
