@@ -94,8 +94,7 @@ PRG_get_bytes_internal(void* prg_vp, unsigned char* bytes, size_t len)
   unsigned char* in = NULL;
 
   P_CHECKA(in = calloc(len, sizeof(unsigned char)));
-  memset(in, 0, len);
-
+  
   int outlen;
   P_CHECKC(PK11_CipherOp(prg->ctx, bytes, &outlen, len, in, len));
   P_CHECKCB((size_t)outlen == len);
