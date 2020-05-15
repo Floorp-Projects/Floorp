@@ -250,3 +250,100 @@
 }
 
 @end
+
+@implementation mozMenuAccessible
+
+- (NSString*)title {
+  return @"";
+}
+
+- (NSString*)accessibilityLabel {
+  return @"";
+}
+
+- (void)postNotification:(NSString*)notification {
+  [super postNotification:notification];
+
+  if ([notification isEqualToString:@"AXMenuOpened"]) {
+    mIsOpened = YES;
+  } else if ([notification isEqualToString:@"AXMenuClosed"]) {
+    mIsOpened = NO;
+  }
+}
+
+- (void)expire {
+  if (mIsOpened) {
+    // VO needs to receive a menu closed event when the menu goes away.
+    // If the menu is being destroyed, send a menu closed event first.
+    [self postNotification:@"AXMenuClosed"];
+  }
+
+  [super expire];
+}
+
+@end
+
+@implementation mozMenuItemAccessible
+
+- (NSString*)accessibilityLabel {
+  return @"";
+}
+
+- (NSArray*)accessibilityAttributeNames {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  static NSMutableArray* attributes = nil;
+
+  if (!attributes) {
+    attributes = [[super accessibilityAttributeNames] mutableCopy];
+    [attributes addObject:@"AXMenuItemMarkChar"];
+  }
+
+  return attributes;
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (id)accessibilityAttributeValue:(NSString*)attribute {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  if ([attribute isEqualToString:@"AXMenuItemMarkChar"]) {
+    AccessibleWrap* accWrap = [self getGeckoAccessible];
+    if (accWrap && accWrap->IsContent() && accWrap->GetContent()->IsXULElement(nsGkAtoms::menuitem)) {
+      // We need to provide a marker character. This is the visible "√" you see
+      // on dropdown menus. In our a11y tree this is a single child text node
+      // of the menu item.
+      // We do this only with XUL menuitems that conform to the native theme, and not
+      // with aria menu items that might have a pseudo element or something.
+      if (accWrap->ChildCount() == 1 && accWrap->FirstChild()->Role() == roles::STATICTEXT) {
+        nsAutoString marker;
+        accWrap->FirstChild()->Name(marker);
+        if (marker.Length() == 1) {
+          return nsCocoaUtils::ToNSString(marker);
+        }
+      }
+    }
+
+    return nil;
+  }
+
+  return [super accessibilityAttributeValue:attribute];
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (BOOL)isSelected {
+  // Our focused state is equivelent to native selected states for menus.
+  return [self stateWithMask:states::FOCUSED] != 0;
+}
+
+- (void)handleAccessibleEvent:(uint32_t)eventType {
+  switch (eventType) {
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      // Our focused state is equivelent to native selected states for menus.
+      mozAccessible* parent = (mozAccessible*)[self parent];
+      [parent postNotification:NSAccessibilitySelectedChildrenChangedNotification];
+      break;
+  }
+
+  [super handleAccessibleEvent:eventType];
+}
+
+@end

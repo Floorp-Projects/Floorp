@@ -26,3 +26,11 @@
 
 @interface mozOptionAccessible : mozSelectableChildAccessible
 @end
+
+@interface mozMenuAccessible : mozSelectableAccessible {
+  BOOL mIsOpened;
+}
+@end
+
+@interface mozMenuItemAccessible : mozSelectableChildAccessible
+@end
