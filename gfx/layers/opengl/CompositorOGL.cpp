@@ -57,7 +57,7 @@
 #  include "mozilla/widget/GtkCompositorWidget.h"
 #endif
 #if MOZ_WIDGET_ANDROID
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #endif
 
 #include "GeckoProfiler.h"

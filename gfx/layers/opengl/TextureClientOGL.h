@@ -19,7 +19,7 @@
 #include "AndroidSurfaceTexture.h"
 #include "AndroidNativeWindow.h"
 #ifdef MOZ_WIDGET_ANDROID
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/GeckoSurfaceWrappers.h"
 #endif
 
 namespace mozilla {

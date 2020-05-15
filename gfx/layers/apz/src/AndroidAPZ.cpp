@@ -9,11 +9,11 @@
 #include "AndroidFlingPhysics.h"
 #include "AndroidVelocityTracker.h"
 #include "AsyncPanZoomController.h"
-#include "GeneratedJNIWrappers.h"
 #include "GenericFlingAnimation.h"
 #include "OverscrollHandoffState.h"
 #include "SimpleVelocityTracker.h"
 #include "ViewConfiguration.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/StaticPrefs_apz.h"
 
 static mozilla::LazyLogModule sApzAndLog("apz.android");

@@ -33,8 +33,8 @@
 #include "nsRegionFwd.h"      // for nsIntRegion
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "GeneratedJNIWrappers.h"
 #  include "AndroidSurfaceTexture.h"
+#  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #endif
 
 namespace mozilla {

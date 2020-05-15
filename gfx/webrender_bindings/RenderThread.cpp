@@ -31,7 +31,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "GLLibraryEGL.h"
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/webrender/RenderAndroidSurfaceTextureHostOGL.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK

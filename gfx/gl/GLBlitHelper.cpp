@@ -19,10 +19,10 @@
 #include "GPUVideoImage.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "GeneratedJNIWrappers.h"
 #  include "AndroidSurfaceTexture.h"
 #  include "GLImages.h"
 #  include "GLLibraryEGL.h"
+#  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #endif
 
 #ifdef XP_MACOSX
