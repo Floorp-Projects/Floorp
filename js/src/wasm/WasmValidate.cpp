@@ -2305,6 +2305,9 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
         return d.fail(
             "failed to read ref.func index in initializer expression");
       }
+      if (i >= env->numFuncs()) {
+        return d.fail("function index out of range in initializer expression");
+      }
       env->validForRefFunc.setBit(i);
       *init = InitExpr::fromRefFunc(i);
       break;
