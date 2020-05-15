@@ -35,7 +35,8 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/GeckoResultWrappers.h"
+#  include "mozilla/java/GeckoRuntimeWrappers.h"
 #endif
 
 namespace mozilla {
