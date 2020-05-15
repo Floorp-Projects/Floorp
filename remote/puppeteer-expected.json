@@ -704,7 +704,7 @@
     "PASS"
   ],
   "Firefox Browser Page Page.goto should return response when page changes its URL after load": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should work with subframes return 204": [
     "PASS"
@@ -713,10 +713,10 @@
     "TIMEOUT"
   ],
   "Firefox Browser Page Page.goto should navigate to empty page with domcontentloaded": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should work when page calls history API in beforeunload": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should navigate to empty page with networkidle0": [
     "SKIP"
@@ -755,16 +755,16 @@
     "PASS"
   ],
   "Firefox Browser Page Page.goto should work when navigating to valid url": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should work when navigating to data url": [
     "FAIL"
   ],
   "Firefox Browser Page Page.goto should work when navigating to 404": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should return last response in redirect chain": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should wait for network idle to succeed navigation": [
     "SKIP"
@@ -785,7 +785,7 @@
     "FAIL"
   ],
   "Firefox Browser Page Page.goto should work with self requesting page": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should fail when navigating and show the url at the error message": [
     "PASS"
@@ -794,7 +794,7 @@
     "FAIL"
   ],
   "Firefox Browser Page Page.waitForNavigation should work": [
-    "FAIL"
+    "FAIL", "PASS"
   ],
   "Firefox Browser Page Page.waitForNavigation should work with both domcontentloaded and load": [
     "PASS"
@@ -819,7 +819,7 @@
     "SKIP"
   ],
   "Firefox Browser Page Page.goBack should work": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.goBack should work with HistoryAPI": [
     "FAIL"
@@ -861,16 +861,16 @@
     "PASS"
   ],
   "Firefox Browser Page Request.headers should work": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Response.headers should work": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Response.fromCache should return |false| for non-cached content": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Response.fromCache should work": [
-    "SKIP"
+    "FAIL"
   ],
   "Firefox Browser Page Response.fromServiceWorker should return |false| for non-service-worker content": [
     "SKIP"
@@ -882,13 +882,13 @@
     "FAIL"
   ],
   "Firefox Browser Page Request.postData should be |undefined| when there is no post data": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Response.text should work": [
-    "FAIL"
+    "TIMEOUT"
   ],
   "Firefox Browser Page Response.text should return uncompressed text": [
-    "FAIL"
+    "TIMEOUT"
   ],
   "Firefox Browser Page Response.text should throw when requesting body of redirected response": [
     "FAIL"
@@ -897,22 +897,22 @@
     "TIMEOUT"
   ],
   "Firefox Browser Page Response.json should work": [
-    "FAIL"
+    "TIMEOUT"
   ],
   "Firefox Browser Page Response.buffer should work": [
-    "FAIL"
+    "TIMEOUT"
   ],
   "Firefox Browser Page Response.buffer should work with compression": [
-    "FAIL"
+    "TIMEOUT"
   ],
   "Firefox Browser Page Response.statusText should work": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Network Events Page.Events.Request": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Network Events Page.Events.Response": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Network Events Page.Events.RequestFailed": [
     "FAIL"
@@ -1197,7 +1197,7 @@
     "PASS"
   ],
   "Firefox Browser Page Page.waitForResponse should work": [
-    "TIMEOUT"
+    "PASS"
   ],
   "Firefox Browser Page Page.waitForResponse should respect timeout": [
     "PASS"
@@ -1206,10 +1206,10 @@
     "PASS"
   ],
   "Firefox Browser Page Page.waitForResponse should work with predicate": [
-    "TIMEOUT"
+    "PASS"
   ],
   "Firefox Browser Page Page.waitForResponse should work with no timeout": [
-    "TIMEOUT"
+    "PASS"
   ],
   "Firefox Browser Page Page.exposeFunction should work": [
     "FAIL"
@@ -1805,16 +1805,16 @@
     "FAIL"
   ],
   "Firefox ignoreHTTPSErrors Response.securityDetails should work": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox ignoreHTTPSErrors Response.securityDetails should be |null| for non-secure requests": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox ignoreHTTPSErrors Response.securityDetails Network redirects should report SecurityDetails": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox ignoreHTTPSErrors should work": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox ignoreHTTPSErrors should work with request interception": [
     "FAIL"

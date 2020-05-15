@@ -444,19 +444,23 @@ class RecordEvents {
    *     https://github.com/cyrus-and/chrome-remote-interface#clientdomaineventcallback
    * @param {string} options.eventName
    *     Name to use for reporting.
+   * @param {Function=} options.callback
+   *     ({ eventName, payload }) => {} to be called when each event is received
    * @param {function(payload):string=} options.messageFn
    */
   addRecorder(options = {}) {
     const {
       event,
       eventName,
-      messageFn = () => `Received ${eventName}`,
+      messageFn = () => `Recorded ${eventName}`,
+      callback,
     } = options;
 
     const promise = new Promise(resolve => {
       const unsubscribe = event(payload => {
         info(messageFn(payload));
-        this.events.push({ eventName, payload });
+        this.events.push({ eventName, payload, index: this.events.length });
+        callback?.({ eventName, payload, index: this.events.length - 1 });
         if (this.events.length > this.total) {
           this.subscriptions.delete(unsubscribe);
           unsubscribe();
@@ -467,6 +471,33 @@ class RecordEvents {
     });
 
     this.promises.add(promise);
+  }
+
+  /**
+   * Register a promise to await while recording the timeline. The returned
+   * callback resolves the registered promise and adds `step`
+   * to the timeline, along with an associated payload, if provided.
+   *
+   * @param {string} step
+   * @return {Function} callback
+   */
+  addPromise(step) {
+    let callback;
+    const promise = new Promise(resolve => {
+      callback = value => {
+        resolve();
+        info(`Recorded ${step}`);
+        this.events.push({
+          eventName: step,
+          payload: value,
+          index: this.events.length,
+        });
+        return value;
+      };
+    });
+
+    this.promises.add(promise);
+    return callback;
   }
 
   /**
@@ -512,5 +543,20 @@ class RecordEvents {
     return this.events
       .filter(event => event.eventName == eventName)
       .map(event => event.payload);
+  }
+
+  /**
+   * Find index of first occurrence of the given event.
+   *
+   * @param {string} eventName
+   *
+   * @return {number} The event index, -1 if not found.
+   */
+  indexOf(eventName) {
+    const event = this.events.find(el => el.eventName == eventName);
+    if (event) {
+      return event.index;
+    }
+    return -1;
   }
 }
