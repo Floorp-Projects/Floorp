@@ -1,0 +1,67 @@
+"use strict";
+
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/browser/test-block-action.html";
+const TIMEOUT = "TIMEOUT";
+
+add_task(async function() {
+  const hud = await openNewTabAndConsole(TEST_URI);
+
+  ok(hud, "web console opened");
+
+  const filter = "test-block-action-style.css";
+  const blockCommand = `:block ${filter}`;
+  const unblockCommand = `:unblock ${filter}`;
+
+  info("Before blocking");
+  await tryFetching();
+  const resp1 = await waitFor(() => findMessage(hud, "successful"));
+  ok(resp1, "the request was not blocked");
+
+  await executeAndWaitForMessage(hud, blockCommand, "are now blocked");
+
+  info("After blocking");
+  await tryFetching();
+  const resp2 = await waitFor(() => findMessage(hud, "blocked"));
+  ok(resp2, "the request was blocked as expected");
+
+  await executeAndWaitForMessage(hud, unblockCommand, "Removed blocking");
+
+  info("After unblocking");
+  await tryFetching();
+
+  const resp3 = await waitFor(() => findMessage(hud, "successful"));
+  ok(resp3, "the request was not blocked");
+});
+
+async function tryFetching() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [TIMEOUT], async function(
+    timeoutStr
+  ) {
+    const win = content.wrappedJSObject;
+    const FETCH_URI =
+      "http://example.com/browser/devtools/client/webconsole/" +
+      "test/browser/test-block-action-style.css";
+    const timeout = new Promise(res =>
+      win.setTimeout(() => res(timeoutStr), 1000)
+    );
+    const fetchPromise = win.fetch(FETCH_URI);
+
+    try {
+      const resp = await Promise.race([fetchPromise, timeout]);
+      if (typeof resp === "object") {
+        // Request Promise
+        win.console.log("the request was successful");
+      } else if (resp === timeoutStr) {
+        // Timeout
+        win.console.log("the request was blocked");
+      } else {
+        win.console.error("Unkown response");
+      }
+    } catch {
+      // NetworkError
+      win.console.log("the request was blocked");
+    }
+  });
+}

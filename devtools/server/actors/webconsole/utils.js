@@ -649,6 +649,60 @@ WebConsoleCommands._registerOriginal("screenshot", function(owner, args = {}) {
 });
 
 /**
+ * Block specific resource from loading
+ *
+ * @param object args
+ *               an object with key "url", i.e. a filter
+ *
+ * @return void
+ */
+WebConsoleCommands._registerOriginal("block", function(owner, args = {}) {
+  if (!args.url) {
+    owner.helperResult = {
+      type: "error",
+      message: "webconsole.messages.commands.blockArgMissing",
+    };
+    return;
+  }
+
+  owner.helperResult = (async () => {
+    await owner.consoleActor.blockRequest(args);
+
+    return {
+      type: "blockURL",
+      args,
+    };
+  })();
+});
+
+/*
+ * Unblock a blocked a resource
+ *
+ * @param object filter
+ *               an object with key "url", i.e. a filter
+ *
+ * @return void
+ */
+WebConsoleCommands._registerOriginal("unblock", function(owner, args = {}) {
+  if (!args.url) {
+    owner.helperResult = {
+      type: "error",
+      message: "webconsole.messages.commands.blockArgMissing",
+    };
+    return;
+  }
+
+  owner.helperResult = (async () => {
+    await owner.consoleActor.unblockRequest(args);
+
+    return {
+      type: "unblockURL",
+      args,
+    };
+  })();
+});
+
+/**
  * (Internal only) Add the bindings to |owner.sandbox|.
  * This is intended to be used by the WebConsole actor only.
  *
