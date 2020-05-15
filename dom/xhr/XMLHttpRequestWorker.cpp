@@ -21,6 +21,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ProgressEvent.h"
+#include "mozilla/dom/StreamBlobImpl.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/UnionConversions.h"
 #include "mozilla/dom/URLSearchParams.h"
@@ -226,19 +227,16 @@ class WorkerThreadProxySyncRunnable : public WorkerMainThreadRunnable {
   virtual bool MainThreadRun() override;
 };
 
-class SendRunnable final : public WorkerThreadProxySyncRunnable,
-                           public StructuredCloneHolder {
-  nsString mStringBody;
+class SendRunnable final : public WorkerThreadProxySyncRunnable {
+  RefPtr<BlobImpl> mBlobImpl;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
   bool mHasUploadListeners;
 
  public:
   SendRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-               const nsAString& aStringBody)
+               BlobImpl* aBlobImpl)
       : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy),
-        StructuredCloneHolder(CloningSupported, TransferringNotSupported,
-                              StructuredCloneScope::SameProcess),
-        mStringBody(aStringBody),
+        mBlobImpl(aBlobImpl),
         mHasUploadListeners(false) {}
 
   void SetHaveUploadListeners(bool aHasUploadListeners) {
@@ -1257,7 +1255,9 @@ void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
       DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>
       payload;
 
-  if (HasData()) {
+  if (!mBlobImpl) {
+    payload.SetNull();
+  } else {
     AutoSafeJSContext cx;
 
     JS::Rooted<JSObject*> globalObject(cx, JS::CurrentGlobalOrNull(cx));
@@ -1272,50 +1272,12 @@ void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
       return;
     }
 
-    JS::Rooted<JS::Value> body(cx);
-    Read(parent, cx, &body, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+    RefPtr<Blob> blob = Blob::Create(parent, mBlobImpl);
+    MOZ_ASSERT(blob);
 
-    Maybe<
-        DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVStringArgument>
-        holder;
-    holder.emplace(payload.SetValue());
-    bool done = false, failed = false, tryNext;
-
-    if (body.isObject()) {
-      done = (failed =
-                  !holder.ref().TrySetToDocument(cx, &body, tryNext, false)) ||
-             !tryNext ||
-             (failed = !holder.ref().TrySetToBlob(cx, &body, tryNext, false)) ||
-             !tryNext ||
-             (failed = !holder.ref().TrySetToArrayBufferView(cx, &body, tryNext,
-                                                             false)) ||
-             !tryNext ||
-             (failed = !holder.ref().TrySetToArrayBuffer(cx, &body, tryNext,
-                                                         false)) ||
-             !tryNext ||
-             (failed =
-                  !holder.ref().TrySetToFormData(cx, &body, tryNext, false)) ||
-             !tryNext ||
-             (failed = !holder.ref().TrySetToURLSearchParams(cx, &body, tryNext,
-                                                             false)) ||
-             !tryNext;
-    }
-
-    if (!done) {
-      done = (failed = !holder.ref().TrySetToUSVString(cx, &body, tryNext)) ||
-             !tryNext;
-    }
-    if (failed || !done) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-  } else {
     DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString&
         ref = payload.SetValue();
-    ref.SetAsUSVString().ShareOrDependUpon(mStringBody);
+    ref.SetAsBlob() = blob;
   }
 
   // Send() has been already called, reset the proxy.
@@ -1622,10 +1584,36 @@ void XMLHttpRequestWorker::Unpin() {
   NS_RELEASE_THIS();
 }
 
-void XMLHttpRequestWorker::SendInternal(SendRunnable* aRunnable,
+void XMLHttpRequestWorker::SendInternal(const BodyExtractorBase* aBody,
                                         ErrorResult& aRv) {
-  MOZ_ASSERT(aRunnable);
   mWorkerPrivate->AssertIsOnWorkerThread();
+
+  // We don't really need to keep the same body-type when we proxy the send()
+  // call to the main-thread XHR. Let's extract the nsIInputStream from the
+  // aBody and let's wrap it into a StreamBlobImpl.
+
+  RefPtr<BlobImpl> blobImpl;
+
+  if (aBody) {
+    nsAutoCString charset;
+    nsAutoCString defaultContentType;
+    nsCOMPtr<nsIInputStream> uploadStream;
+
+    uint64_t size_u64;
+    aRv = aBody->GetAsStream(getter_AddRefs(uploadStream), &size_u64,
+                             defaultContentType, charset);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    blobImpl = StreamBlobImpl::Create(
+        uploadStream.forget(), NS_ConvertUTF8toUTF16(defaultContentType),
+        size_u64, NS_LITERAL_STRING("StreamBlobImpl"));
+    MOZ_ASSERT(blobImpl);
+  }
+
+  RefPtr<SendRunnable> sendRunnable =
+      new SendRunnable(mWorkerPrivate, mProxy, blobImpl);
 
   // No send() calls when open is running.
   if (mProxy->mOpenCount) {
@@ -1656,12 +1644,12 @@ void XMLHttpRequestWorker::SendInternal(SendRunnable* aRunnable,
 
   mProxy->mOuterChannelId++;
 
-  aRunnable->SetSyncLoopTarget(syncLoopTarget);
-  aRunnable->SetHaveUploadListeners(hasUploadListeners);
+  sendRunnable->SetSyncLoopTarget(syncLoopTarget);
+  sendRunnable->SetHaveUploadListeners(hasUploadListeners);
 
   mStateData->mFlagSend = true;
 
-  aRunnable->Dispatch(Canceling, aRv);
+  sendRunnable->Dispatch(Canceling, aRv);
   if (aRv.Failed()) {
     // Dispatch() may have spun the event loop and we may have already unrooted.
     // If so we don't want autoUnpin to try again.
@@ -1882,100 +1870,52 @@ void XMLHttpRequestWorker::Send(
     return;
   }
 
-  RefPtr<SendRunnable> sendRunnable;
-
   if (aData.IsNull()) {
-    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, VoidString());
-    // Nothing to clone.
+    SendInternal(nullptr, aRv);
+    return;
   }
 
-  else if (aData.Value().IsDocument()) {
+  if (aData.Value().IsDocument()) {
     MOZ_CRASH("Documents are not exposed to workers.");
   }
 
-  else if (aData.Value().IsBlob()) {
-    RefPtr<Blob> blob = &aData.Value().GetAsBlob();
-    MOZ_ASSERT(blob);
-
-    JS::Rooted<JS::Value> value(aCx);
-    if (!GetOrCreateDOMReflector(aCx, blob, &value)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
-
-    sendRunnable->Write(aCx, value, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+  if (aData.Value().IsBlob()) {
+    BodyExtractor<const Blob> body(&aData.Value().GetAsBlob());
+    SendInternal(&body, aRv);
+    return;
   }
 
-  else if (aData.Value().IsArrayBuffer()) {
-    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
-
-    JS::Rooted<JS::Value> value(aCx);
-    value.setObject(*aData.Value().GetAsArrayBuffer().Obj());
-
-    sendRunnable->Write(aCx, value, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+  if (aData.Value().IsArrayBuffer()) {
+    BodyExtractor<const ArrayBuffer> body(&aData.Value().GetAsArrayBuffer());
+    SendInternal(&body, aRv);
+    return;
   }
 
-  else if (aData.Value().IsArrayBufferView()) {
-    const ArrayBufferView& body = aData.Value().GetAsArrayBufferView();
-
-    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
-
-    JS::Rooted<JS::Value> value(aCx);
-    value.setObject(*body.Obj());
-
-    sendRunnable->Write(aCx, value, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+  if (aData.Value().IsArrayBufferView()) {
+    BodyExtractor<const ArrayBufferView> body(
+        &aData.Value().GetAsArrayBufferView());
+    SendInternal(&body, aRv);
+    return;
   }
 
-  else if (aData.Value().IsFormData()) {
-    JS::Rooted<JS::Value> value(aCx);
-    if (!GetOrCreateDOMReflector(aCx, &aData.Value().GetAsFormData(), &value)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
-
-    sendRunnable->Write(aCx, value, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+  if (aData.Value().IsFormData()) {
+    BodyExtractor<const FormData> body(&aData.Value().GetAsFormData());
+    SendInternal(&body, aRv);
+    return;
   }
 
-  else if (aData.Value().IsURLSearchParams()) {
-    JS::Rooted<JS::Value> value(aCx);
-    if (!GetOrCreateDOMReflector(aCx, &aData.Value().GetAsURLSearchParams(),
-                                 &value)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
-
-    sendRunnable->Write(aCx, value, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+  if (aData.Value().IsURLSearchParams()) {
+    BodyExtractor<const URLSearchParams> body(
+        &aData.Value().GetAsURLSearchParams());
+    SendInternal(&body, aRv);
+    return;
   }
 
-  else if (aData.Value().IsUSVString()) {
-    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy,
-                                    aData.Value().GetAsUSVString());
-    // Nothing to clone.
+  if (aData.Value().IsUSVString()) {
+    BodyExtractor<const nsAString> body(&aData.Value().GetAsUSVString());
+    SendInternal(&body, aRv);
+    return;
   }
-
-  MOZ_ASSERT(sendRunnable);
-  SendInternal(sendRunnable, aRv);
 }
 
 void XMLHttpRequestWorker::Abort(ErrorResult& aRv) {
