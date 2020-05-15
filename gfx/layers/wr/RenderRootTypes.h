@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace layers {
 
-struct RenderRootDisplayListData {
+struct DisplayListData {
   wr::IdNamespace mIdNamespace;
   LayoutDeviceRect mRect;
   nsTArray<WebRenderParentCommand> mCommands;
@@ -45,8 +45,8 @@ struct RenderRootUpdates {
 namespace ipc {
 
 template <>
-struct IPDLParamTraits<mozilla::layers::RenderRootDisplayListData> {
-  typedef mozilla::layers::RenderRootDisplayListData paramType;
+struct IPDLParamTraits<mozilla::layers::DisplayListData> {
+  typedef mozilla::layers::DisplayListData paramType;
 
   static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam);
 

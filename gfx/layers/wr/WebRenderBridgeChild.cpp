@@ -104,9 +104,9 @@ void WebRenderBridgeChild::UpdateResources(
 }
 
 bool WebRenderBridgeChild::EndTransaction(
-    nsTArray<RenderRootDisplayListData>& aRenderRoots,
-    TransactionId aTransactionId, bool aContainsSVGGroup,
-    const mozilla::VsyncId& aVsyncId, const mozilla::TimeStamp& aVsyncStartTime,
+    nsTArray<DisplayListData>& aDisplayListData, TransactionId aTransactionId,
+    bool aContainsSVGGroup, const mozilla::VsyncId& aVsyncId,
+    const mozilla::TimeStamp& aVsyncStartTime,
     const mozilla::TimeStamp& aRefreshStartTime,
     const mozilla::TimeStamp& aTxnStartTime, const nsCString& aTxnURL) {
   MOZ_ASSERT(!mDestroyed);
@@ -114,9 +114,9 @@ bool WebRenderBridgeChild::EndTransaction(
 
   TimeStamp fwdTime = TimeStamp::Now();
 
-  for (auto& renderRoot : aRenderRoots) {
-    renderRoot.mCommands = std::move(mParentCommands);
-    renderRoot.mIdNamespace = mIdNamespace;
+  for (auto& datum : aDisplayListData) {
+    datum.mCommands = std::move(mParentCommands);
+    datum.mIdNamespace = mIdNamespace;
   }
 
   nsTArray<CompositionPayload> payloads;
@@ -126,7 +126,7 @@ bool WebRenderBridgeChild::EndTransaction(
 
   mSentDisplayList = true;
   bool ret = this->SendSetDisplayList(
-      std::move(aRenderRoots), mDestroyedActors, GetFwdTransactionId(),
+      std::move(aDisplayListData), mDestroyedActors, GetFwdTransactionId(),
       aTransactionId, aContainsSVGGroup, aVsyncId, aVsyncStartTime,
       aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime, payloads);
 
