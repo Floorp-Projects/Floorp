@@ -396,18 +396,17 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   {
     AUTO_PROFILER_TRACING_MARKER("Paint", "ForwardDPTransaction", GRAPHICS);
-    nsTArray<DisplayListData> dlData;
-    auto datum = dlData.AppendElement();
-    builder.Finalize(*datum);
-    mLastDisplayListSize = datum->mDL->mCapacity;
-    resourceUpdates.Flush(datum->mResourceUpdates, datum->mSmallShmems,
-                          datum->mLargeShmems);
-    datum->mRect =
+    DisplayListData dlData;
+    builder.Finalize(dlData);
+    mLastDisplayListSize = dlData.mDL->mCapacity;
+    resourceUpdates.Flush(dlData.mResourceUpdates, dlData.mSmallShmems,
+                          dlData.mLargeShmems);
+    dlData.mRect =
         LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
-    datum->mScrollData.emplace(std::move(mScrollData));
+    dlData.mScrollData.emplace(std::move(mScrollData));
 
     bool ret = WrBridge()->EndTransaction(
-        dlData, mLatestTransactionId, containsSVGGroup,
+        std::move(dlData), mLatestTransactionId, containsSVGGroup,
         mTransactionIdAllocator->GetVsyncId(),
         mTransactionIdAllocator->GetVsyncStart(), refreshStart,
         mTransactionStart, mURL);
