@@ -6,6 +6,7 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
+    SCHEDULES.exclusive = ['macosx']
 
 XPIDL_SOURCES += [
     'nsPIWidgetCocoa.idl',
