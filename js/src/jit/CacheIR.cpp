@@ -5150,18 +5150,22 @@ AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
     return AttachDecision::NoAction;
   }
 
-  // Check for special-cased native functions.
-  if (callee->native() == js::array_push) {
-    return tryAttachArrayPush();
-  }
-  if (callee->native() == js::array_join) {
-    return tryAttachArrayJoin();
-  }
-  if (callee->native() == intrinsic_IsSuspendedGenerator) {
-    return tryAttachIsSuspendedGenerator();
+  if (!callee->hasJitInfo() ||
+      callee->jitInfo()->type() != JSJitInfo::InlinableNative) {
+    return AttachDecision::NoAction;
   }
 
-  return AttachDecision::NoAction;
+  // Check for special-cased native functions.
+  switch (callee->jitInfo()->inlinableNative) {
+    case InlinableNative::ArrayPush:
+      return tryAttachArrayPush();
+    case InlinableNative::ArrayJoin:
+      return tryAttachArrayJoin();
+    case InlinableNative::IntrinsicIsSuspendedGenerator:
+      return tryAttachIsSuspendedGenerator();
+    default:
+      return AttachDecision::NoAction;
+  }
 }
 
 // Remember the template object associated with any script being called

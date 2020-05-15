@@ -142,6 +142,7 @@ static bool CanInlineCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicToInteger:
     case InlinableNative::IntrinsicToString:
     case InlinableNative::IntrinsicIsConstructing:
+    case InlinableNative::IntrinsicIsSuspendedGenerator:
     case InlinableNative::IntrinsicSubstringKernel:
     case InlinableNative::IntrinsicGuardToArrayIterator:
     case InlinableNative::IntrinsicGuardToMapIterator:
@@ -555,6 +556,10 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineTypedArrayByteOffset(callInfo);
     case InlinableNative::IntrinsicTypedArrayElementShift:
       return inlineTypedArrayElementShift(callInfo);
+
+    case InlinableNative::IntrinsicIsSuspendedGenerator:
+      // Not supported in Ion.
+      return InliningStatus_NotInlined;
 
     case InlinableNative::Limit:
       break;
