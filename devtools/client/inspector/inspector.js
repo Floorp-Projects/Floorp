@@ -213,9 +213,9 @@ Inspector.prototype = {
     return this._deferredOpen();
   },
 
-  async _onTargetAvailable({ type, targetFront, isTopLevel }) {
+  async _onTargetAvailable({ targetFront }) {
     // Ignore all targets but the top level one
-    if (!isTopLevel) {
+    if (!targetFront.isTopLevel) {
       return;
     }
 
@@ -229,9 +229,9 @@ Inspector.prototype = {
     ]);
   },
 
-  _onTargetDestroyed({ type, targetFront, isTopLevel }) {
+  _onTargetDestroyed({ targetFront }) {
     // Ignore all targets but the top level one
-    if (!isTopLevel) {
+    if (!targetFront.isTopLevel) {
       return;
     }
     targetFront.off("will-navigate", this._onBeforeNavigate);
