@@ -31,7 +31,7 @@ const {
  * ----- Start of model -----
  *
  * Everything below this comment up to the "End of model" comment is copied from:
- * https://github.com/mozilla-services/fathom-login-forms/blob/96d83b26e06587e28baecf404c1058132d5e5ec7/new-password/rulesets.js#L14-L498
+ * https://github.com/mozilla-services/fathom-login-forms/blob/c1e5136/new-password/rulesets.js#L14-L539
  * Deviations from that file:
  *   - Remove import statements, instead using ``ChromeUtils.defineModuleGetter`` and destructuring assignments above.
  *   - Set ``DEVELOPMENT`` constant to ``false``.
@@ -41,54 +41,55 @@ const {
 // privileged Chrome context
 const DEVELOPMENT = false;
 
-// Run me with confidence cutoff = 0.5.
+// Run me with confidence cutoff = 0.75.
 const coefficients = {
   new: [
-    ["hasNewLabel", 2.2810254096984863],
-    ["hasConfirmLabel", 1.694574236869812],
-    ["hasCurrentLabel", -1.3689748048782349],
-    ["closestLabelMatchesNew", 2.337895631790161],
-    ["closestLabelMatchesConfirm", 2.0099358558654785],
-    ["closestLabelMatchesCurrent", -2.149383544921875],
-    ["hasNewAriaLabel", 2.3408854007720947],
-    ["hasConfirmAriaLabel", 1.6442108154296875],
-    ["hasCurrentAriaLabel", -0.47289180755615234],
-    ["hasNewPlaceholder", 1.4538962841033936],
-    ["hasConfirmPlaceholder", 1.3284525871276855],
-    ["hasCurrentPlaceholder", -2.261751651763916],
-    ["forgotPasswordInFormLinkTextContent", -0.5433191061019897],
-    ["forgotPasswordInFormLinkHref", -0.765314519405365],
-    ["forgotPasswordInFormLinkTitle", -2.4542791843414307],
-    ["forgotInFormLinkTextContent", -0.941589891910553],
-    ["forgotInFormLinkHref", 0.14392481744289398],
-    ["forgotPasswordInFormButtonTextContent", -1.4535348415374756],
-    ["forgotPasswordOnPageLinkTextContent", -0.9497349262237549],
-    ["forgotPasswordOnPageLinkHref", -0.4683777689933777],
-    ["forgotPasswordOnPageLinkTitle", 0.9323362112045288],
-    ["forgotPasswordOnPageButtonTextContent", -0.036500222980976105],
-    ["elementAttrsMatchNew", 2.3482909202575684],
-    ["elementAttrsMatchConfirm", 1.4599562883377075],
-    ["elementAttrsMatchCurrent", -1.8001548051834106],
-    ["elementAttrsMatchPassword1", 1.8529325723648071],
-    ["elementAttrsMatchPassword2", 1.480426549911499],
-    ["elementAttrsMatchLogin", 0.6426483988761902],
-    ["formAttrsMatchRegister", 1.7514275312423706],
-    ["formHasRegisterAction", 2.0106680393218994],
-    ["formButtonIsRegister", 2.6456642150878906],
-    ["formAttrsMatchLogin", -1.1687955856323242],
-    ["formHasLoginAction", -0.6696907877922058],
-    ["formButtonIsLogin", -1.9459353685379028],
-    ["hasAutocompleteCurrentPassword", -2.674823760986328],
-    ["formHasRememberMeCheckbox", 0.3080791234970093],
-    ["formHasRememberMeLabel", -0.13528524339199066],
-    ["formHasNewsletterCheckbox", 1.2682256698608398],
-    ["formHasNewsletterLabel", 2.317833423614502],
-    ["closestHeaderAboveIsLoginy", -1.8291908502578735],
-    ["closestHeaderAboveIsRegistery", 1.908536672592163],
+    ["hasNewLabel", 2.531618356704712],
+    ["hasConfirmLabel", 1.9212454557418823],
+    ["hasCurrentLabel", -1.5062531232833862],
+    ["closestLabelMatchesNew", 2.4905529022216797],
+    ["closestLabelMatchesConfirm", 2.188796281814575],
+    ["closestLabelMatchesCurrent", -2.5512311458587646],
+    ["hasNewAriaLabel", 1.9324924945831299],
+    ["hasConfirmAriaLabel", 1.7427018880844116],
+    ["hasCurrentAriaLabel", -0.45434775948524475],
+    ["hasNewPlaceholder", 1.3900811672210693],
+    ["hasConfirmPlaceholder", 2.120662212371826],
+    ["hasCurrentPlaceholder", -2.464745283126831],
+    ["forgotPasswordInFormLinkTextContent", -0.34269317984580994],
+    ["forgotPasswordInFormLinkHref", -1.100291132926941],
+    ["forgotPasswordInFormLinkTitle", -2.5948476791381836],
+    ["forgotInFormLinkTextContent", -1.104567050933838],
+    ["forgotInFormLinkHref", 0.43580958247184753],
+    ["forgotPasswordInFormButtonTextContent", -2.2410218715667725],
+    ["forgotPasswordOnPageLinkTextContent", -0.7233141660690308],
+    ["forgotPasswordOnPageLinkHref", -0.3587746322154999],
+    ["forgotPasswordOnPageLinkTitle", 0.5892723798751831],
+    ["forgotPasswordOnPageButtonTextContent", -0.0006637098849751055],
+    ["elementAttrsMatchNew", 2.36958646774292],
+    ["elementAttrsMatchConfirm", 1.79710853099823],
+    ["elementAttrsMatchCurrent", -2.0240602493286133],
+    ["elementAttrsMatchPassword1", 1.9658048152923584],
+    ["elementAttrsMatchPassword2", 1.6933585405349731],
+    ["elementAttrsMatchLogin", 1.1432386636734009],
+    ["formAttrsMatchRegister", 1.8227713108062744],
+    ["formHasRegisterAction", 1.9209907054901123],
+    ["formButtonIsRegister", 2.889024496078491],
+    ["formAttrsMatchLogin", -1.166875958442688],
+    ["formHasLoginAction", -0.4696630537509918],
+    ["formButtonIsLogin", -2.284656524658203],
+    ["hasAutocompleteCurrentPassword", -0.04689808934926987],
+    ["formHasRememberMeCheckbox", 0.5008370280265808],
+    ["formHasRememberMeLabel", -0.022740153595805168],
+    ["formHasNewsletterCheckbox", 1.5111156702041626],
+    ["formHasNewsletterLabel", 2.277301549911499],
+    ["closestHeaderAboveIsLoginy", -2.2182235717773438],
+    ["closestHeaderAboveIsRegistery", 1.930107593536377],
+    ["nextInputIsConfirmy", 2.5108766555786133],
   ],
 };
 
-const biases = [["new", 0.3539522588253021]];
+const biases = [["new", 0.08310158550739288]];
 
 const passwordStringRegex = /password|passwort|رمز عبور|mot de passe|パスワード|비밀번호|암호|wachtwoord|senha|Пароль|parol|密码|contraseña|heslo|كلمة السر|kodeord|Κωδικός|pass code|Kata sandi|hasło|รหัสผ่าน|Şifre/i;
 const passwordAttrRegex = /pw|pwd|passwd|pass/i;
@@ -148,20 +149,18 @@ function makeRuleset(coeffs, biases) {
     }
 
     const parentElement = element.parentElement;
+    // Bug 1634819: element.parentElement is null if element.parentNode is a ShadowRoot
+    if (!parentElement) {
+      return false;
+    }
     // Check if the input is in a <td>, and, if so, check the textContent of the containing <tr>
-    if (
-      // Bug 1634819: element.parentElement is null if element.parentNode is a ShadowRoot
-      parentElement &&
-      parentElement.tagName === "TD" &&
-      parentElement.parentElement
-    ) {
+    if (parentElement.tagName === "TD" && parentElement.parentElement) {
       // TODO: How bad is the assumption that the <tr> won't be the parent of the <td>?
       return regex.test(parentElement.parentElement.textContent);
     }
 
     // Check if the input is in a <dd>, and, if so, check the textContent of the preceding <dt>
     if (
-      parentElement &&
       parentElement.tagName === "DD" &&
       // previousElementSibling can be null
       parentElement.previousElementSibling
@@ -286,6 +285,39 @@ function makeRuleset(coeffs, biases) {
       selector,
       () => Array.from(element.querySelectorAll(selector))
     );
+  }
+
+  /**
+   * Return whether the form element directly after this one looks like a
+   * confirm-password input.
+   */
+  function nextInputIsConfirmy(fnode) {
+    const form = fnode.element.form;
+    const me = fnode.element;
+    if (form !== null) {
+      let afterMe = false;
+      for (const formEl of form.elements) {
+        if (formEl === me) {
+          afterMe = true;
+        } else if (afterMe) {
+          if (
+            formEl.type === "password" &&
+            !formEl.disabled &&
+            formEl.getAttribute("aria-hidden") !== "true"
+          ) {
+            // Now we're looking at a passwordy, visible input[type=password]
+            // directly after me.
+            return elementAttrsMatchRegex(formEl, confirmAttrRegex);
+            // We could check other confirmy smells as well. Balance accuracy
+            // against time and complexity.
+          }
+          // We look only at the very next element, so we may be thrown off by
+          // Hide buttons and such.
+          break;
+        }
+      }
+    }
+    return false;
   }
 
   function hasSomeMatchingPredicateForSelectorWithinElement(
@@ -525,6 +557,7 @@ function makeRuleset(coeffs, biases) {
           closestHeaderAboveMatchesRegex(fnode.element, loginRegex),
         closestHeaderAboveIsRegistery: fnode =>
           closestHeaderAboveMatchesRegex(fnode.element, registerStringRegex),
+        nextInputIsConfirmy,
       }),
       rule(type("new"), out("new")),
     ],
