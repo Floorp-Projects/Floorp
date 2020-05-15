@@ -18,7 +18,6 @@ namespace mozilla {
 namespace layers {
 
 struct RenderRootDisplayListData {
-  wr::RenderRoot mRenderRoot;
   wr::IdNamespace mIdNamespace;
   LayoutDeviceRect mRect;
   nsTArray<WebRenderParentCommand> mCommands;
@@ -33,7 +32,6 @@ struct RenderRootDisplayListData {
 };
 
 struct RenderRootUpdates {
-  wr::RenderRoot mRenderRoot;
   nsTArray<WebRenderParentCommand> mCommands;
   nsTArray<OpUpdateResource> mResourceUpdates;
   nsTArray<RefCountedShmem> mSmallShmems;

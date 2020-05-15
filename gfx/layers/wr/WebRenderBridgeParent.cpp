@@ -1032,9 +1032,6 @@ bool WebRenderBridgeParent::ProcessRenderRootDisplayListData(
     UpdateAPZScrollData(aWrEpoch, std::move(aDisplayList.mScrollData.ref()));
   }
 
-  MOZ_ASSERT(aDisplayList.mRenderRoot == wr::RenderRoot::Default ||
-             IsRootWebRenderBridgeParent());
-
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
   if (aValidTransaction) {
     MOZ_ASSERT(aDisplayList.mIdNamespace == mIdNamespace);
@@ -1169,9 +1166,6 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
   wr::TransactionBuilder txn;
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
-  MOZ_ASSERT(aUpdates.mRenderRoot == wr::RenderRoot::Default ||
-             IsRootWebRenderBridgeParent());
-
   if (!aUpdates.mScrollUpdates.IsEmpty()) {
     UpdateAPZScrollOffsets(std::move(aUpdates.mScrollUpdates),
                            aUpdates.mPaintSequenceNumber);
@@ -1259,9 +1253,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
   bool scheduleAnyComposite = false;
 
   for (auto& update : aRenderRootUpdates) {
-    MOZ_ASSERT(update.mRenderRoot == wr::RenderRoot::Default ||
-               IsRootWebRenderBridgeParent());
-
     bool scheduleComposite = false;
     if (!ProcessEmptyTransactionUpdates(update, &scheduleComposite)) {
       return IPC_FAIL(this, "Failed to process empty transaction update.");
