@@ -158,7 +158,6 @@ nsCocoaWindow::nsCocoaWindow()
       mInFullScreenTransition(false),
       mModal(false),
       mFakeModal(false),
-      mSupportsNativeFullScreen(false),
       mInNativeFullScreenMode(false),
       mIsAnimationSuppressed(false),
       mInReportMoveEvent(false),
@@ -494,12 +493,15 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
     [mWindow setOpaque:YES];
   }
 
+  NSWindowCollectionBehavior newBehavior = [mWindow collectionBehavior];
   if (mAlwaysOnTop) {
     [mWindow setLevel:NSFloatingWindowLevel];
-    NSWindowCollectionBehavior newBehavior = [mWindow collectionBehavior];
     newBehavior |= NSWindowCollectionBehaviorCanJoinAllSpaces;
-    [mWindow setCollectionBehavior:newBehavior];
   }
+  if ((features & NSResizableWindowMask)) {
+    newBehavior |= NSWindowCollectionBehaviorFullScreenPrimary;
+  }
+  [mWindow setCollectionBehavior:newBehavior];
 
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
   [mWindow disableCursorRects];
@@ -1578,10 +1580,6 @@ void nsCocoaWindow::UpdateFullscreenState(bool aFullScreen, bool aNativeMode) {
 
 inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
                                                         bool aUseSystemTransition) {
-  if (!mSupportsNativeFullScreen) {
-    // If we cannot use native fullscreen, don't touch it.
-    return false;
-  }
   if (mInNativeFullScreenMode) {
     // If we are using native fullscreen, go ahead to exit it.
     return true;
@@ -1621,14 +1619,6 @@ nsresult nsCocoaWindow::DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransi
   mInFullScreenTransition = true;
 
   if (ShouldToggleNativeFullscreen(aFullScreen, aUseSystemTransition)) {
-    // If we're using native fullscreen mode and our native window is invisible,
-    // our attempt to go into fullscreen mode will fail with an assertion in
-    // system code, without [WindowDelegate windowDidFailToEnterFullScreen:]
-    // ever getting called.  To pre-empt this we bail here.  See bug 752294.
-    if (aFullScreen && ![mWindow isVisible]) {
-      EnteredFullScreen(false);
-      return NS_OK;
-    }
     MOZ_ASSERT(mInNativeFullScreenMode != aFullScreen,
                "We shouldn't have been in native fullscreen.");
     // Calling toggleFullScreen will result in windowDid(FailTo)?(Enter|Exit)FullScreen
@@ -2303,41 +2293,6 @@ void nsCocoaWindow::SetShowsToolbarButton(bool aShow) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mWindow) [mWindow setShowsToolbarButton:aShow];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-void nsCocoaWindow::SetShowsFullScreenButton(bool aShow) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mWindow || ![mWindow respondsToSelector:@selector(toggleFullScreen:)] ||
-      mSupportsNativeFullScreen == aShow) {
-    return;
-  }
-
-  // If the window is currently in fullscreen mode, then we're going to
-  // transition out first, then set the collection behavior & toggle
-  // mSupportsNativeFullScreen, then transtion back into fullscreen mode. This
-  // prevents us from getting into a conflicting state with MakeFullScreen
-  // where mSupportsNativeFullScreen would lead us down the wrong path.
-  bool wasFullScreen = mInFullScreenMode;
-
-  if (wasFullScreen) {
-    MakeFullScreen(false);
-  }
-
-  NSWindowCollectionBehavior newBehavior = [mWindow collectionBehavior];
-  if (aShow) {
-    newBehavior |= NSWindowCollectionBehaviorFullScreenPrimary;
-  } else {
-    newBehavior &= ~NSWindowCollectionBehaviorFullScreenPrimary;
-  }
-  [mWindow setCollectionBehavior:newBehavior];
-  mSupportsNativeFullScreen = aShow;
-
-  if (wasFullScreen) {
-    MakeFullScreen(true);
-  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
