@@ -223,12 +223,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "base16"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d27c3610c36aee21ce8ac510e6224498de4228ad772a171ed65643a24693a5a8"
-
-[[package]]
 name = "base64"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1191,20 +1185,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ece"
-version = "1.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e831571186ec514efc697af518eee5e4aaecc13edeb4a918227f7bcba2c20b1"
-dependencies = [
- "base64 0.12.0",
- "byteorder",
- "failure",
- "failure_derive",
- "once_cell",
- "serde",
-]
-
-[[package]]
 name = "either"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1269,7 +1249,7 @@ checksum = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "failure",
 ]
@@ -1347,27 +1327,6 @@ checksum = "b8c37abd4a58e0cb794bcae4a7dc4f02fff376949d8d1066d4c729e97bfb38ec"
 dependencies = [
  "comedy",
  "winapi 0.3.7",
-]
-
-[[package]]
-name = "firefox-accounts-bridge"
-version = "0.1.0"
-dependencies = [
- "atomic_refcell",
- "cstr",
- "fxa-client",
- "libc",
- "moz_task",
- "nserror",
- "nsstring",
- "once_cell",
- "paste",
- "serde",
- "serde_json",
- "storage_variant",
- "thin-vec",
- "url",
- "xpcom",
 ]
 
 [[package]]
@@ -1597,30 +1556,6 @@ dependencies = [
  "futures-sink",
  "futures-task",
  "pin-utils",
-]
-
-[[package]]
-name = "fxa-client"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
-dependencies = [
- "base64 0.12.0",
- "byteorder",
- "error-support",
- "failure",
- "ffi-support",
- "hex",
- "lazy_static",
- "log",
- "prost",
- "prost-derive",
- "rc_crypto",
- "serde",
- "serde_derive",
- "serde_json",
- "sync15",
- "url",
- "viaduct",
 ]
 
 [[package]]
@@ -1900,7 +1835,6 @@ dependencies = [
  "cubeb-sys",
  "encoding_glue",
  "env_logger",
- "firefox-accounts-bridge",
  "fluent",
  "fluent-ffi",
  "fluent-langneg",
@@ -2099,20 +2033,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hawk"
-version = "3.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57528ce5133f688e1bc4daadc3e50bf9093d40e8a1f64c6e506ccbae005e57e6"
-dependencies = [
- "base64 0.12.0",
- "failure",
- "log",
- "once_cell",
- "rand",
- "url",
-]
-
-[[package]]
 name = "headers"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2136,12 +2056,6 @@ checksum = "e7f66481bfee273957b1f20485a4ff3362987f85b2c236580d81b4eb7a326429"
 dependencies = [
  "http",
 ]
-
-[[package]]
-name = "hex"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
 
 [[package]]
 name = "hibitset"
@@ -2281,7 +2195,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 
 [[package]]
 name = "intl-memoizer"
@@ -3210,31 +3124,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "nss"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
-dependencies = [
- "base64 0.12.0",
- "error-support",
- "failure",
- "failure_derive",
- "nss_sys",
- "serde",
- "serde_derive",
-]
-
-[[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
-
-[[package]]
-name = "nss_sys"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
-dependencies = [
- "nss_build_common",
-]
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 
 [[package]]
 name = "nsstring"
@@ -3436,28 +3328,6 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "winapi 0.3.7",
-]
-
-[[package]]
-name = "paste"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a229b1c58c692edcaa5b9b0948084f130f55d2dcc15b02fcc5340b2b4521476"
-dependencies = [
- "paste-impl",
- "proc-macro-hack",
-]
-
-[[package]]
-name = "paste-impl"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e0bf239e447e67ff6d16a8bb5e4d4bd2343acf5066061c0e8e06ac5ba8ca68c"
-dependencies = [
- "proc-macro-hack",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -3873,21 +3743,6 @@ dependencies = [
  "crossbeam-utils 0.6.5",
  "lazy_static",
  "num_cpus",
-]
-
-[[package]]
-name = "rc_crypto"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
-dependencies = [
- "base64 0.12.0",
- "ece",
- "error-support",
- "failure",
- "failure_derive",
- "hawk",
- "libsqlite3-sys",
- "nss",
 ]
 
 [[package]]
@@ -4438,7 +4293,7 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "ffi-support",
  "interrupt-support",
@@ -4635,7 +4490,7 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "base64 0.12.0",
  "rand",
@@ -4644,32 +4499,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "sync15"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
-dependencies = [
- "base16",
- "base64 0.12.0",
- "error-support",
- "failure",
- "ffi-support",
- "interrupt-support",
- "lazy_static",
- "log",
- "rc_crypto",
- "serde",
- "serde_derive",
- "serde_json",
- "sync-guid",
- "sync15-traits",
- "url",
- "viaduct",
-]
-
-[[package]]
 name = "sync15-traits"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "failure",
  "ffi-support",
@@ -5285,7 +5117,7 @@ checksum = "078775d0255232fb988e6fccf26ddc9d1ac274299aaedcedce21c6f72cc533ce"
 [[package]]
 name = "viaduct"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "failure",
  "failure_derive",
@@ -5401,7 +5233,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=77a7f5eb12a8d93f2bd71bd4d844405e06743365#77a7f5eb12a8d93f2bd71bd4d844405e06743365"
+source = "git+https://github.com/mozilla/application-services?rev=243c8c3c3e2428012ad3a5f5400f96738615d6a5#243c8c3c3e2428012ad3a5f5400f96738615d6a5"
 dependencies = [
  "error-support",
  "failure",
