@@ -172,6 +172,8 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
 
   switch (aRole) {
     case roles::COMBOBOX:
+      return [mozPopupButtonAccessible class];
+
     case roles::PUSHBUTTON:
       return [mozButtonAccessible class];
 
@@ -212,6 +214,18 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
 
     case roles::OPTION: {
       return [mozOptionAccessible class];
+    }
+
+    case roles::COMBOBOX_LIST:
+    case roles::MENUBAR:
+    case roles::MENUPOPUP: {
+      return [mozMenuAccessible class];
+    }
+
+    case roles::COMBOBOX_OPTION:
+    case roles::PARENT_MENUITEM:
+    case roles::MENUITEM: {
+      return [mozMenuItemAccessible class];
     }
 
     default:
