@@ -412,12 +412,6 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute unsigned long sandboxFlags;
 
   /**
-  *   The TriggingSandboxFlags are the SandboxFlags of the entity
-  *   responsible for causing the load to occur.
-  */
-  [infallible] attribute unsigned long triggeringSandboxFlags;
-
-  /**
    * Allows to query only the security mode bits from above.
    */
   [infallible] readonly attribute unsigned long securityMode;

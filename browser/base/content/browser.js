@@ -1506,7 +1506,7 @@ function _loadURI(browser, uri, params = {}) {
     params.loadFlags || params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
   let hasValidUserGestureActivation =
     document.hasValidTransientUserGestureActivation;
-  let triggeringSandboxFlags = document.sandboxFlags;
+
   if (!triggeringPrincipal) {
     throw new Error("Must load with a triggering Principal");
   }
@@ -1548,7 +1548,6 @@ function _loadURI(browser, uri, params = {}) {
     referrerInfo,
     postData,
     hasValidUserGestureActivation,
-    triggeringSandboxFlags,
   };
   try {
     if (!mustChangeProcess) {

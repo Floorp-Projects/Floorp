@@ -95,10 +95,6 @@ class nsDocShellLoadState final {
 
   void SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal);
 
-  uint32_t TriggeringSandboxFlags() const;
-
-  void SetTriggeringSandboxFlags(uint32_t aTriggeringSandboxFlags);
-
   nsIContentSecurityPolicy* Csp() const;
 
   void SetCsp(nsIContentSecurityPolicy* aCsp);
@@ -284,11 +280,6 @@ class nsDocShellLoadState final {
   // the argument aURI is provided by the web, then please do not pass a
   // SystemPrincipal as the triggeringPrincipal.
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-
-  // The SandboxFlags of the load, that are, the SandboxFlags of the entity
-  // responsible for causing the load to occur. Most likely this are the
-  // SandboxFlags of the document that started the load.
-  uint32_t mTriggeringSandboxFlags;
 
   // The CSP of the load, that is, the CSP of the entity responsible for causing
   // the load to occur. Most likely this is the CSP of the document that started

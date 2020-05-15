@@ -3890,15 +3890,13 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aErrorURI);
   loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
-  if (mBrowsingContext) {
-    loadState->SetTriggeringSandboxFlags(mBrowsingContext->GetSandboxFlags());
-  }
   loadState->SetLoadType(LOAD_ERROR_PAGE);
   loadState->SetFirstParty(true);
   loadState->SetSourceBrowsingContext(mBrowsingContext);
   loadState->SetHasValidUserGestureActivation(
       mBrowsingContext &&
       mBrowsingContext->HasValidTransientUserGestureActivation());
+
   return InternalLoad(loadState, nullptr, nullptr);
 }
 
@@ -3951,7 +3949,6 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
 
     nsIPrincipal* triggeringPrincipal = doc->NodePrincipal();
     nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
-    uint32_t triggeringSandboxFlags = doc->GetSandboxFlags();
 
     nsAutoString contentTypeHint;
     doc->GetContentType(contentTypeHint);
@@ -3994,7 +3991,6 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
     loadState->SetMaybeResultPrincipalURI(emplacedResultPrincipalURI);
     loadState->SetLoadReplace(loadReplace);
     loadState->SetTriggeringPrincipal(triggeringPrincipal);
-    loadState->SetTriggeringSandboxFlags(triggeringSandboxFlags);
     loadState->SetPrincipalToInherit(triggeringPrincipal);
     loadState->SetCsp(csp);
     loadState->SetLoadFlags(flags);
@@ -5028,7 +5024,6 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
     loadState->SetCsp(doc->GetCsp());
     loadState->SetHasValidUserGestureActivation(
         doc->HasValidTransientUserGestureActivation());
-    loadState->SetTriggeringSandboxFlags(doc->GetSandboxFlags());
   }
 
   loadState->SetPrincipalIsExplicit(true);
@@ -8166,8 +8161,6 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
       // LoadReplace will always be false due to asserts above, skip setting
       // it.
       loadState->SetTriggeringPrincipal(aLoadState->TriggeringPrincipal());
-      loadState->SetTriggeringSandboxFlags(
-          aLoadState->TriggeringSandboxFlags());
       loadState->SetCsp(aLoadState->Csp());
       loadState->SetInheritPrincipal(
           aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL));
@@ -9640,7 +9633,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       aLoadState->HasLoadFlags(LOAD_FLAGS_FROM_EXTERNAL)) {
     loadInfo->SetHasValidUserGestureActivation(true);
   }
-  loadInfo->SetTriggeringSandboxFlags(aLoadState->TriggeringSandboxFlags());
 
   /* Get the cache Key from SH */
   uint32_t cacheKey = 0;
@@ -11891,11 +11883,6 @@ nsresult nsDocShell::OnLinkClickSync(
   nsCOMPtr<nsIPrincipal> triggeringPrincipal =
       aTriggeringPrincipal ? aTriggeringPrincipal : aContent->NodePrincipal();
 
-  uint32_t triggeringSandboxFlags = 0;
-  if (mBrowsingContext) {
-    triggeringSandboxFlags = mBrowsingContext->GetSandboxFlags();
-  }
-
   nsCOMPtr<nsIContentSecurityPolicy> csp = aCsp;
   if (!csp) {
     // Currently, if no csp is passed explicitly we fall back to querying the
@@ -11996,7 +11983,6 @@ nsresult nsDocShell::OnLinkClickSync(
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
   loadState->SetReferrerInfo(referrerInfo);
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
-  loadState->SetTriggeringSandboxFlags(triggeringSandboxFlags);
   loadState->SetPrincipalToInherit(aContent->NodePrincipal());
   loadState->SetCsp(csp);
   loadState->SetLoadFlags(flags);

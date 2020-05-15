@@ -69,11 +69,6 @@ dictionary LoadURIOptions {
   boolean hasValidUserGestureActivation = false;
 
   /**
-   * The SandboxFlags of the entity thats
-   * responsible for causing the load.
-   */
-  long triggeringSandboxFlags = 0;
-  /**
    * If non-0, a value to pass to nsIDocShell::setCancelContentJSEpoch
    * when initiating the load.
    */
