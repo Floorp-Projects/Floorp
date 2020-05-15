@@ -1148,14 +1148,6 @@ class nsIWidget : public nsISupports {
    */
   virtual void SetShowsToolbarButton(bool aShow) = 0;
 
-  /*
-   * On Mac OS X Lion, this method shows or hides the full screen button in
-   * the titlebar that handles native full screen mode.
-   *
-   * Ignored on child widgets, non-Mac platforms, & pre-Lion Mac.
-   */
-  virtual void SetShowsFullScreenButton(bool aShow) = 0;
-
   enum WindowAnimationType {
     eGenericWindowAnimation,
     eDocumentWindowAnimation
