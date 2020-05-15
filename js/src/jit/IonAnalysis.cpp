@@ -4890,6 +4890,133 @@ void jit::UnmarkLoopBlocks(MIRGraph& graph, MBasicBlock* header) {
 #endif
 }
 
+bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
+  // This pass folds MLoadFixedSlot, MLoadDynamicSlot, MLoadElement instructions
+  // followed by MUnbox into a single instruction. For LoadElement this allows
+  // us to fuse the hole check with the type check for the unbox.
+
+  for (MBasicBlockIterator block(graph.begin()); block != graph.end();
+       block++) {
+    if (mir->shouldCancel("FoldLoadsWithUnbox")) {
+      return false;
+    }
+
+    for (MInstructionIterator insIter(block->begin());
+         insIter != block->end();) {
+      MInstruction* ins = *insIter;
+      insIter++;
+
+      // We're only interested in loads producing a Value.
+      if (!ins->isLoadFixedSlot() && !ins->isLoadDynamicSlot() &&
+          !ins->isLoadElement()) {
+        continue;
+      }
+      if (ins->type() != MIRType::Value) {
+        continue;
+      }
+
+      MInstruction* load = ins;
+
+      // Ensure there's a single def-use (ignoring resume points) and it's an
+      // unbox.
+      MDefinition* defUse = load->maybeSingleDefUse();
+      if (!defUse) {
+        continue;
+      }
+      if (!defUse->isUnbox()) {
+        continue;
+      }
+
+      // For now require the load and unbox to be in the same block. This isn't
+      // strictly necessary but it's the common case and could prevent bailouts
+      // when moving the unbox before a loop.
+      MUnbox* unbox = defUse->toUnbox();
+      if (unbox->block() != *block) {
+        continue;
+      }
+
+      MOZ_ASSERT(!IsMagicType(unbox->type()));
+
+      // If this is a LoadElement that needs a hole check, we only support
+      // folding it with a fallible unbox so that we can eliminate the hole
+      // check.
+      if (load->isLoadElement() && load->toLoadElement()->needsHoleCheck()) {
+        if (!unbox->fallible()) {
+          continue;
+        }
+        // No matter what happens below, if the fallible unbox is the only use
+        // (including resume points!) we can now eliminate the hole check.
+        if (load->hasOneUse()) {
+          load->toLoadElement()->disableHoleCheck();
+        }
+      }
+
+      // For now only fold for types where we can do better than a separate load
+      // and unbox:
+      //
+      // * Int32 and Boolean: we can test the type tag and load the payload
+      //   without bitwise instructions on 64-bit platforms.
+      //
+      // * Double: we can load the double directly in a FP register.
+      //
+      // For other types we have to load the full Value anyway on 64-bit
+      // platforms so there's not much to gain.
+      if (unbox->type() != MIRType::Int32 && unbox->type() != MIRType::Double &&
+          unbox->type() != MIRType::Boolean) {
+        continue;
+      }
+
+      // Combine the load and unbox into a single MIR instruction.
+
+      MIRType type = unbox->type();
+      MUnbox::Mode mode = unbox->mode();
+      BailoutKind bailoutKind = unbox->bailoutKindUnchecked();
+
+      MInstruction* replacement;
+      switch (load->op()) {
+        case MDefinition::Opcode::LoadFixedSlot: {
+          auto* loadIns = load->toLoadFixedSlot();
+          replacement = MLoadFixedSlotAndUnbox::New(
+              graph.alloc(), loadIns->object(), loadIns->slot(), mode, type,
+              bailoutKind);
+          break;
+        }
+        case MDefinition::Opcode::LoadDynamicSlot: {
+          auto* loadIns = load->toLoadDynamicSlot();
+          replacement = MLoadDynamicSlotAndUnbox::New(
+              graph.alloc(), loadIns->slots(), loadIns->slot(), mode, type,
+              bailoutKind);
+          break;
+        }
+        case MDefinition::Opcode::LoadElement: {
+          auto* loadIns = load->toLoadElement();
+          MOZ_ASSERT(!loadIns->loadDoubles(),
+                     "Unexpected loadDoubles with MIRType::Value");
+          MOZ_ASSERT_IF(loadIns->needsHoleCheck(), unbox->fallible());
+          replacement = MLoadElementAndUnbox::New(
+              graph.alloc(), loadIns->elements(), loadIns->index(), mode, type,
+              bailoutKind);
+          break;
+        }
+        default:
+          MOZ_CRASH("Unexpected instruction");
+      }
+
+      block->insertBefore(load, replacement);
+      unbox->replaceAllUsesWith(replacement);
+      load->replaceAllUsesWith(replacement);
+
+      if (*insIter == unbox) {
+        insIter++;
+      }
+      block->discard(unbox);
+      block->discard(load);
+    }
+  }
+
+  return true;
+}
+
 // Reorder the blocks in the loop starting at the given header to be contiguous.
 static void MakeLoopContiguous(MIRGraph& graph, MBasicBlock* header,
                                size_t numMarked) {

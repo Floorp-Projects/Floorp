@@ -3711,7 +3711,31 @@ void LIRGenerator::visitLoadFixedSlotAndUnbox(MLoadFixedSlotAndUnbox* ins) {
   if (ins->fallible()) {
     assignSnapshot(lir, ins->bailoutKind());
   }
+  define(lir, ins);
+}
 
+void LIRGenerator::visitLoadDynamicSlotAndUnbox(MLoadDynamicSlotAndUnbox* ins) {
+  MDefinition* slots = ins->slots();
+  MOZ_ASSERT(slots->type() == MIRType::Slots);
+
+  auto* lir = new (alloc()) LLoadDynamicSlotAndUnbox(useRegisterAtStart(slots));
+  if (ins->fallible()) {
+    assignSnapshot(lir, ins->bailoutKind());
+  }
+  define(lir, ins);
+}
+
+void LIRGenerator::visitLoadElementAndUnbox(MLoadElementAndUnbox* ins) {
+  MDefinition* elements = ins->elements();
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(elements->type() == MIRType::Elements);
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  auto* lir = new (alloc())
+      LLoadElementAndUnbox(useRegister(elements), useRegisterOrConstant(index));
+  if (ins->fallible()) {
+    assignSnapshot(lir, ins->bailoutKind());
+  }
   define(lir, ins);
 }
 

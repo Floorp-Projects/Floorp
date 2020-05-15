@@ -3403,6 +3403,7 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
     MOZ_ASSERT(fallible());
     return bailoutKind_;
   }
+  BailoutKind bailoutKindUnchecked() const { return bailoutKind_; }
   bool fallible() const { return mode() != Infallible; }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isUnbox() || ins->toUnbox()->mode() != mode()) {
@@ -7564,8 +7565,11 @@ class MLoadElement : public MBinaryInstruction, public NoTypePolicy::Data {
   NAMED_OPERANDS((0, elements), (1, index))
 
   bool needsHoleCheck() const { return needsHoleCheck_; }
+  void disableHoleCheck() { needsHoleCheck_ = false; }
+
   bool loadDoubles() const { return loadDoubles_; }
   bool fallible() const { return needsHoleCheck(); }
+
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isLoadElement()) {
       return false;
@@ -7586,6 +7590,49 @@ class MLoadElement : public MBinaryInstruction, public NoTypePolicy::Data {
   }
 
   ALLOW_CLONE(MLoadElement)
+};
+
+class MLoadElementAndUnbox : public MBinaryInstruction,
+                             public NoTypePolicy::Data {
+  MUnbox::Mode mode_;
+  BailoutKind bailoutKind_;
+
+ protected:
+  MLoadElementAndUnbox(MDefinition* elements, MDefinition* index,
+                       MUnbox::Mode mode, MIRType type, BailoutKind kind)
+      : MBinaryInstruction(classOpcode, elements, index),
+        mode_(mode),
+        bailoutKind_(kind) {
+    setResultType(type);
+    setMovable();
+    if (mode_ == MUnbox::TypeBarrier || mode_ == MUnbox::Fallible) {
+      setGuard();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(LoadElementAndUnbox)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, elements), (1, index))
+
+  MUnbox::Mode mode() const { return mode_; }
+  BailoutKind bailoutKind() const { return bailoutKind_; }
+  bool fallible() const { return mode_ != MUnbox::Infallible; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isLoadElementAndUnbox() ||
+        mode() != ins->toLoadElementAndUnbox()->mode() ||
+        bailoutKind() != ins->toLoadElementAndUnbox()->bailoutKind()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::Element);
+  }
+
+  ALLOW_CLONE(MLoadElementAndUnbox);
 };
 
 // Load a value from the elements vector of a native object. If the index is
@@ -8238,7 +8285,8 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isLoadFixedSlotAndUnbox() ||
         slot() != ins->toLoadFixedSlotAndUnbox()->slot() ||
-        mode() != ins->toLoadFixedSlotAndUnbox()->mode()) {
+        mode() != ins->toLoadFixedSlotAndUnbox()->mode() ||
+        bailoutKind() != ins->toLoadFixedSlotAndUnbox()->bailoutKind()) {
       return false;
     }
     return congruentIfOperandsEqual(ins);
@@ -8253,6 +8301,53 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
   AliasType mightAlias(const MDefinition* store) const override;
 
   ALLOW_CLONE(MLoadFixedSlotAndUnbox);
+};
+
+class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
+                                 public NoTypePolicy::Data {
+  size_t slot_;
+  MUnbox::Mode mode_;
+  BailoutKind bailoutKind_;
+
+ protected:
+  MLoadDynamicSlotAndUnbox(MDefinition* slots, size_t slot, MUnbox::Mode mode,
+                           MIRType type, BailoutKind kind)
+      : MUnaryInstruction(classOpcode, slots),
+        slot_(slot),
+        mode_(mode),
+        bailoutKind_(kind) {
+    setResultType(type);
+    setMovable();
+    if (mode_ == MUnbox::TypeBarrier || mode_ == MUnbox::Fallible) {
+      setGuard();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(LoadDynamicSlotAndUnbox)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, slots))
+
+  size_t slot() const { return slot_; }
+  MUnbox::Mode mode() const { return mode_; }
+  BailoutKind bailoutKind() const { return bailoutKind_; }
+  bool fallible() const { return mode_ != MUnbox::Infallible; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isLoadDynamicSlotAndUnbox() ||
+        slot() != ins->toLoadDynamicSlotAndUnbox()->slot() ||
+        mode() != ins->toLoadDynamicSlotAndUnbox()->mode() ||
+        bailoutKind() != ins->toLoadDynamicSlotAndUnbox()->bailoutKind()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::DynamicSlot);
+  }
+
+  ALLOW_CLONE(MLoadDynamicSlotAndUnbox);
 };
 
 class MStoreFixedSlot

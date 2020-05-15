@@ -72,6 +72,7 @@ class JSLinearString;
   _(RangeAnalysis)                             \
   _(LoopUnrolling)                             \
   _(Sink)                                      \
+  _(FoldLoadsWithUnbox)                        \
   _(RemoveUnnecessaryBitops)                   \
   _(FoldLinearArithConstants)                  \
   _(EffectiveAddressAnalysis)                  \

@@ -1315,6 +1315,15 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (!mir->compilingWasm()) {
+    AutoTraceLog log(logger, TraceLogger_FoldLoadsWithUnbox);
+    if (!FoldLoadsWithUnbox(mir, graph)) {
+      return false;
+    }
+    gs.spewPass("FoldLoadsWithUnbox");
+    AssertGraphCoherency(graph);
+  }
+
+  if (!mir->compilingWasm()) {
     AutoTraceLog log(logger, TraceLogger_AddKeepAliveInstructions);
     if (!AddKeepAliveInstructions(graph)) {
       return false;
