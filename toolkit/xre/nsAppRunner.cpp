@@ -217,7 +217,7 @@
 #include "GTestRunner.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/GeckoAppShellWrappers.h"
 #endif
 
 #if defined(MOZ_SANDBOX)
