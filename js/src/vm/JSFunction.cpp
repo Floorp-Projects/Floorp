@@ -1241,6 +1241,12 @@ bool JSFunction::isDerivedClassConstructor() const {
   return derived;
 }
 
+bool JSFunction::isFieldInitializer() const {
+  bool derived = hasBaseScript() && baseScript()->isFieldInitializer();
+  MOZ_ASSERT_IF(derived, isMethod());
+  return derived;
+}
+
 /* static */
 bool JSFunction::getLength(JSContext* cx, HandleFunction fun,
                            uint16_t* length) {
