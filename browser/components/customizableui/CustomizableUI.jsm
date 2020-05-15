@@ -2051,7 +2051,8 @@ var CustomizableUIInternal = {
           (topmostMenuPopup && topmostMenuPopup.triggerNode) ||
           target.parentNode;
       } else {
-        target = target.parentNode;
+        // Skip any parent shadow roots
+        target = target.parentNode?.host?.parentNode || target.parentNode;
       }
     }
 
