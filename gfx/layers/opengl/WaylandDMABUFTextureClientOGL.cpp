@@ -86,6 +86,9 @@ already_AddRefed<DrawTarget> WaylandDMABUFTextureData::BorrowDrawTarget() {
     return nullptr;
   }
   auto surf = mSurface->GetAsWaylandDMABufSurfaceRGBA();
+  if (!surf->GetMappedRegion()) {
+    return nullptr;
+  }
   return Factory::CreateDrawTargetForData(
       mBackend, (unsigned char*)surf->GetMappedRegion(),
       IntSize(surf->GetWidth(), surf->GetHeight()),
