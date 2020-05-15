@@ -58,12 +58,15 @@
       return SECFailure;                                                       \
   } while (0);
 
-// Check a msgpack object unpacked correctly
-#define UP_CHECK(s)                                                            \
+// Check a msgpack object unpacked correctly. If
+// not, jump to the cleanup label.
+#define UP_CHECKC(s)                                                           \
   do {                                                                         \
     int r = (s);                                                               \
-    if (r != MSGPACK_UNPACK_SUCCESS && r != MSGPACK_UNPACK_EXTRA_BYTES)        \
-      return SECFailure;                                                       \
+    if (r != MSGPACK_UNPACK_SUCCESS && r != MSGPACK_UNPACK_EXTRA_BYTES) {      \
+      rv = SECFailure;                                                         \
+      goto cleanup;                                                            \
+    }                                                                          \
   } while (0);
 
 // Check an MPI library call. If it fails, set the return code and jump
