@@ -14,7 +14,6 @@
 
 #include <gtk/gtk.h>
 #include <functional>
-#include <vector>
 
 /*
  * MozContainer
