@@ -22,6 +22,7 @@ only-for-abis:
 job-defaults:
     attributes:
         artifact_prefix: public/test_info
+        nightly: true
     dependencies:
         geckoview-nightly: geckoview-nightly
     notify:

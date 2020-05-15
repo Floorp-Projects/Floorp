@@ -19,6 +19,7 @@ only-for-abis:
 
 job-defaults:
     attributes:
+        nightly: true
         retrigger: true
     dependencies:
         geckoview-nightly: geckoview-nightly

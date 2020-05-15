@@ -22,6 +22,8 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 job-template:
+    attributes:
+        nightly: true
     description: "Run visual metrics calculations on Raptor"
     run-on-projects: []
     run-on-tasks-for: []
