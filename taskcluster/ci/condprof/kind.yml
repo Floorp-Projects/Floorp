@@ -14,7 +14,6 @@ transforms:
 
 job-defaults:
     run-on-projects:
-        - try
         - mozilla-central
     treeherder:
         kind: other

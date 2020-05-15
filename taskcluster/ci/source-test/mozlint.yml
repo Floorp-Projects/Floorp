@@ -271,8 +271,7 @@ l10n-conflicts:
     treeherder:
         symbol: text(l1nt-conflicts)
     always-target: false
-    run-on-projects:
-        - try
+    run-on-projects: []
     run:
         mach: lint -W -l l10n -f treeherder -f json:/builds/worker/mozlint.json *
     when:

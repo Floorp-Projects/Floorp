@@ -23,7 +23,6 @@ macosx64-node-10:
         symbol: TM(node-10)
     run-on-projects:
         - trunk
-        - try
     run:
         arguments: ['macosx64', '10']
         toolchain-alias: macosx64-node
@@ -45,4 +44,3 @@ win32-node-10:
         toolchain-alias: win32-node
     run-on-projects:
         - trunk
-        - try

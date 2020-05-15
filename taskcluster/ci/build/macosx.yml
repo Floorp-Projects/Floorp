@@ -73,7 +73,7 @@ macosx64/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -261,7 +261,7 @@ macosx64-noopt/debug:
         mozconfig-variant: cross-noopt-debug
         tooltool-downloads: internal
         keep-artifacts: false
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -397,7 +397,7 @@ macosx64-ccov/opt:
         custom-build-variant-cfg: code-coverage-opt
         mozconfig-variant: code-coverage
         tooltool-downloads: internal
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -486,7 +486,7 @@ macosx64-gcp/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils

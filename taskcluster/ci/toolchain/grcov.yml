@@ -26,7 +26,6 @@ macosx64-grcov:
         symbol: TM(grcov)
     run-on-projects:
         - trunk
-        - try
     fetches:
         toolchain:
             - linux64-rust-1.41

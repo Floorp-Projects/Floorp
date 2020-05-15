@@ -21,7 +21,6 @@ job-defaults:
             - 'build/build-clang/build-clang.py'
     run-on-projects:
         - trunk
-        - try
     fetches:
         fetch:
             - clang-10

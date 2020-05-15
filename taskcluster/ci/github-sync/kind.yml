@@ -16,7 +16,7 @@ transforms:
 job-defaults:
     attributes:
         retrigger: true
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     worker-type: b-linux
     treeherder:
         platform: other/opt

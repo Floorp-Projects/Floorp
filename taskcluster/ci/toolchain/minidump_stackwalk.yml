@@ -24,7 +24,6 @@ job-defaults:
         toolchain-artifact: public/build/minidump_stackwalk.tar.xz
     run-on-projects:
         - trunk
-        - try
 
 linux64-minidump-stackwalk:
     treeherder:
