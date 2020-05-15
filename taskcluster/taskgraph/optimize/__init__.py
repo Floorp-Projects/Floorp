@@ -406,10 +406,10 @@ class experimental(object):
     }
     """Doesn't limit platforms, high confidence threshold."""
 
-    bugbug_debug = {
+    bugbug_debug_disperse = {
         'test': Any(
             'skip-unless-schedules',
-            Any('bugbug', 'platform-debug'),
+            Any('bugbug', 'platform-debug', 'platform-disperse'),
             split_args=tuple
         ),
     }

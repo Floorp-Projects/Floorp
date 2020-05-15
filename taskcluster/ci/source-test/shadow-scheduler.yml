@@ -55,16 +55,16 @@ bugbug_all_high:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug_all_high
 
-bugbug_debug:
-    description: Runs the bugbug_debug optimization strategy instead of the default.
+bugbug_debug_disperse:
+    description: Runs the bugbug_debug_disperse optimization strategy instead of the default.
     treeherder:
-        symbol: SS(bugbug_debug)
+        symbol: SS(bugbug_debug_disperse)
     index:
         product: source
-        job-name: shadow-scheduler-bugbug_debug
+        job-name: shadow-scheduler-bugbug_debug_disperse
     worker:
         env:
-            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug_debug
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug_debug_disperse
 
 bugbug_disperse_low:
     description: Runs the bugbug_disperse_low optimization strategy instead of the default.
