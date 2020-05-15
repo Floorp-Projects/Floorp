@@ -27,8 +27,6 @@ var gTabsPanel = {
     if (this._initializedElements) {
       return;
     }
-    let template = document.getElementById("allTabsMenu-container");
-    template.replaceWith(template.content);
 
     for (let [name, id] of Object.entries(this.kElements)) {
       this[name] = document.getElementById(id);
@@ -149,9 +147,8 @@ var gTabsPanel = {
   },
 
   hideAllTabsPanel() {
-    if (this.allTabsView) {
-      PanelMultiView.hidePopup(this.allTabsView.closest("panel"));
-    }
+    this.init();
+    PanelMultiView.hidePopup(this.allTabsView.closest("panel"));
   },
 
   showHiddenTabsPanel(event) {
