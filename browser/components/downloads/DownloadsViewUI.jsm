@@ -749,7 +749,8 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   downloadsCmd_open() {
-    DownloadsCommon.openDownload(this.download);
+    let file = new FileUtils.File(this.download.target.path);
+    DownloadsCommon.openDownloadedFile(file, null, this.element.ownerGlobal);
   },
 
   downloadsCmd_openReferrer() {
