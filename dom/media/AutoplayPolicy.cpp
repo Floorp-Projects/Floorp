@@ -33,6 +33,10 @@ mozilla::LazyLogModule gAutoplayPermissionLog("Autoplay");
 namespace mozilla {
 namespace dom {
 
+static const uint32_t sPOLICY_STICKY_ACTIVATION = 0;
+static const uint32_t sPOLICY_TRANSIENT_ACTIVATION = 1;
+static const uint32_t sPOLICY_USER_INPUT_DEPTH = 2;
+
 static Document* ApproverDocOf(const Document& aDocument) {
   nsCOMPtr<nsIDocShell> ds = aDocument.GetDocShell();
   if (!ds) {
@@ -161,15 +165,33 @@ static bool IsAudioContextAllowedToPlay(const AudioContext& aContext) {
 
 static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
   return Preferences::GetBool("media.autoplay.block-webaudio", false) &&
-         StaticPrefs::media_autoplay_enabled_user_gestures_needed();
+         StaticPrefs::media_autoplay_blocking_policy() ==
+             sPOLICY_STICKY_ACTIVATION;
 }
 
 static bool IsAllowedToPlayByBlockingModel(const HTMLMediaElement& aElement) {
-  if (!StaticPrefs::media_autoplay_enabled_user_gestures_needed()) {
-    // If element is blessed, it would always be allowed to play().
-    return aElement.IsBlessed() || UserActivation::IsHandlingUserInput();
+  const uint32_t policy = StaticPrefs::media_autoplay_blocking_policy();
+  if (policy == sPOLICY_STICKY_ACTIVATION) {
+    const bool isAllowed =
+        IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
+    AUTOPLAY_LOG("Use 'sticky-activation', isAllowed=%d", isAllowed);
+    return isAllowed;
   }
-  return IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
+  // If element is blessed, it would always be allowed to play().
+  const bool isElementBlessed = aElement.IsBlessed();
+  if (policy == sPOLICY_USER_INPUT_DEPTH) {
+    const bool isUserInput = UserActivation::IsHandlingUserInput();
+    AUTOPLAY_LOG("Use 'User-Input-Depth', isBlessed=%d, isUserInput=%d",
+                 isElementBlessed, isUserInput);
+    return isElementBlessed || isUserInput;
+  }
+  const bool hasTransientActivation =
+      aElement.OwnerDoc()->HasValidTransientUserGestureActivation();
+  AUTOPLAY_LOG(
+      "Use 'transient-activation', isBlessed=%d, "
+      "hasValidTransientActivation=%d",
+      isElementBlessed, hasTransientActivation);
+  return isElementBlessed || hasTransientActivation;
 }
 
 // On GeckoView, we don't store any site's permission in permission manager, we

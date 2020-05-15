@@ -1480,8 +1480,6 @@ pref("media.gmp.trial-create.enabled", true);
 pref("media.gmp-gmpopenh264.visible", true);
 pref("media.gmp-gmpopenh264.enabled", true);
 
-// Switch block autoplay logic to v2, and enable UI.
-pref("media.autoplay.enabled.user-gestures-needed", true);
 // Set Firefox to block autoplay, asking for permission by default.
 pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
 
