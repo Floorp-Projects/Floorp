@@ -18,7 +18,7 @@ using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerG
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
-using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
+using mozilla::layers::GeckoContentController_TapType from "mozilla/layers/GeckoContentControllerTypes.h";
 using class mozilla::layers::KeyboardMap from "mozilla/layers/KeyboardMap.h";
 using mozilla::wr::RenderRoot from "mozilla/webrender/WebRenderTypes.h";
 
@@ -72,7 +72,7 @@ parent:
 
 child:
 
-  async HandleTap(TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
+  async HandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
                   ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
 
   async NotifyPinchGesture(PinchGestureType aType, ScrollableLayerGuid aGuid,
