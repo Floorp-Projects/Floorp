@@ -26,18 +26,6 @@ jobs:
           treeherder-symbol: fennec-beta
           target-tasks-method: fennec-beta
       when: []  # Force hook only
-    - name: raptor
-      job:
-          type: decision-task
-          treeherder-symbol: raptor-D
-          target-tasks-method: raptor
-      when: [{hour: 1, minute: 0}]
-    - name: browsertime
-      job:
-          type: decision-task
-          treeherder-symbol: btime-D
-          target-tasks-method: browsertime
-      when: [{hour: 1, minute: 0}]
     - name: bump-android-components
       job:
           type: decision-task

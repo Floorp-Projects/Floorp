@@ -13,7 +13,7 @@ kind-dependencies:
 primary-dependency: signing
 
 only-for-build-types:
-    - performance-test
+    - nightly
 
 only-for-abis:
     - armeabi-v7a
@@ -81,7 +81,7 @@ job-defaults:
             - '--app=fenix'
             - '--browsertime'
             - '--cold'
-            - '--binary=org.mozilla.fenix.performancetest'
+            - '--binary=org.mozilla.fenix.nightly'
             - '--activity=org.mozilla.fenix.IntentReceiverActivity'
             - '--download-symbols=ondemand'
             - '--browsertime-node=$MOZ_FETCHES_DIR/node/bin/node'

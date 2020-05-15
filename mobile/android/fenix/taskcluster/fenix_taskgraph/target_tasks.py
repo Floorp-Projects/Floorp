@@ -33,7 +33,8 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
     def filter(task, parameters):
         # We don't want to ship nightly while Google Play is still behind manual review.
         # See bug 1628413 for more context.
-        return task.attributes.get("nightly", False) and task.kind != "push-apk"
+        return task.attributes.get("nightly", False) and task.kind != "push-apk" or \
+            task.kind in ('browsertime', 'visual-metrics', 'raptor')
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
@@ -57,22 +58,6 @@ def target_tasks_fennec_nightly(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a beta build signed with the fennec key."""
 
     return [l for l, t in full_task_graph.tasks.iteritems() if _filter_fennec("beta", t, parameters)]
-
-
-@_target_task('raptor')
-def target_tasks_raptor(full_task_graph, parameters, graph_config):
-    def filter(task, parameters):
-        return task.kind == 'raptor'
-
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
-
-
-@_target_task('browsertime')
-def target_tasks_raptor(full_task_graph, parameters, graph_config):
-    def filter(task, parameters):
-        return task.kind in ('browsertime', 'visual-metrics')
-
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
 @_target_task("bump_android_components")
