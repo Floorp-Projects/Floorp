@@ -30,7 +30,8 @@ AntiTracking.runTest(
         resolve()
       );
     });
-  }
+  },
+  [["dom.caches.testing.enabled", true]]
 );
 
 AntiTracking.runTest(
@@ -104,7 +105,7 @@ AntiTracking.runTest(
       );
     });
   },
-  null,
+  [["dom.caches.testing.enabled", true]],
   false,
   false
 );
