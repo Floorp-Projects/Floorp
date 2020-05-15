@@ -1,7 +1,7 @@
 #ifndef _CUBEB_JNI_INSTANCES_H_
 #define _CUBEB_JNI_INSTANCES_H_
 
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/jni/Utils.h"
 
 /*
