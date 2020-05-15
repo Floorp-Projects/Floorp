@@ -414,8 +414,6 @@
     <string name="library_reading_list">Cytańska lisćina</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Pytaś</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Biblioteka</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Nastajenja</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1123,6 +1121,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Pomoc</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Wówalenja</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Powěźeńka priwatnosći</string>
     <!-- About page link text to open know your rights link -->
@@ -1357,8 +1357,26 @@
     <string name="certificate_info_verified_by">Pśeglědany wót: %1$s </string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Lašowaś</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Wobźěłaś</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Cośo napšawdu toś to pśizjawjenje lašowaś?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Lašowaś</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Pśizjawjeńske nastajenja</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Wobźěłujobne tekstowe pólo za webadresu pśizjawjenja.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Wobźěłujobne tekstowe pólo za wužywaŕske mě pśizjawjenja.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Wobźěłujobne tekstowe pólo za gronidło pśizjawjenja.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Změny pśizjawjenja składowaś</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Změny zachyśiś</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Wobźěłaś</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Gronidło trěbne</string>
 </resources>

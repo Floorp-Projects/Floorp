@@ -424,8 +424,6 @@
     <string name="library_reading_list">Leseliste</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Suchen</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Bibliothek</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Einstellungen</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1153,6 +1151,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Hilfe</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Abstürze</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Datenschutzhinweis</string>
     <!-- About page link text to open know your rights link -->
@@ -1387,8 +1387,26 @@
     <string name="certificate_info_verified_by">Verifiziert von: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Entfernen</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Bearbeiten</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Sollen diese Zugangsdaten wirklich gelöscht werden?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Löschen</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Optionen für Zugangsdaten</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Das bearbeitbare Textfeld für die Internetadresse der Zugangsdaten.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Das bearbeitbare Textfeld für den Benutzernamen der Zugangsdaten.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Das bearbeitbare Textfeld für das Passwort der Zugangsdaten.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Änderungen an Zugangsdaten speichern.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Änderungen verwerfen</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Bearbeiten</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Passwort erforderlich</string>
 </resources>

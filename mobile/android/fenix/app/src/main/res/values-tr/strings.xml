@@ -415,8 +415,6 @@
     <string name="library_reading_list">Okuma listesi</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Ara</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Arşiv</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Ayarlar</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1119,6 +1117,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Destek</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Çökmeler</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Gizlilik bildirimi</string>
     <!-- About page link text to open know your rights link -->
@@ -1353,8 +1353,16 @@
     <string name="certificate_info_verified_by">Doğrulayan: %1$s </string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Sil</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Düzenle</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Bu hesabı silmek istediğinizden emin misiniz?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Sil</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Değişikliklerden vazgeç</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Düzenle</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Parola gerekli</string>
 </resources>

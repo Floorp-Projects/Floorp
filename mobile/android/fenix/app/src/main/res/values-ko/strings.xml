@@ -427,8 +427,6 @@
     <string name="library_reading_list">읽기 목록</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">검색</string>
-    <!-- Library Page Title -->
-    <string name="library_title">라이브러리</string>
     <!-- Settings Page Title -->
     <string name="settings_title">설정</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1167,6 +1165,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">지원</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">충돌</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">개인 정보 보호 정책</string>
 
@@ -1403,8 +1403,26 @@
     <string name="certificate_info_verified_by">인증 기관: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">삭제</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">편집</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">이 로그인을 삭제하시겠습니까?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">삭제</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">로그인 옵션</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">로그인 웹 주소의 편집 가능한 텍스트 필드입니다.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">로그인 사용자 이름의 편집 가능한 텍스트 필드입니다.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">로그인 비밀번호의 편집 가능한 텍스트 필드입니다.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">변경 내용을 로그인에 저장.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">변경 내용 취소</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">편집</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">비밀번호 필요</string>
 </resources>

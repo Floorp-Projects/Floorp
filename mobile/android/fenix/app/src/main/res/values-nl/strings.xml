@@ -421,8 +421,6 @@
 
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Zoeken</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Bibliotheek</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Instellingen</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1130,6 +1128,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Ondersteuning</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Crashes</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Privacyverklaring</string>
     <!-- About page link text to open know your rights link -->
@@ -1364,8 +1364,26 @@
     <string name="certificate_info_verified_by">Geverifieerd door: %1$s </string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Verwijderen</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Bewerken</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Weet u zeker dat u deze aanmelding wilt verwijderen?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Verwijderen</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Aanmeldopties</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Het bewerkbare tekstveld voor het webadres van de aanmelding.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Het bewerkbare tekstveld voor de gebruikersnaam van de aanmelding.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Het bewerkbare tekstveld voor het wachtwoord van de aanmelding.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Wijzigingen aan aanmelding opslaan.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Wijzigingen verwerpen</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Bewerken</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Wachtwoord vereist</string>
 </resources>

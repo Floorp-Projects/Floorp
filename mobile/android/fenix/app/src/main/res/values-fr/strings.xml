@@ -423,8 +423,6 @@
     <string name="library_reading_list">Liste de lecture</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Rechercher</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Bibliothèque</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Paramètres</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1157,6 +1155,8 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
 
     <!-- About page link text to open support link -->
     <string name="about_support">Assistance</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Plantages</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Politique de confidentialité</string>
     <!-- About page link text to open know your rights link -->
@@ -1390,8 +1390,18 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="certificate_info_verified_by">Vérifié par : %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Supprimer</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Modifier</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Voulez-vous vraiment supprimer cet identifiant ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Supprimer</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Enregistrez les modifications de l’identifiant.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Annuler les modifications</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Modifier</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Mot de passe requis</string>
 </resources>

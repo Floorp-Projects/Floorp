@@ -414,8 +414,6 @@
     <string name="library_reading_list">Списак за читање</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Претрага</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Библиотека</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Подешавања</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1125,6 +1123,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Подршка</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Рушења</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Обавештење о приватности</string>
     <!-- About page link text to open know your rights link -->
@@ -1359,8 +1359,26 @@
     <string name="certificate_info_verified_by">Потврђено од: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Обриши</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Уређивање</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Јесте ли сигурни да желите да избришете ову пријаву?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Обриши</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Опције за пријаву</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Текстовно поље које може да се уређује за веб адресу пријаве.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Текстовно поље које може да се уређује за корисничко име пријаве.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Текстовно поље које може да се уређује за лозинку пријаве.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Сачувајте измене за пријаву.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Одбаците измене</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Уређивање</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Потребна је лозинка</string>
 </resources>
