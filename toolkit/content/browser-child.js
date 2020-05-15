@@ -26,6 +26,32 @@ sendAsyncMessage("Content:BrowserChildReady", {
   time: Services.telemetry.msSystemNow(),
 });
 
+addEventListener(
+  "DOMTitleChanged",
+  function(aEvent) {
+    if (
+      !aEvent.isTrusted ||
+      // Check that we haven't been closed (DOM code dispatches this event
+      // asynchronously).
+      content.closed
+    ) {
+      return;
+    }
+    // Ensure `docShell.document` (an nsIWebNavigation idl prop) is there:
+    docShell.QueryInterface(Ci.nsIWebNavigation);
+    if (
+      // Check that the document whose title changed is the toplevel document,
+      // rather than a subframe, and check that it is still the current
+      // document in the docshell - we may have started loading another one.
+      docShell.document != aEvent.target
+    ) {
+      return;
+    }
+    sendAsyncMessage("DOMTitleChanged", { title: content.document.title });
+  },
+  false
+);
+
 // This is here for now until we find a better way of forcing an about:blank load
 // with a particular principal that doesn't involve the message manager. We can't
 // do this with JS Window Actors for now because JS Window Actors are tied to the
