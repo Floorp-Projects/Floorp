@@ -836,26 +836,6 @@
     "description": "Reason for performing a non-incremental GC (see js::gc::AbortReason)",
     "bug_numbers": [1308116]
   },
-  "GC_SCC_SWEEP_TOTAL_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 500,
-    "n_buckets": 50,
-    "description": "Time spent sweeping compartment SCCs (ms)"
-  },
-  "GC_SCC_SWEEP_MAX_PAUSE_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 500,
-    "n_buckets": 50,
-    "description": "Time spent sweeping slowest compartment SCC (ms)"
-  },
   "GC_MINOR_REASON": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
