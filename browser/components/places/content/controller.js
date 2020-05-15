@@ -128,6 +128,10 @@ PlacesController.prototype = {
   },
 
   isCommandEnabled: function PC_isCommandEnabled(aCommand) {
+    // Determine whether or not nodes can be inserted.
+    let ip = this._view.insertionPoint;
+    let canInsert = ip && (aCommand.endsWith("_paste") || !ip.isTag);
+
     switch (aCommand) {
       case "cmd_undo":
         return PlacesTransactions.topUndoEntry != null;
@@ -155,7 +159,22 @@ PlacesController.prototype = {
         return this._view.hasSelection;
       case "cmd_paste":
       case "placesCmd_paste":
-        return this._canInsert(true) && this._isClipboardDataPasteable();
+        // If the clipboard contains a Places flavor it is definitely pasteable,
+        // otherwise we also allow pasting "text/unicode" and "text/x-moz-url" data.
+        // We don't check if the data is valid here, because the clipboard may
+        // contain very large blobs that would largely slowdown commands updating.
+        // Of course later paste() should ignore any invalid data.
+        return (
+          canInsert &&
+          this.clipboard.hasDataMatchingFlavors(
+            [
+              ...PlacesUIUtils.PLACES_FLAVORS,
+              PlacesUtils.TYPE_X_MOZ_URL,
+              PlacesUtils.TYPE_UNICODE,
+            ],
+            Ci.nsIClipboard.kGlobalClipboard
+          )
+        );
       case "cmd_selectAll":
         if (this._view.selType != "single") {
           let rootNode = this._view.result.root;
@@ -172,12 +191,12 @@ PlacesController.prototype = {
         return selectedNode && PlacesUtils.nodeIsURI(selectedNode);
       }
       case "placesCmd_new:folder":
-        return this._canInsert();
+        return canInsert;
       case "placesCmd_new:bookmark":
-        return this._canInsert();
+        return canInsert;
       case "placesCmd_new:separator":
         return (
-          this._canInsert() &&
+          canInsert &&
           !PlacesUtils.asQuery(this._view.result.root).queryOptions
             .excludeItems &&
           this._view.result.sortingMode ==
@@ -204,8 +223,8 @@ PlacesController.prototype = {
         );
       }
       case "placesCmd_createBookmark": {
-        return this._view.selectedNodes.every(
-          node => PlacesUtils.nodeIsURI(node) && node.itemId == -1
+        return !this._view.selectedNodes.some(
+          node => !PlacesUtils.nodeIsURI(node) || node.itemId != -1
         );
       }
       default:
@@ -340,69 +359,6 @@ PlacesController.prototype = {
     }
 
     return true;
-  },
-
-  /**
-   * Determines whether or not nodes can be inserted relative to the selection.
-   */
-  _canInsert: function PC__canInsert(isPaste) {
-    var ip = this._view.insertionPoint;
-    return ip != null && (isPaste || !ip.isTag);
-  },
-
-  /**
-   * Looks at the data on the clipboard to see if it is paste-able.
-   * Paste-able data is:
-   *   - in a format that the view can receive
-   * @return true if: - clipboard data is of a TYPE_X_MOZ_PLACE_* flavor,
-   *                  - clipboard data is of type TEXT_UNICODE and
-   *                    is a valid URI.
-   */
-  _isClipboardDataPasteable: function PC__isClipboardDataPasteable() {
-    // if the clipboard contains TYPE_X_MOZ_PLACE_* data, it is definitely
-    // pasteable, with no need to unwrap all the nodes.
-
-    var flavors = PlacesUIUtils.PLACES_FLAVORS;
-    var clipboard = this.clipboard;
-    var hasPlacesData = clipboard.hasDataMatchingFlavors(
-      flavors,
-      Ci.nsIClipboard.kGlobalClipboard
-    );
-    if (hasPlacesData) {
-      return this._view.insertionPoint != null;
-    }
-
-    // if the clipboard doesn't have TYPE_X_MOZ_PLACE_* data, we also allow
-    // pasting of valid "text/unicode" and "text/x-moz-url" data
-    var xferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(
-      Ci.nsITransferable
-    );
-    xferable.init(null);
-
-    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_URL);
-    xferable.addDataFlavor(PlacesUtils.TYPE_UNICODE);
-    clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
-
-    try {
-      // getAnyTransferData will throw if no data is available.
-      var data = {},
-        type = {};
-      xferable.getAnyTransferData(type, data);
-      data = data.value.QueryInterface(Ci.nsISupportsString).data;
-      if (
-        type.value != PlacesUtils.TYPE_X_MOZ_URL &&
-        type.value != PlacesUtils.TYPE_UNICODE
-      ) {
-        return false;
-      }
-
-      // unwrapNodes() will throw if the data blob is malformed.
-      PlacesUtils.unwrapNodes(data, type.value);
-      return this._view.insertionPoint != null;
-    } catch (e) {
-      // getAnyTransferData or unwrapNodes failed
-      return false;
-    }
   },
 
   /**
