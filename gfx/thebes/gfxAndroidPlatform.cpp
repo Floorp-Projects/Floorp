@@ -29,7 +29,7 @@
 #include FT_FREETYPE_H
 #include FT_MODULE_H
 
-#include "GeneratedJNINatives.h"
+#include "mozilla/java/VsyncSourceNatives.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

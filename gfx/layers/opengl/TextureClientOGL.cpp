@@ -16,6 +16,8 @@
 #  include <jni.h>
 #  include <android/native_window.h>
 #  include <android/native_window_jni.h>
+#  include "mozilla/java/GeckoSurfaceWrappers.h"
+#  include "mozilla/java/SurfaceAllocatorWrappers.h"
 #endif
 
 using namespace mozilla::gl;

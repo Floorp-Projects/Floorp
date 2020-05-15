@@ -11,7 +11,7 @@
 #  include <jni.h>
 #  include <android/native_window.h>
 #  include <android/native_window_jni.h>
-#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/java/GeckoSurfaceWrappers.h"
 #  include "SurfaceTexture.h"
 
 namespace mozilla {

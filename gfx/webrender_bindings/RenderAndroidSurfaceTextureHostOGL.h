@@ -7,7 +7,7 @@
 #ifndef MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOSTOGL_H
 #define MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOSTOGL_H
 
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #include "mozilla/layers/TextureHostOGL.h"
 #include "RenderTextureHostOGL.h"
 

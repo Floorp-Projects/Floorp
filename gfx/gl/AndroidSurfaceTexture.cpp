@@ -8,7 +8,7 @@
 
 #  include "AndroidSurfaceTexture.h"
 
-#  include "GeneratedJNINatives.h"
+#  include "mozilla/java/GeckoSurfaceTextureNatives.h"
 
 #  include "AndroidNativeWindow.h"
 #  include "GLContextEGL.h"

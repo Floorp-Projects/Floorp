@@ -20,8 +20,8 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #  include "mozilla/widget/AndroidCompositorWidget.h"
-#  include "GeneratedJNIWrappers.h"
 #  include <android/native_window.h>
 #  include <android/native_window_jni.h>
 #endif
