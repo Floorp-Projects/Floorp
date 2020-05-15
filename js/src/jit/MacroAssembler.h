@@ -1570,8 +1570,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchTestGCThing(Condition cond, const BaseIndex& address,
                                 Label* label) PER_SHARED_ARCH;
   inline void branchTestGCThing(Condition cond, const ValueOperand& value,
-                                Label* label)
-      DEFINED_ON(arm, arm64, x86_shared);
+                                Label* label) PER_SHARED_ARCH;
 
   inline void branchTestPrimitive(Condition cond, const ValueOperand& value,
                                   Label* label)
@@ -1624,7 +1623,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   template <typename T>
   void branchValueIsNurseryCellImpl(Condition cond, const T& value,
                                     Register temp, Label* label)
-      DEFINED_ON(arm64, x64);
+      DEFINED_ON(arm64, x64, mips64);
 
   template <typename T>
   inline void branchTestUndefinedImpl(Condition cond, const T& t, Label* label)
@@ -1657,8 +1656,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchTestObjectImpl(Condition cond, const T& t, Label* label)
       DEFINED_ON(arm, arm64, x86_shared);
   template <typename T>
-  inline void branchTestGCThingImpl(Condition cond, const T& t, Label* label)
-      DEFINED_ON(arm, arm64, x86_shared);
+  inline void branchTestGCThingImpl(Condition cond, const T& t,
+                                    Label* label) PER_SHARED_ARCH;
   template <typename T>
   inline void branchTestPrimitiveImpl(Condition cond, const T& t, Label* label)
       DEFINED_ON(arm, arm64, x86_shared);
