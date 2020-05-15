@@ -11,99 +11,6 @@ ChromeUtils.defineModuleGetter(
   "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "UpdateUtils",
-  "resource://gre/modules/UpdateUtils.jsm"
-);
-
-/*
- * Used for all kinds of permissions checks which requires explicit
- * whitelisting of specific permissions granted through RPM.
- *
- * Please note that prefs that one wants to update need to be
- * whitelisted within AsyncPrefs.jsm.
- */
-let RPMAccessManager = {
-  accessMap: {
-    "about:newinstall": {
-      getUpdateChannel: ["yes"],
-      getFxAccountsEndpoint: ["yes"],
-    },
-  },
-
-  checkAllowAccess(aDocument, aFeature, aValue) {
-    let principal = aDocument.nodePrincipal;
-    // if there is no content principal; deny access
-    if (!principal) {
-      return false;
-    }
-
-    let uri;
-    if (principal.isNullPrincipal || !principal.URI) {
-      // null principals have a null-principal URI, but for the sake of RPM we
-      // want to access the "real" document URI directly, e.g. if the about:
-      // page is sandboxed.
-      uri = aDocument.documentURIObject;
-    } else {
-      uri = principal.URI;
-    }
-
-    // Cut query params
-    let spec = uri.prePath + uri.filePath;
-
-    if (!uri.schemeIs("about")) {
-      Cu.reportError(
-        "RPMAccessManager does not allow access to Feature: " +
-          aFeature +
-          " for: " +
-          spec
-      );
-      return false;
-    }
-
-    // check if there is an entry for that requestying URI in the accessMap;
-    // if not, deny access.
-    let accessMapForURI = this.accessMap[spec];
-    if (!accessMapForURI) {
-      Cu.reportError(
-        "RPMAccessManager does not allow access to Feature: " +
-          aFeature +
-          " for: " +
-          spec
-      );
-      return false;
-    }
-
-    // check if the feature is allowed to be accessed for that URI;
-    // if not, deny access.
-    let accessMapForFeature = accessMapForURI[aFeature];
-    if (!accessMapForFeature) {
-      Cu.reportError(
-        "RPMAccessManager does not allow access to Feature: " +
-          aFeature +
-          " for: " +
-          spec
-      );
-      return false;
-    }
-
-    // if the actual value is in the whitelist for that feature;
-    // allow access
-    if (accessMapForFeature.includes(aValue)) {
-      return true;
-    }
-
-    // otherwise deny access
-    Cu.reportError(
-      "RPMAccessManager does not allow access to Feature: " +
-        aFeature +
-        " for: " +
-        spec
-    );
-    return false;
-  },
-};
 
 class MessageListener {
   constructor() {
@@ -369,28 +276,5 @@ class MessagePort {
     return new this.window.Promise((resolve, reject) =>
       promise.then(resolve, reject)
     );
-  }
-
-  getUpdateChannel() {
-    let doc = this.window.document;
-    if (!RPMAccessManager.checkAllowAccess(doc, "getUpdateChannel", "yes")) {
-      throw new Error(
-        "RPMAccessManager does not allow access to getUpdateChannel"
-      );
-    }
-    return UpdateUtils.UpdateChannel;
-  }
-
-  getFxAccountsEndpoint(aEntrypoint) {
-    let doc = this.window.document;
-    if (
-      !RPMAccessManager.checkAllowAccess(doc, "getFxAccountsEndpoint", "yes")
-    ) {
-      throw new Error(
-        "RPMAccessManager does not allow access to getFxAccountsEndpoint"
-      );
-    }
-
-    return this.sendRequest("FxAccountsEndpoint", aEntrypoint);
   }
 }

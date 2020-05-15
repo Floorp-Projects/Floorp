@@ -25,8 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",
-  RemotePages:
-    "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
 });
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -94,16 +92,6 @@ function resolveURIInternal(aCmdLine, aArgument) {
 }
 
 let gKiosk = false;
-
-let gRemoteInstallPage = null;
-
-function getNewInstallPage() {
-  if (!gRemoteInstallPage) {
-    gRemoteInstallPage = new RemotePages(NEWINSTALL_PAGE);
-  }
-
-  return NEWINSTALL_PAGE;
-}
 
 var gFirstWindow = false;
 
@@ -250,7 +238,7 @@ function openBrowserWindow(
       Ci.nsIToolkitProfileService
     );
     if (isStartup && pService.createdAlternateProfile) {
-      let url = getNewInstallPage();
+      let url = NEWINSTALL_PAGE;
       if (Array.isArray(urlOrUrlList)) {
         urlOrUrlList.unshift(url);
       } else {
@@ -664,7 +652,7 @@ nsBrowserContentHandler.prototype = {
             // Override the welcome page to explain why the user has a new
             // profile. nsBrowserGlue.css will be responsible for showing the
             // modal dialog.
-            overridePage = getNewInstallPage();
+            overridePage = NEWINSTALL_PAGE;
             break;
           case OVERRIDE_NEW_PROFILE:
             // New profile.

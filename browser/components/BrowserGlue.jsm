@@ -99,6 +99,21 @@ let ACTORS = {
     matches: ["about:logins", "about:logins?*"],
   },
 
+  AboutNewInstall: {
+    parent: {
+      moduleURI: "resource:///actors/AboutNewInstallParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/AboutNewInstallChild.jsm",
+
+      events: {
+        DOMWindowCreated: { capture: true },
+      },
+    },
+
+    matches: ["about:newinstall"],
+  },
+
   AboutNewTab: {
     child: {
       moduleURI: "resource:///actors/AboutNewTabChild.jsm",
