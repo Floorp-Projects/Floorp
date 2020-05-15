@@ -4834,11 +4834,11 @@ CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
       cacheIRStubKind_(BaselineCacheIRStubKind::Regular) {}
 
 void CallIRGenerator::emitNativeCalleeGuard(HandleFunction callee) {
+  MOZ_ASSERT(callee->isBuiltinNative());
   ValOperandId calleeValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
-  JSNative native = callee->native();
-  writer.guardSpecificNativeFunction(calleeObjId, native);
+  writer.guardSpecificFunction(calleeObjId, callee);
 }
 
 AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {

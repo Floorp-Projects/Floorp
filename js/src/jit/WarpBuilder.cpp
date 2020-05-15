@@ -1631,6 +1631,11 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
     return false;
   }
 
+  // TODO: Consider using buildIC for this as well.
+  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return TranspileCacheIRToMIR(mirGen_, loc, current, snapshot, callInfo);
+  }
+
   // TODO: consider adding a Call IC like Baseline has.
 
   bool needsThisCheck = false;

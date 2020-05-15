@@ -1,4 +1,3 @@
-// |jit-test| --warp
 // A simple test to ensure WarpBuilder files are included in code-coverage builds.
 // See bug 1635097.
 
