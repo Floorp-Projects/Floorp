@@ -12,7 +12,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.runBlocking
-import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.experiments.Configuration
 import mozilla.components.service.experiments.Experiment
@@ -40,13 +39,13 @@ class ExperimentsDebugActivityTest {
 
     private val testPackageName = "mozilla.components.service.experiments.test"
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private lateinit var configuration: Configuration
+    private val configuration: Configuration = Configuration(HttpURLConnectionClient())
 
     @Before
     fun setup() {
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
 
-        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() as Client })
+        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
         val config = GleanConfiguration(httpClient = httpClient)
         Glean.initialize(context, uploadEnabled = true, configuration = config)
 
@@ -84,8 +83,10 @@ class ExperimentsDebugActivityTest {
         intent.putExtra(ExperimentsDebugActivity.UPDATE_EXPERIMENTS_EXTRA_KEY, true)
         val activity = Robolectric.buildActivity(ExperimentsDebugActivity::class.java, intent)
 
-        val updater: ExperimentsUpdater = spy(ExperimentsUpdater(ApplicationProvider.getApplicationContext<Context>(), Experiments))
-        updater.initialize(Configuration())
+        val updater: ExperimentsUpdater = spy(
+            ExperimentsUpdater(ApplicationProvider.getApplicationContext<Context>(), Experiments)
+        )
+        updater.initialize(configuration)
         Experiments.updater = updater
 
         activity.create().start().resume()
@@ -109,8 +110,6 @@ class ExperimentsDebugActivityTest {
         val intent = Intent(ApplicationProvider.getApplicationContext<Context>(),
             ExperimentsDebugActivity::class.java)
         var activity = Robolectric.buildActivity(ExperimentsDebugActivity::class.java, intent)
-
-        configuration = Configuration()
 
         Experiments.initialize(context, configuration)
 
@@ -162,7 +161,7 @@ class ExperimentsDebugActivityTest {
         var activity = Robolectric.buildActivity(ExperimentsDebugActivity::class.java, intent)
 
         val updater: ExperimentsUpdater = spy(ExperimentsUpdater(ApplicationProvider.getApplicationContext<Context>(), Experiments))
-        updater.initialize(Configuration())
+        updater.initialize(configuration)
         Experiments.updater = updater
 
         activity.create().start().resume()
@@ -231,8 +230,6 @@ class ExperimentsDebugActivityTest {
 
         val experimentsList = listOf(experiment1, experiment2)
 
-        // Set our experiments as the experiment result
-        configuration = Configuration()
         // Since initialization is performed off of the calling thread, we must be careful to
         // await it in tests to prevent async issues.
         Experiments.initialize(context, configuration)

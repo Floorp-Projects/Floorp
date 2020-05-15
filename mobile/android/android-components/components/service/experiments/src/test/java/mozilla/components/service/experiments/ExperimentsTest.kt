@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.any
@@ -43,7 +44,12 @@ import java.io.File
 class ExperimentsTest {
     private var context: Context = ApplicationProvider.getApplicationContext()
     private var mockContext: Context = getDefaultMockedContext()
-    private lateinit var configuration: Configuration
+    // Setting the endpoint to a non-existent one to prevent actual experiments from being
+    // downloaded to tests.
+    private val configuration: Configuration = Configuration(
+        httpClient = HttpURLConnectionClient(),
+        kintoEndpoint = "https://example.invalid"
+    )
     private lateinit var experiments: ExperimentsInternalAPI
     private lateinit var experimentStorage: FlatFileExperimentStorage
     private lateinit var experimentSource: KintoExperimentSource
@@ -119,9 +125,6 @@ class ExperimentsTest {
         // Initialize WorkManager (early) for instrumentation tests.
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
 
-        // Setting the endpoint to a non-existent one to prevent actual experiments from being
-        // downloaded to tests.
-        configuration = Configuration(kintoEndpoint = "https://example.invalid")
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = valuesProvider
 
@@ -841,9 +844,7 @@ class ExperimentsTest {
         // order to get around this, we need to minimize the mocking of the updater to avoid the
         // error.
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
-        // Setting the endpoint to a non-existent one to prevent actual experiments from being
-        // downloaded to tests.
-        configuration = Configuration(kintoEndpoint = "https://example.invalid")
+
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = ValuesProvider()
 

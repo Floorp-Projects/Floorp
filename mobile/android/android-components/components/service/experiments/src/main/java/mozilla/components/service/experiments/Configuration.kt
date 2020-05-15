@@ -5,7 +5,6 @@
 package mozilla.components.service.experiments
 
 import mozilla.components.concept.fetch.Client
-import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 
 /**
  * The Configuration class describes how to configure Experiments.
@@ -16,6 +15,6 @@ import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
  * [ExperimentsUpdater.KINTO_ENDPOINT_PROD]
  */
 data class Configuration(
-    val httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() },
+    val httpClient: Client,
     val kintoEndpoint: String = ExperimentsUpdater.KINTO_ENDPOINT_PROD
 )

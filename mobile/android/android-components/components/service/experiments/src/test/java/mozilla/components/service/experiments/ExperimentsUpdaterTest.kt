@@ -11,6 +11,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkerParameters
 import androidx.work.testing.WorkManagerTestInitHelper
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,7 +27,10 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class ExperimentsUpdaterTest {
     private var context: Context = ApplicationProvider.getApplicationContext()
-    private lateinit var configuration: Configuration
+    // Setting the endpoint to a non-existent one to prevent actual experiments from being
+    // downloaded to tests.
+    private val configuration: Configuration = Configuration(httpClient = HttpURLConnectionClient(),
+        kintoEndpoint = "https://example.invalid")
     private lateinit var experiments: ExperimentsInternalAPI
     private lateinit var experimentStorage: FlatFileExperimentStorage
     private lateinit var experimentSource: KintoExperimentSource
@@ -53,9 +57,6 @@ class ExperimentsUpdaterTest {
         // Initialize WorkManager (early) for instrumentation tests.
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
 
-        // Setting the endpoint to a non-existent one to prevent actual experiments from being
-        // downloaded to tests.
-        configuration = Configuration(kintoEndpoint = "https://example.invalid")
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = valuesProvider
 

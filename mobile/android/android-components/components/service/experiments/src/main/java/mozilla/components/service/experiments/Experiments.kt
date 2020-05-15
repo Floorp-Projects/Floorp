@@ -70,14 +70,15 @@ open class ExperimentsInternalAPI internal constructor() {
      * as shared preferences.  As we cannot enforce through the compiler that the context pass to
      * the initialize function is a applicationContext, there could potentially be a memory leak
      * if the initializing application doesn't comply.
-     * @param configuration [Configuration] containing information about the experiments endpoint.
+     * @param configuration [Configuration] containing a HTTP client for fetching experiments and
+     * the experiments endpoint.
      *
      * @return Returns a [Job] so that off-thread initialization can be monitored and interacted
      * with.
      */
     fun initialize(
         applicationContext: Context,
-        configuration: Configuration = Configuration(),
+        configuration: Configuration,
         onExperimentsUpdated: (() -> Unit)? = null
     ) {
         if (isInitialized) {
