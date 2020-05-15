@@ -7,7 +7,7 @@ function setup_test_preference(enableUserGesture) {
   return SpecialPowers.pushPrefEnv({
     set: [
       ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-      ["media.autoplay.blocking_policy", enableUserGesture ? 0 : 1],
+      ["media.autoplay.enabled.user-gestures-needed", enableUserGesture],
     ],
   });
 }
