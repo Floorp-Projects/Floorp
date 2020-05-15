@@ -136,7 +136,7 @@ This might happen if the test no longer waits for all the operations to finish e
 
 To push your current patch to try, execute:
 ```bash
-./mach try fuzzy --query "'linux64/ 'damp" --rebuild 5 --artifact
+./mach try fuzzy --query "'linux64-shippable/ 'damp" --rebuild 5
 ```
 It will print in your Terminal a link to perfherder like this one:
 [https://treeherder.mozilla.org/perf.html#/comparechooser?newProject=try&newRevision=9bef6cb13c43bbce21d40ffaea595e082a4c28db](https://treeherder.mozilla.org/perf.html#/comparechooser?newProject=try&newRevision=9bef6cb13c43bbce21d40ffaea595e082a4c28db)
