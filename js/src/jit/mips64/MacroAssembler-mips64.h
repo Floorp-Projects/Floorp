@@ -383,6 +383,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     loadPtr(src, dest);
     ma_dext(dest, dest, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
   }
+  void unboxGCThingForGCBarrier(const ValueOperand& src, Register dest) {
+    ma_dext(dest, src.valueReg(), Imm32(0), Imm32(JSVAL_TAG_SHIFT));
+  }
 
   void unboxInt32(const ValueOperand& operand, Register dest);
   void unboxInt32(Register src, Register dest);
