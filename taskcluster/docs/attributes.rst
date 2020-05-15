@@ -23,19 +23,43 @@ run_on_projects
 ===============
 
 The projects where this task should be in the target task set.  This is how
-requirements like "only run this on inbound" get implemented.  These are
-either project names or the aliases
+requirements like "only run this on autoland" get implemented.
 
- * `integration` -- integration repositories (autoland, inbound, etc)
- * `trunk` -- integration repositories plus mozilla-central
- * `release` -- release repositories including mozilla-central
+.. note::
+
+    Please use this configuration. Running a job for all projects can quickly add up
+    in term of cost while not providing any value for some projects.
+
+`run-on-projects` can use either aliases or project names.
+
+These are the aliases:
+
+ * `integration` -- integration repository (autoland)
+ * `trunk` -- integration repository plus mozilla-central
+ * `release` -- release repositories (beta, release, esr) including mozilla-central
  * `all` -- everywhere (the default)
+
+Project names are the repositories.  They can be:
+
+* `autoland`
+* `mozilla-central`
+* `mozilla-beta`
+* `mozilla-release`
+* `mozilla-esr68`
+* ... A partial list can be found in taskcluster/taskgraph/util/attributes.py
 
 For try, this attribute applies only if ``-p all`` is specified.  All jobs can
 be specified by name regardless of ``run_on_projects``.
 
 If ``run_on_projects`` is set to an empty list, then the task will not run
 anywhere, unless its build platform is specified explicitly in try syntax.
+
+
+.. note::
+
+    As `try` pushes don't use filter_for_projects by design, there isn't a way
+    to define that a task will run on `try`.
+
 
 run_on_hg_branches
 ==================
