@@ -7,14 +7,22 @@ const pageEmptyURL =
   "http://example.com/browser/remote/test/browser/page/doc_empty.html";
 
 add_task(async function testBasicNavigation({ client }) {
-  const { Page } = client;
+  const { Page, Network } = client;
   await Page.enable();
+  await Network.enable();
   const loadEventFired = Page.loadEventFired();
+  const requestEvent = Network.requestWillBeSent();
   const { frameId, loaderId, errorText } = await Page.navigate({
     url: pageEmptyURL,
   });
+  const { loaderId: requestLoaderId } = await requestEvent;
 
-  todo(!!loaderId, "Page.navigate returns loaderId");
+  ok(!!loaderId, "Page.navigate returns loaderId");
+  is(
+    loaderId,
+    requestLoaderId,
+    "Page.navigate returns same loaderId as corresponding request"
+  );
   is(errorText, undefined, "No errorText on a successful navigation");
 
   await loadEventFired;
@@ -29,12 +37,15 @@ add_task(async function testBasicNavigation({ client }) {
 });
 
 add_task(async function testTwoNavigations({ client }) {
-  const { Page } = client;
+  const { Page, Network } = client;
   await Page.enable();
+  await Network.enable();
+  let requestEvent = Network.requestWillBeSent();
   let loadEventFired = Page.loadEventFired();
   const { frameId, loaderId, errorText } = await Page.navigate({
     url: pageEmptyURL,
   });
+  const { loaderId: requestLoaderId } = await requestEvent;
   await loadEventFired;
   is(
     gBrowser.selectedBrowser.currentURI.spec,
@@ -43,6 +54,7 @@ add_task(async function testTwoNavigations({ client }) {
   );
 
   loadEventFired = Page.loadEventFired();
+  requestEvent = Network.requestWillBeSent();
   const {
     frameId: frameId2,
     loaderId: loaderId2,
@@ -50,7 +62,20 @@ add_task(async function testTwoNavigations({ client }) {
   } = await Page.navigate({
     url: pageEmptyURL,
   });
-  todo(loaderId !== loaderId2, "Page.navigate returns different loaderIds");
+  const { loaderId: requestLoaderId2 } = await requestEvent;
+  ok(!!loaderId, "Page.navigate returns loaderId");
+  ok(!!loaderId2, "Page.navigate returns loaderId");
+  isnot(loaderId, loaderId2, "Page.navigate returns different loaderIds");
+  is(
+    loaderId,
+    requestLoaderId,
+    "Page.navigate returns same loaderId as corresponding request"
+  );
+  is(
+    loaderId2,
+    requestLoaderId2,
+    "Page.navigate returns same loaderId as corresponding request"
+  );
   is(errorText, undefined, "No errorText on a successful navigation");
   is(errorText2, undefined, "No errorText on a successful navigation");
   is(frameId, frameId2, "Page.navigate return same frameId");
@@ -64,16 +89,25 @@ add_task(async function testTwoNavigations({ client }) {
 });
 
 add_task(async function testRedirect({ client }) {
-  const { Page } = client;
+  const { Page, Network } = client;
   const sjsURL =
     "http://example.com/browser/remote/test/browser/page/sjs_redirect.sjs";
   const redirectURL = `${sjsURL}?${pageEmptyURL}`;
   await Page.enable();
+  await Network.enable();
+  const requestEvent = Network.requestWillBeSent();
   const loadEventFired = Page.loadEventFired();
+
   const { frameId, loaderId, errorText } = await Page.navigate({
     url: redirectURL,
   });
-  todo(!!loaderId, "Page.navigate returns loaderId");
+  const { loaderId: requestLoaderId } = await requestEvent;
+  ok(!!loaderId, "Page.navigate returns loaderId");
+  is(
+    loaderId,
+    requestLoaderId,
+    "Page.navigate returns same loaderId as original request"
+  );
   is(errorText, undefined, "No errorText on a successful navigation");
   ok(!!frameId, "Page.navigate returns frameId");
 
@@ -91,7 +125,7 @@ add_task(async function testUnknownHost({ client }) {
     url: "http://example-does-not-exist.com",
   });
   ok(!!frameId, "Page.navigate returns frameId");
-  todo(!!loaderId, "Page.navigate returns loaderId");
+  ok(!!loaderId, "Page.navigate returns loaderId");
   is(errorText, "NS_ERROR_UNKNOWN_HOST", "Failed navigation returns errorText");
 });
 
@@ -101,7 +135,7 @@ add_task(async function testExpiredCertificate({ client }) {
     url: "https://expired.example.com",
   });
   ok(!!frameId, "Page.navigate returns frameId");
-  todo(!!loaderId, "Page.navigate returns loaderId");
+  ok(!!loaderId, "Page.navigate returns loaderId");
   is(
     errorText,
     "SEC_ERROR_EXPIRED_CERTIFICATE",
@@ -110,12 +144,20 @@ add_task(async function testExpiredCertificate({ client }) {
 });
 
 add_task(async function testUnknownCertificate({ client }) {
-  const { Page } = client;
+  const { Page, Network } = client;
+  await Network.enable();
+  const requestEvent = Network.requestWillBeSent();
   const { frameId, loaderId, errorText } = await Page.navigate({
     url: "https://self-signed.example.com",
   });
+  const { loaderId: requestLoaderId } = await requestEvent;
   ok(!!frameId, "Page.navigate returns frameId");
-  todo(!!loaderId, "Page.navigate returns loaderId");
+  ok(!!loaderId, "Page.navigate returns loaderId");
+  is(
+    loaderId,
+    requestLoaderId,
+    "Page.navigate returns same loaderId as original request"
+  );
   is(errorText, "SSL_ERROR_UNKNOWN", "Failed navigation returns errorText");
 });
 
@@ -125,7 +167,7 @@ add_task(async function testNotFound({ client }) {
     url: "http://example.com/browser/remote/doesnotexist.html",
   });
   ok(!!frameId, "Page.navigate returns frameId");
-  todo(!!loaderId, "Page.navigate returns loaderId");
+  ok(!!loaderId, "Page.navigate returns loaderId");
   is(errorText, undefined, "No errorText on a 404");
 });
 

@@ -59,11 +59,13 @@ class Page extends Domain {
     super(session);
 
     this._onDialogLoaded = this._onDialogLoaded.bind(this);
+    this._onRequest = this._onRequest.bind(this);
 
     this.enabled = false;
     this.session.networkObserver.startTrackingBrowserNetwork(
       this.session.target.browser
     );
+    this.session.networkObserver.on("request", this._onRequest);
   }
 
   destructor() {
@@ -71,6 +73,7 @@ class Page extends Domain {
     this._isDestroyed = false;
     this.disable();
 
+    this.session.networkObserver.off("request", this._onRequest);
     this.session.networkObserver.stopTrackingBrowserNetwork(
       this.session.target.browser
     );
@@ -108,7 +111,8 @@ class Page extends Domain {
     } catch (e) {
       throw new Error("Error: Cannot navigate to invalid URL");
     }
-    if (frameId && frameId != this.session.browsingContext.id.toString()) {
+    const topFrameId = this.session.browsingContext.id.toString();
+    if (frameId && frameId != topFrameId) {
       throw new UnsupportedError("frameId not supported");
     }
 
@@ -160,14 +164,10 @@ class Page extends Domain {
     };
     this.session.browsingContext.loadURI(url, opts);
     // clients expect loaderId == requestId for a document navigation request
-    const {
-      // TODO as part of Bug 1599260
-      // navigationRequestId: loaderId,
-      errorCode,
-    } = await requestDone;
+    const { navigationRequestId: loaderId, errorCode } = await requestDone;
     const result = {
-      frameId: this.session.browsingContext.id.toString(),
-      // loaderId,
+      frameId: topFrameId,
+      loaderId,
     };
     if (errorCode) {
       result.errorText = errorCode;
@@ -735,6 +735,20 @@ class Page extends Domain {
     // Since the event is fired asynchronously, this should not have an impact
     // on the actual tests relying on this API.
     this.emit("Page.javascriptDialogOpening", { message, type });
+  }
+
+  /**
+   * Handles HTTP request to propagate loaderId to events emitted from
+   * content process
+   */
+  _onRequest(_type, _ch, data) {
+    if (!data.loaderId) {
+      return;
+    }
+    this.executeInChild("_updateLoaderId", {
+      loaderId: data.loaderId,
+      frameId: this.session.browsingContext.id.toString(),
+    });
   }
 }
 
