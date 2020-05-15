@@ -12,10 +12,16 @@ const UNFILTERED_URI_COUNT = "browser.engagement.unfiltered_uri_count";
 
 const TELEMETRY_SUBSESSION_TOPIC = "internal-telemetry-after-subsession-split";
 
+const RESTORE_ON_DEMAND_PREF = "browser.sessionstore.restore_on-demand";
+
 ChromeUtils.defineModuleGetter(
   this,
   "MINIMUM_TAB_COUNT_INTERVAL_MS",
   "resource:///modules/BrowserUsageTelemetry.jsm"
+);
+
+const { SessionStore } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionStore.jsm"
 );
 
 // Reset internal URI counter in case URIs were opened by other tests.
@@ -416,5 +422,143 @@ add_task(async function test_tabsHistogram() {
   for (let openTab of openedTabs) {
     BrowserTestUtils.removeTab(openTab);
   }
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_loadedTabsHistogram() {
+  Services.prefs.setBoolPref(RESTORE_ON_DEMAND_PREF, true);
+  registerCleanupFunction(() =>
+    Services.prefs.clearUserPref(RESTORE_ON_DEMAND_PREF)
+  );
+
+  function resetTimestamps() {
+    BrowserUsageTelemetry._lastRecordTabCount = 0;
+    BrowserUsageTelemetry._lastRecordLoadedTabCount = 0;
+  }
+
+  resetTimestamps();
+  const tabCount = TelemetryTestUtils.getAndClearHistogram("TAB_COUNT");
+  const loadedTabCount = TelemetryTestUtils.getAndClearHistogram(
+    "LOADED_TAB_COUNT"
+  );
+
+  checkTabCountHistogram(tabCount.snapshot(), {}, "TAB_COUNT - initial count");
+  checkTabCountHistogram(
+    loadedTabCount.snapshot(),
+    {},
+    "LOADED_TAB_COUNT - initial count"
+  );
+
+  resetTimestamps();
+  const tabs = [
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank"),
+  ];
+
+  // There are two tabs open: the mochi.test tab and the foreground tab.
+  checkTabCountHistogram(
+    tabCount.snapshot(),
+    { 1: 0, 2: 1, 3: 0 },
+    "TAB_COUNT - new tab"
+  );
+  checkTabCountHistogram(
+    loadedTabCount.snapshot(),
+    { 1: 0, 2: 1, 3: 0 },
+    "TAB_COUNT - new tab"
+  );
+
+  // Open a pending tab, as if by session restore.
+  resetTimestamps();
+  const lazyTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla", {
+    createLazyBrowser: true,
+  });
+  tabs.push(lazyTab);
+
+  checkTabCountHistogram(
+    tabCount.snapshot(),
+    { 1: 0, 2: 1, 3: 1, 4: 0 },
+    "TAB_COUNT - Added pending tab"
+  );
+
+  // Only the mochi.test and foreground tab are loaded.
+  checkTabCountHistogram(
+    loadedTabCount.snapshot(),
+    { 1: 0, 2: 2, 3: 0 },
+    "LOADED_TAB_COUNT - Added pending tab"
+  );
+
+  resetTimestamps();
+  const restoredEvent = BrowserTestUtils.waitForEvent(lazyTab, "SSTabRestored");
+  await BrowserTestUtils.switchTab(gBrowser, lazyTab);
+  await restoredEvent;
+
+  checkTabCountHistogram(
+    tabCount.snapshot(),
+    { 1: 0, 2: 1, 3: 1, 4: 0 },
+    "TAB_COUNT - Restored pending tab"
+  );
+
+  checkTabCountHistogram(
+    loadedTabCount.snapshot(),
+    { 1: 0, 2: 2, 3: 1, 4: 0 },
+    "LOADED_TAB_COUNT - Restored pending tab"
+  );
+
+  resetTimestamps();
+
+  await Promise.all([
+    BrowserTestUtils.loadURI(lazyTab.linkedBrowser, "http://example.com/"),
+    BrowserTestUtils.browserLoaded(
+      lazyTab.linkedBrowser,
+      false,
+      "http://example.com/"
+    ),
+  ]);
+
+  checkTabCountHistogram(
+    tabCount.snapshot(),
+    { 1: 0, 2: 1, 3: 2, 4: 0 },
+    "TAB_COUNT - Navigated in existing tab"
+  );
+
+  checkTabCountHistogram(
+    loadedTabCount.snapshot(),
+    { 1: 0, 2: 2, 3: 2, 4: 0 },
+    "LOADED_TAB_COUNT - Navigated in existing tab"
+  );
+
+  resetTimestamps();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  // The new window will have a new tab.
+  checkTabCountHistogram(
+    tabCount.snapshot(),
+    { 1: 0, 2: 1, 3: 2, 4: 1, 5: 0 },
+    "TAB_COUNT - Opened new window"
+  );
+
+  checkTabCountHistogram(
+    loadedTabCount.snapshot(),
+    { 1: 0, 2: 2, 3: 2, 4: 1, 5: 0 },
+    "LOADED_TAB_COUNT - Opened new window"
+  );
+
+  resetTimestamps();
+  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:robots");
+  checkTabCountHistogram(
+    tabCount.snapshot(),
+    { 1: 0, 2: 1, 3: 2, 4: 1, 5: 1, 6: 0 },
+    "TAB_COUNT - Opened new tab in new window"
+  );
+
+  checkTabCountHistogram(
+    loadedTabCount.snapshot(),
+    { 1: 0, 2: 2, 3: 2, 4: 1, 5: 1, 6: 0 },
+    "LOADED_TAB_COUNT - Opened new tab in new window"
+  );
+
+  for (const tab of tabs) {
+    BrowserTestUtils.removeTab(tab);
+  }
+
   await BrowserTestUtils.closeWindow(win);
 });
