@@ -287,29 +287,6 @@ class WebRenderBridgeParent final
 
   void RemoveEpochDataPriorTo(const wr::Epoch& aRenderedEpoch);
 
-  void PushDeferredPipelineData(RenderRootDeferredData&& aDeferredData);
-
-  /**
-   * If we attempt to process information for a particular pipeline before we
-   * can determine what RenderRoot it belongs to, then we defer that data until
-   * we can. This handles processing that deferred data.
-   */
-  bool MaybeHandleDeferredPipelineData(
-      wr::RenderRoot aRenderRoot, const nsTArray<wr::PipelineId>& aPipelineIds,
-      const TimeStamp& aTxnStartTime);
-
-  /**
-   * See MaybeHandleDeferredPipelineData - this is the implementation of that
-   * for a single pipeline.
-   */
-  bool MaybeHandleDeferredPipelineDataForPipeline(
-      wr::RenderRoot aRenderRoot, wr::PipelineId aPipelineId,
-      const TimeStamp& aTxnStartTime);
-
-  bool HandleDeferredPipelineData(
-      nsTArray<RenderRootDeferredData>& aDeferredData,
-      const TimeStamp& aTxnStartTime);
-
   bool IsRootWebRenderBridgeParent() const;
   LayersId GetLayersId() const;
 
@@ -355,8 +332,6 @@ class WebRenderBridgeParent final
 
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
   virtual ~WebRenderBridgeParent();
-
-  void RemoveDeferredPipeline(wr::PipelineId aPipelineId);
 
   bool ProcessEmptyTransactionUpdates(RenderRootUpdates& aUpdates,
                                       bool* aScheduleComposite);
@@ -519,25 +494,6 @@ class WebRenderBridgeParent final
   wr::PipelineId mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
   RefPtr<wr::WebRenderAPI> mApi;
-  // This is a map from pipeline id to render root, that tracks the render
-  // roots of all subpipelines (including nested subpipelines, e.g. in the
-  // Fission case) attached to this WebRenderBridgeParent. This is only
-  // populated on the root WRBP. It is used to resolve the render root for the
-  // subpipelines, since they may not know where they are attached in the
-  // parent display list and therefore may not know their render root.
-  nsDataHashtable<nsUint64HashKey, wr::RenderRoot> mPipelineRenderRoots;
-  // This is a hashset of child pipelines for this WRBP. This allows us to
-  // iterate through all the children of a non-root WRBP and add them to
-  // the root's mPipelineRenderRoots, and potentially resolve any of their
-  // deferred updates.
-  nsTHashtable<nsUint64HashKey> mChildPipelines;
-  // This is a map from pipeline id to a list of deferred data. This is only
-  // populated on the root WRBP. The data contained within is deferred because
-  // the sub-WRBP that received it did not know which renderroot it belonged
-  // to. Once that is resolved by the root WRBP getting the right display list
-  // update, the deferred data is processed.
-  nsDataHashtable<nsUint64HashKey, nsTArray<RenderRootDeferredData>>
-      mPipelineDeferredUpdates;
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   RefPtr<CompositorAnimationStorage> mAnimStorage;
