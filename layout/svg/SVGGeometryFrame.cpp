@@ -53,39 +53,6 @@ NS_QUERYFRAME_HEAD(SVGGeometryFrame)
   NS_QUERYFRAME_ENTRY(SVGGeometryFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 
-//----------------------------------------------------------------------
-// Display list item:
-
-class nsDisplaySVGGeometry final : public nsPaintedDisplayItem {
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
-
- public:
-  nsDisplaySVGGeometry(nsDisplayListBuilder* aBuilder, SVGGeometryFrame* aFrame)
-      : nsPaintedDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplaySVGGeometry);
-    MOZ_ASSERT(aFrame, "Must have a frame!");
-  }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplaySVGGeometry)
-#endif
-
-  NS_DISPLAY_DECL_NAME("nsDisplaySVGGeometry", TYPE_SVG_GEOMETRY)
-
-  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState,
-                       nsTArray<nsIFrame*>* aOutFrames) override;
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
-
-  nsDisplayItemGeometry* AllocateGeometry(
-      nsDisplayListBuilder* aBuilder) override {
-    return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-  }
-
-  void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                 const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion* aInvalidRegion) const override;
-};
-
 void nsDisplaySVGGeometry::HitTest(nsDisplayListBuilder* aBuilder,
                                    const nsRect& aRect, HitTestState* aState,
                                    nsTArray<nsIFrame*>* aOutFrames) {

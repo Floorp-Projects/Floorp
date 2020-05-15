@@ -14,6 +14,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/layout/SVGGeometryFrame.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/ClipManager.h"
 #include "mozilla/layers/ImageClient.h"
@@ -1051,14 +1052,22 @@ class WebRenderGroupData : public WebRenderUserData {
   DIGroup mFollowingGroup;
 };
 
-static bool IsItemProbablyActive(nsDisplayItem* aItem,
-                                 nsDisplayListBuilder* aDisplayListBuilder,
-                                 bool aParentActive = true);
+static bool IsItemProbablyActive(
+    nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const mozilla::layers::StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder, bool aParentActive = true);
 
 static bool HasActiveChildren(const nsDisplayList& aList,
+                              mozilla::wr::DisplayListBuilder& aBuilder,
+                              mozilla::wr::IpcResourceUpdateQueue& aResources,
+                              const mozilla::layers::StackingContextHelper& aSc,
+                              mozilla::layers::RenderRootStateManager* aManager,
                               nsDisplayListBuilder* aDisplayListBuilder) {
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
-    if (IsItemProbablyActive(i, aDisplayListBuilder, false)) {
+    if (IsItemProbablyActive(i, aBuilder, aResources, aSc, aManager,
+                             aDisplayListBuilder, false)) {
       return true;
     }
   }
@@ -1072,9 +1081,12 @@ static bool HasActiveChildren(const nsDisplayList& aList,
 //
 // We can't easily use GetLayerState because it wants a bunch of layers related
 // information.
-static bool IsItemProbablyActive(nsDisplayItem* aItem,
-                                 nsDisplayListBuilder* aDisplayListBuilder,
-                                 bool aParentActive) {
+static bool IsItemProbablyActive(
+    nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const mozilla::layers::StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder, bool aParentActive) {
   switch (aItem->GetType()) {
     case DisplayItemType::TYPE_TRANSFORM: {
       nsDisplayTransform* transformItem =
@@ -1085,33 +1097,41 @@ static bool IsItemProbablyActive(nsDisplayItem* aItem,
       GP("active: %d\n", transformItem->MayBeAnimated(aDisplayListBuilder));
       return transformItem->MayBeAnimated(aDisplayListBuilder, false) ||
              !is2D ||
-             HasActiveChildren(*transformItem->GetChildren(),
-                               aDisplayListBuilder);
+             HasActiveChildren(*transformItem->GetChildren(), aBuilder,
+                               aResources, aSc, aManager, aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_OPACITY: {
       nsDisplayOpacity* opacityItem = static_cast<nsDisplayOpacity*>(aItem);
       bool active = opacityItem->NeedsActiveLayer(aDisplayListBuilder,
                                                   opacityItem->Frame(), false);
       GP("active: %d\n", active);
-      return active || HasActiveChildren(*opacityItem->GetChildren(),
-                                         aDisplayListBuilder);
+      return active ||
+             HasActiveChildren(*opacityItem->GetChildren(), aBuilder,
+                               aResources, aSc, aManager, aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_FOREIGN_OBJECT: {
       return true;
+    }
+    case DisplayItemType::TYPE_SVG_GEOMETRY: {
+      auto* svgItem = static_cast<nsDisplaySVGGeometry*>(aItem);
+      return svgItem->ShouldBeActive(aBuilder, aResources, aSc, aManager,
+                                     aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_BLEND_MODE: {
       /* BLEND_MODE needs to be active if it might have a previous sibling
        * that is active. We use the activeness of the parent as a rough
        * proxy for this situation. */
       return aParentActive ||
-             HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);
+             HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources, aSc,
+                               aManager, aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_WRAP_LIST:
     case DisplayItemType::TYPE_CONTAINER:
     case DisplayItemType::TYPE_MASK:
     case DisplayItemType::TYPE_PERSPECTIVE: {
       if (aItem->GetChildren()) {
-        return HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);
+        return HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources,
+                                 aSc, aManager, aDisplayListBuilder);
       }
       return false;
     }
@@ -1137,8 +1157,11 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
 
   nsDisplayItem* item = aList->GetBottom();
   nsDisplayItem* startOfCurrentGroup = item;
+  RenderRootStateManager* manager =
+    aCommandBuilder->mManager->GetRenderRootStateManager();
   while (item) {
-    if (IsItemProbablyActive(item, mDisplayListBuilder)) {
+    if (IsItemProbablyActive(item, aBuilder, aResources, aSc, manager,
+                             mDisplayListBuilder)) {
       // We're going to be starting a new group.
       RefPtr<WebRenderGroupData> groupData =
           aCommandBuilder->CreateOrRecycleWebRenderUserData<WebRenderGroupData>(
@@ -1199,8 +1222,6 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         sIndent++;
         // Note: this call to CreateWebRenderCommands can recurse back into
         // this function.
-        RenderRootStateManager* manager =
-            aCommandBuilder->mManager->GetRenderRootStateManager();
         bool createdWRCommands = item->CreateWebRenderCommands(
             aBuilder, aResources, aSc, manager, mDisplayListBuilder);
         sIndent--;
