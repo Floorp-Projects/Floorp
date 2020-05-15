@@ -1002,8 +1002,8 @@ static bool intrinsic_GeneratorObjectIsClosed(JSContext* cx, unsigned argc,
   return true;
 }
 
-bool js::intrinsic_IsSuspendedGenerator(JSContext* cx, unsigned argc,
-                                        Value* vp) {
+static bool intrinsic_IsSuspendedGenerator(JSContext* cx, unsigned argc,
+                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
 
@@ -2236,7 +2236,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsGeneratorObject", intrinsic_IsInstanceOfBuiltin<GeneratorObject>,
           1, 0),
     JS_FN("GeneratorObjectIsClosed", intrinsic_GeneratorObjectIsClosed, 1, 0),
-    JS_FN("IsSuspendedGenerator", intrinsic_IsSuspendedGenerator, 1, 0),
+    JS_INLINABLE_FN("IsSuspendedGenerator", intrinsic_IsSuspendedGenerator, 1,
+                    0, IntrinsicIsSuspendedGenerator),
 
     JS_FN("GeneratorIsRunning", intrinsic_GeneratorIsRunning, 1, 0),
     JS_FN("GeneratorSetClosed", intrinsic_GeneratorSetClosed, 1, 0),

@@ -123,6 +123,8 @@
   _(IntrinsicFinishBoundFunctionInit)              \
   _(IntrinsicIsPackedArray)                        \
                                                    \
+  _(IntrinsicIsSuspendedGenerator)                 \
+                                                   \
   _(IntrinsicGuardToArrayIterator)                 \
   _(IntrinsicGuardToMapIterator)                   \
   _(IntrinsicGuardToSetIterator)                   \
