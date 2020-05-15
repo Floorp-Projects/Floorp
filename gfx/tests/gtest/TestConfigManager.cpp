@@ -21,6 +21,7 @@ class MockGfxInfo final : public nsIGfxInfo {
 
   int32_t mStatusWr;
   int32_t mStatusWrCompositor;
+  int32_t mMaxRefreshRate;
   Maybe<bool> mHasBattery;
   const char* mVendorId;
 
@@ -28,6 +29,7 @@ class MockGfxInfo final : public nsIGfxInfo {
   MockGfxInfo()
       : mStatusWr(nsIGfxInfo::FEATURE_ALLOW_ALWAYS),
         mStatusWrCompositor(nsIGfxInfo::FEATURE_STATUS_OK),
+        mMaxRefreshRate(-1),
         mHasBattery(Some(false)),
         mVendorId("0x10de") {}
 
@@ -61,6 +63,8 @@ class MockGfxInfo final : public nsIGfxInfo {
     aAdapterVendorID.AssignASCII(mVendorId);
     return NS_OK;
   }
+
+  NS_IMETHOD_(int32_t) GetMaxRefreshRate() override { return mMaxRefreshRate; }
 
   // The following methods we don't need for testing gfxConfigManager.
   NS_IMETHOD GetFeatureSuggestedDriverVersion(int32_t aFeature,
@@ -610,6 +614,38 @@ TEST_F(GfxConfigManager, WebRenderIntelBatteryNoHwStretchingNotNightly) {
   mScaledResolution = true;
   mMockGfxInfo->mHasBattery.ref() = true;
   mMockGfxInfo->mVendorId = "0x8086";
+  ConfigureWebRender();
+
+  EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderHighRefreshRateNightly) {
+  mIsNightly = true;
+  mMockGfxInfo->mMaxRefreshRate = 120;
+  ConfigureWebRender();
+
+  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderHighRefreshRateNotNightly) {
+  mIsNightly = false;
+  mMockGfxInfo->mMaxRefreshRate = 120;
   ConfigureWebRender();
 
   EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
