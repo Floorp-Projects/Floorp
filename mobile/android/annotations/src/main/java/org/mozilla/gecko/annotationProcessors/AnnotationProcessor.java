@@ -19,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.TreeSet;
 
 public class AnnotationProcessor {
     private static final String NATIVES_NAME = "Natives";
@@ -58,73 +57,6 @@ public class AnnotationProcessor {
 
         int ret = 0;
 
-        final String unifiedHeaderFileName = QUALIFIER + WRAPPERS_NAME + ".h";
-        final String unifiedNativesFileName = QUALIFIER + NATIVES_NAME + ".h";
-
-        final StringBuilder unifiedHeaderFile = new StringBuilder(GENERATED_COMMENT);
-        final StringBuilder unifiedNativesFile = new StringBuilder(GENERATED_COMMENT);
-
-        // Class names that are included in the unified header.  Eventually, all these class names
-        // will be removed from this list and the unified header files can be removed entirely.
-        final TreeSet<String> generatedNamesToUnify = new TreeSet<String>();
-        generatedNamesToUnify.add("AndroidGamepadManager");
-        generatedNamesToUnify.add("Base64Utils");
-        generatedNamesToUnify.add("Clipboard");
-        generatedNamesToUnify.add("CodecProxy");
-        generatedNamesToUnify.add("EventCallback");
-        generatedNamesToUnify.add("EventDispatcher");
-        generatedNamesToUnify.add("GeckoAppShell");
-        generatedNamesToUnify.add("GeckoAudioInfo");
-        generatedNamesToUnify.add("GeckoBatteryManager");
-        generatedNamesToUnify.add("GeckoBundle");
-        generatedNamesToUnify.add("GeckoEditableChild");
-        generatedNamesToUnify.add("GeckoHLSDemuxerWrapper");
-        generatedNamesToUnify.add("GeckoHLSResourceWrapper");
-        generatedNamesToUnify.add("GeckoHLSSample");
-        generatedNamesToUnify.add("GeckoInputStream");
-        generatedNamesToUnify.add("GeckoJavaSampler");
-        generatedNamesToUnify.add("GeckoNetworkManager");
-        generatedNamesToUnify.add("GeckoProcessManager");
-        generatedNamesToUnify.add("GeckoProcessType");
-        generatedNamesToUnify.add("GeckoResult");
-        generatedNamesToUnify.add("GeckoRuntime");
-        generatedNamesToUnify.add("GeckoScreenOrientation");
-        generatedNamesToUnify.add("GeckoServiceChildProcess");
-        generatedNamesToUnify.add("GeckoSession");
-        generatedNamesToUnify.add("GeckoSurface");
-        generatedNamesToUnify.add("GeckoSurfaceTexture");
-        generatedNamesToUnify.add("GeckoSystemStateListener");
-        generatedNamesToUnify.add("GeckoThread");
-        generatedNamesToUnify.add("GeckoVRManager");
-        generatedNamesToUnify.add("GeckoVideoInfo");
-        generatedNamesToUnify.add("GeckoWebExecutor");
-        generatedNamesToUnify.add("ImageDecoder");
-        generatedNamesToUnify.add("MediaDrmProxy");
-        generatedNamesToUnify.add("PanZoomController");
-        generatedNamesToUnify.add("PrefsHelper");
-        generatedNamesToUnify.add("RuntimeTelemetry");
-        generatedNamesToUnify.add("Sample");
-        generatedNamesToUnify.add("SampleBuffer");
-        generatedNamesToUnify.add("ScreenManagerHelper");
-        generatedNamesToUnify.add("ServiceAllocator");
-        generatedNamesToUnify.add("SessionAccessibility");
-        generatedNamesToUnify.add("SessionKeyInfo");
-        generatedNamesToUnify.add("SessionTextInput");
-        generatedNamesToUnify.add("SpeechSynthesisService");
-        generatedNamesToUnify.add("StackScroller");
-        generatedNamesToUnify.add("SurfaceAllocator");
-        generatedNamesToUnify.add("SurfaceTextureListener");
-        generatedNamesToUnify.add("TelemetryUtils");
-        generatedNamesToUnify.add("VsyncSource");
-        generatedNamesToUnify.add("WebAuthnTokenManager");
-        generatedNamesToUnify.add("WebMessage");
-        generatedNamesToUnify.add("WebNotification");
-        generatedNamesToUnify.add("WebNotificationDelegate");
-        generatedNamesToUnify.add("WebRequest");
-        generatedNamesToUnify.add("WebRequestError");
-        generatedNamesToUnify.add("WebResponse");
-        generatedNamesToUnify.add("XPCOMEventTarget");
-
         // Get an iterator over the classes in the jar files given...
         Iterator<ClassWithOptions> jarClassIterator = IterableJarLoadingURLClassLoader.getIteratorOverJars(jars);
 
@@ -139,12 +71,6 @@ public class AnnotationProcessor {
             final String headerExportedFileName = EXPORT_PREFIX + annotatedClass.generatedName + WRAPPERS_NAME + ".h";
             final String nativesFileName = QUALIFIER + File.separator + annotatedClass.generatedName + NATIVES_NAME + ".h";
             final String nativesExportedFileName = EXPORT_PREFIX + annotatedClass.generatedName + NATIVES_NAME + ".h";
-
-            if (generatedNamesToUnify.contains(annotatedClass.generatedName)) {
-                unifiedHeaderFile.append("#include \"" + headerExportedFileName + "\"\n");
-                unifiedNativesFile.append("#include \"" + nativesExportedFileName + "\"\n");
-            }
-            generatedNamesToUnify.remove(annotatedClass.generatedName);
 
             final StringBuilder headerFile = new StringBuilder(GENERATED_COMMENT);
             final StringBuilder implementationFile = new StringBuilder(GENERATED_COMMENT);
@@ -205,22 +131,8 @@ public class AnnotationProcessor {
             ret |= writeOutputFile(headerFileName, headerFile);
             ret |= writeOutputFile(nativesFileName, nativesFile);
         }
-
-        ret |= writeOutputFile(unifiedHeaderFileName, unifiedHeaderFile);
-        ret |= writeOutputFile(unifiedNativesFileName, unifiedNativesFile);
-
         long e = System.currentTimeMillis();
         System.out.println("Annotation processing complete in " + (e - s) + "ms");
-
-        if (!generatedNamesToUnify.isEmpty()) {
-            System.out.println(
-                "Some unified annotation header names need to be updated; edit " +
-                "mobile/android/annotations/src/main/java/org/mozilla/gecko/annotationProcessors/annotationProcessor.java:");
-            for (String n : generatedNamesToUnify) {
-                System.out.println(n);
-            }
-            ret = 2;
-        }
 
         System.exit(ret);
     }
