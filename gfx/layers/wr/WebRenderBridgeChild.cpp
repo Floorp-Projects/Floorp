@@ -115,7 +115,6 @@ bool WebRenderBridgeChild::EndTransaction(
   TimeStamp fwdTime = TimeStamp::Now();
 
   for (auto& renderRoot : aRenderRoots) {
-    MOZ_ASSERT(renderRoot.mRenderRoot == wr::RenderRoot::Default);
     renderRoot.mCommands = std::move(mParentCommands);
     renderRoot.mIdNamespace = mIdNamespace;
   }
@@ -154,7 +153,6 @@ void WebRenderBridgeChild::EndEmptyTransaction(
   TimeStamp fwdTime = TimeStamp::Now();
 
   for (auto& update : aRenderRootUpdates) {
-    MOZ_ASSERT(update.mRenderRoot == wr::RenderRoot::Default);
     update.mCommands = std::move(mParentCommands);
   }
 
