@@ -127,22 +127,28 @@ class TargetList {
 
     // Map the descriptor typeName to a target type.
     const targetType = this.getTargetType(targetFront);
+    const isTopLevel = targetFront == this.targetFront;
 
     targetFront.setTargetType(targetType);
-    targetFront.setIsTopLevel(targetFront == this.targetFront);
+    targetFront.setIsTopLevel(isTopLevel);
 
     this._targets.add(targetFront);
 
     // Notify the target front creation listeners
     await this._createListeners.emitAsync(targetType, {
+      type: targetType,
       targetFront,
+      isTopLevel,
       isTargetSwitching,
     });
   }
 
   _onTargetDestroyed(targetFront, isTargetSwitching = false) {
-    this._destroyListeners.emit(targetFront.targetType, {
+    const targetType = targetFront.targetType;
+    this._destroyListeners.emit(targetType, {
+      type: targetType,
       targetFront,
+      isTopLevel: targetFront.isTopLevel,
       isTargetSwitching,
     });
     this._targets.delete(targetFront);
@@ -295,8 +301,10 @@ class TargetList {
    *        The type of target to listen for. Constant of TargetList.TYPES.
    * @param {Function} onAvailable
    *        Callback fired when a target has been just created or was already available.
-   *        The function is called with the following arguments:
+   *        The function is called with three arguments:
+   *        - {String} type: The target type
    *        - {TargetFront} targetFront: The target Front
+   *        - {Boolean} isTopLevel: Is this target the top level one?
    *        - {Boolean} isTargetSwitching: Is this target relates to a navigation and
    *                    this replaced a previously available target, this flag will be true
    * @param {Function} onDestroy
@@ -319,7 +327,9 @@ class TargetList {
           // which may setup things regarding the existing targets
           // and listen callsite may care about the full initialization
           await onAvailable({
+            type: targetFront.targetType,
             targetFront,
+            isTopLevel: targetFront == this.targetFront,
             isTargetSwitching: false,
           });
         } catch (e) {

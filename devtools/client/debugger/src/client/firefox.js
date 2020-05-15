@@ -33,9 +33,10 @@ export async function onConnect(
 
 async function onTargetAvailable({
   targetFront,
+  isTopLevel,
   isTargetSwitching,
 }): Promise<void> {
-  if (!targetFront.isTopLevel) {
+  if (!isTopLevel) {
     return;
   }
 
@@ -90,8 +91,8 @@ async function onTargetAvailable({
   await clientCommands.checkIfAlreadyPaused();
 }
 
-function onTargetDestroyed({ targetFront }): void {
-  if (targetFront.isTopLevel) {
+function onTargetDestroyed({ targetFront, isTopLevel }): void {
+  if (isTopLevel) {
     targetFront.off("will-navigate", actions.willNavigate);
     targetFront.off("navigate", actions.navigated);
     removeEventsTopTarget(targetFront);
