@@ -6,10 +6,10 @@
 #ifndef GeckoBatteryManager_h
 #define GeckoBatteryManager_h
 
-#include "GeneratedJNINatives.h"
 #include "nsAppShell.h"
 
 #include "mozilla/Hal.h"
+#include "mozilla/java/GeckoBatteryManagerNatives.h"
 
 namespace mozilla {
 

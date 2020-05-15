@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AndroidAlerts.h"
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/GeckoRuntimeWrappers.h"
+#include "mozilla/java/WebNotificationWrappers.h"
 #include "nsAlertsUtils.h"
 
 namespace mozilla {

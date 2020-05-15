@@ -11,8 +11,8 @@
 
 #include <jni.h>
 
+#include "mozilla/java/RuntimeTelemetryNatives.h"
 #include "mozilla/jni/Natives.h"
-#include "GeneratedJNIWrappers.h"
 
 namespace mozilla {
 namespace widget {

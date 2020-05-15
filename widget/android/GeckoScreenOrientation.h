@@ -6,12 +6,12 @@
 #ifndef GeckoScreenOrientation_h
 #define GeckoScreenOrientation_h
 
-#include "GeneratedJNINatives.h"
 #include "nsAppShell.h"
 #include "nsCOMPtr.h"
 #include "nsIScreenManager.h"
 
 #include "mozilla/Hal.h"
+#include "mozilla/java/GeckoScreenOrientationNatives.h"
 
 namespace mozilla {
 

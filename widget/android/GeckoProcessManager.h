@@ -6,13 +6,13 @@
 #ifndef GeckoProcessManager_h
 #define GeckoProcessManager_h
 
-#include "GeneratedJNINatives.h"
 #include "WidgetUtils.h"
 #include "nsAppShell.h"
 #include "nsWindow.h"
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "mozilla/java/GeckoProcessManagerNatives.h"
 
 namespace mozilla {
 

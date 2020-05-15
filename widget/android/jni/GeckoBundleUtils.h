@@ -7,6 +7,8 @@
 #ifndef mozilla_jni_GeckoBundleUtils_h
 #define mozilla_jni_GeckoBundleUtils_h
 
+#include "mozilla/java/GeckoBundleWrappers.h"
+
 namespace mozilla {
 namespace jni {
 
