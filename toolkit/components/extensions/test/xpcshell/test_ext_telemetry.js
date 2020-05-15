@@ -738,9 +738,13 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     await run({
       backgroundScript: async () => {
         try {
-          await browser.telemetry.submitEncryptedPing({
-            payload: "encrypted-webext-test",
-          });
+          await browser.telemetry.submitEncryptedPing(
+            { payload: "encrypted-webext-test" },
+            {
+              schemaName: "schema-name",
+              schemaVersion: 123,
+            }
+          );
           browser.test.fail(
             "Expected exception without required manifest entries set."
           );
@@ -757,9 +761,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
 
     const telemetryManifestEntries = {
       ping_type: "encrypted-webext-ping",
-      schemaName: "schema-name",
       schemaNamespace: "schema-namespace",
-      schemaVersion: 123,
       public_key: {
         id: "pioneer-dev-20200423",
         key: {
@@ -773,9 +775,15 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
 
     await run({
       backgroundScript: async () => {
-        await browser.telemetry.submitEncryptedPing({
-          payload: "encrypted-webext-test",
-        });
+        await browser.telemetry.submitEncryptedPing(
+          {
+            payload: "encrypted-webext-test",
+          },
+          {
+            schemaName: "schema-name",
+            schemaVersion: 123,
+          }
+        );
         browser.test.notifyPass("submit_encrypted_ping_pass");
       },
       permissions: ["telemetry"],
@@ -790,9 +798,13 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
 
     await run({
       backgroundScript: async () => {
-        await browser.telemetry.submitEncryptedPing({
-          payload: "encrypted-webext-test",
-        });
+        await browser.telemetry.submitEncryptedPing(
+          { payload: "encrypted-webext-test" },
+          {
+            schemaName: "schema-name",
+            schemaVersion: 123,
+          }
+        );
         browser.test.notifyPass("submit_encrypted_ping_pass");
       },
       permissions: ["telemetry"],
