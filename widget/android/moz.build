@@ -112,11 +112,6 @@ EXPORTS.mozilla.java += [
     '!{}'.format(c) for c in wrappers_from_WrapForJNI
 ]
 
-EXPORTS += [
-    '!GeneratedJNINatives.h',
-    '!GeneratedJNIWrappers.h',
-]
-
 SOURCES += ['!{}'.format(c) for c in sources_from_WrapForJNI]
 
 SOURCES += [
@@ -160,8 +155,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 # the Gradle task that generates all of the outputs, so we add a dummy first
 # output.
 
-t = tuple(['generated_jni_wrappers', 'GeneratedJNINatives.h',
-           'GeneratedJNIWrappers.h'] + natives_from_WrapForJNI +
+t = tuple(['generated_jni_wrappers'] + natives_from_WrapForJNI +
           sources_from_WrapForJNI + wrappers_from_WrapForJNI)
 
 GeneratedFile(*t,
