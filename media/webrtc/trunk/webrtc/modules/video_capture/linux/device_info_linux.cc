@@ -200,11 +200,18 @@ uint32_t DeviceInfoLinux::NumberOfDevices() {
   uint32_t count = 0;
   char device[20];
   int fd = -1;
+  struct v4l2_capability cap;
 
   /* detect /dev/video [0-63]VideoCaptureModule entries */
   for (int n = 0; n < 64; n++) {
     sprintf(device, "/dev/video%d", n);
     if ((fd = open(device, O_RDONLY)) != -1) {
+      // query device capabilities and make sure this is a video capture device
+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
+        close(fd);
+        continue;
+      }
+
       close(fd);
       count++;
     }
@@ -229,9 +236,15 @@ int32_t DeviceInfoLinux::GetDeviceName(uint32_t deviceNumber,
   int fd = -1;
   bool found = false;
   int device_index;
+  struct v4l2_capability cap;
   for (device_index = 0; device_index < 64; device_index++) {
     sprintf(device, "/dev/video%d", device_index);
     if ((fd = open(device, O_RDONLY)) != -1) {
+      // query device capabilities and make sure this is a video capture device
+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
+        close(fd);
+        continue;
+      }
       if (count == deviceNumber) {
         // Found the device
         found = true;
@@ -247,7 +260,6 @@ int32_t DeviceInfoLinux::GetDeviceName(uint32_t deviceNumber,
     return -1;
 
   // query device capabilities
-  struct v4l2_capability cap;
   if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0) {
     RTC_LOG(LS_INFO) << "error in querying the device capability for device "
                      << device << ". errno = " << errno;
@@ -315,6 +327,11 @@ int32_t DeviceInfoLinux::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
     // query device capabilities
     struct v4l2_capability cap;
     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
+      // skip devices without video capture capability
+      if (!(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
+        continue;
+      }
+
       if (cap.bus_info[0] != 0) {
         if (strncmp((const char*)cap.bus_info, (const char*)deviceUniqueIdUTF8,
                     strlen((const char*)deviceUniqueIdUTF8)) ==
