@@ -1729,9 +1729,9 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
       // If this MediaTrackGraph has entered regular (non-forced) shutdown it
       // is not able to process any more messages. Those messages being added to
       // the graph in the first place is an error.
-      MOZ_DIAGNOSTIC_ASSERT(mForceShutDown ||
-                            LifecycleStateRef() <
-                                LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP);
+      MOZ_DIAGNOSTIC_ASSERT(LifecycleStateRef() <
+                                LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP ||
+                            mForceShutDown);
     }
 
     if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {

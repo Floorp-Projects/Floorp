@@ -19,6 +19,7 @@
 #include "nsIPrincipal.h"
 #include "MediaSegment.h"
 #include "RemoteTrackSource.h"
+#include "RtpRtcpConfig.h"
 #include "MediaConduitInterface.h"
 #include "MediaTransportHandler.h"
 #include "mozilla/dom/RTCRtpReceiverBinding.h"
@@ -738,7 +739,6 @@ nsresult TransceiverImpl::UpdateVideoConduit() {
     std::vector<UniquePtr<VideoCodecConfig>> configs;
     rv = TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(details,
                                                                &configs);
-
     if (NS_FAILED(rv)) {
       MOZ_MTLOG(ML_ERROR, mPCHandle
                               << "[" << mMid << "]: " << __FUNCTION__
@@ -753,7 +753,8 @@ nsresult TransceiverImpl::UpdateVideoConduit() {
       return NS_OK;
     }
 
-    auto error = conduit->ConfigureSendMediaCodec(configs[0].get());
+    auto error = conduit->ConfigureSendMediaCodec(configs[0].get(),
+                                                  details.GetRtpRtcpConfig());
     if (error) {
       MOZ_MTLOG(ML_ERROR, mPCHandle
                               << "[" << mMid << "]: " << __FUNCTION__

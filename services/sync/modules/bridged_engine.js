@@ -56,6 +56,7 @@ class BridgedStore {
       let incomingEnvelopesAsJSON = chunk.map(record =>
         JSON.stringify(record.toIncomingEnvelope())
       );
+      this._log.trace("incoming envelopes", incomingEnvelopesAsJSON);
       await promisify(
         this.engine._bridge.storeIncoming,
         incomingEnvelopesAsJSON
@@ -291,12 +292,17 @@ BridgedEngine.prototype = {
   },
 
   async getLastSync() {
-    let lastSync = await promisify(this._bridge.getLastSync);
-    return lastSync;
+    // The bridge defines lastSync as integer ms, but sync itself wants to work
+    // in a float seconds with 2 decimal places.
+    let lastSyncMS = await promisify(this._bridge.getLastSync);
+    return Math.round(lastSyncMS / 10) / 100;
   },
 
-  async setLastSync(lastSyncMillis) {
-    await promisify(this._bridge.setLastSync, lastSyncMillis);
+  async setLastSync(lastSyncSeconds) {
+    await promisify(
+      this._bridge.setLastSync,
+      Math.round(lastSyncSeconds * 1000)
+    );
   },
 
   /**
@@ -341,6 +347,7 @@ BridgedEngine.prototype = {
     let outgoingEnvelopesAsJSON = await promisify(this._bridge.apply);
     let changeset = {};
     for (let envelopeAsJSON of outgoingEnvelopesAsJSON) {
+      this._log.trace("outgoing envelope", envelopeAsJSON);
       let record = BridgedRecord.fromOutgoingEnvelope(
         this.name,
         JSON.parse(envelopeAsJSON)

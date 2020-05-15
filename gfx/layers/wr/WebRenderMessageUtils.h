@@ -110,12 +110,6 @@ struct ParamTraits<mozilla::wr::LayoutPoint>
     : public PlainOldDataSerializer<mozilla::wr::LayoutPoint> {};
 
 template <>
-struct ParamTraits<mozilla::wr::RenderRoot>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::wr::RenderRoot, mozilla::wr::RenderRoot::Default,
-          mozilla::wr::kHighestRenderRoot> {};
-
-template <>
 struct ParamTraits<mozilla::wr::ImageRendering>
     : public ContiguousEnumSerializer<mozilla::wr::ImageRendering,
                                       mozilla::wr::ImageRendering::Auto,

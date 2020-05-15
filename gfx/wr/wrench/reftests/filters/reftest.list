@@ -2,8 +2,8 @@
 platform(linux,mac) == draw_calls(7) color_targets(7) alpha_targets(0) filter-blur.yaml filter-blur.png
 == isolated.yaml isolated-ref.yaml
 == invisible.yaml invisible-ref.yaml
-color_targets(2) alpha_targets(0) == opacity.yaml opacity-ref.yaml
-color_targets(2) alpha_targets(0) == opacity-combined.yaml opacity-combined-ref.yaml
+== opacity.yaml opacity-ref.yaml
+fuzzy-range(<=1,*10000) == opacity-combined.yaml opacity-combined-ref.yaml
 == opacity-overlap.yaml opacity-overlap-ref.yaml
 == filter-brightness.yaml filter-brightness-ref.yaml
 == filter-brightness-2.yaml filter-brightness-2-ref.yaml

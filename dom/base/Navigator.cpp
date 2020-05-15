@@ -523,7 +523,7 @@ bool Navigator::CookieEnabled() {
   }
 
   nsCOMPtr<nsIURI> contentURI;
-  doc->NodePrincipal()->GetURI(getter_AddRefs(contentURI));
+  BasePrincipal::Cast(doc->NodePrincipal())->GetURI(getter_AddRefs(contentURI));
 
   if (!contentURI) {
     // Not a content, so technically can't set cookies, but let's

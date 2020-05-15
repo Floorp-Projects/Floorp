@@ -45,9 +45,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=535043
 /** Test for Bug 1264157 **/
 SimpleTest.waitForFocus(function() {
   // Check the initial values.
-  let active = [].slice.call(document.querySelectorAll("input:not(:disabled):not(:-moz-read-only)"));
+  let active = [].slice.call(document.querySelectorAll("input:not(:disabled):not(:read-only)"));
   let disabled = [].slice.call(document.querySelectorAll("input:disabled"));
-  let readonly = [].slice.call(document.querySelectorAll("input:-moz-read-only:not(:disabled)"));
+  let readonly = [].slice.call(document.querySelectorAll("input:read-only:not(:disabled)"));
   ok(active.length == 2, "Test is messed up: missing non-disabled/non-readonly inputs");
   ok(disabled.length == 2, "Test is messed up: missing disabled inputs");
   ok(readonly.length == 2, "Test is messed up: missing readonly inputs");

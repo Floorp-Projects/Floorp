@@ -13,6 +13,7 @@ var EXPORTED_SYMBOLS = [
   "Addresses",
   "Bookmarks",
   "CreditCards",
+  "ExtensionStorage",
   "Formdata",
   "History",
   "Passwords",
@@ -24,83 +25,58 @@ var EXPORTED_SYMBOLS = [
 
 var module = this;
 
-// Global modules
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-const { PlacesUtils } = ChromeUtils.import(
-  "resource://gre/modules/PlacesUtils.jsm"
-);
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
-);
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
-);
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { SessionStore } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionStore.jsm"
-);
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
-const { WEAVE_VERSION } = ChromeUtils.import(
-  "resource://services-sync/constants.js"
-);
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { Svc } = ChromeUtils.import("resource://services-sync/util.js");
-const { SyncTelemetry } = ChromeUtils.import(
-  "resource://services-sync/telemetry.js"
-);
-const { BookmarkValidator } = ChromeUtils.import(
-  "resource://services-sync/bookmark_validator.js"
-);
-const { PasswordValidator } = ChromeUtils.import(
-  "resource://services-sync/engines/passwords.js"
-);
-const { FormValidator } = ChromeUtils.import(
-  "resource://services-sync/engines/forms.js"
-);
-const { AddonValidator } = ChromeUtils.import(
-  "resource://services-sync/engines/addons.js"
-);
-// TPS modules
-const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
-// Module wrappers for tests
-const { Addon } = ChromeUtils.import("resource://tps/modules/addons.jsm");
-const {
-  Bookmark,
-  BookmarkFolder,
-  DumpBookmarks,
-  Livemark,
-  Separator,
-} = ChromeUtils.import("resource://tps/modules/bookmarks.jsm");
-const {
-  Address,
-  CreditCard,
-  DumpAddresses,
-  DumpCreditCards,
-} = ChromeUtils.import("resource://tps/modules/formautofill.jsm");
-const { FormData } = ChromeUtils.import("resource://tps/modules/forms.jsm");
-const { DumpHistory, HistoryEntry } = ChromeUtils.import(
-  "resource://tps/modules/history.jsm"
-);
-const { DumpPasswords, Password } = ChromeUtils.import(
-  "resource://tps/modules/passwords.jsm"
-);
-const { Preference } = ChromeUtils.import("resource://tps/modules/prefs.jsm");
-const { BrowserTabs } = ChromeUtils.import("resource://tps/modules/tabs.jsm");
-const { BrowserWindows } = ChromeUtils.import(
-  "resource://tps/modules/windows.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  Async: "resource://services-common/async.js",
+  BrowserTabs: "resource://tps/modules/tabs.jsm",
+  BrowserWindows: "resource://tps/modules/windows.jsm",
+  CommonUtils: "resource://services-common/utils.js",
+  extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  Log: "resource://gre/modules/Log.jsm",
+  Logger: "resource://tps/logger.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+  Svc: "resource://services-sync/util.js",
+  SyncTelemetry: "resource://services-sync/telemetry.js",
+  Weave: "resource://services-sync/main.js",
+  WEAVE_VERSION: "resource://services-sync/constants.js",
+
+  Addon: "resource://tps/modules/addons.jsm",
+  AddonValidator: "resource://services-sync/engines/addons.js",
+
+  FormData: "resource://tps/modules/forms.jsm",
+  FormValidator: "resource://services-sync/engines/forms.js",
+
+  Bookmark: "resource://tps/modules/bookmarks.jsm",
+  DumpBookmarks: "resource://tps/modules/bookmarks.jsm",
+  BookmarkFolder: "resource://tps/modules/bookmarks.jsm",
+  Livemark: "resource://tps/modules/bookmarks.jsm",
+  Separator: "resource://tps/modules/bookmarks.jsm",
+  BookmarkValidator: "resource://services-sync/bookmark_validator.js",
+
+  Address: "resource://tps/modules/formautofill.jsm",
+  DumpAddresses: "resource://tps/modules/formautofill.jsm",
+  CreditCard: "resource://tps/modules/formautofill.jsm",
+  DumpCreditCards: "resource://tps/modules/formautofill.jsm",
+
+  DumpHistory: "resource://tps/modules/history.jsm",
+  HistoryEntry: "resource://tps/modules/history.jsm",
+
+  Preference: "resource://tps/modules/prefs.jsm",
+
+  DumpPasswords: "resource://tps/modules/passwords.jsm",
+  Password: "resource://tps/modules/passwords.jsm",
+  PasswordValidator: "resource://services-sync/engines/passwords.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "fileProtocolHandler", () => {
   let fileHandler = Services.io.getProtocolHandler("file");
@@ -1594,6 +1570,20 @@ var Tabs = {
 var Windows = {
   async add(aWindow) {
     await TPS.HandleWindows(aWindow, ACTION_ADD);
+  },
+};
+
+// Jumping through loads of hoops via calling back into a "HandleXXX" method
+// and adding an ACTION_XXX indirection adds no value - let's KISS!
+// eslint-disable-next-line no-unused-vars
+var ExtStorage = {
+  async set(id, data) {
+    Logger.logInfo(`setting data for '${id}': ${data}`);
+    await extensionStorageSync.set({ id }, data);
+  },
+  async verify(id, keys, data) {
+    let got = await extensionStorageSync.get({ id }, keys);
+    Logger.AssertEqual(got, data, `data for '${id}'/${keys}`);
   },
 };
 

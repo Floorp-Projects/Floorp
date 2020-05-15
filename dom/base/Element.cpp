@@ -260,8 +260,7 @@ Element::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
 }
 
 EventStates Element::IntrinsicState() const {
-  return IsEditable() ? NS_EVENT_STATE_MOZ_READWRITE
-                      : NS_EVENT_STATE_MOZ_READONLY;
+  return IsEditable() ? NS_EVENT_STATE_READWRITE : NS_EVENT_STATE_READONLY;
 }
 
 void Element::NotifyStateChange(EventStates aStates) {
@@ -334,11 +333,11 @@ void Element::UpdateEditableState(bool aNotify) {
     // insertion into the document and UpdateState can be slow for
     // some kinds of elements even when not notifying.
     if (IsEditable()) {
-      RemoveStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
-      AddStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
+      RemoveStatesSilently(NS_EVENT_STATE_READONLY);
+      AddStatesSilently(NS_EVENT_STATE_READWRITE);
     } else {
-      RemoveStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
-      AddStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
+      RemoveStatesSilently(NS_EVENT_STATE_READWRITE);
+      AddStatesSilently(NS_EVENT_STATE_READONLY);
     }
   }
 }
@@ -3397,6 +3396,35 @@ void Element::GetAnimationsUnsorted(Element* aElement,
                "Only relevant animations should be added to an element's "
                "effect set");
     aAnimations.AppendElement(animation);
+  }
+}
+
+void Element::CloneAnimationsFrom(const Element& aOther) {
+  AnimationTimeline* const timeline = OwnerDoc()->Timeline();
+  MOZ_ASSERT(timeline, "Timeline has not been set on the document yet");
+  // Iterate through all pseudo types and copy the effects from each of the
+  // other element's effect sets into this element's effect set.
+  for (PseudoStyleType pseudoType :
+       {PseudoStyleType::NotPseudo, PseudoStyleType::before,
+        PseudoStyleType::after, PseudoStyleType::marker}) {
+    // If the element has an effect set for this pseudo type (or not pseudo)
+    // then copy the effects and animation properties.
+    if (EffectSet* const effects =
+            EffectSet::GetEffectSet(&aOther, pseudoType)) {
+      EffectSet* const clonedEffects =
+          EffectSet::GetOrCreateEffectSet(this, pseudoType);
+      for (KeyframeEffect* const effect : *effects) {
+        // Clone the effect.
+        RefPtr<KeyframeEffect> clonedEffect = new KeyframeEffect(
+            OwnerDoc(), OwningAnimationTarget{this, pseudoType}, *effect);
+
+        // Clone the animation
+        RefPtr<Animation> clonedAnimation = Animation::ClonePausedAnimation(
+            OwnerDoc()->GetParentObject(), *effect->GetAnimation(),
+            *clonedEffect, *timeline);
+        clonedEffects->AddEffect(*clonedEffect);
+      }
+    }
   }
 }
 

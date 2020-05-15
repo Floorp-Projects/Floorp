@@ -49,6 +49,7 @@ class BugBugPushSchedules(OptimizationStrategy):
         self.use_reduced_tasks = use_reduced_tasks
         self.combine_weights = combine_weights
         self.fallback = fallback
+        self.timedout = False
 
     def should_remove_task(self, task, params, importance):
         if params['project'] not in ("autoland", "try"):
@@ -56,13 +57,18 @@ class BugBugPushSchedules(OptimizationStrategy):
 
         branch = urlsplit(params['head_repository']).path.strip('/')
         rev = params['head_rev']
+
+        if self.timedout:
+            return seta.is_low_value_task(task.label, params['project'])
+
         try:
             data = push_schedules(branch, rev)
         except BugbugTimeoutException:
-            if self.fallback:
-                return seta.is_low_value_task(task.label, params['project'])
+            if not self.fallback:
+                raise
 
-            raise
+            self.timedout = True
+            return self.should_remove_task(task, params, importance)
 
         key = "reduced_tasks" if self.use_reduced_tasks else "tasks"
         tasks = set(

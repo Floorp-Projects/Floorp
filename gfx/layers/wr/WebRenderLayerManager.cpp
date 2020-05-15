@@ -42,7 +42,6 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
       mWebRenderCommandBuilder(this),
       mLastDisplayListSize(0) {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
-  mStateManager.mRenderRoot = wr::RenderRoot::Default;
   mStateManager.mLayerManager = this;
 
   if (XRE_IsContentProcess() &&
@@ -245,11 +244,10 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
 
   GetCompositorBridgeChild()->EndCanvasTransaction();
 
-  AutoTArray<RenderRootUpdates, wr::kRenderRootCount> renderRootUpdates;
+  AutoTArray<RenderRootUpdates, 1> renderRootUpdates;
   if (mStateManager.mAsyncResourceUpdates || !mPendingScrollUpdates.IsEmpty() ||
       WrBridge()->HasWebRenderParentCommands()) {
     auto updates = renderRootUpdates.AppendElement();
-    updates->mRenderRoot = wr::RenderRoot::Default;
     updates->mPaintSequenceNumber = mPaintSequenceNumber;
     if (mStateManager.mAsyncResourceUpdates) {
       mStateManager.mAsyncResourceUpdates->Flush(updates->mResourceUpdates,
@@ -378,8 +376,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
       resourceUpdates.ReplaceResources(
           std::move(mStateManager.mAsyncResourceUpdates.ref()));
     } else {
-      WrBridge()->UpdateResources(mStateManager.mAsyncResourceUpdates.ref(),
-                                  mStateManager.GetRenderRoot());
+      WrBridge()->UpdateResources(mStateManager.mAsyncResourceUpdates.ref());
     }
     mStateManager.mAsyncResourceUpdates.reset();
   }
@@ -402,7 +399,6 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     AUTO_PROFILER_TRACING_MARKER("Paint", "ForwardDPTransaction", GRAPHICS);
     nsTArray<RenderRootDisplayListData> renderRootDLs;
     auto renderRootDL = renderRootDLs.AppendElement();
-    renderRootDL->mRenderRoot = wr::RenderRoot::Default;
     builder.Finalize(*renderRootDL);
     mLastDisplayListSize = renderRootDL->mDL->mCapacity;
     resourceUpdates.Flush(renderRootDL->mResourceUpdates,
@@ -522,7 +518,7 @@ void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
 void WebRenderLayerManager::DiscardImages() {
   wr::IpcResourceUpdateQueue resources(WrBridge());
   mStateManager.DiscardImagesInTransaction(resources);
-  WrBridge()->UpdateResources(resources, wr::RenderRoot::Default);
+  WrBridge()->UpdateResources(resources);
 }
 
 void WebRenderLayerManager::DiscardLocalImages() {

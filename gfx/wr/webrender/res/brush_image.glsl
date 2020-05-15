@@ -103,8 +103,12 @@ void image_brush_vs(
             // the repetitions. In most case it is the current segment, but for the
             // middle area we look at the border size instead.
             vec2 segment_uv_size = uv1 - uv0;
-
             #ifdef WR_FEATURE_REPETITION
+            // Value of the stretch size with repetition. We have to compute it for
+            // both axis even if we only repeat on one axis because the value for
+            // each axis depends on what the repeated value would have been for the
+            // other axis.
+            vec2 repeated_stretch_size = stretch_size;
             // The repetition parameters for the middle area of a nine-patch are based
             // on the size of the border segments rather than the middle segment itself,
             // taking top and left by default, falling back to bottom and right when a
@@ -113,27 +117,27 @@ void image_brush_vs(
             // branchiness in this shader.
             if ((brush_flags & BRUSH_FLAG_SEGMENT_NINEPATCH_MIDDLE) != 0) {
                 segment_uv_size = uv0 - res.uv_rect.p0;
-                stretch_size.x = segment_rect.p0.x - prim_rect.p0.x;
-                stretch_size.y = segment_rect.p0.y - prim_rect.p0.y;
+                repeated_stretch_size = segment_rect.p0 - prim_rect.p0;
                 float epsilon = 0.001;
-                if (segment_uv_size.x < epsilon || stretch_size.x < epsilon) {
+
+                if (segment_uv_size.x < epsilon || repeated_stretch_size.x < epsilon) {
                     segment_uv_size.x = res.uv_rect.p1.x - uv1.x;
-                    stretch_size.x = prim_rect.p0.x + prim_rect.size.x
+                    repeated_stretch_size.x = prim_rect.p0.x + prim_rect.size.x
                         - segment_rect.p0.x - segment_rect.size.x;
                 }
-                if (segment_uv_size.y < epsilon || stretch_size.y < epsilon) {
+
+                if (segment_uv_size.y < epsilon || repeated_stretch_size.y < epsilon) {
                     segment_uv_size.y = res.uv_rect.p1.y - uv1.y;
-                    stretch_size.y = prim_rect.p0.y + prim_rect.size.y
+                    repeated_stretch_size.y = prim_rect.p0.y + prim_rect.size.y
                         - segment_rect.p0.y - segment_rect.size.y;
                 }
             }
 
-            vec2 original_stretch_size = stretch_size;
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X) != 0) {
-              stretch_size.x = original_stretch_size.y / segment_uv_size.y * segment_uv_size.x;
+              stretch_size.x = repeated_stretch_size.y / segment_uv_size.y * segment_uv_size.x;
             }
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y) != 0) {
-              stretch_size.y = original_stretch_size.x / segment_uv_size.x * segment_uv_size.y;
+              stretch_size.y = repeated_stretch_size.x / segment_uv_size.x * segment_uv_size.y;
             }
             #endif
 

@@ -161,8 +161,7 @@ already_AddRefed<TextureClient> ImageClient::CreateTextureClientForImage(
 }
 
 bool ImageClientSingle::UpdateImage(ImageContainer* aContainer,
-                                    uint32_t aContentFlags,
-                                    const Maybe<wr::RenderRoot>& aRenderRoot) {
+                                    uint32_t aContentFlags) {
   AutoTArray<ImageContainer::OwningImage, 4> images;
   uint32_t generationCounter;
   aContainer->GetCurrentImages(&images, &generationCounter);
@@ -286,8 +285,7 @@ ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
     : ImageClient(aFwd, aFlags, CompositableType::IMAGE_BRIDGE) {}
 
 bool ImageClientBridge::UpdateImage(ImageContainer* aContainer,
-                                    uint32_t aContentFlags,
-                                    const Maybe<wr::RenderRoot>& aRenderRoot) {
+                                    uint32_t aContentFlags) {
   if (!GetForwarder() || !mLayer) {
     return false;
   }

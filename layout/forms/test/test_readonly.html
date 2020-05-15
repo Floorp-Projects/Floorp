@@ -35,11 +35,11 @@ for (const element of Array.from(document.querySelectorAll('#should-apply *'))) 
   if (elementDesc === "input")
     elementDesc += ` type="${element.type}"`;
   test(function() {
-    assert_false(element.matches(':-moz-read-only'), "Shouldn't be initially read-only");
-    assert_true(element.matches(':-moz-read-write'), "Thus should be read-write");
+    assert_false(element.matches(':read-only'), "Shouldn't be initially read-only");
+    assert_true(element.matches(':read-write'), "Thus should be read-write");
     element.setAttribute("readonly", "readonly");
-    assert_true(element.matches(':-moz-read-only'), "Should become read-only");
-    assert_false(element.matches(':-moz-read-write'), "Thus should stop being read-write");
+    assert_true(element.matches(':read-only'), "Should become read-only");
+    assert_false(element.matches(':read-write'), "Thus should stop being read-write");
   }, elementDesc);
 }
 
@@ -48,11 +48,11 @@ for (const element of Array.from(document.querySelectorAll('#should-not-apply *'
   if (elementDesc === "input")
     elementDesc += ` type="${element.type}"`;
   test(function() {
-    assert_true(element.matches(':-moz-read-only'), "Should match read-only");
-    assert_false(element.matches(':-moz-read-write'), "Should not be read-write");
+    assert_true(element.matches(':read-only'), "Should match read-only");
+    assert_false(element.matches(':read-write'), "Should not be read-write");
     element.setAttribute("readonly", "readonly");
-    assert_true(element.matches(':-moz-read-only'), "Should keep matching read-only");
-    assert_false(element.matches(':-moz-read-write'), "Should still not be read-write");
+    assert_true(element.matches(':read-only'), "Should keep matching read-only");
+    assert_false(element.matches(':read-write'), "Should still not be read-write");
   }, elementDesc);
 }
 </script>

@@ -686,9 +686,6 @@ var AddonTestUtils = {
       version,
       platformVersion,
       crashReporter: true,
-      extraProps: {
-        browserTabsRemoteAutostart: false,
-      },
     });
     this.appInfo = AppInfo.getAppInfo();
   },

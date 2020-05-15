@@ -23,7 +23,6 @@ builtin(include, build/autoconf/zlib.m4)dnl
 builtin(include, build/autoconf/icu.m4)dnl
 builtin(include, build/autoconf/clang-plugin.m4)dnl
 builtin(include, build/autoconf/alloc.m4)dnl
-builtin(include, build/autoconf/ios.m4)dnl
 builtin(include, build/autoconf/sanitize.m4)dnl
 
 MOZ_PROG_CHECKMSYS()

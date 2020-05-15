@@ -36,7 +36,6 @@ RenderRootStateManager::GetWebRenderUserDataTable() {
 
 wr::IpcResourceUpdateQueue& RenderRootStateManager::AsyncResourceUpdates() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_IsParentProcess() || mRenderRoot == wr::RenderRoot::Default);
 
   if (!mAsyncResourceUpdates) {
     mAsyncResourceUpdates.emplace(WrBridge());
@@ -73,7 +72,7 @@ void RenderRootStateManager::FlushAsyncResourceUpdates() {
   }
 
   if (!IsDestroyed() && WrBridge()) {
-    WrBridge()->UpdateResources(mAsyncResourceUpdates.ref(), mRenderRoot);
+    WrBridge()->UpdateResources(mAsyncResourceUpdates.ref());
   }
 
   mAsyncResourceUpdates.reset();
@@ -180,7 +179,7 @@ void RenderRootStateManager::AddWebRenderParentCommand(
 }
 void RenderRootStateManager::UpdateResources(
     wr::IpcResourceUpdateQueue& aResources) {
-  WrBridge()->UpdateResources(aResources, mRenderRoot);
+  WrBridge()->UpdateResources(aResources);
 }
 void RenderRootStateManager::AddPipelineIdForAsyncCompositable(
     const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
@@ -202,14 +201,12 @@ void RenderRootStateManager::ReleaseTextureOfImage(const wr::ImageKey& aKey) {
 
 Maybe<wr::FontInstanceKey> RenderRootStateManager::GetFontKeyForScaledFont(
     gfx::ScaledFont* aScaledFont, wr::IpcResourceUpdateQueue* aResources) {
-  return WrBridge()->GetFontKeyForScaledFont(aScaledFont, mRenderRoot,
-                                             aResources);
+  return WrBridge()->GetFontKeyForScaledFont(aScaledFont, aResources);
 }
 
 Maybe<wr::FontKey> RenderRootStateManager::GetFontKeyForUnscaledFont(
     gfx::UnscaledFont* aUnscaledFont, wr::IpcResourceUpdateQueue* aResources) {
-  return WrBridge()->GetFontKeyForUnscaledFont(aUnscaledFont, mRenderRoot,
-                                               aResources);
+  return WrBridge()->GetFontKeyForUnscaledFont(aUnscaledFont, aResources);
 }
 
 }  // namespace layers

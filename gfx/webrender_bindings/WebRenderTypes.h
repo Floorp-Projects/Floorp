@@ -65,21 +65,6 @@ struct ExternalImageKeyPair {
 /* Generate a brand new window id and return it. */
 WindowId NewWindowId();
 
-MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
-    RenderRoot, uint8_t,
-    (
-        // The default render root - within the parent process, this refers
-        // to everything within the top chrome area (urlbar, tab strip, etc.).
-        // Within the content process, this refers to the content area. Any
-        // system that multiplexes data streams from different processes is
-        // responsible for converting RenderRoot::Default into
-        // whatever value is appropriate
-        Default));
-
-typedef EnumSet<RenderRoot, uint8_t> RenderRootSet;
-
-RenderRoot RenderRootFromId(DocumentId id);
-
 inline DebugFlags NewDebugFlags(uint32_t aFlags) { return {aFlags}; }
 
 inline Maybe<wr::ImageFormat> SurfaceFormatToImageFormat(

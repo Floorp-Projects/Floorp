@@ -58,8 +58,11 @@ public class WebExtension {
     // TODO: move to @NonNull when we remove registerWebExtension
     public final @Nullable MetaData metaData;
 
-    // TODO: make public
-    final boolean isBuiltIn;
+    /**
+     * Whether this extension is built-in. Built-in extension can be installed
+     * using {@link WebExtensionController#installBuiltIn}.
+     */
+    public final boolean isBuiltIn;
 
     /** Called whenever a delegate is set or unset on this {@link WebExtension} instance.
     /* package */ interface DelegateController {

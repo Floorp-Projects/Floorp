@@ -51,6 +51,9 @@ glob:**/*.ini
 glob:**/*.list
 path:testing/mozbase/manifestparser
 path:testing/runtimes
+path:testing/web-platform/tests/
+path:testing/web-platform/mozilla/tests/
+glob:testing/web-platform/*.py
 
 # For scheduling android-gradle-dependencies.
 path:mobile/android/config/

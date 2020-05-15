@@ -73,6 +73,8 @@ class WebExtensionTest : BaseSessionTest() {
                 "resource://android/assets/web_extensions/borderify/"
         ))
 
+        assertTrue(borderify.isBuiltIn)
+
         mainSession.reload()
         sessionRule.waitForPageStop()
 
@@ -186,8 +188,7 @@ class WebExtensionTest : BaseSessionTest() {
                         "Adds a red border to all webpages matching example.com.")
                 assertEquals(extension.metaData!!.name, "Borderify")
                 assertEquals(extension.metaData!!.version, "1.0")
-                // TODO: Bug 1601067
-                // assertEquals(extension.isBuiltIn, false)
+                assertEquals(extension.isBuiltIn, false)
                 assertEquals(extension.metaData!!.enabled, false)
                 assertEquals(extension.metaData!!.signedState,
                         WebExtension.SignedStateFlags.SIGNED)
