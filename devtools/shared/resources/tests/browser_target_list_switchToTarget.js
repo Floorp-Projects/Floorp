@@ -47,22 +47,19 @@ async function testSwitchToTarget(client) {
 
   const frameTargets = [];
   let currentTarget = firstTarget;
-  const onFrameAvailable = ({
-    type,
-    targetFront,
-    isTopLevel,
-    isTargetSwitching,
-  }) => {
+  const onFrameAvailable = ({ targetFront, isTargetSwitching }) => {
     is(
-      type,
+      targetFront.targetType,
       TargetList.TYPES.FRAME,
       "We are only notified about frame targets"
     );
     ok(
-      targetFront == currentTarget ? isTopLevel : !isTopLevel,
-      "isTopLevel argument is correct"
+      targetFront == currentTarget
+        ? targetFront.isTopLevel
+        : !targetFront.isTopLevel,
+      "isTopLevel property is correct"
     );
-    if (isTopLevel) {
+    if (targetFront.isTopLevel) {
       // When calling watchTargets, this will be false, but it will be true when calling switchToTarget
       is(
         isTargetSwitching,
@@ -75,22 +72,19 @@ async function testSwitchToTarget(client) {
     frameTargets.push(targetFront);
   };
   const destroyedTargets = [];
-  const onFrameDestroyed = ({
-    type,
-    targetFront,
-    isTopLevel,
-    isTargetSwitching,
-  }) => {
+  const onFrameDestroyed = ({ targetFront, isTargetSwitching }) => {
     is(
-      type,
+      targetFront.targetType,
       TargetList.TYPES.FRAME,
       "target-destroyed: We are only notified about frame targets"
     );
     ok(
-      targetFront == firstTarget ? isTopLevel : !isTopLevel,
-      "target-destroyed: isTopLevel argument is correct"
+      targetFront == firstTarget
+        ? targetFront.isTopLevel
+        : !targetFront.isTopLevel,
+      "target-destroyed: isTopLevel property is correct"
     );
-    if (isTopLevel) {
+    if (targetFront.isTopLevel) {
       is(
         isTargetSwitching,
         true,

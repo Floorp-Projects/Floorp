@@ -117,8 +117,8 @@ class FirefoxConnector {
     await this.addListeners();
   }
 
-  async onTargetAvailable({ targetFront, isTopLevel, isTargetSwitching }) {
-    if (!isTopLevel) {
+  async onTargetAvailable({ targetFront, isTargetSwitching }) {
+    if (!targetFront.isTopLevel) {
       return;
     }
 

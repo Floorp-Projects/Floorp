@@ -114,16 +114,16 @@ async function testBrowserWorkers(mainRoot) {
     "Check that watchTargets will call the create callback for all existing workers"
   );
   const targets = [];
-  const onAvailable = async ({ type, targetFront, isTopLevel }) => {
+  const onAvailable = async ({ targetFront }) => {
     ok(
-      type === TYPES.WORKER ||
-        type === TYPES.SHARED_WORKER ||
-        type === TYPES.SERVICE_WORKER,
+      targetFront.targetType === TYPES.WORKER ||
+        targetFront.targetType === TYPES.SHARED_WORKER ||
+        targetFront.targetType === TYPES.SERVICE_WORKER,
       "We are only notified about worker targets"
     );
     ok(
-      targetFront == target ? isTopLevel : !isTopLevel,
-      "isTopLevel argument is correct"
+      targetFront == target ? targetFront.isTopLevel : !targetFront.isTopLevel,
+      "isTopLevel property is correct"
     );
     targets.push(targetFront);
   };
@@ -157,7 +157,7 @@ async function testBrowserWorkers(mainRoot) {
 
   // Create a new worker and see if the worker target is reported
   const onWorkerCreated = new Promise(resolve => {
-    const onAvailable2 = async ({ type, targetFront, isTopLevel }) => {
+    const onAvailable2 = async ({ targetFront }) => {
       if (targets.includes(targetFront)) {
         return;
       }
@@ -213,9 +213,13 @@ async function testTabWorkers(mainRoot, tab) {
 
   // Assert that watchTargets will call the create callback for all existing workers
   const targets = [];
-  const onAvailable = async ({ type, targetFront, isTopLevel }) => {
-    is(type, TYPES.WORKER, "We are only notified about worker targets");
-    ok(!isTopLevel, "The workers are never top level");
+  const onAvailable = async ({ targetFront }) => {
+    is(
+      targetFront.targetType,
+      TYPES.WORKER,
+      "We are only notified about worker targets"
+    );
+    ok(!targetFront.isTopLevel, "The workers are never top level");
     targets.push(targetFront);
   };
   await targetList.watchTargets([TYPES.WORKER], onAvailable);

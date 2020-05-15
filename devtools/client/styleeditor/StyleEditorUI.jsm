@@ -1133,8 +1133,8 @@ StyleEditorUI.prototype = {
     this.selectStyleSheet(source, location.line - 1, location.column - 1);
   },
 
-  async _onTargetAvailable({ targetFront, isTopLevel }) {
-    if (isTopLevel) {
+  async _onTargetAvailable({ targetFront }) {
+    if (targetFront.isTopLevel) {
       await this.initializeHighlighter(targetFront);
 
       const stylesheetsFront = await targetFront.getFront("stylesheets");
@@ -1146,8 +1146,8 @@ StyleEditorUI.prototype = {
     }
   },
 
-  async _onTargetDestroyed({ isTopLevel }) {
-    if (isTopLevel) {
+  async _onTargetDestroyed({ targetFront }) {
+    if (targetFront.isTopLevel) {
       this._clear();
     }
   },
