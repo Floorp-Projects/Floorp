@@ -61,7 +61,6 @@ RenderCompositorEGL::RenderCompositorEGL(
 RenderCompositorEGL::~RenderCompositorEGL() {
 #ifdef MOZ_WIDGET_ANDROID
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
-  java::GeckoSurfaceTexture::DetachAllFromGLContext((int64_t)gl());
 #endif
   DestroyEGLSurface();
 }
@@ -100,11 +99,6 @@ RenderedFrameId RenderCompositorEGL::EndFrame(
 }
 
 void RenderCompositorEGL::Pause() {
-#ifdef MOZ_WIDGET_ANDROID
-  java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
-  java::GeckoSurfaceTexture::DetachAllFromGLContext((int64_t)gl());
-  RenderThread::Get()->NotifyAllAndroidSurfaceTexturesDetatched();
-#endif
   DestroyEGLSurface();
 }
 

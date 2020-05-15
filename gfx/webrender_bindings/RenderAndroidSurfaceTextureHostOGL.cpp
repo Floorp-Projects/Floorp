@@ -59,10 +59,6 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHostOGL::Lock(
              (!mSurfTex->IsSingleBuffer() &&
               mPrepareStatus == STATUS_UPDATE_TEX_IMAGE_NEEDED));
 
-  if (!EnsureAttachedToGLContext()) {
-    return InvalidToWrExternalImage();
-  }
-
   if (mGL.get() != aGL) {
     // This should not happen. On android, SharedGL is used.
     MOZ_ASSERT_UNREACHABLE("Unexpected GL context");
@@ -70,6 +66,11 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHostOGL::Lock(
   }
 
   if (!mSurfTex || !mGL || !mGL->MakeCurrent()) {
+    return InvalidToWrExternalImage();
+  }
+
+  MOZ_ASSERT(mAttachedToGLContext);
+  if (!mAttachedToGLContext) {
     return InvalidToWrExternalImage();
   }
 
@@ -101,10 +102,6 @@ void RenderAndroidSurfaceTextureHostOGL::Unlock() {}
 
 void RenderAndroidSurfaceTextureHostOGL::DeleteTextureHandle() {
   NotifyNotUsed();
-}
-
-void RenderAndroidSurfaceTextureHostOGL::DetachedFromGLContext() {
-  mAttachedToGLContext = false;
 }
 
 bool RenderAndroidSurfaceTextureHostOGL::EnsureAttachedToGLContext() {
