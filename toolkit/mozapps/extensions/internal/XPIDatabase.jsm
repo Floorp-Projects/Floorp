@@ -88,6 +88,7 @@ const TOOLKIT_ID = "toolkit@mozilla.org";
 
 const KEY_APP_SYSTEM_ADDONS = "app-system-addons";
 const KEY_APP_SYSTEM_DEFAULTS = "app-system-defaults";
+const KEY_APP_SYSTEM_PROFILE = "app-system-profile";
 const KEY_APP_BUILTINS = "app-builtin";
 const KEY_APP_SYSTEM_LOCAL = "app-system-local";
 const KEY_APP_SYSTEM_SHARE = "app-system-share";
@@ -407,6 +408,13 @@ class AddonInternal {
 
   get isCorrectlySigned() {
     switch (this.location.name) {
+      case KEY_APP_SYSTEM_PROFILE:
+        // Add-ons installed via Normandy must be signed by the system
+        // key or the "Mozilla Extensions" key.
+        return [
+          AddonManager.SIGNEDSTATE_SYSTEM,
+          AddonManager.SIGNEDSTATE_PRIVILEGED,
+        ].includes(this.signedState);
       case KEY_APP_SYSTEM_ADDONS:
         // System add-ons must be signed by the system key.
         return this.signedState == AddonManager.SIGNEDSTATE_SYSTEM;
