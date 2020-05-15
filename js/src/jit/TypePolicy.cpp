@@ -883,8 +883,11 @@ template <unsigned Op>
 bool ObjectPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
                                           MInstruction* ins) {
   MDefinition* in = ins->getOperand(Op);
-  if (in->type() == MIRType::Object || in->type() == MIRType::Slots ||
-      in->type() == MIRType::Elements) {
+
+  MOZ_ASSERT(in->type() != MIRType::Slots);
+  MOZ_ASSERT(in->type() != MIRType::Elements);
+
+  if (in->type() == MIRType::Object) {
     return true;
   }
 
@@ -1057,10 +1060,6 @@ bool StoreUnboxedScalarPolicy::adjustValueInput(TempAllocator& alloc,
 
 bool StoreUnboxedScalarPolicy::adjustInputs(TempAllocator& alloc,
                                             MInstruction* ins) const {
-  if (!SingleObjectPolicy::staticAdjustInputs(alloc, ins)) {
-    return false;
-  }
-
   MStoreUnboxedScalar* store = ins->toStoreUnboxedScalar();
   MOZ_ASSERT(store->elements()->type() == MIRType::Elements);
   MOZ_ASSERT(store->index()->type() == MIRType::Int32);
@@ -1233,9 +1232,8 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2>>)                \
   _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, BoxPolicy<2>>)          \
   _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, UnboxedInt32Policy<2>>) \
-  _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>,                         \
-              TruncateToInt32Policy<2>>)                                      \
-  _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, BoxPolicy<2>>)                \
+  _(MixPolicy<UnboxedInt32Policy<1>, TruncateToInt32Policy<2>>)               \
+  _(MixPolicy<ObjectPolicy<0>, BoxPolicy<2>>)                                 \
   _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, UnboxedInt32Policy<2>>)       \
   _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, ObjectPolicy<2>>)             \
   _(MixPolicy<StringPolicy<0>, UnboxedInt32Policy<1>, UnboxedInt32Policy<2>>) \
@@ -1244,8 +1242,8 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(MixPolicy<ObjectPolicy<0>, StringPolicy<1>, UnboxedInt32Policy<2>>)       \
   _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, UnboxedInt32Policy<2>,  \
               UnboxedInt32Policy<3>>)                                         \
-  _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>,                         \
-              TruncateToInt32Policy<2>, TruncateToInt32Policy<3>>)            \
+  _(MixPolicy<UnboxedInt32Policy<1>, TruncateToInt32Policy<2>,                \
+              TruncateToInt32Policy<3>>)                                      \
   _(MixPolicy<ObjectPolicy<0>, CacheIdPolicy<1>, NoFloatPolicy<2>>)           \
   _(MixPolicy<ObjectPolicy<0>, BoxExceptPolicy<1, MIRType::Object>,           \
               CacheIdPolicy<2>>)                                              \
@@ -1270,9 +1268,10 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(MixPolicy<StringPolicy<0>, UnboxedInt32Policy<1>>)                        \
   _(MixPolicy<StringPolicy<0>, StringPolicy<1>>)                              \
   _(MixPolicy<BoxPolicy<0>, BoxPolicy<1>>)                                    \
-  _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, BoxPolicy<2>,                 \
-              ObjectPolicy<3>>)                                               \
+  _(MixPolicy<ObjectPolicy<0>, BoxPolicy<2>, ObjectPolicy<3>>)                \
   _(NoFloatPolicy<0>)                                                         \
+  _(NoFloatPolicy<1>)                                                         \
+  _(NoFloatPolicy<2>)                                                         \
   _(NoFloatPolicyAfter<0>)                                                    \
   _(NoFloatPolicyAfter<1>)                                                    \
   _(NoFloatPolicyAfter<2>)                                                    \
