@@ -79,6 +79,7 @@ already_AddRefed<nsIURIFixupInfo> GetFixupURIInfo(const nsACString& aStringURI,
 nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
     : mURI(aURI),
       mResultPrincipalURIIsSome(false),
+      mTriggeringSandboxFlags(0),
       mKeepResultPrincipalURIIfSet(false),
       mLoadReplace(false),
       mInheritPrincipal(false),
@@ -128,6 +129,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mTriggeringPrincipal = aLoadState.TriggeringPrincipal();
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
   mStoragePrincipalToInherit = aLoadState.StoragePrincipalToInherit();
+  mTriggeringSandboxFlags = aLoadState.TriggeringSandboxFlags();
   mCsp = aLoadState.Csp();
   mOriginalURIString = aLoadState.OriginalURIString();
   mCancelContentJSEpoch = aLoadState.CancelContentJSEpoch();
@@ -349,6 +351,7 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
   loadState->SetFirstParty(true);
   loadState->SetHasValidUserGestureActivation(
       aLoadURIOptions.mHasValidUserGestureActivation);
+  loadState->SetTriggeringSandboxFlags(aLoadURIOptions.mTriggeringSandboxFlags);
   loadState->SetPostDataStream(postData);
   loadState->SetHeadersStream(aLoadURIOptions.mHeaders);
   loadState->SetBaseURI(aLoadURIOptions.mBaseURI);
@@ -451,6 +454,14 @@ void nsDocShellLoadState::SetCsp(nsIContentSecurityPolicy* aCsp) {
 }
 
 nsIContentSecurityPolicy* nsDocShellLoadState::Csp() const { return mCsp; }
+
+void nsDocShellLoadState::SetTriggeringSandboxFlags(uint32_t flags) {
+  mTriggeringSandboxFlags = flags;
+}
+
+uint32_t nsDocShellLoadState::TriggeringSandboxFlags() const {
+  return mTriggeringSandboxFlags;
+}
 
 bool nsDocShellLoadState::InheritPrincipal() const { return mInheritPrincipal; }
 
@@ -868,6 +879,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.TriggeringPrincipal() = mTriggeringPrincipal;
   loadState.PrincipalToInherit() = mPrincipalToInherit;
   loadState.StoragePrincipalToInherit() = mStoragePrincipalToInherit;
+  loadState.TriggeringSandboxFlags() = mTriggeringSandboxFlags;
   loadState.Csp() = mCsp;
   loadState.OriginalURIString() = mOriginalURIString;
   loadState.CancelContentJSEpoch() = mCancelContentJSEpoch;
