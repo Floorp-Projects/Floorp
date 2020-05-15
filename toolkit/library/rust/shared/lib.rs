@@ -55,7 +55,7 @@ extern crate xulstore;
 
 extern crate audio_thread_priority;
 
-#[cfg(feature = "new_webext_storage")]
+#[cfg(all(feature = "new_webext_storage", not(target_os = "android")))]
 extern crate webext_storage_bridge;
 
 #[cfg(feature = "webrtc")]
@@ -75,8 +75,6 @@ extern crate fluent_langneg_ffi;
 
 extern crate fluent;
 extern crate fluent_ffi;
-
-extern crate rusqlite;
 
 extern crate viaduct;
 
