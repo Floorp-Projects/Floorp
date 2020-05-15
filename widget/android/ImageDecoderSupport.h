@@ -5,7 +5,7 @@
 #ifndef ImageDecoderSupport_h__
 #define ImageDecoderSupport_h__
 
-#include "GeneratedJNINatives.h"
+#include "mozilla/java/ImageDecoderNatives.h"
 
 class imgIContainerCallback;
 

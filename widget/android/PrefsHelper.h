@@ -6,12 +6,12 @@
 #ifndef PrefsHelper_h
 #define PrefsHelper_h
 
-#include "GeneratedJNINatives.h"
 #include "MainThreadUtils.h"
 #include "nsAppShell.h"
 #include "nsCOMPtr.h"
 #include "nsVariant.h"
 
+#include "mozilla/java/PrefsHelperNatives.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 

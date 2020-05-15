@@ -16,7 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/jni/Refs.h"
 
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"

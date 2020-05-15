@@ -13,7 +13,7 @@
 #include "nsIAlertsService.h"
 #include "nsIObserver.h"
 
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/WebNotificationWrappers.h"
 
 #include "mozilla/StaticPtr.h"
 

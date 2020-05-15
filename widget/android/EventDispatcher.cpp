@@ -15,6 +15,7 @@
 
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/java/EventCallbackWrappers.h"
 
 // Disable the C++ 2a warning. See bug #1509926
 #if defined(__clang__)

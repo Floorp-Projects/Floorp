@@ -23,6 +23,12 @@
 #include "nsIDNSListener.h"
 #include "nsIDNSRecord.h"
 
+#include "mozilla/java/GeckoInputStreamNatives.h"
+#include "mozilla/java/GeckoResultWrappers.h"
+#include "mozilla/java/GeckoWebExecutorWrappers.h"
+#include "mozilla/java/WebMessageWrappers.h"
+#include "mozilla/java/WebRequestErrorWrappers.h"
+#include "mozilla/java/WebResponseWrappers.h"
 #include "mozilla/net/DNS.h"  // for NetAddr
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Preferences.h"

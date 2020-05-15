@@ -6,7 +6,7 @@
 #ifndef mozilla_GeckoVRManager_h_
 #define mozilla_GeckoVRManager_h_
 
-#include "GeneratedJNINatives.h"
+#include "mozilla/java/GeckoVRManagerWrappers.h"
 #include "mozilla/jni/Utils.h"
 
 namespace mozilla {

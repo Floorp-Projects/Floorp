@@ -7,7 +7,6 @@
 #ifndef mozilla_widget_EventDispatcher_h
 #define mozilla_widget_EventDispatcher_h
 
-#include "GeneratedJNINatives.h"
 #include "jsapi.h"
 #include "nsClassHashtable.h"
 #include "nsCOMArray.h"
@@ -15,6 +14,8 @@
 #include "nsHashKeys.h"
 #include "nsPIDOMWindow.h"
 
+#include "mozilla/java/EventDispatcherNatives.h"
+#include "mozilla/java/GeckoBundleWrappers.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
