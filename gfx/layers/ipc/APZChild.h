@@ -10,7 +10,6 @@
 #include "mozilla/layers/PAPZChild.h"
 
 namespace mozilla {
-
 namespace layers {
 
 class GeckoContentController;
@@ -21,6 +20,8 @@ class GeckoContentController;
  */
 class APZChild final : public PAPZChild {
  public:
+  using APZStateChange = GeckoContentController_APZStateChange;
+
   explicit APZChild(RefPtr<GeckoContentController> aController);
   virtual ~APZChild();
 
@@ -61,7 +62,6 @@ class APZChild final : public PAPZChild {
 };
 
 }  // namespace layers
-
 }  // namespace mozilla
 
 #endif  // mozilla_layers_APZChild_h

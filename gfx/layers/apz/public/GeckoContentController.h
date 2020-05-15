@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_GeckoContentController_h
 #define mozilla_layers_GeckoContentController_h
 
+#include "GeckoContentControllerTypes.h"
 #include "InputData.h"              // for PinchGestureInput
 #include "LayersTypes.h"            // for ScrollDirection
 #include "Units.h"                  // for CSSPoint, CSSRect, etc
@@ -28,6 +29,8 @@ namespace layers {
 
 class GeckoContentController {
  public:
+  using APZStateChange = GeckoContentController_APZStateChange;
+  using TapType = GeckoContentController_TapType;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GeckoContentController)
 
   /**
@@ -49,30 +52,6 @@ class GeckoContentController {
    * thread where it can send IPDL messages.
    */
   virtual void RequestContentRepaint(const RepaintRequest& aRequest) = 0;
-
-  /**
-   * Different types of tap-related events that can be sent in
-   * the HandleTap function. The names should be relatively self-explanatory.
-   * Note that the eLongTapUp will always be preceded by an eLongTap, but not
-   * all eLongTap notifications will be followed by an eLongTapUp (for instance,
-   * if the user moves their finger after triggering the long-tap but before
-   * lifting it).
-   * The difference between eDoubleTap and eSecondTap is subtle - the eDoubleTap
-   * is for an actual double-tap "gesture" while eSecondTap is for the same user
-   * input but where a double-tap gesture is not allowed. This is used to fire
-   * a click event with detail=2 to web content (similar to what a mouse double-
-   * click would do).
-   */
-  // clang-format off
-  MOZ_DEFINE_ENUM_CLASS_AT_CLASS_SCOPE(
-    TapType, (
-      eSingleTap,
-      eDoubleTap,
-      eSecondTap,
-      eLongTap,
-      eLongTapUp
-  ));
-  // clang-format on
 
   /**
    * Requests handling of a tap event. |aPoint| is in LD pixels, relative to the
@@ -125,34 +104,6 @@ class GeckoContentController {
    * Runs the given task on the "repaint" thread.
    */
   virtual void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) = 0;
-
-  // clang-format off
-  MOZ_DEFINE_ENUM_CLASS_AT_CLASS_SCOPE(
-    APZStateChange, (
-      /**
-       * APZ started modifying the view (including panning, zooming, and fling).
-       */
-      eTransformBegin,
-      /**
-       * APZ finished modifying the view.
-       */
-      eTransformEnd,
-      /**
-       * APZ started a touch.
-       * |aArg| is 1 if touch can be a pan, 0 otherwise.
-       */
-      eStartTouch,
-      /**
-       * APZ started a pan.
-       */
-      eStartPanning,
-      /**
-       * APZ finished processing a touch.
-       * |aArg| is 1 if touch was a click, 0 otherwise.
-       */
-      eEndTouch
-  ));
-  // clang-format on
 
   /**
    * General notices of APZ state changes for consumers.

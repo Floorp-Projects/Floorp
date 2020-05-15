@@ -52,6 +52,7 @@
 #include "mozilla/layers/CompositorVsyncScheduler.h"
 #include "mozilla/layers/ContentCompositorBridgeParent.h"
 #include "mozilla/layers/FrameUniformityData.h"
+#include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayerManagerMLGPU.h"

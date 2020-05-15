@@ -35,11 +35,11 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/CompositorOptions.h"
+#include "mozilla/layers/GeckoContentControllerTypes.h"
 #include "nsIWebBrowserChrome3.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "AudioChannelService.h"
 #include "PuppetWidget.h"
-#include "mozilla/layers/GeckoContentController.h"
 #include "nsDeque.h"
 
 class nsBrowserStatusFilter;
@@ -579,13 +579,13 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const nsTArray<layers::ScrollableLayerGuid>& aTargets) const;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvHandleTap(
-      const layers::GeckoContentController::TapType& aType,
+      const layers::GeckoContentController_TapType& aType,
       const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
       const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvNormalPriorityHandleTap(
-      const layers::GeckoContentController::TapType& aType,
+      const layers::GeckoContentController_TapType& aType,
       const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
       const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId);
 
@@ -595,7 +595,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   bool UpdateFrame(const layers::RepaintRequest& aRequest);
   bool NotifyAPZStateChange(
       const ViewID& aViewId,
-      const layers::GeckoContentController::APZStateChange& aChange,
+      const layers::GeckoContentController_APZStateChange& aChange,
       const int& aArg);
   void StartScrollbarDrag(const layers::AsyncDragMetrics& aDragMetrics);
   void ZoomToRect(const uint32_t& aPresShellId,
