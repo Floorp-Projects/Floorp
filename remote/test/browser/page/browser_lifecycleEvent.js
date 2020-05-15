@@ -6,6 +6,8 @@
 // Test the Page lifecycle events
 
 const DOC = toDataURL("default-test-page");
+const PAGE_URL =
+  "http://example.com/browser/remote/test/browser/page/doc_empty.html";
 
 add_task(async function noInitialEvents({ client }) {
   const { Page } = client;
@@ -41,7 +43,7 @@ add_task(async function noEventsAfterDisable({ client }) {
   await assertNavigationLifecycleEvents({ promise, frameId, timeout: 1000 });
 });
 
-add_task(async function navigateEvents({ client }) {
+add_task(async function navigateToDataURLEvents({ client }) {
   const { Page } = client;
   await Page.enable();
   info("Page domain has been enabled");
@@ -51,11 +53,32 @@ add_task(async function navigateEvents({ client }) {
   info("Lifecycle events have been enabled");
 
   let pageLoaded = Page.loadEventFired();
-  const { frameId } = await Page.navigate({ url: DOC });
+  const { frameId, loaderId } = await Page.navigate({ url: DOC });
+  // Bug 1632007 return a loaderId for data: url
+  todo(!!loaderId, "Page.navigate returns a loaderId");
   await pageLoaded;
   info("A new page has been loaded");
 
-  await assertNavigationLifecycleEvents({ promise, frameId });
+  await assertNavigationLifecycleEvents({ promise, frameId, loaderId });
+});
+
+add_task(async function navigateToPageURLEvents({ client }) {
+  const { Page } = client;
+  await Page.enable();
+  info("Page domain has been enabled");
+
+  await Page.setLifecycleEventsEnabled({ enabled: true });
+  const promise = recordPromises(Page, ["init", "DOMContentLoaded", "load"]);
+  info("Lifecycle events have been enabled");
+
+  let pageLoaded = Page.loadEventFired();
+  const { frameId, loaderId } = await Page.navigate({ url: PAGE_URL });
+  ok(!!loaderId, "Page.navigate returns a loaderId");
+
+  await pageLoaded;
+  info("A new page has been loaded");
+
+  await assertNavigationLifecycleEvents({ promise, frameId, loaderId });
 });
 
 add_task(async function navigateEventsOnReload({ client }) {
@@ -118,7 +141,8 @@ function recordPromises(Page, names) {
   });
 }
 
-async function assertNavigationLifecycleEvents({ promise, frameId, timeout }) {
+async function assertNavigationLifecycleEvents(options = {}) {
+  const { promise, frameId, loaderId, timeout } = options;
   // Wait for all the promises to resolve
   const promises = [promise];
 
@@ -142,8 +166,8 @@ async function assertNavigationLifecycleEvents({ promise, frameId, timeout }) {
   );
 
   // Now assert the data exposed by each of these events
-  const frameStartedLoading = resolutions.get("init");
-  is(frameStartedLoading.frameId, frameId, "init frameId is the same one");
+  const init = resolutions.get("init");
+  is(init.frameId, frameId, "init frameId is the same one");
 
   const DOMContentLoaded = resolutions.get("DOMContentLoaded");
   is(
@@ -154,4 +178,25 @@ async function assertNavigationLifecycleEvents({ promise, frameId, timeout }) {
 
   const load = resolutions.get("load");
   is(load.frameId, frameId, "load frameId is the same one");
+
+  ok(init.timestamp, "init has a timestamp");
+  ok(
+    init.timestamp <= DOMContentLoaded.timestamp,
+    "init precedes DOMContentLoaded"
+  );
+  ok(
+    DOMContentLoaded.timestamp <= load.timestamp,
+    "DOMContentLoaded precedes load"
+  );
+
+  if (!loaderId) {
+    return;
+  }
+  is(init.loaderId, loaderId, "init has expected loaderId");
+  is(load.loaderId, loaderId, "load has expected loaderId");
+  is(
+    DOMContentLoaded.loaderId,
+    loaderId,
+    "DOMContentLoaded has expected loaderId"
+  );
 }

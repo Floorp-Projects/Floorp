@@ -285,53 +285,39 @@ class Page extends ContentProcessDomain {
   }
 
   handleEvent({ type, target }) {
-    const isFrame = target.defaultView != this.content;
-
-    if (isFrame) {
+    if (target.defaultView != this.content) {
       // Ignore iframes for now
       return;
     }
 
-    const timestamp = Date.now();
+    const timestamp = Date.now() / 1000;
     const frameId = target.defaultView.docShell.browsingContext.id.toString();
     const url = target.location.href;
+    const loaderId =
+      this._lastRequest?.frameId == frameId
+        ? this._lastRequest?.loaderId
+        : null;
 
     switch (type) {
       case "DOMContentLoaded":
         this.emit("Page.domContentEventFired", { timestamp });
-        if (!isFrame) {
-          this.emitLifecycleEvent(
-            frameId,
-            /* loaderId */ null,
-            "DOMContentLoaded",
-            timestamp
-          );
-        }
+        this.emitLifecycleEvent(
+          frameId,
+          loaderId,
+          "DOMContentLoaded",
+          timestamp
+        );
         break;
 
       case "pagehide":
         // Maybe better to bound to "unload" once we can register for this event
         this.emit("Page.frameStartedLoading", { frameId });
-        if (!isFrame) {
-          this.emitLifecycleEvent(
-            frameId,
-            /* loaderId */ null,
-            "init",
-            timestamp
-          );
-        }
+        this.emitLifecycleEvent(frameId, loaderId, "init", timestamp);
         break;
 
       case "load":
         this.emit("Page.loadEventFired", { timestamp });
-        if (!isFrame) {
-          this.emitLifecycleEvent(
-            frameId,
-            /* loaderId */ null,
-            "load",
-            timestamp
-          );
-        }
+        this.emitLifecycleEvent(frameId, loaderId, "load", timestamp);
 
         // XXX this should most likely be sent differently
         this.emit("Page.navigatedWithinDocument", { frameId, url });
@@ -340,14 +326,13 @@ class Page extends ContentProcessDomain {
 
       case "readystatechange":
         if (this.content.document.readState === "loading") {
-          this.emitLifecycleEvent(
-            frameId,
-            /* loaderId */ null,
-            "init",
-            timestamp
-          );
+          this.emitLifecycleEvent(frameId, loaderId, "init", timestamp);
         }
     }
+  }
+
+  _updateLoaderId(data) {
+    this._lastRequest = data;
   }
 
   _contentRect() {

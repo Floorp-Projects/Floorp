@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test order and consistency of Network events as a whole.
+// Test order and consistency of Network/Page events as a whole.
 // Details of specific events are checked in event-specific test files.
 
 const PAGE_URL =
@@ -14,17 +14,19 @@ const JS_URL =
 add_task(async function documentNavigationWithScriptResource({ client }) {
   const { Page, Network } = client;
   await Network.enable();
+  await Page.enable();
+  await Page.setLifecycleEventsEnabled({ enabled: true });
   const { history, urlToEvents } = configureHistory(client);
   const navigateDone = history.addPromise("Page.navigate");
 
   const { frameId } = await Page.navigate({ url: PAGE_URL }).then(navigateDone);
   ok(frameId, "Page.navigate returned a frameId");
 
-  info("Wait for Network events");
+  info("Wait for events");
   const events = await history.record();
-  is(events.length, 5, "Expected number of events");
+  is(events.length, 8, "Expected number of events");
   const eventNames = events.map(
-    item => `${item.eventName}(${item.payload.type || ""})`
+    item => `${item.eventName}(${item.payload.type || item.payload.name})`
   );
   info(`Received events: ${eventNames}`);
   const documentEvents = urlToEvents.get(PAGE_URL);
@@ -43,6 +45,19 @@ add_task(async function documentNavigationWithScriptResource({ client }) {
   const docRequest = documentEvents[0].event;
   is(docRequest.request.url, PAGE_URL, "Got the doc request");
   is(docRequest.documentURL, PAGE_URL, "documenURL matches request url");
+  const lifeCycleEvents = history.findEvents("Page.lifecycleEvent");
+  const firstLifecycle = history.indexOf("Page.lifecycleEvent");
+  ok(
+    firstLifecycle > documentEvents[1].index,
+    "First lifecycle event is after document response"
+  );
+  for (const e of lifeCycleEvents) {
+    is(
+      e.loaderId,
+      docRequest.loaderId,
+      `${e.name} lifecycle event has same loaderId as document request`
+    );
+  }
 
   const resourceRequest = resourceEvents[0].event;
   is(resourceRequest.documentURL, PAGE_URL, "documentURL is trigger document");
@@ -53,12 +68,16 @@ add_task(async function documentNavigationWithScriptResource({ client }) {
   );
   const navigateStep = history.indexOf("Page.navigate");
   ok(
-    documentEvents[1].index < navigateStep,
+    navigateStep > documentEvents[1].index,
     "Page.navigate returns after document response"
   );
   ok(
     navigateStep < resourceEvents[0].index,
     "Page.navigate returns before resource request"
+  );
+  ok(
+    navigateStep < firstLifecycle,
+    "Page.navigate returns before first lifecycle event"
   );
 
   const docResponse = documentEvents[1].event;
@@ -106,9 +125,10 @@ add_task(async function documentNavigationWithScriptResource({ client }) {
 function configureHistory(client) {
   const REQUEST = "Network.requestWillBeSent";
   const RESPONSE = "Network.responseReceived";
+  const LIFECYCLE = "Page.lifecycleEvent";
 
-  const { Network } = client;
-  const history = new RecordEvents(4);
+  const { Network, Page } = client;
+  const history = new RecordEvents(8);
   const urlToEvents = new Map();
   function updateUrlToEvents(kind) {
     return ({ payload, index, eventName }) => {
@@ -141,5 +161,14 @@ function configureHistory(client) {
     },
     callback: updateUrlToEvents("response"),
   });
+
+  history.addRecorder({
+    event: Page.lifecycleEvent,
+    eventName: LIFECYCLE,
+    messageFn: payload => {
+      return `Received ${LIFECYCLE} ${payload.name}`;
+    },
+  });
+
   return { history, urlToEvents };
 }
