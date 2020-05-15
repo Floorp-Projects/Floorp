@@ -1241,10 +1241,18 @@ void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
                                              void* aChromeTooltipListener) {
   auto self = static_cast<ChromeTooltipListener*>(aChromeTooltipListener);
   if (self && self->mPossibleTooltipNode) {
+    // release tooltip target once done, no matter what we do here.
+    auto cleanup = MakeScopeExit([&] { self->mPossibleTooltipNode = nullptr; });
     if (!self->mPossibleTooltipNode->IsInComposedDoc()) {
-      // release tooltip target if there is one, NO MATTER WHAT
-      self->mPossibleTooltipNode = nullptr;
       return;
+    }
+    // Check that the document or its ancestors haven't been replaced.
+    Document* doc = self->mPossibleTooltipNode->OwnerDoc();
+    while (doc) {
+      if (!doc->IsCurrentActiveDocument()) {
+        return;
+      }
+      doc = doc->GetInProcessParentDocument();
     }
 
     // The actual coordinates we want to put the tooltip at are relative to the
@@ -1270,8 +1278,6 @@ void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
     }
 
     if (!widget || !docShell || !docShell->GetIsActive()) {
-      // release tooltip target if there is one, NO MATTER WHAT
-      self->mPossibleTooltipNode = nullptr;
       return;
     }
 
@@ -1304,8 +1310,5 @@ void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
             self->mPossibleTooltipNode->OwnerDoc()->GetDocShell());
       }
     }
-
-    // release tooltip target if there is one, NO MATTER WHAT
-    self->mPossibleTooltipNode = nullptr;
   }
 }
