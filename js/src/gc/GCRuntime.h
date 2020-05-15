@@ -735,20 +735,17 @@ class GCRuntime {
   void findDeadCompartments();
 
   friend class SweepMarkTask;
-  IncrementalProgress markUntilBudgetExhausted(SliceBudget& sliceBudget,
-                                               gcstats::PhaseKind phase);
-  IncrementalProgress markUntilBudgetExhausted(SliceBudget& sliceBudget);
+  IncrementalProgress markUntilBudgetExhausted(
+      SliceBudget& sliceBudget,
+      GCMarker::ShouldReportMarkTime reportTime = GCMarker::ReportMarkTime);
   void drainMarkStack();
   template <class ZoneIterT>
-  IncrementalProgress markWeakReferences(gcstats::PhaseKind phase,
-                                         SliceBudget& budget);
-  IncrementalProgress markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase,
-                                                       SliceBudget& budget);
+  IncrementalProgress markWeakReferences(SliceBudget& budget);
+  IncrementalProgress markWeakReferencesInCurrentGroup(SliceBudget& budget);
   template <class ZoneIterT>
   void markGrayRoots(gcstats::PhaseKind phase);
   void markBufferedGrayRoots(JS::Zone* zone);
-  IncrementalProgress markAllWeakReferences(gcstats::PhaseKind phase,
-                                            SliceBudget& budget);
+  IncrementalProgress markAllWeakReferences();
   void markAllGrayReferences(gcstats::PhaseKind phase);
 
   void beginSweepPhase(JS::GCReason reason, AutoGCSession& session);
@@ -1016,6 +1013,11 @@ class GCRuntime {
 
   // Whether it's currently safe to yield to the mutator in an incremental GC.
   MainThreadData<bool> safeToYield;
+
+  // Whether to do any marking caused by barriers on a background thread during
+  // incremental sweeping, while also sweeping zones which have finished
+  // marking.
+  MainThreadData<bool> markOnBackgroundThreadDuringSweeping;
 
   /* Whether any sweeping will take place in the separate GC helper thread. */
   MainThreadData<bool> sweepOnBackgroundThread;

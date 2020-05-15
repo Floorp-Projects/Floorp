@@ -1752,7 +1752,8 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
         }
       } else if (js::StringEqualsLiteral(str, "drain")) {
         auto unlimited = SliceBudget::unlimited();
-        MOZ_RELEASE_ASSERT(markUntilBudgetExhausted(unlimited));
+        MOZ_RELEASE_ASSERT(
+            markUntilBudgetExhausted(unlimited, DontReportMarkTime));
       } else if (js::StringEqualsLiteral(str, "set-color-gray")) {
         queueMarkColor = mozilla::Some(MarkColor::Gray);
         if (gcrt.state() != State::Sweep) {
@@ -1774,7 +1775,21 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
   return QueueComplete;
 }
 
-bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget) {
+static gcstats::PhaseKind GrayMarkingPhaseForCurrentPhase(
+    const gcstats::Statistics& stats) {
+  using namespace gcstats;
+  switch (stats.currentPhaseKind()) {
+    case PhaseKind::SWEEP_MARK:
+      return PhaseKind::SWEEP_MARK_GRAY;
+    case PhaseKind::SWEEP_MARK_WEAK:
+      return PhaseKind::SWEEP_MARK_GRAY_WEAK;
+    default:
+      MOZ_CRASH("Unexpected current phase");
+  }
+}
+
+bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
+                                        ShouldReportMarkTime reportTime) {
 #ifdef DEBUG
   MOZ_ASSERT(!strictCompartmentChecking);
   strictCompartmentChecking = true;
@@ -1802,6 +1817,12 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget) {
     }
 
     if (hasGrayEntries()) {
+      mozilla::Maybe<gcstats::AutoPhase> ap;
+      if (reportTime) {
+        auto& stats = runtime()->gc.stats();
+        ap.emplace(stats, GrayMarkingPhaseForCurrentPhase(stats));
+      }
+
       AutoSetMarkColor autoSetGray(*this, MarkColor::Gray);
       do {
         processMarkStackTop(budget);

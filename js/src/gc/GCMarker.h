@@ -348,7 +348,12 @@ class GCMarker : public JSTracer {
   };
   MarkQueueProgress processMarkQueue();
 
-  MOZ_MUST_USE bool markUntilBudgetExhausted(SliceBudget& budget);
+  enum ShouldReportMarkTime : bool {
+    ReportMarkTime = true,
+    DontReportMarkTime = false
+  };
+  MOZ_MUST_USE bool markUntilBudgetExhausted(
+      SliceBudget& budget, ShouldReportMarkTime reportTime = ReportMarkTime);
 
   void setGCMode(JSGCMode mode) {
     // Ignore failure to resize the stack and keep using the existing stack.
