@@ -505,13 +505,19 @@ menuitem.bookmark-item {
   }
 }
 
-/* Location bar */
+/* Address bar */
 
 %include ../shared/urlbar-searchbar.inc.css
 
 #urlbar,
 #searchbar {
   font-size: 1.15em;
+}
+
+@supports -moz-bool-pref("browser.urlbar.update2.expandTextOnFocus") {
+  #urlbar[breakout-extend] {
+    font-size: 1.25em;
+  }
 }
 
 @media (-moz-windows-default-theme: 0) {
@@ -526,19 +532,13 @@ menuitem.bookmark-item {
   list-style-image: url("chrome://browser/skin/share.svg");
 }
 
-/* identity box */
-
 %include ../shared/identity-block/identity-block.inc.css
+%include ../shared/notification-icons.inc.css
+%include ../shared/addon-notification.inc.css
 
-/* autocomplete */
+/* Address bar results view */
 
-%include ../shared/autocomplete.inc.css
-
-#PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
-  border-top: 1px solid ThreeDShadow;
-}
-
-%include ../shared/urlbar-autocomplete.inc.css
+%include ../shared/urlbarView.inc.css
 
 :root {
   --urlbar-popup-url-color: hsl(210, 77%, 47%);
@@ -562,10 +562,12 @@ menuitem.bookmark-item {
   }
 }
 
-@supports -moz-bool-pref("browser.urlbar.update2.expandTextOnFocus") {
-  #urlbar[breakout-extend] {
-    font-size: 1.25em;
-  }
+/* Autocomplete */
+
+%include ../shared/autocomplete.inc.css
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
+  border-top: 1px solid ThreeDShadow;
 }
 
 /* Bookmarking panel */
@@ -628,9 +630,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   background: Highlight !important;
   color: HighlightText !important;
 }
-
-%include ../shared/notification-icons.inc.css
-%include ../shared/addon-notification.inc.css
 
 /* Translation infobar */
 
