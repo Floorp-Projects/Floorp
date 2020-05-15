@@ -6,15 +6,23 @@
 const URL = "data:text/html;charset=utf-8,<iframe id='test-iframe'></iframe>";
 
 // Test that the docShell UA emulation works
-async function contentTask() {
+async function contentTaskNoOverride() {
   let docshell = docShell;
   is(
     docshell.browsingContext.customUserAgent,
     "",
     "There should initially be no customUserAgent"
   );
+}
 
-  docshell.browsingContext.customUserAgent = "foo";
+async function contentTaskOverride() {
+  let docshell = docShell;
+  is(
+    docshell.browsingContext.customUserAgent,
+    "foo",
+    "The user agent should be changed to foo"
+  );
+
   is(
     content.navigator.userAgent,
     "foo",
@@ -52,6 +60,11 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
     browser
   ) {
-    await SpecialPowers.spawn(browser, [], contentTask);
+    await SpecialPowers.spawn(browser, [], contentTaskNoOverride);
+
+    let browsingContext = BrowserTestUtils.getBrowsingContextFrom(browser);
+    browsingContext.customUserAgent = "foo";
+
+    await SpecialPowers.spawn(browser, [], contentTaskOverride);
   });
 });
