@@ -29,6 +29,8 @@
 #include "new-regexp/util/flags.h"
 #include "new-regexp/util/vector.h"
 #include "new-regexp/util/zone.h"
+#include "threading/ExclusiveData.h"
+#include "vm/MutexIDs.h"
 #include "vm/NativeObject.h"
 
 // Forward declaration of classes
@@ -174,17 +176,22 @@ inline constexpr bool IsInRange(T value, U lower_limit, U higher_limit) {
                                  static_cast<unsigned_T>(lower_limit));
 }
 
-#define LAZY_INSTANCE_INITIALIZER { mozilla::Nothing() }
+#define LAZY_INSTANCE_INITIALIZER { }
 
 template <typename T>
-struct LazyInstanceImpl {
-  mozilla::Maybe<T> value_;
-  T* Pointer() {
-    if (value_.isNothing()) {
-      value_.emplace();
+class LazyInstanceImpl {
+ public:
+  LazyInstanceImpl() : value_(js::mutexid::IrregexpLazyStatic) {}
+
+  const T* Pointer() {
+    auto val = value_.lock();
+    if (val->isNothing()) {
+      val->emplace();
     }
-    return value_.ptr();
+    return val->ptr();
   }
+ private:
+  js::ExclusiveData<mozilla::Maybe<T>> value_;
 };
 
 template <typename T>

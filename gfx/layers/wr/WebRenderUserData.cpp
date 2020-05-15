@@ -181,8 +181,7 @@ Maybe<wr::ImageKey> WebRenderImageData::UpdateImageKey(
   ImageClientSingle* imageClient = mImageClient->AsImageClientSingle();
   uint32_t oldCounter = imageClient->GetLastUpdateGenerationCounter();
 
-  bool ret = imageClient->UpdateImage(aContainer, /* unused */ 0,
-                                      Some(mManager->GetRenderRoot()));
+  bool ret = imageClient->UpdateImage(aContainer, /* unused */ 0);
   RefPtr<TextureClient> currentTexture = imageClient->GetForwardedTexture();
   if (!ret || !currentTexture) {
     // Delete old key

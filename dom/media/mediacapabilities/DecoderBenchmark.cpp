@@ -14,8 +14,9 @@ namespace mozilla {
 void DecoderBenchmark::StoreScore(const nsACString& aDecoderName,
                                   const nsACString& aKey,
                                   RefPtr<FrameStatistics> aStats) {
-  uint64_t totalFrames = aStats->GetTotalFrames();
-  uint64_t droppedFrames = aStats->GetDroppedFrames();
+  FrameStatisticsData statsData = aStats->GetFrameStatisticsData();
+  uint64_t totalFrames = FrameStatistics::GetTotalFrames(statsData);
+  uint64_t droppedFrames = FrameStatistics::GetDroppedFrames(statsData);
 
   MOZ_ASSERT(droppedFrames <= totalFrames);
   MOZ_ASSERT(totalFrames >= mLastTotalFrames);

@@ -309,7 +309,7 @@ struct DIGroup {
   // current item being processed.
   IntRect mClippedImageBounds;  // mLayerBounds with the clipping of any
                                 // containers applied
-  Maybe<std::pair<wr::RenderRoot, wr::BlobImageKey>> mKey;
+  Maybe<wr::BlobImageKey> mKey;
   std::vector<RefPtr<ScaledFont>> mFonts;
 
   DIGroup()
@@ -343,7 +343,7 @@ struct DIGroup {
   void ClearImageKey(RenderRootStateManager* aManager, bool aForce = false) {
     if (mKey) {
       MOZ_RELEASE_ASSERT(aForce || mInvalidRect.IsEmpty());
-      aManager->AddBlobImageKeyForDiscard(mKey.value().second);
+      aManager->AddBlobImageKeyForDiscard(*mKey);
       mKey = Nothing();
     }
     mFonts.clear();
@@ -615,7 +615,7 @@ struct DIGroup {
         // so request it be updated unconditionally (wr should be able to easily
         // detect if this is a no-op on its side, if that matters)
         aResources.SetBlobImageVisibleArea(
-            mKey.value().second,
+            *mKey,
             ViewAs<ImagePixel>(mVisibleRect,
                                PixelCastJustification::LayerIsImage));
         mLastVisibleRect = mVisibleRect;
@@ -636,7 +636,7 @@ struct DIGroup {
               for (auto& scaled : aScaledFonts) {
                 Maybe<wr::FontInstanceKey> key =
                     aWrManager->WrBridge()->GetFontKeyForScaledFont(
-                        scaled, aBuilder.GetRenderRoot(), &aResources);
+                        scaled, &aResources);
                 if (key.isNothing()) {
                   validFonts = false;
                   break;
@@ -706,7 +706,7 @@ struct DIGroup {
                                  PixelCastJustification::LayerIsImage))) {
         return;
       }
-      mKey = Some(std::make_pair(aBuilder.GetRenderRoot(), key));
+      mKey = Some(key);
     } else {
       wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), opacity);
 
@@ -720,7 +720,7 @@ struct DIGroup {
       GP("Update Blob %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
          mInvalidRect.width, mInvalidRect.height);
       if (!aResources.UpdateBlobImage(
-              mKey.value().second, descriptor, bytes,
+              *mKey, descriptor, bytes,
               ViewAs<ImagePixel>(mVisibleRect,
                                  PixelCastJustification::LayerIsImage),
               dirtyRect)) {
@@ -729,7 +729,7 @@ struct DIGroup {
     }
     mFonts = std::move(fonts);
     aResources.SetBlobImageVisibleArea(
-        mKey.value().second,
+        *mKey,
         ViewAs<ImagePixel>(mVisibleRect, PixelCastJustification::LayerIsImage));
     mLastVisibleRect = mVisibleRect;
     PushImage(aBuilder, itemBounds);
@@ -760,7 +760,7 @@ struct DIGroup {
     aBuilder.SetHitTestInfo(mScrollId, hitInfo, SideBits::eNone);
     aBuilder.PushImage(dest, dest, !backfaceHidden,
                        wr::ToImageRendering(sampleFilter),
-                       wr::AsImageKey(mKey.value().second));
+                       wr::AsImageKey(*mKey));
     aBuilder.ClearHitTestInfo();
   }
 
@@ -1142,7 +1142,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       // We're going to be starting a new group.
       RefPtr<WebRenderGroupData> groupData =
           aCommandBuilder->CreateOrRecycleWebRenderUserData<WebRenderGroupData>(
-              item, aBuilder.GetRenderRoot());
+              item);
 
       groupData->mFollowingGroup.mInvalidRect.SetEmpty();
 
@@ -1386,8 +1386,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
 
   g.mDisplayListBuilder = aDisplayListBuilder;
   RefPtr<WebRenderGroupData> groupData =
-      CreateOrRecycleWebRenderUserData<WebRenderGroupData>(
-          aWrappingItem, aBuilder.GetRenderRoot());
+      CreateOrRecycleWebRenderUserData<WebRenderGroupData>(aWrappingItem);
 
   bool snapped;
   nsRect groupBounds =
@@ -1828,8 +1827,7 @@ Maybe<wr::ImageKey> WebRenderCommandBuilder::CreateImageKey(
     mozilla::wr::ImageRendering aRendering, const StackingContextHelper& aSc,
     gfx::IntSize& aSize, const Maybe<LayoutDeviceRect>& aAsyncImageBounds) {
   RefPtr<WebRenderImageData> imageData =
-      CreateOrRecycleWebRenderUserData<WebRenderImageData>(
-          aItem, aBuilder.GetRenderRoot());
+      CreateOrRecycleWebRenderUserData<WebRenderImageData>(aItem);
   MOZ_ASSERT(imageData);
 
   if (aContainer->IsAsync()) {
@@ -2091,8 +2089,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
   }
 
   RefPtr<WebRenderFallbackData> fallbackData =
-      CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(
-          aItem, aBuilder.GetRenderRoot());
+      CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
   bool snap;
   nsRect itemBounds = aItem->GetBounds(aDisplayListBuilder, &snap);
@@ -2246,7 +2243,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                 for (auto& scaled : aScaledFonts) {
                   Maybe<wr::FontInstanceKey> key =
                       mManager->WrBridge()->GetFontKeyForScaledFont(
-                          scaled, aBuilder.GetRenderRoot(), &aResources);
+                          scaled, &aResources);
                   if (key.isNothing()) {
                     validFonts = false;
                     break;
@@ -2341,7 +2338,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
         if (isInvalidated) {
           // Update image if there it's invalidated.
-          if (!helper.UpdateImage(aBuilder.GetRenderRoot())) {
+          if (!helper.UpdateImage()) {
             return nullptr;
           }
         } else {
@@ -2422,8 +2419,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     nsDisplayListBuilder* aDisplayListBuilder,
     const LayoutDeviceRect& aBounds) {
   RefPtr<WebRenderMaskData> maskData =
-      CreateOrRecycleWebRenderUserData<WebRenderMaskData>(
-          aMaskItem, aBuilder.GetRenderRoot());
+      CreateOrRecycleWebRenderUserData<WebRenderMaskData>(aMaskItem);
 
   if (!maskData) {
     return Nothing();
@@ -2478,8 +2474,8 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
 
               for (auto& scaled : aScaledFonts) {
                 Maybe<wr::FontInstanceKey> key =
-                    mManager->WrBridge()->GetFontKeyForScaledFont(
-                        scaled, aBuilder.GetRenderRoot(), &aResources);
+                    mManager->WrBridge()->GetFontKeyForScaledFont(scaled,
+                                                                  &aResources);
                 if (key.isNothing()) {
                   validFonts = false;
                   break;

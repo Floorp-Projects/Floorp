@@ -395,7 +395,7 @@ Element* HTMLEditor::FindSelectionRoot(nsINode* aNode) const {
     // If the content is in read-write state but is not editable itself,
     // return it as the selection root.
     if (content->IsElement() &&
-        content->AsElement()->State().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
+        content->AsElement()->State().HasState(NS_EVENT_STATE_READWRITE)) {
       return content->AsElement();
     }
     return nullptr;

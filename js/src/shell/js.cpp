@@ -493,7 +493,6 @@ struct MOZ_STACK_CLASS EnvironmentPreparer
   void invoke(JS::HandleObject global, Closure& closure) override;
 };
 
-bool shell::enableDeferredMode = true;
 bool shell::enableCodeCoverage = false;
 bool shell::enableDisassemblyDumps = false;
 bool shell::offthreadCompilation = false;
@@ -11714,9 +11713,6 @@ int main(int argc, char** argv, char** envp) {
   if (enableCodeCoverage) {
     coverage::EnableLCov();
   }
-
-  enableDeferredMode = !op.getBoolOption("disable-parser-deferred-alloc") &&
-                       getenv("DISABLE_PARSER_DEFERRED_ALLOC") == nullptr;
 
 #ifdef JS_WITHOUT_NSPR
   if (!op.getMultiStringOption("dll").empty()) {

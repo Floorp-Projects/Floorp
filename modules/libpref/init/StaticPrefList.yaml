@@ -6350,13 +6350,17 @@
 #---------------------------------------------------------------------------
 
 
-# If "media.autoplay.default" is not ALLOWED, and this pref is true,
-# then audible media would only be allowed to autoplay after website has
-# been activated by specific user gestures, but non-audible
-# media won't be restricted.
-- name: media.autoplay.enabled.user-gestures-needed
-  type: bool
-  value: false
+# This pref defines what the blocking policy would be used in blocking autoplay.
+# 0 : use sticky activation (default)
+# https://html.spec.whatwg.org/multipage/interaction.html#sticky-activation
+# 1 : use transient activation (the transient activation duration can be
+#     adjusted by the pref `dom.user_activation.transient.timeout`)
+# https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
+# 2 : user input depth (allow autoplay when the play is trigged by user input
+#     which is determined by the user input depth)
+- name: media.autoplay.blocking_policy
+  type: uint32_t
+  value: 0
   mirror: always
 
 # File-backed MediaCache size.
@@ -8179,7 +8183,7 @@
 # Whether canvas extraction should result in random data. If false, canvas
 # extraction results in all-white, opaque pixel data.
 - name: privacy.resistFingerprinting.randomDataOnCanvasExtract
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 

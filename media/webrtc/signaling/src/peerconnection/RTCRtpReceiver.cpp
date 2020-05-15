@@ -14,6 +14,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "MediaTrackGraph.h"
 #include "RemoteTrackSource.h"
+#include "RtpRtcpConfig.h"
 #include "nsString.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/VideoStreamTrack.h"
@@ -422,7 +423,8 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
       return rv;
     }
 
-    auto error = conduit->ConfigureRecvMediaCodecs(configs);
+    auto error =
+        conduit->ConfigureRecvMediaCodecs(configs, details.GetRtpRtcpConfig());
 
     if (error) {
       MOZ_LOG(gReceiverLog, LogLevel::Error,

@@ -81,6 +81,9 @@ async function syncAndDownload(filters) {
         mimetype: "application/octet-stream",
       },
       incremental: filter.type == "diff",
+      effectiveTimestamp: new Date(filter.timestamp).getTime(),
+      parent: filter.type == "diff" ? filter.parent : undefined,
+      id: filter.id,
     };
 
     await localDB.create(record);
@@ -103,7 +106,7 @@ add_task(
     Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, false);
 
     let result = await syncAndDownload([
-      { timestamp: "2019-01-01T00:00:00Z", type: "full" },
+      { timestamp: "2019-01-01T00:00:00Z", type: "full", id: "0000" },
     ]);
     equal(result, "disabled", "CRLite filter download should not have run");
   }
@@ -133,9 +136,24 @@ add_task(
     Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
 
     let result = await syncAndDownload([
-      { timestamp: "2019-01-01T06:00:00Z", type: "diff" },
-      { timestamp: "2019-01-01T18:00:00Z", type: "diff" },
-      { timestamp: "2019-01-01T12:00:00Z", type: "diff" },
+      {
+        timestamp: "2019-01-01T06:00:00Z",
+        type: "diff",
+        id: "0001",
+        parent: "0000",
+      },
+      {
+        timestamp: "2019-01-01T18:00:00Z",
+        type: "diff",
+        id: "0002",
+        parent: "0001",
+      },
+      {
+        timestamp: "2019-01-01T12:00:00Z",
+        type: "diff",
+        id: "0003",
+        parent: "0002",
+      },
     ]);
     equal(
       result,
@@ -149,11 +167,74 @@ add_task(
   {
     skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
   },
+  async function test_crlite_incremental_filters_with_wrong_parent() {
+    Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
+
+    let result = await syncAndDownload([
+      { timestamp: "2019-01-01T00:00:00Z", type: "full", id: "0000" },
+      {
+        timestamp: "2019-01-01T06:00:00Z",
+        type: "diff",
+        id: "0001",
+        parent: "0000",
+      },
+      {
+        timestamp: "2019-01-01T12:00:00Z",
+        type: "diff",
+        id: "0003",
+        parent: "0002",
+      },
+      {
+        timestamp: "2019-01-01T18:00:00Z",
+        type: "diff",
+        id: "0004",
+        parent: "0003",
+      },
+    ]);
+    let [status, filters] = result.split(";");
+    equal(status, "finished", "CRLite filter download should have run");
+    let filtersSplit = filters.split(",");
+    deepEqual(
+      filtersSplit,
+      ["2019-01-01T00:00:00Z-full", "2019-01-01T06:00:00Z-diff"],
+      "Should have downloaded the expected CRLite filters"
+    );
+  }
+);
+
+add_task(
+  {
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  },
+  async function test_crlite_incremental_filter_too_early() {
+    Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
+
+    let result = await syncAndDownload([
+      { timestamp: "2019-01-02T00:00:00Z", type: "full", id: "0000" },
+      {
+        timestamp: "2019-01-01T00:00:00Z",
+        type: "diff",
+        id: "0001",
+        parent: "0000",
+      },
+    ]);
+    equal(
+      result,
+      "finished;2019-01-02T00:00:00Z-full",
+      "CRLite filter download should have run"
+    );
+  }
+);
+
+add_task(
+  {
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  },
   async function test_crlite_filters_basic() {
     Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
 
     let result = await syncAndDownload([
-      { timestamp: "2019-01-01T00:00:00Z", type: "full" },
+      { timestamp: "2019-01-01T00:00:00Z", type: "full", id: "0000" },
     ]);
     equal(
       result,
@@ -172,10 +253,25 @@ add_task(
 
     let result = await syncAndDownload([
       // These are deliberately listed out of order.
-      { timestamp: "2019-01-01T06:00:00Z", type: "diff" },
-      { timestamp: "2019-01-01T00:00:00Z", type: "full" },
-      { timestamp: "2019-01-01T18:00:00Z", type: "diff" },
-      { timestamp: "2019-01-01T12:00:00Z", type: "diff" },
+      {
+        timestamp: "2019-01-01T06:00:00Z",
+        type: "diff",
+        id: "0001",
+        parent: "0000",
+      },
+      { timestamp: "2019-01-01T00:00:00Z", type: "full", id: "0000" },
+      {
+        timestamp: "2019-01-01T18:00:00Z",
+        type: "diff",
+        id: "0003",
+        parent: "0002",
+      },
+      {
+        timestamp: "2019-01-01T12:00:00Z",
+        type: "diff",
+        id: "0002",
+        parent: "0001",
+      },
     ]);
     let [status, filters] = result.split(";");
     equal(status, "finished", "CRLite filter download should have run");
@@ -202,18 +298,63 @@ add_task(
 
     let result = await syncAndDownload([
       // These are deliberately listed out of order.
-      { timestamp: "2019-01-02T06:00:00Z", type: "diff" },
-      { timestamp: "2019-01-03T12:00:00Z", type: "diff" },
-      { timestamp: "2019-01-02T12:00:00Z", type: "diff" },
-      { timestamp: "2019-01-03T18:00:00Z", type: "diff" },
-      { timestamp: "2019-01-02T18:00:00Z", type: "diff" },
-      { timestamp: "2019-01-02T00:00:00Z", type: "full" },
-      { timestamp: "2019-01-03T00:00:00Z", type: "full" },
-      { timestamp: "2019-01-01T06:00:00Z", type: "diff" },
-      { timestamp: "2019-01-01T18:00:00Z", type: "diff" },
-      { timestamp: "2019-01-01T12:00:00Z", type: "diff" },
-      { timestamp: "2019-01-01T00:00:00Z", type: "full" },
-      { timestamp: "2019-01-03T06:00:00Z", type: "diff" },
+      {
+        timestamp: "2019-01-02T06:00:00Z",
+        type: "diff",
+        id: "0011",
+        parent: "0010",
+      },
+      {
+        timestamp: "2019-01-03T12:00:00Z",
+        type: "diff",
+        id: "0022",
+        parent: "0021",
+      },
+      {
+        timestamp: "2019-01-02T12:00:00Z",
+        type: "diff",
+        id: "0012",
+        parent: "0011",
+      },
+      {
+        timestamp: "2019-01-03T18:00:00Z",
+        type: "diff",
+        id: "0023",
+        parent: "0022",
+      },
+      {
+        timestamp: "2019-01-02T18:00:00Z",
+        type: "diff",
+        id: "0013",
+        parent: "0012",
+      },
+      { timestamp: "2019-01-02T00:00:00Z", type: "full", id: "0010" },
+      { timestamp: "2019-01-03T00:00:00Z", type: "full", id: "0020" },
+      {
+        timestamp: "2019-01-01T06:00:00Z",
+        type: "diff",
+        id: "0001",
+        parent: "0000",
+      },
+      {
+        timestamp: "2019-01-01T18:00:00Z",
+        type: "diff",
+        id: "0003",
+        parent: "0002",
+      },
+      {
+        timestamp: "2019-01-01T12:00:00Z",
+        type: "diff",
+        id: "0002",
+        parent: "0001",
+      },
+      { timestamp: "2019-01-01T00:00:00Z", type: "full", id: "0000" },
+      {
+        timestamp: "2019-01-03T06:00:00Z",
+        type: "diff",
+        id: "0021",
+        parent: "0020",
+      },
     ]);
     let [status, filters] = result.split(";");
     equal(status, "finished", "CRLite filter download should have run");
@@ -277,7 +418,7 @@ add_task(
     });
 
     let result = await syncAndDownload([
-      { timestamp: "2019-11-19T00:00:00Z", type: "full" },
+      { timestamp: "2019-11-19T00:00:00Z", type: "full", id: "0000" },
     ]);
     equal(
       result,

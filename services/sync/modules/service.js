@@ -88,10 +88,6 @@ function getEngineModules() {
     Password: { module: "passwords.js", symbol: "PasswordEngine" },
     Prefs: { module: "prefs.js", symbol: "PrefsEngine" },
     Tab: { module: "tabs.js", symbol: "TabEngine" },
-    ExtensionStorage: {
-      module: "extension-storage.js",
-      symbol: "ExtensionStorageEngine",
-    },
   };
   if (Svc.Prefs.get("engine.addresses.available", false)) {
     result.Addresses = {
@@ -110,6 +106,12 @@ function getEngineModules() {
     controllingPref: "services.sync.engine.bookmarks.buffer",
     whenFalse: "BookmarksEngine",
     whenTrue: "BufferedBookmarksEngine",
+  };
+  result.ExtensionStorage = {
+    module: "extension-storage.js",
+    controllingPref: "webextensions.storage.sync.kinto",
+    whenTrue: "ExtensionStorageEngineKinto",
+    whenFalse: "ExtensionStorageEngineBridge",
   };
   return result;
 }
