@@ -31,6 +31,11 @@ add_task(async function test_proc_info() {
           cpuThreads += parentProc.threads[x].cpuUser;
         }
 
+        Assert.ok(
+          parentProc.threads.some(thread => thread.name),
+          "At least one of the threads of the parent process is named"
+        );
+
         for (var i = 0; i < parentProc.children.length; i++) {
           let childProc = parentProc.children[i];
           Assert.notEqual(
