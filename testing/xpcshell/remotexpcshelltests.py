@@ -145,10 +145,14 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.testingModulesDir = self.remoteModulesDir
         self.testharnessdir = self.remoteScriptsDir
         xpcsCmd = xpcshell.XPCShellTestThread.buildXpcsCmd(self)
-        # remove "-g <dir> -a <dir>" and add "--greomni <apk>"
+        # remove "-g <dir> -a <dir>" and replace with remote alternatives
         del xpcsCmd[1:5]
-        xpcsCmd.insert(3, '--greomni')
-        xpcsCmd.insert(4, self.remoteAPK)
+        if self.options['localAPK']:
+            xpcsCmd.insert(3, '--greomni')
+            xpcsCmd.insert(4, self.remoteAPK)
+        else:
+            xpcsCmd.insert(1, '-g')
+            xpcsCmd.insert(2, self.remoteBinDir)
 
         if self.remoteDebugger:
             # for example, "/data/local/gdbserver" "localhost:12345"
@@ -293,15 +297,18 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             print("Couldn't find local xpcshell test directory", file=sys.stderr)
             sys.exit(1)
 
-        self.localAPKContents = ZipFile(options['localAPK'])
+        self.remoteAPK = None
+        if options['localAPK']:
+            self.localAPKContents = ZipFile(options['localAPK'])
+            self.remoteAPK = posixpath.join(self.remoteBinDir,
+                                            os.path.basename(options['localAPK']))
+        else:
+            self.localAPKContents = None
         if options['setup']:
             self.setupTestDir()
             self.setupUtilities()
             self.setupModules()
         self.initDir(self.remoteMinidumpDir)
-        self.remoteAPK = None
-        self.remoteAPK = posixpath.join(self.remoteBinDir,
-                                        os.path.basename(options['localAPK']))
 
         # data that needs to be passed to the RemoteXPCShellTestThread
         self.mobileArgs = {
@@ -386,27 +393,28 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         if not abi:
             raise Exception("failed to get ro.product.cpu.abi from device")
         self.log.info("ro.product.cpu.abi %s" % abi)
-        abilist = [abi]
-        retries = 0
-        while not abilistprop and retries < 3:
-            abilistprop = self.device.get_prop("ro.product.cpu.abilist")
-            retries += 1
-        self.log.info('ro.product.cpu.abilist %s' % abilistprop)
-        abi_found = False
-        names = [n for n in self.localAPKContents.namelist() if n.startswith('lib/')]
-        self.log.debug("apk names: %s" % names)
-        if abilistprop and len(abilistprop) > 0:
-            abilist.extend(abilistprop.split(','))
-        for abicand in abilist:
-            abi_found = len([n for n in names if n.startswith('lib/%s' % abicand)]) > 0
-            if abi_found:
-                abi = abicand
-                break
-        if not abi_found:
-            self.log.info("failed to get matching abi from apk.")
-            if len(names) > 0:
-                self.log.info("device cpu abi not found in apk. Using abi from apk.")
-                abi = names[0].split('/')[1]
+        if self.localAPKContents:
+            abilist = [abi]
+            retries = 0
+            while not abilistprop and retries < 3:
+                abilistprop = self.device.get_prop("ro.product.cpu.abilist")
+                retries += 1
+            self.log.info('ro.product.cpu.abilist %s' % abilistprop)
+            abi_found = False
+            names = [n for n in self.localAPKContents.namelist() if n.startswith('lib/')]
+            self.log.debug("apk names: %s" % names)
+            if abilistprop and len(abilistprop) > 0:
+                abilist.extend(abilistprop.split(','))
+            for abicand in abilist:
+                abi_found = len([n for n in names if n.startswith('lib/%s' % abicand)]) > 0
+                if abi_found:
+                    abi = abicand
+                    break
+            if not abi_found:
+                self.log.info("failed to get matching abi from apk.")
+                if len(names) > 0:
+                    self.log.info("device cpu abi not found in apk. Using abi from apk.")
+                    abi = names[0].split('/')[1]
         self.log.info("Using abi %s." % abi)
         self.env["MOZ_ANDROID_CPU_ABI"] = abi
 
@@ -455,12 +463,20 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.push(local, remoteFile)
         self.device.chmod(remoteFile, root=True)
 
-        remoteFile = posixpath.join(self.remoteBinDir,
-                                    os.path.basename(self.options['localAPK']))
-        self.device.push(self.options['localAPK'], remoteFile)
-        self.device.chmod(remoteFile, root=True)
+        if self.options['localAPK']:
+            remoteFile = posixpath.join(self.remoteBinDir,
+                                        os.path.basename(self.options['localAPK']))
+            self.device.push(self.options['localAPK'], remoteFile)
+            self.device.chmod(remoteFile, root=True)
 
-        self.pushLibs()
+            self.pushLibs()
+        else:
+            localB2G = os.path.join(self.options['objdir'], "dist", "b2g")
+            if os.path.exists(localB2G):
+                self.device.push(localB2G, self.remoteBinDir)
+                self.device.chmod(self.remoteBinDir, root=True)
+            else:
+                raise Exception("unable to install gre: no APK and not b2g")
 
     def pushLibs(self):
         elfhack = os.path.join(self.localBin, 'elfhack')
@@ -569,16 +585,6 @@ def main():
 
     parser = parser_remote()
     options = parser.parse_args()
-    if not options.localAPK:
-        for file in os.listdir(os.path.join(options.objdir, "dist")):
-            if (file.endswith(".apk") and file.startswith("fennec")):
-                options.localAPK = os.path.join(options.objdir, "dist")
-                options.localAPK = os.path.join(options.localAPK, file)
-                print("using APK: " + options.localAPK, file=sys.stderr)
-                break
-        else:
-            print("Error: please specify an APK", file=sys.stderr)
-            sys.exit(1)
 
     options = verifyRemoteOptions(parser, options)
     log = commandline.setup_logging("Remote XPCShell",
