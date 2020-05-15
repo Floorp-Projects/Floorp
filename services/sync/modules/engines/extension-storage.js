@@ -19,7 +19,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 ChromeUtils.defineModuleGetter(
   this,
   "extensionStorageSync",
-  "resource://gre/modules/ExtensionStorageSync.jsm"
+  "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
 );
 
 /**

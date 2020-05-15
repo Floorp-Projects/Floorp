@@ -8,7 +8,7 @@ const { ExtensionStorageEngine } = ChromeUtils.import(
 );
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 const { extensionStorageSync } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorageSync.jsm"
+  "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
 );
 
 let engine;
