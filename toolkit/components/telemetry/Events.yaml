@@ -1701,6 +1701,7 @@ security.ui.protections:
       - 1610897
       - 1612088
       - 1612091
+      - 1637615
     description: >
       User interaction by click events on the protection report.
     objects: [
@@ -1712,6 +1713,7 @@ security.ui.protections:
       "mtr_signup_button",
       "trackers_about_link",
       "mobile_app_link",
+      "settings_link",
     ]
     expiry_version: "80"
     record_in_processes: ["content"]
