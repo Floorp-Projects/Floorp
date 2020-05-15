@@ -24,7 +24,7 @@
 #define GCM_TAG_LEN_BYTES 16
 
 #define PRIO_TAG "PrioPacket"
-#define AAD_LEN (strlen(PRIO_TAG) + CURVE25519_KEY_LEN + GCM_IV_LEN_BYTES)
+#define AAD_LEN (sizeof(PRIO_TAG) - 1 + CURVE25519_KEY_LEN + GCM_IV_LEN_BYTES)
 
 // For an example of NSS curve25519 import/export code, see:
 // https://searchfox.org/nss/rev/cfd5fcba7efbfe116e2c08848075240ec3a92718/gtests/pk11_gtest/pk11_curve25519_unittest.cc#66
