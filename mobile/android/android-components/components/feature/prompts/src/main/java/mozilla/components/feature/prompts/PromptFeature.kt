@@ -312,47 +312,52 @@ class PromptFeature private constructor(
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
     override fun onConfirm(sessionId: String, value: Any?) {
         store.consumePromptFrom(sessionId, activePrompt) {
-            when (it) {
-                is TimeSelection -> it.onConfirm(value as Date)
-                is Color -> it.onConfirm(value as String)
-                is Alert -> {
-                    val shouldNotShowMoreDialogs = value as Boolean
-                    promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
-                    it.onConfirm(!shouldNotShowMoreDialogs)
-                }
-                is SingleChoice -> it.onConfirm(value as Choice)
-                is MenuChoice -> it.onConfirm(value as Choice)
-                is PromptRequest.Popup -> it.onAllow()
-                is MultipleChoice -> it.onConfirm(value as Array<Choice>)
+            try {
+                when (it) {
+                    is TimeSelection -> it.onConfirm(value as Date)
+                    is Color -> it.onConfirm(value as String)
+                    is Alert -> {
+                        val shouldNotShowMoreDialogs = value as Boolean
+                        promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
+                        it.onConfirm(!shouldNotShowMoreDialogs)
+                    }
+                    is SingleChoice -> it.onConfirm(value as Choice)
+                    is MenuChoice -> it.onConfirm(value as Choice)
+                    is PromptRequest.Popup -> it.onAllow()
+                    is MultipleChoice -> it.onConfirm(value as Array<Choice>)
 
-                is Authentication -> {
-                    val (user, password) = value as Pair<String, String>
-                    it.onConfirm(user, password)
-                }
+                    is Authentication -> {
+                        val (user, password) = value as Pair<String, String>
+                        it.onConfirm(user, password)
+                    }
 
-                is TextPrompt -> {
-                    val (shouldNotShowMoreDialogs, text) = value as Pair<Boolean, String>
+                    is TextPrompt -> {
+                        val (shouldNotShowMoreDialogs, text) = value as Pair<Boolean, String>
 
-                    promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
-                    it.onConfirm(!shouldNotShowMoreDialogs, text)
-                }
+                        promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
+                        it.onConfirm(!shouldNotShowMoreDialogs, text)
+                    }
 
-                is Share -> it.onSuccess()
+                    is Share -> it.onSuccess()
 
-                is LoginPrompt -> it.onConfirm(value as Login)
+                    is LoginPrompt -> it.onConfirm(value as Login)
 
-                is PromptRequest.Confirm -> {
-                    val (isCheckBoxChecked, buttonType) = value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
-                    promptAbuserDetector.userWantsMoreDialogs(!isCheckBoxChecked)
-                    when (buttonType) {
-                        MultiButtonDialogFragment.ButtonType.POSITIVE ->
-                            it.onConfirmPositiveButton(!isCheckBoxChecked)
-                        MultiButtonDialogFragment.ButtonType.NEGATIVE ->
-                            it.onConfirmNegativeButton(!isCheckBoxChecked)
-                        MultiButtonDialogFragment.ButtonType.NEUTRAL ->
-                            it.onConfirmNeutralButton(!isCheckBoxChecked)
+                    is PromptRequest.Confirm -> {
+                        val (isCheckBoxChecked, buttonType) =
+                            value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
+                        promptAbuserDetector.userWantsMoreDialogs(!isCheckBoxChecked)
+                        when (buttonType) {
+                            MultiButtonDialogFragment.ButtonType.POSITIVE ->
+                                it.onConfirmPositiveButton(!isCheckBoxChecked)
+                            MultiButtonDialogFragment.ButtonType.NEGATIVE ->
+                                it.onConfirmNegativeButton(!isCheckBoxChecked)
+                            MultiButtonDialogFragment.ButtonType.NEUTRAL ->
+                                it.onConfirmNeutralButton(!isCheckBoxChecked)
+                        }
                     }
                 }
+            } catch (e: ClassCastException) {
+                throw IllegalArgumentException("PromptFeature onConsume cast failed with ${it.javaClass}", e)
             }
         }
     }
