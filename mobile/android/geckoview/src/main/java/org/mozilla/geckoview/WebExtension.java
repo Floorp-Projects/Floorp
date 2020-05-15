@@ -546,6 +546,12 @@ public class WebExtension {
         @Nullable
         public final Boolean active;
         /**
+         * The CookieStoreId used for the tab. This option is only
+         * available if the extension has the "cookies" permission.
+         */
+        @Nullable
+        public final String cookieStoreId;
+        /**
          * Whether the tab is created and made visible in the tab bar
          * without any content loaded into memory, a state known as
          * discarded. The tab’s content should be loaded when the tab is
@@ -581,6 +587,7 @@ public class WebExtension {
         /** For testing. */
         protected CreateTabDetails() {
             active = null;
+            cookieStoreId = null;
             discarded = null;
             index = null;
             openInReaderMode = null;
@@ -590,6 +597,7 @@ public class WebExtension {
 
         /* package */ CreateTabDetails(final GeckoBundle bundle) {
             active = bundle.getBooleanObject("active");
+            cookieStoreId = bundle.getString("cookieStoreId");
             discarded = bundle.getBooleanObject("discarded");
             index = bundle.getInteger("index");
             openInReaderMode = bundle.getBooleanObject("openInReaderMode");
