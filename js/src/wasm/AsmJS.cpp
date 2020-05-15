@@ -6035,7 +6035,7 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
   if (!funbox) {
     return false;
   }
-  funbox->initWithEnclosingParseContext(outerpc, fun,
+  funbox->initWithEnclosingParseContext(outerpc, fun->flags(),
                                         FunctionSyntaxKind::Statement);
 
   Directives newDirectives = directives;

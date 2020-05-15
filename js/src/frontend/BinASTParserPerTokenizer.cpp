@@ -306,10 +306,10 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
 
   compilationInfo_.traceListHead = funbox;
   if (pc_) {
-    funbox->initWithEnclosingParseContext(pc_, fun, syntax);
+    funbox->initWithEnclosingParseContext(pc_, fun->flags(), syntax);
   } else {
     funbox->initFromLazyFunction(fun);
-    funbox->initWithEnclosingScope(fun);
+    funbox->initWithEnclosingScope(fun->enclosingScope(), fun->flags(), syntax);
   }
   return funbox;
 }

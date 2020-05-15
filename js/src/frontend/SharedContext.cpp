@@ -70,16 +70,23 @@ void SharedContext::computeAllowSyntax(Scope* scope) {
     if (si.kind() == ScopeKind::Function) {
       FunctionScope* funScope = &si.scope()->as<FunctionScope>();
       JSFunction* fun = funScope->canonicalFunction();
+
+      // Arrow function inherit syntax restrictions of enclosing scope.
       if (fun->isArrow()) {
         continue;
       }
+
       allowNewTarget_ = true;
       allowSuperProperty_ = fun->allowSuperProperty();
-      allowSuperCall_ = fun->isDerivedClassConstructor();
+
+      if (fun->isDerivedClassConstructor()) {
+        allowSuperCall_ = true;
+      }
+
       if (fun->isFieldInitializer()) {
-        allowSuperCall_ = false;
         allowArguments_ = false;
       }
+
       return;
     }
   }
@@ -165,8 +172,8 @@ EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
       enclosingScope_(cx, enclosingScope),
       bindings(cx) {
   computeAllowSyntax(enclosingScope);
-  computeInWith(enclosingScope);
   computeThisBinding(enclosingScope, enclosingEnv);
+  computeInWith(enclosingScope);
 }
 
 #ifdef DEBUG
@@ -238,20 +245,14 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   }
 }
 
-void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
-  // Standalone functions are Function or Generator constructors and are
-  // always scoped to the global.
-  MOZ_ASSERT(enclosingScope->is<GlobalScope>());
-  enclosingScope_ = AbstractScopePtr(enclosingScope);
-  allowNewTarget_ = true;
-  thisBinding_ = ThisBinding::Function;
-}
-
 void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
                                                 FunctionFlags flags,
                                                 FunctionSyntaxKind kind) {
   SharedContext* sc = enclosing->sc();
+
+  // HasModuleGoal and useAsm are inherited from enclosing context.
   useAsm = sc->isFunctionBox() && sc->asFunctionBox()->useAsmOrInsideUseAsm();
+  setHasModuleGoal(sc->hasModuleGoal());
 
   // Arrow functions don't have their own `this` binding.
   if (flags.isArrow()) {
@@ -261,20 +262,15 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     allowArguments_ = sc->allowArguments();
     thisBinding_ = sc->thisBinding();
   } else {
-    allowNewTarget_ = true;
-    allowSuperProperty_ = flags.allowSuperProperty();
-
-    if (kind == FunctionSyntaxKind::FieldInitializer) {
-      setFieldInitializer();
-      allowArguments_ = false;
-    }
-
     if (IsConstructorKind(kind)) {
       auto stmt =
           enclosing->findInnermostStatement<ParseContext::ClassStatement>();
       MOZ_ASSERT(stmt);
       stmt->constructorBox = this;
     }
+
+    allowNewTarget_ = true;
+    allowSuperProperty_ = flags.allowSuperProperty();
 
     if (kind == FunctionSyntaxKind::DerivedClassConstructor) {
       setDerivedClassConstructor();
@@ -283,10 +279,12 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     } else {
       thisBinding_ = ThisBinding::Function;
     }
-  }
 
-  // We inherit the parse goal from our top-level.
-  setHasModuleGoal(sc->hasModuleGoal());
+    if (kind == FunctionSyntaxKind::FieldInitializer) {
+      setFieldInitializer();
+      allowArguments_ = false;
+    }
+  }
 
   if (sc->inWith()) {
     inWith_ = true;
@@ -299,29 +297,34 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
   }
 }
 
-void FunctionBox::initWithEnclosingScope(JSFunction* fun) {
-  Scope* enclosingScope = fun->enclosingScope();
+void FunctionBox::initWithEnclosingScope(Scope* enclosingScope,
+                                         FunctionFlags flags,
+                                         FunctionSyntaxKind kind) {
   MOZ_ASSERT(enclosingScope);
+  enclosingScope_ = AbstractScopePtr(enclosingScope);
 
-  if (!isArrow()) {
+  if (flags.isArrow()) {
+    computeAllowSyntax(enclosingScope);
+    computeThisBinding(enclosingScope);
+  } else {
     allowNewTarget_ = true;
-    allowSuperProperty_ = fun->allowSuperProperty();
+    allowSuperProperty_ = flags.allowSuperProperty();
 
-    if (isDerivedClassConstructor()) {
+    if (kind == FunctionSyntaxKind::DerivedClassConstructor) {
       setDerivedClassConstructor();
       allowSuperCall_ = true;
       thisBinding_ = ThisBinding::DerivedConstructor;
     } else {
       thisBinding_ = ThisBinding::Function;
     }
-  } else {
-    computeAllowSyntax(enclosingScope);
-    computeThisBinding(enclosingScope);
+
+    if (kind == FunctionSyntaxKind::FieldInitializer) {
+      setFieldInitializer();
+      allowArguments_ = false;
+    }
   }
 
   computeInWith(enclosingScope);
-
-  enclosingScope_ = AbstractScopePtr(enclosingScope);
 }
 
 void FunctionBox::setEnclosingScopeForInnerLazyFunction(

@@ -263,7 +263,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
         bindings(cx) {
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||
                scopeKind == ScopeKind::NonSyntactic);
-    thisBinding_ = ThisBinding::Global;
+    MOZ_ASSERT(thisBinding_ == ThisBinding::Global);
   }
 
   Scope* compilationEnclosingScope() const override { return nullptr; }
@@ -419,18 +419,12 @@ class FunctionBox : public SharedContext {
   }
 
   void initFromLazyFunction(JSFunction* fun);
-  void initStandaloneFunction(Scope* enclosingScope);
-
-  void initWithEnclosingScope(JSFunction* fun);
+  void initWithEnclosingScope(Scope* enclosingScope, FunctionFlags flags,
+                              FunctionSyntaxKind kind);
 
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionFlags flags,
                                      FunctionSyntaxKind kind);
-
-  void initWithEnclosingParseContext(ParseContext* enclosing, JSFunction* fun,
-                                     FunctionSyntaxKind kind) {
-    initWithEnclosingParseContext(enclosing, fun->flags(), kind);
-  }
 
   void setEnclosingScopeForInnerLazyFunction(
       const AbstractScopePtr& enclosingScope);
