@@ -6,8 +6,7 @@
 #ifndef mozilla_a11y_SessionAccessibility_h_
 #define mozilla_a11y_SessionAccessibility_h_
 
-#include "GeneratedJNINatives.h"
-#include "GeneratedJNIWrappers.h"
+#include "mozilla/java/SessionAccessibilityNatives.h"
 #include "nsAppShell.h"
 #include "nsThreadUtils.h"
 #include "nsWindow.h"
