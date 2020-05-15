@@ -1193,14 +1193,63 @@ bool RTPSender::SetFecParameters(const FecProtectionParams& delta_params,
   return true;
 }
 
+static void CopyHeaderAndExtensionsToRtxPacket(const RtpPacketToSend& packet,
+                                               RtpPacketToSend* rtx_packet) {
+  // Set the relevant fixed packet headers. The following are not set:
+  // * Payload type - it is replaced in rtx packets.
+  // * Sequence number - RTX has a separate sequence numbering.
+  // * SSRC - RTX stream has its own SSRC.
+  rtx_packet->SetMarker(packet.Marker());
+  rtx_packet->SetTimestamp(packet.Timestamp());
+
+  // Set the variable fields in the packet header:
+  // * CSRCs - must be set before header extensions.
+  // * Header extensions - replace Rid header with RepairedRid header.
+  const std::vector<uint32_t> csrcs = packet.Csrcs();
+  rtx_packet->SetCsrcs(csrcs);
+  for (int extension_num = kRtpExtensionNone + 1;
+       extension_num < kRtpExtensionNumberOfExtensions; ++extension_num) {
+    auto extension = static_cast<RTPExtensionType>(extension_num);
+
+    // Stream ID header extensions (MID, RSID) are sent per-SSRC. Since RTX
+    // operates on a different SSRC, the presence and values of these header
+    // extensions should be determined separately and not blindly copied.
+    if (extension == kRtpExtensionMid ||
+        extension == kRtpExtensionRtpStreamId) {
+      continue;
+    }
+
+    rtc::ArrayView<const uint8_t> source = packet.FindExtension(extension);
+
+    // Empty extensions should be supported, so not checking |source.empty()|.
+    // TODO: But this does not work in Mozilla's version of libwebrtc. Remove
+    // this check with the next update from tip of libwebrtc.
+    if (source.empty()) {
+      continue;
+    }
+
+    rtc::ArrayView<uint8_t> destination =
+        rtx_packet->AllocateExtension(extension, source.size());
+
+    // Could happen if any:
+    // 1. Extension has 0 length.
+    // 2. Extension is not registered in destination.
+    // 3. Allocating extension in destination failed.
+    if (destination.empty() || source.size() != destination.size()) {
+      continue;
+    }
+
+    std::memcpy(destination.begin(), source.begin(), destination.size());
+  }
+}
+
 std::unique_ptr<RtpPacketToSend> RTPSender::BuildRtxPacket(
     const RtpPacketToSend& packet) {
   // TODO(danilchap): Create rtx packet with extra capacity for SRTP
   // when transport interface would be updated to take buffer class.
   std::unique_ptr<RtpPacketToSend> rtx_packet(new RtpPacketToSend(
-      &rtp_header_extension_map_, packet.size() + kRtxHeaderSize));
+      &rtp_header_extension_map_, max_packet_size_));
   // Add original RTP header.
-  rtx_packet->CopyHeaderFrom(packet);
   {
     rtc::CritScope lock(&send_critsect_);
     if (!sending_media_)
@@ -1219,8 +1268,18 @@ std::unique_ptr<RtpPacketToSend> RTPSender::BuildRtxPacket(
 
     // Replace SSRC.
     rtx_packet->SetSsrc(*ssrc_rtx_);
-  }
 
+    CopyHeaderAndExtensionsToRtxPacket(packet, rtx_packet.get());
+
+    // Copy rtp-stream-id from packet to repaired-rtp-stream-id
+    if (rtp_header_extension_map_.IsRegistered(kRtpExtensionRtpStreamId) &&
+        rtp_header_extension_map_.IsRegistered(kRtpExtensionRepairedRtpStreamId)) {
+      std::string rid;
+      if (packet.GetExtension<RtpStreamId>(&rid)) {
+        rtx_packet->SetExtension<RepairedRtpStreamId>(rid);
+      }
+    }
+  }
   uint8_t* rtx_payload =
       rtx_packet->AllocatePayload(packet.payload_size() + kRtxHeaderSize);
   RTC_DCHECK(rtx_payload);
