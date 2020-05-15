@@ -7,6 +7,7 @@
 import argparse
 import json
 import logging
+import multiprocessing
 import re
 import os
 import platform
@@ -490,6 +491,14 @@ if 'all' in args.skip_tests.split(","):
 # parallel. Work around them for now.
 if platform.system() == 'Windows':
     env['JITTEST_EXTRA_ARGS'] = "-j1 " + env.get('JITTEST_EXTRA_ARGS', '')
+
+# Bug 1557130 - Atomics tests can create many additional threads which can
+# lead to resource exhaustion, resulting in intermittent failures. This was
+# only seen on beefy machines (> 32 cores), so limit the number of parallel
+# workers for now.
+if platform.system() == 'Windows':
+    worker_count = min(multiprocessing.cpu_count(), 16)
+    env['JSTESTS_EXTRA_ARGS'] = "-j{} ".format(worker_count) + env.get('JSTESTS_EXTRA_ARGS', '')
 
 if use_minidump:
     # Set up later js invocations to run with the breakpad injector loaded.
