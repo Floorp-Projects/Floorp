@@ -3,46 +3,98 @@
 
 "use strict";
 
-// Test the Network.requestWillBeSent event
-
 const PAGE_URL =
-  "http://example.com/browser/remote/test/browser/network/doc_requestWillBeSent.html";
+  "http://example.com/browser/remote/test/browser/network/doc_networkEvents.html";
 const JS_URL =
-  "http://example.com/browser/remote/test/browser/network/file_requestWillBeSent.js";
+  "http://example.com/browser/remote/test/browser/network/file_networkEvents.js";
 
-add_task(async function({ client }) {
-  const { Page, Network } = client;
+add_task(async function noEventsWhenNetworkDomainDisabled({ client }) {
+  const history = configureHistory(client, 0);
+  await loadURL(PAGE_URL);
 
+  const events = await history.record();
+  is(events.length, 0, "Expected no Network.responseReceived events");
+});
+
+add_task(async function noEventsAfterNetworkDomainDisabled({ client }) {
+  const { Network } = client;
+
+  const history = configureHistory(client, 0);
   await Network.enable();
-  info("Network domain has been enabled");
+  await Network.disable();
+  await loadURL(PAGE_URL);
 
-  let requests = 0;
-  const onRequests = new Promise(resolve => {
-    Network.requestWillBeSent(event => {
-      info("Received a request");
-      switch (++requests) {
-        case 1:
-          is(event.request.url, PAGE_URL, "Got the page request");
-          is(event.type, "Document", "The page request has 'Document' type");
-          is(
-            event.requestId,
-            event.loaderId,
-            "The page request has requestId = loaderId (puppeteer assumes that to detect the page start request)"
-          );
-          break;
-        case 2:
-          is(event.request.url, JS_URL, "Got the JS request");
-          resolve();
-          break;
-        case 3:
-          ok(false, "Expect only two requests");
-      }
-    });
+  const events = await history.record();
+  is(events.length, 0, "Expected no Network.responseReceived events");
+});
+
+add_task(async function documentNavigationWithResource({ client }) {
+  const { Page, Network } = client;
+  await Network.enable();
+  const history = configureHistory(client);
+
+  const { frameId: frameIdNav } = await Page.navigate({ url: PAGE_URL });
+  ok(frameIdNav, "Page.navigate returned a frameId");
+
+  info("Wait for Network events");
+  const events = await history.record();
+  is(events.length, 2, "Expected number of Network.requestWillBeSent events");
+
+  const docRequest = events[0].payload;
+  is(docRequest.request.url, PAGE_URL, "Got the doc request");
+  is(docRequest.documentURL, PAGE_URL, "documenURL matches request url");
+  is(docRequest.type, "Document", "The doc request has 'Document' type");
+  is(docRequest.request.method, "GET", "The doc request has 'GET' method");
+  is(
+    docRequest.requestId,
+    docRequest.loaderId,
+    "The doc request has requestId = loaderId"
+  );
+  is(
+    docRequest.frameId,
+    frameIdNav,
+    "Doc request returns same frameId as Page.navigate"
+  );
+  is(docRequest.request.headers.host, "example.com", "Doc request has headers");
+
+  const resourceRequest = events[1].payload;
+  is(resourceRequest.documentURL, PAGE_URL, "documentURL is trigger document");
+  is(resourceRequest.request.url, JS_URL, "Got the JS request");
+  is(
+    resourceRequest.request.headers.host,
+    "example.com",
+    "Doc request has headers"
+  );
+  is(resourceRequest.type, "Script", "The page request has 'Script' type");
+  is(resourceRequest.request.method, "GET", "The doc request has 'GET' method");
+  is(
+    docRequest.frameId,
+    frameIdNav,
+    "Resource request returns same frameId as Page.navigate"
+  );
+  todo(
+    resourceRequest.loaderId === docRequest.loaderId,
+    "The same loaderId is used for dependent requests (Bug 1637838)"
+  );
+  ok(
+    docRequest.timestamp <= resourceRequest.timestamp,
+    "Document request happens before resource request"
+  );
+});
+
+function configureHistory(client) {
+  const REQUEST = "Network.requestWillBeSent";
+
+  const { Network } = client;
+  const history = new RecordEvents(4);
+
+  history.addRecorder({
+    event: Network.requestWillBeSent,
+    eventName: REQUEST,
+    messageFn: payload => {
+      return `Received ${REQUEST} for ${payload.request?.url}`;
+    },
   });
 
-  const { frameId } = await Page.navigate({ url: PAGE_URL });
-  ok(frameId, "Page.navigate returned a frameId");
-
-  info("Wait for Network.requestWillBeSent events");
-  await onRequests;
-});
+  return history;
+}
