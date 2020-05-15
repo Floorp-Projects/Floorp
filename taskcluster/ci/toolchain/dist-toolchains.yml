@@ -7,7 +7,6 @@ job-defaults:
     worker-type: b-linux
     run-on-projects:
         - trunk
-        - try
     run:
         using: toolchain-script
         script: build-dist-toolchains.sh

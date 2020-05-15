@@ -36,7 +36,6 @@ macosx64-sccache:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run-on-projects:
         - trunk
-        - try
     run:
         arguments: ['x86_64-apple-darwin']
         resources:

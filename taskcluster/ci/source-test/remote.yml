@@ -34,7 +34,7 @@ job-defaults:
 
 puppeteer:
     description: Puppeteer tests against Firefox CDP-based remote protocol
-    run-on-projects: ["mozilla-central", "try"]
+    run-on-projects: ["mozilla-central"]
     treeherder:
         symbol: remote(pup)
     run:
@@ -45,7 +45,7 @@ puppeteer:
 
 puppeteer-fis:
     description: Puppeteer tests against Firefox CDP-based remote protocol with Fission (site isolation) turned on
-    run-on-projects: ["try"]
+    run-on-projects: []
     treeherder:
         symbol: remote(pup-fis)
     run:

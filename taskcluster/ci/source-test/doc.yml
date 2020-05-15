@@ -9,7 +9,7 @@ generate:
         symbol: doc(generate)
         kind: test
         tier: 1
-    run-on-projects: ['trunk', 'try']
+    run-on-projects: ['trunk']
     worker-type: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: "lint"}

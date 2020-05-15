@@ -37,7 +37,7 @@ sm-plain-win32/debug:
     run:
         spidermonkey-variant: plaindebug
         spidermonkey-platform: win32
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - win64-clang-cl
@@ -72,7 +72,7 @@ sm-plain-win32/opt:
     run:
         spidermonkey-variant: plain
         spidermonkey-platform: win32
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - win64-clang-cl

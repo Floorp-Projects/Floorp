@@ -47,7 +47,7 @@ jobs:
             cwd: '{checkout}'
             command: >
                 ./taskcluster/scripts/misc/run-profileserver.sh
-        run-on-projects: ['try', 'release']
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang

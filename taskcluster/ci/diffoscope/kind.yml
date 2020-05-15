@@ -64,7 +64,7 @@ jobs:
         new: build-linux-reproduced/opt
         original: build-linux-shippable/opt
         fail-on-diff: true
-        run-on-projects: ['try', 'mozilla-central']  # Do not run linux32 on autoland, Bug 1599197
+        run-on-projects: ['mozilla-central']  # Do not run linux32 on autoland, Bug 1599197
 
     reproducible-linux32-generated-files:
         symbol: Linux32g
@@ -72,7 +72,7 @@ jobs:
         new: build-linux-reproduced/opt
         original: build-linux-shippable/opt
         fail-on-diff: true
-        run-on-projects: ['try', 'mozilla-central']  # Do not run linux32 on autoland, Bug 1599197
+        run-on-projects: ['mozilla-central']  # Do not run linux32 on autoland, Bug 1599197
 
 
 # Make a task for each diff we might want. The following are just examples,

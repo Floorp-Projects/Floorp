@@ -28,7 +28,7 @@ linux64/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -68,7 +68,7 @@ linux64-plain/opt:
         extra-config:
             disable_package_metrics: true
         mozconfig-variant: plain-opt
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -456,7 +456,7 @@ linux/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['try', 'release']
+    run-on-projects: ['release']
     fetches:
         toolchain:
             - linux64-binutils
@@ -496,7 +496,7 @@ linux/debug:
         mozconfig-variant: debug
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['try', 'release']
+    run-on-projects: [release']
     fetches:
         toolchain:
             - linux64-binutils
@@ -541,7 +541,7 @@ linux-rusttests/opt:
         mozconfig-variant: rusttests
         tooltool-downloads: public
         keep-artifacts: false
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -581,7 +581,7 @@ linux-rusttests/debug:
         mozconfig-variant: rusttests-debug
         tooltool-downloads: public
         keep-artifacts: false
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -674,7 +674,7 @@ linux-shippable/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['try', 'release']
+    run-on-projects: ['release']
     fetches:
         toolchain:
             - linux64-binutils
@@ -717,7 +717,7 @@ linux-reproduced/opt:
         need-xvfb: true
     # Original comment: Limited to trunk until bug 1596350 is fixed.
     # Addendum: Do not run on autoland, Bug 1599197
-    run-on-projects: ['try', 'mozilla-central', 'comm-central']
+    run-on-projects: ['mozilla-central', 'comm-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -911,7 +911,7 @@ linux64-asan-fuzzing-ccov/opt:
     treeherder:
         platform: linux64/asan
         symbol: Bocf
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     worker-type: b-linux
     worker:
         env:
@@ -951,7 +951,7 @@ linux64-fuzzing-ccov/opt:
     treeherder:
         platform: linux64/opt
         symbol: Bocf
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     worker-type: b-linux
     worker:
         max-run-time: 5400
@@ -1153,7 +1153,7 @@ linux64-noopt/debug:
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -1197,7 +1197,7 @@ linux64-rusttests/opt:
         mozconfig-variant: rusttests
         tooltool-downloads: public
         keep-artifacts: false
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -1236,7 +1236,7 @@ linux64-rusttests/debug:
         mozconfig-variant: rusttests-debug
         tooltool-downloads: public
         keep-artifacts: false
-    run-on-projects: ['trunk', 'try']
+    run-on-projects: ['trunk']
     fetches:
         toolchain:
             - linux64-binutils
@@ -1258,7 +1258,7 @@ linux64-ccov/opt:
         platform: linux64-ccov/opt
         symbol: B
         tier: 2
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     worker-type: b-linux
     worker:
         artifacts:
@@ -1406,7 +1406,7 @@ linux-gcp/debug:
         mozconfig-variant: debug
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['try', 'release']
+    run-on-projects: ['release']
     fetches:
         toolchain:
             - linux64-binutils
@@ -1451,7 +1451,7 @@ linux-gcp/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['try', 'release']
+    run-on-projects: ['release']
     fetches:
         toolchain:
             - linux64-binutils
@@ -1536,7 +1536,7 @@ linux64-gcp/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils

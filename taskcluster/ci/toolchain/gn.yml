@@ -9,7 +9,6 @@ job-defaults:
         max-run-time: 1800
     run-on-projects:
         - trunk
-        - try
     run:
         resources:
             - 'taskcluster/scripts/misc/build-gn-common.sh'

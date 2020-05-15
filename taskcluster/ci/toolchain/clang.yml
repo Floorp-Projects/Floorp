@@ -242,7 +242,6 @@ macosx64-clang:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run-on-projects:
         - trunk
-        - try
     run:
         script: build-clang.sh
         tooltool-downloads: internal
