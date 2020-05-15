@@ -76,6 +76,7 @@ STATIC_ATOMS = [
     Atom("all", "all"),
     Atom("allow", "allow"),
     Atom("allowdirs", "allowdirs"),
+    Atom("allowdownloads", "allow-downloads"),
     Atom("allowevents", "allowevents"),
     Atom("allowforms", "allow-forms"),
     Atom("allowfullscreen", "allowfullscreen"),
