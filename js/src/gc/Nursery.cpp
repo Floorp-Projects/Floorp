@@ -1276,6 +1276,7 @@ float js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
   endProfile(ProfileKey::Pretenure);
 
   rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
+  rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT_2, pretenureCount);
   rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE, promotionRate * 100);
 
   return promotionRate;
