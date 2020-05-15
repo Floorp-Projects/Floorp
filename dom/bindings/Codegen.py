@@ -19007,7 +19007,10 @@ class CGEventGetter(CGNativeMember):
         if type.isUnion():
             return "aRetVal = " + memberName + ";\n"
         if type.isSequence():
-            return "aRetVal = " + memberName + ".Clone();\n"
+            if type.nullable():
+                return "if (" + memberName + ".IsNull()) { aRetVal.SetNull(); } else { aRetVal.SetValue(" + memberName + ".Value().Clone()); }\n"
+            else:
+                return "aRetVal = " + memberName + ".Clone();\n"
         raise TypeError("Event code generator does not support this type!")
 
     def declare(self, cgClass):
