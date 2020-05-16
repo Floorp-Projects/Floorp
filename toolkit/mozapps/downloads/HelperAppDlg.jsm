@@ -857,6 +857,10 @@ nsUnknownContentTypeDialog.prototype = {
     );
   },
 
+  get handleInternally() {
+    return this.dialogElement("handleInternally").selected;
+  },
+
   toggleRememberChoice(aCheckbox) {
     this.dialogElement("settingsChange").hidden = !aCheckbox.checked;
     this.mDialog.sizeToContent();
@@ -933,7 +937,7 @@ nsUnknownContentTypeDialog.prototype = {
       if (needUpdate) {
         this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.useSystemDefault;
       }
-    } else {
+    } else if (this.useOtherHandler) {
       // For "open with", we need to check both preferred action and whether the user chose
       // a new app.
       needUpdate =
@@ -1030,7 +1034,7 @@ nsUnknownContentTypeDialog.prototype = {
         );
         this._saveToDiskTimer.initWithCallback(this, 0, nsITimer.TYPE_ONE_SHOT);
       } else {
-        this.mLauncher.launchWithApplication();
+        this.mLauncher.launchWithApplication(this.handleInternally);
       }
 
       // Update user pref for this mime type (if necessary). We do not

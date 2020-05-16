@@ -309,6 +309,11 @@ class nsExternalAppHandler final : public nsIStreamListener,
   bool mShouldCloseWindow;
 
   /**
+   * True if the file should be handled internally.
+   */
+  bool mHandleInternally;
+
+  /**
    * One of the REASON_ constants from nsIHelperAppLauncherDialog. Indicates the
    * reason the dialog was shown (unknown content type, server requested it,
    * etc).
