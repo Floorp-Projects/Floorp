@@ -67,7 +67,16 @@
         <hbox>
           <radio id="open" label="&openWith.label;" accesskey="&openWith.accesskey;"/>
           <deck id="modeDeck" flex="1">
-            <hbox id="openHandlerBox" flex="1" align="center"/>
+            <hbox id="openHandlerBox" flex="1" align="center">
+              <menulist id="openHandler" flex="1">
+                <menupopup id="openHandlerPopup" oncommand="dialog.openHandlerCommand();">
+                  <menuitem id="defaultHandler" default="true" crop="right"/>
+                  <menuitem id="otherHandler" hidden="true" crop="left"/>
+                  <menuseparator/>
+                  <menuitem id="choose" label="&other.label;"/>
+                </menupopup>
+              </menulist>
+            </hbox>
             <hbox flex="1" align="center">
               <button id="chooseButton" oncommand="dialog.chooseApp();"
 #ifdef XP_MACOSX
@@ -97,14 +106,5 @@
       <separator class="thin"/>
     </vbox>
   </vbox>
-
-  <menulist id="openHandler" flex="1">
-    <menupopup id="openHandlerPopup" oncommand="dialog.openHandlerCommand();">
-      <menuitem id="defaultHandler" default="true" crop="right"/>
-      <menuitem id="otherHandler" hidden="true" crop="left"/>
-      <menuseparator/>
-      <menuitem id="choose" label="&other.label;"/>
-    </menupopup>
-  </menulist>
 </dialog>
 </window>
