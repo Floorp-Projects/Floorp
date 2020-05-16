@@ -2455,9 +2455,11 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithFeatures(
       }
 
       nsAutoCString skipHostList;
-      rv = feature->GetSkipHostList(skipHostList);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        continue;
+      if (aListType == nsIUrlClassifierFeature::blacklist) {
+        rv = feature->GetSkipHostList(skipHostList);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          continue;
+        }
       }
 
       ipcFeatures.AppendElement(
