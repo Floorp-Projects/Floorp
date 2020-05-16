@@ -1405,7 +1405,7 @@ struct vec4_scalar {
       : x(x), y(y), z(z), w(w) {}
   vec4_scalar(vec3_scalar xyz, float w) : x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
 
-  float& select(XYZW c) {
+  ALWAYS_INLINE float& select(XYZW c) {
     switch (c) {
       case X:
         return x;
