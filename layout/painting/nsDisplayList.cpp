@@ -7986,7 +7986,9 @@ bool nsDisplayTransform::CreateWebRenderCommands(
     // In ChooseScaleAndSetTransform, we round the offset from the reference
     // frame used to adjust the transform, if there is no transform, or it
     // is just a translation. We need to do the same here.
-    position.Round();
+    if (nsLayoutUtils::ShouldSnapToGrid(mFrame)) {
+      position.Round();
+    }
   }
 
   // We don't send animations for transform separator display items.

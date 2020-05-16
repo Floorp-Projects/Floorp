@@ -692,7 +692,6 @@ static Maybe<TransformData> CreateAnimationData(
         nsLayoutUtils::GetCrossDocParentFrame(aFrame));
     origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
   }
-  bool snapToGrid = nsLayoutUtils::ShouldSnapToGrid(aFrame);
 
   Maybe<MotionPathData> motionPathData;
   if (aDataType == AnimationDataType::WithMotionPath) {
@@ -709,7 +708,7 @@ static Maybe<TransformData> CreateAnimationData(
 
   return Some(TransformData(origin, offsetToTransformOrigin, bounds,
                             devPixelsToAppUnits, scaleX, scaleY,
-                            hasPerspectiveParent, snapToGrid, motionPathData));
+                            hasPerspectiveParent, motionPathData));
 }
 
 void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
