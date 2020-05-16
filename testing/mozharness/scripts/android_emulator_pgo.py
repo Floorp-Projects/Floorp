@@ -207,6 +207,12 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         env["MOZ_JAR_LOG_FILE"] = jarlog
         env["LLVM_PROFILE_FILE"] = profdata
 
+        if self.query_minidump_stackwalk():
+            os.environ['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
+        os.environ['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
+        if not self.symbols_path:
+            self.symbols_path = os.environ.get("MOZ_FETCHES_DIR")
+
         # Force test_root to be on the sdcard for android pgo
         # builds which fail for Android 4.3 when profiles are located
         # in /data/local/tmp/tests with
@@ -241,6 +247,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
                 connect_to_running_emulator=True,
                 startup_timeout=1000,
                 env=env,
+                symbols_path=self.symbols_path,
             )
             driver.start_session()
 
