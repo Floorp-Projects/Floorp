@@ -285,9 +285,17 @@ class MacroAssemblerX86Shared : public Assembler {
   void load16ZeroExtend(const BaseIndex& src, Register dest) {
     movzwl(Operand(src), dest);
   }
+  template <typename S>
+  void load16UnalignedZeroExtend(const S& src, Register dest) {
+    load16ZeroExtend(src, dest);
+  }
   template <typename S, typename T>
   void store16(const S& src, const T& dest) {
     movw(src, Operand(dest));
+  }
+  template <typename S, typename T>
+  void store16Unaligned(const S& src, const T& dest) {
+    store16(src, dest);
   }
   void load16SignExtend(const Operand& src, Register dest) {
     movswl(src, dest);
@@ -298,17 +306,29 @@ class MacroAssemblerX86Shared : public Assembler {
   void load16SignExtend(const BaseIndex& src, Register dest) {
     movswl(Operand(src), dest);
   }
+  template <typename S>
+  void load16UnalignedSignExtend(const S& src, Register dest) {
+    load16SignExtend(src, dest);
+  }
   void load32(const Address& address, Register dest) {
     movl(Operand(address), dest);
   }
   void load32(const BaseIndex& src, Register dest) { movl(Operand(src), dest); }
   void load32(const Operand& src, Register dest) { movl(src, dest); }
+  template <typename S>
+  void load32Unaligned(const S& src, Register dest) {
+    load32(src, dest);
+  }
   template <typename S, typename T>
   void store32(const S& src, const T& dest) {
     movl(src, Operand(dest));
   }
   template <typename S, typename T>
   void store32_NoSecondScratch(const S& src, const T& dest) {
+    store32(src, dest);
+  }
+  template <typename S, typename T>
+  void store32Unaligned(const S& src, const T& dest) {
     store32(src, dest);
   }
   void loadDouble(const Address& src, FloatRegister dest) { vmovsd(src, dest); }
