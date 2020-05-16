@@ -269,7 +269,7 @@ DownloadLegacyTransfer.prototype = {
     aStartTime,
     aTempFile,
     aCancelable,
-    aIsPrivate,
+    aBrowsingContext,
     aHandleInternally
   ) {
     this._cancelable = aCancelable;
@@ -295,8 +295,18 @@ DownloadLegacyTransfer.prototype = {
     // Create a new Download object associated to a DownloadLegacySaver, and
     // wait for it to be available.  This operation may cause the entire
     // download system to initialize before the object is created.
+    let browsingContextId = aBrowsingContext.id;
+    let windowGlobal = aBrowsingContext.currentWindowGlobal;
+    let originAttributes = windowGlobal.documentPrincipal.originAttributes;
+    let isPrivate = originAttributes.privateBrowsingId > 0;
+    let { userContextId } = originAttributes;
     Downloads.createDownload({
-      source: { url: aSource.spec, isPrivate: aIsPrivate },
+      source: {
+        url: aSource.spec,
+        isPrivate,
+        userContextId,
+        browsingContextId,
+      },
       target: {
         path: aTarget.QueryInterface(Ci.nsIFileURL).file.path,
         partFilePath: aTempFile && aTempFile.path,
