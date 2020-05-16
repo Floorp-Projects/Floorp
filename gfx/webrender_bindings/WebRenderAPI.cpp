@@ -826,8 +826,8 @@ void TransactionBuilder::DeleteFontInstance(wr::FontInstanceKey aKey) {
 }
 
 void TransactionBuilder::UpdateQualitySettings(
-    bool aAllowSacrificingSubpixelAA) {
-  wr_transaction_set_quality_settings(mTxn, aAllowSacrificingSubpixelAA);
+    bool aForceSubpixelAAWherePossible) {
+  wr_transaction_set_quality_settings(mTxn, aForceSubpixelAAWherePossible);
 }
 
 class FrameStartTime : public RendererEvent {
