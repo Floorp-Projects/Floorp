@@ -318,6 +318,21 @@ class LogMarkerPayload : public ProfilerMarkerPayload {
   std::string mText;
 };
 
+class MediaSampleMarkerPayload : public ProfilerMarkerPayload {
+ public:
+  MFBT_API MediaSampleMarkerPayload(const int64_t aSampleStartTimeUs,
+                                    const int64_t aSampleEndTimeUs);
+  DECL_BASE_STREAM_PAYLOAD
+
+ private:
+  MFBT_API MediaSampleMarkerPayload(CommonProps&& aCommonProps,
+                                    const int64_t aSampleStartTimeUs,
+                                    const int64_t aSampleEndTimeUs);
+
+  int64_t mSampleStartTimeUs;
+  int64_t mSampleEndTimeUs;
+};
+
 }  // namespace baseprofiler
 
 // Serialize a pointed-at ProfilerMarkerPayload, may be null when there are no

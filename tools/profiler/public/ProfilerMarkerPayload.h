@@ -664,6 +664,21 @@ class LogMarkerPayload : public ProfilerMarkerPayload {
   nsCString mText;
 };
 
+class MediaSampleMarkerPayload : public ProfilerMarkerPayload {
+ public:
+  MediaSampleMarkerPayload(const int64_t aSampleStartTimeUs,
+                           const int64_t aSampleEndTimeUs);
+  DECL_STREAM_PAYLOAD
+
+ private:
+  MediaSampleMarkerPayload(CommonProps&& aCommonProps,
+                           const int64_t aSampleStartTimeUs,
+                           const int64_t aSampleEndTimeUs);
+
+  int64_t mSampleStartTimeUs;
+  int64_t mSampleEndTimeUs;
+};
+
 class JsAllocationMarkerPayload : public ProfilerMarkerPayload {
  public:
   JsAllocationMarkerPayload(const mozilla::TimeStamp& aStartTime,

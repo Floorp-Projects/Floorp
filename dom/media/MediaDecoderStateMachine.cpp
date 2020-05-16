@@ -37,6 +37,19 @@
 #include "VideoSegment.h"
 #include "VideoUtils.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#  define MDSM_ERROR_MARKER(tag, error, markerTime)                          \
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK, TextMarkerPayload, \
+                                     (error, markerTime))
+#  define MDSM_SAMPLE_MARKER(tag, startTime, endTime) \
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(                 \
+        tag, MEDIA_PLAYBACK, MediaSampleMarkerPayload, (startTime, endTime))
+#else
+#  define MDSM_ERROR_MARKER(tag, error)
+#  define MDSM_SAMPLE_MARKER(tag, startTime, endTime)
+#endif
+
 namespace mozilla {
 
 using namespace mozilla::media;
@@ -379,6 +392,7 @@ class MediaDecoderStateMachine::DormantState
   explicit DormantState(Master* aPtr) : StateObject(aPtr) {}
 
   void Enter() {
+    PROFILER_ADD_MARKER("MDSM::EnterDormantState", MEDIA_PLAYBACK);
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
     }
@@ -1387,6 +1401,7 @@ class MediaDecoderStateMachine::AccurateSeekingState
            "] target=%" PRId64,
            aVideo->mTime.ToMicroseconds(),
            aVideo->GetEndTime().ToMicroseconds(), target.ToMicroseconds());
+      PROFILER_ADD_MARKER("MDSM::DropVideoUpToSeekTarget", MEDIA_PLAYBACK);
       mFirstVideoFrameAfterSeek = aVideo;
     } else {
       if (target >= aVideo->mTime && aVideo->GetEndTime() >= target) {
@@ -1865,6 +1880,7 @@ class MediaDecoderStateMachine::BufferingState
   explicit BufferingState(Master* aPtr) : StateObject(aPtr) {}
 
   void Enter() {
+    PROFILER_ADD_MARKER("MDSM::EnterBufferingState", MEDIA_PLAYBACK);
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
     }
@@ -2613,6 +2629,7 @@ void MediaDecoderStateMachine::BufferingState::HandleEndOfVideo() {
 }
 
 RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
+  PROFILER_ADD_MARKER("MDSM::EnterShutdownState", MEDIA_PLAYBACK);
   auto master = mMaster;
 
   master->mDelayedScheduler.Reset();
@@ -2840,6 +2857,8 @@ void MediaDecoderStateMachine::PushAudio(AudioData* aSample) {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aSample);
   AudioQueue().Push(aSample);
+  MDSM_SAMPLE_MARKER("MDSM::PushAudio", aSample->mTime.ToMicroseconds(),
+                     aSample->GetEndTime().ToMicroseconds());
 }
 
 void MediaDecoderStateMachine::PushVideo(VideoData* aSample) {
@@ -2847,6 +2866,8 @@ void MediaDecoderStateMachine::PushVideo(VideoData* aSample) {
   MOZ_ASSERT(aSample);
   aSample->mFrameID = ++mCurrentFrameID;
   VideoQueue().Push(aSample);
+  MDSM_SAMPLE_MARKER("MDSM::PushVideo", aSample->mTime.ToMicroseconds(),
+                     aSample->GetEndTime().ToMicroseconds());
 }
 
 void MediaDecoderStateMachine::OnAudioPopped(const RefPtr<AudioData>& aSample) {
@@ -3137,6 +3158,7 @@ void MediaDecoderStateMachine::BufferedRangeUpdated() {
 RefPtr<MediaDecoder::SeekPromise> MediaDecoderStateMachine::Seek(
     const SeekTarget& aTarget) {
   AUTO_PROFILER_LABEL("MediaDecoderStateMachine::Seek", MEDIA_PLAYBACK);
+  PROFILER_ADD_MARKER("MDSM::Seek", MEDIA_PLAYBACK);
   MOZ_ASSERT(OnTaskQueue());
 
   // We need to be able to seek in some way
@@ -3446,6 +3468,8 @@ bool MediaDecoderStateMachine::HasLowBufferedData(const TimeUnit& aThreshold) {
 void MediaDecoderStateMachine::DecodeError(const MediaResult& aError) {
   MOZ_ASSERT(OnTaskQueue());
   LOGE("Decode error: %s", aError.Description().get());
+  MDSM_ERROR_MARKER("MDSM::DecodeError", aError.Description(),
+                    TimeStamp::NowUnfuzzed());
   // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackErrorEvent.Notify(aError);
 }
