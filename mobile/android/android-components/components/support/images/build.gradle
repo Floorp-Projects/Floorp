@@ -4,7 +4,6 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -13,12 +12,11 @@ android {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
 
-        kapt {
-            arguments {
-                arg("room.schemaLocation", "$projectDir/schemas".toString())
-            }
-        }
+    lintOptions {
+        warningsAsErrors true
+        abortOnError true
     }
 
     buildTypes {
@@ -29,44 +27,30 @@ android {
     }
 
     sourceSets {
-        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+        androidTest {
+            // Use the same resources as the unit tests
+            resources.srcDirs += ['src/test/resources']
+        }
     }
 }
 
 dependencies {
-    implementation project(':browser-icons')
-    implementation project(':browser-session')
-    implementation project(':concept-engine')
-    implementation project(':concept-fetch')
-    implementation project(':feature-customtabs')
-    implementation project(':feature-intent')
-    implementation project(':feature-session')
     implementation project(':support-base')
-    implementation project(':support-images')
-    implementation project(':support-ktx')
-    implementation project(':support-utils')
 
-    implementation Dependencies.androidx_browser
-    implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_annotation
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
-
-    implementation Dependencies.androidx_room_runtime
-    kapt Dependencies.androidx_room_compiler
 
     testImplementation project(':support-test')
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
-    testImplementation Dependencies.kotlin_reflect
-    testImplementation Dependencies.testing_coroutines
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_coroutines
 
     androidTestImplementation Dependencies.androidx_test_core
     androidTestImplementation Dependencies.androidx_test_runner
     androidTestImplementation Dependencies.androidx_test_rules
-    androidTestImplementation Dependencies.androidx_room_testing
 }
 
 apply from: '../../../publish.gradle'

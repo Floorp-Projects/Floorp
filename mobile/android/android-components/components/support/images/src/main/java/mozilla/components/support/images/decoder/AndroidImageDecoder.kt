@@ -2,24 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.icons.decoder
+package mozilla.components.support.images.decoder
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Size
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
-import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.images.DesiredSize
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
 /**
- * [IconDecoder] that will use Android's [BitmapFactory] in order to decode the byte data.
+ * [ImageDecoder] that will use Android's [BitmapFactory] in order to decode the byte data.
  */
-class AndroidIconDecoder : IconDecoder {
-    private val logger = Logger("AndroidIconDecoder")
+class AndroidImageDecoder : ImageDecoder {
+    private val logger = Logger("AndroidImageDecoder")
 
     override fun decode(data: ByteArray, desiredSize: DesiredSize): Bitmap? =
         try {

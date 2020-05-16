@@ -5,9 +5,9 @@
 package mozilla.components.browser.icons.processor
 
 import android.content.Context
-import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.support.images.DesiredSize
 
 /**
  * An [IconProcessor] implementation receives the [Icon] with the [IconRequest] and [IconRequest.Resource] after

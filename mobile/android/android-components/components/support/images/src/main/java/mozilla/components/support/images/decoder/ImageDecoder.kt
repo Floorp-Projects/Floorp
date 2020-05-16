@@ -2,18 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.icons.decoder
+package mozilla.components.support.images.decoder
 
 import android.graphics.Bitmap
-import mozilla.components.browser.icons.DesiredSize
+import mozilla.components.support.images.DesiredSize
 
 /**
- * An icon decoder that can decode a [ByteArray] into a [Bitmap].
+ * An image decoder that can decode a [ByteArray] into a [Bitmap].
  *
  * Depending on the image format the decoder may internally decode the [ByteArray] into multiple [Bitmap]. It is up to
  * the decoder implementation to return the best [Bitmap] to use.
  */
-interface IconDecoder {
+interface ImageDecoder {
     /**
      * Decodes the given [data] into a a [Bitmap] or null.
      *
