@@ -28,6 +28,10 @@
         screenX="" screenY=""
         persist="screenX screenY"
         aria-describedby="intro location whichIs type from source unknownPrompt">
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="toolkit/global/unknownContentType.ftl"/>
+</linkset>
 <dialog id="unknownContentType">
 
   <stringbundle id="strings" src="chrome://mozapps/locale/downloads/unknownContentType.properties"/>
@@ -64,6 +68,8 @@
       <separator/>
       <label control="mode" class="header" value="&actionQuestion.label;"/>
       <radiogroup id="mode" class="small-indent">
+        <radio id="handleInternally" hidden="true" data-l10n-id="unknowncontenttype-handleinternally"/>
+
         <hbox>
           <radio id="open" label="&openWith.label;" accesskey="&openWith.accesskey;"/>
           <deck id="modeDeck" flex="1">
