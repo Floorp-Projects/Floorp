@@ -121,6 +121,21 @@ void MacroAssembler::popcnt32(Register input, Register output, Register tmp) {
 }
 
 // ===============================================================
+// Swap instructions
+
+void MacroAssembler::swap16SignExtend(Register reg) {
+  rolw(Imm32(8), reg);
+  movswl(reg, reg);
+}
+
+void MacroAssembler::swap16ZeroExtend(Register reg) {
+  rolw(Imm32(8), reg);
+  movzwl(reg, reg);
+}
+
+void MacroAssembler::swap32(Register reg) { bswapl(reg); }
+
+// ===============================================================
 // Arithmetic instructions
 
 void MacroAssembler::add32(Register src, Register dest) { addl(src, dest); }

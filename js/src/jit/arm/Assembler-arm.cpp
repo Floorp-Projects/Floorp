@@ -1211,6 +1211,20 @@ BufferOffset Assembler::as_orr(Register dest, Register src1, Operand2 op2,
   return as_alu(dest, src1, op2, OpOrr, s, c);
 }
 
+// Reverse byte operations.
+BufferOffset Assembler::as_rev(Register dest, Register src, Condition c) {
+  return writeInst((int)c | 0b0000'0110'1011'1111'0000'1111'0011'0000 |
+                   RD(dest) | src.code());
+}
+BufferOffset Assembler::as_rev16(Register dest, Register src, Condition c) {
+  return writeInst((int)c | 0b0000'0110'1011'1111'0000'1111'1011'0000 |
+                   RD(dest) | src.code());
+}
+BufferOffset Assembler::as_revsh(Register dest, Register src, Condition c) {
+  return writeInst((int)c | 0b0000'0110'1111'1111'0000'1111'1011'0000 |
+                   RD(dest) | src.code());
+}
+
 // Mathematical operations.
 BufferOffset Assembler::as_adc(Register dest, Register src1, Operand2 op2,
                                SBit s, Condition c) {

@@ -1619,6 +1619,7 @@ class AssemblerX86Shared : public AssemblerShared {
   void bsfl(const Register& src, const Register& dest) {
     masm.bsfl_rr(src.encoding(), dest.encoding());
   }
+  void bswapl(Register reg) { masm.bswapl_r(reg.encoding()); }
   void popcntl(const Register& src, const Register& dest) {
     masm.popcntl_rr(src.encoding(), dest.encoding());
   }
@@ -1698,6 +1699,9 @@ class AssemblerX86Shared : public AssemblerShared {
     masm.roll_ir(imm.value, dest.encoding());
   }
   void roll_cl(Register dest) { masm.roll_CLr(dest.encoding()); }
+  void rolw(const Imm32 imm, Register dest) {
+    masm.rolw_ir(imm.value, dest.encoding());
+  }
   void rorl(const Imm32 imm, Register dest) {
     masm.rorl_ir(imm.value, dest.encoding());
   }

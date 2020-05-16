@@ -131,6 +131,11 @@ void MacroAssembler::xor64(const Operand& src, Register64 dest) {
 }
 
 // ===============================================================
+// Swap instructions
+
+void MacroAssembler::swap64(Register64 reg) { bswapq(reg.reg); }
+
+// ===============================================================
 // Arithmetic functions
 
 void MacroAssembler::addPtr(Register src, Register dest) { addq(src, dest); }

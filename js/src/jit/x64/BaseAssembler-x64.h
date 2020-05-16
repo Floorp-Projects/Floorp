@@ -185,6 +185,11 @@ class BaseAssemblerX64 : public BaseAssembler {
     m_formatter.oneByteOp64(OP_XOR_EvGv, offset, base, index, scale, src);
   }
 
+  void bswapq_r(RegisterID dst) {
+    spew("bswapq     %s", GPReg64Name(dst));
+    m_formatter.twoByteOp64(OP2_BSWAP, dst);
+  }
+
   void bsrq_rr(RegisterID src, RegisterID dst) {
     spew("bsrq       %s, %s", GPReg64Name(src), GPReg64Name(dst));
     m_formatter.twoByteOp64(OP2_BSR_GvEv, src, dst);

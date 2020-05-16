@@ -157,6 +157,15 @@ void MacroAssembler::xorPtr(Register src, Register dest) { xorl(src, dest); }
 void MacroAssembler::xorPtr(Imm32 imm, Register dest) { xorl(imm, dest); }
 
 // ===============================================================
+// Swap instructions
+
+void MacroAssembler::swap64(Register64 reg) {
+  bswapl(reg.low);
+  bswapl(reg.high);
+  xchgl(reg.low, reg.high);
+}
+
+// ===============================================================
 // Arithmetic functions
 
 void MacroAssembler::addPtr(Register src, Register dest) { addl(src, dest); }

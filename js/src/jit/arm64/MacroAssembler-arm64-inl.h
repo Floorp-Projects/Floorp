@@ -206,6 +206,27 @@ void MacroAssembler::xorPtr(Imm32 imm, Register dest) {
 }
 
 // ===============================================================
+// Swap instructions
+
+void MacroAssembler::swap16SignExtend(Register reg) {
+  rev16(ARMRegister(reg, 32), ARMRegister(reg, 32));
+  sxth(ARMRegister(reg, 32), ARMRegister(reg, 32));
+}
+
+void MacroAssembler::swap16ZeroExtend(Register reg) {
+  rev16(ARMRegister(reg, 32), ARMRegister(reg, 32));
+  uxth(ARMRegister(reg, 32), ARMRegister(reg, 32));
+}
+
+void MacroAssembler::swap32(Register reg) {
+  rev(ARMRegister(reg, 32), ARMRegister(reg, 32));
+}
+
+void MacroAssembler::swap64(Register64 reg) {
+  rev(ARMRegister(reg.reg, 64), ARMRegister(reg.reg, 64));
+}
+
+// ===============================================================
 // Arithmetic functions
 
 void MacroAssembler::add32(Register src, Register dest) {
