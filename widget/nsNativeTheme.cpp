@@ -63,7 +63,14 @@ EventStates nsNativeTheme::GetContentState(nsIFrame* aFrame,
   }
 
   if (isXULCheckboxRadio && aAppearance == StyleAppearance::Radio) {
-    if (IsFocused(aFrame)) flags |= NS_EVENT_STATE_FOCUS;
+    if (IsFocused(aFrame)) {
+      flags |= NS_EVENT_STATE_FOCUS;
+      nsPIDOMWindowOuter* window =
+          aFrame->GetContent()->OwnerDoc()->GetWindow();
+      if (window && window->ShouldShowFocusRing()) {
+        flags |= NS_EVENT_STATE_FOCUSRING;
+      }
+    }
   }
 
   // On Windows and Mac, only draw focus rings if they should be shown. This
@@ -85,11 +92,10 @@ EventStates nsNativeTheme::GetContentState(nsIFrame* aFrame,
   if (aAppearance == StyleAppearance::Button) return flags;
 #endif
 #if defined(XP_MACOSX) || defined(XP_WIN)
-  Document* doc = aFrame->GetContent()->OwnerDoc();
-  nsPIDOMWindowOuter* window = doc->GetWindow();
-  if (window && !window->ShouldShowFocusRing()) flags &= ~NS_EVENT_STATE_FOCUS;
+  if (!flags.HasState(NS_EVENT_STATE_FOCUSRING)) {
+    flags &= ~NS_EVENT_STATE_FOCUS;
+  }
 #endif
-
   return flags;
 }
 
