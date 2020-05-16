@@ -28,13 +28,11 @@ class OSXNotificationInfo;
 
 class OSXNotificationCenter : public nsIAlertsService,
                               public nsIAlertsIconData,
-                              public nsIAlertsDoNotDisturb,
                               public nsIAlertNotificationImageListener {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_NSIALERTSICONDATA
-  NS_DECL_NSIALERTSDONOTDISTURB
   NS_DECL_NSIALERTNOTIFICATIONIMAGELISTENER
 
   OSXNotificationCenter();
@@ -52,7 +50,6 @@ class OSXNotificationCenter : public nsIAlertsService,
   mozNotificationCenterDelegate* mDelegate;
   nsTArray<RefPtr<OSXNotificationInfo> > mActiveAlerts;
   nsTArray<RefPtr<OSXNotificationInfo> > mPendingAlerts;
-  bool mSuppressForScreenSharing;
 };
 
 }  // namespace mozilla

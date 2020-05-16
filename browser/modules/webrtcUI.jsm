@@ -280,11 +280,8 @@ var webrtcUI = {
 
     let sharedWindowRawDeviceIds = new Set();
     this.sharingScreen = false;
-    let suppressNotifications = false;
     for (let stream of this._streams) {
       let { state } = stream;
-      suppressNotifications |= state.suppressNotifications;
-
       for (let device of state.devices) {
         if (!device.scary) {
           continue;
@@ -315,18 +312,6 @@ var webrtcUI = {
       if (sharedWindowRawDeviceIds.has(rawDeviceId)) {
         this.sharedWindows.add(win);
       }
-    }
-
-    if (
-      Services.prefs.getBoolPref(
-        "privacy.webrtc.allowSilencingNotifications",
-        false
-      )
-    ) {
-      let alertsService = Cc["@mozilla.org/alerts-service;1"]
-        .getService(Ci.nsIAlertsService)
-        .QueryInterface(Ci.nsIAlertsDoNotDisturb);
-      alertsService.suppressForScreenSharing = suppressNotifications;
     }
   },
 
