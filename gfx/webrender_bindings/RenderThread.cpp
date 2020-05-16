@@ -701,6 +701,25 @@ void RenderThread::NotifyNotUsed(uint64_t aExternalImageId) {
   Loop()->PostTask(task.forget());
 }
 
+void RenderThread::NofityForUse(uint64_t aExternalImageId) {
+  MOZ_ASSERT(RenderThread::IsInRenderThread());
+
+  HandlePrepareForUse();
+
+  {
+    MutexAutoLock lock(mRenderTextureMapLock);
+    if (mHasShutdown) {
+      return;
+    }
+    auto it = mRenderTextures.find(aExternalImageId);
+    MOZ_ASSERT(it != mRenderTextures.end());
+    if (it == mRenderTextures.end()) {
+      return;
+    }
+    it->second->NofityForUse();
+  }
+}
+
 void RenderThread::UnregisterExternalImageDuringShutdown(
     uint64_t aExternalImageId) {
   MOZ_ASSERT(IsInRenderThread());
