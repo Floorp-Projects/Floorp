@@ -506,7 +506,7 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(
     ObjOperandId objId, uint32_t getterOffset) {
   MDefinition* obj = getOperand(objId);
 
-  auto* length = MTypedArrayLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
   add(length);
 
   pushResult(length);
@@ -588,12 +588,12 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
     return true;
   }
 
-  auto* length = MTypedArrayLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
   add(length);
 
   index = addBoundsCheck(index, length);
 
-  auto* elements = MTypedArrayElements::New(alloc(), obj);
+  auto* elements = MArrayBufferViewElements::New(alloc(), obj);
   add(elements);
 
   auto* load = MLoadUnboxedScalar::New(alloc(), elements, index, elementType);
@@ -714,7 +714,7 @@ bool WarpCacheIRTranspiler::emitStoreTypedArrayElement(ObjOperandId objId,
   MDefinition* index = getOperand(indexId);
   MDefinition* rhs = getOperand(ValOperandId(rhsId));
 
-  auto* length = MTypedArrayLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
   add(length);
 
   if (!handleOOB) {
@@ -722,7 +722,7 @@ bool WarpCacheIRTranspiler::emitStoreTypedArrayElement(ObjOperandId objId,
     index = addBoundsCheck(index, length);
   }
 
-  auto* elements = MTypedArrayElements::New(alloc(), obj);
+  auto* elements = MArrayBufferViewElements::New(alloc(), obj);
   add(elements);
 
   MInstruction* store;

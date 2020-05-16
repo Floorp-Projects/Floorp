@@ -84,7 +84,7 @@ static inline const MDefinition* MaybeUnwrap(const MDefinition* object) {
     object = object->getOperand(0);
   }
 
-  if (object->isTypedArrayElements()) {
+  if (object->isArrayBufferViewElements()) {
     return nullptr;
   }
   if (object->isConstantElements()) {
@@ -118,8 +118,8 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::Elements:
     case MDefinition::Opcode::MaybeCopyElementsForWrite:
     case MDefinition::Opcode::MaybeToDoubleElement:
-    case MDefinition::Opcode::TypedArrayLength:
-    case MDefinition::Opcode::TypedArrayByteOffset:
+    case MDefinition::Opcode::ArrayBufferViewLength:
+    case MDefinition::Opcode::ArrayBufferViewByteOffset:
     case MDefinition::Opcode::ArrayPopShift:
     case MDefinition::Opcode::ArrayPush:
     case MDefinition::Opcode::LoadTypedArrayElementHole:
@@ -137,7 +137,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::StoreDynamicSlot:
     case MDefinition::Opcode::InArray:
     case MDefinition::Opcode::LoadElementHole:
-    case MDefinition::Opcode::TypedArrayElements:
+    case MDefinition::Opcode::ArrayBufferViewElements:
     case MDefinition::Opcode::CopyLexicalEnvironmentObject:
     case MDefinition::Opcode::IsPackedArray:
     case MDefinition::Opcode::SuperFunction:

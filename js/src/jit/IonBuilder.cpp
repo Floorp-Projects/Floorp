@@ -9071,7 +9071,7 @@ void IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
     return;
   }
 
-  *length = MTypedArrayLength::New(alloc(), obj);
+  *length = MArrayBufferViewLength::New(alloc(), obj);
   current->add(*length);
 
   if (index) {
@@ -9079,7 +9079,7 @@ void IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
       *index = addBoundsCheck(*index, *length);
     }
 
-    *elements = MTypedArrayElements::New(alloc(), obj);
+    *elements = MArrayBufferViewElements::New(alloc(), obj);
     current->add(*elements);
   }
 }
@@ -9092,7 +9092,7 @@ MInstruction* IonBuilder::addTypedArrayByteOffset(MDefinition* obj) {
     int32_t offset = AssertedCast<int32_t>(tarr->byteOffset());
     byteOffset = MConstant::New(alloc(), Int32Value(offset));
   } else {
-    byteOffset = MTypedArrayByteOffset::New(alloc(), obj);
+    byteOffset = MArrayBufferViewByteOffset::New(alloc(), obj);
   }
 
   current->add(byteOffset);

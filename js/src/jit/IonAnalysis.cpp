@@ -3880,7 +3880,7 @@ bool jit::AddKeepAliveInstructions(MIRGraph& graph) {
           MOZ_ASSERT(!ins->hasUses());
           continue;
         case MDefinition::Opcode::Elements:
-        case MDefinition::Opcode::TypedArrayElements:
+        case MDefinition::Opcode::ArrayBufferViewElements:
           MOZ_ASSERT(ins->numOperands() == 1);
           ownerObject = ins->getOperand(0);
           break;
