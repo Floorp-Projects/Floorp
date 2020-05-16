@@ -1583,7 +1583,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   if (NS_FAILED(rv)) {
     nsresult transferError = rv;
 
-    rv = CreateFailedTransfer(aChannel && NS_UsePrivateBrowsing(aChannel));
+    rv = CreateFailedTransfer();
     if (NS_FAILED(rv)) {
       LOG(
           ("Failed to create transfer to report failure."
@@ -2011,7 +2011,7 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver* aSaver,
       // have to.
       if (!mTransfer) {
         // We don't care if this fails.
-        CreateFailedTransfer(channel && NS_UsePrivateBrowsing(channel));
+        CreateFailedTransfer();
       }
 
       SendStatusChange(kWriteError, aStatus, nullptr, path);
@@ -2104,8 +2104,7 @@ nsresult nsExternalAppHandler::CreateTransfer() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transfer->Init(mSourceUrl, target, EmptyString(), mMimeInfo,
-                      mTimeDownloadStarted, mTempFile, this,
-                      channel && NS_UsePrivateBrowsing(channel),
+                      mTimeDownloadStarted, mTempFile, this, mBrowsingContext,
                       mHandleInternally);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2142,7 +2141,7 @@ nsresult nsExternalAppHandler::CreateTransfer() {
   return rv;
 }
 
-nsresult nsExternalAppHandler::CreateFailedTransfer(bool aIsPrivateBrowsing) {
+nsresult nsExternalAppHandler::CreateFailedTransfer() {
   nsresult rv;
   nsCOMPtr<nsITransfer> transfer =
       do_CreateInstance(NS_TRANSFER_CONTRACTID, &rv);
@@ -2164,7 +2163,7 @@ nsresult nsExternalAppHandler::CreateFailedTransfer(bool aIsPrivateBrowsing) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transfer->Init(mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
-                      mTimeDownloadStarted, nullptr, this, aIsPrivateBrowsing,
+                      mTimeDownloadStarted, nullptr, this, mBrowsingContext,
                       mHandleInternally);
   NS_ENSURE_SUCCESS(rv, rv);
 

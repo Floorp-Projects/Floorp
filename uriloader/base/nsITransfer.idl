@@ -10,6 +10,7 @@ interface nsIURI;
 interface nsICancelable;
 interface nsIMIMEInfo;
 interface nsIFile;
+webidl BrowsingContext;
 
 [scriptable, uuid(37ec75d3-97ad-4da8-afaa-eabe5b4afd73)]
 interface nsITransfer : nsIWebProgressListener2 {
@@ -60,7 +61,7 @@ interface nsITransfer : nsIWebProgressListener2 {
               in PRTime startTime,
               in nsIFile aTempFile,
               in nsICancelable aCancelable,
-              in boolean aIsPrivate,
+              in BrowsingContext aBrowsingContext,
               in boolean aHandleInternally);
 
     /*
