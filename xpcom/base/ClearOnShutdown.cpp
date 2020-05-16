@@ -49,7 +49,7 @@ void KillClearOnShutdown(ShutdownPhase aPhase) {
        phase <= static_cast<size_t>(aPhase); phase++) {
     if (sShutdownObservers[static_cast<size_t>(phase)]) {
       while (ShutdownObserver* observer =
-                 sShutdownObservers[static_cast<size_t>(phase)]->popFirst()) {
+                 sShutdownObservers[static_cast<size_t>(phase)]->popLast()) {
         observer->Shutdown();
         delete observer;
       }
