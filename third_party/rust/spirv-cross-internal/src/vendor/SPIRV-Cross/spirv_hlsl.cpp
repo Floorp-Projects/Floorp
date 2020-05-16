@@ -401,8 +401,12 @@ string CompilerHLSL::type_to_glsl(const SPIRType &type, uint32_t id)
 		case SPIRType::Double:
 			return "double";
 		case SPIRType::Int64:
+			if (hlsl_options.shader_model < 60)
+				SPIRV_CROSS_THROW("64-bit integers only supported in SM 6.0.");
 			return "int64_t";
 		case SPIRType::UInt64:
+			if (hlsl_options.shader_model < 60)
+				SPIRV_CROSS_THROW("64-bit integers only supported in SM 6.0.");
 			return "uint64_t";
 		default:
 			return "???";
@@ -1495,6 +1499,24 @@ void CompilerHLSL::emit_resources()
 		statement("float2 SPIRV_Cross_unpackHalf2x16(uint value)");
 		begin_scope();
 		statement("return f16tof32(uint2(value & 0xffff, value >> 16));");
+		end_scope();
+		statement("");
+	}
+
+	if (requires_uint2_packing)
+	{
+		statement("uint64_t SPIRV_Cross_packUint2x32(uint2 value)");
+		begin_scope();
+		statement("return (uint64_t(value.y) << 32) | uint64_t(value.x);");
+		end_scope();
+		statement("");
+
+		statement("uint2 SPIRV_Cross_unpackUint2x32(uint64_t value)");
+		begin_scope();
+		statement("uint2 Unpacked;");
+		statement("Unpacked.x = uint(value & 0xffffffff);");
+		statement("Unpacked.y = uint(value >> 32);");
+		statement("return Unpacked;");
 		end_scope();
 		statement("");
 	}
@@ -3194,6 +3216,11 @@ void CompilerHLSL::emit_uniform(const SPIRVariable &var)
 		emit_legacy_uniform(var);
 }
 
+bool CompilerHLSL::emit_complex_bitcast(uint32_t, uint32_t, uint32_t)
+{
+	return false;
+}
+
 string CompilerHLSL::bitcast_glsl_op(const SPIRType &out_type, const SPIRType &in_type)
 {
 	if (out_type.basetype == SPIRType::UInt && in_type.basetype == SPIRType::Int)
@@ -4046,7 +4073,7 @@ void CompilerHLSL::emit_access_chain(const Instruction &instruction)
 			add_implied_read_expression(e, ops[i]);
 		}
 
-		if (has_decoration(ops[1], DecorationNonUniformEXT) || has_decoration(ops[2], DecorationNonUniformEXT))
+		if (has_decoration(ops[1], DecorationNonUniformEXT))
 			propagate_nonuniform_qualifier(ops[1]);
 	}
 	else
@@ -4060,8 +4087,10 @@ void CompilerHLSL::emit_atomic(const uint32_t *ops, uint32_t length, spv::Op op)
 	const char *atomic_op = nullptr;
 
 	string value_expr;
-	if (op != OpAtomicIDecrement && op != OpAtomicIIncrement)
+	if (op != OpAtomicIDecrement && op != OpAtomicIIncrement && op != OpAtomicLoad && op != OpAtomicStore)
 		value_expr = to_expression(ops[op == OpAtomicCompareExchange ? 6 : 5]);
+
+	bool is_atomic_store = false;
 
 	switch (op)
 	{
@@ -4073,6 +4102,11 @@ void CompilerHLSL::emit_atomic(const uint32_t *ops, uint32_t length, spv::Op op)
 	case OpAtomicIDecrement:
 		atomic_op = "InterlockedAdd";
 		value_expr = "-1";
+		break;
+
+	case OpAtomicLoad:
+		atomic_op = "InterlockedAdd";
+		value_expr = "0";
 		break;
 
 	case OpAtomicISub:
@@ -4110,6 +4144,11 @@ void CompilerHLSL::emit_atomic(const uint32_t *ops, uint32_t length, spv::Op op)
 		atomic_op = "InterlockedExchange";
 		break;
 
+	case OpAtomicStore:
+		atomic_op = "InterlockedExchange";
+		is_atomic_store = true;
+		break;
+
 	case OpAtomicCompareExchange:
 		if (length < 8)
 			SPIRV_CROSS_THROW("Not enough data for opcode.");
@@ -4121,31 +4160,57 @@ void CompilerHLSL::emit_atomic(const uint32_t *ops, uint32_t length, spv::Op op)
 		SPIRV_CROSS_THROW("Unknown atomic opcode.");
 	}
 
-	uint32_t result_type = ops[0];
-	uint32_t id = ops[1];
-	forced_temporaries.insert(ops[1]);
-
-	auto &type = get<SPIRType>(result_type);
-	statement(variable_decl(type, to_name(id)), ";");
-
-	auto &data_type = expression_type(ops[2]);
-	auto *chain = maybe_get<SPIRAccessChain>(ops[2]);
-	SPIRType::BaseType expr_type;
-	if (data_type.storage == StorageClassImage || !chain)
+	if (is_atomic_store)
 	{
-		statement(atomic_op, "(", to_expression(ops[2]), ", ", value_expr, ", ", to_name(id), ");");
-		expr_type = data_type.basetype;
+		auto &data_type = expression_type(ops[0]);
+		auto *chain = maybe_get<SPIRAccessChain>(ops[0]);
+
+		auto &tmp_id = extra_sub_expressions[ops[0]];
+		if (!tmp_id)
+		{
+			tmp_id = ir.increase_bound_by(1);
+			emit_uninitialized_temporary_expression(get_pointee_type(data_type).self, tmp_id);
+		}
+
+		if (data_type.storage == StorageClassImage || !chain)
+		{
+			statement(atomic_op, "(", to_expression(ops[0]), ", ", to_expression(ops[3]), ", ", to_expression(tmp_id), ");");
+		}
+		else
+		{
+			// RWByteAddress buffer is always uint in its underlying type.
+			statement(chain->base, ".", atomic_op, "(", chain->dynamic_index, chain->static_index, ", ", to_expression(ops[3]),
+			          ", ", to_expression(tmp_id), ");");
+		}
 	}
 	else
 	{
-		// RWByteAddress buffer is always uint in its underlying type.
-		expr_type = SPIRType::UInt;
-		statement(chain->base, ".", atomic_op, "(", chain->dynamic_index, chain->static_index, ", ", value_expr, ", ",
-		          to_name(id), ");");
-	}
+		uint32_t result_type = ops[0];
+		uint32_t id = ops[1];
+		forced_temporaries.insert(ops[1]);
 
-	auto expr = bitcast_expression(type, expr_type, to_name(id));
-	set<SPIRExpression>(id, expr, result_type, true);
+		auto &type = get<SPIRType>(result_type);
+		statement(variable_decl(type, to_name(id)), ";");
+
+		auto &data_type = expression_type(ops[2]);
+		auto *chain = maybe_get<SPIRAccessChain>(ops[2]);
+		SPIRType::BaseType expr_type;
+		if (data_type.storage == StorageClassImage || !chain)
+		{
+			statement(atomic_op, "(", to_expression(ops[2]), ", ", value_expr, ", ", to_name(id), ");");
+			expr_type = data_type.basetype;
+		}
+		else
+		{
+			// RWByteAddress buffer is always uint in its underlying type.
+			expr_type = SPIRType::UInt;
+			statement(chain->base, ".", atomic_op, "(", chain->dynamic_index, chain->static_index, ", ", value_expr,
+			          ", ", to_name(id), ");");
+		}
+
+		auto expr = bitcast_expression(type, expr_type, to_name(id));
+		set<SPIRExpression>(id, expr, result_type, true);
+	}
 	flush_all_atomic_capable_variables();
 }
 
@@ -4370,6 +4435,27 @@ void CompilerHLSL::emit_instruction(const Instruction &instruction)
 	case OpInBoundsAccessChain:
 	{
 		emit_access_chain(instruction);
+		break;
+	}
+	case OpBitcast:
+	{
+		auto bitcast_type = get_bitcast_type(ops[0], ops[2]);
+		if (bitcast_type == CompilerHLSL::TypeNormal)
+			CompilerGLSL::emit_instruction(instruction);
+		else
+		{
+			if (!requires_uint2_packing)
+			{
+				requires_uint2_packing = true;
+				force_recompile();
+			}
+
+			if (bitcast_type == CompilerHLSL::TypePackUint2x32)
+				emit_unary_func_op(ops[0], ops[1], ops[2], "SPIRV_Cross_packUint2x32");
+			else
+				emit_unary_func_op(ops[0], ops[1], ops[2], "SPIRV_Cross_unpackUint2x32");
+		}
+
 		break;
 	}
 
@@ -4919,6 +5005,8 @@ void CompilerHLSL::emit_instruction(const Instruction &instruction)
 	case OpAtomicIAdd:
 	case OpAtomicIIncrement:
 	case OpAtomicIDecrement:
+	case OpAtomicLoad:
+	case OpAtomicStore:
 	{
 		emit_atomic(ops, instruction.length, opcode);
 		break;
@@ -5349,4 +5437,19 @@ bool CompilerHLSL::is_hlsl_resource_binding_used(ExecutionModel model, uint32_t 
 	StageSetBinding tuple = { model, desc_set, binding };
 	auto itr = resource_bindings.find(tuple);
 	return itr != end(resource_bindings) && itr->second.second;
+}
+
+CompilerHLSL::BitcastType CompilerHLSL::get_bitcast_type(uint32_t result_type, uint32_t op0)
+{
+	auto &rslt_type = get<SPIRType>(result_type);
+	auto &expr_type = expression_type(op0);
+
+	if (rslt_type.basetype == SPIRType::BaseType::UInt64 && expr_type.basetype == SPIRType::BaseType::UInt &&
+	    expr_type.vecsize == 2)
+		return BitcastType::TypePackUint2x32;
+	else if (rslt_type.basetype == SPIRType::BaseType::UInt && rslt_type.vecsize == 2 &&
+	         expr_type.basetype == SPIRType::BaseType::UInt64)
+		return BitcastType::TypeUnpackUint64;
+
+	return BitcastType::TypeNormal;
 }

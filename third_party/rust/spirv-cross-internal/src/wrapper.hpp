@@ -56,6 +56,8 @@ extern "C"
         bool point_coord_compat;
         bool vertex_transform_clip_space;
         bool vertex_invert_y;
+        bool force_storage_buffer_as_uav;
+        bool nonwritable_uav_texture_as_srv;
     } ScHlslCompilerOptions;
 
     typedef struct ScMslCompilerOptions
@@ -85,6 +87,7 @@ extern "C"
         bool vertex_invert_y;
         uint32_t version;
         bool es;
+        bool enable_420_pack_extension;
     } ScGlslCompilerOptions;
 
     typedef struct ScResource
@@ -125,6 +128,8 @@ extern "C"
     typedef struct ScType
     {
         spirv_cross::SPIRType::BaseType type;
+        uint32_t vecsize;
+        uint32_t columns;
         uint32_t *member_types;
         size_t member_types_size;
         uint32_t *array;

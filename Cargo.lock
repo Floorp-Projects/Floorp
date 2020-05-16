@@ -517,6 +517,10 @@ name = "cc"
 version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa87058dce70a3ff5621797f1506cb837edd02ac4c0ae642b4542dce802908b8"
+dependencies = [
+ "jobserver",
+ "num_cpus",
+]
 
 [[package]]
 name = "cert_storage"
@@ -1720,9 +1724,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-auxil"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b46e6f0031330a0be08d17820f2dcaaa91cb36710a97a9500cb4f1c36e785c8"
+checksum = "67bdbf8e8d6883c70e5a0d7379ad8ab3ac95127a3761306b36122d8f1c177a8e"
 dependencies = [
  "fxhash",
  "gfx-hal",
@@ -1731,9 +1735,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-dx11"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b148219292624126f78245e50a9720d95ea149a415ce8ce73ab7014205301b88"
+checksum = "92de0ddc0fde1a89b2a0e92dcc6bbb554bd34af0135e53a28d5ef064611094a4"
 dependencies = [
  "bitflags",
  "gfx-auxil",
@@ -1751,9 +1755,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-dx12"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6facbfcdbb383b3cb7ea0709932ad1273e600a31a242255e80597297ce803dca"
+checksum = "37365e2927d55cefac0d3f78dfd1d3119fbb13a8bd7afe2409d729961fee22fc"
 dependencies = [
  "bitflags",
  "d3d12",
@@ -1779,9 +1783,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-metal"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfe128c29675b5afc8acdda1dfe096d6abd5e3528059ab0b98bda8215d8beed9"
+checksum = "205f3ca8e74ed814ea2c0206d47d8925077673cab2e21f9b12d48ff781cf87ee"
 dependencies = [
  "arrayvec",
  "bitflags",
@@ -2142,6 +2146,15 @@ name = "hex"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
+
+[[package]]
+name = "hermit-abi"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61565ff7aaace3525556587bd2dc31d4a07071957be715e63ce7b1eccf51a8f4"
+dependencies = [
+ "libc",
+]
 
 [[package]]
 name = "hibitset"
@@ -3313,10 +3326,11 @@ dependencies = [
 
 [[package]]
 name = "num_cpus"
-version = "1.7.0"
+version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "514f0d73e64be53ff320680ca671b64fe3fb91da01e1ae2ddc99eb51d453b20d"
+checksum = "05499f3756671c15885fee9034446956fff3f243d6077b91e5767df161f766b3"
 dependencies = [
+ "hermit-abi",
  "libc",
 ]
 
@@ -4422,15 +4436,15 @@ dependencies = [
 [[package]]
 name = "spirv-cross-internal"
 version = "0.1.0"
-source = "git+https://github.com/kvark/spirv_cross?branch=wgpu2#f252537beb139a818b4a8c854e501690c9ade20e"
+source = "git+https://github.com/kvark/spirv_cross?branch=wgpu3#20191ad2f370afd6d247edcb9ff9da32d3bedb9c"
 dependencies = [
  "cc",
 ]
 
 [[package]]
 name = "spirv_cross"
-version = "0.18.0"
-source = "git+https://github.com/kvark/spirv_cross?branch=wgpu2#f252537beb139a818b4a8c854e501690c9ade20e"
+version = "0.20.0"
+source = "git+https://github.com/kvark/spirv_cross?branch=wgpu3#20191ad2f370afd6d247edcb9ff9da32d3bedb9c"
 dependencies = [
  "spirv-cross-internal",
 ]
