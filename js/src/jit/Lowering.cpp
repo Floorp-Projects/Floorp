@@ -3695,6 +3695,45 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
   }
 }
 
+void LIRGenerator::visitStoreDataViewElement(MStoreDataViewElement* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->littleEndian()->type() == MIRType::Boolean);
+
+  if (ins->isFloatWrite()) {
+    MOZ_ASSERT_IF(ins->writeType() == Scalar::Float32,
+                  ins->value()->type() == MIRType::Float32);
+    MOZ_ASSERT_IF(ins->writeType() == Scalar::Float64,
+                  ins->value()->type() == MIRType::Double);
+  } else if (ins->isBigIntWrite()) {
+    MOZ_ASSERT(ins->value()->type() == MIRType::BigInt);
+  } else {
+    MOZ_ASSERT(ins->value()->type() == MIRType::Int32);
+  }
+
+  LUse elements = useRegister(ins->elements());
+  LUse index = useRegister(ins->index());
+  LAllocation value;
+  if (ins->isBigIntWrite()) {
+    value = useRegister(ins->value());
+  } else {
+    value = useRegisterOrNonDoubleConstant(ins->value());
+  }
+  LAllocation littleEndian = useRegisterOrConstant(ins->littleEndian());
+
+  LDefinition tempDef = LDefinition::BogusTemp();
+  LInt64Definition temp64Def = LInt64Definition::BogusTemp();
+  if (Scalar::byteSize(ins->writeType()) < 8) {
+    tempDef = temp();
+  } else {
+    temp64Def = tempInt64();
+  }
+
+  add(new (alloc()) LStoreDataViewElement(elements, index, value, littleEndian,
+                                          tempDef, temp64Def),
+      ins);
+}
+
 void LIRGenerator::visitStoreTypedArrayElementHole(
     MStoreTypedArrayElementHole* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);

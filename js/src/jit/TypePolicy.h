@@ -453,6 +453,7 @@ class InstanceOfPolicy final : public TypePolicy {
                                  MInstruction* def) const override;
 };
 
+class StoreDataViewElementPolicy;
 class StoreTypedArrayHolePolicy;
 
 class StoreUnboxedScalarPolicy : public TypePolicy {
@@ -464,9 +465,18 @@ class StoreUnboxedScalarPolicy : public TypePolicy {
                                             MDefinition* value,
                                             int valueOperand);
 
+  friend class StoreDataViewElementPolicy;
   friend class StoreTypedArrayHolePolicy;
 
  public:
+  EMPTY_DATA_;
+  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
+                                 MInstruction* ins) const override;
+};
+
+class StoreDataViewElementPolicy final : public StoreUnboxedScalarPolicy {
+ public:
+  constexpr StoreDataViewElementPolicy() = default;
   EMPTY_DATA_;
   MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
                                  MInstruction* ins) const override;

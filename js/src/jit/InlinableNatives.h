@@ -39,6 +39,16 @@
   _(DataViewGetFloat64)                            \
   _(DataViewGetBigInt64)                           \
   _(DataViewGetBigUint64)                          \
+  _(DataViewSetInt8)                               \
+  _(DataViewSetUint8)                              \
+  _(DataViewSetInt16)                              \
+  _(DataViewSetUint16)                             \
+  _(DataViewSetInt32)                              \
+  _(DataViewSetUint32)                             \
+  _(DataViewSetFloat32)                            \
+  _(DataViewSetFloat64)                            \
+  _(DataViewSetBigInt64)                           \
+  _(DataViewSetBigUint64)                          \
                                                    \
   _(IntlGuardToCollator)                           \
   _(IntlGuardToDateTimeFormat)                     \

@@ -12701,6 +12701,130 @@ void CodeGenerator::visitStoreUnboxedBigInt(LStoreUnboxedBigInt* lir) {
   }
 }
 
+void CodeGenerator::visitStoreDataViewElement(LStoreDataViewElement* lir) {
+  Register elements = ToRegister(lir->elements());
+  const LAllocation* value = lir->value();
+  const LAllocation* littleEndian = lir->littleEndian();
+  Register temp = ToTempRegisterOrInvalid(lir->temp());
+  Register64 temp64 = ToTempRegister64OrInvalid(lir->temp64());
+
+  const MStoreDataViewElement* mir = lir->mir();
+  Scalar::Type writeType = mir->writeType();
+
+  BaseIndex dest(elements, ToRegister(lir->index()), TimesOne);
+
+  bool noSwap = littleEndian->isConstant() &&
+                ToBoolean(littleEndian) == MOZ_LITTLE_ENDIAN();
+
+  // Directly store if no byte swap is needed and the platform supports
+  // unaligned accesses for floating point registers.
+  if (noSwap && MacroAssembler::SupportsFastUnalignedAccesses()) {
+    if (!Scalar::isBigIntType(writeType)) {
+      StoreToTypedArray(masm, writeType, value, dest);
+    } else {
+      masm.loadBigInt64(ToRegister(value), temp64);
+      masm.storeToTypedBigIntArray(writeType, temp64, dest);
+    }
+    return;
+  }
+
+  // Load the value into a gpr register.
+  switch (writeType) {
+    case Scalar::Int16:
+    case Scalar::Uint16:
+    case Scalar::Int32:
+    case Scalar::Uint32:
+      if (value->isConstant()) {
+        masm.move32(Imm32(ToInt32(value)), temp);
+      } else {
+        masm.move32(ToRegister(value), temp);
+      }
+      break;
+    case Scalar::Float32: {
+      FloatRegister fvalue = ToFloatRegister(value);
+      masm.canonicalizeFloatIfDeterministic(fvalue);
+      masm.moveFloat32ToGPR(fvalue, temp);
+      break;
+    }
+    case Scalar::Float64: {
+      FloatRegister fvalue = ToFloatRegister(value);
+      masm.canonicalizeDoubleIfDeterministic(fvalue);
+      masm.moveDoubleToGPR64(fvalue, temp64);
+      break;
+    }
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+      masm.loadBigInt64(ToRegister(value), temp64);
+      break;
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Uint8Clamped:
+    default:
+      MOZ_CRASH("Invalid typed array type");
+  }
+
+  if (!noSwap) {
+    // Swap the bytes in the loaded value.
+    Label skip;
+    if (!littleEndian->isConstant()) {
+      masm.branch32(
+          MOZ_LITTLE_ENDIAN() ? Assembler::NotEqual : Assembler::Equal,
+          ToRegister(littleEndian), Imm32(0), &skip);
+    }
+
+    switch (writeType) {
+      case Scalar::Int16:
+        masm.swap16SignExtend(temp);
+        break;
+      case Scalar::Uint16:
+        masm.swap16ZeroExtend(temp);
+        break;
+      case Scalar::Int32:
+      case Scalar::Uint32:
+      case Scalar::Float32:
+        masm.swap32(temp);
+        break;
+      case Scalar::Float64:
+      case Scalar::BigInt64:
+      case Scalar::BigUint64:
+        masm.swap64(temp64);
+        break;
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Uint8Clamped:
+      default:
+        MOZ_CRASH("Invalid typed array type");
+    }
+
+    if (skip.used()) {
+      masm.bind(&skip);
+    }
+  }
+
+  // Store the value into the destination.
+  switch (writeType) {
+    case Scalar::Int16:
+    case Scalar::Uint16:
+      masm.store16Unaligned(temp, dest);
+      break;
+    case Scalar::Int32:
+    case Scalar::Uint32:
+    case Scalar::Float32:
+      masm.store32Unaligned(temp, dest);
+      break;
+    case Scalar::Float64:
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+      masm.store64Unaligned(temp64, dest);
+      break;
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Uint8Clamped:
+    default:
+      MOZ_CRASH("Invalid typed array type");
+  }
+}
+
 void CodeGenerator::visitStoreTypedArrayElementHole(
     LStoreTypedArrayElementHole* lir) {
   Register elements = ToRegister(lir->elements());

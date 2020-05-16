@@ -4482,6 +4482,35 @@ class LStoreUnboxedBigInt : public LInstructionHelper<0, 3, INT64_PIECES> {
   LInt64Definition temp() { return getInt64Temp(0); }
 };
 
+class LStoreDataViewElement
+    : public LInstructionHelper<0, 4, 1 + INT64_PIECES> {
+ public:
+  LIR_HEADER(StoreDataViewElement)
+
+  LStoreDataViewElement(const LAllocation& elements, const LAllocation& index,
+                        const LAllocation& value,
+                        const LAllocation& littleEndian,
+                        const LDefinition& temp, const LInt64Definition& temp64)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setOperand(2, value);
+    setOperand(3, littleEndian);
+    setTemp(0, temp);
+    setInt64Temp(1, temp64);
+  }
+
+  const MStoreDataViewElement* mir() const {
+    return mir_->toStoreDataViewElement();
+  }
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LAllocation* value() { return getOperand(2); }
+  const LAllocation* littleEndian() { return getOperand(3); }
+  const LDefinition* temp() { return getTemp(0); }
+  const LInt64Definition temp64() { return getInt64Temp(1); }
+};
+
 class LStoreTypedArrayElementHole : public LInstructionHelper<0, 4, 1> {
  public:
   LIR_HEADER(StoreTypedArrayElementHole)

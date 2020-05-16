@@ -8187,6 +8187,40 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
   ALLOW_CLONE(MStoreUnboxedScalar)
 };
 
+// Store an unboxed scalar value to a dataview object.
+class MStoreDataViewElement : public MQuaternaryInstruction,
+                              public StoreUnboxedScalarBase,
+                              public StoreDataViewElementPolicy::Data {
+  MStoreDataViewElement(MDefinition* elements, MDefinition* index,
+                        MDefinition* value, MDefinition* littleEndian,
+                        Scalar::Type storageType)
+      : MQuaternaryInstruction(classOpcode, elements, index, value,
+                               littleEndian),
+        StoreUnboxedScalarBase(storageType) {
+    setMovable();
+    MOZ_ASSERT(elements->type() == MIRType::Elements);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
+    MOZ_ASSERT(Scalar::byteSize(storageType) > 1);
+  }
+
+ public:
+  INSTRUCTION_HEADER(StoreDataViewElement)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, elements), (1, index), (2, value), (3, littleEndian))
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::UnboxedElement);
+  }
+  TruncateKind operandTruncateKind(size_t index) const override;
+
+  bool canConsumeFloat32(MUse* use) const override {
+    return use == getUseFor(2) && writeType() == Scalar::Float32;
+  }
+
+  ALLOW_CLONE(MStoreDataViewElement)
+};
+
 class MStoreTypedArrayElementHole : public MQuaternaryInstruction,
                                     public StoreUnboxedScalarBase,
                                     public StoreTypedArrayHolePolicy::Data {

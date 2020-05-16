@@ -112,6 +112,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::LoadDataViewElement:
     case MDefinition::Opcode::StoreElement:
     case MDefinition::Opcode::StoreUnboxedScalar:
+    case MDefinition::Opcode::StoreDataViewElement:
     case MDefinition::Opcode::SetInitializedLength:
     case MDefinition::Opcode::ArrayLength:
     case MDefinition::Opcode::SetArrayLength:
