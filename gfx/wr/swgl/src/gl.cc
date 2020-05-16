@@ -3324,42 +3324,96 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
   }
 }
 
-// Clip a primitive against the near or far Z planes, producing intermediate
-// vertexes with interpolated attributes that will no longer intersect the
-// selected plane. This overwrites the vertexes in-place, producing at most
-// N+1 vertexes for each invocation, so appropriate storage should be reserved
-// before calling.
-template <int SIDE>
-static int clip_near_far(int nump, Point3D* p, Interpolants* interp) {
+// Clip a primitive against both sides of a view-frustum axis, producing
+// intermediate vertexes with interpolated attributes that will no longer
+// intersect the selected axis planes. This assumes the primitive is convex
+// and should produce at most N+2 vertexes for each invocation (only in the
+// worst case where one point falls outside on each of the opposite sides
+// with the rest of the points inside).
+template <XYZW AXIS>
+static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
+                     Interpolants* outInterp) {
   int numClip = 0;
   Point3D prev = p[nump - 1];
   Interpolants prevInterp = interp[nump - 1];
-  float prevDist = SIDE * prev.z - prev.w;
-  // Loop through points, finding edges that cross the plane by evaluating
-  // the plane equation at each point.
+  float prevCoord = prev.select(AXIS);
+  // Coordinate must satisfy -W <= C <= W. Determine if it is outside, and
+  // if so, remember which side it is outside of.
+  int prevSide = prevCoord < -prev.w ? -1 : (prevCoord > prev.w ? 1 : 0);
+  // Loop through points, finding edges that cross the planes by evaluating
+  // the side at each point.
   for (int i = 0; i < nump; i++) {
     Point3D cur = p[i];
     Interpolants curInterp = interp[i];
-    float curDist = SIDE * cur.z - cur.w;
-    if (curDist < 0.0f && prevDist < 0.0f) {
-      // The edge is inside the plane, so output point unmodified.
-      p[numClip] = cur;
-      interp[numClip] = curInterp;
-      numClip++;
-    } else if (curDist < 0.0f || prevDist < 0.0f) {
+    float curCoord = cur.select(AXIS);
+    int curSide = curCoord < -cur.w ? -1 : (curCoord > cur.w ? 1 : 0);
+    // Check if the previous and current end points are on different sides.
+    if (curSide != prevSide) {
       // One of the edge's end points is outside the plane with the other
       // inside the plane. Find the offset where it crosses the plane and
       // adjust the point and interpolants to there.
-      float k = prevDist / (prevDist - curDist);
-      p[numClip] = prev + (cur - prev) * k;
-      interp[numClip] = prevInterp + (curInterp - prevInterp) * k;
+      if (prevSide) {
+        // Edge that was previously outside crosses inside.
+        // Evaluate plane equation for previous and current end-point
+        // based on previous side and calculate relative offset.
+        assert(numClip < nump + 2);
+        float prevDist = prevCoord - prevSide * prev.w;
+        float curDist = curCoord - prevSide * cur.w;
+        float k = prevDist / (prevDist - curDist);
+        outP[numClip] = prev + (cur - prev) * k;
+        outInterp[numClip] = prevInterp + (curInterp - prevInterp) * k;
+        numClip++;
+      }
+      if (curSide) {
+        // Edge that was previously inside crosses outside.
+        // Evaluate plane equation for previous and current end-point
+        // based on current side and calculate relative offset.
+        assert(numClip < nump + 2);
+        float prevDist = prevCoord - curSide * prev.w;
+        float curDist = curCoord - curSide * cur.w;
+        float k = prevDist / (prevDist - curDist);
+        outP[numClip] = prev + (cur - prev) * k;
+        outInterp[numClip] = prevInterp + (curInterp - prevInterp) * k;
+        numClip++;
+      }
+    }
+    if (!curSide) {
+      // The current end point is inside the plane, so output point unmodified.
+      assert(numClip < nump + 2);
+      outP[numClip] = cur;
+      outInterp[numClip] = curInterp;
       numClip++;
     }
     prev = cur;
     prevInterp = curInterp;
-    prevDist = curDist;
+    prevCoord = curCoord;
+    prevSide = curSide;
   }
   return numClip;
+}
+
+// Helper function to dispatch to perspective span drawing with points that
+// have already been transformed and clipped.
+static inline void draw_perspective_clipped(int nump, Point3D* p_clip,
+                                            Interpolants* interp_clip,
+                                            Texture& colortex, int layer,
+                                            Texture& depthtex) {
+  // If polygon is ouside clip rect, nothing to draw.
+  ClipRect clipRect(colortex);
+  if (!clipRect.overlaps(nump, p_clip)) {
+    return;
+  }
+
+  // Finally draw perspective-correct spans for the polygon.
+  if (colortex.internal_format == GL_RGBA8) {
+    draw_perspective_spans<uint32_t>(nump, p_clip, interp_clip, colortex,
+                                     layer, depthtex, clipRect);
+  } else if (colortex.internal_format == GL_R8) {
+    draw_perspective_spans<uint8_t>(nump, p_clip, interp_clip, colortex,
+                                    layer, depthtex, clipRect);
+  } else {
+    assert(false);
+  }
 }
 
 // Draws a perspective-correct 3D primitive with varying Z value, as opposed
@@ -3374,63 +3428,81 @@ static int clip_near_far(int nump, Point3D* p, Interpolants* interp) {
 // This process is expensive and should be avoided if possible for primitive
 // batches that are known ahead of time to not need perspective-correction.
 static void draw_perspective(int nump,
-                             Interpolants interp_outs[6],
+                             Interpolants interp_outs[4],
                              Texture& colortex, int layer,
                              Texture& depthtex) {
   // Convert output of vertex shader to screen space.
-  Point3D p[6];
   vec4 pos = vertex_shader->gl_Position;
   vec3_scalar scale =
     vec3_scalar(ctx->viewport.width(), ctx->viewport.height(), 1) * 0.5f;
   vec3_scalar offset =
     vec3_scalar(ctx->viewport.x0, ctx->viewport.y0, 0.0f) + scale;
-  if (test_none(pos.z < -pos.w || pos.z > pos.w)) {
+  if (test_none(pos.z <= -pos.w || pos.z >= pos.w)) {
     // No points cross the near or far planes, so no clipping required.
     // Just divide coords by W and convert to viewport.
     Float w = 1.0f / pos.w;
     vec3 screen = pos.sel(X, Y, Z) * w * scale + offset;
-    p[0] = Point3D(screen.x.x, screen.y.x, screen.z.x, w.x);
-    p[1] = Point3D(screen.x.y, screen.y.y, screen.z.y, w.y);
-    p[2] = Point3D(screen.x.z, screen.y.z, screen.z.z, w.z);
-    p[3] = Point3D(screen.x.w, screen.y.w, screen.z.w, w.w);
+    Point3D p[4] = {
+        {screen.x.x, screen.y.x, screen.z.x, w.x},
+        {screen.x.y, screen.y.y, screen.z.y, w.y},
+        {screen.x.z, screen.y.z, screen.z.z, w.z},
+        {screen.x.w, screen.y.w, screen.z.w, w.w}
+    };
+    draw_perspective_clipped(nump, p, interp_outs, colortex, layer, depthtex);
   } else {
-    // Points cross the near or far planes, so we need to clip...
-    p[0] = Point3D(pos.x.x, pos.y.x, pos.z.x, pos.w.x);
-    p[1] = Point3D(pos.x.y, pos.y.y, pos.z.y, pos.w.y);
-    p[2] = Point3D(pos.x.z, pos.y.z, pos.z.z, pos.w.z);
-    p[3] = Point3D(pos.x.w, pos.y.w, pos.z.w, pos.w.w);
-    // Clip against near plane.
-    nump = clip_near_far<-1>(nump, p, interp_outs);
+    // Points cross the near or far planes, so we need to clip.
+    // Start with the original 3 or 4 points...
+    Point3D p[4] = {
+        {pos.x.x, pos.y.x, pos.z.x, pos.w.x},
+        {pos.x.y, pos.y.y, pos.z.y, pos.w.y},
+        {pos.x.z, pos.y.z, pos.z.z, pos.w.z},
+        {pos.x.w, pos.y.w, pos.z.w, pos.w.w}
+    };
+    // Clipping can expand the points by 1 for each of 6 view frustum planes.
+    Point3D p_clip[4 + 6];
+    Interpolants interp_clip[4 + 6];
+    // Clip against near and far Z planes.
+    nump = clip_side<Z>(nump, p, interp_outs, p_clip, interp_clip);
+    // If no points are left inside the view frustum, there's nothing to draw.
     if (nump < 3) {
       return;
     }
-    // Clip against far plane.
-    nump = clip_near_far<1>(nump, p, interp_outs);
-    if (nump < 3) {
-      return;
+    // After clipping against only the near and far planes, we might still
+    // produce points where W = 0, exactly at the camera plane. OpenGL specifies
+    // that for clip coordinates, points must satisfy:
+    //   -W <= X <= W
+    //   -W <= Y <= W
+    //   -W <= Z <= W
+    // When Z = W = 0, this is trivially satisfied, but when we transform and
+    // divide by W below it will produce a divide by 0. Usually we want to only
+    // clip Z to avoid the extra work of clipping X and Y. We can still project
+    // points that fall outside the view frustum X and Y so long as Z is valid.
+    // The span drawing code will then ensure X and Y are clamped to viewport
+    // boundaries. However, in the Z = W = 0 case, sometimes clipping X and Y,
+    // will push W further inside the view frustum so that it is no longer 0,
+    // allowing us to finally proceed to projecting the points to the screen.
+    for (int i = 0; i < nump; i++) {
+      // Found an invalid W, so need to clip against X and Y...
+      if (p_clip[i].w <= 0.0f) {
+        // Ping-pong p_clip -> p_tmp -> p_clip.
+        Point3D p_tmp[4 + 6];
+        Interpolants interp_tmp[4 + 6];
+        nump = clip_side<X>(nump, p_clip, interp_clip, p_tmp, interp_tmp);
+        if (nump < 3) return;
+        nump = clip_side<Y>(nump, p_tmp, interp_tmp, p_clip, interp_clip);
+        if (nump < 3) return;
+        // After clipping against X and Y planes, there's still points left
+        // to draw, so proceed to trying projection now...
+        break;
+      }
     }
     // Divide coords by W and convert to viewport.
     for (int i = 0; i < nump; i++) {
-      float w = 1.0f / p[i].w;
-      p[i] = Point3D(p[i].sel(X, Y, Z) * w * scale + offset, w);
+      float w = 1.0f / p_clip[i].w;
+      p_clip[i] = Point3D(p_clip[i].sel(X, Y, Z) * w * scale + offset, w);
     }
-  }
-
-  // If polygon is ouside clip rect, nothing to draw.
-  ClipRect clipRect(colortex);
-  if (!clipRect.overlaps(nump, p)) {
-    return;
-  }
-
-  // Finally draw perspective-correct spans for the polygon.
-  if (colortex.internal_format == GL_RGBA8) {
-    draw_perspective_spans<uint32_t>(nump, p, interp_outs, colortex, layer,
-                                     depthtex, clipRect);
-  } else if (colortex.internal_format == GL_R8) {
-    draw_perspective_spans<uint8_t>(nump, p, interp_outs, colortex, layer,
-                                    depthtex, clipRect);
-  } else {
-    assert(false);
+    draw_perspective_clipped(nump, p_clip, interp_clip, colortex, layer,
+                             depthtex);
   }
 }
 
@@ -3439,7 +3511,7 @@ static void draw_quad(int nump, Texture& colortex, int layer,
   // Run vertex shader once for the primitive's vertices.
   // Reserve space for 6 sets of interpolants, in case we need to clip against
   // near and far planes in the perspective case.
-  Interpolants interp_outs[6];
+  Interpolants interp_outs[4];
   vertex_shader->run_primitive((char*)interp_outs, sizeof(Interpolants));
   vec4 pos = vertex_shader->gl_Position;
   // Check if any vertex W is different from another. If so, use perspective.
