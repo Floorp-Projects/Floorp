@@ -1372,9 +1372,6 @@ pref("pdfjs.firstRun", true);
 pref("pdfjs.previousHandler.preferredAction", 0);
 pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 
-// Try to convert PDFs sent as octet-stream
-pref("pdfjs.handleOctetStream", true);
-
 // Is the sidebar positioned ahead of the content browser
 pref("sidebar.position_start", true);
 
