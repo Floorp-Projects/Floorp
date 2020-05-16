@@ -49,6 +49,9 @@ interface nsITransfer : nsIWebProgressListener2 {
      * @param aIsPrivate Used to determine the privacy status of the new transfer.
      *                   If true, indicates that the transfer was initiated from
      *                   a source that desires privacy.
+     *
+     * @param aHandleInternally Set to true if the download should be opened within
+     *                          the browser.
      */
     void init(in nsIURI aSource,
               in nsIURI aTarget,
@@ -57,7 +60,8 @@ interface nsITransfer : nsIWebProgressListener2 {
               in PRTime startTime,
               in nsIFile aTempFile,
               in nsICancelable aCancelable,
-              in boolean aIsPrivate);
+              in boolean aIsPrivate,
+              in boolean aHandleInternally);
 
     /*
      * Used to notify the transfer object of the hash of the downloaded file.
