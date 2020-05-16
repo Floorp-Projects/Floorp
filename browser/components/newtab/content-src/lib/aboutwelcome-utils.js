@@ -5,6 +5,7 @@
 export const AboutWelcomeUtils = {
   handleUserAction(action) {
     switch (action.type) {
+      case "OPEN_ABOUT_PAGE":
       case "OPEN_AWESOME_BAR":
       case "OPEN_PRIVATE_BROWSER_WINDOW":
       case "SHOW_MIGRATION_WIZARD":

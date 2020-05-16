@@ -110,7 +110,10 @@ const SpecialMessageActions = {
         if (action.data.entrypoint) {
           aboutPageURL.search = action.data.entrypoint;
         }
-        window.openTrustedLinkIn(aboutPageURL.toString(), "tab");
+        window.openTrustedLinkIn(
+          aboutPageURL.toString(),
+          action.data.where || "tab"
+        );
         break;
       case "OPEN_PREFERENCES_PAGE":
         window.openPreferences(
