@@ -973,7 +973,15 @@ function prompt(aActor, aBrowser, aRequest) {
       }
 
       this.mainAction.callback = async function(aState) {
-        let remember = aState && aState.checkboxChecked;
+        let remember = false;
+        let silenceNotifications = false;
+
+        if (notificationSilencingEnabled && sharingScreen) {
+          silenceNotifications = aState && aState.checkboxChecked;
+        } else {
+          remember = aState && aState.checkboxChecked;
+        }
+
         let allowedDevices = [];
         let perms = Services.perms;
         if (videoDevices.length) {
@@ -1079,6 +1087,7 @@ function prompt(aActor, aBrowser, aRequest) {
           callID: aRequest.callID,
           windowID: aRequest.windowID,
           devices: allowedDevices,
+          suppressNotifications: silenceNotifications,
         });
       };
 
@@ -1124,7 +1133,24 @@ function prompt(aActor, aBrowser, aRequest) {
         "getUserMedia.reasonForNoPermanentAllow.insecure";
     }
 
-    if (!notificationSilencingEnabled) {
+    if (notificationSilencingEnabled && sharingScreen) {
+      let [
+        silenceNotifications,
+        silenceNotificationsWarning,
+      ] = localization.formatMessagesSync([
+        { id: "popup-silence-notifications-checkbox" },
+        { id: "popup-silence-notifications-checkbox-warning" },
+      ]);
+
+      options.checkbox = {
+        label: silenceNotifications.value,
+        checked: false,
+        checkedState: {
+          disableMainAction: false,
+          warningLabel: silenceNotificationsWarning.value,
+        },
+      };
+    } else {
       options.checkbox = {
         label: stringBundle.getString("getUserMedia.remember"),
         checked: principal.isAddonOrExpandedAddonPrincipal,
