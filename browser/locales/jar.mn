@@ -10,6 +10,7 @@
 [localization] @AB_CD@.jar:
   preview/protections.ftl                          (../components/protections/content/protections.ftl)
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
+  preview/popup-notifications.ftl                  (../base/content/popup-notifications.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
