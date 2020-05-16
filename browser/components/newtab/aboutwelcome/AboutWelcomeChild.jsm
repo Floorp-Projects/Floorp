@@ -21,6 +21,25 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new Logger("AboutWelcomeChild");
 });
 
+function _parseOverrideContent(value) {
+  let result = {};
+  try {
+    result = value ? JSON.parse(value) : {};
+  } catch (e) {
+    Cu.reportError(e);
+  }
+  return result;
+}
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "multiStageAboutWelcomeContent",
+  "browser.aboutwelcome.overrideContent",
+  "",
+  null,
+  _parseOverrideContent
+);
+
 class AboutWelcomeChild extends JSWindowActorChild {
   actorCreated() {
     this.exportFunctions();
@@ -73,6 +92,12 @@ class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWGetStartupData",
     });
 
+    // For local dev, checks for JSON content inside pref browser.aboutwelcome.overrideContent
+    // that is used to override default 3 cards welcome UI with multistage welcome
+    Cu.exportFunction(this.AWGetMultiStageScreens.bind(this), window, {
+      defineAs: "AWGetMultiStageScreens",
+    });
+
     Cu.exportFunction(this.AWGetFxAMetricsFlowURI.bind(this), window, {
       defineAs: "AWGetFxAMetricsFlowURI",
     });
@@ -89,6 +114,16 @@ class AboutWelcomeChild extends JSWindowActorChild {
   wrapPromise(promise) {
     return new this.contentWindow.Promise((resolve, reject) =>
       promise.then(resolve, reject)
+    );
+  }
+
+  /**
+   * Send multistage welcome JSON data read from aboutwelcome.overrideConetent pref to page
+   */
+  AWGetMultiStageScreens() {
+    return Cu.cloneInto(
+      multiStageAboutWelcomeContent || {},
+      this.contentWindow
     );
   }
 

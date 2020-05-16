@@ -66,6 +66,12 @@ const SpecialMessageActionSchemas = {
             description: 'The about page. E.g. "welcome" for about:welcome',
             type: "string",
           },
+          where: {
+            default: "tab",
+            description: "Where the URL is opened.",
+            enum: ["current", "save", "tab", "tabshifted", "window"],
+            type: "string",
+          },
           entrypoint: {
             description:
               'Any optional entrypoint value that will be added to the search. E.g. "foo=bar" would result in about:welcome?foo=bar',
