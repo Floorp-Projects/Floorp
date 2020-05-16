@@ -3800,12 +3800,12 @@ class LGetNextEntryForIterator : public LInstructionHelper<1, 2, 3> {
   const LDefinition* temp2() { return getTemp(2); }
 };
 
-// Read the length of a typed array.
-class LTypedArrayLength : public LInstructionHelper<1, 1, 0> {
+// Read the length of an array buffer view.
+class LArrayBufferViewLength : public LInstructionHelper<1, 1, 0> {
  public:
-  LIR_HEADER(TypedArrayLength)
+  LIR_HEADER(ArrayBufferViewLength)
 
-  explicit LTypedArrayLength(const LAllocation& obj)
+  explicit LArrayBufferViewLength(const LAllocation& obj)
       : LInstructionHelper(classOpcode) {
     setOperand(0, obj);
   }
@@ -3813,12 +3813,12 @@ class LTypedArrayLength : public LInstructionHelper<1, 1, 0> {
   const LAllocation* object() { return getOperand(0); }
 };
 
-// Read the byteOffset of a typed array.
-class LTypedArrayByteOffset : public LInstructionHelper<1, 1, 0> {
+// Read the byteOffset of an array buffer view.
+class LArrayBufferViewByteOffset : public LInstructionHelper<1, 1, 0> {
  public:
-  LIR_HEADER(TypedArrayByteOffset)
+  LIR_HEADER(ArrayBufferViewByteOffset)
 
-  explicit LTypedArrayByteOffset(const LAllocation& obj)
+  explicit LArrayBufferViewByteOffset(const LAllocation& obj)
       : LInstructionHelper(classOpcode) {
     setOperand(0, obj);
   }
@@ -3826,12 +3826,12 @@ class LTypedArrayByteOffset : public LInstructionHelper<1, 1, 0> {
   const LAllocation* object() { return getOperand(0); }
 };
 
-// Load a typed array's elements vector.
-class LTypedArrayElements : public LInstructionHelper<1, 1, 0> {
+// Load an array buffer view's elements vector.
+class LArrayBufferViewElements : public LInstructionHelper<1, 1, 0> {
  public:
-  LIR_HEADER(TypedArrayElements)
+  LIR_HEADER(ArrayBufferViewElements)
 
-  explicit LTypedArrayElements(const LAllocation& object)
+  explicit LArrayBufferViewElements(const LAllocation& object)
       : LInstructionHelper(classOpcode) {
     setOperand(0, object);
   }

@@ -22,6 +22,7 @@
 #include "jit/SharedICRegisters.h"
 #include "proxy/Proxy.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/ArrayBufferViewObject.h"
 #include "vm/BigIntType.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GeneratorObject.h"
@@ -3071,7 +3072,7 @@ bool CacheIRCompiler::emitLoadTypedArrayLengthResult(ObjOperandId objId,
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), scratch);
+  masm.unboxInt32(Address(obj, ArrayBufferViewObject::lengthOffset()), scratch);
   EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
   return true;
 }
@@ -5637,7 +5638,7 @@ void js::jit::LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout,
                                  Register obj, Register result) {
   switch (layout) {
     case TypedThingLayout::TypedArray:
-      masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), result);
+      masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), result);
       break;
     case TypedThingLayout::OutlineTypedObject:
       masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfData()), result);
@@ -5656,7 +5657,8 @@ void js::jit::LoadTypedThingLength(MacroAssembler& masm,
                                    Register result) {
   switch (layout) {
     case TypedThingLayout::TypedArray:
-      masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), result);
+      masm.unboxInt32(Address(obj, ArrayBufferViewObject::lengthOffset()),
+                      result);
       break;
     case TypedThingLayout::OutlineTypedObject:
     case TypedThingLayout::InlineTypedObject:

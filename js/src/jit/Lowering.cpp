@@ -2983,21 +2983,25 @@ void LIRGenerator::visitGetNextEntryForIterator(MGetNextEntryForIterator* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitTypedArrayLength(MTypedArrayLength* ins) {
+void LIRGenerator::visitArrayBufferViewLength(MArrayBufferViewLength* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  define(new (alloc()) LTypedArrayLength(useRegisterAtStart(ins->object())),
+  define(new (alloc())
+             LArrayBufferViewLength(useRegisterAtStart(ins->object())),
          ins);
 }
 
-void LIRGenerator::visitTypedArrayByteOffset(MTypedArrayByteOffset* ins) {
+void LIRGenerator::visitArrayBufferViewByteOffset(
+    MArrayBufferViewByteOffset* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  define(new (alloc()) LTypedArrayByteOffset(useRegisterAtStart(ins->object())),
+  define(new (alloc())
+             LArrayBufferViewByteOffset(useRegisterAtStart(ins->object())),
          ins);
 }
 
-void LIRGenerator::visitTypedArrayElements(MTypedArrayElements* ins) {
+void LIRGenerator::visitArrayBufferViewElements(MArrayBufferViewElements* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Elements);
-  define(new (alloc()) LTypedArrayElements(useRegisterAtStart(ins->object())),
+  define(new (alloc())
+             LArrayBufferViewElements(useRegisterAtStart(ins->object())),
          ins);
 }
 

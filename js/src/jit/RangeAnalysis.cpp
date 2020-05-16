@@ -1773,11 +1773,11 @@ void MInitializedLength::computeRange(TempAllocator& alloc) {
       Range::NewUInt32Range(alloc, 0, NativeObject::MAX_DENSE_ELEMENTS_COUNT));
 }
 
-void MTypedArrayLength::computeRange(TempAllocator& alloc) {
+void MArrayBufferViewLength::computeRange(TempAllocator& alloc) {
   setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
 }
 
-void MTypedArrayByteOffset::computeRange(TempAllocator& alloc) {
+void MArrayBufferViewByteOffset::computeRange(TempAllocator& alloc) {
   setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
 }
 
