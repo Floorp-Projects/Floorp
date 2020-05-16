@@ -9,6 +9,7 @@
 #include "jsmath.h"
 
 #include "builtin/AtomicsObject.h"
+#include "builtin/DataViewObject.h"
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/Collator.h"
 #  include "builtin/intl/DateTimeFormat.h"
@@ -192,6 +193,16 @@ static bool CanInlineCrossRealm(InlinableNative native) {
     case InlinableNative::AtomicsOr:
     case InlinableNative::AtomicsXor:
     case InlinableNative::AtomicsIsLockFree:
+    case InlinableNative::DataViewGetInt8:
+    case InlinableNative::DataViewGetUint8:
+    case InlinableNative::DataViewGetInt16:
+    case InlinableNative::DataViewGetUint16:
+    case InlinableNative::DataViewGetInt32:
+    case InlinableNative::DataViewGetUint32:
+    case InlinableNative::DataViewGetFloat32:
+    case InlinableNative::DataViewGetFloat64:
+    case InlinableNative::DataViewGetBigInt64:
+    case InlinableNative::DataViewGetBigUint64:
     case InlinableNative::ReflectGetPrototypeOf:
     case InlinableNative::String:
     case InlinableNative::StringCharCodeAt:
@@ -300,6 +311,28 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     // Boolean natives.
     case InlinableNative::Boolean:
       return inlineBoolean(callInfo);
+
+    // DataView natives.
+    case InlinableNative::DataViewGetInt8:
+      return inlineDataViewGet(callInfo, Scalar::Int8);
+    case InlinableNative::DataViewGetUint8:
+      return inlineDataViewGet(callInfo, Scalar::Uint8);
+    case InlinableNative::DataViewGetInt16:
+      return inlineDataViewGet(callInfo, Scalar::Int16);
+    case InlinableNative::DataViewGetUint16:
+      return inlineDataViewGet(callInfo, Scalar::Uint16);
+    case InlinableNative::DataViewGetInt32:
+      return inlineDataViewGet(callInfo, Scalar::Int32);
+    case InlinableNative::DataViewGetUint32:
+      return inlineDataViewGet(callInfo, Scalar::Uint32);
+    case InlinableNative::DataViewGetFloat32:
+      return inlineDataViewGet(callInfo, Scalar::Float32);
+    case InlinableNative::DataViewGetFloat64:
+      return inlineDataViewGet(callInfo, Scalar::Float64);
+    case InlinableNative::DataViewGetBigInt64:
+      return inlineDataViewGet(callInfo, Scalar::BigInt64);
+    case InlinableNative::DataViewGetBigUint64:
+      return inlineDataViewGet(callInfo, Scalar::BigUint64);
 
 #ifdef JS_HAS_INTL_API
     // Intl natives.
@@ -3978,6 +4011,68 @@ IonBuilder::InliningResult IonBuilder::inlineIsConstructing(
 
   bool constructing = inlineCallInfo_->constructing();
   pushConstant(BooleanValue(constructing));
+  return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult IonBuilder::inlineDataViewGet(CallInfo& callInfo,
+                                                         Scalar::Type type) {
+  if (callInfo.argc() < 1 || callInfo.constructing()) {
+    return InliningStatus_NotInlined;
+  }
+
+  MDefinition* obj = callInfo.thisArg();
+  TemporaryTypeSet* thisTypes = obj->resultTypeSet();
+  const JSClass* clasp =
+      thisTypes ? thisTypes->getKnownClass(constraints()) : nullptr;
+  if (clasp != &DataViewObject::class_) {
+    return InliningStatus_NotInlined;
+  }
+
+  MDefinition* index = callInfo.getArg(0);
+  if (!IsNumberType(index->type())) {
+    return InliningStatus_NotInlined;
+  }
+
+  MDefinition* littleEndian;
+  if (Scalar::byteSize(type) > 1) {
+    if (callInfo.argc() > 1) {
+      littleEndian = convertToBoolean(callInfo.getArg(1));
+    } else {
+      littleEndian = constant(BooleanValue(false));
+    }
+  }
+
+  callInfo.setImplicitlyUsedUnchecked();
+
+  // Calling |dataView.getUint32()| will result in a double for values that
+  // don't fit in an int32. We have to bailout if this happens and the
+  // instruction is not known to return a double.
+  bool allowDouble = getInlineReturnTypeSet()->hasType(TypeSet::DoubleType());
+  MIRType knownType = MIRTypeForArrayBufferViewRead(type, allowDouble);
+
+  MInstruction* indexInt32 = MToIntegerInt32::New(alloc(), index);
+  current->add(indexInt32);
+  index = indexInt32;
+
+  // Get bounds-check, then get elements, and add all instructions.
+  MInstruction* elements;
+  addDataViewData(obj, type, &index, &elements);
+
+  // Load the element.
+  MInstruction* load;
+  if (Scalar::byteSize(type) == 1) {
+    load = MLoadUnboxedScalar::New(alloc(), elements, index, type);
+  } else {
+    load =
+        MLoadDataViewElement::New(alloc(), elements, index, littleEndian, type);
+  }
+  current->add(load);
+  current->push(load);
+
+  // Note: we can ignore the type barrier here, we know the type must be valid
+  // and unbarriered.
+  load->setResultType(knownType);
+
   return InliningStatus_Inlined;
 }
 

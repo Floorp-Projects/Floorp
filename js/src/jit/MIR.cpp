@@ -1317,6 +1317,11 @@ void MLoadUnboxedScalar::printOpcode(GenericPrinter& out) const {
   out.printf(" %s", ScalarTypeDescr::typeName(storageType()));
 }
 
+void MLoadDataViewElement::printOpcode(GenericPrinter& out) const {
+  MDefinition::printOpcode(out);
+  out.printf(" %s", ScalarTypeDescr::typeName(storageType()));
+}
+
 void MAssertRange::printOpcode(GenericPrinter& out) const {
   MDefinition::printOpcode(out);
   out.put(" ");
@@ -2658,6 +2663,7 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
       case MDefinition::Opcode::LoadElement:
       case MDefinition::Opcode::LoadElementHole:
       case MDefinition::Opcode::LoadUnboxedScalar:
+      case MDefinition::Opcode::LoadDataViewElement:
       case MDefinition::Opcode::LoadTypedArrayElementHole:
       case MDefinition::Opcode::CharCodeAt:
       case MDefinition::Opcode::Mod:
@@ -5837,7 +5843,7 @@ static BarrierKind PropertyReadNeedsTypeBarrier(
 
   if (!name && IsTypedArrayClass(key->clasp())) {
     Scalar::Type arrayType = GetTypedArrayClassType(key->clasp());
-    MIRType type = MIRTypeForTypedArrayRead(arrayType, true);
+    MIRType type = MIRTypeForArrayBufferViewRead(arrayType, true);
     if (observed->mightBeMIRType(type)) {
       return BarrierKind::NoBarrier;
     }
