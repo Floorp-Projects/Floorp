@@ -70,6 +70,8 @@ pub struct CompilerOptions {
     /// Support point coordinate builtin but ignore the value.
     pub point_coord_compat: bool,
     pub vertex: CompilerVertexOptions,
+    pub force_storage_buffer_as_uav: bool,
+    pub nonwritable_uav_texture_as_srv: bool,
 }
 
 impl CompilerOptions {
@@ -80,6 +82,8 @@ impl CompilerOptions {
             point_coord_compat: self.point_coord_compat,
             vertex_invert_y: self.vertex.invert_y,
             vertex_transform_clip_space: self.vertex.transform_clip_space,
+            force_storage_buffer_as_uav: self.force_storage_buffer_as_uav,
+            nonwritable_uav_texture_as_srv: self.nonwritable_uav_texture_as_srv,
         }
     }
 }
@@ -91,6 +95,8 @@ impl Default for CompilerOptions {
             point_size_compat: false,
             point_coord_compat: false,
             vertex: CompilerVertexOptions::default(),
+            force_storage_buffer_as_uav: false,
+            nonwritable_uav_texture_as_srv: false,
         }
     }
 }

@@ -530,7 +530,8 @@ struct SPIRType : IVariant
 		Image,
 		SampledImage,
 		Sampler,
-		AccelerationStructureNV,
+		AccelerationStructure,
+		RayQuery,
 
 		// Keep internal types at the end.
 		ControlPointArray,
@@ -561,6 +562,10 @@ struct SPIRType : IVariant
 	spv::StorageClass storage = spv::StorageClassGeneric;
 
 	SmallVector<TypeID> member_types;
+
+	// If member order has been rewritten to handle certain scenarios with Offset,
+	// allow codegen to rewrite the index.
+	SmallVector<uint32_t> member_type_index_redirection;
 
 	struct ImageType
 	{
@@ -775,7 +780,7 @@ struct SPIRBlock : IVariant
 		ComplexLoop
 	};
 
-	enum
+	enum : uint32_t
 	{
 		NoDominator = 0xffffffffu
 	};

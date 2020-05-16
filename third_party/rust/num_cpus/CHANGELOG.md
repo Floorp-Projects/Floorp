@@ -1,3 +1,58 @@
+## v1.13.0
+
+### Features
+
+- add Linux cgroups support when calling `get()`.
+
+## v1.12.0
+
+#### Fixes
+
+- fix `get` on OpenBSD to ignore offline CPUs
+- implement `get_physical` on OpenBSD
+
+## v1.11.1
+
+#### Fixes
+
+- Use `mem::zeroed` instead of `mem::uninitialized`.
+
+## v1.11.0
+
+#### Features
+
+- add `hermit` target OS support
+- removes `bitrig` support
+
+#### Fixes
+
+- fix `get_physical` count with AMD hyperthreading.
+
+## v1.10.1
+
+#### Fixes
+
+- improve `haiku` CPU detection
+
+## v1.10.0
+
+#### Features
+
+- add `illumos` target OS support
+- add default fallback if target is unknown to `1`
+
+## v1.9.0
+
+#### Features
+
+- add `sgx` target env support
+
+## v1.8.0
+
+#### Features
+
+- add `wasm-unknown-unknown` target support
+
 ## v1.7.0
 
 #### Features

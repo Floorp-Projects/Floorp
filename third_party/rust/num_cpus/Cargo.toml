@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "num_cpus"
-version = "1.7.0"
+version = "1.13.0"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 description = "Get the number of CPUs on a machine."
 documentation = "https://docs.rs/num_cpus"
@@ -23,3 +23,5 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/seanmonstar/num_cpus"
 [dependencies.libc]
 version = "0.2.26"
+[target."cfg(all(any(target_arch = \"x86_64\", target_arch = \"aarch64\"), target_os = \"hermit\"))".dependencies.hermit-abi]
+version = "0.1.3"

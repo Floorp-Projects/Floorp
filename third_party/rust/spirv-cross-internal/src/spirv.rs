@@ -347,33 +347,47 @@ pub enum Type {
     Unknown,
     Void,
     Boolean {
+        vecsize: u32,
+        columns: u32,
         array: Vec<u32>,
     },
     Char {
         array: Vec<u32>,
     },
     Int {
+        vecsize: u32,
+        columns: u32,
         array: Vec<u32>,
     },
     UInt {
+        vecsize: u32,
+        columns: u32,
         array: Vec<u32>,
     },
     Int64 {
+        vecsize: u32,
         array: Vec<u32>,
     },
     UInt64 {
+        vecsize: u32,
         array: Vec<u32>,
     },
     AtomicCounter {
         array: Vec<u32>,
     },
     Half {
+        vecsize: u32,
+        columns: u32,
         array: Vec<u32>,
     },
     Float {
+        vecsize: u32,
+        columns: u32,
         array: Vec<u32>,
     },
     Double {
+        vecsize: u32,
+        columns: u32,
         array: Vec<u32>,
     },
     Struct {
@@ -390,19 +404,24 @@ pub enum Type {
         array: Vec<u32>,
     },
     SByte {
+        vecsize: u32,
         array: Vec<u32>,
     },
     UByte {
+        vecsize: u32,
         array: Vec<u32>,
     },
     Short {
+        vecsize: u32,
         array: Vec<u32>,
     },
     UShort {
+        vecsize: u32,
         array: Vec<u32>,
     },
     ControlPointArray,
-    AccelerationStructureNv,
+    AccelerationStructure,
+    RayQuery,
 }
 
 /// A SPIR-V shader module.
