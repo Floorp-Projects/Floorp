@@ -269,7 +269,8 @@ DownloadLegacyTransfer.prototype = {
     aStartTime,
     aTempFile,
     aCancelable,
-    aIsPrivate
+    aIsPrivate,
+    aHandleInternally
   ) {
     this._cancelable = aCancelable;
 
@@ -304,6 +305,7 @@ DownloadLegacyTransfer.prototype = {
       launchWhenSucceeded,
       contentType,
       launcherPath,
+      handleInternally: aHandleInternally,
     })
       .then(aDownload => {
         // Legacy components keep partial data when they use a ".part" file.

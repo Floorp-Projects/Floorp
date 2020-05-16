@@ -1207,6 +1207,7 @@ const kPlainSerializableDownloadProperties = [
   "launcherPath",
   "launchWhenSucceeded",
   "contentType",
+  "handleInternally",
 ];
 
 /**
