@@ -29,6 +29,7 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
   GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
   virtual void PrepareForUse() override;
+  virtual void NofityForUse() override;
   virtual void NotifyNotUsed() override;
 
  private:
@@ -38,6 +39,7 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
 
   enum PrepareStatus {
     STATUS_NONE,
+    STATUS_MIGHT_BE_USED_BY_WR,
     STATUS_UPDATE_TEX_IMAGE_NEEDED,
     STATUS_PREPARED
   };
