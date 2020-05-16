@@ -2624,7 +2624,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
         let end = sub.size.map_or(base_range.end, |s| {
             assert_eq!(s % WORD_ALIGNMENT, 0);
-            base_range.start + s
+            start + s
         });
 
         if (data & 0xFF) * 0x0101_0101 == data {

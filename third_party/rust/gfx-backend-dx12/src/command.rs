@@ -143,7 +143,8 @@ impl UserData {
         }
     }
 
-    /// Update root constant values. Changes are marked as dirty.
+    /// Write root constant values into the user data, overwriting virtual memory
+    /// range [offset..offset + data.len()]. Changes are marked as dirty.
     fn set_constants(&mut self, offset: usize, data: &[u32]) {
         assert!(offset + data.len() <= ROOT_SIGNATURE_SIZE);
         // Each root constant occupies one DWORD
@@ -153,7 +154,8 @@ impl UserData {
         }
     }
 
-    /// Update descriptor table. Changes are marked as dirty.
+    /// Write a SRV/CBV/UAV descriptor table into the user data, overwriting virtual
+    /// memory range [offset..offset + 1]. Changes are marked as dirty.
     fn set_srv_cbv_uav_table(&mut self, offset: usize, table_start: u32) {
         assert!(offset < ROOT_SIGNATURE_SIZE);
         // A descriptor table occupies one DWORD
@@ -161,7 +163,8 @@ impl UserData {
         self.dirty_mask |= 1u64 << offset;
     }
 
-    /// Update descriptor table. Changes are marked as dirty.
+    /// Write a sampler descriptor table into the user data, overwriting virtual
+    /// memory range [offset..offset + 1]. Changes are marked as dirty.
     fn set_sampler_table(&mut self, offset: usize, table_start: u32) {
         assert!(offset < ROOT_SIGNATURE_SIZE);
         // A descriptor table occupies one DWORD
@@ -169,13 +172,15 @@ impl UserData {
         self.dirty_mask |= 1u64 << offset;
     }
 
-    ///
+    /// Write a CBV root descriptor into the user data, overwriting virtual
+    /// memory range [offset..offset + 2]. Changes are marked as dirty.
     fn set_descriptor_cbv(&mut self, offset: usize, buffer: u64) {
         assert!(offset + 1 < ROOT_SIGNATURE_SIZE);
+        // A root descriptor occupies two DWORDs
         self.data[offset] = RootElement::DescriptorCbv { buffer };
         self.data[offset + 1] = RootElement::DescriptorPlaceholder;
-        self.dirty_mask |= 0b1u64 << offset;
-        self.dirty_mask |= 0b1u64 << offset + 1;
+        self.dirty_mask |= 1u64 << offset;
+        self.dirty_mask |= 1u64 << offset + 1;
     }
 
     fn is_dirty(&self) -> bool {

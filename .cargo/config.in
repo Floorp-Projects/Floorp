@@ -33,7 +33,7 @@ replace-with = "vendored-sources"
 rev = "9871d65530f5fc0e3d953efbf40b51e9c56c6d2a"
 
 [source."https://github.com/kvark/spirv_cross"]
-branch = "wgpu2"
+branch = "wgpu3"
 git = "https://github.com/kvark/spirv_cross"
 replace-with = "vendored-sources"
 

@@ -74,6 +74,8 @@ extern "C"
                 hlsl_options.shader_model = options->shader_model;
                 hlsl_options.point_size_compat = options->point_size_compat;
                 hlsl_options.point_coord_compat = options->point_coord_compat;
+                hlsl_options.force_storage_buffer_as_uav = options->force_storage_buffer_as_uav;
+                hlsl_options.nonwritable_uav_texture_as_srv = options->nonwritable_uav_texture_as_srv;
 
                 compiler_hlsl->set_hlsl_options(hlsl_options);
             } while (0);)
@@ -186,6 +188,7 @@ extern "C"
                 auto glsl_options = compiler_glsl->get_common_options();
                 glsl_options.version = options->version;
                 glsl_options.es = options->es;
+                glsl_options.enable_420pack_extension = options->enable_420_pack_extension;
                 glsl_options.vertex.fixup_clipspace = options->vertex_transform_clip_space;
                 glsl_options.vertex.flip_vert_y = options->vertex_invert_y;
                 compiler_glsl->set_common_options(glsl_options);
@@ -377,6 +380,8 @@ extern "C"
 
                 auto ty = (ScType *)malloc(sizeof(ScType));
                 ty->type = type.basetype;
+                ty->vecsize = type.vecsize;
+                ty->columns = type.columns;
                 ty->member_types_size = member_types_size;
                 ty->array_size = array_size;
 
