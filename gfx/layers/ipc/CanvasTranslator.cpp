@@ -270,6 +270,11 @@ void CanvasTranslator::BeginTransaction() { mIsInTransaction = true; }
 
 void CanvasTranslator::Flush() {
 #if defined(XP_WIN)
+  // We can end up without a device, due to a reset and failure to re-create.
+  if (!mDevice) {
+    return;
+  }
+
   gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
       GetReferenceDrawTarget()->GetBackendType());
   RefPtr<ID3D11DeviceContext> deviceContext;
