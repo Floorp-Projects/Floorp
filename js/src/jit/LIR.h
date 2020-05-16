@@ -327,6 +327,8 @@ class LInt64Value {
 #endif
 
  public:
+  LInt64Value() = default;
+
 #if JS_BITS_PER_WORD == 32
   LInt64Value(ValT high, ValT low) : high_(high), low_(low) {}
 
@@ -651,7 +653,21 @@ class LDefinition {
 #endif
 };
 
-using LInt64Definition = LInt64Value<LDefinition>;
+class LInt64Definition : public LInt64Value<LDefinition> {
+ public:
+  using LInt64Value<LDefinition>::LInt64Value;
+
+  static LInt64Definition BogusTemp() { return LInt64Definition(); }
+
+  bool isBogusTemp() const {
+#if JS_BITS_PER_WORD == 32
+    MOZ_ASSERT(high().isBogusTemp() == low().isBogusTemp());
+    return high().isBogusTemp();
+#else
+    return value().isBogusTemp();
+#endif
+  }
+};
 
 // Forward declarations of LIR types.
 #define LIROP(op) class L##op;
