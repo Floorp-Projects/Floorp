@@ -552,7 +552,7 @@ nsUnknownContentTypeDialog.prototype = {
       // set save as the selected option
       this.dialogElement("mode").selectedItem = this.dialogElement("save");
     } else {
-      this.initAppAndSaveToDiskValues();
+      this.initInteractiveControls();
 
       // Initialize "always ask me" box. This should always be disabled
       // and set to true for the ambiguous type application/octet-stream.
@@ -622,7 +622,6 @@ nsUnknownContentTypeDialog.prototype = {
     this.dialogElement("mode").focus();
   },
 
-  // initIntro:
   initIntro(url, filename, displayname) {
     this.dialogElement("location").value = displayname;
     this.dialogElement("location").setAttribute("realname", filename);
@@ -728,7 +727,6 @@ nsUnknownContentTypeDialog.prototype = {
     }
   },
 
-  // getPath:
   getPath(aFile) {
     if (AppConstants.platform == "macosx") {
       return aFile.leafName || aFile.path;
@@ -736,8 +734,7 @@ nsUnknownContentTypeDialog.prototype = {
     return aFile.path;
   },
 
-  // initAppAndSaveToDiskValues:
-  initAppAndSaveToDiskValues() {
+  initInteractiveControls() {
     var modeGroup = this.dialogElement("mode");
 
     // We don't let users open .exe files or random binary data directly
@@ -789,6 +786,10 @@ nsUnknownContentTypeDialog.prototype = {
     openHandler.selectedIndex = 0;
     var defaultOpenHandler = this.dialogElement("defaultHandler");
 
+    if (this.shouldShowInternalHandlerOption()) {
+      this.dialogElement("handleInternally").hidden = false;
+    }
+
     if (
       this.mLauncher.MIMEInfo.preferredAction ==
       this.nsIMIMEInfo.useSystemDefault
@@ -804,6 +805,13 @@ nsUnknownContentTypeDialog.prototype = {
         otherHandler && !otherHandler.hidden
           ? otherHandler
           : defaultOpenHandler;
+    } else if (
+      !this.dialogElement("handleInternally").hidden &&
+      this.mLauncher.MIMEInfo.preferredAction ==
+        this.nsIMIMEInfo.handleInternally
+    ) {
+      // Handle internally
+      modeGroup.selectedItem = this.dialogElement("handleInternally");
     } else {
       // Save to disk.
       modeGroup.selectedItem = this.dialogElement("save");
@@ -970,7 +978,6 @@ nsUnknownContentTypeDialog.prototype = {
     hs.store(handlerInfo);
   },
 
-  // onOK:
   onOK(aEvent) {
     // Verify typed app path, if necessary.
     if (this.useOtherHandler) {
@@ -1041,7 +1048,6 @@ nsUnknownContentTypeDialog.prototype = {
     this.onUnload();
   },
 
-  // onCancel:
   onCancel() {
     // Remove our web progress listener.
     this.mLauncher.setWebProgressListener(null);
@@ -1072,7 +1078,6 @@ nsUnknownContentTypeDialog.prototype = {
     }
   },
 
-  // dialogElement:  Convenience.
   dialogElement(id) {
     return this.mDialog.document.getElementById(id);
   },
@@ -1226,6 +1231,19 @@ nsUnknownContentTypeDialog.prototype = {
     }
 
     this.finishChooseApp();
+  },
+
+  shouldShowInternalHandlerOption() {
+    // This is currently available only for PDF files and when
+    // pdf.js is enabled.
+    return (
+      this.mLauncher.MIMEInfo.primaryExtension == "pdf" &&
+      !Services.prefs.getBoolPref("pdfjs.disabled", true) &&
+      Services.prefs.getBoolPref(
+        "browser.helperApps.showOpenOptionForPdfJS",
+        false
+      )
+    );
   },
 
   // Turn this on to get debugging messages.
