@@ -1499,17 +1499,13 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   // draw a focus indicator only when focus rings should be drawn
-  if (Document* doc = mContent->GetComposedDoc()) {
-    nsPIDOMWindowOuter* window = doc->GetWindow();
-    if (window && window->ShouldShowFocusRing()) {
-      nsPresContext* pc = PresContext();
-      const nsStyleDisplay* disp = StyleDisplay();
-      if (IsThemed(disp) &&
-          pc->Theme()->ThemeWantsButtonInnerFocusRing(disp->mAppearance) &&
-          mDisplayFrame && IsVisibleForPainting()) {
-        aLists.Content()->AppendNewToTop<nsDisplayComboboxFocus>(aBuilder,
-                                                                 this);
-      }
+  if (mContent->AsElement()->State().HasState(NS_EVENT_STATE_FOCUSRING)) {
+    nsPresContext* pc = PresContext();
+    const nsStyleDisplay* disp = StyleDisplay();
+    if (IsThemed(disp) &&
+        pc->Theme()->ThemeWantsButtonInnerFocusRing(disp->mAppearance) &&
+        mDisplayFrame && IsVisibleForPainting()) {
+      aLists.Content()->AppendNewToTop<nsDisplayComboboxFocus>(aBuilder, this);
     }
   }
 
