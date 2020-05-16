@@ -39,7 +39,7 @@ extern LazyLogModule gMediaDecoderLog;
 #  define VSINK_ADD_PROFILER_MARKER(tag, markerTime, aTime, vTime)    \
     do {                                                              \
       if (profiler_thread_is_being_profiled()) {                      \
-        PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, GRAPHICS,               \
+        PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK,         \
                                          VideoFrameMarkerPayload,     \
                                          (markerTime, aTime, vTime)); \
       }                                                               \
