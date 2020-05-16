@@ -8012,6 +8012,62 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
   ALLOW_CLONE(MLoadUnboxedScalar)
 };
 
+// Load an unboxed scalar value from a dataview object.
+class MLoadDataViewElement : public MTernaryInstruction,
+                             public NoTypePolicy::Data {
+  Scalar::Type storageType_;
+
+  MLoadDataViewElement(MDefinition* elements, MDefinition* index,
+                       MDefinition* littleEndian, Scalar::Type storageType)
+      : MTernaryInstruction(classOpcode, elements, index, littleEndian),
+        storageType_(storageType) {
+    setResultType(MIRType::Value);
+    setMovable();
+    MOZ_ASSERT(elements->type() == MIRType::Elements);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(littleEndian->type() == MIRType::Boolean);
+    MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
+    MOZ_ASSERT(Scalar::byteSize(storageType) > 1);
+  }
+
+ public:
+  INSTRUCTION_HEADER(LoadDataViewElement)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, elements), (1, index), (2, littleEndian))
+
+  Scalar::Type storageType() const { return storageType_; }
+  bool fallible() const {
+    // Bailout if the result does not fit in an int32.
+    return storageType_ == Scalar::Uint32 && type() == MIRType::Int32;
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::UnboxedElement);
+  }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isLoadDataViewElement()) {
+      return false;
+    }
+    const MLoadDataViewElement* other = ins->toLoadDataViewElement();
+    if (storageType_ != other->storageType_) {
+      return false;
+    }
+    return congruentIfOperandsEqual(other);
+  }
+
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
+
+  void computeRange(TempAllocator& alloc) override;
+
+  bool canProduceFloat32() const override {
+    return storageType_ == Scalar::Float32;
+  }
+
+  ALLOW_CLONE(MLoadDataViewElement)
+};
+
 // Load a value from a typed array. Out-of-bounds accesses are handled in-line.
 class MLoadTypedArrayElementHole : public MBinaryInstruction,
                                    public SingleObjectPolicy::Data {
@@ -12422,8 +12478,8 @@ bool PropertyWriteNeedsTypeBarrier(TempAllocator& alloc,
 AbortReasonOr<bool> TypeCanHaveExtraIndexedProperties(IonBuilder* builder,
                                                       TemporaryTypeSet* types);
 
-inline MIRType MIRTypeForTypedArrayRead(Scalar::Type arrayType,
-                                        bool observedDouble) {
+inline MIRType MIRTypeForArrayBufferViewRead(Scalar::Type arrayType,
+                                             bool observedDouble) {
   switch (arrayType) {
     case Scalar::Int8:
     case Scalar::Uint8:

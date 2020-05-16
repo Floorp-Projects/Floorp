@@ -9084,6 +9084,41 @@ void IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
   }
 }
 
+void IonBuilder::addDataViewData(MDefinition* obj, Scalar::Type type,
+                                 MDefinition** index, MInstruction** elements) {
+  MInstruction* length = MArrayBufferViewLength::New(alloc(), obj);
+  current->add(length);
+
+  // Adjust the length to account for accesses near the end of the dataview.
+  if (size_t byteSize = Scalar::byteSize(type); byteSize > 1) {
+    // To ensure |0 <= index && index + byteSize <= length|, we can either emit
+    // |BoundsCheck(index, length)| followed by
+    // |BoundsCheck(index + (byteSize - 1), length)|, or alternatively emit
+    // |BoundsCheck(index, Max(length - (byteSize - 1), 0))|. The latter should
+    // result in faster code when LICM moves the length adjustment and also
+    // ensures Spectre index masking occurs after all bounds checks.
+
+    auto* byteSizeMinusOne = MConstant::New(alloc(), Int32Value(byteSize - 1));
+    current->add(byteSizeMinusOne);
+
+    length = MSub::New(alloc(), length, byteSizeMinusOne, MIRType::Int32);
+    length->toSub()->setTruncateKind(MDefinition::Truncate);
+    current->add(length);
+
+    // |length| mustn't be negative for MBoundsCheck.
+    auto* zero = MConstant::New(alloc(), Int32Value(0));
+    current->add(zero);
+
+    length = MMinMax::New(alloc(), length, zero, MIRType::Int32, true);
+    current->add(length);
+  }
+
+  *index = addBoundsCheck(*index, length);
+
+  *elements = MArrayBufferViewElements::New(alloc(), obj);
+  current->add(*elements);
+}
+
 MInstruction* IonBuilder::addTypedArrayByteOffset(MDefinition* obj) {
   MInstruction* byteOffset;
   if (TypedArrayObject* tarr = tryTypedArrayEmbedConstantElements(obj)) {
@@ -9129,7 +9164,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_getelem_typed(MDefinition* obj,
     // the array type to determine the result type, even if the opcode has
     // never executed. The known pushed type is only used to distinguish
     // uint32 reads that may produce either doubles or integers.
-    MIRType knownType = MIRTypeForTypedArrayRead(arrayType, allowDouble);
+    MIRType knownType = MIRTypeForArrayBufferViewRead(arrayType, allowDouble);
 
     // Get length, bounds-check, then get elements, and add all instructions.
     MInstruction* length;

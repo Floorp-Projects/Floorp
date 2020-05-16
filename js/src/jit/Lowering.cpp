@@ -3531,6 +3531,56 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
   }
 }
 
+void LIRGenerator::visitLoadDataViewElement(MLoadDataViewElement* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+
+  MOZ_ASSERT(IsNumericType(ins->type()));
+
+  const LUse elements = useRegister(ins->elements());
+  const LUse index = useRegister(ins->index());
+  const LAllocation littleEndian = useRegisterOrConstant(ins->littleEndian());
+
+  // We need a temp register for:
+  // - Uint32Array with known double result,
+  // - Float32Array,
+  // - and BigInt64Array and BigUint64Array.
+  LDefinition tempDef = LDefinition::BogusTemp();
+  if ((ins->storageType() == Scalar::Uint32 &&
+       IsFloatingPointType(ins->type())) ||
+      ins->storageType() == Scalar::Float32) {
+    tempDef = temp();
+  }
+  if (Scalar::isBigIntType(ins->storageType())) {
+#ifdef JS_CODEGEN_X86
+    // There are not enough registers on x86.
+    if (littleEndian.isConstant()) {
+      tempDef = temp();
+    }
+#else
+    tempDef = temp();
+#endif
+  }
+
+  // We also need a separate 64-bit temp register for:
+  // - Float64Array
+  // - and BigInt64Array and BigUint64Array.
+  LInt64Definition temp64Def = LInt64Definition::BogusTemp();
+  if (Scalar::byteSize(ins->storageType()) == 8) {
+    temp64Def = tempInt64();
+  }
+
+  auto* lir = new (alloc())
+      LLoadDataViewElement(elements, index, littleEndian, tempDef, temp64Def);
+  if (ins->fallible()) {
+    assignSnapshot(lir, Bailout_Overflow);
+  }
+  define(lir, ins);
+  if (Scalar::isBigIntType(ins->storageType())) {
+    assignSafepoint(lir, ins);
+  }
+}
+
 void LIRGenerator::visitClampToUint8(MClampToUint8* ins) {
   MDefinition* in = ins->input();
 

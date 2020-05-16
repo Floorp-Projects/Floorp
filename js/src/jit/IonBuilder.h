@@ -12,6 +12,8 @@
 
 #include "mozilla/Maybe.h"
 
+#include "jsfriendapi.h"
+
 #include "jit/BaselineInspector.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/IonAnalysis.h"
@@ -517,6 +519,11 @@ class MOZ_STACK_CLASS IonBuilder {
     return length;
   }
 
+  // Add instructions to compute a data view's data and convert |*index| into a
+  // bounds-checked definition.
+  void addDataViewData(MDefinition* obj, Scalar::Type type, MDefinition** index,
+                       MInstruction** elements);
+
   // Add an instruction to compute a typed array's byte offset to the current
   // block.
   MInstruction* addTypedArrayByteOffset(MDefinition* obj);
@@ -725,6 +732,9 @@ class MOZ_STACK_CLASS IonBuilder {
 
   // Boolean natives.
   InliningResult inlineBoolean(CallInfo& callInfo);
+
+  // DataView natives.
+  InliningResult inlineDataViewGet(CallInfo& callInfo, Scalar::Type type);
 
   // Iterator intrinsics.
   InliningResult inlineNewIterator(CallInfo& callInfo, MNewIterator::Type type);

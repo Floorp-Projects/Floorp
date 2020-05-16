@@ -29,6 +29,17 @@
                                                    \
   _(Boolean)                                       \
                                                    \
+  _(DataViewGetInt8)                               \
+  _(DataViewGetUint8)                              \
+  _(DataViewGetInt16)                              \
+  _(DataViewGetUint16)                             \
+  _(DataViewGetInt32)                              \
+  _(DataViewGetUint32)                             \
+  _(DataViewGetFloat32)                            \
+  _(DataViewGetFloat64)                            \
+  _(DataViewGetBigInt64)                           \
+  _(DataViewGetBigUint64)                          \
+                                                   \
   _(IntlGuardToCollator)                           \
   _(IntlGuardToDateTimeFormat)                     \
   _(IntlGuardToListFormat)                         \
