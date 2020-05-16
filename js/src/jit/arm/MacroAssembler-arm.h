@@ -1130,12 +1130,31 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void load16SignExtend(const Address& address, Register dest);
   void load16SignExtend(const BaseIndex& src, Register dest);
 
+  template <typename S>
+  void load16UnalignedSignExtend(const S& src, Register dest) {
+    // load16SignExtend uses |ldrsh|, which supports unaligned access.
+    load16SignExtend(src, dest);
+  }
+
   void load16ZeroExtend(const Address& address, Register dest);
   void load16ZeroExtend(const BaseIndex& src, Register dest);
+
+  template <typename S>
+  void load16UnalignedZeroExtend(const S& src, Register dest) {
+    // load16ZeroExtend uses |ldrh|, which supports unaligned access.
+    load16ZeroExtend(src, dest);
+  }
 
   void load32(const Address& address, Register dest);
   void load32(const BaseIndex& address, Register dest);
   void load32(AbsoluteAddress address, Register dest);
+
+  template <typename S>
+  void load32Unaligned(const S& src, Register dest) {
+    // load32 uses |ldr|, which supports unaligned access.
+    load32(src, dest);
+  }
+
   void load64(const Address& address, Register64 dest) {
     load32(LowWord(address), dest.low);
     load32(HighWord(address), dest.high);
@@ -1143,6 +1162,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void load64(const BaseIndex& address, Register64 dest) {
     load32(LowWord(address), dest.low);
     load32(HighWord(address), dest.high);
+  }
+
+  template <typename S>
+  void load64Unaligned(const S& src, Register64 dest) {
+    // load64 calls load32, which supports unaligned accesses.
+    load64(src, dest);
   }
 
   void loadPtr(const Address& address, Register dest);
@@ -1172,11 +1197,23 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void store16(Register src, const BaseIndex& address);
   void store16(Imm32 imm, const BaseIndex& address);
 
+  template <typename S, typename T>
+  void store16Unaligned(const S& src, const T& dest) {
+    // store16 uses |strh|, which supports unaligned access.
+    store16(src, dest);
+  }
+
   void store32(Register src, AbsoluteAddress address);
   void store32(Register src, const Address& address);
   void store32(Register src, const BaseIndex& address);
   void store32(Imm32 src, const Address& address);
   void store32(Imm32 src, const BaseIndex& address);
+
+  template <typename S, typename T>
+  void store32Unaligned(const S& src, const T& dest) {
+    // store32 uses |str|, which supports unaligned access.
+    store32(src, dest);
+  }
 
   void store64(Register64 src, Address address) {
     store32(src.low, LowWord(address));
@@ -1196,6 +1233,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void store64(Imm64 imm, const BaseIndex& address) {
     store32(imm.low(), LowWord(address));
     store32(imm.hi(), HighWord(address));
+  }
+
+  template <typename S, typename T>
+  void store64Unaligned(const S& src, const T& dest) {
+    // store64 calls store32, which supports unaligned access.
+    store64(src, dest);
   }
 
   void storePtr(ImmWord imm, const Address& address);

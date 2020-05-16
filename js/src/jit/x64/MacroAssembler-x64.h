@@ -577,6 +577,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void load64(const BaseIndex& address, Register64 dest) {
     movq(Operand(address), dest.reg);
   }
+  template <typename S>
+  void load64Unaligned(const S& src, Register64 dest) {
+    load64(src, dest);
+  }
   template <typename T>
   void storePtr(ImmWord imm, T address) {
     if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
@@ -643,6 +647,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   void store64(Imm64 imm, const BaseIndex& address) {
     storePtr(ImmWord(imm.value), address);
+  }
+  template <typename S, typename T>
+  void store64Unaligned(const S& src, const T& dest) {
+    store64(src, dest);
   }
 
   void splitTag(Register src, Register dest) {
