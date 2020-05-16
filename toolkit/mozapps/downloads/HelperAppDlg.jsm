@@ -573,12 +573,6 @@ nsUnknownContentTypeDialog.prototype = {
       // uriloader has passed, rather we want to ask the MIME Service.
       // This is so we don't needlessly disable the "autohandle" checkbox.
 
-      // commented out to close the opening brace in the if statement.
-      // var mimeService = Components.classes["@mozilla.org/mime;1"].getService(Components.interfaces.nsIMIMEService);
-      // var type = mimeService.getTypeFromURI(this.mLauncher.source);
-      // this.realMIMEInfo = mimeService.getFromTypeAndExtension(type, "");
-
-      // if (type == "application/octet-stream") {
       if (shouldntRememberChoice) {
         rememberChoice.checked = false;
         rememberChoice.hidden = true;
@@ -589,12 +583,6 @@ nsUnknownContentTypeDialog.prototype = {
             this.nsIMIMEInfo.handleInternally;
       }
       this.toggleRememberChoice(rememberChoice);
-
-      // XXXben - menulist won't init properly, hack.
-      var openHandler = this.dialogElement("openHandler");
-      openHandler.remove();
-      var openHandlerBox = this.dialogElement("openHandlerBox");
-      openHandlerBox.appendChild(openHandler);
     }
 
     this.mDialog.setTimeout(function() {
