@@ -2109,9 +2109,18 @@ nsresult nsExternalAppHandler::CreateTransfer() {
   rv = NS_NewFileURI(getter_AddRefs(target), mFinalFileDestination);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = transfer->Init(mSourceUrl, target, EmptyString(), mMimeInfo,
-                      mTimeDownloadStarted, mTempFile, this, mBrowsingContext,
-                      mHandleInternally);
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
+  if (mBrowsingContext) {
+    rv = transfer->InitWithBrowsingContext(
+        mSourceUrl, target, EmptyString(), mMimeInfo, mTimeDownloadStarted,
+        mTempFile, this, channel && NS_UsePrivateBrowsing(channel),
+        mBrowsingContext, mHandleInternally);
+  } else {
+    rv = transfer->Init(mSourceUrl, target, EmptyString(), mMimeInfo,
+                        mTimeDownloadStarted, mTempFile, this,
+                        channel && NS_UsePrivateBrowsing(channel));
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If we were cancelled since creating the transfer, just return. It is
@@ -2168,9 +2177,18 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
   rv = NS_NewFileURI(getter_AddRefs(pseudoTarget), pseudoFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = transfer->Init(mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
-                      mTimeDownloadStarted, nullptr, this, mBrowsingContext,
-                      mHandleInternally);
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
+  if (mBrowsingContext) {
+    rv = transfer->InitWithBrowsingContext(
+        mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
+        mTimeDownloadStarted, nullptr, this,
+        channel && NS_UsePrivateBrowsing(channel), mBrowsingContext,
+        mHandleInternally);
+  } else {
+    rv = transfer->Init(mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
+                        mTimeDownloadStarted, nullptr, this,
+                        channel && NS_UsePrivateBrowsing(channel));
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Our failed transfer is ready.
