@@ -68,6 +68,7 @@ MockTransfer.prototype = {
 
   /* nsITransfer */
   init() {},
+  initWithBrowsingContext() {},
   setSha256Hash() {},
   setSignatureInfo() {},
 };
