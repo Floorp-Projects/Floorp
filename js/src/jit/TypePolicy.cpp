@@ -1067,6 +1067,17 @@ bool StoreUnboxedScalarPolicy::adjustInputs(TempAllocator& alloc,
   return adjustValueInput(alloc, store, store->writeType(), store->value(), 2);
 }
 
+bool StoreDataViewElementPolicy::adjustInputs(TempAllocator& alloc,
+                                              MInstruction* ins) const {
+  auto* store = ins->toStoreDataViewElement();
+  MOZ_ASSERT(store->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(store->index()->type() == MIRType::Int32);
+  MOZ_ASSERT(store->littleEndian()->type() == MIRType::Boolean);
+
+  return StoreUnboxedScalarPolicy::adjustValueInput(
+      alloc, ins, store->writeType(), store->value(), 2);
+}
+
 bool StoreTypedArrayHolePolicy::adjustInputs(TempAllocator& alloc,
                                              MInstruction* ins) const {
   MStoreTypedArrayElementHole* store = ins->toStoreTypedArrayElementHole();
@@ -1192,29 +1203,30 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
 }
 
 // Lists of all TypePolicy specializations which are used by MIR Instructions.
-#define TYPE_POLICY_LIST(_)    \
-  _(AllDoublePolicy)           \
-  _(ArithPolicy)               \
-  _(BitwisePolicy)             \
-  _(BoxInputsPolicy)           \
-  _(CallPolicy)                \
-  _(CallSetElementPolicy)      \
-  _(ClampPolicy)               \
-  _(ComparePolicy)             \
-  _(FilterTypeSetPolicy)       \
-  _(InstanceOfPolicy)          \
-  _(PowPolicy)                 \
-  _(SameValuePolicy)           \
-  _(SignPolicy)                \
-  _(StoreTypedArrayHolePolicy) \
-  _(StoreUnboxedScalarPolicy)  \
-  _(TestPolicy)                \
-  _(ToDoublePolicy)            \
-  _(ToInt32Policy)             \
-  _(ToBigIntPolicy)            \
-  _(ToStringPolicy)            \
-  _(ToInt64Policy)             \
-  _(TypeBarrierPolicy)         \
+#define TYPE_POLICY_LIST(_)     \
+  _(AllDoublePolicy)            \
+  _(ArithPolicy)                \
+  _(BitwisePolicy)              \
+  _(BoxInputsPolicy)            \
+  _(CallPolicy)                 \
+  _(CallSetElementPolicy)       \
+  _(ClampPolicy)                \
+  _(ComparePolicy)              \
+  _(FilterTypeSetPolicy)        \
+  _(InstanceOfPolicy)           \
+  _(PowPolicy)                  \
+  _(SameValuePolicy)            \
+  _(SignPolicy)                 \
+  _(StoreDataViewElementPolicy) \
+  _(StoreTypedArrayHolePolicy)  \
+  _(StoreUnboxedScalarPolicy)   \
+  _(TestPolicy)                 \
+  _(ToDoublePolicy)             \
+  _(ToInt32Policy)              \
+  _(ToBigIntPolicy)             \
+  _(ToStringPolicy)             \
+  _(ToInt64Policy)              \
+  _(TypeBarrierPolicy)          \
   _(TypedArrayIndexPolicy)
 
 #define TEMPLATE_TYPE_POLICY_LIST(_)                                          \
