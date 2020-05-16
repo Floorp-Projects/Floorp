@@ -55,6 +55,7 @@
 #endif
 #include "util/CheckedArithmetic.h"
 #include "util/Unicode.h"
+#include "vm/ArrayBufferViewObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
@@ -8215,22 +8216,24 @@ void CodeGenerator::visitWasmStoreSlotI64(LWasmStoreSlotI64* ins) {
   masm.store64(value, addr);
 }
 
-void CodeGenerator::visitTypedArrayLength(LTypedArrayLength* lir) {
+void CodeGenerator::visitArrayBufferViewLength(LArrayBufferViewLength* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-  masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), out);
+  masm.unboxInt32(Address(obj, ArrayBufferViewObject::lengthOffset()), out);
 }
 
-void CodeGenerator::visitTypedArrayByteOffset(LTypedArrayByteOffset* lir) {
+void CodeGenerator::visitArrayBufferViewByteOffset(
+    LArrayBufferViewByteOffset* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-  masm.unboxInt32(Address(obj, TypedArrayObject::byteOffsetOffset()), out);
+  masm.unboxInt32(Address(obj, ArrayBufferViewObject::byteOffsetOffset()), out);
 }
 
-void CodeGenerator::visitTypedArrayElements(LTypedArrayElements* lir) {
+void CodeGenerator::visitArrayBufferViewElements(
+    LArrayBufferViewElements* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-  masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), out);
+  masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), out);
 }
 
 static constexpr bool ValidateShiftRange(Scalar::Type from, Scalar::Type to) {
@@ -12188,14 +12191,15 @@ void CodeGenerator::visitLoadTypedArrayElementHole(
   Register scratch = out.scratchReg();
   Register scratch2 = ToRegister(lir->temp());
   Register index = ToRegister(lir->index());
-  masm.unboxInt32(Address(object, TypedArrayObject::lengthOffset()), scratch);
+  masm.unboxInt32(Address(object, ArrayBufferViewObject::lengthOffset()),
+                  scratch);
 
   // Load undefined if index >= length.
   Label outOfBounds, done;
   masm.spectreBoundsCheck32(index, scratch, scratch2, &outOfBounds);
 
   // Load the elements vector.
-  masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), scratch);
+  masm.loadPtr(Address(object, ArrayBufferViewObject::dataOffset()), scratch);
 
   Scalar::Type arrayType = lir->mir()->arrayType();
   size_t width = Scalar::byteSize(arrayType);
@@ -12233,14 +12237,15 @@ void CodeGenerator::visitLoadTypedArrayElementHoleBigInt(
   // Load the length.
   Register scratch = out.scratchReg();
   Register index = ToRegister(lir->index());
-  masm.unboxInt32(Address(object, TypedArrayObject::lengthOffset()), scratch);
+  masm.unboxInt32(Address(object, ArrayBufferViewObject::lengthOffset()),
+                  scratch);
 
   // Load undefined if index >= length.
   Label outOfBounds, done;
   masm.spectreBoundsCheck32(index, scratch, temp, &outOfBounds);
 
   // Load the elements vector.
-  masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), scratch);
+  masm.loadPtr(Address(object, ArrayBufferViewObject::dataOffset()), scratch);
 
   Scalar::Type arrayType = lir->mir()->arrayType();
   size_t width = Scalar::byteSize(arrayType);

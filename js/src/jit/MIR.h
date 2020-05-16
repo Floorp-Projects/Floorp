@@ -359,10 +359,11 @@ class AliasSet {
     WasmHeap = 1 << 7,        // An asm.js/wasm heap load
     WasmHeapMeta = 1 << 8,    // The asm.js/wasm heap base pointer and
                               // bounds check limit, in Tls.
-    TypedArrayLengthOrOffset = 1 << 9,  // A typed array's length or byteOffset
-    WasmGlobalCell = 1 << 10,           // A wasm global cell
-    WasmTableElement = 1 << 11,         // An element of a wasm table
-    WasmStackResult = 1 << 12,  // A stack result from the current function
+    ArrayBufferViewLengthOrOffset =
+        1 << 9,                  // An array buffer view's length or byteOffset
+    WasmGlobalCell = 1 << 10,    // A wasm global cell
+    WasmTableElement = 1 << 11,  // An element of a wasm table
+    WasmStackResult = 1 << 12,   // A stack result from the current function
 
     // JSContext's exception state. This is used on instructions like MThrow
     // that throw exceptions (other than OOM) but have no other side effect, to
@@ -7227,17 +7228,17 @@ class MGetNextEntryForIterator
   Mode mode() const { return mode_; }
 };
 
-// Read the length of a typed array.
-class MTypedArrayLength : public MUnaryInstruction,
-                          public SingleObjectPolicy::Data {
-  explicit MTypedArrayLength(MDefinition* obj)
+// Read the length of an array buffer view.
+class MArrayBufferViewLength : public MUnaryInstruction,
+                               public SingleObjectPolicy::Data {
+  explicit MArrayBufferViewLength(MDefinition* obj)
       : MUnaryInstruction(classOpcode, obj) {
     setResultType(MIRType::Int32);
     setMovable();
   }
 
  public:
-  INSTRUCTION_HEADER(TypedArrayLength)
+  INSTRUCTION_HEADER(ArrayBufferViewLength)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
@@ -7245,23 +7246,23 @@ class MTypedArrayLength : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::TypedArrayLengthOrOffset);
+    return AliasSet::Load(AliasSet::ArrayBufferViewLengthOrOffset);
   }
 
   void computeRange(TempAllocator& alloc) override;
 };
 
-// Read the byteOffset of a typed array.
-class MTypedArrayByteOffset : public MUnaryInstruction,
-                              public SingleObjectPolicy::Data {
-  explicit MTypedArrayByteOffset(MDefinition* obj)
+// Read the byteOffset of an array buffer view.
+class MArrayBufferViewByteOffset : public MUnaryInstruction,
+                                   public SingleObjectPolicy::Data {
+  explicit MArrayBufferViewByteOffset(MDefinition* obj)
       : MUnaryInstruction(classOpcode, obj) {
     setResultType(MIRType::Int32);
     setMovable();
   }
 
  public:
-  INSTRUCTION_HEADER(TypedArrayByteOffset)
+  INSTRUCTION_HEADER(ArrayBufferViewByteOffset)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
@@ -7269,23 +7270,23 @@ class MTypedArrayByteOffset : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::TypedArrayLengthOrOffset);
+    return AliasSet::Load(AliasSet::ArrayBufferViewLengthOrOffset);
   }
 
   void computeRange(TempAllocator& alloc) override;
 };
 
-// Load a typed array's elements vector.
-class MTypedArrayElements : public MUnaryInstruction,
-                            public SingleObjectPolicy::Data {
-  explicit MTypedArrayElements(MDefinition* object)
+// Load an array buffer view's elements vector.
+class MArrayBufferViewElements : public MUnaryInstruction,
+                                 public SingleObjectPolicy::Data {
+  explicit MArrayBufferViewElements(MDefinition* object)
       : MUnaryInstruction(classOpcode, object) {
     setResultType(MIRType::Elements);
     setMovable();
   }
 
  public:
-  INSTRUCTION_HEADER(TypedArrayElements)
+  INSTRUCTION_HEADER(ArrayBufferViewElements)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
@@ -7296,7 +7297,7 @@ class MTypedArrayElements : public MUnaryInstruction,
     return AliasSet::Load(AliasSet::ObjectFields);
   }
 
-  ALLOW_CLONE(MTypedArrayElements)
+  ALLOW_CLONE(MArrayBufferViewElements)
 };
 
 // Return the element shift of a typed array, i.e. the shift value so that
@@ -7933,7 +7934,7 @@ enum MemoryBarrierRequirement {
 
 // Also see comments at MMemoryBarrierRequirement, above.
 
-// Load an unboxed scalar value from a typed array or other object.
+// Load an unboxed scalar value from an array buffer view or other object.
 class MLoadUnboxedScalar : public MBinaryInstruction,
                            public NoTypePolicy::Data {
   int32_t offsetAdjustment_ = 0;
@@ -8089,7 +8090,7 @@ class StoreUnboxedScalarBase {
   bool isBigIntWrite() const { return Scalar::isBigIntType(writeType_); }
 };
 
-// Store an unboxed scalar value to a typed array or other object.
+// Store an unboxed scalar value to an array buffer view or other object.
 class MStoreUnboxedScalar : public MTernaryInstruction,
                             public StoreUnboxedScalarBase,
                             public StoreUnboxedScalarPolicy::Data {

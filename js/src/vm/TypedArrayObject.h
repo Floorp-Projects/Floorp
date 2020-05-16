@@ -45,16 +45,6 @@ namespace js {
 
 class TypedArrayObject : public ArrayBufferViewObject {
  public:
-  static constexpr int lengthOffset() {
-    return NativeObject::getFixedSlotOffset(LENGTH_SLOT);
-  }
-  static constexpr int byteOffsetOffset() {
-    return NativeObject::getFixedSlotOffset(BYTEOFFSET_SLOT);
-  }
-  static constexpr int dataOffset() {
-    return NativeObject::getPrivateDataOffset(DATA_SLOT);
-  }
-
   static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                 "bad inlined constant in jsfriendapi.h");
 
@@ -121,7 +111,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
   bool hasInlineElements() const;
   void setInlineElements();
   uint8_t* elementsRaw() const {
-    return *(uint8_t**)((((char*)this) + js::TypedArrayObject::dataOffset()));
+    return *(uint8_t**)((((char*)this) + ArrayBufferViewObject::dataOffset()));
   }
   uint8_t* elements() const {
     assertZeroLengthArrayData();

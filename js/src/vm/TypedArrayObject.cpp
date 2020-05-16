@@ -269,7 +269,7 @@ bool TypedArrayObject::hasInlineElements() const {
 }
 
 void TypedArrayObject::setInlineElements() {
-  char* dataSlot = reinterpret_cast<char*>(this) + this->dataOffset();
+  char* dataSlot = reinterpret_cast<char*>(this) + dataOffset();
   *reinterpret_cast<void**>(dataSlot) =
       this->fixedData(TypedArrayObject::FIXED_DATA_START);
 }
@@ -527,7 +527,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       InitObjectPrivate(tarray, buf, nbytes, MemoryUse::TypedArrayElements);
     } else {
 #ifdef DEBUG
-      constexpr size_t dataOffset = TypedArrayObject::dataOffset();
+      constexpr size_t dataOffset = ArrayBufferViewObject::dataOffset();
       constexpr size_t offset = dataOffset + sizeof(HeapSlot);
       MOZ_ASSERT(offset + nbytes <= GetGCKindBytes(allocKind));
 #endif
