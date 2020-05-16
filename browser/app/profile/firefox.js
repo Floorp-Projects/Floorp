@@ -369,6 +369,11 @@ pref("browser.download.autohideButton", true);
   pref("browser.helperApps.deleteTempFileOnExit", true);
 #endif
 
+// This controls the visibility of the radio button in the
+// Unknown Content Type (Helper App) dialog that will open
+// the content in the browser.
+pref("browser.helperApps.showOpenOptionForPdfJS", true);
+
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
 
