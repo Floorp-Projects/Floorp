@@ -26,6 +26,8 @@ extern crate cubeb_coreaudio;
 extern crate cubeb_pulse;
 extern crate encoding_glue;
 extern crate env_logger;
+#[cfg(not(target_os = "android"))]
+extern crate firefox_accounts_bridge;
 #[cfg(feature = "glean")]
 extern crate fog;
 extern crate gkrust_utils;
