@@ -1433,6 +1433,11 @@ class BaseAssembler : public GenericAssembler {
     }
   }
 
+  void bswapl_r(RegisterID dst) {
+    spew("bswap      %s", GPReg32Name(dst));
+    m_formatter.twoByteOp(OP2_BSWAP, dst);
+  }
+
   void sarl_ir(int32_t imm, RegisterID dst) {
     MOZ_ASSERT(imm < 32);
     spew("sarl       $%d, %s", imm, GPReg32Name(dst));
@@ -1494,6 +1499,17 @@ class BaseAssembler : public GenericAssembler {
   void roll_ir(int32_t imm, RegisterID dst) {
     MOZ_ASSERT(imm < 32);
     spew("roll       $%d, %s", imm, GPReg32Name(dst));
+    if (imm == 1) {
+      m_formatter.oneByteOp(OP_GROUP2_Ev1, dst, GROUP2_OP_ROL);
+    } else {
+      m_formatter.oneByteOp(OP_GROUP2_EvIb, dst, GROUP2_OP_ROL);
+      m_formatter.immediate8u(imm);
+    }
+  }
+  void rolw_ir(int32_t imm, RegisterID dst) {
+    MOZ_ASSERT(imm < 32);
+    spew("roll       $%d, %s", imm, GPReg16Name(dst));
+    m_formatter.prefix(PRE_OPERAND_SIZE);
     if (imm == 1) {
       m_formatter.oneByteOp(OP_GROUP2_Ev1, dst, GROUP2_OP_ROL);
     } else {
@@ -4684,6 +4700,13 @@ class BaseAssembler : public GenericAssembler {
       m_buffer.putByteUnchecked(opcode);
     }
 
+    void twoByteOp(TwoByteOpcodeID opcode, int reg) {
+      m_buffer.ensureSpace(MaxInstructionSize);
+      emitRexIfNeeded(0, 0, reg);
+      m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
+      m_buffer.putByteUnchecked(opcode + (reg & 7));
+    }
+
     void twoByteOp(TwoByteOpcodeID opcode, RegisterID rm, int reg) {
       m_buffer.ensureSpace(MaxInstructionSize);
       emitRexIfNeeded(reg, 0, rm);
@@ -4957,6 +4980,13 @@ class BaseAssembler : public GenericAssembler {
       emitRexW(reg, 0, 0);
       m_buffer.putByteUnchecked(opcode);
       memoryModRM(address, reg);
+    }
+
+    void twoByteOp64(TwoByteOpcodeID opcode, int reg) {
+      m_buffer.ensureSpace(MaxInstructionSize);
+      emitRexW(0, 0, reg);
+      m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
+      m_buffer.putByteUnchecked(opcode + (reg & 7));
     }
 
     void twoByteOp64(TwoByteOpcodeID opcode, RegisterID rm, int reg) {
