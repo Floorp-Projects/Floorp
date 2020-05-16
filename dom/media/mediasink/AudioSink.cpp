@@ -15,6 +15,24 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "nsPrintfCString.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#  define PROFILER_MARKER(tag, sample)                                    \
+    do {                                                                  \
+      uint64_t startTime = (sample)->mTime.ToMicroseconds();              \
+      uint64_t endTime = (sample)->GetEndTime().ToMicroseconds();         \
+      auto profilerTag = (tag);                                           \
+      mOwnerThread->Dispatch(NS_NewRunnableFunction(                      \
+          "AudioSink:AddMarker", [profilerTag, startTime, endTime] {      \
+            PROFILER_ADD_MARKER_WITH_PAYLOAD(profilerTag, MEDIA_PLAYBACK, \
+                                             MediaSampleMarkerPayload,    \
+                                             (startTime, endTime));       \
+          }));                                                            \
+    } while (0)
+#else
+#  define PROFILER_MARKER(sample)
+#endif
+
 namespace mozilla {
 
 extern LazyLogModule gMediaDecoderLog;
@@ -267,6 +285,7 @@ UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
   SINK_LOG_V("playing audio at time=%" PRId64 " offset=%u length=%u",
              mCurrentData->mTime.ToMicroseconds(),
              mCurrentData->Frames() - mCursor->Available(), framesToPop);
+  PROFILER_MARKER("PlayAudio", mCurrentData);
 
   UniquePtr<AudioStream::Chunk> chunk =
       MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());
