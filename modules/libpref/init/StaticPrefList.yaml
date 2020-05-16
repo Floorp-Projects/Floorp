@@ -4325,9 +4325,8 @@
 #endif
   mirror: always
 
-  # Force disables allowing sacrificing subpixel anti-aliasing for less
-  # powerful configurations.
-- name: gfx.webrender.quality.force-disable-sacrificing-subpixel-aa
+  # Force subpixel anti-aliasing as much as possible, despite performance cost.
+- name: gfx.webrender.quality.force-subpixel-aa-where-possible
   type: bool
   value: false
   mirror: always

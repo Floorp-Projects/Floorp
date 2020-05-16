@@ -666,10 +666,10 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static void ReInitFrameRate();
 
   /**
-   * Update allow sacrificing subpixel AA quality setting (called after pref
+   * Update force subpixel AA quality setting (called after pref
    * changes).
    */
-  void UpdateAllowSacrificingSubpixelAA();
+  void UpdateForceSubpixelAAWherePossible();
 
   /**
    * Used to test which input types are handled via APZ.

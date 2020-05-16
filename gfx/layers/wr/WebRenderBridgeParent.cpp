@@ -1440,7 +1440,7 @@ void WebRenderBridgeParent::DisableNativeCompositor() {
 
 void WebRenderBridgeParent::UpdateQualitySettings() {
   wr::TransactionBuilder txn;
-  txn.UpdateQualitySettings(gfxVars::AllowSacrificingSubpixelAA());
+  txn.UpdateQualitySettings(gfxVars::ForceSubpixelAAWherePossible());
   mApi->SendTransaction(txn);
 }
 

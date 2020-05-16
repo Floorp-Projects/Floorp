@@ -1766,9 +1766,9 @@ pub extern "C" fn wr_transaction_set_is_transform_async_zooming(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_transaction_set_quality_settings(txn: &mut Transaction, allow_sacrificing_subpixel_aa: bool) {
+pub extern "C" fn wr_transaction_set_quality_settings(txn: &mut Transaction, force_subpixel_aa_where_possible: bool) {
     txn.set_quality_settings(QualitySettings {
-        allow_sacrificing_subpixel_aa,
+        force_subpixel_aa_where_possible,
     });
 }
 

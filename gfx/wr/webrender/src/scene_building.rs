@@ -3665,9 +3665,9 @@ impl FlattenedStackingContext {
                             true
                         }
                         (_, ROOT_SPATIAL_NODE_INDEX) => {
-                            // If quality settings prefer subpixel AA over performance, skip creating
+                            // If quality settings force subpixel AA over performance, skip creating
                             // a slice for the fixed position element(s) here.
-                            if !quality_settings.allow_sacrificing_subpixel_aa {
+                            if quality_settings.force_subpixel_aa_where_possible {
                                 return false;
                             }
 

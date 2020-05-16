@@ -189,7 +189,7 @@ class TransactionBuilder final {
 
   void DeleteFontInstance(wr::FontInstanceKey aKey);
 
-  void UpdateQualitySettings(bool aAllowSacrificingSubpixelAA);
+  void UpdateQualitySettings(bool aForceSubpixelAAWherePossible);
 
   void Notify(wr::Checkpoint aWhen, UniquePtr<NotificationHandler> aHandler);
 
