@@ -100,15 +100,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _components_HeroText__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
-/* harmony import */ var _components_FxCards__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5);
-/* harmony import */ var _components_MSLocalized__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(4);
-/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(8);
+/* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _components_HeroText__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
+/* harmony import */ var _components_FxCards__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
+/* harmony import */ var _components_MSLocalized__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(4);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(5);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -136,6 +138,8 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
   componentDidMount() {
     if (this.props.experiment && this.props.branchId) {
       this.messageId = `ABOUT_WELCOME_${this.props.experiment}_${this.props.branchId}`.toUpperCase();
+    } else if (this.props.id && this.props.screens) {
+      this.messageId = this.props.id;
     }
 
     this.fetchFxAFlowUri();
@@ -149,7 +153,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
   }
 
   handleStartBtnClick() {
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_5__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_6__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
     const ping = {
       event: "CLICK_BUTTON",
       event_context: {
@@ -165,21 +169,31 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
   render() {
     const {
       props
-    } = this;
+    } = this; // TBD: Refactor to redirect based off template value
+    // inside props.template
+    // Create SimpleAboutWelcome that renders default about welcome
+    // See Bug 1638087
+
+    if (props.screens) {
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__["MultiStageAboutWelcome"], {
+        screens: props.screens
+      });
+    }
+
     let UTMTerm = this.props.experiment && this.props.branchId ? `${this.props.experiment}-${this.props.branchId}` : "default";
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "outer-wrapper welcomeContainer"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "welcomeContainerInner"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_HeroText__WEBPACK_IMPORTED_MODULE_2__["HeroText"], {
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_HeroText__WEBPACK_IMPORTED_MODULE_3__["HeroText"], {
       title: props.title,
       subtitle: props.subtitle
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_FxCards__WEBPACK_IMPORTED_MODULE_3__["FxCards"], {
+    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_FxCards__WEBPACK_IMPORTED_MODULE_4__["FxCards"], {
       cards: props.cards,
       metricsFlowUri: this.state.metricsFlowUri,
       sendTelemetry: window.AWSendEventTelemetry,
       utm_term: UTMTerm
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_MSLocalized__WEBPACK_IMPORTED_MODULE_4__["Localized"], {
+    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_MSLocalized__WEBPACK_IMPORTED_MODULE_5__["Localized"], {
       text: props.startButton.label
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "start-button",
@@ -189,14 +203,20 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
 
 }
 
-AboutWelcome.defaultProps = _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_5__["DEFAULT_WELCOME_CONTENT"];
+AboutWelcome.defaultProps = _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_6__["DEFAULT_WELCOME_CONTENT"];
 
 async function mount() {
   const {
     slug,
     branch
   } = await window.AWGetStartupData();
-  const settings = branch && branch.value ? branch.value : {};
+  let settings = branch && branch.value ? branch.value : {};
+
+  if (!(branch && branch.value)) {
+    // Check for override content in pref browser.aboutwelcome.overrideContent
+    settings = await window.AWGetMultiStageScreens();
+  }
+
   react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(AboutWelcome, _extends({
     experiment: slug,
     branchId: branch && branch.slug
@@ -223,24 +243,48 @@ module.exports = ReactDOM;
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HeroText", function() { return HeroText; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MultiStageAboutWelcome", function() { return MultiStageAboutWelcome; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-const HeroText = props => {
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-    text: props.title
-  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
-    className: "welcome-title"
-  })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-    text: props.subtitle
-  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
-    className: "welcome-subtitle"
+
+const MultiStageAboutWelcome = props => {
+  const [index, setScreenIndex] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(0); // Transition to next screen, opening about:home on last screen button CTA
+
+  const handleTransition = index < props.screens.length ? Object(react__WEBPACK_IMPORTED_MODULE_0__["useCallback"])(() => setScreenIndex(prevState => prevState + 1), []) : _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction({
+    type: "OPEN_ABOUT_PAGE",
+    data: {
+      args: "home",
+      where: "current"
+    }
+  });
+  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: `welcomeCardGrid`
+  }, props.screens.map(screen => {
+    return index === screen.order ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
+      key: screen.id,
+      id: screen.id,
+      content: screen.content,
+      navigate: handleTransition
+    }) : null;
+  })));
+};
+
+const WelcomeScreen = props => {
+  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: `${props.id}`
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: props.content.title
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: props.content.primary_button.label
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    onClick: props.navigate
   })));
 };
 
@@ -307,12 +351,162 @@ const Localized = ({
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AboutWelcomeUtils", function() { return AboutWelcomeUtils; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_WELCOME_CONTENT", function() { return DEFAULT_WELCOME_CONTENT; });
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+const AboutWelcomeUtils = {
+  handleUserAction(action) {
+    switch (action.type) {
+      case "OPEN_ABOUT_PAGE":
+      case "OPEN_AWESOME_BAR":
+      case "OPEN_PRIVATE_BROWSER_WINDOW":
+      case "SHOW_MIGRATION_WIZARD":
+        window.AWSendToParent("SPECIAL_ACTION", action);
+        break;
+
+      case "OPEN_URL":
+        window.open(action.data.args);
+        break;
+    }
+  },
+
+  sendEvent(type, detail) {
+    document.dispatchEvent(new CustomEvent(`AWPage:${type}`, {
+      bubbles: true,
+      detail
+    }));
+  }
+
+};
+const DEFAULT_WELCOME_CONTENT = {
+  title: {
+    string_id: "onboarding-welcome-header"
+  },
+  startButton: {
+    label: {
+      string_id: "onboarding-start-browsing-button-label"
+    },
+    message_id: "START_BROWSING_BUTTON",
+    action: {
+      type: "OPEN_AWESOME_BAR"
+    }
+  },
+  cards: [{
+    content: {
+      title: {
+        string_id: "onboarding-data-sync-title"
+      },
+      text: {
+        string_id: "onboarding-data-sync-text2"
+      },
+      icon: "devices",
+      primary_button: {
+        label: {
+          string_id: "onboarding-data-sync-button2"
+        },
+        action: {
+          type: "OPEN_URL",
+          addFlowParams: true,
+          data: {
+            args: "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&style=trailhead",
+            where: "tabshifted"
+          }
+        }
+      }
+    },
+    id: "TRAILHEAD_CARD_2",
+    order: 1,
+    blockOnClick: false
+  }, {
+    content: {
+      title: {
+        string_id: "onboarding-firefox-monitor-title"
+      },
+      text: {
+        string_id: "onboarding-firefox-monitor-text2"
+      },
+      icon: "ffmonitor",
+      primary_button: {
+        label: {
+          string_id: "onboarding-firefox-monitor-button"
+        },
+        action: {
+          type: "OPEN_URL",
+          data: {
+            args: "https://monitor.firefox.com/",
+            where: "tabshifted"
+          }
+        }
+      }
+    },
+    id: "TRAILHEAD_CARD_3",
+    order: 2,
+    blockOnClick: false
+  }, {
+    content: {
+      title: {
+        string_id: "onboarding-browse-privately-title"
+      },
+      text: {
+        string_id: "onboarding-browse-privately-text"
+      },
+      icon: "private",
+      primary_button: {
+        label: {
+          string_id: "onboarding-browse-privately-button"
+        },
+        action: {
+          type: "OPEN_PRIVATE_BROWSER_WINDOW"
+        }
+      }
+    },
+    id: "TRAILHEAD_CARD_4",
+    order: 3,
+    blockOnClick: true
+  }]
+};
+
+/***/ }),
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HeroText", function() { return HeroText; });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+const HeroText = props => {
+  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: props.title
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
+    className: "welcome-title"
+  })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: props.subtitle
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
+    className: "welcome-subtitle"
+  })));
+};
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FxCards", function() { return FxCards; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6);
-/* harmony import */ var _asrouter_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
-/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8);
+/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8);
+/* harmony import */ var _asrouter_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -422,7 +616,7 @@ class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
 }
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -463,7 +657,7 @@ function addUtmParams(url, utmTerm) {
 }
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -526,128 +720,6 @@ class OnboardingCard extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCo
   }
 
 }
-
-/***/ }),
-/* 8 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AboutWelcomeUtils", function() { return AboutWelcomeUtils; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_WELCOME_CONTENT", function() { return DEFAULT_WELCOME_CONTENT; });
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-const AboutWelcomeUtils = {
-  handleUserAction(action) {
-    switch (action.type) {
-      case "OPEN_AWESOME_BAR":
-      case "OPEN_PRIVATE_BROWSER_WINDOW":
-      case "SHOW_MIGRATION_WIZARD":
-        window.AWSendToParent("SPECIAL_ACTION", action);
-        break;
-
-      case "OPEN_URL":
-        window.open(action.data.args);
-        break;
-    }
-  },
-
-  sendEvent(type, detail) {
-    document.dispatchEvent(new CustomEvent(`AWPage:${type}`, {
-      bubbles: true,
-      detail
-    }));
-  }
-
-};
-const DEFAULT_WELCOME_CONTENT = {
-  title: {
-    string_id: "onboarding-welcome-header"
-  },
-  startButton: {
-    label: {
-      string_id: "onboarding-start-browsing-button-label"
-    },
-    message_id: "START_BROWSING_BUTTON",
-    action: {
-      type: "OPEN_AWESOME_BAR"
-    }
-  },
-  cards: [{
-    content: {
-      title: {
-        string_id: "onboarding-data-sync-title"
-      },
-      text: {
-        string_id: "onboarding-data-sync-text2"
-      },
-      icon: "devices",
-      primary_button: {
-        label: {
-          string_id: "onboarding-data-sync-button2"
-        },
-        action: {
-          type: "OPEN_URL",
-          addFlowParams: true,
-          data: {
-            args: "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&style=trailhead",
-            where: "tabshifted"
-          }
-        }
-      }
-    },
-    id: "TRAILHEAD_CARD_2",
-    order: 1,
-    blockOnClick: false
-  }, {
-    content: {
-      title: {
-        string_id: "onboarding-firefox-monitor-title"
-      },
-      text: {
-        string_id: "onboarding-firefox-monitor-text2"
-      },
-      icon: "ffmonitor",
-      primary_button: {
-        label: {
-          string_id: "onboarding-firefox-monitor-button"
-        },
-        action: {
-          type: "OPEN_URL",
-          data: {
-            args: "https://monitor.firefox.com/",
-            where: "tabshifted"
-          }
-        }
-      }
-    },
-    id: "TRAILHEAD_CARD_3",
-    order: 2,
-    blockOnClick: false
-  }, {
-    content: {
-      title: {
-        string_id: "onboarding-browse-privately-title"
-      },
-      text: {
-        string_id: "onboarding-browse-privately-text"
-      },
-      icon: "private",
-      primary_button: {
-        label: {
-          string_id: "onboarding-browse-privately-button"
-        },
-        action: {
-          type: "OPEN_PRIVATE_BROWSER_WINDOW"
-        }
-      }
-    },
-    id: "TRAILHEAD_CARD_4",
-    order: 3,
-    blockOnClick: true
-  }]
-};
 
 /***/ })
 /******/ ]);

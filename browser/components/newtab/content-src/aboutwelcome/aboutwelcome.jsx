@@ -4,6 +4,7 @@
 
 import React from "react";
 import ReactDOM from "react-dom";
+import { MultiStageAboutWelcome } from "./components/MultiStageAboutWelcome";
 import { HeroText } from "./components/HeroText";
 import { FxCards } from "./components/FxCards";
 import { Localized } from "./components/MSLocalized";
@@ -29,6 +30,8 @@ class AboutWelcome extends React.PureComponent {
   componentDidMount() {
     if (this.props.experiment && this.props.branchId) {
       this.messageId = `ABOUT_WELCOME_${this.props.experiment}_${this.props.branchId}`.toUpperCase();
+    } else if (this.props.id && this.props.screens) {
+      this.messageId = this.props.id;
     }
     this.fetchFxAFlowUri();
     window.AWSendEventTelemetry({
@@ -56,6 +59,14 @@ class AboutWelcome extends React.PureComponent {
 
   render() {
     const { props } = this;
+    // TBD: Refactor to redirect based off template value
+    // inside props.template
+    // Create SimpleAboutWelcome that renders default about welcome
+    // See Bug 1638087
+    if (props.screens) {
+      return <MultiStageAboutWelcome screens={props.screens} />;
+    }
+
     let UTMTerm =
       this.props.experiment && this.props.branchId
         ? `${this.props.experiment}-${this.props.branchId}`
@@ -88,7 +99,12 @@ AboutWelcome.defaultProps = DEFAULT_WELCOME_CONTENT;
 
 async function mount() {
   const { slug, branch } = await window.AWGetStartupData();
-  const settings = branch && branch.value ? branch.value : {};
+  let settings = branch && branch.value ? branch.value : {};
+
+  if (!(branch && branch.value)) {
+    // Check for override content in pref browser.aboutwelcome.overrideContent
+    settings = await window.AWGetMultiStageScreens();
+  }
 
   ReactDOM.render(
     <AboutWelcome

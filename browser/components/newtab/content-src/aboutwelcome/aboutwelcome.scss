@@ -61,14 +61,9 @@ body {
   margin-top: 32px;
   display: grid;
   grid-gap: 32px;
-  opacity: 0;
   transition: opacity 0.4s;
   transition-delay: 0.1s;
   grid-auto-rows: 1fr;
-
-  &.show {
-    opacity: 1;
-  }
 
   @media (min-width: $break-point-medium) {
     grid-template-columns: repeat(auto-fit, 224px);
