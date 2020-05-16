@@ -112,7 +112,7 @@ pub struct Reftest {
     disable_dual_source_blending: bool,
     allow_mipmaps: bool,
     zoom_factor: f32,
-    allow_sacrificing_subpixel_aa: Option<bool>,
+    force_subpixel_aa_where_possible: Option<bool>,
 }
 
 impl Reftest {
@@ -373,7 +373,7 @@ impl ReftestManifest {
             let mut zoom_factor = 1.0;
             let mut allow_mipmaps = false;
             let mut dirty_region_index = 0;
-            let mut allow_sacrificing_subpixel_aa = None;
+            let mut force_subpixel_aa_where_possible = None;
 
             let mut paths = vec![];
             for (i, token) in tokens.iter().enumerate() {
@@ -407,9 +407,9 @@ impl ReftestManifest {
                         let (_, args, _) = parse_function(function);
                         zoom_factor = args[0].parse().unwrap();
                     }
-                    function if function.starts_with("allow_sacrificing_subpixel_aa") => {
+                    function if function.starts_with("force_subpixel_aa_where_possible") => {
                         let (_, args, _) = parse_function(function);
-                        allow_sacrificing_subpixel_aa = Some(args[0].parse().unwrap());
+                        force_subpixel_aa_where_possible = Some(args[0].parse().unwrap());
                     }
                     function if function.starts_with("fuzzy-range") => {  // make sure this comes before 'fuzzy'
                         let (_, args, _) = parse_function(function);
@@ -541,7 +541,7 @@ impl ReftestManifest {
                 disable_dual_source_blending,
                 allow_mipmaps,
                 zoom_factor,
-                allow_sacrificing_subpixel_aa,
+                force_subpixel_aa_where_possible,
             });
         }
 
@@ -697,10 +697,10 @@ impl<'a> ReftestHarness<'a> {
                 DebugCommand::ClearCaches(ClearCache::all())
             );
 
-        let quality_settings = match t.allow_sacrificing_subpixel_aa {
-            Some(allow_sacrificing_subpixel_aa) => {
+        let quality_settings = match t.force_subpixel_aa_where_possible {
+            Some(force_subpixel_aa_where_possible) => {
                 QualitySettings {
-                    allow_sacrificing_subpixel_aa,
+                    force_subpixel_aa_where_possible,
                 }
             }
             None => {

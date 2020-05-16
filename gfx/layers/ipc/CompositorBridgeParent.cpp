@@ -1967,7 +1967,7 @@ void CompositorBridgeParent::AccumulateMemoryReport(wr::MemoryReport* aReport) {
 
 /*static*/
 void CompositorBridgeParent::InitializeStatics() {
-  gfxVars::SetAllowSacrificingSubpixelAAListener(&UpdateQualitySettings);
+  gfxVars::SetForceSubpixelAAWherePossibleListener(&UpdateQualitySettings);
   gfxVars::SetWebRenderDebugFlagsListener(&UpdateDebugFlags);
   gfxVars::SetUseWebRenderMultithreadingListener(
       &UpdateWebRenderMultithreading);

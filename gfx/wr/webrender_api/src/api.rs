@@ -33,18 +33,19 @@ pub type DocumentLayer = i8;
 /// between rendering quality and performance / power usage.
 #[derive(Copy, Clone, Deserialize, Serialize)]
 pub struct QualitySettings {
-    /// If true, allow picture cache slices to be created that may prevent
-    /// subpixel AA on text being used due to lack of opaque background. This
-    /// often allows a significant performance win on pages that interleave
-    /// scroll regions with fixed position elements.
-    pub allow_sacrificing_subpixel_aa: bool,
+    /// If true, disable creating separate picture cache slices when the
+    /// scroll root changes. This gives maximum opportunity to find an
+    /// opaque background, which enables subpixel AA. However, it is
+    /// usually significantly more expensive to render when scrolling.
+    pub force_subpixel_aa_where_possible: bool,
 }
 
 impl Default for QualitySettings {
     fn default() -> Self {
         QualitySettings {
-            // Preferring performance in this case retains the current behavior.
-            allow_sacrificing_subpixel_aa: true,
+            // Prefer performance over maximum subpixel AA quality, since WR
+            // already enables subpixel AA in more situations than other browsers.
+            force_subpixel_aa_where_possible: false,
         }
     }
 }
