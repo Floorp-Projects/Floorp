@@ -138,8 +138,9 @@ interface nsIHelperAppLauncher : nsICancelable
   /**
    * Tell the launcher that we will want to open the file.
    * NOTE: This will release the reference to the nsIHelperAppLauncherDialog.
+   * @param aHandleInternally TRUE if we should handle opening this internally.
    */
-  void launchWithApplication();
+  void launchWithApplication(in boolean aHandleInternally);
 
   /**
    * Callback invoked by nsIHelperAppLauncherDialog::promptForSaveToFileAsync
