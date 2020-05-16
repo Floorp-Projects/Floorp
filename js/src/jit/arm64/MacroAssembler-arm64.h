@@ -847,6 +847,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     Mov(scratch32, Operand(imm.value));
     doBaseIndex(scratch32, address, vixl::STRH_w);
   }
+  template <typename S, typename T>
+  void store16Unaligned(const S& src, const T& dest) {
+    store16(src, dest);
+  }
 
   void storePtr(ImmWord imm, const Address& address) {
     vixl::UseScratchRegisterScope temps(this);
@@ -938,6 +942,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     Str(scratch32, toMemOperand(address));
   }
 
+  template <typename S, typename T>
+  void store32Unaligned(const S& src, const T& dest) {
+    store32(src, dest);
+  }
+
   void store64(Register64 src, Address address) { storePtr(src.reg, address); }
 
   void store64(Register64 src, const BaseIndex& address) {
@@ -946,6 +955,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void store64(Imm64 imm, const BaseIndex& address) {
     storePtr(ImmWord(imm.value), address);
+  }
+
+  template <typename S, typename T>
+  void store64Unaligned(const S& src, const T& dest) {
+    store64(src, dest);
   }
 
   // StackPointer manipulation.
@@ -1200,11 +1214,19 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     movePtr(ImmWord((uintptr_t)address.addr), scratch64.asUnsized());
     ldr(ARMRegister(dest, 32), MemOperand(scratch64));
   }
+  template <typename S>
+  void load32Unaligned(const S& src, Register dest) {
+    load32(src, dest);
+  }
   void load64(const Address& address, Register64 dest) {
     loadPtr(address, dest.reg);
   }
   void load64(const BaseIndex& address, Register64 dest) {
     loadPtr(address, dest.reg);
+  }
+  template <typename S>
+  void load64Unaligned(const S& src, Register64 dest) {
+    load64(src, dest);
   }
 
   void load8SignExtend(const Address& address, Register dest) {
@@ -1227,12 +1249,20 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void load16SignExtend(const BaseIndex& src, Register dest) {
     doBaseIndex(ARMRegister(dest, 32), src, vixl::LDRSH_w);
   }
+  template <typename S>
+  void load16UnalignedSignExtend(const S& src, Register dest) {
+    load16SignExtend(src, dest);
+  }
 
   void load16ZeroExtend(const Address& address, Register dest) {
     Ldrh(ARMRegister(dest, 32), toMemOperand(address));
   }
   void load16ZeroExtend(const BaseIndex& src, Register dest) {
     doBaseIndex(ARMRegister(dest, 32), src, vixl::LDRH_w);
+  }
+  template <typename S>
+  void load16UnalignedZeroExtend(const S& src, Register dest) {
+    load16ZeroExtend(src, dest);
   }
 
   void adds32(Register src, Register dest) {

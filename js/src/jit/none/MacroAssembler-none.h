@@ -382,6 +382,10 @@ class MacroAssemblerNone : public Assembler {
     MOZ_CRASH();
   }
   template <typename T>
+  void load32Unaligned(T, Register) {
+    MOZ_CRASH();
+  }
+  template <typename T>
   void loadFloat32(T, FloatRegister) {
     MOZ_CRASH();
   }
@@ -406,11 +410,23 @@ class MacroAssemblerNone : public Assembler {
     MOZ_CRASH();
   }
   template <typename T>
+  void load16UnalignedSignExtend(T, Register) {
+    MOZ_CRASH();
+  }
+  template <typename T>
   void load16ZeroExtend(T, Register) {
     MOZ_CRASH();
   }
   template <typename T>
+  void load16UnalignedZeroExtend(T, Register) {
+    MOZ_CRASH();
+  }
+  template <typename T>
   void load64(T, Register64) {
+    MOZ_CRASH();
+  }
+  template <typename T>
+  void load64Unaligned(T, Register64) {
     MOZ_CRASH();
   }
 
@@ -424,6 +440,10 @@ class MacroAssemblerNone : public Assembler {
   }
   template <typename T, typename S>
   void store32_NoSecondScratch(T, S) {
+    MOZ_CRASH();
+  }
+  template <typename T, typename S>
+  void store32Unaligned(T, S) {
     MOZ_CRASH();
   }
   template <typename T, typename S>
@@ -443,7 +463,15 @@ class MacroAssemblerNone : public Assembler {
     MOZ_CRASH();
   }
   template <typename T, typename S>
+  void store16Unaligned(T, S) {
+    MOZ_CRASH();
+  }
+  template <typename T, typename S>
   void store64(T, S) {
+    MOZ_CRASH();
+  }
+  template <typename T, typename S>
+  void store64Unaligned(T, S) {
     MOZ_CRASH();
   }
 

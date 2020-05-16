@@ -601,6 +601,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     movl(Operand(HighWord(address)), dest.high);
   }
   template <typename T>
+  void load64Unaligned(const T& address, Register64 dest) {
+    load64(address, dest);
+  }
+  template <typename T>
   void storePtr(ImmWord imm, T address) {
     movl(Imm32(imm.value), Operand(address));
   }
@@ -636,6 +640,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   void store64(Imm64 imm, Address address) {
     movl(imm.low(), Operand(LowWord(address)));
     movl(imm.hi(), Operand(HighWord(address)));
+  }
+  template <typename S, typename T>
+  void store64Unaligned(const S& src, const T& dest) {
+    store64(src, dest);
   }
 
   void setStackArg(Register reg, uint32_t arg) {
