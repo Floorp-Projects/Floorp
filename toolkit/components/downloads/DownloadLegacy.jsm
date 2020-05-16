@@ -271,67 +271,6 @@ DownloadLegacyTransfer.prototype = {
     aCancelable,
     aIsPrivate
   ) {
-    return this._nsITransferInitInternal(
-      aSource,
-      aTarget,
-      aDisplayName,
-      aMIMEInfo,
-      aStartTime,
-      aTempFile,
-      aCancelable,
-      aIsPrivate
-    );
-  },
-
-  // nsITransfer
-  initWithBrowsingContext(
-    aSource,
-    aTarget,
-    aDisplayName,
-    aMIMEInfo,
-    aStartTime,
-    aTempFile,
-    aCancelable,
-    aIsPrivate,
-    aBrowsingContext,
-    aHandleInternally
-  ) {
-    let browsingContextId;
-    let userContextId;
-    if (aBrowsingContext && aBrowsingContext.currentWindowGlobal) {
-      browsingContextId = aBrowsingContext.id;
-      let windowGlobal = aBrowsingContext.currentWindowGlobal;
-      let originAttributes = windowGlobal.documentPrincipal.originAttributes;
-      userContextId = originAttributes.userContextId;
-    }
-    return this._nsITransferInitInternal(
-      aSource,
-      aTarget,
-      aDisplayName,
-      aMIMEInfo,
-      aStartTime,
-      aTempFile,
-      aCancelable,
-      aIsPrivate,
-      userContextId,
-      browsingContextId,
-      aHandleInternally
-    );
-  },
-
-  _nsITransferInitInternal(
-    aSource,
-    aTarget,
-    aDisplayName,
-    aMIMEInfo,
-    aStartTime,
-    aTempFile,
-    aCancelable,
-    isPrivate,
-    userContextId = 0,
-    browsingContextId = 0,
-    handleInternally = false
-  ) {
     this._cancelable = aCancelable;
 
     let launchWhenSucceeded = false,
@@ -356,12 +295,7 @@ DownloadLegacyTransfer.prototype = {
     // wait for it to be available.  This operation may cause the entire
     // download system to initialize before the object is created.
     Downloads.createDownload({
-      source: {
-        url: aSource.spec,
-        isPrivate,
-        userContextId,
-        browsingContextId,
-      },
+      source: { url: aSource.spec, isPrivate: aIsPrivate },
       target: {
         path: aTarget.QueryInterface(Ci.nsIFileURL).file.path,
         partFilePath: aTempFile && aTempFile.path,
@@ -370,7 +304,6 @@ DownloadLegacyTransfer.prototype = {
       launchWhenSucceeded,
       contentType,
       launcherPath,
-      handleInternally,
     })
       .then(aDownload => {
         // Legacy components keep partial data when they use a ".part" file.

@@ -111,12 +111,13 @@ function doGetProtocolFlags(aURI) {
 /**
  * openUILink handles clicks on UI elements that cause URLs to load.
  *
- * @param {string} url
- * @param {Event | Object} event Event or JSON object representing an Event
+ * As the third argument, you may pass an object with the same properties as
+ * accepted by openUILinkIn, plus "ignoreButton" and "ignoreAlt".
+ *
+ * @param url {string}
+ * @param event {Event | Object} Event or JSON object representing an Event
  * @param {Boolean | Object} aIgnoreButton
- *                           Boolean or object with the same properties as
- *                           accepted by openUILinkIn, plus "ignoreButton"
- *                           and "ignoreAlt".
+ * @param {Boolean} aIgnoreButton
  * @param {Boolean} aIgnoreAlt
  * @param {Boolean} aAllowThirdPartyFixup
  * @param {Object} aPostData

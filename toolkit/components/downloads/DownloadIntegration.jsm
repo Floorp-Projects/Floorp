@@ -784,43 +784,6 @@ var DownloadIntegration = {
       return;
     }
 
-    if (aDownload.handleInternally) {
-      let win = Services.wm.getMostRecentBrowserWindow();
-      let browsingContext =
-        win && win.BrowsingContext.get(aDownload.source.browsingContextId);
-      win = Services.wm.getOuterWindowWithId(
-        browsingContext &&
-          browsingContext.embedderWindowGlobal &&
-          browsingContext.embedderWindowGlobal.outerWindowId
-      );
-      let fileURI = Services.io.newFileURI(file);
-      if (win) {
-        // TODO: Replace openTrustedLinkIn with openUILink once
-        //       we have access to the event.
-        win.openTrustedLinkIn(fileURI.spec, "tab", {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-          userContextId: aDownload.source.userContextId,
-        });
-        return;
-      }
-      let features = "chrome,dialog=no,all";
-      if (aDownload.source.isPrivate) {
-        features += ",private";
-      }
-      let args = Cc["@mozilla.org/supports-string;1"].createInstance(
-        Ci.nsISupportsString
-      );
-      args.data = fileURI.spec;
-      win = Services.ww.openWindow(
-        null,
-        AppConstants.BROWSER_CHROME_URL,
-        "_blank",
-        features,
-        args
-      );
-      return;
-    }
-
     // No custom application chosen, let's launch the file with the default
     // handler. First, let's try to launch it through the MIME service.
     if (mimeInfo) {

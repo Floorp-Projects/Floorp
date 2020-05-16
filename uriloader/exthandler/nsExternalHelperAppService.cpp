@@ -1155,7 +1155,6 @@ nsExternalAppHandler::nsExternalAppHandler(
       mStopRequestIssued(false),
       mIsFileChannel(false),
       mShouldCloseWindow(false),
-      mHandleInternally(false),
       mReason(aReason),
       mTempFileIsExecutable(false),
       mTimeDownloadStarted(0),
@@ -1272,12 +1271,6 @@ NS_IMETHODIMP nsExternalAppHandler::GetTimeDownloadStarted(PRTime* aTime) {
 
 NS_IMETHODIMP nsExternalAppHandler::GetContentLength(int64_t* aContentLength) {
   *aContentLength = mContentLength;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsExternalAppHandler::GetBrowsingContextId(
-    uint64_t* aBrowsingContextId) {
-  *aBrowsingContextId = mBrowsingContext->Id();
   return NS_OK;
 }
 
@@ -1589,7 +1582,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   if (NS_FAILED(rv)) {
     nsresult transferError = rv;
 
-    rv = CreateFailedTransfer();
+    rv = CreateFailedTransfer(aChannel && NS_UsePrivateBrowsing(aChannel));
     if (NS_FAILED(rv)) {
       LOG(
           ("Failed to create transfer to report failure."
@@ -1741,7 +1734,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 #endif
     if (action == nsIMIMEInfo::useHelperApp ||
         action == nsIMIMEInfo::useSystemDefault) {
-      rv = LaunchWithApplication(mHandleInternally);
+      rv = LaunchWithApplication();
     } else {
       rv = PromptForSaveDestination();
     }
@@ -2017,7 +2010,7 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver* aSaver,
       // have to.
       if (!mTransfer) {
         // We don't care if this fails.
-        CreateFailedTransfer();
+        CreateFailedTransfer(channel && NS_UsePrivateBrowsing(channel));
       }
 
       SendStatusChange(kWriteError, aStatus, nullptr, path);
@@ -2110,17 +2103,10 @@ nsresult nsExternalAppHandler::CreateTransfer() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
-  if (mBrowsingContext) {
-    rv = transfer->InitWithBrowsingContext(
-        mSourceUrl, target, EmptyString(), mMimeInfo, mTimeDownloadStarted,
-        mTempFile, this, channel && NS_UsePrivateBrowsing(channel),
-        mBrowsingContext, mHandleInternally);
-  } else {
-    rv = transfer->Init(mSourceUrl, target, EmptyString(), mMimeInfo,
-                        mTimeDownloadStarted, mTempFile, this,
-                        channel && NS_UsePrivateBrowsing(channel));
-  }
 
+  rv = transfer->Init(mSourceUrl, target, EmptyString(), mMimeInfo,
+                      mTimeDownloadStarted, mTempFile, this,
+                      channel && NS_UsePrivateBrowsing(channel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If we were cancelled since creating the transfer, just return. It is
@@ -2156,7 +2142,7 @@ nsresult nsExternalAppHandler::CreateTransfer() {
   return rv;
 }
 
-nsresult nsExternalAppHandler::CreateFailedTransfer() {
+nsresult nsExternalAppHandler::CreateFailedTransfer(bool aIsPrivateBrowsing) {
   nsresult rv;
   nsCOMPtr<nsITransfer> transfer =
       do_CreateInstance(NS_TRANSFER_CONTRACTID, &rv);
@@ -2177,18 +2163,8 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
   rv = NS_NewFileURI(getter_AddRefs(pseudoTarget), pseudoFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
-  if (mBrowsingContext) {
-    rv = transfer->InitWithBrowsingContext(
-        mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
-        mTimeDownloadStarted, nullptr, this,
-        channel && NS_UsePrivateBrowsing(channel), mBrowsingContext,
-        mHandleInternally);
-  } else {
-    rv = transfer->Init(mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
-                        mTimeDownloadStarted, nullptr, this,
-                        channel && NS_UsePrivateBrowsing(channel));
-  }
+  rv = transfer->Init(mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
+                      mTimeDownloadStarted, nullptr, this, aIsPrivateBrowsing);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Our failed transfer is ready.
@@ -2315,11 +2291,8 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
 
 // LaunchWithApplication should only be called by the helper app dialog which
 // allows the user to say launch with application or save to disk.
-NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(
-    bool aHandleInternally) {
+NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication() {
   if (mCanceled) return NS_OK;
-
-  mHandleInternally = aHandleInternally;
 
   // Now check if the file is local, in which case we won't bother with saving
   // it to a temporary directory and just launch it from where it is
@@ -2487,28 +2460,6 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
   LOG(("OS gave back 0x%p - found: %i\n", *_retval, found));
   // If we got no mimeinfo, something went wrong. Probably lack of memory.
   if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-
-  // (1.5) Overwrite with generic description if the extension is PDF
-  // since the file format is supported by Firefox and we don't want
-  // other brands positioning themselves as the sole viewer for a system.
-  if (aFileExt.LowerCaseEqualsASCII("pdf") ||
-      aFileExt.LowerCaseEqualsASCII(".pdf")) {
-    nsCOMPtr<nsIStringBundleService> bundleService =
-        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIStringBundle> unknownContentTypeBundle;
-    rv = bundleService->CreateBundle(
-        "chrome://mozapps/locale/downloads/unknownContentType.properties",
-        getter_AddRefs(unknownContentTypeBundle));
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString pdfHandlerDescription;
-      rv = unknownContentTypeBundle->GetStringFromName("pdfHandlerDescription",
-                                                       pdfHandlerDescription);
-      if (NS_SUCCEEDED(rv)) {
-        (*_retval)->SetDescription(pdfHandlerDescription);
-      }
-    }
-  }
 
   // (2) Now, let's see if we can find something in our datastore
   // This will not overwrite the OS information that interests us
