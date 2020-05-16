@@ -190,6 +190,7 @@ OSXNotificationCenter::OSXNotificationCenter() {
 
   mDelegate = [[mozNotificationCenterDelegate alloc] initWithOSXNC:this];
   GetNotificationCenter().delegate = mDelegate;
+  mSuppressForScreenSharing = false;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -203,7 +204,7 @@ OSXNotificationCenter::~OSXNotificationCenter() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMPL_ISUPPORTS(OSXNotificationCenter, nsIAlertsService, nsIAlertsIconData,
+NS_IMPL_ISUPPORTS(OSXNotificationCenter, nsIAlertsService, nsIAlertsIconData, nsIAlertsDoNotDisturb,
                   nsIAlertNotificationImageListener)
 
 nsresult OSXNotificationCenter::Init() {
@@ -249,6 +250,10 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG(aAlert);
+
+  if (mSuppressForScreenSharing) {
+    return NS_OK;
+  }
 
   Class unClass = NSClassFromString(@"NSUserNotification");
   id<FakeNSUserNotification> notification = [[unClass alloc] init];
@@ -532,6 +537,36 @@ OSXNotificationCenter::OnImageReady(nsISupports* aUserData, imgIRequest* aReques
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+// nsIAlertsDoNotDisturb
+NS_IMETHODIMP
+OSXNotificationCenter::GetManualDoNotDisturb(bool* aRetVal) { return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+OSXNotificationCenter::SetManualDoNotDisturb(bool aDoNotDisturb) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+OSXNotificationCenter::GetSuppressForScreenSharing(bool* aRetVal) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+
+  NS_ENSURE_ARG(aRetVal);
+  *aRetVal = mSuppressForScreenSharing;
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
+}
+
+NS_IMETHODIMP
+OSXNotificationCenter::SetSuppressForScreenSharing(bool aSuppress) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+
+  mSuppressForScreenSharing = aSuppress;
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
 }
 
 }  // namespace mozilla
