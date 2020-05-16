@@ -3340,6 +3340,38 @@ pdf.viewer:
       - 'main'
       - 'content'
 
+# The following section contains scalars for the Unknown Content Type (Helper App) dialog.
+unknowncontenttype:
+  pdf_action:
+    bug_numbers:
+      - 773942
+    description: >
+      A counter incremented every time a user uses the Unknown Content Type dialog
+      for PDF files, with counts grouped by action chosen (see keys). Some external
+      applications that have very high adoption are counted specifically.
+      Note: 'OPEN_WITH_SYSTEM_DEFAULT' may eventually resolve to one of Acrobat, Foxit, MsEdge, Chromium, etc.
+    keyed: true
+    keys:
+      - 'OPEN_WITH_INTERNAL_HANDLER'
+      - 'OPEN_WITH_SYSTEM_DEFAULT'
+      - 'OPEN_WITH_ACROBAT'
+      - 'OPEN_WITH_FOXIT'
+      - 'OPEN_WITH_MSEDGE'
+      - 'OPEN_WITH_CHROMIUM'
+      - 'OPEN_WITH_PREVIEW'
+      - 'OPEN_WITH_OTHER'
+      - 'SAVE'
+      - 'CANCEL'
+    expires: "85"
+    kind: uint
+    notification_emails:
+      - jaws@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 # The following section contains scalars for printing.
 printing:
   error:
