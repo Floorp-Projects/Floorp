@@ -1685,6 +1685,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     alwaysAsk = (action != nsIMIMEInfo::saveToDisk);
   }
 
+  // If we're not asking, check we actually know what to do:
+  if (!alwaysAsk) {
+    alwaysAsk = action != nsIMIMEInfo::saveToDisk &&
+                action != nsIMIMEInfo::useHelperApp &&
+                action != nsIMIMEInfo::useSystemDefault;
+  }
+
   // if we were told that we _must_ save to disk without asking, all the stuff
   // before this is irrelevant; override it
   if (mForceSave) {
