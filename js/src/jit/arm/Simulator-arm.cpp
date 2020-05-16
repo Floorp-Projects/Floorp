@@ -30,6 +30,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
@@ -3712,6 +3713,25 @@ void Simulator::decodeType3(SimInstruction* instr) {
                   // Sxtb.
                   set_register(rd, (int32_t)(int8_t)(rm_val & 0xFF));
                 }
+              } else if (instr->bits(20, 16) == 0b1'1111 &&
+                         instr->bits(11, 4) == 0b1111'0011) {
+                // Rev
+                uint32_t rm_val = get_register(instr->rmValue());
+
+                static_assert(MOZ_LITTLE_ENDIAN());
+                set_register(rd,
+                             mozilla::NativeEndian::swapToBigEndian(rm_val));
+              } else if (instr->bits(20, 16) == 0b1'1111 &&
+                         instr->bits(11, 4) == 0b1111'1011) {
+                // Rev16
+                uint32_t rm_val = get_register(instr->rmValue());
+
+                static_assert(MOZ_LITTLE_ENDIAN());
+                uint32_t hi = mozilla::NativeEndian::swapToBigEndian(
+                    uint16_t(rm_val >> 16));
+                uint32_t lo =
+                    mozilla::NativeEndian::swapToBigEndian(uint16_t(rm_val));
+                set_register(rd, (hi << 16) | lo);
               } else {
                 MOZ_CRASH();
               }
@@ -3757,6 +3777,15 @@ void Simulator::decodeType3(SimInstruction* instr) {
                                                 instr->bits(11, 10));
                   set_register(rd, rn_val + (rm_val & 0xFFFF));
                 }
+              } else if (instr->bits(20, 16) == 0b1'1111 &&
+                         instr->bits(11, 4) == 0b1111'1011) {
+                // Revsh
+                uint32_t rm_val = get_register(instr->rmValue());
+
+                static_assert(MOZ_LITTLE_ENDIAN());
+                set_register(
+                    rd, int32_t(int16_t(mozilla::NativeEndian::swapToBigEndian(
+                            uint16_t(rm_val)))));
               } else {
                 MOZ_CRASH();
               }
