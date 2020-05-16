@@ -75,6 +75,13 @@ fuzzy-if(skiaContent,0-1,0-23) == resize-reflow-001.html resize-reflow-001.ref.h
 # == table-caption-splitaftercaption-11.html blank.html # bug 672654
 == table-cell-breaking-1a.html table-cell-breaking-1-ref.html
 == table-cell-breaking-1b.html table-cell-breaking-1-ref.html
+== table-cell-breaking-2a.html table-cell-breaking-2-ref.html
+== table-cell-breaking-2b.html table-cell-breaking-2-ref.html
+# Note: table-cell-breaking-3a.html should match table-cell-breaking-3-ref.html, but
+# currently it renders the same as table-cell-breaking-3a-ref.html.
+== table-cell-breaking-3a.html table-cell-breaking-3a-ref.html
+fails == table-cell-breaking-3a.html table-cell-breaking-3-ref.html
+asserts(1-1) == table-cell-breaking-3b.html table-cell-breaking-3-ref.html
 == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2-ref.html
 fuzzy-if(Android,0-4,0-2) == combobox-page-break-inside.html combobox-page-break-inside-ref.html
 fuzzy-if(OSX,23-23,1-1) == table-nested-1308876-1.xhtml table-nested-1308876-1-ref.html
