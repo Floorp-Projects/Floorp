@@ -674,6 +674,32 @@ IonBuilder::InliningResult IonBuilder::inlineNativeGetter(CallInfo& callInfo,
     return InliningStatus_Inlined;
   }
 
+  // Try to optimize DataView byteLengths.
+  if (DataViewObject::isOriginalByteLengthGetter(native)) {
+    const JSClass* clasp = thisTypes->getKnownClass(constraints());
+    if (clasp != &DataViewObject::class_) {
+      return InliningStatus_NotInlined;
+    }
+
+    auto* length = MArrayBufferViewLength::New(alloc(), thisArg);
+    current->add(length);
+    current->push(length);
+    return InliningStatus_Inlined;
+  }
+
+  // Try to optimize DataView byteOffsets.
+  if (DataViewObject::isOriginalByteOffsetGetter(native)) {
+    const JSClass* clasp = thisTypes->getKnownClass(constraints());
+    if (clasp != &DataViewObject::class_) {
+      return InliningStatus_NotInlined;
+    }
+
+    auto* byteOffset = MArrayBufferViewByteOffset::New(alloc(), thisArg);
+    current->add(byteOffset);
+    current->push(byteOffset);
+    return InliningStatus_Inlined;
+  }
+
   // Try to optimize RegExp getters.
   RegExpFlags mask = RegExpFlag::NoFlags;
   if (RegExpObject::isOriginalFlagGetter(native, &mask)) {
