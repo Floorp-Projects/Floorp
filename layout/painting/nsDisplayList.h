@@ -1819,7 +1819,9 @@ class nsDisplayListBuilder {
   };
 
  private:
-  bool MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame);
+  bool MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
+                                    const nsRect& aVisibleRect,
+                                    const nsRect& aDirtyRect);
 
   /**
    * Returns whether a frame acts as an animated geometry root, optionally

@@ -814,12 +814,13 @@ bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
   return false;
 }
 
-bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
-                                                        nsIFrame* aFrame) {
+bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(
+    nsIFrame* aDirtyFrame, nsIFrame* aFrame, const nsRect& aVisibleRect,
+    const nsRect& aDirtyRect) {
   MOZ_ASSERT(aFrame->GetParent() == aDirtyFrame);
   nsRect dirty;
   nsRect visible = OutOfFlowDisplayData::ComputeVisibleRectForFrame(
-      this, aFrame, GetVisibleRect(), GetDirtyRect(), &dirty);
+      this, aFrame, aVisibleRect, aDirtyRect, &dirty);
   if (!(aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) &&
       visible.IsEmpty()) {
     return false;
@@ -1157,6 +1158,45 @@ void nsDisplayListBuilder::ClearFixedBackgroundDisplayData() {
 
 void nsDisplayListBuilder::MarkFramesForDisplayList(
     nsIFrame* aDirtyFrame, const nsFrameList& aFrames) {
+  nsRect visibleRect = GetVisibleRect();
+  nsRect dirtyRect = GetDirtyRect();
+
+  // If we are entering content that is fixed to the RCD-RSF, we are
+  // crossing the async zoom container boundary, and need to convert from
+  // visual to layout coordinates.
+  if (ViewportFrame* viewportFrame = do_QueryFrame(aDirtyFrame)) {
+    if (IsForEventDelivery() && ShouldBuildAsyncZoomContainer() &&
+        viewportFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
+      if (viewportFrame->PresShell()->GetRootScrollFrame()) {
+#ifdef DEBUG
+        for (nsIFrame* f : aFrames) {
+          MOZ_ASSERT(ViewportUtils::IsZoomedContentRoot(f));
+        }
+#endif
+        visibleRect = ViewportUtils::VisualToLayout(visibleRect,
+                                                    viewportFrame->PresShell());
+        dirtyRect = ViewportUtils::VisualToLayout(dirtyRect,
+                                                  viewportFrame->PresShell());
+      }
+#ifdef DEBUG
+      else {
+        // This is an edge case that should only happen if we are in a
+        // document with a XUL root element so that it does not have a root
+        // scroll frame but it has fixed pos content and all of the frames in
+        // aFrames are that fixed pos content.
+        for (nsIFrame* f : aFrames) {
+          MOZ_ASSERT(!ViewportUtils::IsZoomedContentRoot(f) &&
+                     f->GetParent() == aDirtyFrame &&
+                     f->StyleDisplay()->mPosition ==
+                         StylePositionProperty::Fixed);
+        }
+        // There's no root scroll frame so there can't be any zooming or async
+        // panning so we don't need to adjust the visible and dirty rects.
+      }
+#endif
+    }
+  }
+
   bool markedFrames = false;
   for (nsIFrame* e : aFrames) {
     // Skip the AccessibleCaret frame when building no caret.
@@ -1170,7 +1210,7 @@ void nsDisplayListBuilder::MarkFramesForDisplayList(
         }
       }
     }
-    if (MarkOutOfFlowFrameForDisplay(aDirtyFrame, e)) {
+    if (MarkOutOfFlowFrameForDisplay(aDirtyFrame, e, visibleRect, dirtyRect)) {
       markedFrames = true;
     }
   }
@@ -1183,44 +1223,6 @@ void nsDisplayListBuilder::MarkFramesForDisplayList(
     const DisplayItemClipChain* combinedClipChain =
         mClipState.GetCurrentCombinedClipChain(this);
     const ActiveScrolledRoot* asr = mCurrentActiveScrolledRoot;
-    nsRect visibleRect = GetVisibleRect();
-    nsRect dirtyRect = GetDirtyRect();
-
-    // If we are entering content that is fixed to the RCD-RSF, we are
-    // crossing the async zoom container boundary, and need to convert from
-    // visual to layout coordinates.
-    if (ViewportFrame* viewportFrame = do_QueryFrame(aDirtyFrame)) {
-      if (IsForEventDelivery() && ShouldBuildAsyncZoomContainer() &&
-          viewportFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
-        if (viewportFrame->PresShell()->GetRootScrollFrame()) {
-#ifdef DEBUG
-          for (nsIFrame* f : aFrames) {
-            MOZ_ASSERT(ViewportUtils::IsZoomedContentRoot(f));
-          }
-#endif
-          visibleRect = ViewportUtils::VisualToLayout(
-              visibleRect, viewportFrame->PresShell());
-          dirtyRect = ViewportUtils::VisualToLayout(dirtyRect,
-                                                    viewportFrame->PresShell());
-        }
-#ifdef DEBUG
-        else {
-          // This is an edge case that should only happen if we are in a
-          // document with a XUL root element so that it does not have a root
-          // scroll frame but it has fixed pos content and all of the frames in
-          // aFrames are that fixed pos content.
-          for (nsIFrame* f : aFrames) {
-            MOZ_ASSERT(!ViewportUtils::IsZoomedContentRoot(f) &&
-                       f->GetParent() == aDirtyFrame &&
-                       f->StyleDisplay()->mPosition ==
-                           StylePositionProperty::Fixed);
-          }
-          // There's no root scroll frame so there can't be any zooming or async
-          // panning so we don't need to adjust the visible and dirty rects.
-        }
-#endif
-      }
-    }
 
     OutOfFlowDisplayData* data = new OutOfFlowDisplayData(
         clipChain, combinedClipChain, asr, visibleRect, dirtyRect);
