@@ -28,26 +28,11 @@ internal object EngineStateReducer {
     }
 }
 
-private fun BrowserState.copyWithEngineState(
+private inline fun BrowserState.copyWithEngineState(
     tabId: String,
-    update: (EngineState) -> EngineState
+    crossinline update: (EngineState) -> EngineState
 ): BrowserState {
-    // Currently we map over both lists (tabs and customTabs). We could optimize this away later on if we know what
-    // type we want to modify.
-    return copy(
-        tabs = tabs.map { current ->
-            if (current.id == tabId) {
-                current.copy(engineState = update.invoke(current.engineState))
-            } else {
-                current
-            }
-        },
-        customTabs = customTabs.map { current ->
-            if (current.id == tabId) {
-                current.copy(engineState = update.invoke(current.engineState))
-            } else {
-                current
-            }
-        }
-    )
+    return updateTabState(tabId) { current ->
+        current.createCopy(engineState = update(current.engineState))
+    }
 }

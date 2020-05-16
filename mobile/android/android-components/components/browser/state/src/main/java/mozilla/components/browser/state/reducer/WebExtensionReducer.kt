@@ -89,21 +89,11 @@ internal object WebExtensionReducer {
         update: (WebExtensionState) -> WebExtensionState
     ): BrowserState {
         return copy(
-            tabs = tabs.map { current ->
-                if (current.id == tabId) {
-                    val existingExtension = current.extensionState[extensionId]
-                    val newExtension = extensionId to update(existingExtension ?: WebExtensionState(extensionId))
-                    val updatedExtensions = if (existingExtension == null) {
-                        current.extensionState + newExtension
-                    } else {
-                        val newExtensions = current.extensionState - extensionId
-                        newExtensions + newExtension
-                    }
-                    current.copy(extensionState = updatedExtensions)
-                } else {
-                    current
-                }
-            }
+            tabs = tabs.updateTabs(tabId) { current ->
+                val existingExtension = current.extensionState[extensionId]
+                val newExtension = extensionId to update(existingExtension ?: WebExtensionState(extensionId))
+                current.copy(extensionState = current.extensionState + newExtension)
+            } ?: tabs
         )
     }
 
@@ -113,7 +103,6 @@ internal object WebExtensionReducer {
     ): BrowserState {
         val existingExtension = extensions[extensionId]
         val newExtension = extensionId to update(existingExtension ?: WebExtensionState(extensionId))
-        val updatedExtensions = extensions - extensionId
-        return copy(extensions = updatedExtensions + newExtension)
+        return copy(extensions = extensions + newExtension)
     }
 }

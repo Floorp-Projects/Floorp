@@ -124,29 +124,14 @@ internal object ContentStateReducer {
     }
 }
 
-private fun updateContentState(
+private inline fun updateContentState(
     state: BrowserState,
     tabId: String,
-    update: (ContentState) -> ContentState
+    crossinline update: (ContentState) -> ContentState
 ): BrowserState {
-    // Currently we map over both lists (tabs and customTabs). We could optimize this away later on if we know what
-    // type we want to modify.
-    return state.copy(
-        tabs = state.tabs.map { current ->
-            if (current.id == tabId) {
-                current.copy(content = update.invoke(current.content))
-            } else {
-                current
-            }
-        },
-        customTabs = state.customTabs.map { current ->
-            if (current.id == tabId) {
-                current.copy(content = update.invoke(current.content))
-            } else {
-                current
-            }
-        }
-    )
+    return state.updateTabState(tabId) { current ->
+        current.createCopy(content = update(current.content))
+    }
 }
 
 private fun isHostEquals(sessionUrl: String, newUrl: String): Boolean {

@@ -25,7 +25,24 @@ data class CustomTabSessionState(
     override val engineState: EngineState = EngineState(),
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
     override val contextId: String? = null
-) : SessionState
+) : SessionState {
+
+    override fun createCopy(
+        id: String,
+        content: ContentState,
+        trackingProtection: TrackingProtectionState,
+        engineState: EngineState,
+        extensionState: Map<String, WebExtensionState>,
+        contextId: String?
+    ) = copy(
+        id = id,
+        content = content,
+        trackingProtection = trackingProtection,
+        engineState = engineState,
+        extensionState = extensionState,
+        contextId = contextId
+    )
+}
 
 /**
  * Convenient function for creating a custom tab.

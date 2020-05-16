@@ -24,4 +24,17 @@ interface SessionState {
     val engineState: EngineState
     val extensionState: Map<String, WebExtensionState>
     val contextId: String?
+
+    /**
+     * Copy the class and override some parameters.
+     */
+    @Suppress("LongParameterList")
+    fun createCopy(
+        id: String = this.id,
+        content: ContentState = this.content,
+        trackingProtection: TrackingProtectionState = this.trackingProtection,
+        engineState: EngineState = this.engineState,
+        extensionState: Map<String, WebExtensionState> = this.extensionState,
+        contextId: String? = this.contextId
+    ): SessionState
 }
