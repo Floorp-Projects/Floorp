@@ -94,7 +94,6 @@ class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
                     nsIFrame* aPrevInFlow) override;
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
                            PostDestroyData& aPostDestroyData) override;
-  void DidSetComputedStyle(ComputedStyle* aOldStyle) final;
 
   bool GetIntrinsicImageDimensions(mozilla::gfx::Size& aSize,
                                    mozilla::AspectRatio& aAspectRatio) const;

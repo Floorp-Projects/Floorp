@@ -116,24 +116,6 @@ void nsSVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-/* virtual */
-void nsSVGImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
-  SVGGeometryFrame::DidSetComputedStyle(aOldStyle);
-
-  if (!mImageContainer || !aOldStyle) {
-    return;
-  }
-
-  auto newOrientation = StyleVisibility()->mImageOrientation;
-
-  if (aOldStyle->StyleVisibility()->mImageOrientation != newOrientation) {
-    nsCOMPtr<imgIContainer> image(mImageContainer->Unwrap());
-    mImageContainer = nsLayoutUtils::OrientImage(image, newOrientation);
-  }
-
-  // TODO(heycam): We should handle aspect-ratio, like nsImageFrame does.
-}
-
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
@@ -823,8 +805,6 @@ void nsSVGImageListener::Notify(imgIRequest* aRequest, int32_t aType,
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     if (image) {
-      image = nsLayoutUtils::OrientImage(
-          image, mFrame->StyleVisibility()->mImageOrientation);
       image->SetAnimationMode(mFrame->PresContext()->ImageAnimationMode());
       mFrame->mImageContainer = std::move(image);
     }
