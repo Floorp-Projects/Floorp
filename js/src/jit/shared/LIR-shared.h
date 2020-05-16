@@ -4373,6 +4373,30 @@ class LLoadUnboxedBigInt : public LInstructionHelper<1, 2, 1 + INT64_PIECES> {
   const LInt64Definition temp64() { return getInt64Temp(1); }
 };
 
+class LLoadDataViewElement : public LInstructionHelper<1, 3, 1 + INT64_PIECES> {
+ public:
+  LIR_HEADER(LoadDataViewElement)
+
+  LLoadDataViewElement(const LAllocation& elements, const LAllocation& index,
+                       const LAllocation& littleEndian, const LDefinition& temp,
+                       const LInt64Definition& temp64)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setOperand(2, littleEndian);
+    setTemp(0, temp);
+    setInt64Temp(1, temp64);
+  }
+  const MLoadDataViewElement* mir() const {
+    return mir_->toLoadDataViewElement();
+  }
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LAllocation* littleEndian() { return getOperand(2); }
+  const LDefinition* temp() { return getTemp(0); }
+  const LInt64Definition temp64() { return getInt64Temp(1); }
+};
+
 class LLoadTypedArrayElementHole : public LInstructionHelper<BOX_PIECES, 2, 1> {
  public:
   LIR_HEADER(LoadTypedArrayElementHole)

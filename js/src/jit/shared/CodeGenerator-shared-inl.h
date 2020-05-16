@@ -76,6 +76,10 @@ static inline double ToDouble(const LAllocation* a) {
   return a->toConstant()->numberToDouble();
 }
 
+static inline bool ToBoolean(const LAllocation* a) {
+  return a->toConstant()->toBoolean();
+}
+
 static inline Register ToRegister(const LAllocation& a) {
   MOZ_ASSERT(a.isGeneralReg());
   return a.toGeneralReg()->reg();
@@ -120,6 +124,14 @@ static inline Register ToTempRegisterOrInvalid(const LDefinition* def) {
     return InvalidReg;
   }
   return ToRegister(def);
+}
+
+static inline Register64 ToTempRegister64OrInvalid(
+    const LInt64Definition& def) {
+  if (def.isBogusTemp()) {
+    return Register64::Invalid();
+  }
+  return ToRegister64(def);
 }
 
 static inline Register ToTempUnboxRegister(const LDefinition* def) {
