@@ -552,7 +552,7 @@ nsUnknownContentTypeDialog.prototype = {
       // set save as the selected option
       this.dialogElement("mode").selectedItem = this.dialogElement("save");
     } else {
-      this.initInteractiveControls();
+      this.initAppAndSaveToDiskValues();
 
       // Initialize "always ask me" box. This should always be disabled
       // and set to true for the ambiguous type application/octet-stream.
@@ -573,6 +573,12 @@ nsUnknownContentTypeDialog.prototype = {
       // uriloader has passed, rather we want to ask the MIME Service.
       // This is so we don't needlessly disable the "autohandle" checkbox.
 
+      // commented out to close the opening brace in the if statement.
+      // var mimeService = Components.classes["@mozilla.org/mime;1"].getService(Components.interfaces.nsIMIMEService);
+      // var type = mimeService.getTypeFromURI(this.mLauncher.source);
+      // this.realMIMEInfo = mimeService.getFromTypeAndExtension(type, "");
+
+      // if (type == "application/octet-stream") {
       if (shouldntRememberChoice) {
         rememberChoice.checked = false;
         rememberChoice.hidden = true;
@@ -583,6 +589,12 @@ nsUnknownContentTypeDialog.prototype = {
             this.nsIMIMEInfo.handleInternally;
       }
       this.toggleRememberChoice(rememberChoice);
+
+      // XXXben - menulist won't init properly, hack.
+      var openHandler = this.dialogElement("openHandler");
+      openHandler.remove();
+      var openHandlerBox = this.dialogElement("openHandlerBox");
+      openHandlerBox.appendChild(openHandler);
     }
 
     this.mDialog.setTimeout(function() {
@@ -622,6 +634,7 @@ nsUnknownContentTypeDialog.prototype = {
     this.dialogElement("mode").focus();
   },
 
+  // initIntro:
   initIntro(url, filename, displayname) {
     this.dialogElement("location").value = displayname;
     this.dialogElement("location").setAttribute("realname", filename);
@@ -727,6 +740,7 @@ nsUnknownContentTypeDialog.prototype = {
     }
   },
 
+  // getPath:
   getPath(aFile) {
     if (AppConstants.platform == "macosx") {
       return aFile.leafName || aFile.path;
@@ -734,7 +748,8 @@ nsUnknownContentTypeDialog.prototype = {
     return aFile.path;
   },
 
-  initInteractiveControls() {
+  // initAppAndSaveToDiskValues:
+  initAppAndSaveToDiskValues() {
     var modeGroup = this.dialogElement("mode");
 
     // We don't let users open .exe files or random binary data directly
@@ -786,10 +801,6 @@ nsUnknownContentTypeDialog.prototype = {
     openHandler.selectedIndex = 0;
     var defaultOpenHandler = this.dialogElement("defaultHandler");
 
-    if (this.shouldShowInternalHandlerOption()) {
-      this.dialogElement("handleInternally").hidden = false;
-    }
-
     if (
       this.mLauncher.MIMEInfo.preferredAction ==
       this.nsIMIMEInfo.useSystemDefault
@@ -805,13 +816,6 @@ nsUnknownContentTypeDialog.prototype = {
         otherHandler && !otherHandler.hidden
           ? otherHandler
           : defaultOpenHandler;
-    } else if (
-      !this.dialogElement("handleInternally").hidden &&
-      this.mLauncher.MIMEInfo.preferredAction ==
-        this.nsIMIMEInfo.handleInternally
-    ) {
-      // Handle internally
-      modeGroup.selectedItem = this.dialogElement("handleInternally");
     } else {
       // Save to disk.
       modeGroup.selectedItem = this.dialogElement("save");
@@ -855,10 +859,6 @@ nsUnknownContentTypeDialog.prototype = {
       this.dialogElement("open").selected &&
       this.dialogElement("openHandler").selectedIndex == 0
     );
-  },
-
-  get handleInternally() {
-    return this.dialogElement("handleInternally").selected;
   },
 
   toggleRememberChoice(aCheckbox) {
@@ -937,7 +937,7 @@ nsUnknownContentTypeDialog.prototype = {
       if (needUpdate) {
         this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.useSystemDefault;
       }
-    } else if (this.useOtherHandler) {
+    } else {
       // For "open with", we need to check both preferred action and whether the user chose
       // a new app.
       needUpdate =
@@ -982,8 +982,8 @@ nsUnknownContentTypeDialog.prototype = {
     hs.store(handlerInfo);
   },
 
+  // onOK:
   onOK(aEvent) {
-    let shouldLogAction = this.dialogElement("basicBox").collapsed;
     // Verify typed app path, if necessary.
     if (this.useOtherHandler) {
       var helperApp = this.helperAppChoice();
@@ -1013,7 +1013,6 @@ nsUnknownContentTypeDialog.prototype = {
 
         // Leave dialog up.
         aEvent.preventDefault();
-        shouldLogAction = false;
       }
     }
 
@@ -1025,12 +1024,10 @@ nsUnknownContentTypeDialog.prototype = {
     // certain circumstances (e.g. The user clicks cancel in the
     // "Save to Disk" dialog. In those cases, we don't want to
     // update the helper application preferences in the RDF file.
-    let action;
     try {
       var needUpdate = this.updateMIMEInfo();
 
       if (this.dialogElement("save").selected) {
-        action = "SAVE";
         // see @notify
         // we cannot use opener's setTimeout, see bug 420405
         this._saveToDiskTimer = Cc["@mozilla.org/timer;1"].createInstance(
@@ -1038,8 +1035,7 @@ nsUnknownContentTypeDialog.prototype = {
         );
         this._saveToDiskTimer.initWithCallback(this, 0, nsITimer.TYPE_ONE_SHOT);
       } else {
-        action = this.getOpenWithActionForTelemetry();
-        this.mLauncher.launchWithApplication(this.handleInternally);
+        this.mLauncher.launchWithApplication();
       }
 
       // Update user pref for this mime type (if necessary). We do not
@@ -1053,19 +1049,12 @@ nsUnknownContentTypeDialog.prototype = {
       ) {
         this.updateHelperAppPref();
       }
-    } catch (e) {
-    } finally {
-      if (shouldLogAction) {
-        this.logActionInTelemetryIfExtensionIsPDF(action);
-      }
-    }
-
+    } catch (e) {}
     this.onUnload();
   },
 
+  // onCancel:
   onCancel() {
-    this.logActionInTelemetryIfExtensionIsPDF("CANCEL");
-
     // Remove our web progress listener.
     this.mLauncher.setWebProgressListener(null);
 
@@ -1095,6 +1084,7 @@ nsUnknownContentTypeDialog.prototype = {
     }
   },
 
+  // dialogElement:  Convenience.
   dialogElement(id) {
     return this.mDialog.document.getElementById(id);
   },
@@ -1248,88 +1238,6 @@ nsUnknownContentTypeDialog.prototype = {
     }
 
     this.finishChooseApp();
-  },
-
-  shouldShowInternalHandlerOption() {
-    // This is currently available only for PDF files and when
-    // pdf.js is enabled.
-    let browsingContext = this.mDialog.BrowsingContext.get(
-      this.mLauncher.browsingContextId
-    );
-    let primaryExtension = "";
-    try {
-      // The primaryExtension getter may throw if there are no
-      // known extensions for this mimetype.
-      primaryExtension = this.mLauncher.MIMEInfo.primaryExtension;
-    } catch (e) {}
-    return (
-      !browsingContext?.currentWindowGlobal?.documentPrincipal?.URI?.schemeIs(
-        "resource"
-      ) &&
-      primaryExtension == "pdf" &&
-      !Services.prefs.getBoolPref("pdfjs.disabled", true) &&
-      Services.prefs.getBoolPref(
-        "browser.helperApps.showOpenOptionForPdfJS",
-        false
-      )
-    );
-  },
-
-  getOpenWithActionForTelemetry() {
-    if (this.handleInternally) {
-      return "OPEN_WITH_INTERNAL_HANDLER";
-    }
-    let name = this.mLauncher.MIMEInfo.preferredApplicationHandler?.name;
-    let { defaultDescription } = this.mLauncher.MIMEInfo;
-    if (name) {
-      name = name.toLowerCase();
-      // Reduce "firefox-bin", "Firefox.app", and "firefox.exe" to just "firefox"
-      let delimeter = AppConstants.platform == "linux" ? "-" : ".";
-      name = name.substring(0, name.indexOf(delimeter));
-    } else if (defaultDescription.includes("Edge")) {
-      name = "msedge";
-    } else if (defaultDescription.includes("Chrome")) {
-      name = "chrome";
-    } else if (defaultDescription == "Preview") {
-      name = "preview";
-    }
-    switch (name) {
-      case "acrobat":
-      case "acrord32":
-      case "adobe acrobat reader dc":
-        return "OPEN_WITH_ACROBAT";
-      case "chrome":
-        // Chromium also uses "chrome.exe" as the executable name.
-        return "OPEN_WITH_CHROMIUM";
-      case "foxitreader":
-        return "OPEN_WITH_FOXIT";
-      case "msedge":
-        return "OPEN_WITH_MSEDGE";
-      case "preview":
-        return "OPEN_WITH_PREVIEW";
-      case undefined:
-        if (
-          this.mLauncher.MIMEInfo.preferredAction ==
-          this.mLauncher.MIMEInfo.useSystemDefault
-        ) {
-          return "OPEN_WITH_SYSTEM_DEFAULT";
-        }
-      // Fall through
-      default:
-        return "OPEN_WITH_OTHER";
-    }
-  },
-
-  logActionInTelemetryIfExtensionIsPDF(action) {
-    try {
-      if (this.mLauncher.MIMEInfo.primaryExtension == "pdf") {
-        Services.telemetry.keyedScalarAdd(
-          "unknowncontenttype.pdf_action",
-          action,
-          1
-        );
-      }
-    } catch (ex) {}
   },
 
   // Turn this on to get debugging messages.

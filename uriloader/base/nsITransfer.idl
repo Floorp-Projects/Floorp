@@ -10,7 +10,6 @@ interface nsIURI;
 interface nsICancelable;
 interface nsIMIMEInfo;
 interface nsIFile;
-webidl BrowsingContext;
 
 [scriptable, uuid(37ec75d3-97ad-4da8-afaa-eabe5b4afd73)]
 interface nsITransfer : nsIWebProgressListener2 {
@@ -50,7 +49,6 @@ interface nsITransfer : nsIWebProgressListener2 {
      * @param aIsPrivate Used to determine the privacy status of the new transfer.
      *                   If true, indicates that the transfer was initiated from
      *                   a source that desires privacy.
-     *
      */
     void init(in nsIURI aSource,
               in nsIURI aTarget,
@@ -60,27 +58,6 @@ interface nsITransfer : nsIWebProgressListener2 {
               in nsIFile aTempFile,
               in nsICancelable aCancelable,
               in boolean aIsPrivate);
-
-    /**
-     * Same as init, but allows for passing the browsingContext
-     * which will allow for opening the download with the same
-     * userContextId
-     *
-     * @param aBrowsingContext BrowsingContext of the initiating document.
-     *
-     * @param aHandleInternally Set to true if the download should be opened within
-     *                          the browser.
-     */
-    void initWithBrowsingContext(in nsIURI aSource,
-                                 in nsIURI aTarget,
-                                 in AString aDisplayName,
-                                 in nsIMIMEInfo aMIMEInfo,
-                                 in PRTime startTime,
-                                 in nsIFile aTempFile,
-                                 in nsICancelable aCancelable,
-                                 in boolean aIsPrivate,
-                                 in BrowsingContext aBrowsingContext,
-                                 in boolean aHandleInternally);
 
     /*
      * Used to notify the transfer object of the hash of the downloaded file.

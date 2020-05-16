@@ -1207,7 +1207,6 @@ const kPlainSerializableDownloadProperties = [
   "launcherPath",
   "launchWhenSucceeded",
   "contentType",
-  "handleInternally",
 ];
 
 /**
@@ -1429,10 +1428,8 @@ DownloadSource.fromSerializable = function(aSerializable) {
   } else {
     // Convert String objects to primitive strings at this point.
     source.url = aSerializable.url.toString();
-    for (let propName of ["isPrivate", "userContextId", "browsingContextId"]) {
-      if (propName in aSerializable) {
-        source[propName] = aSerializable[propName];
-      }
+    if ("isPrivate" in aSerializable) {
+      source.isPrivate = aSerializable.isPrivate;
     }
     if ("referrerInfo" in aSerializable) {
       // Quick pass, pass directly nsIReferrerInfo, we don't need to serialize
