@@ -784,6 +784,29 @@ var DownloadIntegration = {
       return;
     }
 
+    if (aDownload.handleInternally) {
+      let win = Services.wm.getMostRecentBrowserWindow();
+      let fileURI = Services.io.newFileURI(file);
+      if (win) {
+        // TODO: Replace openTrustedLinkIn with openUILink once
+        //       we have access to the event.
+        win.openTrustedLinkIn(fileURI.spec, "tab");
+        return;
+      }
+      let args = Cc["@mozilla.org/supports-string;1"].createInstance(
+        Ci.nsISupportsString
+      );
+      args.data = fileURI.spec;
+      Services.ww.openWindow(
+        null,
+        AppConstants.BROWSER_CHROME_URL,
+        "_blank",
+        "chrome,dialog=no,all",
+        args
+      );
+      return;
+    }
+
     // No custom application chosen, let's launch the file with the default
     // handler. First, let's try to launch it through the MIME service.
     if (mimeInfo) {
