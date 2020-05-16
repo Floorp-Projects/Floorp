@@ -2465,6 +2465,28 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
   // If we got no mimeinfo, something went wrong. Probably lack of memory.
   if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
 
+  // (1.5) Overwrite with generic description if the extension is PDF
+  // since the file format is supported by Firefox and we don't want
+  // other brands positioning themselves as the sole viewer for a system.
+  if (aFileExt.LowerCaseEqualsASCII("pdf") ||
+      aFileExt.LowerCaseEqualsASCII(".pdf")) {
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIStringBundle> unknownContentTypeBundle;
+    rv = bundleService->CreateBundle(
+        "chrome://mozapps/locale/downloads/unknownContentType.properties",
+        getter_AddRefs(unknownContentTypeBundle));
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString pdfHandlerDescription;
+      rv = unknownContentTypeBundle->GetStringFromName("pdfHandlerDescription",
+                                                       pdfHandlerDescription);
+      if (NS_SUCCEEDED(rv)) {
+        (*_retval)->SetDescription(pdfHandlerDescription);
+      }
+    }
+  }
+
   // (2) Now, let's see if we can find something in our datastore
   // This will not overwrite the OS information that interests us
   // (i.e. default application, default app. description)
