@@ -1240,7 +1240,13 @@ nsUnknownContentTypeDialog.prototype = {
   shouldShowInternalHandlerOption() {
     // This is currently available only for PDF files and when
     // pdf.js is enabled.
+    let browsingContext = this.mDialog.BrowsingContext.get(
+      this.mLauncher.browsingContextId
+    );
     return (
+      !browsingContext?.currentWindowGlobal?.documentPrincipal?.URI?.schemeIs(
+        "resource"
+      ) &&
       this.mLauncher.MIMEInfo.primaryExtension == "pdf" &&
       !Services.prefs.getBoolPref("pdfjs.disabled", true) &&
       Services.prefs.getBoolPref(
