@@ -266,7 +266,8 @@ inline void LossyAppendUTF8toLatin1(const nsACString& aSource,
 /**
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
  *
- * Allocates and returns a new |char| buffer which you must free with |free|.
+ * Infallibly allocates and returns a new |char| buffer which you must
+ * free with |free|.
  * Performs a conversion with LossyConvertUTF16toLatin1() writing into the
  * newly-allocated buffer.
  *
@@ -278,10 +279,15 @@ inline void LossyAppendUTF8toLatin1(const nsACString& aSource,
  */
 char* ToNewCString(const nsAString& aSource);
 
+/* A fallible version of ToNewCString. Returns nullptr on failure. */
+char* ToNewCString(const nsAString& aSource,
+                   const mozilla::fallible_t& aFallible);
+
 /**
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
  *
- * Allocates and returns a new |char| buffer which you must free with |free|.
+ * Infallibly allocates and returns a new |char| buffer which you must
+ * free with |free|.
  *
  * The new buffer is zero-terminated, but that may not help you if |aSource|
  * contains embedded nulls.
@@ -291,11 +297,15 @@ char* ToNewCString(const nsAString& aSource);
  */
 char* ToNewCString(const nsACString& aSource);
 
+/* A fallible version of ToNewCString. Returns nullptr on failure. */
+char* ToNewCString(const nsACString& aSource,
+                   const mozilla::fallible_t& aFallible);
+
 /**
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
  *
- * Allocates and returns a new |char| buffer which you must free with
- * |free|.
+ * Infallibly allocates and returns a new |char| buffer which you must
+ * free with |free|.
  * Performs an encoding conversion from a UTF-16 string to a UTF-8 string with
  * unpaired surrogates replaced with the REPLACEMENT CHARACTER copying
  * |aSource| to your new buffer.
@@ -307,15 +317,18 @@ char* ToNewCString(const nsACString& aSource);
  * @param aUTF8Count the number of 8-bit units that was returned
  * @return a new |char| buffer you must free with |free|.
  */
-
 char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count = nullptr);
 
+/* A fallible version of ToNewUTF8String. Returns nullptr on failure. */
+char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count,
+                      const mozilla::fallible_t& aFallible);
+
 /**
- * Returns a new |char16_t| buffer containing a zero-terminated copy of
- * |aSource|.
+ * Returns a new |char16_t| buffer containing a zero-terminated copy
+ * of |aSource|.
  *
- * Allocates and returns a new |char16_t| buffer which you must free with
- * |free|.
+ * Infallibly allocates and returns a new |char16_t| buffer which you must
+ * free with |free|.
  *
  * The new buffer is zero-terminated, but that may not help you if |aSource|
  * contains embedded nulls.
@@ -325,12 +338,16 @@ char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count = nullptr);
  */
 char16_t* ToNewUnicode(const nsAString& aSource);
 
+/* A fallible version of ToNewUnicode. Returns nullptr on failure. */
+char16_t* ToNewUnicode(const nsAString& aSource,
+                       const mozilla::fallible_t& aFallible);
+
 /**
- * Returns a new |char16_t| buffer containing a zero-terminated copy of
- * |aSource|.
+ * Returns a new |char16_t| buffer containing a zero-terminated copy
+ * of |aSource|.
  *
- * Allocates and returns a new |char16_t| buffer which you must free with
- * |free|.
+ * Infallibly allocates and returns a new |char16_t| buffer which you must
+ * free with|free|.
  *
  * Performs an encoding conversion by 0-padding 8-bit wide characters up to
  * 16-bits wide (i.e. Latin1 to UTF-16 conversion) while copying |aSource|
@@ -344,12 +361,16 @@ char16_t* ToNewUnicode(const nsAString& aSource);
  */
 char16_t* ToNewUnicode(const nsACString& aSource);
 
+/* A fallible version of ToNewUnicode. Returns nullptr on failure. */
+char16_t* ToNewUnicode(const nsACString& aSource,
+                       const mozilla::fallible_t& aFallible);
+
 /**
  * Returns a new |char16_t| buffer containing a zero-terminated copy
  * of |aSource|.
  *
- * Allocates and returns a new |char| buffer which you must free with
- * |free|.  Performs an encoding conversion from UTF-8 to UTF-16
+ * Infallibly allocates and returns a new |char| buffer which you must
+ * free with |free|.  Performs an encoding conversion from UTF-8 to UTF-16
  * while copying |aSource| to your new buffer.  Malformed byte sequences
  * are replaced with the REPLACEMENT CHARACTER.
  *
@@ -363,6 +384,10 @@ char16_t* ToNewUnicode(const nsACString& aSource);
  */
 char16_t* UTF8ToNewUnicode(const nsACString& aSource,
                            uint32_t* aUTF16Count = nullptr);
+
+/* A fallible version of UTF8ToNewUnicode. Returns nullptr on failure. */
+char16_t* UTF8ToNewUnicode(const nsACString& aSource, uint32_t* aUTF16Count,
+                           const mozilla::fallible_t& aFallible);
 
 /**
  * Copies |aLength| 16-bit code units from the start of |aSource| to the

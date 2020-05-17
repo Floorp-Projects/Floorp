@@ -9957,7 +9957,7 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
     }
 
     if (NS_FAILED(rv)) {
-      char* str = ToNewCString(aNewHash);
+      char* str = ToNewCString(aNewHash, mozilla::fallible);
       if (!str) {
         return NS_ERROR_OUT_OF_MEMORY;
       }

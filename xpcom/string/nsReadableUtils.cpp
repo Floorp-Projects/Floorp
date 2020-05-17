@@ -24,18 +24,25 @@ using mozilla::MakeSpan;
  * enough to hold a copy of the supplied string (plus a zero terminator).
  *
  * @param aSource an string you will eventually be making a copy of
- * @return a new buffer (of the type specified by the second parameter) which
- * you must free with |free|.
+ * @return a new buffer which you must free with |free|.
  *
  */
-template <class FromStringT, class ToCharT>
-inline ToCharT* AllocateStringCopy(const FromStringT& aSource, ToCharT*) {
-  // Can't overflow due to the definition of nsTSubstring<T>::kMaxCapacity
-  return static_cast<ToCharT*>(
-      moz_xmalloc((size_t(aSource.Length()) + 1) * sizeof(ToCharT)));
+template <class FromStringT, class CharT>
+inline CharT* AllocateStringCopy(const FromStringT& aSource, CharT*) {
+  return static_cast<CharT*>(
+      malloc((size_t(aSource.Length()) + 1) * sizeof(CharT)));
 }
 
 char* ToNewCString(const nsAString& aSource) {
+  char* str = ToNewCString(aSource, mozilla::fallible);
+  if (!str) {
+    MOZ_CRASH("Unable to allocate memory");
+  }
+  return str;
+}
+
+char* ToNewCString(const nsAString& aSource,
+                   const mozilla::fallible_t& aFallible) {
   char* dest = AllocateStringCopy(aSource, (char*)nullptr);
   if (!dest) {
     return nullptr;
@@ -47,7 +54,8 @@ char* ToNewCString(const nsAString& aSource) {
   return dest;
 }
 
-char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count) {
+char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count,
+                      const mozilla::fallible_t& aFallible) {
   auto len = aSource.Length();
   // The uses of this function seem temporary enough that it's not
   // worthwhile to be fancy about the allocation size. Let's just use
@@ -63,7 +71,10 @@ char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count) {
     return nullptr;
   }
   size_t destLenVal = destLen.value();
-  char* dest = static_cast<char*>(moz_xmalloc(destLenVal));
+  char* dest = static_cast<char*>(malloc(destLenVal));
+  if (!dest) {
+    return nullptr;
+  }
 
   size_t written = ConvertUtf16toUtf8(aSource, MakeSpan(dest, destLenVal));
   dest[written] = 0;
@@ -75,7 +86,24 @@ char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count) {
   return dest;
 }
 
+char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count) {
+  char* str = ToNewUTF8String(aSource, aUTF8Count, mozilla::fallible);
+  if (!str) {
+    MOZ_CRASH("Unable to allocate memory");
+  }
+  return str;
+}
+
 char* ToNewCString(const nsACString& aSource) {
+  char* str = ToNewCString(aSource, mozilla::fallible);
+  if (!str) {
+    MOZ_CRASH("Unable to allocate memory");
+  }
+  return str;
+}
+
+char* ToNewCString(const nsACString& aSource,
+                   const mozilla::fallible_t& aFallible) {
   // no conversion needed, just allocate a buffer of the correct length and copy
   // into it
 
@@ -91,6 +119,15 @@ char* ToNewCString(const nsACString& aSource) {
 }
 
 char16_t* ToNewUnicode(const nsAString& aSource) {
+  char16_t* str = ToNewUnicode(aSource, mozilla::fallible);
+  if (!str) {
+    MOZ_CRASH("Unable to allocate memory");
+  }
+  return str;
+}
+
+char16_t* ToNewUnicode(const nsAString& aSource,
+                       const mozilla::fallible_t& aFallible) {
   // no conversion needed, just allocate a buffer of the correct length and copy
   // into it
 
@@ -106,6 +143,15 @@ char16_t* ToNewUnicode(const nsAString& aSource) {
 }
 
 char16_t* ToNewUnicode(const nsACString& aSource) {
+  char16_t* str = ToNewUnicode(aSource, mozilla::fallible);
+  if (!str) {
+    MOZ_CRASH("Unable to allocate memory");
+  }
+  return str;
+}
+
+char16_t* ToNewUnicode(const nsACString& aSource,
+                       const mozilla::fallible_t& aFallible) {
   char16_t* dest = AllocateStringCopy(aSource, (char16_t*)nullptr);
   if (!dest) {
     return nullptr;
@@ -117,7 +163,8 @@ char16_t* ToNewUnicode(const nsACString& aSource) {
   return dest;
 }
 
-char16_t* UTF8ToNewUnicode(const nsACString& aSource, uint32_t* aUTF16Count) {
+char16_t* UTF8ToNewUnicode(const nsACString& aSource, uint32_t* aUTF16Count,
+                           const mozilla::fallible_t& aFallible) {
   // Compute length plus one as required by ConvertUTF8toUTF16
   uint32_t lengthPlusOne = aSource.Length() + 1;  // Can't overflow
 
@@ -131,7 +178,10 @@ char16_t* UTF8ToNewUnicode(const nsACString& aSource, uint32_t* aUTF16Count) {
     return nullptr;
   }
 
-  char16_t* dest = (char16_t*)moz_xmalloc(allocLength.value());
+  char16_t* dest = (char16_t*)malloc(allocLength.value());
+  if (!dest) {
+    return nullptr;
+  }
 
   size_t written = ConvertUtf8toUtf16(aSource, MakeSpan(dest, lengthPlusOne));
   dest[written] = 0;
@@ -141,6 +191,14 @@ char16_t* UTF8ToNewUnicode(const nsACString& aSource, uint32_t* aUTF16Count) {
   }
 
   return dest;
+}
+
+char16_t* UTF8ToNewUnicode(const nsACString& aSource, uint32_t* aUTF16Count) {
+  char16_t* str = UTF8ToNewUnicode(aSource, aUTF16Count, mozilla::fallible);
+  if (!str) {
+    MOZ_CRASH("Unable to allocate memory");
+  }
+  return str;
 }
 
 char16_t* CopyUnicodeTo(const nsAString& aSource, uint32_t aSrcOffset,

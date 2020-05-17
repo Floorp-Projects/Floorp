@@ -532,7 +532,7 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
       //     line continuation -- jht 4/29/98
       nsAutoCString tempStr(valueStart, valueEnd - valueStart);
       tempStr.StripCRLF();
-      char* res = ToNewCString(tempStr);
+      char* res = ToNewCString(tempStr, mozilla::fallible);
       NS_ENSURE_TRUE(res, NS_ERROR_OUT_OF_MEMORY);
 
       if (isQuotedString) RemoveQuotedStringEscapes(res);

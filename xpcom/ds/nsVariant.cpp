@@ -31,7 +31,7 @@ static nsresult String2Double(const char* aString, double* aResult) {
 }
 
 static nsresult AString2Double(const nsAString& aString, double* aResult) {
-  char* pChars = ToNewCString(aString);
+  char* pChars = ToNewCString(aString, mozilla::fallible);
   if (!pChars) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -633,7 +633,7 @@ bool nsDiscriminatedUnion::String2ID(nsID* aPid) const {
       return false;
   }
 
-  char* pChars = ToNewCString(*pString);
+  char* pChars = ToNewCString(*pString, mozilla::fallible);
   if (!pChars) {
     return false;
   }
