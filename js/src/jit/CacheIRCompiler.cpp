@@ -3688,6 +3688,44 @@ bool CacheIRCompiler::emitArrayJoinResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathAbsInt32Result(Int32OperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  Register input = allocator.useRegister(masm, inputId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.mov(input, scratch);
+  // Don't negate already positive values.
+  Label positive;
+  masm.branchTest32(Assembler::NotSigned, scratch, scratch, &positive);
+  // neg32 might overflow for INT_MIN.
+  masm.branchNeg32(Assembler::Overflow, scratch, failure->label());
+  masm.bind(&positive);
+
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  return true;
+}
+
+bool CacheIRCompiler::emitMathAbsNumberResult(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchFloatRegister scratch(this);
+
+  allocator.ensureDoubleRegister(masm, inputId, FloatReg0);
+
+  masm.absDouble(FloatReg0, scratch);
+  masm.boxDouble(scratch, output.valueReg(), scratch);
+  return true;
+}
+
 bool CacheIRCompiler::emitStoreTypedElement(ObjOperandId objId,
                                             TypedThingLayout layout,
                                             Scalar::Type elementType,
