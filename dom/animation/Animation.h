@@ -150,7 +150,7 @@ class Animation : public DOMEventTargetHelper,
   virtual void Reverse(ErrorResult& aRv);
 
   void Persist();
-  void CommitStyles(ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void CommitStyles(ErrorResult& aRv);
 
   bool IsRunningOnCompositor() const;
 
