@@ -658,13 +658,13 @@
 
 - name: MathAbsInt32Result
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: Int32Id
 
 - name: MathAbsNumberResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: NumberId
 

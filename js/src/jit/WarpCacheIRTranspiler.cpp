@@ -942,6 +942,26 @@ bool WarpCacheIRTranspiler::emitCompareStringResult(JSOp op,
   return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_String);
 }
 
+bool WarpCacheIRTranspiler::emitMathAbsInt32Result(Int32OperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MAbs::New(alloc(), input, MIRType::Int32);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMathAbsNumberResult(NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MAbs::New(alloc(), input, MIRType::Double);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
                                                       uint8_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
