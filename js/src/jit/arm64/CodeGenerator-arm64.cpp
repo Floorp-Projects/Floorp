@@ -197,16 +197,6 @@ void CodeGenerator::visitMinMaxF(LMinMaxF* ins) {
   }
 }
 
-void CodeGenerator::visitAbsD(LAbsD* ins) {
-  ARMFPRegister input(ToFloatRegister(ins->input()), 64);
-  masm.Fabs(input, input);
-}
-
-void CodeGenerator::visitAbsF(LAbsF* ins) {
-  ARMFPRegister input(ToFloatRegister(ins->input()), 32);
-  masm.Fabs(input, input);
-}
-
 void CodeGenerator::visitSqrtD(LSqrtD* ins) {
   ARMFPRegister input(ToFloatRegister(ins->input()), 64);
   ARMFPRegister output(ToFloatRegister(ins->output()), 64);

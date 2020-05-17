@@ -8392,6 +8392,20 @@ void CodeGenerator::visitAbsI(LAbsI* ins) {
   masm.bind(&positive);
 }
 
+void CodeGenerator::visitAbsD(LAbsD* ins) {
+  FloatRegister input = ToFloatRegister(ins->input());
+  MOZ_ASSERT(input == ToFloatRegister(ins->output()));
+
+  masm.absDouble(input, input);
+}
+
+void CodeGenerator::visitAbsF(LAbsF* ins) {
+  FloatRegister input = ToFloatRegister(ins->input());
+  MOZ_ASSERT(input == ToFloatRegister(ins->output()));
+
+  masm.absFloat32(input, input);
+}
+
 void CodeGenerator::visitPowI(LPowI* ins) {
   FloatRegister value = ToFloatRegister(ins->value());
   Register power = ToRegister(ins->power());

@@ -678,26 +678,6 @@ void CodeGenerator::visitMinMaxF(LMinMaxF* ins) {
   }
 }
 
-void CodeGenerator::visitAbsD(LAbsD* ins) {
-  FloatRegister input = ToFloatRegister(ins->input());
-  MOZ_ASSERT(input == ToFloatRegister(ins->output()));
-  // Load a value which is all ones except for the sign bit.
-  ScratchDoubleScope scratch(masm);
-  masm.loadConstantDouble(
-      SpecificNaN<double>(0, FloatingPoint<double>::kSignificandBits), scratch);
-  masm.vandpd(scratch, input, input);
-}
-
-void CodeGenerator::visitAbsF(LAbsF* ins) {
-  FloatRegister input = ToFloatRegister(ins->input());
-  MOZ_ASSERT(input == ToFloatRegister(ins->output()));
-  // Same trick as visitAbsD above.
-  ScratchFloat32Scope scratch(masm);
-  masm.loadConstantFloat32(
-      SpecificNaN<float>(0, FloatingPoint<float>::kSignificandBits), scratch);
-  masm.vandps(scratch, input, input);
-}
-
 void CodeGenerator::visitClzI(LClzI* ins) {
   Register input = ToRegister(ins->input());
   Register output = ToRegister(ins->output());

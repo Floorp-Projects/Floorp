@@ -1415,7 +1415,6 @@ void LIRGenerator::visitAbs(MAbs* ins) {
     default:
       MOZ_CRASH();
   }
-
   defineReuseInput(lir, ins, 0);
 }
 
