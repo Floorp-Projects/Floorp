@@ -3731,7 +3731,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAccumulateMixedContentHSTS(
 
 mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
     nsIURI* uri, const MaybeDiscarded<BrowsingContext>& aContext) {
-  if (aContext.IsNullOrDiscarded()) {
+  if (aContext.IsDiscarded()) {
     return IPC_OK();
   }
 

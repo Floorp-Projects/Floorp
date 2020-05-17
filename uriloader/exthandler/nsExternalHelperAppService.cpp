@@ -923,7 +923,6 @@ NS_IMETHODIMP
 nsExternalHelperAppService::LoadURI(nsIURI* aURI,
                                     BrowsingContext* aBrowsingContext) {
   NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(aBrowsingContext);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(

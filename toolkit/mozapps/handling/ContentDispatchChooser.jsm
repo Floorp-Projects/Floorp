@@ -18,18 +18,8 @@ nsContentDispatchChooser.prototype = {
 
   // nsIContentDispatchChooser
 
-  ask: function ask(aHandler, aWindowContext, aURI, aReason) {
-    var window = null;
-    try {
-      if (aWindowContext) {
-        window = aWindowContext.getInterface(Ci.nsIDOMWindow);
-        if (window) {
-          window = window.docShell.rootTreeItem.domWindow;
-        }
-      }
-    } catch (e) {
-      /* it's OK to not have a window */
-    }
+  ask: function ask(aHandler, aBrowsingContext, aURI, aReason) {
+    let window = aBrowsingContext?.top?.embedderElement?.ownerGlobal || null;
 
     var bundle = Services.strings.createBundle(STRINGBUNDLE_URL);
 
@@ -59,7 +49,7 @@ nsContentDispatchChooser.prototype = {
     }
     params.appendElement(aHandler);
     params.appendElement(aURI);
-    params.appendElement(aWindowContext);
+    params.appendElement(aBrowsingContext);
 
     Services.ww.openWindow(
       window,
