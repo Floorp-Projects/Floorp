@@ -5073,10 +5073,7 @@ bool Document::QueryCommandState(const nsAString& aHTMLCommandName,
       return currentValue.EqualsLiteral("justify");
     }
     default:
-      // If command does not have a state_all value, this call fails and sets
-      // retval to false.  This is fine -- we want to return false in that case
-      // anyway (bug 738385), so we just succeed and return false regardless.
-      return params->GetBool("state_all");
+      break;
   }
 
   // If command does not have a state_all value, this call fails and sets
