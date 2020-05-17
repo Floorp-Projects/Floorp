@@ -1535,7 +1535,7 @@ already_AddRefed<HeapSnapshot> ChromeUtils::ReadHeapSnapshot(
     GlobalObject& global, const nsAString& filePath, ErrorResult& rv) {
   auto start = TimeStamp::Now();
 
-  UniquePtr<char[]> path(ToNewCString(filePath));
+  UniquePtr<char[]> path(ToNewCString(filePath, mozilla::fallible));
   if (!path) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;

@@ -586,7 +586,7 @@ nsresult NS_MakeAbsoluteURI(char** result, const char* spec, nsIURI* baseURI) {
   nsAutoCString resultBuf;
   rv = NS_MakeAbsoluteURI(resultBuf, nsDependentCString(spec), baseURI);
   if (NS_SUCCEEDED(rv)) {
-    *result = ToNewCString(resultBuf);
+    *result = ToNewCString(resultBuf, mozilla::fallible);
     if (!*result) rv = NS_ERROR_OUT_OF_MEMORY;
   }
   return rv;

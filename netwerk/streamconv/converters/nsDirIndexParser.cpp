@@ -64,7 +64,7 @@ nsDirIndexParser::GetListener(nsIDirIndexListener** aListener) {
 
 NS_IMETHODIMP
 nsDirIndexParser::GetComment(char** aComment) {
-  *aComment = ToNewCString(mComment);
+  *aComment = ToNewCString(mComment, mozilla::fallible);
 
   if (!*aComment) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -79,7 +79,7 @@ nsDirIndexParser::SetEncoding(const char* aEncoding) {
 
 NS_IMETHODIMP
 nsDirIndexParser::GetEncoding(char** aEncoding) {
-  *aEncoding = ToNewCString(mEncoding);
+  *aEncoding = ToNewCString(mEncoding, mozilla::fallible);
 
   if (!*aEncoding) return NS_ERROR_OUT_OF_MEMORY;
 

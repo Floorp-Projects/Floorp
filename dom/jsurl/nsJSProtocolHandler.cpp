@@ -324,7 +324,7 @@ nsresult nsJSThunk::EvaluateScript(
       // For compatibility, if the result is ISO-8859-1, we use
       // windows-1252, so that people can compatibly create images
       // using javascript: URLs.
-      bytes = ToNewCString(result);
+      bytes = ToNewCString(result, mozilla::fallible);
       bytesLen = result.Length();
       charset = &isoCharset;
     } else {

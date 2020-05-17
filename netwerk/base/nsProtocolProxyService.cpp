@@ -1935,7 +1935,7 @@ void nsProtocolProxyService::LoadHostFilters(const nsACString& aFilters) {
       hinfo->name.host_len = host.Length();
 
       hinfo->is_ipaddr = false;
-      hinfo->name.host = ToNewCString(host);
+      hinfo->name.host = ToNewCString(host, mozilla::fallible);
 
       if (!hinfo->name.host) goto loser;
     }

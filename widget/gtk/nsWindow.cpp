@@ -4727,7 +4727,7 @@ void nsWindow::RefreshWindowClass(void) {
 void nsWindow::SetWindowClass(const nsAString& xulWinType) {
   if (!mShell) return;
 
-  char* res_name = ToNewCString(xulWinType);
+  char* res_name = ToNewCString(xulWinType, mozilla::fallible);
   if (!res_name) return;
 
   const char* role = nullptr;

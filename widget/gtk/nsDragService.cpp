@@ -727,7 +727,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
           const char* castedText = reinterpret_cast<char*>(mTargetDragData);
           char16_t* convertedText = nullptr;
           NS_ConvertUTF8toUTF16 ucs2string(castedText, mTargetDragDataLen);
-          convertedText = ToNewUnicode(ucs2string);
+          convertedText = ToNewUnicode(ucs2string, mozilla::fallible);
           if (convertedText) {
             MOZ_LOG(sDragLm, LogLevel::Debug,
                     ("successfully converted plain text \

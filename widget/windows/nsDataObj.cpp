@@ -2015,7 +2015,7 @@ nsresult nsDataObj ::BuildPlatformHTML(const char* inOurHTML,
   clipboardString.Append(inHTMLString);
   clipboardString.Append(trailingString);
 
-  *outPlatformHTML = ToNewCString(clipboardString);
+  *outPlatformHTML = ToNewCString(clipboardString, mozilla::fallible);
   if (!*outPlatformHTML) return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
