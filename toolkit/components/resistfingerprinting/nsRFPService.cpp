@@ -822,7 +822,7 @@ void nsRFPService::UpdateRFPPref() {
       }
       // PR_SetEnv() needs the input string been leaked intentionally, so
       // we copy it here.
-      tz = ToNewCString(tzValue);
+      tz = ToNewCString(tzValue, mozilla::fallible);
       if (tz != nullptr) {
         PR_SetEnv(tz);
       }

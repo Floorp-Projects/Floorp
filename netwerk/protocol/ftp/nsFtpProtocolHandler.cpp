@@ -249,7 +249,7 @@ nsresult nsFtpProtocolHandler::InsertConnection(nsIURI* aKey,
     return rv;
   }
 
-  ts->key = ToNewCString(spec);
+  ts->key = ToNewCString(spec, mozilla::fallible);
   if (!ts->key) {
     delete ts;
     return NS_ERROR_OUT_OF_MEMORY;
