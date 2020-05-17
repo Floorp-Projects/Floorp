@@ -656,6 +656,18 @@
   args:
     obj: ObjId
 
+- name: MathAbsInt32Result
+  shared: true
+  transpile: false
+  args:
+    input: Int32Id
+
+- name: MathAbsNumberResult
+  shared: true
+  transpile: false
+  args:
+    input: NumberId
+
 - name: StoreTypedArrayElement
   shared: true
   transpile: true
