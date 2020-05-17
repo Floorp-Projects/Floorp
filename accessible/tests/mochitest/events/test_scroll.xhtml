@@ -44,6 +44,8 @@
         tabBrowser().loadURI(aURL, {
           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
         });
+        // Flush layout, so as to guarantee that the a11y tree is constructed.
+        browserDocument().documentElement.getBoundingClientRect();
       }
 
       this.getID = function loadTab_getID()
@@ -71,6 +73,8 @@
           inBackground: true,
           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
         });
+        // Flush layout, so as to guarantee that the a11y tree is constructed.
+        browserDocument().documentElement.getBoundingClientRect();
       }
 
       this.getID = function loadTabInBackground_getID()
