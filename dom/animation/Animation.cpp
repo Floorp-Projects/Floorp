@@ -707,10 +707,13 @@ void Animation::CommitStyles(ErrorResult& aRv) {
         "Target is not capable of having a style attribute");
   }
 
+  // Hold onto a strong reference to the doc in case the flush destroys it.
+  RefPtr<Document> doc = target.mElement->GetComposedDoc();
+
   // Flush frames before checking if the target element is rendered since the
   // result could depend on pending style changes, and IsRendered() looks at the
   // primary frame.
-  if (Document* doc = target.mElement->GetComposedDoc()) {
+  if (doc) {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
   if (!target.mElement->IsRendered()) {
