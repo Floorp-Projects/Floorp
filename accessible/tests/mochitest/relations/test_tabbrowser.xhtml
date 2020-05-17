@@ -39,6 +39,8 @@
           replace: true,
           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
         });
+        // Flush layout, so as to guarantee that the a11y tree is constructed.
+        browserDocument().documentElement.getBoundingClientRect();
       }
 
       this.finalCheck = function testTabRelations_finalCheck(aEvent)
