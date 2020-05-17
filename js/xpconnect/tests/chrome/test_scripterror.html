@@ -6,8 +6,6 @@
 <script>
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-SimpleTest.waitForExplicitFinish();
-
 function awaitScriptError(fun) {
   // Use setTimeout in order to prevent throwing from test frame
   // and to have a clean stack frame.
@@ -44,7 +42,10 @@ function hasExpectedProperties(message, exception) {
      "correct innerWindowID");
 }
 
-async function run() {
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({"set": [["javascript.options.asyncstack",
+                                            true]]});
+
   const TESTS = [
     "abc",
     new Error("foobar"),
@@ -67,9 +68,5 @@ async function run() {
     hasExpectedProperties(message, test);
     is(message.isPromiseRejection, true, "is a rejected promise");
   }
-
-  SimpleTest.finish();
-}
-
-run();
+});
 </script>
