@@ -110,7 +110,7 @@ interface nsIExternalProtocolService : nsISupports
    *        (bug 394479).
    */
   void loadURI(in nsIURI aURI,
-               in BrowsingContext aBrowsingContext);
+               [optional] in BrowsingContext aBrowsingContext);
 
   /**
    * Gets a human-readable description for the application responsible for

@@ -25,7 +25,7 @@
  * window.arguments[8]:
  *   This is the nsIURI that we are being brought up for in the first place.
  * window.arguments[9]:
- *   The nsIInterfaceRequestor of the parent window; may be null
+ *   The browsingContext from which the request originates; may be null.
  */
 
 const { EnableDelayHelper } = ChromeUtils.import(
