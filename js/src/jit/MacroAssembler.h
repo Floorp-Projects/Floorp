@@ -1298,6 +1298,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchRshift32(Condition cond, T src, Register dest,
                              Label* label) PER_SHARED_ARCH;
 
+  inline void branchNeg32(Condition cond, Register reg,
+                          Label* label) PER_SHARED_ARCH;
+
   inline void decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                            Label* label) PER_SHARED_ARCH;
 

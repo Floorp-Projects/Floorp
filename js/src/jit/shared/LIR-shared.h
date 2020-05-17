@@ -2277,6 +2277,8 @@ class LAbsI : public LInstructionHelper<1, 1, 0> {
   explicit LAbsI(const LAllocation& num) : LInstructionHelper(classOpcode) {
     setOperand(0, num);
   }
+
+  MAbs* mir() const { return mir_->toAbs(); }
 };
 
 // Absolute value of a double.

@@ -1161,6 +1161,12 @@ void MacroAssembler::branchRshift32(Condition cond, T src, Register dest,
   branch32(cond == Zero ? Equal : NotEqual, dest, Imm32(0), label);
 }
 
+void MacroAssembler::branchNeg32(Condition cond, Register reg, Label* label) {
+  MOZ_ASSERT(cond == Overflow);
+  neg32(reg);
+  B(label, cond);
+}
+
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                                   Label* label) {
   Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(rhs.value));
