@@ -19,6 +19,7 @@ import {
   getSourceContent,
   getBreakpointsList,
   getPendingBreakpointList,
+  isMapScopesEnabled,
 } from "../../selectors";
 
 import { setBreakpointPositions } from "./breakpointPositions";
@@ -28,6 +29,9 @@ import { PROMISE } from "../utils/middleware/promise";
 import { recordEvent } from "../../utils/telemetry";
 import { comparePosition } from "../../utils/location";
 import { getTextAtPosition } from "../../utils/source";
+import { getMappedScopesForLocation } from "../pause/mapScopes";
+import { isOriginalSource } from "../../utils/source-maps";
+import { validateNavigateContext } from "../../utils/context";
 
 import type { ThunkArgs } from "../types";
 import type {
@@ -37,6 +41,7 @@ import type {
   SourceLocation,
   Context,
 } from "../../types";
+import type { ParserDispatcher } from "../../workers/parser";
 import type { State } from "../../reducers/types";
 
 // This file has the primitive operations used to modify individual breakpoints
@@ -63,11 +68,24 @@ import type { State } from "../../reducers/types";
 // breakpoint will be added to the reducer, to restore the above invariant.
 // See syncBreakpoint.js for more.
 
-function clientSetBreakpoint(client, state: State, breakpoint: Breakpoint) {
+async function clientSetBreakpoint(
+  client,
+  cx,
+  { getState, dispatch }: ThunkArgs,
+  breakpoint: Breakpoint
+) {
   const breakpointLocation = makeBreakpointLocation(
-    state,
+    getState(),
     breakpoint.generatedLocation
   );
+  const shouldMapBreakpointExpressions =
+    isMapScopesEnabled(getState()) &&
+    isOriginalSource(getSource(getState(), breakpoint.location?.sourceId)) &&
+    (breakpoint.options.logValue || breakpoint.options.condition);
+
+  if (shouldMapBreakpointExpressions) {
+    breakpoint = await dispatch(updateBreakpointSourceMapping(cx, breakpoint));
+  }
   return client.setBreakpoint(breakpointLocation, breakpoint.options);
 }
 
@@ -81,7 +99,8 @@ function clientRemoveBreakpoint(
 }
 
 export function enableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
-  return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+  return (thunkArgs: ThunkArgs) => {
+    const { dispatch, getState, client } = thunkArgs;
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint || !breakpoint.disabled) {
       return;
@@ -92,7 +111,7 @@ export function enableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
       type: "SET_BREAKPOINT",
       cx,
       breakpoint: { ...breakpoint, disabled: false },
-      [PROMISE]: clientSetBreakpoint(client, getState(), breakpoint),
+      [PROMISE]: clientSetBreakpoint(client, cx, thunkArgs, breakpoint),
     });
   };
 }
@@ -104,7 +123,8 @@ export function addBreakpoint(
   disabled: boolean = false,
   shouldCancel: () => boolean = () => false
 ) {
-  return async ({ dispatch, getState, sourceMaps, client }: ThunkArgs) => {
+  return async (thunkArgs: ThunkArgs) => {
+    const { dispatch, getState, client } = thunkArgs;
     recordEvent("add_breakpoint");
 
     const { sourceId, column, line } = initialLocation;
@@ -170,7 +190,7 @@ export function addBreakpoint(
       // to remove any installed breakpoint in the server.
       [PROMISE]: disabled
         ? clientRemoveBreakpoint(client, getState(), generatedLocation)
-        : clientSetBreakpoint(client, getState(), breakpoint),
+        : clientSetBreakpoint(client, cx, thunkArgs, breakpoint),
     });
   };
 }
@@ -302,7 +322,8 @@ export function setBreakpointOptions(
   location: SourceLocation,
   options: BreakpointOptions = {}
 ) {
-  return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+  return (thunkArgs: ThunkArgs) => {
+    const { dispatch, getState, client } = thunkArgs;
     let breakpoint = getBreakpoint(getState(), location);
     if (!breakpoint) {
       return dispatch(addBreakpoint(cx, location, options));
@@ -315,7 +336,60 @@ export function setBreakpointOptions(
       type: "SET_BREAKPOINT",
       cx,
       breakpoint,
-      [PROMISE]: clientSetBreakpoint(client, getState(), breakpoint),
+      [PROMISE]: clientSetBreakpoint(client, cx, thunkArgs, breakpoint),
     });
+  };
+}
+
+async function updateExpression(
+  evaluationsParser: ParserDispatcher,
+  mappings,
+  originalExpression: string
+) {
+  const mapped = await evaluationsParser.mapExpression(
+    originalExpression,
+    mappings,
+    [],
+    false,
+    false
+  );
+  if (!mapped) {
+    return originalExpression;
+  }
+  if (!originalExpression.trimEnd().endsWith(";")) {
+    return mapped.expression.replace(/;$/, "");
+  }
+  return mapped.expression;
+}
+
+function updateBreakpointSourceMapping(cx: Context, breakpoint: Breakpoint) {
+  return async ({ getState, dispatch, evaluationsParser }: ThunkArgs) => {
+    const options = { ...breakpoint.options };
+
+    const mappedScopes = await dispatch(
+      getMappedScopesForLocation(breakpoint.location)
+    );
+    if (!mappedScopes) {
+      return breakpoint;
+    }
+    const { mappings } = mappedScopes;
+
+    if (options.condition) {
+      options.condition = await updateExpression(
+        evaluationsParser,
+        mappings,
+        options.condition
+      );
+    }
+    if (options.logValue) {
+      options.logValue = await updateExpression(
+        evaluationsParser,
+        mappings,
+        options.logValue
+      );
+    }
+
+    validateNavigateContext(getState(), cx);
+    return { ...breakpoint, options };
   };
 }
