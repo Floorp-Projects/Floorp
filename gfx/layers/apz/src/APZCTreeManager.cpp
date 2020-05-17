@@ -2398,6 +2398,11 @@ void APZCTreeManager::SetTargetAPZC(
     RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aTargets[i]);
     target = GetZoomableTarget(target, apzc);
   }
+  if (InputBlockState* block = mInputQueue->GetBlockForId(aInputBlockId)) {
+    if (block->AsPinchGestureBlock() && aTargets.Length() == 1) {
+      target = FindZoomableApzc(target);
+    }
+  }
   mInputQueue->SetConfirmedTargetApzc(aInputBlockId, target);
 }
 

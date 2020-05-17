@@ -634,6 +634,10 @@ void InputQueue::ScheduleMainThreadTimeout(
   }
 }
 
+InputBlockState* InputQueue::GetBlockForId(uint64_t aInputBlockId) {
+  return FindBlockForId(aInputBlockId, nullptr);
+}
+
 InputBlockState* InputQueue::FindBlockForId(uint64_t aInputBlockId,
                                             InputData** aOutFirstInput) {
   for (const auto& queuedInput : mQueuedInputs) {

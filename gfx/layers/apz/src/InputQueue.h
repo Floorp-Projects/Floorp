@@ -142,6 +142,8 @@ class InputQueue {
    */
   bool IsDragOnScrollbar(bool aOnScrollbar);
 
+  InputBlockState* GetBlockForId(uint64_t aInputBlockId);
+
  private:
   ~InputQueue();
 
