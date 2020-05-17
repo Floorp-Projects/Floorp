@@ -15,6 +15,7 @@ CompiledModules(
     'index.js',
     'locColumn.js',
     'mappingContains.js',
+    'optimizedOut.js',
     'positionCmp.js',
     'rangeMetadata.js',
 )

@@ -28,33 +28,39 @@ import {
 } from "./findGeneratedBindingFromPosition";
 import {
   buildGeneratedBindingList,
+  buildFakeBindingList,
   type GeneratedBindingLocation,
 } from "./buildGeneratedBindingList";
 import {
   originalRangeStartsInside,
   getApplicableBindingsForOriginalPosition,
 } from "./getApplicableBindingsForOriginalPosition";
+import { getOptimizedOutGrip } from "./optimizedOut";
 
 import { log } from "../../log";
 import type { ThunkArgs } from "../../../actions/types";
 
 import type {
   PartialPosition,
-  Frame,
   Scope,
   Source,
   SourceContent,
+  Frame,
   BindingContents,
   ScopeBindings,
+  MappedLocation,
 } from "../../../types";
 
 export type OriginalScope = RenderableScope;
+export type MappedFrameLocation = MappedLocation & {
+  this?: $ElementType<Frame, "this">,
+};
 
 export async function buildMappedScopes(
   source: Source,
   content: SourceContent,
-  frame: Frame,
-  scopes: Scope,
+  frame: MappedFrameLocation,
+  scopes: ?Scope,
   { client, parser, sourceMaps }: ThunkArgs
 ): Promise<?{
   mappings: {
@@ -70,7 +76,7 @@ export async function buildMappedScopes(
   }
 
   const originalRanges = await loadRangeMetadata(
-    frame,
+    frame.location,
     originalAstScopes,
     sourceMaps
   );
@@ -79,11 +85,16 @@ export async function buildMappedScopes(
     return null;
   }
 
-  const generatedAstBindings = buildGeneratedBindingList(
-    scopes,
-    generatedAstScopes,
-    frame.this
-  );
+  let generatedAstBindings;
+  if (scopes) {
+    generatedAstBindings = buildGeneratedBindingList(
+      scopes,
+      generatedAstScopes,
+      frame.this
+    );
+  } else {
+    generatedAstBindings = buildFakeBindingList(generatedAstScopes);
+  }
 
   const {
     mappedOriginalScopes,
@@ -98,8 +109,11 @@ export async function buildMappedScopes(
     sourceMaps
   );
 
+  const globalLexicalScope = scopes
+    ? getGlobalFromScope(scopes)
+    : generateGlobalFromAst(generatedAstScopes);
   const mappedGeneratedScopes = generateClientScope(
-    scopes,
+    globalLexicalScope,
     mappedOriginalScopes
   );
 
@@ -265,22 +279,9 @@ function buildLocationKey(loc: PartialPosition): string {
 }
 
 function generateClientScope(
-  scopes: Scope,
+  globalLexicalScope: OriginalScope,
   originalScopes: Array<SourceScope & { generatedBindings: ScopeBindings }>
 ): OriginalScope {
-  // Pull the root object scope and root lexical scope to reuse them in
-  // our mapped scopes. This assumes that file file being processed is
-  // a CommonJS or ES6 module, which might not be ideal. Potentially
-  // should add some logic to try to detect those cases?
-  let globalLexicalScope: ?OriginalScope = null;
-  for (let s = scopes; s.parent; s = s.parent) {
-    // $FlowIgnore - Flow doesn't like casting 'parent'.
-    globalLexicalScope = s;
-  }
-  if (!globalLexicalScope) {
-    throw new Error("Assertion failure - there should always be a scope");
-  }
-
   // Build a structure similar to the client's linked scope object using
   // the original AST scopes, but pulling in the generated bindings
   // linked to each scope.
@@ -331,6 +332,49 @@ function generateClientScope(
   }
 
   return result;
+}
+
+function getGlobalFromScope(scopes: Scope): OriginalScope {
+  // Pull the root object scope and root lexical scope to reuse them in
+  // our mapped scopes. This assumes that file being processed is
+  // a CommonJS or ES6 module, which might not be ideal. Potentially
+  // should add some logic to try to detect those cases?
+  let globalLexicalScope: ?OriginalScope = null;
+  for (let s = scopes; s.parent; s = s.parent) {
+    // $FlowIgnore - Flow doesn't like casting 'parent'.
+    globalLexicalScope = s;
+  }
+  if (!globalLexicalScope) {
+    throw new Error("Assertion failure - there should always be a scope");
+  }
+  return globalLexicalScope;
+}
+
+function generateGlobalFromAst(
+  generatedScopes: Array<SourceScope>
+): OriginalScope {
+  const globalLexicalAst = generatedScopes[generatedScopes.length - 2];
+  if (!globalLexicalAst) {
+    throw new Error("Assertion failure - there should always be a scope");
+  }
+  return {
+    actor: "generatedActor1",
+    type: "block",
+    scopeKind: "",
+    bindings: {
+      arguments: [],
+      variables: Object.fromEntries(
+        Object.keys(globalLexicalAst).map(key => [key, getOptimizedOutGrip()])
+      ),
+    },
+    // $FlowIgnore - Flow doesn't like casting 'parent'.
+    parent: {
+      actor: "generatedActor0",
+      object: getOptimizedOutGrip(),
+      scopeKind: "",
+      type: "object",
+    },
+  };
 }
 
 function hasValidIdent(
@@ -511,15 +555,7 @@ async function findGeneratedBinding(
     // attempt to map the binding, and that most likely means that the
     // code was entirely emitted from the output code.
     return {
-      grip: {
-        configurable: false,
-        enumerable: true,
-        writable: false,
-        value: {
-          type: "null",
-          optimizedOut: true,
-        },
-      },
+      grip: getOptimizedOutGrip(),
       expression: `
         (() => {
           throw new Error('"' + ${JSON.stringify(

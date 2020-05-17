@@ -10,6 +10,7 @@ import type { Scope, BindingContents } from "../../../types";
 import { clientCommands } from "../../../client/firefox";
 
 import { locColumn } from "./locColumn";
+import { getOptimizedOutGrip } from "./optimizedOut";
 
 export type GeneratedBindingLocation = {
   name: string,
@@ -115,6 +116,33 @@ export function buildGeneratedBindingList(
   }
 
   // Sort so we can binary-search.
+  return sortBindings(generatedBindings);
+}
+
+export function buildFakeBindingList(
+  generatedAstScopes: SourceScope[]
+): Array<GeneratedBindingLocation> {
+  // TODO if possible, inject real bindings for the global scope
+  const generatedBindings = generatedAstScopes.reduce((acc, generated) => {
+    for (const name of Object.keys(generated.bindings)) {
+      if (name === "this") {
+        continue;
+      }
+      const { refs } = generated.bindings[name];
+      for (const loc of refs) {
+        acc.push({
+          name,
+          loc,
+          desc: () => Promise.resolve(getOptimizedOutGrip()),
+        });
+      }
+    }
+    return acc;
+  }, []);
+  return sortBindings(generatedBindings);
+}
+
+function sortBindings(generatedBindings: Array<GeneratedBindingLocation>) {
   return generatedBindings.sort((a, b) => {
     const aStart = a.loc.start;
     const bStart = b.loc.start;

@@ -20,14 +20,24 @@ import assert from "../../utils/assert";
 
 import { log } from "../../utils/log";
 import { isGenerated, isOriginal } from "../../utils/source";
-import type { Frame, Scope, ThreadContext, XScopeVariables } from "../../types";
+import type {
+  Frame,
+  Scope,
+  ThreadContext,
+  XScopeVariables,
+  SourceLocation,
+} from "../../types";
 
 import type { ThunkArgs } from "../types";
 
-import { buildMappedScopes } from "../../utils/pause/mapScopes";
+import {
+  buildMappedScopes,
+  type MappedFrameLocation,
+} from "../../utils/pause/mapScopes";
 import { isFulfilled } from "../../utils/async-value";
 
 import type { OriginalScope } from "../../utils/pause/mapScopes";
+import { getMappedLocation } from "../../utils/source-maps";
 
 const expressionRegex = /\bfp\(\)/g;
 
@@ -124,13 +134,6 @@ export function mapScopes(
     const { dispatch, client, getState } = thunkArgs;
     assert(cx.thread == frame.thread, "Thread mismatch");
 
-    const generatedSource = getSource(
-      getState(),
-      frame.generatedLocation.sourceId
-    );
-
-    const source = getSource(getState(), frame.location.sourceId);
-
     await dispatch({
       type: "MAP_SCOPES",
       cx,
@@ -142,41 +145,72 @@ export function mapScopes(
           return buildOriginalScopes(frame, client, cx, frameId, scopes);
         }
 
-        if (
-          !isMapScopesEnabled(getState()) ||
-          !source ||
-          !generatedSource ||
-          generatedSource.isWasm ||
-          source.isPrettyPrinted ||
-          isGenerated(source)
-        ) {
-          return null;
-        }
-
-        await dispatch(loadSourceText({ cx, source }));
-        if (isOriginal(source)) {
-          await dispatch(loadSourceText({ cx, source: generatedSource }));
-        }
-
-        try {
-          const content =
-            getSource(getState(), source.id) &&
-            getSourceContent(getState(), source.id);
-
-          return await buildMappedScopes(
-            source,
-            content && isFulfilled(content)
-              ? content.value
-              : { type: "text", value: "", contentType: undefined },
-            frame,
-            await scopes,
-            thunkArgs
-          );
-        } catch (e) {
-          log(e);
-          return null;
-        }
+        return dispatch(getMappedScopes(cx, scopes, frame));
       })(),
     });
+  };
+}
+
+export function getMappedScopes(
+  cx: ThreadContext,
+  scopes: ?Promise<Scope>,
+  frame: MappedFrameLocation
+) {
+  return async function(thunkArgs: ThunkArgs) {
+    const { getState, dispatch } = thunkArgs;
+    const generatedSource = getSource(
+      getState(),
+      frame.generatedLocation.sourceId
+    );
+
+    const source = getSource(getState(), frame.location.sourceId);
+
+    if (
+      !isMapScopesEnabled(getState()) ||
+      !source ||
+      !generatedSource ||
+      generatedSource.isWasm ||
+      source.isPrettyPrinted ||
+      isGenerated(source)
+    ) {
+      return null;
+    }
+
+    await dispatch(loadSourceText({ cx, source }));
+    if (isOriginal(source)) {
+      await dispatch(loadSourceText({ cx, source: generatedSource }));
+    }
+
+    try {
+      const content =
+        getSource(getState(), source.id) &&
+        getSourceContent(getState(), source.id);
+
+      return await buildMappedScopes(
+        source,
+        content && isFulfilled(content)
+          ? content.value
+          : { type: "text", value: "", contentType: undefined },
+        frame,
+        await scopes,
+        thunkArgs
+      );
+    } catch (e) {
+      log(e);
+      return null;
+    }
+  };
+}
+
+export function getMappedScopesForLocation(location: SourceLocation) {
+  return async function(thunkArgs: ThunkArgs) {
+    const { dispatch, getState, sourceMaps } = thunkArgs;
+    const cx = getThreadContext(getState());
+    const mappedLocation: $Shape<MappedFrameLocation> = await getMappedLocation(
+      getState(),
+      sourceMaps,
+      location
+    );
+    return dispatch(getMappedScopes(cx, null, mappedLocation));
   };
 }
