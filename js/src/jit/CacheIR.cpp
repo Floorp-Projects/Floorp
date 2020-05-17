@@ -5076,6 +5076,44 @@ AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachMathAbs(HandleFunction callee) {
+  // Need one argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!args_[0].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'abs' native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId argumentId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+
+  // abs(INT_MIN) is a double.
+  if (args_[0].isInt32() && args_[0].toInt32() != INT_MIN) {
+    Int32OperandId int32Id = writer.guardToInt32(argumentId);
+    writer.mathAbsInt32Result(int32Id);
+  } else {
+    NumberOperandId numberId = writer.guardIsNumber(argumentId);
+    writer.mathAbsNumberResult(numberId);
+  }
+
+  // The INT_MIN case and implementation details of the C++ abs
+  // make this a bit tricky. We probably can just remove monitoring
+  // in the future completely, so do the easy thing right now.
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("MathAbs");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringCharCodeAt(
     HandleFunction callee) {
   return tryAttachStringChar(callee, StringChar::CodeAt);
@@ -5242,6 +5280,8 @@ AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
       return tryAttachStringCharCodeAt(callee);
     case InlinableNative::StringCharAt:
       return tryAttachStringCharAt(callee);
+    case InlinableNative::MathAbs:
+      return tryAttachMathAbs(callee);
     default:
       return AttachDecision::NoAction;
   }
