@@ -15,6 +15,7 @@
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/net/DNSRequestParent.h"
+#include "mozilla/net/ProxyConfigLookupParent.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
 #include "nsIHttpActivityObserver.h"
@@ -325,6 +326,21 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvGetTLSClientCert(
   }
 
   *aSucceeded = true;
+  return IPC_OK();
+}
+
+already_AddRefed<PProxyConfigLookupParent>
+SocketProcessParent::AllocPProxyConfigLookupParent(
+    nsIURI* aURI, const uint32_t& aProxyResolveFlags) {
+  RefPtr<ProxyConfigLookupParent> actor =
+      new ProxyConfigLookupParent(aURI, aProxyResolveFlags);
+  return actor.forget();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvPProxyConfigLookupConstructor(
+    PProxyConfigLookupParent* aActor, nsIURI* aURI,
+    const uint32_t& aProxyResolveFlags) {
+  static_cast<ProxyConfigLookupParent*>(aActor)->DoProxyLookup();
   return IPC_OK();
 }
 

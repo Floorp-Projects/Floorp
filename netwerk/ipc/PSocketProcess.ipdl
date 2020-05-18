@@ -17,6 +17,7 @@ include protocol PBackground;
 include protocol PAltService;
 include protocol PAltSvcTransaction;
 include protocol PTRRService;
+include protocol PProxyConfigLookup;
 
 include MemoryReportTypes;
 include NeckoChannelParams;
@@ -34,6 +35,7 @@ using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using base::ProcessId from "base/process.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using PRTime from "prtime.h";
+using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -51,6 +53,7 @@ sync protocol PSocketProcess
   manages PAltService;
   manages PAltSvcTransaction;
   manages PTRRService;
+  manages PProxyConfigLookup;
 
 parent:
   async InitCrashReporter(NativeThreadId threadId);
@@ -84,6 +87,7 @@ parent:
                         ByteArray? aClientCert,
                         ByteArray[] aCollectedCANames)
     returns (bool aSucceeded, ByteArray aOutCert, ByteArray aOutKey, ByteArray[] aBuiltChain);
+  async PProxyConfigLookup(nsIURI aUri, uint32_t aFlags);
 
 child:
   async PreferenceUpdate(Pref pref);

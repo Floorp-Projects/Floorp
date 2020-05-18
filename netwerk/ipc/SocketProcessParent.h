@@ -103,6 +103,12 @@ class SocketProcessParent final
       bool* aSucceeded, ByteArray* aOutCert, ByteArray* aOutKey,
       nsTArray<ByteArray>* aBuiltChain);
 
+  already_AddRefed<PProxyConfigLookupParent> AllocPProxyConfigLookupParent(
+      nsIURI* aURI, const uint32_t& aProxyResolveFlags);
+  mozilla::ipc::IPCResult RecvPProxyConfigLookupConstructor(
+      PProxyConfigLookupParent* aActor, nsIURI* aURI,
+      const uint32_t& aProxyResolveFlags) override;
+
  private:
   SocketProcessHost* mHost;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;
