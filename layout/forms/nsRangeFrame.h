@@ -88,6 +88,10 @@ class nsRangeFrame final : public nsContainerFrame,
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
+  ComputedStyle* GetAdditionalComputedStyle(int32_t aIndex) const override;
+  void SetAdditionalComputedStyle(int32_t aIndex,
+                                  ComputedStyle* aComputedStyle) override;
+
   /**
    * Returns true if the slider's thumb moves horizontally, or else false if it
    * moves vertically.
@@ -175,6 +179,11 @@ class nsRangeFrame final : public nsContainerFrame,
    * @see nsRangeFrame::CreateAnonymousContent
    */
   nsCOMPtr<Element> mThumbDiv;
+
+  /**
+   * Cached ComputedStyle for -moz-focus-outer CSS pseudo-element style.
+   */
+  RefPtr<ComputedStyle> mOuterFocusStyle;
 
   class DummyTouchListener final : public nsIDOMEventListener {
    private:

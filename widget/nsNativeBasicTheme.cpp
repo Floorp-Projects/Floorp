@@ -911,7 +911,6 @@ bool nsNativeBasicTheme::WidgetIsContainer(StyleAppearance aAppearance) {
 
 bool nsNativeBasicTheme::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
   switch (aAppearance) {
-    case StyleAppearance::Range:
     // TODO(emilio): Checkbox / Radio don't have focus indicators when checked.
     // If they did, we could just return true here unconditionally.
     case StyleAppearance::Checkbox:
