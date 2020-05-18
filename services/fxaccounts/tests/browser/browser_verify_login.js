@@ -5,7 +5,7 @@ add_task(async function() {
   let payload = {
     data: {
       deviceName: "Laptop",
-      url: "https://example.com/newLogin",
+      url: "http://localhost/newLogin",
       title: "Sign-in Request",
       body:
         "New sign-in request from vershwal's Nighty on Intel Mac OS X 10.12",
