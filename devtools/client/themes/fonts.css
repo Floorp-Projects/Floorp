@@ -417,10 +417,6 @@
   outline: none;
 }
 
-.font-value-slider::-moz-focus-outer {
-  border: 0;
-}
-
 .font-value-slider::-moz-range-thumb {
   background-color: var(--slider-thumb-color);
   border: 0;
