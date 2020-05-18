@@ -89,8 +89,10 @@ class SourcePreview extends Component {
   updateEditor(mode, text) {
     // Reset the existed 'mode' attribute in order to make setText() process faster
     // to prevent drawing unnecessary syntax highlight.
-    this.editor.setMode(null);
-    this.editor.setText(text);
+    if (this?.editor?.hasCodeMirror) {
+      this.editor.setMode(null);
+      this.editor.setText(text);
+    }
 
     if (this.editorSetModeTimeout) {
       clearTimeout(this.editorSetModeTimeout);
