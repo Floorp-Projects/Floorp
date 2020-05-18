@@ -40,7 +40,7 @@ add_task(async function() {
     let permission = aSubject.QueryInterface(Ci.nsIPermission);
     return (
       permission.type == "storageAccessAPI" &&
-      permission.principal.URI.equals(uri)
+      permission.principal.equalsURI(uri)
     );
   });
 
@@ -59,7 +59,7 @@ add_task(async function() {
       let permission = aSubject.QueryInterface(Ci.nsIPermission);
       return (
         permission.type == "storageAccessAPI" &&
-        permission.principal.URI.equals(uri)
+        permission.principal.equalsURI(uri)
       );
     });
 
