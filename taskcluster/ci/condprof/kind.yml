@@ -130,7 +130,7 @@ jobs:
             product: firefox
             job-name: condprof-g5-geckoview_example
         dependencies:
-            build: build-android-api-16/pgo
+            build: build-android-api-16-shippable/opt
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz
@@ -231,7 +231,7 @@ jobs:
             product: firefox
             job-name: condprof-p2_aarch64-fenix.nightly
         dependencies:
-            build: build-android-api-16/pgo
+            build: build-android-api-16-shippable/opt
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz
@@ -265,7 +265,7 @@ jobs:
             product: firefox
             job-name: condprof-p2_aarch64-geckoview_example
         dependencies:
-            build: build-android-api-16/pgo
+            build: build-android-api-16-shippable/opt
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz
