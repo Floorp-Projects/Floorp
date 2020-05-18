@@ -31,6 +31,12 @@ const ENABLE_BLOCKING_LABEL = L10N.getStr(
 const ADD_URL_PLACEHOLDER = L10N.getStr(
   "netmonitor.actionbar.blockSearchPlaceholder"
 );
+const REQUEST_BLOCKING_USAGE_NOTICE = L10N.getStr(
+  "netmonitor.actionbar.requestBlockingUsageNotice"
+);
+const REQUEST_BLOCKING_ADD_NOTICE = L10N.getStr(
+  "netmonitor.actionbar.requestBlockingAddNotice"
+);
 const REMOVE_URL_TOOLTIP = L10N.getStr("netmonitor.actionbar.removeBlockedUrl");
 
 class RequestBlockingPanel extends Component {
@@ -269,12 +275,40 @@ class RequestBlockingPanel extends Component {
     );
   }
 
-  render() {
+  renderEmptyListNotice() {
     return div(
-      { className: "request-blocking-panel" },
+      { className: "request-blocking-list-empty-notice" },
+      div(
+        { className: "request-blocking-notice-element" },
+        REQUEST_BLOCKING_USAGE_NOTICE
+      ),
+      div(
+        { className: "request-blocking-notice-element" },
+        REQUEST_BLOCKING_ADD_NOTICE
+      )
+    );
+  }
+
+  render() {
+    const { blockedUrls, addBlockedUrl } = this.props;
+
+    return div(
+      {
+        className: "request-blocking-panel",
+        onDragOver: e => {
+          e.preventDefault();
+        },
+        onDrop: e => {
+          e.preventDefault();
+          const url = e.dataTransfer.getData("text/plain");
+          addBlockedUrl(url);
+          this.scrollToBottom();
+        },
+      },
       this.renderEnableBar(),
       this.renderBlockedList(),
-      this.renderAddForm()
+      this.renderAddForm(),
+      !blockedUrls.length && this.renderEmptyListNotice()
     );
   }
 }

@@ -167,3 +167,18 @@
   padding-inline: 20px 8px;
   background: none;
 }
+
+.request-blocking-list-empty-notice {
+  margin: 0;
+  flex: 1;
+  overflow-x: hidden;
+}
+
+.request-blocking-notice-element {
+  padding-top: 12px;
+  padding-inline: 12px;
+}
+
+.request-blocking-notice-element::before {
+  content:"• ";
+}
