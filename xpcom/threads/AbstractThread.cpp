@@ -262,6 +262,7 @@ void AbstractThread::ShutdownMainThread() {
 void AbstractThread::DispatchStateChange(
     already_AddRefed<nsIRunnable> aRunnable) {
   AbstractThread* currentThread = GetCurrent();
+  MOZ_DIAGNOSTIC_ASSERT(currentThread, "An AbstractThread must exist");
   if (currentThread->IsTailDispatcherAvailable()) {
     currentThread->TailDispatcher().AddStateChangeTask(this,
                                                        std::move(aRunnable));
@@ -280,6 +281,7 @@ void AbstractThread::DispatchStateChange(
 void AbstractThread::DispatchDirectTask(
     already_AddRefed<nsIRunnable> aRunnable) {
   AbstractThread* currentThread = GetCurrent();
+  MOZ_DIAGNOSTIC_ASSERT(currentThread, "An AbstractThread must exist");
   if (currentThread->IsTailDispatcherAvailable()) {
     currentThread->TailDispatcher().AddDirectTask(std::move(aRunnable));
   } else {
