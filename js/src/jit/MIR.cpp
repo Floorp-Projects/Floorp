@@ -1840,11 +1840,18 @@ void MUnbox::printOpcode(GenericPrinter& out) const {
 #endif
 
 MDefinition* MUnbox::foldsTo(TempAllocator& alloc) {
-  // Fold MUnbox(MBox(x)) => x if types match.
   if (input()->isBox()) {
     MBox* box = input()->toBox();
+
+    // Fold MUnbox(MBox(x)) => x if types match.
     if (box->input()->type() == type()) {
       return box->input();
+    }
+
+    // Fold MUnbox(MBox(x)) => MToDouble(x) if possible.
+    if (type() == MIRType::Double &&
+        IsTypeRepresentableAsDouble(box->input()->type())) {
+      return MToDouble::New(alloc, box->input());
     }
   }
 
