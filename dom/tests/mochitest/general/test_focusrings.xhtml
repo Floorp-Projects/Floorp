@@ -33,7 +33,7 @@ function initTest()
 function runTest()
 {
   var isMac = (navigator.platform.includes("Mac"));
-  var isWin = (navigator.platform.includes("Win"));
+  var isWinOrLinux = navigator.platform.includes("Win") || navigator.platform.includes("Linux");
 
   function checkFocus(element, visible, testid)
   {
@@ -56,8 +56,8 @@ function runTest()
   // kind of real user input, mouse or key, was last entered. But we can handle
   // the test regardless of which user input last occurred.
   $("l1").focus();
-  var expectedVisible = (!isWin || getComputedStyle($("l1"), "").outlineWidth == "2px");
-  testHTMLElements(htmlElements, isMac, isWin && !expectedVisible);
+  var expectedVisible = (!isWinOrLinux || getComputedStyle($("l1"), "").outlineWidth == "2px");
+  testHTMLElements(htmlElements, isMac, isWinOrLinux && !expectedVisible);
 
   $("l1").focus();
   checkFocus($("l1"), expectedVisible, "appearance on list after focus() with :moz-focusring");
