@@ -27,7 +27,6 @@ from taskgraph.transforms.job.common import (
 )
 
 VARIANTS = [
-    'nightly',
     'shippable',
     'devedition',
     'pgo',
@@ -57,10 +56,10 @@ def test_packages_url(taskdesc):
     """Account for different platforms that name their test packages differently"""
     artifact_url = get_artifact_url('<build>', get_artifact_path(taskdesc,
                                     'target.test_packages.json'))
-    # for android nightly we need to add 'en-US' to the artifact url
+    # for android shippable we need to add 'en-US' to the artifact url
     test = taskdesc['run']['test']
     if 'android' in test['test-platform'] and (
-            get_variant(test['test-platform']) in ("nightly", 'shippable')):
+            get_variant(test['test-platform']) in ('shippable', )):
         head, tail = os.path.split(artifact_url)
         artifact_url = os.path.join(head, 'en-US', tail)
     return artifact_url

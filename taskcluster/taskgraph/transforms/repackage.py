@@ -205,10 +205,7 @@ def make_job_description(config, jobs):
             attributes['locale'] = locale
 
         treeherder = job.get('treeherder', {})
-        if attributes.get('nightly'):
-            treeherder.setdefault('symbol', 'Nr')
-        else:
-            treeherder.setdefault('symbol', 'Rpk')
+        treeherder.setdefault('symbol', 'Rpk')
         dep_th_platform = dep_job.task.get('extra', {}).get('treeherder-platform')
         treeherder.setdefault('platform', dep_th_platform)
         treeherder.setdefault('tier', 1)

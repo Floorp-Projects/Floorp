@@ -290,11 +290,11 @@ def verify_always_optimized(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('full_task_graph')
-def verify_nightly_no_sccache(task, taskgraph, scratch_pad, graph_config):
-    if task and any([task.attributes.get('nightly'), task.attributes.get('shippable')]):
+def verify_shippable_no_sccache(task, taskgraph, scratch_pad, graph_config):
+    if task and task.attributes.get('shippable'):
         if task.task.get('payload', {}).get('env', {}).get('USE_SCCACHE'):
             raise Exception(
-                'Nightly job {} cannot use sccache'.format(task.label))
+                'Shippable job {} cannot use sccache'.format(task.label))
 
 
 @verifications.add('full_task_graph')
@@ -306,17 +306,12 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config):
                 build_env = task.task.get('payload', {}).get('env', {})
                 package_tests = build_env.get('MOZ_AUTOMATION_PACKAGE_TESTS')
                 shippable = task.attributes.get('shippable', False)
-                nightly = task.attributes.get('nightly', False)
                 build_has_tests = scratch_pad.get(task.label)
 
                 if package_tests != '1':
                     # Shippable builds should always package tests.
                     if shippable:
                         exceptions.append('Build job {} is shippable and does not specify '
-                                          'MOZ_AUTOMATION_PACKAGE_TESTS=1 in the '
-                                          'environment.'.format(task.label))
-                    if nightly:
-                        exceptions.append('Build job {} is nightly and does not specify '
                                           'MOZ_AUTOMATION_PACKAGE_TESTS=1 in the '
                                           'environment.'.format(task.label))
 
@@ -329,9 +324,9 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config):
                 else:
                     # Build tasks that aren't in the scratch pad have no
                     # dependent tests, so we shouldn't package tests.
-                    # With the caveat that we expect shippable and nightly jobs to always
+                    # With the caveat that we expect shippable jobs to always
                     # produce tests.
-                    if not build_has_tests and not any([shippable, nightly]):
+                    if not build_has_tests and not shippable:
                         exceptions.append(
                             'Build job {} has no tests, but specifies '
                             'MOZ_AUTOMATION_PACKAGE_TESTS={} in the environment. '
