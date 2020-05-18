@@ -196,6 +196,8 @@
     <string name="preferences_private_browsing_options">نجی برائوزنگ</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">لنکس نجی ٹیب میں کھولیں</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">نجی براؤزنگ میں اسکرین شاٹس کی اجازت دیں</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">نجی براؤزنگ شارٹکٹ شامل کریں</string>
     <!-- Preference for accessibility -->
@@ -397,8 +399,6 @@
     <string name="library_reading_list">پڑھنے کی فہرست</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">تلاش کریں</string>
-    <!-- Library Page Title -->
-    <string name="library_title">لائبریری</string>
     <!-- Settings Page Title -->
     <string name="settings_title">سیٹنگز</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -456,6 +456,10 @@
     <string name="history_delete_all">سابقات حذف کریں</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">کیا آپ کو یقین ہے کہ آپ اپنے سابقات صاف کرنا چاہتے ہیں؟</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">سابقات حذف کردی گئی</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s حذف ہو گیا</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">صاف کریں</string>
     <!-- History overflow menu copy button -->
@@ -511,6 +515,10 @@
     <string name="bookmark_edit">بکمارک میں ترمیم کریں</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">فولڈر منتخب کریں</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">کیا آپ واقعی اس فولڈر کو حذف کرنا چاہتے ہیں؟</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s حذف ہو گیا</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">فولڈر بناؤ</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -564,8 +572,6 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">حذف شدہ %s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">منتخب کردہ بُکمارک کو حذف ہو رہا ہے</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">‏‏پہلے جیسا کریں</string>
 
@@ -834,6 +840,12 @@
 
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">براؤزنگ کا ڈیٹا حذف ہو رہا ہے…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview اب Firefox Nightly ہو گیا ہے</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Mozilla Firefox براؤزر حاصل کریں</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1155,6 +1167,11 @@
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">تمام ویب سائٹوں پر زوم کریں</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">نام (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">آخری استعمال</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">تلاش انجن شامل کریں</string>
     <!-- Title of the Edit search engine screen -->
@@ -1242,8 +1259,12 @@
     <string name="certificate_info_verified_by">توثیق کردہ برائے: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">حذف کریں</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">تدوین کریں</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">کیا آپ واقعی اس لاگ ان کو حذف کرنا چاہتے ہیں؟</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">حذف کریں</string>
-</resources>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">تدوین</string>
+    </resources>

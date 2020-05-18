@@ -18,13 +18,15 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Skedat tuaja të hapura do të shfaqen këtu.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s prodhohet nga Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Gjendeni në sesion privat</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s e spastron historikun tuaj të kërkimeve dhe shfletimit, kur dilni nga aplikacioni apo mbyllni krejt skedat private. Edhe pse kjo s’ju bën anonim përballë sajteve apo furnizuesit të shërbimit tuaj internet,
-        e bën më të lehtë mbajtjen private të asaj çka bëni në internet, nga cilido tjetër që përdor këtë pajisje.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s e spastron historikun tuaj të kërkimeve dhe shfletimit prej skedash private, kur i mbyllni ato ose dilni nga aplikacioni. Edhe pse kjo s’ju bën anonim përballë sajteve apo furnizuesit të shërbimit tuaj internet, e bën më të lehtë mbajtjen private të asaj çka bëni në internet, nga cilido tjetër që përdor këtë pajisje.</string>
     <string name="private_browsing_common_myths">
        Mite të rëndomtë mbi shfletimin privat
     </string>
@@ -411,8 +413,6 @@
     <string name="library_reading_list">Listë Leximesh</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Kërkoni</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Bibliotekë</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Rregullime</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -466,11 +466,18 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Hiqe</string>
 
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Mënyrë Private)</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Fshije historikun</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Jeni i sigurt se doni të spastrohet historiku juaj?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Historiku u Fshi</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s u fshi</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Spastroje</string>
     <!-- History overflow menu copy button -->
@@ -525,6 +532,10 @@
     <string name="bookmark_edit">Përpunoni faqerojtësin</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Përzgjidhni dosje</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Jeni i sigurt se doni të fshihet kjo dosje?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s u fshi</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Shtoni dosje</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -578,7 +589,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">U fshi %1$s</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Po fshihen faqerojtësit e përzgjedhur</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Faqerojtësit u fshinë</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ZHBËJE</string>
 
@@ -850,6 +861,32 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Po fshihen të dhëna shfletimi…</string>
 
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">“Firefox Preview” tanimë është “Firefox Nightly”</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly përditësohet përnatë dhe ka veçori të reja eksperimentale.
+        Por, është më pak i qëndrueshëm. Për funksionim më të qëndrueshëm, shkarkoni shfletuesin tonë beta.</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Merrni Shfletuesin Firefox të Mozilla-s</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly është lëvizur</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Ky aplikacion s’do të përfitojë më përditësime sigurie. Reshtni së përdoruri këtë aplikacion dhe kaloni te Nightly i ri.
+        \n\nQë të shpërngulni te aplikacioni tjetër faqerojtësit tuaj, kredenciale hyrjesh dhe historik, krijoni një llogari Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Kaloni te Nightly i ri</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly është lëvizur</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ky aplikacion s’do të përfitojë më përditësime sigurie. Merrni Nightly-n e ri dhe reshtni së përdoruri këtë aplikacion.
+        \n\nQë të shpërngulni te aplikacioni tjetër faqerojtësit tuaj, kredenciale hyrjesh dhe historik, krijoni një llogari Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Merrni Nightly-n e ri</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1083,6 +1120,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Asistencë</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Vithisje</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Shënim mbi privatësinë</string>
     <!-- About page link text to open know your rights link -->
@@ -1219,6 +1258,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Aktivizojeni që të lejoni pickim dhe &lt;em&gt;zoom&lt;/em&gt;, edhe në sajte që e pengojnë këtë gjest.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Emrash (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Përdorur së fundi</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Renditni menu kredencialesh</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Shtoni motor kërkimesh</string>
     <!-- Title of the Edit search engine screen -->
@@ -1311,8 +1357,26 @@
     <string name="certificate_info_verified_by">Verifikuar Nga: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Fshije</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Përpunoni</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Jeni i sigurt se doni të fshihen këto kredenciale hyrjeje?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Fshije</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Mundësi hyrjesh</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Fusha e përpunueshme e teksteve për adresën web të kredencialeve të hyrjes.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Fusha e përpunueshme e teksteve për emrin e përdoruesit të kredencialeve të hyrjes.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Fusha e përpunueshme e teksteve për fjalëkalimin e kredencialeve të hyrjes.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Ruani ndryshimet te kredenciale hyrjesh.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Hidhi tej ndryshimet</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Përpunoni</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Lypset fjalëkalim</string>
 </resources>

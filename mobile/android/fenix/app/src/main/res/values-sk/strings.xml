@@ -421,8 +421,6 @@
     <string name="library_reading_list">Zoznam na prečítanie</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Hľadať</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Knižnica</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Nastavenia</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -475,6 +473,9 @@
 
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Odstrániť</string>
+
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (súkromné prehliadanie)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -1128,6 +1129,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Podpora</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Zlyhania</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Zásady ochrany súkromia</string>
     <!-- About page link text to open know your rights link -->
@@ -1263,6 +1266,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Povolenie priblíženia aj na stránkach, ktoré toto gesto nepodporujú.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">názvu (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">posledného použitia</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Zoradiť ponuku prihlasovacích údajov</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pridať vyhľadávací modul</string>
     <!-- Title of the Edit search engine screen -->
@@ -1354,8 +1364,26 @@
     <string name="certificate_info_verified_by">Overil ju: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Odstrániť</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Upraviť</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Naozaj chcete odstrániť tieto prihlasovacie údaje?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Odstrániť</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Možnosti prihlásenia</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Upraviteľné textové pole pre webovú adresu.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Upraviteľné textové pole pre používateľské meno.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Upraviteľné textové pole pre heslo.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Uložiť zmeny prihlasovacích údajov.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Neuložiť zmeny</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Upraviť</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Vyžaduje sa heslo</string>
 </resources>

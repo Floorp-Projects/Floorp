@@ -417,8 +417,6 @@
     <string name="library_reading_list">Lista di lettura</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Ricercà</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Bibliuteca</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Preferenze</string>
 
@@ -1128,6 +1126,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Assistenza</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Lampate</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Pulitica di cunfidenzialità</string>
 
@@ -1366,8 +1366,14 @@
     <string name="certificate_info_verified_by">Verificatu da : %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Squassà</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Mudificà</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Site sicuru di vulè squassà st’identificazione di cunnessione ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Squassà</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Mudificà</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Parolla d’entrata richiesta</string>
 </resources>

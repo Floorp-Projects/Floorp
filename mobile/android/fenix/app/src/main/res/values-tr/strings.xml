@@ -1359,6 +1359,16 @@
     <string name="login_deletion_confirmation">Bu hesabı silmek istediğinizden emin misiniz?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Sil</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Hesap seçenekleri</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Hesabın web adresi için düzenlenebilir metin alanı.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Hesabın kullanıcı adı için düzenlenebilir metin alanı.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Hesabın parolası için düzenlenebilir metin alanı.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Değişiklikleri hesaba kaydet.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Değişikliklerden vazgeç</string>
     <!--  The page title for editing a saved login. -->

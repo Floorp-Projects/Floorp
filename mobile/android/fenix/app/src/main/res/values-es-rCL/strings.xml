@@ -1117,6 +1117,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Ayuda</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Fallos</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Política de privacidad</string>
     <!-- About page link text to open know your rights link -->
@@ -1352,8 +1354,26 @@
     <string name="certificate_info_verified_by">Verificado por: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Eliminar</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Editar</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">¿Estás seguro de que quieres eliminar esta conexión?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Eliminar</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Opciones de conexiones</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">El campo de texto editable para la dirección web de la conexión.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">El campo de texto editable para el nombre de usuario de la conexión.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">El campo de texto editable para la contraseña de la conexión.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Guardar cambios a la conexión.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Descartar cambios</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Editar</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Contraseña requerida</string>
 </resources>

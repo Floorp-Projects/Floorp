@@ -310,6 +310,8 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Kuutorogol e keɓe karalle</string>
 
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Ina yamira Mozilla yo aaf etee ƴetta keɓe ngam fannuuji ƴeewndorɗi</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Jaŋtorde Kooke</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
@@ -330,6 +332,8 @@
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions"><![CDATA[Yillo <b>firefox.com/pair</b> nder Firefox e ordinateer maa ngam heɓde kod QR maa.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Uddit kameraa</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Haaytu</string>
 
@@ -560,6 +564,10 @@
     <string name="clear_permission">Momtu yamiroore</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Momtu jamirroje e lowe ɗee fof</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kameraa</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikkoroo</string>
     <!-- Preference for altering the location access for all websites -->
     <string name="preference_phone_feature_location">Nokku</string>
     <!-- Preference for altering the notification access for all websites -->
@@ -578,6 +586,16 @@
     <string name="tracking_protection_on">Kuɓɓol</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Ñifol</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Yamir ojoo e widewoo</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Daaƴ ojoo e widewoo e keɓe cinndel tan</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Ojoo e widewoo maa taroy e WI-FI</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Daaƴ ojoo tan</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Daaƴ ojoo e widewoo</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Kuɓɓol</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -587,6 +605,8 @@
     <string name="create_collection_select_tabs">Suɓo tabbe</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Labo Fof</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Labto fof</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">Suɓo tabbe danndateeɗe</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
@@ -696,6 +716,9 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Ñiiɓirde geese nattaama</string>
 
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Mawnin walla famɗin binndol e lowe geese</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Momtu keɓe banngogol</string>
     <!-- Title for the tabs item in Delete browsing data -->
@@ -717,12 +740,18 @@
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Maa seŋtoye e ko heewi e lowe</string>
 
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Nate e piile mogginaaɗe</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Jamirooje lowre</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Momtu keɓe banngogol</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Momtu keɓe banngogol nde nguddataa</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Ina momta keɓe banngogol ɗoon e ɗoon  so a suɓiima &quot;Uddu&quot; e dosol dowrowol ngol</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Ina momta keɓe banngogol ɗoon e ɗoon  so a suɓiima \&quot;Uddu\&quot; e dosol dowrowol ngol</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">Aslol banngogol</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -744,6 +773,9 @@
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox  Preview wontii Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly ina heɓa kesɗitine jamma fof etee ina jogii fannuuji ƴeewndorɗi kesi.
+        Kono noon, haɗum waawi ŋakkude deeƴde. Aawto wanngorde amen beta ngam kuutorgol ɓurngol deeƴde.</string>
     <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button">Heɓ wanngorde Mozilla Firefox</string>
 
@@ -764,10 +796,23 @@
     <string name="onboarding_header">A Jaɓɓaama e %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Aɗa jogii konte kisa?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Jaŋngu anndude %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Yiy ko hesɗi</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Aɗa jogii naamnal baɗte %s ŋeñtaaɗo oo? Aɗa yiɗi anndu ko waylii?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Heɓ jaabawuuji ɗoo</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Heɓ ko ɓuri moƴƴude e %s.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">A seŋiima hono %s e wanngotde Firefox woɗnde e ngel noddirgel. Aɗa yiɗi seŋoraade ɗee konte?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Eey, seŋam</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -787,6 +832,8 @@
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Gaadanteejo</string>
 
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Ina daaƴa rewindotooɓe famarɓe kono ina yamira kelle yo loow no haanirta</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Uddit teelte</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -822,8 +869,12 @@
     <string name="sign_in_instructions"><![CDATA[E ordinateer maa, uddit Firefox e yah to <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Hebiima niiwtaade</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Seŋoro kameraa maa</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Huutoro ɗoo iimeel</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Seŋtondir</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Haaytu</string>
 
@@ -837,13 +888,27 @@
     <string name="preference_enhanced_tracking_protection">Ndeenka Dewindol Ƴellitiika</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Wanngo tawo a rewindaaka</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Mooftan hoore maa keɓe maa. %s ina reen maa e ko heewi e rewindotooɓe ɓurɓe wooweede rewooɓe e maa e ceŋogol.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ɓeydu humpito</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">Gaadanteejo</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Ƴagguɗo</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Kuukiije</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Kuukiije iwɗe e geese ɗe njillaaka</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Kuukiiji goɗɗi ɗii kala (ina mbaawi saabaade taƴondiral e lowe geese)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Kuukiiji ɗii kala (ina mbaawi saabaade taƴondiral e lowe geese)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Dewindagol loowdi</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Nder tabbe ɗee fof</string>
     <string name="enhanced_tracking_protection_blocked">Faddaama</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Yamiraama</string>
@@ -991,4 +1056,4 @@
     <string name="login_deletion_confirmation">Aɗa yenanaa yiɗde momtude ndee seŋorde?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Momtu</string>
-</resources>
+    </resources>

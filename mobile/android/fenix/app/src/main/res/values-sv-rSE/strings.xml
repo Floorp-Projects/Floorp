@@ -1377,6 +1377,16 @@
     <string name="login_deletion_confirmation">Är du säker på att du vill ta bort den här inloggningen?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Ta bort</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Inloggningsalternativ</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Det redigerbara textfältet för inloggningens webbadress.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Det redigerbara textfältet för inloggningens användarnamn.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Det redigerbara textfältet för inloggningens lösenord.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Spara ändringar för inloggning.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Ignorera ändringar</string>
     <!--  The page title for editing a saved login. -->

@@ -416,8 +416,6 @@
     <string name="library_reading_list">Lista de leitura</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Procurar</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Biblioteca</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Definições</string>
 
@@ -1126,6 +1124,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Apoio</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Falhas</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Política de privacidade</string>
     <!-- About page link text to open know your rights link -->
@@ -1263,6 +1263,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Ative para permitir o beliscar e o zoom, mesmo em sites que impeçam este gesto.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nome (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Última utilização</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menu de ordenação de credenciais</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adicionar motor de pesquisa</string>
     <!-- Title of the Edit search engine screen -->
@@ -1355,8 +1362,26 @@
     <string name="certificate_info_verified_by">Confirmado por: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Eliminar</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Editar</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Tem a certeza que deseja eliminar esta credencial?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Eliminar</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Opções de credenciais</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">O campo de texto editável para o endereço de Internet da credencial.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">O campo de texto editável para o nome de utilizador da credencial.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">O campo de texto editável para a palavra-passe da credencial.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Guardar alterações na credencial.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Descartar alterações</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Editar</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">É necessária uma palavra-passe</string>
 </resources>

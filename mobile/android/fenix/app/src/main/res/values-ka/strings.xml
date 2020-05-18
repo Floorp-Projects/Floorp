@@ -413,8 +413,6 @@
     <string name="library_reading_list">წასაკითხთა სია</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">ძიება</string>
-    <!-- Library Page Title -->
-    <string name="library_title">ბიბლიოთეკა</string>
     <!-- Settings Page Title -->
     <string name="settings_title">პარამეტრები</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1122,6 +1120,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">მხარდაჭერა</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">უეცარი გათიშვები</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">პირადულობის განაცხადი</string>
     <!-- About page link text to open know your rights link -->
@@ -1258,6 +1258,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">მოახლოებისა და დაშორების ჩართვა იმ საიტებზეც კი, რომლებზეც აკრძალულია.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">ანბანურად</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">ბოლოს გამოყენებული</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ანგარიშების მენიუს დალაგება</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">საძიებო სისტემის დამატება</string>
     <!-- Title of the Edit search engine screen -->
@@ -1350,8 +1357,26 @@
     <string name="certificate_info_verified_by">დამმოწმებელი: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">წაშლა</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">ჩასწორება</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">ნამდვილად გსურთ ამ მონაცემების წაშლა?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">წაშლა</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">მონაცემების პარამეტრები</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">ტექსტის ჩასასწორებელი ველი, ანგარიშის ვებმისამართისთვის.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">ტექსტის ჩასასწორებელი ველი, ანგარიშის სახელისთვის.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">ტექსტის ჩასასწორებელი ველი, ანგარიშის პაროლისთვის.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">მონაცემების ცვლილების შენახვა.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">ცვლილებების გაუქმება</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">ჩასწორება</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">პაროლი აუცილებელია</string>
 </resources>

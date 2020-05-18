@@ -47,7 +47,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Nova privatna kartica</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Najpopularnije stranice</string>
+    <string name="home_screen_top_sites_heading">Omiljene stranice</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -771,7 +771,7 @@
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Kartice su zatvorene</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Dodano u top stranice!</string>
+    <string name="snackbar_added_to_top_sites">Dodano u omiljene stranice!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privatna kartica je zatvorena</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1129,6 +1129,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Podrška</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Rušenja</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Pravila privatnosti</string>
     <!-- About page link text to open know your rights link -->
@@ -1361,14 +1363,32 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Sigurno želiš izbrisati ovu zabilješku?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Dodaj u top stranice</string>
+    <string name="browser_menu_add_to_top_sites">Dodaj u omiljene stranice</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Potvrđeno od: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Izbriši</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Uredi</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Sigurno izbrisati ovu prijavu?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Izbriši</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Opcije prijave</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Tekstualno polje za web adresu prijave koje se može uređivati.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Tekstualno polje za korisničko ime koje se može uređivati.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Tekstualno polje za lozinku koje se može uređivati.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Spremi izmjene prijave.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Odbaci izmjene</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Uređivanje</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Potrebna je lozinka</string>
 </resources>

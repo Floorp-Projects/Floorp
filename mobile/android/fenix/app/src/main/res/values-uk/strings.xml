@@ -205,7 +205,7 @@
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Приватність та безпека</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">Дозволи сайту</string>
+    <string name="preferences_site_permissions">Дозволи сайтів</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Приватний перегляд</string>
     <!-- Preference for opening links in a private tab-->
@@ -266,7 +266,7 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Шукати закладки</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">Налаштування облікового запису</string>
+    <string name="preferences_account_settings">Обліковий запис</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Відкривати посилання в програмах</string>
 
@@ -346,7 +346,7 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Використання й технічні дані</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Надсилає в Mozilla дані про використання, швидкодію, апаратне забезпечення та налаштування браузера, щоб допомогти вдосконалити %1$s</string>
+    <string name="preferences_usage_data_description">Надсилання в Mozilla даних про використання, швидкодію, апаратне забезпечення та налаштування браузера, щоб допомогти вдосконалити %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Маркетингові дані</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
@@ -845,7 +845,7 @@
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Звільняє місце для зберігання</string>
     <!-- Title for the site permissions item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_site_permissions">Дозволи сайту</string>
+    <string name="preferences_delete_browsing_data_site_permissions">Дозволи сайтів</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Видалити дані перегляду</string>
     <!-- Title for the Delete browsing data on quit preference -->

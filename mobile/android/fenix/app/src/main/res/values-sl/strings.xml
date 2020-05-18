@@ -1126,6 +1126,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Podpora</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Sesutja</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Obvestilo o zasebnosti</string>
     <!-- About page link text to open know your rights link -->
@@ -1136,6 +1138,9 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Knjižnice, ki jih uporabljamo</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Meni Razhroščevanje: še %1$d klik(ov) do omogočenja</string>
     <string name="about_debug_menu_toast_done">Meni za razhroščevanje je omogočen</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
@@ -1267,6 +1272,9 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Času zadnje uporabe</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Meni razvrščanja prijav</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Dodaj iskalnik</string>
     <!-- Title of the Edit search engine screen -->
@@ -1361,8 +1369,16 @@
     <string name="certificate_info_verified_by">Overil: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Izbriši</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Uredi</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Ali ste prepričani, da želite izbrisati to prijavo?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Izbriši</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Možnosti prijave</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Zavrzi spremembe</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Zahtevano je geslo</string>
 </resources>
