@@ -862,8 +862,10 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
   nsAutoCString host(aHost);
   NS_ENSURE_TRUE(!host.IsEmpty(), NS_ERROR_UNEXPECTED);
 
-  LOG(("Resolving host [%s]%s%s type %d. [this=%p]\n", host.get(),
-       flags & RES_BYPASS_CACHE ? " - bypassing cache" : "",
+  nsAutoCString originSuffix;
+  aOriginAttributes.CreateSuffix(originSuffix);
+  LOG(("Resolving host [%s]<%s>%s%s type %d. [this=%p]\n", host.get(),
+       originSuffix.get(), flags & RES_BYPASS_CACHE ? " - bypassing cache" : "",
        flags & RES_REFRESH_CACHE ? " - refresh cache" : "", type, this));
 
   // ensure that we are working with a valid hostname before proceeding.  see
@@ -906,8 +908,6 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
       // any pending callbacks, then add to pending callbacks queue,
       // and return.  otherwise, add ourselves as first pending
       // callback, and proceed to do the lookup.
-      nsAutoCString originSuffix;
-      aOriginAttributes.CreateSuffix(originSuffix);
 
       if (gTRRService && gTRRService->IsExcludedFromTRR(host)) {
         flags |= RES_DISABLE_TRR;
