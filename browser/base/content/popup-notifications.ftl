@@ -17,3 +17,12 @@ popup-screen-sharing-never =
 
 popup-silence-notifications-checkbox = Disable notifications from { -brand-short-name } while sharing
 popup-silence-notifications-checkbox-warning = { -brand-short-name } will not display notifications while you are sharing.
+
+## WebRTC window or screen share tab switch warning
+
+sharing-warning-window = You are sharing { -brand-short-name }. Other people can see when you switch to a new tab.
+sharing-warning-screen = You are sharing your entire screen. Other people can see when you switch to a new tab.
+sharing-warning-proceed-to-tab =
+  .label = Proceed to Tab
+sharing-warning-disable-for-session =
+  .label = Disable sharing protection for this session
