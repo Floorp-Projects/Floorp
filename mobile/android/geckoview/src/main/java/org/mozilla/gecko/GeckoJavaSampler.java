@@ -44,8 +44,6 @@ public class GeckoJavaSampler {
             }
             for (int i = 0; i < aStack.length; i++) {
                 mFrames[aStack.length - 1 - i] = new Frame();
-                mFrames[aStack.length - 1 - i].fileName = aStack[i].getFileName();
-                mFrames[aStack.length - 1 - i].lineNo = aStack[i].getLineNumber();
                 mFrames[aStack.length - 1 - i].methodName = aStack[i].getMethodName();
                 mFrames[aStack.length - 1 - i].className = aStack[i].getClassName();
             }
@@ -53,8 +51,6 @@ public class GeckoJavaSampler {
     }
 
     private static class Frame {
-        public String fileName;
-        public int lineNo;
         public String methodName;
         public String className;
     }
