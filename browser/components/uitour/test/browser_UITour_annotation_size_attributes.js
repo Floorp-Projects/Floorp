@@ -7,8 +7,8 @@
 var gTestTab;
 var gContentAPI;
 var gContentWindow;
-var highlight = document.getElementById("UITourHighlightContainer");
-var tooltip = document.getElementById("UITourTooltip");
+var highlight = UITour.getHighlightContainerAndMaybeCreate(document);
+var tooltip = UITour.getTooltipAndMaybeCreate(document);
 
 add_task(setup_UITourTest);
 
