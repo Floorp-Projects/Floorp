@@ -102,8 +102,8 @@ jsreftest:
     tier: default
     run-on-projects:
         by-test-platform:
-            android-hw-.*-aarch64/.*: ['try', 'mozilla-central', 'release']
-            android-hw-.*-api-16/.*: ['try', 'mozilla-central', 'release']
+            android-hw-.*-aarch64(?:-shippable)?/.*: ['try', 'mozilla-central', 'release']
+            android-hw-.*-api-16(?:-shippable)?/.*: ['try', 'mozilla-central', 'release']
             default: built-projects
 
 reftest:
