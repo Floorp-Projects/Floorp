@@ -293,7 +293,10 @@
     },
 
     set selectedTab(val) {
-      if (gNavToolbox.collapsed && !this._allowTabChange) {
+      if (
+        gSharedTabWarning.willShowSharedTabWarning(val) ||
+        (gNavToolbox.collapsed && !this._allowTabChange)
+      ) {
         return this.tabbox.selectedTab;
       }
       // Update the tab
@@ -2854,6 +2857,8 @@
       if (pinned) {
         this._notifyPinnedStatus(t);
       }
+
+      gSharedTabWarning.tabAdded(t);
 
       return t;
     },

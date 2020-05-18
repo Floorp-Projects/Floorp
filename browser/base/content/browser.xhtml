@@ -84,6 +84,7 @@
   <link rel="localization" href="browser/sidebarMenu.ftl"/>
   <link rel="localization" href="browser/allTabsMenu.ftl"/>
   <link rel="localization" href="browser/places.ftl"/>
+  <link rel="localization" href="preview/popup-notifications.ftl"/>
 
   <title>&mainWindow.title;</title>
 
@@ -683,6 +684,40 @@
                crop="end"/>
       </hbox>
     </hbox>
+
+    <html:template id="sharing-tabs-warning-panel-template">
+      <panel id="sharing-tabs-warning-panel"
+             role="alert"
+             flip="slide"
+             type="arrow"
+             orient="vertical"
+             ignorekeys="true"
+             consumeoutsideclicks="never"
+             norolluponanchor="true"
+             onpopupshown="gSharedTabWarning.sharedTabWarningShown();">
+        <hbox type="window" align="start">
+          <image class="screen-icon popup-notification-icon"></image>
+          <vbox flex="1" pack="start">
+            <label>
+              <html:span id="sharing-warning-window-panel-header"
+                         role="heading"
+                         aria-level="1"
+                         data-l10n-id="sharing-warning-window"/>
+              <html:span id="sharing-warning-screen-panel-header"
+                         role="heading"
+                         aria-level="1"
+                         data-l10n-id="sharing-warning-screen"/>
+            </label>
+            <hbox align="center">
+              <button id="sharing-warning-proceed-to-tab" oncommand="gSharedTabWarning.allowSharedTabSwitch();" flex="1" data-l10n-id="sharing-warning-proceed-to-tab"/>
+            </hbox>
+            <hbox pack="start">
+              <checkbox id="sharing-warning-disable-for-session" data-l10n-id="sharing-warning-disable-for-session"/>
+            </hbox>
+          </vbox>
+        </hbox>
+      </panel>
+    </html:template>
   </popupset>
   <box id="appMenu-viewCache" hidden="true"/>
 
