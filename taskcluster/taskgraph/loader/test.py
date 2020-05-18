@@ -55,6 +55,7 @@ def loader(kind, path, config, params, loaded_tasks):
                 test.setdefault('attributes', {})['nightly'] = True
             if test_platform.get('shippable'):
                 test.setdefault('attributes', {})['shippable'] = True
+                test['attributes']['shipping_product'] = test_platform['shipping_product']
 
             logger.debug("Generating tasks for test {} on platform {}".format(
                 test_name, test['test-platform']))
@@ -104,6 +105,8 @@ def get_test_platforms(test_platforms_cfg, builds_by_platform, signed_builds_by_
         if builds_by_platform[build_platform].attributes.get('shippable'):
             test_platforms[test_platform]['shippable'] = \
                 builds_by_platform[build_platform].attributes['shippable']
+            test_platforms[test_platform]['shipping_product'] = \
+                builds_by_platform[build_platform].attributes['shipping_product']
 
         test_platforms[test_platform].update(cfg)
 
