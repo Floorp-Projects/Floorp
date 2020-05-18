@@ -173,7 +173,11 @@ async function waitUntilPermission(url, name) {
 
 async function interactWithTracker() {
   await new Promise(resolve => {
-    onmessage = resolve;
+    let orionmessage = onmessage;
+    onmessage = _ => {
+      onmessage = orionmessage;
+      resolve();
+    };
 
     info("Let's interact with the tracker");
     window.open(
