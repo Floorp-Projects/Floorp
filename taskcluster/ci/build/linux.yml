@@ -1041,7 +1041,6 @@ linux64-fuzzing-ccov/opt:
 linux64-asan-reporter-shippable/opt:
     description: "Linux64 Opt ASAN Reporter (Shippable)"
     attributes:
-        nightly: true
         shippable: true
     shipping-product:
         by-release-type:

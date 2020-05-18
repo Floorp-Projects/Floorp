@@ -943,7 +943,6 @@ win64-asan-reporter-shippable/opt:
     description: "Win64 Opt ASAN Reporter (Shippable)"
     attributes:
         shippable: true
-        nightly: true
     shipping-product:
         by-release-type:
             nightly: firefox
