@@ -8522,73 +8522,73 @@ void CodeGenerator::visitMathFunctionD(LMathFunctionD* ins) {
 
   void* funptr = nullptr;
   switch (ins->mir()->function()) {
-    case MMathFunction::Log:
+    case UnaryMathFunction::Log:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log_impl);
       break;
-    case MMathFunction::Sin:
+    case UnaryMathFunction::Sin:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_sin_impl);
       break;
-    case MMathFunction::Cos:
+    case UnaryMathFunction::Cos:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_cos_impl);
       break;
-    case MMathFunction::Exp:
+    case UnaryMathFunction::Exp:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_exp_impl);
       break;
-    case MMathFunction::Tan:
+    case UnaryMathFunction::Tan:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_tan_impl);
       break;
-    case MMathFunction::ATan:
+    case UnaryMathFunction::ATan:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_atan_impl);
       break;
-    case MMathFunction::ASin:
+    case UnaryMathFunction::ASin:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_asin_impl);
       break;
-    case MMathFunction::ACos:
+    case UnaryMathFunction::ACos:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_acos_impl);
       break;
-    case MMathFunction::Log10:
+    case UnaryMathFunction::Log10:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log10_impl);
       break;
-    case MMathFunction::Log2:
+    case UnaryMathFunction::Log2:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log2_impl);
       break;
-    case MMathFunction::Log1P:
+    case UnaryMathFunction::Log1P:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log1p_impl);
       break;
-    case MMathFunction::ExpM1:
+    case UnaryMathFunction::ExpM1:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_expm1_impl);
       break;
-    case MMathFunction::CosH:
+    case UnaryMathFunction::CosH:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_cosh_impl);
       break;
-    case MMathFunction::SinH:
+    case UnaryMathFunction::SinH:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_sinh_impl);
       break;
-    case MMathFunction::TanH:
+    case UnaryMathFunction::TanH:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_tanh_impl);
       break;
-    case MMathFunction::ACosH:
+    case UnaryMathFunction::ACosH:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_acosh_impl);
       break;
-    case MMathFunction::ASinH:
+    case UnaryMathFunction::ASinH:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_asinh_impl);
       break;
-    case MMathFunction::ATanH:
+    case UnaryMathFunction::ATanH:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_atanh_impl);
       break;
-    case MMathFunction::Trunc:
+    case UnaryMathFunction::Trunc:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_trunc_impl);
       break;
-    case MMathFunction::Cbrt:
+    case UnaryMathFunction::Cbrt:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_cbrt_impl);
       break;
-    case MMathFunction::Floor:
+    case UnaryMathFunction::Floor:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_floor_impl);
       break;
-    case MMathFunction::Ceil:
+    case UnaryMathFunction::Ceil:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_ceil_impl);
       break;
-    case MMathFunction::Round:
+    case UnaryMathFunction::Round:
       funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_round_impl);
       break;
     default:
@@ -8611,17 +8611,17 @@ void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
   void* funptr = nullptr;
   CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check;
   switch (ins->mir()->function()) {
-    case MMathFunction::Floor:
+    case UnaryMathFunction::Floor:
       funptr = JS_FUNC_TO_DATA_PTR(void*, floorf);
       check = CheckUnsafeCallWithABI::DontCheckOther;
       break;
-    case MMathFunction::Round:
+    case UnaryMathFunction::Round:
       funptr = JS_FUNC_TO_DATA_PTR(void*, math_roundf_impl);
       break;
-    case MMathFunction::Trunc:
+    case UnaryMathFunction::Trunc:
       funptr = JS_FUNC_TO_DATA_PTR(void*, math_truncf_impl);
       break;
-    case MMathFunction::Ceil:
+    case UnaryMathFunction::Ceil:
       funptr = JS_FUNC_TO_DATA_PTR(void*, ceilf);
       check = CheckUnsafeCallWithABI::DontCheckOther;
       break;
