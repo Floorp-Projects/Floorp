@@ -555,9 +555,9 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   virtual nsISerialEventTarget* EventTargetFor(
       mozilla::TaskCategory aCategory) const = 0;
 
-  void SaveStorageAccessGranted();
+  void SaveStorageAccessGranted(const nsACString& aPermissionKey);
 
-  bool HasStorageAccessGranted();
+  bool HasStorageAccessGranted(const nsACString& aPermissionKey);
 
   nsIPrincipal* GetDocumentContentBlockingAllowListPrincipal() const;
 
@@ -651,11 +651,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // the event object alive.
   mozilla::dom::Event* mEvent;
 
-  // A boolean flag indicating whether storage access is granted for the
-  // current window. These are also set as permissions, but it could happen
-  // that we need to access them synchronously in this context, and for
-  // this, we need a copy here.
-  bool mStorageAccessGranted;
+  // This is a list of storage access granted for the current window. These are
+  // also set as permissions, but it could happen that we need to access them
+  // synchronously in this context, and for this, we need a copy here.
+  nsTArray<nsCString> mStorageAccessGranted;
 
   // The WindowGlobalChild actor for this window.
   //

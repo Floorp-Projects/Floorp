@@ -26,6 +26,7 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDOMChromeWindow.h"
+#include "nsIObserver.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "mozilla/EventListenerManager.h"
@@ -162,7 +163,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                                   public nsIScriptObjectPrincipal,
                                   public nsSupportsWeakReference,
                                   public nsIInterfaceRequestor,
-                                  public PRCListStr {
+                                  public PRCListStr,
+                                  public nsIObserver {
  public:
   typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindowOuter*>
       OuterWindowByIdTable;
@@ -349,6 +351,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
+
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
 
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> IndexedGetterOuter(
       uint32_t aIndex);
