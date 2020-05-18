@@ -175,8 +175,7 @@ static bool SkipNode(const nsIContent* aContent) {
   const nsIContent* content = aContent;
   while (content) {
     if (!IsDisplayedNode(content) || content->IsComment() ||
-        content->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::noframes,
-                                     nsGkAtoms::select)) {
+        content->IsAnyOfHTMLElements(nsGkAtoms::select)) {
       DEBUG_FIND_PRINTF("Skipping node: ");
       DumpNode(content);
       return true;

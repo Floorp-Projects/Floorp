@@ -92,6 +92,11 @@ let runTests = t.step_func_done(function() {
     </div>
   `);
 
+  testFindable(true, "foobar", `
+    <body><script style="display: block;">foobar</` + `script></body>
+  `);
+
+
   testFindable(true, "Shadow text", function(document) {
     let div = document.createElement("div");
     div.attachShadow({ mode: "open" }).innerHTML = `
