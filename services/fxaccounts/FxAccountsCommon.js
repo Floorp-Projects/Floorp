@@ -269,6 +269,7 @@ exports.FXA_PWDMGR_SECURE_FIELDS = new Set([
   "keyFetchToken",
   "unwrapBKey",
   "assertion",
+  "scopedKeys",
 ]);
 
 // Fields we keep in memory and don't persist anywhere.
