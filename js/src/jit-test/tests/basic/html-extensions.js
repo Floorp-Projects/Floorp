@@ -24,6 +24,11 @@ assertEq("".link.length, 1);
 assertEq("".fontsize.length, 1);
 assertEq("".fontcolor.length, 1);
 
+// Ensure @@replace on String.prototype isn't called.
+String.prototype[Symbol.replace] = function() {
+    throw "Shouldn't call @@replace";
+};
+
 // " in the attribute value is escaped (&quot;)
 assertEq("bla\"<>'".anchor("foo'<>\"\"123\"/\\"),
 	 "<a name=\"foo'<>&quot;&quot;123&quot;/\\\">bla\"<>'</a>");
