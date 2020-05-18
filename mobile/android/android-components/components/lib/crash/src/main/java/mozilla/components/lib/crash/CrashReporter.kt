@@ -252,8 +252,8 @@ class CrashReporter(
         }
     }
 
-    internal fun getCrashReporterServiceById(id: String): CrashReporterService {
-        return services.first { it.id == id }
+    internal fun getCrashReporterServiceById(id: String): CrashReporterService? {
+        return services.firstOrNull { it.id == id }
     }
 
     enum class Prompt {

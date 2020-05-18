@@ -91,9 +91,9 @@ private fun SpannableStringBuilder.append(
     onSelection: (String) -> Unit
 ): SpannableStringBuilder {
     services.forEachIndexed { index, entity ->
-        val name = crashReporter.getCrashReporterServiceById(entity.serviceId).name
-        val url = crashReporter.getCrashReporterServiceById(entity.serviceId)
-            .createCrashReportUrl(entity.reportId)
+        val service = crashReporter.getCrashReporterServiceById(entity.serviceId)
+        val name = service?.name ?: entity.serviceId
+        val url = service?.createCrashReportUrl(entity.reportId)
 
         if (url != null) {
             append(name, object : ClickableSpan() {
