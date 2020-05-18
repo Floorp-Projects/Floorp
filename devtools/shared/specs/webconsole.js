@@ -245,6 +245,10 @@ const webconsoleSpecPrototype = {
         url: Arg(0, "json"),
       },
     },
+    getBlockedUrls: {
+      request: {},
+      response: RetVal("array:string"),
+    },
   },
 };
 

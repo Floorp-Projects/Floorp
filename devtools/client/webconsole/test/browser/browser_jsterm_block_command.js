@@ -18,17 +18,40 @@ add_task(async function() {
   await tryFetching();
   const resp1 = await waitFor(() => findMessage(hud, "successful"));
   ok(resp1, "the request was not blocked");
-
+  info(`Execute the :block command and try to do execute a network request`);
   await executeAndWaitForMessage(hud, blockCommand, "are now blocked");
-
-  info("After blocking");
   await tryFetching();
+
   const resp2 = await waitFor(() => findMessage(hud, "blocked"));
   ok(resp2, "the request was blocked as expected");
 
-  await executeAndWaitForMessage(hud, unblockCommand, "Removed blocking");
+  info("Open netmonitor check the blocked filter is registered in its state");
+  const { panelWin } = await openNetMonitor();
+  // wait until the blockedUrls property is populated
+  await waitFor(
+    () => panelWin.store.getState().requestBlocking.blockedUrls.length > 0
+  );
+  const netMonitorState1 = panelWin.store.getState();
+  is(
+    netMonitorState1.requestBlocking.blockedUrls[0].url,
+    filter,
+    "blocked request shows up in netmonitor state"
+  );
 
+  info("Switch back to the console");
+  await hud.toolbox.selectTool("webconsole");
+
+  // :unblock
+  await executeAndWaitForMessage(hud, unblockCommand, "Removed blocking");
   info("After unblocking");
+
+  const netMonitorState2 = panelWin.store.getState();
+  is(
+    netMonitorState2.requestBlocking.blockedUrls.length,
+    0,
+    "unblocked request should not be in netmonitor state"
+  );
+
   await tryFetching();
 
   const resp3 = await waitFor(() => findMessage(hud, "successful"));
