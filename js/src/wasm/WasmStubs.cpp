@@ -249,6 +249,15 @@ static void GenPrintF64(DebugChannel channel, MacroAssembler& masm,
     }
   });
 }
+
+#  ifdef ENABLE_WASM_SIMD
+static void GenPrintV128(DebugChannel channel, MacroAssembler& masm,
+                         const FloatRegister& src) {
+  // TODO: We might try to do something meaningful here once SIMD data are
+  // aligned and hence C++-ABI compliant.  For now, just make ourselves visible.
+  GenPrintf(channel, masm, "v128");
+}
+#  endif
 #else
 static void GenPrintf(DebugChannel channel, MacroAssembler& masm,
                       const char* fmt, ...) {}
@@ -262,6 +271,10 @@ static void GenPrintF32(DebugChannel channel, MacroAssembler& masm,
                         const FloatRegister& src) {}
 static void GenPrintF64(DebugChannel channel, MacroAssembler& masm,
                         const FloatRegister& src) {}
+#  ifdef ENABLE_WASM_SIMD
+static void GenPrintV128(DebugChannel channel, MacroAssembler& masm,
+                         const FloatRegister& src) {}
+#  endif
 #endif
 
 static bool FinishOffsets(MacroAssembler& masm, Offsets* offsets) {
@@ -355,7 +368,10 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
             break;
           case MIRType::Int8x16:
 #ifdef ENABLE_WASM_SIMD
-            masm.loadUnalignedSimd128(src, iter->fpu());
+            // We will reach this point when we generate interpreter entry stubs
+            // for exports that receive v128 values, but the code will never be
+            // executed because such exports cannot be called from JS.
+            masm.breakpoint();
             break;
 #else
             MOZ_CRASH("V128 not supported in SetupABIArguments");
@@ -398,7 +414,15 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
             break;
           }
           case MIRType::Int8x16: {
-            MOZ_CRASH("SIMD stack argument");
+#ifdef ENABLE_WASM_SIMD
+            // We will reach this point when we generate interpreter entry stubs
+            // for exports that receive v128 values, but the code will never be
+            // executed because such exports cannot be called from JS.
+            masm.breakpoint();
+            break;
+#else
+            MOZ_CRASH("V128 not supported in SetupABIArguments");
+#endif
           }
           case MIRType::StackResults: {
             MOZ_ASSERT(args.isSyntheticStackResultPointerArg(iter.index()));
@@ -1637,6 +1661,13 @@ static void StackCopy(MacroAssembler& masm, MIRType type, Register scratch,
     masm.loadDouble(src, fpscratch);
     GenPrintF64(DebugChannel::Import, masm, fpscratch);
     masm.storeDouble(fpscratch, dst);
+#ifdef ENABLE_WASM_SIMD
+  } else if (type == MIRType::Int8x16) {
+    ScratchSimd128Scope fpscratch(masm);
+    masm.loadUnalignedSimd128(src, fpscratch);
+    GenPrintV128(DebugChannel::Import, masm, fpscratch);
+    masm.storeUnalignedSimd128(fpscratch, dst);
+#endif
   } else {
     MOZ_CRASH("StackCopy: unexpected type");
   }
