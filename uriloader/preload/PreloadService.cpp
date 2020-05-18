@@ -72,83 +72,121 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     return nullptr;
   }
 
-  nsCOMPtr<nsIURI> uri = aLinkElement->GetURI();
-
   nsAutoString as, charset, crossOrigin, integrity, referrerPolicyAttr, srcset,
-      sizes, type;
+      sizes, type, url;
+
+  nsCOMPtr<nsIURI> uri = aLinkElement->GetURI();
   aLinkElement->GetAs(as);
   aLinkElement->GetCharset(charset);
+  aLinkElement->GetImageSrcset(srcset);
+  aLinkElement->GetImageSizes(sizes);
+  aLinkElement->GetHref(url);
   aLinkElement->GetCrossOrigin(crossOrigin);
   aLinkElement->GetIntegrity(integrity);
   aLinkElement->GetReferrerPolicy(referrerPolicyAttr);
   auto referrerPolicy = PreloadReferrerPolicy(referrerPolicyAttr);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      dom::ReferrerInfo::CreateFromDocumentAndPolicyOverride(mDocument,
+                                                             referrerPolicy);
+  dom::DOMString domType;
+  aLinkElement->GetType(domType);
+  domType.ToString(type);
 
+  RefPtr<PreloaderBase> preload = PreloadOrCoalesce(
+      uri, url, aPolicyType, as, type, charset, srcset, sizes, integrity,
+      crossOrigin, referrerPolicy, referrerPolicyAttr, referrerInfo);
+
+  if (!preload) {
+    NotifyNodeEvent(aLinkElement, false);
+    return nullptr;
+  }
+
+  preload->AddLinkPreloadNode(aLinkElement);
+  return preload.forget();
+}
+
+already_AddRefed<PreloaderBase> PreloadService::PreloadLinkHeader(
+    nsIURI* aURI, const nsAString& aURL, nsContentPolicyType aPolicyType,
+    const nsAString& aAs, const nsAString& aType, const nsAString& aIntegrity,
+    const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aCORS,
+    const nsAString& aReferrerPolicy, nsIReferrerInfo* aReferrerInfo) {
+  if (!StaticPrefs::network_preload()) {
+    return nullptr;
+  }
+
+  if (!CheckReferrerURIScheme(aReferrerInfo)) {
+    return nullptr;
+  }
+
+  if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
+    return nullptr;
+  }
+
+  auto referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
+  return PreloadOrCoalesce(aURI, aURL, aPolicyType, aAs, aType, EmptyString(),
+                           aSrcset, aSizes, aIntegrity, aCORS, referrerPolicy,
+                           aReferrerPolicy, aReferrerInfo);
+}
+
+already_AddRefed<PreloaderBase> PreloadService::PreloadOrCoalesce(
+    nsIURI* aURI, const nsAString& aURL, nsContentPolicyType aPolicyType,
+    const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
+    const nsAString& aSrcset, const nsAString& aSizes,
+    const nsAString& aIntegrity, const nsAString& aCORS,
+    dom::ReferrerPolicy aReferrerPolicy, const nsAString& aReferrerPolicyAttr,
+    nsIReferrerInfo* aReferrerInfo) {
   bool isImgSet = false;
   PreloadHashKey preloadKey;
+  nsCOMPtr<nsIURI> uri = aURI;
 
-  if (as.LowerCaseEqualsASCII("script")) {
-    dom::DOMString domType;
-    aLinkElement->GetType(domType);
-    domType.ToString(type);
+  if (aAs.LowerCaseEqualsASCII("script")) {
     preloadKey =
-        PreloadHashKey::CreateAsScript(uri, crossOrigin, type, referrerPolicy);
-  } else if (as.LowerCaseEqualsASCII("style")) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        dom::ReferrerInfo::CreateFromDocumentAndPolicyOverride(mDocument,
-                                                               referrerPolicy);
+        PreloadHashKey::CreateAsScript(uri, aCORS, aType, aReferrerPolicy);
+  } else if (aAs.LowerCaseEqualsASCII("style")) {
     preloadKey = PreloadHashKey::CreateAsStyle(
-        uri, mDocument->NodePrincipal(), referrerInfo,
-        dom::Element::StringToCORSMode(crossOrigin),
+        uri, mDocument->NodePrincipal(), aReferrerInfo,
+        dom::Element::StringToCORSMode(aCORS),
         css::eAuthorSheetFeatures /* see Loader::LoadSheet */);
-  } else if (as.LowerCaseEqualsASCII("image")) {
-    aLinkElement->GetImageSrcset(srcset);
-    aLinkElement->GetImageSizes(sizes);
-    nsAutoString url;
-    aLinkElement->GetHref(url);
-    uri = mDocument->ResolvePreloadImage(BaseURIForPreload(), url, srcset,
-                                         sizes, &isImgSet);
+  } else if (aAs.LowerCaseEqualsASCII("image")) {
+    uri = mDocument->ResolvePreloadImage(BaseURIForPreload(), aURL, aSrcset,
+                                         aSizes, &isImgSet);
     if (!uri) {
-      NotifyNodeEvent(aLinkElement, false);
       return nullptr;
     }
 
     preloadKey = PreloadHashKey::CreateAsImage(
-        uri, mDocument->NodePrincipal(),
-        dom::Element::StringToCORSMode(crossOrigin), referrerPolicy);
-  } else if (as.LowerCaseEqualsASCII("font")) {
+        uri, mDocument->NodePrincipal(), dom::Element::StringToCORSMode(aCORS),
+        aReferrerPolicy);
+  } else if (aAs.LowerCaseEqualsASCII("font")) {
     preloadKey = PreloadHashKey::CreateAsFont(
-        uri, dom::Element::StringToCORSMode(crossOrigin), referrerPolicy);
-  } else if (as.LowerCaseEqualsASCII("fetch")) {
+        uri, dom::Element::StringToCORSMode(aCORS), aReferrerPolicy);
+  } else if (aAs.LowerCaseEqualsASCII("fetch")) {
     preloadKey = PreloadHashKey::CreateAsFetch(
-        uri, dom::Element::StringToCORSMode(crossOrigin), referrerPolicy);
+        uri, dom::Element::StringToCORSMode(aCORS), aReferrerPolicy);
   } else {
-    NotifyNodeEvent(aLinkElement, false);
     return nullptr;
   }
 
   RefPtr<PreloaderBase> preload = LookupPreload(&preloadKey);
   if (!preload) {
-    if (as.LowerCaseEqualsASCII("script")) {
-      PreloadScript(uri, type, charset, crossOrigin, referrerPolicyAttr,
-                    integrity, true /* isInHead - TODO */);
-    } else if (as.LowerCaseEqualsASCII("style")) {
-      PreloadStyle(uri, charset, crossOrigin, referrerPolicyAttr, integrity);
-    } else if (as.LowerCaseEqualsASCII("image")) {
-      PreloadImage(uri, crossOrigin, referrerPolicyAttr, isImgSet);
-    } else if (as.LowerCaseEqualsASCII("font")) {
-      PreloadFont(uri, crossOrigin, referrerPolicyAttr);
-    } else if (as.LowerCaseEqualsASCII("fetch")) {
-      PreloadFetch(uri, crossOrigin, referrerPolicyAttr);
+    if (aAs.LowerCaseEqualsASCII("script")) {
+      PreloadScript(uri, aType, aCharset, aCORS, aReferrerPolicyAttr,
+                    aIntegrity, true /* isInHead - TODO */);
+    } else if (aAs.LowerCaseEqualsASCII("style")) {
+      PreloadStyle(uri, aCharset, aCORS, aReferrerPolicyAttr, aIntegrity);
+    } else if (aAs.LowerCaseEqualsASCII("image")) {
+      PreloadImage(uri, aCORS, aReferrerPolicyAttr, isImgSet);
+    } else if (aAs.LowerCaseEqualsASCII("font")) {
+      PreloadFont(uri, aCORS, aReferrerPolicyAttr);
+    } else if (aAs.LowerCaseEqualsASCII("fetch")) {
+      PreloadFetch(uri, aCORS, aReferrerPolicyAttr);
     }
 
     preload = LookupPreload(&preloadKey);
     if (!preload) {
-      NotifyNodeEvent(aLinkElement, false);
       return nullptr;
     }
   }
-
-  preload->AddLinkPreloadNode(aLinkElement);
 
   return preload.forget();
 }
