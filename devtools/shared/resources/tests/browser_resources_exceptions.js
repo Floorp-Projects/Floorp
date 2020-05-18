@@ -22,7 +22,9 @@ add_task(async function() {
 
   info("Call watch once");
   const onAvailable = () => {};
-  await resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], onAvailable);
+  await resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], {
+    onAvailable,
+  });
 
   info("Call watch again, should throw because we are already listening");
   const expectedMessage1 =
@@ -30,12 +32,12 @@ add_task(async function() {
     "the client should call `watch` only once per resource type.";
 
   await Assert.rejects(
-    resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], onAvailable),
+    resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], { onAvailable }),
     err => err.message === expectedMessage1
   );
 
   info("Call unwatch");
-  resourceWatcher.unwatch([ResourceWatcher.TYPES.ROOT_NODE], onAvailable);
+  resourceWatcher.unwatch([ResourceWatcher.TYPES.ROOT_NODE], { onAvailable });
 
   info("Call watch again, should throw because we already listened previously");
   const expectedMessage2 =
@@ -43,7 +45,7 @@ add_task(async function() {
     "and doesn't support watching again on a previous resource.";
 
   await Assert.rejects(
-    resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], onAvailable),
+    resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], { onAvailable }),
     err => err.message === expectedMessage2
   );
 

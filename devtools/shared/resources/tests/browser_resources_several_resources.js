@@ -40,7 +40,7 @@ add_task(async function() {
   };
 
   info("Call watch([CONSOLE_MESSAGES, ROOT_NODE], ...)");
-  await resourceWatcher.watch([CONSOLE_MESSAGES, ROOT_NODE], onAvailable);
+  await resourceWatcher.watch([CONSOLE_MESSAGES, ROOT_NODE], { onAvailable });
 
   info("Use console.log in the content page");
   logInTab(tab, "test");
@@ -58,7 +58,7 @@ add_task(async function() {
   await waitUntil(() => receivedMessages === 2);
 
   info("Stop watching ROOT_NODE resources");
-  await resourceWatcher.unwatch([ROOT_NODE], onAvailable);
+  await resourceWatcher.unwatch([ROOT_NODE], { onAvailable });
 
   // Check that messages from new targets are still captured after calling
   // unwatch for another resource.
@@ -72,7 +72,7 @@ add_task(async function() {
   await waitUntil(() => receivedMessages === 3);
 
   info("Stop watching CONSOLE_MESSAGES resources");
-  await resourceWatcher.unwatch([CONSOLE_MESSAGES], onAvailable);
+  await resourceWatcher.unwatch([CONSOLE_MESSAGES], { onAvailable });
   await logInTab(tab, "test-again");
 
   // We don't have a specific event to wait for here, so allow some time for

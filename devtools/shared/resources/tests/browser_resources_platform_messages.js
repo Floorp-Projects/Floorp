@@ -37,31 +37,31 @@ add_task(async function() {
 
   let done;
   const onAllMessagesReceived = new Promise(resolve => (done = resolve));
-
-  await resourceWatcher.watch(
-    [ResourceWatcher.TYPES.PLATFORM_MESSAGES],
-    ({ resourceType, targetFront, resource }) => {
-      if (!expectedMessages.includes(resource.message)) {
-        return;
-      }
-
-      receivedMessages.push(resource.message);
-      is(
-        resource.message,
-        expectedMessages[receivedMessages.length - 1],
-        `Received the expected «${resource.message}» message, in the expected order`
-      );
-
-      ok(
-        resource.timeStamp.toString().match(/^\d+$/),
-        "The resource has a timeStamp property"
-      );
-
-      if (receivedMessages.length == expectedMessages.length) {
-        done();
-      }
+  const onAvailable = ({ resourceType, targetFront, resource }) => {
+    if (!expectedMessages.includes(resource.message)) {
+      return;
     }
-  );
+
+    receivedMessages.push(resource.message);
+    is(
+      resource.message,
+      expectedMessages[receivedMessages.length - 1],
+      `Received the expected «${resource.message}» message, in the expected order`
+    );
+
+    ok(
+      resource.timeStamp.toString().match(/^\d+$/),
+      "The resource has a timeStamp property"
+    );
+
+    if (receivedMessages.length == expectedMessages.length) {
+      done();
+    }
+  };
+
+  await resourceWatcher.watch([ResourceWatcher.TYPES.PLATFORM_MESSAGES], {
+    onAvailable,
+  });
 
   info(
     "Now log messages *after* the call to ResourceWatcher.watch and after having received all existing messages"

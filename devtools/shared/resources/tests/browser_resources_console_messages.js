@@ -36,25 +36,26 @@ async function testMessages(browser, resourceWatcher) {
 
   let runtimeDoneResolve;
   const onRuntimeDone = new Promise(resolve => (runtimeDoneResolve = resolve));
-  await resourceWatcher.watch(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGES],
-    ({ resourceType, targetFront, resource }) => {
-      is(
-        resourceType,
-        ResourceWatcher.TYPES.CONSOLE_MESSAGES,
-        "Received a message"
-      );
-      ok(resource.message, "message is wrapped into a message attribute");
-      const expected = (expectedExistingConsoleCalls.length > 0
-        ? expectedExistingConsoleCalls
-        : expectedRuntimeConsoleCalls
-      ).shift();
-      checkConsoleAPICall(resource.message, expected);
-      if (expectedRuntimeConsoleCalls.length == 0) {
-        runtimeDoneResolve();
-      }
+  const onAvailable = ({ resourceType, targetFront, resource }) => {
+    is(
+      resourceType,
+      ResourceWatcher.TYPES.CONSOLE_MESSAGES,
+      "Received a message"
+    );
+    ok(resource.message, "message is wrapped into a message attribute");
+    const expected = (expectedExistingConsoleCalls.length > 0
+      ? expectedExistingConsoleCalls
+      : expectedRuntimeConsoleCalls
+    ).shift();
+    checkConsoleAPICall(resource.message, expected);
+    if (expectedRuntimeConsoleCalls.length == 0) {
+      runtimeDoneResolve();
     }
-  );
+  };
+
+  await resourceWatcher.watch([ResourceWatcher.TYPES.CONSOLE_MESSAGES], {
+    onAvailable,
+  });
   is(
     expectedExistingConsoleCalls.length,
     0,

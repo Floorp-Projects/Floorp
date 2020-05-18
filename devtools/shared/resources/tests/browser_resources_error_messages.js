@@ -47,29 +47,29 @@ add_task(async function() {
 
   let done;
   const onAllErrorReceived = new Promise(resolve => (done = resolve));
+  const onAvailable = ({ resourceType, targetFront, resource }) => {
+    const { pageError } = resource;
 
-  await resourceWatcher.watch(
-    [ResourceWatcher.TYPES.ERROR_MESSAGES],
-    ({ resourceType, targetFront, resource }) => {
-      const { pageError } = resource;
-
-      if (!pageError.sourceName.includes("test_page_errors")) {
-        info(`Ignore error from unknown source: "${pageError.sourceName}"`);
-        return;
-      }
-
-      const index = receivedMessages.length;
-      receivedMessages.push(pageError);
-
-      info(`checking received page error #${index}: ${pageError.errorMessage}`);
-      ok(pageError, "The resource has a pageError attribute");
-      checkObject(pageError, expectedMessages[index]);
-
-      if (receivedMessages.length == expectedMessages.length) {
-        done();
-      }
+    if (!pageError.sourceName.includes("test_page_errors")) {
+      info(`Ignore error from unknown source: "${pageError.sourceName}"`);
+      return;
     }
-  );
+
+    const index = receivedMessages.length;
+    receivedMessages.push(pageError);
+
+    info(`checking received page error #${index}: ${pageError.errorMessage}`);
+    ok(pageError, "The resource has a pageError attribute");
+    checkObject(pageError, expectedMessages[index]);
+
+    if (receivedMessages.length == expectedMessages.length) {
+      done();
+    }
+  };
+
+  await resourceWatcher.watch([ResourceWatcher.TYPES.ERROR_MESSAGES], {
+    onAvailable,
+  });
 
   info(
     "Now log errors *after* the call to ResourceWatcher.watch and after having received all existing messages"
