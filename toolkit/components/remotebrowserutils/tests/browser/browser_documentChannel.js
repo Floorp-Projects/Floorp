@@ -228,13 +228,21 @@ add_task(async function test_enabled() {
   // should succeed.
   info("ENABLED -- FILE -- raw URI load");
   let resp = await postFrom(FILE_DUMMY, PRINT_POSTDATA);
-  ok(E10SUtils.isWebRemoteType(resp.remoteType), "process switch");
+  if (SpecialPowers.useRemoteSubframes) {
+    ok(E10SUtils.isWebRemoteType(resp.remoteType), "process switch");
+  } else {
+    is(resp.remoteType, E10SUtils.FILE_REMOTE_TYPE, "No process switch");
+  }
   is(resp.location, PRINT_POSTDATA, "correct location");
   is(resp.body, "initialRemoteType=file", "correct POST body");
 
   info("ENABLED -- FILE -- 307-redirect URI load");
   let resp307 = await postFrom(FILE_DUMMY, add307(PRINT_POSTDATA));
-  ok(E10SUtils.isWebRemoteType(resp307.remoteType), "process switch");
+  if (SpecialPowers.useRemoteSubframes) {
+    ok(E10SUtils.isWebRemoteType(resp307.remoteType), "process switch");
+  } else {
+    is(resp307.remoteType, E10SUtils.FILE_REMOTE_TYPE, "No process switch");
+  }
   is(resp307.location, PRINT_POSTDATA, "correct location");
   is(resp307.body, "initialRemoteType=file", "correct POST body");
 
