@@ -648,12 +648,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
         "No CreateRenderTexture() implementation for this TextureHost type.");
   }
 
-  void EnsureRenderTexture(const wr::ExternalImageId& aExternalImageId);
-
-  // Destroy RenderTextureHost when it was created by the TextureHost.
-  // It is called in TextureHost::Finalize().
-  virtual void MaybeDestroyRenderTexture();
-
   static void DestroyRenderTexture(const wr::ExternalImageId& aExternalImageId);
 
   /// Returns the number of actual textures that will be used to render this.
@@ -723,14 +717,12 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   int mCompositableCount;
   uint64_t mFwdTransactionId;
   bool mReadLocked;
-  wr::MaybeExternalImageId mExternalImageId;
 
   friend class Compositor;
   friend class TextureParent;
   friend class TiledLayerBufferComposite;
   friend class TextureSourceProvider;
   friend class GPUVideoTextureHost;
-  friend class WebRenderTextureHost;
 };
 
 /**
