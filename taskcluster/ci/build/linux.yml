@@ -270,7 +270,6 @@ linux64-devedition/opt:
     description: "Linux64 devedition (shippable)"
     use-pgo: linux64-shippable/opt
     attributes:
-        nightly: true
         shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
@@ -649,7 +648,6 @@ linux-devedition/opt:
     description: "Linux32 devedition (shippable)"
     use-pgo: linux-shippable/opt
     attributes:
-        nightly: true
         shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
