@@ -7,15 +7,16 @@
 #ifndef mozilla_net_TRRServiceParent_h
 #define mozilla_net_TRRServiceParent_h
 
-#include "mozilla/DataStorage.h"
 #include "mozilla/net/PTRRServiceParent.h"
+#include "mozilla/net/TRRServiceBase.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
 namespace mozilla {
 namespace net {
 
-class TRRServiceParent : public nsIObserver,
+class TRRServiceParent : public TRRServiceBase,
+                         public nsIObserver,
                          public nsSupportsWeakReference,
                          public PTRRServiceParent {
  public:
@@ -25,9 +26,15 @@ class TRRServiceParent : public nsIObserver,
   explicit TRRServiceParent() : mTRRBLStorageInited(false) {}
   void Init();
   void UpdateParentalControlEnabled();
+  static void PrefsChanged(const char* aName, void* aSelf);
+  void SetDetectedTrrURI(const nsACString& aURI);
+  bool MaybeSetPrivateURI(const nsACString& aURI) override;
+  void GetTrrURI(nsACString& aURI);
 
  private:
   virtual ~TRRServiceParent() = default;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
+  void prefsChanged(const char* aName);
 
   bool mTRRBLStorageInited;
 };

@@ -34,6 +34,7 @@ class TRRServiceChild : public PTRRServiceChild {
   mozilla::ipc::IPCResult RecvUpdateParentalControlEnabled(
       const bool& aEnabled);
   mozilla::ipc::IPCResult RecvClearDNSCache(const bool& aTrrToo);
+  mozilla::ipc::IPCResult RecvSetDetectedTrrURI(const nsCString& aURI);
 
  private:
   virtual ~TRRServiceChild() = default;

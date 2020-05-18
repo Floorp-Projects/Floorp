@@ -46,6 +46,7 @@ EXPORTS.mozilla.net += [
     'HTTPSSVC.h',
     'IDNBlocklistUtils.h',
     'TRRService.h',
+    'TRRServiceBase.h',
     'TRRServiceChild.h',
     'TRRServiceParent.h',
 ]
@@ -69,6 +70,7 @@ UNIFIED_SOURCES += [
     'punycode.c',
     'TRR.cpp',
     'TRRService.cpp',
+    'TRRServiceBase.cpp',
     'TRRServiceChild.cpp',
     'TRRServiceParent.cpp',
 ]

@@ -46,7 +46,6 @@ NS_IMPL_ISUPPORTS(TRRService, nsIObserver, nsISupportsWeakReference)
 
 TRRService::TRRService()
     : mInitialized(false),
-      mMode(0),
       mTRRBlacklistExpireTime(72 * 3600),
       mLock("trrservice"),
       mConfirmationNS(NS_LITERAL_CSTRING("example.com")),
@@ -206,55 +205,6 @@ void TRRService::GetPrefBranch(nsIPrefBranch** result) {
   CallGetService(NS_PREFSERVICE_CONTRACTID, result);
 }
 
-void TRRService::ProcessURITemplate(nsACString& aURI) {
-  // URI Template, RFC 6570.
-  if (aURI.IsEmpty()) {
-    return;
-  }
-  nsAutoCString scheme;
-  nsCOMPtr<nsIIOService> ios(do_GetIOService());
-  if (ios) {
-    ios->ExtractScheme(aURI, scheme);
-  }
-  if (!scheme.Equals("https")) {
-    LOG(("TRRService TRR URI %s is not https. Not used.\n",
-         PromiseFlatCString(aURI).get()));
-    aURI.Truncate();
-    return;
-  }
-
-  // cut off everything from "{" to "}" sequences (potentially multiple),
-  // as a crude conversion from template into URI.
-  nsAutoCString uri(aURI);
-
-  do {
-    nsCCharSeparatedTokenizer openBrace(uri, '{');
-    if (openBrace.hasMoreTokens()) {
-      // the 'nextToken' is the left side of the open brace (or full uri)
-      nsAutoCString prefix(openBrace.nextToken());
-
-      // if there is an open brace, there's another token
-      const nsACString& endBrace = openBrace.nextToken();
-      nsCCharSeparatedTokenizer closeBrace(endBrace, '}');
-      if (closeBrace.hasMoreTokens()) {
-        // there is a close brace as well, make a URI out of the prefix
-        // and the suffix
-        closeBrace.nextToken();
-        nsAutoCString suffix(closeBrace.nextToken());
-        uri = prefix + suffix;
-      } else {
-        // no (more) close brace
-        break;
-      }
-    } else {
-      // no (more) open brace
-      break;
-    }
-  } while (true);
-
-  aURI = uri;
-}
-
 bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
   bool clearCache = false;
   nsAutoCString newURI(aURI);
@@ -286,54 +236,6 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
   return true;
 }
 
-void TRRService::CheckURIPrefs() {
-  mURISetByDetection = false;
-
-  // The user has set a custom URI so it takes precedence.
-  if (mURIPrefHasUserValue) {
-    MaybeSetPrivateURI(mURIPref);
-    return;
-  }
-
-  // Check if the rollout addon has set a pref.
-  if (!mRolloutURIPref.IsEmpty()) {
-    MaybeSetPrivateURI(mRolloutURIPref);
-    return;
-  }
-
-  // Otherwise just use the default value.
-  MaybeSetPrivateURI(mURIPref);
-}
-
-// static
-uint32_t TRRService::ModeFromPrefs() {
-  // 0 - off, 1 - reserved, 2 - TRR first, 3 - TRR only, 4 - reserved,
-  // 5 - explicit off
-
-  auto processPrefValue = [](uint32_t value) -> uint32_t {
-    if (value == MODE_RESERVED1 || value == MODE_RESERVED4 ||
-        value > MODE_TRROFF) {
-      return MODE_TRROFF;
-    }
-    return value;
-  };
-
-  uint32_t tmp = MODE_NATIVEONLY;
-  if (NS_SUCCEEDED(Preferences::GetUint(TRR_PREF("mode"), &tmp))) {
-    tmp = processPrefValue(tmp);
-  }
-
-  if (tmp != MODE_NATIVEONLY) {
-    return tmp;
-  }
-
-  if (NS_SUCCEEDED(Preferences::GetUint(kRolloutModePref, &tmp))) {
-    return processPrefValue(tmp);
-  }
-
-  return MODE_NATIVEONLY;
-}
-
 nsresult TRRService::ReadPrefs(const char* name) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 
@@ -343,24 +245,11 @@ nsresult TRRService::ReadPrefs(const char* name) {
 
   if (!name || !strcmp(name, TRR_PREF("mode")) ||
       !strcmp(name, kRolloutModePref)) {
-    uint32_t oldMode = mMode;
-    mMode = ModeFromPrefs();
-    if (mMode != oldMode) {
-      nsCOMPtr<nsIObserverService> obs =
-          mozilla::services::GetObserverService();
-      if (obs) {
-        obs->NotifyObservers(nullptr, NS_NETWORK_TRR_MODE_CHANGED_TOPIC,
-                             nullptr);
-      }
-    }
+    OnTRRModeChange();
   }
   if (!name || !strcmp(name, TRR_PREF("uri")) ||
       !strcmp(name, kRolloutURIPref)) {
-    mURIPrefHasUserValue = Preferences::HasUserValue(TRR_PREF("uri"));
-    Preferences::GetCString(TRR_PREF("uri"), mURIPref);
-    Preferences::GetCString(kRolloutURIPref, mRolloutURIPref);
-
-    CheckURIPrefs();
+    OnTRRURIChange();
   }
   if (!name || !strcmp(name, TRR_PREF("credentials"))) {
     MutexAutoLock lock(mLock);
