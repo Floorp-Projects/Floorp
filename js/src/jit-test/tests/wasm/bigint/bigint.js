@@ -341,9 +341,8 @@ function testGlobalBadImportLiteral() {
   );
 }
 
-// This exercises error code paths that can be taken when
-// HasI64BigIntSupport() is true, though the test does not directly deal
-// with I64 types.
+// This exercises error code paths that were added due to BigInt/I64
+// conversion, though the test does not directly deal with I64 types.
 function testGlobalBadImportNumber() {
   assertErrorMessage(
     () =>

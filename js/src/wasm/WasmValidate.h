@@ -73,7 +73,6 @@ struct CompilerEnvironment {
       bool gcTypes_;
       bool multiValues_;
       bool hugeMemory_;
-      bool bigInt_;
       bool v128_;
     };
   };
@@ -90,8 +89,7 @@ struct CompilerEnvironment {
                       OptimizedBackend optimizedBackend,
                       DebugEnabled debugEnabled, bool multiValueConfigured,
                       bool refTypesConfigured, bool gcTypesConfigured,
-                      bool hugeMemory, bool bigIntConfigured,
-                      bool v128Configured);
+                      bool hugeMemory, bool v128Configured);
 
   // Compute any remaining compilation parameters.
   void computeParameters(Decoder& d);
@@ -133,10 +131,6 @@ struct CompilerEnvironment {
   bool hugeMemory() const {
     MOZ_ASSERT(isComputed());
     return hugeMemory_;
-  }
-  bool bigInt() const {
-    MOZ_ASSERT(isComputed());
-    return bigInt_;
   }
   bool v128() const {
     MOZ_ASSERT(isComputed());
@@ -214,7 +208,6 @@ struct ModuleEnvironment {
   bool gcTypesEnabled() const { return compilerEnv->gcTypes(); }
   bool refTypesEnabled() const { return compilerEnv->refTypes(); }
   bool multiValuesEnabled() const { return compilerEnv->multiValues(); }
-  bool bigIntEnabled() const { return compilerEnv->bigInt(); }
   bool v128Enabled() const { return compilerEnv->v128(); }
   bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
   bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }

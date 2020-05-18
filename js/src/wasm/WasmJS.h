@@ -106,9 +106,6 @@ bool GcTypesAvailable(JSContext* cx);
 // Multi-value block and function returns.
 bool MultiValuesAvailable(JSContext* cx);
 
-// I64<->BigInt interconversion at the wasm/JS boundary.
-bool I64BigIntConversionAvailable(JSContext* cx);
-
 // Shared memory and atomics.
 bool ThreadsAvailable(JSContext* cx);
 

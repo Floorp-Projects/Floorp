@@ -428,7 +428,6 @@ wasmAssert(`(module
     // Mutability of import declaration and imported value have to match
     {
         const mutErr = /imported global mutability mismatch/;
-        const i64Err = /cannot pass i64 to or from JS/;
 
         let m1 = new Module(wasmTextToBinary(`(module
                                                (import "m" "g" (global i32)))`));

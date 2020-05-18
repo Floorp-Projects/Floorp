@@ -107,38 +107,36 @@
 })();
 
 // Test JIT entry stub
-if (wasmBigIntEnabled()) {
-  (function testJitEntry() {
-    let options = getJitCompilerOptions();
-    if (!options["baseline.enable"]) return;
+(function testJitEntry() {
+  let options = getJitCompilerOptions();
+  if (!options["baseline.enable"]) return;
 
-    let baselineTrigger = options["baseline.warmup.trigger"];
+  let baselineTrigger = options["baseline.warmup.trigger"];
 
-    i = wasmEvalText(
-      `(module
-        (func (export "foo") (param i64) (result i64)
-         local.get 0
-         i64.const 1
-         i64.add
-         return
-        )
-    )`,
-      {}
-    ).exports;
+  i = wasmEvalText(
+    `(module
+      (func (export "foo") (param i64) (result i64)
+       local.get 0
+       i64.const 1
+       i64.add
+       return
+      )
+  )`,
+    {}
+  ).exports;
 
-    function caller(n) {
-      return i.foo(42n);
-    }
+  function caller(n) {
+    return i.foo(42n);
+  }
 
-    // Baseline compile ffis.
-    for (let i = baselineTrigger + 1; i-- > 0; ) {
-      caller(i);
-    }
+  // Baseline compile ffis.
+  for (let i = baselineTrigger + 1; i-- > 0; ) {
+    caller(i);
+  }
 
-    // Enable the jit entry.
-    assertEq(caller(0), 43n);
+  // Enable the jit entry.
+  assertEq(caller(0), 43n);
 
-    // Test the jit exit under normal conditions.
-    assertEq(caller(0), 43n);
-  })();
-}
+  // Test the jit exit under normal conditions.
+  assertEq(caller(0), 43n);
+})();

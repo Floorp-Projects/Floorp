@@ -400,15 +400,13 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
-  if ((fi.funcType().hasI64ArgOrRet() && !I64BigIntConversionAvailable(cx))
 #ifdef ENABLE_WASM_SIMD
-      || fi.funcType().hasV128ArgOrRet()
-#endif
-  ) {
+  if (fi.funcType().hasV128ArgOrRet()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_VAL_TYPE, "i64 or v128");
+                             JSMSG_WASM_BAD_VAL_TYPE);
     return false;
   }
+#endif
 
   MOZ_ASSERT(argTypes.lengthWithStackResults() == argc);
   Maybe<char*> stackResultPointer;
@@ -506,14 +504,10 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
           }
           break;
         case ValType::I64:
-#ifdef ENABLE_WASM_BIGINT
           if (!argTypes->hasType(TypeSet::BigIntType())) {
             return true;
           }
           break;
-#else
-          MOZ_CRASH("NYI");
-#endif
         case ValType::V128:
           MOZ_CRASH("Not needed per spec");
         case ValType::F32:
@@ -594,17 +588,11 @@ Instance::callImport_i32(Instance* instance, int32_t funcImportIndex,
 Instance::callImport_i64(Instance* instance, int32_t funcImportIndex,
                          int32_t argc, uint64_t* argv) {
   JSContext* cx = TlsContext.get();
-#ifdef ENABLE_WASM_BIGINT
   RootedValue rval(cx);
   if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval)) {
     return false;
   }
   return ToWebAssemblyValue_i64(cx, rval, (int64_t*)argv);
-#else
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_BAD_VAL_TYPE, "i64");
-  return false;
-#endif
 }
 
 /* static */ int32_t /* 0 to signal trap; 1 to signal OK */
@@ -612,7 +600,7 @@ Instance::callImport_v128(Instance* instance, int32_t funcImportIndex,
                           int32_t argc, uint64_t* argv) {
   JSContext* cx = TlsContext.get();
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_BAD_VAL_TYPE, "v128");
+                           JSMSG_WASM_BAD_VAL_TYPE);
   return false;
 }
 
@@ -2093,15 +2081,13 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return false;
   }
 
-  if ((funcType->hasI64ArgOrRet() && !I64BigIntConversionAvailable(cx))
 #ifdef ENABLE_WASM_SIMD
-      || funcType->hasV128ArgOrRet()
-#endif
-  ) {
+  if (funcType->hasV128ArgOrRet()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_VAL_TYPE, "i64 or v128");
+                             JSMSG_WASM_BAD_VAL_TYPE);
     return false;
   }
+#endif
 
   ArgTypeVector argTypes(*funcType);
   ResultType resultType(ResultType::Vector(funcType->results()));
