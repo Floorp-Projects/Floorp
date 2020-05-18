@@ -20,18 +20,11 @@ kind-dependencies:
 primary-dependency: build
 
 only-for-build-platforms:
-    - android-api-16-nightly/opt
-    - linux64-nightly/opt
     - linux64-shippable/opt
-    - linux-nightly/opt
     - linux-shippable/opt
-    - macosx64-nightly/opt
     - macosx64-shippable/opt
-    - win32-nightly/opt
     - win32-shippable/opt
-    - win64-nightly/opt
     - win64-shippable/opt
-    - win64-aarch64-nightly/opt
     - win64-aarch64-shippable/opt
     - linux64-devedition/opt
     - linux-devedition/opt
@@ -41,14 +34,8 @@ only-for-build-platforms:
     - win64-aarch64-devedition/opt
 
 job-template:
-    description:
-        by-build-platform:
-            default: Localization
-            android-api-16-nightly: Single Locale Repack
-    locales-file:
-        by-build-platform:
-            default: browser/locales/l10n-changesets.json
-            android-api-16-nightly: mobile/locales/l10n-changesets.json
+    description: Localization
+    locales-file: browser/locales/l10n-changesets.json
     locales-per-chunk: 5
     run-on-projects: ['release']
     attributes:
@@ -59,15 +46,6 @@ job-template:
             macosx64.*: [ja]
             default: [ja-JP-mac]
     run-time: 3600
-    docker-image:
-        by-build-platform:
-            android-api-16-nightly:
-                in-tree: android-build
-            default: null
-    secrets:
-        by-build-platform:
-            default: false
-            android-api-16-nightly: true
     fetches:
         toolchain:
             by-build-platform:
@@ -75,9 +53,6 @@ job-template:
                 macosx64.*:
                     - linux64-libdmg
                     - linux64-hfsplus
-                android-api-16-nightly:
-                    - android-gradle-dependencies
-                    - android-sdk-linux
     tooltool:
         by-build-platform:
             default: internal
@@ -85,7 +60,6 @@ job-template:
     index:
         type:
             by-build-platform:
-                .*nightly.*: nightly-l10n
                 # Defer swapping index's until a later patch
                 .*devedition.*: nightly-l10n
                 default: shippable-l10n
@@ -93,15 +67,8 @@ job-template:
             by-build-platform:
                 default: firefox
                 .*-devedition: devedition
-                android-api-16-nightly: mobile
         job-name:
             by-build-platform:
-                linux-nightly: linux-opt
-                linux64-nightly: linux64-opt
-                macosx64-nightly: macosx64-opt
-                win32-nightly: win32-opt
-                win64-nightly: win64-opt
-                win64-aarch64-nightly: win64-aarch64-opt
                 linux-shippable: linux-opt
                 linux64-shippable: linux64-opt
                 macosx64-shippable: macosx64-opt
@@ -114,25 +81,15 @@ job-template:
                 win32-devedition: win32-devedition-opt
                 win64-devedition: win64-devedition-opt
                 win64-aarch64-devedition: win64-aarch64-devedition-opt
-                android-api-16-nightly: android-api-16-opt
     worker-type:
         by-build-platform:
             default: b-linux
             win.*: b-win2012
     treeherder:
         symbol: L10n(B)
-        tier:
-            by-build-platform:
-                default: 1
-                android-api-16-nightly: 2
+        tier: 1
         platform:
             by-build-platform:
-                linux64-nightly: linux64/opt
-                linux-nightly: linux32/opt
-                macosx64-nightly: osx-cross/opt
-                win32-nightly: windows2012-32/opt
-                win64-nightly: windows2012-64/opt
-                win64-aarch64-nightly: windows2012-aarch64/opt
                 linux64-shippable: linux64-shippable/opt
                 linux-shippable: linux32-shippable/opt
                 macosx64-shippable: osx-shippable/opt
@@ -145,7 +102,6 @@ job-template:
                 win32-devedition: windows2012-32-devedition/opt
                 win64-devedition: windows2012-64-devedition/opt
                 win64-aarch64-devedition: windows2012-aarch64-devedition/opt
-                android-api-16-nightly: android-4-0-armv7-api16/opt
     env:
         by-build-platform:
             linux.*:    # linux64 and 32 get same treatment here
@@ -160,44 +116,40 @@ job-template:
                 EN_US_PACKAGE_NAME: target.zip
                 EN_US_BINARY_URL:
                     artifact-reference: <build-signing/{artifact_prefix}>
-            android-api-16-nightly:
-                EN_US_PACKAGE_NAME: target.apk
-                EN_US_BINARY_URL:
-                    artifact-reference: <build/{artifact_prefix}/en-US>
     mozharness:
         config:
             by-build-platform:
-                linux-(?:nightly|shippable):
+                linux-shippable:
                     - single_locale/firefox.py
                     - single_locale/linux32.py
                     - single_locale/tc_common.py
                     - single_locale/tc_linux_common.py
                     - taskcluster_nightly.py
-                linux64-(?:nightly|shippable):
+                linux64-shippable:
                     - single_locale/firefox.py
                     - single_locale/linux64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_linux_common.py
                     - taskcluster_nightly.py
-                macosx64-(?:nightly|shippable):
+                macosx64-shippable:
                     - single_locale/firefox.py
                     - single_locale/macosx64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_macosx64.py
                     - taskcluster_nightly.py
-                win32-(?:nightly|shippable):
+                win32-shippable:
                     - single_locale/firefox.py
                     - single_locale/win32.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win32.py
                     - taskcluster_nightly.py
-                win64-(?:nightly|shippable):
+                win64-shippable:
                     - single_locale/firefox.py
                     - single_locale/win64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win64.py
                     - taskcluster_nightly.py
-                win64-aarch64-(?:nightly|shippable):
+                win64-aarch64-shippable:
                     - single_locale/firefox.py
                     - single_locale/win64-aarch64.py
                     - single_locale/tc_common.py
@@ -239,19 +191,7 @@ job-template:
                     - single_locale/tc_common.py
                     - single_locale/tc_win64.py
                     - taskcluster_nightly.py
-                android-api-16-nightly:
-                    - taskcluster_nightly.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_android-api-16.py
         # no default, so we fail on new entries
-        actions:
-            by-build-platform:
-                default: ['clone-locales', 'list-locales', 'setup', 'repack',
-                          'summary']
-                android-api-16-nightly: ['get-secrets',
-                                         'clone-locales', 'list-locales', 'setup', 'repack',
-                                         'upload-repacks', 'summary']
-        script:
-            by-build-platform:
-                default: mozharness/scripts/desktop_l10n.py
-                android-api-16-nightly: mozharness/scripts/mobile_l10n.py
+        actions: ['clone-locales', 'list-locales', 'setup', 'repack',
+                  'summary']
+        script: mozharness/scripts/desktop_l10n.py
