@@ -1462,13 +1462,15 @@ add_task(async function test_async_resolve_with_trr_server_5() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 5); // TRR-user-disabled
 
+  // When dns is resolved in socket process, we can't set |expectEarlyFail| to true.
+  let inSocketProcess = mozinfo.socketprocess_networking;
   let [_] = await new DNSListener(
     "bar_with_trr3.example.com",
     undefined,
     false,
     undefined,
     `https://foo.example.com:${h2Port}/doh?responseIP=3.3.3.3`,
-    true
+    !inSocketProcess
   );
 
   // Call normal AsyncOpen, it will return result from the native resolver.

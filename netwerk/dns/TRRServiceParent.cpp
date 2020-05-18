@@ -117,5 +117,10 @@ TRRServiceParent::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
+void TRRServiceParent::UpdateParentalControlEnabled() {
+  bool enabled = TRRService::GetParentalControlEnabledInternal();
+  Unused << SendUpdateParentalControlEnabled(enabled);
+}
+
 }  // namespace net
 }  // namespace mozilla

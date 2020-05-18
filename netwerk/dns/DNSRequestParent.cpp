@@ -125,8 +125,15 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
       array.AppendElement(addr);
     }
 
-    SendLookupCompletedHelper(mIPCActor,
-                              DNSRequestResponse(DNSRecord(cname, array)));
+    double trrFetchDuration;
+    rec->GetTrrFetchDuration(&trrFetchDuration);
+
+    double trrFetchDurationNetworkOnly;
+    rec->GetTrrFetchDurationNetworkOnly(&trrFetchDurationNetworkOnly);
+
+    SendLookupCompletedHelper(
+        mIPCActor, DNSRequestResponse(DNSRecord(cname, array, trrFetchDuration,
+                                                trrFetchDurationNetworkOnly)));
   } else {
     SendLookupCompletedHelper(mIPCActor, DNSRequestResponse(status));
   }
