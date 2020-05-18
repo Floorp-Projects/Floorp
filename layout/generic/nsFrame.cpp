@@ -2104,19 +2104,21 @@ void nsIFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   }
 }
 
-void nsIFrame::GetCrossDocChildLists(nsTArray<ChildList>* aLists) {
+AutoTArray<nsIFrame::ChildList, 4> nsIFrame::GetCrossDocChildLists() {
+  AutoTArray<ChildList, 4> childLists;
   nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(this);
   if (subdocumentFrame) {
     // Descend into the subdocument
     nsIFrame* root = subdocumentFrame->GetSubdocumentRootFrame();
     if (root) {
-      aLists->AppendElement(nsIFrame::ChildList(
+      childLists.AppendElement(nsIFrame::ChildList(
           nsFrameList(root, nsLayoutUtils::GetLastSibling(root)),
           nsIFrame::kPrincipalList));
     }
   }
 
-  GetChildLists(aLists);
+  GetChildLists(&childLists);
+  return childLists;
 }
 
 Visibility nsIFrame::GetVisibility() const {
@@ -7514,31 +7516,21 @@ void nsIFrame::InvalidateFrameSubtree(bool aRebuildDisplayItems /* = true */) {
 
   AddStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT);
 
-  AutoTArray<nsIFrame::ChildList, 4> childListArray;
-  GetCrossDocChildLists(&childListArray);
-
-  nsIFrame::ChildListArrayIterator lists(childListArray);
-  for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
+  for (const auto& childList : GetCrossDocChildLists()) {
+    for (nsIFrame* child : childList.mList) {
       // Don't explicitly rebuild display items for our descendants,
       // since we should be marked and it implicitly includes all
       // descendants.
-      childFrames.get()->InvalidateFrameSubtree(false);
+      child->InvalidateFrameSubtree(false);
     }
   }
 }
 
 void nsIFrame::ClearInvalidationStateBits() {
   if (HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-    AutoTArray<nsIFrame::ChildList, 4> childListArray;
-    GetCrossDocChildLists(&childListArray);
-
-    nsIFrame::ChildListArrayIterator lists(childListArray);
-    for (; !lists.IsDone(); lists.Next()) {
-      nsFrameList::Enumerator childFrames(lists.CurrentList());
-      for (; !childFrames.AtEnd(); childFrames.Next()) {
-        childFrames.get()->ClearInvalidationStateBits();
+    for (const auto& childList : GetCrossDocChildLists()) {
+      for (nsIFrame* child : childList.mList) {
+        child->ClearInvalidationStateBits();
       }
     }
   }
@@ -11135,14 +11127,9 @@ void nsIFrame::AddInPopupStateBitToDescendants(nsIFrame* aFrame) {
 
   aFrame->AddStateBits(NS_FRAME_IN_POPUP);
 
-  AutoTArray<nsIFrame::ChildList, 4> childListArray;
-  aFrame->GetCrossDocChildLists(&childListArray);
-
-  nsIFrame::ChildListArrayIterator lists(childListArray);
-  for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      AddInPopupStateBitToDescendants(childFrames.get());
+  for (const auto& childList : aFrame->GetCrossDocChildLists()) {
+    for (nsIFrame* child : childList.mList) {
+      AddInPopupStateBitToDescendants(child);
     }
   }
 }
@@ -11161,15 +11148,9 @@ void nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame) {
     // out the increment in AddInPopupStateBitToDescendants above.
     aFrame->DecApproximateVisibleCount();
   }
-
-  AutoTArray<nsIFrame::ChildList, 4> childListArray;
-  aFrame->GetCrossDocChildLists(&childListArray);
-
-  nsIFrame::ChildListArrayIterator lists(childListArray);
-  for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      RemoveInPopupStateBitFromDescendants(childFrames.get());
+  for (const auto& childList : aFrame->GetCrossDocChildLists()) {
+    for (nsIFrame* child : childList.mList) {
+      RemoveInPopupStateBitFromDescendants(child);
     }
   }
 }

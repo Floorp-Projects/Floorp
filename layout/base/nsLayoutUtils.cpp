@@ -8111,14 +8111,9 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
     return total;
   }
 
-  AutoTArray<nsIFrame::ChildList, 4> childListArray;
-  aFrame->GetChildLists(&childListArray);
-
-  for (nsIFrame::ChildListArrayIterator childLists(childListArray);
-       !childLists.IsDone(); childLists.Next()) {
-    for (nsFrameList::Enumerator e(childLists.CurrentList()); !e.AtEnd();
-         e.Next()) {
-      total += SizeOfTextRunsForFrames(e.get(), aMallocSizeOf, clear);
+  for (const auto& childList : aFrame->GetChildLists()) {
+    for (nsIFrame* f : childList.mList) {
+      total += SizeOfTextRunsForFrames(f, aMallocSizeOf, clear);
     }
   }
   return total;
