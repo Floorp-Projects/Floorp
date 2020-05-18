@@ -36,29 +36,23 @@ let childHasFocused = false;
 
 function openFullscreenWindow() {
     win = window.docShell.rootTreeItem.domWindow
-                .openDialog("bug665540_window.xhtml", "_blank", "resizable=yes,chrome", window);
-    info("win.windowState = " + win.windowState);
-    info("win.fullScreen = " + win.fullScreen);
+                .openDialog("bug665540_window.xhtml", "_blank", "resizable=yes,chrome");
 
-    // size mode and full screen may change asynchronously after child gets focused.
-    if (win.windowState == win.STATE_FULLSCREEN) {
+    win.addEventListener("sizemodechange", () => {
+        info("sizemodechange. windowState = " + win.windowState + " fullScreen = " + win.fullScreen);
         sizemodeChanged = true;
-    } else {
-        win.addEventListener("sizemodechange", () => {
-            info("sizemodechange. windowState = " + win.windowState + " fullScreen = " + win.fullScreen);
-            sizemodeChanged = true;
-            tryStart();
-        }, { once: true });
-    }
-    if (win.fullScreen) {
+        tryStart();
+    }, { once: true });
+
+    win.addEventListener("fullscreen", () => {
+        info("fullscreen event. windowState = " + win.windowState + " fullScreen = " + win.fullScreen);
         fullscreenChanged = true;
-    } else {
-        win.addEventListener("fullscreen", () => {
-            info("fullscreen event. windowState = " + win.windowState + " fullScreen = " + win.fullScreen);
-            fullscreenChanged = true;
-            tryStart();
-        }, { once: true });
-    }
+        tryStart();
+    }, { once: true });
+
+    SimpleTest.waitForFocus(() => {
+        win.fullScreen = true;
+    }, win);
 
     // Close our window if the test times out so that it doesn't interfere
     // with later tests.
@@ -69,17 +63,15 @@ function openFullscreenWindow() {
     }, 20000);
 }
 
-function childFocused() {
-    info("child focused. windowState = " + win.windowState + " fullScreen = " + win.fullScreen);
-    childHasFocused = true;
-    tryStart();
-}
-
 function tryStart() {
-    if (!sizemodeChanged || !fullscreenChanged || !childHasFocused) {
+    // wait until the window goes full screen and its size mode actually changes.
+    if (!sizemodeChanged || !fullscreenChanged) {
         return;
     }
+    SimpleTest.waitForFocus(start, win);
+}
 
+function start() {
     // The select doesn't open if the mouse click is fired too soon
     // (on X11 at least).
     setTimeout(openSelect, 1000);
