@@ -3004,12 +3004,6 @@ nsDOMWindowUtils::FlushPendingFileDeletions() {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::IsIncrementalGCEnabled(JSContext* cx, bool* aResult) {
-  *aResult = JS::IsIncrementalGCEnabled(cx);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::StartPCCountProfiling(JSContext* cx) {
   js::StartPCCountProfiling(cx);
   return NS_OK;
