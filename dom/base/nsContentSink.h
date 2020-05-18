@@ -152,20 +152,23 @@ class nsContentSink : public nsICSSLoaderObserver,
   nsresult ProcessLinkHeader(const nsAString& aLinkData);
   nsresult ProcessLinkFromHeader(
       const nsAString& aAnchor, const nsAString& aHref, const nsAString& aRel,
-      const nsAString& aTitle, const nsAString& aType, const nsAString& aMedia,
-      const nsAString& aCrossOrigin, const nsAString& aReferrerPolicy,
-      const nsAString& aAs);
+      const nsAString& aTitle, const nsAString& aIntegrity,
+      const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aType,
+      const nsAString& aMedia, const nsAString& aCrossOrigin,
+      const nsAString& aReferrerPolicy, const nsAString& aAs);
 
-  virtual nsresult ProcessStyleLinkFromHeader(const nsAString& aHref,
-                                              bool aAlternate,
-                                              const nsAString& aTitle,
-                                              const nsAString& aType,
-                                              const nsAString& aMedia,
-                                              const nsAString& aReferrerPolicy);
+  virtual nsresult ProcessStyleLinkFromHeader(
+      const nsAString& aHref, bool aAlternate, const nsAString& aTitle,
+      const nsAString& aIntegrity, const nsAString& aType,
+      const nsAString& aMedia, const nsAString& aReferrerPolicy);
 
-  void PrefetchPreloadHref(const nsAString& aHref, uint32_t aLinkTypes,
-                           const nsAString& aAs, const nsAString& aType,
-                           const nsAString& aMedia);
+  void PrefetchHref(const nsAString& aHref, const nsAString& aAs,
+                    const nsAString& aType, const nsAString& aMedia);
+  void PreloadHref(const nsAString& aHref, const nsAString& aAs,
+                   const nsAString& aType, const nsAString& aMedia,
+                   const nsAString& aIntegrity, const nsAString& aSrcset,
+                   const nsAString& aSizes, const nsAString& aCORS,
+                   const nsAString& aReferrerPolicy);
 
   // For PrefetchDNS() aHref can either be the usual
   // URI format or of the form "//www.hostname.com" without a scheme.
