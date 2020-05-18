@@ -258,6 +258,33 @@ function validatedWebRemoteType(
     return aPreferredRemoteType;
   }
 
+  if (aPreferredRemoteType == FILE_REMOTE_TYPE && !aRemoteSubframes) {
+    E10SUtils.log().debug("checking allowLinkedWebInFileUriProcess");
+    if (!aCurrentUri) {
+      E10SUtils.log().debug("No aCurrentUri");
+      return FILE_REMOTE_TYPE;
+    }
+
+    // If aCurrentUri is passed then we should only allow FILE_REMOTE_TYPE
+    // when it is same origin as target or the current URI is already a
+    // file:// URI.
+    if (aCurrentUri.scheme == "file" || aCurrentUri.spec == "about:blank") {
+      return FILE_REMOTE_TYPE;
+    }
+
+    try {
+      // checkSameOriginURI throws when not same origin.
+      // todo: if you intend to update CheckSameOriginURI to log the error to the
+      // console you also need to update the 'aFromPrivateWindow' argument.
+      sm.checkSameOriginURI(aCurrentUri, aTargetUri, false, false);
+      E10SUtils.log().debug("Next URL is same origin");
+      return FILE_REMOTE_TYPE;
+    } catch (e) {
+      E10SUtils.log().debug("Leaving same origin");
+      return WEB_REMOTE_TYPE;
+    }
+  }
+
   return WEB_REMOTE_TYPE;
 }
 
