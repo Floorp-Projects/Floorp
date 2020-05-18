@@ -502,11 +502,19 @@ this.BrowserIDManager.prototype = {
       "X-KeyId": key.kid,
     };
 
-    return this._tokenServerClient.getTokenFromOAuthToken(
-      this._tokenServerUrl,
-      token,
-      headers
-    );
+    return this._tokenServerClient
+      .getTokenFromOAuthToken(this._tokenServerUrl, token, headers)
+      .catch(async err => {
+        if (err.response || err.response.status === 401) {
+          // remove the cached token if we cannot authorize with it.
+          // we have to do this here because we know which `token` to remove
+          // from cache.
+          await fxa.removeCachedOAuthToken({ token });
+        }
+
+        // continue the error chain, so other handlers can deal with the error.
+        throw err;
+      });
   },
 
   // Returns a promise that is resolved with a valid token for the current

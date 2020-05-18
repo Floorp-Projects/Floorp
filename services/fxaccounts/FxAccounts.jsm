@@ -586,7 +586,7 @@ class FxAccounts {
   }
 
   /**
-   * Remove an OAuth token from the token cache.  Callers should call this
+   * Remove an OAuth token from the token cache. Callers should call this
    * after they determine a token is invalid, so a new token will be fetched
    * on the next call to getOAuthToken().
    *
@@ -1676,6 +1676,17 @@ FxAccountsInternal.prototype = {
     });
   },
 
+  /**
+   * Remove an OAuth token from the token cache
+   * and makes a network request to FxA server to destroy the token.
+   *
+   * @param options
+   *        {
+   *          token: (string) A previously fetched token.
+   *        }
+   * @return Promise.<undefined> This function will always resolve, even if
+   *         an unknown token is passed.
+   */
   removeCachedOAuthToken(options) {
     if (!options.token || typeof options.token !== "string") {
       throw this._error(
