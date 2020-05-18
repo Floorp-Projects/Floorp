@@ -171,6 +171,7 @@ def use_artifact(config, jobs):
         use_artifact = False
     for job in jobs:
         if (config.kind == 'build' and use_artifact and
+            not job.get('attributes', {}).get('nightly', False) and
             job.get('index', {}).get('job-name') in ARTIFACT_JOBS):
             job['treeherder']['symbol'] += 'a'
             job['worker']['env']['USE_ARTIFACT'] = '1'
