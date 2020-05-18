@@ -342,3 +342,11 @@ pub unsafe extern "C" fn xulstore_iter_get_next(
 pub unsafe extern "C" fn xulstore_iter_free(iter: *mut XULStoreIterator) {
     drop(Box::from_raw(iter));
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn xulstore_shutdown() -> nsresult {
+    match XULStore::shutdown() {
+        Ok(()) => NS_OK,
+        Err(err) => err.into(),
+    }
+}

@@ -49,6 +49,7 @@ nsresult RemoveValue(const nsAString& doc, const nsAString& id,
 nsresult GetIDs(const nsAString& doc, UniquePtr<XULStoreIterator>& iter);
 nsresult GetAttrs(const nsAString& doc, const nsAString& id,
                   UniquePtr<XULStoreIterator>& iter);
+nsresult Shutdown();
 };  // namespace XULStore
 };  // namespace mozilla
 
