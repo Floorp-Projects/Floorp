@@ -93,7 +93,6 @@ function logExistingMessages(browser) {
 }
 const expectedExistingConsoleCalls = [
   {
-    _type: "ConsoleAPI",
     level: "log",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
@@ -101,7 +100,6 @@ const expectedExistingConsoleCalls = [
     arguments: ["foobarBaz-log", { type: "undefined" }],
   },
   {
-    _type: "ConsoleAPI",
     level: "info",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
@@ -109,7 +107,6 @@ const expectedExistingConsoleCalls = [
     arguments: ["foobarBaz-info", { type: "null" }],
   },
   {
-    _type: "ConsoleAPI",
     level: "warn",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,

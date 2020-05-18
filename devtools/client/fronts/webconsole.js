@@ -78,7 +78,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   _onNetworkEvent(packet) {
     const actor = packet.eventActor;
     const networkInfo = {
-      _type: "NetworkEvent",
+      type: "networkEvent",
       timeStamp: actor.timeStamp,
       node: null,
       actor: actor.actor,
@@ -304,22 +304,22 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   async getCachedMessages(messageTypes) {
     const response = await super.getCachedMessages(messageTypes);
     if (Array.isArray(response.messages)) {
-      response.messages = response.messages.map(message => {
-        if (Array.isArray(message?.arguments)) {
+      response.messages = response.messages.map(packet => {
+        if (Array.isArray(packet?.message?.arguments)) {
           // We might need to create fronts for each of the message arguments.
-          message.arguments = message.arguments.map(arg =>
+          packet.message.arguments = packet.message.arguments.map(arg =>
             getAdHocFrontOrPrimitiveGrip(arg, this)
           );
         }
 
-        if (message?.exception) {
-          message.exception = getAdHocFrontOrPrimitiveGrip(
-            message.exception,
+        if (packet.pageError?.exception) {
+          packet.pageError.exception = getAdHocFrontOrPrimitiveGrip(
+            packet.pageError.exception,
             this
           );
         }
 
-        return message;
+        return packet;
       });
     }
     return response;

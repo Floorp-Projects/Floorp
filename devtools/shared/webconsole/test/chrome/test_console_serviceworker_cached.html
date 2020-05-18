@@ -22,27 +22,33 @@ const FRAME_URL = BASE_URL + "sandboxed_iframe.html";
 
 const firstTabExpectedCalls = [
   {
-    level: "log",
-    filename: /helper_serviceworker/,
-    arguments: ['script evaluation'],
-  },
-  {
-    level: "log",
-    filename: /helper_serviceworker/,
-    arguments: ['install event'],
-  },
-  {
-    level: "log",
-    filename: /helper_serviceworker/,
-    arguments: ['activate event'],
+    message: {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['script evaluation'],
+    }
+  }, {
+    message: {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['install event'],
+    }
+  }, {
+    message: {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['activate event'],
+    }
   },
 ];
 
 const secondTabExpectedCalls = [
   {
-    level: "log",
-    filename: /helper_serviceworker/,
-    arguments: ['fetch event: ' + FRAME_URL],
+    message: {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['fetch event: ' + FRAME_URL],
+    }
   }
 ];
 
