@@ -139,6 +139,7 @@ function JSFuzzIterate() {
   //   4) You must catch all exceptions.
   let code = String.fromCharCode(...fuzzBuf);
   timed(3, _ => test(code));
+  return 0;
 }
 
 function testFile(file) {
