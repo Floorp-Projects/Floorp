@@ -163,7 +163,7 @@ android-api-16/opt:
 
 android-api-16/pgo:
     description: "Android 4.0 api-16+ PGO"
-    use-pgo: true
+    use-pgo: android-api-16-shippable/opt
     index:
         job-name: android-api-16-pgo
     attributes:
@@ -185,7 +185,7 @@ android-api-16/pgo:
 
 android-api-16-shippable/opt:
     description: "Android 4.0 api-16+ Shippable"
-    use-pgo: android-api-16/pgo
+    use-pgo: true
     attributes:
         enable-full-crashsymbols: true
         shippable: true
@@ -237,7 +237,7 @@ android-aarch64/opt:
 
 android-aarch64/pgo:
     description: "Android 5.0 AArch64 PGO"
-    use-pgo: android-api-16/pgo
+    use-pgo: android-api-16-shippable/opt
     index:
         job-name: android-aarch64-pgo
     attributes:
@@ -282,7 +282,7 @@ android-aarch64/debug:
 
 android-aarch64-shippable/opt:
     description: "Android 5.0 AArch64 Shippable"
-    use-pgo: android-api-16/pgo
+    use-pgo: android-api-16-shippable/opt
     attributes:
         enable-full-crashsymbols: true
         shippable: true
