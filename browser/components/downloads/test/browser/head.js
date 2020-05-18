@@ -144,6 +144,7 @@ async function setDownloadDir() {
       ["browser.download.dir", tmpDir.path],
     ],
   });
+  return tmpDir.path;
 }
 
 let gHttpServer = null;
