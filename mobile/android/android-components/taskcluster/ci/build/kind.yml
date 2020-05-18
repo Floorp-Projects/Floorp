@@ -21,19 +21,17 @@ job-defaults:
     artifact-template:
         type: file
         name: public/build/{artifact_file_name}
-        path: '/builds/worker/checkouts/src/{component_path}/build/maven/org/mozilla/components/{component}/{version_with_snapshot}/{artifact_file_name}'
+        path: '/builds/worker/checkouts/src/{component_path}/build/maven/org/mozilla/components/{component}/{version}/{artifact_file_name}'
     attributes:
         code-review:
             by-build-type:
                 release: false
-                snapshot: false
                 nightly: false
                 default: true
     description: Execute Gradle tasks for component "{component}"
     expose-artifacts:
         by-build-type:
             release: true
-            snapshot: true
             nightly: true
             default: false
     fetches:
@@ -43,7 +41,6 @@ job-defaults:
     include-coverage:
         by-build-type:
             release: false
-            snapshot: false
             nightly: false
             default: true
     run:
@@ -54,14 +51,6 @@ job-defaults:
                     - ':{component}:testRelease'
                     - ':{component}:lintRelease'
                     - ':{component}:publish'
-                snapshot:
-                    - '-Psnapshot'
-                    - '-Ptimestamp={timestamp}'
-                    - ':{component}:assemble'
-                    - ':{component}:test'
-                    - ':{component}:lint'
-                    - ':{component}:publish'
-                    - ':{component}:renameSnapshotArtifacts'
                 nightly:
                     - '-PnightlyVersion={nightlyVersion}'
                     - ':{component}:assembleRelease'
@@ -86,7 +75,6 @@ job-defaults:
     run-on-tasks-for:
         by-build-type:
             release: []
-            snapshot: []
             nightly: []
             default: [github-pull-request, github-push]
     treeherder:
@@ -94,7 +82,6 @@ job-defaults:
         symbol:
             by-build-type:
                 release: '{component}(BR)'
-                snapshot: '{component}(BSnap)'
                 nightly: '{component}(BN)'
                 default: '{component}(B)'
         platform: android-all/opt
@@ -111,9 +98,6 @@ overriden-jobs:
     browser-engine-gecko-nightly:
         treeherder:
             symbol: 'browser-engine-gecko-nigh(B)'
-    snapshot-browser-engine-gecko-nightly:
-        treeherder:
-            symbol: 'browser-engine-gecko-nigh(BSnap)'
     nightly-browser-engine-gecko-nightly:
         treeherder:
             symbol: 'browser-engine-gecko-nigh(BN)'
@@ -124,9 +108,6 @@ overriden-jobs:
     lib-fetch-httpurlconnection:
         treeherder:
             symbol: 'lib-fetch-httpurlconnect(B)'
-    snapshot-lib-fetch-httpurlconnection:
-        treeherder:
-            symbol: 'lib-fetch-httpurlconnect(BSnap)'
     nightly-lib-fetch-httpurlconnection:
         treeherder:
             symbol: 'lib-fetch-httpurlconnect(BN)'

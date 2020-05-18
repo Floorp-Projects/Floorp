@@ -7,14 +7,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.target_tasks import _target_task, filter_for_tasks_for
 
 
-@_target_task("snapshot")
-def target_tasks_snapshot(full_task_graph, parameters, graph_config):
-    def filter(task, parameters):
-        return task.attributes.get("build-type", "") == "snapshot"
-
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
-
-
 @_target_task("nightly")
 def target_tasks_nightly(full_task_graph, parameters, graph_config):
     def filter(task, parameters):

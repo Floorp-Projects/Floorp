@@ -26,7 +26,7 @@ def loader(kind, path, config, params, loaded_tasks):
             }
         }
         for component in get_components()
-        for build_type in ('regular', 'nightly', 'release', 'snapshot')
+        for build_type in ('regular', 'nightly', 'release')
         if (
             component['name'] not in not_for_components
             and (component['shouldPublish'] or build_type == 'regular')

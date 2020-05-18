@@ -33,7 +33,7 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
                     artifactId = artifactIdArg
                     description = descriptionArg
                     // 'local' is for streamlining local publication workflow.
-                    version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : (project.hasProperty('local') ? '-local' + getLocalPublicationTimestamp() : ''))
+                    version = config.componentsVersion + (project.hasProperty('local') ? '-local' + getLocalPublicationTimestamp() : '')
 
                     licenses {
                         license {
@@ -63,14 +63,5 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
                 url = "$buildDir/maven"
             }
         }
-    }
-
-    task renameSnapshotArtifacts(type: Exec) {
-        dependsOn publish
-
-        def renameScript = "${rootDir}/automation/taskcluster/rename_snapshot_artifacts.py"
-        def mavenBuildDir = "${project.buildDir}/maven"
-
-        commandLine 'python', renameScript, '--path', mavenBuildDir, '--timestamp', (project.hasProperty('timestamp') ? timestamp : '')
     }
 }
