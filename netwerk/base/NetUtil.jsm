@@ -308,7 +308,7 @@ var NetUtil = {
       contentPolicyType = Ci.nsIContentPolicy.TYPE_OTHER;
     }
 
-    let channel = Services.io.newChannelFromURI(
+    return Services.io.newChannelFromURI(
       uri,
       loadingNode || null,
       loadingPrincipal || null,
@@ -316,10 +316,6 @@ var NetUtil = {
       securityFlags,
       contentPolicyType
     );
-    if (loadUsingSystemPrincipal) {
-      channel.loadInfo.allowDeprecatedSystemRequests = true;
-    }
-    return channel;
   },
 
   /**
