@@ -813,18 +813,29 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   MOZ_CAN_RUN_SCRIPT nsresult CheckTrailingNBSPOfRun(WSFragment* aRun);
 
   /**
-   * ReplacePreviousNBSPIfUnnecessary() replaces previous character of aPoint
-   * if it's a NBSP and it's unnecessary.
+   * MaybeReplacePreviousNBSPWithASCIIWhitespace() replaces previous character
+   * of aPoint if it's a NBSP and it's unnecessary.
    *
    * @param aRun        Current text run.  aPoint must be in this run.
    * @param aPoint      Current insertion point.  Its previous character is
    *                    unnecessary NBSP will be checked.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult ReplacePreviousNBSPIfUnnecessary(
-      WSFragment* aRun, const EditorDOMPoint& aPoint);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  MaybeReplacePreviousNBSPWithASCIIWhitespace(const WSFragment& aRun,
+                                              const EditorDOMPoint& aPoint);
 
-  MOZ_CAN_RUN_SCRIPT nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
-                                               int32_t aOffset);
+  /**
+   * MaybeReplaceInclusiveNextNBSPWithASCIIWhitespace() replaces an NBSP at
+   * the point with an ASCII whitespace only when the point is an NBSP and
+   * it's replaceable with an ASCII whitespace.
+   *
+   * @param aPoint      If point in a text node, the character is checked
+   *                    whether it's an NBSP or not.  Otherwise, first
+   *                    character of next editable text node is checked.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  MaybeReplaceInclusiveNextNBSPWithASCIIWhitespace(
+      const WSFragment& aRun, const EditorDOMPoint& aPoint);
 
   MOZ_CAN_RUN_SCRIPT nsresult Scrub();
 
