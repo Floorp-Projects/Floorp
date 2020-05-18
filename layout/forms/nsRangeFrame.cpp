@@ -72,11 +72,6 @@ void nsRangeFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   aContent->AddEventListener(NS_LITERAL_STRING("touchstart"),
                              mDummyTouchListener, false);
 
-  ServoStyleSet* styleSet = PresContext()->StyleSet();
-
-  mOuterFocusStyle = styleSet->ProbePseudoElementStyle(
-      *aContent->AsElement(), PseudoStyleType::mozFocusOuter, Style());
-
   return nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
@@ -148,78 +143,6 @@ void nsRangeFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
   }
 }
 
-class nsDisplayRangeFocusRing final : public nsPaintedDisplayItem {
- public:
-  nsDisplayRangeFocusRing(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsPaintedDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayRangeFocusRing);
-  }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayRangeFocusRing)
-
-  nsDisplayItemGeometry* AllocateGeometry(
-      nsDisplayListBuilder* aBuilder) override;
-  void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                 const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion* aInvalidRegion) const override;
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) const override;
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
-  NS_DISPLAY_DECL_NAME("RangeFocusRing", TYPE_RANGE_FOCUS_RING)
-};
-
-nsDisplayItemGeometry* nsDisplayRangeFocusRing::AllocateGeometry(
-    nsDisplayListBuilder* aBuilder) {
-  return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-}
-
-void nsDisplayRangeFocusRing::ComputeInvalidationRegion(
-    nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
-    nsRegion* aInvalidRegion) const {
-  auto geometry =
-      static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-
-  if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
-    bool snap;
-    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-  }
-
-  nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
-}
-
-nsRect nsDisplayRangeFocusRing::GetBounds(nsDisplayListBuilder* aBuilder,
-                                          bool* aSnap) const {
-  *aSnap = false;
-  nsRect rect(ToReferenceFrame(), Frame()->GetSize());
-
-  // We want to paint as if specifying a border for ::-moz-focus-outer
-  // specifies an outline for our frame, so inflate by the border widths:
-  ComputedStyle* computedStyle =
-      static_cast<nsRangeFrame*>(mFrame)->mOuterFocusStyle;
-  MOZ_ASSERT(computedStyle, "We only exist if mOuterFocusStyle is non-null");
-  rect.Inflate(computedStyle->StyleBorder()->GetComputedBorder());
-
-  return rect;
-}
-
-void nsDisplayRangeFocusRing::Paint(nsDisplayListBuilder* aBuilder,
-                                    gfxContext* aCtx) {
-  bool unused;
-  ComputedStyle* computedStyle =
-      static_cast<nsRangeFrame*>(mFrame)->mOuterFocusStyle;
-  MOZ_ASSERT(computedStyle, "We only exist if mOuterFocusStyle is non-null");
-
-  PaintBorderFlags flags = aBuilder->ShouldSyncDecodeImages()
-                               ? PaintBorderFlags::SyncDecodeImages
-                               : PaintBorderFlags();
-
-  ImgDrawResult result = nsCSSRendering::PaintBorder(
-      mFrame->PresContext(), *aCtx, mFrame, GetPaintRect(),
-      GetBounds(aBuilder, &unused), computedStyle, flags);
-
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
-}
-
 void nsRangeFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                     const nsDisplayListSet& aLists) {
   const nsStyleDisplay* disp = StyleDisplay();
@@ -240,36 +163,6 @@ void nsRangeFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   } else {
     BuildDisplayListForInline(aBuilder, aLists);
   }
-
-  // Draw a focus outline if appropriate:
-
-  if (!aBuilder->IsForPainting() || !IsVisibleForPainting()) {
-    // we don't want the focus ring item for hit-testing or if the item isn't
-    // in the area being [re]painted
-    return;
-  }
-
-  EventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) ||
-      !eventStates.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    return;  // can't have focus or doesn't match :-moz-focusring
-  }
-
-  if (!mOuterFocusStyle || !mOuterFocusStyle->StyleBorder()->HasBorder()) {
-    // no ::-moz-focus-outer specified border (how style specifies a focus ring
-    // for range)
-    return;
-  }
-
-  // FIXME(emilio): This is using ThemeWantsButtonInnerFocusRing even though
-  // it's painting the ::-moz-focus-outer pseudo-class... But why is
-  // ::-moz-focus-outer useful, instead of outline?
-  if (IsThemed(disp) && !PresContext()->Theme()->ThemeWantsButtonInnerFocusRing(
-                            disp->mAppearance)) {
-    return;  // the native theme displays its own visual indication of focus
-  }
-
-  aLists.Content()->AppendNewToTop<nsDisplayRangeFocusRing>(aBuilder, this);
 }
 
 void nsRangeFrame::Reflow(nsPresContext* aPresContext,
@@ -820,23 +713,4 @@ bool nsRangeFrame::ShouldUseNativeStyle() const {
          thumbFrame &&
          !PresContext()->HasAuthorSpecifiedRules(
              thumbFrame, STYLES_DISABLING_NATIVE_THEMING);
-}
-
-ComputedStyle* nsRangeFrame::GetAdditionalComputedStyle(int32_t aIndex) const {
-  // We only implement this so that SetAdditionalComputedStyle will be
-  // called if style changes that would change the -moz-focus-outer
-  // pseudo-element have occurred.
-  if (aIndex != 0) {
-    return nullptr;
-  }
-  return mOuterFocusStyle;
-}
-
-void nsRangeFrame::SetAdditionalComputedStyle(int32_t aIndex,
-                                              ComputedStyle* aComputedStyle) {
-  MOZ_ASSERT(aIndex == 0,
-             "GetAdditionalComputedStyle is handling other indexes?");
-
-  // The -moz-focus-outer pseudo-element's style has changed.
-  mOuterFocusStyle = aComputedStyle;
 }

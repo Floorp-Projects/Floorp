@@ -13,6 +13,7 @@
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/PseudoStyleType.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 // Is this pseudo-element a CSS2 pseudo-element that can be specified
 // with the single colon syntax (in addition to the double-colon syntax,
@@ -120,6 +121,9 @@ class nsCSSPseudoElements {
   static bool IsEnabled(Type aType, EnabledState aEnabledState) {
     if (!PseudoElementHasAnyFlag(
             aType, CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)) {
+      if (aType == Type::mozFocusOuter) {
+        return mozilla::StaticPrefs::layout_css_moz_focus_outer_enabled();
+      }
       return true;
     }
 
