@@ -24,14 +24,30 @@ using namespace js;
 using namespace js::jit;
 
 WarpBuilder::WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen)
-    : WarpBuilderShared(mirGen, nullptr),
-      snapshot_(snapshot),
+    : snapshot_(snapshot),
+      mirGen_(mirGen),
       graph_(mirGen.graph()),
+      alloc_(mirGen.alloc()),
       info_(mirGen.outerInfo()),
       script_(snapshot.script()->script()),
-      loopStack_(mirGen.alloc()),
-      iterators_(mirGen.alloc()) {
+      loopStack_(alloc_),
+      iterators_(alloc_) {
   opSnapshotIter_ = snapshot.script()->opSnapshots().getFirst();
+}
+
+MConstant* WarpBuilder::constant(const Value& v) {
+  MOZ_ASSERT_IF(v.isString(), v.toString()->isAtom());
+  MOZ_ASSERT_IF(v.isGCThing(), !IsInsideNursery(v.toGCThing()));
+
+  MConstant* c = MConstant::New(alloc(), v);
+  current->add(c);
+
+  return c;
+}
+
+void WarpBuilder::pushConstant(const Value& v) {
+  MConstant* c = constant(v);
+  current->push(c);
 }
 
 BytecodeSite* WarpBuilder::newBytecodeSite(BytecodeLocation loc) {
@@ -268,6 +284,19 @@ bool WarpBuilder::addPendingEdge(const PendingEdge& edge,
   return pendingEdges_.add(p, targetPC, std::move(edges));
 }
 
+bool WarpBuilder::resumeAfter(MInstruction* ins, BytecodeLocation loc) {
+  MOZ_ASSERT(ins->isEffectful());
+
+  MResumePoint* resumePoint = MResumePoint::New(
+      alloc(), ins->block(), loc.toRawBytecode(), MResumePoint::ResumeAfter);
+  if (!resumePoint) {
+    return false;
+  }
+
+  ins->setResumePoint(resumePoint);
+  return true;
+}
+
 bool WarpBuilder::build() {
   if (!buildPrologue()) {
     return false;
@@ -455,7 +484,7 @@ bool WarpBuilder::buildPrologue() {
 
 bool WarpBuilder::buildBody() {
   for (BytecodeLocation loc : AllBytecodesIterable(script_)) {
-    if (mirGen().shouldCancel("WarpBuilder (opcode loop)")) {
+    if (mirGen_.shouldCancel("WarpBuilder (opcode loop)")) {
       return false;
     }
 
@@ -673,7 +702,7 @@ bool WarpBuilder::build_String(BytecodeLocation loc) {
 
 bool WarpBuilder::build_Symbol(BytecodeLocation loc) {
   uint32_t which = loc.getSymbolIndex();
-  JS::Symbol* sym = mirGen().runtime->wellKnownSymbols().get(which);
+  JS::Symbol* sym = mirGen_.runtime->wellKnownSymbols().get(which);
   pushConstant(SymbolValue(sym));
   return true;
 }
@@ -1604,7 +1633,7 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
 
   // TODO: Consider using buildIC for this as well.
   if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
-    return TranspileCacheIRToMIR(mirGen(), loc, current, snapshot, callInfo);
+    return TranspileCacheIRToMIR(mirGen_, loc, current, snapshot, callInfo);
   }
 
   // TODO: consider adding a Call IC like Baseline has.
@@ -1620,10 +1649,37 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
     needsThisCheck = true;
   }
 
-  MCall* call = makeCall(callInfo, needsThisCheck);
+  // TODO: specialize for known target. Pad missing arguments. Set MCall flags
+  // based on this known target.
+  JSFunction* target = nullptr;
+  uint32_t targetArgs = callInfo.argc();
+  bool isDOMCall = false;
+  DOMObjectKind objKind = DOMObjectKind::Unknown;
+
+  MCall* call =
+      MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),
+                 callInfo.argc(), callInfo.constructing(),
+                 callInfo.ignoresReturnValue(), isDOMCall, objKind);
   if (!call) {
     return false;
   }
+
+  if (callInfo.constructing()) {
+    if (needsThisCheck) {
+      call->setNeedsThisCheck();
+    }
+    call->addArg(targetArgs + 1, callInfo.getNewTarget());
+  }
+
+  // Add explicit arguments.
+  // Skip addArg(0) because it is reserved for |this|.
+  for (int32_t i = callInfo.argc() - 1; i >= 0; i--) {
+    call->addArg(i + 1, callInfo.getArg(i));
+  }
+
+  // Pass |this| and function.
+  call->addArg(0, callInfo.thisArg());
+  call->initFunction(callInfo.fun());
 
   current->add(call);
   current->push(call);
@@ -1700,7 +1756,7 @@ bool WarpBuilder::build_GetGName(BytecodeLocation loc) {
 
   // Try to optimize undefined/NaN/Infinity.
   PropertyName* name = loc.getPropertyName(script_);
-  const JSAtomState& names = mirGen().runtime->names();
+  const JSAtomState& names = mirGen_.runtime->names();
 
   if (name == names.undefined) {
     pushConstant(UndefinedValue());
@@ -2124,7 +2180,7 @@ bool WarpBuilder::build_Object(BytecodeLocation loc) {
   JSObject* obj = loc.getObject(script_);
   MConstant* objConst = constant(ObjectValue(*obj));
 
-  if (mirGen().options.cloneSingletons()) {
+  if (mirGen_.options.cloneSingletons()) {
     auto* clone = MCloneLiteral::New(alloc(), objConst);
     current->add(clone);
     current->push(clone);
@@ -2668,7 +2724,7 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     if (!inputs_.append(inputs.begin(), inputs.end())) {
       return false;
     }
-    return TranspileCacheIRToMIR(mirGen(), loc, current, snapshot, inputs_);
+    return TranspileCacheIRToMIR(mirGen_, loc, current, snapshot, inputs_);
   }
 
   // Work around std::initializer_list not defining operator[].
