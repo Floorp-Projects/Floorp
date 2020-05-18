@@ -235,6 +235,10 @@ var whitelist = [
   // This file is referenced from WebRTCParent.jsm. Once this localization
   // file gets moved to the locales directory, this should get removed.
   { file: "resource://app/localization/en-US/preview/popup-notifications.ftl" },
+
+  // This file is referenced from webrtcIndicator.xhtml. Once this localization
+  // file gets moved to the locales directory, this should get removed.
+  { file: "chrome://browser/content/webrtcIndicator.ftl" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {

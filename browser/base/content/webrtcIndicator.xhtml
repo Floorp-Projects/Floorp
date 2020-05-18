@@ -7,29 +7,42 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/webRTC-indicator.css" type="text/css"?>
 
-<!DOCTYPE window>
+<!DOCTYPE html>
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        id="webrtcIndicator"
-        role="alert"
-        windowtype="Browser:WebRTCGlobalIndicator"
-        onload="init(event);"
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      id="webrtcIndicator"
+      role="alert"
+      windowtype="Browser:WebRTCGlobalIndicator"
 #ifdef XP_MACOSX
-        inwindowmenu="false"
+      inwindowmenu="false"
 #endif
-        sizemode="normal"
-        hidechrome="true"
-        orient="horizontal"
-        >
-  <script src="chrome://browser/content/webrtcIndicator.js"/>
+      chromemargin="0,0,0,0">
 
-  <button id="firefoxButton"/>
-  <button id="audioVideoButton" type="menu">
-    <menupopup id="audioVideoPopup" type="Devices"/>
-  </button>
-  <separator id="shareSeparator"/>
-  <button id="screenShareButton" type="menu">
-    <menupopup id="screenSharePopup" type="Screen"/>
-  </button>
-</window>
+  <head>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="preview/webrtcIndicator.ftl"/>
+#ifndef XP_MACOSX
+    <title data-l10n-id="webrtc-indicator-title"></title>
+#endif
+    <script src="chrome://browser/content/webrtcIndicator.js"></script>
+  </head>
+
+  <body>
+    <div id="display-share" class="row-item">
+      <image id="display-share-icon" />
+
+      <span id="window-share-info" data-l10n-id="webrtc-sharing-window"/>
+      <span id="browser-window-share-info" data-l10n-id="webrtc-sharing-browser-window"/>
+      <button id="stop-sharing-window" class="stop-button" data-l10n-id="webrtc-stop-sharing-button"/>
+
+      <span id="screen-share-info" data-l10n-id="webrtc-sharing-screen"/>
+      <button id="stop-sharing-screen" class="stop-button" data-l10n-id="webrtc-stop-sharing-button"/>
+    </div>
+    <button id="microphone-button" class="row-item control-icon" type="microphone" data-l10n-id="webrtc-microphone-button"/>
+    <button id="camera-button" class="row-item control-icon" type="camera" data-l10n-id="webrtc-camera-button"/>
+    <div id="window-controls" class="row-item">
+      <button id="minimize" class="control-icon" data-l10n-id="webrtc-minimize"/>
+    </div>
+  </body>
+</html>
