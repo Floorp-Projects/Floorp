@@ -64,6 +64,14 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     private lateinit var searchStore: SearchFragmentStore
     private lateinit var searchInteractor: SearchInteractor
 
+    private fun shouldShowSearchSuggestions(isPrivate: Boolean): Boolean =
+        if (isPrivate) {
+            requireContext().settings().shouldShowSearchSuggestions &&
+                requireContext().settings().shouldShowSearchSuggestionsInPrivate
+        } else {
+            requireContext().settings().shouldShowSearchSuggestions
+        }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -85,21 +93,13 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
 
-        val showSearchSuggestions =
-            if (isPrivate) {
-                requireContext().settings().shouldShowSearchSuggestions &&
-                        requireContext().settings().shouldShowSearchSuggestionsInPrivate
-            } else {
-                requireContext().settings().shouldShowSearchSuggestions
-            }
-
         searchStore = StoreProvider.get(this) {
             SearchFragmentStore(
                 SearchFragmentState(
                     query = url,
                     searchEngineSource = currentSearchEngine,
                     defaultEngineSource = currentSearchEngine,
-                    showSearchSuggestions = showSearchSuggestions,
+                    showSearchSuggestions = shouldShowSearchSuggestions(isPrivate),
                     showSearchSuggestionsHint = false,
                     showSearchShortcuts = requireContext().settings().shouldShowSearchShortcuts && url.isEmpty(),
                     showClipboardSuggestions = requireContext().settings().shouldShowClipboardSuggestions,
@@ -142,6 +142,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                 listener = ::launchVoiceSearch
             )
         )
+
         val urlView = toolbarView.view
             .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
         urlView?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
