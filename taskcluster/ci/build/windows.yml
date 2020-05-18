@@ -1037,7 +1037,6 @@ win32-devedition/opt:
         job-name: win32-opt
         type: nightly
     attributes:
-        nightly: true
         shippable: true
         enable-full-crashsymbols: true
     stub-installer:
@@ -1105,7 +1104,6 @@ win64-devedition/opt:
         job-name: win64-opt
         type: nightly
     attributes:
-        nightly: true
         shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
@@ -1482,7 +1480,6 @@ win64-aarch64-devedition/opt:
         job-name: win64-aarch64-opt
         type: nightly
     attributes:
-        nightly: true
         shippable: true
         enable-full-crashsymbols: true
         # Skip the test packaging check because we copy test packages from

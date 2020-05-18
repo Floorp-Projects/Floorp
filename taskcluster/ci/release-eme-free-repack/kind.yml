@@ -51,7 +51,6 @@ jobs:
             build_platform: macosx64-shippable
             build_type: opt
             artifact_prefix: releng/partner
-            nightly: true
             shippable: true
 
     win32-shippable:
@@ -64,7 +63,6 @@ jobs:
             build_platform: win32-shippable
             build_type: opt
             artifact_prefix: releng/partner
-            nightly: true
             shippable: true
 
     win64-shippable:
@@ -77,5 +75,4 @@ jobs:
             build_platform: win64-shippable
             build_type: opt
             artifact_prefix: releng/partner
-            nightly: true
             shippable: true

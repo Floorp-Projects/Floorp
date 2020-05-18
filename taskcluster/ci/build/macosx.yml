@@ -187,7 +187,6 @@ macosx64-devedition/opt:
     description: "MacOS X Dev Edition x64 (shippable)"
     use-pgo: macosx64-shippable/opt
     attributes:
-        nightly: true
         shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
