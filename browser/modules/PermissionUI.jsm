@@ -853,7 +853,7 @@ XRPermissionPrompt.prototype = {
       name: this.getPrincipalName(),
     };
 
-    if (this.principal.URI.schemeIs("file")) {
+    if (this.principal.schemeIs("file")) {
       options.checkbox = { show: false };
     } else {
       // Don't offer "always remember" action in PB mode
@@ -878,7 +878,7 @@ XRPermissionPrompt.prototype = {
   },
 
   get message() {
-    if (this.principal.URI.schemeIs("file")) {
+    if (this.principal.schemeIs("file")) {
       return gBrowserBundle.GetStringFromName("xr.shareWithFile3");
     }
 
