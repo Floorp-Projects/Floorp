@@ -233,6 +233,10 @@ var whitelist = [
   // file gets moved to the locales directory, this should get removed.
   { file: "resource://app/localization/en-US/preview/popup-notifications.ftl" },
 
+  // This file is referenced from webrtcIndicator.xhtml. Once this localization
+  // file gets moved to the locales directory, this should get removed.
+  { file: "chrome://browser/content/webrtcIndicator.ftl" },
+
   // services/fxaccounts/RustFxAccount.js
   { file: "resource://gre/modules/RustFxAccount.js" },
 ];
