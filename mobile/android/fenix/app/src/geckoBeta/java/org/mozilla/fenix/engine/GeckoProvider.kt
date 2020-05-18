@@ -8,7 +8,6 @@ import mozilla.components.browser.engine.gecko.autofill.GeckoLoginDelegateWrappe
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.lib.crash.handler.CrashHandlerService
-import mozilla.components.service.experiments.Experiments
 import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.settings
@@ -49,12 +48,6 @@ object GeckoProvider {
             .aboutConfigEnabled(Config.channel.isBeta)
             .debugLogging(Config.channel.isDebug)
             .build()
-
-        Experiments.withExperiment("webrender-performance-comparison-experiment") { branchName ->
-            if (branchName == "disable_webrender") {
-                runtimeSettings.extras.putInt("forcedisablewebrender", 1)
-            }
-        }
 
         if (!Settings.getInstance(context).shouldUseAutoSize) {
             runtimeSettings.automaticFontSizeAdjustment = false
