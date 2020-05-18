@@ -13,6 +13,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "jslibmath.h"
+#include "jsmath.h"
 
 #include "builtin/RegExp.h"
 #include "jit/AtomicOperations.h"
@@ -1373,53 +1374,53 @@ MDefinition* MSign::foldsTo(TempAllocator& alloc) {
   return MConstant::New(alloc, DoubleValue(out));
 }
 
-const char* MMathFunction::FunctionName(Function function) {
+const char* MMathFunction::FunctionName(UnaryMathFunction function) {
   switch (function) {
-    case Log:
+    case UnaryMathFunction::Log:
       return "Log";
-    case Sin:
+    case UnaryMathFunction::Sin:
       return "Sin";
-    case Cos:
+    case UnaryMathFunction::Cos:
       return "Cos";
-    case Exp:
+    case UnaryMathFunction::Exp:
       return "Exp";
-    case Tan:
+    case UnaryMathFunction::Tan:
       return "Tan";
-    case ACos:
+    case UnaryMathFunction::ACos:
       return "ACos";
-    case ASin:
+    case UnaryMathFunction::ASin:
       return "ASin";
-    case ATan:
+    case UnaryMathFunction::ATan:
       return "ATan";
-    case Log10:
+    case UnaryMathFunction::Log10:
       return "Log10";
-    case Log2:
+    case UnaryMathFunction::Log2:
       return "Log2";
-    case Log1P:
+    case UnaryMathFunction::Log1P:
       return "Log1P";
-    case ExpM1:
+    case UnaryMathFunction::ExpM1:
       return "ExpM1";
-    case CosH:
+    case UnaryMathFunction::CosH:
       return "CosH";
-    case SinH:
+    case UnaryMathFunction::SinH:
       return "SinH";
-    case TanH:
+    case UnaryMathFunction::TanH:
       return "TanH";
-    case ACosH:
+    case UnaryMathFunction::ACosH:
       return "ACosH";
-    case ASinH:
+    case UnaryMathFunction::ASinH:
       return "ASinH";
-    case ATanH:
+    case UnaryMathFunction::ATanH:
       return "ATanH";
-    case Trunc:
+    case UnaryMathFunction::Trunc:
       return "Trunc";
-    case Cbrt:
+    case UnaryMathFunction::Cbrt:
       return "Cbrt";
-    case Floor:
+    case UnaryMathFunction::Floor:
       return "Floor";
-    case Ceil:
+    case UnaryMathFunction::Ceil:
       return "Ceil";
-    case Round:
+    case UnaryMathFunction::Round:
       return "Round";
     default:
       MOZ_CRASH("Unknown math function");
@@ -1443,73 +1444,73 @@ MDefinition* MMathFunction::foldsTo(TempAllocator& alloc) {
   double in = input->toConstant()->numberToDouble();
   double out;
   switch (function_) {
-    case Log:
+    case UnaryMathFunction::Log:
       out = js::math_log_impl(in);
       break;
-    case Sin:
+    case UnaryMathFunction::Sin:
       out = js::math_sin_impl(in);
       break;
-    case Cos:
+    case UnaryMathFunction::Cos:
       out = js::math_cos_impl(in);
       break;
-    case Exp:
+    case UnaryMathFunction::Exp:
       out = js::math_exp_impl(in);
       break;
-    case Tan:
+    case UnaryMathFunction::Tan:
       out = js::math_tan_impl(in);
       break;
-    case ACos:
+    case UnaryMathFunction::ACos:
       out = js::math_acos_impl(in);
       break;
-    case ASin:
+    case UnaryMathFunction::ASin:
       out = js::math_asin_impl(in);
       break;
-    case ATan:
+    case UnaryMathFunction::ATan:
       out = js::math_atan_impl(in);
       break;
-    case Log10:
+    case UnaryMathFunction::Log10:
       out = js::math_log10_impl(in);
       break;
-    case Log2:
+    case UnaryMathFunction::Log2:
       out = js::math_log2_impl(in);
       break;
-    case Log1P:
+    case UnaryMathFunction::Log1P:
       out = js::math_log1p_impl(in);
       break;
-    case ExpM1:
+    case UnaryMathFunction::ExpM1:
       out = js::math_expm1_impl(in);
       break;
-    case CosH:
+    case UnaryMathFunction::CosH:
       out = js::math_cosh_impl(in);
       break;
-    case SinH:
+    case UnaryMathFunction::SinH:
       out = js::math_sinh_impl(in);
       break;
-    case TanH:
+    case UnaryMathFunction::TanH:
       out = js::math_tanh_impl(in);
       break;
-    case ACosH:
+    case UnaryMathFunction::ACosH:
       out = js::math_acosh_impl(in);
       break;
-    case ASinH:
+    case UnaryMathFunction::ASinH:
       out = js::math_asinh_impl(in);
       break;
-    case ATanH:
+    case UnaryMathFunction::ATanH:
       out = js::math_atanh_impl(in);
       break;
-    case Trunc:
+    case UnaryMathFunction::Trunc:
       out = js::math_trunc_impl(in);
       break;
-    case Cbrt:
+    case UnaryMathFunction::Cbrt:
       out = js::math_cbrt_impl(in);
       break;
-    case Floor:
+    case UnaryMathFunction::Floor:
       out = js::math_floor_impl(in);
       break;
-    case Ceil:
+    case UnaryMathFunction::Ceil:
       out = js::math_ceil_impl(in);
       break;
-    case Round:
+    case UnaryMathFunction::Round:
       out = js::math_round_impl(in);
       break;
     default:
@@ -3235,6 +3236,32 @@ void MMathFunction::trySpecializeFloat32(TempAllocator& alloc) {
 
   setResultType(MIRType::Float32);
   specialization_ = MIRType::Float32;
+}
+
+bool MMathFunction::isFloat32Commutative() const {
+  switch (function_) {
+    case UnaryMathFunction::Floor:
+    case UnaryMathFunction::Ceil:
+    case UnaryMathFunction::Round:
+    case UnaryMathFunction::Trunc:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool MMathFunction::canRecoverOnBailout() const {
+  switch (function_) {
+    case UnaryMathFunction::Sin:
+    case UnaryMathFunction::Log:
+    case UnaryMathFunction::Ceil:
+    case UnaryMathFunction::Floor:
+    case UnaryMathFunction::Round:
+    case UnaryMathFunction::Trunc:
+      return true;
+    default:
+      return false;
+  }
 }
 
 MHypot* MHypot::New(TempAllocator& alloc, const MDefinitionVector& vector) {
