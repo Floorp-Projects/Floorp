@@ -706,29 +706,43 @@ nsresult nsWindowWatcher::OpenWindowInternal(
                                                 aDialog, uriToLoadIsChrome,
                                                 hasChromeParent, aCalledFromJS);
   } else {
+    MOZ_DIAGNOSTIC_ASSERT(parentBC && parentBC->IsContent(),
+                          "content caller must provide content parent");
     chromeFlags = CalculateChromeFlagsForChild(features, sizeSpec);
 
     if (aDialog) {
       MOZ_ASSERT(XRE_IsParentProcess());
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
     }
+  }
 
-    // Propagate the remote & fission status of the parent window, if available,
-    // to the child.
-    if (parentWindow) {
-      auto* docShell = nsDocShell::Cast(parentWindow->GetDocShell());
+  bool windowTypeIsChrome =
+      chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
 
-      if (docShell->UseRemoteTabs()) {
-        chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
-      }
+  if (parentBC && !aForceNoOpener) {
+    if (parentBC->IsChrome() && !windowTypeIsChrome) {
+      NS_WARNING(
+          "Content windows may never have chrome windows as their openers.");
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (parentBC->IsContent() && windowTypeIsChrome) {
+      NS_WARNING(
+          "Chrome windows may never have content windows as their openers.");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
 
-      if (docShell->UseRemoteSubframes()) {
-        chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
-      }
-    } else if (XRE_IsContentProcess()) {
-      // If we don't have a parent window, but we're loaded in the content
-      // process, force ourselves into a remote window.
+  // If we're opening a content window from a content window, we need to exactly
+  // inherit fission and e10s status flags from parentBC. Only new toplevel
+  // windows may change these options.
+  if (parentBC && parentBC->IsContent() && !windowTypeIsChrome) {
+    chromeFlags &= ~(nsIWebBrowserChrome::CHROME_REMOTE_WINDOW |
+                     nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
+    if (parentBC->UseRemoteTabs()) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
+    }
+    if (parentBC->UseRemoteSubframes()) {
+      chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
     }
   }
 
@@ -736,24 +750,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // we affect the entry global) make more sense?  Or do we just want to affect
   // GetSubjectPrincipal()?
   dom::AutoJSAPI jsapiChromeGuard;
-
-  nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(aParent);
-
-  bool windowTypeIsChrome =
-      chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
-
-  if (!aForceNoOpener) {
-    if (chromeWin && !windowTypeIsChrome) {
-      NS_WARNING(
-          "Content windows may never have chrome windows as their openers.");
-      return NS_ERROR_INVALID_ARG;
-    }
-    if (aParent && !chromeWin && windowTypeIsChrome) {
-      NS_WARNING(
-          "Chrome windows may never have content windows as their openers.");
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
 
   if (isCallerChrome && !hasChromeParent && !windowTypeIsChrome) {
     // open() is called from chrome on a non-chrome window, initialize an
@@ -824,17 +820,13 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     // Now check whether it's ok to ask a window provider for a window.  Don't
     // do it if we're opening a dialog or if our parent is a chrome window or
     // if we're opening something that has modal, dialog, or chrome flags set.
-    if (!aDialog && !chromeWin &&
+    if (parentTreeOwner && !aDialog && parentBC->IsContent() &&
         !(chromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
                          nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                          nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
       MOZ_ASSERT(openWindowInfo);
 
-      nsCOMPtr<nsIWindowProvider> provider;
-      if (parentTreeOwner) {
-        provider = do_GetInterface(parentTreeOwner);
-      }
-
+      nsCOMPtr<nsIWindowProvider> provider = do_GetInterface(parentTreeOwner);
       if (provider) {
         rv = provider->ProvideWindow(openWindowInfo, chromeFlags, aCalledFromJS,
                                      sizeSpec.WidthSpecified(), uriToLoad, name,
