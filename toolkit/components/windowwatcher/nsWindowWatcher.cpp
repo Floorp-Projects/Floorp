@@ -519,7 +519,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   SizeSpec sizeSpec;
   CalcSizeSpec(features, sizeSpec);
 
-  uint32_t chromeFlags = CalculateChromeFlagsForChild(features, sizeSpec);
+  uint32_t chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
 
   if (isPrivateBrowsingWindow) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -702,13 +702,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // the calculation sees the actual caller when doing its
   // security checks.
   if (isCallerChrome && XRE_IsParentProcess()) {
-    chromeFlags = CalculateChromeFlagsForParent(aParent, features, sizeSpec,
-                                                aDialog, uriToLoadIsChrome,
-                                                hasChromeParent, aCalledFromJS);
+    chromeFlags = CalculateChromeFlagsForSystem(
+        features, sizeSpec, aDialog, uriToLoadIsChrome, hasChromeParent);
   } else {
     MOZ_DIAGNOSTIC_ASSERT(parentBC && parentBC->IsContent(),
                           "content caller must provide content parent");
-    chromeFlags = CalculateChromeFlagsForChild(features, sizeSpec);
+    chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
 
     if (aDialog) {
       MOZ_ASSERT(XRE_IsParentProcess());
@@ -1788,7 +1787,7 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
  * @return the chrome bitmask
  */
 // static
-uint32_t nsWindowWatcher::CalculateChromeFlagsForChild(
+uint32_t nsWindowWatcher::CalculateChromeFlagsForContent(
     const WindowFeatures& aFeatures, const SizeSpec& aSizeSpec) {
   if (aFeatures.IsEmpty()) {
     return nsIWebBrowserChrome::CHROME_ALL;
@@ -1803,19 +1802,16 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForChild(
 /**
  * Calculate the chrome bitmask from a string list of features for a new
  * privileged window.
- * @param aParent the opener window
  * @param aFeatures a string containing a list of named chrome features
  * @param aDialog affects the assumptions made about unnamed features
  * @param aChromeURL true if the window is being sent to a chrome:// URL
  * @param aHasChromeParent true if the parent window is privileged
- * @param aCalledFromJS true if the window open request came from script.
  * @return the chrome bitmask
  */
 // static
-uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
-    mozIDOMWindowProxy* aParent, const WindowFeatures& aFeatures,
-    const SizeSpec& aSizeSpec, bool aDialog, bool aChromeURL,
-    bool aHasChromeParent, bool aCalledFromJS) {
+uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
+    const WindowFeatures& aFeatures, const SizeSpec& aSizeSpec, bool aDialog,
+    bool aChromeURL, bool aHasChromeParent) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
 
