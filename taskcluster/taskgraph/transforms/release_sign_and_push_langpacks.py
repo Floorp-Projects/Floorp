@@ -93,7 +93,8 @@ def filter_out_macos_jobs_but_mac_only_locales(config, jobs):
             # Other locales of the same job shouldn't be processed
             job['attributes']['chunk_locales'] = ['ja-JP-mac']
             job['label'] = job['label'].replace(
-                job['attributes']['l10n_chunk'], 'ja-JP-mac'
+                # Guard against a chunk 10 or chunk 1 (latter on try) weird munging
+                "-{}/".format(job['attributes']['l10n_chunk']), '-ja-JP-mac/'
             )
             yield job
 
