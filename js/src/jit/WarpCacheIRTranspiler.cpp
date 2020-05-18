@@ -6,6 +6,8 @@
 
 #include "jit/WarpCacheIRTranspiler.h"
 
+#include "jsmath.h"
+
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/CacheIROpsGenerated.h"
@@ -963,6 +965,17 @@ bool WarpCacheIRTranspiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
   auto* ins = MSqrt::New(alloc(), input, MIRType::Double);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMathFunctionNumberResult(
+    NumberOperandId inputId, UnaryMathFunction fun) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MMathFunction::New(alloc(), input, fun);
   add(ins);
 
   pushResult(ins);

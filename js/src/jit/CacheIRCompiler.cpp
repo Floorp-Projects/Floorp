@@ -14,6 +14,8 @@
 #include <utility>
 
 #include "jslibmath.h"
+#include "jsmath.h"
+
 #include "gc/Allocator.h"
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/IonCacheIRCompiler.h"
@@ -28,7 +30,6 @@
 #include "vm/GeneratorObject.h"
 
 #include "builtin/Boolean-inl.h"
-
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
 #include "jit/VMFunctionList-inl.h"
@@ -3735,6 +3736,35 @@ bool CacheIRCompiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   allocator.ensureDoubleRegister(masm, inputId, scratch);
 
   masm.sqrtDouble(scratch, scratch);
+  masm.boxDouble(scratch, output.valueReg(), scratch);
+  return true;
+}
+
+bool CacheIRCompiler::emitMathFunctionNumberResult(NumberOperandId inputId,
+                                                   UnaryMathFunction fun) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchFloatRegister scratch(this);
+
+  Register outputScratch = output.valueReg().scratchReg();
+
+  UnaryMathFunctionType funPtr = GetUnaryMathFunctionPtr(fun);
+
+  allocator.ensureDoubleRegister(masm, inputId, scratch);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(outputScratch);
+  masm.passABIArg(scratch, MoveOp::DOUBLE);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, funPtr), MoveOp::DOUBLE);
+  masm.storeCallFloatResult(scratch);
+
+  LiveRegisterSet ignore;
+  ignore.add(scratch);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
   masm.boxDouble(scratch, output.valueReg(), scratch);
   return true;
 }
