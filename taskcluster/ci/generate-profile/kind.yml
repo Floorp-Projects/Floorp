@@ -82,7 +82,7 @@ jobs:
                 - linux64-clang
                 - linux64-minidump-stackwalk
 
-    android-api-16/pgo:
+    android-api-16-shippable/opt:
         description: "Android 4.0 api-16+ Profile Generation"
         shipping-phase: build
         shipping-product: fennec
