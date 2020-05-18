@@ -13,14 +13,14 @@
 #include "jit/MIRBuilderShared.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
-#include "jit/WarpBuilderShared.h"
 #include "jit/WarpSnapshot.h"
 
 using namespace js;
 using namespace js::jit;
 
 // The CacheIR transpiler generates MIR from Baseline CacheIR.
-class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
+class MOZ_RAII WarpCacheIRTranspiler {
+  TempAllocator& alloc_;
   BytecodeLocation loc_;
   const CacheIRStubInfo* stubInfo_;
   const uint8_t* stubData_;
@@ -28,7 +28,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   // Vector mapping OperandId to corresponding MDefinition.
   MDefinitionStackVector operands_;
 
-  CallInfo* callInfo_;
+  MBasicBlock* current_;
+
+  const CallInfo* callInfo_;
 
 #ifdef DEBUG
   // Used to assert that there is only one effectful instruction
@@ -37,30 +39,29 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   bool pushedResult_ = false;
 #endif
 
+  TempAllocator& alloc() { return alloc_; }
+
   inline void add(MInstruction* ins) {
     MOZ_ASSERT(!ins->isEffectful());
-    current->add(ins);
+    current_->add(ins);
   }
 
   inline void addEffectful(MInstruction* ins) {
     MOZ_ASSERT(ins->isEffectful());
     MOZ_ASSERT(!effectful_, "Can only have one effectful instruction");
-    current->add(ins);
+    current_->add(ins);
 #ifdef DEBUG
     effectful_ = ins;
 #endif
   }
 
-  MOZ_MUST_USE bool resumeAfter(MInstruction* ins) {
-    MOZ_ASSERT(effectful_ == ins);
-    return WarpBuilderShared::resumeAfter(ins, loc_);
-  }
+  MOZ_MUST_USE bool resumeAfter(MInstruction* ins);
 
   // CacheIR instructions writing to the IC's result register (the *Result
   // instructions) must call this to push the result onto the virtual stack.
   void pushResult(MDefinition* result) {
     MOZ_ASSERT(!pushedResult_, "Can't have more than one result");
-    current->push(result);
+    current_->push(result);
 #ifdef DEBUG
     pushedResult_ = true;
 #endif
@@ -111,12 +112,13 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
  public:
   WarpCacheIRTranspiler(MIRGenerator& mirGen, BytecodeLocation loc,
-                        MBasicBlock* current, CallInfo* callInfo,
+                        MBasicBlock* current, const CallInfo* callInfo,
                         const WarpCacheIR* snapshot)
-      : WarpBuilderShared(mirGen, current),
+      : alloc_(mirGen.alloc()),
         loc_(loc),
         stubInfo_(snapshot->stubInfo()),
         stubData_(snapshot->stubData()),
+        current_(current),
         callInfo_(callInfo) {}
 
   MOZ_MUST_USE bool transpile(const MDefinitionStackVector& inputs);
@@ -148,6 +150,20 @@ bool WarpCacheIRTranspiler::transpile(const MDefinitionStackVector& inputs) {
 
   // Effectful instructions should have a resume point.
   MOZ_ASSERT_IF(effectful_, effectful_->resumePoint());
+  return true;
+}
+
+bool WarpCacheIRTranspiler::resumeAfter(MInstruction* ins) {
+  MOZ_ASSERT(ins->isEffectful());
+  MOZ_ASSERT(effectful_ == ins);
+
+  MResumePoint* resumePoint = MResumePoint::New(
+      alloc(), ins->block(), loc_.toRawBytecode(), MResumePoint::ResumeAfter);
+  if (!resumePoint) {
+    return false;
+  }
+
+  ins->setResumePoint(resumePoint);
   return true;
 }
 
@@ -980,68 +996,6 @@ bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
   return defineOperand(resultId, callInfo_->fun());
 }
 
-bool WarpCacheIRTranspiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
-                                                        Int32OperandId argcId,
-                                                        uint8_t slotIndex) {
-#ifdef DEBUG
-  MDefinition* argc = getOperand(argcId);
-  MOZ_ASSERT(argc->toConstant()->toInt32() ==
-             static_cast<int32_t>(callInfo_->argc()));
-#endif
-
-  slotIndex += callInfo_->argc();
-  return emitLoadArgumentFixedSlot(resultId, slotIndex);
-}
-
-bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
-                                                   Int32OperandId argcId,
-                                                   CallFlags flags,
-                                                   bool ignoresReturnValue) {
-  MDefinition* callee = getOperand(calleeId);
-#ifdef DEBUG
-  MDefinition* argc = getOperand(argcId);
-  MOZ_ASSERT(argc->toConstant()->toInt32() ==
-             static_cast<int32_t>(callInfo_->argc()));
-#endif
-
-  // CacheIR emits the following for specialized native calls:
-  //     GuardSpecificObject <callee> <func>
-  //     CallNativeFunction <callee> ..
-  // We can use the <func> JSFunction object to specialize this call.
-  // GuardSpecificObject is transpiled to MGuardObjectIdentity above.
-  JSFunction* target = nullptr;
-  if (callee->isGuardObjectIdentity()) {
-    auto* guard = callee->toGuardObjectIdentity();
-    target = &guard->expected()->toConstant()->toObject().as<JSFunction>();
-    MOZ_ASSERT(target->isNative());
-  }
-
-  // We know we are constructing a native function even if we don't know the
-  // actual target.
-  bool needsThisCheck = false;
-  if (callInfo_->constructing()) {
-    MOZ_ASSERT(flags.isConstructing());
-
-    callInfo_->thisArg()->setImplicitlyUsedUnchecked();
-    // Magic value passed to natives to indicate construction.
-    callInfo_->setThis(constant(MagicValue(JS_IS_CONSTRUCTING)));
-  }
-
-  MCall* call = makeCall(*callInfo_, needsThisCheck, target);
-  if (!call) {
-    return false;
-  }
-
-  if (flags.isSameRealm()) {
-    call->setNotCrossRealm();
-  }
-
-  addEffectful(call);
-  pushResult(call);
-
-  return resumeAfter(call);
-}
-
 bool WarpCacheIRTranspiler::emitTypeMonitorResult() {
   MOZ_ASSERT(pushedResult_, "Didn't push result MDefinition");
   return true;
@@ -1060,7 +1014,7 @@ bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, BytecodeLocation loc,
 bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, BytecodeLocation loc,
                                 MBasicBlock* current,
                                 const WarpCacheIR* snapshot,
-                                CallInfo& callInfo) {
+                                const CallInfo& callInfo) {
   WarpCacheIRTranspiler transpiler(mirGen, loc, current, &callInfo, snapshot);
 
   // Synthesize the constant number of arguments for this call op.
