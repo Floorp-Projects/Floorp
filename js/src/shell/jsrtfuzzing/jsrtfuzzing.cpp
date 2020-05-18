@@ -115,13 +115,23 @@ int js::shell::FuzzJSRuntimeFuzz(const uint8_t* buf, size_t size) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   if (!srcBuf.init(gCx, data, mozilla::ArrayLength(data) - 1,
                    JS::SourceOwnership::Borrowed)) {
-    return 0;
+    return 1;
   }
 
-  JS::Evaluate(gCx, opts.setFileAndLine(__FILE__, __LINE__), srcBuf, &v);
+  if (!JS::Evaluate(gCx, opts.setFileAndLine(__FILE__, __LINE__), srcBuf, &v) &&
+      !JS_IsExceptionPending(gCx)) {
+    // A return value of `false` without a pending exception indicates
+    // a timeout as triggered by the `timeout` shell function.
+    return 1;
+  }
 
   // The fuzzing module is required to handle any exceptions
   CrashOnPendingException();
 
-  return 0;
+  int32_t ret = 0;
+  if (!ToInt32(gCx, v, &ret)) {
+    MOZ_CRASH("Must return an int32 compatible return value!");
+  }
+
+  return ret;
 }
