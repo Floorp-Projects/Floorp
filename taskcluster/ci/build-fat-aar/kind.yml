@@ -96,8 +96,8 @@ jobs:
             toolchain:
                 - linux64-sccache
 
-    android-geckoview-fat-aar-nightly/opt:
-        description: "Android GeckoView multi-architecture fat AAR Nightly"
+    android-geckoview-fat-aar-shippable/opt:
+        description: "Android GeckoView multi-architecture fat AAR Shippable"
         attributes:
             nightly: true
             enable-full-crashsymbols: true
@@ -111,10 +111,10 @@ jobs:
             platform: android-4-0-geckoview-fat-aar/opt
             symbol: Ngv
         dependencies:
-            android-x86-nightly: build-android-x86-nightly/opt
-            android-x86_64-nightly: build-android-x86_64-nightly/opt
-            android-api-16-nightly: build-android-api-16-nightly/opt
-            android-aarch64-nightly: build-android-aarch64-nightly/opt
+            android-x86-shippable: build-android-x86-shippable/opt
+            android-x86_64-shippable: build-android-x86_64-shippable/opt
+            android-api-16-shippable: build-android-api-16-shippable/opt
+            android-aarch64-shippable: build-android-aarch64-shippable/opt
         worker:
             env:
                 PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-nightly
