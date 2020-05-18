@@ -337,6 +337,7 @@ function transformPageErrorPacket(packet) {
     private: pageError.private,
     chromeContext: pageError.chromeContext,
     cssSelectors: pageError.cssSelectors,
+    isPromiseRejection: pageError.isPromiseRejection,
   });
 }
 

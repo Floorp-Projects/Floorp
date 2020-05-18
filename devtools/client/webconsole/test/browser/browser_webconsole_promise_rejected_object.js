@@ -7,49 +7,94 @@
 
 const TEST_URI = `data:text/html;charset=utf-8,
   <script>
-    new Promise((_, reject) => setTimeout(reject, 0, "potato"));
-    new Promise((_, reject) => setTimeout(reject, 0, ""));
-    new Promise((_, reject) => setTimeout(reject, 0, 0));
-    new Promise((_, reject) => setTimeout(reject, 0, false));
-    new Promise((_, reject) => setTimeout(reject, 0, null));
-    new Promise((_, reject) => setTimeout(reject, 0, undefined));
-    new Promise((_, reject) => setTimeout(reject, 0, {fav: "eggplant"}));
-    new Promise((_, reject) => setTimeout(reject, 0, ["cherry", "strawberry"]));
-    new Promise((_, reject) => setTimeout(reject, 0, new Error("spinach")));
+    function createRejectedPromise(reason) {
+      new Promise(function promiseCb(_, reject) {
+        setTimeout(function setTimeoutCb(){
+          reject(reason);
+        }, 0);
+      });
+    }
+
     var err = new Error("carrot");
     err.name = "VeggieError";
-    new Promise((_, reject) => setTimeout(reject, 0, err));
+
+    const reasons = [
+      "potato",
+      "",
+      0,
+      false,
+      null,
+      undefined,
+      {fav: "eggplant"},
+      ["cherry", "strawberry"],
+      new Error("spinach"),
+      err,
+    ];
+
+    reasons.forEach(function forEachCb(reason) {
+      createRejectedPromise(reason);
+    });
   </script>`;
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const expectedErrors = [
-    "Uncaught potato",
-    "Uncaught <empty string>",
-    "Uncaught 0",
-    "Uncaught false",
-    "Uncaught null",
-    "Uncaught undefined",
-    `Uncaught Object { fav: "eggplant" }`,
-    `Uncaught Array [ "cherry", "strawberry" ]`,
-    `Uncaught Error: spinach`,
-    `Uncaught VeggieError: carrot`,
+    "Uncaught (in promise) potato",
+    "Uncaught (in promise) <empty string>",
+    "Uncaught (in promise) 0",
+    "Uncaught (in promise) false",
+    "Uncaught (in promise) null",
+    "Uncaught (in promise) undefined",
+    `Uncaught (in promise) Object { fav: "eggplant" }`,
+    `Uncaught (in promise) Array [ "cherry", "strawberry" ]`,
+    `Uncaught (in promise) Error: spinach`,
+    `Uncaught (in promise) VeggieError: carrot`,
   ];
 
   for (const expectedError of expectedErrors) {
-    await waitFor(
+    const message = await waitFor(
       () => findMessage(hud, expectedError, ".error"),
       `Couldn't find «${expectedError}» message`
     );
-    ok(true, `Found «${expectedError}» message`);
+    ok(message, `Found «${expectedError}» message`);
+
+    message.querySelector(".collapse-button").click();
+    const framesEl = await waitFor(() => {
+      const frames = message.querySelectorAll(
+        ".message-body-wrapper > .stacktrace .frame"
+      );
+      return frames.length > 0 ? frames : null;
+    }, "Couldn't find stacktrace");
+
+    const frames = Array.from(framesEl)
+      .map(frameEl =>
+        Array.from(
+          frameEl.querySelectorAll(".title, .location-async-cause")
+        ).map(el => el.textContent.trim())
+      )
+      .flat();
+
+    is(
+      frames.join("\n"),
+      [
+        "setTimeoutCb",
+        "(Async: setTimeout handler)",
+        "promiseCb",
+        "createRejectedPromise",
+        "forEachCb",
+        "forEach",
+        "<anonymous>",
+      ].join("\n"),
+      "Error message has expected frames"
+    );
   }
   ok(true, "All expected messages were found");
 
   info("Check that object in errors can be expanded");
   const rejectedObjectMessage = findMessage(
     hud,
-    `Uncaught Object { fav: "eggplant" }`,
+    `Uncaught (in promise) Object { fav: "eggplant" }`,
     ".error"
   );
   const oi = rejectedObjectMessage.querySelector(".tree");

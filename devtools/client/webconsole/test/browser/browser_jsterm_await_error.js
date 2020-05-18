@@ -22,19 +22,19 @@ add_task(async function() {
   info("Check that awaiting for a rejecting promise displays an error");
   let res = await executeAndWaitForErrorMessage(
     `await new Promise((resolve,reject) => setTimeout(() => reject("await-rej"), 250))`,
-    "Uncaught await-rej"
+    "Uncaught (in promise) await-rej"
   );
   ok(res.node, "awaiting for a rejecting promise displays an error message");
 
   res = await executeAndWaitForErrorMessage(
     `await Promise.reject("await-rej-2")`,
-    `Uncaught await-rej-2`
+    `Uncaught (in promise) await-rej-2`
   );
   ok(res.node, "awaiting for Promise.reject displays an error");
 
   res = await executeAndWaitForErrorMessage(
     `await Promise.reject("")`,
-    `Uncaught <empty string>`
+    `Uncaught (in promise) <empty string>`
   );
   ok(
     res.node,
@@ -43,7 +43,7 @@ add_task(async function() {
 
   res = await executeAndWaitForErrorMessage(
     `await Promise.reject(null)`,
-    `Uncaught null`
+    `Uncaught (in promise) null`
   );
   ok(
     res.node,
@@ -52,7 +52,7 @@ add_task(async function() {
 
   res = await executeAndWaitForErrorMessage(
     `await Promise.reject(undefined)`,
-    `Uncaught undefined`
+    `Uncaught (in promise) undefined`
   );
   ok(
     res.node,
@@ -61,7 +61,7 @@ add_task(async function() {
 
   res = await executeAndWaitForErrorMessage(
     `await Promise.reject(false)`,
-    `Uncaught false`
+    `Uncaught (in promise) false`
   );
   ok(
     res.node,
@@ -70,7 +70,7 @@ add_task(async function() {
 
   res = await executeAndWaitForErrorMessage(
     `await Promise.reject(0)`,
-    `Uncaught 0`
+    `Uncaught (in promise) 0`
   );
   ok(
     res.node,
@@ -79,7 +79,7 @@ add_task(async function() {
 
   res = await executeAndWaitForErrorMessage(
     `await Promise.reject({foo: "bar"})`,
-    `Uncaught Object { foo: "bar" }`
+    `Uncaught (in promise) Object { foo: "bar" }`
   );
   ok(
     res.node,
@@ -88,7 +88,7 @@ add_task(async function() {
 
   res = await executeAndWaitForErrorMessage(
     `await Promise.reject(new Error("foo"))`,
-    `Uncaught Error: foo`
+    `Uncaught (in promise) Error: foo`
   );
   ok(
     res.node,
@@ -100,7 +100,7 @@ add_task(async function() {
      err.name = "CustomError";
      await Promise.reject(err);
      `,
-    `Uncaught CustomError: foo`
+    `Uncaught (in promise) CustomError: foo`
   );
   ok(
     res.node,
@@ -127,7 +127,7 @@ add_task(async function() {
 
   res = await executeAndWaitForErrorMessage(
     `await new Promise(res => { throw "instant throw"; })`,
-    `Uncaught instant throw`
+    `Uncaught (in promise) instant throw`
   );
   ok(
     res.node,

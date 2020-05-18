@@ -37,7 +37,8 @@ rawPackets.set(`Unknown property ‘such-unknown-property’.  Declaration dropp
     "stacktrace": null,
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "p"
+    "cssSelectors": "p",
+    "isPromiseRejection": false
   },
   "type": "pageError"
 });
@@ -61,7 +62,8 @@ rawPackets.set(`Error in parsing value for ‘padding-top’.  Declaration dropp
     "stacktrace": null,
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "p"
+    "cssSelectors": "p",
+    "isPromiseRejection": false
   },
   "type": "pageError"
 });
