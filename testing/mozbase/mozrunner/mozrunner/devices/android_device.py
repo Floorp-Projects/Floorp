@@ -10,6 +10,7 @@ import platform
 import re
 import shutil
 import signal
+import six
 import subprocess
 import sys
 import telnetlib
@@ -601,11 +602,21 @@ class AndroidEmulator(object):
                 else:
                     f.write(line)
 
+    def _telnet_read_until(self, telnet, expected, timeout):
+        if six.PY3 and isinstance(expected, six.text_type):
+            expected = expected.encode('ascii')
+        return telnet.read_until(expected, timeout)
+
+    def _telnet_write(self, telnet, command):
+        if six.PY3 and isinstance(command, six.text_type):
+            command = command.encode('ascii')
+        telnet.write(command)
+
     def _telnet_cmd(self, telnet, command):
-        _log_debug(">>> " + command)
-        telnet.write('%s\n' % command)
-        result = telnet.read_until('OK', 10)
-        _log_debug("<<< " + result)
+        _log_debug(">>> %s" % command)
+        self._telnet_write(telnet, '%s\n' % command)
+        result = self._telnet_read_until(telnet, 'OK', 10)
+        _log_debug("<<< %s" % result)
         return result
 
     def _verify_emulator(self):
@@ -615,11 +626,11 @@ class AndroidEmulator(object):
             try:
                 tn = telnetlib.Telnet('localhost', 5554, 10)
                 if tn is not None:
-                    tn.read_until('OK', 10)
+                    self._telnet_read_until(tn, 'OK', 10)
                     self._telnet_cmd(tn, 'avd status')
                     self._telnet_cmd(tn, 'redir list')
                     self._telnet_cmd(tn, 'network status')
-                    tn.write('quit\n')
+                    self._telnet_write(tn, 'quit\n')
                     tn.read_all()
                     telnet_ok = True
                 else:
@@ -816,6 +827,8 @@ def _verify_kvm(substs):
     command = [emulator_path, '-accel-check']
     try:
         out = subprocess.check_output(command)
+        if six.PY3 and not isinstance(out, six.text_type):
+            out = out.decode('utf-8')
         if 'is installed and usable' in ''.join(out):
             return
     except Exception as e:
