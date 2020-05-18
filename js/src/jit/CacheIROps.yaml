@@ -668,6 +668,12 @@
   args:
     input: NumberId
 
+- name: MathSqrtNumberResult
+  shared: true
+  transpile: false
+  args:
+    input: NumberId
+
 - name: StoreTypedArrayElement
   shared: true
   transpile: true

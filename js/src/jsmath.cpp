@@ -63,7 +63,8 @@ static bool math_function(JSContext* cx, HandleValue val,
   }
 
   // NB: Always stored as a double so the math function can be inlined
-  // through MMathFunction.
+  // through MMathFunction. We also rely on this to avoid type monitoring
+  // in CallIRGenerator::tryAttachMathSqrt.
   double z = F(x);
   res.setDouble(z);
   return true;
