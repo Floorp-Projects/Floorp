@@ -495,18 +495,16 @@ this.BrowserIDManager.prototype = {
   async _fetchTokenUsingOAuth() {
     this._log.debug("Getting a token using OAuth");
     const fxa = this._fxaService;
-    const clientId = fxAccountsCommon.FX_OAUTH_CLIENT_ID;
     const scope = fxAccountsCommon.SCOPE_OLD_SYNC;
     const ttl = fxAccountsCommon.OAUTH_TOKEN_FOR_SYNC_LIFETIME_SECONDS;
-    const oauthToken = await fxa.getOAuthToken({ scope, ttl });
-    const scopedKeys = await fxa.keys.getScopedKeys(scope, clientId);
-    const key = scopedKeys[scope];
+    const { token, key } = await fxa.getAccessToken(scope, ttl);
     const headers = {
       "X-KeyId": key.kid,
     };
+
     return this._tokenServerClient.getTokenFromOAuthToken(
       this._tokenServerUrl,
-      oauthToken,
+      token,
       headers
     );
   },
