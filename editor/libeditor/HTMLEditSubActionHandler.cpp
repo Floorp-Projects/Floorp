@@ -196,6 +196,11 @@ template nsIContent* HTMLEditor::FindNearEditableContent(
     const EditorDOMPoint& aPoint, nsIEditor::EDirection aDirection);
 template nsIContent* HTMLEditor::FindNearEditableContent(
     const EditorRawDOMPoint& aPoint, nsIEditor::EDirection aDirection);
+template nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
+    const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint);
+template nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
+    const EditorDOMPointInText& aStartPoint,
+    const EditorDOMPointInText& aEndPoint);
 
 nsresult HTMLEditor::InitEditorContentAndSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -3564,6 +3569,100 @@ nsresult HTMLEditor::DeleteNodeIfInvisibleAndEditableTextNode(
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::DeleteNodeWithTransaction() failed");
   return rv;
+}
+
+template <typename EditorDOMPointType>
+nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
+    const EditorDOMPointType& aStartPoint,
+    const EditorDOMPointType& aEndPoint) {
+  if (NS_WARN_IF(!aStartPoint.IsSet()) || NS_WARN_IF(!aEndPoint.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // MOOSE: this routine needs to be modified to preserve the integrity of the
+  // wsFragment info.
+
+  if (aStartPoint == aEndPoint) {
+    // Nothing to delete
+    return NS_OK;
+  }
+
+  if (aStartPoint.GetContainer() == aEndPoint.GetContainer() &&
+      aStartPoint.IsInTextNode()) {
+    RefPtr<Text> textNode = aStartPoint.ContainerAsText();
+    nsresult rv =
+        DeleteTextWithTransaction(*textNode, aStartPoint.Offset(),
+                                  aEndPoint.Offset() - aStartPoint.Offset());
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::DeleteTextWithTransaction() failed");
+    return rv;
+  }
+
+  RefPtr<nsRange> range =
+      nsRange::Create(aStartPoint.ToRawRangeBoundary(),
+                      aEndPoint.ToRawRangeBoundary(), IgnoreErrors());
+  if (!range) {
+    NS_WARNING("nsRange::Create() failed");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Collect editable text nodes in the given range.
+  AutoTArray<OwningNonNull<Text>, 16> arrayOfTextNodes;
+  DOMIterator iter;
+  if (NS_FAILED(iter.Init(*range))) {
+    return NS_OK;  // Nothing to delete in the range.
+  }
+  iter.AppendNodesToArray(
+      +[](nsINode& aNode, void*) {
+        MOZ_ASSERT(aNode.IsText());
+        return HTMLEditUtils::IsSimplyEditableNode(aNode);
+      },
+      arrayOfTextNodes);
+  for (OwningNonNull<Text>& textNode : arrayOfTextNodes) {
+    if (textNode == aStartPoint.GetContainer()) {
+      if (aStartPoint.IsEndOfContainer()) {
+        continue;
+      }
+      nsresult rv = DeleteTextWithTransaction(
+          MOZ_KnownLive(textNode), aStartPoint.Offset(),
+          textNode->Length() - aStartPoint.Offset());
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_FAILED(rv)) {
+        NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+        return rv;
+      }
+      continue;
+    }
+
+    if (textNode == aEndPoint.GetContainer()) {
+      if (aEndPoint.IsStartOfContainer()) {
+        break;
+      }
+      nsresult rv = DeleteTextWithTransaction(MOZ_KnownLive(textNode), 0,
+                                              aEndPoint.Offset());
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_FAILED(rv)) {
+        NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+        return rv;
+      }
+      return NS_OK;
+    }
+
+    nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(textNode));
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      return rv;
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
