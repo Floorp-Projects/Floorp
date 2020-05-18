@@ -271,6 +271,7 @@ linux64-devedition/opt:
     use-pgo: linux64-shippable/opt
     attributes:
         nightly: true
+        shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
     shipping-product: devedition
@@ -649,6 +650,7 @@ linux-devedition/opt:
     use-pgo: linux-shippable/opt
     attributes:
         nightly: true
+        shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
     shipping-product: devedition
@@ -1042,6 +1044,7 @@ linux64-asan-reporter-shippable/opt:
     description: "Linux64 Opt ASAN Reporter (Shippable)"
     attributes:
         nightly: true
+        shippable: true
     shipping-product:
         by-release-type:
             nightly: firefox

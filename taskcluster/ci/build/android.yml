@@ -114,6 +114,7 @@ android-x86-shippable/opt:
     description: "Android 4.2 x86 Shippable"
     attributes:
         enable-full-crashsymbols: true
+        shippable: true
         nightly: true
         # Android nightlies don't run tests in gecko, but are needed for github projects
         skip-verify-test-packaging: true
@@ -191,6 +192,7 @@ android-api-16-shippable/opt:
     use-pgo: android-api-16/pgo
     attributes:
         enable-full-crashsymbols: true
+        shippable: true
         nightly: true
         # Android nightlies don't run tests in gecko, but are needed for github projects
         skip-verify-test-packaging: true
@@ -291,6 +293,7 @@ android-aarch64-shippable/opt:
     use-pgo: android-api-16/pgo
     attributes:
         enable-full-crashsymbols: true
+        shippable: true
         nightly: true
         # Android nightlies don't run tests in gecko, but are needed for github projects
         skip-verify-test-packaging: true
@@ -344,6 +347,7 @@ android-x86_64-shippable/opt:
     description: "Android 5.0 x86-64 Shippable"
     attributes:
         enable-full-crashsymbols: true
+        shippable: true
         nightly: true
         # Android nightlies don't run tests in gecko, but are needed for github projects
         skip-verify-test-packaging: true
