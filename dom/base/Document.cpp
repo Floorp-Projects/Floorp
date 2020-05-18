@@ -16204,7 +16204,7 @@ bool Document::HasStoragePermission() {
   // it is set in the parent process, so we need to check the cache
   // to see if the permission is granted afterwards.
   nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (ContentBlocking::HasStorageAccessGranted(inner)) {
+  if (inner && inner->HasStorageAccessGranted()) {
     return true;
   }
 
