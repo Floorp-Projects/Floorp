@@ -24,7 +24,7 @@ job-template:
     required_signoffs:
         - mar-signing
     run-on-projects: []
-    nightly: false
+    shippable: false
     attributes:
         retrigger: true
     worker-type: linux-depsigning

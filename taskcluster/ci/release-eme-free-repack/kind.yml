@@ -52,6 +52,7 @@ jobs:
             build_type: opt
             artifact_prefix: releng/partner
             nightly: true
+            shippable: true
 
     win32-shippable:
         treeherder:
@@ -64,6 +65,7 @@ jobs:
             build_type: opt
             artifact_prefix: releng/partner
             nightly: true
+            shippable: true
 
     win64-shippable:
         treeherder:
@@ -76,3 +78,4 @@ jobs:
             build_type: opt
             artifact_prefix: releng/partner
             nightly: true
+            shippable: true
