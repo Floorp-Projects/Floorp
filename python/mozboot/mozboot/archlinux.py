@@ -48,6 +48,7 @@ class ArchlinuxBootstrapper(
         'python2',
         'python2-setuptools',
         'python',  # This is Python 3 on Arch.
+        'python-pip',
         'unzip',
         'zip',
     ]
