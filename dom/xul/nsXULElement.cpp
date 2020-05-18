@@ -429,8 +429,8 @@ int32_t nsXULElement::ScreenY() {
 }
 
 bool nsXULElement::HasMenu() {
-  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame());
-  return menu != nullptr;
+  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
+  return !!menu;
 }
 
 void nsXULElement::OpenMenu(bool aOpenFlag) {
