@@ -723,6 +723,10 @@
             <label class="PanelUI-profiler-recording-label">Recording…</label>
             <spacer flex="1" />
           </hbox>
+          <description id="PanelUI-profiler-locked">
+            The profiler is currently disabled, most likely due to a Private Browsing
+            window being open.
+          </description>
           <hbox id="PanelUI-profiler-inactive" class="PanelUI-profiler-buttons">
             <spacer flex="1" />
             <vbox>
@@ -986,7 +990,7 @@
           </html:div>
         </toolbaritem>
       </vbox>
-      <toolbarbutton class="subviewbutton panel-subview-footer" 
+      <toolbarbutton class="subviewbutton panel-subview-footer"
                      onclick="ToolbarPanelHub.toggleWhatsNewPref(event)">
         <checkbox id="panelMenu-toggleWhatsNew"
                   class="panelMenu-toggleWhatsNew-checkbox"

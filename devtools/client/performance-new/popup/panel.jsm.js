@@ -62,6 +62,7 @@ function selectElementsInPanelview(panelview) {
     window: /** @type {ChromeWindow} */ (document.defaultView),
     inactive: getElementById("PanelUI-profiler-inactive"),
     active: getElementById("PanelUI-profiler-active"),
+    locked: getElementById("PanelUI-profiler-locked"),
     presetDescription: getElementById("PanelUI-profiler-content-description"),
     presetCustom: getElementById("PanelUI-profiler-content-custom"),
     presetsCustomButton: getElementById(
@@ -133,25 +134,48 @@ function createViewControllers(state, elements) {
       PanelMultiView.forNode(elements.panelview).descriptionHeightWorkaround();
     },
 
-    updateProfilerActive() {
+    updateProfilerState() {
       const { Services } = lazy.Services();
-      const isProfilerActive = Services.profiler.IsActive();
-      elements.inactive.setAttribute(
-        "hidden",
-        isProfilerActive ? "true" : "false"
-      );
-      elements.active.setAttribute(
-        "hidden",
-        isProfilerActive ? "false" : "true"
-      );
-      elements.settingsSection.setAttribute(
-        "hidden",
-        isProfilerActive ? "true" : "false"
-      );
-      elements.contentRecording.setAttribute(
-        "hidden",
-        isProfilerActive ? "false" : "true"
-      );
+      /**
+       * Convert two boolean values into a "profilerState" enum.
+       *
+       * @type {"active" | "inactive" | "locked"}
+       */
+      let profilerState = Services.profiler.IsActive() ? "active" : "inactive";
+      if (!Services.profiler.CanProfile()) {
+        // In private browsing mode, the profiler is locked.
+        profilerState = "locked";
+      }
+
+      switch (profilerState) {
+        case "active":
+          elements.inactive.setAttribute("hidden", "true");
+          elements.active.setAttribute("hidden", "false");
+          elements.settingsSection.setAttribute("hidden", "true");
+          elements.contentRecording.setAttribute("hidden", "false");
+          elements.locked.setAttribute("hidden", "true");
+          break;
+        case "inactive":
+          elements.inactive.setAttribute("hidden", "false");
+          elements.active.setAttribute("hidden", "true");
+          elements.settingsSection.setAttribute("hidden", "false");
+          elements.contentRecording.setAttribute("hidden", "true");
+          elements.locked.setAttribute("hidden", "true");
+          break;
+        case "locked": {
+          elements.inactive.setAttribute("hidden", "true");
+          elements.active.setAttribute("hidden", "true");
+          elements.settingsSection.setAttribute("hidden", "true");
+          elements.contentRecording.setAttribute("hidden", "true");
+          elements.locked.setAttribute("hidden", "false");
+          // This works around XULElement height issues.
+          const { height } = elements.locked.getBoundingClientRect();
+          elements.locked.style.height = `${height}px`;
+          break;
+        }
+        default:
+          throw new Error("Unhandled profiler state.");
+      }
     },
 
     createPresetsList() {
@@ -217,7 +241,7 @@ function initializePopup(state, elements, view) {
     // the size of the container. It needs to wait a second before the bounding box
     // returns an actual size.
     view.updateInfoCollapse();
-    view.updateProfilerActive();
+    view.updateProfilerState();
     view.updatePresets();
 
     // XUL <description> elements don't vertically size correctly, this is
@@ -319,12 +343,20 @@ function addPopupEventHandlers(state, elements, view) {
 
   // Update the view when the profiler starts/stops.
   const { Services } = lazy.Services();
-  Services.obs.addObserver(view.updateProfilerActive, "profiler-started");
-  Services.obs.addObserver(view.updateProfilerActive, "profiler-stopped");
-  state.cleanup.push(() => {
-    Services.obs.removeObserver(view.updateProfilerActive, "profiler-started");
-    Services.obs.removeObserver(view.updateProfilerActive, "profiler-stopped");
-  });
+
+  // These are all events that can affect the current state of the profiler.
+  const events = [
+    "profiler-started",
+    "profiler-stopped",
+    "chrome-document-global-created", // This is potentially a private browser.
+    "last-pb-context-exited",
+  ];
+  for (const event of events) {
+    Services.obs.addObserver(view.updateProfilerState, event);
+    state.cleanup.push(() => {
+      Services.obs.removeObserver(view.updateProfilerState, event);
+    });
+  }
 }
 
 // Provide an exports object for the JSM to be properly read by TypeScript.
