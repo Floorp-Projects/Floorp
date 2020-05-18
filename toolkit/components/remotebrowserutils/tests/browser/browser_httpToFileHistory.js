@@ -16,9 +16,7 @@ function reversed(list) {
 }
 
 function butLast(list) {
-  let copy = list.slice();
-  copy.pop();
-  return copy;
+  return list.slice(0, -1);
 }
 
 async function runTest() {
@@ -27,7 +25,10 @@ async function runTest() {
     let count = 0;
     let index = -1;
     for (let { url } of HISTORY) {
-      BrowserTestUtils.loadURI(aBrowser, url);
+      SpecialPowers.spawn(aBrowser, [url], url => {
+        content.location.href = url;
+      });
+
       await BrowserTestUtils.browserLoaded(aBrowser, false, loaded => {
         return (
           Services.io.newURI(loaded).scheme == Services.io.newURI(url).scheme
@@ -118,20 +119,4 @@ async function runTest() {
   });
 }
 
-if (!SpecialPowers.useRemoteSubframes) {
-  add_task(async function prefNotSet() {
-    await SpecialPowers.pushPrefEnv({
-      set: [[DOCUMENT_CHANNEL_PREF, false]],
-    });
-    await runTest();
-    await SpecialPowers.popPrefEnv();
-  });
-}
-
-add_task(async function prefEnabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[DOCUMENT_CHANNEL_PREF, true]],
-  });
-  await runTest();
-  await SpecialPowers.popPrefEnv();
-});
+add_task(runTest);
