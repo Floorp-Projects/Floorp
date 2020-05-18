@@ -71,6 +71,7 @@ function PageError(props) {
     messageBody.push(
       "Uncaught ",
       GripMessageBody({
+        key: "body",
         dispatch,
         messageId,
         grip: parameters[0],
@@ -84,6 +85,7 @@ function PageError(props) {
   } else {
     messageBody.push(
       REPS.StringRep.rep({
+        key: "bodytext",
         object: messageText,
         mode: MODE.LONG,
         ...repsProps,

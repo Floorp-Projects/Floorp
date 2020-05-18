@@ -3177,7 +3177,7 @@ function ErrorRep(props) {
   return span({
     "data-link-actor-id": object.actor,
     className: `objectBox-stackTrace ${customFormat ? "reps-custom-format" : ""}`
-  }, content);
+  }, ...content);
 }
 /**
  * Returns a React element reprensenting the Error stacktrace, i.e.
