@@ -26,6 +26,11 @@ ChromeUtils.defineModuleGetter(
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "XPCOMUtils",
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 var webrtcUI = {
   initialized: false,
@@ -37,6 +42,13 @@ var webrtcUI = {
     if (!this.initialized) {
       Services.obs.addObserver(this, "browser-delayed-startup-finished");
       this.initialized = true;
+
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "useLegacyGlobalIndicator",
+        "privacy.webrtc.legacyGlobalIndicator",
+        true
+      );
     }
   },
 
@@ -539,7 +551,7 @@ var webrtcUI = {
 };
 
 function getGlobalIndicator() {
-  if (AppConstants.platform != "macosx") {
+  if (!webrtcUI.useLegacyGlobalIndicator) {
     const INDICATOR_CHROME_URI =
       "chrome://browser/content/webrtcIndicator.xhtml";
     const features = "chrome,dialog=yes,titlebar=no,popup=yes";
@@ -547,6 +559,20 @@ function getGlobalIndicator() {
     return Services.ww.openWindow(
       null,
       INDICATOR_CHROME_URI,
+      "_blank",
+      features,
+      []
+    );
+  }
+
+  if (AppConstants.platform != "macosx") {
+    const LEGACY_INDICATOR_CHROME_URI =
+      "chrome://browser/content/webrtcLegacyIndicator.xhtml";
+    const features = "chrome,dialog=yes,titlebar=no,popup=yes";
+
+    return Services.ww.openWindow(
+      null,
+      LEGACY_INDICATOR_CHROME_URI,
       "_blank",
       features,
       []
