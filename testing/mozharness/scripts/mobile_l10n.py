@@ -87,10 +87,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         c = self.config
         repack_env = self.query_env(partial_env=c.get("repack_env"))
         if self.query_is_nightly():
-            # Nightly promotion needs to set update_channel but not do all
-            # the 'IS_NIGHTLY' automation parts, like uploading symbols
-            # (for now).
-            repack_env["IS_NIGHTLY"] = "yes"
             # we might set update_channel explicitly
             if c.get('update_channel'):
                 update_channel = c['update_channel']

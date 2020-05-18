@@ -112,7 +112,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
 
         bootstrap_env['L10NBASEDIR'] = abs_dirs['abs_l10n_dir']
         if self.query_is_nightly():
-            bootstrap_env["IS_NIGHTLY"] = "yes"
             # we might set update_channel explicitly
             if config.get('update_channel'):
                 update_channel = config['update_channel']
