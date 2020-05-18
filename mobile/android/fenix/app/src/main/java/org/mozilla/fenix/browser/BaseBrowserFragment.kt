@@ -179,8 +179,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             engineView = WeakReference(engineView),
             swipeRefresh = WeakReference(swipeRefresh),
             viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
-            arguments = requireArguments(),
-            firstContentfulHappened = ::didFirstContentfulHappen
+            arguments = requireArguments()
         ).apply {
             beginAnimateInIfNecessary()
         }
@@ -861,15 +860,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         if (!FeatureFlags.dynamicBottomToolbar) {
             updateLayoutMargins(inFullScreen)
         }
-    }
-
-    private fun didFirstContentfulHappen(): Boolean {
-        val store = context?.components?.core?.store
-        val tabState = store?.state?.tabs?.find {
-            it.id == (customTabSessionId
-                ?: context?.components?.core?.sessionManager?.selectedSession?.id)
-        }
-        return tabState?.content?.firstContentfulPaint == true
     }
 
     /*
