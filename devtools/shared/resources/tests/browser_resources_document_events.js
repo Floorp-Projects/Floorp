@@ -31,10 +31,9 @@ add_task(async function() {
   const onLoadingAtInit = listener.once("dom-loading");
   const onInteractiveAtInit = listener.once("dom-interactive");
   const onCompleteAtInit = listener.once("dom-complete");
-  await resourceWatcher.watch(
-    [ResourceWatcher.TYPES.DOCUMENT_EVENTS],
-    parameters => listener.dispatch(parameters)
-  );
+  await resourceWatcher.watch([ResourceWatcher.TYPES.DOCUMENT_EVENTS], {
+    onAvailable: parameters => listener.dispatch(parameters),
+  });
   await assertEvents(onLoadingAtInit, onInteractiveAtInit, onCompleteAtInit);
   ok(
     true,

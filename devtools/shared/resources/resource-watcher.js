@@ -56,14 +56,17 @@ class ResourceWatcher {
    *
    * @param {Array:string} resources
    *        List of all resources which should be fetched and observed.
-   * @param {Function} onAvailable
-   *        Function which will be called once per existing resource and
-   *        each time a resource is created
-   * @param {Function} onDestroyed
-   *        Function which will be called each time a resource in the remote
-   *        target is destroyed
+   * @param {Object} options
+   *        - {Function} onAvailable: This attribute is mandatory.
+   *                                  Function which will be called once per existing
+   *                                  resource and each time a resource is created.
+   *        - {Function} onDestroyed: This attribute is optional.
+   *                                  Function which will be called each time a resource in
+   *                                  the remote target is destroyed.
    */
-  async watch(resources, onAvailable, onDestroyed) {
+  async watch(resources, options) {
+    const { onAvailable, onDestroyed } = options;
+
     // First ensuring enabling listening to targets.
     // This will call onTargetAvailable for all already existing targets,
     // as well as for the one created later.
@@ -84,7 +87,9 @@ class ResourceWatcher {
    * Stop watching for given type of resources.
    * See `watch` for the arguments as both methods receive the same.
    */
-  unwatch(resources, onAvailable, onDestroyed) {
+  unwatch(resources, options) {
+    const { onAvailable, onDestroyed } = options;
+
     for (const resource of resources) {
       this._availableListeners.off(resource, onAvailable);
       if (onDestroyed) {

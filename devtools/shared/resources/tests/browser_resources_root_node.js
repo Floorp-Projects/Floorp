@@ -36,7 +36,9 @@ add_task(async function() {
   info("Call watch([ROOT_NODE], ...)");
   let onAvailableCounter = 0;
   const onAvailable = () => onAvailableCounter++;
-  await resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], onAvailable);
+  await resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], {
+    onAvailable,
+  });
 
   info("Wait until onAvailable has been called");
   await waitUntil(() => onAvailableCounter === 1);
@@ -51,7 +53,7 @@ add_task(async function() {
   is(onAvailableCounter, 2, "onAvailable has been called 2 times");
 
   info("Call unwatch([ROOT_NODE], ...) for the onAvailable callback");
-  resourceWatcher.unwatch([ResourceWatcher.TYPES.ROOT_NODE], onAvailable);
+  resourceWatcher.unwatch([ResourceWatcher.TYPES.ROOT_NODE], { onAvailable });
 
   info("Reload the selected browser");
   const reloaded = BrowserTestUtils.browserLoaded(browser);
@@ -84,7 +86,9 @@ add_task(async function testRootNodeFrontIsCorrect() {
   let rootNodeResolve;
   let rootNodePromise = new Promise(r => (rootNodeResolve = r));
   const onAvailable = rootNodeFront => rootNodeResolve(rootNodeFront);
-  await resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], onAvailable);
+  await resourceWatcher.watch([ResourceWatcher.TYPES.ROOT_NODE], {
+    onAvailable,
+  });
 
   info("Wait until onAvailable has been called");
   const { resource: root1, resourceType } = await rootNodePromise;
@@ -118,7 +122,7 @@ add_task(async function testRootNodeFrontIsCorrect() {
   is(div3.getAttribute("id"), "div3", "Correct root node retrieved");
 
   // Cleanup
-  resourceWatcher.unwatch([ResourceWatcher.TYPES.ROOT_NODE], onAvailable);
+  resourceWatcher.unwatch([ResourceWatcher.TYPES.ROOT_NODE], { onAvailable });
   targetList.stopListening();
   await client.close();
 });
