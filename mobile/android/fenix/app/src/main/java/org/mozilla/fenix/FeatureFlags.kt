@@ -48,4 +48,9 @@ object FeatureFlags {
      * Enables new tab tray pref
      */
     val tabTray = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables new voice search feature
+     */
+    val voiceSearch = Config.channel.isNightlyOrDebug
 }

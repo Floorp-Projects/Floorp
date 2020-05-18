@@ -43,6 +43,7 @@ import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -138,7 +139,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             BrowserToolbar.Button(
                 ContextCompat.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                 requireContext().getString(R.string.voice_search_content_description),
-                visible = { requireContext().settings().shouldShowVoiceSearch },
+                visible = { requireContext().settings().shouldShowVoiceSearch && FeatureFlags.voiceSearch },
                 listener = ::launchVoiceSearch
             )
         )
@@ -311,7 +312,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        if (requestCode == 0 && resultCode == RESULT_OK) {
+        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
             intent?.getStringArrayListExtra(EXTRA_RESULTS)?.first()?.also {
                 toolbarView.view.edit.updateUrl(url = it, shouldHighlight = true)
                 searchInteractor.onTextChanged(it)
