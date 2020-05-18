@@ -110,8 +110,8 @@ android-x86-fuzzing/debug:
         build-fuzzing:
             - android
 
-android-x86-nightly/opt:
-    description: "Android 4.2 x86 Nightly"
+android-x86-shippable/opt:
+    description: "Android 4.2 x86 Shippable"
     attributes:
         enable-full-crashsymbols: true
         nightly: true
@@ -186,8 +186,8 @@ android-api-16/pgo:
         toolchain:
             - linux64-clang
 
-android-api-16-nightly/opt:
-    description: "Android 4.0 api-16+ Nightly"
+android-api-16-shippable/opt:
+    description: "Android 4.0 api-16+ Shippable"
     use-pgo: android-api-16/pgo
     attributes:
         enable-full-crashsymbols: true
@@ -286,8 +286,8 @@ android-aarch64/debug:
             - linux64-clang
             - linux64-sccache
 
-android-aarch64-nightly/opt:
-    description: "Android 5.0 AArch64 Nightly"
+android-aarch64-shippable/opt:
+    description: "Android 5.0 AArch64 Shippable"
     use-pgo: android-api-16/pgo
     attributes:
         enable-full-crashsymbols: true
@@ -340,8 +340,8 @@ android-x86_64/opt:
             - linux64-clang
             - linux64-sccache
 
-android-x86_64-nightly/opt:
-    description: "Android 5.0 x86-64 Nightly"
+android-x86_64-shippable/opt:
+    description: "Android 5.0 x86-64 Shippable"
     attributes:
         enable-full-crashsymbols: true
         nightly: true

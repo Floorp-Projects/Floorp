@@ -16,11 +16,11 @@ _ARTIFACT_ID_PER_PLATFORM = {
     'android-x86_64-opt': 'geckoview-default-x86_64',
     'android-geckoview-fat-aar-opt': 'geckoview-default',
 
-    'android-aarch64-nightly': 'geckoview{update_channel}-arm64-v8a',
-    'android-api-16-nightly': 'geckoview{update_channel}-armeabi-v7a',
-    'android-x86-nightly': 'geckoview{update_channel}-x86',
-    'android-x86_64-nightly': 'geckoview{update_channel}-x86_64',
-    'android-geckoview-fat-aar-nightly': 'geckoview{update_channel}',
+    'android-aarch64-shippable': 'geckoview{update_channel}-arm64-v8a',
+    'android-api-16-shippable': 'geckoview{update_channel}-armeabi-v7a',
+    'android-x86-shippable': 'geckoview{update_channel}-x86',
+    'android-x86_64-shippable': 'geckoview{update_channel}-x86_64',
+    'android-geckoview-fat-aar-shippable': 'geckoview{update_channel}',
 }
 
 
