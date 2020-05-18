@@ -459,6 +459,12 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvSaveStorageAccessGranted() {
     inner->SaveStorageAccessGranted();
   }
 
+  nsCOMPtr<nsPIDOMWindowOuter> outer =
+      nsPIDOMWindowOuter::GetFromCurrentInner(inner);
+  if (outer) {
+    nsGlobalWindowOuter::Cast(outer)->SetHasStorageAccess(true);
+  }
+
   return IPC_OK();
 }
 
