@@ -4,7 +4,7 @@
  */
 
 /**
- * This test is an xpcshell test for clearStorageForPrincipal. It verifies that
+ * This test is an xpcshell test for clearStoragesForPrincipal. It verifies that
  * if the removing client is the last client in the targeting origin, then it
  * is expected to remove the origin directory as well.
  */
@@ -29,7 +29,7 @@ async function testSteps() {
   // - storage/default/http+++www.mozilla.org/idb/
   // - storage/default/http+++www.example.com/idb/
   // - storage/default/http+++www.example.com/cache/
-  installPackage("clearStorageForPrincipal_profile");
+  installPackage("clearStoragesForPrincipal_profile");
 
   let request;
   let file;
