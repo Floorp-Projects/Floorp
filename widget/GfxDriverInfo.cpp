@@ -515,6 +515,12 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0162);
       APPEND_DEVICE(0x0166);
       APPEND_DEVICE(0x016a);
+
+      // gen6 gt2
+      APPEND_DEVICE(0x0112);
+      APPEND_DEVICE(0x0116);
+      APPEND_DEVICE(0x0122);
+      APPEND_DEVICE(0x0126);
 #endif
       [[fallthrough]];
     case DeviceFamily::IntelModernRolloutWebRender:
