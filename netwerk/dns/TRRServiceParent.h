@@ -24,6 +24,7 @@ class TRRServiceParent : public nsIObserver,
 
   explicit TRRServiceParent() : mTRRBLStorageInited(false) {}
   void Init();
+  void UpdateParentalControlEnabled();
 
  private:
   virtual ~TRRServiceParent() = default;

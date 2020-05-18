@@ -58,5 +58,17 @@ mozilla::ipc::IPCResult TRRServiceChild::RecvInitTRRBLStorage(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult TRRServiceChild::RecvUpdateParentalControlEnabled(
+    const bool& aEnabled) {
+  gTRRService->mParentalControlEnabled = aEnabled;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult TRRServiceChild::RecvClearDNSCache(
+    const bool& aTrrToo) {
+  Unused << sDNSService->ClearCache(aTrrToo);
+  return IPC_OK();
+}
+
 }  // namespace net
 }  // namespace mozilla

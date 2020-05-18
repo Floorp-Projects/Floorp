@@ -359,11 +359,15 @@ ChildDNSService::GetDNSCacheEntries(
 }
 
 NS_IMETHODIMP
-ChildDNSService::ClearCache(bool aTrrToo) { return NS_ERROR_NOT_AVAILABLE; }
+ChildDNSService::ClearCache(bool aTrrToo) {
+  Unused << mTRRServiceParent->SendClearDNSCache(aTrrToo);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 ChildDNSService::ReloadParentalControlEnabled() {
-  return NS_ERROR_NOT_AVAILABLE;
+  mTRRServiceParent->UpdateParentalControlEnabled();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

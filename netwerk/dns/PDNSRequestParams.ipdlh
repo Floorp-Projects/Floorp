@@ -20,6 +20,8 @@ struct DNSRecord
 {
   nsCString canonicalName;
   NetAddr[] addrs;
+  double trrFetchDuration;
+  double trrFetchDurationNetworkOnly;
 };
 
 union DNSRequestResponse
