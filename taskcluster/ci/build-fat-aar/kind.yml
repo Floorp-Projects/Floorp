@@ -100,6 +100,7 @@ jobs:
         description: "Android GeckoView multi-architecture fat AAR Shippable"
         attributes:
             nightly: true
+            shippable: true
             enable-full-crashsymbols: true
             disable-push-apk: true
         shipping-phase: build
