@@ -2,121 +2,125 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-window {
-  border: 1px solid #ff9500;
+:root {
+  -moz-appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  --indicator-height: 60px;
+  --indicator-background-color: rgb(249,249,250);
+  --indicator-icon-fill: rgba(12,12,13,0.8);
+  --indicator-item-separator: 1px solid hsla(210,4%,10%,.14);
+  --indicator-stop-button-background-color: rgb(0,96,223);
+  --indicator-stop-button-hover-background-color: rgb(0,62,170);
+  --indicator-stop-button-color: rgb(255,255,255);
+  --minimize-background-color: rgb(215,215,219);
+  --control-icon-hover-background-color: rgb(215,215,219);
 }
 
-#audioVideoButton,
-#screenShareButton,
-#firefoxButton {
-  height: 29px;
+body {
+  display: inline-flex;
+  background-color: var(--indicator-background-color);
+  max-height: var(--indicator-height);
   margin: 0;
+  user-select: none;
+  -moz-window-dragging: drag;
+}
+
+button {
   -moz-appearance: none;
   border-style: none;
-}
-
-#audioVideoButton,
-#screenShareButton {
+  margin: 0;
   -moz-context-properties: fill;
-  fill: white;
-}
-
-#firefoxButton {
-  background-image: url("chrome://branding/content/icon48.png");
+  fill: var(--indicator-icon-fill);
   background-repeat: no-repeat;
-  background-size: 22px;
+  -moz-window-dragging: no-drag;
+}
+
+.row-item {
+  display: flex;
+  align-items: center;
+  min-width: 50px;
+  height: var(--indicator-height);
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+.row-item:not(:last-child) {
+  border-right: var(--indicator-item-separator);
+}
+
+/**
+ * For display sharing, if we happen to be sharing both
+ * a window and a screen, we want to show the UI for sharing
+ * the screen, since that's the more privacy-sensitive one.
+ */
+:root[sharingwindow]:not([sharingscreen]) > body > #display-share > #screen-share-info,
+:root[sharingwindow]:not([sharingscreen]) > body > #display-share > #stop-sharing-screen,
+:root[sharingwindow]:not([sharingbrowserwindow]) > body > #display-share > #browser-window-share-info,
+:root[sharingwindow][sharingbrowserwindow] > body > #display-share > #window-share-info,
+:root[sharingscreen] > body > #display-share > #window-share-info,
+:root[sharingscreen] > body > #display-share > #browser-window-share-info,
+:root[sharingscreen] > body > #display-share > #stop-sharing-window,
+/**
+ * If we're not sharing either the screen or the window, we can
+ * hide the entire display sharing section.
+ */
+:root:not(:-moz-any([sharingscreen],[sharingwindow])) > body > #display-share,
+:root:not([sharingvideo]) > body > #camera-button,
+:root:not([sharingaudio]) > body > #microphone-button {
+  display:none;
+}
+
+.control-icon {
   background-position: center center;
-  min-width: 29px;
-  background-color: white;
+  background-size: 16px;
 }
 
-#firefoxButton:hover {
-  background-color: #f2f2f2;
+.control-icon:hover {
+  background-color: var(--control-icon-hover-background-color);
 }
 
-#screenShareButton {
+#display-share-icon {
   background-image: url("chrome://browser/skin/notification-icons/screen.svg");
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: 16px;
-  min-width: 27px;
-  display: none;
+  width: 16px;
+  height: 16px;
+  margin-inline-start: 5px;
+  margin-inline-end: 15px;
 }
 
-window[sharingscreen] > #screenShareButton {
-  display: -moz-box;
-}
-
-#audioVideoButton {
-  display: none;
-  background-repeat: no-repeat;
-}
-
-/* When screen sharing, need to pull in the separator: */
-window[sharingscreen] > #audioVideoButton {
-  margin-right: -1px;
-}
-
-/* Single icon button: */
-window[sharingvideo] > #audioVideoButton,
-window[sharingaudio] > #audioVideoButton {
-  display: -moz-box;
-  background-position: center center;
-  background-size: 16px;
-  min-width: 26px;
-}
-
-window[sharingvideo] > #audioVideoButton {
+#camera-button {
   background-image: url("chrome://browser/skin/notification-icons/camera.svg");
 }
 
-window[sharingaudio] > #audioVideoButton {
+#microphone-button {
   background-image: url("chrome://browser/skin/notification-icons/microphone.svg");
 }
 
-/* Multi-icon button: */
-window[sharingaudio][sharingvideo] > #audioVideoButton {
-  background-image: url("chrome://browser/skin/notification-icons/camera.svg"),
-                    url("chrome://browser/skin/notification-icons/microphone.svg");
-  background-position: 6px center, 26px center;
-  background-size: 16px, 16px;
-  min-width: 46px;
+.stop-button {
+  background-color: var(--indicator-stop-button-background-color);
+  color: var(--indicator-stop-button-color);
+  border-radius: 5px;
+  padding: 10px;
+  margin-inline-start: 15px;
 }
 
-/* Hover styles */
-#audioVideoButton,
-#screenShareButton {
-  background-color: #ffaa33;
+.stop-button:hover {
+  background-color:  var(--indicator-stop-button-hover-background-color);
 }
 
-#audioVideoButton:hover,
-#screenShareButton:hover {
-  background-color: #ff9500;
+#window-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: self-end;
 }
 
-/* Don't show the dropmarker for the type="menu" case */
-#audioVideoButton > .box-inherit > .button-menu-dropmarker,
-#screenShareButton > .box-inherit > .button-menu-dropmarker {
-  display: none;
+#minimize {
+  padding: 10px;
+  min-width: unset;
+  background-image: url("chrome://browser/skin/notification-icons/minimize.svg");
 }
 
-/* Separator in case of screen sharing + video/audio sharing */
-#shareSeparator {
-  width: 1px;
-  margin: 4px -1px 4px 0;
-  background-color: #FFCA80;
-  /* Separator needs to show above either button when they're hovered: */
-  position: relative;
-  z-index: 1;
-  display: none;
-}
-
-window[sharingscreen][sharingvideo] > #shareSeparator,
-window[sharingscreen][sharingaudio] > #shareSeparator {
-  display: -moz-box;
-}
-
-:-moz-any(#audioVideoButton, #screenShareButton,
-          #firefoxButton):-moz-focusring {
+:-moz-any(#microphone-button, #camera-button, .stop-button):-moz-focusring {
   outline: none;
 }
