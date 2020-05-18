@@ -161,11 +161,13 @@ nsresult TRR::DohEncode(nsCString& aBody, bool aDisableECS) {
 
 NS_IMETHODIMP
 TRR::Run() {
-  MOZ_ASSERT_IF(gTRRService && StaticPrefs::network_trr_fetch_off_main_thread(),
+  MOZ_ASSERT_IF(gTRRService &&
+                    StaticPrefs::network_trr_fetch_off_main_thread() &&
+                    !XRE_IsSocketProcess(),
                 gTRRService->IsOnTRRThread());
-  MOZ_ASSERT_IF(
-      gTRRService && !StaticPrefs::network_trr_fetch_off_main_thread(),
-      NS_IsMainThread());
+  MOZ_ASSERT_IF(!StaticPrefs::network_trr_fetch_off_main_thread() ||
+                    XRE_IsSocketProcess(),
+                NS_IsMainThread());
 
   if ((gTRRService == nullptr) || NS_FAILED(SendHTTPRequest())) {
     FailData(NS_ERROR_FAILURE);
@@ -191,7 +193,7 @@ static void InitHttpHandler() {
 nsresult TRR::CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult) {
   *aResult = nullptr;
 
-  if (NS_IsMainThread()) {
+  if (NS_IsMainThread() && !XRE_IsSocketProcess()) {
     nsresult rv;
     nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1474,7 +1476,8 @@ class ProxyCancel : public Runnable {
 };
 
 void TRR::Cancel() {
-  if (StaticPrefs::network_trr_fetch_off_main_thread()) {
+  if (StaticPrefs::network_trr_fetch_off_main_thread() &&
+      !XRE_IsSocketProcess()) {
     if (gTRRService) {
       nsCOMPtr<nsIThread> thread = gTRRService->TRRThread();
       if (thread && !thread->IsOnCurrentThread()) {

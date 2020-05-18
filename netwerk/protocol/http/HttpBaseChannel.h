@@ -568,7 +568,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   // Redirect tracking
   // Checks whether or not aURI and mOriginalURI share the same domain.
-  bool SameOriginWithOriginalUri(nsIURI* aURI);
+  virtual bool SameOriginWithOriginalUri(nsIURI* aURI);
 
   // GetPrincipal Returns the channel's URI principal.
   nsIPrincipal* GetURIPrincipal();
