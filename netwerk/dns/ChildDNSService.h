@@ -19,6 +19,8 @@
 namespace mozilla {
 namespace net {
 
+class TRRServiceParent;
+
 class ChildDNSService final : public nsPIDNSService, public nsIObserver {
  public:
   // AsyncResolve (and CancelAsyncResolve) can be called off-main
@@ -58,6 +60,7 @@ class ChildDNSService final : public nsPIDNSService, public nsIObserver {
   nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<DNSRequestSender>>>
       mPendingRequests;
   Mutex mPendingRequestsLock;
+  RefPtr<TRRServiceParent> mTRRServiceParent;
 };
 
 }  // namespace net

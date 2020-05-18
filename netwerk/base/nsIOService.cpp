@@ -223,6 +223,9 @@ static const char* gCallbackPrefsForSocketProcess[] = {
     NETWORK_DNS_PREF,
     "network.ssl_tokens_cache_enabled",
     "network.send_ODA_to_content_directly",
+    "network.trr.",
+    "network.dns.disableIPv6",
+    "network.dns.skipTRR-when-parental-control-enabled",
     nullptr,
 };
 
@@ -385,10 +388,11 @@ nsresult nsIOService::InitializeNetworkLinkService() {
   }
 
   // go into managed mode if we can, and chrome process
-  if (XRE_IsParentProcess()) {
-    mNetworkLinkService =
-        do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID, &rv);
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
+
+  mNetworkLinkService = do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID, &rv);
 
   if (mNetworkLinkService) {
     mNetworkLinkServiceInitialized = true;

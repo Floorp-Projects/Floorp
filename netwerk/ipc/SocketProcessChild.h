@@ -106,6 +106,14 @@ class SocketProcessChild final
 
   mozilla::ipc::IPCResult RecvClearSessionCache();
 
+  already_AddRefed<PTRRServiceChild> AllocPTRRServiceChild(
+      const bool& aCaptiveIsPassed, const bool& aParentalControlEnabled,
+      const nsTArray<nsCString>& aDNSSuffixList);
+  mozilla::ipc::IPCResult RecvPTRRServiceConstructor(
+      PTRRServiceChild* aActor, const bool& aCaptiveIsPassed,
+      const bool& aParentalControlEnabled,
+      nsTArray<nsCString>&& aDNSSuffixList) override;
+
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();

@@ -22,6 +22,7 @@
 #include "mozilla/net/BackgroundDataBridgeParent.h"
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/DNSRequestParent.h"
+#include "mozilla/net/TRRServiceChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/Preferences.h"
@@ -408,6 +409,21 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvClearSessionCache() {
   if (EnsureNSSInitializedChromeOrContent()) {
     nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
   }
+  return IPC_OK();
+}
+
+already_AddRefed<PTRRServiceChild> SocketProcessChild::AllocPTRRServiceChild(
+    const bool& aCaptiveIsPassed, const bool& aParentalControlEnabled,
+    const nsTArray<nsCString>& aDNSSuffixList) {
+  RefPtr<TRRServiceChild> actor = new TRRServiceChild();
+  return actor.forget();
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvPTRRServiceConstructor(
+    PTRRServiceChild* aActor, const bool& aCaptiveIsPassed,
+    const bool& aParentalControlEnabled, nsTArray<nsCString>&& aDNSSuffixList) {
+  static_cast<TRRServiceChild*>(aActor)->Init(
+      aCaptiveIsPassed, aParentalControlEnabled, std::move(aDNSSuffixList));
   return IPC_OK();
 }
 

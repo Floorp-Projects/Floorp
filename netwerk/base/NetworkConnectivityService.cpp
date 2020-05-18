@@ -24,6 +24,10 @@ static StaticRefPtr<NetworkConnectivityService> gConnService;
 // static
 already_AddRefed<NetworkConnectivityService>
 NetworkConnectivityService::GetSingleton() {
+  if (!XRE_IsParentProcess()) {
+    return nullptr;
+  }
+
   if (gConnService) {
     return do_AddRef(gConnService);
   }

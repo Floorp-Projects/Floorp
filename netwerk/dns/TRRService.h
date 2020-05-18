@@ -19,6 +19,9 @@ class nsINetworkLinkService;
 namespace mozilla {
 namespace net {
 
+class TRRServiceChild;
+class TRRServiceParent;
+
 class TRRService : public nsIObserver,
                    public nsITimerCallback,
                    public nsSupportsWeakReference,
@@ -73,12 +76,19 @@ class TRRService : public nsIObserver,
 
  private:
   virtual ~TRRService();
+
+  friend class TRRServiceChild;
+  friend class TRRServiceParent;
+  static void AddObserver(nsIObserver* aObserver);
+  static bool CheckCaptivePortalIsPassed();
+  static bool GetParentalControlEnabledInternal();
+  static bool CheckPlatformDNSStatus(nsINetworkLinkService* aLinkService);
+
   nsresult ReadPrefs(const char* name);
   void GetPrefBranch(nsIPrefBranch** result);
   void MaybeConfirm();
   void MaybeConfirm_locked();
   friend class ::nsDNSService;
-  void GetParentalControlEnabledInternal();
   void SetDetectedTrrURI(const nsACString& aURI);
 
   bool IsDomainBlacklisted(const nsACString& aHost,
@@ -86,8 +96,7 @@ class TRRService : public nsIObserver,
                            bool aPrivateBrowsing);
   bool IsExcludedFromTRR_unlocked(const nsACString& aHost);
 
-  void RebuildSuffixList(nsINetworkLinkService* aLinkService);
-  void CheckPlatformDNSStatus(nsINetworkLinkService* aLinkService);
+  void RebuildSuffixList(nsTArray<nsCString>&& aSuffixList);
 
   nsresult DispatchTRRRequestInternal(TRR* aTrrRequest, bool aWithLock);
   already_AddRefed<nsIThread> TRRThread_locked();
