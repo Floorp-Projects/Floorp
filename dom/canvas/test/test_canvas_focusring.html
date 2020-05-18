@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <title>Canvas Tests</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <body>
 <script>
@@ -25,11 +26,12 @@ function isEmptyCanvas(ctx, w, h) {
   return true;
 }
 
+var b1 = document.getElementById('button3');
+var b2 = document.getElementById('button4');
+
 function test_drawFocusIfNeeded_canvas() {
   var c = document.getElementById("c689");
   var ctx = c.getContext("2d");
-  var b1 = document.getElementById('button3');
-  var b2 = document.getElementById('button4');
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.beginPath();
   ctx.rect(10, 10, 30, 30);
@@ -56,13 +58,16 @@ function test_drawFocusIfNeeded_canvas() {
 
 <script>
 
-function runTests() {
- try {
-  test_drawFocusIfNeeded_canvas();
- } catch(e) {
-  ok(false, "unexpected exception thrown in: test_drawFocusIfNeeded_canvas");
-  throw e;
- }
+async function runTests() {
+  await SimpleTest.promiseFocus();
+  synthesizeKey("KEY_Tab"); // Trigger keyboard navigation so outlines are shown.
+  synthesizeKey("KEY_Tab", { shiftKey: true }); // And now undo the focus move.
+  try {
+    test_drawFocusIfNeeded_canvas();
+  } catch(e) {
+    ok(false, "unexpected exception thrown in: test_drawFocusIfNeeded_canvas");
+    throw e;
+  }
 
  SpecialPowers.setBoolPref("canvas.focusring.enabled", false);
  SimpleTest.finish();

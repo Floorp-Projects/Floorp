@@ -1136,12 +1136,13 @@ static bool ShouldMatchFocusVisible(const Element& aElement,
   return false;
 }
 
-// On Windows, focus rings are only shown when the FLAG_SHOWRING flag is used.
+// On Windows and Linux, focus rings are only shown when the FLAG_SHOWRING flag
+// is used.
 static bool ShouldShowFocusRingForElement(Element& aElement, int32_t aFlags) {
   if (aFlags & nsIFocusManager::FLAG_SHOWRING) {
     return true;
   }
-#ifndef XP_WIN
+#if defined(XP_MACOS) || defined(ANDROID)
   if (aFlags & nsIFocusManager::FLAG_BYMOUSE) {
     return !nsContentUtils::ContentIsLink(&aElement) &&
            !aElement.IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio);

@@ -159,7 +159,7 @@ fuzzy-if(skiaContent,0-1,0-150) == clip-multiple-move-2.html clip-multiple-move-
 == stroketext-shadow.html stroketext-shadow-ref.html
 
 # focus rings
-pref(canvas.focusring.enabled,true) skip-if(cocoaWidget) skip-if(winWidget) fuzzy-if(skiaContent&&!cocoaWidget&&!winWidget,0-1,0-2) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded-ref.html
+pref(canvas.focusring.enabled,true) fuzzy-if(skiaContent,0-1,0-2) skip-if(cocoaWidget||winWidget||gtkWidget) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded-ref.html
 
 # Check that captureStream() displays in a local video element
 == capturestream.html wrapper.html?green.png
