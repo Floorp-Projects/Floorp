@@ -15,7 +15,6 @@ WORKER_TYPES = {
     'gce/gecko-3-b-linux': ('docker-worker', 'linux'),
     'invalid/invalid': ('invalid', None),
     'invalid/always-optimized': ('always-optimized', None),
-    'scriptworker-prov-v1/pushapk-v1': ('push-apk', None),
     "scriptworker-prov-v1/signing-linux-v1": ('scriptworker-signing', None),
     "scriptworker-k8s/gecko-3-shipit": ('shipit', None),
     "scriptworker-k8s/gecko-1-shipit": ('shipit', None),

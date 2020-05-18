@@ -158,29 +158,6 @@ BALROG_SERVER_SCOPES = {
 }
 
 
-PUSH_APK_SCOPE_ALIAS_TO_PROJECT = [[
-    'central', set([
-        'mozilla-central',
-    ])
-], [
-    'beta', set([
-        'mozilla-beta',
-    ])
-], [
-    'release', set([
-        'mozilla-release',
-    ])
-]]
-
-
-PUSH_APK_SCOPES = {
-    'central': 'googleplay:aurora',
-    'beta': 'googleplay:beta',
-    'release': 'googleplay:release',
-    'default': 'googleplay:dep',
-}
-
-
 """ The list of the release promotion phases which we send notifications for
 """
 RELEASE_NOTIFICATION_PHASES = ('promote', 'push', 'ship')
@@ -315,12 +292,6 @@ get_balrog_server_scope = functools.partial(
     get_scope_from_project,
     alias_to_project_map=BALROG_SCOPE_ALIAS_TO_PROJECT,
     alias_to_scope_map=BALROG_SERVER_SCOPES,
-)
-
-get_push_apk_scope = functools.partial(
-    get_scope_from_project,
-    alias_to_project_map=PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
-    alias_to_scope_map=PUSH_APK_SCOPES,
 )
 
 cached_load_yaml = memoize(load_yaml)

@@ -4,8 +4,6 @@
 ---
 s3_bucket_paths:
     by-platform:
-        fennec-release:
-            - pub/mobile/candidates
         devedition-release:
             - pub/devedition/candidates
         firefox-release:

@@ -417,7 +417,7 @@ mapping:
                     - latest-${branch}-l10n
     target.complete.mar:
         <<: *default
-        description: "The main installer we ship our mobile products baked within"
+        description: "The main installer we ship our products baked within"
         all_locales: true
         from:
             - mar-signing

@@ -98,7 +98,7 @@ Release Promotion Flavors
 -------------------------
 
 For the most part, release promotion flavors match the pattern ``phase_product``,
-e.g. ``promote_fennec``, ``push_devedition``, or ``ship_firefox``.
+e.g. ``promote_firefox``, ``push_devedition``, or ``ship_firefox``.
 
 We've added ``_rc`` suffix flavors, to deal with special RC behavior around rolling out updates using a different rate or channel.
 
@@ -146,15 +146,15 @@ Testing and developing the release promotion action
 
 To test the release promotion, action, we can use ``./mach taskgraph test-action-callback`` to debug.
 
-The full command for a ``promote_fennec`` test might look like::
+The full command for a ``promote_firefox`` test might look like::
 
     ./mach taskgraph test-action-callback \
         --task-group-id LR-xH1ViTTi2jrI-N1Mf2A \
-        --input /src/gecko/params/promote_fennec.yml \
-        -p /src/gecko/params/maple-promote-fennec.yml \
+        --input /src/gecko/params/promote_firefox.yml \
+        -p /src/gecko/params/maple-promote-firefox.yml \
         release_promotion_action > ../promote.json
 
-The input file (in the above example, that would be ``/src/gecko/params/promote_fennec.yml``), contains the action inputs. The input schema is defined in the `release promotion action`_. Previous example inputs are embedded in previous promotion task group action task definitions (``task.extra.action.input``).
+The input file (in the above example, that would be ``/src/gecko/params/promote_firefox.yml``), contains the action inputs. The input schema is defined in the `release promotion action`_. Previous example inputs are embedded in previous promotion task group action task definitions (``task.extra.action.input``).
 
 The ``parameters.yml`` file is downloadable from a previous decision or action task.
 

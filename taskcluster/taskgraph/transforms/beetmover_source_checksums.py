@@ -54,9 +54,7 @@ def make_beetmover_checksums_description(config, jobs):
         description = "Beetmover submission of checksums for source file"
 
         extra = {}
-        if build_platform.startswith("android"):
-            extra['product'] = 'fennec'
-        elif 'devedition' in build_platform:
+        if 'devedition' in build_platform:
             extra['product'] = 'devedition'
         else:
             extra['product'] = 'firefox'

@@ -4,8 +4,6 @@
 ---
 s3_bucket_paths:
     by-platform:
-        fennec-source:
-            - pub/mobile/candidates
         devedition-source:
             - pub/devedition/candidates
         firefox-source:
@@ -37,12 +35,10 @@ mapping:
             by-platform:
                 firefox-source: firefox-${version}.source.tar.xz
                 devedition-source: firefox-${version}.source.tar.xz
-                fennec-source: fennec-${version}.source.tar.xz
         checksums_path:
             by-platform:
                 firefox-source: source/firefox-${version}.source.tar.xz
                 devedition-source: source/firefox-${version}.source.tar.xz
-                fennec-source: source/fennec-${version}.source.tar.xz
     source.tar.xz.asc:
         <<: *default
         description: "Detached signature for the source file"
@@ -50,9 +46,7 @@ mapping:
             by-platform:
                 firefox-source: firefox-${version}.source.tar.xz.asc
                 devedition-source: firefox-${version}.source.tar.xz.asc
-                fennec-source: fennec-${version}.source.tar.xz.asc
         checksums_path:
             by-platform:
                 firefox-source: source/firefox-${version}.source.tar.xz.asc
                 devedition-source: source/firefox-${version}.source.tar.xz.asc
-                fennec-source: source/fennec-${version}.source.tar.xz.asc
