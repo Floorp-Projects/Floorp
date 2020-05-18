@@ -455,8 +455,6 @@ NetworkGeolocationProvider.prototype = {
     xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     xhr.responseType = "json";
     xhr.mozBackgroundRequest = true;
-    // Allow deprecated HTTP request from SystemPrincipal
-    xhr.channel.loadInfo.allowDeprecatedSystemRequests = true;
     xhr.timeout = Services.prefs.getIntPref("geo.provider.network.timeout");
     xhr.ontimeout = () => {
       LOG("Location request XHR timed out.");
