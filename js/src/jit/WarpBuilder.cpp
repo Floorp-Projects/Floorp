@@ -1620,37 +1620,10 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
     needsThisCheck = true;
   }
 
-  // TODO: specialize for known target. Pad missing arguments. Set MCall flags
-  // based on this known target.
-  JSFunction* target = nullptr;
-  uint32_t targetArgs = callInfo.argc();
-  bool isDOMCall = false;
-  DOMObjectKind objKind = DOMObjectKind::Unknown;
-
-  MCall* call =
-      MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),
-                 callInfo.argc(), callInfo.constructing(),
-                 callInfo.ignoresReturnValue(), isDOMCall, objKind);
+  MCall* call = makeCall(callInfo, needsThisCheck);
   if (!call) {
     return false;
   }
-
-  if (callInfo.constructing()) {
-    if (needsThisCheck) {
-      call->setNeedsThisCheck();
-    }
-    call->addArg(targetArgs + 1, callInfo.getNewTarget());
-  }
-
-  // Add explicit arguments.
-  // Skip addArg(0) because it is reserved for |this|.
-  for (int32_t i = callInfo.argc() - 1; i >= 0; i--) {
-    call->addArg(i + 1, callInfo.getArg(i));
-  }
-
-  // Pass |this| and function.
-  call->addArg(0, callInfo.thisArg());
-  call->initFunction(callInfo.fun());
 
   current->add(call);
   current->push(call);
