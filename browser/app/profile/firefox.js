@@ -1643,6 +1643,9 @@ pref("privacy.userContext.newTabContainerOnLeftClick.enabled", false);
 pref("privacy.webrtc.allowSilencingNotifications", false);
 // Set to true to use the legacy WebRTC global indicator
 pref("privacy.webrtc.legacyGlobalIndicator", true);
+// Set to true to enable a warning displayed when attempting
+// to switch tabs in a window that's being shared over WebRTC.
+pref("privacy.webrtc.sharedTabWarning", false);
 
 // Start the browser in e10s mode
 pref("browser.tabs.remote.autostart", true);
