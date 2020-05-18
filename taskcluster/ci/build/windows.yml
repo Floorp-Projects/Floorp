@@ -939,8 +939,8 @@ win64-asan/opt:
             - win64-node
             - win64-winchecksec
 
-win64-asan-reporter-nightly/opt:
-    description: "Win64 Opt ASAN Reporter Nightly"
+win64-asan-reporter-shippable/opt:
+    description: "Win64 Opt ASAN Reporter (Shippable)"
     attributes:
         nightly: true
     shipping-product:
