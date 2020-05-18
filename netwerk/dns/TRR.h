@@ -86,7 +86,8 @@ class TRR : public Runnable,
         mOriginSuffix(aRec->originSuffix) {
     mHost = aRec->host;
     mPB = aRec->pb;
-    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "TRR must be in parent");
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess(),
+                          "TRR must be in parent or socket process");
   }
 
   // when following CNAMEs
@@ -103,7 +104,8 @@ class TRR : public Runnable,
         mCnameLoop(aLoopCount),
         mAllowRFC1918(false),
         mOriginSuffix(aRec ? aRec->originSuffix : EmptyCString()) {
-    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "TRR must be in parent");
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess(),
+                          "TRR must be in parent or socket process");
   }
 
   // used on push
@@ -116,7 +118,8 @@ class TRR : public Runnable,
         mPB(aPB),
         mCnameLoop(kCnameChaseMax),
         mAllowRFC1918(false) {
-    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "TRR must be in parent");
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess(),
+                          "TRR must be in parent or socket process");
   }
 
   // to verify a domain
@@ -133,7 +136,8 @@ class TRR : public Runnable,
         mCnameLoop(kCnameChaseMax),
         mAllowRFC1918(false),
         mOriginSuffix(aOriginSuffix) {
-    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "TRR must be in parent");
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess(),
+                          "TRR must be in parent or socket process");
   }
 
   NS_IMETHOD Run() override;
