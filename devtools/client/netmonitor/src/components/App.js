@@ -14,8 +14,6 @@ const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 
-const blockingActions = require("devtools/client/netmonitor/src/actions/request-blocking");
-
 // Components
 loader.lazyGetter(this, "MonitorPanel", function() {
   return createFactory(
@@ -56,16 +54,9 @@ class App extends Component {
       statisticsOpen: PropTypes.bool.isRequired,
       // Document which settings menu will be injected to
       toolboxDoc: PropTypes.object.isRequired,
-      // Syncing blocked requests
-      addBlockedUrl: PropTypes.func,
     };
   }
 
-  async componentDidMount() {
-    const responses = await this.props.connector.getBlockedUrls();
-    const urls = responses.flat();
-    urls.forEach(url => this.props.addBlockedUrl(url));
-  }
   // Rendering
 
   render() {
@@ -105,11 +96,6 @@ class App extends Component {
 
 // Exports
 
-module.exports = connect(
-  state => ({
-    statisticsOpen: state.ui.statisticsOpen,
-  }),
-  (dispatch, props) => ({
-    addBlockedUrl: url => dispatch(blockingActions.addBlockedUrl(url)),
-  })
-)(App);
+module.exports = connect(state => ({
+  statisticsOpen: state.ui.statisticsOpen,
+}))(App);
