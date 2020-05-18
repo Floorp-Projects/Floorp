@@ -292,4 +292,4 @@
   skin/classic/browser/privatebrowsing/private-browsing.svg    (../shared/privatebrowsing/private-browsing.svg)
   skin/classic/browser/install-ssb.svg                         (../shared/install-ssb.svg)
   skin/classic/browser/critical.svg                            (../shared/icons/critical.svg)
-  
+  skin/classic/browser/webRTC-indicator.css                    (../shared/webRTC-indicator.css)
