@@ -1330,14 +1330,16 @@ nsresult BrowsingContext::SetOriginAttributes(const OriginAttributes& aAttrs) {
 void BrowsingContext::AssertCoherentLoadContext() {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // LoadContext should generally match our opener or parent.
-  if (RefPtr<BrowsingContext> opener = GetOpener()) {
-    MOZ_DIAGNOSTIC_ASSERT(opener->mType == mType);
-    MOZ_DIAGNOSTIC_ASSERT(opener->mGroup == mGroup);
-    MOZ_DIAGNOSTIC_ASSERT(opener->mUseRemoteTabs == mUseRemoteTabs);
-    MOZ_DIAGNOSTIC_ASSERT(opener->mUseRemoteSubframes == mUseRemoteSubframes);
-    MOZ_DIAGNOSTIC_ASSERT(opener->mPrivateBrowsingId == mPrivateBrowsingId);
-    MOZ_DIAGNOSTIC_ASSERT(
-        opener->mOriginAttributes.EqualsIgnoringFPD(mOriginAttributes));
+  if (IsContent()) {
+    if (RefPtr<BrowsingContext> opener = GetOpener()) {
+      MOZ_DIAGNOSTIC_ASSERT(opener->mType == mType);
+      MOZ_DIAGNOSTIC_ASSERT(opener->mGroup == mGroup);
+      MOZ_DIAGNOSTIC_ASSERT(opener->mUseRemoteTabs == mUseRemoteTabs);
+      MOZ_DIAGNOSTIC_ASSERT(opener->mUseRemoteSubframes == mUseRemoteSubframes);
+      MOZ_DIAGNOSTIC_ASSERT(opener->mPrivateBrowsingId == mPrivateBrowsingId);
+      MOZ_DIAGNOSTIC_ASSERT(
+          opener->mOriginAttributes.EqualsIgnoringFPD(mOriginAttributes));
+    }
   }
   if (RefPtr<BrowsingContext> parent = GetParent()) {
     MOZ_DIAGNOSTIC_ASSERT(parent->mType == mType);
