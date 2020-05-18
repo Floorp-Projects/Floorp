@@ -11,20 +11,6 @@
 namespace mozilla {
 namespace layout {
 
-FrameChildListIterator::FrameChildListIterator(const nsIFrame* aFrame)
-    : FrameChildListArrayIterator(mLists) {
-  aFrame->GetChildLists(&mLists);
-#ifdef DEBUG
-  // Make sure that there are no duplicate list IDs.
-  FrameChildListIDs ids;
-  uint32_t count = mLists.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    NS_ASSERTION(!ids.contains(mLists[i].mID), "Duplicate item found!");
-    ids += mLists[i].mID;
-  }
-#endif
-}
-
 #ifdef DEBUG_FRAME_DUMP
 const char* ChildListName(FrameChildListID aListID) {
   switch (aListID) {
