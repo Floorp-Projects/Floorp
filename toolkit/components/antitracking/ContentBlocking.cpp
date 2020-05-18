@@ -723,6 +723,12 @@ void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
         if (inner) {
           inner->SaveStorageAccessGranted();
         }
+
+        nsCOMPtr<nsPIDOMWindowOuter> outer =
+            nsPIDOMWindowOuter::GetFromCurrentInner(inner);
+        if (outer) {
+          nsGlobalWindowOuter::Cast(outer)->SetHasStorageAccess(true);
+        }
       }
     }
   });
