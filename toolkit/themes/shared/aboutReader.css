@@ -507,24 +507,24 @@ button:disabled {
   background-repeat: no-repeat;
 }
 
-.toolbar .button:hover,
-.toolbar .button:-moz-focusring,
-.font-size-buttons > button:hover,
-.font-size-buttons > button:-moz-focusring,
-.font-type-buttons > button:hover,
-.content-width-buttons > button:hover,
-.content-width-buttons > button:-moz-focusring,
-.line-height-buttons > button:hover,
-.line-height-buttons > button:-moz-focusring {
+.toolbar .button:enabled:hover,
+.toolbar .button:enabled:-moz-focusring,
+.font-size-buttons > button:enabled:hover,
+.font-size-buttons > button:enabled:-moz-focusring,
+.font-type-buttons > button:enabled:hover,
+.content-width-buttons > button:enabled:hover,
+.content-width-buttons > button:enabled:-moz-focusring,
+.line-height-buttons > button:enabled:hover,
+.line-height-buttons > button:enabled:-moz-focusring {
   background-color: var(--toolbar-hover);
 }
 
-.button:active,
-.font-size-buttons > button:active,
+.button:enabled:active,
+.font-size-buttons > button:enabled:active,
 .font-size-buttons > button.selected,
-.content-width-buttons > button:active,
+.content-width-buttons > button:enabled:active,
 .content-width-buttons > button.selected,
-.line-height-buttons > button:active,
+.line-height-buttons > button:enabled:active,
 .line-height-buttons > button.selected {
   background-color: #dadada;
 }
