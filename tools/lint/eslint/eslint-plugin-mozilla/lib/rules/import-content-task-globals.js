@@ -19,6 +19,30 @@
 var helpers = require("../helpers");
 var frameScriptEnv = require("../environments/frame-script");
 
+// The global environment of SpecialPowers.spawn tasks is
+// controlled by the Sandbox environment created by
+// SpecialPowersSandbox.jsm. This list should be kept in sync with
+// that module.
+var sandboxGlobals = [
+  "Assert",
+  "Blob",
+  "BrowsingContext",
+  "ChromeUtils",
+  "ContentTaskUtils",
+  "EventUtils",
+  "Services",
+  "TextDecoder",
+  "TextEncoder",
+  "URL",
+  "assert",
+  "info",
+  "is",
+  "isnot",
+  "ok",
+  "todo",
+  "todo_is",
+];
+
 module.exports = function(context) {
   // ---------------------------------------------------------------------------
   // Public
@@ -39,31 +63,18 @@ module.exports = function(context) {
     "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawn']": function(
       node
     ) {
-      // The global environment of SpecialPowers.spawn tasks is
-      // controlled by the Sandbox environment created by
-      // SpecialPowersSandbox.jsm. This list should be kept in sync with
-      // that module.
+      let globals = [...sandboxGlobals, "SpecialPowers", "content", "docShell"];
+      for (let global of globals) {
+        helpers.addVarToScope(global, context.getScope(), false);
+      }
+    },
+    "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawnChrome']": function(
+      node
+    ) {
       let globals = [
-        "Assert",
-        "Blob",
-        "BrowsingContext",
-        "ChromeUtils",
-        "ContentTaskUtils",
-        "EventUtils",
-        "Services",
-        "SpecialPowers",
-        "TextDecoder",
-        "TextEncoder",
-        "URL",
-        "assert",
-        "content",
-        "docShell",
-        "info",
-        "is",
-        "isnot",
-        "ok",
-        "todo",
-        "todo_is",
+        ...sandboxGlobals,
+        "browsingContext",
+        "windowGlobalParent",
       ];
       for (let global of globals) {
         helpers.addVarToScope(global, context.getScope(), false);
