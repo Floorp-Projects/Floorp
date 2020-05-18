@@ -49,7 +49,6 @@ using namespace mozilla::widget;
 #  include <gtk/gtk.h>
 #  include <gdk/gdkx.h>
 #  include <gdk/gdk.h>
-#  include "gtk2xtbin.h"
 
 #elif defined(OS_WIN)
 
