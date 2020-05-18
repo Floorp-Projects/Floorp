@@ -57,6 +57,9 @@ class CrashGenerationServer {
                                               const ClientInfo& client_info,
                                               const std::wstring& file_path);
 
+  typedef void (*OnClientDumpWrittenCallback)(void* context,
+                                              const ClientInfo& client_info);
+
   typedef void (*OnClientExitedCallback)(void* context,
                                          const ClientInfo& client_info);
 
@@ -72,8 +75,9 @@ class CrashGenerationServer {
   //     the Everyone group read access on the pipe.
   // Parameter connect_callback: Callback for a new client connection.
   // Parameter connect_context: Context for client connection callback.
-  // Parameter crash_callback: Callback for a client crash dump request.
-  // Parameter crash_context: Context for client crash dump request callback.
+  // Parameter dump_callback: Callback for a client crash dump request.
+  // Parameter dump_context: Context for client crash dump request callback.
+  // Parameter written_callback: Callback called after a crash dump was written.
   // Parameter exit_callback: Callback for client process exit.
   // Parameter exit_context: Context for client exit callback.
   // Parameter generate_dumps: Whether to automatically generate dumps.
@@ -88,6 +92,7 @@ class CrashGenerationServer {
                         void* connect_context,
                         OnClientDumpRequestCallback dump_callback,
                         void* dump_context,
+                        OnClientDumpWrittenCallback written_callback,
                         OnClientExitedCallback exit_callback,
                         void* exit_context,
                         OnClientUploadRequestCallback upload_request_callback,
@@ -255,6 +260,9 @@ class CrashGenerationServer {
 
   // Context for client dump request callback.
   void* dump_context_;
+
+  // Callback for a client dump written.
+  OnClientDumpWrittenCallback written_callback_;
 
   // Callback for client process exit.
   OnClientExitedCallback exit_callback_;

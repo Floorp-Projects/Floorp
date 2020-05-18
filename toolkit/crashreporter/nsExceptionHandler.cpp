@@ -276,7 +276,8 @@ struct ChildProcessData : public nsUint32HashKey {
   explicit ChildProcessData(KeyTypePointer aKey)
       : nsUint32HashKey(aKey),
         sequence(0),
-        annotations(nullptr)
+        annotations(nullptr),
+        minidumpOnly(false)
 #ifdef MOZ_CRASHREPORTER_INJECTOR
         ,
         callback(nullptr)
@@ -289,6 +290,7 @@ struct ChildProcessData : public nsUint32HashKey {
   // indicate which process crashed first.
   uint32_t sequence;
   UniquePtr<AnnotationTable> annotations;
+  bool minidumpOnly;  // If true then no annotations are present
 #ifdef MOZ_CRASHREPORTER_INJECTOR
   InjectorCrashCallback* callback;
 #endif
@@ -3184,11 +3186,9 @@ static void ReadExceptionTimeAnnotations(AnnotationTable& aAnnotations,
   }
 }
 
-static void PopulateContentProcessAnnotations(AnnotationTable& aAnnotations,
-                                              uint32_t aPid) {
+static void PopulateContentProcessAnnotations(AnnotationTable& aAnnotations) {
   MergeContentCrashAnnotations(aAnnotations);
   AddCommonAnnotations(aAnnotations);
-  ReadExceptionTimeAnnotations(aAnnotations, aPid);
 }
 
 // It really only makes sense to call this function when
@@ -3255,13 +3255,13 @@ static void OnChildProcessDumpRequested(void* aContext,
     bool runCallback;
 #endif
     {
-      MutexAutoLock lock(*dumpMapLock);
+      dumpMapLock->Lock();
       ChildProcessData* pd = pidToMinidump->PutEntry(pid);
       MOZ_ASSERT(!pd->minidump);
       pd->minidump = minidump;
       pd->sequence = ++crashSequence;
       pd->annotations = MakeUnique<AnnotationTable>();
-      PopulateContentProcessAnnotations(*(pd->annotations), pid);
+      PopulateContentProcessAnnotations(*(pd->annotations));
 #ifdef MOZ_CRASHREPORTER_INJECTOR
       runCallback = nullptr != pd->callback;
 #endif
@@ -3270,6 +3270,17 @@ static void OnChildProcessDumpRequested(void* aContext,
     if (runCallback) NS_DispatchToMainThread(new ReportInjectedCrash(pid));
 #endif
   }
+}
+
+static void OnChildProcessDumpWritten(void* aContext,
+                                      const ClientInfo& aClientInfo) {
+  uint32_t pid = aClientInfo.pid();
+  ChildProcessData* pd = pidToMinidump->GetEntry(pid);
+  MOZ_ASSERT(pd);
+  if (!pd->minidumpOnly) {
+    ReadExceptionTimeAnnotations(*(pd->annotations), pid);
+  }
+  dumpMapLock->Unlock();
 }
 
 static bool OOPInitialized() { return pidToMinidump != nullptr; }
@@ -3310,7 +3321,7 @@ void OOPInit() {
       std::wstring(NS_ConvertASCIItoUTF16(childCrashNotifyPipe).get()),
       nullptr,           // default security attributes
       nullptr, nullptr,  // we don't care about process connect here
-      OnChildProcessDumpRequested, nullptr, nullptr,
+      OnChildProcessDumpRequested, nullptr, OnChildProcessDumpWritten, nullptr,
       nullptr,           // we don't care about process exit here
       nullptr, nullptr,  // we don't care about upload request here
       true,              // automatically generate dumps
@@ -3328,9 +3339,8 @@ void OOPInit() {
   const std::string dumpPath =
       gExceptionHandler->minidump_descriptor().directory();
   crashServer = new CrashGenerationServer(
-      serverSocketFd, OnChildProcessDumpRequested, nullptr, nullptr,
-      nullptr,  // we don't care about process exit here
-      true, &dumpPath);
+      serverSocketFd, OnChildProcessDumpRequested, nullptr,
+      OnChildProcessDumpWritten, nullptr, true, &dumpPath);
 
 #elif defined(XP_MACOSX)
   childCrashNotifyPipe = mozilla::Smprintf("gecko-crash-server-pipe.%i",
@@ -3338,11 +3348,11 @@ void OOPInit() {
                              .release();
   const std::string dumpPath = gExceptionHandler->dump_path();
 
-  crashServer = new CrashGenerationServer(childCrashNotifyPipe, nullptr,
-                                          nullptr, OnChildProcessDumpRequested,
-                                          nullptr, nullptr, nullptr,
-                                          true,  // automatically generate dumps
-                                          dumpPath);
+  crashServer = new CrashGenerationServer(
+      childCrashNotifyPipe, nullptr, nullptr, OnChildProcessDumpRequested,
+      nullptr, OnChildProcessDumpWritten, nullptr,
+      true,  // automatically generate dumps
+      dumpPath);
 #endif
 
   if (!crashServer->Start()) MOZ_CRASH("can't start crash reporter server()");
@@ -3411,6 +3421,7 @@ void InjectCrashReporterIntoProcess(DWORD processID,
     ChildProcessData* pd = pidToMinidump->PutEntry(processID);
     MOZ_ASSERT(!pd->minidump && !pd->callback);
     pd->callback = cb;
+    pd->minidumpOnly = true;
   }
 
   nsCOMPtr<nsIRunnable> r = new InjectCrashRunnable(processID);
@@ -3563,7 +3574,7 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
   NS_IF_ADDREF(*dump = pd->minidump);
   // Only Flash process minidumps don't have annotations. Once we get rid of
   // the Flash processes this check will become redundant.
-  if (pd->annotations) {
+  if (!pd->minidumpOnly) {
     aAnnotations = *(pd->annotations);
   }
   if (aSequence) {
