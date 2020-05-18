@@ -218,7 +218,8 @@ CookieJarSettings::CookiePermission(nsIPrincipal* aPrincipal,
   // Check if this protocol doesn't allow cookies.
   bool hasFlags;
   nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
+  BasePrincipal::Cast(aPrincipal)->GetURI(getter_AddRefs(uri));
+
   rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_FORBIDS_COOKIE_ACCESS,
                            &hasFlags);
   if (NS_FAILED(rv) || hasFlags) {
