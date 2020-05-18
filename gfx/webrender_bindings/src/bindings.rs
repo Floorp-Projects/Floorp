@@ -2075,11 +2075,6 @@ pub extern "C" fn wr_api_stop_capture_sequence(dh: &mut DocumentHandle) {
     dh.api.stop_capture_sequence();
 }
 
-#[no_mangle]
-pub extern "C" fn wr_api_set_transaction_logging(dh: &mut DocumentHandle, aValue: bool) {
-    dh.api.send_debug_cmd(DebugCommand::SetTransactionLogging(aValue));
-}
-
 #[cfg(target_os = "windows")]
 fn read_font_descriptor(bytes: &mut WrVecU8, index: u32) -> NativeFontHandle {
     let wchars = bytes.convert_into_vec::<u16>();

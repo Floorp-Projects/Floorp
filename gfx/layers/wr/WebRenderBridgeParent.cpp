@@ -1842,14 +1842,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvToggleCaptureSequence() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetTransactionLogging(
-    const bool& aValue) {
-  if (!mDestroyed) {
-    mApi->SetTransactionLogging(aValue);
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSyncWithCompositor() {
   FlushSceneBuilds();
   if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
