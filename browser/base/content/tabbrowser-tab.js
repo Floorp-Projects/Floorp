@@ -292,7 +292,10 @@
     on_dragstart(event) {
       if (event.eventPhase == Event.CAPTURING_PHASE) {
         this.style.MozUserFocus = "";
-      } else if (this.mOverCloseButton) {
+      } else if (
+        this.mOverCloseButton ||
+        gSharedTabWarning.willShowSharedTabWarning(this)
+      ) {
         event.stopPropagation();
       }
     }
@@ -352,6 +355,10 @@
         } else if (!this.selected && this.multiselected) {
           gBrowser.lockClearMultiSelectionOnce();
         }
+      }
+
+      if (gSharedTabWarning.willShowSharedTabWarning(this)) {
+        eventMaySelectTab = false;
       }
 
       if (eventMaySelectTab) {
