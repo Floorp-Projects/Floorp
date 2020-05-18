@@ -43,3 +43,45 @@ void WarpBuilderShared::pushConstant(const Value& v) {
   MConstant* cst = constant(v);
   current->push(cst);
 }
+
+MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
+                                   JSFunction* target) {
+  MOZ_ASSERT_IF(needsThisCheck, !target);
+
+  // TODO: specialize for known target. Pad missing arguments. Set MCall flags
+  // based on this known target.
+  uint32_t targetArgs = callInfo.argc();
+  bool isDOMCall = false;
+  DOMObjectKind objKind = DOMObjectKind::Unknown;
+
+  // TODO: MCall::New initializes WrappedFunction with various flags from
+  // the target. This not thread-safe for non-native JSFunctions.
+  MOZ_ASSERT_IF(target, target->isNative());
+  MCall* call =
+      MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),
+                 callInfo.argc(), callInfo.constructing(),
+                 callInfo.ignoresReturnValue(), isDOMCall, objKind);
+  if (!call) {
+    return nullptr;
+  }
+
+  if (callInfo.constructing()) {
+    // Note: setThis should have been done by the caller of makeCall.
+    if (needsThisCheck) {
+      call->setNeedsThisCheck();
+    }
+    call->addArg(targetArgs + 1, callInfo.getNewTarget());
+  }
+
+  // Add explicit arguments.
+  // Skip addArg(0) because it is reserved for |this|.
+  for (int32_t i = callInfo.argc() - 1; i >= 0; i--) {
+    call->addArg(i + 1, callInfo.getArg(i));
+  }
+
+  // Pass |this| and function.
+  call->addArg(0, callInfo.thisArg());
+  call->initFunction(callInfo.fun());
+
+  return call;
+}
