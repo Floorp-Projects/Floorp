@@ -39,7 +39,6 @@ def check_mozharness_perfherder_options(config, jobs):
         platform = job['treeherder']['platform']
         primary_config = job['run']['config'][0]
         options = worker.get('env', {}).get('PERFHERDER_EXTRA_OPTIONS')
-        nightly = job.get('attributes', {}).get('nightly', False)
         shippable = job.get('attributes', {}).get('shippable', False)
 
         # This isn't strictly necessary. But the Perfherder code looking at the
@@ -47,7 +46,7 @@ def check_mozharness_perfherder_options(config, jobs):
         # sense to run this linter elsewhere.
         assert primary_config.startswith('builds/')
 
-        key = (platform, primary_config, (nightly or shippable), options)
+        key = (platform, primary_config, shippable, options)
 
         if key in SEEN_CONFIGS:
             raise Exception(

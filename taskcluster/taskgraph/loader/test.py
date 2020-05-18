@@ -51,8 +51,6 @@ def loader(kind, path, config, params, loaded_tasks):
 
             test['build-attributes'] = test_platform['build-attributes']
             test['test-name'] = test_name
-            if test_platform.get('nightly'):
-                test.setdefault('attributes', {})['nightly'] = True
             if test_platform.get('shippable'):
                 test.setdefault('attributes', {})['shippable'] = True
                 test['attributes']['shipping_product'] = test_platform['shipping_product']
@@ -99,9 +97,6 @@ def get_test_platforms(test_platforms_cfg, builds_by_platform, signed_builds_by_
             'build-attributes': builds_by_platform[build_platform].attributes,
         }
 
-        if builds_by_platform[build_platform].attributes.get('nightly'):
-            test_platforms[test_platform]['nightly'] = \
-                builds_by_platform[build_platform].attributes['nightly']
         if builds_by_platform[build_platform].attributes.get('shippable'):
             test_platforms[test_platform]['shippable'] = \
                 builds_by_platform[build_platform].attributes['shippable']

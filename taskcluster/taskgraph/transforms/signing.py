@@ -114,8 +114,7 @@ def make_task_description(config, jobs):
             for f in artifacts['formats']:
                 formats.add(f)  # Add each format only once
 
-        is_nightly = dep_job.attributes.get(
-            'nightly', dep_job.attributes.get('shippable', False))
+        is_shippable = dep_job.attributes.get('shippable', False)
         build_platform = dep_job.attributes.get('build_platform')
         treeherder = None
         if 'partner' not in config.kind and 'eme-free' not in config.kind:
@@ -158,9 +157,9 @@ def make_task_description(config, jobs):
             attributes['chunk_locales'] = dep_job.attributes.get('chunk_locales')
 
         signing_cert_scope = get_signing_cert_scope_per_platform(
-            build_platform, is_nightly, config
+            build_platform, is_shippable, config
         )
-        worker_type_alias = 'linux-signing' if is_nightly else 'linux-depsigning'
+        worker_type_alias = 'linux-signing' if is_shippable else 'linux-depsigning'
         mac_behavior = None
         task = {
             'label': label,
@@ -181,9 +180,6 @@ def make_task_description(config, jobs):
         if 'macosx' in build_platform:
             shippable = "false"
             if "shippable" in attributes and attributes["shippable"]:
-                shippable = "true"
-            # remove the nightly check once nightly is gone as an attribute
-            if "nightly" in attributes and attributes["nightly"]:
                 shippable = "true"
             mac_behavior = evaluate_keyed_by(
                 config.graph_config['mac-notarization']['mac-behavior'],
