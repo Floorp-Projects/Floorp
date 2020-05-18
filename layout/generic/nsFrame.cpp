@@ -2623,12 +2623,8 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
   // focus indicators.
   if (outline.mOutlineStyle.IsAuto()) {
     auto* disp = StyleDisplay();
-    // FIXME(emilio): The range special-case is needed because <input
-    // type=range> displays its own outline with ::-moz-focus-outer, and this
-    // would show two outlines instead of one.
     if (IsThemed(disp) &&
-        (PresContext()->Theme()->ThemeDrawsFocusForWidget(disp->mAppearance) ||
-         disp->mAppearance != StyleAppearance::Range)) {
+        PresContext()->Theme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
       return;
     }
   }
