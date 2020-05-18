@@ -92,10 +92,6 @@ function prepareMessage(packet, idGenerator) {
  * Transforms a packet from Firefox RDP structure to Chrome RDP structure.
  */
 function transformPacket(packet) {
-  if (packet._type) {
-    packet = convertCachedPacket(packet);
-  }
-
   switch (packet.type) {
     case "consoleAPICall": {
       return transformConsoleAPICallPacket(packet);
@@ -344,9 +340,7 @@ function transformPageErrorPacket(packet) {
   });
 }
 
-function transformNetworkEventPacket(packet) {
-  const { networkEvent } = packet;
-
+function transformNetworkEventPacket(networkEvent) {
   return new NetworkEventMessage({
     actor: networkEvent.actor,
     isXHR: networkEvent.isXHR,
@@ -451,30 +445,6 @@ function getRepeatId(message) {
       return value;
     }
   );
-}
-
-function convertCachedPacket(packet) {
-  // The devtools server provides cached message packets in a different shape, so we
-  // transform them here.
-  let convertPacket = {};
-  if (packet._type === "ConsoleAPI") {
-    convertPacket.message = packet;
-    convertPacket.type = "consoleAPICall";
-  } else if (packet._type === "PageError") {
-    convertPacket.pageError = packet;
-    convertPacket.type = "pageError";
-  } else if (packet._type === "NetworkEvent") {
-    convertPacket.networkEvent = packet;
-    convertPacket.type = "networkEvent";
-  } else if (packet._type === "LogMessage") {
-    convertPacket = {
-      ...packet,
-      type: "logMessage",
-    };
-  } else {
-    throw new Error("Unexpected packet type: " + packet._type);
-  }
-  return convertPacket;
 }
 
 /**

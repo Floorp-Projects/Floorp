@@ -28,6 +28,7 @@ const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
 // Test fakes.
 const {
   stubPreparedMessages,
+  stubPackets,
 } = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
 const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
 
@@ -114,19 +115,15 @@ describe("ConsoleAPICall component:", () => {
     });
 
     it("renders prefixed messages", () => {
+      const packet = stubPackets.get("console.log('foobar', 'test')");
       const stub = {
-        level: "debug",
-        filename: "resource:///modules/CustomizableUI.jsm",
-        lineNumber: 181,
-        functionName: "initialize",
-        timeStamp: 1519311532912,
-        arguments: ["Initializing"],
-        prefix: "MyNicePrefix",
-        workerType: "none",
-        styles: [],
-        category: "webdev",
-        _type: "ConsoleAPI",
+        ...packet,
+        message: {
+          ...packet.message,
+          prefix: "MyNicePrefix",
+        },
       };
+
       const wrapper = render(
         ConsoleApiCall({
           message: prepareMessage(stub, { getNextId: () => "p" }),
@@ -137,13 +134,13 @@ describe("ConsoleAPICall component:", () => {
       expect(prefix.text()).toBe("MyNicePrefix: ");
 
       expect(wrapper.find(".message-body").text()).toBe(
-        "MyNicePrefix: Initializing"
+        "MyNicePrefix: foobar test"
       );
 
       // There should be the location
       const locationLink = wrapper.find(`.message-location`);
       expect(locationLink.length).toBe(1);
-      expect(locationLink.text()).toBe("CustomizableUI.jsm:181");
+      expect(locationLink.text()).toBe("test-console-api.html:1:35");
     });
 
     it("renders repeat node", () => {
