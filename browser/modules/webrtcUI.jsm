@@ -125,14 +125,15 @@ var webrtcUI = {
 
   _streams: [],
   // The boolean parameters indicate which streams should be included in the result.
-  getActiveStreams(aCamera, aMicrophone, aScreen) {
+  getActiveStreams(aCamera, aMicrophone, aScreen, aWindow = false) {
     return webrtcUI._streams
       .filter(aStream => {
         let state = aStream.state;
         return (
           (aCamera && state.camera) ||
           (aMicrophone && state.microphone) ||
-          (aScreen && state.screen)
+          (aScreen && state.screen) ||
+          (aWindow && state.window)
         );
       })
       .map(aStream => {
@@ -141,6 +142,7 @@ var webrtcUI = {
           camera: state.camera,
           microphone: state.microphone,
           screen: state.screen,
+          window: state.window,
         };
         let browser = aStream.topBrowsingContext.embedderElement;
         let browserWindow = browser.ownerGlobal;
