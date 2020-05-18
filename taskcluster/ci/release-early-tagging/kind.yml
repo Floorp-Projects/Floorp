@@ -27,10 +27,6 @@ job-defaults:
 
 
 jobs:
-    fennec:
-        name: fennec-tag-buildN
-        shipping-product: fennec
-
     firefox:
         name: firefox-tag-buildN
         shipping-product: firefox

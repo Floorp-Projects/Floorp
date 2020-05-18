@@ -43,22 +43,6 @@ jobs:
         treeherder:
             platform: devedition-release/opt
 
-    fennec:
-        bouncer-products-per-alias:
-            by-project:
-                mozilla-beta:
-                    fennec-beta-latest: apk
-                mozilla-release:
-                    fennec-latest: apk
-                birch:
-                    fennec-latest: apk
-                maple:
-                    fennec-beta-latest: apk
-                default: {}
-        shipping-product: fennec
-        treeherder:
-            platform: fennec-release/opt
-
     firefox:
         bouncer-products-per-alias:
             by-project:

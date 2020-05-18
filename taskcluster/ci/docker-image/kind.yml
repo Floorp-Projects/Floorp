@@ -206,8 +206,6 @@ jobs:
         symbol: I(idx)
     funsize-update-generator:
         symbol: I(pg)
-    mozapkpublisher:
-        symbol: I(apk)
     update-verify:
         symbol: I(uv)
     diffoscope:

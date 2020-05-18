@@ -40,10 +40,6 @@ job-defaults:
                 default: false
 
 jobs:
-    fennec:
-        name: fennec-version-bump
-        shipping-product: fennec
-
     firefox:
         name: firefox-version-bump
         shipping-product: firefox

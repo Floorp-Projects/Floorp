@@ -38,14 +38,6 @@ jobs:
         treeherder:
             platform: devedition-release/opt
 
-    fennec:
-        bouncer-platforms: ['android', 'android-x86']
-        bouncer-products: ['apk']
-        shipping-product: fennec
-        locales-file: mobile/locales/l10n-changesets.json
-        treeherder:
-            platform: fennec-release/opt
-
     firefox:
         bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
         bouncer-products:

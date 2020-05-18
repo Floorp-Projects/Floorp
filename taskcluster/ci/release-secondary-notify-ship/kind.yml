@@ -11,7 +11,6 @@ transforms:
 
 kind-dependencies:
     - release-secondary-balrog-scheduling
-    - push-apk
 
 job-defaults:
     name: notify-release-drivers-ship
@@ -35,8 +34,3 @@ jobs:
         notifications:
             subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
             message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
-    fennec-rc:
-        shipping-product: fennec
-        notifications:
-            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
-            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"

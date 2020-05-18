@@ -26,7 +26,7 @@ default: &default
 mapping:
     target.snap:
         <<: *default
-        description: "The main installer we ship our mobile products baked within"
+        description: "The main installer we ship our products baked within"
         pretty_name: firefox-${version}.snap
         checksums_path: firefox-${version}.snap.checksums
 

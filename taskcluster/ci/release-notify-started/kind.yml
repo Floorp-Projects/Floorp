@@ -26,8 +26,6 @@ job-defaults:
             default: []
 
 jobs:
-    fennec:
-        shipping-product: fennec
     firefox:
         shipping-product: firefox
     devedition:

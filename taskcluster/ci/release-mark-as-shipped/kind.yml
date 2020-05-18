@@ -10,7 +10,6 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - push-apk
     - release-balrog-scheduling
     - release-bouncer-aliases
     - release-version-bump
@@ -35,10 +34,6 @@ job-defaults:
     shipping-phase: ship
 
 jobs:
-    fennec:
-        name: release-fennec_mark_as_shipped
-        shipping-product: fennec
-
     firefox:
         name: release-firefox_mark_as_shipped
         shipping-product: firefox
