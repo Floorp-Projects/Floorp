@@ -68,12 +68,39 @@ class ConsoleOutput extends Component {
     super(props);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.maybeScrollToBottom = this.maybeScrollToBottom.bind(this);
+
+    this.resizeObserver = new ResizeObserver(() => {
+      // If we don't have the outputNode reference, or if the outputNode isn't connected
+      // anymore, we disconnect the resize observer (componentWillUnmount is never called
+      // on this component, so we have to do it here).
+      if (!this.outputNode || !this.outputNode.isConnected) {
+        this.resizeObserver.disconnect();
+        return;
+      }
+
+      if (this.scrolledToBottom) {
+        this.scrollToBottom();
+      }
+    });
   }
 
   componentDidMount() {
     if (this.props.visibleMessages.length > 0) {
-      scrollToBottom(this.outputNode);
+      this.scrollToBottom();
     }
+
+    this.lastMessageIntersectionObserver = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          // Consider that we're not pinned to the bottom anymore if the last message is
+          // less than half-visible.
+          this.scrolledToBottom = entry.intersectionRatio >= 0.5;
+        }
+      },
+      { root: this.outputNode, threshold: [0.5] }
+    );
+
+    this.resizeObserver.observe(this.outputNode);
 
     const { serviceContainer, onFirstMeaningfulPaint, dispatch } = this.props;
     serviceContainer.attachRefToWebConsoleUI("outputScroller", this.outputNode);
@@ -93,13 +120,16 @@ class ConsoleOutput extends Component {
 
   componentWillUpdate(nextProps, nextState) {
     const { outputNode } = this;
-    if (!outputNode || !outputNode.lastChild) {
+    if (!outputNode?.lastChild) {
       // Force a scroll to bottom when messages are added to an empty console.
       // This makes the console stay pinned to the bottom if a batch of messages
       // are added after a page refresh (Bug 1402237).
       this.shouldScrollBottom = true;
       return;
     }
+
+    const { lastChild } = outputNode;
+    this.lastMessageIntersectionObserver.unobserve(lastChild);
 
     // We need to scroll to the bottom if:
     // - we are reacting to "initialize" action, and we are already scrolled to the bottom
@@ -108,7 +138,6 @@ class ConsoleOutput extends Component {
     // - the number of messages in the store changed and the new message is an evaluation
     //   result.
 
-    const { lastChild } = outputNode;
     const visibleMessagesDelta =
       nextProps.visibleMessages.length - this.props.visibleMessages.length;
     const messagesDelta = nextProps.messages.size - this.props.messages.size;
@@ -132,21 +161,30 @@ class ConsoleOutput extends Component {
     this.shouldScrollBottom =
       (!this.props.initialized &&
         nextProps.initialized &&
-        isScrolledToBottom(lastChild, outputNode)) ||
+        this.scrolledToBottom) ||
       isNewMessageEvaluationResult ||
-      (isScrolledToBottom(lastChild, outputNode) &&
-        visibleMessagesDelta > 0 &&
-        !isOpeningGroup);
+      (this.scrolledToBottom && visibleMessagesDelta > 0 && !isOpeningGroup);
   }
 
   componentDidUpdate() {
     this.maybeScrollToBottom();
+    if (this?.outputNode?.lastChild) {
+      this.lastMessageIntersectionObserver.observe(this.outputNode.lastChild);
+    }
   }
 
   maybeScrollToBottom() {
     if (this.outputNode && this.shouldScrollBottom) {
-      scrollToBottom(this.outputNode);
+      this.scrollToBottom();
     }
+  }
+
+  scrollToBottom() {
+    if (this.outputNode.scrollHeight > this.outputNode.clientHeight) {
+      this.outputNode.scrollTop = this.outputNode.scrollHeight;
+    }
+
+    this.scrolledToBottom = true;
   }
 
   onContextMenu(e) {
@@ -218,20 +256,6 @@ class ConsoleOutput extends Component {
       messageNodes
     );
   }
-}
-
-function scrollToBottom(node) {
-  if (node.scrollHeight > node.clientHeight) {
-    node.scrollTop = node.scrollHeight;
-  }
-}
-
-function isScrolledToBottom(lastNode, scrollNode) {
-  const lastNodeHeight = lastNode ? lastNode.clientHeight : 0;
-  return (
-    scrollNode.scrollTop + scrollNode.clientHeight >=
-    scrollNode.scrollHeight - lastNodeHeight / 2
-  );
 }
 
 function mapStateToProps(state, props) {
