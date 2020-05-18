@@ -108,7 +108,7 @@ const clearIndexedDB = async function(options) {
           principal.schemeIs("https") ||
           principal.schemeIs("file")
         ) {
-          let host = principal.URI.hostPort;
+          let host = principal.hostPort;
           if (!options.hostnames || options.hostnames.includes(host)) {
             promises.push(
               new Promise((resolve, reject) => {
@@ -187,7 +187,7 @@ const clearLocalStorage = async function(options) {
             principal.schemeIs("https") ||
             principal.schemeIs("file")
           ) {
-            let host = principal.URI.hostPort;
+            let host = principal.hostPort;
             if (!options.hostnames || options.hostnames.includes(host)) {
               promises.push(
                 new Promise((resolve, reject) => {
