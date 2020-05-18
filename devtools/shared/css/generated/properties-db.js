@@ -10685,7 +10685,6 @@ exports.PSEUDO_ELEMENTS = [
   ":first-line",
   ":selection",
   ":-moz-focus-inner",
-  ":-moz-focus-outer",
   ":-moz-progress-bar",
   ":-moz-range-track",
   ":-moz-range-progress",
