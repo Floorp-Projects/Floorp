@@ -144,7 +144,7 @@ add_task(async function enableHtmlViews() {
       description: "Short description",
       fullDescription: "Longer description\nWith brs!",
       type: "extension",
-      contributionURL: "http://localhost/contribute",
+      contributionURL: "http://example.com/contribute",
       averageRating: 4.279,
       userPermissions: {
         origins: ["<all_urls>", "file://*/*"],
@@ -481,7 +481,7 @@ add_task(async function testFullDetails() {
 
   let waitForTab = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    "http://localhost/contribute"
+    "http://example.com/contribute"
   );
   contrib.querySelector("button").click();
   BrowserTestUtils.removeTab(await waitForTab);
