@@ -40,13 +40,14 @@ def check_mozharness_perfherder_options(config, jobs):
         primary_config = job['run']['config'][0]
         options = worker.get('env', {}).get('PERFHERDER_EXTRA_OPTIONS')
         nightly = job.get('attributes', {}).get('nightly', False)
+        shippable = job.get('attributes', {}).get('shippable', False)
 
         # This isn't strictly necessary. But the Perfherder code looking at the
         # values we care about is only active on builds. So it doesn't make
         # sense to run this linter elsewhere.
         assert primary_config.startswith('builds/')
 
-        key = (platform, primary_config, nightly, options)
+        key = (platform, primary_config, (nightly or shippable), options)
 
         if key in SEEN_CONFIGS:
             raise Exception(
