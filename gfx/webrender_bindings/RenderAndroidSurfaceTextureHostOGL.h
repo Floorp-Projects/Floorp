@@ -28,9 +28,9 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
   gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
   GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
-  virtual void PrepareForUse() override;
-  virtual void NofityForUse() override;
-  virtual void NotifyNotUsed() override;
+  void PrepareForUse() override;
+  void NofityForUse() override;
+  void NotifyNotUsed() override;
 
  private:
   virtual ~RenderAndroidSurfaceTextureHostOGL();
