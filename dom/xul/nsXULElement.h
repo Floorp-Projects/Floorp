@@ -340,7 +340,7 @@ class nsXULElement : public nsStyledElement {
   MOZ_CAN_RUN_SCRIPT int32_t ScreenX();
   MOZ_CAN_RUN_SCRIPT int32_t ScreenY();
 
-  bool HasMenu();
+  MOZ_CAN_RUN_SCRIPT bool HasMenu();
   MOZ_CAN_RUN_SCRIPT void OpenMenu(bool aOpenFlag);
 
   virtual bool PerformAccesskey(bool aKeyCausesActivation,
