@@ -5143,6 +5143,36 @@ AttachDecision CallIRGenerator::tryAttachMathSqrt(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
+                                                      UnaryMathFunction fun) {
+  // Need one argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!args_[0].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is this Math function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId argumentId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  NumberOperandId numberId = writer.guardIsNumber(argumentId);
+  writer.mathFunctionNumberResult(numberId, fun);
+
+  // These functions always return a double so we don't need type monitoring.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("MathFunction");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringCharCodeAt(
     HandleFunction callee) {
   return tryAttachStringChar(callee, StringChar::CodeAt);
@@ -5299,20 +5329,66 @@ AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
 
   // Check for special-cased native functions.
   switch (callee->jitInfo()->inlinableNative) {
+    // Array natives.
     case InlinableNative::ArrayPush:
       return tryAttachArrayPush(callee);
     case InlinableNative::ArrayJoin:
       return tryAttachArrayJoin(callee);
+
+    // Intrinsics.
     case InlinableNative::IntrinsicIsSuspendedGenerator:
       return tryAttachIsSuspendedGenerator(callee);
+
+    // String natives.
     case InlinableNative::StringCharCodeAt:
       return tryAttachStringCharCodeAt(callee);
     case InlinableNative::StringCharAt:
       return tryAttachStringCharAt(callee);
+
+    // Math natives.
     case InlinableNative::MathAbs:
       return tryAttachMathAbs(callee);
     case InlinableNative::MathSqrt:
       return tryAttachMathSqrt(callee);
+    case InlinableNative::MathSin:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Sin);
+    case InlinableNative::MathTan:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Tan);
+    case InlinableNative::MathCos:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Cos);
+    case InlinableNative::MathExp:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Exp);
+    case InlinableNative::MathLog:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Log);
+    case InlinableNative::MathASin:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ASin);
+    case InlinableNative::MathATan:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ATan);
+    case InlinableNative::MathACos:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ACos);
+    case InlinableNative::MathLog10:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Log10);
+    case InlinableNative::MathLog2:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Log2);
+    case InlinableNative::MathLog1P:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Log1P);
+    case InlinableNative::MathExpM1:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ExpM1);
+    case InlinableNative::MathCosH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::CosH);
+    case InlinableNative::MathSinH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::SinH);
+    case InlinableNative::MathTanH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::TanH);
+    case InlinableNative::MathACosH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ACosH);
+    case InlinableNative::MathASinH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ASinH);
+    case InlinableNative::MathATanH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ATanH);
+    case InlinableNative::MathCbrt:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Cbrt);
+
     default:
       return AttachDecision::NoAction;
   }

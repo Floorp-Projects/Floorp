@@ -674,6 +674,13 @@
   args:
     input: NumberId
 
+- name: MathFunctionNumberResult
+  shared: true
+  transpile: true
+  args:
+    input: NumberId
+    fun: UnaryMathFunctionImm
+
 - name: StoreTypedArrayElement
   shared: true
   transpile: true
