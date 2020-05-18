@@ -48,7 +48,11 @@
 // - It did not change the info header layout from WinBMPv3.
 // - |mBpp| can now be 16 or 32, in which case |mCompression| can be RGB or the
 //   new BITFIELDS value; in the latter case an additional 12 bytes of color
-//   bitfields follow the info header.
+//   bitfields follow the info header (52 bytes total).
+//
+// WinBMPv3-NT-Alpha. A variant of WinBMPv3-NT with support for alpha channels.
+//   Adds an additional 4 bytes in in the info header (now 56 bytes total), and
+//   supports an alpha channel in the BITFIELDS sections.
 //
 // WinBMPv4.
 // - It extended the info header to 108 bytes, including the 12 bytes of color
