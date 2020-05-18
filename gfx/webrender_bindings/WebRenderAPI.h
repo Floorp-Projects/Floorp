@@ -273,8 +273,6 @@ class WebRenderAPI final {
 
   void ToggleCaptureSequence();
 
-  void SetTransactionLogging(bool aValue);
-
   void SetCompositionRecorder(
       UniquePtr<layers::WebRenderCompositionRecorder> aRecorder);
 

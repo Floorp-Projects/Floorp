@@ -106,7 +106,6 @@
     <command id="wrToggleCaptureSequenceCmd" oncommand="gGfxUtils.toggleWebrenderCaptureSequence();" disabled="true"/>
 #ifdef NIGHTLY_BUILD
     <command id="windowRecordingCmd" oncommand="gGfxUtils.toggleWindowRecording();"/>
-    <command id="wrTransactionLoggingCmd" oncommand="gGfxUtils.toggleTransactionLogging();"/>
 #endif
 #ifdef XP_MACOSX
     <command id="minimizeWindow"
@@ -354,13 +353,6 @@
     key="$" modifiers="control"
 #endif
     command="windowRecordingCmd"/>
-    <key id="key_transactionLoggingCmd"
-#ifdef XP_MACOSX
-    key="5" modifiers="control,shift"
-#else
-    key="%" modifiers="control"
-#endif
-    command="wrTransactionLoggingCmd"/>
 #endif
 #ifdef XP_MACOSX
     <key id="key_minimizeWindow"

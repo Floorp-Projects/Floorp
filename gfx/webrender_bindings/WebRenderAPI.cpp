@@ -614,10 +614,6 @@ void WebRenderAPI::ToggleCaptureSequence() {
   }
 }
 
-void WebRenderAPI::SetTransactionLogging(bool aValue) {
-  wr_api_set_transaction_logging(mDocHandle, aValue);
-}
-
 void WebRenderAPI::SetCompositionRecorder(
     UniquePtr<layers::WebRenderCompositionRecorder> aRecorder) {
   class SetCompositionRecorderEvent final : public RendererEvent {
