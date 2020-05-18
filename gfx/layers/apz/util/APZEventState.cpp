@@ -20,6 +20,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
@@ -218,8 +219,10 @@ bool APZEventState::FireContextmenuEvents(PresShell* aPresShell,
   // is the most useless thing ever because nsDOMWindowUtils::SendMouseEvent
   // just converts them back to widget format, but that API has many callers,
   // including in JS code, so it's not trivial to change.
+  CSSPoint point = CSSPoint::FromAppUnits(
+      ViewportUtils::VisualToLayout(CSSPoint::ToAppUnits(aPoint), aPresShell));
   bool eventHandled = APZCCallbackHelper::DispatchMouseEvent(
-      aPresShell, NS_LITERAL_STRING("contextmenu"), aPoint, 2, 1,
+      aPresShell, NS_LITERAL_STRING("contextmenu"), point, 2, 1,
       WidgetModifiersToDOMModifiers(aModifiers), true,
       dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH,
       0 /* Use the default value here. */);

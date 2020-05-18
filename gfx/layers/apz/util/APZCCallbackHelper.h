@@ -111,7 +111,9 @@ class APZCCallbackHelper {
 
   /* Dispatch a mouse event with the given parameters.
    * Return whether or not any listeners have called preventDefault on the
-   * event. */
+   * event.
+   * This is a lightweight wrapper around nsContentUtils::SendMouseEvent()
+   * and as such expects |aPoint| to be in layout coordinates. */
   MOZ_CAN_RUN_SCRIPT
   static bool DispatchMouseEvent(PresShell* aPresShell, const nsString& aType,
                                  const CSSPoint& aPoint, int32_t aButton,
