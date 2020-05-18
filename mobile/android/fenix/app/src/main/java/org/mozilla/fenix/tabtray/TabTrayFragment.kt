@@ -285,6 +285,8 @@ class TabTrayFragment : Fragment(R.layout.fragment_tab_tray), TabsTray.Observer,
         view?.tabsTray?.asView()?.isVisible = !hasNoTabs
         view?.save_to_collection_button?.isVisible = !hasNoTabs && !isPrivate
 
+        setHasOptionsMenu(!hasNoTabs)
+
         if (hasNoTabs) {
             view?.announceForAccessibility(view?.context?.getString(R.string.no_open_tabs_description))
         }
