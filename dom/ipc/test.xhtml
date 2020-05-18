@@ -70,8 +70,8 @@
        var frameLoader = document.getElementById('page').frameLoader;
        var x = parseInt(Math.random() * 100);
        var y = parseInt(Math.random() * 100);
-       frameLoader.sendCrossProcessMouseEvent("mousedown", x, y, 0, 1, 0, false);
-       frameLoader.sendCrossProcessMouseEvent("mouseup", x, y, 0, 1, 0, false);
+       frameLoader.sendCrossProcessMouseEvent("mousedown", x, y, 0, 1, 0);
+       frameLoader.sendCrossProcessMouseEvent("mouseup", x, y, 0, 1, 0);
      }
 
     function openWindow() {

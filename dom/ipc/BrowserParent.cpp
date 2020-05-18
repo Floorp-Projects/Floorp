@@ -1356,12 +1356,10 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
 
 void BrowserParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
                                    int32_t aButton, int32_t aClickCount,
-                                   int32_t aModifiers,
-                                   bool aIgnoreRootScrollFrame) {
+                                   int32_t aModifiers) {
   if (!mIsDestroyed) {
     Unused << PBrowserParent::SendMouseEvent(nsString(aType), aX, aY, aButton,
-                                             aClickCount, aModifiers,
-                                             aIgnoreRootScrollFrame);
+                                             aClickCount, aModifiers);
   }
 }
 

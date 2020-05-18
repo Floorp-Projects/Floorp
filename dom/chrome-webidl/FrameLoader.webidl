@@ -76,8 +76,7 @@ interface FrameLoader {
                                   float aY,
                                   long aButton,
                                   long aClickCount,
-                                  long aModifiers,
-                                  optional boolean aIgnoreRootScrollFrame = false);
+                                  long aModifiers);
 
   /**
    * Activate event forwarding from client (remote frame) to parent.
