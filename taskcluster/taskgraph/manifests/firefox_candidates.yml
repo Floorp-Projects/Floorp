@@ -56,7 +56,7 @@ platform_names:
             linux-devedition: 'linux-i686'
             linux64-shippable: 'linux-x86_64'
             linux64-devedition: 'linux-x86_64'
-            linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+            linux64-asan-reporter-shippable: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'mac'
             macosx64-devedition: 'mac'
             win32-shippable: 'win32'
@@ -65,14 +65,14 @@ platform_names:
             win64-devedition: 'win64'
             win64-aarch64-shippable: 'win64-aarch64'
             win64-aarch64-devedition: 'win64-aarch64'
-            win64-asan-reporter-nightly: 'win64-asan-reporter'
+            win64-asan-reporter-shippable: 'win64-asan-reporter'
     tools_platform:
         by-platform:
             linux-shippable: 'linux'
             linux-devedition: 'linux-devedition'
             linux64-shippable: 'linux64'
             linux64-devedition: 'linux64-devedition'
-            linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+            linux64-asan-reporter-shippable: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'macosx64'
             macosx64-devedition: 'macosx64-devedition'
             win32-shippable: 'win32'
@@ -81,14 +81,14 @@ platform_names:
             win64-devedition: 'win64-devedition'
             win64-aarch64-shippable: 'win64-aarch64'
             win64-aarch64-devedition: 'win64-aarch64-devedition'
-            win64-asan-reporter-nightly: 'win64-asan-reporter'
+            win64-asan-reporter-shippable: 'win64-asan-reporter'
     filename_platform:
         by-platform:
             linux-shippable: 'linux'
             linux-devedition: 'linux'
             linux64-shippable: 'linux64'
             linux64-devedition: 'linux64'
-            linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+            linux64-asan-reporter-shippable: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'macosx64'
             macosx64-devedition: 'macosx64'
             win32-shippable: 'win32'
@@ -97,7 +97,7 @@ platform_names:
             win64-devedition: 'win64'
             win64-aarch64-shippable: 'win64_aarch64'
             win64-aarch64-devedition: 'win64_aarch64'
-            win64-asan-reporter-nightly: 'win64-asan-reporter'
+            win64-asan-reporter-shippable: 'win64-asan-reporter'
 
 default: &default
     from:

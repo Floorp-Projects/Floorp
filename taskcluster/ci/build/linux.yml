@@ -1038,8 +1038,8 @@ linux64-fuzzing-ccov/opt:
         build-fuzzing:
             - linux
 
-linux64-asan-reporter-nightly/opt:
-    description: "Linux64 Opt ASAN Reporter Nightly"
+linux64-asan-reporter-shippable/opt:
+    description: "Linux64 Opt ASAN Reporter (Shippable)"
     attributes:
         nightly: true
     shipping-product:

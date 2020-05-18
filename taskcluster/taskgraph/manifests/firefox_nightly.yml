@@ -52,7 +52,7 @@ platform_names:
             linux-devedition: 'linux-i686'
             linux64-shippable: 'linux-x86_64'
             linux64-devedition: 'linux-x86_64'
-            linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+            linux64-asan-reporter-shippable: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'mac'
             macosx64-devedition: 'mac'
             win32-shippable: 'win32'
@@ -61,12 +61,12 @@ platform_names:
             win64-devedition: 'win64'
             win64-aarch64-shippable: 'win64-aarch64'
             win64-aarch64-devedition: 'win64-aarch64'
-            win64-asan-reporter-nightly: 'win64-asan-reporter'
+            win64-asan-reporter-shippable: 'win64-asan-reporter'
     stage_platform:
         by-platform:
             linux-shippable: 'linux'
             linux-devedition: 'linux'
-            linux64-asan-reporter-nightly: 'linux64-asan-reporter'
+            linux64-asan-reporter-shippable: 'linux64-asan-reporter'
             linux64-shippable: 'linux64'
             linux64-devedition: 'linux64'
             macosx64-shippable: 'macosx64'
@@ -77,7 +77,7 @@ platform_names:
             win64-devedition: 'win64'
             win64-aarch64-shippable: 'win64-aarch64'
             win64-aarch64-devedition: 'win64-aarch64'
-            win64-asan-reporter-nightly: 'win64-asan-reporter'
+            win64-asan-reporter-shippable: 'win64-asan-reporter'
 
 default: &default
     from:
@@ -129,8 +129,8 @@ mapping:
         pretty_name: firefox-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
         checksums_path: firefox-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
         not_for_platforms:
-            - linux64-asan-reporter-nightly
-            - win64-asan-reporter-nightly
+            - linux64-asan-reporter-shippable
+            - win64-asan-reporter-shippable
     target.json:
         <<: *default
         description: "Various compile and moz_app flags baked together in a json file"
@@ -204,8 +204,8 @@ mapping:
         pretty_name: jsshell-${filename_platform}.zip
         checksums_path: jsshell-${filename_platform}.zip
         not_for_platforms:
-            - linux64-asan-reporter-nightly
-            - win64-asan-reporter-nightly
+            - linux64-asan-reporter-shippable
+            - win64-asan-reporter-shippable
     target.langpack.xpi:
         <<: *default
         all_locales: true
@@ -221,8 +221,8 @@ mapping:
             - win32-shippable
             - win64-shippable
             - win64-aarch64-shippable
-            - win64-asan-reporter-nightly
-            - linux64-asan-reporter-nightly
+            - win64-asan-reporter-shippable
+            - linux64-asan-reporter-shippable
         pretty_name: firefox-${version}.${locale}.langpack.xpi
         checksums_path: firefox-${version}.${locale}.langpack.xpi
         destinations:
@@ -243,7 +243,7 @@ mapping:
             - win32-shippable
             - win64-shippable
             - win64-aarch64-shippable
-            - win64-asan-reporter-nightly
+            - win64-asan-reporter-shippable
         destinations:
             - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
             - latest-${branch}/mar-tools/${stage_platform}
@@ -257,7 +257,7 @@ mapping:
             - win32-shippable
             - win64-shippable
             - win64-aarch64-shippable
-            - win64-asan-reporter-nightly
+            - win64-asan-reporter-shippable
         destinations:
             - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
             - latest-${branch}/mar-tools/${stage_platform}
@@ -270,7 +270,7 @@ mapping:
         only_for_platforms:
             - linux-shippable
             - linux64-shippable
-            - linux64-asan-reporter-nightly
+            - linux64-asan-reporter-shippable
         pretty_name: firefox-${version}.${locale}.${filename_platform}.tar.bz2
         checksums_path: firefox-${version}.${locale}.${filename_platform}.tar.bz2
         destinations:
@@ -291,7 +291,7 @@ mapping:
         only_for_platforms:
             - linux-shippable
             - linux64-shippable
-            - linux64-asan-reporter-nightly
+            - linux64-asan-reporter-shippable
         pretty_name: firefox-${version}.${locale}.${filename_platform}.tar.bz2.asc
         checksums_path: firefox-${version}.${locale}.${filename_platform}.tar.bz2.asc
         destinations:
@@ -351,7 +351,7 @@ mapping:
             - win64-shippable
             - win32-shippable
             - win64-aarch64-shippable
-            - win64-asan-reporter-nightly
+            - win64-asan-reporter-shippable
         pretty_name: firefox-${version}.${locale}.${filename_platform}.zip
         checksums_path: firefox-${version}.${locale}.${filename_platform}.zip
     target.installer.exe:
@@ -364,7 +364,7 @@ mapping:
             - win64-shippable
             - win32-shippable
             - win64-aarch64-shippable
-            - win64-asan-reporter-nightly
+            - win64-asan-reporter-shippable
         pretty_name: firefox-${version}.${locale}.${filename_platform}.installer.exe
         checksums_path: firefox-${version}.${locale}.${filename_platform}.installer.exe
         destinations:

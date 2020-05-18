@@ -21,7 +21,7 @@ only-for-build-platforms:
     - linux/opt
     - linux64-shippable/opt
     - linux64-devedition/opt
-    - linux64-asan-reporter-nightly/opt
+    - linux64-asan-reporter-shippable/opt
     - linux64/opt
     - linux64-pgo/opt
     - macosx64-shippable/opt
@@ -37,7 +37,7 @@ only-for-build-platforms:
     - win64-aarch64-devedition/opt
     - win64/opt
     - win64-pgo/opt
-    - win64-asan-reporter-nightly/opt
+    - win64-asan-reporter-shippable/opt
 
 job-template:
     worker-type: 'b-linux'

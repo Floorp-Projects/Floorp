@@ -678,8 +678,8 @@ def target_tasks_nightly_asan(full_task_graph, parameters, graph_config):
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     filter = make_desktop_nightly_filter({
-        'linux64-asan-reporter-nightly',
-        'win64-asan-reporter-nightly'
+        'linux64-asan-reporter-shippable',
+        'win64-asan-reporter-shippable'
     })
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
 

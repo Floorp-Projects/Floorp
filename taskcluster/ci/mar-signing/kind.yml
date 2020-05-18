@@ -25,8 +25,8 @@ only-for-build-platforms:
     - win32-devedition/opt
     - win64-devedition/opt
     - win64-aarch64-devedition/opt
-    - linux64-asan-reporter-nightly/opt
-    - win64-asan-reporter-nightly/opt
+    - linux64-asan-reporter-shippable/opt
+    - win64-asan-reporter-shippable/opt
 
 job-template:
     shipping-phase: promote
