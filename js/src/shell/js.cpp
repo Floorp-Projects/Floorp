@@ -502,9 +502,6 @@ bool shell::enableWasmSimd = false;
 #endif
 bool shell::enableWasmVerbose = false;
 bool shell::enableTestWasmAwaitTier2 = false;
-#ifdef ENABLE_WASM_BIGINT
-bool shell::enableWasmBigInt = true;
-#endif
 bool shell::enableSourcePragmas = true;
 bool shell::enableAsyncStacks = false;
 bool shell::enableStreams = false;
@@ -10238,9 +10235,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableBYOBStreamReaders = op.getBoolOption("enable-byob-stream-readers");
   enableWritableStreams = op.getBoolOption("enable-writable-streams");
   enableReadableStreamPipeTo = op.getBoolOption("enable-readablestream-pipeto");
-#ifdef ENABLE_WASM_BIGINT
-  enableWasmBigInt = !op.getBoolOption("no-wasm-bigint");
-#endif
   enableWeakRefs = op.getBoolOption("enable-weak-refs");
   enableToSource = !op.getBoolOption("disable-tosource");
   enablePropertyErrorMessageFix =
@@ -10267,9 +10261,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
-#ifdef ENABLE_WASM_BIGINT
-      .setWasmBigIntEnabled(enableWasmBigInt)
-#endif
       .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks);
 
@@ -10641,9 +10632,6 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(enableWasmSimd)
-#endif
-#ifdef ENABLE_WASM_BIGINT
-      .setWasmBigIntEnabled(enableWasmBigInt)
 #endif
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
@@ -11062,12 +11050,6 @@ int main(int argc, char** argv, char** envp) {
                         "Enable WebAssembly verbose logging") ||
       !op.addBoolOption('\0', "disable-wasm-huge-memory",
                         "Disable WebAssembly huge memory") ||
-#ifdef ENABLE_WASM_BIGINT
-      !op.addBoolOption('\0', "no-wasm-bigint",
-                        "Disable WebAssembly BigInt conversions") ||
-#else
-      !op.addBoolOption('\0', "no-wasm-bigint", "No-op") ||
-#endif
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2") ||

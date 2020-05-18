@@ -790,12 +790,6 @@ static bool WasmMultiValueEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool WasmBigIntEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::I64BigIntConversionAvailable(cx));
-  return true;
-}
-
 static bool WasmSimdSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::SimdAvailable(cx));
@@ -6677,10 +6671,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmMultiValueEnabled", WasmMultiValueEnabled, 1, 0,
 "wasmMultiValueEnabled()",
 "  Returns a boolean indicating whether the WebAssembly multi-value proposal is enabled."),
-
-    JS_FN_HELP("wasmBigIntEnabled", WasmBigIntEnabled, 1, 0,
-"wasmBigIntEnabled()",
-"  Returns a boolean indicating whether the WebAssembly I64 to BigInt proposal is enabled."),
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",
