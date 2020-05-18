@@ -16,20 +16,20 @@
 
 SimpleTest.waitForExplicitFinish();
 
-const expectedCachedConsoleCalls = [
-    {
-      level: "log",
-      filename: /console-test-worker/,
-      arguments: ['Log from worker init'],
-    },
-];
+const expectedCachedConsoleCalls = [{
+  message:{
+    level: "log",
+    filename: /console-test-worker/,
+    arguments: ['Log from worker init'],
+  }
+}];
 
-const expectedConsoleAPICalls = [
-    {
-      level: "log",
-      arguments: ['Log was requested from worker'],
-    },
-];
+const expectedConsoleAPICalls = [{
+  message: {
+    level: "log",
+    arguments: ['Log was requested from worker'],
+  }
+}];
 
 window.onload = async function () {
   const {state} = await attachConsoleToWorker(["ConsoleAPI"]);
@@ -61,7 +61,7 @@ const testConsoleAPI = async function (state) {
   return new Promise(resolve => {
     const onConsoleAPICall = (packet) => {
       info("received message level: " + packet.message.level);
-      checkConsoleAPICalls([packet.message], expectedConsoleAPICalls);
+      checkConsoleAPICalls([packet], expectedConsoleAPICalls);
       state.webConsoleFront.off("consoleAPICall", onConsoleAPICall);
       resolve();
     }

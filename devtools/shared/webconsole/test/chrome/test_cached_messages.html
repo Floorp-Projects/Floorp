@@ -31,7 +31,6 @@ function doPageErrors() {
 
   expectedPageErrors = [
     {
-      _type: "PageError",
       errorMessage: /fooColor/,
       sourceName: /.+/,
       category: "CSS Parser",
@@ -40,7 +39,6 @@ function doPageErrors() {
       warning: true,
     },
     {
-      _type: "PageError",
       errorMessage: /doTheImpossible/,
       sourceName: /.+/,
       category: "chrome javascript",
@@ -72,7 +70,6 @@ function doConsoleCalls() {
 
   expectedConsoleCalls = [
     {
-      _type: "ConsoleAPI",
       level: "log",
       filename: /test_cached_messages/,
       functionName: "doConsoleCalls",
@@ -80,7 +77,6 @@ function doConsoleCalls() {
       arguments: ["foobarBaz-log", { type: "undefined" }],
     },
     {
-      _type: "ConsoleAPI",
       level: "info",
       filename: /test_cached_messages/,
       functionName: "doConsoleCalls",
@@ -88,7 +84,6 @@ function doConsoleCalls() {
       arguments: ["foobarBaz-info", { type: "null" }],
     },
     {
-      _type: "ConsoleAPI",
       level: "warn",
       filename: /test_cached_messages/,
       functionName: "doConsoleCalls",
@@ -167,12 +162,12 @@ function onCachedConsoleAPI(state, response) {
   ok(msgs.length >= expectedConsoleCalls.length,
      "number of cached console messages");
 
-  for (const msg of msgs) {
+  for (const {message} of msgs) {
     for (const expected of expectedConsoleCalls) {
-      if (expected.functionName == msg.functionName &&
-          expected.filename.test(msg.filename)) {
+      if (expected.functionName == message.functionName &&
+          expected.filename.test(message.filename)) {
         expectedConsoleCalls.splice(expectedConsoleCalls.indexOf(expected));
-        checkConsoleAPICall(msg, expected);
+        checkConsoleAPICall(message, expected);
         break;
       }
     }
@@ -202,12 +197,12 @@ function onCachedPageErrors(state, response) {
   ok(msgs.length >= expectedPageErrors.length,
      "number of cached page errors");
 
-  for (const msg of msgs) {
+  for (const {pageError} of msgs) {
     for (const expected of expectedPageErrors) {
-      if (expected.category == msg.category &&
-          expected.errorMessage.test(msg.errorMessage)) {
+      if (expected.category == pageError.category &&
+          expected.errorMessage.test(pageError.errorMessage)) {
         expectedPageErrors.splice(expectedPageErrors.indexOf(expected));
-        checkObject(msg, expected);
+        checkObject(pageError, expected);
         break;
       }
     }
