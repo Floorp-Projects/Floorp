@@ -30,6 +30,7 @@ import mozilla.components.support.base.crash.Breadcrumb as CrashBreadcrumb
  * @param dsn Data Source Name of the Sentry server.
  * @param tags A list of additional tags that will be sent together with crash reports.
  * @param environment An optional, environment name string or null to set none
+ * @param sentryProjectUrl Base URL of the Sentry web interface pointing to the app/project.
  */
 class SentryService(
     context: Context,
@@ -37,6 +38,7 @@ class SentryService(
     tags: Map<String, String> = emptyMap(),
     environment: String? = null,
     private val sendEventForNativeCrashes: Boolean = false,
+    private val sentryProjectUrl: String? = null,
     clientFactory: SentryClientFactory? = null
 ) : CrashReporterService {
     override val id: String = "sentry"
@@ -44,8 +46,10 @@ class SentryService(
     override val name: String = "Sentry"
 
     override fun createCrashReportUrl(identifier: String): String? {
-        val id = identifier.replace("-", "")
-        return "https://sentry.prod.mozaws.net/operations/samples-crash/?query=$id"
+        return sentryProjectUrl?.let {
+            val id = identifier.replace("-", "")
+            return "$it/?query=$id"
+        }
     }
 
     // Fenix perf note: Sentry init may negatively impact cold startup so it's important this is lazily init.
