@@ -167,8 +167,6 @@ class ViewSourcePageChild extends JSWindowActorChild {
    *        The pageshow event being handled.
    */
   onPageShow(event) {
-    this.contentWindow.focus();
-
     // If we need to draw the selection, wait until an actual view source page
     // has loaded, instead of about:blank.
     if (
