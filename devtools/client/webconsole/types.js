@@ -56,6 +56,7 @@ exports.ConsoleMessage = function(props) {
       logpointId: undefined,
       chromeContext: false,
       hasException: false,
+      isPromiseRejection: false,
     },
     props
   );

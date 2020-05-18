@@ -173,49 +173,49 @@ describe("PageError component:", () => {
     const message = stubPreparedMessages.get(`Promise reject ""`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe("Uncaught <empty string>");
+    expect(text).toBe("Uncaught (in promise) <empty string>");
   });
 
   it("renders uncaught rejected Promise with string", () => {
     const message = stubPreparedMessages.get(`Promise reject "tomato"`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught tomato`);
+    expect(text).toBe(`Uncaught (in promise) tomato`);
   });
 
   it("renders uncaught rejected Promise with boolean", () => {
     const message = stubPreparedMessages.get(`Promise reject false`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught false`);
+    expect(text).toBe(`Uncaught (in promise) false`);
   });
 
   it("renders uncaught rejected Promise with number ", () => {
     const message = stubPreparedMessages.get(`Promise reject 0`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught 0`);
+    expect(text).toBe(`Uncaught (in promise) 0`);
   });
 
   it("renders uncaught rejected Promise with null", () => {
     const message = stubPreparedMessages.get(`Promise reject null`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught null`);
+    expect(text).toBe(`Uncaught (in promise) null`);
   });
 
   it("renders uncaught rejected Promise with undefined", () => {
     const message = stubPreparedMessages.get(`Promise reject undefined`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught undefined`);
+    expect(text).toBe(`Uncaught (in promise) undefined`);
   });
 
   it("renders uncaught rejected Promise with Symbol", () => {
     const message = stubPreparedMessages.get(`Promise reject Symbol`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Symbol(potato)`);
+    expect(text).toBe(`Uncaught (in promise) Symbol(potato)`);
   });
 
   it("renders uncaught rejected Promise with object", () => {
@@ -229,14 +229,14 @@ describe("PageError component:", () => {
       )
     );
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Object { vegetable: "cucumber" }`);
+    expect(text).toBe(`Uncaught (in promise) Object { vegetable: "cucumber" }`);
   });
 
   it("renders uncaught rejected Promise with error", () => {
     const message = stubPreparedMessages.get(`Promise reject Error Object`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Error: pumpkin`);
+    expect(text).toBe(`Uncaught (in promise) Error: pumpkin`);
   });
 
   it("renders uncaught rejected Promise with Error with custom name", () => {
@@ -245,7 +245,7 @@ describe("PageError component:", () => {
     );
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught JuicyError: pineapple`);
+    expect(text).toBe(`Uncaught (in promise) JuicyError: pineapple`);
   });
 
   it("renders URLs in message as actual, cropped, links", () => {
