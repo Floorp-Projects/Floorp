@@ -295,8 +295,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                                          const float& aY,
                                          const int32_t& aButton,
                                          const int32_t& aClickCount,
-                                         const int32_t& aModifiers,
-                                         const bool& aIgnoreRootScrollFrame);
+                                         const int32_t& aModifiers);
 
   mozilla::ipc::IPCResult RecvRealMouseMoveEvent(
       const mozilla::WidgetMouseEvent& aEvent, const ScrollableLayerGuid& aGuid,
