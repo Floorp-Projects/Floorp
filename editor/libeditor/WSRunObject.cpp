@@ -214,9 +214,12 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
       // Delete the leading ws that is after insertion point.  We don't
       // have to (it would still not be significant after br), but it's
       // just more aesthetically pleasing to.
-      nsresult rv = DeleteRange(pointToInsert, afterRun->EndPoint());
+      nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                        .DeleteTextAndTextNodesWithTransaction(
+                            pointToInsert, afterRun->EndPoint());
       if (NS_FAILED(rv)) {
-        NS_WARNING("WSRunObject::DeleteRange() failed");
+        NS_WARNING(
+            "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
         return nullptr;
       }
     } else if (afterRun->IsVisibleAndMiddleOfHardLine()) {
@@ -251,9 +254,12 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
     } else if (beforeRun->IsEndOfHardLine()) {
       // Need to delete the trailing ws that is before insertion point, because
       // it would become significant after break inserted.
-      nsresult rv = DeleteRange(beforeRun->StartPoint(), pointToInsert);
+      nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                        .DeleteTextAndTextNodesWithTransaction(
+                            beforeRun->StartPoint(), pointToInsert);
       if (NS_FAILED(rv)) {
-        NS_WARNING("WSRunObject::DeleteRange() failed");
+        NS_WARNING(
+            "WSRunObject::DeleteTextAndTextNodesWithTransaction() failed");
         return nullptr;
       }
     } else if (beforeRun->IsVisibleAndMiddleOfHardLine()) {
@@ -313,9 +319,12 @@ nsresult WSRunObject::InsertText(Document& aDocument,
     } else if (afterRun->IsStartOfHardLine()) {
       // Delete the leading ws that is after insertion point, because it
       // would become significant after text inserted.
-      nsresult rv = DeleteRange(pointToInsert, afterRun->EndPoint());
+      nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                        .DeleteTextAndTextNodesWithTransaction(
+                            pointToInsert, afterRun->EndPoint());
       if (NS_FAILED(rv)) {
-        NS_WARNING("WSRunObject::DeleteRange() failed");
+        NS_WARNING(
+            "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
         return rv;
       }
     } else if (afterRun->IsVisibleAndMiddleOfHardLine()) {
@@ -336,9 +345,12 @@ nsresult WSRunObject::InsertText(Document& aDocument,
     } else if (beforeRun->IsEndOfHardLine()) {
       // Need to delete the trailing ws that is before insertion point, because
       // it would become significant after text inserted.
-      nsresult rv = DeleteRange(beforeRun->StartPoint(), pointToInsert);
+      nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                        .DeleteTextAndTextNodesWithTransaction(
+                            beforeRun->StartPoint(), pointToInsert);
       if (NS_FAILED(rv)) {
-        NS_WARNING("WSRunObject::DeleteRange() failed");
+        NS_WARNING(
+            "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
         return rv;
       }
     } else if (beforeRun->IsVisibleAndMiddleOfHardLine()) {
@@ -456,8 +468,12 @@ nsresult WSRunObject::DeleteWSBackward() {
       return NS_OK;
     }
     nsresult rv =
-        DeleteRange(atPreviousCharOfStart, atPreviousCharOfStart.NextPoint());
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WSRunObject::DeleteRange() failed");
+        MOZ_KnownLive(mHTMLEditor)
+            .DeleteTextAndTextNodesWithTransaction(
+                atPreviousCharOfStart, atPreviousCharOfStart.NextPoint());
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
     return rv;
   }
 
@@ -484,8 +500,11 @@ nsresult WSRunObject::DeleteWSBackward() {
     }
 
     // finally, delete that ws
-    rv = DeleteRange(startToDelete, endToDelete);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WSRunObject::DeleteRange() failed");
+    rv = MOZ_KnownLive(mHTMLEditor)
+             .DeleteTextAndTextNodesWithTransaction(startToDelete, endToDelete);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
     return rv;
   }
 
@@ -500,8 +519,11 @@ nsresult WSRunObject::DeleteWSBackward() {
     }
 
     // finally, delete that ws
-    rv = DeleteRange(startToDelete, endToDelete);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WSRunObject::DeleteRange() failed");
+    rv = MOZ_KnownLive(mHTMLEditor)
+             .DeleteTextAndTextNodesWithTransaction(startToDelete, endToDelete);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
     return rv;
   }
 
@@ -520,8 +542,12 @@ nsresult WSRunObject::DeleteWSForward() {
         !atNextCharOfStart.IsCharNBSP()) {
       return NS_OK;
     }
-    nsresult rv = DeleteRange(atNextCharOfStart, atNextCharOfStart.NextPoint());
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WSRunObject::DeleteRange() failed");
+    nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                      .DeleteTextAndTextNodesWithTransaction(
+                          atNextCharOfStart, atNextCharOfStart.NextPoint());
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
     return rv;
   }
 
@@ -547,8 +573,11 @@ nsresult WSRunObject::DeleteWSForward() {
     }
 
     // Finally, delete that ws
-    rv = DeleteRange(startToDelete, endToDelete);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WSRunObject::DeleteRange() failed");
+    rv = MOZ_KnownLive(mHTMLEditor)
+             .DeleteTextAndTextNodesWithTransaction(startToDelete, endToDelete);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
     return rv;
   }
 
@@ -563,8 +592,11 @@ nsresult WSRunObject::DeleteWSForward() {
     }
 
     // Finally, delete that ws
-    rv = DeleteRange(startToDelete, endToDelete);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WSRunObject::DeleteRange() failed");
+    rv = MOZ_KnownLive(mHTMLEditor)
+             .DeleteTextAndTextNodesWithTransaction(startToDelete, endToDelete);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
     return rv;
   }
 
@@ -1121,10 +1153,12 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
       // mScanStartPoint will be referred bellow so that we need to keep
       // it a valid point.
       AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
-      nsresult rv = aEndObject->DeleteRange(aEndObject->mScanStartPoint,
-                                            afterRun->EndPoint());
+      nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                        .DeleteTextAndTextNodesWithTransaction(
+                            aEndObject->mScanStartPoint, afterRun->EndPoint());
       if (NS_FAILED(rv)) {
-        NS_WARNING("WSRunObject::DeleteRange() failed");
+        NS_WARNING(
+            "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
         return rv;
       }
     }
@@ -1162,12 +1196,13 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
 
   // trim before run of any trailing ws
   if (beforeRun->IsEndOfHardLine()) {
-    nsresult rv = DeleteRange(beforeRun->StartPoint(), mScanStartPoint);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::DeleteRange() failed");
-      return rv;
-    }
-    return NS_OK;
+    nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                      .DeleteTextAndTextNodesWithTransaction(
+                          beforeRun->StartPoint(), mScanStartPoint);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+    return rv;
   }
 
   if (beforeRun->IsVisibleAndMiddleOfHardLine() && !mPRE) {
@@ -1254,107 +1289,6 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
             "WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces() "
             "failed");
         return rv;
-      }
-    }
-  }
-  return NS_OK;
-}
-
-nsresult WSRunObject::DeleteRange(const EditorDOMPoint& aStartPoint,
-                                  const EditorDOMPoint& aEndPoint) {
-  if (NS_WARN_IF(!aStartPoint.IsSet()) || NS_WARN_IF(!aEndPoint.IsSet())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  MOZ_ASSERT(aStartPoint.IsSetAndValid());
-  MOZ_ASSERT(aEndPoint.IsSetAndValid());
-
-  // MOOSE: this routine needs to be modified to preserve the integrity of the
-  // wsFragment info.
-
-  if (aStartPoint == aEndPoint) {
-    // Nothing to delete
-    return NS_OK;
-  }
-
-  if (aStartPoint.GetContainer() == aEndPoint.GetContainer() &&
-      aStartPoint.IsInTextNode()) {
-    RefPtr<Text> textNode = aStartPoint.ContainerAsText();
-    nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                      .DeleteTextWithTransaction(
-                          *textNode, aStartPoint.Offset(),
-                          aEndPoint.Offset() - aStartPoint.Offset());
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::DeleteTextWithTransaction() failed");
-    return rv;
-  }
-
-  RefPtr<nsRange> range;
-  int32_t count = mNodeArray.Length();
-  int32_t idx = mNodeArray.IndexOf(aStartPoint.GetContainer());
-  if (idx == -1) {
-    // If our starting point wasn't one of our ws text nodes, then just go
-    // through them from the beginning.
-    idx = 0;
-  }
-  for (; idx < count; idx++) {
-    RefPtr<Text> node = mNodeArray[idx];
-    if (!node) {
-      // We ran out of ws nodes; must have been deleting to end
-      return NS_OK;
-    }
-    if (node == aStartPoint.GetContainer()) {
-      if (!aStartPoint.IsEndOfContainer()) {
-        nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                          .DeleteTextWithTransaction(
-                              *node, aStartPoint.Offset(),
-                              aStartPoint.GetContainer()->Length() -
-                                  aStartPoint.Offset());
-        if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
-          return rv;
-        }
-      }
-    } else if (node == aEndPoint.GetContainer()) {
-      if (!aEndPoint.IsStartOfContainer()) {
-        nsresult rv =
-            MOZ_KnownLive(mHTMLEditor)
-                .DeleteTextWithTransaction(*node, 0, aEndPoint.Offset());
-        if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
-          return rv;
-        }
-      }
-      break;
-    } else {
-      if (!range) {
-        ErrorResult error;
-        range = nsRange::Create(aStartPoint.ToRawRangeBoundary(),
-                                aEndPoint.ToRawRangeBoundary(), error);
-        if (!range) {
-          NS_WARNING("nsRange::Create() failed");
-          return error.StealNSResult();
-        }
-      }
-      bool nodeBefore, nodeAfter;
-      nsresult rv =
-          RangeUtils::CompareNodeToRange(node, range, &nodeBefore, &nodeAfter);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("RangeUtils::CompareNodeToRange() failed");
-        return rv;
-      }
-      if (nodeAfter) {
-        break;
-      }
-      if (!nodeBefore) {
-        nsresult rv =
-            MOZ_KnownLive(mHTMLEditor).DeleteNodeWithTransaction(*node);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-          return rv;
-        }
-        mNodeArray.RemoveElement(node);
-        --count;
-        --idx;
       }
     }
   }
@@ -1481,8 +1415,11 @@ nsresult WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(
                        "end point, but ignored");
 
   // Finally, delete that replaced ws, if any
-  rv = DeleteRange(start, end);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WSRunObject::DeleteRange() failed");
+  rv = MOZ_KnownLive(mHTMLEditor)
+           .DeleteTextAndTextNodesWithTransaction(start, end);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
   return rv;
 }
 
@@ -1808,11 +1745,13 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
                      "expected position");
         EditorDOMPointInText atNextCharOfPreviousCharOfEndOfRun =
             atPreviousCharOfEndOfRun.NextPoint();
-        nsresult rv =
-            DeleteRange(atNextCharOfPreviousCharOfEndOfRun,
-                        atNextCharOfPreviousCharOfEndOfRun.NextPoint());
+        nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                          .DeleteTextAndTextNodesWithTransaction(
+                              atNextCharOfPreviousCharOfEndOfRun,
+                              atNextCharOfPreviousCharOfEndOfRun.NextPoint());
         if (NS_FAILED(rv)) {
-          NS_WARNING("WSRunObject::DeleteRange() failed");
+          NS_WARNING(
+              "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
           return rv;
         }
       }
@@ -1842,10 +1781,13 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
         NS_ASSERTION(atPreviousCharOfEndOfRun.IsCharNBSP(),
                      "Trying to remove an NBSP, but it's gone from the "
                      "expected position");
-        nsresult rv = DeleteRange(atPreviousCharOfEndOfRun,
-                                  atPreviousCharOfEndOfRun.NextPoint());
+        nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                          .DeleteTextAndTextNodesWithTransaction(
+                              atPreviousCharOfEndOfRun,
+                              atPreviousCharOfEndOfRun.NextPoint());
         if (NS_FAILED(rv)) {
-          NS_WARNING("WSRunObject::DeleteRange() failed");
+          NS_WARNING(
+              "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
           return rv;
         }
       }
@@ -1927,9 +1869,13 @@ nsresult WSRunObject::ReplacePreviousNBSPIfUnnecessary(
         atPreviousChar.IsNextCharNBSP(),
         "Trying to remove an NBSP, but it's gone from the expected position");
     EditorDOMPointInText atNextCharOfPreviousChar = atPreviousChar.NextPoint();
-    nsresult rv = DeleteRange(atNextCharOfPreviousChar,
-                              atNextCharOfPreviousChar.NextPoint());
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WSRunObject::DeleteRange() failed");
+    nsresult rv =
+        MOZ_KnownLive(mHTMLEditor)
+            .DeleteTextAndTextNodesWithTransaction(
+                atNextCharOfPreviousChar, atNextCharOfPreviousChar.NextPoint());
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
     return rv;
   }
 
@@ -1982,9 +1928,12 @@ nsresult WSRunObject::CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
           atNextChar.IsNextCharNBSP(),
           "Trying to remove an NBSP, but it's gone from the expected position");
       EditorDOMPointInText atNextCharOfNextChar = atNextChar.NextPoint();
-      rv = DeleteRange(atNextCharOfNextChar, atNextCharOfNextChar.NextPoint());
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "WSRunObject::DeleteRange() failed");
+      rv = MOZ_KnownLive(mHTMLEditor)
+               .DeleteTextAndTextNodesWithTransaction(
+                   atNextCharOfNextChar, atNextCharOfNextChar.NextPoint());
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
       return rv;
     }
   }
@@ -1996,9 +1945,11 @@ nsresult WSRunObject::Scrub() {
     if (run->IsMiddleOfHardLine()) {
       continue;
     }
-    nsresult rv = DeleteRange(run->StartPoint(), run->EndPoint());
+    nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                      .DeleteTextAndTextNodesWithTransaction(run->StartPoint(),
+                                                             run->EndPoint());
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::DeleteRange() failed");
+      NS_WARNING("HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
       return rv;
     }
   }
