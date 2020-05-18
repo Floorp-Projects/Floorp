@@ -99,6 +99,57 @@ add_task(async function test_initialialize_via_oauth_token() {
   Services.prefs.setBoolPref("identity.sync.useOAuthForSyncToken", false);
 });
 
+add_task(async function test_refreshOAuthTokenOn401() {
+  _("Refreshes the FXA OAuth token after a 401.");
+  Services.prefs.setBoolPref("identity.sync.useOAuthForSyncToken", true);
+  let getTokenCount = 0;
+  let browseridManager = new BrowserIDManager();
+  let identityConfig = makeIdentityConfig();
+  let fxaInternal = makeFxAccountsInternalMock(identityConfig);
+  configureFxAccountIdentity(browseridManager, identityConfig, fxaInternal);
+  browseridManager._fxaService._internal.initialize();
+  browseridManager._fxaService.getAccessToken = () => {
+    ++getTokenCount;
+    return Promise.resolve(MOCK_ACCESS_TOKEN_RESPONSE);
+  };
+
+  let didReturn401 = false;
+  let didReturn200 = false;
+  let mockTSC = mockTokenServer(() => {
+    if (getTokenCount <= 1) {
+      didReturn401 = true;
+      return {
+        status: 401,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      };
+    }
+    didReturn200 = true;
+    return {
+      status: 200,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        id: "id",
+        key: "key",
+        api_endpoint: "http://example.com/",
+        uid: "uid",
+        duration: 300,
+      }),
+    };
+  });
+
+  browseridManager._tokenServerClient = mockTSC;
+
+  await browseridManager._ensureValidToken();
+
+  Assert.equal(getTokenCount, 2);
+  Assert.ok(didReturn401);
+  Assert.ok(didReturn200);
+  Assert.ok(browseridManager._token);
+  Assert.ok(browseridManager._hasValidToken());
+  Services.prefs.setBoolPref("identity.sync.useOAuthForSyncToken", false);
+});
+
 add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
   _("Verify sync state with auth error + account deleted");
 
