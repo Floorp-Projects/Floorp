@@ -145,7 +145,6 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsIUploadChannel.h"
 #include "nsIURIFixup.h"
-#include "nsIURIMutator.h"
 #include "nsIURILoader.h"
 #include "nsIViewSourceChannel.h"
 #include "nsIWebBrowserChrome.h"
@@ -5898,9 +5897,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   //   2. Send the URI to a keyword server (if enabled)
   //   3. If the error was DNS failure, then add www and .com to the URI
   //      (if appropriate).
-  //   4. If the www .com additions don't work, try those with an HTTPS scheme
-  //      (if appropriate).
-  //   5. Throw an error dialog box...
+  //   4. Throw an error dialog box...
   //
   if (url && NS_FAILED(aStatus)) {
     if (aStatus == NS_ERROR_FILE_NOT_FOUND ||
@@ -5969,8 +5966,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
       return NS_OK;
     }
 
-    if ((aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET ||
-         aStatus == NS_ERROR_CONNECTION_REFUSED) &&
+    if ((aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET) &&
         ((mLoadType == LOAD_NORMAL && isTopFrame) || mAllowKeywordFixup)) {
       //
       // Try and make an alternative URI from the old one
@@ -6062,8 +6058,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
 
       //
       // Now try change the address, e.g. turn http://foo into
-      // http://www.foo.com, and if that doesn't work try https with
-      // https://foo and https://www.foo.com.
+      // http://www.foo.com
       //
       if (aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET) {
         bool doCreateAlternate = true;
@@ -6106,23 +6101,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                 getter_AddRefs(newPostData), getter_AddRefs(newURI));
           }
         }
-      } else if (aStatus == NS_ERROR_CONNECTION_REFUSED &&
-                 Preferences::GetBool("browser.fixup.fallback-to-https",
-                                      false)) {
-        // Try HTTPS, since http didn't work
-        if (SchemeIsHTTP(url)) {
-          int32_t port = 0;
-          url->GetPort(&port);
-
-          // Fall back to HTTPS only if port is default
-          if (port == -1) {
-            newURI = nullptr;
-            newPostData = nullptr;
-            NS_MutateURI(url)
-                .SetScheme(NS_LITERAL_CSTRING("https"))
-                .Finalize(getter_AddRefs(newURI));
-          }
-        }
       }
 
       // Did we make a new URI that is different to the old one? If so
@@ -6146,35 +6124,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
           MOZ_ASSERT(loadInfo, "loadInfo is required on all channels");
           nsCOMPtr<nsIPrincipal> triggeringPrincipal =
               loadInfo->TriggeringPrincipal();
-
-          // If the new URI is HTTP, it may not work and we may want to fall
-          // back to HTTPS, so kick off a speculative connect to get that
-          // started.  Even if we don't adjust to HTTPS here, there could be a
-          // redirect to HTTPS coming so this could speed things up.
-          if (SchemeIsHTTP(url)) {
-            int32_t port = 0;
-            rv = url->GetPort(&port);
-
-            // only do this if the port is default.
-            if (NS_SUCCEEDED(rv) && port == -1) {
-              nsCOMPtr<nsIURI> httpsURI;
-              rv = NS_MutateURI(url)
-                       .SetScheme(NS_LITERAL_CSTRING("https"))
-                       .Finalize(getter_AddRefs(httpsURI));
-
-              if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsIIOService> ios = do_GetIOService();
-                if (ios) {
-                  nsCOMPtr<nsISpeculativeConnect> speculativeService =
-                      do_QueryInterface(ios);
-                  if (speculativeService) {
-                    speculativeService->SpeculativeConnect(
-                        httpsURI, triggeringPrincipal, nullptr);
-                  }
-                }
-              }
-            }
-          }
 
           LoadURIOptions loadURIOptions;
           loadURIOptions.mTriggeringPrincipal = triggeringPrincipal;
