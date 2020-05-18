@@ -10,7 +10,6 @@ scripts
     desktop_unittest.rst
     fx_desktop_build.rst
     marionette.rst
-    mobile_l10n.rst
     mobile_partner_repack.rst
     multil10n.rst
     talos_script.rst
