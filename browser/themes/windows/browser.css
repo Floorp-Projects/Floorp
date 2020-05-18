@@ -271,8 +271,8 @@
   :root:not([inDOMFullscreen]) #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
-  :root:not([inDOMFullscreen]) #toolbar-menubar:-moz-lwtheme,
-  :root:not([inDOMFullscreen]) #TabsToolbar:-moz-lwtheme {
+  :root:not([inDOMFullscreen]):not([chromehidden~="menubar"]) #toolbar-menubar:-moz-lwtheme,
+  :root:not([inDOMFullscreen]):not([chromehidden~="toolbar"]) #TabsToolbar:-moz-lwtheme {
     visibility: visible;
   }
 }
