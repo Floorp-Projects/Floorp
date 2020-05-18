@@ -9,6 +9,7 @@
 #include "nsIParentalControlsService.h"
 #include "nsINetworkLinkService.h"
 #include "nsIObserverService.h"
+#include "nsIOService.h"
 #include "nsNetUtil.h"
 #include "nsStandardURL.h"
 #include "TRR.h"
@@ -546,7 +547,8 @@ nsresult TRRService::DispatchTRRRequest(TRR* aTrrRequest) {
 nsresult TRRService::DispatchTRRRequestInternal(TRR* aTrrRequest,
                                                 bool aWithLock) {
   NS_ENSURE_ARG_POINTER(aTrrRequest);
-  if (!StaticPrefs::network_trr_fetch_off_main_thread()) {
+  if (!StaticPrefs::network_trr_fetch_off_main_thread() ||
+      XRE_IsSocketProcess()) {
     return NS_DispatchToMainThread(aTrrRequest);
   }
 
@@ -997,9 +999,11 @@ TRRService::Notify(nsITimer* aTimer) {
 }
 
 void TRRService::TRRIsOkay(enum TrrOkay aReason) {
-  MOZ_ASSERT_IF(StaticPrefs::network_trr_fetch_off_main_thread(),
+  MOZ_ASSERT_IF(StaticPrefs::network_trr_fetch_off_main_thread() &&
+                    !XRE_IsSocketProcess(),
                 IsOnTRRThread());
-  MOZ_ASSERT_IF(!StaticPrefs::network_trr_fetch_off_main_thread(),
+  MOZ_ASSERT_IF(!StaticPrefs::network_trr_fetch_off_main_thread() ||
+                    XRE_IsSocketProcess(),
                 NS_IsMainThread());
 
   Telemetry::AccumulateCategorical(
@@ -1028,9 +1032,11 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
     const nsACString& aOriginSuffix) {
   // this is an NS check for the TRR blacklist or confirmationNS check
 
-  MOZ_ASSERT_IF(StaticPrefs::network_trr_fetch_off_main_thread(),
+  MOZ_ASSERT_IF(StaticPrefs::network_trr_fetch_off_main_thread() &&
+                    !XRE_IsSocketProcess(),
                 IsOnTRRThread());
-  MOZ_ASSERT_IF(!StaticPrefs::network_trr_fetch_off_main_thread(),
+  MOZ_ASSERT_IF(!StaticPrefs::network_trr_fetch_off_main_thread() ||
+                    XRE_IsSocketProcess(),
                 NS_IsMainThread());
   MOZ_ASSERT(!rec);
 
