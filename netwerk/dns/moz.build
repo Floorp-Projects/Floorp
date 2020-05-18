@@ -46,6 +46,8 @@ EXPORTS.mozilla.net += [
     'HTTPSSVC.h',
     'IDNBlocklistUtils.h',
     'TRRService.h',
+    'TRRServiceChild.h',
+    'TRRServiceParent.h',
 ]
 
 SOURCES += [
@@ -67,11 +69,14 @@ UNIFIED_SOURCES += [
     'punycode.c',
     'TRR.cpp',
     'TRRService.cpp',
+    'TRRServiceChild.cpp',
+    'TRRServiceParent.cpp',
 ]
 
 IPDL_SOURCES = [
     'PDNSRequest.ipdl',
     'PDNSRequestParams.ipdlh',
+    'PTRRService.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

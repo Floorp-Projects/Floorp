@@ -10,6 +10,7 @@
 
 #include "mozilla/ipc/SharedMemoryBasic.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Logging.h"
