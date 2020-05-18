@@ -111,6 +111,8 @@ class Performance : public DOMEventTargetHelper {
 
   virtual bool CrossOriginIsolated() const = 0;
 
+  void QueueNotificationObserversTask();
+
  protected:
   explicit Performance(bool aSystemPrincipal);
   Performance(nsPIDOMWindowInner* aWindow, bool aSystemPrincipal);
