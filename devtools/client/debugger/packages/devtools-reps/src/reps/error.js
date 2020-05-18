@@ -102,7 +102,7 @@ function ErrorRep(props) {
         customFormat ? "reps-custom-format" : ""
       }`,
     },
-    content
+    ...content
   );
 }
 
