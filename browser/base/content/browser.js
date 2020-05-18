@@ -245,6 +245,11 @@ XPCOMUtils.defineLazyScriptGetter(
   "A11yUtils",
   "chrome://browser/content/browser-a11yUtils.js"
 );
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  "gSharedTabWarning",
+  "chrome://browser/content/browser-webrtc.js"
+);
 
 // lazy service getters
 

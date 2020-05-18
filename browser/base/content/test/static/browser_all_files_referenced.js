@@ -229,10 +229,6 @@ var whitelist = [
   // Referenced from the screenshots webextension
   { file: "resource://app/localization/en-US/browser/screenshots.ftl" },
 
-  // This file is referenced from WebRTCParent.jsm. Once this localization
-  // file gets moved to the locales directory, this should get removed.
-  { file: "resource://app/localization/en-US/preview/popup-notifications.ftl" },
-
   // services/fxaccounts/RustFxAccount.js
   { file: "resource://gre/modules/RustFxAccount.js" },
 ];
