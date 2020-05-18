@@ -41,19 +41,22 @@ class DomPromiseListener final : public PromiseNativeHandler {
   NS_DECL_ISUPPORTS
 
  public:
-  using CallbackType = std::function<void(JSContext*, JS::Handle<JS::Value>)>;
+  using CallbackTypeResolved =
+      std::function<void(JSContext*, JS::Handle<JS::Value>)>;
+  using CallbackTypeRejected = std::function<void(nsresult)>;
 
   explicit DomPromiseListener(Promise* aDOMPromise);
-  DomPromiseListener(Promise* aDOMPromise, CallbackType&& aResolve,
-                     CallbackType&& aReject);
-  void SetResolvers(CallbackType&& aResolve, CallbackType&& aReject);
+  DomPromiseListener(Promise* aDOMPromise, CallbackTypeResolved&& aResolve,
+                     CallbackTypeRejected&& aReject);
+  void SetResolvers(CallbackTypeResolved&& aResolve,
+                    CallbackTypeRejected&& aReject);
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
  private:
-  ~DomPromiseListener() = default;
-  Maybe<CallbackType> mResolve;
-  Maybe<CallbackType> mReject;
+  ~DomPromiseListener();
+  Maybe<CallbackTypeResolved> mResolve;
+  Maybe<CallbackTypeRejected> mReject;
 };
 
 }  // namespace dom

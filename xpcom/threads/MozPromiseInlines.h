@@ -38,15 +38,7 @@ MozPromise<ResolveValueT, RejectValueT, IsExclusive>::FromDomPromise(
         }
         p->Resolve(value, __func__);
       },
-      [p](JSContext* aCx, JS::Handle<JS::Value> aValue) {
-        if (!aValue.isInt32()) {
-          p->Reject(NS_ERROR_DOM_NOT_NUMBER_ERR, __func__);
-          return;
-        }
-        nsresult rv = nsresult(aValue.toInt32());
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-        p->Reject(rv, __func__);
-      });
+      [p](nsresult aError) { p->Reject(aError, __func__); });
   return p;
 }
 
