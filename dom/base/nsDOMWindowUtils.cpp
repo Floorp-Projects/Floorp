@@ -4243,14 +4243,6 @@ nsDOMWindowUtils::StopCompositionRecording(bool aWriteToDisk,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetTransactionLogging(bool aValue) {
-  if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
-    wrbc->SetTransactionLogging(aValue);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::SetSystemFont(const nsACString& aFontName) {
   nsIWidget* widget = GetWidget();
   if (!widget) {

@@ -175,7 +175,6 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
 
   void Capture();
   void ToggleCaptureSequence();
-  void SetTransactionLogging(bool aValue);
 
  private:
   friend class CompositorBridgeChild;

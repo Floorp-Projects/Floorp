@@ -603,9 +603,5 @@ void WebRenderBridgeChild::ToggleCaptureSequence() {
   this->SendToggleCaptureSequence();
 }
 
-void WebRenderBridgeChild::SetTransactionLogging(bool aValue) {
-  this->SendSetTransactionLogging(aValue);
-}
-
 }  // namespace layers
 }  // namespace mozilla
