@@ -18,10 +18,16 @@ DomPromiseListener::DomPromiseListener(dom::Promise* aDOMPromise) {
 }
 
 DomPromiseListener::DomPromiseListener(dom::Promise* aDOMPromise,
-                                       CallbackType&& aResolve,
-                                       CallbackType&& aReject)
+                                       CallbackTypeResolved&& aResolve,
+                                       CallbackTypeRejected&& aReject)
     : mResolve(Some(std::move(aResolve))), mReject(Some(std::move(aReject))) {
   aDOMPromise->AppendNativeHandler(this);
+}
+
+DomPromiseListener::~DomPromiseListener() {
+  if (mReject) {
+    (*mReject)(NS_BINDING_ABORTED);
+  }
 }
 
 void DomPromiseListener::ResolvedCallback(JSContext* aCx,
@@ -37,15 +43,21 @@ void DomPromiseListener::ResolvedCallback(JSContext* aCx,
 void DomPromiseListener::RejectedCallback(JSContext* aCx,
                                           JS::Handle<JS::Value> aValue) {
   if (mReject) {
-    (*mReject)(aCx, aValue);
+    nsresult errorCode;
+    if (!aValue.isInt32()) {
+      errorCode = NS_ERROR_DOM_NOT_NUMBER_ERR;
+    } else {
+      errorCode = nsresult(aValue.toInt32());
+    }
+    (*mReject)(errorCode);
   }
   // Let's clear the lambdas in case we have a cycle to ourselves.
   mResolve.reset();
   mReject.reset();
 }
 
-void DomPromiseListener::SetResolvers(CallbackType&& aResolve,
-                                      CallbackType&& aReject) {
+void DomPromiseListener::SetResolvers(CallbackTypeResolved&& aResolve,
+                                      CallbackTypeRejected&& aReject) {
   mResolve = Some(std::move(aResolve));
   mReject = Some(std::move(aReject));
 }
