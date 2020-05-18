@@ -10,8 +10,8 @@
 var gTestTab;
 var gContentAPI;
 var gContentWindow;
-var highlight = document.getElementById("UITourHighlight");
-var tooltip = document.getElementById("UITourTooltip");
+var highlight = UITour.getHighlightContainerAndMaybeCreate(document);
+var tooltip = UITour.getTooltipAndMaybeCreate(document);
 
 function test() {
   registerCleanupFunction(() => {

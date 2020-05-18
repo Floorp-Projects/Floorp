@@ -463,6 +463,9 @@ function UITourTest(usingAddTask = false) {
     Services.perms.ALLOW_ACTION
   );
 
+  UITour.getHighlightContainerAndMaybeCreate(window.document);
+  UITour.getTooltipAndMaybeCreate(window.document);
+
   // If a test file is using add_task, we don't need to have a test function or
   // call `waitForExplicitFinish`.
   if (!usingAddTask) {
