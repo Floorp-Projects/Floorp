@@ -595,3 +595,28 @@ menupopup::part(drop-indicator) {
   font-size: 1.18em;
 %endif
 }
+
+#sharing-tabs-warning-panel > hbox[type="window"] > vbox > label > #sharing-warning-screen-panel-header,
+#sharing-tabs-warning-panel > hbox[type="screen"] > vbox > label > #sharing-warning-window-panel-header {
+  display: none;
+}
+
+#sharing-tabs-warning-panel {
+  max-width: 400px;
+}
+
+#sharing-warning-proceed-to-tab {
+  -moz-appearance: none;
+  border-style: none;
+  margin: 0;
+  background-color: rgb(0,96,223);
+  color: rgb(255,255,255);
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+#sharing-warning-proceed-to-tab:hover {
+  background-color: rgb(0,62,170);
+}
