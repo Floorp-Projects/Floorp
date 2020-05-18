@@ -1696,6 +1696,21 @@ class SpecialPowersChild extends JSWindowActorChild {
     });
   }
 
+  /**
+   * Like `spawn`, but spawns a chrome task in the parent process,
+   * instead. The task additionally has access to `windowGlobalParent`
+   * and `browsingContext` globals corresponding to the window from
+   * which the task was spawned.
+   */
+  spawnChrome(args, task) {
+    return this.sendQuery("SpawnChrome", {
+      args,
+      task: String(task),
+      caller: Cu.getFunctionSourceLocation(task),
+      imports: this._spawnTaskImports,
+    });
+  }
+
   snapshotContext(target, rect, background) {
     let browsingContext = this._browsingContextForTarget(target);
 
