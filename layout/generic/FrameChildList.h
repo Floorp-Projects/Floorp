@@ -32,44 +32,6 @@ class FrameChildList {
   FrameChildListID mID;
 };
 
-/**
- * A class to iterate frame child lists.
- */
-class MOZ_STACK_CLASS FrameChildListArrayIterator {
- public:
-  explicit FrameChildListArrayIterator(const nsTArray<FrameChildList>& aLists)
-      : mLists(aLists), mCurrentIndex(0) {}
-  bool IsDone() const { return mCurrentIndex >= mLists.Length(); }
-  FrameChildListID CurrentID() const {
-    NS_ASSERTION(!IsDone(), "CurrentID(): iterator at end");
-    return mLists[mCurrentIndex].mID;
-  }
-  const nsFrameList& CurrentList() const {
-    NS_ASSERTION(!IsDone(), "CurrentList(): iterator at end");
-    return mLists[mCurrentIndex].mList;
-  }
-  void Next() {
-    NS_ASSERTION(!IsDone(), "Next(): iterator at end");
-    ++mCurrentIndex;
-  }
-
- protected:
-  const nsTArray<FrameChildList>& mLists;
-  uint32_t mCurrentIndex;
-};
-
-/**
- * A class for retrieving a frame's child lists and iterate them.
- */
-class MOZ_STACK_CLASS FrameChildListIterator
-    : public FrameChildListArrayIterator {
- public:
-  explicit FrameChildListIterator(const nsIFrame* aFrame);
-
- protected:
-  AutoTArray<FrameChildList, 4> mLists;
-};
-
 }  // namespace layout
 }  // namespace mozilla
 
