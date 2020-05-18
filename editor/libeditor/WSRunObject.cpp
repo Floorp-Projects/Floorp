@@ -1603,7 +1603,6 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
   // proliferation.  Examine what is before and after the trailing nbsp, if
   // any.
   bool leftCheck = false;
-  bool spaceNBSP = false;
   bool rightCheck = false;
 
   // Check if it's a visible fragment in a hard line.
@@ -1621,18 +1620,20 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
     // nbsp with space
     EditorDOMPointInText atPreviousCharOfPreviousCharOfEndOfRun =
         GetPreviousEditableCharPoint(atPreviousCharOfEndOfRun);
+    bool isPreviousCharASCIIWhitespace =
+        atPreviousCharOfPreviousCharOfEndOfRun.IsSet() &&
+        !atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer() &&
+        atPreviousCharOfPreviousCharOfEndOfRun.IsCharASCIISpace();
     if (atPreviousCharOfPreviousCharOfEndOfRun.IsSet()) {
       if (atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer() ||
           !atPreviousCharOfPreviousCharOfEndOfRun.IsCharASCIISpace()) {
         leftCheck = true;
-      } else {
-        spaceNBSP = true;
       }
     } else if (aRun->StartsFromNormalText() ||
                aRun->StartsFromSpecialContent()) {
       leftCheck = true;
     }
-    if (leftCheck || spaceNBSP) {
+    if (leftCheck || isPreviousCharASCIIWhitespace) {
       // now check that what is to the right of it is compatible with replacing
       // nbsp with space
       if (aRun->EndsByNormalText() || aRun->EndsBySpecialContent() ||
@@ -1723,7 +1724,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
           return rv;
         }
       }
-    } else if (!mPRE && spaceNBSP && rightCheck) {
+    } else if (!mPRE && isPreviousCharASCIIWhitespace && rightCheck) {
       // Don't mess with this preformatted for now.  We have a run of ASCII
       // whitespace (which will render as one space) followed by an nbsp (which
       // is at the end of the whitespace run).  Let's switch their order.  This
