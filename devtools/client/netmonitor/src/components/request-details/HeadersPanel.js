@@ -447,7 +447,6 @@ class HeadersPanel extends Component {
           // Force StringRep to crop the text everytime
           member: Object.assign({}, member, { open: false }),
           mode: MODE.TINY,
-          cropLimit: 60,
           noGrip: true,
         })
       ),
