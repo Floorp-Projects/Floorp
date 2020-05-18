@@ -234,6 +234,52 @@ add_task(async function() {
     isScrolledToBottom(outputContainer),
     "The console is scrolled to the bottom after a repeated message"
   );
+
+  info(
+    "Check that typing a multiline expression in the input keep the output scrolled to bottom"
+  );
+  await setInputValue(hud, "hello\nworld\n!\n");
+  // Wait until the output is scrolled to the bottom.
+  await waitFor(
+    () => isScrolledToBottom(outputContainer),
+    "Output does not scroll to the bottom after typing a multiline expression"
+  );
+  ok(
+    true,
+    "The console is scrolled to the bottom after typing a multiline expression in the input"
+  );
+
+  await setInputValue(hud, "");
+  ok(
+    isScrolledToBottom(outputContainer),
+    "The console is scrolled to the bottom after clearing the input"
+  );
+
+  info(
+    "Check that switching between editor and inline mode keep the output scrolled to bottom"
+  );
+  await toggleLayout(hud);
+  // Wait until the output is scrolled to the bottom.
+  await waitFor(
+    () => isScrolledToBottom(outputContainer),
+    "Output does not scroll to the bottom after switching to editor mode"
+  );
+  ok(
+    true,
+    "The console is scrolled to the bottom after switching to editor mode"
+  );
+
+  // Switching back to inline mode
+  await toggleLayout(hud);
+  // Wait until the output is scrolled to the bottom.
+  await waitFor(
+    () => isScrolledToBottom(outputContainer),
+    "Output does not scroll to the bottom after switching back to inline mode"
+  );
+  ok(
+    true,
+    "The console is scrolled to the bottom after switching back to inline mode"
+  );
 });
 
 function hasVerticalOverflow(container) {
