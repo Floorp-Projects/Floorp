@@ -326,7 +326,6 @@ struct MetadataCacheablePod {
   Maybe<uint32_t> startFuncIndex;
   Maybe<uint32_t> nameCustomSectionIndex;
   bool filenameIsURL;
-  bool bigIntEnabled;
   bool v128Enabled;
   bool omitsBoundsChecks;
 
@@ -336,7 +335,6 @@ struct MetadataCacheablePod {
         minMemoryLength(0),
         globalDataLength(0),
         filenameIsURL(false),
-        bigIntEnabled(false),
         v128Enabled(false),
         omitsBoundsChecks(false) {}
 };

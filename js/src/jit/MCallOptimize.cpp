@@ -4218,19 +4218,10 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
       inst.metadata(bestTier).lookupFuncExport(funcIndex);
   const wasm::FuncType& sig = funcExport.funcType();
 
-// Bug 1631656 - Don't try to inline with I64 args on 32-bit platforms because
-// it is more difficult (because it requires multiple LIR arguments per I64).
-#ifdef JS_64BIT
-  bool bigIntEnabled = inst.code().metadata().bigIntEnabled;
-#else
-  bool bigIntEnabled = false;
-#endif
-
   // Check that the function doesn't take or return non-compatible JS
   // argument types before adding nodes to the MIR graph, otherwise they'd be
   // dead code.
-  if ((sig.hasI64ArgOrRet() && !bigIntEnabled) ||
-      sig.temporarilyUnsupportedReftypeForInlineEntry() ||
+  if (sig.temporarilyUnsupportedReftypeForInlineEntry() ||
       !JitOptions.enableWasmIonFastCalls) {
     return InliningStatus_NotInlined;
   }
@@ -4250,19 +4241,25 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
     return InliningStatus_NotInlined;
   }
 
-  // Bug 1631650 - On 64-bit platforms, we give up inlining for I64 args
+  // Bug 1631656 - Don't try to inline with I64 args on 32-bit platforms because
+  // it is more difficult (because it requires multiple LIR arguments per I64).
+  //
+  // Bug 1631650 - On 64-bit platforms, we also give up inlining for I64 args
   // spilled to the stack because it causes problems with register allocation.
-#if defined(ENABLE_WASM_BIGINT) && JS_BITS_PER_WORD == 64
-  if (sig.hasI64ArgOrRet()) {
-    ABIArgGenerator abi;
-    for (const auto& valType : sig.args()) {
-      ABIArg abiArg = abi.next(ToMIRType(valType));
-      if (abiArg.kind() == ABIArg::Stack) {
-        return InliningStatus_NotInlined;
-      }
+#ifdef JS_64BIT
+  const bool inlineWithI64 = true;
+#else
+  const bool inlineWithI64 = false;
+#endif
+  ABIArgGenerator abi;
+  for (const auto& valType : sig.args()) {
+    MIRType mirType = ToMIRType(valType);
+    ABIArg abiArg = abi.next(mirType);
+    if (mirType == MIRType::Int64 &&
+        (!inlineWithI64 || (abiArg.kind() == ABIArg::Stack))) {
+      return InliningStatus_NotInlined;
     }
   }
-#endif
 
   auto* call = MIonToWasmCall::New(alloc(), inst.object(), funcExport);
   if (!call) {
@@ -4291,14 +4288,9 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
       case wasm::ValType::I32:
         conversion = MTruncateToInt32::New(alloc(), arg);
         break;
-      case wasm::ValType::I64: {
-#ifdef ENABLE_WASM_BIGINT
+      case wasm::ValType::I64:
         conversion = MToInt64::New(alloc(), arg);
         break;
-#else
-        MOZ_CRASH("impossible per above check");
-#endif
-      }
       case wasm::ValType::F32:
         conversion = MToFloat32::New(alloc(), arg);
         break;
@@ -4338,7 +4330,6 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
 
   current->add(call);
 
-#ifdef ENABLE_WASM_BIGINT
   // Add any post-function call conversions that are necessary.
   MInstruction* postConversion = call;
   const wasm::ValTypeVector& results = sig.results();
@@ -4362,10 +4353,6 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
   }
   current->push(postConversion);
   MOZ_TRY(resumeAfter(postConversion));
-#else
-  current->push(call);
-  MOZ_TRY(resumeAfter(call));
-#endif
 
   callInfo.setImplicitlyUsedUnchecked();
 

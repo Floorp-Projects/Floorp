@@ -9,17 +9,15 @@ wasmFullPass(`
              42,
              { env: { f: () => [52, 10, 0] } });
 
-if (wasmBigIntEnabled()) {
-    wasmFullPass(`
-      (module
-        (import "env" "f" (func $f (result i64 i64 i64)))
-        (func (export "run") (result i64)
-          (call $f)
-          i64.sub
-          i64.sub))`,
-                 42n,
-                 { env: { f: () => [52n, 10n, 0n] } });
-}
+wasmFullPass(`
+  (module
+    (import "env" "f" (func $f (result i64 i64 i64)))
+    (func (export "run") (result i64)
+      (call $f)
+      i64.sub
+      i64.sub))`,
+             42n,
+             { env: { f: () => [52n, 10n, 0n] } });
 
 wasmFullPass(`
   (module
@@ -120,23 +118,21 @@ expectMultiValueResult(`
       (f64.const 52.5)
       (f64.const 10.5)))`, [0.5, 52.5, 10.5]);
 
-if (wasmBigIntEnabled()) {
-  expectMultiValueResult(`
-    (module
-      (func (export "run") (result i32 i64 i32)
-        (i32.const 0)
-        (i64.const 52)
-        (i32.const 10)))`, [0, 52n, 10]);
-  expectMultiValueResult(`
-    (module
-      (func (export "run") (result i64 i32 i64)
-        (i64.const 0)
-        (i32.const 52)
-        (i64.const 10)))`, [0n, 52, 10n]);
-  expectMultiValueResult(`
-    (module
-      (func (export "run") (result i64 i64 i64)
-        (i64.const 0)
-        (i64.const 52)
-        (i64.const 10)))`, [0n, 52n, 10n]);
-}
+expectMultiValueResult(`
+  (module
+    (func (export "run") (result i32 i64 i32)
+      (i32.const 0)
+      (i64.const 52)
+      (i32.const 10)))`, [0, 52n, 10]);
+expectMultiValueResult(`
+  (module
+    (func (export "run") (result i64 i32 i64)
+      (i64.const 0)
+      (i32.const 52)
+      (i64.const 10)))`, [0n, 52, 10n]);
+expectMultiValueResult(`
+  (module
+    (func (export "run") (result i64 i64 i64)
+      (i64.const 0)
+      (i64.const 52)
+      (i64.const 10)))`, [0n, 52n, 10n]);

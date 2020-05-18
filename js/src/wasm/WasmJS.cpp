@@ -231,15 +231,6 @@ bool wasm::MultiValuesAvailable(JSContext* cx) {
   return WasmMultiValueFlag(cx) && (BaselineAvailable(cx) || IonAvailable(cx));
 }
 
-bool wasm::I64BigIntConversionAvailable(JSContext* cx) {
-  // All compilers support int64<->bigint conversion.
-#ifdef ENABLE_WASM_BIGINT
-  return cx->options().isWasmBigIntEnabled();
-#else
-  return false;
-#endif
-}
-
 bool wasm::SimdAvailable(JSContext* cx) {
   // Cranelift and Ion do not support SIMD.
   return WasmSimdFlag(cx) && BaselineAvailable(cx);
@@ -367,17 +358,12 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
       return true;
     }
     case ValType::I64: {
-#ifdef ENABLE_WASM_BIGINT
-      if (I64BigIntConversionAvailable(cx)) {
-        BigInt* bigint = ToBigInt(cx, v);
-        if (!bigint) {
-          return false;
-        }
-        val.set(Val(BigInt::toUint64(bigint)));
-        return true;
+      BigInt* bigint = ToBigInt(cx, v);
+      if (!bigint) {
+        return false;
       }
-#endif
-      break;
+      val.set(Val(BigInt::toUint64(bigint)));
+      return true;
     }
     case ValType::Ref: {
       RootedFunction fun(cx);
@@ -416,17 +402,12 @@ static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
       out.setDouble(JS::CanonicalizeNaN(val.f64()));
       return true;
     case ValType::I64: {
-#ifdef ENABLE_WASM_BIGINT
-      if (I64BigIntConversionAvailable(cx)) {
-        BigInt* bi = BigInt::createFromInt64(cx, val.i64());
-        if (!bi) {
-          return false;
-        }
-        out.setBigInt(bi);
-        return true;
+      BigInt* bi = BigInt::createFromInt64(cx, val.i64());
+      if (!bi) {
+        return false;
       }
-#endif
-      break;
+      out.setBigInt(bi);
+      return true;
     }
     case ValType::Ref:
       switch (val.type().refTypeKind()) {
@@ -571,22 +552,11 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
           obj->val(&val);
         } else {
           if (IsNumberType(global.type())) {
-            if (I64BigIntConversionAvailable(cx)) {
-              if (global.type() == ValType::I64 && v.isNumber()) {
-                return ThrowBadImportType(cx, import.field.get(), "BigInt");
-              }
-              if (global.type() != ValType::I64 && !v.isNumber()) {
-                return ThrowBadImportType(cx, import.field.get(), "Number");
-              }
-            } else {
-              if (!v.isNumber()) {
-                return ThrowBadImportType(cx, import.field.get(), "Number");
-              }
-              if (global.type() == ValType::I64) {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                         JSMSG_WASM_BAD_I64_LINK);
-                return false;
-              }
+            if (global.type() == ValType::I64 && v.isNumber()) {
+              return ThrowBadImportType(cx, import.field.get(), "BigInt");
+            }
+            if (global.type() != ValType::I64 && !v.isNumber()) {
+              return ThrowBadImportType(cx, import.field.get(), "Number");
             }
           } else {
             MOZ_ASSERT(global.type().isReference());
@@ -605,7 +575,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
           if (global.type() == ValType::V128) {
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                     JSMSG_WASM_BAD_VAL_TYPE, "v128");
+                                     JSMSG_WASM_BAD_VAL_TYPE);
             return false;
           }
 
@@ -2898,11 +2868,8 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     globalType = ValType::F32;
   } else if (StringEqualsLiteral(typeLinearStr, "f64")) {
     globalType = ValType::F64;
-#ifdef ENABLE_WASM_BIGINT
-  } else if (I64BigIntConversionAvailable(cx) &&
-             StringEqualsLiteral(typeLinearStr, "i64")) {
+  } else if (StringEqualsLiteral(typeLinearStr, "i64")) {
     globalType = ValType::I64;
-#endif
 #ifdef ENABLE_WASM_SIMD
   } else if (SimdAvailable(cx) && StringEqualsLiteral(typeLinearStr, "v128")) {
     globalType = ValType::V128;
@@ -2963,7 +2930,7 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       (args.length() >= 2 && globalType.isReference())) {
     if (globalType == ValType::V128) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_VAL_TYPE, "v128");
+                               JSMSG_WASM_BAD_VAL_TYPE);
       return false;
     }
     if (!ToWebAssemblyValue(cx, globalType, valueVal, &globalVal)) {
@@ -2998,23 +2965,14 @@ static bool IsGlobal(HandleValue v) {
 bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
   switch (args.thisv().toObject().as<WasmGlobalObject>().type().kind()) {
     case ValType::I32:
+    case ValType::I64:
     case ValType::F32:
     case ValType::F64:
       args.thisv().toObject().as<WasmGlobalObject>().value(cx, args.rval());
       return true;
     case ValType::V128:
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_VAL_TYPE, "v128");
-      return false;
-    case ValType::I64:
-#ifdef ENABLE_WASM_BIGINT
-      if (I64BigIntConversionAvailable(cx)) {
-        return args.thisv().toObject().as<WasmGlobalObject>().value(
-            cx, args.rval());
-      }
-#endif
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_VAL_TYPE, "i64");
+                               JSMSG_WASM_BAD_VAL_TYPE);
       return false;
     case ValType::Ref:
       switch (
@@ -3051,10 +3009,9 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  if ((global->type() == ValType::I64 && !I64BigIntConversionAvailable(cx)) ||
-      global->type() == ValType::V128) {
+  if (global->type() == ValType::V128) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_VAL_TYPE, "i64 or v128");
+                             JSMSG_WASM_BAD_VAL_TYPE);
     return false;
   }
 
@@ -3109,11 +3066,7 @@ void WasmGlobalObject::setVal(JSContext* cx, wasm::HandleVal hval) {
       cell->f64 = val.f64();
       break;
     case ValType::I64:
-#ifdef ENABLE_WASM_BIGINT
-      MOZ_ASSERT(I64BigIntConversionAvailable(cx),
-                 "expected BigInt support for setting I64 global");
       cell->i64 = val.i64();
-#endif
       break;
     case ValType::V128:
       MOZ_CRASH("unexpected v128 when setting global's value");

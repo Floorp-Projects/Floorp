@@ -124,7 +124,6 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   target->reftypesEnabled = wasm::ReftypesAvailable(cx);
   target->gcEnabled = wasm::GcTypesAvailable(cx);
   target->hugeMemory = wasm::IsHugeMemoryEnabled();
-  target->bigIntEnabled = wasm::I64BigIntConversionAvailable(cx);
   target->multiValuesEnabled = wasm::MultiValuesAvailable(cx);
   target->v128Enabled = wasm::SimdAvailable(cx);
 
@@ -422,11 +421,13 @@ static bool TieringBeneficial(uint32_t codeSize) {
 CompilerEnvironment::CompilerEnvironment(const CompileArgs& args)
     : state_(InitialWithArgs), args_(&args) {}
 
-CompilerEnvironment::CompilerEnvironment(
-    CompileMode mode, Tier tier, OptimizedBackend optimizedBackend,
-    DebugEnabled debugEnabled, bool multiValueConfigured,
-    bool refTypesConfigured, bool gcTypesConfigured, bool hugeMemory,
-    bool bigIntConfigured, bool v128Configured)
+CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
+                                         OptimizedBackend optimizedBackend,
+                                         DebugEnabled debugEnabled,
+                                         bool multiValueConfigured,
+                                         bool refTypesConfigured,
+                                         bool gcTypesConfigured,
+                                         bool hugeMemory, bool v128Configured)
     : state_(InitialWithModeTierDebug),
       mode_(mode),
       tier_(tier),
@@ -436,7 +437,6 @@ CompilerEnvironment::CompilerEnvironment(
       gcTypes_(gcTypesConfigured),
       multiValues_(multiValueConfigured),
       hugeMemory_(hugeMemory),
-      bigInt_(bigIntConfigured),
       v128_(v128Configured) {}
 
 void CompilerEnvironment::computeParameters() {
@@ -461,7 +461,6 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
   bool craneliftEnabled = args_->craneliftEnabled;
   bool forceTiering = args_->forceTiering;
   bool hugeMemory = args_->hugeMemory;
-  bool bigIntEnabled = args_->bigIntEnabled;
   bool multiValuesEnabled = args_->multiValuesEnabled;
   bool v128Enabled = args_->v128Enabled;
 
@@ -497,7 +496,6 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
   gcTypes_ = gcEnabled;
   multiValues_ = multiValuesEnabled;
   hugeMemory_ = hugeMemory;
-  bigInt_ = bigIntEnabled;
   multiValues_ = multiValuesEnabled;
   v128_ = v128Enabled;
 
@@ -606,7 +604,6 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   bool refTypesConfigured = false;
 #endif
   bool multiValueConfigured = args.multiValuesEnabled;
-  bool bigIntConfigured = args.bigIntEnabled;
   bool v128Configured = args.v128Enabled;
 
   OptimizedBackend optimizedBackend = args.craneliftEnabled
@@ -616,7 +613,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   CompilerEnvironment compilerEnv(
       CompileMode::Tier2, Tier::Optimized, optimizedBackend,
       DebugEnabled::False, multiValueConfigured, refTypesConfigured,
-      gcTypesConfigured, args.hugeMemory, bigIntConfigured, v128Configured);
+      gcTypesConfigured, args.hugeMemory, v128Configured);
 
   ModuleEnvironment env(&compilerEnv, args.sharedMemoryEnabled
                                           ? Shareable::True
