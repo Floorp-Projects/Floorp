@@ -769,6 +769,8 @@ void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
     }
 
     BrowsingContext* top = aParentContext->Top();
+    uint32_t behavior = AntiTrackingUtils::GetCookieBehavior(top);
+
     top->PreOrderWalk([&](BrowsingContext* aContext) {
       // Only check browsing contexts that are in-process.
       if (aContext->IsInProcess()) {
@@ -776,7 +778,6 @@ void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
         Unused << AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
             aContext, nullptr, origin);
 
-        uint32_t behavior = AntiTrackingUtils::GetCookieBehavior(aContext);
         if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
             !AntiTrackingUtils::IsFirstLevelSubContext(aContext)) {
           return;
@@ -817,13 +818,14 @@ void ContentBlocking::UpdateAllowAccessOnParentProcess(
   nsAutoCString permissionKey;
   AntiTrackingUtils::CreateStoragePermissionKey(aTrackingOrigin, permissionKey);
 
+  uint32_t behavior = AntiTrackingUtils::GetCookieBehavior(aParentContext);
+
   aParentContext->PreOrderWalk([&](BrowsingContext* aContext) {
     WindowGlobalParent* wgp = aContext->Canonical()->GetCurrentWindowGlobal();
     if (!wgp) {
       return;
     }
 
-    uint32_t behavior = AntiTrackingUtils::GetCookieBehavior(aContext);
     if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
         !AntiTrackingUtils::IsFirstLevelSubContext(aContext)) {
       return;
