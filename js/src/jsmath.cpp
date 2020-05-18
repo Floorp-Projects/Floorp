@@ -52,8 +52,6 @@ using mozilla::NumberEqualsInt32;
 using mozilla::PositiveInfinity;
 using mozilla::WrappingMultiply;
 
-using UnaryMathFunctionType = double (*)(double);
-
 template <UnaryMathFunctionType F>
 static bool math_function(JSContext* cx, HandleValue val,
                           MutableHandleValue res) {

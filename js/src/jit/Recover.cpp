@@ -892,22 +892,23 @@ bool RSign::recover(JSContext* cx, SnapshotIterator& iter) const {
 bool MMathFunction::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   switch (function_) {
-    case Ceil:
+    case UnaryMathFunction::Ceil:
       writer.writeUnsigned(uint32_t(RInstruction::Recover_Ceil));
       return true;
-    case Floor:
+    case UnaryMathFunction::Floor:
       writer.writeUnsigned(uint32_t(RInstruction::Recover_Floor));
       return true;
-    case Round:
+    case UnaryMathFunction::Round:
       writer.writeUnsigned(uint32_t(RInstruction::Recover_Round));
       return true;
-    case Trunc:
+    case UnaryMathFunction::Trunc:
       writer.writeUnsigned(uint32_t(RInstruction::Recover_Trunc));
       return true;
-    case Sin:
-    case Log:
+    case UnaryMathFunction::Sin:
+    case UnaryMathFunction::Log:
+      static_assert(sizeof(UnaryMathFunction) == sizeof(uint8_t));
       writer.writeUnsigned(uint32_t(RInstruction::Recover_MathFunction));
-      writer.writeByte(function_);
+      writer.writeByte(uint8_t(function_));
       return true;
     default:
       MOZ_CRASH("Unknown math function.");
@@ -915,12 +916,12 @@ bool MMathFunction::writeRecoverData(CompactBufferWriter& writer) const {
 }
 
 RMathFunction::RMathFunction(CompactBufferReader& reader) {
-  function_ = reader.readByte();
+  function_ = UnaryMathFunction(reader.readByte());
 }
 
 bool RMathFunction::recover(JSContext* cx, SnapshotIterator& iter) const {
   switch (function_) {
-    case MMathFunction::Sin: {
+    case UnaryMathFunction::Sin: {
       RootedValue arg(cx, iter.read());
       RootedValue result(cx);
 
@@ -931,7 +932,7 @@ bool RMathFunction::recover(JSContext* cx, SnapshotIterator& iter) const {
       iter.storeInstructionResult(result);
       return true;
     }
-    case MMathFunction::Log: {
+    case UnaryMathFunction::Log: {
       RootedValue arg(cx, iter.read());
       RootedValue result(cx);
 
