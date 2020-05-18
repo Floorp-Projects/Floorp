@@ -38,7 +38,6 @@ job-template:
                 mozilla-beta:
                     by-platform:
                         # ja-JP-mac is only langpack on mac, and is unlisted always
-                        macosx64-nightly.*: unlisted
                         macosx64-shippable.*: unlisted
                         macosx64-devedition.*: unlisted
                         linux.*-devedition.*: unlisted
