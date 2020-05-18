@@ -3726,6 +3726,19 @@ bool CacheIRCompiler::emitMathAbsNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchFloatRegister scratch(this);
+
+  allocator.ensureDoubleRegister(masm, inputId, scratch);
+
+  masm.sqrtDouble(scratch, scratch);
+  masm.boxDouble(scratch, output.valueReg(), scratch);
+  return true;
+}
+
 bool CacheIRCompiler::emitStoreTypedElement(ObjOperandId objId,
                                             TypedThingLayout layout,
                                             Scalar::Type elementType,
