@@ -9,6 +9,7 @@
     if (isApzEnabled()) {
       SimpleTest.waitForExplicitFinish();
 
+
       var prefs = [
         ["apz.test.logging_enabled", true],
         ["apz.paint_skipping.enabled", true],
@@ -16,9 +17,24 @@
         ["general.smoothScroll", false],
         ["apz.minimap.enabled", true], // helps to debug these tests
       ];
-      const subtests = [
+
+      var zoom_and_pan_prefs = [
+        ...prefs,
+        ...getPrefs("TOUCH_EVENTS:PAN"),
+        ["apz.allow_zooming", true],
+      ];
+
+      var subtests = [
         { file: "helper_checkerboard_apzforcedisabled.html", prefs },
       ];
+
+      let isWindows = navigator.platform.indexOf("Win") == 0;
+      if (!isWindows) {
+        subtests.push(
+          { file: "helper_checkerboard_zoomoverflowhidden.html", "prefs": zoom_and_pan_prefs }
+        );
+      }
+
       // Run the actual test in its own window, because it requires that the
       // root APZC be scrollable. Mochitest pages themselves often run
       // inside an iframe which means we have no control over the root APZC.
