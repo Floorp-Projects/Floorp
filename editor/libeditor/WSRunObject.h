@@ -546,30 +546,24 @@ class MOZ_STACK_CLASS WSRunScanner {
                              bool aForward) const;
 
   /**
-   * GetNextCharPoint() and GetNextCharPointFromPointInText() return next
-   * character's point of aPoint.  If there is no character after aPoint,
-   * mTextNode is set to nullptr.
+   * GetInclusiveNextEditableCharPoint() returns aPoint if it points a character
+   * in an editable text node, or start of next editable text node otherwise.
+   * FYI: For the performance, this does not check whether given container
+   *      is not after mStartReasonContent or not.
    */
   template <typename PT, typename CT>
-  EditorDOMPointInText GetNextCharPoint(
+  EditorDOMPointInText GetInclusiveNextEditableCharPoint(
       const EditorDOMPointBase<PT, CT>& aPoint) const;
-  EditorDOMPointInText GetNextCharPointFromPointInText(
-      const EditorDOMPointInText& aPoint) const;
 
   /**
-   * LookForNextCharPointWithinAllTextNodes() and
-   * LookForPreviousCharPointWithinAllTextNodes() are helper methods of
-   * GetNextCharPoint(const EditorRawDOMPoint&) and GetPreviousCharPoint(const
-   * EditorRawDOMPoint&).  When the container isn't in mNodeArray, they call one
-   * of these methods.  Then, these methods look for nearest text node in
-   * mNodeArray from aPoint. Then, will call GetNextCharPointFromPointInText()
-   * or GetPreviousCharPointFromPointInText() and returns its result.
+   * GetPreviousEditableCharPoint() returns previous editable point in a
+   * text node.  Note that this returns last character point when it meets
+   * non-empty text node, otherwise, returns a point in an empty text node.
+   * FYI: For the performance, this does not check whether given container
+   *      is not before mEndReasonContent or not.
    */
   template <typename PT, typename CT>
-  EditorDOMPointInText LookForNextCharPointWithinAllTextNodes(
-      const EditorDOMPointBase<PT, CT>& aPoint) const;
-  template <typename PT, typename CT>
-  EditorDOMPointInText LookForPreviousCharPointWithinAllTextNodes(
+  EditorDOMPointInText GetPreviousEditableCharPoint(
       const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   nsresult GetWSNodes();
@@ -581,14 +575,6 @@ class MOZ_STACK_CLASS WSRunScanner {
   nsIContent* GetEditableBlockParentOrTopmotEditableInlineContent(
       nsIContent* aContent) const;
 
-  /**
-   * GetPreviousCharPoint() and GetPreviousCharPointFromPointInText() return
-   * previous character's point of of aPoint. If there is no character before
-   * aPoint, mTextNode is set to nullptr.
-   */
-  template <typename PT, typename CT>
-  EditorDOMPointInText GetPreviousCharPoint(
-      const EditorDOMPointBase<PT, CT>& aPoint) const;
   EditorDOMPointInText GetPreviousCharPointFromPointInText(
       const EditorDOMPointInText& aPoint) const;
 
@@ -600,9 +586,6 @@ class MOZ_STACK_CLASS WSRunScanner {
       WSFragment::Visible aIsVisible,
       WSFragment::StartOfHardLine aIsStartOfHardLine,
       WSFragment::EndOfHardLine aIsEndOfHardLine);
-
-  // The list of nodes containing ws in this run.
-  nsTArray<RefPtr<dom::Text>> mNodeArray;
 
   // The node passed to our constructor.
   EditorDOMPoint mScanStartPoint;
