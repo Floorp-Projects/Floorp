@@ -17,9 +17,7 @@ kind-dependencies:
 
 only-for-build-platforms:
     - win32-shippable/opt
-    - win32-nightly/opt
     - win64-shippable/opt
-    - win64-nightly/opt
     - win32-devedition/opt
     - win64-devedition/opt
 

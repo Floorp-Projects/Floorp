@@ -24,8 +24,6 @@ kind-dependencies:
 only-for-build-platforms:
     - linux-shippable/opt
     - linux64-shippable/opt
-    - linux-nightly/opt
-    - linux64-nightly/opt
 
 job-template:
     shipping-phase: promote

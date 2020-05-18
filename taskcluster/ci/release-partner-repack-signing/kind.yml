@@ -19,7 +19,6 @@ kind-dependencies:
 primary-dependency: release-partner-repack-notarization-part-1
 
 only-for-build-platforms:
-    - macosx64-nightly/opt
     - macosx64-shippable/opt
 
 job-template:
