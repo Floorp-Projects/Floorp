@@ -8,6 +8,7 @@
 
 #include "base/basictypes.h"
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Poison.h"
@@ -672,6 +673,9 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
   // we've finished notifying observers of XPCOM shutdown, because shutdown
   // observers themselves might call ClearOnShutdown().
   mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownFinal);
+
+  AbstractThread::ShutdownMainThread();
+
   mozilla::AppShutdown::MaybeFastShutdown(
       mozilla::ShutdownPhase::ShutdownFinal);
 
