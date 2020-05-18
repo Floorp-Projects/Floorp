@@ -118,7 +118,6 @@ class APZCCallbackHelper {
   static bool DispatchMouseEvent(PresShell* aPresShell, const nsString& aType,
                                  const CSSPoint& aPoint, int32_t aButton,
                                  int32_t aClickCount, int32_t aModifiers,
-                                 bool aIgnoreRootScrollFrame,
                                  unsigned short aInputSourceArg,
                                  uint32_t aPointerId);
 
