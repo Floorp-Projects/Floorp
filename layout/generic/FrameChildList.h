@@ -39,7 +39,7 @@ inline void nsFrameList::AppendIfNonempty(
     nsTArray<mozilla::layout::FrameChildList>* aLists,
     mozilla::layout::FrameChildListID aListID) const {
   if (NotEmpty()) {
-    aLists->AppendElement(mozilla::layout::FrameChildList(*this, aListID));
+    aLists->EmplaceBack(*this, aListID);
   }
 }
 

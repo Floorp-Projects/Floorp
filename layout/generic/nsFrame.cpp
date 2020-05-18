@@ -2111,9 +2111,9 @@ AutoTArray<nsIFrame::ChildList, 4> nsIFrame::GetCrossDocChildLists() {
     // Descend into the subdocument
     nsIFrame* root = subdocumentFrame->GetSubdocumentRootFrame();
     if (root) {
-      childLists.AppendElement(nsIFrame::ChildList(
+      childLists.EmplaceBack(
           nsFrameList(root, nsLayoutUtils::GetLastSibling(root)),
-          nsIFrame::kPrincipalList));
+          nsIFrame::kPrincipalList);
     }
   }
 
