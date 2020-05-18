@@ -21,8 +21,6 @@ logger = logging.getLogger(__name__)
 
 
 FTP_PLATFORMS_PER_BOUNCER_PLATFORM = {
-    'android': 'android-api-16',
-    'android-x86': 'android-x86',
     'linux': 'linux-i686',
     'linux64': 'linux-x86_64',
     'osx': 'mac',
@@ -39,13 +37,6 @@ RELEASES_PATH_TEMPLATE = '/{ftp_product}/releases/{version}/\
 
 
 CONFIG_PER_BOUNCER_PRODUCT = {
-    'apk': {
-        'path_template': RELEASES_PATH_TEMPLATE,
-        'file_names': {
-            'android': '{product}-{version}.:lang.android-arm.apk',
-            'android-x86': '{product}-{version}.:lang.android-i386.apk',
-        },
-    },
     'complete-mar': {
         'name_postfix': '-Complete',
         'path_template': RELEASES_PATH_TEMPLATE,
@@ -188,7 +179,7 @@ partial-related entry for "{}"'.format(job['name']))
             product, bouncer_product, current_version, current_build_number, previous_version
         ): {
             'options': {
-                'add_locales': craft_add_locales(product),
+                'add_locales': True,
                 'ssl_only': craft_ssl_only(bouncer_product, project),
             },
             'paths_per_bouncer_platform': craft_paths_per_bouncer_platform(
@@ -238,7 +229,7 @@ def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms
 
 
 def _craft_ftp_product(product):
-    return 'mobile' if product == 'fennec' else product.lower()
+    return product.lower()
 
 
 def _craft_filename_product(product):
@@ -283,11 +274,6 @@ def craft_ssl_only(bouncer_product, project):
         'partial-mar',
         'partial-mar-candidates',
     )
-
-
-def craft_add_locales(product):
-    # Do not add locales on Fennec in order to let "multi" work
-    return product != 'fennec'
 
 
 def split_build_data(version):

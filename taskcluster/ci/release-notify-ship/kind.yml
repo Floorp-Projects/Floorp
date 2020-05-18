@@ -10,7 +10,6 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - push-apk
     - release-balrog-scheduling
     - release-bouncer-aliases
     - release-version-bump
@@ -32,11 +31,6 @@ job-defaults:
                 default: []
 
 jobs:
-    fennec:
-        shipping-product: fennec
-        notifications:
-            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
-            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
     firefox:
         shipping-product: firefox
         notifications:

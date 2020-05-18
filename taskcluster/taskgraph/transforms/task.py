@@ -1150,32 +1150,6 @@ def build_bouncer_submission_payload(config, task, task_def):
     }
 
 
-@payload_builder('push-apk', schema={
-    Required('upstream-artifacts'): [{
-        Required('taskId'): taskref_or_string,
-        Required('taskType'): text_type,
-        Required('paths'): [text_type],
-        Optional('optional', default=False): bool,
-    }],
-
-    # "Invalid" is a noop for try and other non-supported branches
-    Required('google-play-track'): Any('production', 'beta', 'alpha', 'rollout', 'internal'),
-    Required('commit'): bool,
-    Optional('rollout-percentage'): Any(int, None),
-})
-def build_push_apk_payload(config, task, task_def):
-    worker = task['worker']
-
-    task_def['payload'] = {
-        'commit': worker['commit'],
-        'upstreamArtifacts': worker['upstream-artifacts'],
-        'google_play_track': worker['google-play-track'],
-    }
-
-    if worker.get('rollout-percentage', None):
-        task_def['payload']['rollout_percentage'] = worker['rollout-percentage']
-
-
 @payload_builder('push-snap', schema={
     Required('channel'): text_type,
     Required('upstream-artifacts'): [{

@@ -17,12 +17,6 @@ job-defaults:
     shipping-phase: push
 
 jobs:
-    fennec-push-to-release:
-        name: fennec_push_to_release
-        product: fennec
-        shipping-product: fennec
-        treeherder-platform: fennec-release/opt
-
     devedition-push-to-release:
         name: devedition_push_to_release
         product: devedition

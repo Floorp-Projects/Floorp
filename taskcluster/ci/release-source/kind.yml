@@ -49,12 +49,6 @@ jobs:
             platform: firefox-release/opt
         shipping-product: firefox
 
-    fennec-source/opt:
-        description: "Fennec source builder"
-        treeherder:
-            platform: fennec-release/opt
-        shipping-product: fennec
-
     devedition-source/opt:
         description: "Devedition source builder"
         treeherder:
