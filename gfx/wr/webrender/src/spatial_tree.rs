@@ -625,7 +625,7 @@ impl SpatialTree {
         &self,
         spatial_node_index: SpatialNodeIndex,
     ) -> SpatialNodeIndex {
-        let mut scroll_root = None;
+        let mut scroll_root = ROOT_SPATIAL_NODE_INDEX;
         let mut node_index = spatial_node_index;
 
         while node_index != ROOT_SPATIAL_NODE_INDEX {
@@ -639,33 +639,14 @@ impl SpatialTree {
                     // If we found an explicit scroll root, store that
                     // and keep looking up the tree.
                     if let ScrollFrameKind::Explicit = info.frame_kind {
-                        // If the scroll root has no scrollable area, we don't want to
-                        // consider it. This helps pages that have a nested scroll root
-                        // within a redundant scroll root to avoid selecting the wrong
-                        // reference spatial node for a picture cache.
-                        if info.scrollable_size.width > 0.0 ||
-                           info.scrollable_size.height > 0.0 {
-                            // Since we are skipping redundant scroll roots, we may end up
-                            // selecting inner scroll roots that are very small. There is
-                            // no performance benefit to creating a slice for these roots,
-                            // as they are cheap to rasterize. The size comparison is in
-                            // local-space, but makes for a reasonable estimate. The value
-                            // is arbitrary, but is generally small enough to ignore things
-                            // like scroll roots around text input elements.
-                            if info.viewport_rect.size.width > 128.0 &&
-                               info.viewport_rect.size.height > 128.0 {
-                                // If we've found a root that is scrollable, and a reasonable
-                                // size, select that as the current root for this node
-                                scroll_root = Some(node_index);
-                            }
-                        }
+                        scroll_root = node_index;
                     }
                 }
             }
             node_index = node.parent.expect("unable to find parent node");
         }
 
-        scroll_root.unwrap_or(ROOT_SPATIAL_NODE_INDEX)
+        scroll_root
     }
 
     fn print_node<T: PrintTreePrinter>(
