@@ -1027,16 +1027,15 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
 
     MOZ_ASSERT(currentFrame);
 
-    if (nsLayoutUtils::FrameHasDisplayPort(currentFrame)) {
+    // Check whether the current frame is a scrollable frame with display port.
+    nsRect displayPort;
+    nsIScrollableFrame* sf = do_QueryFrame(currentFrame);
+    nsIContent* content = sf ? currentFrame->GetContent() : nullptr;
+
+    if (content && nsLayoutUtils::GetDisplayPort(content, &displayPort)) {
       CRR_LOG("Frame belongs to displayport frame %p\n", currentFrame);
-      nsIScrollableFrame* sf = do_QueryFrame(currentFrame);
-      MOZ_ASSERT(sf);
-      nsRect displayPort;
-      DebugOnly<bool> hasDisplayPort = nsLayoutUtils::GetDisplayPort(
-          currentFrame->GetContent(), &displayPort,
-          DisplayportRelativeTo::ScrollPort);
-      MOZ_ASSERT(hasDisplayPort);
-      // get it relative to the scrollport (from the scrollframe)
+
+      // Get overflow relative to the scrollport (from the scrollframe)
       nsRect r = aOverflow - sf->GetScrollPortRect().TopLeft();
       r.IntersectRect(r, displayPort);
       if (!r.IsEmpty()) {
