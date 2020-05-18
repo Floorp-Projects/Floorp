@@ -147,7 +147,13 @@ var webrtcUI = {
         let tab =
           browserWindow.gBrowser &&
           browserWindow.gBrowser.getTabForBrowser(browser);
-        return { uri: state.documentURI, tab, browser, types };
+        return {
+          uri: state.documentURI,
+          tab,
+          browser,
+          types,
+          devices: state.devices,
+        };
       });
   },
 
