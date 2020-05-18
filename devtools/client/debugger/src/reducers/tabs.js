@@ -15,6 +15,7 @@ import move from "lodash-move";
 
 import { isSimilarTab, persistTabs } from "../utils/tabs";
 import { makeShallowQuery } from "../utils/resource";
+import { getPrettySourceURL } from "../utils/source";
 
 import {
   getSource,
@@ -297,6 +298,11 @@ const querySourcesForTabs = makeShallowQuery({
 
 export function tabExists(state: State, sourceId: SourceId): boolean {
   return !!getSourceTabs(state).find(tab => tab.sourceId == sourceId);
+}
+
+export function hasPrettyTab(state: State, sourceUrl: URL): boolean {
+  const prettyUrl = getPrettySourceURL(sourceUrl);
+  return !!getSourceTabs(state).find(tab => tab.url === prettyUrl);
 }
 
 export default update;
