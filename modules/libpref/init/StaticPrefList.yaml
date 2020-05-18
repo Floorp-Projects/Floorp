@@ -904,10 +904,14 @@
   value: "#000000"
   mirror: never
 
+# Whether focus rings are always shown by default.
+#
+# This is the initial value of nsWindowRoot::mShowFocusRings, but it can be
+# overridden by system preferences.  For Windows, we start with default-true,
+# and by default the UISF_HIDEFOCUS message comes by and sets it to false.
 - name: browser.display.show_focus_rings
   type: bool
-# Focus rings are not shown on Mac or Android by default.
-#if defined(XP_MACOSX) || defined(ANDROID)
+#ifndef XP_WIN
   value: false
 #else
   value: true
