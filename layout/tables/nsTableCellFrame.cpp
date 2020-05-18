@@ -546,7 +546,10 @@ nsMargin nsTableCellFrame::GetBorderOverflow() { return nsMargin(0, 0, 0, 0); }
 
 void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent) {
   /* It's the 'border-collapse' on the table that matters */
-  LogicalMargin borderPadding = GetLogicalUsedBorderAndPadding(aWM);
+  const LogicalMargin borderPadding =
+      GetLogicalUsedBorderAndPadding(GetWritingMode())
+          .ApplySkipSides(GetLogicalSkipSides())
+          .ConvertTo(aWM, GetWritingMode());
 
   nscoord bStartInset = borderPadding.BStart(aWM);
   nscoord bEndInset = borderPadding.BEnd(aWM);
@@ -815,21 +818,8 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
   WritingMode wm = aReflowInput.GetWritingMode();
   LogicalSize availSize = aReflowInput.AvailableSize();
 
-  LogicalMargin borderPadding = aReflowInput.ComputedLogicalPadding();
-  LogicalMargin border = GetBorderWidth(wm);
-  borderPadding += border;
-
-  // reduce available space by insets, if we're in a constrained situation
-  availSize.ISize(wm) -= borderPadding.IStartEnd(wm);
-  if (NS_UNCONSTRAINEDSIZE != availSize.BSize(wm)) {
-    availSize.BSize(wm) -= borderPadding.BStartEnd(wm);
-  }
-
-  // Try to reflow the child into the available space. It might not
-  // fit or might need continuing.
-  if (availSize.BSize(wm) < 0) {
-    availSize.BSize(wm) = 1;
-  }
+  LogicalMargin borderPadding =
+      aReflowInput.ComputedLogicalPadding() + GetBorderWidth(wm);
 
   ReflowOutput kidSize(wm);
   kidSize.ClearSize();
@@ -853,6 +843,37 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
       DISPLAY_REFLOW_CHANGE();
     }
   }
+
+  // We need to apply the skip sides for current fragmentainer's border and
+  // padding after we finish calculating the special block-size or unpaginated
+  // block-size to prevent the skip sides from affecting the results.
+  //
+  // We assume we are the last fragment by using
+  // PreReflowBlockLevelLogicalSkipSides(), i.e. the block-end border and
+  // padding is not skipped.
+  borderPadding.ApplySkipSides(PreReflowBlockLevelLogicalSkipSides());
+
+  availSize.ISize(wm) -= borderPadding.IStartEnd(wm);
+
+  // If we have a constrained available block-size, shrink it by subtracting our
+  // block-direction border and padding for our children.
+  if (NS_UNCONSTRAINEDSIZE != availSize.BSize(wm)) {
+    availSize.BSize(wm) -= borderPadding.BStart(wm);
+
+    if (aReflowInput.mStyleBorder->mBoxDecorationBreak ==
+        StyleBoxDecorationBreak::Clone) {
+      // We have box-decoration-break:clone. Subtract block-end border and
+      // padding from the available block-size as well.
+      availSize.BSize(wm) -= borderPadding.BEnd(wm);
+    }
+  }
+
+  // Available block-size can became negative after subtracting block-direction
+  // border and padding. Per spec, to guarantee progress, fragmentainers are
+  // assumed to have a minimum block size of 1px regardless of their used size.
+  // https://drafts.csswg.org/css-break/#breaking-rules
+  availSize.BSize(wm) =
+      std::max(availSize.BSize(wm), nsPresContext::CSSPixelsToAppUnits(1));
 
   WritingMode kidWM = firstKid->GetWritingMode();
   ReflowInput kidReflowInput(aPresContext, aReflowInput, firstKid,
@@ -931,7 +952,13 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
   cellSize.BSize(wm) = kidSize.BSize(wm);
 
   if (NS_UNCONSTRAINEDSIZE != cellSize.BSize(wm)) {
-    cellSize.BSize(wm) += borderPadding.BStartEnd(wm);
+    cellSize.BSize(wm) += borderPadding.BStart(wm);
+
+    if (aStatus.IsComplete() ||
+        aReflowInput.mStyleBorder->mBoxDecorationBreak ==
+            StyleBoxDecorationBreak::Clone) {
+      cellSize.BSize(wm) += borderPadding.BEnd(wm);
+    }
   }
 
   // next determine the cell's isize
