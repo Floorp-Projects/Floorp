@@ -243,11 +243,11 @@ ContentBlocking::AllowAccessFor(
         !parentWindowContext->GetIsThirdPartyTrackingResourceWindow()) {
       LOG(("Our window isn't a third-party tracking window"));
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-    } else if ((CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
-                behavior ==
-                    nsICookieService::
-                        BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) &&
-               !parentWindowContext->GetIsThirdPartyWindow()) {
+    }
+    if ((CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
+         behavior ==
+             nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) &&
+        !parentWindowContext->GetIsThirdPartyWindow()) {
       LOG(("Our window isn't a third-party window"));
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     }
