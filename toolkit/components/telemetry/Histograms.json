@@ -11598,13 +11598,6 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["dkeeler@mozilla.com", "jcj@mozilla.com", "seceng-telemetry@mozilla.com"]
   },
-  "WEAVE_CONFIGURED_MASTER_PASSWORD": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "If both Firefox Sync and Master Password are configured for this device"
-  },
   "WEAVE_START_COUNT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
