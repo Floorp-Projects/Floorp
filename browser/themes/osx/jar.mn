@@ -12,7 +12,7 @@ browser.jar:
   skin/classic/browser/pageInfo.css
 * skin/classic/browser/searchbar.css
   skin/classic/browser/slowStartup-16.png
-  skin/classic/browser/webRTC-indicator.css
+  skin/classic/browser/webRTC-menubar-indicator.css
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
 * skin/classic/browser/customizableui/panelUI.css    (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsView.css (downloads/allDownloadsView.css)
