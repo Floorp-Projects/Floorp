@@ -13,22 +13,20 @@
 #include "jit/MIRBuilderShared.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
+#include "jit/WarpBuilderShared.h"
 #include "jit/WarpSnapshot.h"
 
 using namespace js;
 using namespace js::jit;
 
 // The CacheIR transpiler generates MIR from Baseline CacheIR.
-class MOZ_RAII WarpCacheIRTranspiler {
-  TempAllocator& alloc_;
+class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   BytecodeLocation loc_;
   const CacheIRStubInfo* stubInfo_;
   const uint8_t* stubData_;
 
   // Vector mapping OperandId to corresponding MDefinition.
   MDefinitionStackVector operands_;
-
-  MBasicBlock* current_;
 
   const CallInfo* callInfo_;
 
@@ -39,29 +37,30 @@ class MOZ_RAII WarpCacheIRTranspiler {
   bool pushedResult_ = false;
 #endif
 
-  TempAllocator& alloc() { return alloc_; }
-
   inline void add(MInstruction* ins) {
     MOZ_ASSERT(!ins->isEffectful());
-    current_->add(ins);
+    current->add(ins);
   }
 
   inline void addEffectful(MInstruction* ins) {
     MOZ_ASSERT(ins->isEffectful());
     MOZ_ASSERT(!effectful_, "Can only have one effectful instruction");
-    current_->add(ins);
+    current->add(ins);
 #ifdef DEBUG
     effectful_ = ins;
 #endif
   }
 
-  MOZ_MUST_USE bool resumeAfter(MInstruction* ins);
+  MOZ_MUST_USE bool resumeAfter(MInstruction* ins) {
+    MOZ_ASSERT(effectful_ == ins);
+    return WarpBuilderShared::resumeAfter(ins, loc_);
+  }
 
   // CacheIR instructions writing to the IC's result register (the *Result
   // instructions) must call this to push the result onto the virtual stack.
   void pushResult(MDefinition* result) {
     MOZ_ASSERT(!pushedResult_, "Can't have more than one result");
-    current_->push(result);
+    current->push(result);
 #ifdef DEBUG
     pushedResult_ = true;
 #endif
@@ -114,11 +113,10 @@ class MOZ_RAII WarpCacheIRTranspiler {
   WarpCacheIRTranspiler(MIRGenerator& mirGen, BytecodeLocation loc,
                         MBasicBlock* current, const CallInfo* callInfo,
                         const WarpCacheIR* snapshot)
-      : alloc_(mirGen.alloc()),
+      : WarpBuilderShared(mirGen, current),
         loc_(loc),
         stubInfo_(snapshot->stubInfo()),
         stubData_(snapshot->stubData()),
-        current_(current),
         callInfo_(callInfo) {}
 
   MOZ_MUST_USE bool transpile(const MDefinitionStackVector& inputs);
@@ -150,20 +148,6 @@ bool WarpCacheIRTranspiler::transpile(const MDefinitionStackVector& inputs) {
 
   // Effectful instructions should have a resume point.
   MOZ_ASSERT_IF(effectful_, effectful_->resumePoint());
-  return true;
-}
-
-bool WarpCacheIRTranspiler::resumeAfter(MInstruction* ins) {
-  MOZ_ASSERT(ins->isEffectful());
-  MOZ_ASSERT(effectful_ == ins);
-
-  MResumePoint* resumePoint = MResumePoint::New(
-      alloc(), ins->block(), loc_.toRawBytecode(), MResumePoint::ResumeAfter);
-  if (!resumePoint) {
-    return false;
-  }
-
-  ins->setResumePoint(resumePoint);
   return true;
 }
 
