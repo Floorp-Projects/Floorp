@@ -956,13 +956,12 @@ static void GetScrollableOverflowForPerspective(
     nsPoint aOffset, nsRect& aScrolledFrameOverflowArea) {
   // Iterate over all children except pop-ups.
   FrameChildListIDs skip = {nsIFrame::kSelectPopupList, nsIFrame::kPopupList};
-  for (nsIFrame::ChildListIterator childLists(aCurrentFrame);
-       !childLists.IsDone(); childLists.Next()) {
-    if (skip.contains(childLists.CurrentID())) {
+  for (const auto& [list, listID] : aCurrentFrame->GetChildLists()) {
+    if (skip.contains(listID)) {
       continue;
     }
 
-    for (nsIFrame* child : childLists.CurrentList()) {
+    for (nsIFrame* child : list) {
       nsPoint offset = aOffset;
 
       // When we reach a direct child of the scroll, then we record the offset
@@ -2413,14 +2412,12 @@ static void AdjustViews(nsIFrame* aFrame) {
 
   // Call AdjustViews recursively for all child frames except the popup list as
   // the views for popups are not scrolled.
-  nsIFrame::ChildListIterator lists(aFrame);
-  for (; !lists.IsDone(); lists.Next()) {
-    if (lists.CurrentID() == nsIFrame::kPopupList) {
+  for (const auto& [list, listID] : aFrame->GetChildLists()) {
+    if (listID == nsIFrame::kPopupList) {
       continue;
     }
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      AdjustViews(childFrames.get());
+    for (nsIFrame* child : list) {
+      AdjustViews(child);
     }
   }
 }
@@ -6916,12 +6913,8 @@ static void CollectScrollPositionsForSnap(
     return;
   }
 
-  nsIFrame::ChildListIterator childLists(aFrame);
-  for (; !childLists.IsDone(); childLists.Next()) {
-    nsFrameList::Enumerator childFrames(childLists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* f = childFrames.get();
-
+  for (const auto& childList : aFrame->GetChildLists()) {
+    for (nsIFrame* f : childList.mList) {
       const nsStyleDisplay* styleDisplay = f->StyleDisplay();
       if (styleDisplay->mScrollSnapAlign.inline_ !=
               StyleScrollSnapAlignKeyword::None ||
@@ -7113,9 +7106,8 @@ static nsSliderFrame* GetSliderFrame(nsIFrame* aScrollbarFrame) {
     return nullptr;
   }
 
-  for (nsIFrame::ChildListIterator childLists(aScrollbarFrame);
-       !childLists.IsDone(); childLists.Next()) {
-    for (nsIFrame* frame : childLists.CurrentList()) {
+  for (const auto& childList : aScrollbarFrame->GetChildLists()) {
+    for (nsIFrame* frame : childList.mList) {
       if (nsSliderFrame* sliderFrame = do_QueryFrame(frame)) {
         return sliderFrame;
       }
