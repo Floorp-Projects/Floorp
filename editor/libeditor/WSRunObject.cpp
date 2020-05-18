@@ -226,12 +226,12 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
       // Need to determine if break at front of non-nbsp run.  If so, convert
       // run to nbsp.
       EditorDOMPointInText atNextCharOfInsertionPoint =
-          GetNextCharPoint(pointToInsert);
+          GetInclusiveNextEditableCharPoint(pointToInsert);
       if (atNextCharOfInsertionPoint.IsSet() &&
           !atNextCharOfInsertionPoint.IsEndOfContainer() &&
           atNextCharOfInsertionPoint.IsCharASCIISpace()) {
         EditorDOMPointInText atPreviousCharOfNextCharOfInsertionPoint =
-            GetPreviousCharPointFromPointInText(atNextCharOfInsertionPoint);
+            GetPreviousEditableCharPoint(atNextCharOfInsertionPoint);
         if (!atPreviousCharOfNextCharOfInsertionPoint.IsSet() ||
             atPreviousCharOfNextCharOfInsertionPoint.IsEndOfContainer() ||
             !atPreviousCharOfNextCharOfInsertionPoint.IsCharASCIISpace()) {
@@ -377,7 +377,7 @@ nsresult WSRunObject::InsertText(Document& aDocument,
         theString.SetCharAt(kNBSP, 0);
       } else if (beforeRun->IsVisible()) {
         EditorDOMPointInText atPreviousChar =
-            GetPreviousCharPoint(pointToInsert);
+            GetPreviousEditableCharPoint(pointToInsert);
         if (atPreviousChar.IsSet() && !atPreviousChar.IsEndOfContainer() &&
             atPreviousChar.IsCharASCIISpace()) {
           theString.SetCharAt(kNBSP, 0);
@@ -397,7 +397,8 @@ nsresult WSRunObject::InsertText(Document& aDocument,
       if (afterRun->IsEndOfHardLine()) {
         theString.SetCharAt(kNBSP, lastCharIndex);
       } else if (afterRun->IsVisible()) {
-        EditorDOMPointInText atNextChar = GetNextCharPoint(pointToInsert);
+        EditorDOMPointInText atNextChar =
+            GetInclusiveNextEditableCharPoint(pointToInsert);
         if (atNextChar.IsSet() && !atNextChar.IsEndOfContainer() &&
             atNextChar.IsCharASCIISpace()) {
           theString.SetCharAt(kNBSP, lastCharIndex);
@@ -455,7 +456,7 @@ nsresult WSRunObject::InsertText(Document& aDocument,
 
 nsresult WSRunObject::DeleteWSBackward() {
   EditorDOMPointInText atPreviousCharOfStart =
-      GetPreviousCharPoint(mScanStartPoint);
+      GetPreviousEditableCharPoint(mScanStartPoint);
   if (!atPreviousCharOfStart.IsSet() ||
       atPreviousCharOfStart.IsEndOfContainer()) {
     return NS_OK;
@@ -531,7 +532,8 @@ nsresult WSRunObject::DeleteWSBackward() {
 }
 
 nsresult WSRunObject::DeleteWSForward() {
-  EditorDOMPointInText atNextCharOfStart = GetNextCharPoint(mScanStartPoint);
+  EditorDOMPointInText atNextCharOfStart =
+      GetInclusiveNextEditableCharPoint(mScanStartPoint);
   if (!atNextCharOfStart.IsSet() || atNextCharOfStart.IsEndOfContainer()) {
     return NS_OK;
   }
@@ -616,7 +618,8 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
   // Is there a visible run there or earlier?
   for (; run; run = run->mLeft) {
     if (run->IsVisibleAndMiddleOfHardLine()) {
-      EditorDOMPointInText atPreviousChar = GetPreviousCharPoint(aPoint);
+      EditorDOMPointInText atPreviousChar =
+          GetPreviousEditableCharPoint(aPoint);
       // When it's a non-empty text node, return it.
       if (atPreviousChar.IsSet() && !atPreviousChar.IsContainerEmpty()) {
         MOZ_ASSERT(!atPreviousChar.IsEndOfContainer());
@@ -651,7 +654,8 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
   // Is there a visible run there or later?
   for (; run; run = run->mRight) {
     if (run->IsVisibleAndMiddleOfHardLine()) {
-      EditorDOMPointInText atNextChar = GetNextCharPoint(aPoint);
+      EditorDOMPointInText atNextChar =
+          GetInclusiveNextEditableCharPoint(aPoint);
       // When it's a non-empty text node, return it.
       if (atNextChar.IsSet() && !atNextChar.IsContainerEmpty()) {
         return WSScanResult(
@@ -745,7 +749,6 @@ nsresult WSRunScanner::GetWSNodes() {
   // first look backwards to find preceding ws nodes
   if (Text* textNode = mScanStartPoint.GetContainerAsText()) {
     const nsTextFragment* textFrag = &textNode->TextFragment();
-    mNodeArray.InsertElementAt(0, textNode);
     if (!mScanStartPoint.IsStartOfContainer()) {
       for (uint32_t i = mScanStartPoint.Offset(); i; i--) {
         // sanity bounds check the char position.  bug 136165
@@ -791,7 +794,6 @@ nsresult WSRunScanner::GetWSNodes() {
       } else if (previousLeafContentOrBlock->IsText() &&
                  previousLeafContentOrBlock->IsEditable()) {
         RefPtr<Text> textNode = previousLeafContentOrBlock->AsText();
-        mNodeArray.InsertElementAt(0, textNode);
         const nsTextFragment* textFrag = &textNode->TextFragment();
         uint32_t len = textNode->TextLength();
 
@@ -901,7 +903,6 @@ nsresult WSRunScanner::GetWSNodes() {
       } else if (nextLeafContentOrBlock->IsText() &&
                  nextLeafContentOrBlock->IsEditable()) {
         RefPtr<Text> textNode = nextLeafContentOrBlock->AsText();
-        mNodeArray.AppendElement(textNode);
         const nsTextFragment* textFrag = &textNode->TextFragment();
         uint32_t len = textNode->TextLength();
 
@@ -1169,7 +1170,8 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
         // make sure leading char of following ws is an nbsp, so that it will
         // show up
         EditorDOMPointInText nextCharOfStartOfEnd =
-            aEndObject->GetNextCharPoint(aEndObject->mScanStartPoint);
+            aEndObject->GetInclusiveNextEditableCharPoint(
+                aEndObject->mScanStartPoint);
         if (nextCharOfStartOfEnd.IsSet() &&
             !nextCharOfStartOfEnd.IsEndOfContainer() &&
             nextCharOfStartOfEnd.IsCharASCIISpace()) {
@@ -1211,7 +1213,7 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
       // make sure trailing char of starting ws is an nbsp, so that it will show
       // up
       EditorDOMPointInText atPreviousCharOfStart =
-          GetPreviousCharPoint(mScanStartPoint);
+          GetPreviousEditableCharPoint(mScanStartPoint);
       if (atPreviousCharOfStart.IsSet() &&
           !atPreviousCharOfStart.IsEndOfContainer() &&
           atPreviousCharOfStart.IsCharASCIISpace()) {
@@ -1249,7 +1251,8 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
   if (afterRun && afterRun->IsVisibleAndMiddleOfHardLine()) {
     // make sure leading char of following ws is an nbsp, so that it will show
     // up
-    EditorDOMPointInText atNextCharOfStart = GetNextCharPoint(mScanStartPoint);
+    EditorDOMPointInText atNextCharOfStart =
+        GetInclusiveNextEditableCharPoint(mScanStartPoint);
     if (atNextCharOfStart.IsSet() && !atNextCharOfStart.IsEndOfContainer() &&
         atNextCharOfStart.IsCharASCIISpace()) {
       // mScanStartPoint will be referred bellow so that we need to keep
@@ -1271,7 +1274,7 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
     // make sure trailing char of starting ws is an nbsp, so that it will show
     // up
     EditorDOMPointInText atPreviousCharOfStart =
-        GetPreviousCharPoint(mScanStartPoint);
+        GetPreviousEditableCharPoint(mScanStartPoint);
     if (atPreviousCharOfStart.IsSet() &&
         !atPreviousCharOfStart.IsEndOfContainer() &&
         atPreviousCharOfStart.IsCharASCIISpace()) {
@@ -1296,83 +1299,139 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
 }
 
 template <typename PT, typename CT>
-EditorDOMPointInText WSRunScanner::GetNextCharPoint(
+EditorDOMPointInText WSRunScanner::GetInclusiveNextEditableCharPoint(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  size_t index = aPoint.IsInTextNode()
-                     ? mNodeArray.IndexOf(aPoint.GetContainer())
-                     : decltype(mNodeArray)::NoIndex;
-  if (index == decltype(mNodeArray)::NoIndex) {
-    // Use range comparisons to get next text node which is in mNodeArray.
-    return LookForNextCharPointWithinAllTextNodes(aPoint);
+  if (NS_WARN_IF(!aPoint.IsInContentNode()) ||
+      NS_WARN_IF(!mScanStartPoint.IsInContentNode())) {
+    return EditorDOMPointInText();
   }
-  return GetNextCharPointFromPointInText(
-      EditorDOMPointInText(mNodeArray[index], aPoint.Offset()));
+
+  EditorRawDOMPoint point;
+  if (nsIContent* child = aPoint.GetChild()) {
+    nsIContent* leafContent = child->HasChildren()
+                                  ? HTMLEditUtils::GetFirstLeafChild(
+                                        *child, ChildBlockBoundary::Ignore)
+                                  : child;
+    if (NS_WARN_IF(!leafContent)) {
+      return EditorDOMPointInText();
+    }
+    point.Set(leafContent, 0);
+  } else {
+    point = aPoint;
+  }
+
+  // If it points a character in a text node, return it.
+  // XXX For the performance, this does not check whether the container
+  //     is outside of our range.
+  if (point.IsInTextNode() && point.GetContainer()->IsEditable() &&
+      !point.IsEndOfContainer()) {
+    return EditorDOMPointInText(point.ContainerAsText(), point.Offset());
+  }
+
+  if (point.GetContainer() == mEndReasonContent) {
+    return EditorDOMPointInText();
+  }
+
+  nsIContent* editableBlockParentOrTopmotEditableInlineContent =
+      GetEditableBlockParentOrTopmotEditableInlineContent(
+          mScanStartPoint.ContainerAsContent());
+  if (NS_WARN_IF(!editableBlockParentOrTopmotEditableInlineContent)) {
+    // Meaning that the container of `mScanStartPoint` is not editable.
+    editableBlockParentOrTopmotEditableInlineContent =
+        mScanStartPoint.ContainerAsContent();
+  }
+
+  for (nsIContent* nextContent =
+           HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+               *point.ContainerAsContent(),
+               *editableBlockParentOrTopmotEditableInlineContent, mEditingHost);
+       nextContent;
+       nextContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+           *nextContent, *editableBlockParentOrTopmotEditableInlineContent,
+           mEditingHost)) {
+    if (!nextContent->IsText() || !nextContent->IsEditable()) {
+      if (nextContent == mEndReasonContent) {
+        break;  // Reached end of current runs.
+      }
+      continue;
+    }
+    return EditorDOMPointInText(nextContent->AsText(), 0);
+  }
+  return EditorDOMPointInText();
 }
 
 template <typename PT, typename CT>
-EditorDOMPointInText WSRunScanner::GetPreviousCharPoint(
+EditorDOMPointInText WSRunScanner::GetPreviousEditableCharPoint(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  size_t index = aPoint.IsInTextNode()
-                     ? mNodeArray.IndexOf(aPoint.GetContainer())
-                     : decltype(mNodeArray)::NoIndex;
-  if (index == decltype(mNodeArray)::NoIndex) {
-    // Use range comparisons to get previous text node which is in mNodeArray.
-    return LookForPreviousCharPointWithinAllTextNodes(aPoint);
-  }
-  return GetPreviousCharPointFromPointInText(
-      EditorDOMPointInText(mNodeArray[index], aPoint.Offset()));
-}
-
-EditorDOMPointInText WSRunScanner::GetNextCharPointFromPointInText(
-    const EditorDOMPointInText& aPoint) const {
-  MOZ_ASSERT(aPoint.IsSet());
-
-  size_t index = mNodeArray.IndexOf(aPoint.GetContainer());
-  if (index == decltype(mNodeArray)::NoIndex) {
-    // Can't find point, but it's not an error
+  if (NS_WARN_IF(!aPoint.IsInContentNode()) ||
+      NS_WARN_IF(!mScanStartPoint.IsInContentNode())) {
     return EditorDOMPointInText();
   }
 
-  if (aPoint.IsSetAndValid() && !aPoint.IsEndOfContainer()) {
-    // XXX This may return empty text node.
-    return aPoint;
+  EditorRawDOMPoint point;
+  if (nsIContent* previousChild = aPoint.GetPreviousSiblingOfChild()) {
+    nsIContent* leafContent =
+        previousChild->HasChildren()
+            ? HTMLEditUtils::GetLastLeafChild(*previousChild,
+                                              ChildBlockBoundary::Ignore)
+            : previousChild;
+    if (NS_WARN_IF(!leafContent)) {
+      return EditorDOMPointInText();
+    }
+    point.SetToEndOf(leafContent);
+  } else {
+    point = aPoint;
   }
 
-  if (index + 1 == mNodeArray.Length()) {
+  // If it points a character in a text node and it's not first character
+  // in it, return its previous point.
+  // XXX For the performance, this does not check whether the container
+  //     is outside of our range.
+  if (point.IsInTextNode() && point.GetContainer()->IsEditable() &&
+      !point.IsStartOfContainer()) {
+    return EditorDOMPointInText(point.ContainerAsText(), point.Offset() - 1);
+  }
+
+  if (point.GetContainer() == mStartReasonContent) {
     return EditorDOMPointInText();
   }
 
-  // XXX This may return empty text node.
-  return EditorDOMPointInText(mNodeArray[index + 1], 0);
-}
-
-EditorDOMPointInText WSRunScanner::GetPreviousCharPointFromPointInText(
-    const EditorDOMPointInText& aPoint) const {
-  MOZ_ASSERT(aPoint.IsSet());
-
-  size_t index = mNodeArray.IndexOf(aPoint.GetContainer());
-  if (index == decltype(mNodeArray)::NoIndex) {
-    // Can't find point, but it's not an error
-    return EditorDOMPointInText();
+  nsIContent* editableBlockParentOrTopmotEditableInlineContent =
+      GetEditableBlockParentOrTopmotEditableInlineContent(
+          mScanStartPoint.ContainerAsContent());
+  if (NS_WARN_IF(!editableBlockParentOrTopmotEditableInlineContent)) {
+    // Meaning that the container of `mScanStartPoint` is not editable.
+    editableBlockParentOrTopmotEditableInlineContent =
+        mScanStartPoint.ContainerAsContent();
   }
 
-  if (!aPoint.IsStartOfContainer()) {
-    return aPoint.PreviousPoint();
+  for (nsIContent* previousContent =
+           HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+               *point.ContainerAsContent(),
+               *editableBlockParentOrTopmotEditableInlineContent, mEditingHost);
+       previousContent;
+       previousContent =
+           HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+               *previousContent,
+               *editableBlockParentOrTopmotEditableInlineContent,
+               mEditingHost)) {
+    if (!previousContent->IsText() || !previousContent->IsEditable()) {
+      if (previousContent == mStartReasonContent) {
+        break;  // Reached start of current runs.
+      }
+      continue;
+    }
+    return EditorDOMPointInText(
+        previousContent->AsText(),
+        previousContent->AsText()->TextLength()
+            ? previousContent->AsText()->TextLength() - 1
+            : 0);
   }
-
-  if (!index) {
-    return EditorDOMPointInText();
-  }
-
-  // XXX This may return empty text node.
-  return EditorDOMPointInText(mNodeArray[index - 1],
-                              mNodeArray[index - 1]->TextLength()
-                                  ? mNodeArray[index - 1]->TextLength() - 1
-                                  : 0);
+  return EditorDOMPointInText();
 }
 
 nsresult WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(
@@ -1432,19 +1491,19 @@ WSRunObject::GetASCIIWhitespacesBounds(
   EditorDOMPointInText start, end;
 
   if (aDir & eAfter) {
-    EditorDOMPointInText atNextChar = GetNextCharPoint(aPoint);
+    EditorDOMPointInText atNextChar = GetInclusiveNextEditableCharPoint(aPoint);
     if (atNextChar.IsSet()) {
       // We found a text node, at least.
       start = end = atNextChar;
       // Scan ahead to end of ASCII whitespaces.
       // XXX Looks like that this is too expensive in most cases.  While we
       //     are scanning a text node, we should do it without
-      //     GetNextCharPointInText().
+      //     GetInclusiveNextEditableCharPoint().
       // XXX This loop ends at end of a text node.  Shouldn't we keep looking
       //     next text node?
       for (; atNextChar.IsSet() && !atNextChar.IsEndOfContainer() &&
              atNextChar.IsCharASCIISpace();
-           atNextChar = GetNextCharPointFromPointInText(atNextChar)) {
+           atNextChar = GetInclusiveNextEditableCharPoint(atNextChar)) {
         // End of the range should be after the whitespace.
         end = atNextChar = atNextChar.NextPoint();
       }
@@ -1452,7 +1511,7 @@ WSRunObject::GetASCIIWhitespacesBounds(
   }
 
   if (aDir & eBefore) {
-    EditorDOMPointInText atPreviousChar = GetPreviousCharPoint(aPoint);
+    EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
     if (atPreviousChar.IsSet()) {
       // We found a text node, at least.
       start = atPreviousChar.NextPoint();
@@ -1462,13 +1521,12 @@ WSRunObject::GetASCIIWhitespacesBounds(
       // Scan back to start of ASCII whitespaces.
       // XXX Looks like that this is too expensive in most cases.  While we
       //     are scanning a text node, we should do it without
-      //     GetPreviousCharPointFromPointInText().
+      //     GetPreviousEditableCharPoint().
       // XXX This loop ends at end of a text node.  Shouldn't we keep looking
       //     the text node?
       for (; atPreviousChar.IsSet() && !atPreviousChar.IsEndOfContainer() &&
              atPreviousChar.IsCharASCIISpace();
-           atPreviousChar =
-               GetPreviousCharPointFromPointInText(atPreviousChar)) {
+           atPreviousChar = GetPreviousEditableCharPoint(atPreviousChar)) {
         start = atPreviousChar;
       }
     }
@@ -1529,104 +1587,6 @@ char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {
   return aTextNode->TextFragment().CharAt(aOffset);
 }
 
-template <typename PT, typename CT>
-EditorDOMPointInText WSRunScanner::LookForNextCharPointWithinAllTextNodes(
-    const EditorDOMPointBase<PT, CT>& aPoint) const {
-  // Note: only to be called if aPoint.GetContainer() is not a ws node.
-
-  MOZ_ASSERT(aPoint.IsSetAndValid());
-
-  // Binary search on wsnodes
-  uint32_t numNodes = mNodeArray.Length();
-
-  if (!numNodes) {
-    // Do nothing if there are no nodes to search
-    return EditorDOMPointInText();
-  }
-
-  // Begin binary search.  We do this because we need to minimize calls to
-  // ComparePoints(), which is expensive.
-  uint32_t firstNum = 0, curNum = numNodes / 2, lastNum = numNodes;
-  while (curNum != lastNum) {
-    Text* curNode = mNodeArray[curNum];
-    int16_t cmp = *nsContentUtils::ComparePoints(aPoint.ToRawRangeBoundary(),
-                                                 RawRangeBoundary(curNode, 0u));
-    if (cmp < 0) {
-      lastNum = curNum;
-    } else {
-      firstNum = curNum + 1;
-    }
-    curNum = (lastNum - firstNum) / 2 + firstNum;
-    MOZ_ASSERT(firstNum <= curNum && curNum <= lastNum, "Bad binary search");
-  }
-
-  // When the binary search is complete, we always know that the current node
-  // is the same as the end node, which is always past our range.  Therefore,
-  // we've found the node immediately after the point of interest.
-  if (curNum == mNodeArray.Length()) {
-    // hey asked for past our range (it's after the last node).
-    // GetNextCharPoint() will do the work for us when we pass it the last
-    // index of the last node.
-    return GetNextCharPointFromPointInText(
-        EditorDOMPointInText::AtEndOf(mNodeArray[curNum - 1]));
-  }
-
-  // The char after the point is the first character of our range.
-  return GetNextCharPointFromPointInText(
-      EditorDOMPointInText(mNodeArray[curNum], 0));
-}
-
-template <typename PT, typename CT>
-EditorDOMPointInText WSRunScanner::LookForPreviousCharPointWithinAllTextNodes(
-    const EditorDOMPointBase<PT, CT>& aPoint) const {
-  // Note: only to be called if aNode is not a ws node.
-
-  MOZ_ASSERT(aPoint.IsSetAndValid());
-
-  // Binary search on wsnodes
-  uint32_t numNodes = mNodeArray.Length();
-
-  if (!numNodes) {
-    // Do nothing if there are no nodes to search
-    return EditorDOMPointInText();
-  }
-
-  uint32_t firstNum = 0, curNum = numNodes / 2, lastNum = numNodes;
-  int16_t cmp = 0;
-
-  // Begin binary search.  We do this because we need to minimize calls to
-  // ComparePoints(), which is expensive.
-  while (curNum != lastNum) {
-    Text* curNode = mNodeArray[curNum];
-    cmp = *nsContentUtils::ComparePoints(aPoint.ToRawRangeBoundary(),
-                                         RawRangeBoundary(curNode, 0u));
-    if (cmp < 0) {
-      lastNum = curNum;
-    } else {
-      firstNum = curNum + 1;
-    }
-    curNum = (lastNum - firstNum) / 2 + firstNum;
-    MOZ_ASSERT(firstNum <= curNum && curNum <= lastNum, "Bad binary search");
-  }
-
-  // When the binary search is complete, we always know that the current node
-  // is the same as the end node, which is always past our range. Therefore,
-  // we've found the node immediately after the point of interest.
-  if (curNum == mNodeArray.Length()) {
-    // Get the point before the end of the last node, we can pass the length of
-    // the node into GetPreviousCharPoint(), and it will return the last
-    // character.
-    return GetPreviousCharPointFromPointInText(
-        EditorDOMPointInText::AtEndOf(mNodeArray[curNum - 1]));
-  }
-
-  // We can just ask the current node for the point immediately before it,
-  // it will handle moving to the previous node (if any) and returning the
-  // appropriate character
-  return GetPreviousCharPointFromPointInText(
-      EditorDOMPointInText(mNodeArray[curNum], 0));
-}
-
 nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
   if (NS_WARN_IF(!aRun)) {
     return NS_ERROR_INVALID_ARG;
@@ -1646,14 +1606,14 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
 
   // first check for trailing nbsp
   EditorDOMPointInText atPreviousCharOfEndOfRun =
-      GetPreviousCharPoint(aRun->EndPoint());
+      GetPreviousEditableCharPoint(aRun->RawEndPoint());
   if (atPreviousCharOfEndOfRun.IsSet() &&
       !atPreviousCharOfEndOfRun.IsEndOfContainer() &&
       atPreviousCharOfEndOfRun.IsCharNBSP()) {
     // now check that what is to the left of it is compatible with replacing
     // nbsp with space
     EditorDOMPointInText atPreviousCharOfPreviousCharOfEndOfRun =
-        GetPreviousCharPointFromPointInText(atPreviousCharOfEndOfRun);
+        GetPreviousEditableCharPoint(atPreviousCharOfEndOfRun);
     if (atPreviousCharOfPreviousCharOfEndOfRun.IsSet()) {
       if (atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer() ||
           !atPreviousCharOfPreviousCharOfEndOfRun.IsCharASCIISpace()) {
@@ -1714,9 +1674,10 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
             return NS_ERROR_FAILURE;
           }
 
-          atPreviousCharOfEndOfRun = GetPreviousCharPoint(aRun->EndPoint());
+          atPreviousCharOfEndOfRun =
+              GetPreviousEditableCharPoint(aRun->RawEndPoint());
           atPreviousCharOfPreviousCharOfEndOfRun =
-              GetPreviousCharPointFromPointInText(atPreviousCharOfEndOfRun);
+              GetPreviousEditableCharPoint(atPreviousCharOfEndOfRun);
           rightCheck = true;
         }
       }
@@ -1824,11 +1785,11 @@ nsresult WSRunObject::ReplacePreviousNBSPIfUnnecessary(
   // about what is after it.  What is after it now will end up after the
   // inserted object.
   bool canConvert = false;
-  EditorDOMPointInText atPreviousChar = GetPreviousCharPoint(aPoint);
+  EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
   if (atPreviousChar.IsSet() && !atPreviousChar.IsEndOfContainer() &&
       atPreviousChar.IsCharNBSP()) {
     EditorDOMPointInText atPreviousCharOfPreviousChar =
-        GetPreviousCharPointFromPointInText(atPreviousChar);
+        GetPreviousEditableCharPoint(atPreviousChar);
     if (atPreviousCharOfPreviousChar.IsSet()) {
       if (atPreviousCharOfPreviousChar.IsEndOfContainer() ||
           !atPreviousCharOfPreviousChar.IsCharASCIISpace()) {
@@ -1890,14 +1851,14 @@ nsresult WSRunObject::CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
   // before it.  What is before it now will end up before the inserted text.
   bool canConvert = false;
   EditorDOMPointInText atNextChar =
-      GetNextCharPoint(EditorRawDOMPoint(aNode, aOffset));
+      GetInclusiveNextEditableCharPoint(EditorRawDOMPoint(aNode, aOffset));
   if (!atNextChar.IsSet() || NS_WARN_IF(atNextChar.IsEndOfContainer())) {
     return NS_OK;
   }
 
   if (atNextChar.IsCharNBSP()) {
     EditorDOMPointInText atNextCharOfNextCharOfNBSP =
-        GetNextCharPointFromPointInText(atNextChar.NextPoint());
+        GetInclusiveNextEditableCharPoint(atNextChar.NextPoint());
     if (atNextCharOfNextCharOfNBSP.IsSet()) {
       if (atNextCharOfNextCharOfNBSP.IsEndOfContainer() ||
           !atNextCharOfNextCharOfNBSP.IsCharASCIISpace()) {
