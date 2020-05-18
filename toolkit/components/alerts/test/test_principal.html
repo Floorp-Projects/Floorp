@@ -88,7 +88,7 @@ async function testNodePrincipal() {
     "chrome://alerts/locale/alert.properties"
   );
   var localizedSource = stringBundle.formatStringFromName(
-    "source.label", [principal.URI.hostPort]);
+    "source.label", [principal.hostPort]);
   is(source, localizedSource, "Should include source for node principal");
 }
 
