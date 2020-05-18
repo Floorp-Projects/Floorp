@@ -592,12 +592,8 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
 
       do {
         nsIFrame* f = stack.PopLastElement();
-
-        nsIFrame::ChildListIterator lists(f);
-        for (; !lists.IsDone(); lists.Next()) {
-          nsFrameList::Enumerator childFrames(lists.CurrentList());
-          for (; !childFrames.AtEnd(); childFrames.Next()) {
-            nsIFrame* kid = childFrames.get();
+        for (const auto& childList : f->GetChildLists()) {
+          for (nsIFrame* kid : childList.mList) {
             kid->MarkIntrinsicISizesDirty();
             stack.AppendElement(kid);
           }
