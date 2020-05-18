@@ -36,7 +36,7 @@ MOZ_MUST_USE bool TranspileCacheIRToMIR(MIRGenerator& mirGen,
                                         BytecodeLocation loc,
                                         MBasicBlock* current,
                                         const WarpCacheIR* snapshot,
-                                        const CallInfo& callInfo);
+                                        CallInfo& callInfo);
 
 }  // namespace jit
 }  // namespace js
