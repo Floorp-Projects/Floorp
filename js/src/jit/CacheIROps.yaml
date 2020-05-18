@@ -670,7 +670,7 @@
 
 - name: MathSqrtNumberResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: NumberId
 
