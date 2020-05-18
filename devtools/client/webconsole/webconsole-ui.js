@@ -338,7 +338,7 @@ class WebConsoleUI {
         resourceWatcher.TYPES.ERROR_MESSAGES,
         resourceWatcher.TYPES.PLATFORM_MESSAGES,
       ],
-      this._onResourceAvailable
+      { onAvailable: this._onResourceAvailable }
     );
   }
 

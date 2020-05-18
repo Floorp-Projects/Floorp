@@ -76,10 +76,9 @@ async function generateConsoleApiStubs() {
   const onConsoleMessage = ({ resource }) => {
     handleConsoleMessage(resource);
   };
-  await resourceWatcher.watch(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGES],
-    onConsoleMessage
-  );
+  await resourceWatcher.watch([resourceWatcher.TYPES.CONSOLE_MESSAGES], {
+    onAvailable: onConsoleMessage,
+  });
 
   for (const { keys, code } of getCommands()) {
     const received = new Promise(resolve => {
@@ -110,10 +109,9 @@ async function generateConsoleApiStubs() {
     await received;
   }
 
-  resourceWatcher.unwatch(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGES],
-    onConsoleMessage
-  );
+  resourceWatcher.unwatch([resourceWatcher.TYPES.CONSOLE_MESSAGES], {
+    onAvailable: onConsoleMessage,
+  });
 
   // We have everything we want, we can freeze the console to avoid communication
   // with the server.

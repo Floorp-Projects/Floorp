@@ -76,10 +76,9 @@ async function generateCssMessageStubs() {
   };
 
   /* CSS errors are considered as pageError on the server */
-  await resourceWatcher.watch(
-    [resourceWatcher.TYPES.ERROR_MESSAGES],
-    onErrorMessageAvailable
-  );
+  await resourceWatcher.watch([resourceWatcher.TYPES.ERROR_MESSAGES], {
+    onAvailable: onErrorMessageAvailable,
+  });
 
   for (const code of getCommands()) {
     const received = new Promise(resolve => {
@@ -107,10 +106,9 @@ async function generateCssMessageStubs() {
     await received;
   }
 
-  resourceWatcher.unwatch(
-    [resourceWatcher.TYPES.ERROR_MESSAGES],
-    onErrorMessageAvailable
-  );
+  resourceWatcher.unwatch([resourceWatcher.TYPES.ERROR_MESSAGES], {
+    onAvailable: onErrorMessageAvailable,
+  });
 
   await closeTabAndToolbox().catch(() => {});
   return stubs;

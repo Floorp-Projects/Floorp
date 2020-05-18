@@ -203,7 +203,7 @@ Inspector.prototype = {
 
     await this.toolbox.resourceWatcher.watch(
       [this.toolbox.resourceWatcher.TYPES.ROOT_NODE],
-      this.onResourceAvailable
+      { onAvailable: this.onResourceAvailable }
     );
     // Store the URL of the target page prior to navigation in order to ensure
     // telemetry counts in the Grid Inspector are not double counted on reload.
