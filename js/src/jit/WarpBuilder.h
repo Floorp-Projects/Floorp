@@ -12,6 +12,7 @@
 #include "jit/JitContext.h"
 #include "jit/MIR.h"
 #include "jit/MIRBuilderShared.h"
+#include "jit/WarpBuilderShared.h"
 #include "jit/WarpSnapshot.h"
 #include "vm/Opcodes.h"
 
@@ -73,14 +74,11 @@ class WarpSnapshot;
 
 // WarpBuilder builds a MIR graph from WarpSnapshot. Unlike WarpOracle,
 // WarpBuilder can run off-thread.
-class MOZ_STACK_CLASS WarpBuilder {
+class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   WarpSnapshot& snapshot_;
-  MIRGenerator& mirGen_;
   MIRGraph& graph_;
-  TempAllocator& alloc_;
   const CompileInfo& info_;
   JSScript* script_;
-  MBasicBlock* current = nullptr;
 
   // Pointer to a WarpOpSnapshot or nullptr if we reached the end of the list.
   // Because bytecode is compiled from first to last instruction (and
@@ -100,7 +98,6 @@ class MOZ_STACK_CLASS WarpBuilder {
   // compilation instead of builder.
   PhiVector iterators_;
 
-  TempAllocator& alloc() { return alloc_; }
   MIRGraph& graph() { return graph_; }
   const CompileInfo& info() const { return info_; }
   WarpSnapshot& snapshot() const { return snapshot_; }
@@ -131,12 +128,7 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildBackedge();
   MOZ_MUST_USE bool buildTestBackedge(BytecodeLocation loc);
 
-  MOZ_MUST_USE bool resumeAfter(MInstruction* ins, BytecodeLocation loc);
-
   MOZ_MUST_USE bool addIteratorLoopPhis(BytecodeLocation loopHead);
-
-  MConstant* constant(const Value& v);
-  void pushConstant(const Value& v);
 
   MOZ_MUST_USE bool buildPrologue();
   MOZ_MUST_USE bool buildBody();
