@@ -914,20 +914,7 @@ function String_sup() {
 
 function EscapeAttributeValue(v) {
     var inputStr = ToString(v);
-    var inputLen = inputStr.length;
-    var outputStr = "";
-    var chunkStart = 0;
-    for (var i = 0; i < inputLen; i++) {
-        if (inputStr[i] === '"') {
-            outputStr += callFunction(String_substring, inputStr, chunkStart, i) + "&quot;";
-            chunkStart = i + 1;
-        }
-    }
-    if (chunkStart === 0)
-        return inputStr;
-    if (chunkStart < inputLen)
-        outputStr += callFunction(String_substring, inputStr, chunkStart);
-    return outputStr;
+    return StringReplaceAllString(inputStr, '"', "&quot;");
 }
 
 // ES6 draft 2014-04-27 B.2.3.2
