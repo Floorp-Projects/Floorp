@@ -950,7 +950,7 @@ win64-asan-reporter-shippable/opt:
     index:
         product: firefox
         job-name: win64-asan-reporter-opt
-        type: nightly
+        type: shippable
     treeherder:
         platform: win64-asan-reporter/opt
         symbol: BoR
