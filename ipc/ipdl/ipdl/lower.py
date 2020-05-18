@@ -3015,19 +3015,6 @@ def _generateCxxUnion(ud):
 
         cls.addstmts([getvalue, getconstvalue])
 
-        if not _cxxTypeCanOnlyMove(c.ipdltype):
-            readvalue = MethodDefn(MethodDecl(
-                'get', ret=Type.VOID, const=True,
-                params=[Decl(c.ptrToType(), 'aOutValue')]))
-            rhs = ExprCall(getConstValueVar)
-            if c.ipdltype.isIPDL() and c.ipdltype.isArray():
-                rhs = ExprCall(ExprSelect(rhs, '.', 'Clone'), args=[])
-            readvalue.addstmts([
-                StmtExpr(ExprAssn(ExprDeref(ExprVar('aOutValue')),
-                                  rhs))
-            ])
-            cls.addstmt(readvalue)
-
         optype = MethodDefn(MethodDecl('', typeop=c.refType(), force_inline=True))
         optype.addstmt(StmtReturn(ExprCall(getValueVar)))
         opconsttype = MethodDefn(MethodDecl(
