@@ -3881,7 +3881,18 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
   bool hasDisplayPort =
       rootFrame->GetContent() &&
       nsLayoutUtils::GetDisplayPort(rootFrame->GetContent(), &rootDisplayPort);
-  if (!hasDisplayPort) {
+  if (hasDisplayPort) {
+    // The display port of the root frame already factors in it's callback
+    // transform, so subtract it out here, the GetCumulativeApzCallbackTransform
+    // call below will add it back.
+    if (nsIContent* content = rootFrame->GetContent()) {
+      if (void* property =
+              content->GetProperty(nsGkAtoms::apzCallbackTransform)) {
+        rootDisplayPort -=
+            CSSPoint::ToAppUnits(*static_cast<CSSPoint*>(property));
+      }
+    }
+  } else {
     // If we don't have a display port on the root frame let's fall back to
     // the root composition bounds instead.
     nsRect rootCompBounds =
