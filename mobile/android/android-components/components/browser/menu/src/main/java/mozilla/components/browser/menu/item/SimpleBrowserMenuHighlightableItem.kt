@@ -14,10 +14,10 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
 import mozilla.components.browser.menu.ext.addRippleEffect
-import mozilla.components.browser.menu2.candidate.ContainerStyle
-import mozilla.components.browser.menu2.candidate.MenuCandidate
-import mozilla.components.browser.menu2.candidate.TextMenuCandidate
-import mozilla.components.browser.menu2.candidate.TextStyle
+import mozilla.components.concept.menu.candidate.ContainerStyle
+import mozilla.components.concept.menu.candidate.MenuCandidate
+import mozilla.components.concept.menu.candidate.TextMenuCandidate
+import mozilla.components.concept.menu.candidate.TextStyle
 
 /**
  * A menu item for displaying text with a highlight state which sets the

@@ -13,10 +13,10 @@ import androidx.core.content.ContextCompat.getColor
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.ContainerStyle
-import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
-import mozilla.components.browser.menu2.candidate.RowMenuCandidate
-import mozilla.components.browser.menu2.candidate.SmallMenuCandidate
+import mozilla.components.concept.menu.candidate.ContainerStyle
+import mozilla.components.concept.menu.candidate.DrawableMenuIcon
+import mozilla.components.concept.menu.candidate.RowMenuCandidate
+import mozilla.components.concept.menu.candidate.SmallMenuCandidate
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

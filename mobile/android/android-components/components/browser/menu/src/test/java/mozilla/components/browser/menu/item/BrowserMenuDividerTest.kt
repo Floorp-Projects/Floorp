@@ -5,8 +5,8 @@
 package mozilla.components.browser.menu.item
 
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.ContainerStyle
-import mozilla.components.browser.menu2.candidate.DividerMenuCandidate
+import mozilla.components.concept.menu.candidate.ContainerStyle
+import mozilla.components.concept.menu.candidate.DividerMenuCandidate
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

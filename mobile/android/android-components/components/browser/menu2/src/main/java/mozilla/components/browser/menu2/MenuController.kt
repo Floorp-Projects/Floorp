@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.menu2
 
+import mozilla.components.concept.menu.Side
+
 /**
  * Controls a popup menu composed of MenuCandidate objects.
  * @param visibleSide Sets the menu to open with either the start or end visible.
@@ -11,17 +13,3 @@ package mozilla.components.browser.menu2
 class MenuController(
     private val visibleSide: Side = Side.START
 )
-
-/**
- * Indicates the starting or ending side of the menu or an option.
- */
-enum class Side {
-    /**
-     * Starting side (top or left).
-     */
-    START,
-    /**
-     * Ending side (bottom or right).
-     */
-    END
-}

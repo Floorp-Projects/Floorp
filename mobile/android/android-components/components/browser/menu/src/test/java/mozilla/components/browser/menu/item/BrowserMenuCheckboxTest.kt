@@ -5,7 +5,7 @@
 package mozilla.components.browser.menu.item
 
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
+import mozilla.components.concept.menu.candidate.CompoundMenuCandidate
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test

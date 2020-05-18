@@ -6,7 +6,7 @@ package mozilla.components.browser.menu
 
 import android.content.Context
 import android.view.View
-import mozilla.components.browser.menu2.candidate.MenuCandidate
+import mozilla.components.concept.menu.candidate.MenuCandidate
 
 /**
  * Interface to be implemented by menu items to be shown in the browser menu.
