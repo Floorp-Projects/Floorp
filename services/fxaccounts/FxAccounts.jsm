@@ -514,7 +514,9 @@ class FxAccounts {
   }
 
   /**
-   * Get an OAuth token for the user
+   * Get an OAuth token for the user.
+   * If you need a corresponding scoped key to go along with this
+   * token, consider using the new 'getAccessToken' method instead.
    *
    * @param options
    *        {
@@ -539,6 +541,48 @@ class FxAccounts {
     } catch (err) {
       throw this._internal._errorToErrorClass(err);
     }
+  }
+
+  /**
+   * Fetches an OAuth token based on the given scope
+   * and its key in a single operation.
+   *
+   * @param scope {String} the requested OAuth scope
+   * @param ttl {Number} OAuth token TTL
+   * @returns {Promise<Object>} Object containing "scope", "token"
+   *  and "key" properties.
+   */
+  async getAccessToken(scope, ttl) {
+    log.debug("getAccessToken enter");
+    const token = await this._internal.getOAuthToken({ scope, ttl });
+    const ACCT_DATA_FIELDS = ["scopedKeys"];
+
+    return this._withCurrentAccountState(async currentState => {
+      const data = await currentState.getUserAccountData(ACCT_DATA_FIELDS);
+      const scopedKeys = data.scopedKeys || {};
+      let key;
+
+      if (!scopedKeys.hasOwnProperty(scope)) {
+        log.debug(`Fetching scopedKeys data for ${scope}`);
+        const newKeyData = await this._internal.keys.getScopedKeys(
+          scope,
+          FX_OAUTH_CLIENT_ID
+        );
+
+        scopedKeys[scope] = newKeyData[scope] || null;
+        await currentState.updateUserAccountData({ scopedKeys });
+      } else {
+        log.debug(`Using cached scopedKeys data for ${scope}`);
+      }
+
+      key = scopedKeys[scope];
+
+      return {
+        scope,
+        token,
+        key,
+      };
+    });
   }
 
   /**

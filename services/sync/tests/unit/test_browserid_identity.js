@@ -33,21 +33,18 @@ const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;
 const HOUR_MS = MINUTE_MS * 60;
 
-const MOCK_TOKEN_RESPONSE = {
-  access_token:
-    "e3c5caf17f27a0d9e351926a928938b3737df43e91d4992a5a5fca9a7bdef8ba",
-  token_type: "bearer",
+const MOCK_SCOPED_KEY = {
+  k:
+    "3TVYx0exDTbrc5SGMkNg_C_eoNfjV0elHClP7npHrAtrlJu-esNyTUQaR6UcJBVYilPr8-T4BqWlIp4TOpKavA",
+  kid: "1569964308879-5y6waestOxDDM-Ia4_2u1Q",
+  kty: "oct",
   scope: "https://identity.mozilla.com/apps/oldsync",
-  expires_in: 3600 * 6,
-  auth_at: 1587762898,
 };
-const MOCK_SCOPED_KEY_RESPONSE = {
-  "https://identity.mozilla.com/apps/oldsync": {
-    identifier: "https://identity.mozilla.com/apps/oldsync",
-    keyRotationSecret:
-      "0000000000000000000000000000000000000000000000000000000000000000",
-    keyRotationTimestamp: 1510726317123,
-  },
+
+const MOCK_ACCESS_TOKEN_RESPONSE = {
+  token: "e3c5caf17f27a0d9e351926a928938b3737df43e91d4992a5a5fca9a7bdef8ba",
+  key: MOCK_SCOPED_KEY,
+  scope: "https://identity.mozilla.com/apps/oldsync",
 };
 
 var globalIdentityConfig = makeIdentityConfig();
@@ -93,10 +90,8 @@ add_task(async function test_initialialize_via_oauth_token() {
   let fxaInternal = makeFxAccountsInternalMock(identityConfig);
   configureFxAccountIdentity(browseridManager, identityConfig, fxaInternal);
   browseridManager._fxaService._internal.initialize();
-  browseridManager._fxaService._internal.fxAccountsOAuthGrantClient.getTokenFromAssertion = () =>
-    Promise.resolve(MOCK_TOKEN_RESPONSE);
-  browseridManager._fxaService._internal._fxAccountsClient.getScopedKeyData = () =>
-    Promise.resolve(MOCK_SCOPED_KEY_RESPONSE);
+  browseridManager._fxaService.getAccessToken = () =>
+    Promise.resolve(MOCK_ACCESS_TOKEN_RESPONSE);
 
   await browseridManager._ensureValidToken();
   Assert.ok(!!browseridManager._token);

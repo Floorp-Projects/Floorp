@@ -219,6 +219,7 @@ class FxAccountsKeys {
 
   /**
    * @param {String} scopes Space separated requested scopes
+   * @param {String} clientId oauth client id
    */
   async getScopedKeys(scopes, clientId) {
     const { sessionToken } = await this._fxia._getVerifiedAccountOrReject();
