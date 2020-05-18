@@ -546,8 +546,8 @@ ContentBlocking::CompleteAllowAccessFor(
     ContentBlockingNotifier::StorageAccessGrantedReason aReason) {
   MOZ_ASSERT(aParentContext->IsInProcess());
 
-  // Let's store the permission in the current parent window and other
-  // windows having the same tracking origin.
+  // Let's inform the other windows having the same tracking origin about
+  // the stroage permission is granted.
   ContentBlocking::UpdateAllowAccessOnCurrentProcess(aParentContext,
                                                      aTrackingOrigin);
 
@@ -556,7 +556,7 @@ ContentBlocking::CompleteAllowAccessFor(
       AntiTrackingUtils::GetInnerWindow(aParentContext);
   MOZ_ASSERT(parentInner);
 
-  nsGlobalWindowInner::Cast(parentInner)->StorageAccessGranted();
+  nsGlobalWindowInner::Cast(parentInner)->SaveStorageAccessGranted();
 
   // Theoratically this can be done in the parent process. But right now,
   // we need the channel while notifying content blocking events, and
@@ -711,6 +711,7 @@ void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
       Unused << AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
           aContext, nullptr, origin);
 
+      // Permission is only synced to first-level iframes.
       if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
           !AntiTrackingUtils::IsFirstLevelSubContext(aContext)) {
         return;
