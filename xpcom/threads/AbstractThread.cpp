@@ -31,9 +31,21 @@ MOZ_THREAD_LOCAL(AbstractThread*) AbstractThread::sCurrentThreadTLS;
 class XPCOMThreadWrapper final : public AbstractThread,
                                  public nsIThreadObserver {
  public:
-  explicit XPCOMThreadWrapper(nsIThreadInternal* aThread,
-                              bool aRequireTailDispatch)
-      : AbstractThread(aRequireTailDispatch), mThread(aThread) {}
+  XPCOMThreadWrapper(nsIThreadInternal* aThread, bool aRequireTailDispatch,
+                     bool aOnThread)
+      : AbstractThread(aRequireTailDispatch),
+        mThread(aThread),
+        mOnThread(aOnThread) {
+    MOZ_DIAGNOSTIC_ASSERT(!aOnThread || IsCurrentThreadIn());
+    if (aOnThread) {
+      MOZ_ASSERT(!sCurrentThreadTLS.get(),
+                 "There can only be a single XPCOMThreadWrapper available on a "
+                 "thread");
+      // Set the default current thread so that GetCurrent() never returns
+      // nullptr.
+      sCurrentThreadTLS.set(this);
+    }
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSITHREADOBSERVER
@@ -107,8 +119,15 @@ class XPCOMThreadWrapper final : public AbstractThread,
  private:
   const RefPtr<nsIThreadInternal> mThread;
   Maybe<AutoTaskDispatcher> mTailDispatcher;
+  const bool mOnThread;
 
-  ~XPCOMThreadWrapper() = default;
+  ~XPCOMThreadWrapper() {
+    if (mOnThread) {
+      MOZ_DIAGNOSTIC_ASSERT(IsCurrentThreadIn(),
+                            "Must be destroyed on the thread it was created");
+      sCurrentThreadTLS.set(nullptr);
+    }
+  }
 
   void MaybeFireTailDispatcher() {
     if (mTailDispatcher.isSome()) {
@@ -226,16 +245,18 @@ void AbstractThread::InitMainThread() {
   nsCOMPtr<nsIThreadInternal> mainThread =
       do_QueryInterface(nsThreadManager::get().GetMainThreadWeak());
   MOZ_DIAGNOSTIC_ASSERT(mainThread);
-  sMainThread = new XPCOMThreadWrapper(mainThread.get(),
-                                       /* aRequireTailDispatch = */ true);
-  ClearOnShutdown(&sMainThread);
 
   if (!sCurrentThreadTLS.init()) {
     MOZ_CRASH();
   }
-  // Set the default current main thread so that GetCurrent() never returns
-  // nullptr.
-  sCurrentThreadTLS.set(sMainThread);
+  sMainThread = new XPCOMThreadWrapper(mainThread.get(),
+                                       /* aRequireTailDispatch = */ true,
+                                       true /* onThread */);
+}
+
+void AbstractThread::ShutdownMainThread() {
+  MOZ_ASSERT(NS_IsMainThread());
+  sMainThread = nullptr;
 }
 
 void AbstractThread::DispatchStateChange(
@@ -269,20 +290,22 @@ void AbstractThread::DispatchDirectTask(
 
 /* static */
 already_AddRefed<AbstractThread> AbstractThread::CreateXPCOMThreadWrapper(
-    nsIThread* aThread, bool aRequireTailDispatch) {
+    nsIThread* aThread, bool aRequireTailDispatch, bool aOnThread) {
   nsCOMPtr<nsIThreadInternal> internalThread = do_QueryInterface(aThread);
   MOZ_ASSERT(internalThread, "Need an nsThread for AbstractThread");
   RefPtr<XPCOMThreadWrapper> wrapper =
-      new XPCOMThreadWrapper(internalThread, aRequireTailDispatch);
+      new XPCOMThreadWrapper(internalThread, aRequireTailDispatch, aOnThread);
 
   bool onCurrentThread = false;
   Unused << aThread->IsOnCurrentThread(&onCurrentThread);
 
   if (onCurrentThread) {
-    MOZ_ASSERT(
-        !sCurrentThreadTLS.get(),
-        "There can only be a single XPCOMThreadWrapper available on a thread");
-    sCurrentThreadTLS.set(wrapper);
+    if (!aOnThread) {
+      MOZ_ASSERT(!sCurrentThreadTLS.get(),
+                 "There can only be a single XPCOMThreadWrapper available on a "
+                 "thread");
+      sCurrentThreadTLS.set(wrapper);
+    }
     return wrapper.forget();
   }
 
