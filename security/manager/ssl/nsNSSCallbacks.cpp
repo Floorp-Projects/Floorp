@@ -272,6 +272,9 @@ OCSPRequest::Run() {
   httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
   loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
 
+  // allow deprecated HTTP request from SystemPrincipal
+  loadInfo->SetAllowDeprecatedSystemRequests(true);
+
   // For OCSP requests, only the first party domain and private browsing id
   // aspects of origin attributes are used. This means that:
   // a) if first party isolation is enabled, OCSP requests will be isolated

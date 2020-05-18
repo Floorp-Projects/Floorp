@@ -662,6 +662,10 @@ void nsPACMan::ContinueLoadingAfterPACUriKnown() {
       }
 
       if (channel) {
+        // allow deprecated HTTP request from SystemPrincipal
+        nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+        loadInfo->SetAllowDeprecatedSystemRequests(true);
+
         channel->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE);
         channel->SetNotificationCallbacks(this);
         if (NS_SUCCEEDED(channel->AsyncOpen(mLoader))) return;
