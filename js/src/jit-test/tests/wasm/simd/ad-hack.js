@@ -1506,6 +1506,75 @@ set(mem, 0, xs);
 insrun.exports.run(0, 16);
 assertSame(get(mem, 16, 16), xs.map((x,i) => x+i))
 
+// Make sure JS<->wasm call guards are sensible.
+
+// Calling from JS to export that accepts v128.
+assertErrorMessage(() => insworker.exports.worker(),
+                   TypeError,
+                   /cannot pass.*v128.*to or from JS/);
+
+// Calling from wasm with v128 to import that comes from JS.  The instantiation
+// will succeed even if the param type of the import is v128 (see "create a host
+// function" in the Wasm JSAPI spec), it is the act of invoking it that checks
+// that verboten types are not used (see "run a host function", ibid.).
+var badImporter = wasmEvalText(`
+  (module
+    (import "" "worker" (func $worker (param v128) (result v128)))
+    (func (export "run")
+      (drop (call $worker (v128.const i32x4 0 1 2 3)))))`,
+             {"":{worker: function(a) { return a; }}});
+
+assertErrorMessage(() => badImporter.exports.run(),
+                   TypeError,
+                   /cannot pass.*v128.*to or from JS/);
+
+// Imports and exports that pass and return v128 as stack (not register) args.
+
+var exportWithStackArgs = wasmEvalText(`
+  (module
+    (func (export "worker") (param v128) (param v128) (param v128) (param v128)
+                            (param v128) (param v128) (param v128) (param v128)
+                            (param v128) (param v128) (param v128) (param v128)
+                            (param v128) (param v128)
+           (result v128 v128)
+      (i8x16.add (local.get 3) (local.get 12))
+      (local.get 7)))`);
+
+var importWithStackArgs = wasmEvalText(`
+  (module
+    (type $t1 (func (param v128) (param v128) (param v128) (param v128)
+                    (param v128) (param v128) (param v128) (param v128)
+                    (param v128) (param v128) (param v128) (param v128)
+                    (param v128) (param v128)
+                    (result v128 v128)))
+    (import "" "worker" (func $worker (type $t1)))
+    (memory (export "mem") 1 1)
+    (table funcref (elem $worker))
+    (func (export "run")
+      (i32.const 16)
+      (call_indirect (type $t1) (v128.const i32x4 1 1 1 1) (v128.const i32x4 2 2 2 2) (v128.const i32x4 3 3 3 3)
+                    (v128.const i32x4 4 4 4 4) (v128.const i32x4 5 5 5 5) (v128.const i32x4 6 6 6 6)
+                    (v128.const i32x4 7 7 7 7) (v128.const i32x4 8 8 8 8) (v128.const i32x4 9 9 9 9)
+                    (v128.const i32x4 10 10 10 10) (v128.const i32x4 11 11 11 11) (v128.const i32x4 12 12 12 12)
+                    (v128.const i32x4 13 13 13 13) (v128.const i32x4 14 14 14 14)
+           (i32.const 0))
+      drop
+      v128.store
+      (i32.const 0)
+      (call $worker (v128.const i32x4 1 1 1 1) (v128.const i32x4 2 2 2 2) (v128.const i32x4 3 3 3 3)
+                    (v128.const i32x4 4 4 4 4) (v128.const i32x4 5 5 5 5) (v128.const i32x4 6 6 6 6)
+                    (v128.const i32x4 7 7 7 7) (v128.const i32x4 8 8 8 8) (v128.const i32x4 9 9 9 9)
+                    (v128.const i32x4 10 10 10 10) (v128.const i32x4 11 11 11 11) (v128.const i32x4 12 12 12 12)
+                    (v128.const i32x4 13 13 13 13) (v128.const i32x4 14 14 14 14))
+      drop
+      v128.store))`,
+                                       {"": exportWithStackArgs.exports});
+
+var mem = new Int32Array(importWithStackArgs.exports.mem.buffer);
+importWithStackArgs.exports.run();
+assertSame(get(mem, 0, 4), [17, 17, 17, 17]);
+assertSame(get(mem, 4, 4), [17, 17, 17, 17]);
+
 // Imports and exports of v128 globals
 
 var insexporter = wasmEvalText(`
@@ -1523,6 +1592,16 @@ var insimporter = wasmEvalText(`
 var mem = new Uint8Array(insimporter.exports.mem.buffer);
 insimporter.exports.run(16);
 assertSame(get(mem, 16, 16), iota(16));
+
+// Guards on accessing v128 globals from JS
+
+assertErrorMessage(() => insexporter.exports.myglobal.value = 0,
+                   TypeError,
+                   /cannot pass.*v128.*to or from JS/);
+
+assertErrorMessage(function () { let v = insexporter.exports.myglobal.value },
+                   TypeError,
+                   /cannot pass.*v128.*to or from JS/);
 
 // Multi-value cases
 
