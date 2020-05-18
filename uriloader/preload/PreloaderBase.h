@@ -79,9 +79,16 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
   // Called by resource loaders or any suitable component to notify the preload
   // has been used for an actual load.  This is intended to stop any usage
   // timers.
-  void NotifyUsage();
+  // @param aDropLoadBackground: If `Keep` then the loading channel, if still in
+  // progress, will not be removed the LOAD_BACKGROUND flag, for instance XHR is
+  // the user here.
+  enum class LoadBackground { Keep, Drop };
+  void NotifyUsage(LoadBackground aLoadBackground = LoadBackground::Drop);
   // Whether this preloader has been used for a regular/actual load or not.
   bool IsUsed() const { return mIsUsed; }
+
+  // Removes itself from the document's preloads hashtable
+  void RemoveSelf(dom::Document* aDocument);
 
   // When a loader starting an actual load finds a preload, the data can be
   // delivered using this method.  It will deliver stream listener notifications
@@ -108,6 +115,23 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
   // for NotifyStop() call.
   void AddLinkPreloadNode(nsINode* aNode);
   void RemoveLinkPreloadNode(nsINode* aNode);
+
+  // A collection of redirects, the main consumer is fetch.
+  class RedirectRecord {
+   public:
+    RedirectRecord(uint32_t aFlags, already_AddRefed<nsIURI> aURI)
+        : mFlags(aFlags), mURI(aURI) {}
+
+    uint32_t Flags() const { return mFlags; }
+    nsCString Spec() const;
+    nsCString Fragment() const;
+
+   private:
+    uint32_t mFlags;
+    nsCOMPtr<nsIURI> mURI;
+  };
+
+  const nsTArray<RedirectRecord>& Redirects() { return mRedirectRecords; }
 
  protected:
   virtual ~PreloaderBase();
@@ -145,6 +169,9 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
   // Reference to HTMLLinkElement DOM nodes to deliver onload and onerror
   // notifications to.
   nsTArray<nsWeakPtr> mNodes;
+
+  // History of redirects.
+  nsTArray<RedirectRecord> mRedirectRecords;
 
   // The loading channel.  This will update when a redirect occurs.
   nsCOMPtr<nsIChannel> mChannel;
