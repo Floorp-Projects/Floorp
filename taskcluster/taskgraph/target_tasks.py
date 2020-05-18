@@ -508,8 +508,8 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
         # Run chrome and chromium on all platforms available
         if '-chrome' in try_name:
             if 'android' in platform:
-                # Run only on pgo android builds
-                if 'pgo' in platform or 'shippable' in platform:
+                # Run only on shippable android builds
+                if 'shippable' in platform:
                     return True
                 else:
                     return False
@@ -520,7 +520,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             return True
 
         # Run raptor scn-power-idle and speedometer for fenix and fennec68
-        if 'pgo' in platform or 'shippable' in platform:
+        if 'shippable' in platform:
             if 'raptor-scn-power-idle' in try_name \
                     and ('-fenix' in try_name or '-fennec68' in try_name):
                 return True
@@ -533,7 +533,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 return True
 
         # Select browsertime tasks
-        if 'browsertime' in try_name and ('pgo' in platform or 'shippable' in platform):
+        if 'browsertime' in try_name and 'shippable' in platform:
             if 'speedometer' in try_name:
                 return True
             if '-live' in try_name:
@@ -553,7 +553,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
         if power_task and cpu_n_memory_task:
             return False
         if power_task or cpu_n_memory_task:
-            if 'pgo' not in platform and 'shippable' not in platform:
+            if 'shippable' not in platform:
                 return False
             if '-speedometer-' in try_name:
                 return True
@@ -845,7 +845,7 @@ def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
         if attributes.get('unittest_suite') != 'raptor':
             return False
         try_name = attributes.get('raptor_try_name')
-        if '-cold' in try_name and ('pgo' in platform or 'shippable' in platform):
+        if '-cold' in try_name and 'shippable' in platform:
             if '-1-refbrow-' in try_name:
                 return True
             # Get browsertime amazon smoke tests
