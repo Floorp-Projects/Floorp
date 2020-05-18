@@ -14,6 +14,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/DNSListenerProxy.h"
+#include "mozilla/net/TRRServiceParent.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
@@ -52,6 +53,8 @@ ChildDNSService::ChildDNSService()
                 XRE_IsContentProcess() || XRE_IsSocketProcess());
   if (XRE_IsParentProcess() && nsIOService::UseSocketProcess()) {
     nsDNSPrefetch::Initialize(this);
+    mTRRServiceParent = new TRRServiceParent();
+    mTRRServiceParent->Init();
   }
 }
 
