@@ -19,4 +19,3 @@
 == bmp-not-square-24bpp.bmp bmp-not-square-24bpp.png
 == os2bmp-size-32x32-24bpp.bmp bmp-size-32x32-24bpp.png
 == top-to-bottom-16x16-24bpp.bmp bmp-size-16x16-24bpp.png
-== 24bpp-rgb.bmp 24bpp-rgb-ref.png
