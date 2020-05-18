@@ -12,7 +12,6 @@ const { actionTypes: at } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
@@ -176,11 +175,7 @@ this.DownloadsManager = class DownloadsManager {
         break;
       case at.OPEN_DOWNLOAD_FILE:
         doDownloadAction(download => {
-          DownloadsCommon.openDownloadedFile(
-            new FileUtils.File(download.target.path),
-            null,
-            BrowserWindowTracker.getTopWindow()
-          );
+          DownloadsCommon.openDownload(download);
         });
         break;
       case at.UNINIT:
