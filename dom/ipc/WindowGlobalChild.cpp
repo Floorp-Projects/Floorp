@@ -453,25 +453,12 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvGetSecurityInfo(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WindowGlobalChild::RecvSaveStorageAccessGranted(
-    const nsCString& aPermissionKey) {
-  nsCOMPtr<nsPIDOMWindowInner> window = GetWindowGlobal();
-  if (!window) {
-    return IPC_OK();
+mozilla::ipc::IPCResult WindowGlobalChild::RecvSaveStorageAccessGranted() {
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetWindowGlobal();
+  if (inner) {
+    inner->SaveStorageAccessGranted();
   }
 
-#ifdef DEBUG
-  nsAutoCString trackingOrigin;
-  nsCOMPtr<nsIPrincipal> principal = DocumentPrincipal();
-  if (principal && NS_SUCCEEDED(principal->GetOriginNoSuffix(trackingOrigin))) {
-    nsAutoCString permissionKey;
-    AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin,
-                                                  permissionKey);
-    MOZ_ASSERT(permissionKey == aPermissionKey);
-  }
-#endif
-
-  window->SaveStorageAccessGranted(aPermissionKey);
   return IPC_OK();
 }
 
