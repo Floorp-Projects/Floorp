@@ -7305,14 +7305,27 @@ const nsIGlobalObject* nsPIDOMWindowInner::AsGlobal() const {
   return nsGlobalWindowInner::Cast(this);
 }
 
-void nsPIDOMWindowInner::SaveStorageAccessGranted() {
-  mStorageAccessGranted = true;
+void nsPIDOMWindowInner::SaveStorageAccessGranted(
+    const nsACString& aPermissionKey) {
+  if (!HasStorageAccessGranted(aPermissionKey)) {
+    mStorageAccessGranted.AppendElement(aPermissionKey);
+  }
 
-  nsGlobalWindowInner::Cast(this)->StorageAccessGranted();
+  nsGlobalWindowInner::Cast(this)->ClearActiveStoragePrincipal();
 }
 
-bool nsPIDOMWindowInner::HasStorageAccessGranted() {
-  return mStorageAccessGranted;
+void nsGlobalWindowInner::ClearActiveStoragePrincipal() {
+  Document* doc = GetExtantDoc();
+  if (doc) {
+    doc->ClearActiveStoragePrincipal();
+  }
+
+  CallOnInProcessChildren(&nsGlobalWindowInner::ClearActiveStoragePrincipal);
+}
+
+bool nsPIDOMWindowInner::HasStorageAccessGranted(
+    const nsACString& aPermissionKey) {
+  return mStorageAccessGranted.Contains(aPermissionKey);
 }
 
 nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
@@ -7335,7 +7348,6 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
       mNumOfIndexedDBDatabases(0),
       mNumOfOpenWebSockets(0),
       mEvent(nullptr),
-      mStorageAccessGranted(false),
       mWindowGlobalChild(aActor) {
   MOZ_ASSERT(aOuterWindow);
   mBrowsingContext = aOuterWindow->GetBrowsingContext();

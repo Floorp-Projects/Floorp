@@ -128,6 +128,12 @@ class ContentBlocking final {
       ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
 
+  friend class dom::Document;
+  static bool HasStorageAccessGranted(nsPIDOMWindowInner* aWindow);
+
+  static bool HasStorageAccessGranted(dom::BrowsingContext* aBrowsingContext,
+                                      const nsACString& aPermissionKey);
+
   static void UpdateAllowAccessOnCurrentProcess(
       dom::BrowsingContext* aParentContext, const nsACString& aTrackingOrigin);
 

@@ -17,6 +17,8 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
+#include "nsIPermission.h"
+#include "nsIPermissionManager.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIWebProgressListener.h"
 #include "mozilla/AntiTrackingUtils.h"
@@ -1465,6 +1467,11 @@ nsGlobalWindowOuter::~nsGlobalWindowOuter() {
   nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac) ac->RemoveWindowAsListener(this);
 
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, PERM_CHANGE_NOTIFICATION);
+  }
+
   nsLayoutStatics::Release();
 }
 
@@ -1536,6 +1543,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindowOuter)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMChromeWindow, IsChromeWindow())
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGlobalWindowOuter)
@@ -6845,6 +6853,49 @@ nsGlobalWindowOuter::GetInterface(const nsIID& aIID, void** aSink) {
   return rv;
 }
 
+//*****************************************************************************
+// nsGlobalWindowOuter::nsIObserver
+//*****************************************************************************
+
+NS_IMETHODIMP
+nsGlobalWindowOuter::Observe(nsISupports* aSupports, const char* aTopic,
+                             const char16_t* aData) {
+  if (!nsCRT::strcmp(aTopic, PERM_CHANGE_NOTIFICATION)) {
+    nsCOMPtr<nsIPermission> permission = do_QueryInterface(aSupports);
+    if (!permission) {
+      return NS_OK;
+    }
+    nsIPrincipal* principal = GetPrincipal();
+    if (!principal) {
+      return NS_OK;
+    }
+    if (!AntiTrackingUtils::IsStorageAccessPermission(permission, principal)) {
+      return NS_OK;
+    }
+    if (!nsCRT::strcmp(aData, u"deleted")) {
+      // The storage access permission was deleted.
+      mHasStorageAccess = false;
+      return NS_OK;
+    }
+    if (!nsCRT::strcmp(aData, u"added") || !nsCRT::strcmp(aData, u"changed")) {
+      // The storage access permission was granted or modified.
+      uint32_t expireType = 0;
+      int64_t expireTime = 0;
+      MOZ_ALWAYS_SUCCEEDS(permission->GetExpireType(&expireType));
+      MOZ_ALWAYS_SUCCEEDS(permission->GetExpireTime(&expireTime));
+      if ((expireType == nsIPermissionManager::EXPIRE_TIME &&
+           expireTime >= PR_Now() / 1000) ||
+          (expireType == nsIPermissionManager::EXPIRE_SESSION &&
+           expireTime != 0)) {
+        // Permission hasn't expired yet.
+        mHasStorageAccess = true;
+        return NS_OK;
+      }
+    }
+  }
+  return NS_OK;
+}
+
 bool nsGlobalWindowOuter::IsSuspended() const {
   MOZ_ASSERT(NS_IsMainThread());
   // No inner means we are effectively suspended
@@ -7569,6 +7620,15 @@ already_AddRefed<nsGlobalWindowOuter> nsGlobalWindowOuter::Create(
   window->SetDocShell(aDocShell);
 
   window->InitWasOffline();
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    // Delay calling AddObserver until we hit the event loop, in case we may be
+    // in the middle of modifying the observer list somehow.
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("PermChangeDelayRunnable", [obs, window] {
+          obs->AddObserver(window, PERM_CHANGE_NOTIFICATION, true);
+        }));
+  }
   return window.forget();
 }
 
