@@ -1578,12 +1578,6 @@ interface nsIDOMWindowUtils : nsISupports {
   void flushPendingFileDeletions();
 
   /**
-   * Return whether incremental GC has been disabled due to a binary add-on.
-   */
-  [implicit_jscontext]
-  boolean isIncrementalGCEnabled();
-
-  /**
    * Begin opcode-level profiling of all JavaScript execution in the window's
    * runtime.
    */
