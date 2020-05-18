@@ -7308,16 +7308,7 @@ const nsIGlobalObject* nsPIDOMWindowInner::AsGlobal() const {
 void nsPIDOMWindowInner::SaveStorageAccessGranted() {
   mStorageAccessGranted = true;
 
-  nsGlobalWindowInner::Cast(this)->ClearActiveStoragePrincipal();
-}
-
-void nsGlobalWindowInner::ClearActiveStoragePrincipal() {
-  Document* doc = GetExtantDoc();
-  if (doc) {
-    doc->ClearActiveStoragePrincipal();
-  }
-
-  CallOnInProcessChildren(&nsGlobalWindowInner::ClearActiveStoragePrincipal);
+  nsGlobalWindowInner::Cast(this)->StorageAccessGranted();
 }
 
 bool nsPIDOMWindowInner::HasStorageAccessGranted() {
