@@ -12,6 +12,7 @@ job-defaults:
             default:
                 by-test-platform:
                     android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                    android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
                     default: []
     tier: 3
     target:
@@ -117,6 +118,7 @@ browsertime-tp6m:
                     default:
                         by-test-platform:
                             android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
                             default: []
             youtube:
                 by-app:
@@ -125,6 +127,7 @@ browsertime-tp6m:
                     default:
                         by-test-platform:
                             android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
                             default: []
             default: []
     pageload:
@@ -201,6 +204,7 @@ browsertime-speedometer-mobile:
             default:
                 by-test-platform:
                     android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                    android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
                     default: []
     treeherder-symbol: Btime(sp)
     mozharness:
