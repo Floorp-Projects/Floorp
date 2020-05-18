@@ -3384,6 +3384,13 @@ void MediaManager::OnNavigation(uint64_t aWindowID) {
   if (mCallIds.Get(aWindowID, &callIDs)) {
     for (auto& callID : *callIDs) {
       mActiveCallbacks.Remove(callID);
+      for (auto& request : mPendingGUMRequest.Clone()) {
+        nsString id;
+        request->GetCallID(id);
+        if (id == callID) {
+          mPendingGUMRequest.RemoveElement(request);
+        }
+      }
     }
     mCallIds.Remove(aWindowID);
   }
