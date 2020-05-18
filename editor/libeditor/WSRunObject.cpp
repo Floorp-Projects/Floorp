@@ -1599,11 +1599,6 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  // Try to change an nbsp to a space, if possible, just to prevent nbsp
-  // proliferation.  Examine what is before and after the trailing nbsp, if
-  // any.
-  bool rightCheck = false;
-
   // Check if it's a visible fragment in a hard line.
   if (!aRun->IsVisibleAndMiddleOfHardLine()) {
     return NS_ERROR_FAILURE;
@@ -1628,13 +1623,13 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
          !isPreviousCharASCIIWhitespace) ||
         (!atPreviousCharOfPreviousCharOfEndOfRun.IsSet() &&
          (aRun->StartsFromNormalText() || aRun->StartsFromSpecialContent()));
+    bool followedByVisibleContentOrBRElement = false;
     if (maybeNBSPFollowingVisibleContent || isPreviousCharASCIIWhitespace) {
       // now check that what is to the right of it is compatible with replacing
       // nbsp with space
-      if (aRun->EndsByNormalText() || aRun->EndsBySpecialContent() ||
-          aRun->EndsByBRElement()) {
-        rightCheck = true;
-      }
+      followedByVisibleContentOrBRElement = aRun->EndsByNormalText() ||
+                                            aRun->EndsBySpecialContent() ||
+                                            aRun->EndsByBRElement();
       if (aRun->EndsByBlockBoundary() && mScanStartPoint.IsInContentNode()) {
         bool insertBRElement = HTMLEditUtils::IsBlockElement(
             *mScanStartPoint.ContainerAsContent());
@@ -1681,11 +1676,12 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
               GetPreviousEditableCharPoint(aRun->RawEndPoint());
           atPreviousCharOfPreviousCharOfEndOfRun =
               GetPreviousEditableCharPoint(atPreviousCharOfEndOfRun);
-          rightCheck = true;
+          followedByVisibleContentOrBRElement = true;
         }
       }
 
-      if (maybeNBSPFollowingVisibleContent && rightCheck) {
+      if (maybeNBSPFollowingVisibleContent &&
+          followedByVisibleContentOrBRElement) {
         // Now replace nbsp with space.  First, insert a space
         AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
         nsresult rv =
@@ -1724,7 +1720,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
     }
 
     if (!mPRE && !maybeNBSPFollowingVisibleContent &&
-        isPreviousCharASCIIWhitespace && rightCheck) {
+        isPreviousCharASCIIWhitespace && followedByVisibleContentOrBRElement) {
       // Don't mess with this preformatted for now.  We have a run of ASCII
       // whitespace (which will render as one space) followed by an nbsp (which
       // is at the end of the whitespace run).  Let's switch their order.  This
