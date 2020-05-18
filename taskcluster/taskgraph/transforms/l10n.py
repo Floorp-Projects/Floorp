@@ -368,7 +368,7 @@ def make_job_description(config, jobs):
         job['mozharness'].update({
             'using': 'mozharness',
             'job-script': 'taskcluster/scripts/builder/build-l10n.sh',
-            'secrets': job['secrets'],
+            'secrets': job.get('secrets', False),
         })
         job_description = {
             'name': job['name'],
