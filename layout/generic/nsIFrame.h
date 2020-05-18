@@ -1644,7 +1644,21 @@ class nsIFrame : public nsQueryFrame {
   const nsFrameList& PrincipalChildList() const {
     return GetChildList(kPrincipalList);
   }
+
+  /**
+   * Sub-classes should override this methods if they want to append their own
+   * child lists into aLists.
+   */
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
+
+  /**
+   * Returns the child lists for this frame.
+   */
+  AutoTArray<ChildList, 4> GetChildLists() const {
+    AutoTArray<ChildList, 4> childLists;
+    GetChildLists(&childLists);
+    return childLists;
+  }
 
   /**
    * Gets the child lists for this frame, including

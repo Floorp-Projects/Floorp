@@ -121,11 +121,11 @@ void DetailsFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 bool DetailsFrame::HasMainSummaryFrame(nsIFrame* aSummaryFrame) {
   const ChildListIDs flowLists = {kPrincipalList, kOverflowList};
   for (nsIFrame* frag = this; frag; frag = frag->GetNextInFlow()) {
-    for (ChildListIterator lists(frag); !lists.IsDone(); lists.Next()) {
-      if (!flowLists.contains(lists.CurrentID())) {
+    for (const auto& [list, listID] : frag->GetChildLists()) {
+      if (!flowLists.contains(listID)) {
         continue;
       }
-      for (nsIFrame* child : lists.CurrentList()) {
+      for (nsIFrame* child : list) {
         child = nsPlaceholderFrame::GetRealFrameFor(child);
         // We skip any non-primary frames such as a list-style-position:inside
         // bullet frame for the <details> itself.

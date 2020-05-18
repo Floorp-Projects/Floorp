@@ -995,16 +995,13 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
   // view for popups is managed by the parent. Currently only nsMenuFrame
   // and nsPopupSetFrame have a popupList and during layout will adjust the
   // view manually to position the popup.
-  ChildListIterator lists(aFrame);
-  for (; !lists.IsDone(); lists.Next()) {
-    if (lists.CurrentID() == kPopupList) {
+  for (const auto& [list, listID] : aFrame->GetChildLists()) {
+    if (listID == kPopupList) {
       continue;
     }
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
+    for (nsIFrame* childFrame : list) {
       // Position the frame's view (if it has one) otherwise recursively
       // process its children
-      nsIFrame* childFrame = childFrames.get();
       if (childFrame->HasView()) {
         PositionFrameView(childFrame);
       } else {
@@ -2426,15 +2423,13 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
                "At start of reflow, we should've pulled items back from all "
                "NIFs and cleared the state bit stored in didPushItemsBit in "
                "the process.");
-    for (nsIFrame::ChildListIterator childLists(f); !childLists.IsDone();
-         childLists.Next()) {
-      if (!itemLists.contains(childLists.CurrentID())) {
-        MOZ_ASSERT(absLists.contains(childLists.CurrentID()) ||
-                       childLists.CurrentID() == kBackdropList,
+    for (const auto& [list, listID] : f->GetChildLists()) {
+      if (!itemLists.contains(listID)) {
+        MOZ_ASSERT(absLists.contains(listID) || listID == kBackdropList,
                    "unexpected non-empty child list");
         continue;
       }
-      for (auto* child : childLists.CurrentList()) {
+      for (const auto* child : list) {
         MOZ_ASSERT(f == this || child->GetPrevInFlow(),
                    "all pushed items must be pulled up before reflow");
       }
@@ -2489,25 +2484,21 @@ void nsContainerFrame::List(FILE* out, const char* aPrefix,
 
   // Output the children
   bool outputOneList = false;
-  ChildListIterator lists(this);
-  for (; !lists.IsDone(); lists.Next()) {
+  for (const auto& [list, listID] : nsIFrame::GetChildLists()) {
     if (outputOneList) {
       str += aPrefix;
     }
-    if (lists.CurrentID() != kPrincipalList) {
+    if (listID != kPrincipalList) {
       if (!outputOneList) {
         str += "\n";
         str += aPrefix;
       }
-      str += nsPrintfCString("%s %p ",
-                             mozilla::layout::ChildListName(lists.CurrentID()),
-                             &GetChildList(lists.CurrentID()));
+      str += nsPrintfCString("%s %p ", mozilla::layout::ChildListName(listID),
+                             &GetChildList(listID));
     }
     fprintf_stderr(out, "%s<\n", str.get());
     str = "";
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* kid = childFrames.get();
+    for (nsIFrame* kid : list) {
       // Verify the child frame's parent frame pointer is correct
       NS_ASSERTION(kid->GetParent() == this, "bad parent frame pointer");
 
@@ -2538,11 +2529,8 @@ void nsContainerFrame::ListWithMatchedRules(FILE* out,
   childPrefix += aPrefix;
   childPrefix += "  ";
 
-  ChildListIterator lists(this);
-  for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* kid = childFrames.get();
+  for (const auto& childList : nsIFrame::GetChildLists()) {
+    for (const nsIFrame* kid : childList.mList) {
       kid->ListWithMatchedRules(out, childPrefix.get());
     }
   }
