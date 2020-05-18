@@ -59,6 +59,7 @@ void gfxConfigManager::Init() {
       DeviceManagerDx::Get()->CheckHardwareStretchingSupport();
   mScaledResolution = HasScaledResolution();
   mIsWin10OrLater = IsWin10OrLater();
+  mWrCompositorDCompRequired = true;
 #else
   mHwStretchingSupport = true;
 #endif
@@ -327,7 +328,7 @@ void gfxConfigManager::ConfigureWebRender() {
         NS_LITERAL_CSTRING("FEATURE_FAILURE_PICTURE_CACHING_DISABLED"));
   }
 
-  if (!mFeatureWrDComp->IsEnabled()) {
+  if (!mFeatureWrDComp->IsEnabled() && mWrCompositorDCompRequired) {
     mFeatureWrCompositor->ForceDisable(
         FeatureStatus::Unavailable, "No DirectComposition usage",
         NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DIRECTCOMPOSITION"));
