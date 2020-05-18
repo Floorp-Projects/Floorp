@@ -272,11 +272,8 @@ int32_t nsScrollbarFrame::MoveToNewPosition() {
     return curpos;
   }
   // notify all nsSliderFrames of the change
-  nsIFrame::ChildListIterator childLists(this);
-  for (; !childLists.IsDone(); childLists.Next()) {
-    nsFrameList::Enumerator childFrames(childLists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* f = childFrames.get();
+  for (const auto& childList : nsIFrame::GetChildLists()) {
+    for (nsIFrame* f : childList.mList) {
       nsSliderFrame* sliderFrame = do_QueryFrame(f);
       if (sliderFrame) {
         sliderFrame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::curpos,
