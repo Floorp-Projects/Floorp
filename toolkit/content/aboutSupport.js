@@ -930,10 +930,6 @@ var snapshotFormatters = {
     insertEnumerateDatabase();
   },
 
-  javaScript(data) {
-    $("javascript-incremental-gc").textContent = data.incrementalGCEnabled;
-  },
-
   remoteAgent(data) {
     if (!AppConstants.ENABLE_REMOTE_AGENT) {
       return;
