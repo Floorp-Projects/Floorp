@@ -16,7 +16,7 @@ import { isWorker } from "../../utils/threads";
 import {
   getGeneratedSourceByURL,
   getHasSiblingOfSameName,
-  hasPrettySource as checkHasPrettySource,
+  hasPrettyTab as checkHasPrettyTab,
   getContext,
   getMainThread,
   getExtensionNameBySourceUrl,
@@ -71,7 +71,7 @@ type Props = {
   mainThread: Thread,
   hasMatchingGeneratedSource: boolean,
   hasSiblingOfSameName: boolean,
-  hasPrettySource: boolean,
+  hasPrettyTab: boolean,
   focusItem: TreeNode => void,
   selectItem: TreeNode => void,
   setExpanded: (TreeNode, boolean, boolean) => void,
@@ -308,7 +308,7 @@ class SourceTreeItem extends Component<Props, State> {
       debuggeeUrl,
       projectRoot,
       source,
-      hasPrettySource,
+      hasPrettyTab,
       threads,
     } = this.props;
 
@@ -351,7 +351,7 @@ class SourceTreeItem extends Component<Props, State> {
       return <AccessibleImage className="blackBox" />;
     }
 
-    if (hasPrettySource) {
+    if (hasPrettyTab) {
       return <AccessibleImage className="prettyPrint" />;
     }
 
@@ -473,7 +473,7 @@ const mapStateToProps = (state, props: OwnProps) => {
     mainThread: getMainThread(state),
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
     hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
-    hasPrettySource: source ? checkHasPrettySource(state, source.id) : false,
+    hasPrettyTab: source ? checkHasPrettyTab(state, source.url) : false,
     sourceContent: source ? getSourceContentValue(state, source) : null,
     extensionName:
       (isUrlExtension(item.name) &&

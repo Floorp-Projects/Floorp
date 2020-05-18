@@ -2694,7 +2694,7 @@ Object {
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
-      "hasPrettySource": true,
+      "hasPrettyTab": true,
       "item": Object {
         "contents": Object {
           "extensionName": null,
@@ -2747,7 +2747,7 @@ Object {
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
-          hasPrettySource={true}
+          hasPrettyTab={true}
           item={
             Object {
               "contents": Object {
@@ -2827,7 +2827,7 @@ Object {
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
-    "hasPrettySource": true,
+    "hasPrettyTab": true,
     "item": Object {
       "contents": Object {
         "extensionName": null,

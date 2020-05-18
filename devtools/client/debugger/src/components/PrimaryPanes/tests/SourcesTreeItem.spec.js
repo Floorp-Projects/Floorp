@@ -436,7 +436,7 @@ describe("SourceTreeItem", () => {
     it("should show source item with prettyPrint icon", async () => {
       const node = render({
         item: createMockItem(),
-        hasPrettySource: true,
+        hasPrettyTab: true,
       });
       expect(node).toMatchSnapshot();
     });
