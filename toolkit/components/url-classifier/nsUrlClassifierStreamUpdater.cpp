@@ -148,8 +148,6 @@ nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
   mozilla::OriginAttributes attrs;
   attrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
   loadInfo->SetOriginAttributes(attrs);
-  // allow deprecated HTTP request from SystemPrincipal
-  loadInfo->SetAllowDeprecatedSystemRequests(true);
 
   mBeganStream = false;
 
