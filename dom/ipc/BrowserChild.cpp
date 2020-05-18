@@ -1459,7 +1459,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvStopIMEStateManagement() {
 mozilla::ipc::IPCResult BrowserChild::RecvMouseEvent(
     const nsString& aType, const float& aX, const float& aY,
     const int32_t& aButton, const int32_t& aClickCount,
-    const int32_t& aModifiers, const bool& aIgnoreRootScrollFrame) {
+    const int32_t& aModifiers) {
   // IPDL doesn't hold a strong reference to protocols as they're not required
   // to be refcounted. This function can run script, which may trigger a nested
   // event loop, which may release this, so we hold a strong reference here.
@@ -1467,7 +1467,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvMouseEvent(
   RefPtr<PresShell> presShell = GetTopLevelPresShell();
   APZCCallbackHelper::DispatchMouseEvent(
       presShell, aType, CSSPoint(aX, aY), aButton, aClickCount, aModifiers,
-      aIgnoreRootScrollFrame, MouseEvent_Binding::MOZ_SOURCE_UNKNOWN,
+      false, MouseEvent_Binding::MOZ_SOURCE_UNKNOWN,
       0 /* Use the default value here. */);
   return IPC_OK();
 }

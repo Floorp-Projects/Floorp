@@ -2708,7 +2708,6 @@ void nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType, float aX,
                                                float aY, int32_t aButton,
                                                int32_t aClickCount,
                                                int32_t aModifiers,
-                                               bool aIgnoreRootScrollFrame,
                                                ErrorResult& aRv) {
   auto* browserParent = GetBrowserParent();
   if (!browserParent) {
@@ -2716,8 +2715,8 @@ void nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType, float aX,
     return;
   }
 
-  browserParent->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
-                                aIgnoreRootScrollFrame);
+  browserParent->SendMouseEvent(aType, aX, aY, aButton, aClickCount,
+                                aModifiers);
 }
 
 void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
