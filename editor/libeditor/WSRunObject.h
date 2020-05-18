@@ -436,10 +436,16 @@ class MOZ_STACK_CLASS WSRunScanner {
           mIsStartOfHardLine(StartOfHardLine::No),
           mIsEndOfHardLine(EndOfHardLine::No) {}
 
-    EditorRawDOMPoint StartPoint() const {
+    EditorDOMPoint StartPoint() const {
+      return EditorDOMPoint(mStartNode, mStartOffset);
+    }
+    EditorDOMPoint EndPoint() const {
+      return EditorDOMPoint(mEndNode, mEndOffset);
+    }
+    EditorRawDOMPoint RawStartPoint() const {
       return EditorRawDOMPoint(mStartNode, mStartOffset);
     }
-    EditorRawDOMPoint EndPoint() const {
+    EditorRawDOMPoint RawEndPoint() const {
       return EditorRawDOMPoint(mEndNode, mEndOffset);
     }
 
@@ -797,18 +803,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
  protected:
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToSplitAcrossBlocksPriv();
-
-  /**
-   * DeleteRange() removes the range between aStartPoint and aEndPoint.
-   * When aStartPoint and aEndPoint are same point, does nothing.
-   * When aStartPoint and aEndPoint are in same text node, removes characters
-   * between them.
-   * When aStartPoint is in a text node, removes the text data after the point.
-   * When aEndPoint is in a text node, removes the text data before the point.
-   * Removes any nodes between them.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult DeleteRange(const EditorDOMPoint& aStartPoint,
-                                          const EditorDOMPoint& aEndPoint);
 
   /**
    * InsertNBSPAndRemoveFollowingASCIIWhitespaces() inserts an NBSP first.

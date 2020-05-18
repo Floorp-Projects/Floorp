@@ -2013,6 +2013,16 @@ class HTMLEditor final : public TextEditor,
   DeleteNodeIfInvisibleAndEditableTextNode(nsIContent& aContent);
 
   /**
+   * DeleteTextAndTextNodesWithTransaction() removes text nodes which are in
+   * the given range and delete some characters in start and/or end of
+   * the range.
+   */
+  template <typename EditorDOMPointType>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteTextAndTextNodesWithTransaction(const EditorDOMPointType& aStartPoint,
+                                        const EditorDOMPointType& aEndPoint);
+
+  /**
    * If aPoint follows invisible `<br>` element, returns the invisible `<br>`
    * element.  Otherwise, nullptr.
    */
