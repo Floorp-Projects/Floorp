@@ -264,48 +264,6 @@ function toDataURL(src, doctype = "html") {
   return `data:${mime},${encodeURIComponent(doc)}`;
 }
 
-function convertArgument(arg) {
-  if (typeof arg === "bigint") {
-    return { unserializableValue: `${arg.toString()}n` };
-  }
-  if (Object.is(arg, -0)) {
-    return { unserializableValue: "-0" };
-  }
-  if (Object.is(arg, Infinity)) {
-    return { unserializableValue: "Infinity" };
-  }
-  if (Object.is(arg, -Infinity)) {
-    return { unserializableValue: "-Infinity" };
-  }
-  if (Object.is(arg, NaN)) {
-    return { unserializableValue: "NaN" };
-  }
-
-  return { value: arg };
-}
-
-async function evaluate(client, contextId, pageFunction, ...args) {
-  const { Runtime } = client;
-
-  if (typeof pageFunction === "string") {
-    return Runtime.evaluate({
-      expression: pageFunction,
-      contextId,
-      returnByValue: true,
-      awaitPromise: true,
-    });
-  } else if (typeof pageFunction === "function") {
-    return Runtime.callFunctionOn({
-      functionDeclaration: pageFunction.toString(),
-      executionContextId: contextId,
-      arguments: args.map(convertArgument),
-      returnByValue: true,
-      awaitPromise: true,
-    });
-  }
-  throw new Error("pageFunction: expected 'string' or 'function'");
-}
-
 /**
  * Load a given URL in the currently selected tab
  */
