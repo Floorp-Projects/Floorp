@@ -119,7 +119,7 @@ android-x86-shippable/opt:
     shipping-product: fennec
     index:
         job-name: android-x86-opt
-        type: android-nightly
+        type: android-shippable
     treeherder:
         platform: android-4-2-x86-shippable/opt
         symbol: B
@@ -171,7 +171,7 @@ android-api-16-shippable/opt:
     shipping-product: fennec
     index:
         job-name: android-api-16-opt
-        type: android-nightly-with-multi-l10n
+        type: android-shippable-with-multi-l10n
     treeherder:
         platform: android-4-0-armv7-api16-shippable/opt
         symbol: Bpgo(B)
@@ -246,7 +246,7 @@ android-aarch64-shippable/opt:
     shipping-product: fennec
     index:
         job-name: android-aarch64-opt
-        type: android-nightly
+        type: android-shippable
     treeherder:
         platform: android-5-0-aarch64-shippable/opt
         symbol: Bpgo(B)
@@ -297,7 +297,7 @@ android-x86_64-shippable/opt:
     shipping-product: fennec
     index:
         job-name: android-x86_64-opt
-        type: android-nightly
+        type: android-shippable
     treeherder:
         platform: android-5-0-x86_64-shippable/opt
         symbol: B

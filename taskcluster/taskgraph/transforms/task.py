@@ -143,7 +143,9 @@ task_description_schema = Schema({
         # Type of gecko v2 index to use
         'type': Any('generic', 'nightly', 'l10n', 'nightly-with-multi-l10n',
                     'nightly-l10n', 'shippable', 'shippable-l10n',
-                    'android-nightly', 'android-nightly-with-multi-l10n'),
+                    'android-nightly', 'android-nightly-with-multi-l10n',
+                    'android-shippable', 'android-shippable-with-multi-l10n',
+                    'shippable-with-multi-l10n'),
 
         # The rank that the task will receive in the TaskCluster
         # index.  A newly completed task supercedes the currently
@@ -1602,6 +1604,13 @@ def add_nightly_multi_index_routes(config, task):
     return task
 
 
+@index_builder('shippable-with-multi-l10n')
+def add_shippable_multi_index_routes(config, task):
+    task = add_shippable_index_routes(config, task)
+    task = add_l10n_index_routes(config, task, force_locale="multi")
+    return task
+
+
 @index_builder('l10n')
 def add_l10n_index_routes(config, task, force_locale=None):
     index = task.get('index')
@@ -1751,9 +1760,25 @@ def add_android_nightly_index_routes(config, task):
     return task
 
 
+@index_builder('android-shippable')
+def add_android_shippable_index_routes(config, task):
+    task = add_shippable_index_routes(config, task)
+    task = add_geckoview_index_routes(config, task)
+
+    return task
+
+
 @index_builder('android-nightly-with-multi-l10n')
 def add_android_nightly_multi_index_routes(config, task):
     task = add_nightly_multi_index_routes(config, task)
+    task = add_geckoview_index_routes(config, task)
+
+    return task
+
+
+@index_builder('android-shippable-with-multi-l10n')
+def add_android_shippable_multi_index_routes(config, task):
+    task = add_shippable_multi_index_routes(config, task)
     task = add_geckoview_index_routes(config, task)
 
     return task
