@@ -81,7 +81,7 @@ def get_balrog_platform_name(platform):
     Remove known values instead to catch aarch64 and other platforms
     that may be added.
     """
-    removals = ["-devedition", "-shippable"]
+    removals = ["-devedition", "-nightly", "-shippable"]
     for remove in removals:
         platform = platform.replace(remove, '')
     return PLATFORM_RENAMES.get(platform, platform)

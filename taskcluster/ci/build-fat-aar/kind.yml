@@ -72,20 +72,45 @@ job-defaults:
             - linux64-node
 
 jobs:
+    android-geckoview-fat-aar/opt:
+        description: "Android GeckoView multi-architecture fat AAR Opt"
+        index:
+            job-name: android-geckoview-fat-aar-opt
+        treeherder:
+            platform: android-4-0-geckoview-fat-aar/opt
+            symbol: Bgv
+        dependencies:
+            android-x86-opt: build-android-x86/opt
+            android-x86_64-opt: build-android-x86_64/opt
+            android-api-16-opt: build-android-api-16/opt
+            android-aarch64-opt: build-android-aarch64/opt
+        worker:
+            env:
+                PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-opt
+                USE_ARTIFACT: '1'
+                MOZ_ARTIFACT_TASK: {task-reference: '<android-api-16-opt>'}
+        run:
+            actions: [get-secrets, build]
+            config: ["builds/releng_base_android_64_builds.py"]
+        fetches:
+            toolchain:
+                - linux64-sccache
+
     android-geckoview-fat-aar-shippable/opt:
         description: "Android GeckoView multi-architecture fat AAR Shippable"
         attributes:
+            nightly: true
             shippable: true
             enable-full-crashsymbols: true
             disable-push-apk: true
         shipping-phase: build
         shipping-product: fennec
         index:
-            job-name: android-geckoview-fat-aar-opt
-            type: shippable-with-multi-l10n
+            job-name: android-geckoview-fat-aar-nightly
+            type: nightly-with-multi-l10n
         treeherder:
-            platform: android-4-0-geckoview-fat-aar-shippable/opt
-            symbol: Bgv
+            platform: android-4-0-geckoview-fat-aar/opt
+            symbol: Ngv
         dependencies:
             android-x86-shippable: build-android-x86-shippable/opt
             android-x86_64-shippable: build-android-x86_64-shippable/opt

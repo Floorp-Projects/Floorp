@@ -46,7 +46,10 @@ def make_repackage_signing_description(config, jobs):
         attributes['repackage_type'] = 'repackage-signing'
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'rs(B)')
+        if attributes.get('nightly'):
+            treeherder.setdefault('symbol', 'rs(N)')
+        else:
+            treeherder.setdefault('symbol', 'rs(B)')
         dep_th_platform = dep_job.task.get('extra', {}).get('treeherder-platform')
         treeherder.setdefault('platform', dep_th_platform)
         treeherder.setdefault(
@@ -85,9 +88,9 @@ def make_repackage_signing_description(config, jobs):
         )
 
         build_platform = dep_job.attributes.get('build_platform')
-        is_shippable = dep_job.attributes.get('shippable')
+        is_nightly = dep_job.attributes.get('nightly', dep_job.attributes.get('shippable'))
         signing_cert_scope = get_signing_cert_scope_per_platform(
-            build_platform, is_shippable, config
+            build_platform, is_nightly, config
         )
         scopes = [signing_cert_scope]
 

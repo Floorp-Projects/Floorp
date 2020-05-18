@@ -115,14 +115,17 @@ android-x86-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         shippable: true
+        nightly: true
+        # Android nightlies don't run tests in gecko, but are needed for github projects
+        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
     index:
         job-name: android-x86-opt
-        type: android-shippable
+        type: android-nightly
     treeherder:
-        platform: android-4-2-x86-shippable/opt
-        symbol: B
+        platform: android-4-2-x86/opt
+        symbol: N
     worker-type: b-linux
     worker:
         env:
@@ -161,20 +164,46 @@ android-api-16/opt:
             - linux64-clang
             - linux64-sccache
 
+android-api-16/pgo:
+    description: "Android 4.0 api-16+ PGO"
+    use-pgo: true
+    index:
+        job-name: android-api-16-pgo
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: android-4-0-armv7-api16/pgo
+        symbol: Bpgo(B)
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: api-16
+    fetches:
+        toolchain:
+            - linux64-clang
+
 android-api-16-shippable/opt:
     description: "Android 4.0 api-16+ Shippable"
-    use-pgo: true
+    use-pgo: android-api-16/pgo
     attributes:
         enable-full-crashsymbols: true
         shippable: true
+        nightly: true
+        # Android nightlies don't run tests in gecko, but are needed for github projects
+        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
     index:
         job-name: android-api-16-opt
-        type: android-shippable-with-multi-l10n
+        type: android-nightly-with-multi-l10n
     treeherder:
-        platform: android-4-0-armv7-api16-shippable/opt
-        symbol: Bpgo(B)
+        platform: android-4-0-armv7-api16/opt
+        symbol: N
     worker-type: b-linux
     worker:
         env:
@@ -213,6 +242,29 @@ android-aarch64/opt:
             - linux64-clang
             - linux64-sccache
 
+android-aarch64/pgo:
+    description: "Android 5.0 AArch64 PGO"
+    use-pgo: android-api-16/pgo
+    index:
+        job-name: android-aarch64-pgo
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: android-5-0-aarch64/pgo
+        symbol: Bpgo(B)
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: aarch64
+    fetches:
+        toolchain:
+            - linux64-clang
+
 android-aarch64/debug:
     description: "Android 5.0 AArch64 Debug"
     index:
@@ -238,18 +290,21 @@ android-aarch64/debug:
 
 android-aarch64-shippable/opt:
     description: "Android 5.0 AArch64 Shippable"
-    use-pgo: android-api-16-shippable/opt
+    use-pgo: android-api-16/pgo
     attributes:
         enable-full-crashsymbols: true
         shippable: true
+        nightly: true
+        # Android nightlies don't run tests in gecko, but are needed for github projects
+        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
     index:
         job-name: android-aarch64-opt
-        type: android-shippable
+        type: android-nightly
     treeherder:
-        platform: android-5-0-aarch64-shippable/opt
-        symbol: Bpgo(B)
+        platform: android-5-0-aarch64/opt
+        symbol: N
     worker-type: b-linux
     worker:
         env:
@@ -293,14 +348,17 @@ android-x86_64-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         shippable: true
+        nightly: true
+        # Android nightlies don't run tests in gecko, but are needed for github projects
+        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
     index:
         job-name: android-x86_64-opt
-        type: android-shippable
+        type: android-nightly
     treeherder:
-        platform: android-5-0-x86_64-shippable/opt
-        symbol: B
+        platform: android-5-0-x86_64/opt
+        symbol: N
     worker-type: b-linux
     worker:
         env:
