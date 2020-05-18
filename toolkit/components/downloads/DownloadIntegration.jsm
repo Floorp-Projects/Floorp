@@ -709,6 +709,9 @@ var DownloadIntegration = {
    *           to launch the file. The relevant properties are: the target
    *           file, the contentType and the custom application chosen
    *           to launch it.
+   * @param options.openWhere     Optional string indicating how to open when handling
+   *                              download by opening the target file URI.
+   *                              One of "window", "tab", "tabshifted"
    *
    * @return {Promise}
    * @resolves When the instruction to launch the file has been
@@ -718,7 +721,7 @@ var DownloadIntegration = {
    * @rejects  JavaScript exception if there was an error trying to launch
    *           the file.
    */
-  async launchDownload(aDownload) {
+  async launchDownload(aDownload, { openWhere }) {
     let file = new FileUtils.File(aDownload.target.path);
 
     // In case of a double extension, like ".tar.gz", we only
@@ -824,8 +827,22 @@ var DownloadIntegration = {
     // No custom application chosen, let's launch the file with the default
     // handler. First, let's try to launch it through the MIME service.
     if (mimeInfo) {
-      mimeInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
+      const PDF_CONTENT_TYPE = "application/pdf";
+      // Open PDFs internally unless explicitly configured to do otherwise
+      if (
+        mimeInfo.type == PDF_CONTENT_TYPE &&
+        !mimeInfo.alwaysAskBeforeHandling &&
+        mimeInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally
+        // TODO: also preview for save to disk and always ask file actions?
+      ) {
+        DownloadUIHelper.loadFileIn(file, {
+          isPrivate: aDownload.source.isPrivate,
+          openWhere,
+        });
+        return;
+      }
 
+      mimeInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
       try {
         this.launchFile(file, mimeInfo);
         return;
