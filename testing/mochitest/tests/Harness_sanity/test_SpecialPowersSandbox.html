@@ -87,6 +87,14 @@ add_task(async function() {
         });
       });
     },
+    "SpecialPowers.spawnChrome": () => {
+      return SpecialPowers.spawnChrome([], async () => {
+        Assert.equal(1, 2, "Thing");
+        Assert.equal(1, 1, "Hmm");
+        Assert.ok(true, "Yay.");
+        Assert.ok(false, "Boo!.");
+      });
+    },
     "SpecialPowers.loadChromeScript": async () => {
       let script = SpecialPowers.loadChromeScript(() => {
         this.addMessageListener("ping", () => "pong");
