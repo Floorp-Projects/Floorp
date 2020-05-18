@@ -482,7 +482,7 @@ var SiteDataManager = {
       for (let perm of perms) {
         // Specialcase local file permissions.
         if (!host) {
-          if (perm.principal.URI.schemeIs("file")) {
+          if (perm.principal.schemeIs("file")) {
             Services.perms.removePermission(perm);
           }
         } else if (Services.eTLD.hasRootDomain(perm.principal.URI.host, host)) {
