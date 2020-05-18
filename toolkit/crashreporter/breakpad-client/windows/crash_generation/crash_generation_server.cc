@@ -101,6 +101,7 @@ CrashGenerationServer::CrashGenerationServer(
     void* connect_context,
     OnClientDumpRequestCallback dump_callback,
     void* dump_context,
+    OnClientDumpWrittenCallback written_callback,
     OnClientExitedCallback exit_callback,
     void* exit_context,
     OnClientUploadRequestCallback upload_request_callback,
@@ -116,6 +117,7 @@ CrashGenerationServer::CrashGenerationServer(
       connect_context_(connect_context),
       dump_callback_(dump_callback),
       dump_context_(dump_context),
+      written_callback_(written_callback),
       exit_callback_(exit_callback),
       exit_context_(exit_context),
       upload_request_callback_(upload_request_callback),
@@ -892,10 +894,14 @@ void CrashGenerationServer::HandleDumpRequest(const ClientInfo& client_info) {
     }
   }
 
-  SetEvent(client_info.dump_generated_handle());
-
   if (dump_callback_ && execute_callback) {
     dump_callback_(dump_context_, client_info, dump_path);
+  }
+
+  SetEvent(client_info.dump_generated_handle());
+
+  if (written_callback_ && execute_callback) {
+    written_callback_(dump_context_, client_info);
   }
 }
 
