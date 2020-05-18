@@ -58,7 +58,11 @@ job-template:
             default: internal
             linux.*: public
     index:
-        type: shippable-l10n
+        type:
+            by-build-platform:
+                # Defer swapping index's until a later patch
+                .*devedition.*: nightly-l10n
+                default: shippable-l10n
         product:
             by-build-platform:
                 default: firefox

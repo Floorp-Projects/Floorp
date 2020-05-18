@@ -124,7 +124,7 @@ jobs:
                 - linux64-lucetc
                 - wasi-sysroot
 
-    android-api-16-shippable/opt:
+    android-api-16/pgo:
         description: "Android 4.0 api-16+ PGO instrumented"
         index:
             product: mobile
