@@ -20,6 +20,11 @@
 namespace mozilla {
 namespace net {
 
+static const char* gTRRUriCallbackPrefs[] = {
+    "network.trr.uri", "network.trr.mode", kRolloutURIPref, kRolloutURIPref,
+    nullptr,
+};
+
 NS_IMPL_ISUPPORTS(TRRServiceParent, nsIObserver, nsISupportsWeakReference)
 
 void TRRServiceParent::Init() {
@@ -46,6 +51,10 @@ void TRRServiceParent::Init() {
   if (nls) {
     nls->GetDnsSuffixList(suffixList);
   }
+
+  Preferences::RegisterPrefixCallbacks(TRRServiceParent::PrefsChanged,
+                                       gTRRUriCallbackPrefs, this);
+  prefsChanged(nullptr);
 
   Unused << socketParent->SendPTRRServiceConstructor(
       this, captiveIsPassed, parentalControlEnabled, suffixList);
@@ -112,14 +121,77 @@ TRRServiceParent::Observe(nsISupports* aSubject, const char* aTopic,
       Unused << SendUpdatePlatformDNSInformation(suffixList,
                                                  platformDisabledTRR);
     }
+
+    if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC) && mURISetByDetection) {
+      Unused << SendNotifyObserver(
+          nsDependentCString(aTopic),
+          aData ? nsDependentString(aData) : VoidString());
+      CheckURIPrefs();
+    }
   }
 
   return NS_OK;
 }
 
+bool TRRServiceParent::MaybeSetPrivateURI(const nsACString& aURI) {
+  nsAutoCString newURI(aURI);
+  ProcessURITemplate(newURI);
+
+  if (mPrivateURI.Equals(newURI)) {
+    return false;
+  }
+
+  mPrivateURI = newURI;
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, NS_NETWORK_TRR_URI_CHANGED_TOPIC, nullptr);
+  }
+  return true;
+}
+
+void TRRServiceParent::SetDetectedTrrURI(const nsACString& aURI) {
+  if (mURIPrefHasUserValue) {
+    return;
+  }
+
+  mURISetByDetection = MaybeSetPrivateURI(aURI);
+  RefPtr<TRRServiceParent> self = this;
+  nsCString uri(aURI);
+  gIOService->CallOrWaitForSocketProcess(
+      [self, uri]() { Unused << self->SendSetDetectedTrrURI(uri); });
+}
+
+void TRRServiceParent::GetTrrURI(nsACString& aURI) { aURI = mPrivateURI; }
+
 void TRRServiceParent::UpdateParentalControlEnabled() {
   bool enabled = TRRService::GetParentalControlEnabledInternal();
-  Unused << SendUpdateParentalControlEnabled(enabled);
+  RefPtr<TRRServiceParent> self = this;
+  gIOService->CallOrWaitForSocketProcess([self, enabled]() {
+    Unused << self->SendUpdateParentalControlEnabled(enabled);
+  });
+}
+
+// static
+void TRRServiceParent::PrefsChanged(const char* aName, void* aSelf) {
+  static_cast<TRRServiceParent*>(aSelf)->prefsChanged(aName);
+}
+
+void TRRServiceParent::prefsChanged(const char* aName) {
+  if (!aName || !strcmp(aName, "network.trr.uri") ||
+      !strcmp(aName, kRolloutURIPref)) {
+    OnTRRURIChange();
+  }
+
+  if (!aName || !strcmp(aName, "network.trr.mode") ||
+      !strcmp(aName, kRolloutModePref)) {
+    OnTRRModeChange();
+  }
+}
+
+void TRRServiceParent::ActorDestroy(ActorDestroyReason why) {
+  Preferences::UnregisterPrefixCallbacks(TRRServiceParent::PrefsChanged,
+                                         gTRRUriCallbackPrefs, this);
 }
 
 }  // namespace net

@@ -70,5 +70,11 @@ mozilla::ipc::IPCResult TRRServiceChild::RecvClearDNSCache(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult TRRServiceChild::RecvSetDetectedTrrURI(
+    const nsCString& aURI) {
+  gTRRService->SetDetectedTrrURI(aURI);
+  return IPC_OK();
+}
+
 }  // namespace net
 }  // namespace mozilla
