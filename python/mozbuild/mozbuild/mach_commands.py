@@ -108,8 +108,7 @@ class CargoProvider(MachCommandBase):
     @Command('cargo', category='build',
              description='Invoke cargo in useful ways.')
     def cargo(self):
-        self.parser.print_usage()
-        return 1
+        pass
 
     @SubCommand('cargo', 'check',
                 description='Run `cargo check` on a given crate.  Defaults to gkrust.')
