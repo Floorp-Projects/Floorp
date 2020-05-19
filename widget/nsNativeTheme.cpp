@@ -62,40 +62,16 @@ EventStates nsNativeTheme::GetContentState(nsIFrame* aFrame,
     }
   }
 
-  if (isXULCheckboxRadio && aAppearance == StyleAppearance::Radio) {
-    if (IsFocused(aFrame)) {
-      flags |= NS_EVENT_STATE_FOCUS;
-      nsPIDOMWindowOuter* window =
-          aFrame->GetContent()->OwnerDoc()->GetWindow();
-      if (window && window->ShouldShowFocusRing()) {
-        flags |= NS_EVENT_STATE_FOCUSRING;
-      }
+  if (isXULCheckboxRadio && aAppearance == StyleAppearance::Radio &&
+      IsFocused(aFrame)) {
+    flags |= NS_EVENT_STATE_FOCUS;
+    nsPIDOMWindowOuter* window =
+        aFrame->GetContent()->OwnerDoc()->GetWindow();
+    if (window && window->ShouldShowFocusRing()) {
+      flags |= NS_EVENT_STATE_FOCUSRING;
     }
   }
 
-  // On Windows and Mac, only draw focus rings if they should be shown. This
-  // means that focus rings are only shown once the keyboard has been used to
-  // focus something in the window.
-#if defined(XP_MACOSX)
-  // Mac always draws focus rings for textboxes and lists.
-  if (aAppearance == StyleAppearance::MenulistTextfield ||
-      aAppearance == StyleAppearance::NumberInput ||
-      aAppearance == StyleAppearance::Textfield ||
-      aAppearance == StyleAppearance::Textarea ||
-      aAppearance == StyleAppearance::Searchfield ||
-      aAppearance == StyleAppearance::Listbox) {
-    return flags;
-  }
-#endif
-#if defined(XP_WIN)
-  // On Windows, focused buttons are always drawn as such by the native theme.
-  if (aAppearance == StyleAppearance::Button) return flags;
-#endif
-#if defined(XP_MACOSX) || defined(XP_WIN)
-  if (!flags.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    flags &= ~NS_EVENT_STATE_FOCUS;
-  }
-#endif
   return flags;
 }
 
