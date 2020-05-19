@@ -303,9 +303,8 @@ class GCMarker : public JSTracer {
    * objects. If this invariant is violated, the cycle collector may free
    * objects that are still reachable.
    */
-  void setMarkColorGray();
-  void setMarkColorBlack();
   void setMarkColor(gc::MarkColor newColor);
+  void setMarkColorUnchecked(gc::MarkColor newColor);
   gc::MarkColor markColor() const { return color; }
 
   // Declare which color the main mark stack will be used for. The whole stack
@@ -471,6 +470,8 @@ class GCMarker : public JSTracer {
 
   MainThreadOrGCTaskData<gc::MarkColor> mainStackColor;
 
+  MainThreadOrGCTaskData<gc::MarkStack*> currentStackPtr;
+
   gc::MarkStack& getStack(gc::MarkColor which) {
     return which == mainStackColor ? stack : auxStack;
   }
@@ -478,7 +479,10 @@ class GCMarker : public JSTracer {
     return which == mainStackColor ? stack : auxStack;
   }
 
-  gc::MarkStack& currentStack() { return getStack(color); }
+  gc::MarkStack& currentStack() {
+    MOZ_ASSERT(currentStackPtr);
+    return *currentStackPtr;
+  }
 
   /* Pointer to the top of the stack of arenas we are delaying marking on. */
   MainThreadOrGCTaskData<js::gc::Arena*> delayedMarkingList;
