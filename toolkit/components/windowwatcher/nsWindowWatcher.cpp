@@ -503,8 +503,8 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
-  GetWindowTreeOwner(parentWindowOuter, getter_AddRefs(parentTreeOwner));
+  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner =
+      parentWindowOuter->GetTreeOwner();
   if (NS_WARN_IF(!parentTreeOwner)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -615,7 +615,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     return NS_ERROR_FAILURE;
   }
 
-  GetWindowTreeOwner(parentWindow, getter_AddRefs(parentTreeOwner));
+  if (parentWindow) {
+    parentTreeOwner = parentWindow->GetTreeOwner();
+  }
 
   // We expect BrowserParent to have provided us the absolute URI of the window
   // we're to open, so there's no need to call URIfromURL (or more importantly,
@@ -952,7 +954,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
         nsCOMPtr<nsPIDOMWindowOuter> newWindow(do_GetInterface(newChrome));
         nsCOMPtr<nsIDocShellTreeItem> newDocShellItem;
         if (newWindow) {
-          GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
+          newDocShellItem = newWindow->GetDocShell();
         }
         if (!newDocShellItem) {
           newDocShellItem = do_GetInterface(newChrome);
@@ -2433,28 +2435,6 @@ void nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
   }
 
   treeOwnerAsWin->SetVisibility(true);
-}
-
-void nsWindowWatcher::GetWindowTreeItem(mozIDOMWindowProxy* aWindow,
-                                        nsIDocShellTreeItem** aResult) {
-  *aResult = 0;
-
-  if (aWindow) {
-    nsCOMPtr<nsIDocShell> docshell =
-        nsPIDOMWindowOuter::From(aWindow)->GetDocShell();
-    docshell.forget(aResult);
-  }
-}
-
-void nsWindowWatcher::GetWindowTreeOwner(nsPIDOMWindowOuter* aWindow,
-                                         nsIDocShellTreeOwner** aResult) {
-  *aResult = 0;
-
-  nsCOMPtr<nsIDocShellTreeItem> treeItem;
-  GetWindowTreeItem(aWindow, getter_AddRefs(treeItem));
-  if (treeItem) {
-    treeItem->GetTreeOwner(aResult);
-  }
 }
 
 /* static */
