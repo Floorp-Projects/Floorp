@@ -16,13 +16,13 @@ import android.speech.RecognizerIntent
 import android.speech.RecognizerIntent.EXTRA_RESULTS
 import android.text.style.StyleSpan
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -130,14 +130,11 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         awesomeBarView = AwesomeBarView(view.scrollable_area, searchInteractor)
 
-        view.scrollView.setOnTouchListener { _, event ->
-            when (event?.action) {
-                MotionEvent.ACTION_SCROLL, MotionEvent.ACTION_MOVE -> {
-                    view.hideKeyboard()
-                }
-            }
-            true
+        view.scrollView.setOnScrollChangeListener {
+                _: NestedScrollView, _: Int, _: Int, _: Int, _: Int ->
+            view.hideKeyboard()
         }
+
         toolbarView = ToolbarView(
             view.toolbar_component_wrapper,
             searchInteractor,

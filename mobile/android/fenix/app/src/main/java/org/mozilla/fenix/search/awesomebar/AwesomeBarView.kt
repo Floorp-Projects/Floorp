@@ -11,9 +11,7 @@ import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
-import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
@@ -27,7 +25,6 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
