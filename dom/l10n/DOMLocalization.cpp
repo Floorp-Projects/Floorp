@@ -32,9 +32,8 @@ NS_IMPL_RELEASE_INHERITED(DOMLocalization, Localization)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMLocalization)
 NS_INTERFACE_MAP_END_INHERITING(Localization)
 
-DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal, const bool aSync,
-                                 const BundleGenerator& aBundleGenerator)
-    : Localization(aGlobal, aSync, aBundleGenerator) {
+DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal)
+    : Localization(aGlobal) {
   mMutations = new L10nMutations(this);
 }
 
@@ -48,14 +47,13 @@ already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
     return nullptr;
   }
 
-  RefPtr<DOMLocalization> domLoc =
-      new DOMLocalization(global, aSync, aBundleGenerator);
+  RefPtr<DOMLocalization> domLoc = new DOMLocalization(global);
 
   if (aResourceIds.Length()) {
     domLoc->AddResourceIds(aResourceIds);
   }
 
-  domLoc->Activate(true);
+  domLoc->Activate(aSync, true, aBundleGenerator);
 
   return domLoc.forget();
 }

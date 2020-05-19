@@ -15,7 +15,10 @@ namespace dom {
 
 enum class DocumentL10nState {
   // State set when the DocumentL10n gets constructed.
-  Constructed = 0,
+  Uninitialized = 0,
+
+  // State set when the DocumentL10n is activated and ready to be used.
+  Activated,
 
   // State set when the initial translation got triggered. This happens
   // if DocumentL10n was constructed during parsing of the document.
@@ -44,10 +47,12 @@ class DocumentL10n final : public DOMLocalization {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentL10n, DOMLocalization)
 
-  static RefPtr<DocumentL10n> Create(Document* aDocument, const bool aSync);
+  static RefPtr<DocumentL10n> Create(Document* aDocument);
+
+  void Activate(const bool aLazy);
 
  protected:
-  explicit DocumentL10n(Document* aDocument, const bool aSync);
+  explicit DocumentL10n(Document* aDocument);
   bool Init();
 
   virtual ~DocumentL10n() = default;

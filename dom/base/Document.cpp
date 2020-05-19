@@ -3865,12 +3865,7 @@ bool Document::GetAllowPlugins() {
 
 void Document::EnsureL10n() {
   if (!mDocumentL10n) {
-    Element* elem = GetDocumentElement();
-    if (NS_WARN_IF(!elem)) {
-      return;
-    }
-    bool isSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
-    mDocumentL10n = DocumentL10n::Create(this, isSync);
+    mDocumentL10n = DocumentL10n::Create(this);
     MOZ_ASSERT(mDocumentL10n);
   }
 }
@@ -10514,10 +10509,6 @@ void Document::Destroy() {
 
   // To break cycles.
   mPreloadService.ClearAllPreloads();
-
-  if (mDocumentL10n) {
-    mDocumentL10n->Destroy();
-  }
 }
 
 void Document::RemovedFromDocShell() {

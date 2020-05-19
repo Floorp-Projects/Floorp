@@ -209,14 +209,87 @@ function maybeReportErrorToGecko(error) {
  * It combines language negotiation, FluentBundle and I/O to
  * provide a scriptable API to format translations.
  */
-const Localization = {
-  cached(iterable, isSync) {
-    if (isSync) {
+class Localization {
+  /**
+   * `Activate` has to be called for this object to be usable.
+   *
+   * @returns {Localization}
+   */
+  constructor() {
+    this.resourceIds = [];
+    this.generateBundles = undefined;
+    this.generateBundlesSync = undefined;
+    this.isSync = undefined;
+    this.bundles = undefined;
+  }
+
+  /**
+   * Activate the instance of the `Localization` class.
+   *
+   * @param {bool}                    sync - Whether the instance should be
+   *                                         synchronous.
+   * @param {bool}                   eager - Whether the initial bundles should be
+   *                                         fetched eagerly.
+   * @param {Function}     generateBundles - Custom FluentBundle asynchronous generator.
+   * @param {Function} generateBundlesSync - Custom FluentBundle generator.
+   */
+  activate(sync, eager, generateBundles = defaultGenerateBundles, generateBundlesSync = defaultGenerateBundlesSync) {
+    if (this.bundles) {
+      throw new Error("Attempt to initialize an already initialized instance.");
+    }
+    this.generateBundles = generateBundles;
+    this.generateBundlesSync = generateBundlesSync;
+    this.isSync = sync;
+    this.regenerateBundles(eager);
+  }
+
+  setIsSync(isSync) {
+    this.isSync = isSync;
+  }
+
+  cached(iterable) {
+    if (this.isSync) {
       return CachedSyncIterable.from(iterable);
     } else {
       return CachedAsyncIterable.from(iterable);
     }
-  },
+  }
+
+  /**
+   * @param {String} resourceId - Resource IDs
+   */
+  addResourceId(resourceId) {
+    this.resourceIds.push(resourceId);
+    this.onChange();
+    return this.resourceIds.length;
+  }
+
+  /**
+   * @param {String} resourceId - Resource IDs
+   */
+  removeResourceId(resourceId) {
+    this.resourceIds = this.resourceIds.filter(r => r !== resourceId);
+    this.onChange();
+    return this.resourceIds.length;
+  }
+
+  /**
+   * @param {Array<String>} resourceIds - List of resource IDs
+   */
+  addResourceIds(resourceIds) {
+    this.resourceIds.push(...resourceIds);
+    this.onChange();
+    return this.resourceIds.length;
+  }
+
+  /**
+   * @param {Array<String>} resourceIds - List of resource IDs
+   */
+  removeResourceIds(resourceIds) {
+    this.resourceIds = this.resourceIds.filter(r => !resourceIds.includes(r));
+    this.onChange();
+    return this.resourceIds.length;
+  }
 
   /**
    * Format translations and handle fallback if needed.
@@ -225,19 +298,19 @@ const Localization = {
    * Localization. In case of errors, fetch the next context in the
    * fallback chain.
    *
-   * @param   {Array<String>}     resourceIds - List of resource ids used by this
-   *                                            localization.
-   * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
    * @param   {Array<Object>}         keys    - Translation keys to format.
    * @param   {Function}              method  - Formatting function.
    * @returns {Promise<Array<string?|Object?>>}
    * @private
    */
-  async formatWithFallback(resourceIds, bundles, keys, method) {
+  async formatWithFallback(keys, method) {
+    if (!this.bundles) {
+      throw new Error("Attempt to format on an uninitialized instance.");
+    }
     const translations = new Array(keys.length).fill(null);
     let hasAtLeastOneBundle = false;
 
-    for await (const bundle of bundles) {
+    for await (const bundle of this.bundles) {
       hasAtLeastOneBundle = true;
       const missingIds = keysFromBundle(method, bundle, keys, translations);
 
@@ -251,11 +324,11 @@ const Localization = {
     }
 
     if (!hasAtLeastOneBundle) {
-      maybeReportErrorToGecko(`[fluent] Request for keys failed because no resource bundles got generated.\n keys: ${JSON.stringify(keys)}.\n resourceIds: ${JSON.stringify(resourceIds)}.`);
+      maybeReportErrorToGecko(`[fluent] Request for keys failed because no resource bundles got generated.\n keys: ${JSON.stringify(keys)}.\n resourceIds: ${JSON.stringify(this.resourceIds)}.`);
     }
 
     return translations;
-  },
+  }
 
   /**
    * Format translations and handle fallback if needed.
@@ -264,19 +337,23 @@ const Localization = {
    * Localization. In case of errors, fetch the next context in the
    * fallback chain.
    *
-   * @param   {Array<String>}     resourceIds - List of resource ids used by this
-   *                                            localization.
-   * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
    * @param   {Array<Object>}         keys    - Translation keys to format.
    * @param   {Function}              method  - Formatting function.
    * @returns {Array<string|Object>}
    * @private
    */
-  formatWithFallbackSync(resourceIds, bundles, keys, method) {
+  formatWithFallbackSync(keys, method) {
+    if (!this.isSync) {
+      throw new Error("Can't use sync formatWithFallback when state is async.");
+    }
+    if (!this.bundles) {
+      throw new Error("Attempt to format on an uninitialized instance.");
+    }
+
     const translations = new Array(keys.length).fill(null);
     let hasAtLeastOneBundle = false;
 
-    for (const bundle of bundles) {
+    for (const bundle of this.bundles) {
       hasAtLeastOneBundle = true;
       const missingIds = keysFromBundle(method, bundle, keys, translations);
 
@@ -290,11 +367,11 @@ const Localization = {
     }
 
     if (!hasAtLeastOneBundle) {
-      maybeReportErrorToGecko(`[fluent] Request for keys failed because no resource bundles got generated.\n keys: ${JSON.stringify(keys)}.\n resourceIds: ${JSON.stringify(resourceIds)}.`);
+      maybeReportErrorToGecko(`[fluent] Request for keys failed because no resource bundles got generated.\n keys: ${JSON.stringify(keys)}.\n resourceIds: ${JSON.stringify(this.resourceIds)}.`);
     }
 
     return translations;
-  },
+  }
 
 
   /**
@@ -319,32 +396,26 @@ const Localization = {
    *
    * Returns a Promise resolving to an array of the translation messages.
    *
-   * @param   {Array<String>}     resourceIds - List of resource ids used by this
-   *                                            localization.
-   * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<Object>}         keys    - Translation keys to format.
+   * @param   {Array<Object>} keys
    * @returns {Promise<Array<{value: string, attributes: Object}?>>}
    * @private
    */
-  formatMessages(resourceIds, bundles, keys) {
-    return this.formatWithFallback(resourceIds, bundles, keys, messageFromBundle);
-  },
+  formatMessages(keys) {
+    return this.formatWithFallback(keys, messageFromBundle);
+  }
 
   /**
    * Sync version of `formatMessages`.
    *
    * Returns an array of the translation messages.
    *
-   * @param   {Array<String>}     resourceIds - List of resource ids used by this
-   *                                            localization.
-   * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<Object>}         keys    - Translation keys to format.
+   * @param   {Array<Object>} keys
    * @returns {Array<{value: string, attributes: Object}?>}
    * @private
    */
-  formatMessagesSync(resourceIds, bundles, keys) {
-    return this.formatWithFallbackSync(resourceIds, bundles, keys, messageFromBundle);
-  },
+  formatMessagesSync(keys) {
+    return this.formatWithFallbackSync(keys, messageFromBundle);
+  }
 
   /**
    * Retrieve translations corresponding to the passed keys.
@@ -362,31 +433,25 @@ const Localization = {
    *
    * Returns a Promise resolving to an array of the translation strings.
    *
-   * @param   {Array<String>}     resourceIds - List of resource ids used by this
-   *                                            localization.
-   * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<Object>}         keys    - Translation keys to format.
+   * @param   {Array<Object>} keys
    * @returns {Promise<Array<string?>>}
    */
-  formatValues(resourceIds, bundles, keys) {
-    return this.formatWithFallback(resourceIds, bundles, keys, valueFromBundle);
-  },
+  formatValues(keys) {
+    return this.formatWithFallback(keys, valueFromBundle);
+  }
 
   /**
    * Sync version of `formatValues`.
    *
    * Returns an array of the translation strings.
    *
-   * @param   {Array<String>}     resourceIds - List of resource ids used by this
-   *                                            localization.
-   * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<Object>}         keys    - Translation keys to format.
+   * @param   {Array<Object>} keys
    * @returns {Array<string?>}
    * @private
    */
-  formatValuesSync(resourceIds, bundles, keys) {
-    return this.formatWithFallbackSync(resourceIds, bundles, keys, valueFromBundle);
-  },
+  formatValuesSync(keys) {
+    return this.formatWithFallbackSync(keys, valueFromBundle);
+  }
 
   /**
    * Retrieve the translation corresponding to the `id` identifier.
@@ -406,53 +471,75 @@ const Localization = {
    * retranslated when the user changes their language preferences, e.g. in
    * notifications.
    *
-   * @param   {Array<String>}     resourceIds - List of resource ids used by this
-   *                                            localization.
-   * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {string}                 id     - Identifier of the translation to format
-   * @param   {Object}                 [args] - Optional external arguments
+   * @param   {string}  id     - Identifier of the translation to format
+   * @param   {Object}  [args] - Optional external arguments
    * @returns {Promise<string?>}
    */
-  async formatValue(resourceIds, bundles, id, args) {
-    const [val] = await this.formatValues(resourceIds, bundles, [{id, args}]);
+  async formatValue(id, args) {
+    const [val] = await this.formatValues([{id, args}]);
     return val;
-  },
+  }
 
   /**
    * Sync version of `formatValue`.
    *
    * Returns a translation string.
    *
-   * @param   {Array<String>}     resourceIds - List of resource ids used by this
-   *                                            localization.
-   * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {string}                 id     - Identifier of the translation to format
-   * @param   {Object}                 [args] - Optional external arguments
+   * @param   {Array<Object>} keys
    * @returns {string?}
    * @private
    */
-  formatValueSync(resourceIds, bundles, id, args) {
-    const [val] = this.formatValuesSync(resourceIds, bundles, [{id, args}]);
+  formatValueSync(id, args) {
+    const [val] = this.formatValuesSync([{id, args}]);
     return val;
-  },
+  }
+
+  /**
+   * Register weak observers on events that will trigger cache invalidation
+   */
+  registerObservers() {
+    Services.obs.addObserver(this, "intl:app-locales-changed", true);
+    Services.prefs.addObserver("intl.l10n.pseudo", this, true);
+  }
+
+  /**
+   * Default observer handler method.
+   *
+   * @param {String} subject
+   * @param {String} topic
+   * @param {Object} data
+   */
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "intl:app-locales-changed":
+        this.onChange();
+        break;
+      case "nsPref:changed":
+        switch (data) {
+          case "intl.l10n.pseudo":
+            this.onChange();
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  onChange() {
+    if (this.bundles) {
+      this.regenerateBundles(false);
+    }
+  }
 
   /**
    * This method should be called when there's a reason to believe
    * that language negotiation or available resources changed.
    *
-   * @param {Array<String>}    resourceIds - List of resource ids used by this
-   *                                         localization.
-   * @param {bool}                  isSync - Whether the instance should be
-   *                                         synchronous.
-   * @param {bool}                   eager - whether the I/O for new context should begin eagerly
-   * @param {Function}     generateBundles - Custom FluentBundle asynchronous generator.
-   * @param {Function} generateBundlesSync - Custom FluentBundle generator.
-   * @returns {Iter<FluentBundle>}
+   * @param {bool} eager - whether the I/O for new context should begin eagerly
    */
-  generateBundles(resourceIds, isSync, eager = false, generateBundles = defaultGenerateBundles, generateBundlesSync = defaultGenerateBundlesSync) {
-    // Store for error reporting from `formatWithFallback`.
-    let generateMessages = isSync ? generateBundlesSync : generateBundles;
-    let bundles = this.cached(generateMessages(resourceIds), isSync);
+  regenerateBundles(eager = false) {
+    let generateMessages = this.isSync ? this.generateBundlesSync : this.generateBundles;
+    this.bundles = this.cached(generateMessages(this.resourceIds));
     if (eager) {
       // If the first app locale is the same as last fallback
       // it means that we have all resources in this locale, and
@@ -462,11 +549,14 @@ const Localization = {
       const appLocale = Services.locale.appLocaleAsBCP47;
       const lastFallback = Services.locale.lastFallbackLocale;
       const prefetchCount = appLocale === lastFallback ? 1 : 2;
-      bundles.touchNext(prefetchCount);
+      this.bundles.touchNext(prefetchCount);
     }
-    return bundles;
-  },
+  }
 }
+
+Localization.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsISupportsWeakReference,
+]);
 
 /**
  * Format the value of a message into a string or `null`.
@@ -587,5 +677,13 @@ function keysFromBundle(method, bundle, keys, translations) {
   return missingIds;
 }
 
+/**
+ * Helper function which allows us to construct a new
+ * Localization from Localization.
+ */
+var getLocalization = () => {
+  return new Localization();
+};
+
 this.Localization = Localization;
-var EXPORTED_SYMBOLS = ["Localization"];
+var EXPORTED_SYMBOLS = ["Localization", "getLocalization"];
