@@ -1315,4 +1315,14 @@ interface nsILoadInfo : nsISupports
     EMBEDDER_POLICY_NULL = 0,
     EMBEDDER_POLICY_REQUIRE_CORP = 1,
   };
+
+  /**
+   * This attribute is the loading context's cross origin embedder policy.
+   * The value is initialized with corresponding WindowContext which get by
+   * innerWindowIID in the nsILoadInfo.
+   * It also could be set by workers when fetch is called under
+   * the workers' scope. 
+   */
+  [infallible] attribute nsILoadInfo_CrossOriginEmbedderPolicy
+        loadingEmbedderPolicy;
 };

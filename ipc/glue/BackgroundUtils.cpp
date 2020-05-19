@@ -547,7 +547,8 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieJarSettingsArgs,
       aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo,
-      aLoadInfo->GetHasStoragePermission()));
+      aLoadInfo->GetHasStoragePermission(),
+      aLoadInfo->GetLoadingEmbedderPolicy()));
 
   return NS_OK;
 }
@@ -769,7 +770,8 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.hasValidUserGestureActivation(),
       loadInfoArgs.allowDeprecatedSystemRequests(),
       loadInfoArgs.parserCreatedScript(), loadInfoArgs.hasStoragePermission(),
-      loadInfoArgs.requestBlockingReason(), loadingContext);
+      loadInfoArgs.requestBlockingReason(), loadingContext,
+      loadInfoArgs.loadingEmbedderPolicy());
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
