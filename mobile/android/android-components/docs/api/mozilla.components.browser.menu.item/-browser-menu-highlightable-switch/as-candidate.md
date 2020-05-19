@@ -2,7 +2,7 @@
 
 # asCandidate
 
-`fun asCandidate(context: <ERROR CLASS>): `[`CompoundMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-compound-menu-candidate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableSwitch.kt#L81)
+`fun asCandidate(context: <ERROR CLASS>): `[`CompoundMenuCandidate`](../../mozilla.components.concept.menu.candidate/-compound-menu-candidate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableSwitch.kt#L81)
 
 Overrides [BrowserMenuCompoundButton.asCandidate](../-browser-menu-compound-button/as-candidate.md)
 

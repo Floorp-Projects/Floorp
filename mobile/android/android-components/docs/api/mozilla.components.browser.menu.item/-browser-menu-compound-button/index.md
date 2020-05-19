@@ -38,7 +38,7 @@ satisfy [BrowserMenuItem.getLayoutResource](../../mozilla.components.browser.men
 
 | Name | Summary |
 |---|---|
-| [asCandidate](as-candidate.md) | `open fun asCandidate(context: <ERROR CLASS>): `[`CompoundMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-compound-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
+| [asCandidate](as-candidate.md) | `open fun asCandidate(context: <ERROR CLASS>): `[`CompoundMenuCandidate`](../../mozilla.components.concept.menu.candidate/-compound-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [bind](bind.md) | `open fun bind(menu: `[`BrowserMenu`](../../mozilla.components.browser.menu/-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
 
 ### Inherited Functions

@@ -31,7 +31,7 @@ A simple browser menu switch.
 
 | Name | Summary |
 |---|---|
-| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`CompoundMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-compound-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
+| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`CompoundMenuCandidate`](../../mozilla.components.concept.menu.candidate/-compound-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [getLayoutResource](get-layout-resource.md) | `fun getLayoutResource(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
 
 ### Inherited Functions

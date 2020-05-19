@@ -2,7 +2,7 @@
 
 # MenuController
 
-`class MenuController` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/MenuController.kt#L11)
+`class MenuController` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/MenuController.kt#L13)
 
 Controls a popup menu composed of MenuCandidate objects.
 
@@ -14,7 +14,7 @@ Controls a popup menu composed of MenuCandidate objects.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `MenuController(visibleSide: `[`Side`](../-side/index.md)` = Side.START)`<br>Controls a popup menu composed of MenuCandidate objects. |
+| [&lt;init&gt;](-init-.md) | `MenuController(visibleSide: `[`Side`](../../mozilla.components.concept.menu/-side/index.md)` = Side.START)`<br>Controls a popup menu composed of MenuCandidate objects. |
 
 ### Extension Functions
 
