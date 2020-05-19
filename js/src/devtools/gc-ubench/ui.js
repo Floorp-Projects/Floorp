@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var features = {
-  trackingSizes: "mozMemory" in performance,
-  showingGCs: "mozMemory" in performance,
-};
-
 var stroke = {
   gcslice: "rgb(255,100,0)",
   minor: "rgb(0,255,100)",
@@ -25,6 +20,47 @@ var memoryCtx;
 
 var loadState = "(init)"; // One of '(active)', '(inactive)', '(N/A)'
 var testState = "idle"; // One of 'idle' or 'running'.
+var enabled = { trackingSizes: false };
+
+var gMemory = performance.mozMemory?.gc || performance.mozMemory || {};
+
+var Firefox = class extends Host {
+  start_turn() {
+    // Handled by Gecko.
+  }
+
+  end_turn() {
+    // Handled by Gecko.
+  }
+
+  suspend(duration) {
+    // Not used; requestAnimationFrame takes its place.
+    throw new Error("unimplemented");
+  }
+
+  get minorGCCount() {
+    return gMemory.minorGCCount;
+  }
+  get majorGCCount() {
+    return gMemory.majorGCCount;
+  }
+  get GCSliceCount() {
+    return gMemory.sliceCount;
+  }
+  get gcBytes() {
+    return gMemory.zone.gcBytes;
+  }
+  get gcAllocTrigger() {
+    return gMemory.zone.gcAllocTrigger;
+  }
+
+  features = {
+    haveMemorySizes: 'gcBytes' in gMemory,
+    haveGCCounts: 'majorGCCount' in gMemory,
+  };
+};
+
+var gHost = new Firefox();
 
 function parse_units(v) {
   if (!v.length) {
@@ -168,7 +204,7 @@ var LatencyGraph = class extends Graph {
     ctx.stroke();
 
     // Draw vertical lines marking minor and major GCs
-    if (features.showingGCs) {
+    if (gHost.features.haveGCCounts) {
       ctx.strokeStyle = stroke.gcslice;
       let idx = sampleIndex % numSamples;
       const count = {
@@ -240,11 +276,8 @@ var LatencyGraph = class extends Graph {
 var MemoryGraph = class extends Graph {
   constructor(ctx) {
     super(ctx);
-    this.worstEver = this.bestEver = performance.mozMemory.zone.gcBytes;
-    this.limit = Math.max(
-      this.worstEver,
-      performance.mozMemory.zone.gcAllocTrigger
-    );
+    this.worstEver = this.bestEver = gHost.gcBytes();
+    this.limit = Math.max(this.worstEver, gHost.gcAllocTrigger);
   }
 
   ypos(size) {
@@ -293,10 +326,7 @@ var MemoryGraph = class extends Graph {
 
     if (this.worstEver < worst) {
       this.worstEver = worst;
-      this.limit = Math.max(
-        this.worstEver,
-        performance.mozMemory.zone.gcAllocTrigger
-      );
+      this.limit = Math.max(this.worstEver, gHost.gcAllocTrigger);
     }
 
     this.drawHBar(
@@ -310,8 +340,8 @@ var MemoryGraph = class extends Graph {
       "#cc1111"
     );
     this.drawHBar(
-      performance.mozMemory.zone.gcAllocTrigger,
-      `${format_bytes(performance.mozMemory.zone.gcAllocTrigger)} trigger`,
+      gHost.gcAllocTrigger,
+      `${format_bytes(gHost.gcAllocTrigger)} trigger`,
       "#cc11cc"
     );
 
@@ -388,8 +418,7 @@ function handler(timestamp) {
 
   if (testState == "running") {
     document.getElementById("test-progress").textContent =
-      (gLoadMgr.cycleCurrentLoadRemaining(timestamp) / 1000).toFixed(1) +
-      " sec";
+      (gLoadMgr.currentLoadRemaining(timestamp) / 1000).toFixed(1) + " sec";
   }
 
   const delay = gPerf.on_frame(timestamp);
@@ -489,7 +518,7 @@ function onload() {
   var canvas = document.getElementById("graph");
   latencyGraph = new LatencyGraph(canvas.getContext("2d"));
 
-  if (!performance.mozMemory || !performance.mozMemory.gc) {
+  if (!gHost.features.haveMemorySizes) {
     document.getElementById("memgraph-disabled").style.display = "block";
     document.getElementById("track-sizes-div").style.display = "none";
   }
@@ -521,7 +550,10 @@ function start_test_cycle(tests_to_run) {
 }
 
 function update_load_state_indicator() {
-  if (!gLoadMgr.load_running() || gLoadMgr.active.name == "noAllocation") {
+  if (
+    !gLoadMgr.load_running() ||
+    gLoadMgr.activeLoad().name == "noAllocation"
+  ) {
     loadState = "(none)";
   } else if (gPerf.is_stopped() || gLoadMgr.paused) {
     loadState = "(inactive)";
@@ -650,11 +682,11 @@ function garbage_per_frame_changed() {
 }
 
 function trackHeapSizes(track) {
-  features.trackingSizes = track;
+  enabled.trackingSizes = track && gHost.features.haveMemorySizes;
 
   var canvas = document.getElementById("memgraph");
 
-  if (features.trackingSizes) {
+  if (enabled.trackingSizes) {
     canvas.style.display = "block";
     memoryGraph = new MemoryGraph(canvas.getContext("2d"));
   } else {

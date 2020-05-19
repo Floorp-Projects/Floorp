@@ -22,6 +22,44 @@ var gDefaultGarbagePiles = "8";
 
 var gDefaultTestDuration = 8.0;
 
+// The Host interface that provides functionality needed by the test harnesses
+// (web + various shells). Subclasses should override with the appropriate
+// functionality. The methods that throw an error must be implemented. The ones
+// that return undefined are optional.
+//
+// Note that currently the web UI doesn't really use the scheduling pieces of
+// this.
+var Host = class {
+  constructor() {}
+  start_turn() {
+    throw new Error("unimplemented");
+  }
+  end_turn() {
+    throw new Error("unimplemented");
+  }
+  suspend(duration) {
+    throw new Error("unimplemented");
+  } // Shell driver only
+  now() {
+    return performance.now();
+  }
+
+  minorGCCount() {
+    return undefined;
+  }
+  majorGCCount() {
+    return undefined;
+  }
+  GCSliceCount() {
+    return undefined;
+  }
+
+  features = {
+    haveMemorySizes: false,
+    haveGCCounts: false,
+  };
+};
+
 function parse_units(v) {
   if (!v.length) {
     return NaN;
@@ -200,7 +238,7 @@ var AllocationLoadManager = class {
     }
   }
 
-  tick(now = performance.now()) {
+  tick(now = gHost.now()) {
     this.lastActive = this._active;
     let events = this._eventsSinceLastTick;
     this._eventsSinceLastTick = 0;
@@ -242,7 +280,7 @@ var AllocationLoadManager = class {
     return !this.cycle || this.cycle.done();
   }
 
-  cycleCurrentLoadRemaining(now = performance.now()) {
+  currentLoadRemaining(now = gHost.now()) {
     return this.cycleStopped()
       ? 0
       : this.testDurationMS - this.cycle.currentLoadElapsed(now);
