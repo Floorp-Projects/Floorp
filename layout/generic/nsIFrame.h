@@ -1662,7 +1662,7 @@ class nsIFrame : public nsQueryFrame {
    * Returns the child lists for this frame, including ones belong to a child
    * document.
    */
-  AutoTArray<ChildList, 4> GetCrossDocChildLists();
+  AutoTArray<ChildList, 4> CrossDocChildLists();
 
   // The individual concrete child lists.
   static const ChildListID kPrincipalList = mozilla::layout::kPrincipalList;
