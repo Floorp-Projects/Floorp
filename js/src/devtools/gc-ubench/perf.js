@@ -4,6 +4,10 @@
 
 // Performance monitoring and calculation.
 
+function round_up(val, interval) {
+  return val + (interval - (val % interval));
+}
+
 // Class for inter-frame timing, which handles being paused and resumed.
 var FrameTimer = class {
   constructor() {
@@ -143,5 +147,88 @@ var FrameHistory = class {
 
   is_stopped() {
     return this._frameTimer.is_stopped();
+  }
+};
+
+var PerfTracker = class {
+  constructor() {
+    // Private
+    this._currentLoadStart = undefined;
+    this._frameCount = undefined;
+    this._mutating_ms = undefined;
+    this._suspend_sec = undefined;
+    this._minorGCs = undefined;
+    this._majorGCs = undefined;
+
+    // Public
+    this.results = [];
+  }
+
+  on_load_start(load, now = gHost.now()) {
+    this._currentLoadStart = now;
+    this._frameCount = 0;
+    this._mutating_ms = 0;
+    this._suspend_sec = 0;
+    this._majorGCs = gHost.majorGCCount;
+    this._minorGCs = gHost.minorGCCount;
+  }
+
+  on_load_end(load, now = gHost.now()) {
+    const elapsed_time = (now - this._currentLoadStart) / 1000;
+    const full_time = round_up(elapsed_time, 1 / 60);
+    const frame_60fps_limit = Math.round(full_time * 60);
+    const dropped_60fps_frames = frame_60fps_limit - this._frameCount;
+    const dropped_60fps_fraction = dropped_60fps_frames / frame_60fps_limit;
+
+    const mutating_and_gc_fraction = this._mutating_ms / (full_time * 1000);
+
+    this.results.push({
+      load,
+      elapsed_time,
+      mutating: this._mutating_ms / 1000,
+      mutating_and_gc_fraction,
+      suspended: this._suspend_sec,
+      full_time,
+      frames: this._frameCount,
+      dropped_60fps_frames,
+      dropped_60fps_fraction,
+      majorGCs: gHost.majorGCCount - this._majorGCs,
+      minorGCs: gHost.minorGCCount - this._minorGCs,
+    });
+    this._currentLoadStart = undefined;
+    this._frameCount = 0;
+  }
+
+  after_suspend(wait_sec) {
+    this._suspend_sec += wait_sec;
+  }
+
+  before_mutator(now = gHost.now()) {
+    this._frameCount++;
+  }
+
+  after_mutator(start_time, end_time = gHost.now()) {
+    // Warning: this is called before on_load_start is called from
+    // handle_tick_events.
+  }
+
+  handle_tick_events(events, loadMgr, tick_start, tick_end) {
+    // When the load manager switches from one load to another, there will be
+    // the tick start, the load is switched, the new load runs for a bit, then
+    // the tick end. Associate the timestamp of the start of the tick with both
+    // the end of the previous load and the beginning of the new one.
+    let load_running = true;
+    if (events & loadMgr.LOAD_ENDED) {
+      this.on_load_end(loadMgr.lastActive, tick_start);
+      load_running = false;
+    }
+    if (events & loadMgr.LOAD_STARTED) {
+      this.on_load_start(loadMgr.active, tick_start);
+      load_running = true;
+    }
+
+    if (load_running) {
+      this._mutating_ms += tick_end - tick_start;
+    }
   }
 };
