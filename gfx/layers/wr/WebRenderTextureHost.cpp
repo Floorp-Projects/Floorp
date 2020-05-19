@@ -38,9 +38,7 @@ class ScheduleNofityForUse : public wr::NotificationHandler {
 WebRenderTextureHost::WebRenderTextureHost(
     const SurfaceDescriptor& aDesc, TextureFlags aFlags, TextureHost* aTexture,
     wr::ExternalImageId& aExternalImageId)
-    : TextureHost(aFlags),
-      mWrappedTextureHost(aTexture),
-      mExternalImageId(aExternalImageId) {
+    : TextureHost(aFlags), mWrappedTextureHost(aTexture) {
   // The wrapped textureHost will be used in WebRender, and the WebRender could
   // run at another thread. It's hard to control the life-time when gecko
   // receives PTextureParent destroy message. It's possible that textureHost is
@@ -53,19 +51,16 @@ WebRenderTextureHost::WebRenderTextureHost(
 
   MOZ_COUNT_CTOR(WebRenderTextureHost);
 
-  CreateRenderTextureHost(aDesc, aTexture);
+  mWrappedTextureHost->EnsureRenderTexture(aExternalImageId);
 }
 
 WebRenderTextureHost::~WebRenderTextureHost() {
   MOZ_COUNT_DTOR(WebRenderTextureHost);
-  TextureHost::DestroyRenderTexture(mExternalImageId);
 }
 
-void WebRenderTextureHost::CreateRenderTextureHost(
-    const layers::SurfaceDescriptor& aDesc, TextureHost* aTexture) {
-  MOZ_ASSERT(aTexture);
-
-  aTexture->CreateRenderTexture(mExternalImageId);
+wr::ExternalImageId WebRenderTextureHost::GetExternalImageKey() {
+  MOZ_ASSERT(mWrappedTextureHost->mExternalImageId.isSome());
+  return mWrappedTextureHost->mExternalImageId.ref();
 }
 
 bool WebRenderTextureHost::Lock() {
@@ -146,7 +141,7 @@ gfx::SurfaceFormat WebRenderTextureHost::GetFormat() const {
 void WebRenderTextureHost::NotifyNotUsed() {
 #ifdef MOZ_WIDGET_ANDROID
   if (mWrappedTextureHost->AsSurfaceTextureHost()) {
-    wr::RenderThread::Get()->NotifyNotUsed(wr::AsUint64(mExternalImageId));
+    wr::RenderThread::Get()->NotifyNotUsed(wr::AsUint64(GetExternalImageKey()));
   }
 #endif
   TextureHost::NotifyNotUsed();
@@ -159,8 +154,9 @@ void WebRenderTextureHost::MaybeNofityForUse(wr::TransactionBuilder& aTxn) {
   }
   // SurfaceTexture of video needs NofityForUse() to detect if it is rendered
   // on WebRender.
-  aTxn.Notify(wr::Checkpoint::FrameTexturesUpdated,
-              MakeUnique<ScheduleNofityForUse>(wr::AsUint64(mExternalImageId)));
+  aTxn.Notify(
+      wr::Checkpoint::FrameTexturesUpdated,
+      MakeUnique<ScheduleNofityForUse>(wr::AsUint64(GetExternalImageKey())));
 #endif
 }
 
@@ -169,7 +165,7 @@ void WebRenderTextureHost::PrepareForUse() {
   if (mWrappedTextureHost->AsSurfaceTextureHost()) {
     // Call PrepareForUse on render thread.
     // See RenderAndroidSurfaceTextureHostOGL::PrepareForUse.
-    wr::RenderThread::Get()->PrepareForUse(wr::AsUint64(mExternalImageId));
+    wr::RenderThread::Get()->PrepareForUse(wr::AsUint64(GetExternalImageKey()));
   }
 #endif
 }
@@ -200,7 +196,7 @@ uint32_t WebRenderTextureHost::NumSubTextures() {
 void WebRenderTextureHost::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
     const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
-  MOZ_ASSERT(mExternalImageId == aExtID);
+  MOZ_ASSERT(GetExternalImageKey() == aExtID);
 
   mWrappedTextureHost->PushResourceUpdates(aResources, aOp, aImageKeys, aExtID);
 }
