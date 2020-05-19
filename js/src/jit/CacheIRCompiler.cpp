@@ -3719,9 +3719,9 @@ bool CacheIRCompiler::emitMathAbsNumberResult(NumberOperandId inputId) {
   AutoOutputRegister output(*this);
   AutoScratchFloatRegister scratch(this);
 
-  allocator.ensureDoubleRegister(masm, inputId, FloatReg0);
+  allocator.ensureDoubleRegister(masm, inputId, scratch);
 
-  masm.absDouble(FloatReg0, scratch);
+  masm.absDouble(scratch, scratch);
   masm.boxDouble(scratch, output.valueReg(), scratch);
   return true;
 }
