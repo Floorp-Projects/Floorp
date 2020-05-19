@@ -433,6 +433,7 @@ bool DocumentLoadListener::Open(
     httpBaseChannel->SetTopWindowURI(topWindowURI);
   }
 
+  // TODO: Remove this in Bug 1639140
   Unused << loadInfo->SetHasStoragePermission(
       AntiTrackingUtils::HasStoragePermissionInParent(mChannel));
 
