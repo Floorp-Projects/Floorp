@@ -8390,6 +8390,16 @@ static bool GCBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool MallocBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  double bytes = 0;
+  for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
+    bytes += zone->mallocHeapSize.bytes();
+  }
+  args.rval().setNumber(bytes);
+  return true;
+}
+
 static bool GCMaxBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setNumber(double(cx->runtime()->gc.tunables.gcMaxBytes()));
@@ -8489,6 +8499,7 @@ JSObject* NewMemoryInfoObject(JSContext* cx) {
     JSNative getter;
   } getters[] = {{"gcBytes", GCBytesGetter},
                  {"gcMaxBytes", GCMaxBytesGetter},
+                 {"mallocBytes", MallocBytesGetter},
                  {"gcIsHighFrequencyMode", GCHighFreqGetter},
                  {"gcNumber", GCNumberGetter},
                  {"majorGCCount", MajorGCCountGetter},
