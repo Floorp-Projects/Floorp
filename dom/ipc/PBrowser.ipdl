@@ -712,7 +712,9 @@ child:
 
     async CompositorOptionsChanged(CompositorOptions newOptions);
 
-    async LoadURL(nsCString uri, ParentShowInfo info);
+    async LoadURL(nsCString uri,
+                  nsIPrincipal triggeringPrincipal,
+                  ParentShowInfo info);
 
     async ResumeLoad(uint64_t pendingSwitchID, ParentShowInfo info);
 

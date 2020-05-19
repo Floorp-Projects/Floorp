@@ -43,7 +43,7 @@ class BrowserBridgeHost : public RemoteBrowser {
   BrowsingContext* GetBrowsingContext() const override;
   nsILoadContext* GetLoadContext() const override;
 
-  void LoadURL(nsIURI* aURI) override;
+  void LoadURL(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal) override;
   void ResumeLoad(uint64_t aPendingSwitchId) override;
   void DestroyStart() override;
   void DestroyComplete() override;
