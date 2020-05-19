@@ -2290,6 +2290,8 @@ pref("security.notification_enable_delay", 500);
   // Disallow web documents loaded with the SystemPrincipal
   pref("security.disallow_non_local_systemprincipal_in_tests", false);
 #endif
+// Cancel outgoing requests with SystemPrincipal
+pref("security.cancel_non_local_systemprincipal", true);
 
 // Sub-resource integrity
 pref("security.sri.enable", true);
