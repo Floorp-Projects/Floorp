@@ -30,6 +30,20 @@
 
 using namespace mozilla::dom;
 
+// static
+uint32_t nsICookieManager::GetCookieBehavior() {
+  bool isFirstPartyIsolated = OriginAttributes::IsFirstPartyEnabled();
+  uint32_t cookieBehavior =
+      mozilla::StaticPrefs::network_cookie_cookieBehavior();
+
+  if (isFirstPartyIsolated &&
+      cookieBehavior ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+    cookieBehavior = nsICookieService::BEHAVIOR_REJECT_TRACKER;
+  }
+  return cookieBehavior;
+}
+
 namespace mozilla {
 namespace net {
 
@@ -246,6 +260,13 @@ CookieService::Observe(nsISupports* /*aSubject*/, const char* aTopic,
     mPrivateStorage = CookiePrivateStorage::Create();
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CookieService::GetCookieBehavior(uint32_t* aCookieBehavior) {
+  NS_ENSURE_ARG_POINTER(aCookieBehavior);
+  *aCookieBehavior = nsICookieManager::GetCookieBehavior();
   return NS_OK;
 }
 
