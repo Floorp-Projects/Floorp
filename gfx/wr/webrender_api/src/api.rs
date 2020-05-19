@@ -20,6 +20,7 @@ use time::precise_time_ns;
 use crate::{display_item as di, font};
 use crate::color::{ColorU, ColorF};
 use crate::display_list::BuiltDisplayList;
+use crate::font::SharedFontInstanceMap;
 use crate::image::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey};
 use crate::image::DEFAULT_TILE_SIZE;
 use crate::units::*;
@@ -1281,13 +1282,18 @@ pub enum ScrollClamping {
 pub struct RenderApiSender {
     api_sender: Sender<ApiMsg>,
 
+    shared_font_instances: SharedFontInstanceMap,
 }
 
 impl RenderApiSender {
     /// Used internally by the `Renderer`.
-    pub fn new(api_sender: Sender<ApiMsg>) -> Self {
+    pub fn new(
+        api_sender: Sender<ApiMsg>,
+        shared_font_instances: SharedFontInstanceMap,
+    ) -> Self {
         RenderApiSender {
             api_sender,
+            shared_font_instances,
         }
     }
 
@@ -1312,6 +1318,7 @@ impl RenderApiSender {
             api_sender: self.api_sender.clone(),
             namespace_id,
             next_id: Cell::new(ResourceId(0)),
+            shared_font_instances: self.shared_font_instances.clone(),
         }
     }
 
@@ -1327,6 +1334,7 @@ impl RenderApiSender {
             api_sender: self.api_sender.clone(),
             namespace_id,
             next_id: Cell::new(ResourceId(0)),
+            shared_font_instances: self.shared_font_instances.clone(),
         }
     }
 }
@@ -1418,6 +1426,7 @@ pub struct RenderApi {
     api_sender: Sender<ApiMsg>,
     namespace_id: IdNamespace,
     next_id: Cell<ResourceId>,
+    shared_font_instances: SharedFontInstanceMap,
 }
 
 impl RenderApi {
@@ -1430,6 +1439,7 @@ impl RenderApi {
     pub fn create_sender(&self) -> RenderApiSender {
         RenderApiSender::new(
             self.api_sender.clone(),
+            self.shared_font_instances.clone(),
         )
     }
 

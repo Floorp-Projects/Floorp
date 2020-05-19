@@ -1347,7 +1347,6 @@ impl RenderBackend {
                     notifications: transaction_msg.notifications,
                     render_frame: transaction_msg.generate_frame,
                     invalidate_rendered_frame: transaction_msg.invalidate_rendered_frame,
-                    fonts: self.resource_cache.get_font_instances(),
                 });
 
                 let blobs_to_rasterize = get_blob_image_updates(&txn.resource_updates);
