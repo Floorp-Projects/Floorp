@@ -2,6 +2,7 @@
 
 use crate::numeric_value::{parse_float, parse_int, NumericLiteralBase};
 use crate::parser::Parser;
+use ast::arena;
 use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSet};
 use ast::source_slice_list::SourceSliceList;
 use ast::SourceLocation;
@@ -16,15 +17,14 @@ use unic_ucd_ident::{is_id_continue, is_id_start};
 pub struct Lexer<'alloc> {
     allocator: &'alloc Bump,
 
+    /// Next token to be returned.
+    token: arena::Box<'alloc, Token>,
+
     /// Length of the input text, in UTF-8 bytes.
     source_length: usize,
 
     /// Iterator over the remaining not-yet-parsed input.
     chars: Chars<'alloc>,
-
-    /// True if the current position is before the first
-    /// token of a line (or on a line with no tokens).
-    is_on_new_line: bool,
 
     atoms: Rc<RefCell<SourceAtomSet<'alloc>>>,
 
@@ -63,11 +63,13 @@ impl<'alloc> Lexer<'alloc> {
         slices: Rc<RefCell<SourceSliceList<'alloc>>>,
     ) -> Lexer<'alloc> {
         let source_length = offset + chars.as_str().len();
+        let mut token = arena::alloc(allocator, new_token());
+        token.is_on_new_line = true;
         Lexer {
             allocator,
+            token,
             source_length,
             chars,
-            is_on_new_line: true,
             atoms,
             slices,
         }
@@ -91,16 +93,27 @@ impl<'alloc> Lexer<'alloc> {
         chars.next()
     }
 
-    pub fn next<'parser>(&mut self, parser: &Parser<'parser>) -> Result<'alloc, Token> {
-        let result = self.advance_impl(parser)?;
-        let is_on_new_line = self.is_on_new_line;
-        self.is_on_new_line = false;
-        Ok(Token {
-            terminal_id: result.terminal_id,
-            loc: result.loc,
-            is_on_new_line,
-            value: result.value,
-        })
+    fn set_result(
+        &mut self,
+        terminal_id: TerminalId,
+        loc: SourceLocation,
+        value: TokenValue,
+    ) -> Result<'alloc, ()> {
+        self.token.terminal_id = terminal_id;
+        self.token.loc = loc;
+        self.token.value = value;
+        Ok(())
+    }
+
+    #[inline]
+    pub fn next<'parser>(
+        &mut self,
+        parser: &Parser<'parser>,
+    ) -> Result<'alloc, arena::Box<'alloc, Token>> {
+        let mut next_token = arena::alloc_with(self.allocator, || new_token());
+        self.advance_impl(parser)?;
+        std::mem::swap(&mut self.token, &mut next_token);
+        Ok(next_token)
     }
 
     fn unexpected_err(&mut self) -> ParseError<'alloc> {
@@ -110,6 +123,11 @@ impl<'alloc> Lexer<'alloc> {
             ParseError::UnexpectedEnd
         }
     }
+}
+
+/// Returns an empty token which is meant as a place holder to be mutated later.
+fn new_token() -> Token {
+    Token::basic_token(TerminalId::End, SourceLocation::default())
 }
 
 // ----------------------------------------------------------------------------
@@ -160,14 +178,6 @@ const LS: char = '\u{2028}';
 /// U+2029 PARAGRAPH SEPARATOR, abbreviated <PS>.
 const PS: char = '\u{2029}';
 
-/// `Token` struct without `is_on_new_line` field, for the return value of
-/// `advance_impl`.
-struct AdvanceResult {
-    terminal_id: TerminalId,
-    loc: SourceLocation,
-    value: TokenValue,
-}
-
 // ----------------------------------------------------------------------------
 // 11.4 Comments
 //
@@ -211,7 +221,7 @@ impl<'alloc> Lexer<'alloc> {
                     return Ok(());
                 }
                 CR | LF | PS | LS => {
-                    self.is_on_new_line = true;
+                    self.token.is_on_new_line = true;
                 }
                 _ => {}
             }
@@ -240,7 +250,7 @@ impl<'alloc> Lexer<'alloc> {
             }
         }
         *builder = AutoCow::new(&self);
-        self.is_on_new_line = true;
+        self.token.is_on_new_line = true;
     }
 }
 
@@ -390,11 +400,7 @@ impl<'alloc> Lexer<'alloc> {
     /// StringValue of it. For example, if the source string is "\u{79}ield",
     /// the result is `TerminalId::NameWithEscape`, and the StringValue is
     /// "yield".
-    fn identifier_tail(
-        &mut self,
-        start: usize,
-        builder: AutoCow<'alloc>,
-    ) -> Result<'alloc, AdvanceResult> {
+    fn identifier_tail(&mut self, start: usize, builder: AutoCow<'alloc>) -> Result<'alloc, ()> {
         let (has_different, text) = self.identifier_name_tail(builder)?;
 
         // https://tc39.es/ecma262/#sec-keywords-and-reserved-words
@@ -656,28 +662,21 @@ impl<'alloc> Lexer<'alloc> {
             }
         };
 
-        Ok(AdvanceResult {
-            terminal_id: id,
-            loc: SourceLocation::new(start, self.offset()),
-            value,
-        })
+        self.set_result(id, SourceLocation::new(start, self.offset()), value)
     }
 
     /// ```text
     /// PrivateIdentifier::
     ///     `#` IdentifierName
     /// ```
-    fn private_identifier(
-        &mut self,
-        start: usize,
-        builder: AutoCow<'alloc>,
-    ) -> Result<'alloc, AdvanceResult> {
+    fn private_identifier(&mut self, start: usize, builder: AutoCow<'alloc>) -> Result<'alloc, ()> {
         let name = self.identifier_name(builder)?;
-        Ok(AdvanceResult {
-            terminal_id: TerminalId::PrivateIdentifier,
-            loc: SourceLocation::new(start, self.offset()),
-            value: self.string_to_token_value(name),
-        })
+        let value = self.string_to_token_value(name);
+        self.set_result(
+            TerminalId::PrivateIdentifier,
+            SourceLocation::new(start, self.offset()),
+            value,
+        )
     }
 
     /// ```text
@@ -1368,7 +1367,7 @@ impl<'alloc> Lexer<'alloc> {
     ///     `\` EscapeSequence
     ///     LineContinuation
     /// ```
-    fn string_literal(&mut self, delimiter: char) -> Result<'alloc, AdvanceResult> {
+    fn string_literal(&mut self, delimiter: char) -> Result<'alloc, ()> {
         let offset = self.offset() - 1;
         let mut builder = AutoCow::new(&self);
         loop {
@@ -1379,11 +1378,12 @@ impl<'alloc> Lexer<'alloc> {
 
                 Some(c @ '"') | Some(c @ '\'') => {
                     if c == delimiter {
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::StringLiteral,
-                            loc: SourceLocation::new(offset, self.offset()),
-                            value: self.string_to_token_value(builder.finish_without_push(&self)),
-                        });
+                        let value = self.string_to_token_value(builder.finish_without_push(&self));
+                        return self.set_result(
+                            TerminalId::StringLiteral,
+                            SourceLocation::new(offset, self.offset()),
+                            value,
+                        );
                     } else {
                         builder.push_matching(c);
                     }
@@ -1422,10 +1422,7 @@ impl<'alloc> Lexer<'alloc> {
     }
 
     // See 12.2.8 and 11.8.5 sections.
-    fn regular_expression_literal(
-        &mut self,
-        builder: &mut AutoCow<'alloc>,
-    ) -> Result<'alloc, AdvanceResult> {
+    fn regular_expression_literal(&mut self, builder: &mut AutoCow<'alloc>) -> Result<'alloc, ()> {
         let offset = self.offset();
 
         loop {
@@ -1505,11 +1502,12 @@ impl<'alloc> Lexer<'alloc> {
         // TODO: 12.2.8.2.4 and 12.2.8.2.5 Check that the body matches the
         // grammar defined in 21.2.1.
 
-        Ok(AdvanceResult {
-            terminal_id: TerminalId::RegularExpressionLiteral,
-            loc: SourceLocation::new(offset, self.offset()),
-            value: self.slice_to_token_value(literal),
-        })
+        let value = self.slice_to_token_value(literal);
+        self.set_result(
+            TerminalId::RegularExpressionLiteral,
+            SourceLocation::new(offset, self.offset()),
+            value,
+        )
     }
 
     // ------------------------------------------------------------------------
@@ -1541,7 +1539,7 @@ impl<'alloc> Lexer<'alloc> {
         start: usize,
         subst: TerminalId,
         tail: TerminalId,
-    ) -> Result<'alloc, AdvanceResult> {
+    ) -> Result<'alloc, ()> {
         let mut builder = AutoCow::new(&self);
         while let Some(ch) = self.chars.next() {
             // TemplateCharacter ::
@@ -1572,18 +1570,12 @@ impl<'alloc> Lexer<'alloc> {
             //   HexDigits [> but only if MV of |HexDigits| ≤ 0x10FFFF ]
             if ch == '$' && self.peek() == Some('{') {
                 self.chars.next();
-                return Ok(AdvanceResult {
-                    terminal_id: subst,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: self.string_to_token_value(builder.finish_without_push(&self)),
-                });
+                let value = self.string_to_token_value(builder.finish_without_push(&self));
+                return self.set_result(subst, SourceLocation::new(start, self.offset()), value);
             }
             if ch == '`' {
-                return Ok(AdvanceResult {
-                    terminal_id: tail,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: self.string_to_token_value(builder.finish_without_push(&self)),
-                });
+                let value = self.string_to_token_value(builder.finish_without_push(&self));
+                return self.set_result(tail, SourceLocation::new(start, self.offset()), value);
             }
             // TODO: Support escape sequences.
             if ch == '\\' {
@@ -1596,7 +1588,7 @@ impl<'alloc> Lexer<'alloc> {
         Err(ParseError::UnterminatedString.into())
     }
 
-    fn advance_impl<'parser>(&mut self, parser: &Parser<'parser>) -> Result<'alloc, AdvanceResult> {
+    fn advance_impl<'parser>(&mut self, parser: &Parser<'parser>) -> Result<'alloc, ()> {
         let mut builder = AutoCow::new(&self);
         let mut start = self.offset();
         while let Some(c) = self.chars.next() {
@@ -1640,7 +1632,7 @@ impl<'alloc> Lexer<'alloc> {
                 //     <LS>
                 //     <PS>
                 LF | CR | LS | PS => {
-                    self.is_on_new_line = true;
+                    self.token.is_on_new_line = true;
                     builder = AutoCow::new(&self);
                     start = self.offset();
                     continue;
@@ -1670,64 +1662,74 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('=') => {
                                 self.chars.next();
-                                return Ok(AdvanceResult {
-                                    terminal_id: TerminalId::StrictNotEqual,
-                                    loc: SourceLocation::new(start, self.offset()),
-                                    value: TokenValue::None,
-                                });
+                                return self.set_result(
+                                    TerminalId::StrictNotEqual,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                );
                             }
-                            _ => return Ok(AdvanceResult {
-                                terminal_id: TerminalId::LaxNotEqual,
-                                loc: SourceLocation::new(start, self.offset()),
-                                value: TokenValue::None,
-                            }),
+                            _ => return self.set_result(
+                                TerminalId::LaxNotEqual,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            ),
                         }
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::LogicalNot,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::LogicalNot,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '%' => match self.peek() {
                     Some('=') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::RemainderAssign,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::RemainderAssign,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::Remainder,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::Remainder,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '&' => match self.peek() {
                     Some('&') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::LogicalAnd,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        match self.peek() {
+                            Some('=') => {
+                                self.chars.next();
+                                return self.set_result(
+                                    TerminalId::LogicalAndAssign,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                );
+                            }
+                            _ => return self.set_result(
+                                TerminalId::LogicalAnd,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            )
+                        }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::BitwiseAndAssign,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::BitwiseAndAssign,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::BitwiseAnd,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::BitwiseAnd,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '*' => match self.peek() {
@@ -1736,88 +1738,88 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('=') => {
                                 self.chars.next();
-                                return Ok(AdvanceResult {
-                                    terminal_id: TerminalId::ExponentiateAssign,
-                                    loc: SourceLocation::new(start, self.offset()),
-                                    value: TokenValue::None,
-                                });
+                                return self.set_result(
+                                    TerminalId::ExponentiateAssign,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                );
                             }
-                            _ => return Ok(AdvanceResult {
-                                terminal_id: TerminalId::Exponentiate,
-                                loc: SourceLocation::new(start, self.offset()),
-                                value: TokenValue::None,
-                            }),
+                            _ => return self.set_result(
+                                TerminalId::Exponentiate,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            ),
                         }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::MultiplyAssign,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::MultiplyAssign,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::Star,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::Star,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '+' => match self.peek() {
                     Some('+') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::Increment,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::Increment,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::AddAssign,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::AddAssign,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::Plus,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::Plus,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '-' => match self.peek() {
                     Some('-') => {
                         self.chars.next();
                         match self.peek() {
-                            Some('>') if self.is_on_new_line => {
+                            Some('>') if self.token.is_on_new_line => {
                                 // B.1.3 SingleLineHTMLCloseComment
                                 // TODO: Limit this to Script (not Module).
                                 self.skip_single_line_comment(&mut builder);
                                 continue;
                             }
-                            _ => return Ok(AdvanceResult {
-                                terminal_id: TerminalId::Decrement,
-                                loc: SourceLocation::new(start, self.offset()),
-                                value: TokenValue::None,
-                            }),
+                            _ => return self.set_result(
+                                TerminalId::Decrement,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            ),
                         }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::SubtractAssign,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::SubtractAssign,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::Minus,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::Minus,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '.' => match self.peek() {
@@ -1826,11 +1828,11 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('.') => {
                                 self.chars.next();
-                                return Ok(AdvanceResult {
-                                    terminal_id: TerminalId::Ellipsis,
-                                    loc: SourceLocation::new(start, self.offset()),
-                                    value: TokenValue::None,
-                                });
+                                return self.set_result(
+                                    TerminalId::Ellipsis,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                );
                             }
                             _ => return Err(ParseError::IllegalCharacter('.').into()),
                         }
@@ -1839,11 +1841,11 @@ impl<'alloc> Lexer<'alloc> {
                         let result = self.decimal_literal_after_decimal_point()?;
                         return Ok(self.numeric_result_to_advance_result(builder.finish(&self), start, result)?);
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::Dot,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::Dot,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '/' => match self.peek() {
@@ -1865,17 +1867,17 @@ impl<'alloc> Lexer<'alloc> {
                             match self.peek() {
                                 Some('=') => {
                                     self.chars.next();
-                                    return Ok(AdvanceResult {
-                                        terminal_id: TerminalId::DivideAssign,
-                                        loc: SourceLocation::new(start, self.offset()),
-                                        value: TokenValue::None,
-                                    });
+                                    return self.set_result(
+                                        TerminalId::DivideAssign,
+                                        SourceLocation::new(start, self.offset()),
+                                        TokenValue::None,
+                                    );
                                 }
-                                _ => return Ok(AdvanceResult {
-                                    terminal_id: TerminalId::Divide,
-                                    loc: SourceLocation::new(start, self.offset()),
-                                    value: TokenValue::None,
-                                }),
+                                _ => return self.set_result(
+                                    TerminalId::Divide,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                ),
                             }
                         }
                         return self.regular_expression_literal(&mut builder);
@@ -1886,11 +1888,11 @@ impl<'alloc> Lexer<'alloc> {
                     if parser.can_accept_terminal(TerminalId::TemplateMiddle) {
                         return self.template_part(start, TerminalId::TemplateMiddle, TerminalId::TemplateTail);
                     }
-                    return Ok(AdvanceResult {
-                        terminal_id: TerminalId::CloseBrace,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    });
+                    return self.set_result(
+                        TerminalId::CloseBrace,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    );
                 }
 
                 '<' => match self.peek() {
@@ -1899,26 +1901,26 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('=') => {
                                 self.chars.next();
-                                return Ok(AdvanceResult {
-                                    terminal_id: TerminalId::LeftShiftAssign,
-                                    loc: SourceLocation::new(start, self.offset()),
-                                    value: TokenValue::None,
-                                });
+                                return self.set_result(
+                                    TerminalId::LeftShiftAssign,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                );
                             }
-                            _ => return Ok(AdvanceResult {
-                                terminal_id: TerminalId::LeftShift,
-                                loc: SourceLocation::new(start, self.offset()),
-                                value: TokenValue::None,
-                            }),
+                            _ => return self.set_result(
+                                TerminalId::LeftShift,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            ),
                         }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::LessThanOrEqualTo,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::LessThanOrEqualTo,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
                     Some('!') if self.is_looking_at("!--") => {
                         // B.1.3 SingleLineHTMLOpenComment. Note that the above
@@ -1931,11 +1933,11 @@ impl<'alloc> Lexer<'alloc> {
                         start = self.offset();
                         continue;
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::LessThan,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::LessThan,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '=' => match self.peek() {
@@ -1944,32 +1946,32 @@ impl<'alloc> Lexer<'alloc> {
                         match self.peek() {
                             Some('=') => {
                                 self.chars.next();
-                                return Ok(AdvanceResult {
-                                    terminal_id: TerminalId::StrictEqual,
-                                    loc: SourceLocation::new(start, self.offset()),
-                                    value: TokenValue::None,
-                                });
+                                return self.set_result(
+                                    TerminalId::StrictEqual,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                );
                             }
-                            _ => return Ok(AdvanceResult {
-                                terminal_id: TerminalId::LaxEqual,
-                                loc: SourceLocation::new(start, self.offset()),
-                                value: TokenValue::None,
-                            }),
+                            _ => return self.set_result(
+                                TerminalId::LaxEqual,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            ),
                         }
                     }
                     Some('>') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::Arrow,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::Arrow,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::EqualSign,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::EqualSign,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '>' => match self.peek() {
@@ -1981,165 +1983,185 @@ impl<'alloc> Lexer<'alloc> {
                                 match self.peek() {
                                     Some('=') => {
                                         self.chars.next();
-                                        return Ok(AdvanceResult {
-                                            terminal_id: TerminalId::UnsignedRightShiftAssign,
-                                            loc: SourceLocation::new(start, self.offset()),
-                                            value: TokenValue::None,
-                                        });
+                                        return self.set_result(
+                                            TerminalId::UnsignedRightShiftAssign,
+                                            SourceLocation::new(start, self.offset()),
+                                            TokenValue::None,
+                                        );
                                     }
-                                    _ => return Ok(AdvanceResult {
-                                        terminal_id: TerminalId::UnsignedRightShift,
-                                        loc: SourceLocation::new(start, self.offset()),
-                                        value: TokenValue::None,
-                                    }),
+                                    _ => return self.set_result(
+                                        TerminalId::UnsignedRightShift,
+                                        SourceLocation::new(start, self.offset()),
+                                        TokenValue::None,
+                                    ),
                                 }
                             }
                             Some('=') => {
                                 self.chars.next();
-                                return Ok(AdvanceResult {
-                                    terminal_id: TerminalId::SignedRightShiftAssign,
-                                    loc: SourceLocation::new(start, self.offset()),
-                                    value: TokenValue::None,
-                                });
+                                return self.set_result(
+                                    TerminalId::SignedRightShiftAssign,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                );
                             }
-                            _ => return Ok(AdvanceResult {
-                                terminal_id: TerminalId::SignedRightShift,
-                                loc: SourceLocation::new(start, self.offset()),
-                                value: TokenValue::None,
-                            }),
+                            _ => return self.set_result(
+                                TerminalId::SignedRightShift,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            ),
                         }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::GreaterThanOrEqualTo,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::GreaterThanOrEqualTo,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::GreaterThan,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::GreaterThan,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '^' => match self.peek() {
                     Some('=') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::BitwiseXorAssign,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::BitwiseXorAssign,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::BitwiseXor,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::BitwiseXor,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '|' => match self.peek() {
                     Some('|') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::LogicalOr,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        match self.peek() {
+                            Some('=') => {
+                                self.chars.next();
+                                return self.set_result(
+                                    TerminalId::LogicalOrAssign,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                );
+                            }
+                            _ => return self.set_result(
+                                TerminalId::LogicalOr,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            )
+                        }
                     }
                     Some('=') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::BitwiseOrAssign,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::BitwiseOrAssign,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::BitwiseOr,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::BitwiseOr,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 },
 
                 '?' => match self.peek() {
                     Some('?') => {
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::Coalesce,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        match self.peek() {
+                            Some('=') => {
+                                self.chars.next();
+                                return self.set_result(
+                                    TerminalId::CoalesceAssign,
+                                    SourceLocation::new(start, self.offset()),
+                                    TokenValue::None,
+                                );
+                            }
+                            _ => return self.set_result(
+                                TerminalId::Coalesce,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            )
+                        }
                     }
                     Some('.') => {
                         if let Some('0'..='9') = self.double_peek() {
-                            return Ok(AdvanceResult {
-                                terminal_id: TerminalId::QuestionMark,
-                                loc: SourceLocation::new(start, self.offset()),
-                                value: TokenValue::None,
-                            })
+                            return self.set_result(
+                                TerminalId::QuestionMark,
+                                SourceLocation::new(start, self.offset()),
+                                TokenValue::None,
+                            )
                         }
                         self.chars.next();
-                        return Ok(AdvanceResult {
-                            terminal_id: TerminalId::OptionalChain,
-                            loc: SourceLocation::new(start, self.offset()),
-                            value: TokenValue::None,
-                        });
+                        return self.set_result(
+                            TerminalId::OptionalChain,
+                            SourceLocation::new(start, self.offset()),
+                            TokenValue::None,
+                        );
                     }
-                    _ => return Ok(AdvanceResult {
-                        terminal_id: TerminalId::QuestionMark,
-                        loc: SourceLocation::new(start, self.offset()),
-                        value: TokenValue::None,
-                    }),
+                    _ => return self.set_result(
+                        TerminalId::QuestionMark,
+                        SourceLocation::new(start, self.offset()),
+                        TokenValue::None,
+                    ),
                 }
 
-                '(' => return Ok(AdvanceResult {
-                    terminal_id: TerminalId::OpenParenthesis,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: TokenValue::None,
-                }),
-                ')' => return Ok(AdvanceResult {
-                    terminal_id: TerminalId::CloseParenthesis,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: TokenValue::None,
-                }),
-                ',' => return Ok(AdvanceResult {
-                    terminal_id: TerminalId::Comma,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: TokenValue::None,
-                }),
-                ':' => return Ok(AdvanceResult {
-                    terminal_id: TerminalId::Colon,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: TokenValue::None,
-                }),
-                ';' => return Ok(AdvanceResult {
-                    terminal_id: TerminalId::Semicolon,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: TokenValue::None,
-                }),
-                '[' => return Ok(AdvanceResult {
-                    terminal_id: TerminalId::OpenBracket,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: TokenValue::None,
-                }),
-                ']' => return Ok(AdvanceResult {
-                    terminal_id: TerminalId::CloseBracket,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: TokenValue::None,
-                }),
-                '{' => return Ok(AdvanceResult {
-                    terminal_id: TerminalId::OpenBrace,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: TokenValue::None,
-                }),
-                '~' => return Ok(AdvanceResult {
-                    terminal_id: TerminalId::BitwiseNot,
-                    loc: SourceLocation::new(start, self.offset()),
-                    value: TokenValue::None,
-                }),
+                '(' => return self.set_result(
+                    TerminalId::OpenParenthesis,
+                    SourceLocation::new(start, self.offset()),
+                    TokenValue::None,
+                ),
+                ')' => return self.set_result(
+                    TerminalId::CloseParenthesis,
+                    SourceLocation::new(start, self.offset()),
+                    TokenValue::None,
+                ),
+                ',' => return self.set_result(
+                    TerminalId::Comma,
+                    SourceLocation::new(start, self.offset()),
+                    TokenValue::None,
+                ),
+                ':' => return self.set_result(
+                    TerminalId::Colon,
+                    SourceLocation::new(start, self.offset()),
+                    TokenValue::None,
+                ),
+                ';' => return self.set_result(
+                    TerminalId::Semicolon,
+                    SourceLocation::new(start, self.offset()),
+                    TokenValue::None,
+                ),
+                '[' => return self.set_result(
+                    TerminalId::OpenBracket,
+                    SourceLocation::new(start, self.offset()),
+                    TokenValue::None,
+                ),
+                ']' => return self.set_result(
+                    TerminalId::CloseBracket,
+                    SourceLocation::new(start, self.offset()),
+                    TokenValue::None,
+                ),
+                '{' => return self.set_result(
+                    TerminalId::OpenBrace,
+                    SourceLocation::new(start, self.offset()),
+                    TokenValue::None,
+                ),
+                '~' => return self.set_result(
+                    TerminalId::BitwiseNot,
+                    SourceLocation::new(start, self.offset()),
+                    TokenValue::None,
+                ),
 
                 // Idents
                 '$' | '_' | 'a'..='z' | 'A'..='Z' => {
@@ -2185,11 +2207,11 @@ impl<'alloc> Lexer<'alloc> {
                 }
             }
         }
-        Ok(AdvanceResult {
-            terminal_id: TerminalId::End,
-            loc: SourceLocation::new(start, self.offset()),
-            value: TokenValue::None,
-        })
+        self.set_result(
+            TerminalId::End,
+            SourceLocation::new(start, self.offset()),
+            TokenValue::None,
+        )
     }
 
     fn string_to_token_value(&mut self, s: &'alloc str) -> TokenValue {
@@ -2207,7 +2229,7 @@ impl<'alloc> Lexer<'alloc> {
         s: &'alloc str,
         start: usize,
         result: NumericResult,
-    ) -> Result<'alloc, AdvanceResult> {
+    ) -> Result<'alloc, ()> {
         let (terminal_id, value) = match result {
             NumericResult::Int { base } => {
                 let n = parse_int(s, base).map_err(|s| ParseError::NotImplemented(s))?;
@@ -2223,11 +2245,11 @@ impl<'alloc> Lexer<'alloc> {
             }
         };
 
-        Ok(AdvanceResult {
+        self.set_result(
             terminal_id,
-            loc: SourceLocation::new(start, self.offset()),
+            SourceLocation::new(start, self.offset()),
             value,
-        })
+        )
     }
 }
 

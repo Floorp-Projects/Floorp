@@ -606,6 +606,18 @@ impl<'alloc> SourceLocationAccessor for ClassExpression<'alloc> {
 impl<'alloc> SourceLocationAccessor for CompoundAssignmentOperator {
     fn set_loc(&mut self, start: SourceLocation, end: SourceLocation) {
         match self {
+            CompoundAssignmentOperator::LogicalOr { mut loc } => {
+                loc.start = start.start;
+                loc.end = end.end;
+            }
+            CompoundAssignmentOperator::LogicalAnd { mut loc } => {
+                loc.start = start.start;
+                loc.end = end.end;
+            }
+            CompoundAssignmentOperator::Coalesce { mut loc } => {
+                loc.start = start.start;
+                loc.end = end.end;
+            }
             CompoundAssignmentOperator::Add { mut loc } => {
                 loc.start = start.start;
                 loc.end = end.end;
@@ -659,6 +671,15 @@ impl<'alloc> SourceLocationAccessor for CompoundAssignmentOperator {
 
     fn get_loc(&self) -> SourceLocation {
         match self {
+            CompoundAssignmentOperator::LogicalOr { loc } => {
+                *loc
+            }
+            CompoundAssignmentOperator::LogicalAnd { loc } => {
+                *loc
+            }
+            CompoundAssignmentOperator::Coalesce { loc } => {
+                *loc
+            }
             CompoundAssignmentOperator::Add { loc } => {
                 *loc
             }

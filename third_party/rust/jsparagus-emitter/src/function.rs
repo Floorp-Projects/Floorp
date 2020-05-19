@@ -25,18 +25,6 @@ pub enum FunctionKind {
     FunctionKindLimit = 8,
 }
 
-#[derive(Debug)]
-pub enum GeneratorKind {
-    NotGenerator = 0,
-    Generator = 1,
-}
-
-#[derive(Debug)]
-pub enum FunctionAsyncKind {
-    SyncFunction = 0,
-    AsyncFunction = 1,
-}
-
 #[allow(dead_code)]
 const FUNCTION_KIND_SHIFT: u16 = 0;
 #[allow(dead_code)]
@@ -122,13 +110,17 @@ const STABLE_ACROSS_CLONES: u16 = CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_
 // @@@@ END TYPES @@@@
 
 impl FunctionFlags {
-    pub fn new(flags: u16) -> Self {
+    fn new(flags: u16) -> Self {
         debug_assert!(
             (((FunctionKind::FunctionKindLimit as u16) - 1) << FUNCTION_KIND_SHIFT)
                 <= FUNCTION_KIND_MASK
         );
 
         Self { flags }
+    }
+
+    pub fn interpreted_normal() -> Self {
+        Self::new(INTERPRETED_NORMAL)
     }
 }
 
@@ -156,8 +148,6 @@ pub enum FunctionScript {
 pub struct FunctionCreationData {
     name: Option<SourceAtomSetIndex>,
     script: FunctionScript,
-    generator_kind: GeneratorKind,
-    async_kind: FunctionAsyncKind,
     flags: FunctionFlags,
     // FIXME: add more fields
 }
@@ -167,25 +157,16 @@ impl FunctionCreationData {
     pub fn non_lazy(
         name: Option<SourceAtomSetIndex>,
         script: ScriptStencilIndex,
-        generator_kind: GeneratorKind,
-        async_kind: FunctionAsyncKind,
         flags: FunctionFlags,
     ) -> Self {
         Self {
             name,
             script: FunctionScript::NonLazy(NonLazyFunctionScript { script }),
-            generator_kind,
-            async_kind,
             flags,
         }
     }
 
-    pub fn lazy(
-        name: Option<SourceAtomSetIndex>,
-        generator_kind: GeneratorKind,
-        async_kind: FunctionAsyncKind,
-        flags: FunctionFlags,
-    ) -> Self {
+    pub fn lazy(name: Option<SourceAtomSetIndex>, flags: FunctionFlags) -> Self {
         Self {
             name,
             script: FunctionScript::Lazy(LazyFunctionScript {
@@ -194,8 +175,6 @@ impl FunctionCreationData {
                 force_strict: false,
                 strict: false,
             }),
-            generator_kind,
-            async_kind,
             flags,
         }
     }

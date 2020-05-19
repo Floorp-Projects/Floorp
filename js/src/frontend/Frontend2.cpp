@@ -160,6 +160,10 @@ class SmooshScriptStencil : public ScriptStencil {
       SmooshGCThing& item = result_.gcthings.data[i];
 
       switch (item.kind) {
+        case SmooshGCThingKind::AtomIndex: {
+          gcThings.infallibleAppend(mozilla::AsVariant(allAtoms_[item.index]));
+          break;
+        }
         case SmooshGCThingKind::ScopeIndex: {
           gcThings.infallibleAppend(mozilla::AsVariant(ScopeIndex(item.index)));
           break;

@@ -2223,6 +2223,25 @@ impl<'alloc> AstBuilder<'alloc> {
         CompoundAssignmentOperator::And { loc: token.loc }
     }
 
+    pub fn logical_or_assign_op(
+        &self,
+        token: arena::Box<'alloc, Token>,
+    ) -> CompoundAssignmentOperator {
+        CompoundAssignmentOperator::LogicalOr { loc: token.loc }
+    }
+    pub fn logical_and_assign_op(
+        &self,
+        token: arena::Box<'alloc, Token>,
+    ) -> CompoundAssignmentOperator {
+        CompoundAssignmentOperator::LogicalAnd { loc: token.loc }
+    }
+    pub fn coalesce_assign_op(
+        &self,
+        token: arena::Box<'alloc, Token>,
+    ) -> CompoundAssignmentOperator {
+        CompoundAssignmentOperator::Coalesce { loc: token.loc }
+    }
+
     pub fn box_assign_op(
         &self,
         op: CompoundAssignmentOperator,
@@ -2231,6 +2250,7 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     // AssignmentExpression : LeftHandSideExpression AssignmentOperator AssignmentExpression
+    // AssignmentExpression : LeftHandSideExpression LogicalAssignmentOperator AssignmentExpression
     pub fn compound_assignment_expr(
         &self,
         left_hand_side: arena::Box<'alloc, Expression<'alloc>>,
