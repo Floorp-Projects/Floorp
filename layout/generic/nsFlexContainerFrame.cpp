@@ -2207,7 +2207,7 @@ static bool FrameHasRelativeBSizeDependency(nsIFrame* aFrame) {
   if (aFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
     return true;
   }
-  for (const auto& childList : aFrame->GetChildLists()) {
+  for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* childFrame : childList.mList) {
       if (childFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
         return true;
