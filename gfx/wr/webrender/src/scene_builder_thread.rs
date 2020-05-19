@@ -6,7 +6,7 @@ use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImage
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, SceneMsg, ResourceUpdate, ExternalEvent};
 use api::{BuiltDisplayList, NotificationRequest, Checkpoint, IdNamespace, QualitySettings};
 use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind, SharedFontInstanceMap};
-use api::DocumentLayer;
+use api::{DocumentLayer, GlyphDimensionRequest, GlyphIndexRequest};
 use api::units::*;
 #[cfg(feature = "capture")]
 use crate::capture::CaptureConfig;
@@ -123,6 +123,8 @@ pub enum SceneBuilderRequest {
     ExternalEvent(ExternalEvent),
     AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
     DeleteDocument(DocumentId),
+    GetGlyphDimensions(GlyphDimensionRequest),
+    GetGlyphIndices(GlyphIndexRequest),
     WakeUp,
     Flush(Sender<()>),
     ClearNamespace(IdNamespace),
@@ -150,6 +152,8 @@ pub enum SceneBuilderResult {
     ExternalEvent(ExternalEvent),
     FlushComplete(Sender<()>),
     ClearNamespace(IdNamespace),
+    GetGlyphDimensions(GlyphDimensionRequest),
+    GetGlyphIndices(GlyphIndexRequest),
     Stopped,
     DocumentsForDebugger(String)
 }
@@ -392,6 +396,12 @@ impl SceneBuilderThread {
 
                 Ok(SceneBuilderRequest::ExternalEvent(evt)) => {
                     self.send(SceneBuilderResult::ExternalEvent(evt));
+                }
+                Ok(SceneBuilderRequest::GetGlyphDimensions(request)) => {
+                    self.send(SceneBuilderResult::GetGlyphDimensions(request))
+                }
+                Ok(SceneBuilderRequest::GetGlyphIndices(request)) => {
+                    self.send(SceneBuilderResult::GetGlyphIndices(request))
                 }
                 Ok(SceneBuilderRequest::Stop) => {
                     self.tx.send(SceneBuilderResult::Stopped).unwrap();

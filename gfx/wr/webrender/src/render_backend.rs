@@ -872,6 +872,25 @@ impl RenderBackend {
 
                         self.bookkeep_after_frames();
                     },
+                    SceneBuilderResult::GetGlyphDimensions(request) => {
+                        let mut glyph_dimensions = Vec::with_capacity(request.glyph_indices.len());
+                        if let Some(base) = self.resource_cache.get_font_instance(request.key) {
+                            let font = FontInstance::from_base(Arc::clone(&base));
+                            for glyph_index in &request.glyph_indices {
+                                let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, *glyph_index);
+                                glyph_dimensions.push(glyph_dim);
+                            }
+                        }
+                        request.sender.send(glyph_dimensions).unwrap();
+                    }
+                    SceneBuilderResult::GetGlyphIndices(request) => {
+                        let mut glyph_indices = Vec::with_capacity(request.text.len());
+                        for ch in request.text.chars() {
+                            let index = self.resource_cache.get_glyph_index(request.key, ch);
+                            glyph_indices.push(index);
+                        }
+                        request.sender.send(glyph_indices).unwrap();
+                    }
                     SceneBuilderResult::FlushComplete(tx) => {
                         tx.send(()).ok();
                     }
@@ -1054,24 +1073,11 @@ impl RenderBackend {
             ApiMsg::FlushSceneBuilder(tx) => {
                 self.low_priority_scene_tx.send(SceneBuilderRequest::Flush(tx)).unwrap();
             }
-            ApiMsg::GetGlyphDimensions(instance_key, glyph_indices, tx) => {
-                let mut glyph_dimensions = Vec::with_capacity(glyph_indices.len());
-                if let Some(base) = self.resource_cache.get_font_instance(instance_key) {
-                    let font = FontInstance::from_base(Arc::clone(&base));
-                    for glyph_index in &glyph_indices {
-                        let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, *glyph_index);
-                        glyph_dimensions.push(glyph_dim);
-                    }
-                }
-                tx.send(glyph_dimensions).unwrap();
+            ApiMsg::GetGlyphDimensions(request) => {
+                self.scene_tx.send(SceneBuilderRequest::GetGlyphDimensions(request)).unwrap();
             }
-            ApiMsg::GetGlyphIndices(font_key, text, tx) => {
-                let mut glyph_indices = Vec::new();
-                for ch in text.chars() {
-                    let index = self.resource_cache.get_glyph_index(font_key, ch);
-                    glyph_indices.push(index);
-                }
-                tx.send(glyph_indices).unwrap();
+            ApiMsg::GetGlyphIndices(request) => {
+                self.scene_tx.send(SceneBuilderRequest::GetGlyphIndices(request)).unwrap();
             }
             ApiMsg::CloneApi(sender) => {
                 assert!(!self.namespace_alloc_by_client);
