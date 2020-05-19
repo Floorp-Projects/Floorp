@@ -184,7 +184,7 @@ class AllocationLoadManager {
   }
 
   load_running() {
-    return this._active && this._active.name != "noAllocation";
+    return this._active;
   }
 
   change_garbagePiles(amount) {
