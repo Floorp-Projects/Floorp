@@ -967,6 +967,11 @@ class MachCommandConditions(object):
         return False
 
     @staticmethod
+    def is_firefox_or_thunderbird(cls):
+        """Must have a Firefox or Thunderbird build."""
+        return MachCommandConditions.is_firefox(cls) or MachCommandConditions.is_thunderbird(cls)
+
+    @staticmethod
     def is_android(cls):
         """Must have an Android build."""
         if hasattr(cls, 'substs'):
