@@ -50,21 +50,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Localization)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-Localization::Localization(nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal), mIsSync(false) {
-  nsCOMPtr<mozILocalizationJSM> jsm =
-      do_ImportModule("resource://gre/modules/Localization.jsm");
-  MOZ_RELEASE_ASSERT(jsm);
-
-  Unused << jsm->GetLocalization(getter_AddRefs(mLocalization));
-  MOZ_RELEASE_ASSERT(mLocalization);
-  mozilla::HoldJSObjects(this);
-}
-
-void Localization::Activate(const bool aSync, const bool aEager,
-                            const BundleGenerator& aBundleGenerator) {
-  AutoJSContext cx;
-
+Localization::Localization(nsIGlobalObject* aGlobal, const bool aSync,
+                           const BundleGenerator& aBundleGenerator)
+    : mGlobal(aGlobal), mIsSync(aSync) {
   if (aBundleGenerator.mGenerateBundles.WasPassed()) {
     GenerateBundles& generateBundles =
         aBundleGenerator.mGenerateBundles.Value();
@@ -77,6 +65,21 @@ void Localization::Activate(const bool aSync, const bool aEager,
   }
   mIsSync = aSync;
 
+  mozilla::HoldJSObjects(this);
+
+  RegisterObservers();
+}
+
+void Localization::Activate(const bool aEager) {
+  nsCOMPtr<mozILocalizationJSM> jsm =
+      do_ImportModule("resource://gre/modules/Localization.jsm");
+  MOZ_RELEASE_ASSERT(jsm);
+
+  Unused << jsm->GetLocalization(getter_AddRefs(mLocalization));
+  MOZ_RELEASE_ASSERT(mLocalization);
+
+  AutoJSContext cx;
+
   JS::Rooted<JS::Value> generateBundlesJS(cx, mGenerateBundles);
   JS::Rooted<JS::Value> generateBundlesSyncJS(cx, mGenerateBundlesSync);
   JS::Rooted<JS::Value> bundlesJS(cx);
@@ -84,8 +87,6 @@ void Localization::Activate(const bool aSync, const bool aEager,
                                  generateBundlesJS, generateBundlesSyncJS,
                                  &bundlesJS);
   mBundles.set(bundlesJS);
-
-  RegisterObservers();
 }
 
 already_AddRefed<Localization> Localization::Constructor(
@@ -98,13 +99,13 @@ already_AddRefed<Localization> Localization::Constructor(
     return nullptr;
   }
 
-  RefPtr<Localization> loc = new Localization(global);
+  RefPtr<Localization> loc = new Localization(global, aSync, aBundleGenerator);
 
   if (aResourceIds.Length()) {
     loc->AddResourceIds(aResourceIds);
   }
 
-  loc->Activate(aSync, true, aBundleGenerator);
+  loc->Activate(true);
 
   return loc.forget();
 }
@@ -228,6 +229,9 @@ uint32_t Localization::RemoveResourceIds(
 already_AddRefed<Promise> Localization::FormatValue(
     JSContext* aCx, const nsACString& aId, const Optional<L10nArgs>& aArgs,
     ErrorResult& aRv) {
+  if (!mLocalization) {
+    Activate(false);
+  }
   JS::Rooted<JS::Value> args(aCx);
 
   if (aArgs.WasPassed()) {
@@ -254,6 +258,9 @@ void Localization::SetIsSync(const bool aIsSync) { mIsSync = aIsSync; }
 
 already_AddRefed<Promise> Localization::FormatValues(
     JSContext* aCx, const Sequence<L10nKey>& aKeys, ErrorResult& aRv) {
+  if (!mLocalization) {
+    Activate(false);
+  }
   nsTArray<JS::Value> jsKeys;
   SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
   for (auto& key : aKeys) {
@@ -278,6 +285,9 @@ already_AddRefed<Promise> Localization::FormatValues(
 
 already_AddRefed<Promise> Localization::FormatMessages(
     JSContext* aCx, const Sequence<L10nKey>& aKeys, ErrorResult& aRv) {
+  if (!mLocalization) {
+    Activate(false);
+  }
   nsTArray<JS::Value> jsKeys;
   SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
   for (auto& key : aKeys) {
@@ -308,6 +318,9 @@ void Localization::FormatValueSync(JSContext* aCx, const nsACString& aId,
         "Can't use formatValueSync when state is async.");
     return;
   }
+  if (!mLocalization) {
+    Activate(false);
+  }
   JS::Rooted<JS::Value> args(aCx);
 
   if (aArgs.WasPassed()) {
@@ -333,6 +346,9 @@ void Localization::FormatValuesSync(JSContext* aCx,
         "Can't use formatValuesSync when state is async.");
     return;
   }
+  if (!mLocalization) {
+    Activate(false);
+  }
   nsTArray<JS::Value> jsKeys;
   SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
   for (auto& key : aKeys) {
@@ -357,6 +373,9 @@ void Localization::FormatMessagesSync(JSContext* aCx,
     aRv.ThrowInvalidStateError(
         "Can't use formatMessagesSync when state is async.");
     return;
+  }
+  if (!mLocalization) {
+    Activate(false);
   }
   nsTArray<JS::Value> jsKeys;
   SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
