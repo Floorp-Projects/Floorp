@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
-  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -132,21 +131,22 @@ class SearchEngineSelector {
    */
   async _getConfiguration(firstTime = true) {
     let result = [];
+    let failed = false;
     try {
       result = await this._remoteConfig.get();
     } catch (ex) {
-      if (
-        ex instanceof RemoteSettingsClient.InvalidSignatureError &&
-        firstTime
-      ) {
-        // The local database is invalid, try and reset it.
-        await this._remoteConfig.db.clear();
-        // Now call this again.
-        return this._getConfiguration(false);
-      }
-      // Don't throw an error just log it, just continue with no data, and hopefully
-      // a sync will fix things later on.
-      Cu.reportError(ex);
+      logConsole.error(ex);
+      failed = true;
+    }
+    if (!result.length) {
+      logConsole.error("Received empty search configuration!");
+      failed = true;
+    }
+    // If we failed, or the result is empty, try loading from the local dump.
+    if (firstTime && failed) {
+      await this._remoteConfig.db.clear();
+      // Now call this again.
+      return this._getConfiguration(false);
     }
     return result;
   }
