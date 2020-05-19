@@ -9,6 +9,7 @@
 #ifndef mozilla_css_Loader_h
 #define mozilla_css_Loader_h
 
+#include <tuple>
 #include <utility>
 
 #include "mozilla/Attributes.h"
@@ -342,7 +343,7 @@ class Loader final {
     Complete
   };
 
-  Tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
+  std::tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
       const SheetInfo& aInfo, nsIPrincipal* aLoaderPrincipal,
       css::SheetParsingMode aParsingMode, bool aSyncLoad) {
     return CreateSheet(aInfo.mURI, aInfo.mContent, aLoaderPrincipal,
@@ -353,7 +354,7 @@ class Loader final {
   // For inline style, the aURI param is null, but the aLinkingContent
   // must be non-null then.  The loader principal must never be null
   // if aURI is not null.
-  Tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
+  std::tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
       nsIURI* aURI, nsIContent* aLinkingContent, nsIPrincipal* aLoaderPrincipal,
       css::SheetParsingMode, CORSMode, nsIReferrerInfo* aLoadingReferrerInfo,
       const nsAString& aIntegrity, bool aSyncLoad);
