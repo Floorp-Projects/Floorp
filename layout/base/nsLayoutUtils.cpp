@@ -6401,15 +6401,17 @@ bool nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
     return false;
   }
 
-  for (const auto& line : block->Lines()) {
-    if (line.IsBlock()) {
-      const nsIFrame* kid = line.mFirstChild;
+  for (nsBlockFrame::ConstLineIterator line = block->LinesBegin(),
+                                       line_end = block->LinesEnd();
+       line != line_end; ++line) {
+    if (line->IsBlock()) {
+      nsIFrame* kid = line->mFirstChild;
       LinePosition kidPosition;
       if (GetFirstLinePosition(aWM, kid, &kidPosition)) {
         // XXX Not sure if this is the correct value to use for container
         //    width here. It will only be used in vertical-rl layout,
         //    which we don't have full support and testing for yet.
-        const auto& containerSize = line.mContainerSize;
+        const nsSize& containerSize = line->mContainerSize;
         *aResult = kidPosition +
                    kid->GetLogicalNormalPosition(aWM, containerSize).B(aWM);
         return true;
@@ -6417,11 +6419,11 @@ bool nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
     } else {
       // XXX Is this the right test?  We have some bogus empty lines
       // floating around, but IsEmpty is perhaps too weak.
-      if (0 != line.BSize() || !line.IsEmpty()) {
-        nscoord bStart = line.BStart();
+      if (line->BSize() != 0 || !line->IsEmpty()) {
+        nscoord bStart = line->BStart();
         aResult->mBStart = bStart;
-        aResult->mBaseline = bStart + line.GetLogicalAscent();
-        aResult->mBEnd = bStart + line.BSize();
+        aResult->mBaseline = bStart + line->GetLogicalAscent();
+        aResult->mBEnd = bStart + line->BSize();
         return true;
       }
     }
@@ -6479,17 +6481,19 @@ static nscoord CalculateBlockContentBEnd(WritingMode aWM,
 
   nscoord contentBEnd = 0;
 
-  for (const auto& line : aFrame->Lines()) {
-    if (line.IsBlock()) {
-      nsIFrame* child = line.mFirstChild;
-      const auto& containerSize = line.mContainerSize;
+  for (nsBlockFrame::LineIterator line = aFrame->LinesBegin(),
+                                  line_end = aFrame->LinesEnd();
+       line != line_end; ++line) {
+    if (line->IsBlock()) {
+      nsIFrame* child = line->mFirstChild;
+      const nsSize& containerSize = line->mContainerSize;
       nscoord offset =
           child->GetLogicalNormalPosition(aWM, containerSize).B(aWM);
       contentBEnd =
           std::max(contentBEnd,
                    nsLayoutUtils::CalculateContentBEnd(aWM, child) + offset);
     } else {
-      contentBEnd = std::max(contentBEnd, line.BEnd());
+      contentBEnd = std::max(contentBEnd, line->BEnd());
     }
   }
   return contentBEnd;
