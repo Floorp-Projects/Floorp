@@ -44,6 +44,9 @@ class HLSDecoder final : public MediaDecoder {
   // Called as data arrives on the underlying HLS player. Main thread only.
   void NotifyDataArrived();
 
+  // Called when Exoplayer start to load media. Main thread only.
+  void NotifyLoad(nsCString aMediaUrl);
+
  private:
   friend class HLSResourceCallbacksSupport;
 
@@ -57,6 +60,9 @@ class HLSDecoder final : public MediaDecoder {
     return true;
   }
 
+  void UpdateCurrentPrincipal(nsCString aMediaUrl);
+  already_AddRefed<nsIPrincipal> GetContentPrincipal(nsCString aMediaUrl);
+
   static size_t sAllocatedInstances;  // Access only in the main thread.
 
   nsCOMPtr<nsIChannel> mChannel;
@@ -64,6 +70,7 @@ class HLSDecoder final : public MediaDecoder {
   java::GeckoHLSResourceWrapper::GlobalRef mHLSResourceWrapper;
   java::GeckoHLSResourceWrapper::Callbacks::GlobalRef mJavaCallbacks;
   RefPtr<HLSResourceCallbacksSupport> mCallbackSupport;
+  nsCOMPtr<nsIPrincipal> mContentPrincipal;
 };
 
 }  // namespace mozilla
