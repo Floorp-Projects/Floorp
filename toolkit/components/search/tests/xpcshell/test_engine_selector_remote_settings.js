@@ -271,3 +271,43 @@ add_task(async function test_selector_db_modification_never_succeeds() {
 
   Assert.deepEqual(result.engines, [], "Should have returned an empty result.");
 });
+
+add_task(async function test_empty_results() {
+  // Check that returning an empty result re-tries.
+  const engineSelector = new SearchEngineSelector();
+  // Fill the database with some values that we can use to test that it is cleared.
+  const db = await RemoteSettings(SearchUtils.SETTINGS_KEY).db;
+  await db.clear();
+  await db.create({
+    default: "yes",
+    engineName: "askjeeves",
+    appliesTo: [{ included: { everywhere: true } }],
+  });
+  await db.saveLastModified(42);
+
+  // Stub the get() so that the first call simulates an empty database, and
+  // the second simulates success reading from the dump.
+  getStub.resetHistory();
+  getStub.onFirstCall().returns([]);
+  getStub.onSecondCall().returns(TEST_CONFIG);
+
+  let result = await engineSelector.fetchEngineConfiguration(
+    "en-US",
+    "default",
+    "default"
+  );
+
+  Assert.ok(
+    getStub.calledTwice,
+    "Should have called the get() function twice."
+  );
+
+  const databaseEntries = await db.list();
+  Assert.equal(databaseEntries.length, 0, "Should have cleared the database.");
+
+  Assert.deepEqual(
+    result.engines.map(e => e.engineName),
+    ["lycos", "altavista", "aol", "excite"],
+    "Should have returned the correct data."
+  );
+});
