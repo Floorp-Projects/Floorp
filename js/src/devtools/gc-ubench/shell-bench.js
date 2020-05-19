@@ -4,12 +4,13 @@
 
 var FPS = 60;
 var gNumSamples = 500;
-var waited = 0;
 
 // This requires a gHost to have been created that provides host-specific
 // facilities. See eg spidermonkey.js.
 
+loadRelativeToScript("argparse.js");
 loadRelativeToScript("harness.js");
+loadRelativeToScript("scheduler.js");
 loadRelativeToScript("perf.js");
 loadRelativeToScript("test_list.js");
 
@@ -32,28 +33,16 @@ function tick(loadMgr, timestamp) {
   return events;
 }
 
-function wait_for_next_frame(t0, t1) {
-  const elapsed = (t1 - t0) / 1000;
-  const period = 1 / FPS;
-  const used = elapsed % period;
-  const delay = period - used;
-  waited += delay;
-  gHost.suspend(delay);
-}
-
 function report_events(events, loadMgr) {
-  let ended = false;
   if (events & loadMgr.LOAD_ENDED) {
     print(`${loadMgr.lastActive.name} ended`);
-    ended = true;
   }
   if (events & loadMgr.LOAD_STARTED) {
     print(`${loadMgr.activeLoad().name} starting`);
   }
-  return ended;
 }
 
-function run(loads) {
+function run(opts, loads) {
   const sequence = [];
   for (const mut of loads) {
     if (tests.has(mut)) {
@@ -72,6 +61,12 @@ function run(loads) {
   const perf = new FrameHistory(gNumSamples);
 
   loadMgr.startCycle(sequence);
+  const schedulerCtors = {
+    keepup: OptimizeForFrameRate,
+    vsync: VsyncScheduler,
+  };
+  const scheduler = new schedulerCtors[opts.sched](gPerf);
+
   perf.start();
 
   const t0 = gHost.now();
@@ -80,18 +75,22 @@ function run(loads) {
   let frames = 0;
   while (loadMgr.load_running()) {
     const timestamp = gHost.now();
+    const events = scheduler.tick(loadMgr, timestamp);
+    const after_tick = gHost.now();
+
     perf.on_frame(timestamp);
-    const events = tick(loadMgr, timestamp);
+
+    report_events(events, loadMgr);
+
     frames++;
     gPerf.handle_tick_events(events, loadMgr, timestamp, gHost.now());
-    if (report_events(events, loadMgr)) {
+    if (events & loadMgr.LOAD_ENDED) {
       possible += (loadMgr.testDurationMS / 1000) * FPS;
-      print(
-        `  observed ${frames} / ${possible} frames in ${(gHost.now() - t0) /
-          1000} seconds`
-      );
+      const elapsed = ((after_tick - t0) / 1000).toFixed(2);
+      print(`  observed ${frames} / ${possible} frames in ${elapsed} seconds`);
     }
-    wait_for_next_frame(t0, gHost.now());
+
+    scheduler.wait_for_next_frame(t0, timestamp, after_tick);
   }
 }
 
@@ -124,3 +123,10 @@ function report_results() {
 `);
   }
 }
+
+var argparse = new ArgParser("JS shell microbenchmark runner");
+argparse.add_argument("--sched", {
+  default: "keepup",
+  options: ["keepup", "vsync"],
+  help: "frame scheduler"
+});
