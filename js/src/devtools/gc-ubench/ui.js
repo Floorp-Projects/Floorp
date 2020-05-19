@@ -11,7 +11,7 @@ var stroke = {
 var numSamples = 500;
 
 var gHistogram = new Map(); // {ms: count}
-var gPerf = new FrameHistory(numSamples);
+var gHistory = new FrameHistory(numSamples);
 
 var latencyGraph;
 var memoryGraph;
@@ -195,9 +195,9 @@ var LatencyGraph = class extends Graph {
       worstpos = 0;
     ctx.beginPath();
     for (let i = 0; i < numSamples; i++) {
-      ctx.lineTo(this.xpos(i), this.ypos(gPerf.delays[i]));
-      if (gPerf.delays[i] >= worst) {
-        worst = gPerf.delays[i];
+      ctx.lineTo(this.xpos(i), this.ypos(gHistory.delays[i]));
+      if (gHistory.delays[i] >= worst) {
+        worst = gHistory.delays[i];
         worstpos = i;
       }
     }
@@ -208,14 +208,14 @@ var LatencyGraph = class extends Graph {
       ctx.strokeStyle = stroke.gcslice;
       let idx = sampleIndex % numSamples;
       const count = {
-        major: gPerf.majorGCs[idx],
+        major: gHistory.majorGCs[idx],
         minor: 0,
-        slice: gPerf.slices[idx],
+        slice: gHistory.slices[idx],
       };
       for (let i = 0; i < numSamples; i++) {
         idx = (sampleIndex + i) % numSamples;
-        const isMajorStart = count.major < gPerf.majorGCs[idx];
-        if (count.slice < gPerf.slices[idx]) {
+        const isMajorStart = count.major < gHistory.majorGCs[idx];
+        if (count.slice < gHistory.slices[idx]) {
           if (isMajorStart) {
             ctx.strokeStyle = stroke.initialMajor;
           }
@@ -227,22 +227,22 @@ var LatencyGraph = class extends Graph {
             ctx.strokeStyle = stroke.gcslice;
           }
         }
-        count.major = gPerf.majorGCs[idx];
-        count.slice = gPerf.slices[idx];
+        count.major = gHistory.majorGCs[idx];
+        count.slice = gHistory.slices[idx];
       }
 
       ctx.strokeStyle = stroke.minor;
       idx = sampleIndex % numSamples;
-      count.minor = gPerf.minorGCs[idx];
+      count.minor = gHistory.minorGCs[idx];
       for (let i = 0; i < numSamples; i++) {
         idx = (sampleIndex + i) % numSamples;
-        if (count.minor < gPerf.minorGCs[idx]) {
+        if (count.minor < gHistory.minorGCs[idx]) {
           ctx.beginPath();
           ctx.moveTo(this.xpos(idx), 0);
           ctx.lineTo(this.xpos(idx), 20);
           ctx.stroke();
         }
-        count.minor = gPerf.minorGCs[idx];
+        count.minor = gHistory.minorGCs[idx];
       }
     }
 
@@ -260,7 +260,7 @@ var LatencyGraph = class extends Graph {
     var where = sampleIndex % numSamples;
     ctx.arc(
       this.xpos(where),
-      this.ypos(gPerf.delays[where]),
+      this.ypos(gHistory.delays[where]),
       5,
       0,
       Math.PI * 2,
@@ -315,12 +315,12 @@ var MemoryGraph = class extends Graph {
     var worst = 0,
       worstpos = 0;
     for (let i = 0; i < numSamples; i++) {
-      if (gPerf.gcBytes[i] >= worst) {
-        worst = gPerf.gcBytes[i];
+      if (gHistory.gcBytes[i] >= worst) {
+        worst = gHistory.gcBytes[i];
         worstpos = i;
       }
-      if (gPerf.gcBytes[i] < this.bestEver) {
-        this.bestEver = gPerf.gcBytes[i];
+      if (gHistory.gcBytes[i] < this.bestEver) {
+        this.bestEver = gHistory.gcBytes[i];
       }
     }
 
@@ -358,7 +358,7 @@ var MemoryGraph = class extends Graph {
     var where = sampleIndex % numSamples;
     ctx.arc(
       this.xpos(where),
-      this.ypos(gPerf.gcBytes[where]),
+      this.ypos(gHistory.gcBytes[where]),
       5,
       0,
       Math.PI * 2,
@@ -369,9 +369,9 @@ var MemoryGraph = class extends Graph {
     ctx.beginPath();
     for (let i = 0; i < numSamples; i++) {
       if (i == (sampleIndex + 1) % numSamples) {
-        ctx.moveTo(this.xpos(i), this.ypos(gPerf.gcBytes[i]));
+        ctx.moveTo(this.xpos(i), this.ypos(gHistory.gcBytes[i]));
       } else {
-        ctx.lineTo(this.xpos(i), this.ypos(gPerf.gcBytes[i]));
+        ctx.lineTo(this.xpos(i), this.ypos(gHistory.gcBytes[i]));
       }
       if (i == where) {
         ctx.stroke();
@@ -387,9 +387,9 @@ function onUpdateDisplayChanged() {
   const do_graph = document.getElementById("do-graph");
   if (do_graph.checked) {
     window.requestAnimationFrame(handler);
-    gPerf.resume();
+    gHistory.resume();
   } else {
-    gPerf.pause();
+    gHistory.pause();
   }
   update_load_state_indicator();
 }
@@ -403,7 +403,7 @@ function onDoLoadChange() {
 
 var previous = 0;
 function handler(timestamp) {
-  if (gPerf.is_stopped()) {
+  if (gHistory.is_stopped()) {
     return;
   }
 
@@ -421,7 +421,7 @@ function handler(timestamp) {
       (gLoadMgr.currentLoadRemaining(timestamp) / 1000).toFixed(1) + " sec";
   }
 
-  const delay = gPerf.on_frame(timestamp);
+  const delay = gHistory.on_frame(timestamp);
 
   update_histogram(gHistogram, delay);
 
@@ -461,7 +461,7 @@ function summarize(arr) {
 }
 
 function reset_draw_state() {
-  gPerf.reset();
+  gHistory.reset();
 }
 
 function onunload() {
@@ -526,7 +526,7 @@ function onload() {
   trackHeapSizes(document.getElementById("track-sizes").checked);
 
   update_load_state_indicator();
-  gPerf.start();
+  gHistory.start();
 
   // Start drawing.
   reset_draw_state();
@@ -555,7 +555,7 @@ function update_load_state_indicator() {
     gLoadMgr.activeLoad().name == "noAllocation"
   ) {
     loadState = "(none)";
-  } else if (gPerf.is_stopped() || gLoadMgr.paused) {
+  } else if (gHistory.is_stopped() || gLoadMgr.paused) {
     loadState = "(inactive)";
   } else {
     loadState = "(active)";

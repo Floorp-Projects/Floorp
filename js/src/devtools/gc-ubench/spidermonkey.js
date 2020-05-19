@@ -42,7 +42,16 @@ var SpiderMonkey = class extends Host {
     haveGCCounts: true,
   };
 };
+
 var gHost = new SpiderMonkey();
 
 run(scriptArgs);
 print(`Waited total of ${waited} seconds`);
+print("\nTest results:\n");
+report_results();
+
+var outfile = "spidermonkey-results.json";
+var origOut = redirect(outfile);
+print(JSON.stringify(gPerf.results));
+redirect(origOut);
+print(`Wrote detailed results to ${outfile}`);

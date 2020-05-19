@@ -60,6 +60,10 @@ var Host = class {
   };
 };
 
+function percent(x) {
+  return `${(x*100).toFixed(2)}%`;
+}
+
 function parse_units(v) {
   if (!v.length) {
     return NaN;

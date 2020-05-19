@@ -13,6 +13,8 @@ loadRelativeToScript("harness.js");
 loadRelativeToScript("perf.js");
 loadRelativeToScript("test_list.js");
 
+var gPerf = new PerfTracker();
+
 var tests = new Map();
 foreach_test_file(f => loadRelativeToScript(f));
 for (const [name, info] of tests.entries()) {
@@ -22,9 +24,11 @@ for (const [name, info] of tests.entries()) {
 }
 
 function tick(loadMgr, timestamp) {
+  gPerf.before_mutator(timestamp);
   gHost.start_turn();
   const events = loadMgr.tick(timestamp);
   gHost.end_turn();
+  gPerf.after_mutator(timestamp);
   return events;
 }
 
@@ -79,6 +83,7 @@ function run(loads) {
     perf.on_frame(timestamp);
     const events = tick(loadMgr, timestamp);
     frames++;
+    gPerf.handle_tick_events(events, loadMgr, timestamp, gHost.now());
     if (report_events(events, loadMgr)) {
       possible += (loadMgr.testDurationMS / 1000) * FPS;
       print(
@@ -87,5 +92,35 @@ function run(loads) {
       );
     }
     wait_for_next_frame(t0, gHost.now());
+  }
+}
+
+function report_results() {
+  for (const result of gPerf.results) {
+    const {
+      load,
+      elapsed_time,
+      mutating,
+      mutating_and_gc_fraction,
+      suspended,
+      full_time,
+      frames,
+      dropped_60fps_frames,
+      dropped_60fps_fraction,
+      minorGCs,
+      majorGCs,
+    } = result;
+
+    const drop_pct = percent(dropped_60fps_fraction);
+    const mut_pct = percent(mutating_and_gc_fraction);
+    const mut_sec = mutating.toFixed(2);
+    const full_sec = full_time.toFixed(2);
+    const susp_sec = suspended.toFixed(2);
+    print(`${load.name}:
+  ${frames} (60fps) frames seen out of expected ${Math.floor(full_time * 60)}
+  ${dropped_60fps_frames} = ${drop_pct} 60fps frames dropped
+  ${mut_pct} of run spent mutating and GCing (${mut_sec}sec out of ${full_sec}sec vs ${susp_sec} sec waiting)
+  ${minorGCs} minor GCs, ${majorGCs} major GCs
+`);
   }
 }
