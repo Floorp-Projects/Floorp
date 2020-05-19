@@ -1376,14 +1376,21 @@ function defineAddonWrapperProperty(name, getter) {
   });
 });
 
-["installDate", "updateDate", "signedDate"].forEach(function(aProp) {
+["installDate", "updateDate"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
-    if (addon[aProp]) {
-      return new Date(addon[aProp]);
-    }
-    return null;
+    // installDate is always set, updateDate is sometimes missing.
+    return new Date(addon[aProp] ?? addon.installDate);
   });
+});
+
+defineAddonWrapperProperty("signedDate", function() {
+  let addon = addonFor(this);
+  let { signedDate } = addon;
+  if (signedDate != null) {
+    return new Date(signedDate);
+  }
+  return null;
 });
 
 ["sourceURI", "releaseNotesURI"].forEach(function(aProp) {
