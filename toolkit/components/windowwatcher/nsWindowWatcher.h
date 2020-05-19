@@ -105,10 +105,6 @@ class nsWindowWatcher : public nsIWindowWatcher,
       nsIDocShellTreeOwner* aTreeOwner, mozIDOMWindowProxy* aParent,
       bool aIsCallerChrome, const SizeSpec& aSizeSpec,
       const mozilla::Maybe<float>& aOpenerFullZoom = mozilla::Nothing());
-  static void GetWindowTreeItem(mozIDOMWindowProxy* aWindow,
-                                nsIDocShellTreeItem** aResult);
-  static void GetWindowTreeOwner(nsPIDOMWindowOuter* aWindow,
-                                 nsIDocShellTreeOwner** aResult);
 
  private:
   nsresult CreateChromeWindow(nsIWebBrowserChrome* aParentChrome,
