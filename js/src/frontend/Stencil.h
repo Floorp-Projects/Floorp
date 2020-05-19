@@ -327,12 +327,12 @@ class EmptyGlobalScopeType {};
 // The lazy closed-over-binding info is represented by these types that will
 // convert to a GCCellPtr(nullptr), GCCellPtr(JSAtom*).
 class NullScriptThing {};
-using ClosedOverBinding = JSAtom*;
+using ScriptAtom = JSAtom*;
 
 // These types all end up being baked into GC things as part of stencil
 // instantiation.
 using ScriptThingVariant =
-    mozilla::Variant<ClosedOverBinding, NullScriptThing, BigIntIndex,
+    mozilla::Variant<ScriptAtom, NullScriptThing, BigIntIndex,
                      ObjLiteralCreationData, RegExpIndex, ScopeIndex,
                      FunctionIndex, EmptyGlobalScopeType>;
 

@@ -534,6 +534,18 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
   MOZ_TRY(xdr->codeEnum32(&kind));
 
   switch (kind) {
+    case JS::TraceKind::String: {
+      RootedAtom atom(cx);
+      if (mode == XDR_ENCODE) {
+        atom = &thingp->as<JSString>().asAtom();
+      }
+      MOZ_TRY(XDRAtom(xdr, &atom));
+      if (mode == XDR_DECODE) {
+        *thingp = JS::GCCellPtr(atom.get());
+      }
+      break;
+    }
+
     case JS::TraceKind::Object: {
       RootedObject obj(cx);
       if (mode == XDR_ENCODE) {
@@ -4787,6 +4799,14 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
         }
       }
       scopeIndex++;
+    } else if (gcThing.is<JSString>()) {
+      JSAtom* atom = &gcThing.as<JSString>().asAtom();
+      if (cx->zone() != atom->zone()) {
+        cx->markAtom(atom);
+      }
+      if (!gcThings.append(JS::GCCellPtr(atom))) {
+        return false;
+      }
     } else {
       bigint = &gcThing.as<BigInt>();
       BigInt* clone = bigint;

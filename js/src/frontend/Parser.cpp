@@ -1795,7 +1795,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   for (const FunctionIndex& index : pc_->innerFunctionIndexesForLazy) {
     gcthings.infallibleAppend(AsVariant(index));
   }
-  for (const ClosedOverBinding& binding : pc_->closedOverBindingsForLazy()) {
+  for (const ScriptAtom& binding : pc_->closedOverBindingsForLazy()) {
     if (binding) {
       gcthings.infallibleAppend(AsVariant(binding));
     } else {
