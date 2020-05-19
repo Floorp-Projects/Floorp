@@ -126,6 +126,7 @@ UNIFIED_SOURCES += [
     'AndroidUiThread.cpp',
     'EventDispatcher.cpp',
     'GeckoEditableSupport.cpp',
+    'GeckoProcessManager.cpp',
     'GfxInfo.cpp',
     'ImageDecoderSupport.cpp',
     'nsAndroidProtocolHandler.cpp',
