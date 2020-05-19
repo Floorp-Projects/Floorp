@@ -15,6 +15,9 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.Action
 
@@ -38,4 +41,39 @@ internal object BrowserStateReducer {
             is MediaAction -> MediaReducer.reduce(state, action)
         }
     }
+}
+
+/**
+ * Finds the corresponding tab in the [BrowserState] and replaces it using [update].
+ * @param tabId ID of the tab to change.
+ * @param update Returns a new version of the tab state. Must be the same class,
+ * preferably using [SessionState.createCopy].
+ */
+@Suppress("Unchecked_Cast")
+internal fun BrowserState.updateTabState(
+    tabId: String,
+    update: (SessionState) -> SessionState
+): BrowserState {
+    val newTabs = tabs.updateTabs(tabId, update) as List<TabSessionState>?
+    if (newTabs != null) return copy(tabs = newTabs)
+
+    val newCustomTabs = customTabs.updateTabs(tabId, update) as List<CustomTabSessionState>?
+    if (newCustomTabs != null) return copy(customTabs = newCustomTabs)
+
+    return this
+}
+
+/**
+ * Finds the corresponding tab in the list and replaces it using [update].
+ * @param tabId ID of the tab to change.
+ * @param update Returns a new version of the tab state.
+ */
+internal fun <T : SessionState> List<T>.updateTabs(
+    tabId: String,
+    update: (T) -> T
+): List<T>? {
+    val tabIndex = indexOfFirst { it.id == tabId }
+    if (tabIndex == -1) return null
+
+    return subList(0, tabIndex) + update(get(tabIndex)) + subList(tabIndex + 1, size)
 }

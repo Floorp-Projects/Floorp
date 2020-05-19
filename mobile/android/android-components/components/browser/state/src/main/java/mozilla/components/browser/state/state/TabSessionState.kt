@@ -31,7 +31,24 @@ data class TabSessionState(
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
     val readerState: ReaderState = ReaderState(),
     override val contextId: String? = null
-) : SessionState
+) : SessionState {
+
+    override fun createCopy(
+        id: String,
+        content: ContentState,
+        trackingProtection: TrackingProtectionState,
+        engineState: EngineState,
+        extensionState: Map<String, WebExtensionState>,
+        contextId: String?
+    ) = copy(
+        id = id,
+        content = content,
+        trackingProtection = trackingProtection,
+        engineState = engineState,
+        extensionState = extensionState,
+        contextId = contextId
+    )
+}
 
 /**
  * Convenient function for creating a tab.

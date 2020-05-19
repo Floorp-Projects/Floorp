@@ -45,12 +45,8 @@ private fun BrowserState.copyWithReaderState(
     update: (ReaderState) -> ReaderState
 ): BrowserState {
     return copy(
-        tabs = tabs.map { current ->
-            if (current.id == tabId) {
-                current.copy(readerState = update.invoke(current.readerState))
-            } else {
-                current
-            }
-        }
+        tabs = tabs.updateTabs(tabId) { current ->
+            current.copy(readerState = update.invoke(current.readerState))
+        } ?: tabs
     )
 }
