@@ -32,6 +32,11 @@ import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.OnFilterListener
 import kotlin.coroutines.CoroutineContext
 
+// This is used for truncating URLs to prevent extreme cases from
+// slowing down UI rendering e.g. in case of a bookmarklet or a data URI.
+// https://github.com/mozilla-mobile/android-components/issues/5249
+const val MAX_URI_LENGTH = 25000
+
 /**
  * A customizable toolbar for browsers.
  *
@@ -99,7 +104,7 @@ class BrowserToolbar @JvmOverloads constructor(
             // We update the display toolbar immediately. We do not do that for the edit toolbar to not
             // mess with what the user is entering. Instead we will remember the value and update the
             // edit toolbar whenever we switch to it.
-            display.url = value
+            display.url = value.take(MAX_URI_LENGTH)
         }
 
     override var siteSecure: Toolbar.SiteSecurity
