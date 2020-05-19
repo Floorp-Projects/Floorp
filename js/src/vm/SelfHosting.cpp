@@ -24,6 +24,7 @@
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/Collator.h"
 #  include "builtin/intl/DateTimeFormat.h"
+#  include "builtin/intl/DisplayNames.h"
 #  include "builtin/intl/IntlObject.h"
 #  include "builtin/intl/ListFormat.h"
 #  include "builtin/intl/Locale.h"
@@ -2412,6 +2413,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("GuardToDateTimeFormat",
                     intrinsic_GuardToBuiltin<DateTimeFormatObject>, 1, 0,
                     IntlGuardToDateTimeFormat),
+    JS_INLINABLE_FN("GuardToDisplayNames",
+                    intrinsic_GuardToBuiltin<DisplayNamesObject>, 1, 0,
+                    IntlGuardToDisplayNames),
     JS_INLINABLE_FN("GuardToListFormat",
                     intrinsic_GuardToBuiltin<ListFormatObject>, 1, 0,
                     IntlGuardToListFormat),
@@ -2434,6 +2438,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<CollatorObject>>, 2, 0),
     JS_FN("CallDateTimeFormatMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<DateTimeFormatObject>>, 2, 0),
+    JS_FN("CallDisplayNamesMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<DisplayNamesObject>>, 2, 0),
     JS_FN("CallListFormatMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<ListFormatObject>>, 2, 0),
     JS_FN("CallNumberFormatMethodIfWrapped",

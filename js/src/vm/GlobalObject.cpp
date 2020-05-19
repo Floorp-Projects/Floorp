@@ -18,6 +18,7 @@
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/Collator.h"
 #  include "builtin/intl/DateTimeFormat.h"
+#  include "builtin/intl/DisplayNames.h"
 #  include "builtin/intl/ListFormat.h"
 #  include "builtin/intl/Locale.h"
 #  include "builtin/intl/NumberFormat.h"
@@ -170,6 +171,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_Intl:
     case JSProto_Collator:
     case JSProto_DateTimeFormat:
+    case JSProto_DisplayNames:
     case JSProto_Locale:
     case JSProto_ListFormat:
     case JSProto_NumberFormat:
