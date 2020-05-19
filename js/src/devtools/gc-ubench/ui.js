@@ -245,10 +245,10 @@ LatencyGraph.prototype.draw = function() {
 
 function MemoryGraph(ctx) {
   Graph.call(this, ctx);
-  this.worstEver = this.bestEver = performance.mozMemory.zone.gcBytes;
+  this.worstEver = this.bestEver = performance.mozMemory.gc.zone.gcBytes;
   this.limit = Math.max(
     this.worstEver,
-    performance.mozMemory.zone.gcAllocTrigger
+    performance.mozMemory.gc.zone.gcAllocTrigger
   );
 }
 
@@ -311,7 +311,7 @@ MemoryGraph.prototype.draw = function() {
     this.worstEver = worst;
     this.limit = Math.max(
       this.worstEver,
-      performance.mozMemory.zone.gcAllocTrigger
+      performance.mozMemory.gc.zone.gcAllocTrigger
     );
   }
 
@@ -322,8 +322,8 @@ MemoryGraph.prototype.draw = function() {
     "#cc1111"
   );
   this.drawHBar(
-    performance.mozMemory.zone.gcAllocTrigger,
-    `${format_bytes(performance.mozMemory.zone.gcAllocTrigger)} trigger`,
+    performance.mozMemory.gc.zone.gcAllocTrigger,
+    `${format_bytes(performance.mozMemory.gc.zone.gcAllocTrigger)} trigger`,
     "#cc11cc"
   );
 
@@ -500,7 +500,7 @@ function onload() {
   var canvas = document.getElementById("graph");
   latencyGraph = new LatencyGraph(canvas.getContext("2d"));
 
-  if (!performance.mozMemory) {
+  if (!performance.mozMemory || !performance.mozMemory.gc) {
     document.getElementById("memgraph-disabled").style.display = "block";
     document.getElementById("track-sizes-div").style.display = "none";
   }
