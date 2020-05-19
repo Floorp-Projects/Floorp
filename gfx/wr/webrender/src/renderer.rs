@@ -39,7 +39,7 @@ use api::{DocumentId, Epoch, ExternalImageHandler, ExternalImageId};
 use api::{ExternalImageSource, ExternalImageType, FontRenderMode, FrameMsg, ImageFormat};
 use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest, OutputImageHandler};
 use api::{DebugCommand, MemoryReport, VoidPtrToSizeFn, PremultipliedColorF};
-use api::{RenderApiSender, RenderNotifier, TextureTarget};
+use api::{RenderApiSender, RenderNotifier, TextureTarget, SharedFontInstanceMap};
 #[cfg(feature = "replay")]
 use api::ExternalImage;
 use api::units::*;
@@ -2455,6 +2455,8 @@ impl Renderer {
         let namespace_alloc_by_client = options.namespace_alloc_by_client;
         let max_glyph_cache_size = options.max_glyph_cache_size.unwrap_or(GlyphCache::DEFAULT_MAX_BYTES_USED);
 
+        let font_instances = SharedFontInstanceMap::new();
+
         let blob_image_handler = options.blob_image_handler.take();
         let thread_listener_for_render_backend = thread_listener.clone();
         let thread_listener_for_scene_builder = thread_listener.clone();
@@ -2468,6 +2470,8 @@ impl Renderer {
         let (scene_builder_channels, scene_tx, scene_rx) =
             SceneBuilderThreadChannels::new(api_tx.clone());
 
+        let sb_font_instances = font_instances.clone();
+
         thread::Builder::new().name(scene_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(scene_thread_name.clone());
             if let Some(ref thread_listener) = *thread_listener_for_scene_builder {
@@ -2477,6 +2481,7 @@ impl Renderer {
             let mut scene_builder = SceneBuilderThread::new(
                 config,
                 device_pixel_ratio,
+                sb_font_instances,
                 make_size_of_ops(),
                 scene_builder_hooks,
                 scene_builder_channels,
@@ -2515,6 +2520,7 @@ impl Renderer {
             scene_tx.clone()
         };
 
+        let rb_font_instances = font_instances.clone();
         let enable_multithreading = options.enable_multithreading;
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(rb_thread_name.clone());
@@ -2542,6 +2548,7 @@ impl Renderer {
                 glyph_rasterizer,
                 glyph_cache,
                 blob_image_handler,
+                rb_font_instances,
             );
 
             resource_cache.enable_multithreading(enable_multithreading);
@@ -2666,7 +2673,7 @@ impl Renderer {
         // to ensure any potential transition when enabling a flag is run.
         renderer.set_debug_flags(debug_flags);
 
-        let sender = RenderApiSender::new(api_tx);
+        let sender = RenderApiSender::new(api_tx, font_instances);
         Ok((renderer, sender))
     }
 

@@ -409,7 +409,6 @@ impl ImageResult {
 
 type ImageCache = ResourceClassCache<ImageKey, ImageResult, ()>;
 
-#[derive(Default)]
 struct Resources {
     font_templates: FastHashMap<FontKey, FontTemplate>,
     font_instances: SharedFontInstanceMap,
@@ -482,12 +481,17 @@ impl ResourceCache {
         glyph_rasterizer: GlyphRasterizer,
         cached_glyphs: GlyphCache,
         blob_image_handler: Option<Box<dyn BlobImageHandler>>,
+        font_instances: SharedFontInstanceMap,
     ) -> Self {
         ResourceCache {
             cached_glyphs,
             cached_images: ResourceClassCache::new(),
             cached_render_tasks: RenderTaskCache::new(),
-            resources: Resources::default(),
+            resources: Resources {
+                font_instances,
+                font_templates: FastHashMap::default(),
+                image_templates: ImageTemplates::default(),
+            },
             cached_glyph_dimensions: FastHashMap::default(),
             texture_cache,
             state: State::Idle,

@@ -54,7 +54,7 @@ pub struct BaseFontInstance {
 
 pub type FontInstanceMap = HashMap<FontInstanceKey, Arc<BaseFontInstance>>;
 /// A map of font instance data accessed concurrently from multiple threads.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct SharedFontInstanceMap {
