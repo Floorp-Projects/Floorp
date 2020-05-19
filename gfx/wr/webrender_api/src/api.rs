@@ -15,10 +15,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::u32;
 use std::sync::mpsc::{Sender, Receiver, channel};
+use time::precise_time_ns;
 // local imports
 use crate::{display_item as di, font};
 use crate::color::{ColorU, ColorF};
-use crate::display_list::{BuiltDisplayList, BuiltDisplayListDescriptor};
+use crate::display_list::BuiltDisplayList;
 use crate::image::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey};
 use crate::image::DEFAULT_TILE_SIZE;
 use crate::units::*;
@@ -249,19 +250,18 @@ impl Transaction {
         epoch: Epoch,
         background: Option<ColorF>,
         viewport_size: LayoutSize,
-        (pipeline_id, content_size, display_list): (PipelineId, LayoutSize, BuiltDisplayList),
+        (pipeline_id, content_size, mut display_list): (PipelineId, LayoutSize, BuiltDisplayList),
         preserve_frame_state: bool,
     ) {
-        let (list_data, list_descriptor) = display_list.into_data();
+        display_list.set_send_time_ns(precise_time_ns());
         self.scene_ops.push(
             SceneMsg::SetDisplayList {
+                display_list,
                 epoch,
                 pipeline_id,
                 background,
                 viewport_size,
                 content_size,
-                list_descriptor,
-                list_data,
                 preserve_frame_state,
             }
         );
@@ -803,9 +803,7 @@ pub enum SceneMsg {
     ///
     SetDisplayList {
         ///
-        list_descriptor: BuiltDisplayListDescriptor,
-        /// The serialized display list.
-        list_data: Vec<u8>,
+        display_list: BuiltDisplayList,
         ///
         epoch: Epoch,
         ///
