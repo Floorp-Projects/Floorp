@@ -112,6 +112,9 @@ nsresult AsyncScriptCompiler::Start(
                      nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // allow deprecated HTTP request from SystemPrincipal
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  loadInfo->SetAllowDeprecatedSystemRequests(true);
   nsCOMPtr<nsIIncrementalStreamLoader> loader;
   rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), this);
   NS_ENSURE_SUCCESS(rv, rv);
