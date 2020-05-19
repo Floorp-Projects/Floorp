@@ -494,37 +494,6 @@ class Localization {
     return val;
   }
 
-  /**
-   * Register weak observers on events that will trigger cache invalidation
-   */
-  registerObservers() {
-    Services.obs.addObserver(this, "intl:app-locales-changed", true);
-    Services.prefs.addObserver("intl.l10n.pseudo", this, true);
-  }
-
-  /**
-   * Default observer handler method.
-   *
-   * @param {String} subject
-   * @param {String} topic
-   * @param {Object} data
-   */
-  observe(subject, topic, data) {
-    switch (topic) {
-      case "intl:app-locales-changed":
-        this.onChange();
-        break;
-      case "nsPref:changed":
-        switch (data) {
-          case "intl.l10n.pseudo":
-            this.onChange();
-        }
-        break;
-      default:
-        break;
-    }
-  }
-
   onChange() {
     if (this.bundles) {
       this.regenerateBundles(false);
