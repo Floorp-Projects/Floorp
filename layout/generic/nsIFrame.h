@@ -1652,7 +1652,7 @@ class nsIFrame : public nsQueryFrame {
   /**
    * Returns the child lists for this frame.
    */
-  AutoTArray<ChildList, 4> GetChildLists() const {
+  AutoTArray<ChildList, 4> ChildLists() const {
     AutoTArray<ChildList, 4> childLists;
     GetChildLists(&childLists);
     return childLists;

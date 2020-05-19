@@ -200,7 +200,7 @@ void nsDeckFrame::Animate(nsIFrame* aParentBox, bool start) {
       imgFrame->StopAnimation();
   }
 
-  for (const auto& childList : aParentBox->GetChildLists()) {
+  for (const auto& childList : aParentBox->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       Animate(child, start);
     }

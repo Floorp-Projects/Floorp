@@ -365,7 +365,7 @@ bool nsIFrame::CheckAndClearPaintedState() {
   bool result = (GetStateBits() & NS_FRAME_PAINTED_THEBES);
   RemoveStateBits(NS_FRAME_PAINTED_THEBES);
 
-  for (const auto& childList : GetChildLists()) {
+  for (const auto& childList : ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       if (child->CheckAndClearPaintedState()) {
         result = true;
@@ -379,7 +379,7 @@ bool nsIFrame::CheckAndClearDisplayListState() {
   bool result = BuiltDisplayList();
   SetBuiltDisplayList(false);
 
-  for (const auto& childList : GetChildLists()) {
+  for (const auto& childList : ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       if (child->CheckAndClearDisplayListState()) {
         result = true;
@@ -1459,7 +1459,7 @@ void nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
     aViewManager->InsertChild(aNewParentView, view, insertBefore,
                               insertBefore != nullptr);
   } else if (GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW) {
-    for (const auto& childList : GetChildLists()) {
+    for (const auto& childList : ChildLists()) {
       // Iterate the child frames, and check each child frame to see if it has
       // a view
       for (nsIFrame* child : childList.mList) {
@@ -5798,7 +5798,7 @@ void nsIFrame::MarkSubtreeDirty() {
   // - TableColGroup
   // - XULBox
   AutoTArray<nsIFrame*, 32> stack;
-  for (const auto& childLists : GetChildLists()) {
+  for (const auto& childLists : ChildLists()) {
     for (nsIFrame* kid : childLists.mList) {
       stack.AppendElement(kid);
     }
@@ -5812,7 +5812,7 @@ void nsIFrame::MarkSubtreeDirty() {
 
     f->AddStateBits(NS_FRAME_IS_DIRTY);
 
-    for (const auto& childLists : f->GetChildLists()) {
+    for (const auto& childLists : f->ChildLists()) {
       for (nsIFrame* kid : childLists.mList) {
         stack.AppendElement(kid);
       }
@@ -6763,7 +6763,7 @@ nsRect nsContainerFrame::ComputeSimpleTightBounds(
   }
 
   nsRect r(0, 0, 0, 0);
-  for (const auto& childLists : nsIFrame::GetChildLists()) {
+  for (const auto& childLists : nsIFrame::ChildLists()) {
     for (nsIFrame* child : childLists.mList) {
       r.UnionRect(
           r, child->ComputeTightBounds(aDrawTarget) + child->GetPosition());
@@ -9627,7 +9627,7 @@ static nsRect UnionBorderBoxes(
       nsIFrame::kPopupList,    nsIFrame::kSelectPopupList,
       nsIFrame::kAbsoluteList, nsIFrame::kFixedList,
       nsIFrame::kFloatList,    nsIFrame::kOverflowList};
-  for (const auto& [list, listID] : aFrame->GetChildLists()) {
+  for (const auto& [list, listID] : aFrame->ChildLists()) {
     if (skip.contains(listID)) {
       continue;
     }
@@ -9975,7 +9975,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
 void nsIFrame::RecomputePerspectiveChildrenOverflow(
     const nsIFrame* aStartFrame) {
-  for (const auto& childList : GetChildLists()) {
+  for (const auto& childList : ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       if (!child->FrameMaintainsOverflow()) {
         continue;  // frame does not maintain overflow rects
@@ -10014,7 +10014,7 @@ void nsIFrame::ComputePreserve3DChildrenOverflow(
 
   nsRect childVisual;
   nsRect childScrollable;
-  for (const auto& childList : GetChildLists()) {
+  for (const auto& childList : ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       // If this child participates in the 3d context, then take the
       // pre-transform region (which contains all descendants that aren't
@@ -11456,7 +11456,7 @@ void nsIFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aSizes) const {
     }
   }
 
-  for (const auto& childList : GetChildLists()) {
+  for (const auto& childList : ChildLists()) {
     for (const nsIFrame* f : childList.mList) {
       f->AddSizeOfExcludingThisForTree(aSizes);
     }
@@ -11624,7 +11624,7 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
 
 // Returns true if we can guarantee there is no visible descendants.
 static bool HasNoVisibleDescendants(const nsIFrame* aFrame) {
-  for (const auto& childList : aFrame->GetChildLists()) {
+  for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* f : childList.mList) {
       if (nsPlaceholderFrame::GetRealFrameFor(f)
               ->IsVisibleOrMayHaveVisibleDescendants()) {
