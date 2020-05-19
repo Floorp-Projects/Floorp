@@ -32,9 +32,9 @@ class Localization : public nsIObserver,
                                                          nsIObserver)
   NS_DECL_NSIOBSERVER
 
-  explicit Localization(nsIGlobalObject* aGlobal);
-  void Activate(const bool aSync, const bool aEager,
-                const BundleGenerator& aBundleGenerator);
+  Localization(nsIGlobalObject* aGlobal, const bool aSync,
+               const BundleGenerator& aBundleGenerator);
+  void Activate(const bool aEager);
 
   void Destroy();
 
