@@ -67,6 +67,7 @@
 #include "nsRFPService.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
+#include "nsICookieManager.h"
 #include "nsICookieService.h"
 #include "nsIHttpChannel.h"
 #include "nsStreamUtils.h"
@@ -507,7 +508,7 @@ StorageManager* Navigator::Storage() {
 }
 
 bool Navigator::CookieEnabled() {
-  bool cookieEnabled = (StaticPrefs::network_cookie_cookieBehavior() !=
+  bool cookieEnabled = (nsICookieManager::GetCookieBehavior() !=
                         nsICookieService::BEHAVIOR_REJECT);
 
   // Check whether an exception overrides the global cookie behavior
