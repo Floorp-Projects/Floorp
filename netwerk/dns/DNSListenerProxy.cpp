@@ -10,26 +10,27 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(DNSListenerProxy, nsIDNSListener, nsIDNSListenerProxy)
+NS_IMPL_ADDREF(DNSListenerProxy)
+NS_IMPL_RELEASE(DNSListenerProxy)
+NS_INTERFACE_MAP_BEGIN(DNSListenerProxy)
+  NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(DNSListenerProxy)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
                                    nsIDNSRecord* aRecord, nsresult aStatus) {
-  RefPtr<OnLookupCompleteRunnable> r =
-      new OnLookupCompleteRunnable(mListener, aRequest, aRecord, aStatus);
-  return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
-}
-
-NS_IMETHODIMP
-DNSListenerProxy::OnLookupCompleteRunnable::Run() {
-  mListener->OnLookupComplete(mRequest, mRecord, mStatus);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DNSListenerProxy::GetOriginalListener(nsIDNSListener** aOriginalListener) {
-  NS_IF_ADDREF(*aOriginalListener = mListener);
-  return NS_OK;
+  RefPtr<DNSListenerProxy> self = this;
+  nsCOMPtr<nsICancelable> request = aRequest;
+  nsCOMPtr<nsIDNSRecord> record = aRecord;
+  return mTargetThread->Dispatch(
+      NS_NewRunnableFunction("DNSListenerProxy::OnLookupComplete",
+                             [self, request, record, aStatus]() {
+                               Unused << self->mListener->OnLookupComplete(
+                                   request, record, aStatus);
+                               self->mListener = nullptr;
+                             }),
+      NS_DISPATCH_NORMAL);
 }
 
 }  // namespace net
