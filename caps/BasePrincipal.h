@@ -152,6 +152,9 @@ class BasePrincipal : public nsJSPrincipals {
                           bool* aRes) override;
   NS_IMETHOD GetPrefLightCacheKey(nsIURI* aURI, bool aWithCredentials,
                                   nsACString& _retval) override;
+  NS_IMETHOD HasFirstpartyStorageAccess(mozIDOMWindow* aCheckWindow,
+                                        uint32_t* aRejectedReason,
+                                        bool* aOutAllowed) override;
   NS_IMETHOD GetAsciiHost(nsACString& aAsciiHost) override;
   NS_IMETHOD GetLocalStorageQuotaKey(nsACString& aRes) override;
   NS_IMETHOD AllowsRelaxStrictFileOriginPolicy(nsIURI* aURI,
