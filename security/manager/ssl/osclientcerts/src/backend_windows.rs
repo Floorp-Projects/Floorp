@@ -4,19 +4,33 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![allow(non_camel_case_types)]
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 use pkcs11::types::*;
 use sha2::{Digest, Sha256};
 use std::convert::TryInto;
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::ops::Deref;
 use std::slice;
 use winapi::shared::bcrypt::*;
 use winapi::um::ncrypt::*;
 use winapi::um::wincrypt::*;
+use winapi::shared::minwindef::{DWORD, PBYTE};
 
 use crate::util::*;
+
+// winapi has some support for ncrypt.h, but not for this function.
+extern "system" {
+    fn NCryptSignHash(
+        hKey: NCRYPT_KEY_HANDLE,
+        pPaddingInfo: *mut c_void,
+        pbHashValue: PBYTE,
+        cbHashValue: DWORD,
+        pbSignature: PBYTE,
+        cbSignature: DWORD,
+        pcbResult: *mut DWORD,
+        dwFlags: DWORD,
+    ) -> SECURITY_STATUS;
+}
 
 /// Given a `CERT_INFO`, tries to return the bytes of the subject distinguished name as formatted by
 /// `CertNameToStrA` using the flag `CERT_SIMPLE_NAME_STR`. This is used as the label for the
