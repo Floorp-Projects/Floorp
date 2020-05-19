@@ -359,8 +359,7 @@ impl BuiltDisplayList {
         BuiltDisplayList { data, descriptor }
     }
 
-    pub fn into_data(mut self) -> (Vec<u8>, BuiltDisplayListDescriptor) {
-        self.descriptor.send_start_time = precise_time_ns();
+    pub fn into_data(self) -> (Vec<u8>, BuiltDisplayListDescriptor) {
         (self.data, self.descriptor)
     }
 
@@ -378,6 +377,10 @@ impl BuiltDisplayList {
 
     pub fn descriptor(&self) -> &BuiltDisplayListDescriptor {
         &self.descriptor
+    }
+
+    pub fn set_send_time_ns(&mut self, time: u64) {
+        self.descriptor.send_start_time = time;
     }
 
     pub fn times(&self) -> (u64, u64, u64) {
@@ -930,7 +933,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
             descriptor: BuiltDisplayListDescriptor {
                 builder_start_time: 0,
                 builder_finish_time: 1,
-                send_start_time: 0,
+                send_start_time: 1,
                 total_clip_nodes,
                 total_spatial_nodes,
                 extra_data_offset,
@@ -1950,7 +1953,7 @@ impl DisplayListBuilder {
                 descriptor: BuiltDisplayListDescriptor {
                     builder_start_time: self.builder_start_time,
                     builder_finish_time: end_time,
-                    send_start_time: 0,
+                    send_start_time: end_time,
                     total_clip_nodes: self.next_clip_index,
                     total_spatial_nodes: self.next_spatial_index,
                     cache_size: self.cache_size,
