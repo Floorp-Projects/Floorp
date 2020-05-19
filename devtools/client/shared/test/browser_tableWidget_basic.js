@@ -21,10 +21,13 @@ add_task(async function() {
       col4: "Column 4",
     },
     uniqueId: "col1",
-    emptyText: "This is dummy empty text",
+    emptyText: "dummy-text",
     highlightUpdated: true,
     removableColumns: true,
     firstColumn: "col4",
+    l10n: {
+      setAttributes: function() {},
+    },
   });
 
   startTests(doc, table);

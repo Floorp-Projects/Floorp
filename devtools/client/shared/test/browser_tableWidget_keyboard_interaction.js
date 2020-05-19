@@ -29,9 +29,12 @@ function test() {
             col4: "Column 4",
           },
           uniqueId: "col1",
-          emptyText: "This is dummy empty text",
+          emptyText: "dummy-text",
           highlightUpdated: true,
           removableColumns: true,
+          l10n: {
+            setAttributes: function() {},
+          },
         });
         startTests();
       });

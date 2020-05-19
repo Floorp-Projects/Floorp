@@ -63,7 +63,8 @@ Object.defineProperty(this, "EVENTS", {
  *                    entry in the table. Default: name.
  *        - wrapTextInElements: Don't ever use 'value' attribute on labels.
  *                              Default: false.
- *        - emptyText: text to display when no entries in the table to display.
+ *        - emptyText: Localization ID for the text to display when there are
+ *                     no entries in the table to display.
  *        - highlightUpdated: true to highlight the changed/added row.
  *        - removableColumns: Whether columns are removeable. If set to false,
  *                            the context menu in the headers will not appear.
@@ -87,6 +88,7 @@ function TableWidget(node, options = {}) {
     firstColumn,
     wrapTextInElements,
     cellContextMenuId,
+    l10n,
   } = options;
   this.emptyText = emptyText || "";
   this.uniqueId = uniqueId || "name";
@@ -95,6 +97,7 @@ function TableWidget(node, options = {}) {
   this.highlightUpdated = highlightUpdated || false;
   this.removableColumns = removableColumns !== false;
   this.cellContextMenuId = cellContextMenuId;
+  this.l10n = l10n;
 
   this.tbody = this.document.createXULElement("hbox");
   this.tbody.className = "table-widget-body theme-body";
@@ -104,10 +107,11 @@ function TableWidget(node, options = {}) {
   this.afterScroll = this.afterScroll.bind(this);
   this.tbody.addEventListener("scroll", this.onScroll.bind(this));
 
-  this.placeholder = this.document.createXULElement("label");
+  // Prepare placeholder
+  this.placeholder = this.document.createElement("div");
   this.placeholder.className = "plain table-widget-empty-text";
-  this.placeholder.setAttribute("flex", "1");
   this._parent.appendChild(this.placeholder);
+  this.setPlaceholder(this.emptyText);
 
   this.items = new Map();
   this.columns = new Map();
@@ -121,8 +125,6 @@ function TableWidget(node, options = {}) {
 
   if (initialColumns) {
     this.setColumns(initialColumns, uniqueId);
-  } else if (this.emptyText) {
-    this.setPlaceholderText(this.emptyText);
   }
 
   this.bindSelectedRow = id => {
@@ -656,10 +658,30 @@ TableWidget.prototype = {
   },
 
   /**
-   * Sets the text to be shown when the table is empty.
+   * Sets the localization ID of the description to be shown when the table is empty.
+   *
+   * @param {String} l10nID
+   *        The ID of the localization string.
+   * @param {String} learnMoreURL
+   *        A URL referring to a website with further information related to
+   *        the data shown in the table widget.
    */
-  setPlaceholderText: function(text) {
-    this.placeholder.setAttribute("value", text);
+  setPlaceholder: function(l10nID, learnMoreURL) {
+    if (learnMoreURL) {
+      let placeholderLink = this.placeholder.firstElementChild;
+      if (!placeholderLink) {
+        placeholderLink = this.document.createElement("a");
+        placeholderLink.setAttribute("target", "_blank");
+        placeholderLink.setAttribute("data-l10n-name", "learn-more-link");
+        this.placeholder.appendChild(placeholderLink);
+      }
+      placeholderLink.setAttribute("href", learnMoreURL);
+    } else {
+      // Remove link element if no learn more URL is given
+      this.placeholder.firstElementChild?.remove();
+    }
+
+    this.l10n.setAttributes(this.placeholder, l10nID);
   },
 
   /**
@@ -955,7 +977,7 @@ TableWidget.prototype = {
       column.clear();
     }
     this.tbody.setAttribute("empty", "empty");
-    this.setPlaceholderText(this.emptyText);
+    this.setPlaceholder(this.emptyText);
 
     this.selectedRow = null;
 
