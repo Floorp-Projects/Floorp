@@ -42,7 +42,6 @@ from .util import (
     memoize,
     memoized_property,
 )
-from .virtualenv import VirtualenvManager
 
 
 def ancestors(path):
@@ -273,6 +272,8 @@ class MozbuildObject(ProcessExecutionMixin):
 
     @property
     def virtualenv_manager(self):
+        from .virtualenv import VirtualenvManager
+
         if self._virtualenv_manager is None:
             name = "init"
             if six.PY3:
