@@ -21,15 +21,11 @@ namespace js::frontend {
 struct BytecodeEmitter;
 
 class BCEScriptStencil : public ScriptStencil {
-  BytecodeEmitter& bce_;
-
   void init(BytecodeEmitter& bce, UniquePtr<ImmutableScriptData> immutableData);
 
  public:
   BCEScriptStencil(BytecodeEmitter& bce,
                    UniquePtr<ImmutableScriptData> immutableData);
-
-  virtual void initAtomMap(GCPtrAtom* atoms) const override;
 };
 
 } /* namespace js::frontend */
