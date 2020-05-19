@@ -18,7 +18,7 @@ CPU_ARCH   = sparc
 
 # Purify doesn't like -MDupdate
 NOMD_OS_CFLAGS += -Wall -Wno-format -Wno-switch -DSUNOS4
-OS_CFLAGS      += $(DSO_CFLAGS) $(NOMD_OS_CFLAGS) -MDupdate $(DEPENDENCIES)
+OS_CFLAGS      += $(DSO_CFLAGS) $(NOMD_OS_CFLAGS)
 MKSHLIB         = $(LD)
 MKSHLIB        += $(DSO_LDOPTS)
 NOSUCHFILE      = /solaris-rm-f-sucks

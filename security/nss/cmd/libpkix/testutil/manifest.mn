@@ -20,6 +20,7 @@ CSRCS = \
 	$(NULL)
 
 LIBRARY_NAME = pkixtooltestutil
+SHARED_LIBRARY = $(NULL)
 
 SOURCE_LIB_DIR = $(PKIX_DEPTH)/$(OBJDIR)
 

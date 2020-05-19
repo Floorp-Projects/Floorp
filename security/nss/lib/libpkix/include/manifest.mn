@@ -4,9 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 CORE_DEPTH = ../../..
 
-EXPORTS = \
-	$(NULL)
-
 PRIVATE_EXPORTS = \
 	pkix.h \
 	pkix_crlsel.h \

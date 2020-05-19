@@ -9,12 +9,6 @@ MODULE = nss
 
 PROGRAM = pk11gcmtest
 
-EXPORTS = \
-	$(NULL)
-
-PRIVATE_EXPORTS = \
-	$(NULL)
-
 CSRCS = \
 	pk11gcmtest.c \
 	$(NULL)

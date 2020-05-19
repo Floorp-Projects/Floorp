@@ -62,9 +62,6 @@ RANLIB		= /bin/true
 NOMD_OS_CFLAGS += $(ODD_CFLAGS) -D_SGI_MP_SOURCE
 
 OS_CFLAGS += $(NOMD_OS_CFLAGS)
-ifdef USE_MDUPDATE
-	OS_CFLAGS += -MDupdate $(DEPENDENCIES)
-endif
 
 ifeq ($(USE_N32),1)
 	SHLIB_LD_OPTS	+= -n32 -mips3

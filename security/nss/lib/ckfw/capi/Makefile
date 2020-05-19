@@ -5,7 +5,17 @@
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
-include config.mk
+
+ifdef BUILD_IDG
+DEFINES += -DNSSDEBUG
+endif
+
+#
+# To create a loadable module on Darwin, we must use -bundle.
+#
+ifeq ($(OS_TARGET),Darwin)
+DSO_LDOPTS = -bundle
+endif
 
 EXTRA_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)nssckfw.$(LIB_SUFFIX) \
@@ -60,8 +70,7 @@ DSO_LDOPTS              = -bM:SRE -bh:4 -bnoentry
 EXTRA_DSO_LDOPTS        = -lc
 MKSHLIB                 = xlC $(DSO_LDOPTS)
 
-$(SHARED_LIBRARY): $(OBJS)
-	@$(MAKE_OBJDIR)
+$(SHARED_LIBRARY): $(OBJS) | $$(@D)/d
 	rm -f $@
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(EXTRA_DSO_LDOPTS)
 	chmod +x $@
@@ -71,5 +80,3 @@ endif
 ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.2)
 LD      += -G
 endif 
-
-

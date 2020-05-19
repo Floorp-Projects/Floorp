@@ -6,13 +6,9 @@
 CORE_DEPTH = ../..
 MODULE	= sectools
 
-EXPORTS = \
-	$(NULL)
-
 CSRCS = \
 	crmfcgi.c \
 	$(NULL)
-
 
 REQUIRES = nss dbm seccmd
 

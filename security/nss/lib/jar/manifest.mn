@@ -5,6 +5,7 @@
 MODULE = nss
 
 LIBRARY_NAME = jar
+SHARED_LIBRARY = $(NULL)
 
 CORE_DEPTH = ../..
 

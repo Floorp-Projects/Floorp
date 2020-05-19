@@ -19,7 +19,6 @@ EXPORTS = \
         $(NULL)
 
 MODULE = nss
-MAPFILE = $(OBJDIR)/ssl.def
 
 CSRCS = \
         dtlscon.c \
@@ -66,6 +65,7 @@ CSRCS = \
 
 LIBRARY_NAME = ssl
 LIBRARY_VERSION = 3
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
 
 # This part of the code, including all sub-dirs, can be optimized for size
 export ALLOW_OPT_CODE_SIZE = 1

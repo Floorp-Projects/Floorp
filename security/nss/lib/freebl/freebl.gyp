@@ -593,6 +593,7 @@
       'verified',
       'verified/kremlin/include',
       'verified/kremlin/kremlib/dist/minimal',
+      'deprecated',
     ],
     'defines': [
       'SHLIB_SUFFIX=\"<(dll_suffix)\"',

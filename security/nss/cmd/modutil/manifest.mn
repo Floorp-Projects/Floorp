@@ -7,8 +7,6 @@ CORE_DEPTH = ../..
 
 MODULE = sectools
 
-EXPORTS = 
-
 CSRCS = modutil.c		\
 		pk11.c			\
 		instsec.c		\

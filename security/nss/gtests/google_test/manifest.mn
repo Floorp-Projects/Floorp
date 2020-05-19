@@ -6,18 +6,12 @@ CORE_DEPTH = ../..
 DEPTH = ../..
 
 MODULE = gtest
+
 LIBRARY_NAME = gtest
-LIBRARY_VERSION = 1
+SHARED_LIBRARY = $(NULL)
 
 INCLUDES += -Igtest/include/ -Igtest
 
 CPPSRCS = \
 	gtest/src/gtest-all.cc \
 	$(NULL)
-
-
-EXPORTS = \
-	$(NULL)
-
-
-

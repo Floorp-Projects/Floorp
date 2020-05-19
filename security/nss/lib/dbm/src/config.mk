@@ -11,12 +11,6 @@ DEFINES += -DMEMMOVE -D__DBINTERFACE_PRIVATE
 #  are specifed as dependencies within rules.mk.
 #
 
-TARGETS        = $(LIBRARY)
-SHARED_LIBRARY =
-IMPORT_LIBRARY =
-PURE_LIBRARY   =
-PROGRAM        =
-
 ifdef SHARED_LIBRARY
 	ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 		DLLBASE=/BASE:0x30000000

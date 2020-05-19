@@ -14,10 +14,6 @@
 #  always be identified for compiling/linking purposes
 #
 
-ifndef JAVA_SOURCE_COMPONENT
-    JAVA_SOURCE_COMPONENT = java
-endif
-
 ifndef NETLIB_SOURCE_COMPONENT
     NETLIB_SOURCE_COMPONENT = netlib
 endif

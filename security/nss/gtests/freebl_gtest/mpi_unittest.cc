@@ -273,6 +273,44 @@ TEST_F(MPITest, MpiSqrMulClamp) {
   }
 }
 
+TEST_F(MPITest, MpiInvModLoop) {
+  mp_int a;
+  mp_int m;
+  mp_int c_actual;
+  mp_int c_expect;
+  MP_DIGITS(&a) = 0;
+  MP_DIGITS(&m) = 0;
+  MP_DIGITS(&c_actual) = 0;
+  MP_DIGITS(&c_expect) = 0;
+  ASSERT_EQ(MP_OKAY, mp_init(&a));
+  ASSERT_EQ(MP_OKAY, mp_init(&m));
+  ASSERT_EQ(MP_OKAY, mp_init(&c_actual));
+  ASSERT_EQ(MP_OKAY, mp_init(&c_expect));
+  mp_read_radix(&a,
+                "3e10b9f4859fb9e8150cc0d94e83ef428d655702a0b6fb1e684f4755eb6be6"
+                "5ac6048cdfc533f73a9bad76125801051f",
+                16);
+  mp_read_radix(&m,
+                "ffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372d"
+                "df581a0db248b0a77aecec196accc52973",
+                16);
+  mp_read_radix(&c_expect,
+                "12302214814361c15ab6c0f2131150af186099f8c22f6c9d6e77ad496b551c"
+                "7c8039e61098bfe2af66474420659435c6",
+                16);
+
+  int rv = mp_invmod(&a, &m, &c_actual);
+  ASSERT_EQ(MP_OKAY, rv);
+
+  rv = mp_cmp(&c_actual, &c_expect);
+  EXPECT_EQ(0, rv);
+
+  mp_clear(&a);
+  mp_clear(&m);
+  mp_clear(&c_actual);
+  mp_clear(&c_expect);
+}
+
 // This test is slow. Disable it by default so we can run these tests on CI.
 class DISABLED_MPITest : public ::testing::Test {};
 

@@ -336,16 +336,6 @@ OVERVIEW of "rules.mk":
 
         clobber_all::           synonym for "realclean::" rule
 
-        private_export::        recursively copy specified
-                                cross-platform header files to the
-                                $(SOURCE_XPPRIVATE_DIR) directory
-
-
-        IMPORT
-        ------
-        import::                uses perl script to retrieve specified
-                                VERSION of the binary release from
-                                $(RELEASE_TREE)
 
         RELEASE
         -------
@@ -368,18 +358,6 @@ OVERVIEW of "rules.mk":
                                 $(SOURCE_RELEASE_PREFIX)/
                                 $(SOURCE_RELEASE_BIN_DIR) directory
 
-        release_jars::          use perl script to package appropriate
-                                files in the $(XPCLASS_JAR),
-                                $(XPHEADER_JAR), $(MDHEADER_JAR), and
-                                $(MDBINARY_JAR) jar files
-
-        release_cpdistdir::     use perl script to copy the
-                                $(XPCLASS_JAR), $(XPHEADER_JAR),
-                                $(MDHEADER_JAR), and $(MDBINARY_JAR)
-                                jar files to the specified VERSION
-                                of the $(RELEASE_TREE) directory
-
-
 
         TOOLS and AUTOMATION
         --------------------
@@ -390,7 +368,7 @@ OVERVIEW of "rules.mk":
                                 "Tinderbox" to automatically generate
                                 binary releases on various platforms
 
-        tests::                 automation tool used to run the
+        check::                 automation tool used to run the
                                 "regress" and "reporter" tools 
                                 on various regression test suites
 
@@ -517,33 +495,10 @@ OVERVIEW of "rules.mk":
         CATEGORY/rule::                   Purpose
         ===================               =============================
 
-        $(PUBLIC_EXPORT_DIR)::            create directory used to
-                                          house public "C" header files
-
-        $(PRIVATE_EXPORT_DIR)::           create directory used to
-                                          house private "C" header
-                                          files
-
         $(SOURCE_XP_DIR)/
         release/include::                 create directory used to
                                           house "C" header files
                                           contained in a release
-
-        $(MKDEPENDENCIES)::               for UNIX systems, create
-                                          a directory used to house
-                                          dependencies and utilize
-                                          the $(MKDEPEND) rule to
-                                          create them
-
-        $(MKDEPEND)::                     cd to the dependency
-                                          directory and create them
-
-        depend::                          if $(OBJS) exist, perform the
-                                          $(MKDEPEND) rule followed by
-                                          the $(MKDEPENDENCIES) rule
-
-        dependclean::                     remove all files contained
-                                          in the dependency repository
 
         .DEFAULT:                         standard gmake rule
 

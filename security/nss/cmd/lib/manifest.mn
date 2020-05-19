@@ -5,6 +5,7 @@
 CORE_DEPTH	= ../..
 
 LIBRARY_NAME	= sectool
+SHARED_LIBRARY = $(NULL)
 
 # MODULE public and private header  directories are implicitly REQUIRED.
 MODULE		= nss

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef FREEBL_NO_DEPEND
-#include "stubs.h"
+#include "../stubs.h"
 #endif
 
 #include <stdio.h>
