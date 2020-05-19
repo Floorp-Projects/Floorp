@@ -33,7 +33,6 @@ var newTabPerCycle = false;
 // delay (ms) for foregrounding app
 var foregroundDelay = 5000;
 
-var browserName;
 var isGecko = false;
 var isGeckoView = false;
 var ext;
@@ -745,7 +744,6 @@ async function init() {
   testName = config.test_name;
   settingsURL = config.test_settings_url;
   csPort = config.cs_port;
-  browserName = config.browser;
   benchmarkPort = config.benchmark_port;
   postStartupDelay = config.post_startup_delay;
   host = config.host;
