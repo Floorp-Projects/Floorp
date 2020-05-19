@@ -206,8 +206,7 @@ win64-fuzzing/debug:
             - win64-node
             - win64-winchecksec
     optimization:
-        build-fuzzing:
-            - windows
+        build-fuzzing: null
 
 win64-plain/debug:
     description: "Win64 Debug Plain"
@@ -1025,8 +1024,7 @@ win64-asan-fuzzing/opt:
             - win64-node
             - win64-winchecksec
     optimization:
-        build-fuzzing:
-            - windows
+        build-fuzzing: null
 
 win32-devedition/opt:
     description: "Win32 Dev Edition (shippable)"
