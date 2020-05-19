@@ -101,7 +101,6 @@ class AwesomeBarView(
     private val defaultSearchSuggestionProvider: SearchSuggestionProvider
     private val searchSuggestionProviderMap: MutableMap<SearchEngine, SearchSuggestionProvider>
     private var providersInUse = mutableSetOf<AwesomeBar.SuggestionProvider>()
-    internal var isKeyboardDismissedProgrammatically: Boolean = false
 
     private val loadUrlUseCase = object : SessionUseCases.LoadUrlUseCase {
         override fun invoke(
@@ -196,23 +195,6 @@ class AwesomeBarView(
             )
 
         searchSuggestionProviderMap = HashMap()
-
-        val recyclerListener = object : RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                when (newState) {
-                    RecyclerView.SCROLL_STATE_DRAGGING ->
-                        if (!isKeyboardDismissedProgrammatically) {
-                        view.hideKeyboard()
-                        isKeyboardDismissedProgrammatically = true
-                    }
-                    RecyclerView.SCROLL_STATE_IDLE -> {
-                        isKeyboardDismissedProgrammatically = false
-                        view.requestFocus()
-                    }
-                }
-            }
-        }
-        view.addOnScrollListener(recyclerListener)
     }
 
     fun update(state: SearchFragmentState) {
