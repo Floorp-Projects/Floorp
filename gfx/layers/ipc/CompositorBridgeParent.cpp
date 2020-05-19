@@ -680,9 +680,9 @@ void CompositorBridgeParent::ActorDestroy(ActorDestroyReason why) {
 
 void CompositorBridgeParent::ScheduleRenderOnCompositorThread() {
   MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(NewRunnableMethod(
-      "layers::CompositorBridgeParent::ScheduleComposition", this,
-      &CompositorBridgeParent::ScheduleComposition));
+  CompositorThread()->Dispatch(
+      NewRunnableMethod("layers::CompositorBridgeParent::ScheduleComposition",
+                        this, &CompositorBridgeParent::ScheduleComposition));
 }
 
 void CompositorBridgeParent::InvalidateOnCompositorThread() {
@@ -2744,8 +2744,7 @@ int32_t RecordContentFrameTime(
     AUTO_PROFILER_STATS(add_marker_with_ContentFramePayload);
     profiler_add_marker_for_thread(
         profiler_current_thread_id(), JS::ProfilingCategoryPair::GRAPHICS,
-        "CONTENT_FRAME_TIME",
-        MakeUnique<ContentFramePayload>(aTxnStart, aCompositeEnd));
+        "CONTENT_FRAME_TIME", ContentFramePayload(aTxnStart, aCompositeEnd));
   }
 #endif
 

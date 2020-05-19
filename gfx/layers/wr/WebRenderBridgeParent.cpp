@@ -260,7 +260,7 @@ class SceneBuiltNotification : public wr::NotificationHandler {
             profiler_add_marker_for_thread(
                 profiler_current_thread_id(),
                 JS::ProfilingCategoryPair::GRAPHICS, "CONTENT_FULL_PAINT_TIME",
-                MakeUnique<ContentFullPaintPayload>(startTime, endTime));
+                ContentFullPaintPayload(startTime, endTime));
           }
 #endif
           Telemetry::Accumulate(
@@ -380,8 +380,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
       mDisablingNativeCompositor(false),
       mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {}
 
-WebRenderBridgeParent::~WebRenderBridgeParent() {
-}
+WebRenderBridgeParent::~WebRenderBridgeParent() {}
 
 /* static */
 WebRenderBridgeParent* WebRenderBridgeParent::CreateDestroyed(

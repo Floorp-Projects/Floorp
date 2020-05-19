@@ -537,7 +537,7 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime,
     AUTO_PROFILER_STATS(add_marker_with_HangMarkerPayload);
     profiler_add_marker_for_thread(
         mStackHelper.GetThreadId(), JS::ProfilingCategoryPair::OTHER,
-        "BHR-detected hang", MakeUnique<HangMarkerPayload>(startTime, endTime));
+        "BHR-detected hang", HangMarkerPayload(startTime, endTime));
   }
 #endif
 }
