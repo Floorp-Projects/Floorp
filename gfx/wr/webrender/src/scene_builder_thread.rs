@@ -40,6 +40,7 @@ use api::{BuiltDisplayListIter, DisplayItem};
 
 /// Various timing information that will be turned into
 /// TransactionProfileCounters later down the pipeline.
+#[derive(Clone, Debug)]
 pub struct TransactionTimings {
     pub builder_start_time_ns: u64,
     pub builder_end_time_ns: u64,

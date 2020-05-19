@@ -2547,7 +2547,6 @@ impl Renderer {
                 texture_cache,
                 glyph_rasterizer,
                 glyph_cache,
-                blob_image_handler,
                 rb_font_instances,
             );
 
@@ -2673,7 +2672,7 @@ impl Renderer {
         // to ensure any potential transition when enabling a flag is run.
         renderer.set_debug_flags(debug_flags);
 
-        let sender = RenderApiSender::new(api_tx, font_instances);
+        let sender = RenderApiSender::new(api_tx, blob_image_handler, font_instances);
         Ok((renderer, sender))
     }
 
