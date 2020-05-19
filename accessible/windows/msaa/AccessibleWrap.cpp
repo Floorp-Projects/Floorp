@@ -1760,7 +1760,7 @@ bool AccessibleWrap::DispatchTextChangeToHandler(bool aIsInsert,
   VARIANT_BOOL isInsert = aIsInsert ? VARIANT_TRUE : VARIANT_FALSE;
 
   IA2TextSegment textSegment{::SysAllocStringLen(aText.get(), aText.Length()),
-                             aStart, static_cast<long>(aLen)};
+                             aStart, aStart + static_cast<long>(aLen)};
 
   ASYNC_INVOKER_FOR(IHandlerControl)
   invoker(controller.mCtrl, Some(controller.mIsProxy));
