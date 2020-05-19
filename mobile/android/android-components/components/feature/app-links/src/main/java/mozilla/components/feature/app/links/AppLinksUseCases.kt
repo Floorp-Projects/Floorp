@@ -45,7 +45,7 @@ class AppLinksUseCases(
     private val launchInApp: () -> Boolean = { false },
     browserPackageNames: Set<String>? = null,
     unguessableWebUrl: String = "https://${UUID.randomUUID()}.net",
-    private val alwaysDeniedSchemes: Set<String> = setOf("file")
+    private val alwaysDeniedSchemes: Set<String> = setOf("file", "javascript", "data", "about")
 ) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val browserPackageNames: Lazy<Set<String>>
@@ -170,7 +170,13 @@ class AppLinksUseCases(
                 marketplaceIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
 
-            val resolveInfoList = intent?.let {
+            val appIntent = when {
+                intent?.data == null -> null
+                alwaysDeniedSchemes.contains(intent.data?.scheme) -> null
+                else -> intent
+            }
+
+            val resolveInfoList = appIntent?.let {
                 getNonBrowserActivities(it)
             }
             val resolveInfo = resolveInfoList?.firstOrNull()
@@ -178,14 +184,8 @@ class AppLinksUseCases(
             // only target intent for specific app if only one non browser app is found
             if (resolveInfoList?.count() == 1) {
                 resolveInfo?.let {
-                    intent.`package` = it.activityInfo?.packageName
+                    appIntent.`package` = it.activityInfo?.packageName
                 }
-            }
-
-            val appIntent = when {
-                intent?.data == null -> null
-                alwaysDeniedSchemes.contains(intent.data?.scheme) -> null
-                else -> intent
             }
 
             return RedirectData(appIntent, fallbackIntent, marketplaceIntent, resolveInfo)
