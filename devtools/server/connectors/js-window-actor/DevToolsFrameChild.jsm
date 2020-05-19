@@ -305,7 +305,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
   }
 
   handleEvent({ type }) {
-    // DOMWindowCreated is registered from FrameWatcher via `ActorManagerParent.addActors`
+    // DOMWindowCreated is registered from FrameWatcher via `ActorManagerParent.addJSWindowActors`
     // as a DOM event to be listened to and so is fired by JS Window Actor code platform code.
     if (type == "DOMWindowCreated") {
       this.instantiate();
