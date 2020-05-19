@@ -34,7 +34,9 @@ var V8 = class extends Host {
 };
 
 var gHost = new V8();
-run(arguments);
+
+var { opts, rest: mutators } = argparse.parse_args(arguments);
+run(opts, mutators);
 
 print("\nTest results:\n");
 report_results();
