@@ -11,6 +11,8 @@ job-defaults:
             - name: public
               type: directory
               path: /builds/worker/artifacts
+        env:
+            UPLOAD_DIR: /builds/worker/artifacts
     run-on-projects: ['trunk']
     attributes:
         build_type: opt
