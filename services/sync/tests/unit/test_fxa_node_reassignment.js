@@ -84,6 +84,24 @@ function prepareServer(cbAfterTokenFetch) {
           }
         });
       },
+      getTokenFromOAuthToken() {
+        return new Promise(res => {
+          // Build a new URL with trailing zeros for the SYNC_VERSION part - this
+          // will still be seen as equivalent by the test server, but different
+          // by sync itself.
+          numReassigns += 1;
+          let trailingZeros = new Array(numReassigns + 1).join("0");
+          let token = config.fxaccount.token;
+          token.endpoint = server.baseURI + "1.1" + trailingZeros + "/johndoe";
+          token.uid = config.username;
+          _(`test server saw token fetch - endpoint now ${token.endpoint}`);
+          numTokenRequests += 1;
+          res(token);
+          if (cbAfterTokenFetch) {
+            cbAfterTokenFetch();
+          }
+        });
+      },
     };
     return server;
   });
