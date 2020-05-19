@@ -3957,6 +3957,8 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
       doc->GetSrcdocData(srcdoc);
       flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
       baseURI = doc->GetBaseURI();
+    } else {
+      srcdoc = VoidString();
     }
     nsCOMPtr<nsIChannel> chan = doc->GetChannel();
     if (chan) {
