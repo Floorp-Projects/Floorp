@@ -43,7 +43,7 @@ function parse_units(v) {
   return NaN;
 }
 
-class AllocationLoad {
+var AllocationLoad = class {
   constructor(info, name) {
     this.load = info;
     this.load.name = this.load.name ?? name;
@@ -95,9 +95,9 @@ class AllocationLoad {
   is_dummy_load() {
     return this.load.name == "noAllocation";
   }
-}
+};
 
-class LoadCycle {
+var LoadCycle = class {
   constructor(tests_to_run, duration) {
     this.queue = [...tests_to_run];
     this.duration = duration;
@@ -136,9 +136,9 @@ class LoadCycle {
   currentLoadElapsed(now = performance.now()) {
     return now - this.started;
   }
-}
+};
 
-class AllocationLoadManager {
+var AllocationLoadManager = class {
   constructor(tests) {
     this._loads = new Map();
     for (const [name, info] of tests.entries()) {
@@ -247,7 +247,7 @@ class AllocationLoadManager {
       ? 0
       : this.testDurationMS - this.cycle.currentLoadElapsed(now);
   }
-}
+};
 
 // Current test state.
 var gLoadMgr = undefined;

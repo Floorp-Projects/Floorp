@@ -47,7 +47,7 @@ function parse_units(v) {
   return NaN;
 }
 
-class Graph {
+var Graph = class {
   constructor(ctx) {
     this.ctx = ctx;
 
@@ -106,9 +106,9 @@ class Graph {
     ctx.closePath();
     ctx.stroke();
   }
-}
+};
 
-class LatencyGraph extends Graph {
+var LatencyGraph = class extends Graph {
   constructor(ctx) {
     super(ctx);
     console.log(this.ctx);
@@ -235,9 +235,9 @@ class LatencyGraph extends Graph {
 
     this.drawAxisLabels("Time", "Pause between frames (log scale)");
   }
-}
+};
 
-class MemoryGraph extends Graph {
+var MemoryGraph = class extends Graph {
   constructor(ctx) {
     super(ctx);
     this.worstEver = this.bestEver = performance.mozMemory.zone.gcBytes;
@@ -351,7 +351,7 @@ class MemoryGraph extends Graph {
 
     this.drawAxisLabels("Time", "Heap Memory Usage");
   }
-}
+};
 
 function onUpdateDisplayChanged() {
   const do_graph = document.getElementById("do-graph");
