@@ -8,6 +8,7 @@
 
 #include "WidgetUtils.h"
 #include "nsAppShell.h"
+#include "nsIObserver.h"
 #include "nsWindow.h"
 
 #include "mozilla/RefPtr.h"
@@ -18,6 +19,8 @@ namespace mozilla {
 
 class GeckoProcessManager final
     : public java::GeckoProcessManager::Natives<GeckoProcessManager> {
+  using BaseNatives = java::GeckoProcessManager::Natives<GeckoProcessManager>;
+
   GeckoProcessManager() = delete;
 
   static already_AddRefed<nsIWidget> GetWidget(int64_t aContentId,
@@ -38,7 +41,32 @@ class GeckoProcessManager final
     return widget::WidgetUtils::DOMWindowToWidget(domWin);
   }
 
+  class ConnectionManager final
+      : public java::GeckoProcessManager::ConnectionManager::Natives<
+            ConnectionManager>,
+        public nsIObserver {
+    using BaseNatives = java::GeckoProcessManager::ConnectionManager::Natives<
+        ConnectionManager>;
+
+    virtual ~ConnectionManager() = default;
+
+   public:
+    ConnectionManager() = default;
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+
+    static void AttachTo(
+        java::GeckoProcessManager::ConnectionManager::Param aInstance);
+    void ObserveNetworkNotifications();
+
+   private:
+    java::GeckoProcessManager::ConnectionManager::WeakRef mJavaConnMgr;
+  };
+
  public:
+  static void Init();
+
   static void GetEditableParent(jni::Object::Param aEditableChild,
                                 int64_t aContentId, int64_t aTabId) {
     nsCOMPtr<nsIWidget> widget = GetWidget(aContentId, aTabId);
