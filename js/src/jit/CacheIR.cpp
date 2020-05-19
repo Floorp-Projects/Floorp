@@ -5312,7 +5312,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
+AttachDecision CallIRGenerator::tryAttachInlinableNative(
     HandleFunction callee) {
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
   MOZ_ASSERT(callee->isNative());
@@ -5669,7 +5669,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
 
   // Check for specific native-function optimizations.
   if (isSpecialized) {
-    TRY_ATTACH(tryAttachSpecialCaseCallNative(calleeFunc));
+    TRY_ATTACH(tryAttachInlinableNative(calleeFunc));
   }
 
   RootedObject templateObj(cx_);
