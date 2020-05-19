@@ -303,11 +303,6 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/websocket",
   },
   {
-    types: ["eventSource"],
-    spec: "devtools/shared/specs/eventsource",
-    front: "devtools/client/fronts/eventsource",
-  },
-  {
     types: ["pushSubscription"],
     spec: "devtools/shared/specs/worker/push-subscription",
     front: "devtools/client/fronts/worker/push-subscription",
