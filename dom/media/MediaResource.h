@@ -55,8 +55,7 @@ class MediaResource : public DecoderDoctorLifeLogger<MediaResource> {
   // Note that this means it's safe for references to this object to be
   // released on a non main thread, but the destructor will always run on
   // the main thread.
-  NS_METHOD_(MozExternalRefCountType) AddRef(void);
-  NS_METHOD_(MozExternalRefCountType) Release(void);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(MediaResource, Destroy());
 
   // Close the resource, stop any listeners, channels, etc.
   // Cancels any currently blocking Read request and forces that request to
@@ -120,8 +119,6 @@ class MediaResource : public DecoderDoctorLifeLogger<MediaResource> {
 
  private:
   void Destroy();
-  mozilla::ThreadSafeAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 };
 
 /**
