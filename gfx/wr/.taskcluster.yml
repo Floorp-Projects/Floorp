@@ -114,61 +114,63 @@ tasks:
         # mako, zlib, etc. Note that unlike the docker-worker used for Linux, these
         # machines WILL persist state from one run to the next, so any cleanup needs
         # to be handled explicitly.
-        - metadata:
-            name: OS X release tests
-            description: Runs release-mode WebRender CI stuff on a OS X TC worker
-            owner: noreply@mozilla.com
-            source: ${repo_url}
-          provisionerId: 'proj-webrender'
-          workerType: 'ci-macos'
-          deadline: {$fromNow: '1 day'}
-          payload:
-            maxRunTime: 3600
-            command:
-              - - /bin/bash
-                - '--login'
-                - '-vec'
-                - |
-                  git clone ${repo_url} webrender
-                  cd webrender
-                  git checkout ${sha}
-                  source $HOME/servotidy-venv/bin/activate
-                  servo-tidy
-                  export RUST_BACKTRACE=full
-                  export RUSTFLAGS='--deny warnings'
-                  export PKG_CONFIG_PATH="/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
-                  echo 'exec make -j1 "$@"' > $HOME/make # See #2638
-                  chmod +x $HOME/make
-                  export MAKE="$HOME/make"
-                  ci-scripts/macos-release-tests.sh
-          routes:
-            - "index.project.webrender.ci.${login}.${branch}.osx-release"
-        - metadata:
-            name: OS X debug tests
-            description: Runs debug-mode WebRender CI stuff on a OS X TC worker
-            owner: noreply@mozilla.com
-            source: ${repo_url}
-          provisionerId: 'proj-webrender'
-          workerType: 'ci-macos'
-          deadline: {$fromNow: '1 day'}
-          payload:
-            maxRunTime: 3600
-            command:
-              - - /bin/bash
-                - '--login'
-                - '-vec'
-                - |
-                  git clone ${repo_url} webrender
-                  cd webrender
-                  git checkout ${sha}
-                  source $HOME/servotidy-venv/bin/activate
-                  servo-tidy
-                  export RUST_BACKTRACE=full
-                  export RUSTFLAGS='--deny warnings'
-                  export PKG_CONFIG_PATH="/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
-                  echo 'exec make -j1 "$@"' > $HOME/make # See #2638
-                  chmod +x $HOME/make
-                  export MAKE="$HOME/make"
-                  ci-scripts/macos-debug-tests.sh
-          routes:
-            - "index.project.webrender.ci.${login}.${branch}.osx-debug"
+
+        # macOS tasks currently disabled, see bug 1639217.
+        # - metadata:
+        #     name: OS X release tests
+        #     description: Runs release-mode WebRender CI stuff on a OS X TC worker
+        #     owner: noreply@mozilla.com
+        #     source: ${repo_url}
+        #   provisionerId: 'proj-webrender'
+        #   workerType: 'ci-macos'
+        #   deadline: {$fromNow: '1 day'}
+        #   payload:
+        #     maxRunTime: 3600
+        #     command:
+        #       - - /bin/bash
+        #         - '--login'
+        #         - '-vec'
+        #         - |
+        #           git clone ${repo_url} webrender
+        #           cd webrender
+        #           git checkout ${sha}
+        #           source $HOME/servotidy-venv/bin/activate
+        #           servo-tidy
+        #           export RUST_BACKTRACE=full
+        #           export RUSTFLAGS='--deny warnings'
+        #           export PKG_CONFIG_PATH="/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
+        #           echo 'exec make -j1 "$@"' > $HOME/make # See #2638
+        #           chmod +x $HOME/make
+        #           export MAKE="$HOME/make"
+        #           ci-scripts/macos-release-tests.sh
+        #   routes:
+        #     - "index.project.webrender.ci.${login}.${branch}.osx-release"
+        # - metadata:
+        #     name: OS X debug tests
+        #     description: Runs debug-mode WebRender CI stuff on a OS X TC worker
+        #     owner: noreply@mozilla.com
+        #     source: ${repo_url}
+        #   provisionerId: 'proj-webrender'
+        #   workerType: 'ci-macos'
+        #   deadline: {$fromNow: '1 day'}
+        #   payload:
+        #     maxRunTime: 3600
+        #     command:
+        #       - - /bin/bash
+        #         - '--login'
+        #         - '-vec'
+        #         - |
+        #           git clone ${repo_url} webrender
+        #           cd webrender
+        #           git checkout ${sha}
+        #           source $HOME/servotidy-venv/bin/activate
+        #           servo-tidy
+        #           export RUST_BACKTRACE=full
+        #           export RUSTFLAGS='--deny warnings'
+        #           export PKG_CONFIG_PATH="/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
+        #           echo 'exec make -j1 "$@"' > $HOME/make # See #2638
+        #           chmod +x $HOME/make
+        #           export MAKE="$HOME/make"
+        #           ci-scripts/macos-debug-tests.sh
+        #   routes:
+        #     - "index.project.webrender.ci.${login}.${branch}.osx-debug"
