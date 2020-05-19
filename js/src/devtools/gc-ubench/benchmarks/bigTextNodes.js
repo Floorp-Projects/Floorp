@@ -10,6 +10,8 @@ tests.set(
     return {
       description: "var foo = [ textNode, textNode, ... ]",
 
+      enabled: "document" in globalThis,
+
       load: N => {
         garbage = new Array(N);
       },
