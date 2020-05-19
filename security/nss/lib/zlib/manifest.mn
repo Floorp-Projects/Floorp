@@ -27,8 +27,7 @@ CSRCS =	adler32.c 	\
 	$(NULL)
 
 LIBRARY_NAME = zlib
-
-# REQUIRES = nss
+SHARED_LIBRARY = $(NULL)
 
 # Define verbose as -1 to turn off all zlib trace messages in
 # debug builds.

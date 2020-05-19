@@ -14,7 +14,8 @@ CSRCS = test_certselector.c \
 	test_comcertselparams.c \
 	$(NULL)
 
-LIBRARY_NAME=pkixtoolcertsel
+LIBRARY_NAME = pkixtoolcertsel
+SHARED_LIBRARY = $(NULL)
 
 SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
 

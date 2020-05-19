@@ -25,7 +25,12 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-include config.mk
+EXTRA_LIBS = $(LIBRARY)
+
+ifneq ($(OS_ARCH),WINNT)
+DEFINES += -DHAVE_UNISTD_H
+endif
+DEFINES += -DHAVE_STDARG_H
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -43,7 +48,6 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-export:: private_export
 
 test: $(PROGRAMS)
 	@cd $(OBJDIR); \

@@ -21,5 +21,6 @@ CSRCS =		   \
 REQUIRES = dbm nspr
 
 LIBRARY_NAME = nssckdbm
+LIBRARY = $(NULL)
 
 EXTRA_SHARED_LIBS = -L$(DIST)/lib -lnssckfw -lnssb -ldbm -lnspr4 -lplc4 -lplds4

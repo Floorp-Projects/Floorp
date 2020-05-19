@@ -17,7 +17,8 @@ CSRCS = test_colcertstore.c \
 	test_httpcertstore.c \
 	$(NULL)
 
-LIBRARY_NAME=pkixtoolmodule
+LIBRARY_NAME = pkixtoolmodule
+SHARED_LIBRARY = $(NULL)
 
 SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
 

@@ -16,7 +16,8 @@ CSRCS = test_procparams.c \
 	test_resourcelimits.c \
 	$(NULL)
 
-LIBRARY_NAME=pkixtoolparams
+LIBRARY_NAME = pkixtoolparams
+SHARED_LIBRARY = $(NULL)
 
 SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
 

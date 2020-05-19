@@ -4,9 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 CORE_DEPTH = ../../../..
 
-EXPORTS = \
-	$(NULL)
-
 PRIVATE_EXPORTS = \
 	pkix_pl_common.h \
 	pkix_pl_mem.h \
@@ -43,4 +40,4 @@ CSRCS = \
 	$(NULL)
 
 LIBRARY_NAME = pkixsystem
-
+SHARED_LIBRARY = $(NULL)

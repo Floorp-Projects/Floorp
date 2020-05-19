@@ -54,10 +54,6 @@ endif
 # Set <component>-specific versions for compiliation and linkage.
 #
 
-ifndef JAVA_VERSION
-    JAVA_VERSION = $(CURRENT_VERSION_SYMLINK)
-endif
-
 ifndef NETLIB_VERSION
     NETLIB_VERSION = $(CURRENT_VERSION_SYMLINK)
 endif

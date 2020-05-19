@@ -31,16 +31,8 @@ endif
 # <user_source_tree> cross-platform (xp) import/export directories
 #
 
-SOURCE_CLASSES_DIR     = $(SOURCE_XP_DIR)/classes
-SOURCE_CLASSES_DBG_DIR = $(SOURCE_XP_DIR)/classes_DBG
 SOURCE_XPHEADERS_DIR   = $(SOURCE_XP_DIR)/public/$(MODULE)
 SOURCE_XPPRIVATE_DIR   = $(SOURCE_XP_DIR)/private/$(MODULE)
-
-ifdef BUILD_OPT
-    IMPORT_XPCLASS_DIR = $(SOURCE_CLASSES_DIR)
-else
-    IMPORT_XPCLASS_DIR = $(SOURCE_CLASSES_DBG_DIR)
-endif
 
 #
 # <user_source_tree> machine-dependent (md) master import/export directory
@@ -110,25 +102,7 @@ SOURCE_RELEASE_XP_DIR = $(SOURCE_RELEASE_PREFIX)
 # <user_source_tree> cross-platform (xp) source-side release directories
 #
 
-SOURCE_RELEASE_CLASSES_DIR     = classes
-SOURCE_RELEASE_CLASSES_DBG_DIR = classes_DBG
 SOURCE_RELEASE_XPHEADERS_DIR   = include
-
-#
-# <user_source_tree> cross-platform (xp) JAR source-side release files
-#
-
-XPCLASS_JAR     = xpclass.jar
-XPCLASS_DBG_JAR = xpclass_dbg.jar
-XPHEADER_JAR    = xpheader.jar
-
-ifdef BUILD_OPT
-    SOURCE_RELEASE_XP_CLASSES_DIR = $(SOURCE_RELEASE_CLASSES_DIR)
-    IMPORT_XPCLASS_JAR = $(XPCLASS_JAR)
-else
-    SOURCE_RELEASE_XP_CLASSES_DIR = $(SOURCE_RELEASE_CLASSES_DBG_DIR)
-    IMPORT_XPCLASS_JAR = $(XPCLASS_DBG_JAR)
-endif
 
 #
 # <user_source_tree> machine-dependent (md) source-side master release directory
@@ -144,14 +118,6 @@ SOURCE_RELEASE_BIN_DIR       = $(PLATFORM)/bin
 SOURCE_RELEASE_LIB_DIR       = $(PLATFORM)/lib
 SOURCE_RELEASE_MDHEADERS_DIR = $(PLATFORM)/include
 SOURCE_RELEASE_SPEC_DIR      = $(SOURCE_RELEASE_MD_DIR)
-
-#
-# <user_source_tree> machine-dependent (md) JAR/tar source-side release files
-#
-
-MDBINARY_JAR = mdbinary.jar
-MDHEADER_JAR = mdheader.jar
-
 
 # Where to put the results
 

@@ -82,11 +82,9 @@ CSRCS = \
 
 MODULE = nss
 
-# don't duplicate module name in REQUIRES
-MAPFILE = $(OBJDIR)/nssutil.def
-
 LIBRARY_NAME = nssutil
 LIBRARY_VERSION = 3
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
 
 # This part of the code, including all sub-dirs, can be optimized for size
 export ALLOW_OPT_CODE_SIZE = 1

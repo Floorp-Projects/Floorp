@@ -12,7 +12,8 @@ MODULE = nss
 
 CSRCS = test_store.c
 
-LIBRARY_NAME=pkixtoolstore
+LIBRARY_NAME = pkixtoolstore
+SHARED_LIBRARY = $(NULL)
 
 SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
 

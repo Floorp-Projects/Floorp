@@ -9,6 +9,7 @@ MODULE = nss
 REQUIRES = nssutil
 
 LIBRARY_NAME = cryptohi
+SHARED_LIBRARY = $(NULL)
 
 EXPORTS = \
 	cryptohi.h \

@@ -15,16 +15,13 @@ ifdef BUILD_TREE
 ifdef LIBRARY_NAME
 BUILD         = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
 OBJDIR        = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
-DEPENDENCIES  = $(BUILD_TREE)/nss/$(LIBRARY_NAME)/.md
 else
 BUILD         = $(BUILD_TREE)/nss
 OBJDIR        = $(BUILD_TREE)/nss
-DEPENDENCIES  = $(BUILD_TREE)/nss/.md
 endif
 else
 BUILD         = $(PLATFORM)
 OBJDIR        = $(PLATFORM)
-DEPENDENCIES  = $(PLATFORM)/.md
 endif
 
 DIST          = $(SOURCE_PREFIX)/$(PLATFORM)
@@ -33,7 +30,7 @@ ifdef BUILD_DEBUG_GC
     DEFINES += -DDEBUG_GC
 endif
 
-GARBAGE += $(DEPENDENCIES) core $(wildcard core.[0-9]*)
+GARBAGE += core $(wildcard core.[0-9]*)
 
 ifdef NSPR_INCLUDE_DIR
     INCLUDES += -I$(NSPR_INCLUDE_DIR)

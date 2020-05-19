@@ -21,4 +21,4 @@ REQUIRES = nspr nss libdbm gtest
 PROGRAM = certdb_gtest
 
 EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) $(EXTRA_OBJS) \
-             ../common/$(OBJDIR)/gtests$(OBJ_SUFFIX)
+             $(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX)

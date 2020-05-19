@@ -7,13 +7,6 @@ RELEASE_LIBS = $(TARGETS)
 
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
-# don't want the 32 in the shared library name
-SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
-IMPORT_LIBRARY = $(OBJDIR)/$(IMPORT_LIB_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION)$(IMPORT_LIB_SUFFIX)
-
-RES = $(OBJDIR)/smime.res
-RESNAME = smime.rc
-
 ifdef NS_USE_GCC
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \

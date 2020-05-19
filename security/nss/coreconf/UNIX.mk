@@ -25,10 +25,6 @@ NSINSTALL_DIR  = $(CORE_DEPTH)/coreconf/nsinstall
 NSINSTALL      = $(NSINSTALL_DIR)/$(OBJDIR_NAME)/nsinstall
 endif
 
-MKDEPEND_DIR    = $(CORE_DEPTH)/coreconf/mkdepend
-MKDEPEND        = $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
-MKDEPENDENCIES  = $(OBJDIR_NAME)/depend.mk
-
 ####################################################################
 #
 # One can define the makefile variable NSDISTMODE to control
@@ -58,7 +54,7 @@ else
 endif
 
 define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); fi
+if test ! -d $(@D); then $(NSINSTALL) -D $(@D); fi
 endef
 
 include $(CORE_DEPTH)/coreconf/Werror.mk

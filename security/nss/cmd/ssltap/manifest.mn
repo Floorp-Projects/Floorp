@@ -8,8 +8,6 @@ CORE_DEPTH = ../..
 # MODULE public and private header  directories are implicitly REQUIRED.
 MODULE = nss
 
-EXPORTS = 
-
 CSRCS = ssltap.c	\
 	$(NULL)
 

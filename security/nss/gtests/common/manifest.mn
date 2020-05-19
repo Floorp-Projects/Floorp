@@ -7,6 +7,7 @@ DEPTH      = ../..
 MODULE = nss
 
 LIBRARY_NAME = gtestutil
+SHARED_LIBRARY = $(NULL)
 
 ifeq ($(NSS_BUILD_UTIL_ONLY),1)
 CPPSRCS = gtests-util.cc

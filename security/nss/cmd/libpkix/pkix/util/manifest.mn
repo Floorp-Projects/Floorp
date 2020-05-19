@@ -16,7 +16,8 @@ CSRCS = test_error.c \
 	test_logger.c \
 	$(NULL)
 
-LIBRARY_NAME=pkixtoolutil
+LIBRARY_NAME = pkixtoolutil
+SHARED_LIBRARY = $(NULL)
 
 SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
 

@@ -96,10 +96,6 @@ endif
 NSINSTALL 	= nsinstall             # HCT4OS2
 INSTALL		= $(NSINSTALL)
 
-MKDEPEND_DIR    = $(CORE_DEPTH)/coreconf/mkdepend
-MKDEPEND        = $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
-MKDEPENDENCIES  = $(OBJDIR_NAME)/depend.mk
-
 ####################################################################
 #
 # One can define the makefile variable NSDISTMODE to control
@@ -140,15 +136,14 @@ ifndef DLL_PREFIX
     DLL_PREFIX = $(NULL)
 endif
 
+ifndef IMPORT_LIB_SUFFIX
+    IMPORT_LIB_SUFFIX = .$(LIB_SUFFIX)
+endif
+
 #
 # override the TARGETS defined in ruleset.mk, adding IMPORT_LIBRARY
 #
 ifndef TARGETS
     TARGETS = $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(PROGRAM)
-endif
-
-
-ifdef LIBRARY_NAME
-    IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)$(JDK_DEBUG_SUFFIX).lib
 endif
 

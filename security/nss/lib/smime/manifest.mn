@@ -17,7 +17,6 @@ PRIVATE_EXPORTS = \
 	$(NULL)
 
 MODULE = nss
-MAPFILE = $(OBJDIR)/smime.def
 
 CSRCS = \
 	cmsarray.c \
@@ -46,6 +45,7 @@ CSRCS = \
 
 LIBRARY_NAME = smime
 LIBRARY_VERSION = 3
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
 
 # This part of the code, including all sub-dirs, can be optimized for size
 export ALLOW_OPT_CODE_SIZE = 1

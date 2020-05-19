@@ -39,7 +39,6 @@ split_util() {
   # Copy some files at the top and the util subdirectory recursively.
   mkdir $dstdir/lib
   cp $nssdir/lib/Makefile $dstdir/lib
-  cp $nssdir/lib/manifest.mn $dstdir/lib
   cp -R $nssdir/lib/util $dstdir/lib/util
 }
 

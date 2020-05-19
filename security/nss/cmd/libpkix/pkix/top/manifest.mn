@@ -26,7 +26,8 @@ CSRCS = test_basicchecker.c \
 	test_validatechain_NB.c \
 	$(NULL)
 
-LIBRARY_NAME=pkixtooltop
+LIBRARY_NAME = pkixtooltop
+SHARED_LIBRARY = $(NULL)
 
 SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
 

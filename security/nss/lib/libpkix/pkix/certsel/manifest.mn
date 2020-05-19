@@ -4,9 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 CORE_DEPTH = ../../../..
 
-EXPORTS = \
-	$(NULL)
-
 PRIVATE_EXPORTS = \
 	pkix_certselector.h \
 	pkix_comcertselparams.h \
@@ -20,4 +17,4 @@ CSRCS = \
 	$(NULL)
 
 LIBRARY_NAME = pkixcertsel
-
+SHARED_LIBRARY = $(NULL)

@@ -164,7 +164,7 @@
     }],
     [ 'disable_deprecated_seed==0', {
       'sources': [
-        'seed.c',
+        'deprecated/seed.c',
       ],
     }],
     [ 'fuzz==1', {
