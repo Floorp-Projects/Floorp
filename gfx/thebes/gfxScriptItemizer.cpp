@@ -51,6 +51,7 @@
 #include "nsUnicodeProperties.h"
 #include "nsCharTraits.h"
 #include "harfbuzz/hb.h"
+#include "unicode/uscript.h"
 
 using namespace mozilla::unicode;
 
@@ -139,6 +140,7 @@ bool gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
 
   SYNC_FIXUP();
   scriptCode = Script::COMMON;
+  Script fallbackScript = Script::UNKNOWN;
 
   for (scriptStart = scriptLimit; scriptLimit < textLength; scriptLimit += 1) {
     uint32_t ch;
@@ -192,9 +194,23 @@ bool gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
     }
 
     if (SameScript(scriptCode, sc, ch)) {
-      if (CanMergeWithContext(scriptCode) && !CanMergeWithContext(sc)) {
-        scriptCode = sc;
-        fixup(scriptCode);
+      if (scriptCode == Script::COMMON) {
+        // If we have not yet resolved a specific scriptCode for the run,
+        // check whether this character provides it.
+        if (!CanMergeWithContext(sc)) {
+          // Use this character's script.
+          scriptCode = sc;
+          fixup(scriptCode);
+        } else if (fallbackScript == Script::UNKNOWN) {
+          // See if the character has a ScriptExtensions property we can
+          // store for use in the event the run remains unresolved.
+          UErrorCode error = U_ZERO_ERROR;
+          UScriptCode extension;
+          int32_t n = uscript_getScriptExtensions(ch, &extension, 1, &error);
+          if (error == U_BUFFER_OVERFLOW_ERROR && n > 0) {
+            fallbackScript = Script(extension);
+          }
+        }
       }
 
       /*
@@ -218,7 +234,12 @@ bool gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
 
   aRunStart = scriptStart;
   aRunLimit = scriptLimit;
-  aRunScript = scriptCode;
+
+  if (scriptCode == Script::COMMON && fallbackScript != Script::UNKNOWN) {
+    aRunScript = fallbackScript;
+  } else {
+    aRunScript = scriptCode;
+  }
 
   return true;
 }
