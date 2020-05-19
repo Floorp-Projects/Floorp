@@ -37,8 +37,6 @@ class Page extends ContentProcessDomain {
     this.scriptsToEvaluateOnLoad = new Map();
     this.worldsToEvaluateOnLoad = new Set();
 
-    this._onFrameAttached = this._onFrameAttached.bind(this);
-    this._onFrameDetached = this._onFrameDetached.bind(this);
     this._onFrameNavigated = this._onFrameNavigated.bind(this);
     this._onScriptLoaded = this._onScriptLoaded.bind(this);
 
@@ -57,8 +55,7 @@ class Page extends ContentProcessDomain {
 
   async enable() {
     if (!this.enabled) {
-      this.session.contextObserver.on("frame-attached", this._onFrameAttached);
-      this.session.contextObserver.on("frame-detached", this._onFrameDetached);
+      this.enabled = true;
       this.session.contextObserver.on(
         "frame-navigated",
         this._onFrameNavigated
@@ -85,15 +82,11 @@ class Page extends ContentProcessDomain {
       this.chromeEventHandler.addEventListener("pageshow", this, {
         mozSystemGroup: true,
       });
-
-      this.enabled = true;
     }
   }
 
   disable() {
     if (this.enabled) {
-      this.session.contextObserver.off("frame-attached", this._onFrameAttached);
-      this.session.contextObserver.off("frame-detached", this._onFrameDetached);
       this.session.contextObserver.off(
         "frame-navigated",
         this._onFrameNavigated
@@ -247,18 +240,6 @@ class Page extends ContentProcessDomain {
 
   url() {
     return this.content.location.href;
-  }
-
-  _onFrameAttached(name, { frameId, parentFrameId }) {
-    this.emit("Page.frameAttached", {
-      frameId,
-      parentFrameId,
-      stack: null,
-    });
-  }
-
-  _onFrameDetached(name, { frameId }) {
-    this.emit("Page.frameDetached", { frameId });
   }
 
   _onFrameNavigated(name, { frameId, window }) {
