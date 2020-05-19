@@ -2853,4 +2853,15 @@ void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
 // Spectre Mitigations.
 
 void MacroAssembler::speculationBarrier() { MOZ_CRASH(); }
+
+void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
+                                         FloatRegister temp, Label* fail) {
+  MOZ_CRASH("Port CodeGenerator::visitRoundF code");
+}
+
+void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
+                                        FloatRegister temp, Label* fail) {
+  MOZ_CRASH("Port CodeGenerator::visitRound code");
+}
+
 //}}} check_macroassembler_style

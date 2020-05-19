@@ -8567,6 +8567,26 @@ void CodeGenerator::visitModD(LModD* ins) {
   }
 }
 
+void CodeGenerator::visitRound(LRound* lir) {
+  FloatRegister input = ToFloatRegister(lir->input());
+  FloatRegister temp = ToFloatRegister(lir->temp());
+  Register output = ToRegister(lir->output());
+
+  Label bail;
+  masm.roundDoubleToInt32(input, output, temp, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
+void CodeGenerator::visitRoundF(LRoundF* lir) {
+  FloatRegister input = ToFloatRegister(lir->input());
+  FloatRegister temp = ToFloatRegister(lir->temp());
+  Register output = ToRegister(lir->output());
+
+  Label bail;
+  masm.roundFloat32ToInt32(input, output, temp, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left,
                                  Register right, Register output) {
   MOZ_ASSERT(lir->isCompareS() || lir->isCompareStrictS());
