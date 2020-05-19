@@ -8734,6 +8734,11 @@
 #endif
   mirror: always
 
+# Duration of timeout of incremental search in menus (ms).  0 means infinite.
+- name: ui.menu.incremental_search.timeout
+  type: uint32_t
+  value: 1000
+  mirror: always
 
 # If true, all popups won't hide automatically on blur
 - name: ui.popup.disable_autohide
