@@ -49,6 +49,9 @@ mod gradient_builder;
 mod image;
 pub mod units;
 
+#[doc(hidden)]
+pub mod image_tiling;
+
 pub use crate::api::*;
 pub use crate::color::*;
 pub use crate::display_item::*;

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BorderSide, BorderStyle, ColorF, ColorU};
-use api::{NormalBorder as ApiNormalBorder, RepeatMode};
+use api::{NormalBorder as ApiNormalBorder, RepeatMode, EdgeAaSegmentMask};
 use api::units::*;
 use crate::clip::ClipChainId;
 use crate::ellipse::Ellipse;
@@ -11,7 +11,7 @@ use euclid::vec2;
 use crate::scene_building::SceneBuilder;
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::gpu_types::{BorderInstance, BorderSegment, BrushFlags};
-use crate::prim_store::{BorderSegmentInfo, BrushSegment, NinePatchDescriptor, EdgeAaSegmentMask};
+use crate::prim_store::{BorderSegmentInfo, BrushSegment, NinePatchDescriptor};
 use crate::prim_store::borders::{NormalBorderPrim, NormalBorderData};
 use crate::util::{lerp, RectHelpers};
 use crate::internal_types::LayoutPrimitiveInfo;

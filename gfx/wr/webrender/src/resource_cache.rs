@@ -11,6 +11,8 @@ use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
 use api::{BlobImageData, BlobImageKey, MemoryReport, VoidPtrToSizeFn};
 use api::{SharedFontInstanceMap, BaseFontInstance};
+use api::image_tiling::{compute_tile_size, compute_tile_range};
+use api::image_tiling::{compute_valid_tiles_if_bounds_change, for_each_tile_in_range, compute_tile_rect};
 use api::units::*;
 #[cfg(feature = "capture")]
 use crate::capture::ExternalCaptureImage;
@@ -26,8 +28,6 @@ use crate::glyph_cache::GlyphCacheEntry;
 use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
-use crate::image::{compute_tile_size, compute_tile_rect, compute_tile_range, for_each_tile_in_range};
-use crate::image::compute_valid_tiles_if_bounds_change;
 use crate::internal_types::{FastHashMap, FastHashSet, TextureSource, ResourceUpdateList};
 use crate::profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use crate::render_backend::{FrameId, FrameStamp};
