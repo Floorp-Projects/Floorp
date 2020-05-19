@@ -305,7 +305,6 @@ void PaymentRequest::IsValidMethodData(
     return;
   }
 
-  nsTArray<nsString> methods;
   for (const PaymentMethodData& methodData : aMethodData) {
     IsValidPaymentMethodIdentifier(methodData.mSupportedMethods, aRv);
     if (aRv.Failed()) {
@@ -325,13 +324,6 @@ void PaymentRequest::IsValidMethodData(
         aRv.ThrowTypeError(NS_ConvertUTF16toUTF8(error));
         return;
       }
-    }
-    if (!methods.Contains(methodData.mSupportedMethods)) {
-      methods.AppendElement(methodData.mSupportedMethods);
-    } else {
-      aRv.ThrowRangeError(nsPrintfCString(
-          "Duplicate payment method '%s'",
-          NS_ConvertUTF16toUTF8(methodData.mSupportedMethods).get()));
     }
   }
 }
