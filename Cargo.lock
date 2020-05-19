@@ -3392,7 +3392,6 @@ dependencies = [
 name = "osclientcerts-static"
 version = "0.1.4"
 dependencies = [
- "bindgen",
  "byteorder",
  "core-foundation",
  "env_logger",
