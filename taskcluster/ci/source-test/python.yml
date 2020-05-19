@@ -345,6 +345,7 @@ mozperftest:
     description: mozperftest unit tests
     platform:
         - linux1804-64/opt
+        - macosx1014-64/opt
         - windows10-64/opt
     treeherder:
         symbol: mpu

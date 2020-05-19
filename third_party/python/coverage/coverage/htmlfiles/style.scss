@@ -1,0 +1,537 @@
+/* Licensed under the Apache License: http://www.apache.org/licenses/LICENSE-2.0 */
+/* For details: https://github.com/nedbat/coveragepy/blob/master/NOTICE.txt */
+
+// CSS styles for coverage.py HTML reports.
+
+// When you edit this file, you need to run "make css" to get the CSS file
+// generated, and then check in both the .scss and the .css files.
+
+// When working on the file, this command is useful:
+//      sass --watch --style=compact --sourcemap=none --no-cache coverage/htmlfiles/style.scss:htmlcov/style.css
+
+// Ignore this comment, it's for the CSS output file:
+/* Don't edit this .css file. Edit the .scss file instead! */
+
+// Dimensions
+$left-gutter: 3rem;
+
+// Page-wide styles
+html, body, h1, h2, h3, p, table, td, th {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-weight: inherit;
+    font-style: inherit;
+    font-size: 100%;
+    font-family: inherit;
+    vertical-align: baseline;
+}
+
+// Set baseline grid to 16 pt.
+body {
+    font-family: georgia, serif;
+    font-size: 1em;
+}
+
+html>body {
+    font-size: 16px;
+}
+
+// Set base font size to 12/16
+p {
+    font-size: .75em;           // 12/16
+    line-height: 1.33333333em;  // 16/12
+}
+
+table {
+    border-collapse: collapse;
+}
+td {
+    vertical-align: top;
+}
+table tr.hidden {
+    display: none !important;
+}
+
+p#no_rows {
+    display: none;
+    font-size: 1.2em;
+}
+
+a.nav {
+    text-decoration: none;
+    color: inherit;
+
+    &:hover {
+        text-decoration: underline;
+        color: inherit;
+    }
+}
+
+// Page structure
+#header {
+    background: #f8f8f8;
+    width: 100%;
+    border-bottom: 1px solid #eee;
+}
+
+.indexfile #footer {
+    margin: 1em 3em;
+}
+
+.pyfile #footer {
+    margin: 1em 1em;
+}
+
+#footer .content {
+    padding: 0;
+    font-size: 85%;
+    font-family: verdana, sans-serif;
+    color: #666666;
+    font-style: italic;
+}
+
+#index {
+    margin: 1em 0 0 3em;
+}
+
+// Header styles
+#header .content {
+    padding: 1em $left-gutter;
+}
+
+h1 {
+    font-size: 1.25em;
+    display: inline-block;
+}
+
+#filter_container {
+    display: inline-block;
+    float: right;
+    margin: 0 2em 0 0;
+
+    input {
+        width: 10em;
+    }
+}
+
+$pln-color: #ffffff;
+$mis-color: #ffdddd;
+$run-color: #ddffdd;
+$exc-color: #eeeeee;
+$par-color: #ffffaa;
+
+$off-button-lighten: 50%;
+
+h2.stats {
+    margin-top: .5em;
+    font-size: 1em;
+}
+.stats span {
+    border: 1px solid;
+    border-radius: .1em;
+    padding: .1em .5em;
+    margin: 0 .1em;
+    cursor: pointer;
+    border-color: #ccc #999 #999 #ccc;
+
+    &.run {
+        background: mix($run-color, #fff, $off-button-lighten);
+        &.show_run {
+            border-color: #999 #ccc #ccc #999;
+            background: $run-color;
+        }
+    }
+    &.mis {
+        background: mix($mis-color, #fff, $off-button-lighten);
+        &.show_mis {
+            border-color: #999 #ccc #ccc #999;
+            background: $mis-color;
+        }
+    }
+    &.exc {
+        background: mix($exc-color, #fff, $off-button-lighten);
+        &.show_exc {
+            border-color: #999 #ccc #ccc #999;
+            background: $exc-color;
+        }
+    }
+    &.par {
+        background: mix($par-color, #fff, $off-button-lighten);
+        &.show_par {
+            border-color: #999 #ccc #ccc #999;
+            background: $par-color;
+        }
+    }
+}
+
+// Yellow post-it things.
+%popup {
+    display: none;
+    position: absolute;
+    z-index: 999;
+    background: #ffffcc;
+    border: 1px solid #888;
+    border-radius: .2em;
+    box-shadow: #cccccc .2em .2em .2em;
+    color: #333;
+    padding: .25em .5em;
+}
+
+// Yellow post-it's in the text listings.
+%in-text-popup {
+    @extend %popup;
+    white-space: normal;
+    float: right;
+    top: 1.75em;
+    right: 1em;
+    height: auto;
+}
+
+// Help panel
+#keyboard_icon {
+    float: right;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.help_panel {
+    @extend %popup;
+    padding: .5em;
+    border: 1px solid #883;
+
+    .legend {
+        font-style: italic;
+        margin-bottom: 1em;
+    }
+
+    .indexfile & {
+        width: 20em;
+        height: 4em;
+    }
+
+    .pyfile & {
+        width: 16em;
+        height: 8em;
+    }
+}
+
+#panel_icon {
+    float: right;
+    cursor: pointer;
+}
+
+.keyhelp {
+    margin: .75em;
+
+    .key {
+        border: 1px solid black;
+        border-color: #888 #333 #333 #888;
+        padding: .1em .35em;
+        font-family: monospace;
+        font-weight: bold;
+        background: #eee;
+    }
+}
+
+// Source file styles
+
+$hover-dark-amt: 95%;
+$pln-hover-color: mix($pln-color, #000, $hover-dark-amt);
+$mis-hover-color: mix($mis-color, #000, $hover-dark-amt);
+$run-hover-color: mix($run-color, #000, $hover-dark-amt);
+$exc-hover-color: mix($exc-color, #000, $hover-dark-amt);
+$par-hover-color: mix($par-color, #000, $hover-dark-amt);
+
+// The slim bar at the left edge of the source lines, colored by coverage.
+$border-indicator-width: .2em;
+
+$context-panel-color: #aaeeff;
+
+#source {
+    padding: 1em 0 1em $left-gutter;
+    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+
+    p {
+        // position relative makes position:absolute pop-ups appear in the right place.
+        position: relative;
+        white-space: pre;
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .n {
+            float: left;
+            text-align: right;
+            width: $left-gutter;
+            box-sizing: border-box;
+            margin-left: -$left-gutter;
+            padding-right: 1em;
+            color: #999999;
+            font-family: verdana, sans-serif;
+
+            a {
+                text-decoration: none;
+                color: #999999;
+                font-size: .8333em;   // 10/12
+                line-height: 1em;
+                &:hover {
+                    text-decoration: underline;
+                    color: #999999;
+                }
+            }
+        }
+
+        &.highlight .n {
+            background: #ffdd00;
+        }
+
+        .t {
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            margin-left: -.5em;
+            padding-left: .5em - $border-indicator-width;
+            border-left: $border-indicator-width solid white;
+
+            &:hover {
+                background: $pln-hover-color;
+
+                & ~ .r .annotate.long {
+                    display: block;
+                }
+            }
+
+            // Syntax coloring
+            .com {
+                color: green;
+                font-style: italic;
+                line-height: 1px;
+            }
+            .key {
+                font-weight: bold;
+                line-height: 1px;
+            }
+            .str {
+                color: #000080;
+            }
+        }
+
+        &.mis {
+            .t {
+                border-left: $border-indicator-width solid #ff0000;
+            }
+
+            &.show_mis .t {
+                background: $mis-color;
+
+                &:hover {
+                    background: $mis-hover-color;
+                }
+            }
+        }
+
+        &.run {
+            .t {
+                border-left: $border-indicator-width solid #00ff00;
+            }
+
+            &.show_run .t {
+                background: $run-color;
+
+                &:hover {
+                    background: $run-hover-color;
+                }
+            }
+        }
+
+        &.exc {
+            .t {
+                border-left: $border-indicator-width solid #808080;
+            }
+
+            &.show_exc .t {
+                background: $exc-color;
+
+                &:hover {
+                    background: $exc-hover-color;
+                }
+            }
+        }
+
+        &.par {
+            .t {
+                border-left: $border-indicator-width solid #eeee99;
+            }
+
+            &.show_par .t {
+                background: $par-color;
+
+                &:hover {
+                    background: $par-hover-color;
+                }
+            }
+
+        }
+
+        .r {
+            position: absolute;
+            top: 0;
+            right: 2.5em;
+            font-family: verdana, sans-serif;
+        }
+
+        .annotate {
+            font-family: georgia;
+            color: #666;
+            padding-right: .5em;
+
+            &.short:hover ~ .long {
+                display: block;
+            }
+
+            &.long {
+                @extend %in-text-popup;
+                width: 30em;
+                right: 2.5em;
+            }
+        }
+
+        input {
+            display: none;
+
+            & ~ .r label.ctx {
+                cursor: pointer;
+                border-radius: .25em;
+                &::before {
+                    content: "▶ ";
+                }
+                &:hover {
+                    background: mix($context-panel-color, #fff, 50%);
+                    color: #666;
+                }
+            }
+
+            &:checked ~ .r label.ctx {
+                background: $context-panel-color;
+                color: #666;
+                border-radius: .75em .75em 0 0;
+                padding: 0 .5em;
+                margin: -.25em 0;
+                &::before {
+                    content: "▼ ";
+                }
+            }
+
+            &:checked ~ .ctxs {
+                padding: .25em .5em;
+                overflow-y: scroll;
+                max-height: 10.5em;
+            }
+        }
+
+        label.ctx {
+            color: #999;
+            display: inline-block;
+            padding: 0 .5em;
+            font-size: .8333em;   // 10/12
+        }
+
+        .ctxs {
+            display: block;
+            max-height: 0;
+            overflow-y: hidden;
+            transition: all .2s;
+            padding: 0 .5em;
+            font-family: verdana, sans-serif;
+            white-space: nowrap;
+            background: $context-panel-color;
+            border-radius: .25em;
+            margin-right: 1.75em;
+            span {
+                display: block;
+                text-align: right;
+            }
+        }
+    }
+}
+
+
+// index styles
+#index {
+    td, th {
+        text-align: right;
+        width: 5em;
+        padding: .25em .5em;
+        border-bottom: 1px solid #eee;
+        &.left {
+            padding-left: 0;
+        }
+        &.right {
+            padding-right: 0;
+        }
+        &.name {
+            text-align: left;
+            width: auto;
+        }
+    }
+    th {
+        font-style: italic;
+        color: #333;
+        border-bottom: 1px solid #ccc;
+        cursor: pointer;
+        &:hover {
+            background: #eee;
+            border-bottom: 1px solid #999;
+        }
+        &.headerSortDown, &.headerSortUp {
+            border-bottom: 1px solid #000;
+            white-space: nowrap;
+            background: #eee;
+        }
+        &.headerSortDown:after {
+            content: " ↓";
+        }
+        &.headerSortUp:after {
+            content: " ↑";
+        }
+    }
+    td.name a {
+        text-decoration: none;
+        color: #000;
+    }
+
+    tr.total td,
+    tr.total_dynamic td {
+        font-weight: bold;
+        border-top: 1px solid #ccc;
+        border-bottom: none;
+    }
+    tr.file:hover {
+        background: #eeeeee;
+        td.name {
+            text-decoration: underline;
+            color: #000;
+        }
+    }
+}
+
+// scroll marker styles
+#scroll_marker {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 16px;
+    height: 100%;
+    background: white;
+    border-left: 1px solid #eee;
+    will-change: transform; // for faster scrolling of fixed element in Chrome
+
+    .marker {
+        background: #ddd;
+        position: absolute;
+        min-height: 3px;
+        width: 100%;
+    }
+}
