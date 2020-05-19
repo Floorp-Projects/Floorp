@@ -76,7 +76,7 @@ parent:
   async __delete__();
 
   // DocShell messaging.
-  async LoadURL(nsCString aSpec);
+  async LoadURL(nsCString aSpec, nsIPrincipal aTriggeringPrincipal);
   async ResumeLoad(uint64_t aPendingSwitchID);
 
   // Out of process rendering.

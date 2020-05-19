@@ -999,8 +999,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvWillChangeProcess(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(const nsCString& aURI,
-                                                  const ParentShowInfo& aInfo) {
+mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(
+    const nsCString& aURI, nsIPrincipal* aTriggeringPrincipal,
+    const ParentShowInfo& aInfo) {
   if (!mDidLoadURLInit) {
     mDidLoadURLInit = true;
     if (!InitBrowserChildMessageManager()) {
@@ -1011,7 +1012,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(const nsCString& aURI,
   }
 
   LoadURIOptions loadURIOptions;
-  loadURIOptions.mTriggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+  loadURIOptions.mTriggeringPrincipal = aTriggeringPrincipal;
   loadURIOptions.mLoadFlags =
       nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
       nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;

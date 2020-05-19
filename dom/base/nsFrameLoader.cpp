@@ -576,7 +576,15 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
       mRemoteBrowser->ResumeLoad(mPendingSwitchID);
       mPendingSwitchID = 0;
     } else {
-      mRemoteBrowser->LoadURL(mURIToLoad);
+      // The triggering principal could be null if the frame is loaded other
+      // than the src attribute, for example, the frame is sandboxed. In the
+      // case we use the principal of the owner content, which is needed to
+      // prevent XSS attaches on documents loaded in subframes.
+      if (mTriggeringPrincipal) {
+        mRemoteBrowser->LoadURL(mURIToLoad, mTriggeringPrincipal);
+      } else {
+        mRemoteBrowser->LoadURL(mURIToLoad, mOwnerContent->NodePrincipal());
+      }
     }
 
     if (!mRemoteBrowserShown) {
