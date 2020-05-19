@@ -2484,7 +2484,7 @@ void nsContainerFrame::List(FILE* out, const char* aPrefix,
 
   // Output the children
   bool outputOneList = false;
-  for (const auto& [list, listID] : nsIFrame::ChildLists()) {
+  for (const auto& [list, listID] : ChildLists()) {
     if (outputOneList) {
       str += aPrefix;
     }
@@ -2529,7 +2529,7 @@ void nsContainerFrame::ListWithMatchedRules(FILE* out,
   childPrefix += aPrefix;
   childPrefix += "  ";
 
-  for (const auto& childList : nsIFrame::ChildLists()) {
+  for (const auto& childList : ChildLists()) {
     for (const nsIFrame* kid : childList.mList) {
       kid->ListWithMatchedRules(out, childPrefix.get());
     }
