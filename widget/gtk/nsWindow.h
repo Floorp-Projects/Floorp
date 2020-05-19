@@ -432,6 +432,7 @@ class nsWindow final : public nsBaseWidget {
   };
   virtual void FlushPreferredPopupRect() override {
     mPreferredPopupRect = nsRect(0, 0, 0, 0);
+    mPreferredPopupRectFlushed = true;
   };
 #endif
   bool IsRemoteContent() { return HasRemoteContent(); }
@@ -701,6 +702,7 @@ class nsWindow final : public nsBaseWidget {
   GtkWindow* GetTopmostWindow();
   bool IsWidgetOverflowWindow();
   nsRect mPreferredPopupRect;
+  bool mPreferredPopupRectFlushed;
   bool mWaitingForMoveToRectCB;
   LayoutDeviceIntRect mPendingSizeRect;
 
