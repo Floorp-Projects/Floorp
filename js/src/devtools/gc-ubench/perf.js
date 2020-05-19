@@ -10,7 +10,7 @@ var features = {
 };
 
 // Class for inter-frame timing, which handles being paused and resumed.
-class FrameTimer {
+var FrameTimer = class {
   constructor() {
     // Start time of the current active test, adjusted for any time spent
     // stopped (so `now - this.start` is how long the current active test
@@ -51,7 +51,7 @@ class FrameTimer {
     this.start += stop_duration;
     this.stopped = 0;
   }
-}
+};
 
 // Per-frame time sampling infra.
 var sampleTime = 16.666667; // ms
@@ -59,7 +59,7 @@ var sampleIndex = 0;
 
 // Class for maintaining a rolling window of per-frame GC-related counters:
 // inter-frame delay, minor/major/slice GC counts, cumulative bytes, etc.
-class FrameHistory {
+var FrameHistory = class {
   constructor(numSamples) {
     // Private
     this._frameTimer = new FrameTimer();
@@ -158,4 +158,4 @@ class FrameHistory {
   is_stopped() {
     return this._frameTimer.is_stopped();
   }
-}
+};
