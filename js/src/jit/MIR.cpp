@@ -1375,56 +1375,7 @@ MDefinition* MSign::foldsTo(TempAllocator& alloc) {
 }
 
 const char* MMathFunction::FunctionName(UnaryMathFunction function) {
-  switch (function) {
-    case UnaryMathFunction::Log:
-      return "Log";
-    case UnaryMathFunction::Sin:
-      return "Sin";
-    case UnaryMathFunction::Cos:
-      return "Cos";
-    case UnaryMathFunction::Exp:
-      return "Exp";
-    case UnaryMathFunction::Tan:
-      return "Tan";
-    case UnaryMathFunction::ACos:
-      return "ACos";
-    case UnaryMathFunction::ASin:
-      return "ASin";
-    case UnaryMathFunction::ATan:
-      return "ATan";
-    case UnaryMathFunction::Log10:
-      return "Log10";
-    case UnaryMathFunction::Log2:
-      return "Log2";
-    case UnaryMathFunction::Log1P:
-      return "Log1P";
-    case UnaryMathFunction::ExpM1:
-      return "ExpM1";
-    case UnaryMathFunction::CosH:
-      return "CosH";
-    case UnaryMathFunction::SinH:
-      return "SinH";
-    case UnaryMathFunction::TanH:
-      return "TanH";
-    case UnaryMathFunction::ACosH:
-      return "ACosH";
-    case UnaryMathFunction::ASinH:
-      return "ASinH";
-    case UnaryMathFunction::ATanH:
-      return "ATanH";
-    case UnaryMathFunction::Trunc:
-      return "Trunc";
-    case UnaryMathFunction::Cbrt:
-      return "Cbrt";
-    case UnaryMathFunction::Floor:
-      return "Floor";
-    case UnaryMathFunction::Ceil:
-      return "Ceil";
-    case UnaryMathFunction::Round:
-      return "Round";
-    default:
-      MOZ_CRASH("Unknown math function");
-  }
+  return GetUnaryMathFunctionName(function);
 }
 
 #ifdef JS_JITSPEW
@@ -1441,81 +1392,13 @@ MDefinition* MMathFunction::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
+  UnaryMathFunctionType funPtr = GetUnaryMathFunctionPtr(function());
+
   double in = input->toConstant()->numberToDouble();
-  double out;
-  switch (function_) {
-    case UnaryMathFunction::Log:
-      out = js::math_log_impl(in);
-      break;
-    case UnaryMathFunction::Sin:
-      out = js::math_sin_impl(in);
-      break;
-    case UnaryMathFunction::Cos:
-      out = js::math_cos_impl(in);
-      break;
-    case UnaryMathFunction::Exp:
-      out = js::math_exp_impl(in);
-      break;
-    case UnaryMathFunction::Tan:
-      out = js::math_tan_impl(in);
-      break;
-    case UnaryMathFunction::ACos:
-      out = js::math_acos_impl(in);
-      break;
-    case UnaryMathFunction::ASin:
-      out = js::math_asin_impl(in);
-      break;
-    case UnaryMathFunction::ATan:
-      out = js::math_atan_impl(in);
-      break;
-    case UnaryMathFunction::Log10:
-      out = js::math_log10_impl(in);
-      break;
-    case UnaryMathFunction::Log2:
-      out = js::math_log2_impl(in);
-      break;
-    case UnaryMathFunction::Log1P:
-      out = js::math_log1p_impl(in);
-      break;
-    case UnaryMathFunction::ExpM1:
-      out = js::math_expm1_impl(in);
-      break;
-    case UnaryMathFunction::CosH:
-      out = js::math_cosh_impl(in);
-      break;
-    case UnaryMathFunction::SinH:
-      out = js::math_sinh_impl(in);
-      break;
-    case UnaryMathFunction::TanH:
-      out = js::math_tanh_impl(in);
-      break;
-    case UnaryMathFunction::ACosH:
-      out = js::math_acosh_impl(in);
-      break;
-    case UnaryMathFunction::ASinH:
-      out = js::math_asinh_impl(in);
-      break;
-    case UnaryMathFunction::ATanH:
-      out = js::math_atanh_impl(in);
-      break;
-    case UnaryMathFunction::Trunc:
-      out = js::math_trunc_impl(in);
-      break;
-    case UnaryMathFunction::Cbrt:
-      out = js::math_cbrt_impl(in);
-      break;
-    case UnaryMathFunction::Floor:
-      out = js::math_floor_impl(in);
-      break;
-    case UnaryMathFunction::Ceil:
-      out = js::math_ceil_impl(in);
-      break;
-    case UnaryMathFunction::Round:
-      out = js::math_round_impl(in);
-      break;
-    default:
-      return this;
-  }
+
+  // The function pointer call can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+  double out = funPtr(in);
 
   if (input->type() == MIRType::Float32) {
     return MConstant::NewFloat32(alloc, out);

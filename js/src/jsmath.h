@@ -46,6 +46,9 @@ enum class UnaryMathFunction : uint8_t {
   Round,
 };
 
+extern UnaryMathFunctionType GetUnaryMathFunctionPtr(UnaryMathFunction fun);
+extern const char* GetUnaryMathFunctionName(UnaryMathFunction fun);
+
 /*
  * JS math functions.
  */
