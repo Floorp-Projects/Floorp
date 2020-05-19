@@ -200,6 +200,18 @@ var makeFxAccountsInternalMock = function(config) {
     _getAssertion(audience) {
       return Promise.resolve(config.fxaccount.user.assertion);
     },
+    getOAuthToken: () => Promise.resolve("some-access-token"),
+    keys: {
+      getScopedKeys: () =>
+        Promise.resolve({
+          "https://identity.mozilla.com/apps/oldsync": {
+            identifier: "https://identity.mozilla.com/apps/oldsync",
+            keyRotationSecret:
+              "0000000000000000000000000000000000000000000000000000000000000000",
+            keyRotationTimestamp: 1510726317123,
+          },
+        }),
+    },
     profile: {
       getProfile() {
         return null;

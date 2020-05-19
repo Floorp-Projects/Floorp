@@ -82,6 +82,10 @@ async function syncAndExpectNodeReassignment(
       getTokenCount++;
       return { endpoint: server.baseURI + "1.1/johndoe/" };
     },
+    async getTokenFromOAuthToken() {
+      getTokenCount++;
+      return { endpoint: server.baseURI + "1.1/johndoe/" };
+    },
   };
   Service.identity._tokenServerClient = mockTSC;
 
@@ -294,6 +298,10 @@ add_task(async function test_loop_avoidance_storage() {
       getTokenCount++;
       return { endpoint: server.baseURI + "1.1/johndoe/" };
     },
+    async getTokenFromOAuthToken() {
+      getTokenCount++;
+      return { endpoint: server.baseURI + "1.1/johndoe/" };
+    },
   };
   Service.identity._tokenServerClient = mockTSC;
 
@@ -389,6 +397,10 @@ add_task(async function test_loop_avoidance_engine() {
   let mockTSC = {
     // TokenServerClient
     getTokenFromBrowserIDAssertion(uri, assertion) {
+      getTokenCount++;
+      return { endpoint: server.baseURI + "1.1/johndoe/" };
+    },
+    async getTokenFromOAuthToken() {
       getTokenCount++;
       return { endpoint: server.baseURI + "1.1/johndoe/" };
     },
