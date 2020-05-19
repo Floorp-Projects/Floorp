@@ -54,9 +54,21 @@ function resolveDisplayNamesInternals(lazyDisplayNamesData) {
                           lazyDisplayNamesData.opt,
                           DisplayNames.relevantExtensionKeys,
                           localeData);
+    // Step 12.
+    internalProps.style = lazyDisplayNamesData.style;
+
+    // Step 14.
+    internalProps.type = lazyDisplayNamesData.type;
+
+    // Step 16.
+    internalProps.fallback = lazyDisplayNamesData.fallback;
 
     // Step 17.
     internalProps.locale = r.locale;
+
+    if (mozExtensions) {
+        internalProps.calendar = r.ca;
+    }
 
     // The caller is responsible for associating |internalProps| with the right
     // object using |setInternalProperties|.
@@ -136,6 +148,41 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
     var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
     opt.localeMatcher = matcher;
 
+    if (mozExtensions) {
+        var calendar = GetOption(options, "calendar", "string", undefined, undefined);
+
+        if (calendar !== undefined) {
+            calendar = intl_ValidateAndCanonicalizeUnicodeExtensionType(calendar, "calendar");
+        }
+
+        opt.ca = calendar;
+    }
+
+    // Step 11.
+    var style = GetOption(options, "style", "string", ["narrow", "short", "long"], "long");
+
+    // Step 12.
+    lazyDisplayNamesData.style = style;
+
+    // Step 13.
+    var type;
+    if (mozExtensions) {
+        type = GetOption(options, "type", "string",
+                         ["language", "region", "script", "currency", "weekday", "month",
+                          "quarter", "dayPeriod", "dateTimeField"], "language");
+    } else {
+        type = GetOption(options, "type", "string",
+                         ["language", "region", "script", "currency"], "language");
+    }
+
+    // Step 14.
+    lazyDisplayNamesData.type = type;
+
+    // Step 15.
+    var fallback = GetOption(options, "fallback", "string", ["code", "none"], "code");
+
+    // Step 16.
+    lazyDisplayNamesData.fallback = fallback;
 
     // We've done everything that must be done now: mark the lazy data as fully
     // computed and install it.
@@ -174,8 +221,31 @@ function Intl_DisplayNames_of(code) {
 
   var internals = getDisplayNamesInternals(displayNames);
 
+  // Unpack the internals object to avoid a slow runtime to selfhosted JS call
+  // in |intl_ComputeDisplayName()|.
+  var {locale, calendar = "", style, type} = internals;
+
+  code = ToString(code);
+
+  // Steps 5-7.
+  var name = intl_ComputeDisplayName(displayNames, locale, calendar, style, type, code);
+
+  // Step 8.
+  // This implementation returns the empty string instead of undefined if no
+  // result was found.
+  if (name !== "") {
+      return name;
+  }
+
+  // Step 9.
+  if (internals.fallback === "code") {
+      // TODO: spec should require case normalisation:
+      // https://github.com/tc39/proposal-intl-displaynames/issues/72
+      return code;
+  }
+
   // Step 10.
-  return;
+  return undefined;
 }
 
 /**
@@ -196,7 +266,14 @@ function Intl_DisplayNames_resolvedOptions() {
     // Steps 4-5.
     var options = {
         locale: internals.locale,
+        style: internals.style,
+        type: internals.type,
+        fallback: internals.fallback,
     };
+
+    if (hasOwn("calendar", internals)) {
+        options.calendar = internals.calendar;
+    }
 
     // Step 6.
     return options;
