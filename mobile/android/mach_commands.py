@@ -253,18 +253,6 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""")
         # Copy over user documentation.
         import mozfile
 
-        # Remove existing geckoview docs and replace with the local copy.
-        # Keep all the files that are git specific and not part of the GV documentation.
-        keep_files = [".git", ".gitignore", "_site", "CODE_OF_CONDUCT.md",
-                      "Gemfile.lock", "README.md"]
-        for filename in os.listdir(repo_path):
-            if filename not in keep_files:
-                filepath = mozpath.join(repo_path, filename)
-                mozfile.remove(filepath)
-
-        src_path = mozpath.join(self.topsrcdir, 'mobile', 'android', 'docs', 'geckoview')
-        os.system("rsync -aruz {}/ {}/".format(src_path, repo_path))
-
         # Extract new javadoc to specified directory inside repo.
         src_tar = mozpath.join(self.topobjdir, 'gradle', 'build', 'mobile', 'android',
                                'geckoview', 'libs', 'geckoview-javadoc.jar')
