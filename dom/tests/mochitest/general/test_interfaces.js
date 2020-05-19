@@ -53,7 +53,7 @@ var ecmaGlobals = [
   { name: "AggregateError", insecureContext: true, nightly: true },
   { name: "Array", insecureContext: true },
   { name: "ArrayBuffer", insecureContext: true },
-  { name: "Atomics", insecureContext: true, earlyBetaOrEarlier: true },
+  { name: "Atomics", insecureContext: true },
   { name: "BigInt", insecureContext: true },
   { name: "BigInt64Array", insecureContext: true },
   { name: "BigUint64Array", insecureContext: true },
@@ -90,7 +90,6 @@ var ecmaGlobals = [
   {
     name: "SharedArrayBuffer",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     crossOriginIsolated: true,
   },
   { name: "String", insecureContext: true },
