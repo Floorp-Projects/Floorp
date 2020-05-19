@@ -1447,10 +1447,12 @@ class BaseStackFrameAllocator {
 
 #ifdef RABALDR_CHUNKY_STACK
   void pushChunkyBytes(uint32_t bytes) {
-    MOZ_ASSERT(bytes <= ChunkSize);
     checkChunkyInvariants();
-    if (masm.framePushed() - currentStackHeight_ < bytes) {
-      masm.reserveStack(ChunkSize);
+    uint32_t freeSpace = masm.framePushed() - currentStackHeight_;
+    if (freeSpace < bytes) {
+      uint32_t bytesToReserve = AlignBytes(bytes - freeSpace, ChunkSize);
+      MOZ_ASSERT(bytesToReserve + freeSpace >= bytes);
+      masm.reserveStack(bytesToReserve);
     }
     currentStackHeight_ += bytes;
     checkChunkyInvariants();
