@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -703,5 +704,37 @@ class EngineObserverTest {
         observer.onNavigateBack()
 
         assertEquals("", session.searchTerms)
+    }
+
+    @Test
+    fun `onHistoryStateChanged dispatches UpdateHistoryStateAction`() {
+        val session = Session("")
+        val store = mock(BrowserStore::class.java)
+        val observer = EngineObserver(session, store)
+        whenever(store.dispatch(any())).thenReturn(mock())
+
+        observer.onHistoryStateChanged(emptyList(), 0)
+        verify(store).dispatch(
+            ContentAction.UpdateHistoryStateAction(
+                session.id,
+                emptyList(),
+                currentIndex = 0
+            )
+        )
+
+        observer.onHistoryStateChanged(listOf(
+            HistoryItem("Firefox", "https://firefox.com"),
+            HistoryItem("Mozilla", "http://mozilla.org")
+        ), 1)
+        verify(store).dispatch(
+            ContentAction.UpdateHistoryStateAction(
+                session.id,
+                listOf(
+                    HistoryItem("Firefox", "https://firefox.com"),
+                    HistoryItem("Mozilla", "http://mozilla.org")
+                ),
+                currentIndex = 1
+            )
+        )
     }
 }

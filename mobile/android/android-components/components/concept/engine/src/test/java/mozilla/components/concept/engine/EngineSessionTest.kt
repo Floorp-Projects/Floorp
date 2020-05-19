@@ -25,6 +25,7 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
+import mozilla.components.concept.engine.history.HistoryItem
 import java.lang.reflect.Modifier
 
 class EngineSessionTest {
@@ -549,6 +550,28 @@ class EngineSessionTest {
             contentType = "application/vnd.android.package-archive",
             cookie = "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
             userAgent = "Components/1.0"
+        )
+    }
+
+    @Test
+    fun `registered observer will be notified about history state`() {
+        val session = spy(DummyEngineSession())
+
+        val observer = mock(EngineSession.Observer::class.java)
+        session.register(observer)
+
+        session.notifyInternalObservers {
+            onHistoryStateChanged(
+                listOf(HistoryItem("Firefox download", "https://download.mozilla.org")),
+                currentIndex = 0
+            )
+        }
+
+        verify(observer).onHistoryStateChanged(
+            historyList = listOf(
+                HistoryItem("Firefox download", "https://download.mozilla.org")
+            ),
+            currentIndex = 0
         )
     }
 

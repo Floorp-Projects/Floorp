@@ -23,6 +23,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
@@ -284,5 +285,13 @@ internal class EngineObserver(
 
     override fun onRecordingStateChanged(devices: List<RecordingDevice>) {
         session.recordingDevices = devices
+    }
+
+    override fun onHistoryStateChanged(historyList: List<HistoryItem>, currentIndex: Int) {
+        store?.dispatch(ContentAction.UpdateHistoryStateAction(
+            session.id,
+            historyList,
+            currentIndex
+        ))
     }
 }

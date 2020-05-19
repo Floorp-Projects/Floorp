@@ -22,6 +22,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.prompt.PromptRequest
@@ -288,6 +289,15 @@ sealed class ContentAction : BrowserAction() {
      * Removes the [WebAppManifest] of the [ContentState] with the given [sessionId].
      */
     data class RemoveWebAppManifestAction(val sessionId: String) : ContentAction()
+
+    /**
+     * Updates the [ContentState] of the given [sessionId] to indicate the current history state.
+     */
+    data class UpdateHistoryStateAction(
+        val sessionId: String,
+        val historyList: List<HistoryItem>,
+        val currentIndex: Int
+    ) : ContentAction()
 }
 
 /**

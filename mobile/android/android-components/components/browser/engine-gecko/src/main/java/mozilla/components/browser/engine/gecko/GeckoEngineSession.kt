@@ -20,6 +20,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
@@ -564,6 +565,14 @@ class GeckoEngineSession(
                 val visits = delegate.getVisited(urls.toList())
                 visits.toBooleanArray()
             }
+        }
+
+        override fun onHistoryStateChange(
+            session: GeckoSession,
+            historyList: GeckoSession.HistoryDelegate.HistoryList
+        ) {
+            val items = historyList.map { HistoryItem(title = it.title, uri = it.uri) }
+            notifyObservers { onHistoryStateChanged(items, historyList.currentIndex) }
         }
     }
 
