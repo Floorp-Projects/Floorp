@@ -44,13 +44,6 @@ void HTMLDialogElement::Close(
   ErrorResult ignored;
   SetOpen(false, ignored);
   ignored.SuppressException();
-
-  Document* doc = OwnerDoc();
-  auto predictFunc = [self = RefPtr<HTMLDialogElement>(this)](
-                         Element* element) { return element == self; };
-
-  doc->TopLayerPop(predictFunc);
-
   RefPtr<AsyncEventDispatcher> eventDispatcher = new AsyncEventDispatcher(
       this, NS_LITERAL_STRING("close"), CanBubble::eNo);
   eventDispatcher->PostDOMEvent();
@@ -65,30 +58,10 @@ void HTMLDialogElement::Show() {
   ignored.SuppressException();
 }
 
-bool HTMLDialogElement::IsInTopLayer() const {
-  return OwnerDoc()->DoesTopLayerContain(this);
-}
-
-void HTMLDialogElement::UnbindFromTree(bool aNullParent) {
-  if (IsInTopLayer()) {
-    Document* doc = OwnerDoc();
-    auto predictFunc = [self = RefPtr<HTMLDialogElement>(this)](
-                           Element* element) { return element == self; };
-
-    doc->TopLayerPop(predictFunc);
-  }
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
-}
-
 void HTMLDialogElement::ShowModal(ErrorResult& aError) {
   if (!IsInComposedDoc() || Open()) {
     aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
-  }
-
-  Document* doc = OwnerDoc();
-  if (!IsInTopLayer()) {
-    doc->TopLayerPush(this);
   }
 
   SetOpen(true, aError);
