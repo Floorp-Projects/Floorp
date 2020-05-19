@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Privat Firefox Preview</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (Privat)</string>
 
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Privat %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (privat)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Fleire innstillingar</string>
@@ -21,13 +21,12 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Dei opne fanene dine vert viste her.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s er produsert av Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Du er i ei privat økt</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s fjernar søk- og nettlesarhistorikken når du avsluttar appen eller lèt att alle private faner. Sjølv om dette ikkje gjer deg anonym for nettstadar eller internett-leverandøren din, vil det gjere det lettare
-        å behalde det du gjer på nettet privat frå alle andre som brukar denne datamaskina.</string>
     <string name="private_browsing_common_myths">Vanlege mytar om privat nettlesing</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Slett økt</string>
@@ -46,6 +45,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Ny privat fane</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Mest besøkte nettstadar</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Opne faner</string>
@@ -62,7 +64,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Rediger bokmerke</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Tilleggshandterar</string>
+    <string name="browser_menu_add_ons">Tillegg</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Ingen tillegg her</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -71,8 +73,6 @@
     <string name="browser_menu_whats_new">Kva er nytt</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Innstillingar</string>
-    <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Ditt bibliotek</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Datamaskinversjon</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -85,8 +85,6 @@
     <string name="browser_menu_private_tab">Privat fane</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Ny fane</string>
-    <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Lagre i samling</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Rapporter problem med nettstaden</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -274,10 +272,6 @@
     <string name="sync_last_synced_summary">Sist synkronisert: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Sist synkronisert: Aldri</string>
-    <!-- Text for displaying the default device name.
-        The first parameter is the application name, the second is the device manufacturer name
-        and the third is the device model. -->
-    <string name="default_device_name">%s på %s%s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -382,8 +376,6 @@
     <string name="library_reading_list">Leseliste</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Søk</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Bbliotek</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Innstillingar</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -537,8 +529,6 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Sletta %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Slettar valde bokmerke</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANGRE</string>
 
@@ -586,10 +576,6 @@
     <string name="tracking_protection_on">På</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Av</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Video og lyd er blokkert</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Video og lyd har løyve</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">På</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1104,4 +1090,4 @@
     <string name="certificate_info_verified_by">Stadfesta av: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Slett</string>
-</resources>
+    </resources>

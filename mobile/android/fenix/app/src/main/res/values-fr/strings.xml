@@ -378,7 +378,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Visitez <b>firefox.com/pair</b> dans Firefox sur votre ordinateur pour obtenir votre QR code.]]></string>
+    <string name="pair_instructions"><![CDATA[Visitez <b>firefox.com/pair</b> dans Firefox sur votre ordinateur pour obtenir votre code QR.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Ouvrir l’appareil photo</string>
     <!-- Button to cancel pairing -->

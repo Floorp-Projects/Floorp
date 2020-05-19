@@ -807,7 +807,7 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Dimensionamento automático de fontes</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Usar a configuração do Android de tamanho de fonte de caracteres. Desative para definir aqui o tamanho.</string>
+    <string name="preference_accessibility_auto_size_summary">Usar a configuração do Android de tamanho de fontes de caracteres. Desative para definir aqui o tamanho.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Excluir dados de navegação</string>

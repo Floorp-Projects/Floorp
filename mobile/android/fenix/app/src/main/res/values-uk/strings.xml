@@ -1086,7 +1086,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Криптомайнери</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Зчитування відбитку браузера</string>
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Зчитування цифрового відбитка</string>
     <string name="enhanced_tracking_protection_blocked">Заблоковано</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Дозволено</string>
@@ -1103,7 +1103,7 @@
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">Перешкоджає доступу зловмисних скриптів до вашого пристрою для видобутку цифрової валюти.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_title">Зчитування відбитку браузера</string>
+    <string name="etp_fingerprinters_title">Зчитування цифрового відбитка</string>
 
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">Зупиняє збір унікальних даних про ваш пристрій, які можна використовувати для відстеження.</string>

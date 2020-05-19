@@ -1001,6 +1001,8 @@
     <string name="sync_scan_code">Skenirajte kodo</string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Na računalniku odprite Firefox in obiščite <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Pripravljeno za skeniranje</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Prijavite se s kamero</string>
     <!-- Text shown for settings option for sign with email -->
@@ -1097,7 +1099,7 @@
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Sledilci prstnih odtisov</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">Zaustavlja zbiranje prepoznavnih podatkov o vaši napravi, ki se lahko uporabijo za sledenje.</string>
+    <string name="etp_fingerprinters_description">Preprečuje zbiranje podatkov o vaši napravi, ki se lahko uporabijo za vašo prepoznavo in sledenje.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Sledilna vsebina</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
@@ -1377,8 +1379,18 @@
     <string name="dialog_delete_positive">Izbriši</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Možnosti prijave</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Besedilno polje za urejanje spletnega naslova prijave.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Besedilno polje za urejanje uporabniškega imena prijave.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Besedilno polje za urejanje gesla prijave.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Shrani spremembe v prijavo.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Zavrzi spremembe</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Urejanje</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Zahtevano je geslo</string>
 </resources>

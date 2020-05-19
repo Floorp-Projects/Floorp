@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s privat</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (nav. privada)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Mai d’opcions</string>
@@ -133,6 +137,12 @@
 
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Senhals</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Avançat</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Vida privada</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Vida privada e seguretat</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilitat</string>
     <!-- Preference category for account information -->
@@ -152,6 +162,8 @@
 
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Aisinas pels desvolopaires</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Cercar dins los marcapaginas</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Paramètres del compte</string>
     <!-- Preference for add_ons -->
@@ -175,6 +187,11 @@
     <string name="empty_device_name_error">Lo nom del periferic pòt pas èsser void.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Sincronizacion…</string>
+
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Darrièra sincronizacion : %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Darrièra sincr. : pas jamai</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -231,8 +248,6 @@
     <string name="library_reading_list">Lista de lectura</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Recercar</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Bibliotèca</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Paramètres</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->

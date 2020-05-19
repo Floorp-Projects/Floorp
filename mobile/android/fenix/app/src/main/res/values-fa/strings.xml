@@ -388,8 +388,6 @@
     <string name="library_reading_list">فهرست خواندن</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">جست‌وجو</string>
-    <!-- Library Page Title -->
-    <string name="library_title">کتابخانه</string>
     <!-- Settings Page Title -->
     <string name="settings_title">تنظیمات</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -833,6 +831,14 @@
     <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button">دریافت مرورگر موزیلا فایرفاکس</string>
 
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly منتقل شده است</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">این برنامه دیگر به روزرسانی های امنیتی را دریافت نمی کند. دریافت Nightly جدید و استفاده از این برنامه را متوقف کنید.
+        \ n \ n برای انتقال نشانک ها ، ورود به سیستم و تاریخ خود به برنامه دیگری ، یک حساب Firefox ایجاد کنید.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">دریافت Nightly  جدید</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1064,6 +1070,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">پشتیبانی</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">خرابی ها</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">اطلاعیه حریم‌شخصی</string>
     <!-- About page link text to open know your rights link -->
@@ -1200,6 +1208,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">حتی در وب سایت هایی که از این حرکت جلوگیری می کنند ، می توانید خرج کردن و بزرگنمایی را فعال کنید.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">نام (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">آخرین بار استفاده</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">مرتب سازی بر روی فهرست ورود</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">افزودن موتور جست‌وجو</string>
     <!-- Title of the Edit search engine screen -->
@@ -1292,8 +1307,18 @@
     <string name="certificate_info_verified_by">تایید شده توسط:%1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">حذف</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">ویرایش</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">آیا مطمئنید که می‌خواهید این ورود را حذف کنید؟</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">حذف</string>
-</resources>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">گزینه های ورود</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description"></string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">قسمت متن قابل ویرایش برای نام کاربری ورود به سیستم.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">قسمت متن قابل ویرایش برای کلمه عبور ورود به سیستم.</string>
+    </resources>
