@@ -8,7 +8,6 @@ import mock
 import tempfile
 import shutil
 from contextlib import contextmanager
-import platform
 
 from mach.registrar import Registrar
 
@@ -72,9 +71,6 @@ def test_doc_flavor(mocked_func):
 @mock.patch("mozperftest.mach_commands.MachCommandBase._activate_virtualenv")
 @mock.patch("mozperftest.mach_commands.PerftestTests._run_python_script")
 def test_test_runner(*mocked):
-    if platform.system() == "Darwin" and ON_TRY:
-        return
-
     # simulating on try to run the paths parser
     old = mach_commands.ON_TRY
     mach_commands.ON_TRY = True
