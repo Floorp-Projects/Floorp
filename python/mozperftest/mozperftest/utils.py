@@ -10,6 +10,8 @@ from io import StringIO
 from redo import retry
 import requests
 from collections import defaultdict
+from pathlib import Path
+import tempfile
 
 
 RETRY_SLEEP = 10
@@ -108,25 +110,40 @@ def install_package(virtualenv_manager, package):
 
 
 def build_test_list(tests, randomized=False):
+    """Collects tests given a list of directories, files and URLs.
+
+    Returns a tuple containing the list of tests found and a temp dir for tests
+    that were downloaded from an URL.
+    """
+    temp_dir = None
+
     if isinstance(tests, str):
         tests = [tests]
     res = []
     for test in tests:
-        if os.path.isfile(test):
+        if test.startswith("http"):
+            if temp_dir is None:
+                temp_dir = tempfile.mkdtemp()
+            target = Path(temp_dir, test.split("/")[-1])
+            download_file(test, target)
+            res.append(str(target))
+            continue
+
+        test = Path(test)
+
+        if test.is_file():
             res.append(test)
-        elif os.path.isdir(test):
-            for root, dirs, files in os.walk(test):
-                for file in files:
-                    if not file.startswith("perftest"):
-                        continue
-                    res.append(os.path.join(root, file))
+        elif test.is_dir():
+            for file in test.rglob("perftest_*.js"):
+                res.append(str(file))
     if not randomized:
         res.sort()
     else:
         # random shuffling is used to make sure
         # we don't always run tests in the same order
         random.shuffle(res)
-    return res
+
+    return res, temp_dir
 
 
 def download_file(url, target, retry_sleep=RETRY_SLEEP, attempts=3):
