@@ -50,11 +50,24 @@ function report_events(events, loadMgr) {
 }
 
 function run(loads) {
+  const sequence = [];
+  for (const mut of loads) {
+    if (tests.has(mut)) {
+      sequence.push(mut);
+    } else if (mut === "all") {
+      sequence.push(...tests.keys());
+    } else {
+      sequence.push(...[...tests.keys()].filter(t => t.includes(mut)));
+    }
+  }
+  if (loads.length === 0) {
+    sequence.push(...tests.keys());
+  }
+
   const loadMgr = new AllocationLoadManager(tests);
   const perf = new FrameHistory(gNumSamples);
 
-  loads = loads.length ? loads : tests.keys();
-  loadMgr.startCycle(loads);
+  loadMgr.startCycle(sequence);
   perf.start();
 
   const t0 = gHost.now();
