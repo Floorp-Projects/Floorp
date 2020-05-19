@@ -257,7 +257,7 @@ void ScrollAnchorContainer::SelectAnchor() {
     ANCHOR_LOG("Beginning selection.\n");
     mAnchorNode = FindAnchorIn(mScrollFrame->mScrolledFrame);
   } else {
-    ANCHOR_LOG("Skipping selection, doesn't maintain a scroll anchor");
+    ANCHOR_LOG("Skipping selection, doesn't maintain a scroll anchor.\n");
     mAnchorNode = nullptr;
   }
 
