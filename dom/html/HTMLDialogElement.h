@@ -37,13 +37,9 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
     mReturnValue = aReturnValue;
   }
 
-  virtual void UnbindFromTree(bool aNullParent = true) override;
-
   void Close(const mozilla::dom::Optional<nsAString>& aReturnValue);
   void Show();
   void ShowModal(ErrorResult& aError);
-
-  bool IsInTopLayer() const;
 
   nsString mReturnValue;
 
