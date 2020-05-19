@@ -115,7 +115,7 @@ sm-warp-linux64/debug:
         tier: 2
     run:
         spidermonkey-variant: warpdebug
-    run-on-projects: [mozilla-central']
+    run-on-projects: ['mozilla-central']
 
 sm-nojit-linux64/opt:
     description: "Spidermonkey no JIT"
