@@ -93,6 +93,7 @@ class Localization : public nsIObserver,
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<mozILocalization> mLocalization;
   bool mIsSync;
+  nsTArray<nsString> mResourceIds;
 };
 
 }  // namespace intl
