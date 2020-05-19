@@ -210,6 +210,36 @@ auto ToResultInvoke(const T* const aObj, nsresult (U::*aFunc)(XArgs...) const,
   return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
+#if defined(XP_WIN) && !defined(_WIN64)
+template <typename T, typename U, typename... XArgs, typename... Args>
+auto ToResultInvoke(T& aObj, nsresult (__stdcall U::*aFunc)(XArgs...),
+                    Args&&... aArgs) {
+  return detail::ToResultInvokeMemberFunction<detail::select_last_t<XArgs...>>(
+      aObj, aFunc, std::forward<Args>(aArgs)...);
+}
+
+template <typename T, typename U, typename... XArgs, typename... Args>
+auto ToResultInvoke(const T& aObj,
+                    nsresult (__stdcall U::*aFunc)(XArgs...) const,
+                    Args&&... aArgs) {
+  return detail::ToResultInvokeMemberFunction<detail::select_last_t<XArgs...>>(
+      aObj, aFunc, std::forward<Args>(aArgs)...);
+}
+
+template <typename T, typename U, typename... XArgs, typename... Args>
+auto ToResultInvoke(T* const aObj, nsresult (__stdcall U::*aFunc)(XArgs...),
+                    Args&&... aArgs) {
+  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+}
+
+template <typename T, typename U, typename... XArgs, typename... Args>
+auto ToResultInvoke(const T* const aObj,
+                    nsresult (__stdcall U::*aFunc)(XArgs...) const,
+                    Args&&... aArgs) {
+  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+}
+#endif
+
 }  // namespace mozilla
 
 #endif  // mozilla_ResultExtensions_h
