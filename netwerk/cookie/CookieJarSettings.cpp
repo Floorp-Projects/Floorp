@@ -100,11 +100,13 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create() {
 
 // static
 already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
-    uint32_t aCookieBehavior) {
+    uint32_t aCookieBehavior, const nsAString& aFirstPartyDomain) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<CookieJarSettings> cookieJarSettings =
       new CookieJarSettings(aCookieBehavior, eProgressive);
+  cookieJarSettings->mFirstPartyDomain = aFirstPartyDomain;
+
   return cookieJarSettings.forget();
 }
 
