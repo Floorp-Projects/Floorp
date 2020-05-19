@@ -44,12 +44,14 @@ private fun emitAwesomebarFact(
     ).collect()
 }
 
-internal fun emitProviderQueryTimingFact(provider: AwesomeBar.SuggestionProvider, timing: Long) {
+@Suppress("MagicNumber")
+internal fun emitProviderQueryTimingFact(provider: AwesomeBar.SuggestionProvider, timingNs: Long) {
     emitAwesomebarFact(
         Action.INTERACTION,
         BrowserAwesomeBarFacts.Items.PROVIDER_DURATION,
         metadata = mapOf(
-            BrowserAwesomeBarFacts.MetadataKeys.DURATION_PAIR to (provider to timing)
+            // We only care about millisecond precision here, so convert from ns to ms before emitting.
+            BrowserAwesomeBarFacts.MetadataKeys.DURATION_PAIR to (provider to (timingNs / 1_000_000L))
         )
     )
 }
