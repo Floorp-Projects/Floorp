@@ -174,6 +174,12 @@ CookieJarSettings::GetIsOnContentBlockingAllowList(
 }
 
 NS_IMETHODIMP
+CookieJarSettings::GetFirstPartyDomain(nsAString& aFirstPartyDomain) {
+  aFirstPartyDomain = mFirstPartyDomain;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CookieJarSettings::CookiePermission(nsIPrincipal* aPrincipal,
                                     uint32_t* aCookiePermission) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -253,6 +259,7 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
   aData.isFixed() = mState == eFixed;
   aData.cookieBehavior() = mCookieBehavior;
   aData.isOnContentBlockingAllowList() = mIsOnContentBlockingAllowList;
+  aData.firstPartyDomain() = mFirstPartyDomain;
 
   for (const RefPtr<nsIPermission>& permission : mCookiePermissions) {
     nsCOMPtr<nsIPrincipal> principal;
@@ -311,6 +318,7 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
   cookieJarSettings->mIsOnContentBlockingAllowList =
       aData.isOnContentBlockingAllowList();
   cookieJarSettings->mCookiePermissions.SwapElements(list);
+  cookieJarSettings->mFirstPartyDomain = aData.firstPartyDomain();
 
   cookieJarSettings.forget(aCookieJarSettings);
 }
@@ -367,6 +375,14 @@ void CookieJarSettings::Merge(const CookieJarSettingsArgs& aData) {
       mCookiePermissions.AppendElement(permission);
     }
   }
+}
+
+void CookieJarSettings::SetFirstPartyDomain(nsIURI* aURI) {
+  MOZ_ASSERT(aURI);
+
+  OriginAttributes attrs;
+  attrs.SetFirstPartyDomain(true, aURI, true);
+  mFirstPartyDomain = std::move(attrs.mFirstPartyDomain);
 }
 
 void CookieJarSettings::UpdateIsOnContentBlockingAllowList(

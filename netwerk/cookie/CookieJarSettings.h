@@ -137,6 +137,8 @@ class CookieJarSettings final : public nsICookieJarSettings {
 
   void UpdateIsOnContentBlockingAllowList(nsIChannel* aChannel);
 
+  void SetFirstPartyDomain(nsIURI* aURI);
+
   // Utility function to test if the passed cookiebahvior is
   // BEHAVIOR_REJECT_TRACKER, BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN or
   // BEHAVIOR_REJECT_FOREIGN when
@@ -164,6 +166,7 @@ class CookieJarSettings final : public nsICookieJarSettings {
   uint32_t mCookieBehavior;
   CookiePermissionList mCookiePermissions;
   bool mIsOnContentBlockingAllowList;
+  nsString mFirstPartyDomain;
 
   State mState;
 
