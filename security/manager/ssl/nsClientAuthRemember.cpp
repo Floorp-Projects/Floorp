@@ -25,8 +25,33 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-NS_IMPL_ISUPPORTS(nsClientAuthRememberService, nsIClientAuthRemember,
+NS_IMPL_ISUPPORTS(nsClientAuthRememberService, nsIClientAuthRememberService,
                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsClientAuthRemember, nsIClientAuthRememberRecord)
+
+NS_IMETHODIMP
+nsClientAuthRemember::GetAsciiHost(/*out*/ nsACString& aAsciiHost) {
+  aAsciiHost = mAsciiHost;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClientAuthRemember::GetFingerprint(/*out*/ nsACString& aFingerprint) {
+  aFingerprint = mFingerprint;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClientAuthRemember::GetDbKey(/*out*/ nsACString& aDBKey) {
+  aDBKey = mDBKey;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClientAuthRemember::GetEntryKey(/*out*/ nsACString& aEntryKey) {
+  aEntryKey = mEntryKey;
+  return NS_OK;
+}
 
 nsClientAuthRememberService::nsClientAuthRememberService()
     : monitor("nsClientAuthRememberService.monitor") {}
@@ -46,6 +71,31 @@ nsresult nsClientAuthRememberService::Init() {
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", false);
     observerService->AddObserver(this, "last-pb-context-exited", false);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClientAuthRememberService::ForgetRememberedDecision(const nsACString& key) {
+  {
+    ReentrantMonitorAutoEnter lock(monitor);
+    mSettingsTable.RemoveEntry(PromiseFlatCString(key).get());
+  }
+
+  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClientAuthRememberService::GetDecisions(
+    nsTArray<RefPtr<nsIClientAuthRememberRecord>>& results) {
+  ReentrantMonitorAutoEnter lock(monitor);
+  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
+    if (!nsClientAuthRememberService::IsPrivateBrowsingKey(
+            iter.Get()->mEntryKey)) {
+      results.AppendElement(iter.Get()->mSettings);
+    }
   }
 
   return NS_OK;
@@ -79,16 +129,8 @@ nsClientAuthRememberService::ClearRememberedDecisions() {
 nsresult nsClientAuthRememberService::ClearPrivateDecisions() {
   ReentrantMonitorAutoEnter lock(monitor);
   for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
-    nsCString entryKey = iter.Get()->mEntryKey;
-    const int32_t separator = entryKey.Find(":", false, 0, -1);
-    nsCString suffix;
-    if (separator >= 0) {
-      entryKey.Left(suffix, separator);
-    } else {
-      suffix = entryKey;
-    }
-
-    if (OriginAttributes::IsPrivateBrowsing(suffix)) {
+    if (nsClientAuthRememberService::IsPrivateBrowsingKey(
+            iter.Get()->mEntryKey)) {
       iter.Remove();
     }
   }
@@ -151,17 +193,13 @@ nsClientAuthRememberService::HasRememberedDecision(
 
   nsAutoCString entryKey;
   GetEntryKey(aHostName, aOriginAttributes, fpStr, entryKey);
-  nsClientAuthRemember settings;
-
   {
     ReentrantMonitorAutoEnter lock(monitor);
     nsClientAuthRememberEntry* entry = mSettingsTable.GetEntry(entryKey.get());
     if (!entry) return NS_OK;
-    settings = entry->mSettings;  // copy
+    entry->mSettings->GetDbKey(aCertDBKey);
+    *aRetVal = true;
   }
-
-  aCertDBKey = settings.mDBKey;
-  *aRetVal = true;
   return NS_OK;
 }
 
@@ -182,10 +220,8 @@ nsresult nsClientAuthRememberService::AddEntryToList(
 
     entry->mEntryKey = entryKey;
 
-    nsClientAuthRemember& settings = entry->mSettings;
-    settings.mAsciiHost = aHostName;
-    settings.mFingerprint = aFingerprint;
-    settings.mDBKey = aDBKey;
+    entry->mSettings =
+        new nsClientAuthRemember(aHostName, aFingerprint, aDBKey, entryKey);
   }
 
   return NS_OK;
@@ -202,4 +238,16 @@ void nsClientAuthRememberService::GetEntryKey(
   hostCert.Append(aFingerprint);
 
   aEntryKey.Assign(hostCert);
+}
+
+bool nsClientAuthRememberService::IsPrivateBrowsingKey(
+    const nsCString& entryKey) {
+  const int32_t separator = entryKey.Find(":", false, 0, -1);
+  nsCString suffix;
+  if (separator >= 0) {
+    entryKey.Left(suffix, separator);
+  } else {
+    suffix = entryKey;
+  }
+  return OriginAttributes::IsPrivateBrowsing(suffix);
 }
