@@ -992,6 +992,12 @@
   args:
     obj: ObjId
 
+- name: LoadStringResult
+  shared: true
+  transpile: true
+  args:
+    str: StringId
+
 - name: LoadInt32Result
   shared: true
   transpile: true
@@ -1087,7 +1093,7 @@
   args:
     val: BoolImm
 
-- name: LoadStringResult
+- name: LoadConstantStringResult
   shared: false
   transpile: false
   args:

@@ -381,6 +381,13 @@ bool WarpCacheIRTranspiler::emitLoadObjectResult(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadStringResult(StringOperandId strId) {
+  MDefinition* str = getOperand(strId);
+  MOZ_ASSERT(str->type() == MIRType::String);
+  pushResult(str);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadBooleanResult(bool val) {
   auto* constant = MConstant::New(alloc(), BooleanValue(val));
   add(constant);
