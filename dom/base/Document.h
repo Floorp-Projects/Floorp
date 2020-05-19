@@ -3405,6 +3405,9 @@ class Document : public nsINode,
   // Not const because all the fullscreen goop is not const
   bool FullscreenEnabled(CallerType aCallerType);
   Element* GetTopLayerTop();
+
+  bool DoesTopLayerContain(const Element* aElement) const;
+
   // Return the fullscreen element in the top layer
   Element* GetUnretargetedFullScreenElement();
   bool Fullscreen() { return !!GetFullscreenElement(); }
