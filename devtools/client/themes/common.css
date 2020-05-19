@@ -339,7 +339,6 @@ checkbox:-moz-focusring {
   margin: 0 3px;
   transition: opacity 0.05s ease-in-out;
   color: var(--theme-icon-color);
-  direction: ltr;
   font-size: 11px;
   -moz-context-properties: fill;
   fill: currentColor;
