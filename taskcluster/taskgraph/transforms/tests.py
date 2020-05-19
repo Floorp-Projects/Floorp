@@ -166,6 +166,7 @@ TEST_VARIANTS = {
     'geckoview-e10s-multi': {
         'description': "{description} with e10s-multi enabled",
         'filterfn': gv_e10s_multi_filter,
+        'run-on-projects': ['trunk'],
         'suffix': 'e10s-multi',
         'merge': {
             'mozharness': {
