@@ -277,13 +277,9 @@ void DocumentL10n::InitialTranslationCompleted(bool aL10nCached) {
     mContentSink->InitialTranslationCompleted();
   }
 
-  // If sync was true, we want to change the state of
-  // mozILocalization to async now.
-  if (mIsSync) {
-    mIsSync = false;
-
-    mLocalization->SetIsSync(mIsSync);
-  }
+  // From now on, the state of Localization is unconditionally
+  // async.
+  SetIsSync(false);
 }
 
 void DocumentL10n::ConnectRoot(nsINode& aNode, bool aTranslate,
