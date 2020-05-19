@@ -420,6 +420,14 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                          nsTArray<nsIFrame*>& aPlaceholders,
                          nsTArray<FlexLine>& aLines);
 
+  /**
+   * This method creates FlexLines and FlexItems for children in flex
+   * container's next-in-flows by using the SharedFlexData stored in flex
+   * container's first-in-flow. Returns FlexLines in the outparam |aLines|.
+   */
+  void GenerateFlexLines(const SharedFlexData& aData,
+                         nsTArray<FlexLine>& aLines);
+
   nscoord GetMainSizeFromReflowInput(const ReflowInput& aReflowInput,
                                      const FlexboxAxisTracker& aAxisTracker);
 

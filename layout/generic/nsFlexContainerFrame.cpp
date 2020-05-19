@@ -3863,6 +3863,33 @@ void nsFlexContainerFrame::GenerateFlexLines(
   }
 }
 
+void nsFlexContainerFrame::GenerateFlexLines(const SharedFlexData& aData,
+                                             nsTArray<FlexLine>& aLines) {
+  MOZ_ASSERT(GetPrevInFlow(), "This should be called by non-first-in-flows!");
+
+  // Pretend we have only one line and zero main gap size.
+  aLines.AppendElement(FlexLine(0));
+
+  // Construct flex items for this flex container fragment from existing flex
+  // items in SharedFlexData.
+  CSSOrderAwareFrameIterator iter(
+      this, kPrincipalList, CSSOrderAwareFrameIterator::eSkipPlaceholders,
+      CSSOrderAwareFrameIterator::eUnknownOrder, OrderingPropertyForIter(this));
+
+  // FIXME(Bug 1637145): This has worst-case O(n^3) performance.
+  for (; !iter.AtEnd(); iter.Next()) {
+    nsIFrame* const child = *iter;
+    nsIFrame* const childFirstInFlow = child->FirstInFlow();
+    for (const FlexLine& line : aData.mLines) {
+      for (const FlexItem& item : line.Items()) {
+        if (item.Frame() == childFirstInFlow) {
+          aLines[0].Items().AppendElement(item.CloneFor(child));
+        }
+      }
+    }
+  }
+}
+
 // Retrieves the content-box main-size of our flex container from the
 // reflow input (specifically, the main-size of *this continuation* of the
 // flex container).
@@ -4260,29 +4287,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   } else {
     auto* data = FirstInFlow()->GetProperty(SharedFlexData::Prop());
 
-    // Pretend we have only one line and zero main gap size.
-    lines.AppendElement(FlexLine(0));
-
-    // Construct flex items for this flex container fragment from existing flex
-    // items in SharedFlexData.
-    CSSOrderAwareFrameIterator iter(
-        this, kPrincipalList, CSSOrderAwareFrameIterator::eSkipPlaceholders,
-        CSSOrderAwareFrameIterator::eUnknownOrder,
-        OrderingPropertyForIter(this));
-
-    // FIXME(Bug 1637145): This has worst-case O(n^3) performance.
-    for (; !iter.AtEnd(); iter.Next()) {
-      nsIFrame* const child = *iter;
-      nsIFrame* const childFirstInFlow = child->FirstInFlow();
-      for (const FlexLine& line : data->mLines) {
-        for (const FlexItem& item : line.Items()) {
-          if (item.Frame() == childFirstInFlow) {
-            lines[0].Items().AppendElement(item.CloneFor(child));
-          }
-        }
-      }
-    }
-
+    GenerateFlexLines(*data, lines);
     contentBoxMainSize = data->mContentBoxMainSize;
     contentBoxCrossSize = data->mContentBoxCrossSize;
   }
