@@ -6763,7 +6763,7 @@ nsRect nsContainerFrame::ComputeSimpleTightBounds(
   }
 
   nsRect r(0, 0, 0, 0);
-  for (const auto& childLists : nsIFrame::ChildLists()) {
+  for (const auto& childLists : ChildLists()) {
     for (nsIFrame* child : childLists.mList) {
       r.UnionRect(
           r, child->ComputeTightBounds(aDrawTarget) + child->GetPosition());
