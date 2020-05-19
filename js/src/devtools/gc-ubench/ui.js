@@ -521,7 +521,7 @@ function start_test_cycle(tests_to_run) {
 }
 
 function update_load_state_indicator() {
-  if (!gLoadMgr.load_running()) {
+  if (!gLoadMgr.load_running() || gLoadMgr.active.name == "noAllocation") {
     loadState = "(none)";
   } else if (gPerf.is_stopped() || gLoadMgr.paused) {
     loadState = "(inactive)";
