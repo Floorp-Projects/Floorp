@@ -118,7 +118,6 @@ mozilla.components.browser.menu.facts
 mozilla.components.browser.menu.item
 mozilla.components.browser.menu.view
 mozilla.components.browser.menu2
-mozilla.components.browser.menu2.candidate
 mozilla.components.browser.search
 mozilla.components.browser.search.provider
 mozilla.components.browser.search.provider.filter
@@ -163,6 +162,8 @@ mozilla.components.concept.engine.webpush
 mozilla.components.concept.engine.window
 mozilla.components.concept.fetch
 mozilla.components.concept.fetch.interceptor
+mozilla.components.concept.menu
+mozilla.components.concept.menu.candidate
 mozilla.components.concept.push
 mozilla.components.concept.storage
 mozilla.components.concept.sync

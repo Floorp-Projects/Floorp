@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`MenuController(visibleSide: `[`Side`](../-side/index.md)` = Side.START)`
+`MenuController(visibleSide: `[`Side`](../../mozilla.components.concept.menu/-side/index.md)` = Side.START)`
 
 Controls a popup menu composed of MenuCandidate objects.
 

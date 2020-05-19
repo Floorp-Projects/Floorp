@@ -17,7 +17,7 @@ Interface to be implemented by menu items to be shown in the browser menu.
 
 | Name | Summary |
 |---|---|
-| [asCandidate](as-candidate.md) | `open fun asCandidate(context: <ERROR CLASS>): `[`MenuCandidate`](../../mozilla.components.browser.menu2.candidate/-menu-candidate/index.md)`?`<br>Converts the menu item into a menu candidate. |
+| [asCandidate](as-candidate.md) | `open fun asCandidate(context: <ERROR CLASS>): `[`MenuCandidate`](../../mozilla.components.concept.menu.candidate/-menu-candidate/index.md)`?`<br>Converts the menu item into a menu candidate. |
 | [bind](bind.md) | `abstract fun bind(menu: `[`BrowserMenu`](../-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
 | [getLayoutResource](get-layout-resource.md) | `abstract fun getLayoutResource(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
 | [invalidate](invalidate.md) | `open fun invalidate(view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to update the displayed data of this item using the passed view. |

@@ -34,7 +34,7 @@ A browser menu item displaying a web extension action.
 
 | Name | Summary |
 |---|---|
-| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`TextMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-text-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
+| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`TextMenuCandidate`](../../mozilla.components.concept.menu.candidate/-text-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [bind](bind.md) | `fun bind(menu: `[`BrowserMenu`](../../mozilla.components.browser.menu/-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
 | [getLayoutResource](get-layout-resource.md) | `fun getLayoutResource(): <ERROR CLASS>`<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
 | [invalidate](invalidate.md) | `fun invalidate(view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to update the displayed data of this item using the passed view. |
