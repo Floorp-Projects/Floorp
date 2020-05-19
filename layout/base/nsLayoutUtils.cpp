@@ -550,7 +550,7 @@ void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
   FrameChildListIDs skip(aSkipChildLists);
   skip += {nsIFrame::kSelectPopupList, nsIFrame::kPopupList};
 
-  for (const auto& [list, listID] : aFrame->GetChildLists()) {
+  for (const auto& [list, listID] : aFrame->ChildLists()) {
     if (skip.contains(listID)) {
       continue;
     }
@@ -1414,7 +1414,7 @@ nsContainerFrame* nsLayoutUtils::LastContinuationWithChild(
     nsContainerFrame* aFrame) {
   MOZ_ASSERT(aFrame, "NULL frame pointer");
   for (auto f = aFrame->LastContinuation(); f; f = f->GetPrevContinuation()) {
-    for (const auto& childList : f->GetChildLists()) {
+    for (const auto& childList : f->ChildLists()) {
       if (MOZ_LIKELY(!childList.mList.IsEmpty())) {
         return static_cast<nsContainerFrame*>(f);
       }
@@ -5862,7 +5862,7 @@ void nsLayoutUtils::MarkDescendantsDirty(nsIFrame* aSubtreeRoot) {
         }
       }
 
-      for (const auto& childList : f->GetChildLists()) {
+      for (const auto& childList : f->ChildLists()) {
         for (nsIFrame* kid : childList.mList) {
           stack.AppendElement(kid);
         }
@@ -5886,7 +5886,7 @@ void nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(
     }
     f->MarkIntrinsicISizesDirty();
 
-    for (const auto& childList : f->GetChildLists()) {
+    for (const auto& childList : f->ChildLists()) {
       for (nsIFrame* kid : childList.mList) {
         stack.AppendElement(kid);
       }
@@ -6518,7 +6518,7 @@ nscoord nsLayoutUtils::CalculateContentBEnd(WritingMode aWM, nsIFrame* aFrame) {
           std::max(contentBEnd, CalculateBlockContentBEnd(aWM, blockFrame));
       skip += nsIFrame::kPrincipalList;
     }
-    for (const auto& [list, listID] : aFrame->GetChildLists()) {
+    for (const auto& [list, listID] : aFrame->ChildLists()) {
       if (!skip.contains(listID)) {
         for (nsIFrame* child : list) {
           nscoord offset =
@@ -7918,7 +7918,7 @@ void nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame* aSubtreeRoot) {
   NS_ASSERTION(start == end || IsInLetterFrame(aSubtreeRoot),
                "frame tree not empty, but caller reported complete status");
 
-  for (const auto& childList : aSubtreeRoot->GetChildLists()) {
+  for (const auto& childList : aSubtreeRoot->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(child);
     }
@@ -8111,7 +8111,7 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
     return total;
   }
 
-  for (const auto& childList : aFrame->GetChildLists()) {
+  for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* f : childList.mList) {
       total += SizeOfTextRunsForFrames(f, aMallocSizeOf, clear);
     }

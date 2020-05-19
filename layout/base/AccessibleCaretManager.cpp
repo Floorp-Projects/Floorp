@@ -1274,7 +1274,7 @@ nsRect AccessibleCaretManager::GetAllChildFrameRectsUnion(
        frame = frame->GetNextContinuation()) {
     nsRect frameRect;
 
-    for (const auto& childList : frame->GetChildLists()) {
+    for (const auto& childList : frame->ChildLists()) {
       // Loop all children to union their scrollable overflow rect.
       for (nsIFrame* child : childList.mList) {
         nsRect childRect = child->GetScrollableOverflowRectRelativeToSelf();

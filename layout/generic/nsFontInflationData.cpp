@@ -320,7 +320,7 @@ void nsFontInflationData::ScanTextIn(nsIFrame* aFrame) {
   // FIXME: Should probably only scan the text that's actually going to
   // be inflated!
 
-  for (const auto& childList : aFrame->GetChildLists()) {
+  for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* kid : childList.mList) {
       if (kid->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
         // Goes in a different set of inflation data.

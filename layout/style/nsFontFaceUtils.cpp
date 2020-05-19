@@ -182,7 +182,7 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
           }
         }
 
-        for (const auto& childList : f->GetChildLists()) {
+        for (const auto& childList : f->ChildLists()) {
           for (nsIFrame* kid : childList.mList) {
             stack.AppendElement(std::make_pair(kid, alreadyScheduled));
           }

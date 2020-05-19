@@ -982,7 +982,7 @@ nsIDocShell* nsSubDocumentFrame::GetDocShell() {
 static void DestroyDisplayItemDataForFrames(nsIFrame* aFrame) {
   FrameLayerBuilder::DestroyDisplayItemDataFor(aFrame);
 
-  for (const auto& childList : aFrame->GetChildLists()) {
+  for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       DestroyDisplayItemDataForFrames(child);
     }
