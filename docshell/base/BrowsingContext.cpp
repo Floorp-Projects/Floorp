@@ -404,6 +404,9 @@ void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   mDocShell = aDocShell;
   mDanglingRemoteOuterProxies = !mIsInProcess;
   mIsInProcess = true;
+  if (mChildSessionHistory) {
+    mChildSessionHistory->SetIsInProcess(true);
+  }
 }
 
 // This class implements a callback that will return the remote window proxy for
@@ -517,6 +520,10 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
     PopupBlocker::RegisterOpenPopupSpam();
   }
 
+  if (IsTop() && GetHasSessionHistory()) {
+    CreateChildSHistory();
+  }
+
   if (XRE_IsContentProcess() && !aFromIPC) {
     // Send attach to our parent if we need to.
     ContentChild::GetSingleton()->SendCreateBrowsingContext(
@@ -626,6 +633,11 @@ void BrowsingContext::PrepareForProcessChange() {
   // different process now. This may need to change in the future with
   // Cross-Process BFCache.
   mDocShell = nullptr;
+  if (mChildSessionHistory) {
+    // This can be removed once session history is stored exclusively in the
+    // parent process.
+    mChildSessionHistory->SetIsInProcess(false);
+  }
 
   if (!mWindowProxy) {
     return;
@@ -1386,16 +1398,16 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
     tmp->mFields.SetWithoutSyncing<IDX_IsPopupSpam>(false);
   }
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mParentWindow, mGroup,
-                                  mEmbedderElement, mWindowContexts,
-                                  mCurrentWindowContext, mSessionStorageManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(
+      mDocShell, mParentWindow, mGroup, mEmbedderElement, mWindowContexts,
+      mCurrentWindowContext, mSessionStorageManager, mChildSessionHistory)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
       mDocShell, mParentWindow, mGroup, mEmbedderElement, mWindowContexts,
-      mCurrentWindowContext, mSessionStorageManager)
+      mCurrentWindowContext, mSessionStorageManager, mChildSessionHistory)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 class RemoteLocationProxy
@@ -2197,6 +2209,51 @@ void BrowsingContext::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
   NS_DispatchToCurrentThreadQueue(
       runner.forget(), StaticPrefs::page_load_deprioritization_period(),
       EventQueuePriority::Idle);
+}
+
+void BrowsingContext::InitSessionHistory() {
+  MOZ_ASSERT(!IsDiscarded());
+  MOZ_ASSERT(IsTop());
+  MOZ_ASSERT(EverAttached());
+
+  if (!GetHasSessionHistory()) {
+    SetHasSessionHistory(true);
+
+    // If the top browsing context (this one) is loaded in this process then we
+    // also create the session history implementation for the child process.
+    // This can be removed once session history is stored exclusively in the
+    // parent process.
+    mChildSessionHistory->SetIsInProcess(mDocShell);
+  }
+}
+
+ChildSHistory* BrowsingContext::GetChildSessionHistory() {
+  // For now we're checking that the session history object for the child
+  // process is available before returning the ChildSHistory object, because
+  // it is the actual implementation that ChildSHistory forwards to. This can
+  // be removed once session history is stored exclusively in the parent
+  // process.
+  return mChildSessionHistory && mChildSessionHistory->IsInProcess()
+             ? mChildSessionHistory.get()
+             : nullptr;
+}
+
+void BrowsingContext::CreateChildSHistory() {
+  MOZ_ASSERT(IsTop());
+
+  // Because session history is global in a browsing context tree, every process
+  // that has access to a browsing context tree needs access to its session
+  // history. That is why we create the ChildSHistory object in every process
+  // where we have access to this browsing context (which is the top one).
+  mChildSessionHistory = new ChildSHistory(this);
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_HasSessionHistory>,
+                             bool aOldValue) {
+  MOZ_ASSERT(GetHasSessionHistory() || !aOldValue,
+             "We don't support turning off session history.");
+
+  CreateChildSHistory();
 }
 
 }  // namespace dom
