@@ -47,6 +47,17 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
     }
   }
 
+  nsAutoString domain;
+  Unused << cjs->GetFirstPartyDomain(domain);
+
+  if (!domain.IsEmpty()) {
+    aAttrs.SetFirstPartyDomain(false, domain, true /* aForced */);
+    return true;
+  }
+
+  // Fallback to get first-party domain from top-level principal when we can't
+  // get it from CookieJarSetting. This might happen when a channel is not
+  // opened via http, for example, about page.
   nsCOMPtr<nsIPrincipal> toplevelPrincipal = loadInfo->GetTopLevelPrincipal();
   if (!toplevelPrincipal) {
     return false;

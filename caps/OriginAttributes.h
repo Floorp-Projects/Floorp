@@ -30,7 +30,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   void SetFirstPartyDomain(const bool aIsTopLevelDocument,
                            const nsACString& aDomain);
   void SetFirstPartyDomain(const bool aIsTopLevelDocument,
-                           const nsAString& aDomain);
+                           const nsAString& aDomain, bool aForced = false);
 
   enum {
     STRIP_FIRST_PARTY_DOMAIN = 0x01,
