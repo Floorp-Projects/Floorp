@@ -3758,6 +3758,29 @@ bool CacheIRCompiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathRoundToInt32Result(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  AutoAvailableFloatRegister scratchFloat0(*this, FloatReg0);
+  AutoAvailableFloatRegister scratchFloat1(*this, FloatReg1);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  allocator.ensureDoubleRegister(masm, inputId, scratchFloat0);
+
+  masm.roundDoubleToInt32(scratchFloat0, scratch, scratchFloat1,
+                          failure->label());
+
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitMathFunctionNumberResult(NumberOperandId inputId,
                                                    UnaryMathFunction fun) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
