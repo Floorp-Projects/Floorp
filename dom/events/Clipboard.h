@@ -32,16 +32,14 @@ class Clipboard : public DOMEventTargetHelper {
   IMPL_EVENT_HANDLER(messageerror)
 
   explicit Clipboard(nsPIDOMWindowInner* aWindow);
-  already_AddRefed<Promise> Read(JSContext* aCx,
-                                 nsIPrincipal& aSubjectPrincipal,
+  already_AddRefed<Promise> Read(nsIPrincipal& aSubjectPrincipal,
                                  ErrorResult& aRv);
-  already_AddRefed<Promise> ReadText(JSContext* aCx,
-                                     nsIPrincipal& aSubjectPrincipal,
+  already_AddRefed<Promise> ReadText(nsIPrincipal& aSubjectPrincipal,
                                      ErrorResult& aRv);
-  already_AddRefed<Promise> Write(JSContext* aCx, DataTransfer& aData,
+  already_AddRefed<Promise> Write(DataTransfer& aData,
                                   nsIPrincipal& aSubjectPrincipal,
                                   ErrorResult& aRv);
-  already_AddRefed<Promise> WriteText(JSContext* aCx, const nsAString& aData,
+  already_AddRefed<Promise> WriteText(const nsAString& aData,
                                       nsIPrincipal& aSubjectPrincipal,
                                       ErrorResult& aRv);
 
@@ -64,8 +62,7 @@ class Clipboard : public DOMEventTargetHelper {
   //  or reading from the clipboard.
   static bool IsTestingPrefEnabled();
 
-  already_AddRefed<Promise> ReadHelper(JSContext* aCx,
-                                       nsIPrincipal& aSubjectPrincipal,
+  already_AddRefed<Promise> ReadHelper(nsIPrincipal& aSubjectPrincipal,
                                        ClipboardReadType aClipboardReadType,
                                        ErrorResult& aRv);
 

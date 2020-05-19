@@ -127,13 +127,13 @@ mozilla::ipc::IPCResult TCPSocketParent::RecvData(const SendableData& aData) {
         return IPC_FAIL_NO_REASON(this);
       }
       Optional<uint32_t> byteLength(buffer.Length());
-      mSocket->Send(autoCx, data, 0, byteLength, rv);
+      mSocket->Send(data, 0, byteLength, rv);
       break;
     }
 
     case SendableData::TnsCString: {
       const nsCString& strData = aData.get_nsCString();
-      mSocket->Send(nullptr, strData, rv);
+      mSocket->Send(strData, rv);
       break;
     }
 

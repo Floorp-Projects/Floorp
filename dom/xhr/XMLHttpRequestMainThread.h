@@ -315,7 +315,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
  public:
   virtual void Send(
-      JSContext* aCx,
       const Nullable<
           DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
           aData,

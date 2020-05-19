@@ -2794,7 +2794,6 @@ void XMLHttpRequestMainThread::UnsuppressEventHandlingAndResume() {
 }
 
 void XMLHttpRequestMainThread::Send(
-    JSContext* aCx,
     const Nullable<
         DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
         aData,
