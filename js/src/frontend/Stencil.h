@@ -353,7 +353,6 @@ class ScriptStencilBase {
   ScriptThingsVector gcThings;
 
   // See `BaseScript::sharedData_`.
-  uint32_t natoms = 0;
   js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
 
   explicit ScriptStencilBase(JSContext* cx) : gcThings(cx) {}
@@ -378,10 +377,6 @@ class ScriptStencil : public ScriptStencilBase {
   // allocations within this stencil.
   JSScript* intoScript(JSContext* cx, CompilationInfo& compilationInfo,
                        SourceExtent extent);
-
-  // Store all atoms into `atoms`
-  // `atoms` is the pointer to `this.natoms`-length array of `GCPtrAtom`.
-  virtual void initAtomMap(GCPtrAtom* atoms) const = 0;
 };
 
 } /* namespace js::frontend */

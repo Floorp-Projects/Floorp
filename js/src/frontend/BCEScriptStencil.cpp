@@ -16,14 +16,12 @@ using namespace js::frontend;
 
 BCEScriptStencil::BCEScriptStencil(BytecodeEmitter& bce,
                                    UniquePtr<ImmutableScriptData> immutableData)
-    : ScriptStencil(bce.cx), bce_(bce) {
+    : ScriptStencil(bce.cx) {
   init(bce, std::move(immutableData));
 }
 
 void BCEScriptStencil::init(BytecodeEmitter& bce,
                             UniquePtr<ImmutableScriptData> immutableData) {
-  natoms = 0;
-
   immutableFlags = bce.sc->immutableFlags();
 
   MOZ_ASSERT(bce.outermostScope().hasOnChain(ScopeKind::NonSyntactic) ==
@@ -54,5 +52,3 @@ void BCEScriptStencil::init(BytecodeEmitter& bce,
     }
   } /* isFunctionBox */
 }
-
-void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {}
