@@ -62,7 +62,6 @@ class WebExtension(Perftest):
             self.serve_benchmark_source(test)
 
         gen_test_config(
-            self.config["app"],
             test["name"],
             self.control_server.port,
             self.post_startup_delay,
