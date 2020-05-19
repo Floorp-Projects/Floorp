@@ -135,9 +135,7 @@ void GPUVideoTextureHost::UpdatedInternal(const nsIntRegion* Region) {
 
 void GPUVideoTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  MOZ_ASSERT(mExternalImageId.isNothing());
-
-  mExternalImageId = Some(aExternalImageId);
+  MOZ_ASSERT(mExternalImageId.isSome());
 
   // When mWrappedTextureHost already exist, call CreateRenderTexture() here.
   // In other cases, EnsureWrappedTextureHost() handles CreateRenderTexture().
@@ -149,6 +147,15 @@ void GPUVideoTextureHost::CreateRenderTexture(
 
   MOZ_ASSERT(EnsureWrappedTextureHost());
   EnsureWrappedTextureHost();
+}
+
+void GPUVideoTextureHost::MaybeDestroyRenderTexture() {
+  if (mExternalImageId.isNothing() || !mWrappedTextureHost) {
+    // RenderTextureHost was not created
+    return;
+  }
+  // When GPUVideoTextureHost created RenderTextureHost, delete it here.
+  TextureHost::DestroyRenderTexture(mExternalImageId.ref());
 }
 
 uint32_t GPUVideoTextureHost::NumSubTextures() {

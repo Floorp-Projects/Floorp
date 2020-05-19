@@ -64,7 +64,7 @@ class WebRenderTextureHost : public TextureHost {
 
   virtual void PrepareForUse() override;
 
-  wr::ExternalImageId GetExternalImageKey() { return mExternalImageId; }
+  wr::ExternalImageId GetExternalImageKey();
 
   int32_t GetRGBStride();
 
@@ -88,10 +88,7 @@ class WebRenderTextureHost : public TextureHost {
   void MaybeNofityForUse(wr::TransactionBuilder& aTxn);
 
  protected:
-  void CreateRenderTextureHost(const SurfaceDescriptor& aDesc,
-                               TextureHost* aTexture);
-
-  const RefPtr<TextureHost> mWrappedTextureHost;
+  RefPtr<TextureHost> mWrappedTextureHost;
   wr::ExternalImageId mExternalImageId;
 };
 
