@@ -5,8 +5,6 @@
 package org.mozilla.focus
 
 import android.content.Context
-import android.util.AttributeSet
-import android.util.JsonReader
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
@@ -14,39 +12,76 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.EngineSessionState
-import mozilla.components.concept.engine.EngineView
-import mozilla.components.concept.engine.Settings
-import mozilla.components.concept.engine.utils.EngineVersion
-import org.json.JSONObject
+import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.contextmenu.ContextMenuUseCases
+import mozilla.components.feature.downloads.DownloadMiddleware
+import mozilla.components.feature.downloads.DownloadsUseCases
+import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.session.SettingsUseCases
+import mozilla.components.feature.session.TrackingProtectionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
+import org.mozilla.focus.components.EngineProvider
+import org.mozilla.focus.downloads.DownloadService
+import org.mozilla.focus.engine.LocalizedContentInterceptor
 import org.mozilla.focus.search.BingSearchEngineFilter
 import org.mozilla.focus.search.CustomSearchEngineProvider
 import org.mozilla.focus.search.HiddenSearchEngineFilter
+import org.mozilla.focus.utils.Settings
 
 /**
  * Helper object for lazily initializing components.
  */
-class Components {
-    val sessionManager by lazy {
-        SessionManager(DummyEngine(), store).apply {
-            @Suppress("DEPRECATION")
-            register(SessionSetupObserver())
+class Components(
+    context: Context
+) {
+    val engineDefaultSettings by lazy {
+        val settings = Settings.getInstance(context)
+
+        DefaultSettings(
+                requestInterceptor = LocalizedContentInterceptor(context),
+                trackingProtectionPolicy = settings.createTrackingProtectionPolicy(),
+                javascriptEnabled = !settings.shouldBlockJavaScript(),
+                remoteDebuggingEnabled = settings.shouldEnableRemoteDebugging(),
+                webFontsEnabled = !settings.shouldBlockWebFonts()
+        )
+    }
+
+    val engine: Engine by lazy {
+        EngineProvider.createEngine(context, engineDefaultSettings).apply {
+            Settings.getInstance(context).setupSafeBrowsing(this)
         }
     }
 
-    // This dummy engine solution is not great.
+    val client: Client by lazy { EngineProvider.createClient(context) }
+
+    val trackingProtectionUseCases by lazy { TrackingProtectionUseCases(store, engine) }
+
+    val settingsUseCases by lazy { SettingsUseCases(engine, store) }
+
     val store by lazy {
         BrowserStore(
-            middleware = EngineMiddleware.create(DummyEngine(), ::findSessionById)
+            middleware = listOf(
+                DownloadMiddleware(context, DownloadService::class.java)
+            ) + EngineMiddleware.create(engine, ::findSessionById)
         )
     }
 
     private fun findSessionById(tabId: String): Session? {
         return sessionManager.findSessionById(tabId)
+    }
+
+    val sessionUseCases: SessionUseCases by lazy { SessionUseCases(store, sessionManager) }
+
+    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
+
+    val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }
+
+    val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
+
+    val sessionManager by lazy {
+        SessionManager(engine, store)
     }
 
     val searchEngineManager by lazy {
@@ -58,52 +93,5 @@ class Components {
         val customProvider = CustomSearchEngineProvider()
 
         SearchEngineManager(listOf(assetsProvider, customProvider))
-    }
-}
-
-/**
- * We are not using an "Engine" implementation yet. Therefore we create this dummy that we pass to
- * the <code>SessionManager</code> for now.
- */
-private class DummyEngine : Engine {
-    override val version: EngineVersion = EngineVersion(1, 0, 0)
-    override val profiler: Profiler? = null
-    override val settings: Settings = DefaultSettings()
-
-    override fun createSession(private: Boolean, contextId: String?): EngineSession {
-        throw NotImplementedError()
-    }
-
-    override fun createSessionState(json: JSONObject): EngineSessionState {
-        throw NotImplementedError()
-    }
-
-    override fun createSessionStateFrom(reader: JsonReader): EngineSessionState {
-        throw NotImplementedError()
-    }
-
-    override fun createView(context: Context, attrs: AttributeSet?): EngineView {
-        throw NotImplementedError()
-    }
-
-    override fun name(): String {
-        throw NotImplementedError()
-    }
-
-    override fun speculativeConnect(url: String) {
-        throw NotImplementedError()
-    }
-}
-
-/**
- * This is a workaround for setting up the Session object. Once we use browser-engine we can just setup the Engine to
- * use specific default settings. For now we need to manually update every created Session model to reflect what Focus
- * expects as default.
- */
-class SessionSetupObserver : SessionManager.Observer {
-    override fun onSessionAdded(session: Session) {
-        // Tracking protection is enabled by default for every tab. Instead of setting up the engine we modify Session
-        // here and IWebView will get its default behavior from Session.
-        session.trackerBlockingEnabled = true
     }
 }

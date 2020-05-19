@@ -14,7 +14,6 @@ import mozilla.components.browser.state.state.CustomTabConfig
 
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.BrowserFragment
-import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.HardwareUtils
 
@@ -142,16 +141,14 @@ class BrowserMenuAdapter(
             )
         }
 
-        if (AppConstants.isGeckoBuild) {
-            // "Report Site Issue" is available for builds using GeckoView only
-            items.add(
-                MenuItem.Default(
-                    R.id.report_site_issue,
-                    resources.getString(R.string.menu_report_site_issue),
-                    0
-                )
+        // "Report Site Issue" is available for builds using GeckoView only
+        items.add(
+            MenuItem.Default(
+                R.id.report_site_issue,
+                resources.getString(R.string.menu_report_site_issue),
+                0
             )
-        }
+        )
 
         if (customTabConfig != null) {
             val customTabItems = customTabConfig.menuItems

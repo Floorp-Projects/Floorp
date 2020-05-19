@@ -11,7 +11,6 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 
 import org.mozilla.focus.R
-import org.mozilla.focus.web.IWebView
 
 import java.net.URISyntaxException
 
@@ -30,7 +29,7 @@ object IntentUtils {
      * want to use an external app to open the uri. Ultimately the OS can spy on anything we're
      * doing in the app, so this isn't an actual "bug".
      */
-    fun handleExternalUri(context: Context, webView: IWebView, uri: String): Boolean {
+    fun handleExternalUri(context: Context, uri: String): Boolean {
         // This code is largely based on Fennec's ExternalIntentDuringPrivateBrowsingPromptFragment.java
         val intent = try { Intent.parseUri(uri, 0) } catch (e: URISyntaxException) { return false }
 
@@ -44,7 +43,7 @@ object IntentUtils {
         val matchingActivities = packageManager.queryIntentActivities(intent, 0)
 
         when (matchingActivities.size) {
-            0 -> handleUnsupportedLink(context, webView, intent)
+            0 -> handleUnsupportedLink(context, intent)
             1 -> {
                 val info = matchingActivities[0]
                 val externalAppTitle = info?.loadLabel(packageManager) ?: "(null)"
@@ -66,10 +65,10 @@ object IntentUtils {
         return true
     }
 
-    private fun handleUnsupportedLink(context: Context, webView: IWebView, intent: Intent): Boolean {
+    private fun handleUnsupportedLink(context: Context, intent: Intent): Boolean {
         val fallbackUrl = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL)
         if (fallbackUrl != null) {
-            webView.loadUrl(fallbackUrl)
+            // webView.loadUrl(fallbackUrl)
             return true
         }
 

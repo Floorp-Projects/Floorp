@@ -10,9 +10,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.fragment_exceptions_domains.*
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
@@ -31,13 +31,13 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
     }
 
     private fun removeSelectedDomains(context: Context) {
-        val domains = (exceptionList.adapter as DomainListAdapter).selection()
-        TelemetryWrapper.removeExceptionDomains(domains.size)
-        if (domains.isNotEmpty()) {
+        val exceptions = (exceptionList.adapter as DomainListAdapter).selection()
+        TelemetryWrapper.removeExceptionDomains(exceptions.size)
+        if (exceptions.isNotEmpty()) {
             launch(Main) {
-                async {
-                    ExceptionDomains.remove(context, domains)
-                }.await()
+                exceptions.forEach { exception ->
+                    context.components.trackingProtectionUseCases.removeException(exception)
+                }
 
                 @Suppress("DEPRECATION")
                 requireFragmentManager().popBackStack()

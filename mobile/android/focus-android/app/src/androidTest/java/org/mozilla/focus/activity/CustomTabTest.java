@@ -91,11 +91,6 @@ public class CustomTabTest {
             Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
-            if (!AppConstants.INSTANCE.isGeckoBuild()) {
-                onWebView()
-                        .withElement(findElement(Locator.ID, TEST_PAGE_HEADER_ID))
-                        .check(webMatches(getText(), equalTo(TEST_PAGE_HEADER_TEXT)));
-            }
 
             // Verify action button is visible
             onView(withContentDescription(ACTION_BUTTON_DESCRIPTION))

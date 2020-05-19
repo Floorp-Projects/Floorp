@@ -19,7 +19,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
-import org.mozilla.focus.exceptions.ExceptionDomains;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
 import org.mozilla.focus.helpers.TestHelper;
 
@@ -63,8 +62,6 @@ public class ToggleBlockTest {
                     .edit()
                     .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
-
-            ExceptionDomains.INSTANCE.remove(appContext, ExceptionDomains.INSTANCE.load(appContext));
 
             // This test runs on both GV and WV.
             // Klar is used to test Geckoview. make sure it's set to Gecko

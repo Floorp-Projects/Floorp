@@ -9,12 +9,6 @@ package org.mozilla.focus.utils
  */
 class Features {
     companion object {
-        /**
-         * Swipe-to-refresh: Currently disabled due to various UX issues: #1776
-         */
-        @JvmField
-        val SWIPE_TO_REFRESH: Boolean = false
-
         val SEARCH_TERMS_OR_URL: Boolean = true
     }
 }

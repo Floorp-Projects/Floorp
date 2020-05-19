@@ -18,13 +18,6 @@ object AppConstants {
     val isReleaseBuild: Boolean
         get() = BUILD_TYPE_RELEASE == BuildConfig.BUILD_TYPE
 
-    val isGeckoBuild: Boolean
-        get() = true
-
     val isDevBuild: Boolean
         get() = BUILD_TYPE_DEBUG == BuildConfig.BUILD_TYPE
-
-    fun supportsDownloadingFiles(): Boolean {
-        return true
-    }
 }

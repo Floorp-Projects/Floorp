@@ -14,7 +14,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.Locales
@@ -81,7 +80,7 @@ object SupportUtils {
     }
 
     fun openDefaultBrowserSumoPage(context: Context) {
-        val session = Session(SupportUtils.DEFAULT_BROWSER_URL, source = SessionState.Source.MENU)
+        val session = createTab(SupportUtils.DEFAULT_BROWSER_URL, source = SessionState.Source.MENU)
         context.components.sessionManager.add(session, selected = true)
 
         if (context is Activity) {

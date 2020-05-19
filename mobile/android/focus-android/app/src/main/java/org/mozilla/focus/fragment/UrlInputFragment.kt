@@ -61,6 +61,7 @@ import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
+import org.mozilla.focus.utils.createTab
 import org.mozilla.focus.whatsnew.WhatsNew
 import java.util.Objects
 import kotlin.coroutines.CoroutineContext
@@ -321,15 +322,14 @@ class UrlInputFragment :
 
         urlView?.setOnCommitListener(::onCommit)
 
-        val geckoViewAndDDG: Boolean =
-            Settings.getInstance(requireContext()).defaultSearchEngineName == duckDuckGo &&
-                    AppConstants.isGeckoBuild
+        val isDDG: Boolean =
+            Settings.getInstance(requireContext()).defaultSearchEngineName == duckDuckGo
 
         session?.let {
             val contentState = requireComponents.store.contentState(it.id)
             urlView?.setText(
                 if (contentState?.isSearch == true &&
-                    !geckoViewAndDDG &&
+                    !isDDG &&
                     Features.SEARCH_TERMS_OR_URL
                 ) {
                     contentState.searchTerms
@@ -436,7 +436,7 @@ class UrlInputFragment :
                 WhatsNew.userViewedWhatsNew(it)
 
                 val url = SupportUtils.getSumoURLForTopic(it, SupportUtils.SumoTopic.WHATS_NEW)
-                val session = Session(url, source = SessionState.Source.MENU)
+                val session = createTab(url, source = SessionState.Source.MENU)
 
                 requireComponents.sessionManager.add(session, selected = true)
             }
@@ -444,7 +444,7 @@ class UrlInputFragment :
             R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
 
             R.id.help -> {
-                val session = Session(SupportUtils.HELP_URL, source = SessionState.Source.MENU)
+                val session = createTab(SupportUtils.HELP_URL, source = SessionState.Source.MENU)
                 requireComponents.sessionManager.add(session, selected = true)
             }
 
@@ -670,7 +670,7 @@ class UrlInputFragment :
             }
         }
 
-        if (!input.trim { it <= ' ' }.isEmpty()) {
+        if (input.trim { it <= ' ' }.isNotEmpty()) {
             handleCrashTrigger(input)
 
             ViewUtils.hideKeyboard(urlView)
@@ -753,23 +753,14 @@ class UrlInputFragment :
 
         val fragmentManager = requireActivity().supportFragmentManager
 
-        // Replace all fragments with a fresh browser fragment. This means we either remove the
-        // HomeFragment with an UrlInputFragment on top or an old BrowserFragment with an
-        // UrlInputFragment.
-        val browserFragment = fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG)
+        if (session != null) {
+            requireComponents.sessionUseCases.loadUrl(url, session?.id)
 
-        if (browserFragment != null && browserFragment is BrowserFragment && browserFragment.isVisible) {
-            // Reuse existing visible fragment - in this case we know the user is already browsing.
-            // The fragment might exist if we "erased" a browsing session, hence we need to check
-            // for visibility in addition to existence.
-            browserFragment.loadUrl(url)
-
-            // And this fragment can be removed again.
             fragmentManager.beginTransaction()
                 .remove(this)
                 .commit()
         } else {
-            val session = Session(url, source = SessionState.Source.USER_ENTERED)
+            val session = createTab(url, source = SessionState.Source.USER_ENTERED)
             if (!searchTerms.isNullOrEmpty()) {
                 requireComponents.store.dispatch(ContentAction.UpdateSearchTermsAction(session.id, searchTerms))
             }

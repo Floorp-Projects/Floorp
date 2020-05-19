@@ -13,6 +13,7 @@ import androidx.preference.PreferenceManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
@@ -24,16 +25,12 @@ import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.session.IntentProcessor
-import org.mozilla.focus.session.removeAndCloseAllSessions
 import org.mozilla.focus.session.ui.SessionsSheetFragment
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.ViewUtils
-import org.mozilla.focus.web.IWebView
-import org.mozilla.focus.web.WebViewProvider
 
 @Suppress("TooManyFunctions")
 open class MainActivity : LocaleAwareAppCompatActivity() {
@@ -83,8 +80,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
         registerSessionObserver()
 
-        WebViewProvider.preload(this)
-
         val launchCount = Settings.getInstance(this).getAppLaunchCount()
         PreferenceManager.getDefaultSharedPreferences(this)
                 .edit()
@@ -101,24 +96,18 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
             override fun onAllSessionsRemoved() {
                 showUrlInputScreen()
-
-                WebViewProvider.performNewBrowserSessionCleanup()
             }
 
             override fun onSessionRemoved(session: Session) {
                 previousSessionCount = components.sessionManager.sessions.count()
                 if (!isCustomTabMode && components.sessionManager.sessions.isEmpty()) {
                     showUrlInputScreen()
-
-                    WebViewProvider.performNewBrowserSessionCleanup()
                 }
             }
         }, owner = this)
 
         if (!isCustomTabMode && components.sessionManager.sessions.isEmpty()) {
             showUrlInputScreen()
-
-            WebViewProvider.performNewBrowserSessionCleanup()
         } else {
             showBrowserScreenForCurrentSession()
         }
@@ -141,10 +130,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     override fun onPause() {
-        if (isFinishing) {
-            WebViewProvider.performCleanup(this)
-        }
-
         val fragmentManager = supportFragmentManager
         val browserFragment =
             fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
@@ -207,7 +192,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val fromShortcut = intent.getBooleanExtra(EXTRA_SHORTCUT, false)
         val fromNotification = intent.getBooleanExtra(EXTRA_NOTIFICATION, false)
 
-        components.sessionManager.removeAndCloseAllSessions()
+        components.sessionManager.removeSessions()
 
         if (fromShortcut) {
             TelemetryWrapper.eraseShortcutEvent()
@@ -241,11 +226,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val shouldAnimate = isShowingBrowser && browserFragment!!.isResumed
 
         if (shouldAnimate) {
-            if (AppConstants.isGeckoBuild) {
-                transaction.setCustomAnimations(0, R.anim.erase_animation_gv)
-            } else {
-                transaction.setCustomAnimations(0, R.anim.erase_animation)
-            }
+            transaction.setCustomAnimations(0, R.anim.erase_animation)
         }
 
         // Currently this callback can get invoked while the app is in the background. Therefore we are using
@@ -292,9 +273,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
-        return if (name == IWebView::class.java.name) {
-            // Inject our implementation of IWebView from the WebViewProvider.
-            WebViewProvider.create(this, attrs)
+        return if (name == EngineView::class.java.name) {
+            components.engine.createView(context, attrs).asView()
         } else super.onCreateView(name, context, attrs)
     }
 

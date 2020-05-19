@@ -18,6 +18,7 @@ import androidx.test.uiautomator.Until;
 import mozilla.components.browser.session.SessionManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,8 +26,6 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.ext.ContextKt;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
 import org.mozilla.focus.helpers.TestHelper;
-import org.mozilla.focus.utils.AppConstants;
-import org.mozilla.focus.web.IWebView;
 
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -50,12 +49,12 @@ import static org.mozilla.focus.helpers.EspressoHelper.navigateToMockWebServer;
 import static org.mozilla.focus.helpers.EspressoHelper.onFloatingEraseButton;
 import static org.mozilla.focus.helpers.EspressoHelper.onFloatingTabsButton;
 import static org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset;
-import static org.mozilla.focus.helpers.WebViewFakeLongPress.injectHitTarget;
 
 /**
  * Open multiple sessions and verify that the UI looks like it should.
  */
 @RunWith(AndroidJUnit4.class)
+@Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView")
 public class MultitaskingTest {
 
     @Rule
@@ -69,10 +68,6 @@ public class MultitaskingTest {
             Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
-
-            // This test is for webview only. Debug is defaulted to Webview, and Klar is used for GV testing.
-            org.junit.Assume.assumeFalse(AppConstants.INSTANCE.isGeckoBuild());
-            org.junit.Assume.assumeFalse(AppConstants.INSTANCE.isKlarBuild());
 
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
@@ -191,14 +186,9 @@ public class MultitaskingTest {
                 .withElement(findElement(Locator.ID, id))
                 .check(webMatches(getText(), equalTo(label)));
 
-        simulateLinkLongPress(path);
-    }
-
-    // Webview only method
-    private void simulateLinkLongPress(String path) {
-        onView(withId(R.id.webview))
-                .perform(injectHitTarget(
-                        new IWebView.HitTarget(true, webServer.url(path).toString(), false, null)));
+        // Removed the following code since it depended on the IWebView abstraction that was removed
+        // in favor of the AC engine components.
+        // simulateLinkLongPress(path);
     }
 
     private void openInNewTab() {

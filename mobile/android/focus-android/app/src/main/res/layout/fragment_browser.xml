@@ -5,7 +5,8 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:mozac="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
         android:id="@+id/browser_container"
@@ -28,22 +29,15 @@
             android:orientation="vertical"
             android:clipChildren="false">
 
-            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-                android:id="@+id/swipe_refresh"
+            <mozilla.components.concept.engine.EngineView
+                android:id="@+id/webview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior">
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-                <org.mozilla.focus.web.IWebView
-                    android:id="@+id/webview"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
-                    app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
-            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
             <FrameLayout
                 android:id="@+id/crash_container"
@@ -87,15 +81,19 @@
                 android:contentDescription="@string/content_description_erase"
                 app:layout_dodgeInsetEdges="bottom"/>
 
-            <include
+            <mozilla.components.feature.findinpage.view.FindInPageBar
                 android:id="@+id/find_in_page"
-                layout="@layout/find_in_page"
-                android:layout_height="wrap_content"
                 android:layout_width="match_parent"
-                android:layout_gravity="bottom"
-                android:visibility="gone"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                app:layout_insetEdge="bottom"/>
+                android:background="#FFFFFFFF"
+                android:elevation="10dp"
+                android:layout_height="56dp"
+                android:padding="4dp"
+                mozac:findInPageNoMatchesTextColor="#ff000000"
+                mozac:findInPageQueryTextColor="#ff000000"
+                mozac:findInPageQueryHintTextColor="#ff000000"
+                mozac:findInPageResultCountTextColor="#ff000000"
+                android:visibility="gone" />
+
         </org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout>
     </LinearLayout>
 

@@ -7,10 +7,13 @@
     package="org.mozilla.focus">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Used by sentry. -->
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <!-- Needed to prompt the user to give permission for camera access -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <!-- Needed to prompt the user to give permission to install a downloaded apk -->
     <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
@@ -131,6 +134,9 @@
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
             </intent-filter>
         </service>
+
+        <service android:name=".downloads.DownloadService"
+            android:exported="false" />
 
         <service android:name=".session.SessionNotificationService"
             android:exported="false" />

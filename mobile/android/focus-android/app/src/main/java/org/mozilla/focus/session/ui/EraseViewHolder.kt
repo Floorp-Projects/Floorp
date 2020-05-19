@@ -12,7 +12,6 @@ import android.view.View
 import android.widget.TextView
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.session.removeAndCloseAllSessions
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class EraseViewHolder(
@@ -32,7 +31,7 @@ class EraseViewHolder(
 
         fragment.animateAndDismiss().addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                fragment.requireComponents.sessionManager.removeAndCloseAllSessions()
+                fragment.requireComponents.sessionManager.removeSessions()
             }
         })
     }

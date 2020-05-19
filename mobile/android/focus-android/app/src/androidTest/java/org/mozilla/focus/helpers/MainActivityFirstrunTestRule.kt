@@ -12,7 +12,6 @@ import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.FirstrunFragment.Companion.FIRSTRUN_PREF
-import org.mozilla.focus.session.removeAllAndCloseAllSessions
 
 open class MainActivityFirstrunTestRule(private val showFirstRun: Boolean) :
     ActivityTestRule<MainActivity>(MainActivity::class.java) {
@@ -39,6 +38,6 @@ open class MainActivityFirstrunTestRule(private val showFirstRun: Boolean) :
         val sessionManager =
             InstrumentationRegistry.getInstrumentation().targetContext.applicationContext.components.sessionManager
 
-        ThreadUtils.postToMainThread(Runnable { sessionManager.removeAllAndCloseAllSessions() })
+        ThreadUtils.postToMainThread(Runnable { sessionManager.removeAll() })
     }
 }

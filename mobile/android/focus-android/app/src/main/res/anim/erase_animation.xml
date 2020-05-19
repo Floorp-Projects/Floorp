@@ -17,8 +17,4 @@
         android:fromYDelta="0"
         android:toYDelta="100%p"
         android:startOffset="@integer/erase_animation_translate_offset" />
-    <alpha
-        android:duration="@integer/erase_animation_alpha_duration"
-        android:fromAlpha="1.0"
-        android:toAlpha="0.0" />
 </set>

@@ -9,6 +9,7 @@ import androidx.test.uiautomator.UiDevice;
 import android.text.format.DateUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
@@ -24,6 +25,7 @@ import tools.fastlane.screengrab.UiAutomatorScreenshotStrategy;
 /**
  * Base class for tests that take screenshots.
  */
+@Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView")
 abstract class ScreenshotTest {
     final long waitingTime = DateUtils.SECOND_IN_MILLIS * 10;
 
@@ -37,10 +39,6 @@ abstract class ScreenshotTest {
         @Override
         protected void beforeActivityLaunched() {
             super.beforeActivityLaunched();
-
-            // This test is for webview only for now.
-            org.junit.Assume.assumeTrue(!AppConstants.INSTANCE.isGeckoBuild() &&
-                    !AppConstants.INSTANCE.isKlarBuild());
         }
     };
 

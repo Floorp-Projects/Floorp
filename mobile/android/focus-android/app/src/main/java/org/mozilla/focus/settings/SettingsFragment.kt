@@ -9,15 +9,11 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import org.mozilla.focus.R
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.AppConstants
 
 class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     override fun onCreatePreferences(bundle: Bundle?, s: String?) {
         addPreferencesFromResource(R.xml.settings)
-        if (!AppConstants.isGeckoBuild && !AppConstants.isDevBuild) {
-            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_advanced_screen)))
-        }
     }
 
     override fun onResume() {

@@ -12,12 +12,17 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.locale.LocaleManager
+import org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
+import org.mozilla.geckoview.BuildConfig.MOZ_APP_VENDOR
+import org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION
+import org.mozilla.geckoview.BuildConfig.MOZ_UPDATE_CHANNEL
 import java.util.Locale
 
 /**
@@ -41,9 +46,31 @@ object CrashReporterWrapper {
         // The BuildConfig value is populated from a file at compile time.
         // If the file did not exist, the value will be null.
         val supportedBuild = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
-        if (!supportedBuild || BuildConfig.SENTRY_TOKEN.isEmpty()) return
+        if (!supportedBuild) return
 
-        val sentryDsn = BuildConfig.SENTRY_TOKEN
+        val services = mutableListOf<CrashReporterService>()
+
+        if (isSentryEnabled()) {
+            val sentryService = SentryService(
+                context,
+                BuildConfig.SENTRY_TOKEN,
+                tags = createTags(context),
+                environment = BuildConfig.BUILD_TYPE,
+                sendEventForNativeCrashes = false // Do not send native crashes to Sentry
+            )
+
+            services.add(sentryService)
+        }
+
+        val socorroService = MozillaSocorroService(
+            context,
+            appName = SOCORRO_APP_NAME,
+            version = MOZ_APP_VERSION,
+            buildId = MOZ_APP_BUILDID,
+            vendor = MOZ_APP_VENDOR,
+            releaseChannel = MOZ_UPDATE_CHANNEL
+        )
+        services.add(socorroService)
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -57,14 +84,7 @@ object CrashReporterWrapper {
 
         crashReporter = CrashReporter(
                 context = context,
-                services = listOf(
-                    SentryService(
-                        context,
-                        sentryDsn,
-                        tags = createTags(context),
-                        sendEventForNativeCrashes = true),
-                    MozillaSocorroService(context, SOCORRO_APP_NAME)
-                ),
+                services = services,
                 promptConfiguration = CrashReporter.PromptConfiguration(
                         appName = context.resources.getString(R.string.app_name)
                 ),
@@ -73,6 +93,8 @@ object CrashReporterWrapper {
 
         onIsEnabledChanged(context)
     }
+
+    fun isSentryEnabled() = !BuildConfig.SENTRY_TOKEN.isNullOrEmpty()
 
     fun onIsEnabledChanged(context: Context, isEnabled: Boolean = TelemetryWrapper.isTelemetryEnabled(context)) {
         crashReporter?.enabled = isEnabled

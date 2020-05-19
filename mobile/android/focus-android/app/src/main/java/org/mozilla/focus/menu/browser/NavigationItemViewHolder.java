@@ -28,7 +28,7 @@ public class NavigationItemViewHolder extends BrowserMenuViewHolder {
         updateLoading(fragment.getSession().getLoading());
 
         final View forwardView = itemView.findViewById(R.id.forward);
-        if (!fragment.canGoForward()) {
+        if (!fragment.getSession().getCanGoForward()) {
             forwardView.setEnabled(false);
             forwardView.setAlpha(0.5f);
         } else {

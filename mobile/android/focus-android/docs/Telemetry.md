@@ -234,7 +234,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 | Autocomplete domain reordered  | action   | reorder  | autocomplete_domain     |       | `options*`
 | Open Exceptions Setting        | action   | open     | allowlist               |       |
 | Remove Exceptions Domains      | action   | remove   | allowlist               |       |`{ "total": 5 }`
-| Remove All Exceptions Domains  | action   | remove_all |allowlist              |       |`{ "total": 5 }`
+| Remove All Exceptions Domains  | action   | remove_all |allowlist              |       |
 | Default search engine clicked  | action   | open     | search_engine_setting   |       |
 | Change default search engine   | action   | save     | search_engine_setting   |       | `{"source": src* }`
 | Select "Remove" engines screen | action   | remove   | search_engine_setting   |       |

@@ -8,16 +8,20 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import androidx.preference.PreferenceManager
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
 import org.mozilla.focus.R
+import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
-import org.mozilla.focus.web.GeckoWebViewProvider
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */
 @Suppress("TooManyFunctions") // This class is designed to have a lot of (simple) functions
-class Settings private constructor(context: Context) {
+class Settings private constructor(
+    private val context: Context
+) {
     companion object {
         private var instance: Settings? = null
 
@@ -31,7 +35,56 @@ class Settings private constructor(context: Context) {
         }
     }
 
-    private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val preferencesListener = EngineSharedPreferencesListener(context)
+
+    private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context).apply {
+        registerOnSharedPreferenceChangeListener(preferencesListener)
+    }
+
+    fun createTrackingProtectionPolicy(): EngineSession.TrackingProtectionPolicy {
+        val trackingCategories: MutableList<EngineSession.TrackingProtectionPolicy.TrackingCategory> = mutableListOf()
+
+        if (shouldBlockSocialTrackers()) {
+            trackingCategories.add(EngineSession.TrackingProtectionPolicy.TrackingCategory.SOCIAL)
+        }
+        if (shouldBlockAdTrackers()) {
+            trackingCategories.add(EngineSession.TrackingProtectionPolicy.TrackingCategory.AD)
+        }
+        if (shouldBlockAnalyticTrackers()) {
+            trackingCategories.add(EngineSession.TrackingProtectionPolicy.TrackingCategory.ANALYTICS)
+        }
+        if (shouldBlockOtherTrackers()) {
+            trackingCategories.add(EngineSession.TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
+        }
+
+        val cookiePolicy = when (shouldBlockCookiesValue()) {
+            context.getString(R.string.preference_privacy_should_block_cookies_yes_option) ->
+                EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE
+
+            context.getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option) ->
+                EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS
+
+            context.getString(R.string.preference_privacy_should_block_cookies_third_party_only_option) ->
+                EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
+
+            else -> EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
+        }
+
+        return EngineSession.TrackingProtectionPolicy.select(
+            cookiePolicy = cookiePolicy,
+            trackingCategories = trackingCategories.toTypedArray(),
+            strictSocialTrackingProtection = shouldBlockSocialTrackers()
+        )
+    }
+
+    fun setupSafeBrowsing(engine: Engine) {
+        if (shouldUseSafeBrowsing()) {
+            engine.settings.safeBrowsingPolicy = arrayOf(EngineSession.SafeBrowsingPolicy.RECOMMENDED)
+        } else {
+            engine.settings.safeBrowsingPolicy = arrayOf(EngineSession.SafeBrowsingPolicy.NONE)
+        }
+    }
+
     private val resources: Resources = context.resources
     val hasAddedToHomeScreen: Boolean
         get() = preferences.getBoolean(getPreferenceKey(R.string.has_added_to_home_screen), false)
@@ -72,23 +125,13 @@ class Settings private constructor(context: Context) {
                 false)
 
     fun shouldBlockCookiesValue(): String =
-        if (AppConstants.isGeckoBuild) {
-            preferences.getString(
-                getPreferenceKey(
-                    R.string
-                        .pref_key_performance_enable_cookies
-                ),
-                resources.getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option)
-            )!!
-        } else {
-            preferences.getString(
-                getPreferenceKey(
-                    R.string
-                        .pref_key_performance_enable_cookies
-                ),
-                resources.getString(R.string.preference_privacy_should_block_cookies_no_option)
-            )!!
-        }
+        preferences.getString(
+            getPreferenceKey(
+                R.string
+                    .pref_key_performance_enable_cookies
+            ),
+            resources.getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option)
+        )!!
 
     fun shouldBlockCookies(): Boolean =
             shouldBlockCookiesValue() == resources.getString(
@@ -102,9 +145,6 @@ class Settings private constructor(context: Context) {
 
     fun shouldShowFirstrun(): Boolean =
             !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false)
-
-    fun isFirstGeckoRun(): Boolean =
-            preferences.getBoolean(GeckoWebViewProvider.PREF_FIRST_GECKO_RUN, true)
 
     fun shouldUseBiometrics(): Boolean =
             preferences.getBoolean(getPreferenceKey(R.string.pref_key_biometric), false)

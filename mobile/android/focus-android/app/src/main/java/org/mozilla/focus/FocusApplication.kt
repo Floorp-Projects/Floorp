@@ -14,6 +14,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import mozilla.components.support.ktx.android.content.isMainProcess
 import org.mozilla.focus.locale.LocaleAwareApplication
 import org.mozilla.focus.session.NotificationSessionObserver
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
@@ -23,7 +24,6 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.StethoWrapper
-import org.mozilla.focus.web.CleanupSessionObserver
 import kotlin.coroutines.CoroutineContext
 
 class FocusApplication : LocaleAwareApplication(), CoroutineScope {
@@ -31,7 +31,7 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
-    val components: Components by lazy { Components() }
+    val components: Components by lazy { Components(this) }
 
     var visibilityLifeCycleCallback: VisibilityLifeCycleCallback? = null
         private set
@@ -42,34 +42,36 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         Log.addSink(AndroidLogSink("Focus"))
         CrashReporterWrapper.init(this)
 
-        StethoWrapper.init(this)
+        if (isMainProcess()) {
+            StethoWrapper.init(this)
 
-        PreferenceManager.setDefaultValues(this, R.xml.settings, false)
+            PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
-        TelemetryWrapper.init(this)
+            TelemetryWrapper.init(this)
 
-        enableStrictMode()
+            enableStrictMode()
 
-        components.searchEngineManager.apply {
-            launch(IO) {
-                loadAsync(this@FocusApplication).await()
+            components.searchEngineManager.apply {
+                launch(IO) {
+                    loadAsync(this@FocusApplication).await()
+                }
+
+                registerForLocaleUpdates(this@FocusApplication)
             }
 
-            registerForLocaleUpdates(this@FocusApplication)
-        }
+            AdjustHelper.setupAdjustIfNeeded(this@FocusApplication)
 
-        AdjustHelper.setupAdjustIfNeeded(this@FocusApplication)
+            visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this@FocusApplication)
+            registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
 
-        visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this@FocusApplication)
-        registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
+            components.sessionManager.apply {
+                @Suppress("DEPRECATION")
+                register(NotificationSessionObserver(this@FocusApplication))
+                @Suppress("DEPRECATION")
+                register(TelemetrySessionObserver(components.store))
+            }
 
-        components.sessionManager.apply {
-            @Suppress("DEPRECATION")
-            register(NotificationSessionObserver(this@FocusApplication))
-            @Suppress("DEPRECATION")
-            register(TelemetrySessionObserver(components.store))
-            @Suppress("DEPRECATION")
-            register(CleanupSessionObserver(this@FocusApplication))
+            components.engine.warmUp()
         }
     }
 

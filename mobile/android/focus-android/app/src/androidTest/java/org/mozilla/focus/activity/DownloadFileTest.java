@@ -18,6 +18,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,7 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 @RunWith(AndroidJUnit4.class)
+@Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView")
 // https://testrail.stage.mozaws.net/index.php?/cases/view/53141
 public class DownloadFileTest {
     private static final String TEST_PATH = "/";
@@ -49,8 +51,6 @@ public class DownloadFileTest {
                     .getTargetContext()
                     .getApplicationContext();
 
-            // This test is for webview only. Debug is defaulted to Webview, and Klar is used for GV testing.
-            org.junit.Assume.assumeTrue(!AppConstants.INSTANCE.isGeckoBuild() && !AppConstants.INSTANCE.isKlarBuild());
             // This test is for API 25 and greater. see https://github.com/mozilla-mobile/focus-android/issues/2696
             org.junit.Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
 

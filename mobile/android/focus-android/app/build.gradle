@@ -154,6 +154,7 @@ dependencies {
     compileOnly 'net.jcip:jcip-annotations:1.0'
     implementation("com.google.code.findbugs:jsr305:3.0.2")
 
+    implementation "org.mozilla.components:browser-engine-gecko:$mozilla_components_version"
     implementation "org.mozilla.components:browser-domains:$mozilla_components_version"
     implementation "org.mozilla.components:browser-errorpages:$mozilla_components_version"
     implementation "org.mozilla.components:browser-search:$mozilla_components_version"
@@ -162,6 +163,12 @@ dependencies {
     implementation "org.mozilla.components:concept-engine:$mozilla_components_version"
     implementation "org.mozilla.components:concept-fetch:$mozilla_components_version"
     implementation "org.mozilla.components:feature-customtabs:$mozilla_components_version"
+    implementation "org.mozilla.components:feature-contextmenu:$mozilla_components_version"
+    implementation "org.mozilla.components:feature-downloads:$mozilla_components_version"
+    implementation "org.mozilla.components:feature-findinpage:$mozilla_components_version"
+    implementation "org.mozilla.components:feature-prompts:$mozilla_components_version"
+    implementation "org.mozilla.components:feature-session:$mozilla_components_version"
+    implementation "org.mozilla.components:feature-tabs:$mozilla_components_version"
     implementation "org.mozilla.components:lib-crash:$mozilla_components_version"
     implementation "org.mozilla.components:lib-fetch-httpurlconnection:$mozilla_components_version"
     implementation "org.mozilla.components:service-telemetry:$mozilla_components_version_telemetry"
@@ -177,8 +184,6 @@ dependencies {
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
     focusImplementation 'com.android.installreferrer:installreferrer:1.1' // Required by Adjust
 
-    implementation "org.mozilla.components:browser-engine-gecko:$mozilla_components_version"
-    implementation "org.mozilla.geckoview:geckoview:$gecko_release_version"
     implementation "androidx.palette:palette:$support_libraries_version"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"

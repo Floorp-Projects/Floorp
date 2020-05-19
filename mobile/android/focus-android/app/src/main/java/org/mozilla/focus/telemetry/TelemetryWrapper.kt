@@ -733,9 +733,8 @@ object TelemetryWrapper {
             .queue()
     }
 
-    fun removeAllExceptionDomains(count: Int) {
+    fun removeAllExceptionDomains() {
         TelemetryEvent.create(Category.ACTION, Method.REMOVE_ALL, Object.ALLOWLIST)
-            .extra(Extra.TOTAL, count.toString())
             .queue()
     }
 

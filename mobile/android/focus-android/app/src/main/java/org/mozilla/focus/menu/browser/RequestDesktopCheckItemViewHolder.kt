@@ -7,6 +7,7 @@ package org.mozilla.focus.menu.browser
 import android.view.View
 import android.widget.CheckBox
 import android.widget.CompoundButton
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.BrowserFragment
@@ -14,7 +15,8 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.UrlUtils
 
 import mozilla.components.support.utils.ThreadUtils
-import org.mozilla.focus.ext.shouldRequestDesktopSite
+import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.requireComponents
 
 internal class RequestDesktopCheckItemViewHolder/* package */(
     itemView: View,
@@ -23,7 +25,8 @@ internal class RequestDesktopCheckItemViewHolder/* package */(
     private val checkbox: CheckBox = itemView.findViewById(R.id.check_menu_item_checkbox)
 
     init {
-        checkbox.isChecked = fragment.session.shouldRequestDesktopSite
+        val tab = itemView.context.components.store.state.findTabOrCustomTab(fragment.session.id)
+        checkbox.isChecked = tab?.content?.desktopMode ?: false
         checkbox.setOnCheckedChangeListener(this)
     }
 
@@ -35,7 +38,9 @@ internal class RequestDesktopCheckItemViewHolder/* package */(
         // the switch change its state.
         ThreadUtils.postToMainThreadDelayed(Runnable {
             menu.dismiss()
-            fragment.loadUrl(UrlUtils.stripSchemeAndSubDomain(fragment.url))
+
+            val url = UrlUtils.stripSchemeAndSubDomain(fragment.url)
+            fragment.requireComponents.sessionUseCases.loadUrl(url)
         }, ANIMATION_DURATION)
     }
 

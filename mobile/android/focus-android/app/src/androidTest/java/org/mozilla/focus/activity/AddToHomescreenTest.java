@@ -135,9 +135,6 @@ public class AddToHomescreenTest {
         TestHelper.pressEnterKey();
         TestHelper.progressBar.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
-        if (!AppConstants.INSTANCE.isGeckoBuild()) {
-            TestHelper.waitForWebSiteTitleLoad();
-        }
 
         openAddtoHSDialog();
         // Add to Home screen dialog is now shown
@@ -186,9 +183,6 @@ public class AddToHomescreenTest {
         TestHelper.pressEnterKey();
         TestHelper.progressBar.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
-        if (!AppConstants.INSTANCE.isGeckoBuild()) {
-            TestHelper.waitForWebSiteTitleLoad();
-        }
 
         openAddtoHSDialog();
 

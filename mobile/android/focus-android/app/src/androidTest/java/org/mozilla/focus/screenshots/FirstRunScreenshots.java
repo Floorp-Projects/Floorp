@@ -11,6 +11,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,16 +31,13 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
+@Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView")
 public class FirstRunScreenshots extends ScreenshotTest {
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(true) {
         @Override
         protected void beforeActivityLaunched() {
             super.beforeActivityLaunched();
-
-            // This test is for webview only for now.
-            org.junit.Assume.assumeTrue(!AppConstants.INSTANCE.isGeckoBuild() &&
-                    !AppConstants.INSTANCE.isKlarBuild());
         }
     };
 

@@ -11,10 +11,9 @@ import androidx.preference.Preference
 import androidx.preference.SwitchPreferenceCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
-import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.exceptions.ExceptionsListFragment
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.widget.CookiesPreference
 
 class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
@@ -35,30 +34,12 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
             preferenceScreen.removePreference(biometricPreference)
         }
 
-        val safeBrowsingPreference =
-            findPreference(getString(R.string.pref_key_category_safe_browsing))
-        preferenceScreen.removePreference(safeBrowsingPreference)
         val cookiesPreference =
             findPreference(getString(R.string.pref_key_performance_enable_cookies)) as CookiesPreference
-        if (!AppConstants.isGeckoBuild) {
-            val cookiesStringsWV =
-                requireContext().resources.getStringArray(R.array.preference_privacy_cookies_options)
-                    .filter {
-                        it != getString(
-                            R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option
-                        )
-                    }
-            cookiesPreference.entries = cookiesStringsWV.toTypedArray()
-            cookiesPreference.entryValues = cookiesStringsWV.toTypedArray()
 
-            cookiesPreference.setDefaultValue(
-                getString(R.string.preference_privacy_should_block_cookies_no_option)
-            )
-        } else {
-            cookiesPreference.setDefaultValue(
-                getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option)
-            )
-        }
+        cookiesPreference.setDefaultValue(
+            getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option)
+        )
         cookiesPreference.updateSummary()
     }
 
@@ -104,8 +85,10 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
 
     private fun updateExceptionSettingAvailability() {
         val exceptionsPreference = findPreference(getString(R.string.pref_key_screen_exceptions))
-        if (ExceptionDomains.load(requireContext()).isEmpty()) {
-            exceptionsPreference.isEnabled = false
+        exceptionsPreference.isEnabled = false
+
+        requireComponents.trackingProtectionUseCases.fetchExceptions.invoke { exceptions ->
+            exceptionsPreference.isEnabled = exceptions.isNotEmpty()
         }
     }
 
