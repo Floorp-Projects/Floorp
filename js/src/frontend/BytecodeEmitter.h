@@ -258,7 +258,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
       return true;
     }
 
-    uint32_t index = perScriptData().atomIndices()->count();
+    uint32_t index;
+    if (!perScriptData().gcThingList().append(atom, &index)) {
+      return false;
+    }
+
     if (!perScriptData().atomIndices()->add(p, atom, index)) {
       ReportOutOfMemory(cx);
       return false;

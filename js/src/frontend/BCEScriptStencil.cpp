@@ -22,7 +22,7 @@ BCEScriptStencil::BCEScriptStencil(BytecodeEmitter& bce,
 
 void BCEScriptStencil::init(BytecodeEmitter& bce,
                             UniquePtr<ImmutableScriptData> immutableData) {
-  natoms = bce.perScriptData().atomIndices()->count();
+  natoms = 0;
 
   immutableFlags = bce.sc->immutableFlags();
 
@@ -55,13 +55,4 @@ void BCEScriptStencil::init(BytecodeEmitter& bce,
   } /* isFunctionBox */
 }
 
-void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {
-  const AtomIndexMap& indices = *bce_.perScriptData().atomIndices();
-
-  for (AtomIndexMap::Range r = indices.all(); !r.empty(); r.popFront()) {
-    JSAtom* atom = r.front().key();
-    uint32_t index = r.front().value();
-    MOZ_ASSERT(index < indices.count());
-    atoms[index].init(atom);
-  }
-}
+void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {}

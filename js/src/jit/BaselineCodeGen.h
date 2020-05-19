@@ -110,9 +110,6 @@ class BaselineCodeGen {
   // Load the |this|-value from the global's lexical environment.
   void loadGlobalThisValue(ValueOperand dest);
 
-  // Load script atom |index| into |dest|.
-  void loadScriptAtom(Register index, Register dest);
-
   // Computes the frame size. See BaselineFrame::debugFrameSize_.
   void computeFrameSize(Register dest);
 
