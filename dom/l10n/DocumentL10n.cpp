@@ -30,9 +30,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocumentL10n)
 NS_INTERFACE_MAP_END_INHERITING(DOMLocalization)
 
 /* static */
-RefPtr<DocumentL10n> DocumentL10n::Create(Document* aDocument,
-                                          const bool aSync) {
-  RefPtr<DocumentL10n> l10n = new DocumentL10n(aDocument, aSync);
+RefPtr<DocumentL10n> DocumentL10n::Create(Document* aDocument) {
+  RefPtr<DocumentL10n> l10n = new DocumentL10n(aDocument);
 
   if (!l10n->Init()) {
     return nullptr;
@@ -40,10 +39,10 @@ RefPtr<DocumentL10n> DocumentL10n::Create(Document* aDocument,
   return l10n.forget();
 }
 
-DocumentL10n::DocumentL10n(Document* aDocument, const bool aSync)
-    : DOMLocalization(aDocument->GetScopeObject(), aSync, {}),
+DocumentL10n::DocumentL10n(Document* aDocument)
+    : DOMLocalization(aDocument->GetScopeObject()),
       mDocument(aDocument),
-      mState(DocumentL10nState::Constructed) {
+      mState(DocumentL10nState::Uninitialized) {
   mContentSink = do_QueryInterface(aDocument->GetCurrentContentSink());
 }
 
@@ -54,6 +53,30 @@ bool DocumentL10n::Init() {
     return false;
   }
   return true;
+}
+
+void DocumentL10n::Activate(const bool aLazy) {
+  if (mState > DocumentL10nState::Uninitialized) {
+    return;
+  }
+
+  Element* elem = mDocument->GetDocumentElement();
+  if (NS_WARN_IF(!elem)) {
+    return;
+  }
+  bool isSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
+
+  if (aLazy) {
+    if (isSync) {
+      NS_WARNING(
+          "Document localization initialized lazy, data-l10n-sync attribute "
+          "has no effect.");
+    }
+    DOMLocalization::Activate(false, true, {});
+  } else {
+    DOMLocalization::Activate(isSync, true, {});
+  }
+  mState = DocumentL10nState::Activated;
 }
 
 JSObject* DocumentL10n::WrapObject(JSContext* aCx,
@@ -142,8 +165,8 @@ void DocumentL10n::TriggerInitialTranslation() {
 }
 
 already_AddRefed<Promise> DocumentL10n::TranslateDocument(ErrorResult& aRv) {
-  MOZ_ASSERT(mState == DocumentL10nState::Constructed,
-             "This method should be called only from Constructed state.");
+  MOZ_ASSERT(mState == DocumentL10nState::Activated,
+             "This method should be called only from Activated state.");
   RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
 
   Element* elem = mDocument->GetDocumentElement();
@@ -254,9 +277,13 @@ void DocumentL10n::InitialTranslationCompleted(bool aL10nCached) {
     mContentSink->InitialTranslationCompleted();
   }
 
-  // From now on, the state of Localization is unconditionally
-  // async.
-  SetIsSync(false);
+  // If sync was true, we want to change the state of
+  // mozILocalization to async now.
+  if (mIsSync) {
+    mIsSync = false;
+
+    mLocalization->SetIsSync(mIsSync);
+  }
 }
 
 void DocumentL10n::ConnectRoot(nsINode& aNode, bool aTranslate,
