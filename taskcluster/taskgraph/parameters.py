@@ -7,6 +7,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import io
+import logging
 import os.path
 import json
 from datetime import datetime
@@ -27,6 +28,8 @@ from six import text_type
 
 from . import GECKO
 from .util.attributes import release_level
+
+logger = logging.getLogger(__name__)
 
 
 class ParameterMismatch(Exception):
@@ -279,6 +282,7 @@ def load_parameters_file(filename, strict=True, overrides=None, trust_domain=Non
 
         if task_id:
             filename = get_artifact_url(task_id, 'public/parameters.yml')
+        logger.info("Loading parameters from {}".format(filename))
         f = urllib.urlopen(filename)
 
     if filename.endswith('.yml'):
