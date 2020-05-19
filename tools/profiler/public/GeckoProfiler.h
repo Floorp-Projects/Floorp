@@ -833,10 +833,10 @@ bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
 bool profiler_is_locked_on_current_thread();
 
 // Insert a marker in the profile timeline for a specified thread.
-void profiler_add_marker_for_thread(
-    int aThreadId, JS::ProfilingCategoryPair aCategoryPair,
-    const char* aMarkerName,
-    mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
+void profiler_add_marker_for_thread(int aThreadId,
+                                    JS::ProfilingCategoryPair aCategoryPair,
+                                    const char* aMarkerName,
+                                    const ProfilerMarkerPayload& aPayload);
 
 enum class NetworkLoadType { LOAD_START, LOAD_STOP, LOAD_REDIRECT };
 

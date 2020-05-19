@@ -411,7 +411,7 @@ void ContentCompositorBridgeParent::ShadowLayersUpdated(
     profiler_add_marker_for_thread(
         profiler_current_thread_id(), JS::ProfilingCategoryPair::GRAPHICS,
         "CONTENT_FULL_PAINT_TIME",
-        MakeUnique<ContentBuildPayload>(aInfo.transactionStart(), endTime));
+        ContentBuildPayload(aInfo.transactionStart(), endTime));
   }
 #endif
   Telemetry::Accumulate(
