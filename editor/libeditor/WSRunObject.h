@@ -810,7 +810,8 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   Tuple<EditorDOMPointInText, EditorDOMPointInText> GetASCIIWhitespacesBounds(
       int16_t aDir, const EditorDOMPointBase<PT, CT>& aPoint) const;
 
-  MOZ_CAN_RUN_SCRIPT nsresult CheckTrailingNBSPOfRun(WSFragment* aRun);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  NormalizeWhitespacesAtEndOf(const WSFragment& aRun);
 
   /**
    * MaybeReplacePreviousNBSPWithASCIIWhitespace() replaces previous character
