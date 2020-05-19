@@ -870,8 +870,9 @@ bool BrowserParent::SendLoadRemoteScript(const nsString& aURL,
   return PBrowserParent::SendLoadRemoteScript(aURL, aRunInGlobalScope);
 }
 
-void BrowserParent::LoadURL(nsIURI* aURI) {
+void BrowserParent::LoadURL(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal) {
   MOZ_ASSERT(aURI);
+  MOZ_ASSERT(aTriggeringPrincipal);
 
   if (mIsDestroyed) {
     return;
@@ -887,7 +888,7 @@ void BrowserParent::LoadURL(nsIURI* aURI) {
     return;
   }
 
-  Unused << SendLoadURL(spec, GetShowInfo());
+  Unused << SendLoadURL(spec, aTriggeringPrincipal, GetShowInfo());
 }
 
 void BrowserParent::ResumeLoad(uint64_t aPendingSwitchID) {

@@ -254,6 +254,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                                const Maybe<ZoomConstraints>& aConstraints);
 
   mozilla::ipc::IPCResult RecvLoadURL(const nsCString& aURI,
+                                      nsIPrincipal* aTriggeringPrincipal,
                                       const ParentShowInfo&);
 
   mozilla::ipc::IPCResult RecvResumeLoad(const uint64_t& aPendingSwitchID,
