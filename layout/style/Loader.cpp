@@ -502,7 +502,7 @@ struct Loader::Sheets {
   RefPtr<StyleSheet> LookupInline(const nsAString&);
 
   // A cache hit or miss. It is a miss if the `StyleSheet` is null.
-  using CacheResult = Tuple<RefPtr<StyleSheet>, SheetState>;
+  using CacheResult = std::tuple<RefPtr<StyleSheet>, SheetState>;
   CacheResult Lookup(SheetLoadDataHashKey&, bool aSyncLoad);
 
   size_t SizeOfIncludingThis(MallocSizeOf) const;
@@ -559,7 +559,7 @@ auto Loader::Sheets::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
         // keys off the URI. See below for the unique inner check.
         if (!sheet->HasModifiedRules() &&
             sheet->ParsingMode() == aKey.ParsingMode()) {
-          return MakeTuple(CloneSheet(*sheet), SheetState::Complete);
+          return {CloneSheet(*sheet), SheetState::Complete};
         }
         LOG(
             ("    Not cloning due to forced unique inner or mismatched "
@@ -603,7 +603,7 @@ auto Loader::Sheets::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
         cachedSheet = clone;
       }
 
-      return MakeTuple(std::move(clone), SheetState::Complete);
+      return {std::move(clone), SheetState::Complete};
     }
     LOG(("    Not cloning due to modified rules"));
     // Remove it now that we know that we're never going to use this stylesheet
@@ -618,13 +618,13 @@ auto Loader::Sheets::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
   if (SheetLoadData* data = mLoadingDatas.Get(&aKey)) {
     LOG(("  From loading: %p", data->mSheet.get()));
     AssertIncompleteSheetMatches(*data, aKey);
-    return MakeTuple(CloneSheet(*data->mSheet), SheetState::Loading);
+    return {CloneSheet(*data->mSheet), SheetState::Loading};
   }
 
   if (SheetLoadData* data = mPendingDatas.GetWeak(&aKey)) {
     LOG(("  From pending: %p", data->mSheet.get()));
     AssertIncompleteSheetMatches(*data, aKey);
-    return MakeTuple(CloneSheet(*data->mSheet), SheetState::Pending);
+    return {CloneSheet(*data->mSheet), SheetState::Pending};
   }
 
   return {};
@@ -1141,7 +1141,7 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
  * state of the sheet they are clones off; make sure to call PrepareSheet() on
  * the result of CreateSheet().
  */
-Tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
+std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
     nsIURI* aURI, nsIContent* aLinkingContent, nsIPrincipal* aLoaderPrincipal,
     css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
     nsIReferrerInfo* aLoadingReferrerInfo, const nsAString& aIntegrity,
@@ -1169,9 +1169,8 @@ Tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
                            aCORSMode, aParsingMode, sriMetadata,
                            false /** TODO - is-link-preload **/);
   auto cacheResult = mSheets->Lookup(key, aSyncLoad);
-  if (Get<0>(cacheResult)) {
-    LOG(("  Hit cache with state: %s",
-         gStateStrings[size_t(Get<1>(cacheResult))]));
+  if (const auto& [styleSheet, sheetState] = cacheResult; styleSheet) {
+    LOG(("  Hit cache with state: %s", gStateStrings[size_t(sheetState)]));
     return cacheResult;
   }
 
@@ -1185,7 +1184,7 @@ Tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
       ReferrerInfo::CreateForExternalCSSResources(sheet);
   sheet->SetReferrerInfo(referrerInfo);
   LOG(("  Needs parser"));
-  return MakeTuple(std::move(sheet), SheetState::NeedsParser);
+  return {std::move(sheet), SheetState::NeedsParser};
 }
 
 static Loader::MediaMatched MediaListMatches(const MediaList* aMediaList,
@@ -2086,10 +2085,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   // Check IsAlternateSheet now, since it can mutate our document and make
   // pending sheets go to the non-pending state.
   auto isAlternate = IsAlternateSheet(aInfo.mTitle, aInfo.mHasAlternateRel);
-
-  SheetState state;
-  RefPtr<StyleSheet> sheet;
-  Tie(sheet, state) =
+  auto [sheet, state] =
       CreateSheet(aInfo, principal, eAuthorSheetFeatures, syncLoad);
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
@@ -2252,7 +2248,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
     state = SheetState::Complete;
   } else {
     // For now, use CORS_NONE for child sheets
-    Tie(sheet, state) =
+    std::tie(sheet, state) =
         CreateSheet(aURL, nullptr, principal, aParentSheet.ParsingMode(),
                     CORS_NONE, aParentSheet.GetReferrerInfo(),
                     EmptyString(),  // integrity is only checked on main sheet
@@ -2346,10 +2342,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   }
 
   bool syncLoad = !aObserver;
-
-  SheetState state;
-  RefPtr<StyleSheet> sheet;
-  Tie(sheet, state) =
+  auto [sheet, state] =
       CreateSheet(aURL, nullptr, aOriginPrincipal, aParsingMode, aCORSMode,
                   aReferrerInfo, aIntegrity, syncLoad);
 

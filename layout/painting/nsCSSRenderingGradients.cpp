@@ -8,6 +8,8 @@
 
 #include "nsCSSRenderingGradients.h"
 
+#include <tuple>
+
 #include "gfx2DGlue.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ComputedStyle.h"
@@ -60,7 +62,7 @@ static CSSPoint ComputeGradientLineEndFromAngle(const CSSPoint& aStart,
 }
 
 // Compute the start and end points of the gradient line for a linear gradient.
-static Tuple<CSSPoint, CSSPoint> ComputeLinearGradientLine(
+static std::tuple<CSSPoint, CSSPoint> ComputeLinearGradientLine(
     nsPresContext* aPresContext, const StyleGradient& aGradient,
     const CSSSize& aBoxSize) {
   using X = StyleHorizontalPositionKeyword;
@@ -79,7 +81,7 @@ static Tuple<CSSPoint, CSSPoint> ComputeLinearGradientLine(
       }
       CSSPoint end = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
       CSSPoint start = CSSPoint(aBoxSize.width, aBoxSize.height) - end;
-      return MakeTuple(start, end);
+      return {start, end};
     }
     case StyleLineDirection::Tag::Vertical: {
       CSSPoint start(center.x, 0);
@@ -87,7 +89,7 @@ static Tuple<CSSPoint, CSSPoint> ComputeLinearGradientLine(
       if (isModern == (direction.AsVertical() == Y::Top)) {
         std::swap(start.y, end.y);
       }
-      return MakeTuple(start, end);
+      return {start, end};
     }
     case StyleLineDirection::Tag::Horizontal: {
       CSSPoint start(0, center.y);
@@ -95,7 +97,7 @@ static Tuple<CSSPoint, CSSPoint> ComputeLinearGradientLine(
       if (isModern == (direction.AsHorizontal() == X::Left)) {
         std::swap(start.x, end.x);
       }
-      return MakeTuple(start, end);
+      return {start, end};
     }
     case StyleLineDirection::Tag::Corner: {
       const auto& corner = direction.AsCorner();
@@ -108,7 +110,7 @@ static Tuple<CSSPoint, CSSPoint> ComputeLinearGradientLine(
         double angle = atan2(ySign * aBoxSize.width, xSign * aBoxSize.height);
         CSSPoint end = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
         CSSPoint start = CSSPoint(aBoxSize.width, aBoxSize.height) - end;
-        return MakeTuple(start, end);
+        return {start, end};
       }
 
       CSSCoord startX = h == X::Left ? 0.0 : aBoxSize.width;
@@ -116,13 +118,13 @@ static Tuple<CSSPoint, CSSPoint> ComputeLinearGradientLine(
 
       CSSPoint start(startX, startY);
       CSSPoint end = CSSPoint(aBoxSize.width, aBoxSize.height) - start;
-      return MakeTuple(start, end);
+      return {start, end};
     }
     default:
       break;
   }
   MOZ_ASSERT_UNREACHABLE("Unknown line direction");
-  return MakeTuple(CSSPoint(), CSSPoint());
+  return {CSSPoint(), CSSPoint()};
 }
 
 using EndingShape = StyleGenericEndingShape<Length, LengthPercentage>;
@@ -153,8 +155,9 @@ static RadialGradientRadii ComputeRadialGradientRadii(const EndingShape& aShape,
 // Compute the start and end points of the gradient line for a radial gradient.
 // Also returns the horizontal and vertical radii defining the circle or
 // ellipse to use.
-static Tuple<CSSPoint, CSSPoint, CSSCoord, CSSCoord> ComputeRadialGradientLine(
-    const StyleGradient& aGradient, const CSSSize& aBoxSize) {
+static std::tuple<CSSPoint, CSSPoint, CSSCoord, CSSCoord>
+ComputeRadialGradientLine(const StyleGradient& aGradient,
+                          const CSSSize& aBoxSize) {
   const auto& radial = aGradient.AsRadial();
   const EndingShape& endingShape = radial.shape;
   const Position& position = radial.position;
@@ -223,18 +226,18 @@ static Tuple<CSSPoint, CSSPoint, CSSCoord, CSSCoord> ComputeRadialGradientLine(
   // The gradient line end point is where the gradient line intersects
   // the ellipse.
   CSSPoint end = start + CSSPoint(radiusX, 0);
-  return MakeTuple(start, end, radiusX, radiusY);
+  return {start, end, radiusX, radiusY};
 }
 
 // Compute the center and the start angle of the conic gradient.
-static Tuple<CSSPoint, float> ComputeConicGradientProperties(
+static std::tuple<CSSPoint, float> ComputeConicGradientProperties(
     const StyleGradient& aGradient, const CSSSize& aBoxSize) {
   const auto& conic = aGradient.AsConic();
   const Position& position = conic.position;
   float angle = static_cast<float>(conic.angle.ToRadians());
   CSSPoint center = ResolvePosition(position, aBoxSize);
 
-  return MakeTuple(center, angle);
+  return {center, angle};
 }
 
 static float Interpolate(float aF1, float aF2, float aFrac) {
@@ -693,14 +696,15 @@ nsCSSGradientRenderer nsCSSGradientRenderer::Create(
   CSSCoord radiusX = 0, radiusY = 0;    // for radial gradients only
   float angle = 0.0;                    // for conic gradients only
   if (aGradient.IsLinear()) {
-    Tie(lineStart, lineEnd) =
+    std::tie(lineStart, lineEnd) =
         ComputeLinearGradientLine(aPresContext, aGradient, srcSize);
   } else if (aGradient.IsRadial()) {
-    Tie(lineStart, lineEnd, radiusX, radiusY) =
+    std::tie(lineStart, lineEnd, radiusX, radiusY) =
         ComputeRadialGradientLine(aGradient, srcSize);
   } else {
     MOZ_ASSERT(aGradient.IsConic());
-    Tie(center, angle) = ComputeConicGradientProperties(aGradient, srcSize);
+    std::tie(center, angle) =
+        ComputeConicGradientProperties(aGradient, srcSize);
   }
   // Avoid sending Infs or Nans to downwind draw targets.
   if (!lineStart.IsFinite() || !lineEnd.IsFinite()) {
