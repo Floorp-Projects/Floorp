@@ -704,6 +704,14 @@ class MOZ_STACK_CLASS LanguageTagParser final {
   static bool parseBaseName(JSContext* cx, mozilla::Span<const char> locale,
                             LanguageTag& tag);
 
+  // Parse the input string as the base-name parts (language, script, region,
+  // variants) of a language tag. Returns Ok(true) if the input could be
+  // completely parsed, Ok(false) if the input couldn't be parsed, or Err() in
+  // case of internal error.
+  static JS::Result<bool> tryParseBaseName(JSContext* cx,
+                                           JSLinearString* locale,
+                                           LanguageTag& tag);
+
   // Return true iff |extension| can be parsed as a Unicode extension subtag.
   static bool canParseUnicodeExtension(mozilla::Span<const char> extension);
 
