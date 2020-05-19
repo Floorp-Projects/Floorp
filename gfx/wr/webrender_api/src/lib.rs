@@ -47,6 +47,7 @@ mod display_list;
 mod font;
 mod gradient_builder;
 mod image;
+mod resources;
 pub mod units;
 
 #[doc(hidden)]
@@ -60,3 +61,4 @@ pub use crate::display_list::*;
 pub use crate::font::*;
 pub use crate::gradient_builder::*;
 pub use crate::image::*;
+pub use crate::resources::DEFAULT_TILE_SIZE;
