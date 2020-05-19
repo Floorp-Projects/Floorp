@@ -25,7 +25,7 @@ var ecmaGlobals = [
   { name: "AggregateError", nightly: true },
   "Array",
   "ArrayBuffer",
-  { name: "Atomics", earlyBetaOrEarlier: true },
+  "Atomics",
   "Boolean",
   "BigInt",
   "BigInt64Array",
@@ -61,7 +61,6 @@ var ecmaGlobals = [
   "Set",
   {
     name: "SharedArrayBuffer",
-    earlyBetaOrEarlier: true,
     crossOriginIsolated: true,
   },
   "String",
