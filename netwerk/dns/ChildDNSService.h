@@ -41,7 +41,7 @@ class ChildDNSService final : public nsPIDNSService, public nsIObserver {
   void MOZ_ALWAYS_INLINE GetDNSRecordHashKey(
       const nsACString& aHost, const nsACString& aTrrServer, uint16_t aType,
       const OriginAttributes& aOriginAttributes, uint32_t aFlags,
-      nsIDNSListener* aListener, nsACString& aHashKey);
+      uintptr_t aListenerAddr, nsACString& aHashKey);
   nsresult AsyncResolveInternal(const nsACString& hostname,
                                 const nsACString& aTrrServer, uint16_t type,
                                 uint32_t flags, nsIDNSListener* listener,

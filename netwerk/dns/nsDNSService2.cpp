@@ -437,13 +437,14 @@ void nsDNSAsyncRequest::OnResolveHostComplete(nsHostResolver* resolver,
 }
 
 bool nsDNSAsyncRequest::EqualsAsyncListener(nsIDNSListener* aListener) {
-  nsCOMPtr<nsIDNSListenerProxy> wrapper = do_QueryInterface(mListener);
+  uintptr_t originalListenerAddr = reinterpret_cast<uintptr_t>(mListener.get());
+  RefPtr<DNSListenerProxy> wrapper = do_QueryObject(mListener);
   if (wrapper) {
-    nsCOMPtr<nsIDNSListener> originalListener;
-    wrapper->GetOriginalListener(getter_AddRefs(originalListener));
-    return aListener == originalListener;
+    originalListenerAddr = wrapper->GetOriginalListenerAddress();
   }
-  return (aListener == mListener);
+
+  uintptr_t listenerAddr = reinterpret_cast<uintptr_t>(aListener);
+  return (listenerAddr == originalListenerAddr);
 }
 
 size_t nsDNSAsyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
