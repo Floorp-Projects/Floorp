@@ -136,7 +136,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                     view.hideKeyboard()
                 }
             }
-            false
+            true
         }
         toolbarView = ToolbarView(
             view.toolbar_component_wrapper,
@@ -346,7 +346,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                 view?.search_scan_button?.isChecked = false
                 toolbarView.view.requestFocus()
             }
-            else -> awesomeBarView.isKeyboardDismissedProgrammatically
+            else -> true
         }
     }
 
