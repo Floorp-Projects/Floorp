@@ -25,7 +25,7 @@ use xpcom::{
 };
 
 use crate::error::{Error, Result};
-use crate::op::{StorageOp, StorageTask, TeardownTask};
+use crate::punt::{Punt, PuntTask, TeardownTask};
 use crate::store::{LazyStore, LazyStoreConfig};
 
 /// An XPCOM component class for the Rust extension storage API. This class
@@ -72,9 +72,9 @@ impl StorageSyncArea {
     }
 
     /// Dispatches a task for a storage operation to the task queue.
-    fn dispatch(&self, op: StorageOp, callback: &mozIExtensionStorageCallback) -> Result<()> {
-        let name = op.name();
-        let task = StorageTask::new(Arc::downgrade(&*self.store()?), op, callback)?;
+    fn dispatch(&self, punt: Punt, callback: &mozIExtensionStorageCallback) -> Result<()> {
+        let name = punt.name();
+        let task = PuntTask::new(Arc::downgrade(&*self.store()?), punt, callback)?;
         let runnable = TaskRunnable::new(name, Box::new(task))?;
         // `may_block` schedules the runnable on a dedicated I/O pool.
         runnable
@@ -129,7 +129,7 @@ impl StorageSyncArea {
         callback: &mozIExtensionStorageCallback,
     ) -> Result<()> {
         self.dispatch(
-            StorageOp::Set {
+            Punt::Set {
                 ext_id: str::from_utf8(&*ext_id)?.into(),
                 value: serde_json::from_str(str::from_utf8(&*json)?)?,
             },
@@ -153,7 +153,7 @@ impl StorageSyncArea {
         callback: &mozIExtensionStorageCallback,
     ) -> Result<()> {
         self.dispatch(
-            StorageOp::Get {
+            Punt::Get {
                 ext_id: str::from_utf8(&*ext_id)?.into(),
                 keys: serde_json::from_str(str::from_utf8(&*json)?)?,
             },
@@ -176,7 +176,7 @@ impl StorageSyncArea {
         callback: &mozIExtensionStorageCallback,
     ) -> Result<()> {
         self.dispatch(
-            StorageOp::Remove {
+            Punt::Remove {
                 ext_id: str::from_utf8(&*ext_id)?.into(),
                 keys: serde_json::from_str(str::from_utf8(&*json)?)?,
             },
@@ -193,7 +193,7 @@ impl StorageSyncArea {
     /// Removes all keys and values for the specified extension.
     fn clear(&self, ext_id: &nsACString, callback: &mozIExtensionStorageCallback) -> Result<()> {
         self.dispatch(
-            StorageOp::Clear {
+            Punt::Clear {
                 ext_id: str::from_utf8(&*ext_id)?.into(),
             },
             callback,
@@ -215,7 +215,7 @@ impl StorageSyncArea {
         callback: &mozIExtensionStorageCallback,
     ) -> Result<()> {
         self.dispatch(
-            StorageOp::GetBytesInUse {
+            Punt::GetBytesInUse {
                 ext_id: str::from_utf8(&*ext_id)?.into(),
                 keys: serde_json::from_str(str::from_utf8(&*keys)?)?,
             },
