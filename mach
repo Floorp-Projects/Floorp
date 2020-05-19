@@ -27,7 +27,6 @@ py2commands="
     gradle
     gtest
     hazards
-    ide
     jsapi-tests
     jsshell-bench
     jstestbrowser
