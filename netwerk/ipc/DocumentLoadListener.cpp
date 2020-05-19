@@ -482,7 +482,6 @@ bool DocumentLoadListener::Open(
   if (aLoadState->LoadType() != LOAD_ERROR_PAGE &&
       !(aLoadState->HasLoadFlags(
           nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE)) &&
-      browsingContext->IsTopContent() &&
       !(aLoadState->LoadType() & LOAD_HISTORY)) {
     nsCOMPtr<nsIWidget> widget =
         browsingContext->GetParentProcessWidgetContaining();
@@ -492,7 +491,7 @@ bool DocumentLoadListener::Open(
       promise = window->OnLoadRequest(
           aLoadState->URI(), nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
           aLoadState->LoadFlags(), aLoadState->TriggeringPrincipal(),
-          aHasGesture);
+          aHasGesture, browsingContext->IsTopContent());
     }
   }
 
@@ -1841,15 +1840,14 @@ DocumentLoadListener::AsyncOnChannelRedirect(
       mParentChannelListener->GetBrowsingContext();
 
   RefPtr<MozPromise<bool, bool, false>> promise;
-  if (bc->IsTopContent()) {
-    nsCOMPtr<nsIWidget> widget = bc->GetParentProcessWidgetContaining();
-    RefPtr<nsWindow> window = nsWindow::From(widget);
+  nsCOMPtr<nsIWidget> widget = bc->GetParentProcessWidgetContaining();
+  RefPtr<nsWindow> window = nsWindow::From(widget);
 
-    if (window) {
-      promise = window->OnLoadRequest(
-          uriBeingLoaded, nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
-          nsIWebNavigation::LOAD_FLAGS_IS_REDIRECT, nullptr, false);
-    }
+  if (window) {
+    promise = window->OnLoadRequest(uriBeingLoaded,
+                                    nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
+                                    nsIWebNavigation::LOAD_FLAGS_IS_REDIRECT,
+                                    nullptr, false, bc->IsTopContent());
   }
 
   if (promise) {
