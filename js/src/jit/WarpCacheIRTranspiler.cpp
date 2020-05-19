@@ -968,6 +968,17 @@ bool WarpCacheIRTranspiler::emitMathAbsNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMathRoundToInt32Result(
+    NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MRound::New(alloc(), input);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
