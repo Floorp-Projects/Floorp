@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">オン</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">オフ</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">プライベートブラウジングモードでの動作を許可する</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">プライベートブラウジングモードで実行する</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">有効</string>
     <!-- Indicates the add-on is disabled. -->

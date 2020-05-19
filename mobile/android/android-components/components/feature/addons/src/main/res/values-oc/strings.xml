@@ -72,6 +72,8 @@
     <string name="mozac_feature_addons_recommended_section">Recomandats</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Pas encara compatible</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">Pas encara disponibla</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
     <string name="mozac_feature_addons_disabled_section">Desactivadas</string>
     <!-- Displays a page with all the details of an add-on. -->
@@ -82,6 +84,8 @@
     <string name="mozac_feature_addons_remove">Levar</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Apondre %1$s ?</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Cal vòstra permission per :</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Apondre</string>
     <!-- This is a button to cancel the add-on installation . -->
@@ -116,4 +120,10 @@
     <string name="mozac_feature_addons_unsupported_learn_more">Ne saber mai</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Error</string>
-    </resources>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
+    <string name="mozac_feature_addons_updater_dialog_status">Estat :</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s es estat ajustat a %2$s.</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">Òc, plan comprés</string>
+</resources>

@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Aktif</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Nonaktif</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Izinkan di penjelajahan pribadi</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Jalankan di penjelajahan pribadi</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Aktif</string>
     <!-- Indicates the add-on is disabled. -->

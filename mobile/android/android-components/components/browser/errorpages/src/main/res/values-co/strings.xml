@@ -12,8 +12,7 @@
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">A richiesta ùn pò riesce</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_message"><![CDATA[      <p>Nisuna infurmazione di dispunibule apprupositu di u penseru o di u sbagliu.</p>¶
-    ]]></string>
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Nisuna infurmazione ùn hè dispunibule apprupositu di stu penseru o di stu sbagliu.</p>¶]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Fiascu di a cunnessione assicurizata</string>
@@ -68,7 +67,7 @@
       <ul>¶
         <li>Forse u servitore tratta dumande numerose o hè timpurariamente in panna ? Pruvate torna da quì à pocu.</li>¶
         <li>Ùn pudete micca navigà nant’à d’altri siti ? Verificate a cunnessione à a reta di u vostru apparechju./li>¶
-        <li>U vostru apparechju o a vostra reta hè pruttetu da un parafocu o un proxy ? Gattivi parametri ponu interferisce cù a navigazione nant’à u web.</li>¶
+        <li>U vostru apparechju o a vostra reta hè prutettu da un parafocu o un proxy ? Gattivi parametri ponu interferisce cù a navigazione nant’à u web.</li>¶
         <li>Avete sempre penseri ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>¶
       </ul>¶]]></string>
 
@@ -210,9 +209,8 @@
       <p>TL’indirizzu indicheghja un protocollu (i.e. : <q>wxyz://</q>) scunnisciutu da u navigatore chì ùn riesce micca à cunnettassi currettamente à u situ.</p>¶
       <ul>¶
         <li>>Pruvate d’accede à cuntenutu multimedia o à d’altri servizii non-testu ? Verificate nant’à u situ i prugrammi chì sò richiesti.</li>¶
-        <li>Certi protocolli ponu richiede un terzu prugramma o estensioni per chì u navigatore possi ricunnoscelli.</li>¶
-      </ul>¶
-    ]]></string>
+        <li>Certi protocolli ponu richiede un terzu prugramma o moduli d’estensione per chì u navigatore possi ricunnoscelli.</li>¶
+      </ul>¶]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">U schedariu ùn esiste micca</string>

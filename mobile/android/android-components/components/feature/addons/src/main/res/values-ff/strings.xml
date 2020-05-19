@@ -24,12 +24,24 @@
     <string name="mozac_feature_addons_permissions_geolocation_description">Yetto nokku maa</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Yetto aslol banngagol</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Reen kuutoragol njokkon, njiilaa kettule</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Wostondir mesasuuji e jaaɓnirɗe goɗɗe ko wonaa ngal ɗoo</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Yiil teelte proksi wanngorde</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">Naat e tabbe uddaaɗe sakket</string>
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">Suuɗ tee hollir tabbe wanngorde ndee</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">Yetto aslol banngagol</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Timmitin kuutorɗe topayɓe ngam heɓde keɓe maa e tabbe udditiiɗe</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Yamre</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">Winnduɓe</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Hesɗitinaa sakket</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -54,6 +66,8 @@
     <string name="mozac_feature_addons_installed_section">Aafaama</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Wagginaama</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Tammbaaka tawo</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
     <string name="mozac_feature_addons_unavailable_section">Heɓotaako tawo</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
@@ -84,6 +98,10 @@
     <string name="mozac_feature_addons_updater_notification_allow_button">Yamir</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">Haɗ</string>
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s ina jogii hesɗitinal kesal</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d jamirooje kese ina naamnaa</string>
     <!-- The content of the notification displayed when an add-on needs a new permission-->
     <string name="mozac_feature_addons_updater_notification_content_singular">Yamiroore hesere ina naamnaa</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
@@ -122,6 +140,8 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">Ittaama no haaniri %1$s</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Horiima ittude %1$s</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Ɗe ɓeyditte egginaa ko yamre ɓennunde %1$s</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1Ɓeyditte</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
@@ -134,8 +154,16 @@
     <string name="mozac_feature_addons_updater_status_no_update_available">Alaa kesɗitine ngoodi</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Juumre</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">Humpito kesɗitine</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Etogol cakkitiingol:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">Ngonka:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s ɓeydaama e %2$s</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">Uddit ɗum e dosol ngol</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">Eey, mi faamii</string>
 </resources>

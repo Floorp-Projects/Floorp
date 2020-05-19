@@ -7,7 +7,7 @@
     <string name="mozac_browser_errorpages_page_refresh">Reintentar</string>
 
     <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Volver atrás</string>
+    <string name="mozac_browser_errorpages_page_go_back">Regresar</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">No se pudo completar la solicitud</string>
@@ -35,6 +35,19 @@
 		<li>Si ya se ha conectado anteriormente a este servidor con éxito, el error puede ser temporal, por lo que puede intentar nuevamente en breve.</li>
 	</ul>
 	]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avanzadas…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Alguien podría estar intentando imitar el sitio y no deberías continuar. </label>
+        <br><br>
+        <label>Los sitios web prueban su identidad mediante certificados. %1$s no confía en <b>%2$s</b> porque el emisor del certificado es desconocido, el certificado está autofirmado o el servidor no envía los certificados intermedios correctos.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Retroceder (recomendado)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Aceptar el riesgo y continuar</string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">La conexión ha sido interrumpida</string>
@@ -166,6 +179,13 @@
 	]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">No hay conexión a Internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Verifica tu conexión de red o intenta volver a cargar la página en unos momentos.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Recargar</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">La dirección no es válida</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
 	<p>La dirección proporcionada no está en un formato reconocido. Compruebe si hay errores en la barra de direcciones y vuelva a intentarlo.</p>
@@ -259,12 +279,4 @@
 	<p>La página web en %1$s se ha identificado como un sitio engañoso y se ha bloqueado de acuerdo con sus preferencias de seguridad.</p>
 	]]></string>
 
-    <!-- The tile for the list of external apps to open the link in -->
-    <string name="mozac_feature_applinks_open_in">Abrir en…</string>
-    <!-- The description to warn users that their private browsing session changes  -->
-    <string name="mozac_feature_applinks_confirm_dialog_title">¿Abrir en aplicación? Puede que lo que haces deje de ser privado.</string>
-    <!-- Opens the selected time -->
-    <string name="mozac_feature_applinks_confirm_dialog_confirm">Abrir</string>
-    <!-- Cancels the prompt -->
-    <string name="mozac_feature_applinks_confirm_dialog_deny">Cancelar</string>
-</resources>
+    </resources>

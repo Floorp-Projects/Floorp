@@ -3,6 +3,8 @@
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_downloads_notification_channel">Gaawte</string>
 
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">Aawtogol dartinaama</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_completed_notification_text2">Aawtagol gasii</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
@@ -21,6 +23,8 @@
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">Horiima udditde fiilde</string>
 
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Sabbo</string>
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">Fuɗɗito</string>
     <!-- Button that cancels the download when pressed -->

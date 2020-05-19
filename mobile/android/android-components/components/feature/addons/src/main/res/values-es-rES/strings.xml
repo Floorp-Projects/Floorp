@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Activado</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Desactivado</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Permitir en navegación privada</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Ejecutar en navegación privada</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Activado</string>
     <!-- Indicates the add-on is disabled. -->
@@ -174,4 +178,10 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Último intento:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">Estado:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s ha sido añadido a %2$s</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">Ábrelo en el menú</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">Vale, entendido</string>
 </resources>

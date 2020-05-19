@@ -6,6 +6,8 @@
     <string name="mozac_feature_contextmenu_open_link_in_private_tab">Dobrir en navigacion privada</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Dobrir l’imatge dins un onglet novèl</string>
+    <!-- Text for context menu item to save / download the link. -->
+    <string name="mozac_feature_contextmenu_download_link">Telecargar lo ligam</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Partejar lo ligam</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
@@ -20,6 +22,8 @@
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Onglet novèl privat dobèrt</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Copiat dins lo quichapapièrs</string>
+    <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">Bascular</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
     <string name="mozac_selection_context_menu_search">Recercar amb %s</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
