@@ -16,6 +16,7 @@
 #include "nsIURI.h"
 #include "nsIWidget.h"
 #include "nsIFile.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 #include "nsArrayEnumerator.h"
 #include "nsMemory.h"
@@ -23,6 +24,7 @@
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "MozContainer.h"
+#include "gfxPlatformGtk.h"
 
 #include "nsFilePicker.h"
 
@@ -159,7 +161,12 @@ nsFilePicker::nsFilePicker()
       mAllowURLs(false),
       mFileChooserDelegate(nullptr) {
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
-  giovfs->ShouldUseFlatpakPortal(&mUseNativeFileChooser);
+  // Due to Bug 1635718 always use portal for file dialog on Wayland.
+  if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
+    mUseNativeFileChooser = true;
+  } else {
+    giovfs->ShouldUseFlatpakPortal(&mUseNativeFileChooser);
+  }
 }
 
 nsFilePicker::~nsFilePicker() = default;
@@ -595,7 +602,16 @@ void nsFilePicker::GtkFileChooserShow(void* file_chooser) {
   static auto sGtkNativeDialogShowPtr =
       (void (*)(void*))dlsym(RTLD_DEFAULT, "gtk_native_dialog_show");
   if (mUseNativeFileChooser && sGtkNativeDialogShowPtr != nullptr) {
+    const char* portalEnvString = g_getenv("GTK_USE_PORTAL");
+    bool setPortalEnv =
+        (portalEnvString && atoi(portalEnvString) == 0) || !portalEnvString;
+    if (setPortalEnv) {
+      setenv("GTK_USE_PORTAL", "1", true);
+    }
     (*sGtkNativeDialogShowPtr)(file_chooser);
+    if (setPortalEnv) {
+      unsetenv("GTK_USE_PORTAL");
+    }
   } else {
     g_signal_connect(file_chooser, "destroy", G_CALLBACK(OnDestroy), this);
     gtk_widget_show(GTK_WIDGET(file_chooser));

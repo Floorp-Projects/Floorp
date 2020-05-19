@@ -12,6 +12,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsArray.h"
 #include "nsPrintfCString.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -23,7 +24,7 @@
 // We use the same code as gtk_should_use_portal() to detect if we're in flatpak
 // env
 // https://github.com/GNOME/gtk/blob/e0ce028c88858b96aeda9e41734a39a3a04f705d/gtk/gtkprivate.c#L272
-static bool GetShouldUseFlatpakPortal() {
+static bool GetFlatpakPortalEnv() {
   bool shouldUsePortal;
   char* path;
   path = g_build_filename(g_get_user_runtime_dir(), "flatpak-info", nullptr);
@@ -36,9 +37,11 @@ static bool GetShouldUseFlatpakPortal() {
   return shouldUsePortal;
 }
 
-static bool ShouldUseFlatpakPortalImpl() {
-  static bool sShouldUseFlatpakPortal = GetShouldUseFlatpakPortal();
-  return sShouldUseFlatpakPortal;
+static bool GetShouldUseFlatpakPortal() {
+  static bool sFlatpakPortalEnv = GetFlatpakPortalEnv();
+  return mozilla::StaticPrefs::widget_use_xdg_desktop_portal()
+             ? true
+             : sFlatpakPortalEnv;
 }
 
 class nsFlatpakHandlerApp : public nsIHandlerApp {
@@ -421,7 +424,7 @@ nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
   // Application in flatpak sandbox does not have access to the list
   // of installed applications on the system. We use generic
   // nsFlatpakHandlerApp which forwards launch call to the system.
-  if (ShouldUseFlatpakPortalImpl()) {
+  if (GetShouldUseFlatpakPortal()) {
     nsFlatpakHandlerApp* mozApp = new nsFlatpakHandlerApp();
     NS_ADDREF(*aApp = mozApp);
     return NS_OK;
@@ -479,7 +482,7 @@ nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
 
   // Flatpak does not reveal installed application to the sandbox,
   // we need to create generic system handler.
-  if (ShouldUseFlatpakPortalImpl()) {
+  if (GetShouldUseFlatpakPortal()) {
     nsFlatpakHandlerApp* mozApp = new nsFlatpakHandlerApp();
     NS_ADDREF(*aApp = mozApp);
     return NS_OK;
@@ -727,6 +730,6 @@ nsGIOService::CreateAppFromCommand(nsACString const& cmd,
 
 NS_IMETHODIMP
 nsGIOService::ShouldUseFlatpakPortal(bool* aRes) {
-  *aRes = ShouldUseFlatpakPortalImpl();
+  *aRes = GetShouldUseFlatpakPortal();
   return NS_OK;
 }
