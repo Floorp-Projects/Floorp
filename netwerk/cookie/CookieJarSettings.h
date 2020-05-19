@@ -117,7 +117,8 @@ class CookieJarSettings final : public nsICookieJarSettings {
   static already_AddRefed<nsICookieJarSettings> Create();
 
   static already_AddRefed<nsICookieJarSettings> Create(
-      uint32_t aCookieBehavior, const nsAString& aFirstPartyDomain);
+      uint32_t aCookieBehavior, const nsAString& aFirstPartyDomain,
+      bool aIsFirstPartyIsolated);
 
   static CookieJarSettings* Cast(nsICookieJarSettings* aCS) {
     return static_cast<CookieJarSettings*>(aCS);
@@ -161,10 +162,12 @@ class CookieJarSettings final : public nsICookieJarSettings {
     eProgressive,
   };
 
-  CookieJarSettings(uint32_t aCookieBehavior, State aState);
+  CookieJarSettings(uint32_t aCookieBehavior, bool aIsFirstPartyIsolated,
+                    State aState);
   ~CookieJarSettings();
 
   uint32_t mCookieBehavior;
+  bool mIsFirstPartyIsolated;
   CookiePermissionList mCookiePermissions;
   bool mIsOnContentBlockingAllowList;
   nsString mFirstPartyDomain;
