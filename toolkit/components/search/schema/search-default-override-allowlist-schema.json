@@ -1,0 +1,55 @@
+{
+  "type": "object",
+  "required": [
+    "thirdPartyId",
+    "overridesId",
+    "urls"
+  ],
+  "properties": {
+    "thirdPartyId": {
+      "type": "string",
+      "title": "Third-party Add-on Id",
+      "description": "The identifier of the third party add-on which will override the app provided one. Should be of the format example@foo",
+      "pattern": "^[a-zA-Z0-9-._]*@[a-zA-Z0-9-._]*$"
+    },
+    "overridesId": {
+      "type": "string",
+      "title": "Add-on Id to Override",
+      "description": "The identifier of the app-provided add-on to be overriden. Should be of the format example@search.mozilla.org",
+      "pattern": "^[a-zA-Z0-9-._]*@search.mozilla.org$"
+    },
+    "urls": {
+      "type": "array",
+      "title": "URLs",
+      "description": "An array of URL sets which must be matched (with the add-on's manifest settings) to allow the override",
+      "items": {
+        "type": "object",
+        "required": [
+          "search_url"
+        ],
+        "properties": {
+          "search_url": {
+            "type": "string",
+            "title": "search_url",
+            "description": "The main search url"
+          },
+          "search_url_get_params": {
+            "type": "string",
+            "title": "search_url_get_params",
+            "description": "Any get parameters"
+          },
+          "search_url_post_params": {
+            "type": "string",
+            "title": "search_url_post_params",
+            "description": "Any post parameters"
+          },
+          "search_form": {
+            "type": "string",
+            "title": "search_form",
+            "description": "The search form url"
+          }
+        }
+      }
+    }
+  }
+}
