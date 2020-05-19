@@ -4,8 +4,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include manifest.mn
+
 include $(CORE_DEPTH)/coreconf/config.mk
-include config.mk
+
+ifdef BUILD_IDG
+DEFINES += -DNSSDEBUG
+endif
+
 include $(CORE_DEPTH)/coreconf/rules.mk
 
 # On AIX 4.3, IBM xlC_r compiler (version 3.6.6) cannot compile
@@ -14,11 +19,9 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 ifeq ($(OS_TARGET)$(OS_RELEASE),AIX4.3)
 ifeq ($(USE_64),1)
 ifndef BUILD_OPT
-$(OBJDIR)/ckhelper.o: ckhelper.c
-	@$(MAKE_OBJDIR)
+$(OBJDIR)/ckhelper.o: ckhelper.c | $$(@D)/d
 	$(CC) -o $@ -c -O2 $(CFLAGS) $<
 endif
 endif
 endif
 
-export:: private_export

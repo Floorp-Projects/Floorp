@@ -10,8 +10,6 @@ ifdef ZLIB_INCLUDE_DIR
 INCLUDES += -I$(ZLIB_INCLUDE_DIR)
 endif
 
-EXPORTS = 
-
 CSRCS = signtool.c		\
 		certgen.c	\
 		javascript.c	\

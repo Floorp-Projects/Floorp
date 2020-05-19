@@ -47,10 +47,6 @@ endif
 
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
-# don't want the 32 in the shared library name
-SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
-
-RES     = $(OBJDIR)/$(LIBRARY_NAME).res
 RESNAME = freebl.rc
 
 ifdef NS_USE_GCC

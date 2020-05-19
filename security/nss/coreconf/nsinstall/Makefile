@@ -20,6 +20,7 @@ include $(DEPTH)/coreconf/config.mk
 
 ifeq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
 PROGRAM		=
+TARGETS		=
 else
 TARGETS		= $(PROGRAM)
 INSTALL		= true
@@ -37,6 +38,6 @@ include $(DEPTH)/coreconf/rules.mk
 
 # Redefine MAKE_OBJDIR for just this directory
 define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); fi
+if test ! -d $(@D); then mkdir -p $(@D); fi
 endef
 

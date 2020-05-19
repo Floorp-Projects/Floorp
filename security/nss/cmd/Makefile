@@ -38,7 +38,9 @@ INCLUDES += \
 	-I./include \
 	$(NULL)
 
+$(SOFTOKEN_SRCDIRS) $(NSS_SRCDIRS): $(LIB_SRCDIRS)
+
 include $(CORE_DEPTH)/coreconf/rules.mk
 
-symbols::
+symbols:
 	@echo "TARGETS	= $(TARGETS)"

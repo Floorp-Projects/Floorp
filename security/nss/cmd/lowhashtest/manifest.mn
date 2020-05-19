@@ -12,12 +12,6 @@ INCLUDES += -I$(CORE_DEPTH)/nss/lib/freebl
 
 PROGRAM = lowhashtest
 
-EXPORTS = \
-	$(NULL)
-
-PRIVATE_EXPORTS = \
-	$(NULL)
-
 CSRCS = \
 	lowhashtest.c \
 	$(NULL)

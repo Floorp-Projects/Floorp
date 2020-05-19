@@ -26,7 +26,6 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-include config.mk
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -43,6 +42,3 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
-
-export:: private_export
-

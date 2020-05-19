@@ -14,9 +14,10 @@ INCLUDES += -I$(CORE_DEPTH)/cpputil
 
 REQUIRES = cpputil
 
-MAPFILE = $(OBJDIR)/pkcs11testmodule.def
-
 LIBRARY_NAME = pkcs11testmodule
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+LIBRARY = $(NULL)
+IMPORT_LIBRARY = $(NULL)
 
 EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)cpputil.$(LIB_SUFFIX) \
              $(NULL)

@@ -4,8 +4,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include manifest.mn
+
 include $(CORE_DEPTH)/coreconf/config.mk
-include config.mk
+
+ifdef BUILD_IDG
+DEFINES += -DNSSDEBUG
+endif
+
+# Needed for compilation of $(OBJDIR)/certdata.c
+INCLUDES += -I.
+
+#
+# To create a loadable module on Darwin, we must use -bundle.
+#
+ifeq ($(OS_TARGET),Darwin)
+DSO_LDOPTS = -bundle
+endif
+
+ifdef USE_GCOV
+DSO_LDOPTS += --coverage
+endif
 
 EXTRA_LIBS =                                       \
 	$(DIST)/lib/$(LIB_PREFIX)nssckfw.$(LIB_SUFFIX) \
@@ -52,7 +70,6 @@ ifndef NSS_CERTDATA-TESTLIB_TXT
 NSS_CERTDATA-TESTLIB_TXT = certdata-testlib.txt
 endif
 
-$(OBJDIR)/certdata-testlib.c: $(NSS_CERTDATA-TESTLIB_TXT)
-	@$(MAKE_OBJDIR)
+$(OBJDIR)/certdata-testlib.c: $(NSS_CERTDATA-TESTLIB_TXT) | $$(@D)/d
 	$(PERL) ../certdata.perl $(NSS_CERTDATA-TESTLIB_TXT) $@
 

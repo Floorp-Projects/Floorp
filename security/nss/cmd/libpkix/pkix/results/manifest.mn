@@ -16,7 +16,8 @@ CSRCS = test_buildresult.c \
 	test_valresult.c \
 	$(NULL)
 
-LIBRARY_NAME=pkixtoolresults
+LIBRARY_NAME = pkixtoolresults
+SHARED_LIBRARY = $(NULL)
 
 SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
 

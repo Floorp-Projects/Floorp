@@ -20,13 +20,6 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (3) Include "component" configuration information. (OPTIONAL)       #
 #######################################################################
 
-
-
-#######################################################################
-# (4) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
-include config.mk
-
 ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.2)
 OS_LIBS += -lsvld 
 endif 
@@ -36,6 +29,10 @@ OS_LIBS += -ldl -lxnet -lposix4 -lsocket -lnsl
 endif
 
 EXTRA_LIBS += $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX)
+
+#######################################################################
+# (4) Include "local" platform-dependent assignments (OPTIONAL).      #
+#######################################################################
 
 include ../platlibs.mk
 

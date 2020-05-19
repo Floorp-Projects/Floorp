@@ -10,10 +10,14 @@ LIB_SRCDIRS = \
 	common \
 	$(NULL)
 
+common: google_test
+
 ifneq ($(NSS_BUILD_WITHOUT_UTIL),1)
 UTIL_SRCDIRS = \
 	util_gtest \
 	$(NULL)
+
+util_gtest: common
 endif
 
 ifneq ($(NSS_BUILD_SOFTOKEN_ONLY),1)
@@ -31,6 +35,17 @@ NSS_SRCDIRS = \
 	nss_bogo_shim \
 	pkcs11testmodule \
 	$(NULL)
+
+certdb_gtest: common
+certhigh_gtest: common
+cryptohi_gtest: common
+der_gtest: common
+pk11_gtest: common pkcs11testmodule
+smime_gtest: common
+softoken_gtest: common
+ssl_gtest: google_test
+sysinit_gtest: google_test
+util_gtest: common
 endif
 endif
 
