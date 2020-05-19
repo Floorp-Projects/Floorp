@@ -23,8 +23,7 @@ class DOMLocalization : public intl::Localization {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMLocalization, Localization)
 
-  explicit DOMLocalization(nsIGlobalObject* aGlobal, const bool aSync,
-                           const BundleGenerator& aBundleGenerator);
+  explicit DOMLocalization(nsIGlobalObject* aGlobal);
 
   static already_AddRefed<DOMLocalization> Constructor(
       const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
