@@ -21,4 +21,10 @@
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_send_crash_report_in_progress">Çökme raporu %1$s\'ya gönderiliyor</string>
+
+    <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
+    <string name="mozac_lib_crash_activity_title">Çökme Raporları</string>
+
+    <!-- Text shown instead of crash list if no crashes have been submitted yet -->
+    <string name="mozac_lib_crash_no_crashes">Henüz hiç çökme raporu gönderilmedi.</string>
 </resources>

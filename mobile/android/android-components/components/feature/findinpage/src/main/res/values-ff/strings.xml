@@ -12,4 +12,10 @@
     and the position the user is at. The first argument is the position, the second argument is the total. -->
     <string name="mozac_feature_findindpage_accessibility_result" tools:ignore="PluralsCandidate">%1$d e nder %2$d</string>
 
+    <!-- String to be read by the accessibility service when focusing the next result button. -->
+    <string name="mozac_feature_findindpage_next_result">Yiytu njeñtudi paandi</string>
+
+    <!-- String to be read by the accessibility service when focusing the previous result button. -->
+    <string name="mozac_feature_findindpage_previous_result">Yiytu njeñtudi njawtundi</string>
+
     </resources>
