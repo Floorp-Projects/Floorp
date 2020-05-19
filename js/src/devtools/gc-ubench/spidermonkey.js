@@ -44,9 +44,9 @@ var SpiderMonkey = class extends Host {
 };
 
 var gHost = new SpiderMonkey();
+var { opts, rest: mutators } = argparse.parse_args(scriptArgs);
+run(opts, mutators);
 
-run(scriptArgs);
-print(`Waited total of ${waited} seconds`);
 print("\nTest results:\n");
 report_results();
 
