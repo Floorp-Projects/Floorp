@@ -1090,7 +1090,8 @@ void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
 
   if (!mCreated) return;
 
-  if (aMove) {
+  if (aMove || mPreferredPopupRectFlushed) {
+    LOG(("  Need also to move, flushed? %d\n", mPreferredPopupRectFlushed));
     NativeMoveResize();
   } else {
     NativeResize();
@@ -1445,10 +1446,15 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   LOG(("  new mBounds  x=%d y=%d width=%d height=%d\n", newBounds.x,
        newBounds.y, newBounds.width, newBounds.height));
 
+  double scale =
+      BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
+  int32_t newWidth = NSToIntRound(scale * newBounds.width);
+  int32_t newHeight = NSToIntRound(scale * newBounds.height);
+
   bool needsPositionUpdate =
       (newBounds.x != mBounds.x || newBounds.y != mBounds.y);
   bool needsSizeUpdate =
-      (newBounds.width != mBounds.width || newBounds.height != mBounds.height);
+      (newWidth != mBounds.width || newHeight != mBounds.height);
   // Update view
 
   if (needsSizeUpdate) {
@@ -1457,6 +1463,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
                                  NSIntPixelsToAppUnits(newBounds.y, p2a),
                                  NSIntPixelsToAppUnits(newBounds.width, p2a),
                                  NSIntPixelsToAppUnits(newBounds.height, p2a));
+    mPreferredPopupRectFlushed = false;
     Resize(newBounds.width, newBounds.height, true);
     DispatchResized();
 
@@ -4125,6 +4132,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   // save our bounds
   mBounds = aRect;
+
+  mPreferredPopupRectFlushed = false;
+
   ConstrainSize(&mBounds.width, &mBounds.height);
 
   GtkWidget* eventWidget = nullptr;
@@ -4982,6 +4992,7 @@ void nsWindow::NativeShow(bool aAction) {
     // There's a chance that when the popup will be shown again it might be
     // resized because parent could be moved meanwhile.
     mPreferredPopupRect = nsRect(0, 0, 0, 0);
+    mPreferredPopupRectFlushed = false;
     if (!mIsX11Display) {
       WaylandStopVsync();
       if (IsWaylandPopup() && IsMainMenuWindow()) {
