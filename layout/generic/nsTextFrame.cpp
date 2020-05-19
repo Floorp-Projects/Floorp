@@ -4913,13 +4913,11 @@ static nscoord LazyGetLineBaselineOffset(nsIFrame* aChildFrame,
       aChildFrame->GetProperty(nsIFrame::LineBaselineOffset(), &offsetFound);
 
   if (!offsetFound) {
-    for (nsBlockFrame::LineIterator line = aBlockFrame->LinesBegin(),
-                                    line_end = aBlockFrame->LinesEnd();
-         line != line_end; line++) {
-      if (line->IsInline()) {
-        int32_t n = line->GetChildCount();
-        nscoord lineBaseline = line->BStart() + line->GetLogicalAscent();
-        for (nsIFrame* lineFrame = line->mFirstChild; n > 0;
+    for (const auto& line : aBlockFrame->Lines()) {
+      if (line.IsInline()) {
+        int32_t n = line.GetChildCount();
+        nscoord lineBaseline = line.BStart() + line.GetLogicalAscent();
+        for (auto* lineFrame = line.mFirstChild; n > 0;
              lineFrame = lineFrame->GetNextSibling(), --n) {
           offset = lineBaseline - lineFrame->GetNormalPosition().y;
           lineFrame->SetProperty(nsIFrame::LineBaselineOffset(), offset);
