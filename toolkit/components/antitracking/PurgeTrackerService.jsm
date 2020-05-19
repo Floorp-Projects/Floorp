@@ -119,10 +119,7 @@ PurgeTrackerService.prototype = {
       false
     );
     // Only purge if ETP is enabled.
-    let cookieBehavior = Services.prefs.getIntPref(
-      "network.cookie.cookieBehavior",
-      Ci.nsICookieService.BEHAVIOR_ACCEPT
-    );
+    let cookieBehavior = Services.cookies.cookieBehavior;
 
     let etpActive =
       cookieBehavior == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ||
