@@ -338,6 +338,9 @@ uint32_t PreferredSampleRate() {
   if (sCubebForcedSampleRate) {
     return sCubebForcedSampleRate;
   }
+  if (StaticPrefs::privacy_resistFingerprinting()) {
+    return 44100;
+  }
   if (!InitPreferredSampleRate()) {
     return 44100;
   }
