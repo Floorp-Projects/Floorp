@@ -1513,6 +1513,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachArrayPush(HandleFunction callee);
   AttachDecision tryAttachArrayJoin(HandleFunction callee);
   AttachDecision tryAttachIsSuspendedGenerator(HandleFunction callee);
+  AttachDecision tryAttachToString(HandleFunction callee);
   AttachDecision tryAttachStringChar(HandleFunction callee, StringChar kind);
   AttachDecision tryAttachStringCharCodeAt(HandleFunction callee);
   AttachDecision tryAttachStringCharAt(HandleFunction callee);

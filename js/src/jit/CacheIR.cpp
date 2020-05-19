@@ -4732,7 +4732,8 @@ AttachDecision TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
     writer.guardType(valId, val_.type());
   }
 
-  writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
+  writer.loadConstantStringResult(
+      TypeName(js::TypeOfValue(val_), cx_->names()));
   writer.returnFromIC();
   trackAttached("Primitive");
   return AttachDecision::Attach;
@@ -5023,6 +5024,35 @@ AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsSuspendedGenerator");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachToString(HandleFunction callee) {
+  // Need a single string argument.
+  // TODO(Warp): Support all or more conversions to strings.
+  if (argc_ != 1 || !args_[0].isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'ToString' intrinsic native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard that the argument is a string.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  StringOperandId strId = writer.guardToString(argId);
+
+  // Return the string.
+  writer.loadStringResult(strId);
+
+  // This stub does not need to be monitored, because it always
+  // returns a string.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("ToString");
   return AttachDecision::Attach;
 }
 
@@ -5338,6 +5368,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Intrinsics.
     case InlinableNative::IntrinsicIsSuspendedGenerator:
       return tryAttachIsSuspendedGenerator(callee);
+    case InlinableNative::IntrinsicToString:
+      return tryAttachToString(callee);
 
     // String natives.
     case InlinableNative::StringCharCodeAt:
