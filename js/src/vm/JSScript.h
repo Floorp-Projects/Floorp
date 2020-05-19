@@ -2654,21 +2654,11 @@ class JSScript : public js::BaseScript {
     return immutableScriptData()->notes();
   }
 
-  size_t natoms() const {
-    MOZ_ASSERT(sharedData_);
-    return sharedData_->natoms();
-  }
-  js::GCPtrAtom* atoms() const {
-    MOZ_ASSERT(sharedData_);
-    return sharedData_->atoms();
+  JSAtom* getAtom(size_t index) const {
+    return &gcthings()[index].as<JSString>().asAtom();
   }
 
-  js::GCPtrAtom& getAtom(size_t index) const {
-    MOZ_ASSERT(index < natoms());
-    return atoms()[index];
-  }
-
-  js::GCPtrAtom& getAtom(jsbytecode* pc) const {
+  JSAtom* getAtom(jsbytecode* pc) const {
     MOZ_ASSERT(containsPC<uint32_t>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE((JSOp)*pc) == JOF_ATOM);
     return getAtom(GET_UINT32_INDEX(pc));
