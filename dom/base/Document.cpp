@@ -13415,6 +13415,17 @@ Element* Document::GetTopLayerTop() {
   return element;
 }
 
+bool Document::DoesTopLayerContain(const Element* aElement) const {
+  for (const nsWeakPtr& weakPtr : mTopLayer) {
+    nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
+    if (element && element == aElement) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 Element* Document::GetUnretargetedFullScreenElement() {
   for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
     nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
