@@ -30,6 +30,10 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   MOZ_MUST_USE bool init();
   JitCode* compile();
 
+#ifdef DEBUG
+  void assertFloatRegisterAvailable(FloatRegister reg);
+#endif
+
  private:
   const CacheIRWriter& writer_;
   IonIC* ic_;

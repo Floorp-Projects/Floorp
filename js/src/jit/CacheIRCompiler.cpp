@@ -2328,11 +2328,14 @@ bool CacheIRCompiler::emitDoubleAddResult(NumberOperandId lhsId,
   // Float register must be preserved. The BinaryArith ICs use
   // the fact that baseline has them available, as well as fixed temps on
   // LBinaryCache.
-  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
-  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
 
-  masm.addDouble(FloatReg1, FloatReg0);
-  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, lhsId, floatScratch0);
+  allocator.ensureDoubleRegister(masm, rhsId, floatScratch1);
+
+  masm.addDouble(floatScratch1, floatScratch0);
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
 
   return true;
 }
@@ -2341,11 +2344,14 @@ bool CacheIRCompiler::emitDoubleSubResult(NumberOperandId lhsId,
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
-  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
 
-  masm.subDouble(FloatReg1, FloatReg0);
-  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, lhsId, floatScratch0);
+  allocator.ensureDoubleRegister(masm, rhsId, floatScratch1);
+
+  masm.subDouble(floatScratch1, floatScratch0);
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
 
   return true;
 }
@@ -2354,11 +2360,14 @@ bool CacheIRCompiler::emitDoubleMulResult(NumberOperandId lhsId,
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
-  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
 
-  masm.mulDouble(FloatReg1, FloatReg0);
-  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, lhsId, floatScratch0);
+  allocator.ensureDoubleRegister(masm, rhsId, floatScratch1);
+
+  masm.mulDouble(floatScratch1, floatScratch0);
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
 
   return true;
 }
@@ -2367,11 +2376,14 @@ bool CacheIRCompiler::emitDoubleDivResult(NumberOperandId lhsId,
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
-  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
 
-  masm.divDouble(FloatReg1, FloatReg0);
-  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, lhsId, floatScratch0);
+  allocator.ensureDoubleRegister(masm, rhsId, floatScratch1);
+
+  masm.divDouble(floatScratch1, floatScratch0);
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
 
   return true;
 }
@@ -2381,23 +2393,26 @@ bool CacheIRCompiler::emitDoubleModResult(NumberOperandId lhsId,
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
-  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
+
+  allocator.ensureDoubleRegister(masm, lhsId, floatScratch0);
+  allocator.ensureDoubleRegister(masm, rhsId, floatScratch1);
 
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
   masm.setupUnalignedABICall(scratch);
-  masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
-  masm.passABIArg(FloatReg1, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
   masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::NumberMod), MoveOp::DOUBLE);
-  masm.storeCallFloatResult(FloatReg0);
+  masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
-  ignore.add(FloatReg0);
+  ignore.add(floatScratch0);
   masm.PopRegsInMaskIgnore(save, ignore);
 
-  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
 
   return true;
 }
@@ -2407,23 +2422,26 @@ bool CacheIRCompiler::emitDoublePowResult(NumberOperandId lhsId,
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
-  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
+
+  allocator.ensureDoubleRegister(masm, lhsId, floatScratch0);
+  allocator.ensureDoubleRegister(masm, rhsId, floatScratch1);
 
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
   masm.setupUnalignedABICall(scratch);
-  masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
-  masm.passABIArg(FloatReg1, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
   masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::ecmaPow), MoveOp::DOUBLE);
-  masm.storeCallFloatResult(FloatReg0);
+  masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
-  ignore.add(FloatReg0);
+  ignore.add(floatScratch0);
   masm.PopRegsInMaskIgnore(save, ignore);
 
-  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
 
   return true;
 }
@@ -3718,7 +3736,7 @@ bool CacheIRCompiler::emitMathAbsNumberResult(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
-  AutoScratchFloatRegister scratch(this);
+  AutoAvailableFloatRegister scratch(*this, FloatReg0);
 
   allocator.ensureDoubleRegister(masm, inputId, scratch);
 
@@ -3731,7 +3749,7 @@ bool CacheIRCompiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
-  AutoScratchFloatRegister scratch(this);
+  AutoAvailableFloatRegister scratch(*this, FloatReg0);
 
   allocator.ensureDoubleRegister(masm, inputId, scratch);
 
@@ -3745,7 +3763,7 @@ bool CacheIRCompiler::emitMathFunctionNumberResult(NumberOperandId inputId,
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
-  AutoScratchFloatRegister scratch(this);
+  AutoAvailableFloatRegister scratch(*this, FloatReg0);
 
   Register outputScratch = output.valueReg().scratchReg();
 
@@ -3778,6 +3796,8 @@ bool CacheIRCompiler::emitStoreTypedElement(ObjOperandId objId,
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
 
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+
   Maybe<Register> valInt32;
   Maybe<Register> valBigInt;
   switch (elementType) {
@@ -3793,10 +3813,8 @@ bool CacheIRCompiler::emitStoreTypedElement(ObjOperandId objId,
 
     case Scalar::Float32:
     case Scalar::Float64:
-      // Float register must be preserved. The SetProp ICs use the fact that
-      // baseline has them available, as well as fixed temps on
-      // LSetPropertyCache.
-      allocator.ensureDoubleRegister(masm, NumberOperandId(rhsId), FloatReg0);
+      allocator.ensureDoubleRegister(masm, NumberOperandId(rhsId),
+                                     floatScratch0);
       break;
 
     case Scalar::BigInt64:
@@ -3854,10 +3872,10 @@ bool CacheIRCompiler::emitStoreTypedElement(ObjOperandId objId,
 #endif
   } else if (elementType == Scalar::Float32) {
     ScratchFloat32Scope fpscratch(masm);
-    masm.convertDoubleToFloat32(FloatReg0, fpscratch);
+    masm.convertDoubleToFloat32(floatScratch0, fpscratch);
     masm.storeToTypedFloatArray(elementType, fpscratch, dest);
   } else if (elementType == Scalar::Float64) {
-    masm.storeToTypedFloatArray(elementType, FloatReg0, dest);
+    masm.storeToTypedFloatArray(elementType, floatScratch0, dest);
   } else {
     masm.storeToTypedIntArray(elementType, *valInt32, dest);
   }
@@ -4065,6 +4083,8 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty(
   Register obj = allocator.useRegister(masm, objId);
   StubFieldOffset offset(offsetOffset, StubField::Type::RawWord);
 
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+
   Maybe<Register> valInt32;
   Maybe<Register> valBigInt;
   switch (type) {
@@ -4080,10 +4100,8 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty(
 
     case Scalar::Float32:
     case Scalar::Float64:
-      // Float register must be preserved. The SetProp ICs use the fact that
-      // baseline has them available, as well as fixed temps on
-      // LSetPropertyCache.
-      allocator.ensureDoubleRegister(masm, NumberOperandId(rhsId), FloatReg0);
+      allocator.ensureDoubleRegister(masm, NumberOperandId(rhsId),
+                                     floatScratch0);
       break;
 
     case Scalar::BigInt64:
@@ -4124,10 +4142,10 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty(
 #endif
   } else if (type == Scalar::Float32) {
     ScratchFloat32Scope fpscratch(masm);
-    masm.convertDoubleToFloat32(FloatReg0, fpscratch);
+    masm.convertDoubleToFloat32(floatScratch0, fpscratch);
     masm.storeToTypedFloatArray(type, fpscratch, dest);
   } else if (type == Scalar::Float64) {
-    masm.storeToTypedFloatArray(type, FloatReg0, dest);
+    masm.storeToTypedFloatArray(type, floatScratch0, dest);
   } else {
     masm.storeToTypedIntArray(type, *valInt32, dest);
   }
@@ -4539,18 +4557,22 @@ bool CacheIRCompiler::emitCompareDoubleResult(JSOp op, NumberOperandId lhsId,
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
+  // Float register must be preserved. The Compare ICs use the fact that
+  // baseline has them available, as well as fixed temps on LBinaryBoolCache.
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
+
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  // Float register must be preserved. The Compare ICs use the fact that
-  // baseline has them available, as well as fixed temps on LBinaryBoolCache.
-  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
-  allocator.ensureDoubleRegister(masm, rhsId, FloatReg1);
+  allocator.ensureDoubleRegister(masm, lhsId, floatScratch0);
+  allocator.ensureDoubleRegister(masm, rhsId, floatScratch1);
 
   Label done, ifTrue;
-  masm.branchDouble(JSOpToDoubleCondition(op), FloatReg0, FloatReg1, &ifTrue);
+  masm.branchDouble(JSOpToDoubleCondition(op), floatScratch0, floatScratch1,
+                    &ifTrue);
   EmitStoreBoolean(masm, false, output);
   masm.jump(&done);
 
@@ -4760,8 +4782,10 @@ bool CacheIRCompiler::emitCompareBigIntNumberResult(JSOp op,
 
   // Float register must be preserved. The Compare ICs use the fact that
   // baseline has them available, as well as fixed temps on LBinaryBoolCache.
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+
   Register lhs = allocator.useRegister(masm, lhsId);
-  allocator.ensureDoubleRegister(masm, rhsId, FloatReg0);
+  allocator.ensureDoubleRegister(masm, rhsId, floatScratch0);
 
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
@@ -4774,11 +4798,11 @@ bool CacheIRCompiler::emitCompareBigIntNumberResult(JSOp op,
   // - |left <= right| is implemented as |right >= left|.
   // - |left > right| is implemented as |right < left|.
   if (op == JSOp::Le || op == JSOp::Gt) {
-    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
     masm.passABIArg(lhs);
   } else {
     masm.passABIArg(lhs);
-    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
   }
 
   using FnBigIntNumber = bool (*)(BigInt*, double);
@@ -4840,7 +4864,9 @@ bool CacheIRCompiler::emitCompareNumberBigIntResult(JSOp op,
 
   // Float register must be preserved. The Compare ICs use the fact that
   // baseline has them available, as well as fixed temps on LBinaryBoolCache.
-  allocator.ensureDoubleRegister(masm, lhsId, FloatReg0);
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+
+  allocator.ensureDoubleRegister(masm, lhsId, floatScratch0);
   Register rhs = allocator.useRegister(masm, rhsId);
 
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
@@ -4855,11 +4881,11 @@ bool CacheIRCompiler::emitCompareNumberBigIntResult(JSOp op,
   // - |left > right| is implemented as |right < left|.
   // Also push the operands in reverse order for JSOp::Eq and JSOp::Ne.
   if (op == JSOp::Lt || op == JSOp::Ge) {
-    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
     masm.passABIArg(rhs);
   } else {
     masm.passABIArg(rhs);
-    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
   }
 
   using FnBigIntNumber = bool (*)(BigInt*, double);
@@ -5677,10 +5703,13 @@ bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
 bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
                                              StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
   // Float register must be preserved. The BinaryArith ICs use
   // the fact that baseline has them available, as well as fixed temps on
   // LBinaryCache.
-  allocator.ensureDoubleRegister(masm, inputId, FloatReg0);
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+
+  allocator.ensureDoubleRegister(masm, inputId, floatScratch0);
   Register result = allocator.defineRegister(masm, resultId);
 
   FailurePath* failure;
@@ -5691,13 +5720,13 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
                                liveVolatileFloatRegs());
   volatileRegs.takeUnchecked(result);
-  volatileRegs.addUnchecked(FloatReg0);
+  volatileRegs.addUnchecked(floatScratch0);
   masm.PushRegsInMask(volatileRegs);
 
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
-  masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
   masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (js::NumberToStringHelperPure)));
 
   masm.mov(ReturnReg, result);
@@ -5955,6 +5984,17 @@ IonCacheIRCompiler* CacheIRCompiler::asIon() {
   MOZ_ASSERT(this->isIon());
   return static_cast<IonCacheIRCompiler*>(this);
 }
+
+#ifdef DEBUG
+void CacheIRCompiler::assertFloatRegisterAvailable(FloatRegister reg) {
+  if (isBaseline()) {
+    // Baseline does not have any FloatRegisters live when calling an IC stub.
+    return;
+  }
+
+  asIon()->assertFloatRegisterAvailable(reg);
+}
+#endif
 
 AutoCallVM::AutoCallVM(MacroAssembler& masm, CacheIRCompiler* compiler,
                        CacheRegisterAllocator& allocator)
