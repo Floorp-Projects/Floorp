@@ -126,6 +126,7 @@ class FrameHistory {
       this.delays[idx] = delay;
       if (features.trackingSizes) {
         this.gcBytes[idx] = performance.mozMemory.gc.gcBytes;
+        this.mallocBytes[idx] = performance.mozMemory.gc.zone.mallocBytes;
       }
       if (features.showingGCs) {
         this.gcs[idx] = performance.mozMemory.gc.gcNumber;
