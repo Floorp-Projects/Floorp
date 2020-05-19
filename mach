@@ -12,7 +12,6 @@
 ''':'
 py2commands="
     android
-    android-emulator
     awsy-test
     browsertime
     cargo
