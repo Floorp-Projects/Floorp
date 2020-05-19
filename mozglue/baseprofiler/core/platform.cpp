@@ -3439,7 +3439,7 @@ void profiler_add_js_marker(const char* aMarkerName) {
 void profiler_add_marker_for_thread(int aThreadId,
                                     ProfilingCategoryPair aCategoryPair,
                                     const char* aMarkerName,
-                                    UniquePtr<ProfilerMarkerPayload> aPayload) {
+                                    const ProfilerMarkerPayload& aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   if (!profiler_can_accept_markers()) {
@@ -3469,14 +3469,14 @@ void profiler_add_marker_for_thread(int aThreadId,
 #endif
 
   // Insert the marker into the buffer
-  TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
-                         ? aPayload->GetStartTime()
+  TimeStamp origin = (!aPayload.GetStartTime().IsNull())
+                         ? aPayload.GetStartTime()
                          : TimeStamp::NowUnfuzzed();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
   CorePS::CoreBuffer().PutObjects(
       ProfileBufferEntry::Kind::MarkerData, aThreadId,
       WrapProfileBufferUnownedCString(aMarkerName),
-      static_cast<uint32_t>(aCategoryPair), aPayload, delta.ToMilliseconds());
+      static_cast<uint32_t>(aCategoryPair), &aPayload, delta.ToMilliseconds());
 }
 
 void profiler_tracing_marker(const char* aCategoryString,
