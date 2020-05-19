@@ -58,6 +58,10 @@ struct MOZ_STACK_CLASS GCThingList {
   explicit GCThingList(JSContext* cx, CompilationInfo& compilationInfo)
       : compilationInfo(compilationInfo), vector(cx) {}
 
+  MOZ_MUST_USE bool append(JSAtom* atom, uint32_t* index) {
+    *index = vector.length();
+    return vector.append(mozilla::AsVariant(std::move(atom)));
+  }
   MOZ_MUST_USE bool append(ScopeIndex scope, uint32_t* index) {
     *index = vector.length();
     if (!vector.append(mozilla::AsVariant(scope))) {
