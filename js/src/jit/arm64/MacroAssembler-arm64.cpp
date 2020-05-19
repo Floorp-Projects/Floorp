@@ -2043,6 +2043,156 @@ void MacroAssembler::speculationBarrier() {
   csdb();
 }
 
+void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
+                                         FloatRegister temp, Label* fail) {
+  const ARMFPRegister src32(src, 32);
+  ScratchFloat32Scope scratch(*this);
+
+  Label negative, done;
+
+  // Branch to a slow path if input < 0.0 due to complicated rounding rules.
+  // Note that Fcmp with NaN unsets the negative flag.
+  Fcmp(src32, 0.0);
+  B(&negative, Assembler::Condition::lo);
+
+  // Handle the simple case of a positive input, and also -0 and NaN.
+  // Rounding proceeds with consideration of the fractional part of the input:
+  // 1. If > 0.5, round to integer with higher absolute value (so, up).
+  // 2. If < 0.5, round to integer with lower absolute value (so, down).
+  // 3. If = 0.5, round to +Infinity (so, up).
+  {
+    // Convert to signed 32-bit integer, rounding halfway cases away from zero.
+    // In the case of overflow, the output is saturated.
+    // In the case of NaN and -0, the output is zero.
+    Fcvtas(ARMRegister(dest, 32), src32);
+    // If the output potentially saturated, fail.
+    branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+
+    // If the result of the rounding was non-zero, return the output.
+    // In the case of zero, the input may have been NaN or -0, which must bail.
+    branch32(Assembler::NotEqual, dest, Imm32(0), &done);
+    {
+      // If input is NaN, comparisons set the C and V bits of the NZCV flags.
+      Fcmp(src32, 0.0f);
+      B(fail, Assembler::Overflow);
+
+      // Move all 32 bits of the input into a scratch register to check for -0.
+      vixl::UseScratchRegisterScope temps(this);
+      const ARMRegister scratchGPR32 = temps.AcquireW();
+      Fmov(scratchGPR32, src32);
+      Cmp(scratchGPR32, vixl::Operand(uint32_t(0x80000000)));
+      B(fail, Assembler::Equal);
+    }
+
+    jump(&done);
+  }
+
+  // Handle the complicated case of a negative input.
+  // Rounding proceeds with consideration of the fractional part of the input:
+  // 1. If > 0.5, round to integer with higher absolute value (so, down).
+  // 2. If < 0.5, round to integer with lower absolute value (so, up).
+  // 3. If = 0.5, round to +Infinity (so, up).
+  bind(&negative);
+  {
+    // Inputs in [-0.5, 0) need 0.5 added; other negative inputs need
+    // the biggest double less than 0.5.
+    Label join;
+    loadConstantFloat32(GetBiggestNumberLessThan(0.5f), temp);
+    loadConstantFloat32(-0.5f, scratch);
+    branchFloat(Assembler::DoubleLessThan, src, scratch, &join);
+    loadConstantFloat32(0.5f, temp);
+    bind(&join);
+
+    addFloat32(src, temp);
+    // Round all values toward -Infinity.
+    // In the case of overflow, the output is saturated.
+    // NaN and -0 are already handled by the "positive number" path above.
+    Fcvtms(ARMRegister(dest, 32), temp);
+    // If the output potentially saturated, fail.
+    branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+
+    // If output is zero, then the actual result is -0. Fail.
+    branchTest32(Assembler::Zero, dest, dest, fail);
+  }
+
+  bind(&done);
+}
+
+void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
+                                        FloatRegister temp, Label* fail) {
+  const ARMFPRegister src64(src, 64);
+  ScratchDoubleScope scratch(*this);
+
+  Label negative, done;
+
+  // Branch to a slow path if input < 0.0 due to complicated rounding rules.
+  // Note that Fcmp with NaN unsets the negative flag.
+  Fcmp(src64, 0.0);
+  B(&negative, Assembler::Condition::lo);
+
+  // Handle the simple case of a positive input, and also -0 and NaN.
+  // Rounding proceeds with consideration of the fractional part of the input:
+  // 1. If > 0.5, round to integer with higher absolute value (so, up).
+  // 2. If < 0.5, round to integer with lower absolute value (so, down).
+  // 3. If = 0.5, round to +Infinity (so, up).
+  {
+    // Convert to signed 32-bit integer, rounding halfway cases away from zero.
+    // In the case of overflow, the output is saturated.
+    // In the case of NaN and -0, the output is zero.
+    Fcvtas(ARMRegister(dest, 32), src64);
+    // If the output potentially saturated, fail.
+    branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+
+    // If the result of the rounding was non-zero, return the output.
+    // In the case of zero, the input may have been NaN or -0, which must bail.
+    branch32(Assembler::NotEqual, dest, Imm32(0), &done);
+    {
+      // If input is NaN, comparisons set the C and V bits of the NZCV flags.
+      Fcmp(src64, 0.0);
+      B(fail, Assembler::Overflow);
+
+      // Move all 64 bits of the input into a scratch register to check for -0.
+      vixl::UseScratchRegisterScope temps(this);
+      const ARMRegister scratchGPR64 = temps.AcquireX();
+      Fmov(scratchGPR64, src64);
+      Cmp(scratchGPR64, vixl::Operand(uint64_t(0x8000000000000000)));
+      B(fail, Assembler::Equal);
+    }
+
+    jump(&done);
+  }
+
+  // Handle the complicated case of a negative input.
+  // Rounding proceeds with consideration of the fractional part of the input:
+  // 1. If > 0.5, round to integer with higher absolute value (so, down).
+  // 2. If < 0.5, round to integer with lower absolute value (so, up).
+  // 3. If = 0.5, round to +Infinity (so, up).
+  bind(&negative);
+  {
+    // Inputs in [-0.5, 0) need 0.5 added; other negative inputs need
+    // the biggest double less than 0.5.
+    Label join;
+    loadConstantDouble(GetBiggestNumberLessThan(0.5), temp);
+    loadConstantDouble(-0.5, scratch);
+    branchDouble(Assembler::DoubleLessThan, src, scratch, &join);
+    loadConstantDouble(0.5, temp);
+    bind(&join);
+
+    addDouble(src, temp);
+    // Round all values toward -Infinity.
+    // In the case of overflow, the output is saturated.
+    // NaN and -0 are already handled by the "positive number" path above.
+    Fcvtms(ARMRegister(dest, 32), temp);
+    // If the output potentially saturated, fail.
+    branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+
+    // If output is zero, then the actual result is -0. Fail.
+    branchTest32(Assembler::Zero, dest, dest, fail);
+  }
+
+  bind(&done);
+}
+
 //}}} check_macroassembler_style
 
 }  // namespace jit

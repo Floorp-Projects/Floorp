@@ -1221,28 +1221,6 @@ void CodeGenerator::visitCeilF(LCeilF* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
-void CodeGenerator::visitRound(LRound* lir) {
-  FloatRegister input = ToFloatRegister(lir->input());
-  Register output = ToRegister(lir->output());
-  FloatRegister tmp = ToFloatRegister(lir->temp());
-  Label bail;
-  // Output is either correct, or clamped. All -0 cases have been translated
-  // to a clamped case.
-  masm.round(input, output, &bail, tmp);
-  bailoutFrom(&bail, lir->snapshot());
-}
-
-void CodeGenerator::visitRoundF(LRoundF* lir) {
-  FloatRegister input = ToFloatRegister(lir->input());
-  Register output = ToRegister(lir->output());
-  FloatRegister tmp = ToFloatRegister(lir->temp());
-  Label bail;
-  // Output is either correct, or clamped. All -0 cases have been translated
-  // to a clamped case.
-  masm.roundf(input, output, &bail, tmp);
-  bailoutFrom(&bail, lir->snapshot());
-}
-
 void CodeGenerator::visitTrunc(LTrunc* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());
