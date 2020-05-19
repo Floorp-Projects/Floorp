@@ -11,6 +11,7 @@ import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ALWAYS_DENY_SCHEMES
 import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SUPPORTED_SCHEMES
 
 /**
@@ -44,9 +45,9 @@ class AppLinksInterceptor(
     private val context: Context,
     private val interceptLinkClicks: Boolean = false,
     private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES,
-    private val alwaysDeniedSchemes: Set<String> = setOf("javascript", "about", "data"),
+    private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES,
     private val launchInApp: () -> Boolean = { false },
-    private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
+    private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp, alwaysDeniedSchemes),
     private val launchFromInterceptor: Boolean = false
 ) : RequestInterceptor {
 
