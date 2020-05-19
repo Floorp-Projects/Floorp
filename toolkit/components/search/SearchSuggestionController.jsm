@@ -93,6 +93,27 @@ class SearchSuggestionEntry {
   get tail() {
     return this._tail;
   }
+
+  get tailOffsetIndex() {
+    if (!this._tail) {
+      return -1;
+    }
+
+    let offsetIndex = this._value.lastIndexOf(this._tail);
+    if (offsetIndex + this._tail.length < this._value.length) {
+      // We might have a tail suggestion that starts with a word contained in
+      // the full-text suggestion. e.g. "london sights in l" ... "london".
+      let lastWordIndex = this._value.lastIndexOf(" ");
+      if (this._tail.startsWith(this._value.substring(lastWordIndex))) {
+        offsetIndex = lastWordIndex;
+      } else {
+        // Something's gone wrong. Consumers should not show this result.
+        offsetIndex = -1;
+      }
+    }
+
+    return offsetIndex;
+  }
 }
 
 // Maps each engine name to a unique firstPartyDomain, so that requests to

@@ -759,6 +759,24 @@ class UrlbarView {
     typeIcon.className = "urlbarView-type-icon";
     noWrap.appendChild(typeIcon);
 
+    let tailPrefix = this._createElement("span");
+    tailPrefix.className = "urlbarView-tail-prefix";
+    noWrap.appendChild(tailPrefix);
+    item._elements.set("tailPrefix", tailPrefix);
+    // tailPrefix holds text only for alignment purposes so it should never be
+    // read to screen readers.
+    tailPrefix.toggleAttribute("aria-hidden", true);
+
+    let tailPrefixStr = this._createElement("span");
+    tailPrefixStr.className = "urlbarView-tail-prefix-string";
+    tailPrefix.appendChild(tailPrefixStr);
+    item._elements.set("tailPrefixStr", tailPrefixStr);
+
+    let tailPrefixChar = this._createElement("span");
+    tailPrefixChar.className = "urlbarView-tail-prefix-char";
+    tailPrefix.appendChild(tailPrefixChar);
+    item._elements.set("tailPrefixChar", tailPrefixChar);
+
     let title = this._createElement("span");
     title.className = "urlbarView-title";
     noWrap.appendChild(title);
@@ -896,6 +914,16 @@ class UrlbarView {
       result.title,
       result.titleHighlights
     );
+
+    if (result.payload.tail && result.payload.tailOffsetIndex >= 0) {
+      this._fillTailSuggestionPrefix(item, result);
+      title.setAttribute("aria-label", result.payload.suggestion);
+      item.toggleAttribute("tail-suggestion", true);
+    } else {
+      item.removeAttribute("tail-suggestion");
+      title.removeAttribute("aria-label");
+    }
+
     title._tooltip = result.title;
     if (title.hasAttribute("overflow")) {
       title.setAttribute("title", title._tooltip);
@@ -1323,6 +1351,25 @@ class UrlbarView {
       }
       index = highlightIndex + highlightLength;
     }
+  }
+
+  /**
+   * Adds markup for a tail suggestion prefix to a row.
+   * @param {Node} item
+   *   The node for the result row.
+   * @param {UrlbarResult} result
+   *   A UrlbarResult representing a tail suggestion.
+   */
+  _fillTailSuggestionPrefix(item, result) {
+    let tailPrefixStrNode = item._elements.get("tailPrefixStr");
+    let tailPrefixStr = result.payload.suggestion.substring(
+      0,
+      result.payload.tailOffsetIndex
+    );
+    tailPrefixStrNode.textContent = tailPrefixStr;
+
+    let tailPrefixCharNode = item._elements.get("tailPrefixChar");
+    tailPrefixCharNode.textContent = result.payload.tailPrefix;
   }
 
   _enableOrDisableOneOffSearches(enable = true) {

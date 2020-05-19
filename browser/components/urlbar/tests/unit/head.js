@@ -303,7 +303,9 @@ function makeSearchResult(
   queryContext,
   {
     suggestion,
+    tailPrefix,
     tail,
+    tailOffsetIndex,
     engineName,
     alias,
     query,
@@ -323,13 +325,24 @@ function makeSearchResult(
     }
   }
 
+  // Tail suggestion common cases, handled here to reduce verbosity in tests.
+  if (tail && !tailPrefix) {
+    tailPrefix = "… ";
+  }
+
+  if (!tailOffsetIndex) {
+    tailOffsetIndex = tail ? suggestion.indexOf(tail) : -1;
+  }
+
   let result = new UrlbarResult(
     UrlbarUtils.RESULT_TYPE.SEARCH,
     UrlbarUtils.RESULT_SOURCE.SEARCH,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       engine: [engineName, UrlbarUtils.HIGHLIGHT.TYPED],
       suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+      tailPrefix,
       tail: [tail, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+      tailOffsetIndex,
       keyword: [alias, UrlbarUtils.HIGHLIGHT.TYPED],
       // Check against undefined so consumers can pass in the empty string.
       query: [
