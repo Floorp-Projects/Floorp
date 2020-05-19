@@ -74,15 +74,6 @@ int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
 DOMTimeStamp nsMenuPopupFrame::sLastKeyTime = 0;
 
-// XXX, kyle.yuan@sun.com, there are 4 definitions for the same purpose:
-//  nsMenuPopupFrame.h, nsListControlFrame.cpp, listbox.xml, tree.xml
-//  need to find a good place to put them together.
-//  if someone changes one, please also change the other.
-uint32_t nsMenuPopupFrame::sTimeoutOfIncrementalSearch = 1000;
-
-const char kPrefIncrementalSearchTimeout[] =
-    "ui.menu.incremental_search.timeout";
-
 // NS_NewMenuPopupFrame
 //
 // Wrapper for creating a new menu popup container
@@ -136,8 +127,6 @@ nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
   if (sDefaultLevelIsTop >= 0) return;
   sDefaultLevelIsTop =
       Preferences::GetBool("ui.panel.default_level_parent", false);
-  Preferences::AddUintVarCache(&sTimeoutOfIncrementalSearch,
-                               kPrefIncrementalSearchTimeout, 1000);
 }  // ctor
 
 void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
