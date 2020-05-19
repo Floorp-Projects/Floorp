@@ -24,6 +24,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -99,6 +100,7 @@ class BaselinePingTest {
         return null
     }
 
+    @Ignore("Currently failing on firebase: https://github.com/mozilla-mobile/fenix/issues/10652")
     @Test
     fun validateBaselinePing() {
         // Wait for the app to be idle/ready.
