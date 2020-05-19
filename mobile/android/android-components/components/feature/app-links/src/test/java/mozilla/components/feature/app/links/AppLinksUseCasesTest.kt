@@ -44,6 +44,9 @@ class AppLinksUseCasesTest {
     private val browserPackage = "com.browser"
     private val testBrowserPackage = "com.current.browser"
     private val filePath = "file:///storage/abc/test.mp3"
+    private val dataUrl = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="
+    private val aboutUrl = "about:config"
+    private val javascriptUrl = "javascript:'hello, world'"
     private val fileType = "audio/mpeg"
 
     @Before
@@ -115,6 +118,33 @@ class AppLinksUseCasesTest {
 
         // We will redirect to it if browser option set to true.
         val redirect = subject.interceptedAppLinkRedirect(filePath)
+        assertFalse(redirect.isRedirect())
+    }
+
+    @Test
+    fun `A data url is not an app link`() {
+        val context = createContext(dataUrl to appPackage)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
+
+        val redirect = subject.interceptedAppLinkRedirect(dataUrl)
+        assertFalse(redirect.isRedirect())
+    }
+
+    @Test
+    fun `A javascript url is not an app link`() {
+        val context = createContext(javascriptUrl to appPackage)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
+
+        val redirect = subject.interceptedAppLinkRedirect(javascriptUrl)
+        assertFalse(redirect.isRedirect())
+    }
+
+    @Test
+    fun `An about url is not an app link`() {
+        val context = createContext(aboutUrl to appPackage)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
+
+        val redirect = subject.interceptedAppLinkRedirect(aboutUrl)
         assertFalse(redirect.isRedirect())
     }
 
@@ -309,6 +339,45 @@ class AppLinksUseCasesTest {
     fun `OpenAppLinkRedirect should not try to open files`() {
         val context = spy(createContext())
         val uri = Uri.fromFile(File(filePath))
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(uri, fileType)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
+
+        subject.openAppLink(intent)
+
+        verify(context, never()).startActivity(any())
+    }
+
+    @Test
+    fun `OpenAppLinkRedirect should not try to open data URIs`() {
+        val context = spy(createContext())
+        val uri = Uri.parse(dataUrl)
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(uri, fileType)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
+
+        subject.openAppLink(intent)
+
+        verify(context, never()).startActivity(any())
+    }
+
+    @Test
+    fun `OpenAppLinkRedirect should not try to open javascript URIs`() {
+        val context = spy(createContext())
+        val uri = Uri.parse(javascriptUrl)
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(uri, fileType)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
+
+        subject.openAppLink(intent)
+
+        verify(context, never()).startActivity(any())
+    }
+
+    @Test
+    fun `OpenAppLinkRedirect should not try to open about URIs`() {
+        val context = spy(createContext())
+        val uri = Uri.parse(aboutUrl)
         val intent = Intent(Intent.ACTION_VIEW)
         intent.setDataAndType(uri, fileType)
         val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))

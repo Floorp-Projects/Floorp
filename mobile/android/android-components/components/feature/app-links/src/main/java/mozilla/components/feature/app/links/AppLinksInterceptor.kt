@@ -44,7 +44,7 @@ class AppLinksInterceptor(
     private val context: Context,
     private val interceptLinkClicks: Boolean = false,
     private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES,
-    private val alwaysDeniedSchemes: Set<String> = setOf("javascript", "about"),
+    private val alwaysDeniedSchemes: Set<String> = setOf("javascript", "about", "data"),
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
     private val launchFromInterceptor: Boolean = false
