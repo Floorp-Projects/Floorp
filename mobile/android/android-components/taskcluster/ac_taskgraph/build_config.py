@@ -26,7 +26,7 @@ def get_components():
     } for (name, project) in build_config['projects'].items()]
 
 
-def get_version(is_snapshot=False):
+def get_version():
     return _read_build_config()["componentsVersion"]
 
 

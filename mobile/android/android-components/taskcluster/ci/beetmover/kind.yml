@@ -20,21 +20,19 @@ primary-dependency: signing
 only-for-build-types:
     - release
     - nightly
-    - snapshot
 
 group-by: component
 
 
 job-template:
     description: Publish component
-    maven-destination: 'maven2/org/mozilla/components/{component}/{version_with_snapshot}/{artifact_file_name}'
+    maven-destination: 'maven2/org/mozilla/components/{component}/{version}/{artifact_file_name}'
     run-on-tasks-for: []
     treeherder:
         job-symbol:
             by-build-type:
                 release: BM-R
                 nightly: BM-N
-                snapshot: BM-Snap
                 default: BM-B
         kind: build
     worker:
@@ -49,14 +47,9 @@ job-template:
                     by-level:
                         '3': maven-nightly-production
                         default: maven-nightly-staging
-                snapshot:
-                    by-level:
-                        '3': maven-snapshot-production
-                        default: maven-snapshot-staging
         beetmover-application-name:
             by-build-type:
                 release: components
-                snapshot: snapshot_components
                 nightly: nightly_components
                 default: UNDEFINED
     worker-type: beetmover

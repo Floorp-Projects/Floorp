@@ -46,7 +46,7 @@ def set_artifact_map(config, tasks):
                     "destinations": [
                         maven_destination.format(
                             component=task["attributes"]["component"],
-                            version_with_snapshot=craft_path_version(version,
+                            version=craft_path_version(version,
                                 task["attributes"]["build-type"], nightly_version),
                             artifact_file_name=os.path.basename(artifact_path),
                         )
