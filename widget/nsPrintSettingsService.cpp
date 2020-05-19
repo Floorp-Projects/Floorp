@@ -448,9 +448,6 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
       aPS->SetPrintOptions(nsIPrintSettings::kPrintEvenPages, b);
       DUMP_BOOL(kReadStr, kPrintEvenPages, b);
     }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
     if (GETBOOLPREF(kPrintOddPages, &b)) {
       aPS->SetPrintOptions(nsIPrintSettings::kPrintOddPages, b);
       DUMP_BOOL(kReadStr, kPrintOddPages, b);
@@ -715,9 +712,6 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
       DUMP_BOOL(kWriteStr, kPrintEvenPages, b);
       Preferences::SetBool(GetPrefName(kPrintEvenPages, aPrinterName), b);
     }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
     if (NS_SUCCEEDED(
             aPS->GetPrintOptions(nsIPrintSettings::kPrintOddPages, &b))) {
       DUMP_BOOL(kWriteStr, kPrintOddPages, b);
