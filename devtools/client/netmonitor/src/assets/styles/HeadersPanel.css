@@ -1,0 +1,220 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Headers tabpanel */
+
+.network-monitor .headers-panel-container {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.network-monitor .headers-panel-container .panel-container {
+  position: absolute;
+  top: calc(var(--theme-toolbar-height) + 1px);
+  bottom: 0;
+  right: 0;
+  left: 0;
+  height: auto;
+}
+
+.network-monitor .headers-panel-container .devtools-button {
+  padding: 2px;
+}
+.network-monitor .headers-panel-container .devtools-dropdown-button {
+  padding: 0;
+}
+
+.network-monitor .headers-panel-container .devtools-button:not(:hover) {
+  background-color: transparent;
+}
+
+.network-monitor .headers-overview {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.network-monitor .headers-overview .summary {
+  padding: 10px 20px;
+}
+
+.network-monitor .headers-summary,
+.network-monitor .response-summary {
+  display: flex;
+  align-items: center;
+}
+
+.network-monitor .raw-headers-toggle {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: center;
+  cursor: pointer;
+}
+
+.network-monitor .accordion-header-label {
+  color: var(--theme-icon-dimmed-color)
+}
+
+.network-monitor .raw-headers-toggle .headers-summary-label {
+  color: var(--theme-toolbar-color);
+}
+
+.network-monitor .raw-headers-toggle-input > input {
+  display: inline-block;
+  width: 2em;
+  vertical-align: bottom;
+  font-size: 12px;
+}
+
+.network-monitor .properties-view .tree-container .treeTable .treeValueCell .devtools-checkbox-toggle {
+  margin-block: 2px;
+}
+
+.network-monitor .properties-view .raw-headers-container .raw-headers {
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  padding: 2px 12px;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+  border: none;
+}
+
+.network-monitor .accordion-item .treeTable .objectBox-string {
+  color: var(--theme-body-color);
+}
+
+.network-monitor .accordion-item .treeTable tr.treeRow.selected .objectBox-string {
+  color: var(--theme-selection-color);
+}
+
+.network-monitor .properties-view .raw-headers-container td {
+  display: block;
+}
+
+.network-monitor .properties-view .raw-headers-container textarea {
+  width: 100%;
+  font-family: var(--monospace-font-family);
+  font-size: var(--theme-body-font-size);
+  resize: none;
+}
+
+.theme-light .network-monitor .properties-view textarea {
+  background-color: white;
+  border: 1px solid var(--grey-25);
+  color: var(--grey-90);
+}
+
+.theme-dark .network-monitor .properties-view textarea {
+  background-color: var(--grey-70);
+  border: 1px solid var(--grey-85);
+  color: white;
+}
+
+.network-monitor .properties-view .raw-headers .tabpanel-summary-label {
+  padding: 0 0 4px;
+}
+
+.headers-summary .textbox-input {
+  margin-inline-end: 2px;
+}
+
+.network-monitor .headers-summary .status-text {
+  width: auto !important;
+  margin-inline-start: 4px;
+}
+
+/* Status codes */
+
+.headers-overview .summary .status .status-code {
+  display: inline;
+  margin-right: 5px;
+  background-color: transparent;
+  color: inherit;
+}
+
+.headers-overview .summary .status[data-code^="1"] {
+  color: var(--status-code-color-1xx);
+}
+
+.headers-overview .summary .status[data-code^="2"] {
+  color: var(--status-code-color-2xx);
+}
+
+.headers-overview .summary .status[data-code^="3"] {
+  color: inherit;
+}
+
+.headers-overview .summary .status[data-code^="4"] {
+  color: var(--status-code-color-4xx);
+}
+
+.headers-overview .summary .status[data-code^="5"] {
+  color: var(--status-code-color-5xx);
+}
+
+/* Non-standard status codes are styled like 5XX */
+.headers-overview .summary .status[data-code^="0"],
+.headers-overview .summary .status[data-code^="6"],
+.headers-overview .summary .status[data-code^="7"],
+.headers-overview .summary .status[data-code^="8"],
+.headers-overview .summary .status[data-code^="9"] {
+  color: var(--status-code-color-5xx);
+}
+
+/* Summary tabpanel */
+
+.network-monitor .tabpanel-summary-container {
+  flex-wrap: wrap;
+  padding: 1px;
+  padding-inline-start: 4px;
+  margin-bottom: 5px;
+}
+
+.network-monitor .tabpanel-summary-container .tracking-resource {
+  margin-inline: -2px 2px;
+  vertical-align: text-bottom;
+  fill: var(--theme-icon-color);
+}
+
+.network-monitor .tabpanel-summary-label {
+  display: inline-block;
+  padding-inline-end: 3px;
+  min-width: 70px;
+  color: var(--theme-icon-dimmed-color);
+}
+
+.network-monitor .tabpanel-summary-value {
+  color: inherit;
+  padding-inline-start: 3px;
+}
+
+.network-monitor .tabpanel-summary-value  strong {
+  margin-right: 3px;
+}
+
+.theme-dark .network-monitor .tabpanel-summary-value {
+  color: var(--theme-selection-color);
+}
+
+.network-monitor .tracking-protection {
+  color: var(--theme-icon-dimmed-color);
+  margin-left: 47px;
+}
+
+.network-monitor .tracking-protection .learn-more-link:not(:hover)::before {
+  color: var(--theme-icon-dimmed-color);
+}
+
+.theme-dark .network-monitor .edit-and-resend-button {
+  background-color: var(--toolbarbutton-background);
+  color: var(--theme-selection-color);
+}
+
+.network-monitor .headers-summary-label,
+.network-monitor .tree-container .objectBox {
+  white-space: nowrap;
+}
