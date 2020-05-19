@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::TileSize;
-use api::units::*;
+use crate::{TileSize, EdgeAaSegmentMask};
+use crate::units::*;
 use euclid::{point2, size2};
-use crate::prim_store::EdgeAaSegmentMask;
-
 use std::i32;
 use std::ops::Range;
 
@@ -681,12 +679,12 @@ mod tests {
     fn empty() {
         let mut count = 0;
         checked_for_each_tile(&rect(0., 0., 74., 74.),
-              &rect(75., 75., 400., 400.),
-              &rect(0, 0, 400, 400),
-              36,
-              &mut |_tile_rect, _tile_offset, _tile_flags| {
-                count += 1;
-              },
+            &rect(75., 75., 400., 400.),
+            &rect(0, 0, 400, 400),
+            36,
+            &mut |_tile_rect, _tile_offset, _tile_flags| {
+              count += 1;
+            },
         );
         assert_eq!(count, 0);
     }

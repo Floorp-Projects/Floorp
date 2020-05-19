@@ -38,7 +38,7 @@ use crate::debug_server;
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, DisplayItem};
 
-/// Various timing information that will be truned into
+/// Various timing information that will be turned into
 /// TransactionProfileCounters later down the pipeline.
 pub struct TransactionTimings {
     pub builder_start_time_ns: u64,

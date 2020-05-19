@@ -95,13 +95,13 @@
 use api::{BorderRadius, ClipIntern, ClipMode, ComplexClipRegion, ImageMask};
 use api::{BoxShadowClipMode, ClipId, ImageKey, ImageRendering, PipelineId};
 use api::units::*;
+use api::image_tiling::{self, Repetition};
 use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
 use crate::box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};
 use crate::ellipse::Ellipse;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use crate::gpu_types::{BoxShadowStretchMode};
-use crate::image::{self, Repetition};
 use crate::intern::{self, ItemUid};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTile};
@@ -569,7 +569,7 @@ impl ClipNodeInfo {
                         clipped_rect.intersection(&rect).unwrap()
                     };
 
-                    let repetitions = image::repetitions(
+                    let repetitions = image_tiling::repetitions(
                         &rect,
                         &visible_rect,
                         rect.size,
@@ -580,7 +580,7 @@ impl ClipNodeInfo {
                             origin,
                             size: rect.size,
                         };
-                        let tiles = image::tiles(
+                        let tiles = image_tiling::tiles(
                             &layout_image_rect,
                             &visible_rect,
                             &props.visible_rect,

@@ -103,7 +103,6 @@ mod glyph_rasterizer;
 mod gpu_cache;
 mod gpu_types;
 mod hit_test;
-mod image;
 mod intern;
 mod internal_types;
 mod picture;
