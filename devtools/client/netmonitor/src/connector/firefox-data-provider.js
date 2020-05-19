@@ -55,6 +55,14 @@ class FirefoxDataProvider {
     this.onWebSocketClosed = this.onWebSocketClosed.bind(this);
     this.onFrameSent = this.onFrameSent.bind(this);
     this.onFrameReceived = this.onFrameReceived.bind(this);
+
+    this.onEventSourceConnectionOpened = this.onEventSourceConnectionOpened.bind(
+      this
+    );
+    this.onEventSourceConnectionClosed = this.onEventSourceConnectionClosed.bind(
+      this
+    );
+    this.onEventReceived = this.onEventReceived.bind(this);
   }
 
   /**
@@ -786,6 +794,30 @@ class FirefoxDataProvider {
     });
     this.emitForTests(TEST_EVENTS.RECEIVED_EVENT_STACKTRACE, response.from);
     return payload.stacktrace;
+  }
+
+  /**
+   * Handle EventSource events.
+   */
+  async onEventSourceConnectionOpened(httpChannelId) {
+    // By default, an EventSource connection doesn't immediately get its mimeType, or
+    // any info which could help us identify a connection is an SSE channel.
+    // We can update the request's mimeType through this event.
+    if (this.actionsEnabled && this.actions.updateMimeType) {
+      // TODO: Implement action updateMimeType.
+      await this.actions.updateMimeType(
+        httpChannelId,
+        "text/event-stream",
+        true
+      );
+    }
+  }
+
+  async onEventSourceConnectionClosed(httpChannelId) {}
+
+  async onEventReceived(httpChannelId, data) {
+    // Dispatch the same action used by websocket inspector.
+    this.addFrame(httpChannelId, data);
   }
 
   /**
