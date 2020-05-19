@@ -61,7 +61,8 @@ class nsWindow final : public nsBaseWidget {
   void OnGeckoViewReady();
   RefPtr<mozilla::MozPromise<bool, bool, false>> OnLoadRequest(
       nsIURI* aUri, int32_t aWindowType, int32_t aFlags,
-      nsIPrincipal* aTriggeringPrincipal, bool aHasUserGesture);
+      nsIPrincipal* aTriggeringPrincipal, bool aHasUserGesture,
+      bool aIsTopLevel);
 
  private:
   uint32_t mScreenId;
