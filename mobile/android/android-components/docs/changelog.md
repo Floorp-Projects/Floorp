@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 42.0.0-SNAPSHOT (In Development)
+# 43.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v41.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/102?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v42.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/103?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 42.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v41.0.0...42.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/102?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/42.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/42.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/42.0.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-state**
   * Adds `firstContentfulPaint` to `ContentState` to know if first contentful paint has happened.
