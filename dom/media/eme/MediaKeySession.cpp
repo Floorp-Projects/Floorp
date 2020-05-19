@@ -50,8 +50,8 @@ static const uint32_t MAX_KEY_ID_LENGTH = 512;
 // platform tests.
 static const uint32_t MAX_CENC_INIT_DATA_LENGTH = 64 * 1024;
 
-MediaKeySession::MediaKeySession(JSContext* aCx, nsPIDOMWindowInner* aParent,
-                                 MediaKeys* aKeys, const nsAString& aKeySystem,
+MediaKeySession::MediaKeySession(nsPIDOMWindowInner* aParent, MediaKeys* aKeys,
+                                 const nsAString& aKeySystem,
                                  MediaKeySessionType aSessionType,
                                  ErrorResult& aRv)
     : DOMEventTargetHelper(aParent),

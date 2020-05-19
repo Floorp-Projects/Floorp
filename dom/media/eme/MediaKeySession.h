@@ -47,7 +47,7 @@ class MediaKeySession final : public DOMEventTargetHelper,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaKeySession,
                                            DOMEventTargetHelper)
  public:
-  MediaKeySession(JSContext* aCx, nsPIDOMWindowInner* aParent, MediaKeys* aKeys,
+  MediaKeySession(nsPIDOMWindowInner* aParent, MediaKeys* aKeys,
                   const nsAString& aKeySystem, MediaKeySessionType aSessionType,
                   ErrorResult& aRv);
 

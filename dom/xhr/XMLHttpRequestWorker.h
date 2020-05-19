@@ -142,7 +142,6 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   virtual XMLHttpRequestUpload* GetUpload(ErrorResult& aRv) override;
 
   virtual void Send(
-      JSContext* aCx,
       const Nullable<
           DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
           aData,
