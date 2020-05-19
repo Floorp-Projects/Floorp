@@ -527,6 +527,8 @@ AssignmentExpression[In, Yield, Await] :
     => assignment_expr($0, $2)
   LeftHandSideExpression[?Yield, ?Await] AssignmentOperator AssignmentExpression[?In, ?Yield, ?Await]
     => compound_assignment_expr($0, $1, $2)
+  LeftHandSideExpression[?Yield, ?Await] LogicalAssignmentOperator AssignmentExpression[?In, ?Yield, ?Await]
+    => compound_assignment_expr($0, $1, $2)
 
 @returns CompoundAssignmentOperator
 AssignmentOperator :
@@ -555,6 +557,14 @@ AssignmentOperator :
   `**=`
     => box_assign_op(pow_assign_op($0))
 
+@returns CompoundAssignmentOperator
+LogicalAssignmentOperator :
+  `&&=`
+    => box_assign_op(logical_and_assign_op($0))
+  `||=`
+    => box_assign_op(logical_or_assign_op($0))
+  `??=`
+    => box_assign_op(coalesce_assign_op($0))
 
 AssignmentPattern[Yield, Await] :
   ObjectAssignmentPattern[?Yield, ?Await]

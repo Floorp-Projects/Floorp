@@ -6,11 +6,13 @@ use std::fmt::Write;
 pub fn dis(bc: &[u8]) -> String {
     let mut result = String::new();
     let mut iter = bc.iter();
+    let mut offset = 0;
     loop {
         let len = match iter.next() {
             Some(byte) => match Opcode::try_from(*byte) {
                 Ok(op) => {
-                    write!(&mut result, "{:?}", op).unwrap();
+                    write!(&mut result, "{}", format!("{:05}: {:?}", offset, op)).unwrap();
+                    offset = offset + op.instruction_length();
                     op.instruction_length()
                 }
                 Err(()) => {

@@ -34,7 +34,7 @@ where
                 //      [stack] OBJ
             }
             None => {
-                let name_index = emitter.emit.get_atom_index(self.key);
+                let name_index = emitter.emit.get_atom_gcthing_index(self.key);
 
                 (self.value)(emitter)?;
                 //      [stack] OBJ VALUE

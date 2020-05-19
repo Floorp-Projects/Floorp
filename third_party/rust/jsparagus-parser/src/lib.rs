@@ -81,7 +81,7 @@ fn parse<'alloc>(
         if t.terminal_id == TerminalId::End {
             break;
         }
-        parser.write_token(&t)?;
+        parser.write_token(t)?;
     }
     parser.close(tokens.offset())
 }
@@ -102,7 +102,7 @@ pub fn is_partial_script<'alloc>(
         if t.terminal_id == TerminalId::End {
             break;
         }
-        parser.write_token(&t)?;
+        parser.write_token(t)?;
     }
     Ok(!parser.can_close())
 }

@@ -565,8 +565,12 @@ pub trait EarlyErrorChecker<'alloc> {
             CatchParameterEarlyErrorsContext::new_with_binding_pattern()
         };
 
-        let param_index = self.context_metadata_mut().find_first_binding(start_of_bindings_offset);
-        let body_index = self.context_metadata_mut().find_first_binding(end_of_bindings_offset);
+        let param_index = self
+            .context_metadata_mut()
+            .find_first_binding(start_of_bindings_offset);
+        let body_index = self
+            .context_metadata_mut()
+            .find_first_binding(end_of_bindings_offset);
         declare_param(
             self.context_metadata(),
             self.atoms(),
@@ -589,8 +593,13 @@ pub trait EarlyErrorChecker<'alloc> {
     }
 
     // Check bindings in Catch with no parameter and Block.
-    fn check_catch_no_param_bindings(&mut self, start_of_catch_offset: usize) -> Result<'alloc, ()> {
-        let body_index = self.context_metadata_mut().find_first_binding(start_of_catch_offset);
+    fn check_catch_no_param_bindings(
+        &mut self,
+        start_of_catch_offset: usize,
+    ) -> Result<'alloc, ()> {
+        let body_index = self
+            .context_metadata_mut()
+            .find_first_binding(start_of_catch_offset);
 
         let param_context = CatchParameterEarlyErrorsContext::new_with_binding_identifier();
         let mut block_context = CatchBlockEarlyErrorsContext::new(param_context);
@@ -614,8 +623,12 @@ pub trait EarlyErrorChecker<'alloc> {
     ) -> Result<'alloc, ()> {
         let mut head_context = LexicalForHeadEarlyErrorsContext::new();
 
-        let head_index = self.context_metadata_mut().find_first_binding(start_of_bindings_offset);
-        let body_index = self.context_metadata_mut().find_first_binding(end_of_bindings_offset);
+        let head_index = self
+            .context_metadata_mut()
+            .find_first_binding(start_of_bindings_offset);
+        let body_index = self
+            .context_metadata_mut()
+            .find_first_binding(end_of_bindings_offset);
         declare_lexical_for_head(
             self.context_metadata(),
             self.atoms(),

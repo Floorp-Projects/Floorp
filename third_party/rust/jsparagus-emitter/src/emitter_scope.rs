@@ -22,6 +22,11 @@ pub enum NameLocation {
     FrameSlot(FrameSlot, BindingKind),
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct EmitterScopeDepth {
+    index: usize,
+}
+
 // --- EmitterScope types
 //
 // These types are the variants of enum EmitterScope.
@@ -118,7 +123,7 @@ impl EmitterScope {
         }
     }
 
-    fn scope_note_index(&self) -> Option<ScopeNoteIndex> {
+    pub fn scope_note_index(&self) -> Option<ScopeNoteIndex> {
         match self {
             EmitterScope::Global(scope) => scope.scope_note_index(),
             EmitterScope::Lexical(scope) => scope.scope_note_index(),
@@ -167,12 +172,16 @@ impl EmitterScopeStack {
         let scope_index = scope_data_map.get_global_index();
         let scope_data = scope_data_map.get_global_at(scope_index);
 
+        // The outermost scope should be the first item in the GC things list.
+        // Enter global scope here, before emitting any name ops below.
+        emit.enter_global_scope(scope_index);
+
         if scope_data.bindings.len() > 0 {
             emit.check_global_or_eval_decl();
         }
 
         for item in scope_data.iter() {
-            let name_index = emit.get_atom_index(item.name());
+            let name_index = emit.get_atom_gcthing_index(item.name());
 
             match item.kind() {
                 BindingKind::Var => {
@@ -193,8 +202,6 @@ impl EmitterScopeStack {
 
         let scope = EmitterScope::Global(GlobalEmitterScope::new(scope_data));
         self.scope_stack.push(scope);
-
-        emit.enter_global_scope(scope_index);
     }
 
     /// Leave the global scope. Call this once at the end of a top-level
@@ -284,5 +291,35 @@ impl EmitterScopeStack {
         }
 
         NameLocation::Dynamic
+    }
+
+    pub fn current_depth(&mut self) -> EmitterScopeDepth {
+        EmitterScopeDepth {
+            index: self.scope_stack.len() - 1,
+        }
+    }
+
+    pub fn scope_note_indices_from_to(
+        &self,
+        from: &EmitterScopeDepth,
+        to: &EmitterScopeDepth,
+    ) -> Vec<Option<ScopeNoteIndex>> {
+        let mut indices = Vec::new();
+        for scope in self
+            .scope_stack
+            .iter()
+            .skip(from.index)
+            .take(to.index - from.index)
+        {
+            indices.push(scope.scope_note_index());
+        }
+        indices
+    }
+
+    pub fn get_scope_note_index_for(&self, index: EmitterScopeDepth) -> Option<ScopeNoteIndex> {
+        self.scope_stack
+            .get(index.index)
+            .expect("scope should exist")
+            .scope_note_index()
     }
 }
