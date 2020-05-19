@@ -11,6 +11,7 @@ function foreach_test_file(callback) {
   callback("benchmarks/largeArrayPropertyAndElements.js");
   callback("benchmarks/selfCyclicWeakMap.js");
   callback("benchmarks/pairCyclicWeakMap.js");
+  callback("benchmarks/deepWeakMap.js");
   callback("benchmarks/textNodes.js");
   callback("benchmarks/bigTextNodes.js");
   callback("benchmarks/events.js");
