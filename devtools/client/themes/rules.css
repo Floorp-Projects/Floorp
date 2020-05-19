@@ -750,6 +750,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  direction: ltr;
 }
 
 #print-simulation-toggle::before {
