@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.icons
+package mozilla.components.support.images
 
 import androidx.annotation.Px
 
 /**
- * Represents the desired size of an icon loaded by [BrowserIcons].
+ * Represents the desired size of an images to be loaded.
  *
  * @property targetSize The size the image will be displayed at, in pixels.
  * @property maxSize The maximum size of an image before it will be thrown out, in pixels.

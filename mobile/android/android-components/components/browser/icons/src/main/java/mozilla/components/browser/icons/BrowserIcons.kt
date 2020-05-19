@@ -23,9 +23,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mozilla.components.browser.icons.decoder.AndroidIconDecoder
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
-import mozilla.components.browser.icons.decoder.IconDecoder
 import mozilla.components.browser.icons.extension.IconMessageHandler
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.generator.IconGenerator
@@ -53,6 +51,9 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.memory.MemoryConsumer
+import mozilla.components.support.images.DesiredSize
+import mozilla.components.support.images.decoder.AndroidImageDecoder
+import mozilla.components.support.images.decoder.ImageDecoder
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
@@ -88,8 +89,8 @@ class BrowserIcons(
         HttpIconLoader(httpClient),
         DataUriIconLoader()
     ),
-    private val decoders: List<IconDecoder> = listOf(
-        AndroidIconDecoder(),
+    private val decoders: List<ImageDecoder> = listOf(
+        AndroidImageDecoder(),
         ICOIconDecoder()
     ),
     private val processors: List<IconProcessor> = listOf(
@@ -245,7 +246,7 @@ private fun load(
     context: Context,
     request: IconRequest,
     loaders: List<IconLoader>,
-    decoders: List<IconDecoder>,
+    decoders: List<ImageDecoder>,
     desiredSize: DesiredSize
 ): Pair<Icon, IconRequest.Resource>? {
     request.resources
@@ -269,7 +270,7 @@ private fun load(
 
 private fun decodeIconLoaderResult(
     result: IconLoader.Result,
-    decoders: List<IconDecoder>,
+    decoders: List<ImageDecoder>,
     desiredSize: DesiredSize
 ): Icon? = when (result) {
     IconLoader.Result.NoResult -> null
@@ -282,7 +283,7 @@ private fun decodeIconLoaderResult(
 
 private fun decodeBytes(
     data: ByteArray,
-    decoders: List<IconDecoder>,
+    decoders: List<ImageDecoder>,
     desiredSize: DesiredSize
 ): Bitmap? {
     decoders.forEach { decoder ->

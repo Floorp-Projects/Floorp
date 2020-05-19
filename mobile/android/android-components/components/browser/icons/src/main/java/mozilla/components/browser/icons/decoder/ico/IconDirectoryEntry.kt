@@ -7,8 +7,8 @@ package mozilla.components.browser.icons.decoder.ico
 import android.graphics.Bitmap
 import mozilla.components.browser.icons.decoder.HEADER_LENGTH_BYTES
 import mozilla.components.browser.icons.decoder.ICON_DIRECTORY_ENTRY_LENGTH_BYTES
-import mozilla.components.browser.icons.decoder.IconDecoder
 import mozilla.components.browser.icons.decoder.ZERO_BYTE
+import mozilla.components.support.images.decoder.ImageDecoder
 import mozilla.components.support.ktx.kotlin.containsAtOffset
 import mozilla.components.support.ktx.kotlin.toBitmap
 
@@ -294,7 +294,7 @@ internal fun createIconDirectoryEntry(
     }
 
     // Look for PNG magic numbers at the start of the payload.
-    val payloadIsPNG = data.containsAtOffset(payloadOffset, IconDecoder.Companion.ImageMagicNumbers.PNG.value)
+    val payloadIsPNG = data.containsAtOffset(payloadOffset, ImageDecoder.Companion.ImageMagicNumbers.PNG.value)
 
     return IconDirectoryEntry(
         imageWidth,

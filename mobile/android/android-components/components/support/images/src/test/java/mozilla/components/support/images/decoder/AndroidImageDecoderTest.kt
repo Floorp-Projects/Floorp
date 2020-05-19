@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.icons.decoder
+package mozilla.components.support.images.decoder
 
 import android.graphics.Bitmap
 import android.util.Size
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.icons.DesiredSize
+import mozilla.components.support.images.DesiredSize
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
@@ -21,11 +21,11 @@ import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.spy
 
 @RunWith(AndroidJUnit4::class)
-class AndroidIconDecoderTest {
+class AndroidImageDecoderTest {
 
     @Test
     fun `WHEN decoding PNG THEN returns non-null bitmap`() {
-        val decoder = AndroidIconDecoder()
+        val decoder = AndroidImageDecoder()
 
         val bitmap = decoder.decode(loadImage("png/mozac.png"), DesiredSize(
             targetSize = 32,
@@ -38,7 +38,7 @@ class AndroidIconDecoderTest {
 
     @Test
     fun `WHEN out of memory THEN returns null`() {
-        val decoder = spy(AndroidIconDecoder())
+        val decoder = spy(AndroidImageDecoder())
         doThrow(OutOfMemoryError()).`when`(decoder).decodeBitmap(any(), anyInt())
 
         val bitmap = decoder.decode(ByteArray(0), DesiredSize(
@@ -52,7 +52,7 @@ class AndroidIconDecoderTest {
 
     @Test
     fun `WHEN bitmap width equals zero THEN returns null`() {
-        val decoder = spy(AndroidIconDecoder())
+        val decoder = spy(AndroidImageDecoder())
         doReturn(Size(0, 512)).`when`(decoder).decodeBitmapBounds(any())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
@@ -66,7 +66,7 @@ class AndroidIconDecoderTest {
 
     @Test
     fun `WHEN bitmap height equals zero THEN returns null`() {
-        val decoder = spy(AndroidIconDecoder())
+        val decoder = spy(AndroidImageDecoder())
         doReturn(Size(512, 0)).`when`(decoder).decodeBitmapBounds(any())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
@@ -80,7 +80,7 @@ class AndroidIconDecoderTest {
 
     @Test
     fun `WHEN decoding null bitmap THEN returns null`() {
-        val decoder = spy(AndroidIconDecoder())
+        val decoder = spy(AndroidImageDecoder())
         doReturn(null).`when`(decoder).decodeBitmap(any(), anyInt())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
@@ -98,7 +98,7 @@ class AndroidIconDecoderTest {
         `when`(bitmap.width).thenReturn(50)
         `when`(bitmap.height).thenReturn(250)
 
-        val decoder = spy(AndroidIconDecoder())
+        val decoder = spy(AndroidImageDecoder())
         doReturn(bitmap).`when`(decoder).decodeBitmap(any(), anyInt())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
@@ -116,7 +116,7 @@ class AndroidIconDecoderTest {
         `when`(bitmap.width).thenReturn(250)
         `when`(bitmap.height).thenReturn(50)
 
-        val decoder = spy(AndroidIconDecoder())
+        val decoder = spy(AndroidImageDecoder())
         doReturn(bitmap).`when`(decoder).decodeBitmap(any(), anyInt())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
@@ -134,7 +134,7 @@ class AndroidIconDecoderTest {
         `when`(bitmap.width).thenReturn(2000)
         `when`(bitmap.height).thenReturn(250)
 
-        val decoder = spy(AndroidIconDecoder())
+        val decoder = spy(AndroidImageDecoder())
         doReturn(bitmap).`when`(decoder).decodeBitmap(any(), anyInt())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
@@ -152,7 +152,7 @@ class AndroidIconDecoderTest {
         `when`(bitmap.width).thenReturn(250)
         `when`(bitmap.height).thenReturn(2000)
 
-        val decoder = spy(AndroidIconDecoder())
+        val decoder = spy(AndroidImageDecoder())
         doReturn(bitmap).`when`(decoder).decodeBitmap(any(), anyInt())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(

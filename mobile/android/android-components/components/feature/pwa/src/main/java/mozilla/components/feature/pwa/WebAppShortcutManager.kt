@@ -22,7 +22,6 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import mozilla.components.browser.icons.BrowserIcons
-import mozilla.components.browser.icons.decoder.AndroidIconDecoder
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.extension.toIconRequest
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
@@ -41,6 +40,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PWA_LAUNCHER
 import mozilla.components.feature.pwa.ext.hasLargeIcons
 import mozilla.components.feature.pwa.ext.installableManifest
+import mozilla.components.support.images.decoder.AndroidImageDecoder
 
 private val pwaIconMemoryCache = IconMemoryCache()
 
@@ -263,7 +263,7 @@ private fun webAppIcons(
         DataUriIconLoader()
     ),
     decoders = listOf(
-        AndroidIconDecoder(),
+        AndroidImageDecoder(),
         ICOIconDecoder()
     ),
     processors = listOf(

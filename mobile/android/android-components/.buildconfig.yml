@@ -284,6 +284,10 @@ projects:
     path: components/support/base
     description: 'Base component containing building blocks for components.'
     publish: true
+  support-images:
+    path: components/support/images
+    description: 'A collection of helpers for handling images such as icons and thumbnails.'
+    publish: true
   support-ktx:
     path: components/support/ktx
     description: 'A set of Kotlin extensions.'

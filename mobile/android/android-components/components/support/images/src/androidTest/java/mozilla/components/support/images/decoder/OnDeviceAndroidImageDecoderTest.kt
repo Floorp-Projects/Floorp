@@ -2,17 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.icons.decoder
+package mozilla.components.support.images.decoder
 
-import mozilla.components.browser.icons.DesiredSize
+import mozilla.components.support.images.DesiredSize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
-class OnDeviceAndroidIconDecoderTest {
+class OnDeviceAndroidImageDecoderTest {
     @Test
     fun decodingPNG() {
-        val decoder = AndroidIconDecoder()
+        val decoder = AndroidImageDecoder()
 
         val bitmap = decoder.decode(loadImage("png/mozac.png"), DesiredSize(
             targetSize = 32,
@@ -27,7 +27,7 @@ class OnDeviceAndroidIconDecoderTest {
 
     @Test
     fun decodingGIF() {
-        val decoder = AndroidIconDecoder()
+        val decoder = AndroidImageDecoder()
 
         val bitmap = decoder.decode(loadImage("gif/cat.gif"), DesiredSize(
             targetSize = 64,
@@ -42,7 +42,7 @@ class OnDeviceAndroidIconDecoderTest {
 
     @Test
     fun decodingJPEG() {
-        val decoder = AndroidIconDecoder()
+        val decoder = AndroidImageDecoder()
 
         val bitmap = decoder.decode(loadImage("jpg/tonys.jpg"), DesiredSize(
             targetSize = 64,
@@ -57,7 +57,7 @@ class OnDeviceAndroidIconDecoderTest {
 
     @Test
     fun decodingBMP() {
-        val decoder = AndroidIconDecoder()
+        val decoder = AndroidImageDecoder()
 
         val bitmap = decoder.decode(loadImage("bmp/test.bmp"), DesiredSize(
             targetSize = 64,
@@ -72,7 +72,7 @@ class OnDeviceAndroidIconDecoderTest {
 
     @Test
     fun decodingWEBP() {
-        val decoder = AndroidIconDecoder()
+        val decoder = AndroidImageDecoder()
 
         val bitmap = decoder.decode(loadImage("webp/test.webp"), DesiredSize(
             targetSize = 64,

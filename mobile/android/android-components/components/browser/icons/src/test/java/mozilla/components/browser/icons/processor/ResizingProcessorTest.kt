@@ -9,9 +9,9 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.DisplayMetrics
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.support.images.DesiredSize
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock

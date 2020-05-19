@@ -7,9 +7,9 @@ package mozilla.components.browser.icons.processor
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.support.images.DesiredSize
 import kotlin.math.roundToInt
 
 /**

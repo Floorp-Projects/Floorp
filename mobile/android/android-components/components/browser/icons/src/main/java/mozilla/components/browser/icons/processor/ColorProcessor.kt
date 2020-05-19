@@ -7,9 +7,9 @@ package mozilla.components.browser.icons.processor
 import android.content.Context
 import android.graphics.Color
 import androidx.palette.graphics.Palette
-import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.support.images.DesiredSize
 
 /**
  * [IconProcessor] implementation to extract the dominant color from the icon.
