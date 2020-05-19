@@ -140,14 +140,14 @@ import java.util.Map.Entry;
         private int mRelativeImportance = 0;
 
         protected InstanceInfo(@NonNull final ServiceAllocator allocator, @NonNull final GeckoProcessType type,
-                               @NonNull final PriorityLevel priority) {
+                               @NonNull final PriorityLevel initialPriority) {
             mAllocator = allocator;
             mType = type;
             mId = mAllocator.allocate(type);
             mBindings = new EnumMap<PriorityLevel, Binding>(PriorityLevel.class);
             mBindDelegate = getBindServiceDelegate();
 
-            mCurrentPriority = priority;
+            mCurrentPriority = initialPriority;
         }
 
         private BindServiceDelegate getBindServiceDelegate() {
@@ -163,6 +163,10 @@ import java.util.Map.Entry;
         public PriorityLevel getPriorityLevel() {
             XPCOMEventTarget.assertOnLauncherThread();
             return mCurrentPriority;
+        }
+
+        public boolean setPriorityLevel(@NonNull final PriorityLevel newPriority) {
+            return setPriorityLevel(newPriority, 0);
         }
 
         public boolean setPriorityLevel(@NonNull final PriorityLevel newPriority,
