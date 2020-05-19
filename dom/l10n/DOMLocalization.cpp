@@ -131,8 +131,8 @@ void DOMLocalization::SetAttributes(
   }
 }
 
-void DOMLocalization::GetAttributes(JSContext* aCx, Element& aElement,
-                                    L10nKey& aResult, ErrorResult& aRv) {
+void DOMLocalization::GetAttributes(Element& aElement, L10nKey& aResult,
+                                    ErrorResult& aRv) {
   nsAutoString l10nId;
   nsAutoString l10nArgs;
 
@@ -141,7 +141,7 @@ void DOMLocalization::GetAttributes(JSContext* aCx, Element& aElement,
   }
 
   if (aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, l10nArgs)) {
-    ConvertStringToL10nArgs(aCx, l10nArgs, aResult.mArgs.SetValue(), aRv);
+    ConvertStringToL10nArgs(l10nArgs, aResult.mArgs.SetValue(), aRv);
   }
 }
 
@@ -299,7 +299,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
       return nullptr;
     }
 
-    GetAttributes(cx, *domElement, *key, aRv);
+    GetAttributes(*domElement, *key, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -568,8 +568,7 @@ void DOMLocalization::ReportL10nOverlaysErrors(
   }
 }
 
-void DOMLocalization::ConvertStringToL10nArgs(JSContext* aCx,
-                                              const nsString& aInput,
+void DOMLocalization::ConvertStringToL10nArgs(const nsString& aInput,
                                               intl::L10nArgs& aRetVal,
                                               ErrorResult& aRv) {
   // This method uses a temporary dictionary to automate
