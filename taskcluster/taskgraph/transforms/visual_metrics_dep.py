@@ -5,8 +5,9 @@
 These transformations take a task description for a visual metrics task and
 add the necessary environment variables to run on the given inputs.
 """
-
 from __future__ import absolute_import, print_function, unicode_literals
+import os
+
 from taskgraph.transforms.base import TransformSequence
 
 
@@ -33,7 +34,11 @@ def run_visual_metrics(config, jobs):
 
             # Store the platform name so we can use it to calculate
             # the similarity metric against other tasks
-            job['worker'].setdefault('env', {})['TC_PLATFORM'] = platform
+            job['worker'].setdefault('env', {})['TC_LABEL'] = dep_job.label
+
+            # Setting the `TC_GROUP_ID` environment variable to a task group ID
+            # is a simple way to compare videos to a specific task group
+            job['worker']['env']['TC_GROUP_ID'] = os.getenv("TC_GROUP_ID", "")
 
             # vismet runs on Linux but we want to have it displayed
             # alongside the job it was triggered by to make it easier for
