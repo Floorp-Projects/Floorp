@@ -36,7 +36,7 @@ extern crate xpcom;
 
 mod area;
 mod error;
-mod op;
+mod punt;
 mod store;
 
 use nserror::{nsresult, NS_OK};
