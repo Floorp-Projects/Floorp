@@ -14,6 +14,7 @@ var SpiderMonkey = class extends Host {
   end_turn() {
     drainJobQueue();
     clearKeptObjects();
+    maybegc();
   }
 
   suspend(duration) {

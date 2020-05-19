@@ -470,6 +470,13 @@ static bool ReturnStringCopy(JSContext* cx, CallArgs& args,
   return true;
 }
 
+static bool MaybeGC(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  JS_MaybeGC(cx);
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool GC(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -6226,6 +6233,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "minorgc([aboutToOverflow])",
 "  Run a minor collector on the Nursery. When aboutToOverflow is true, marks\n"
 "  the store buffer as about-to-overflow before collecting."),
+
+    JS_FN_HELP("maybegc", ::MaybeGC, 0, 0,
+"maybegc()",
+"  Hint to the engine that now is an ok time to run the garbage collector.\n"),
 
     JS_FN_HELP("gcparam", GCParameter, 2, 0,
 "gcparam(name [, value])",
