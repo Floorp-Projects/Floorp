@@ -35,8 +35,8 @@ static unsigned int HexStrToInt(NSString* str) {
 }
 - (id)initWithPicker:(nsColorPicker*)aPicker;
 - (void)open:(NSColor*)aInitialColor title:(NSString*)aTitle;
-- (void)retarget:(nsColorPicker*)aPicker;
 - (void)colorChanged:(NSColorPanel*)aPanel;
+- (void)windowWillClose:(NSNotification*)aNotification;
 @end
 
 @implementation NSColorPanelWrapper
@@ -65,11 +65,6 @@ static unsigned int HexStrToInt(NSString* str) {
   mColorPicker->Done();
 }
 
-- (void)retarget:(nsColorPicker*)aPicker {
-  mColorPicker->DoneWithRetarget();
-  mColorPicker = aPicker;
-}
-
 - (void)dealloc {
   [mColorPanel setTarget:nil];
   [mColorPanel setAction:nil];
@@ -84,8 +79,6 @@ static unsigned int HexStrToInt(NSString* str) {
 
 NS_IMPL_ISUPPORTS(nsColorPicker, nsIColorPicker)
 
-NSColorPanelWrapper* nsColorPicker::sColorPanelWrapper = nullptr;
-
 nsColorPicker::~nsColorPicker() {}
 
 NS_IMETHODIMP
@@ -94,14 +87,7 @@ nsColorPicker::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
   MOZ_ASSERT(NS_IsMainThread(), "Color pickers can only be opened from main thread currently");
   mTitle = aTitle;
   mColor = aInitialColor;
-
-  if (sColorPanelWrapper) {
-    // Update current wrapper to target the new input instead
-    [sColorPanelWrapper retarget:this];
-  } else {
-    // Create a brand new color panel wrapper
-    sColorPanelWrapper = [[NSColorPanelWrapper alloc] initWithPicker:this];
-  }
+  mColorPanelWrapper = [[NSColorPanelWrapper alloc] initWithPicker:this];
   return NS_OK;
 }
 
@@ -137,7 +123,7 @@ nsColorPicker::Open(nsIColorPickerShownCallback* aCallback) {
   MOZ_ASSERT(aCallback);
   mCallback = aCallback;
 
-  [sColorPanelWrapper open:GetNSColorFromHexString(mColor) title:nsCocoaUtils::ToNSString(mTitle)];
+  [mColorPanelWrapper open:GetNSColorFromHexString(mColor) title:nsCocoaUtils::ToNSString(mTitle)];
 
   NS_ADDREF_THIS();
 
@@ -149,14 +135,10 @@ void nsColorPicker::Update(NSColor* aColor) {
   mCallback->Update(mColor);
 }
 
-void nsColorPicker::DoneWithRetarget() {
+void nsColorPicker::Done() {
+  [mColorPanelWrapper release];
+  mColorPanelWrapper = nullptr;
   mCallback->Done(EmptyString());
   mCallback = nullptr;
   NS_RELEASE_THIS();
-}
-
-void nsColorPicker::Done() {
-  [sColorPanelWrapper release];
-  sColorPanelWrapper = nullptr;
-  DoneWithRetarget();
 }
