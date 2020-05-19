@@ -2104,7 +2104,7 @@ void nsIFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   }
 }
 
-AutoTArray<nsIFrame::ChildList, 4> nsIFrame::GetCrossDocChildLists() {
+AutoTArray<nsIFrame::ChildList, 4> nsIFrame::CrossDocChildLists() {
   AutoTArray<ChildList, 4> childLists;
   nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(this);
   if (subdocumentFrame) {
@@ -7512,7 +7512,7 @@ void nsIFrame::InvalidateFrameSubtree(bool aRebuildDisplayItems /* = true */) {
 
   AddStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT);
 
-  for (const auto& childList : GetCrossDocChildLists()) {
+  for (const auto& childList : CrossDocChildLists()) {
     for (nsIFrame* child : childList.mList) {
       // Don't explicitly rebuild display items for our descendants,
       // since we should be marked and it implicitly includes all
@@ -7524,7 +7524,7 @@ void nsIFrame::InvalidateFrameSubtree(bool aRebuildDisplayItems /* = true */) {
 
 void nsIFrame::ClearInvalidationStateBits() {
   if (HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-    for (const auto& childList : GetCrossDocChildLists()) {
+    for (const auto& childList : CrossDocChildLists()) {
       for (nsIFrame* child : childList.mList) {
         child->ClearInvalidationStateBits();
       }
@@ -11123,7 +11123,7 @@ void nsIFrame::AddInPopupStateBitToDescendants(nsIFrame* aFrame) {
 
   aFrame->AddStateBits(NS_FRAME_IN_POPUP);
 
-  for (const auto& childList : aFrame->GetCrossDocChildLists()) {
+  for (const auto& childList : aFrame->CrossDocChildLists()) {
     for (nsIFrame* child : childList.mList) {
       AddInPopupStateBitToDescendants(child);
     }
@@ -11144,7 +11144,7 @@ void nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame) {
     // out the increment in AddInPopupStateBitToDescendants above.
     aFrame->DecApproximateVisibleCount();
   }
-  for (const auto& childList : aFrame->GetCrossDocChildLists()) {
+  for (const auto& childList : aFrame->CrossDocChildLists()) {
     for (nsIFrame* child : childList.mList) {
       RemoveInPopupStateBitFromDescendants(child);
     }
