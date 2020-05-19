@@ -760,6 +760,19 @@ bool WarpCacheIRTranspiler::emitInt32NegationResult(Int32OperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitDoubleNegationResult(NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* constNegOne = MConstant::New(alloc(), DoubleValue(-1.0));
+  add(constNegOne);
+
+  auto* ins = MMul::New(alloc(), input, constNegOne, MIRType::Double);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitInt32NotResult(Int32OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
