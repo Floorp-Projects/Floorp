@@ -5941,16 +5941,26 @@ impl PicturePrimitive {
                 false
             };
 
+            let surface_to_parent_transform = frame_context.spatial_tree
+                .get_relative_transform(surface_spatial_node_index, parent_raster_node_index);
+
             // Check if there is perspective or if an SVG filter is applied, and thus whether a new
             // rasterization root should be established.
-            let establishes_raster_root = has_svg_filter || frame_context.spatial_tree
-                .get_relative_transform(surface_spatial_node_index, parent_raster_node_index)
-                .is_perspective();
+            let establishes_raster_root = has_svg_filter || surface_to_parent_transform.is_perspective();
 
-            let raster_spatial_node_index = if establishes_raster_root {
-                surface_spatial_node_index
+            let (raster_spatial_node_index, device_pixel_scale) = if establishes_raster_root {
+                // If a raster root is established, this surface should be scaled based on the scale factors of the surface raster to parent raster transform.
+                // This scaling helps ensure that the content in this surface does not become blurry or pixelated when composited in the parent surface.
+                let scale_factors = surface_to_parent_transform.scale_factors();
+
+                // Pick the largest scale factor of the transform for the scaling factor.
+                // Currently, we ensure that the scaling factor is >= 1.0 as a smaller scale factor can result in blurry output.
+                let scaling_factor = scale_factors.0.max(scale_factors.1).max(1.0);
+
+                let device_pixel_scale = frame_context.global_device_pixel_scale * Scale::new(scaling_factor);
+                (surface_spatial_node_index, device_pixel_scale)
             } else {
-                parent_raster_node_index
+                (parent_raster_node_index, frame_context.global_device_pixel_scale)
             };
 
             let scale_factors = frame_context
@@ -6002,7 +6012,7 @@ impl PicturePrimitive {
                 inflation_factor,
                 frame_context.global_screen_world_rect,
                 &frame_context.spatial_tree,
-                frame_context.global_device_pixel_scale,
+                device_pixel_scale,
                 scale_factors,
             );
 
