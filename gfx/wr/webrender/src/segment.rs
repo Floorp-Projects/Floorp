@@ -49,9 +49,8 @@
 //! [clip.rs]: ../clip/index.html
 //!
 
-use api::{BorderRadius, ClipMode};
+use api::{BorderRadius, ClipMode, EdgeAaSegmentMask};
 use api::units::*;
-use crate::prim_store::EdgeAaSegmentMask;
 use std::{cmp, usize};
 use crate::util::{extract_inner_rect_safe, RectHelpers};
 use smallvec::SmallVec;
@@ -680,9 +679,8 @@ fn emit_segment_if_needed(
 
 #[cfg(test)]
 mod test {
-    use api::{BorderRadius, ClipMode};
+    use api::{BorderRadius, ClipMode, EdgeAaSegmentMask};
     use api::units::{LayoutPoint, LayoutRect, LayoutSize};
-    use crate::prim_store::EdgeAaSegmentMask;
     use super::{Segment, SegmentBuilder};
     use std::cmp;
 

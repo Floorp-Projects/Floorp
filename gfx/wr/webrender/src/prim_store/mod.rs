@@ -6,7 +6,8 @@ use api::{BorderRadius, ClipMode, ColorF, ColorU};
 use api::{ImageRendering, RepeatMode, PrimitiveFlags};
 use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
 use api::{BoxShadowClipMode, LineStyle, LineOrientation, BorderStyle};
-use api::{PrimitiveKeyKind, ExtendMode};
+use api::{PrimitiveKeyKind, ExtendMode, EdgeAaSegmentMask};
+use api::image_tiling::{self, Repetition};
 use api::units::*;
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::border::BorderSegmentCacheKey;
@@ -23,7 +24,6 @@ use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
 use crate::glyph_rasterizer::GlyphKey;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
 use crate::gpu_types::{BrushFlags};
-use crate::image::{Repetition};
 use crate::intern;
 use crate::internal_types::PlaneSplitAnchor;
 use malloc_size_of::MallocSizeOf;
@@ -946,24 +946,6 @@ pub struct CachedGradientSegment {
 pub struct BorderSegmentInfo {
     pub local_task_size: LayoutSize,
     pub cache_key: BorderSegmentCacheKey,
-}
-
-bitflags! {
-    /// Each bit of the edge AA mask is:
-    /// 0, when the edge of the primitive needs to be considered for AA
-    /// 1, when the edge of the segment needs to be considered for AA
-    ///
-    /// *Note*: the bit values have to match the shader logic in
-    /// `write_transform_vertex()` function.
-    #[cfg_attr(feature = "capture", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
-    #[derive(MallocSizeOf)]
-    pub struct EdgeAaSegmentMask: u8 {
-        const LEFT = 0x1;
-        const TOP = 0x2;
-        const RIGHT = 0x4;
-        const BOTTOM = 0x8;
-    }
 }
 
 /// Represents the visibility state of a segment (wrt clip masks).
@@ -2445,7 +2427,7 @@ impl PrimitiveStore {
                         // have it in the shader.
                         common_data.may_need_repetition = false;
 
-                        let repetitions = crate::image::repetitions(
+                        let repetitions = image_tiling::repetitions(
                             &common_data.prim_rect,
                             &visible_rect,
                             stride,
@@ -2459,7 +2441,7 @@ impl PrimitiveStore {
                                 size: image_data.stretch_size,
                             };
 
-                            let tiles = crate::image::tiles(
+                            let tiles = image_tiling::tiles(
                                 &layout_image_rect,
                                 &visible_rect,
                                 &active_rect,
@@ -3731,7 +3713,7 @@ fn decompose_repeated_primitive(
     );
     let stride = *stretch_size + *tile_spacing;
 
-    let repetitions = crate::image::repetitions(prim_local_rect, &visible_rect, stride);
+    let repetitions = image_tiling::repetitions(prim_local_rect, &visible_rect, stride);
     for Repetition { origin, .. } in repetitions {
         let mut handle = GpuCacheHandle::new();
         let rect = LayoutRect {
