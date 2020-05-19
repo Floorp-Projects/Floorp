@@ -111,7 +111,8 @@ LoadInfo::LoadInfo(
       mAllowDeprecatedSystemRequests(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
-      mIsFromProcessingFrameAttributes(false) {
+      mIsFromProcessingFrameAttributes(false),
+      mLoadingEmbedderPolicy(nsILoadInfo::EMBEDDER_POLICY_NULL) {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
 
@@ -236,6 +237,10 @@ LoadInfo::LoadInfo(
     }
 
     mInnerWindowID = aLoadingContext->OwnerDoc()->InnerWindowID();
+    RefPtr<WindowContext> ctx = WindowContext::GetById(mInnerWindowID);
+    if (ctx) {
+      mLoadingEmbedderPolicy = ctx->GetEmbedderPolicy();
+    }
     mAncestorPrincipals =
         aLoadingContext->OwnerDoc()->AncestorPrincipals().Clone();
     mAncestorOuterWindowIDs =
@@ -388,7 +393,8 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mAllowDeprecatedSystemRequests(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
-      mIsFromProcessingFrameAttributes(false) {
+      mIsFromProcessingFrameAttributes(false),
+      mLoadingEmbedderPolicy(nsILoadInfo::EMBEDDER_POLICY_NULL) {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
   MOZ_ASSERT(aOuterWindow);
@@ -494,7 +500,8 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mAllowDeprecatedSystemRequests(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
-      mIsFromProcessingFrameAttributes(false) {
+      mIsFromProcessingFrameAttributes(false),
+      mLoadingEmbedderPolicy(nsILoadInfo::EMBEDDER_POLICY_NULL) {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
   MOZ_ASSERT(aBrowsingContext);
@@ -581,7 +588,8 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mAllowDeprecatedSystemRequests(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
-      mIsFromProcessingFrameAttributes(false) {
+      mIsFromProcessingFrameAttributes(false),
+      mLoadingEmbedderPolicy(nsILoadInfo::EMBEDDER_POLICY_NULL) {
   RefPtr<WindowGlobalParent> parentWGP =
       aBrowsingContext->GetParentWindowContext();
   CanonicalBrowsingContext* parentBC = parentWGP->BrowsingContext();
@@ -715,6 +723,11 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
     MOZ_ASSERT(mOriginAttributes.mPrivateBrowsingId == 0,
                "chrome docshell shouldn't have mPrivateBrowsingId set.");
   }
+
+  RefPtr<WindowContext> ctx = WindowContext::GetById(mInnerWindowID);
+  if (ctx) {
+    mLoadingEmbedderPolicy = ctx->GetEmbedderPolicy();
+  }
 }
 
 LoadInfo::LoadInfo(const LoadInfo& rhs)
@@ -788,7 +801,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
       mParserCreatedScript(rhs.mParserCreatedScript),
       mHasStoragePermission(rhs.mHasStoragePermission),
-      mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes) {}
+      mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
+      mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy) {}
 
 LoadInfo::LoadInfo(
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
@@ -828,7 +842,8 @@ LoadInfo::LoadInfo(
     uint32_t aHttpsOnlyStatus, bool aHasValidUserGestureActivation,
     bool aAllowDeprecatedSystemRequests, bool aParserCreatedScript,
     bool aHasStoragePermission, uint32_t aRequestBlockingReason,
-    nsINode* aLoadingContext)
+    nsINode* aLoadingContext,
+    nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
@@ -890,7 +905,8 @@ LoadInfo::LoadInfo(
       mAllowDeprecatedSystemRequests(aAllowDeprecatedSystemRequests),
       mParserCreatedScript(aParserCreatedScript),
       mHasStoragePermission(aHasStoragePermission),
-      mIsFromProcessingFrameAttributes(false) {
+      mIsFromProcessingFrameAttributes(false),
+      mLoadingEmbedderPolicy(aLoadingEmbedderPolicy) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
              aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -1959,6 +1975,20 @@ LoadInfo::SetCspEventListener(nsICSPEventListener* aCSPEventListener) {
 NS_IMETHODIMP
 LoadInfo::GetInternalContentPolicyType(nsContentPolicyType* aResult) {
   *aResult = mInternalContentPolicyType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetLoadingEmbedderPolicy(
+    nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) {
+  *aOutPolicy = mLoadingEmbedderPolicy;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetLoadingEmbedderPolicy(
+    nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) {
+  mLoadingEmbedderPolicy = aPolicy;
   return NS_OK;
 }
 
