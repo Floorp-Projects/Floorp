@@ -627,20 +627,14 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       case eCSSProperty_offset_anchor: {
         MOZ_ASSERT(animationStorageData.mTransformData);
 
-        gfx::Matrix4x4 transform = ServoAnimationValueToMatrix4x4(
-            animationValues, *animationStorageData.mTransformData,
-            animationStorageData.mCachedMotionPath);
-        gfx::Matrix4x4 frameTransform = transform;
-        // If the parent has perspective transform, then the offset into
-        // reference frame coordinates is already on this transform. If not,
-        // then we need to ask for it to be added here.
         const TransformData& transformData =
             *animationStorageData.mTransformData;
-        if (!transformData.hasPerspectiveParent()) {
-          nsLayoutUtils::PostTranslate(transform, transformData.origin(),
-                                       transformData.appUnitsPerDevPixel(),
-                                       true);
-        }
+        MOZ_ASSERT(transformData.origin() == nsPoint());
+
+        gfx::Matrix4x4 transform = ServoAnimationValueToMatrix4x4(
+            animationValues, transformData,
+            animationStorageData.mCachedMotionPath);
+        gfx::Matrix4x4 frameTransform = transform;
 
         transform.PostScale(transformData.inheritedXScale(),
                             transformData.inheritedYScale(), 1);
