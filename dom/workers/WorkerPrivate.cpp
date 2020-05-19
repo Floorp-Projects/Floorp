@@ -5232,20 +5232,19 @@ bool WorkerPrivate::CrossOriginIsolated() const {
          nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
 }
 
-Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> WorkerPrivate::GetEmbedderPolicy()
+nsILoadInfo::CrossOriginEmbedderPolicy WorkerPrivate::GetEmbedderPolicy()
     const {
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
-    return Some(nsILoadInfo::EMBEDDER_POLICY_NULL);
+    return nsILoadInfo::EMBEDDER_POLICY_NULL;
   }
 
-  return mEmbedderPolicy;
+  return mEmbedderPolicy.valueOr(nsILoadInfo::EMBEDDER_POLICY_NULL);
 }
 
 Result<Ok, nsresult> WorkerPrivate::SetEmbedderPolicy(
     nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEmbedderPolicy.isNothing());
 
   if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
     return Ok();
@@ -5255,10 +5254,10 @@ Result<Ok, nsresult> WorkerPrivate::SetEmbedderPolicy(
   // corp_reqired. But if owner's embedder policy is null, aPolicy needs not
   // match owner's value.
   // https://wicg.github.io/cross-origin-embedder-policy/#cascade-vs-require
-  auto ownerEmbedderPolicy = GetOwnerEmbedderPolicy();
-  if (ownerEmbedderPolicy.valueOr(nsILoadInfo::EMBEDDER_POLICY_NULL) !=
+  EnsureOwnerEmbedderPolicy();
+  if (mOwnerEmbedderPolicy.valueOr(nsILoadInfo::EMBEDDER_POLICY_NULL) !=
       nsILoadInfo::EMBEDDER_POLICY_NULL) {
-    if (ownerEmbedderPolicy.valueOr(aPolicy) != aPolicy) {
+    if (mOwnerEmbedderPolicy.valueOr(aPolicy) != aPolicy) {
       return Err(NS_ERROR_BLOCKED_BY_POLICY);
     }
   }
@@ -5272,9 +5271,9 @@ void WorkerPrivate::InheritOwnerEmbedderPolicyOrNull(nsIRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequest);
 
-  auto coep = GetOwnerEmbedderPolicy();
+  EnsureOwnerEmbedderPolicy();
 
-  if (coep.isSome()) {
+  if (mOwnerEmbedderPolicy.isSome()) {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
     MOZ_ASSERT(channel);
 
@@ -5289,7 +5288,8 @@ void WorkerPrivate::InheritOwnerEmbedderPolicyOrNull(nsIRequest* aRequest) {
     MOZ_RELEASE_ASSERT(isLocalScriptURI);
   }
 
-  mEmbedderPolicy.emplace(coep.valueOr(nsILoadInfo::EMBEDDER_POLICY_NULL));
+  mEmbedderPolicy.emplace(
+      mOwnerEmbedderPolicy.valueOr(nsILoadInfo::EMBEDDER_POLICY_NULL));
 }
 
 bool WorkerPrivate::MatchEmbedderPolicy(
@@ -5303,19 +5303,25 @@ bool WorkerPrivate::MatchEmbedderPolicy(
   return mEmbedderPolicy.value() == aPolicy;
 }
 
-Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>
-WorkerPrivate::GetOwnerEmbedderPolicy() const {
+nsILoadInfo::CrossOriginEmbedderPolicy WorkerPrivate::GetOwnerEmbedderPolicy()
+    const {
+  if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
+    return nsILoadInfo::EMBEDDER_POLICY_NULL;
+  }
+
+  return mOwnerEmbedderPolicy.valueOr(nsILoadInfo::EMBEDDER_POLICY_NULL);
+}
+
+void WorkerPrivate::EnsureOwnerEmbedderPolicy() {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mOwnerEmbedderPolicy.isNothing());
 
   if (GetParent()) {
-    return GetParent()->GetEmbedderPolicy();
+    mOwnerEmbedderPolicy.emplace(GetParent()->GetEmbedderPolicy());
+  } else if (GetWindow() && GetWindow()->GetWindowContext()) {
+    mOwnerEmbedderPolicy.emplace(
+        GetWindow()->GetWindowContext()->GetEmbedderPolicy());
   }
-
-  if (GetWindow() && GetWindow()->GetWindowContext()) {
-    return Some(GetWindow()->GetWindowContext()->GetEmbedderPolicy());
-  }
-
-  return Nothing();
 }
 
 NS_IMPL_ADDREF(WorkerPrivate::EventTarget)
