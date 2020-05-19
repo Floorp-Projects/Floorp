@@ -17,7 +17,6 @@ const PAGE_2 =
 add_task(async function setup() {
   await pushPrefs(
     ["dom.ipc.processCount", 1],
-    ["toolkit.cosmeticAnimations.enabled", false],
     ["browser.sessionstore.restore_on_demand", false]
   );
 });
