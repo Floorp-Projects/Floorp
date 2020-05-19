@@ -9,6 +9,7 @@
 #include "DecoderTraits.h"
 #include "HLSDemuxer.h"
 #include "HLSUtils.h"
+#include "JavaBuiltins.h"
 #include "MediaContainerType.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
@@ -17,6 +18,8 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
+#include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
@@ -34,6 +37,7 @@ class HLSResourceCallbacksSupport
 
   explicit HLSResourceCallbacksSupport(HLSDecoder* aResource);
   void Detach();
+  void OnLoad(jni::String::Param aUrl);
   void OnDataArrived();
   void OnError(int aErrorCode);
 
@@ -52,6 +56,21 @@ void HLSResourceCallbacksSupport::Detach() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
   mDecoder = nullptr;
+}
+
+void HLSResourceCallbacksSupport::OnLoad(jni::String::Param aUrl) {
+  MutexAutoLock lock(mMutex);
+  if (!mDecoder) {
+    return;
+  }
+  RefPtr<HLSResourceCallbacksSupport> self = this;
+  jni::String::GlobalRef url = std::move(aUrl);
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "HLSResourceCallbacksSupport::OnLoad", [self, url]() -> void {
+        if (self->mDecoder) {
+          self->mDecoder->NotifyLoad(url->ToCString());
+        }
+      }));
 }
 
 void HLSResourceCallbacksSupport::OnDataArrived() {
@@ -174,8 +193,7 @@ void HLSDecoder::AddSizeOfResources(ResourceSizes* aSizes) {
 
 already_AddRefed<nsIPrincipal> HLSDecoder::GetCurrentPrincipal() {
   MOZ_ASSERT(NS_IsMainThread());
-  // Bug 1478843
-  return nullptr;
+  return do_AddRef(mContentPrincipal);
 }
 
 bool HLSDecoder::HadCrossOriginRedirects() {
@@ -231,6 +249,63 @@ void HLSDecoder::NotifyDataArrived() {
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   NotifyReaderDataArrived();
   GetOwner()->DownloadProgressed();
+}
+
+void HLSDecoder::NotifyLoad(nsCString aMediaUrl) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  UpdateCurrentPrincipal(aMediaUrl);
+}
+
+// Should be called when the decoder loads media from a URL to ensure the
+// principal of the media element is appropriately set for CORS.
+void HLSDecoder::UpdateCurrentPrincipal(nsCString aMediaUrl) {
+  nsCOMPtr<nsIPrincipal> principal = GetContentPrincipal(aMediaUrl);
+  MOZ_DIAGNOSTIC_ASSERT(principal);
+
+  // Check the subsumption of old and new principals. Should be either
+  // equal or disjoint.
+  if (!mContentPrincipal) {
+    mContentPrincipal = principal;
+  } else if (principal->Equals(mContentPrincipal)) {
+    return;
+  } else if (!principal->Subsumes(mContentPrincipal) &&
+             !mContentPrincipal->Subsumes(principal)) {
+    // Principals are disjoint -- no access.
+    mContentPrincipal = NullPrincipal::Create(OriginAttributes());
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(false, "non-equal principals should be disjoint");
+    mContentPrincipal = nullptr;
+  }
+  MediaDecoder::NotifyPrincipalChanged();
+}
+
+already_AddRefed<nsIPrincipal> HLSDecoder::GetContentPrincipal(
+    nsCString aMediaUrl) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aMediaUrl.Data());
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  RefPtr<dom::HTMLMediaElement> element = GetOwner()->GetMediaElement();
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  nsSecurityFlags securityFlags =
+      element->ShouldCheckAllowOrigin()
+          ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
+          : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+  if (element->GetCORSMode() == CORS_USE_CREDENTIALS) {
+    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+  }
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), uri,
+                     static_cast<dom::Element*>(element), securityFlags,
+                     nsIContentPolicy::TYPE_INTERNAL_VIDEO);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  nsCOMPtr<nsIPrincipal> principal;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  if (!secMan) {
+    return nullptr;
+  }
+  secMan->GetChannelResultPrincipal(channel, getter_AddRefs(principal));
+  return principal.forget();
 }
 
 }  // namespace mozilla
