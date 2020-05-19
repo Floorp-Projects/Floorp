@@ -8430,6 +8430,18 @@ void CodeGenerator::visitPowD(LPowD* ins) {
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
 
+void CodeGenerator::visitSqrtD(LSqrtD* ins) {
+  FloatRegister input = ToFloatRegister(ins->input());
+  FloatRegister output = ToFloatRegister(ins->output());
+  masm.sqrtDouble(input, output);
+}
+
+void CodeGenerator::visitSqrtF(LSqrtF* ins) {
+  FloatRegister input = ToFloatRegister(ins->input());
+  FloatRegister output = ToFloatRegister(ins->output());
+  masm.sqrtFloat32(input, output);
+}
+
 void CodeGenerator::visitSignI(LSignI* ins) {
   Register input = ToRegister(ins->input());
   Register output = ToRegister(ins->output());
