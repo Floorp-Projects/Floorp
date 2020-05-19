@@ -8,37 +8,15 @@
 
 %{C++
 #include "cert.h"
-#define NS_CLIENTAUTHREMEMBERSERVICE_CONTRACTID "@mozilla.org/security/clientAuthRememberService;1"
+#define NS_CLIENTAUTHREMEMBER_CONTRACTID "@mozilla.org/security/clientAuthRemember;1"
 %}
 
 [ptr] native CERTCertificatePtr(CERTCertificate);
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 
-[scriptable, uuid(e92825af-7e81-4b5c-b412-8e1dd36d14fe)]
-interface nsIClientAuthRememberRecord : nsISupports
-{
-
-  readonly attribute ACString asciiHost;
-
-  readonly attribute ACString fingerprint;
-
-  readonly attribute ACString dbKey;
-
-  readonly attribute ACString entryKey;
-
-};
-
-
 [scriptable, uuid(1dbc6eb6-0972-4bdb-9dc4-acd0abf72369)]
-interface nsIClientAuthRememberService : nsISupports
+interface nsIClientAuthRemember : nsISupports
 {
-
-  [must_use]
-  void forgetRememberedDecision(in ACString key);
-
-
-  [must_use]
-  Array<nsIClientAuthRememberRecord> getDecisions();
 
   [must_use, noscript]
   void rememberDecision(in ACString aHostName,
