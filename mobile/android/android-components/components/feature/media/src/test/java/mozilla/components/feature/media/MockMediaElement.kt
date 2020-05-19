@@ -13,7 +13,8 @@ fun createMockMediaElement(
     id: String = UUID.randomUUID().toString(),
     state: Media.State = Media.State.PLAYING,
     metadata: Media.Metadata = Media.Metadata(),
-    volume: Media.Volume = Media.Volume()
+    volume: Media.Volume = Media.Volume(),
+    fullscreenInfo: Boolean = false
 ): MediaState.Element {
     return MediaState.Element(
         id = id,
@@ -21,6 +22,7 @@ fun createMockMediaElement(
         playbackState = Media.PlaybackState.PLAYING,
         controller = mock(),
         metadata = metadata,
-        volume = volume
+        volume = volume,
+        fullscreen = fullscreenInfo
     )
 }

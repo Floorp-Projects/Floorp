@@ -530,6 +530,7 @@ class EngineObserverTest {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
             override val volume: Volume = mock()
+            override val fullscreen: Boolean = false
         })
         observer.onMediaAdded(media1)
 
@@ -542,6 +543,7 @@ class EngineObserverTest {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
             override val volume: Volume = mock()
+            override val fullscreen: Boolean = false
         })
         observer.onMediaAdded(media2)
 
@@ -554,6 +556,7 @@ class EngineObserverTest {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
             override val volume: Volume = mock()
+            override val fullscreen: Boolean = false
         })
         observer.onMediaAdded(media3)
 
@@ -578,6 +581,7 @@ class EngineObserverTest {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
             override val volume: Volume = mock()
+            override val fullscreen: Boolean = false
         })
         observer.onMediaAdded(media1)
 
@@ -585,6 +589,7 @@ class EngineObserverTest {
             override val controller: Controller = mock()
             override val metadata: Metadata = mock()
             override val volume: Volume = mock()
+            override val fullscreen: Boolean = false
         })
         observer.onMediaAdded(media2)
 

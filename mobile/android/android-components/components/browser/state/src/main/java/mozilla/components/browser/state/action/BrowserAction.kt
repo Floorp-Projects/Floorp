@@ -532,6 +532,16 @@ sealed class MediaAction : BrowserAction() {
     ) : MediaAction()
 
     /**
+     * Updates the [Media.fullscreen] for the [MediaState.Element] with id [mediaId] owned by the tab
+     * with id [tabId].
+     */
+    data class UpdateMediaFullscreenAction(
+        val tabId: String,
+        val mediaId: String,
+        val fullScreen: Boolean
+    ) : MediaAction()
+
+    /**
      * Updates [MediaState.Aggregate] in the [MediaState].
      */
     data class UpdateMediaAggregateAction(

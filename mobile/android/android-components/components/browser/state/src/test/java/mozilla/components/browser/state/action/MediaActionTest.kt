@@ -370,6 +370,20 @@ class MediaActionTest {
         assertEquals(42.2, store.state.media.elements["test-tab"]?.getOrNull(0)?.metadata?.duration)
         assertEquals(-13.37, store.state.media.elements["test-tab"]?.getOrNull(1)?.metadata?.duration)
         assertEquals(-1.0, store.state.media.elements["other-tab"]?.getOrNull(0)?.metadata?.duration)
+
+        store.dispatch(MediaAction.UpdateMediaMetadataAction(
+            tabId = "test-tab",
+            mediaId = element2.id,
+            metadata = Media.Metadata(
+                height = 400L,
+                width = 200L
+            )
+        )).joinBlocking()
+
+        assertEquals(0L, store.state.media.elements["test-tab"]?.getOrNull(0)?.metadata?.height)
+        assertEquals(400L, store.state.media.elements["test-tab"]?.getOrNull(1)?.metadata?.height)
+        assertEquals(200L, store.state.media.elements["test-tab"]?.getOrNull(1)?.metadata?.width)
+        assertEquals(0L, store.state.media.elements["other-tab"]?.getOrNull(0)?.metadata?.height)
     }
 
     @Test
@@ -418,6 +432,40 @@ class MediaActionTest {
         assertEquals(true, store.state.media.elements["test-tab"]?.getOrNull(0)?.volume?.muted)
         assertEquals(true, store.state.media.elements["test-tab"]?.getOrNull(1)?.volume?.muted)
         assertEquals(false, store.state.media.elements["other-tab"]?.getOrNull(0)?.volume?.muted)
+    }
+
+    @Test
+    fun `UpdateMediaFullscreenAction - Updates media fullscreen of element`() {
+        val element1 = createMockMediaElement()
+        val element2 = createMockMediaElement()
+        val element3 = createMockMediaElement()
+
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab"),
+                createTab("https://www.firefox.com", id = "other-tab")
+            ),
+            media = MediaState(
+                elements = mapOf(
+                    "test-tab" to listOf(element1, element2),
+                    "other-tab" to listOf(element3)
+                )
+            )
+        ))
+
+        assertEquals(false, store.state.media.elements["test-tab"]?.getOrNull(0)?.fullscreen)
+        assertEquals(false, store.state.media.elements["test-tab"]?.getOrNull(1)?.fullscreen)
+        assertEquals(false, store.state.media.elements["other-tab"]?.getOrNull(0)?.fullscreen)
+
+        store.dispatch(MediaAction.UpdateMediaFullscreenAction(
+            tabId = "test-tab",
+            mediaId = element1.id,
+            fullScreen = true
+        )).joinBlocking()
+
+        assertEquals(true, store.state.media.elements["test-tab"]?.getOrNull(0)?.fullscreen)
+        assertEquals(false, store.state.media.elements["test-tab"]?.getOrNull(1)?.fullscreen)
+        assertEquals(false, store.state.media.elements["other-tab"]?.getOrNull(0)?.fullscreen)
     }
 
     @Test
@@ -471,6 +519,7 @@ private fun createMockMediaElement(): MediaState.Element {
         playbackState = Media.PlaybackState.PLAYING,
         controller = mock(),
         metadata = Media.Metadata(),
-        volume = Media.Volume()
+        volume = Media.Volume(),
+        fullscreen = false
     )
 }

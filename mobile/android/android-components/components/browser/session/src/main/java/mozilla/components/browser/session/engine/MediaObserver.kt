@@ -49,4 +49,12 @@ internal class MediaObserver(
             volume
         ))
     }
+
+    override fun onFullscreenChanged(media: Media, fullscreen: Boolean) {
+        store.dispatch(MediaAction.UpdateMediaFullscreenAction(
+            tabId,
+            element.id,
+            fullscreen
+        ))
+    }
 }

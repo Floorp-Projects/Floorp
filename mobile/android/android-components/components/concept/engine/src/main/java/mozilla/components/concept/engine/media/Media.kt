@@ -43,6 +43,11 @@ abstract class Media(
     abstract val metadata: Metadata
 
     /**
+     * The fullscreen info for this media element.
+     */
+    abstract val fullscreen: Boolean
+
+    /**
      * The [Volume] for this media element.
      */
     abstract val volume: Volume
@@ -59,6 +64,8 @@ abstract class Media(
         fun onMetadataChanged(media: Media, metadata: Metadata) = Unit
         /** Notify the observer that media volume changed. */
         fun onVolumeChanged(media: Media, volume: Volume) = Unit
+        /** Notify the observer that media fullscreen changed. */
+        fun onFullscreenChanged(media: Media, fullscreen: Boolean) = Unit
     }
 
     /**
@@ -197,7 +204,9 @@ abstract class Media(
      * @property duration Indicates the duration of the media in seconds.
      */
     data class Metadata(
-        val duration: Double = -1.0
+        val duration: Double = -1.0,
+        val height: Long = 0L,
+        val width: Long = 0L
     )
 
     /**

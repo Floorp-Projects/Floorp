@@ -10,6 +10,7 @@ import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.media.createMockMediaElement
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -158,6 +159,126 @@ class MediaStateKtTest {
     }
 
     @Test
+    fun `findFullscreenMediaOrientation() extension method returns orientation when has height and width in full screen`() {
+        assertEquals(
+            MediaState.FullscreenOrientation.PORTRAIT,
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        state = MediaState.State.PLAYING,
+                        activeTabId = "test-tab",
+                        activeMedia = listOf("test-media")
+                    ),
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "test-media",
+                                metadata = Media.Metadata(height = 2L, width = 1L),
+                                fullscreenInfo = true
+                            )
+                        )
+                    )
+                )
+            ).media.findFullscreenMediaOrientation()
+        )
+
+        assertEquals(
+            MediaState.FullscreenOrientation.LANDSCAPE,
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        state = MediaState.State.PLAYING,
+                        activeTabId = "test-tab",
+                        activeMedia = listOf("test-media")
+                    ),
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "test-media",
+                                metadata = Media.Metadata(height = 1L, width = 2L),
+                                fullscreenInfo = true
+                            )
+                        )
+                    )
+                )
+            ).media.findFullscreenMediaOrientation()
+        )
+    }
+
+    @Test
+    fun `expect null findFullscreenMediaOrientation when media doesn't have height or width`() {
+        assertEquals(
+            null,
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        state = MediaState.State.PLAYING,
+                        activeTabId = "test-tab",
+                        activeMedia = listOf("test-media")
+                    ),
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "test-media",
+                                metadata = Media.Metadata(height = 0L, width = 2L)
+                            )
+                        )
+                    )
+                )
+            ).media.findFullscreenMediaOrientation()
+        )
+
+        assertEquals(
+            null,
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        state = MediaState.State.PLAYING,
+                        activeTabId = "test-tab",
+                        activeMedia = listOf("test-media")
+                    ),
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "test-media",
+                                metadata = Media.Metadata(height = 2L, width = 0L)
+                            )
+                        )
+                    )
+                )
+            ).media.findFullscreenMediaOrientation()
+        )
+    }
+
+    @Test
+    fun `expect null findFullscreenMediaOrientation when media not in fullscreen`() {
+        assertEquals(
+            null,
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        state = MediaState.State.PLAYING,
+                        activeTabId = "test-tab",
+                        activeMedia = listOf("test-media")
+                    ),
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "test-media"
+                            )
+                        )
+                    )
+                )
+            ).media.findFullscreenMediaOrientation()
+        )
+    }
+
+    @Test
     fun `isMediaStateForCustomTab() extension method`() {
         assertFalse(
             BrowserState(
@@ -201,7 +322,12 @@ class MediaStateKtTest {
                         activeMedia = listOf("test-media")
                     ),
                     elements = mapOf(
-                        "test-tab" to listOf(createMockMediaElement(id = "test-media", state = Media.State.PAUSED))
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "test-media",
+                                state = Media.State.PAUSED
+                            )
+                        )
                     )
                 )
             ).isMediaStateForCustomTab()
@@ -217,7 +343,12 @@ class MediaStateKtTest {
                         activeMedia = listOf("test-media")
                     ),
                     elements = mapOf(
-                        "test-tab" to listOf(createMockMediaElement(id = "test-media", state = Media.State.PAUSED))
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "test-media",
+                                state = Media.State.PAUSED
+                            )
+                        )
                     )
                 )
             ).isMediaStateForCustomTab()

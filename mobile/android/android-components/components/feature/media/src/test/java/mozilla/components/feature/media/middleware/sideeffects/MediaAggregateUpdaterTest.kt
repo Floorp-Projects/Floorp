@@ -30,19 +30,21 @@ class MediaAggregateUpdaterTest {
 
     @Test
     fun `WHEN has playing media THEN aggregate will have PLAYING state`() {
-        val store = MockStore(BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
-            media = MediaState(
-                elements = mapOf(
-                    "test-tab" to listOf(
-                        createMockMediaElement(
-                            id = "media-id",
-                            state = Media.State.PLAYING
+        val store = MockStore(
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "media-id",
+                                state = Media.State.PLAYING
+                            )
                         )
                     )
                 )
             )
-        ))
+        )
 
         val aggregator = MediaAggregateUpdater()
 
@@ -54,28 +56,67 @@ class MediaAggregateUpdaterTest {
         assertEquals(1, result.activeMedia.size)
         assertEquals("media-id", result.activeMedia[0])
         assertEquals(MediaState.State.PLAYING, result.state)
+        assertEquals(null, result.activeFullscreenOrientation)
     }
 
     @Test
-    fun `WHEN is PLAYING state and media is paused THEN aggregate will have PAUSED state`() {
-        val store = MockStore(BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
-            media = MediaState(
-                aggregate = MediaState.Aggregate(
-                    state = MediaState.State.PLAYING,
-                    activeTabId = "test-tab",
-                    activeMedia = listOf("media-id")
-                ),
-                elements = mapOf(
-                    "test-tab" to listOf(
-                        createMockMediaElement(
-                            id = "media-id",
-                            state = Media.State.PAUSED
+    fun `WHEN has media in fullscreen THEN aggregate will have fullscreen state`() {
+        val store = MockStore(
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "media-id",
+                                metadata = Media.Metadata(height = 1L, width = 2L),
+                                state = Media.State.PLAYING,
+                                fullscreenInfo = true
+                            )
                         )
                     )
                 )
             )
-        ))
+        )
+
+        val aggregator = MediaAggregateUpdater()
+
+        val result = aggregate(store, aggregator)
+
+        assertNotNull(result!!)
+
+        assertEquals("test-tab", result.activeTabId)
+        assertEquals(1, result.activeMedia.size)
+        assertEquals("media-id", result.activeMedia[0])
+        assertEquals(MediaState.State.PLAYING, result.state)
+        assertEquals(
+            MediaState.FullscreenOrientation.LANDSCAPE,
+            result.activeFullscreenOrientation
+        )
+    }
+
+    @Test
+    fun `WHEN is PLAYING state and media is paused THEN aggregate will have PAUSED state`() {
+        val store = MockStore(
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        state = MediaState.State.PLAYING,
+                        activeTabId = "test-tab",
+                        activeMedia = listOf("media-id")
+                    ),
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "media-id",
+                                state = Media.State.PAUSED
+                            )
+                        )
+                    )
+                )
+            )
+        )
 
         val aggregator = MediaAggregateUpdater()
 
@@ -87,28 +128,31 @@ class MediaAggregateUpdaterTest {
         assertEquals(1, result.activeMedia.size)
         assertEquals("media-id", result.activeMedia[0])
         assertEquals(MediaState.State.PAUSED, result.state)
+        assertEquals(null, result.activeFullscreenOrientation)
     }
 
     @Test
     fun `WHEN is PLAYING state and media changes but still plays THEN aggregate will have PLAYING state`() {
-        val store = MockStore(BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
-            media = MediaState(
-                aggregate = MediaState.Aggregate(
-                    state = MediaState.State.PLAYING,
-                    activeTabId = "test-tab",
-                    activeMedia = listOf("media-id")
-                ),
-                elements = mapOf(
-                    "test-tab" to listOf(
-                        createMockMediaElement(
-                            id = "new-media-id",
-                            state = Media.State.PLAYING
+        val store = MockStore(
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        state = MediaState.State.PLAYING,
+                        activeTabId = "test-tab",
+                        activeMedia = listOf("media-id")
+                    ),
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "new-media-id",
+                                state = Media.State.PLAYING
+                            )
                         )
                     )
                 )
             )
-        ))
+        )
 
         val aggregator = MediaAggregateUpdater()
 
@@ -120,29 +164,32 @@ class MediaAggregateUpdaterTest {
         assertEquals(1, result.activeMedia.size)
         assertEquals("new-media-id", result.activeMedia[0])
         assertEquals(MediaState.State.PLAYING, result.state)
+        assertEquals(null, result.activeFullscreenOrientation)
     }
 
     @Test
     fun `WHEN media has short length THEN does not switch to PLAYING state`() {
-        val store = MockStore(BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
-            media = MediaState(
-                elements = mapOf(
-                    "test-tab" to listOf(
-                        createMockMediaElement(
-                            id = "media-id-1",
-                            state = Media.State.PLAYING,
-                            metadata = Media.Metadata(duration = 2.0)
-                        ),
-                        createMockMediaElement(
-                            id = "media-id-2",
-                            state = Media.State.PLAYING,
-                            metadata = Media.Metadata(duration = 1.0)
+        val store = MockStore(
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "media-id-1",
+                                state = Media.State.PLAYING,
+                                metadata = Media.Metadata(duration = 2.0)
+                            ),
+                            createMockMediaElement(
+                                id = "media-id-2",
+                                state = Media.State.PLAYING,
+                                metadata = Media.Metadata(duration = 1.0)
+                            )
                         )
                     )
                 )
             )
-        ))
+        )
 
         val aggregator = MediaAggregateUpdater()
 
@@ -153,20 +200,22 @@ class MediaAggregateUpdaterTest {
 
     @Test
     fun `WHEN media is muted THEN does not switch to PLAYING state`() {
-        val store = MockStore(BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
-            media = MediaState(
-                elements = mapOf(
-                    "test-tab" to listOf(
-                        createMockMediaElement(
-                            id = "media-id-1",
-                            state = Media.State.PLAYING,
-                            volume = Media.Volume(muted = true)
+        val store = MockStore(
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "media-id-1",
+                                state = Media.State.PLAYING,
+                                volume = Media.Volume(muted = true)
+                            )
                         )
                     )
                 )
             )
-        ))
+        )
 
         val aggregator = MediaAggregateUpdater()
 
@@ -177,24 +226,26 @@ class MediaAggregateUpdaterTest {
 
     @Test
     fun `WHEN state is PAUSED and media is paused THEN state remains PAUSED`() {
-        val store = MockStore(BrowserState(
-            tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
-            media = MediaState(
-                aggregate = MediaState.Aggregate(
-                    state = MediaState.State.PAUSED,
-                    activeTabId = "test-tab",
-                    activeMedia = listOf("media-id", "media-id2")
-                ),
-                elements = mapOf(
-                    "test-tab" to listOf(
-                        createMockMediaElement(
-                            id = "media-id",
-                            state = Media.State.PAUSED
+        val store = MockStore(
+            BrowserState(
+                tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        state = MediaState.State.PAUSED,
+                        activeTabId = "test-tab",
+                        activeMedia = listOf("media-id", "media-id2")
+                    ),
+                    elements = mapOf(
+                        "test-tab" to listOf(
+                            createMockMediaElement(
+                                id = "media-id",
+                                state = Media.State.PAUSED
+                            )
                         )
                     )
                 )
             )
-        ))
+        )
 
         val aggregator = MediaAggregateUpdater()
 
@@ -206,6 +257,7 @@ class MediaAggregateUpdaterTest {
         assertEquals(1, result.activeMedia.size)
         assertEquals("media-id", result.activeMedia[0])
         assertEquals(MediaState.State.PAUSED, result.state)
+        assertEquals(null, result.activeFullscreenOrientation)
     }
 
     private fun aggregate(
