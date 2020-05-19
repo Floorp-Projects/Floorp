@@ -55,7 +55,6 @@ extern crate xulstore;
 
 extern crate audio_thread_priority;
 
-#[cfg(feature = "new_webext_storage")]
 extern crate webext_storage_bridge;
 
 #[cfg(feature = "webrtc")]
