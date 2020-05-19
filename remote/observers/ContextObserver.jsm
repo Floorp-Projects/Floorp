@@ -32,8 +32,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { executeSoon } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 
-// Temporary flag to not emit frame related events until everything
-// has been completely implemented, and Puppeteer is no longer busted.
 const FRAMES_ENABLED = Services.prefs.getBoolPref(
   "remote.frames.enabled",
   false
@@ -57,11 +55,6 @@ class ContextObserver {
     });
 
     Services.obs.addObserver(this, "inner-window-destroyed");
-
-    if (FRAMES_ENABLED) {
-      Services.obs.addObserver(this, "webnavigation-create");
-      Services.obs.addObserver(this, "webnavigation-destroy");
-    }
   }
 
   destructor() {
@@ -74,13 +67,7 @@ class ContextObserver {
     this.chromeEventHandler.removeEventListener("pagehide", this, {
       mozSystemGroup: true,
     });
-
     Services.obs.removeObserver(this, "inner-window-destroyed");
-
-    if (FRAMES_ENABLED) {
-      Services.obs.removeObserver(this, "webnavigation-create");
-      Services.obs.removeObserver(this, "webnavigation-destroy");
-    }
   }
 
   handleEvent({ type, target, persisted }) {
@@ -127,37 +114,9 @@ class ContextObserver {
     }
   }
 
+  // "inner-window-destroyed" observer service listener
   observe(subject, topic, data) {
-    switch (topic) {
-      case "inner-window-destroyed":
-        const windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-        this.emit("context-destroyed", { windowId });
-        break;
-      case "webnavigation-create":
-        subject.QueryInterface(Ci.nsIDocShell);
-        this.onDocShellCreated(subject);
-        break;
-      case "webnavigation-destroy":
-        subject.QueryInterface(Ci.nsIDocShell);
-        this.onDocShellDestroyed(subject);
-        break;
-    }
-  }
-
-  onDocShellCreated(docShell) {
-    const parent = docShell.browsingContext.parent;
-
-    // TODO: Use a unique identifier for frames (bug 1605359)
-    this.emit("frame-attached", {
-      frameId: docShell.browsingContext.id.toString(),
-      parentFrameId: parent ? parent.id.toString() : null,
-    });
-  }
-
-  onDocShellDestroyed(docShell) {
-    // TODO: Use a unique identifier for frames (bug 1605359)
-    this.emit("frame-detached", {
-      frameId: docShell.browsingContext.id.toString(),
-    });
+    const innerWindowID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    this.emit("context-destroyed", { windowId: innerWindowID });
   }
 }
