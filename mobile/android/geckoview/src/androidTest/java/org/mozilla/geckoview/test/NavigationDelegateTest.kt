@@ -207,6 +207,31 @@ class NavigationDelegateTest : BaseSessionTest() {
                 WebRequestError.ERROR_UNKNOWN_PROTOCOL)
     }
 
+    @Test fun loadUnknownProtocolIframe() {
+        // Should match iframe URI from IFRAME_UNKNOWN_PROTOCOL
+        val iframeUri = "foo://bar"
+        sessionRule.session.loadTestPath(IFRAME_UNKNOWN_PROTOCOL)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest) : GeckoResult<AllowOrDeny>? {
+                assertThat("URI should not be null", request.uri, notNullValue())
+                assertThat("URI should match", request.uri, endsWith(IFRAME_UNKNOWN_PROTOCOL))
+                return null
+            }
+
+            @AssertCalled(count = 1)
+            override fun onSubframeLoadRequest(session: GeckoSession,
+                                               request: LoadRequest):
+                                               GeckoResult<AllowOrDeny>? {
+                assertThat("URI should not be null", request.uri, notNullValue())
+                assertThat("URI should match", request.uri, endsWith(iframeUri))
+                return null
+            }
+        })
+    }
+
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
     @Ignore // TODO: Bug 1564373
     @Test fun trackingProtection() {
@@ -309,11 +334,22 @@ class NavigationDelegateTest : BaseSessionTest() {
                                        request: LoadRequest):
                     GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
-                assertThat("App requested this load", request.isDirectNavigation,
-                        equalTo(true))
+                assertThat("App requested this load", request.isDirectNavigation, equalTo(true))
                 assertThat("URI should not be null", request.uri, notNullValue())
-                assertThat("URI should match", request.uri,
-                        startsWith(GeckoSessionTestRule.TEST_ENDPOINT))
+                assertThat("URI should match", request.uri, endsWith(path))
+                assertThat("isRedirect should match", request.isRedirect, equalTo(false))
+                return null
+            }
+
+            @AssertCalled(count = 2)
+            override fun onSubframeLoadRequest(session: GeckoSession,
+                                               request: LoadRequest):
+                    GeckoResult<AllowOrDeny>? {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("App did not request this load", request.isDirectNavigation, equalTo(false))
+                assertThat("URI should not be null", request.uri, notNullValue())
+                assertThat("isRedirect should match", request.isRedirect,
+                        equalTo(forEachCall(false, true)))
                 return null
             }
         })
