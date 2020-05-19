@@ -4174,12 +4174,8 @@ void LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins) {
   // attach a scripted setter stub that calls this script recursively.
   gen->setNeedsOverrecursedCheck();
 
-  // We need a double temp register for typed array stubs if this is a SetElem
-  // or InitElem op.
-  LDefinition tempD = LDefinition::BogusTemp();
-  if (IsElemPC(ins->resumePoint()->pc())) {
-    tempD = tempFixed(FloatReg0);
-  }
+  // We need a double temp register for TypedArray or TypedObject stubs.
+  LDefinition tempD = tempFixed(FloatReg0);
 
   LInstruction* lir = new (alloc()) LSetPropertyCache(
       useRegister(ins->object()), useBoxOrTypedOrConstant(id, useConstId),

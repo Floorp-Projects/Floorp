@@ -646,6 +646,7 @@ class MOZ_RAII CacheIRCompiler {
   friend class AutoSaveLiveRegisters;
   friend class AutoCallVM;
   friend class AutoScratchFloatRegister;
+  friend class AutoAvailableFloatRegister;
 
   enum class Mode { Baseline, Ion };
 
@@ -832,6 +833,10 @@ class MOZ_RAII CacheIRCompiler {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     return jsid::fromRawBits(readStubWord(offset, StubField::Type::Id));
   }
+
+#ifdef DEBUG
+  void assertFloatRegisterAvailable(FloatRegister reg);
+#endif
 
  public:
   // The maximum number of arguments passed to a spread call or
@@ -1037,6 +1042,28 @@ class MOZ_RAII AutoScratchFloatRegister {
 
   FloatRegister get() const { return FloatReg0; }
   operator FloatRegister() const { return FloatReg0; }
+};
+
+// This class can be used to assert a certain FloatRegister is available. In
+// Baseline mode, all float registers are available. In Ion mode, only the
+// registers added as fixed temps in LIRGenerator are available.
+class MOZ_RAII AutoAvailableFloatRegister {
+  FloatRegister reg_;
+
+  AutoAvailableFloatRegister(const AutoAvailableFloatRegister&) = delete;
+  void operator=(const AutoAvailableFloatRegister&) = delete;
+
+ public:
+  explicit AutoAvailableFloatRegister(CacheIRCompiler& compiler,
+                                      FloatRegister reg)
+      : reg_(reg) {
+#ifdef DEBUG
+    compiler.assertFloatRegisterAvailable(reg);
+#endif
+  }
+
+  FloatRegister get() const { return reg_; }
+  operator FloatRegister() const { return reg_; }
 };
 
 // See the 'Sharing Baseline stub code' comment in CacheIR.h for a description
