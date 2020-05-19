@@ -1857,6 +1857,25 @@ void nsHttpChannel::SetCachedContentType() {
   mCacheEntry->SetContentType(contentType);
 }
 
+void nsHttpChannel::UpdateAntiTrackingInfo() {
+  Unused << mLoadInfo->SetHasStoragePermission(
+      AntiTrackingUtils::HasStoragePermissionInParent(this));
+
+  AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(this);
+
+  // We only need to set FPD for top-level loads. FPD will automatically be
+  // propagated to non-top level loads via CookieJarSetting.
+  if (mLoadInfo->GetExternalContentPolicyType() ==
+      nsIContentPolicy::TYPE_DOCUMENT) {
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+    Unused << mLoadInfo->GetCookieJarSettings(
+        getter_AddRefs(cookieJarSettings));
+
+    mozilla::net::CookieJarSettings::Cast(cookieJarSettings)
+        ->SetFirstPartyDomain(mURI);
+  }
+}
+
 nsresult nsHttpChannel::CallOnStartRequest() {
   LOG(("nsHttpChannel::CallOnStartRequest [this=%p]", this));
 
@@ -6506,11 +6525,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  Unused << mLoadInfo->SetHasStoragePermission(
-      AntiTrackingUtils::HasStoragePermissionInParent(this));
-
-  AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(this);
-
   static bool sRCWNInited = false;
   if (!sRCWNInited) {
     sRCWNInited = true;
@@ -6541,6 +6555,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     // from) Hence, we have to call UpdatePrivateBrowsing() here
     UpdatePrivateBrowsing();
   }
+
+  UpdateAntiTrackingInfo();
 
   if (WaitingForTailUnblock()) {
     // This channel is marked as Tail and is part of a request context
