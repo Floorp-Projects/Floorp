@@ -36,6 +36,8 @@ class Localization : public nsIObserver,
   void Activate(const bool aSync, const bool aEager,
                 const BundleGenerator& aBundleGenerator);
 
+  void Destroy();
+
   static already_AddRefed<Localization> Constructor(
       const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
       const bool aSync, const BundleGenerator& aBundleGenerator,
@@ -92,8 +94,11 @@ class Localization : public nsIObserver,
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<mozILocalization> mLocalization;
+
   bool mIsSync;
   nsTArray<nsString> mResourceIds;
+  JS::Heap<JS::Value> mGenerateBundles;
+  JS::Heap<JS::Value> mGenerateBundlesSync;
 };
 
 }  // namespace intl
