@@ -744,7 +744,7 @@ bool BaselineCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadStringResult(uint32_t strOffset) {
+bool BaselineCacheIRCompiler::emitLoadConstantStringResult(uint32_t strOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);

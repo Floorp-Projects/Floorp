@@ -4248,6 +4248,20 @@ bool CacheIRCompiler::emitLoadObjectResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadStringResult(StringOperandId strId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register str = allocator.useRegister(masm, strId);
+
+  if (output.hasValue()) {
+    masm.tagValue(JSVAL_TYPE_STRING, str, output.valueReg());
+  } else {
+    masm.mov(str, output.typedReg().gpr());
+  }
+
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadInt32Result(Int32OperandId valId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
