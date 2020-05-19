@@ -60,6 +60,7 @@ class ContextObserver {
 
     if (FRAMES_ENABLED) {
       Services.obs.addObserver(this, "webnavigation-create");
+      Services.obs.addObserver(this, "webnavigation-destroy");
     }
   }
 
@@ -78,6 +79,7 @@ class ContextObserver {
 
     if (FRAMES_ENABLED) {
       Services.obs.removeObserver(this, "webnavigation-create");
+      Services.obs.removeObserver(this, "webnavigation-destroy");
     }
   }
 
@@ -135,6 +137,10 @@ class ContextObserver {
         subject.QueryInterface(Ci.nsIDocShell);
         this.onDocShellCreated(subject);
         break;
+      case "webnavigation-destroy":
+        subject.QueryInterface(Ci.nsIDocShell);
+        this.onDocShellDestroyed(subject);
+        break;
     }
   }
 
@@ -145,6 +151,13 @@ class ContextObserver {
     this.emit("frame-attached", {
       frameId: docShell.browsingContext.id.toString(),
       parentFrameId: parent ? parent.id.toString() : null,
+    });
+  }
+
+  onDocShellDestroyed(docShell) {
+    // TODO: Use a unique identifier for frames (bug 1605359)
+    this.emit("frame-detached", {
+      frameId: docShell.browsingContext.id.toString(),
     });
   }
 }
