@@ -2279,8 +2279,18 @@ class JSScript : public js::BaseScript {
     return pc;
   }
 
+  // Note: ArgBytes is optional, but if specified then containsPC will also
+  //       check that the opcode arguments are in bounds.
+  template <size_t ArgBytes = 0>
   bool containsPC(const jsbytecode* pc) const {
-    return pc >= code() && pc < codeEnd();
+    MOZ_ASSERT_IF(ArgBytes,
+                  js::GetBytecodeLength(pc) == sizeof(jsbytecode) + ArgBytes);
+    const jsbytecode* lastByte = pc + ArgBytes;
+    return pc >= code() && lastByte < codeEnd();
+  }
+  template <typename ArgType>
+  bool containsPC(const jsbytecode* pc) const {
+    return containsPC<sizeof(ArgType)>(pc);
   }
 
   bool contains(const js::BytecodeLocation& loc) const {
@@ -2659,7 +2669,7 @@ class JSScript : public js::BaseScript {
   }
 
   js::GCPtrAtom& getAtom(jsbytecode* pc) const {
-    MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
+    MOZ_ASSERT(containsPC<uint32_t>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE((JSOp)*pc) == JOF_ATOM);
     return getAtom(GET_UINT32_INDEX(pc));
   }
@@ -2678,7 +2688,7 @@ class JSScript : public js::BaseScript {
   }
 
   JSObject* getObject(jsbytecode* pc) const {
-    MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
+    MOZ_ASSERT(containsPC<uint32_t>(pc));
     return getObject(GET_UINT32_INDEX(pc));
   }
 
@@ -2690,7 +2700,7 @@ class JSScript : public js::BaseScript {
     // This method is used to get a scope directly using a JSOp with an
     // index. To search through ScopeNotes to look for a Scope using pc,
     // use lookupScope.
-    MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
+    MOZ_ASSERT(containsPC<uint32_t>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE(JSOp(*pc)) == JOF_SCOPE,
                "Did you mean to use lookupScope(pc)?");
     return getScope(GET_UINT32_INDEX(pc));
@@ -2708,7 +2718,7 @@ class JSScript : public js::BaseScript {
   }
 
   js::BigInt* getBigInt(jsbytecode* pc) const {
-    MOZ_ASSERT(containsPC(pc));
+    MOZ_ASSERT(containsPC<uint32_t>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE(JSOp(*pc)) == JOF_BIGINT);
     return getBigInt(GET_UINT32_INDEX(pc));
   }
