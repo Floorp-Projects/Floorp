@@ -31,7 +31,6 @@ UNSUPPORTED_FEATURES = set([
     "Intl.DateTimeFormat-quarter",
     "Intl.DateTimeFormat-datetimestyle",
     "Intl.DateTimeFormat-formatRange",
-    "Intl.DisplayNames",
     "Intl.Segmenter",
     "top-level-await",
 ])
@@ -423,6 +422,9 @@ def process_test262(test262Dir, test262OutDir, strictTests, externManifests):
     explicitIncludes[os.path.join("built-ins", "TypedArray")] = ["byteConversionValues.js",
                                                                  "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
+
+    # Intl.DisplayNames isn't yet enabled by default.
+    localIncludesMap[os.path.join("intl402")] = ["test262-intl-displaynames.js"]
 
     # Process all test directories recursively.
     for (dirPath, dirNames, fileNames) in os.walk(testDir):
