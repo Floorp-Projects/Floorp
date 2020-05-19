@@ -868,6 +868,22 @@ class MacroAssemblerX86Shared : public Assembler {
     j(Assembler::NotEqual, fail);
   }
 
+  void truncateDoubleToInt32(FloatRegister src, Register dest, Label* fail) {
+    // vcvttsd2si returns 0x80000000 on failure. Test for it by
+    // subtracting 1 and testing overflow. The other possibility is to test
+    // equality for INT_MIN after a comparison, but 1 costs fewer bytes to
+    // materialize.
+    vcvttsd2si(src, dest);
+    cmp32(dest, Imm32(1));
+    j(Assembler::Overflow, fail);
+  }
+  void truncateFloat32ToInt32(FloatRegister src, Register dest, Label* fail) {
+    // Same trick as explained in the above comment.
+    vcvttss2si(src, dest);
+    cmp32(dest, Imm32(1));
+    j(Assembler::Overflow, fail);
+  }
+
   inline void clampIntToUint8(Register reg);
 
   bool maybeInlineDouble(double d, FloatRegister dest) {
