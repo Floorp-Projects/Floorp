@@ -16195,7 +16195,9 @@ nsICookieJarSettings* Document::CookieJarSettings() {
                   inProcessParent->CookieJarSettings()->GetCookieBehavior(),
                   mozilla::net::CookieJarSettings::Cast(
                       inProcessParent->CookieJarSettings())
-                      ->GetFirstPartyDomain())
+                      ->GetFirstPartyDomain(),
+                  inProcessParent->CookieJarSettings()
+                      ->GetIsFirstPartyIsolated())
             : net::CookieJarSettings::Create();
 
     if (auto* wgc = GetWindowGlobalChild()) {
