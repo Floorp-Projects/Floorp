@@ -35,3 +35,6 @@ var V8 = class extends Host {
 
 var gHost = new V8();
 run(arguments);
+
+print("\nTest results:\n");
+report_results();
