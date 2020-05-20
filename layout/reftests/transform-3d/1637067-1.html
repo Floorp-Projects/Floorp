@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+@keyframes rotate {
+  100% {
+    transform: rotatey(1800deg);
+  }
+}
+
+@keyframes rotate2 {
+  100% {
+    transform: rotatey(2800deg);
+  }
+}
+
+
+.text {
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  height: 400px;
+  width: 400px;
+  transform-style: preserve-3d;
+  transform: rotatey(271deg);
+  /*animation: rotate 30s linear infinite reverse;*/
+}
+
+.thing {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 512px;
+  height: 512px;
+  background: url('data:image/svg+xml;utf8,<svg width="512" height="200" viewBox="0 0 512 512" fill="black" xmlns="http://www.w3.org/2000/svg"><text x="0" y="400" font-size="100">some text</text></svg>');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  transform: rotatey(89deg) translatez(117.04394px);
+}
+
+</style>
+</head>
+<body>
+<div class='text'>
+<div class="thing"></div>
+</div>
+</body>
+</html>
