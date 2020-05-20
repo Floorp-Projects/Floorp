@@ -25,7 +25,6 @@ from manifestparser import filters as mpf
 from mozbuild.base import (
     MachCommandBase,
 )
-from mozbuild.virtualenv import VirtualenvManager
 
 from mach.decorators import (
     CommandArgument,
@@ -240,6 +239,7 @@ class MachCommands(MachCommandBase):
                 See the `--python` argument to the `mach python-test` command.
         """
         from mozbuild.pythonutil import find_python3_executable
+        from mozbuild.virtualenv import VirtualenvManager
 
         default_manager = self.virtualenv_manager
 
