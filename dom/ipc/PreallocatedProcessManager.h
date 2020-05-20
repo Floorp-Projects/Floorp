@@ -59,7 +59,8 @@ class PreallocatedProcessManager final {
    * another process is already cached (so the caller knows to destroy it).
    * This takes a reference to the ContentParent if it is cached.
    */
-  static bool Provide(const nsAString& aRemoteType, ContentParent* aParent);
+  static bool Provide(ContentParent* aParent);
+  static void Erase(ContentParent* aParent);
 
  private:
   PreallocatedProcessManager();
