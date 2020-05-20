@@ -30,7 +30,6 @@
 #include "mozilla/BasePrincipal.h"            // for BasePrincipal
 #include "mozilla/CheckedInt.h"               // for CheckedInt
 #include "mozilla/ComposerCommandsUpdater.h"  // for ComposerCommandsUpdater
-#include "mozilla/ComputedStyle.h"            // for ComputedStyle
 #include "mozilla/CSSEditUtils.h"             // for CSSEditUtils
 #include "mozilla/EditAction.h"               // for EditSubAction
 #include "mozilla/EditorDOMPoint.h"           // for EditorDOMPoint
@@ -79,7 +78,6 @@
 #include "nsCaseTreatment.h"
 #include "nsCharTraits.h"              // for NS_IS_HIGH_SURROGATE, etc.
 #include "nsComponentManagerUtils.h"   // for do_CreateInstance
-#include "nsComputedDOMStyle.h"        // for nsComputedDOMStyle
 #include "nsContentUtils.h"            // for nsContentUtils
 #include "nsDOMString.h"               // for DOMStringIsNull
 #include "nsDebug.h"                   // for NS_WARNING, etc.
@@ -3172,36 +3170,6 @@ nsresult EditorBase::GetEndChildNode(const Selection& aSelection,
 
   NS_IF_ADDREF(*aEndNode = range->GetChildAtEndOffset());
   return NS_OK;
-}
-
-/**
- * IsPreformatted() checks the style info for the node for the preformatted
- * text style.
- */
-// static
-bool EditorBase::IsPreformatted(nsINode* aNode) {
-  if (NS_WARN_IF(!aNode)) {
-    return false;
-  }
-  // Look at the node (and its parent if it's not an element), and grab its
-  // ComputedStyle.
-  Element* element = aNode->GetAsElementOrParentElement();
-  if (!element) {
-    return false;
-  }
-
-  RefPtr<ComputedStyle> elementStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(element, nullptr);
-  if (!elementStyle) {
-    // Consider nodes without a ComputedStyle to be NOT preformatted:
-    // For instance, this is true of JS tags inside the body (which show
-    // up as #text nodes but have no ComputedStyle).
-    return false;
-  }
-
-  const nsStyleText* styleText = elementStyle->StyleText();
-
-  return styleText->WhiteSpaceIsSignificant();
 }
 
 nsresult EditorBase::EnsureNoPaddingBRElementForEmptyEditor() {

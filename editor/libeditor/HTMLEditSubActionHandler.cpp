@@ -1455,7 +1455,8 @@ EditActionResult HTMLEditor::HandleInsertText(
   }
 
   EditorDOMPoint pointToInsert(firstRange->StartRef());
-  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+  if (NS_WARN_IF(!pointToInsert.IsSet()) ||
+      NS_WARN_IF(!pointToInsert.IsInContentNode())) {
     return EditActionHandled(NS_ERROR_FAILURE);
   }
   MOZ_ASSERT(pointToInsert.IsSetAndValid());
@@ -1523,7 +1524,8 @@ EditActionResult HTMLEditor::HandleInsertText(
 
   // is our text going to be PREformatted?
   // We remember this so that we know how to handle tabs.
-  bool isPRE = EditorBase::IsPreformatted(pointToInsert.GetContainer());
+  bool isPRE =
+      EditorUtils::IsContentPreformatted(*pointToInsert.ContainerAsContent());
 
   // turn off the edit listener: we know how to
   // build the "doc changed range" ourselves, and it's
@@ -8146,8 +8148,8 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     }
 
     // Check for newlines in pre-formatted text nodes.
-    if (EditorBase::IsPreformatted(nextEditableContent) &&
-        nextEditableContent->IsText()) {
+    if (nextEditableContent->IsText() &&
+        EditorUtils::IsContentPreformatted(*nextEditableContent)) {
       nsAutoString textContent;
       nextEditableContent->GetAsText()->GetData(textContent);
       int32_t newlinePos = textContent.FindChar(nsCRT::LF);
