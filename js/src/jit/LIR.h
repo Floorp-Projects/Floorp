@@ -483,14 +483,13 @@ class LDefinition {
   };
 
   enum Type {
-    GENERAL,     // Generic, integer or pointer-width data (GPR).
-    INT32,       // int32 data (GPR).
-    OBJECT,      // Pointer that may be collected as garbage (GPR).
-    SLOTS,       // Slots/elements pointer that may be moved by minor GCs (GPR).
-    FLOAT32,     // 32-bit floating-point value (FPU).
-    DOUBLE,      // 64-bit floating-point value (FPU).
-    SIMD128INT,  // 128-bit SIMD integer vector (FPU).
-    SIMD128FLOAT,  // 128-bit SIMD floating point vector (FPU).
+    GENERAL,  // Generic, integer or pointer-width data (GPR).
+    INT32,    // int32 data (GPR).
+    OBJECT,   // Pointer that may be collected as garbage (GPR).
+    SLOTS,    // Slots/elements pointer that may be moved by minor GCs (GPR).
+    FLOAT32,  // 32-bit floating-point value (FPU).
+    DOUBLE,   // 64-bit floating-point value (FPU).
+    SIMD128,  // 128-bit SIMD vector (FPU).
     STACKRESULTS,  // A variable-size stack allocation that may contain objects.
 #ifdef JS_NUNBOX32
     // A type virtual register must be followed by a payload virtual
@@ -507,7 +506,7 @@ class LDefinition {
     bits_ =
         (index << VREG_SHIFT) | (policy << POLICY_SHIFT) | (type << TYPE_SHIFT);
 #ifndef ENABLE_WASM_SIMD
-    MOZ_ASSERT(!isSimdType());
+    MOZ_ASSERT(type() != SIMD128);
 #endif
   }
 
@@ -536,9 +535,6 @@ class LDefinition {
     return (Policy)((bits_ >> POLICY_SHIFT) & POLICY_MASK);
   }
   Type type() const { return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK); }
-  bool isSimdType() const {
-    return type() == SIMD128INT || type() == SIMD128FLOAT;
-  }
   bool isCompatibleReg(const AnyRegister& r) const {
     if (isFloatReg() && r.isFloat()) {
       if (type() == FLOAT32) {
@@ -547,7 +543,7 @@ class LDefinition {
       if (type() == DOUBLE) {
         return r.fpu().isDouble();
       }
-      if (isSimdType()) {
+      if (type() == SIMD128) {
         return r.fpu().isSimd128();
       }
       MOZ_CRASH("Unexpected MDefinition type");
@@ -566,7 +562,7 @@ class LDefinition {
   }
 
   bool isFloatReg() const {
-    return type() == FLOAT32 || type() == DOUBLE || isSimdType();
+    return type() == FLOAT32 || type() == DOUBLE || type() == SIMD128;
   }
   uint32_t virtualRegister() const {
     uint32_t index = (bits_ >> VREG_SHIFT) & VREG_MASK;
@@ -632,15 +628,8 @@ class LDefinition {
 #endif
       case MIRType::StackResults:
         return LDefinition::STACKRESULTS;
-      case MIRType::Int8x16:
-      case MIRType::Int16x8:
-      case MIRType::Int32x4:
-      case MIRType::Bool8x16:
-      case MIRType::Bool16x8:
-      case MIRType::Bool32x4:
-        return LDefinition::SIMD128INT;
-      case MIRType::Float32x4:
-        return LDefinition::SIMD128FLOAT;
+      case MIRType::Simd128:
+        return LDefinition::SIMD128;
       default:
         MOZ_CRASH("unexpected type");
     }

@@ -3806,7 +3806,7 @@ bool CacheIRCompiler::emitStoreTypedElement(ObjOperandId objId,
 
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
-    case Scalar::V128:
+    case Scalar::Simd128:
       MOZ_CRASH("Unsupported TypedArray type");
   }
 
@@ -4093,7 +4093,7 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty(
 
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
-    case Scalar::V128:
+    case Scalar::Simd128:
       MOZ_CRASH("Unsupported TypedArray type");
   }
 

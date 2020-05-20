@@ -353,7 +353,7 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
       case Scalar::Uint8Clamped:
       case Scalar::BigInt64:
       case Scalar::BigUint64:
-      case Scalar::V128:
+      case Scalar::Simd128:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }
@@ -413,7 +413,7 @@ void MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
       case Scalar::Uint8Clamped:
       case Scalar::BigInt64:
       case Scalar::BigUint64:
-      case Scalar::V128:
+      case Scalar::Simd128:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }

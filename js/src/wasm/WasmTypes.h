@@ -498,7 +498,7 @@ class ValType {
       case jit::MIRType::Double:
         tc_ = PackTypeCode(TypeCode::F64);
         break;
-      case jit::MIRType::Int8x16:
+      case jit::MIRType::Simd128:
         tc_ = PackTypeCode(TypeCode::V128);
         break;
       default:
@@ -668,7 +668,7 @@ static inline jit::MIRType ToMIRType(ValType vt) {
     case ValType::F64:
       return jit::MIRType::Double;
     case ValType::V128:
-      return jit::MIRType::Int8x16;
+      return jit::MIRType::Simd128;
     case ValType::Ref:
       return jit::MIRType::RefOrNull;
   }

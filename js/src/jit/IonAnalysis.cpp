@@ -3060,13 +3060,7 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::MagicUninitializedLexical:
     case MIRType::MagicIsConstructing:
     case MIRType::Value:
-    case MIRType::Int32x4:
-    case MIRType::Int16x8:
-    case MIRType::Int8x16:
-    case MIRType::Float32x4:
-    case MIRType::Bool32x4:
-    case MIRType::Bool16x8:
-    case MIRType::Bool8x16:
+    case MIRType::Simd128:
       return true;
 
     case MIRType::MagicHole:
@@ -3077,7 +3071,6 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::Pointer:
     case MIRType::Shape:
     case MIRType::ObjectGroup:
-    case MIRType::Doublex2:  // NYI, see also RSimdBox::recover
     case MIRType::Int64:
     case MIRType::RefOrNull:
     case MIRType::StackResults:

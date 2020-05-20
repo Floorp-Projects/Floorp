@@ -1747,7 +1747,7 @@ static Range* GetArrayBufferViewRange(TempAllocator& alloc, Scalar::Type type) {
     case Scalar::BigInt64:
     case Scalar::BigUint64:
     case Scalar::Int64:
-    case Scalar::V128:
+    case Scalar::Simd128:
     case Scalar::Float32:
     case Scalar::Float64:
     case Scalar::MaxTypedArrayViewType:

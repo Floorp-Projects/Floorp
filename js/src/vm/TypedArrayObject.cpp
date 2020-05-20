@@ -91,7 +91,7 @@ bool TypedArrayObject::convertForSideEffect(JSContext* cx,
     }
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
-    case Scalar::V128:
+    case Scalar::Simd128:
       MOZ_CRASH("Unsupported TypedArray type");
   }
   MOZ_ASSERT_UNREACHABLE("Invalid scalar type");
@@ -2074,7 +2074,7 @@ bool TypedArrayObject::getElement<CanGC>(JSContext* cx, uint32_t index,
 #undef GET_ELEMENT
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
-    case Scalar::V128:
+    case Scalar::Simd128:
       break;
   }
 
@@ -2099,7 +2099,7 @@ bool TypedArrayObject::getElementPure(uint32_t index, Value* vp) {
 #undef GET_ELEMENT
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
-    case Scalar::V128:
+    case Scalar::Simd128:
       break;
   }
 
@@ -2127,7 +2127,7 @@ bool TypedArrayObject::getElements(JSContext* cx,
 #undef GET_ELEMENTS
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
-    case Scalar::V128:
+    case Scalar::Simd128:
       break;
   }
 
@@ -2500,7 +2500,7 @@ bool js::SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
 #undef SET_TYPED_ARRAY_ELEMENT
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
-    case Scalar::V128:
+    case Scalar::Simd128:
       break;
   }
 
@@ -2560,7 +2560,7 @@ bool js::DefineTypedArrayElement(JSContext* cx, HandleObject obj,
 #undef DEFINE_TYPED_ARRAY_ELEMENT
       case Scalar::MaxTypedArrayViewType:
       case Scalar::Int64:
-      case Scalar::V128:
+      case Scalar::Simd128:
         break;
     }
 
