@@ -13,10 +13,11 @@
 #include "mozilla/MozPromise.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-#include "nsISHistory.h"
-#include "nsISHEntry.h"
+
+class nsISHistory;
 
 namespace mozilla {
 namespace net {
@@ -25,10 +26,19 @@ class DocumentLoadListener;
 
 namespace dom {
 
-class WindowGlobalParent;
 class BrowserParent;
 class MediaController;
+struct SessionHistoryInfoAndId;
+class SessionHistoryEntry;
 class WindowGlobalParent;
+
+struct SessionHistoryEntryAndId {
+  SessionHistoryEntryAndId(uint64_t aId, SessionHistoryEntry* aEntry)
+      : mId(aId), mEntry(aEntry) {}
+
+  uint64_t mId;
+  RefPtr<SessionHistoryEntry> mEntry;
+};
 
 // CanonicalBrowsingContext is a BrowsingContext living in the parent
 // process, with whatever extra data that a BrowsingContext in the
@@ -83,9 +93,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   already_AddRefed<CanonicalBrowsingContext> GetParentCrossChromeBoundary();
 
   nsISHistory* GetSessionHistory();
-  void SetSessionHistory(nsISHistory* aSHistory) {
-    mSessionHistory = aSHistory;
-  }
+  UniquePtr<SessionHistoryInfoAndId> CreateSessionHistoryEntryForLoad(
+      nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
+  void SessionHistoryCommit(uint64_t aSessionHistoryEntryId);
+
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
@@ -202,6 +213,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   RefPtr<MediaController> mTabMediaController;
 
   RefPtr<net::DocumentLoadListener> mCurrentLoad;
+
+  nsTArray<SessionHistoryEntryAndId> mLoadingEntries;
+  RefPtr<SessionHistoryEntry> mActiveEntry;
 };
 
 }  // namespace dom
