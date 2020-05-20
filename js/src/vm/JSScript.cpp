@@ -4261,7 +4261,7 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
   rollbackGuard.release();
 
   // Link JSFunction to this JSScript.
-  if (stencil.isFunction()) {
+  if (stencil.functionIndex) {
     JSFunction* fun =
         compilationInfo.funcData[*stencil.functionIndex].as<JSFunction*>();
     if (fun->isIncomplete()) {
