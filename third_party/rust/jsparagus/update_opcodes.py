@@ -59,19 +59,19 @@ input_paths = ensure_input_files([
 ])
 
 
-def get_emitter_source_path(name):
+def get_source_path(crate, name):
     path = os.path.join(args.PATH_TO_JSPARAGUS,
-                        'crates', 'emitter', 'src', name)
+                        'crates', crate, 'src', name)
     ensure_exists(path)
     return path
 
 
-opcode_dest_path = get_emitter_source_path('opcode.rs')
-emitter_dest_path = get_emitter_source_path('emitter.rs')
-function_dest_path = get_emitter_source_path('function.rs')
+opcode_dest_path = get_source_path('stencil', 'opcode.rs')
+emitter_dest_path = get_source_path('emitter', 'emitter.rs')
+function_dest_path = get_source_path('stencil', 'function.rs')
 
 copy_dir = os.path.join(args.PATH_TO_JSPARAGUS,
-                        'crates', 'emitter', 'src', 'copy')
+                        'crates', 'stencil', 'src', 'copy')
 if not os.path.exists(copy_dir):
     os.makedirs(copy_dir)
 

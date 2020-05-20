@@ -1,6 +1,6 @@
-use crate::opcode::Opcode;
 use std::convert::TryFrom;
 use std::fmt::Write;
+use stencil::opcode::Opcode;
 
 /// Return a string form of the given bytecode.
 pub fn dis(bc: &[u8]) -> String {

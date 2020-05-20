@@ -1,9 +1,9 @@
 use crate::ast_emitter::AstEmitter;
-use crate::bytecode_offset::{BytecodeOffset, BytecodeOffsetDiff};
 use crate::emitter::EmitError;
 use crate::emitter::InstructionWriter;
 use crate::emitter_scope::EmitterScopeDepth;
 use ast::source_atom_set::SourceAtomSetIndex;
+use stencil::bytecode_offset::{BytecodeOffset, BytecodeOffsetDiff};
 
 // Control structures
 

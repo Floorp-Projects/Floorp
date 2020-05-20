@@ -10,18 +10,19 @@ use crate::emitter_scope::{EmitterScopeStack, NameLocation};
 use crate::expression_emitter::*;
 use crate::function_declaration_emitter::{DummyFunctionScriptEmitter, FunctionDeclarationEmitter};
 use crate::object_emitter::*;
-use crate::opcode::Opcode;
 use crate::reference_op_emitter::{
     AssignmentEmitter, CallEmitter, DeclarationEmitter, ElemReferenceEmitter, GetElemEmitter,
     GetNameEmitter, GetPropEmitter, GetSuperElemEmitter, GetSuperPropEmitter, NameReferenceEmitter,
     NewEmitter, PropReferenceEmitter,
 };
-use crate::regexp::RegExpItem;
 use crate::script_emitter::ScriptEmitter;
-use crate::stencil::{EmitResult, ScriptStencilIndex, ScriptStencilList};
 use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSetIndex};
 use ast::types::*;
 use std::collections::HashSet;
+use stencil::opcode::Opcode;
+use stencil::regexp::RegExpItem;
+use stencil::result::EmitResult;
+use stencil::script::{ScriptStencilIndex, ScriptStencilList};
 
 use crate::control_structures::{
     BreakEmitter, CForEmitter, ContinueEmitter, ControlStructureStack, DoWhileEmitter,
@@ -46,7 +47,12 @@ pub fn emit_program<'alloc>(
         }
     }
 
-    Ok(EmitResult::new(compilation_info, scripts.into()))
+    Ok(EmitResult::new(
+        compilation_info.atoms.into(),
+        compilation_info.slices.into(),
+        compilation_info.scope_data_map.into(),
+        scripts.into(),
+    ))
 }
 
 pub struct AstEmitter<'alloc, 'opt> {

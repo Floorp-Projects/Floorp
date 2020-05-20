@@ -1,8 +1,8 @@
 use crate::ast_emitter::AstEmitter;
 use crate::emitter::EmitError;
-use crate::function::{FunctionCreationData, FunctionFlags};
-use crate::gcthings::GCThingIndex;
 use ast::source_atom_set::SourceAtomSetIndex;
+use stencil::function::{FunctionCreationData, FunctionFlags};
+use stencil::gcthings::GCThingIndex;
 
 /// Create a dummy function with empty script, to implement
 /// FunctionDeclarationEmitter without implementing FunctionScriptEmitter.

@@ -1,10 +1,10 @@
 use crate::ast_emitter::AstEmitter;
 use crate::emitter::EmitError;
 use crate::emitter_scope::NameLocation;
-use crate::gcthings::GCThingIndex;
 use ast::source_atom_set::SourceAtomSetIndex;
-use scope::data::BindingKind;
-use scope::frame_slot::FrameSlot;
+use stencil::frame_slot::FrameSlot;
+use stencil::gcthings::GCThingIndex;
+use stencil::scope::BindingKind;
 
 #[derive(Debug, PartialEq)]
 enum AssignmentReferenceKind {

@@ -1,36 +1,10 @@
 //! The result of emitter
 
-use crate::compilation_info::CompilationInfo;
+use crate::frame_slot::FrameSlot;
 use crate::function::FunctionCreationData;
 use crate::gcthings::GCThing;
 use crate::regexp::RegExpItem;
 use crate::scope_notes::ScopeNote;
-
-use scope::data::ScopeData;
-use scope::frame_slot::FrameSlot;
-
-/// The result of emitter.
-pub struct EmitResult<'alloc> {
-    pub atoms: Vec<&'alloc str>,
-    pub slices: Vec<&'alloc str>,
-    pub scopes: Vec<ScopeData>,
-
-    /// Emitted scripts.
-    /// The first item corresponds to the global script, and the remaining
-    /// items correspond to inner functions.
-    pub scripts: Vec<ScriptStencil>,
-}
-
-impl<'alloc> EmitResult<'alloc> {
-    pub fn new(compilation_info: CompilationInfo<'alloc>, scripts: Vec<ScriptStencil>) -> Self {
-        Self {
-            atoms: compilation_info.atoms.into(),
-            slices: compilation_info.slices.into(),
-            scopes: compilation_info.scope_data_map.into(),
-            scripts,
-        }
-    }
-}
 
 /// Data used to instantiate the non-lazy script.
 /// Maps to js::frontend::ScriptStencil in m-c/js/src/frontend/Stencil.h.

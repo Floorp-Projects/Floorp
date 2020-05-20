@@ -21,6 +21,7 @@ jsparagus-interpreter = { path = "crates/interpreter", optional = true  }
 jsparagus-json-log = { path = "crates/json-log"  }
 jsparagus-parser = { path = "crates/parser" }
 jsparagus-scope = { path = "crates/scope" }
+jsparagus-stencil = { path = "crates/stencil" }
 
 [features]
 default = []
