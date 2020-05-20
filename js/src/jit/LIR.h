@@ -506,7 +506,7 @@ class LDefinition {
     bits_ =
         (index << VREG_SHIFT) | (policy << POLICY_SHIFT) | (type << TYPE_SHIFT);
 #ifndef ENABLE_WASM_SIMD
-    MOZ_ASSERT(type() != SIMD128);
+    MOZ_ASSERT(this->type() != SIMD128);
 #endif
   }
 
