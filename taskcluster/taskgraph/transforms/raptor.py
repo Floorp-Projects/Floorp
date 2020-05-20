@@ -53,6 +53,7 @@ raptor_description_schema = Schema({
     ),
     Optional('run-on-projects'): optionally_keyed_by(
         'app',
+        'pageload',
         'test-name',
         'raptor-test',
         test_description_schema['run-on-projects']
@@ -133,16 +134,27 @@ def split_apps(config, tests):
 
 
 @transforms.add
-def handle_keyed_by_app(config, tests):
+def handle_keyed_by_prereqs(config, tests):
     """
-    Only resolve keys for raptor-subtests here since the
-    `raptor-test` keyed-by option might have keyed-by fields
+    Only resolve keys for prerequisite fields here since the
+    these keyed-by options might have keyed-by fields
     as well.
     """
-    fields = ['raptor-subtests']
+    fields = ['raptor-subtests', 'pageload']
     for test in tests:
         for field in fields:
             resolve_keyed_by(test, field, item_name=test['test-name'])
+
+        # We need to make the split immediately so that we can split
+        # task configurations by pageload type, the `both` condition is
+        # the same as not having a by-pageload split.
+        if test['pageload'] == 'both':
+            test['pageload'] = 'cold'
+
+            warmtest = deepcopy(test)
+            warmtest['pageload'] = 'warm'
+            yield warmtest
+
         yield test
 
 
@@ -176,7 +188,6 @@ def handle_keyed_by(config, tests):
         'limit-platforms',
         'activity',
         'binary-path',
-        'pageload',
         'max-run-time',
         'run-on-projects',
         'target',
