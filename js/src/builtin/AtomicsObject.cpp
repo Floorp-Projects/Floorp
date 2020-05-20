@@ -306,7 +306,7 @@ bool AtomicAccess(JSContext* cx, HandleValue obj, HandleValue index, Op op) {
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.4 Atomics.compareExchange ( typedArray, index, expectedValue,
 //                                  replacementValue )
-bool js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue typedArray = args.get(0);
   HandleValue index = args.get(1);
@@ -335,7 +335,7 @@ bool js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.7 Atomics.load ( typedArray, index )
-bool js::atomics_load(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_load(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue typedArray = args.get(0);
   HandleValue index = args.get(1);
@@ -353,7 +353,7 @@ bool js::atomics_load(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.9 Atomics.store ( typedArray, index, value )
-bool js::atomics_store(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_store(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue typedArray = args.get(0);
   HandleValue index = args.get(1);
@@ -399,7 +399,7 @@ static bool AtomicReadModifyWrite(JSContext* cx, const CallArgs& args,
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.5 Atomics.exchange ( typedArray, index, value )
-bool js::atomics_exchange(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_exchange(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
@@ -409,7 +409,7 @@ bool js::atomics_exchange(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.2 Atomics.add ( typedArray, index, value )
-bool js::atomics_add(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_add(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
@@ -419,7 +419,7 @@ bool js::atomics_add(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.10 Atomics.sub ( typedArray, index, value )
-bool js::atomics_sub(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_sub(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
@@ -429,7 +429,7 @@ bool js::atomics_sub(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.3 Atomics.and ( typedArray, index, value )
-bool js::atomics_and(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_and(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
@@ -439,7 +439,7 @@ bool js::atomics_and(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.8 Atomics.or ( typedArray, index, value )
-bool js::atomics_or(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_or(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
@@ -449,7 +449,7 @@ bool js::atomics_or(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.13 Atomics.xor ( typedArray, index, value )
-bool js::atomics_xor(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_xor(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
@@ -459,7 +459,7 @@ bool js::atomics_xor(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.6 Atomics.isLockFree ( size )
-bool js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue v = args.get(0);
 
@@ -658,7 +658,7 @@ static bool DoAtomicsWait(JSContext* cx,
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.11 Atomics.wait ( typedArray, index, value, timeout )
-bool js::atomics_wait(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_wait(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue objv = args.get(0);
   HandleValue index = args.get(1);
@@ -747,7 +747,7 @@ int64_t js::atomics_notify_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset,
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.12 Atomics.notify ( typedArray, index, count )
-bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
+static bool atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue objv = args.get(0);
   HandleValue index = args.get(1);
