@@ -18,6 +18,7 @@
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/SRILogHelper.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "nsStyleLinkElement.h"
 #include "nsIDocShell.h"
 #include "nsILoadContext.h"
@@ -853,9 +854,11 @@ void nsContentSink::PrefetchDNS(const nsAString& aHref) {
   }
 
   if (!hostname.IsEmpty() && nsHTMLDNSPrefetch::IsAllowed(mDocument)) {
-    nsHTMLDNSPrefetch::PrefetchLow(
-        hostname, isHttps, mDocument->NodePrincipal()->OriginAttributesRef(),
-        mDocument->GetChannel()->GetTRRMode());
+    OriginAttributes oa;
+    StoragePrincipalHelper::GetOriginAttributesForNetworkState(mDocument, oa);
+
+    nsHTMLDNSPrefetch::PrefetchLow(hostname, isHttps, oa,
+                                   mDocument->GetChannel()->GetTRRMode());
   }
 }
 
