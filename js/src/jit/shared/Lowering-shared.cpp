@@ -300,3 +300,39 @@ void LIRGeneratorShared::assignWasmSafepoint(LInstruction* ins,
     return;
   }
 }
+
+#ifndef ENABLE_WASM_SIMD
+
+void LIRGenerator::visitWasmBitselectSimd128(MWasmBitselectSimd128*) {
+  MOZ_CRASH("SIMD not enabled");
+}
+
+void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128*) {
+  MOZ_CRASH("SIMD not enabled");
+}
+
+void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128*) {
+  MOZ_CRASH("SIMD not enabled");
+}
+
+void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128*) {
+  MOZ_CRASH("SIMD not enabled");
+}
+
+void LIRGenerator::visitWasmReplaceLaneSimd128(MWasmReplaceLaneSimd128*) {
+  MOZ_CRASH("SIMD not enabled");
+}
+
+void LIRGenerator::visitWasmScalarToSimd128(MWasmScalarToSimd128*) {
+  MOZ_CRASH("SIMD not enabled");
+}
+
+void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128*) {
+  MOZ_CRASH("SIMD not enabled");
+}
+
+void LIRGenerator::visitWasmReduceSimd128(MWasmReduceSimd128*) {
+  MOZ_CRASH("SIMD not enabled");
+}
+
+#endif  // !ENABLE_WASM_SIMD

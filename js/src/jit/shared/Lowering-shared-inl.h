@@ -583,6 +583,12 @@ LDefinition LIRGeneratorShared::tempDouble() {
   return temp(LDefinition::DOUBLE);
 }
 
+#ifdef ENABLE_WASM_SIMD
+LDefinition LIRGeneratorShared::tempSimd128() {
+  return temp(LDefinition::SIMD128);
+}
+#endif
+
 LDefinition LIRGeneratorShared::tempCopy(MDefinition* input,
                                          uint32_t reusedInput) {
   MOZ_ASSERT(input->virtualRegister());
