@@ -37,6 +37,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
   </script>`;
 
 add_task(async function() {
+  await pushPref("javascript.options.asyncstack", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const expectedErrors = [
