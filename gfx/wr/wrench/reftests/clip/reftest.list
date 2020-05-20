@@ -15,3 +15,4 @@ fuzzy(70,2400) == clip-and-filter-with-rotation.yaml clip-and-filter-with-rotati
 color_targets(1) alpha_targets(0) == clip-out-rotation.yaml blank.yaml # Unexpected color targets, see bug 1580795
 == clipped-occlusion.yaml clipped-occlusion-ref.yaml
 == clip-empty-inner-rect.yaml clip-empty-inner-rect-ref.yaml
+== iframe-nested-in-stacking-context.yaml iframe-nested-in-stacking-context-ref.yaml
