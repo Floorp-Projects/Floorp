@@ -98,7 +98,10 @@ startupRecorder.prototype = {
 
   observe(subject, topic, data) {
     if (topic == "app-startup") {
-      if (!Services.prefs.getBoolPref("browser.startup.record", false)) {
+      if (
+        !Services.prefs.getBoolPref("browser.startup.record", false) &&
+        !Services.prefs.getBoolPref("browser.startup.recordImages", false)
+      ) {
         this._resolve();
         this._resolve = null;
         return;
@@ -110,12 +113,20 @@ startupRecorder.prototype = {
       let topics = [
         "profile-do-change", // This catches stuff loaded during app-startup
         "toplevel-window-ready", // Catches stuff from final-ui-startup
-        "image-loading",
-        "image-drawing",
         firstPaintNotification,
         "sessionstore-windows-restored",
         "browser-startup-idle-tasks-finished",
       ];
+
+      if (Services.prefs.getBoolPref("browser.startup.recordImages", false)) {
+        // For code simplicify, recording images excludes the other startup
+        // recorder behaviors, so we can observe only the image topics.
+        topics = [
+          "image-loading",
+          "image-drawing",
+          "browser-startup-idle-tasks-finished",
+        ];
+      }
       for (let t of topics) {
         Services.obs.addObserver(this, t);
       }
@@ -169,9 +180,15 @@ startupRecorder.prototype = {
         this.record.bind(this, "before handling user events")
       );
     } else if (topic == "browser-startup-idle-tasks-finished") {
+      if (Services.prefs.getBoolPref("browser.startup.recordImages", false)) {
+        Services.obs.removeObserver(this, "image-drawing");
+        Services.obs.removeObserver(this, "image-loading");
+        this._resolve();
+        this._resolve = null;
+        return;
+      }
+
       this.record("before becoming idle");
-      Services.obs.removeObserver(this, "image-drawing");
-      Services.obs.removeObserver(this, "image-loading");
       win.removeEventListener("MozAfterPaint", afterPaintListener);
       win = null;
       this.data.frames = paints;
