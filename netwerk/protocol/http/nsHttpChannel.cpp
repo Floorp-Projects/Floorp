@@ -6992,8 +6992,8 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
 
   if (dnsStrategy & DNS_PREFETCH_ORIGIN) {
     OriginAttributes originAttributes;
-    StoragePrincipalHelper::GetOriginAttributes(
-        this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
+    StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+        this, originAttributes);
 
     mDNSPrefetch = new nsDNSPrefetch(
         mURI, originAttributes, nsIRequest::GetTRRMode(), this, mTimingEnabled);
