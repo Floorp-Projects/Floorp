@@ -26,8 +26,11 @@ async function callRequestStorageAccess(callback, expectFail) {
     ].includes(
       SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
     ) && !isOnContentBlockingAllowList();
+  const TEST_ANOTHER_3RD_PARTY_ORIGIN = SpecialPowers.useRemoteSubframes
+    ? "http://another-tracking.example.net"
+    : "https://another-tracking.example.net";
   // With another-tracking.example.net, we're same-eTLD+1, so the first try succeeds.
-  if (origin != "https://another-tracking.example.net") {
+  if (origin != TEST_ANOTHER_3RD_PARTY_ORIGIN) {
     if (rejectTrackers) {
       let p;
       let threw = false;
@@ -129,7 +132,7 @@ async function callRequestStorageAccess(callback, expectFail) {
     success &&
     rejectTrackers &&
     window.location.search != "?disableWaitUntilPermission" &&
-    origin != "https://another-tracking.example.net"
+    origin != TEST_ANOTHER_3RD_PARTY_ORIGIN
   ) {
     // Wait until the permission is visible in parent process to avoid race
     // conditions. We don't need to wait the permission to be visible in content
