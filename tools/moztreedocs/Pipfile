@@ -14,7 +14,7 @@ scandir = "~=1.9.0"
 singledispatch = "~=3.4.0"
 sphinx-js = "~=2.8"
 sphinx-rtd-theme = "~=0.4.3"
-sphinxcontrib-mermaid = "~=0.3.1"
+sphinxcontrib-mermaid = "~=0.4.0"
 sphinx = "~=2.2.2"
 tornado = "~=6.0.3"
 
