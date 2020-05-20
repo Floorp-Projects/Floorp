@@ -2206,6 +2206,13 @@ class JSScript : public js::BaseScript {
       JSContext* cx, js::frontend::CompilationInfo& compilationInfo,
       js::HandleScript script, js::frontend::ScriptStencil& stencil);
 
+  // Allocate a JSScript and initialize it with bytecode. This consumes
+  // allocations within the stencil.
+  static JSScript* fromStencil(JSContext* cx,
+                               js::frontend::CompilationInfo& compilationInfo,
+                               js::frontend::ScriptStencil& stencil,
+                               js::SourceExtent extent);
+
 #ifdef DEBUG
  private:
   // Assert that jump targets are within the code array of the script.

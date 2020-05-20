@@ -450,7 +450,8 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
-  RootedScript script(cx, stencil.intoScript(cx, compilationInfo, extent));
+  RootedScript script(
+      cx, JSScript::fromStencil(cx, compilationInfo, stencil, extent));
   if (!script) {
     return nullptr;
   }

@@ -720,8 +720,8 @@ bool FunctionScriptEmitter::initScript() {
     bce_->outputScript = script;
   } else {
     SourceExtent extent = funbox_->getScriptExtent();
-    RootedScript script(cx,
-                        stencil.intoScript(cx, bce_->compilationInfo, extent));
+    RootedScript script(
+        cx, JSScript::fromStencil(cx, bce_->compilationInfo, stencil, extent));
     if (!script) {
       return false;
     }
