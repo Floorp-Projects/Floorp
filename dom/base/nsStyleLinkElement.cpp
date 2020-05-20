@@ -65,8 +65,7 @@ nsStyleLinkElement::SheetInfo::SheetInfo(
 nsStyleLinkElement::SheetInfo::~SheetInfo() = default;
 
 nsStyleLinkElement::nsStyleLinkElement()
-    : mDontLoadStyle(false),
-      mUpdatesEnabled(true),
+    : mUpdatesEnabled(true),
       mLineNumber(1),
       mColumnNumber(1) {}
 
@@ -129,10 +128,6 @@ void nsStyleLinkElement::SetStyleSheet(StyleSheet* aStyleSheet) {
       mStyleSheet->SetOwningNode(node);
     }
   }
-}
-
-void nsStyleLinkElement::InitStyleLinkElement(bool aDontLoadStyle) {
-  mDontLoadStyle = aDontLoadStyle;
 }
 
 void nsStyleLinkElement::SetEnableUpdates(bool aEnableUpdates) {
@@ -274,7 +269,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
   }
 
   // When static documents are created, stylesheets are cloned manually.
-  if (mDontLoadStyle || !mUpdatesEnabled || doc->IsStaticDocument()) {
+  if (!mUpdatesEnabled || doc->IsStaticDocument()) {
     return Update{};
   }
 

@@ -364,7 +364,6 @@ nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
 
   nsresult rv;
 
-  ssle->InitStyleLinkElement(false);
   // We want to be notified when the style sheet finishes loading, so
   // disable style sheet loading for now.
   ssle->SetEnableUpdates(false);

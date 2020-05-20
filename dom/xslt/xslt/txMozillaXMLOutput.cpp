@@ -356,7 +356,6 @@ nsresult txMozillaXMLOutput::processingInstruction(const nsString& aTarget,
   if (mCreatingNewDocument) {
     ssle = do_QueryInterface(pi);
     if (ssle) {
-      ssle->InitStyleLinkElement(false);
       ssle->SetEnableUpdates(false);
     }
   }
@@ -501,7 +500,6 @@ nsresult txMozillaXMLOutput::startElementInternal(nsAtom* aPrefix,
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
         do_QueryInterface(mOpenedElement);
     if (ssle) {
-      ssle->InitStyleLinkElement(false);
       ssle->SetEnableUpdates(false);
     }
   }

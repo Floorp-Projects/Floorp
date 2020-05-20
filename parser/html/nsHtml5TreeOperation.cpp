@@ -458,7 +458,6 @@ nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
     if (MOZ_UNLIKELY(aName == nsGkAtoms::style || aName == nsGkAtoms::link)) {
       nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(newContent));
       if (ssle) {
-        ssle->InitStyleLinkElement(false);
         ssle->SetEnableUpdates(false);
       }
     }
@@ -486,7 +485,6 @@ nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
     if (MOZ_UNLIKELY(aName == nsGkAtoms::style || aName == nsGkAtoms::link)) {
       nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(newContent));
       if (ssle) {
-        ssle->InitStyleLinkElement(false);
         ssle->SetEnableUpdates(false);
       }
     }
@@ -535,7 +533,6 @@ nsIContent* nsHtml5TreeOperation::CreateSVGElement(
   if (MOZ_UNLIKELY(aName == nsGkAtoms::style)) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(newContent));
     if (ssle) {
-      ssle->InitStyleLinkElement(false);
       ssle->SetEnableUpdates(false);
     }
   }
