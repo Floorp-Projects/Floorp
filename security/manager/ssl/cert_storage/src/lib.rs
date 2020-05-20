@@ -1164,7 +1164,7 @@ impl CertStorage {
         ));
         let thread = try_ns!(self.thread.lock());
         let runnable = try_ns!(TaskRunnable::new("HasPriorData", task));
-        try_ns!(runnable.dispatch(&*thread));
+        try_ns!(TaskRunnable::dispatch(runnable, &*thread));
         NS_OK
     }
 
@@ -1226,7 +1226,7 @@ impl CertStorage {
         ));
         let thread = try_ns!(self.thread.lock());
         let runnable = try_ns!(TaskRunnable::new("SetRevocations", task));
-        try_ns!(runnable.dispatch(&*thread));
+        try_ns!(TaskRunnable::dispatch(runnable, &*thread));
         NS_OK
     }
 
@@ -1305,7 +1305,7 @@ impl CertStorage {
         ));
         let thread = try_ns!(self.thread.lock());
         let runnable = try_ns!(TaskRunnable::new("SetCRLiteState", task));
-        try_ns!(runnable.dispatch(&*thread));
+        try_ns!(TaskRunnable::dispatch(runnable, &*thread));
         NS_OK
     }
 
@@ -1351,7 +1351,7 @@ impl CertStorage {
         ));
         let thread = try_ns!(self.thread.lock());
         let runnable = try_ns!(TaskRunnable::new("SetFullCRLiteFilter", task));
-        try_ns!(runnable.dispatch(&*thread));
+        try_ns!(TaskRunnable::dispatch(runnable, &*thread));
         NS_OK
     }
 
@@ -1417,7 +1417,7 @@ impl CertStorage {
         ));
         let thread = try_ns!(self.thread.lock());
         let runnable = try_ns!(TaskRunnable::new("AddCerts", task));
-        try_ns!(runnable.dispatch(&*thread));
+        try_ns!(TaskRunnable::dispatch(runnable, &*thread));
         NS_OK
     }
 
@@ -1445,7 +1445,7 @@ impl CertStorage {
         ));
         let thread = try_ns!(self.thread.lock());
         let runnable = try_ns!(TaskRunnable::new("RemoveCertsByHashes", task));
-        try_ns!(runnable.dispatch(&*thread));
+        try_ns!(TaskRunnable::dispatch(runnable, &*thread));
         NS_OK
     }
 

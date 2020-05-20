@@ -196,7 +196,11 @@ where
         let runnable = TaskRunnable::new(self.ferry.name(), Box::new(self))?;
         // `may_block` schedules the task on the I/O thread pool, since we
         // expect most operations to wait on I/O.
-        runnable.dispatch_with_options(target, DispatchOptions::default().may_block(true))?;
+        TaskRunnable::dispatch_with_options(
+            runnable,
+            target,
+            DispatchOptions::default().may_block(true),
+        )?;
         Ok(())
     }
 }
@@ -339,7 +343,11 @@ where
     /// Dispatches the task to the given thread `target`.
     pub fn dispatch(self, target: &nsIEventTarget) -> Result<()> {
         let runnable = TaskRunnable::new(Self::name(), Box::new(self))?;
-        runnable.dispatch_with_options(target, DispatchOptions::default().may_block(true))?;
+        TaskRunnable::dispatch_with_options(
+            runnable,
+            target,
+            DispatchOptions::default().may_block(true),
+        )?;
         Ok(())
     }
 }

@@ -176,7 +176,7 @@ pub(crate) fn persist(key: String, value: Option<String>) -> XULStoreResult<()> 
             .ok_or(XULStoreError::Unavailable)?
             .get_ref()
             .ok_or(XULStoreError::Unavailable)?;
-        TaskRunnable::new("XULStore::Persist", task)?.dispatch(thread)?;
+        TaskRunnable::dispatch(TaskRunnable::new("XULStore::Persist", task)?, thread)?;
     }
 
     // Now insert the key/value pair into the map.  The unwrap() call here

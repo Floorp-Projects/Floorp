@@ -134,7 +134,7 @@ impl KeyValueService {
             nsCString::from(name),
         ));
 
-        TaskRunnable::new("KVService::GetOrCreate", task)?.dispatch(thread)
+        TaskRunnable::dispatch(TaskRunnable::new("KVService::GetOrCreate", task)?, thread)
     }
 }
 
@@ -182,7 +182,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Put", task)?.dispatch(thread)
+        TaskRunnable::dispatch(TaskRunnable::new("KVDatabase::Put", task)?, thread)
     }
 
     xpcom_method!(
@@ -220,7 +220,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::WriteMany", task)?.dispatch(thread)
+        TaskRunnable::dispatch(TaskRunnable::new("KVDatabase::WriteMany", task)?, thread)
     }
 
     xpcom_method!(
@@ -247,7 +247,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Get", task)?.dispatch(thread)
+        TaskRunnable::dispatch(TaskRunnable::new("KVDatabase::Get", task)?, thread)
     }
 
     xpcom_method!(
@@ -264,7 +264,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Has", task)?.dispatch(thread)
+        TaskRunnable::dispatch(TaskRunnable::new("KVDatabase::Has", task)?, thread)
     }
 
     xpcom_method!(
@@ -281,7 +281,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Delete", task)?.dispatch(thread)
+        TaskRunnable::dispatch(TaskRunnable::new("KVDatabase::Delete", task)?, thread)
     }
 
     xpcom_method!(
@@ -297,7 +297,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Clear", task)?.dispatch(thread)
+        TaskRunnable::dispatch(TaskRunnable::new("KVDatabase::Clear", task)?, thread)
     }
 
     xpcom_method!(
@@ -324,7 +324,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Enumerate", task)?.dispatch(thread)
+        TaskRunnable::dispatch(TaskRunnable::new("KVDatabase::Enumerate", task)?, thread)
     }
 }
 
