@@ -2147,6 +2147,9 @@ pref("devtools.netmonitor.har.enableAutoExportToFile", false);
 
 pref("devtools.netmonitor.features.webSockets", true);
 
+// Disable the EventSource Inspector.
+pref("devtools.netmonitor.features.serverSentEvents", false);
+
 // Enable the Storage Inspector
 pref("devtools.storage.enabled", true);
 
