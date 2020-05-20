@@ -1129,7 +1129,7 @@ pref("javascript.options.wasm_reftypes",          true);
   pref("javascript.options.wasm_multi_value",     true);
 #endif
 #ifdef ENABLE_WASM_SIMD
-  pref("javascript.options.wasm_simd",            false);
+  pref("javascript.options.wasm_simd",            true);
 #endif
 pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
