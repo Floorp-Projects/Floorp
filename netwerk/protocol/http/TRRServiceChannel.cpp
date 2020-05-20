@@ -10,6 +10,7 @@
 #include "HttpLog.h"
 #include "AltServiceChild.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/Unused.h"
 #include "nsDNSPrefetch.h"
 #include "nsEscape.h"
 #include "nsHttpTransaction.h"
@@ -303,11 +304,13 @@ nsresult TRRServiceChannel::BeginConnect() {
   rv = mURI->GetScheme(scheme);
   if (NS_SUCCEEDED(rv)) rv = mURI->GetAsciiHost(host);
   if (NS_SUCCEEDED(rv)) rv = mURI->GetPort(&port);
-  if (NS_SUCCEEDED(rv)) mURI->GetUsername(mUsername);
   if (NS_SUCCEEDED(rv)) rv = mURI->GetAsciiSpec(mSpec);
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  // Just a warning here because some nsIURIs do not implement this method.
+  Unused << NS_WARN_IF(NS_FAILED(mURI->GetUsername(mUsername)));
 
   // Reject the URL if it doesn't specify a host
   if (host.IsEmpty()) {
