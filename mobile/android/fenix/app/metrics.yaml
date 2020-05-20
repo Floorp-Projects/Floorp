@@ -137,6 +137,7 @@ events:
           show_search_shortcuts, open_links_in_a_private_tab (bug in
           implementation https://github.com/mozilla-mobile/fenix/issues/7384),
           pref_key_sync_logins, pref_key_sync_bookmarks, pref_key_sync_history,
+          pref_key_show_voice_search,
           and pref_key_show_search_suggestions_in_private.
       enabled:
         description: "Whether or not the preference is *now* enabled"
@@ -1822,6 +1823,19 @@ search_suggestions:
       - https://github.com/mozilla-mobile/fenix/issues/6070
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6746
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+
+voice_search:
+  tapped:
+    type: event
+    description: |
+      A user selected the voice search button on the search screen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10465
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10785
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"

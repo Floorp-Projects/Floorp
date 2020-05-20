@@ -154,6 +154,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     }
 
     private fun launchVoiceSearch() {
+        requireComponents.analytics.metrics.track(Event.VoiceSearchTapped)
         val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PROMPT, requireContext().getString(R.string.voice_search_explainer))

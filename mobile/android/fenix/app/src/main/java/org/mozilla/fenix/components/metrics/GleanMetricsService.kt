@@ -44,6 +44,7 @@ import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.GleanMetrics.UserSpecifiedSearchEngines
+import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.BrowsersCache
@@ -521,6 +522,9 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TipClosed -> EventWrapper(
             { Tip.closed.record(it) },
             { Tip.closedKeys.valueOf(it) }
+        )
+        is Event.VoiceSearchTapped -> EventWrapper<NoExtraKeys>(
+            { VoiceSearch.tapped.record(it) }
         )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null

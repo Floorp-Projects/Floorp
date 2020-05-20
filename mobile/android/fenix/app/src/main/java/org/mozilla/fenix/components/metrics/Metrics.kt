@@ -13,9 +13,9 @@ import mozilla.components.browser.toolbar.facts.ToolbarFacts
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
-import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
 import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.downloads.facts.DownloadsFacts
@@ -166,6 +166,7 @@ sealed class Event {
     object FennecToFenixMigrated : Event()
     object AddonsOpenInSettings : Event()
     object AddonsOpenInToolbarMenu : Event()
+    object VoiceSearchTapped : Event()
 
     // Interaction events with extras
 
@@ -187,6 +188,7 @@ sealed class Event {
             context.getString(R.string.pref_key_sync_logins),
             context.getString(R.string.pref_key_sync_bookmarks),
             context.getString(R.string.pref_key_sync_history),
+            context.getString(R.string.pref_key_show_voice_search),
             context.getString(R.string.pref_key_show_search_suggestions_in_private)
         )
 
