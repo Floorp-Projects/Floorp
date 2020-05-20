@@ -209,6 +209,9 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // Whether SheetComplete was called.
   bool mSheetCompleteCalled = false;
+  // Whether we intentionally are not calling SheetComplete because nobody is
+  // listening for the load.
+  bool mIntentionallyDropped = false;
 #endif
 
   bool ShouldDefer() const { return mWasAlternate || !mMediaMatched; }
