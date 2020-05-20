@@ -2854,6 +2854,16 @@ void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
 
 void MacroAssembler::speculationBarrier() { MOZ_CRASH(); }
 
+void MacroAssembler::floorFloat32ToInt32(FloatRegister src, Register dest,
+                                         Label* fail) {
+  MOZ_CRASH("Port CodeGenerator::visitFloorF code");
+}
+
+void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
+                                        Label* fail) {
+  MOZ_CRASH("Port CodeGenerator::visitFloor code");
+}
+
 void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
                                          FloatRegister temp, Label* fail) {
   MOZ_CRASH("Port CodeGenerator::visitRoundF code");
