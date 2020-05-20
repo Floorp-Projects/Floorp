@@ -12,6 +12,14 @@ Documentation for the specific libraries is included in the [Android Components 
 
 The Glean crash ping format is documented [here](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/docs/metrics.md).
 
+## Breadcrumbs
+
+[Breadcrumbs](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt) are trail of events that are sent with each crash report to both Socorro and Sentry.  
+
+### Events
+
+In [HomeActivity](https://github.com/mozilla-mobile/fenix/blob/master/app/src/main/java/org/mozilla/fenix/HomeActivity.kt) when `onDestinationChanged` occurs, the destination fragment's name and and whether it is a custom tab is added to the breadcrumbs. 
+
 ## Socorro
 
 [Socorro](https://wiki.mozilla.org/Socorro) is a Mozilla open source project for [crash statistics](https://crash-stats.mozilla.org/). Firefox Preview uses Socorro to track native GeckoView crashes. Crash reports contain a signature, classifications, and a number of improved fields (e.g. OS, product, version) - you can read more about what is sent in these fields in the [Socorro report documentation](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Crash_reporting/Understanding_crash_reports).
