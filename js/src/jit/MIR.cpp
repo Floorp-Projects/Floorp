@@ -5575,6 +5575,26 @@ MDefinition* MGuardNullOrUndefined::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MGuardObjectIdentity::foldsTo(TempAllocator& alloc) {
+  if (!object()->isConstant()) {
+    return this;
+  }
+
+  JSObject* obj = &object()->toConstant()->toObject();
+  JSObject* other = &expected()->toConstant()->toObject();
+  if (!bailOnEquality()) {
+    if (obj == other) {
+      return object();
+    }
+  } else {
+    if (obj != other) {
+      return object();
+    }
+  }
+
+  return this;
+}
+
 MDefinition* MGuardSpecificAtom::foldsTo(TempAllocator& alloc) {
   if (str()->isConstant()) {
     JSAtom* cstAtom = &str()->toConstant()->toString()->asAtom();
