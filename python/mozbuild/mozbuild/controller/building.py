@@ -225,6 +225,10 @@ class BuildMonitor(MozbuildObject):
         self.instance_warnings = WarningsDatabase()
 
         def on_warning(warning):
+            # Skip `errors`
+            if warning['type'] == 'error':
+                return
+
             filename = warning['filename']
 
             if not os.path.exists(filename):

@@ -114,12 +114,12 @@ class gfxVars final {
   static StaticAutoPtr<gfxVars> sInstance;
   static StaticAutoPtr<nsTArray<VarBase*>> sVarList;
 
-  template <typename T, T Default()>
+  template <typename T, T Default(), T GetFrom(const GfxVarValue& aValue)>
   class VarImpl final : public VarBase {
    public:
     VarImpl() : mValue(Default()) {}
     void SetValue(const GfxVarValue& aValue) override {
-      aValue.get(&mValue);
+      mValue = GetFrom(aValue);
       if (mListener) {
         mListener();
       }
@@ -154,7 +154,10 @@ class gfxVars final {
 #define GFX_VAR_DECL(CxxName, DataType, DefaultValue)                          \
  private:                                                                      \
   static DataType Get##CxxName##Default() { return DefaultValue; }             \
-  VarImpl<DataType, Get##CxxName##Default> mVar##CxxName;                      \
+  static DataType Get##CxxName##From(const GfxVarValue& aValue) {              \
+    return aValue.get_##DataType();                                            \
+  }                                                                            \
+  VarImpl<DataType, Get##CxxName##Default, Get##CxxName##From> mVar##CxxName;  \
                                                                                \
  public:                                                                       \
   static const DataType& CxxName() { return sInstance->mVar##CxxName.Get(); }  \

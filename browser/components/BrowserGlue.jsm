@@ -65,11 +65,19 @@ XPCOMUtils.defineLazyServiceGetter(
 const PREF_PDFJS_ISDEFAULT_CACHE_STATE = "pdfjs.enabledCache.state";
 
 /**
+ * Fission-compatible JSProcess implementations.
+ * Each actor options object takes the form of a ProcessActorOptions dictionary.
+ * Detailed documentation of these options is in dom/docs/Fission.rst,
+ * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jsprocessactor
+ */
+let JSPROCESSACTORS = {};
+
+/**
  * Fission-compatible JSWindowActor implementations.
  * Detailed documentation of these is in dom/docs/Fission.rst,
  * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jswindowactor
  */
-let ACTORS = {
+let JSWINDOWACTORS = {
   AboutLogins: {
     parent: {
       moduleURI: "resource:///actors/AboutLoginsParent.jsm",
@@ -1176,7 +1184,8 @@ BrowserGlue.prototype = {
     os.addObserver(this, "handlersvc-store-initialized");
     os.addObserver(this, "shield-init-complete");
 
-    ActorManagerParent.addActors(ACTORS);
+    ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
+    ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
     ActorManagerParent.addLegacyActors(LEGACY_ACTORS);
     ActorManagerParent.flush();
 

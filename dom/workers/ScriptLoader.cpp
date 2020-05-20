@@ -593,9 +593,6 @@ class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
 
   NS_IMETHOD OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatusCode) override {
-    MOZ_DIAGNOSTIC_ASSERT_IF(NS_SUCCEEDED(aStatusCode),
-                             mWorkerPrivate->GetEmbedderPolicy().isSome());
-
     return NS_OK;
   }
 
@@ -621,8 +618,6 @@ class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
   ~ScriptResponseHeaderProcessor() = default;
 
   nsresult ProcessCrossOriginEmbedderPolicyHeader(nsIRequest* aRequest) {
-    MOZ_ASSERT_IF(!mIsMainScript, mWorkerPrivate->GetEmbedderPolicy().isSome());
-
     nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aRequest);
 
     // NOTE: the spec doesn't say what to do with non-HTTP workers.

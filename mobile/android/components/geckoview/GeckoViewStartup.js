@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup"); // eslint-disable-line no-unused-vars
 
-const ACTORS = {
+const JSWINDOWACTORS = {
   BrowserTab: {
     parent: {
       moduleURI: "resource:///actors/BrowserTabParent.jsm",
@@ -160,7 +160,7 @@ GeckoViewStartup.prototype = {
         if (
           Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
         ) {
-          ActorManagerParent.addActors(ACTORS);
+          ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
           ActorManagerParent.flush();
 
           Services.mm.loadFrameScript(

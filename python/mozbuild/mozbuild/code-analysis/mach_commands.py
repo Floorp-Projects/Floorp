@@ -162,6 +162,11 @@ class StaticAnalysisMonitor(object):
                 warning['reliability'] = check_config.get('reliability', 'low')
                 warning['reason'] = check_config.get('reason')
                 warning['publish'] = check_config.get('publish', True)
+            elif warning["flag"] == "clang-diagnostic-error":
+                # For a "warning" that is flagged as "clang-diagnostic-error"
+                # set it as "publish"
+                warning['publish'] = True
+
         return (warning, True)
 
 
@@ -576,7 +581,6 @@ class StaticAnalysis(MachCommandBase):
                 dict_issue = {
                     'line': issue['mainEventLineNumber'],
                     'flag': issue['checkerName'],
-                    'build_error': issue['checkerName'].startswith('RW.CLANG'),
                     'message': event_path['eventDescription'],
                     'reliability': self.get_reliability_index_for_cov_checker(
                         issue['checkerName']
@@ -602,6 +606,10 @@ class StaticAnalysis(MachCommandBase):
             for issue in result['issues']:
                 path = build_repo_relative_path(issue['strippedMainEventFilePathname'],
                                                 self.topsrcdir)
+                # Skip clang diagnostic messages
+                if issue['checkerName'].startswith('RW.CLANG'):
+                    continue
+
                 if path is None:
                     # Since we skip a result we should log it
                     self.log(logging.INFO, 'static-analysis', {},

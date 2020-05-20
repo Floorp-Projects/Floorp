@@ -31,7 +31,7 @@ mod statics;
 use crate::{
     error::{XULStoreError, XULStoreResult},
     iter::XULStoreIterator,
-    persist::persist,
+    persist::{flush_writes, persist},
     statics::DATA_CACHE,
 };
 use nsstring::nsAString;
@@ -219,4 +219,8 @@ pub(crate) fn get_attrs(doc: &nsAString, id: &nsAString) -> XULStoreResult<XULSt
         },
         None => Ok(XULStoreIterator::new(vec![].into_iter())),
     }
+}
+
+pub(crate) fn shutdown() -> XULStoreResult<()> {
+    flush_writes()
 }

@@ -94,6 +94,7 @@
   REAL_IF_INTL(Intl, CLASP(Intl))                                             \
   REAL_IF_INTL(Collator, OCLASP(Collator))                                    \
   REAL_IF_INTL(DateTimeFormat, OCLASP(DateTimeFormat))                        \
+  REAL_IF_INTL(DisplayNames, OCLASP(DisplayNames))                            \
   REAL_IF_INTL(ListFormat, OCLASP(ListFormat))                                \
   REAL_IF_INTL(Locale, OCLASP(Locale))                                        \
   REAL_IF_INTL(NumberFormat, OCLASP(NumberFormat))                            \

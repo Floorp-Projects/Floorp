@@ -11,13 +11,13 @@ use crate::gcthings::{GCThingIndex, GCThingList};
 use crate::opcode::Opcode;
 use crate::regexp::{RegExpItem, RegExpList};
 use crate::scope_notes::{ScopeNoteIndex, ScopeNoteList};
-use crate::script_atom_set::{ScriptAtomSet, ScriptAtomSetIndex};
 use crate::stencil::ScriptStencil;
 use ast::source_atom_set::SourceAtomSetIndex;
 use byteorder::{ByteOrder, LittleEndian};
 use scope::data::ScopeIndex;
 use scope::frame_slot::FrameSlot;
 use std::cmp;
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::fmt;
@@ -113,7 +113,9 @@ pub type u24 = u32;
 /// Low-level bytecode emitter.
 pub struct InstructionWriter {
     bytecode: Vec<u8>,
-    atoms: ScriptAtomSet,
+
+    /// To de-duplicate atoms in gcthings list, note the index for each atom.
+    atom_to_gcindex_map: HashMap<SourceAtomSetIndex, GCThingIndex>,
 
     gcthings: GCThingList,
     scope_notes: ScopeNoteList,
@@ -173,8 +175,8 @@ impl InstructionWriter {
     pub fn new() -> Self {
         Self {
             bytecode: Vec::new(),
-            atoms: ScriptAtomSet::new(),
             gcthings: GCThingList::new(),
+            atom_to_gcindex_map: HashMap::new(),
             scope_notes: ScopeNoteList::new(),
             inner_functions: FunctionCreationDataList::new(),
             regexps: RegExpList::new(),
@@ -217,10 +219,6 @@ impl InstructionWriter {
 
     fn write_g_c_thing_index(&mut self, value: GCThingIndex) {
         self.write_u32(usize::from(value) as u32);
-    }
-
-    fn write_script_atom_set_index(&mut self, atom_index: ScriptAtomSetIndex) {
-        self.write_u32(atom_index.into());
     }
 
     fn write_offset(&mut self, offset: i32) {
@@ -311,10 +309,6 @@ impl InstructionWriter {
         // find the offset after the end of bytecode associated with this offset.
         let target_opcode = Opcode::try_from(self.bytecode[offset.offset]).unwrap();
         offset.offset + target_opcode.instruction_length()
-    }
-
-    pub fn get_atom_index(&mut self, value: SourceAtomSetIndex) -> ScriptAtomSetIndex {
-        self.atoms.insert(value)
     }
 
     pub fn emit_jump_target_and_patch(&mut self, jumplist: &Vec<BytecodeOffset>) {
@@ -467,9 +461,9 @@ impl InstructionWriter {
         self.write_u32(big_int_index);
     }
 
-    pub fn string(&mut self, atom_index: ScriptAtomSetIndex) {
+    pub fn string(&mut self, atom_index: GCThingIndex) {
         self.emit_op(Opcode::String);
-        self.write_script_atom_set_index(atom_index);
+        self.write_g_c_thing_index(atom_index);
     }
 
     pub fn symbol(&mut self, symbol: u8) {
@@ -544,19 +538,19 @@ impl InstructionWriter {
         self.emit_op(Opcode::ObjWithProto);
     }
 
-    pub fn init_prop(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn init_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitProp);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn init_hidden_prop(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn init_hidden_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitHiddenProp);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn init_locked_prop(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn init_locked_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitLockedProp);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn init_elem(&mut self) {
@@ -567,14 +561,14 @@ impl InstructionWriter {
         self.emit_op(Opcode::InitHiddenElem);
     }
 
-    pub fn init_prop_getter(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn init_prop_getter(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitPropGetter);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn init_hidden_prop_getter(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn init_hidden_prop_getter(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitHiddenPropGetter);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn init_elem_getter(&mut self) {
@@ -585,14 +579,14 @@ impl InstructionWriter {
         self.emit_op(Opcode::InitHiddenElemGetter);
     }
 
-    pub fn init_prop_setter(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn init_prop_setter(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitPropSetter);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn init_hidden_prop_setter(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn init_hidden_prop_setter(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitHiddenPropSetter);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn init_elem_setter(&mut self) {
@@ -603,14 +597,14 @@ impl InstructionWriter {
         self.emit_op(Opcode::InitHiddenElemSetter);
     }
 
-    pub fn get_prop(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn get_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::GetProp);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn call_prop(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn call_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::CallProp);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn get_elem(&mut self) {
@@ -621,19 +615,19 @@ impl InstructionWriter {
         self.emit_op(Opcode::CallElem);
     }
 
-    pub fn length(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn length(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::Length);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn set_prop(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn set_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::SetProp);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn strict_set_prop(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn strict_set_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::StrictSetProp);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn set_elem(&mut self) {
@@ -644,14 +638,14 @@ impl InstructionWriter {
         self.emit_op(Opcode::StrictSetElem);
     }
 
-    pub fn del_prop(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn del_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::DelProp);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn strict_del_prop(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn strict_del_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::StrictDelProp);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn del_elem(&mut self) {
@@ -670,23 +664,23 @@ impl InstructionWriter {
         self.emit_op(Opcode::SuperBase);
     }
 
-    pub fn get_prop_super(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn get_prop_super(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::GetPropSuper);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn get_elem_super(&mut self) {
         self.emit_op(Opcode::GetElemSuper);
     }
 
-    pub fn set_prop_super(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn set_prop_super(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::SetPropSuper);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn strict_set_prop_super(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn strict_set_prop_super(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::StrictSetPropSuper);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn set_elem_super(&mut self) {
@@ -859,14 +853,14 @@ impl InstructionWriter {
         self.emit_op(Opcode::StrictSpreadEval);
     }
 
-    pub fn implicit_this(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn implicit_this(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::ImplicitThis);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn g_implicit_this(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn g_implicit_this(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::GImplicitThis);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn call_site_obj(&mut self, object_index: GCThingIndex) {
@@ -1042,9 +1036,9 @@ impl InstructionWriter {
         self.write_u8(msg_number as u8);
     }
 
-    pub fn throw_set_const(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn throw_set_const(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::ThrowSetConst);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn try_(&mut self, jump_at_end_offset: i32) {
@@ -1087,9 +1081,9 @@ impl InstructionWriter {
         self.write_u24(localno);
     }
 
-    pub fn init_g_lexical(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn init_g_lexical(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitGLexical);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn init_aliased_lexical(&mut self, hops: u8, slot: u24) {
@@ -1113,24 +1107,24 @@ impl InstructionWriter {
         self.emit_op(Opcode::CheckThis);
     }
 
-    pub fn bind_g_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn bind_g_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::BindGName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn bind_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn bind_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::BindName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn get_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn get_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::GetName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn get_g_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn get_g_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::GetGName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn get_arg(&mut self, argno: u16) {
@@ -1149,19 +1143,19 @@ impl InstructionWriter {
         self.write_u24(slot);
     }
 
-    pub fn get_import(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn get_import(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::GetImport);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn get_bound_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn get_bound_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::GetBoundName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn get_intrinsic(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn get_intrinsic(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::GetIntrinsic);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn callee(&mut self) {
@@ -1173,24 +1167,24 @@ impl InstructionWriter {
         self.write_u8(num_hops);
     }
 
-    pub fn set_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn set_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::SetName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn strict_set_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn strict_set_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::StrictSetName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn set_g_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn set_g_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::SetGName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn strict_set_g_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn strict_set_g_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::StrictSetGName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn set_arg(&mut self, argno: u16) {
@@ -1209,9 +1203,9 @@ impl InstructionWriter {
         self.write_u24(slot);
     }
 
-    pub fn set_intrinsic(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn set_intrinsic(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::SetIntrinsic);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn push_lexical_env(&mut self, lexical_scope_index: u32) {
@@ -1253,32 +1247,32 @@ impl InstructionWriter {
         self.emit_op(Opcode::BindVar);
     }
 
-    pub fn def_var(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn def_var(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::DefVar);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn def_fun(&mut self) {
         self.emit_op(Opcode::DefFun);
     }
 
-    pub fn def_let(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn def_let(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::DefLet);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
-    pub fn def_const(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn def_const(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::DefConst);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn check_global_or_eval_decl(&mut self) {
         self.emit_op(Opcode::CheckGlobalOrEvalDecl);
     }
 
-    pub fn del_name(&mut self, name_index: ScriptAtomSetIndex) {
+    pub fn del_name(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::DelName);
-        self.write_script_atom_set_index(name_index);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn arguments(&mut self) {
@@ -1368,6 +1362,17 @@ impl InstructionWriter {
 
     // @@@@ END METHODS @@@@
 
+    pub fn get_atom_gcthing_index(&mut self, atom: SourceAtomSetIndex) -> GCThingIndex {
+        match self.atom_to_gcindex_map.get(&atom) {
+            Some(index) => *index,
+            None => {
+                let index = self.gcthings.push_atom(atom);
+                self.atom_to_gcindex_map.insert(atom, index);
+                index
+            }
+        }
+    }
+
     pub fn get_function_gcthing_index(&mut self, fun_data: FunctionCreationData) -> GCThingIndex {
         let fun_data_index = self.inner_functions.push(fun_data);
         self.gcthings.push_function(fun_data_index)
@@ -1411,6 +1416,33 @@ impl InstructionWriter {
         self.scope_notes.leave_scope(index, offset);
     }
 
+    pub fn enter_scope_hole(
+        &mut self,
+        maybe_scope_note_index: &Option<ScopeNoteIndex>,
+        parent_scope_note_index: Option<ScopeNoteIndex>,
+    ) -> ScopeNoteIndex {
+        // TODO: the bytecode sequence before leaving scope (entering hole) depends on the kind
+        // of scope (and also controls). This is currently only debug_leave_lexical_env because
+        // there's only simple lexical scope.
+        self.debug_leave_lexical_env();
+        let offset = self.bytecode_offset();
+
+        let gcthing_index = match maybe_scope_note_index {
+            Some(index) => self.scope_notes.get_scope_hole_gcthing_index(index),
+            None => self
+                .body_scope_index
+                .expect("we should have a body scope index"),
+        };
+
+        self.scope_notes
+            .enter_scope(gcthing_index, offset, parent_scope_note_index)
+    }
+
+    pub fn leave_scope_hole(&mut self, index: ScopeNoteIndex) {
+        let offset = self.bytecode_offset();
+        self.scope_notes.leave_scope(index, offset);
+    }
+
     pub fn switch_to_main(&mut self) {
         self.main_offset = self.bytecode_offset();
     }
@@ -1420,7 +1452,6 @@ impl From<InstructionWriter> for ScriptStencil {
     fn from(emit: InstructionWriter) -> Self {
         Self {
             bytecode: emit.bytecode,
-            atoms: emit.atoms.into(),
             regexps: emit.regexps.into(),
             gcthings: emit.gcthings.into(),
             scope_notes: emit.scope_notes.into(),

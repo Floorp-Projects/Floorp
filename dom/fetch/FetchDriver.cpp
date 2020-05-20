@@ -644,6 +644,12 @@ nsresult FetchDriver::HttpFetch(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  {
+    nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+    rv = loadInfo->SetLoadingEmbedderPolicy(mRequest->GetEmbedderPolicy());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Insert ourselves into the notification callbacks chain so we can set
   // headers on redirects.
 #ifdef DEBUG

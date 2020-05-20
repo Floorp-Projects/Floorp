@@ -257,12 +257,10 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase,
   MOZ_CAN_RUN_SCRIPT
   void ClearInterval(int32_t aHandle);
 
-  already_AddRefed<Promise> CreateImageBitmap(JSContext* aCx,
-                                              const ImageBitmapSource& aImage,
+  already_AddRefed<Promise> CreateImageBitmap(const ImageBitmapSource& aImage,
                                               ErrorResult& aRv);
 
-  already_AddRefed<Promise> CreateImageBitmap(JSContext* aCx,
-                                              const ImageBitmapSource& aImage,
+  already_AddRefed<Promise> CreateImageBitmap(const ImageBitmapSource& aImage,
                                               int32_t aSx, int32_t aSy,
                                               int32_t aSw, int32_t aSh,
                                               ErrorResult& aRv);

@@ -51,6 +51,7 @@ public interface BaseHlsPlayer {
     }
 
     public interface ResourceCallbacks {
+        void onLoad(String mediaUrl);
         void onDataArrived();
         void onError(int errorCode);
     }

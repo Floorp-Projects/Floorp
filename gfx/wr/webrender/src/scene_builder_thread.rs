@@ -40,6 +40,7 @@ use api::{BuiltDisplayListIter, DisplayItem};
 
 /// Various timing information that will be turned into
 /// TransactionProfileCounters later down the pipeline.
+#[derive(Clone, Debug)]
 pub struct TransactionTimings {
     pub builder_start_time_ns: u64,
     pub builder_end_time_ns: u64,
@@ -62,7 +63,6 @@ pub struct Transaction {
     pub notifications: Vec<NotificationRequest>,
     pub render_frame: bool,
     pub invalidate_rendered_frame: bool,
-    pub fonts: SharedFontInstanceMap,
 }
 
 impl Transaction {
@@ -261,6 +261,7 @@ pub struct SceneBuilderThread {
     api_tx: Sender<ApiMsg>,
     config: FrameBuilderConfig,
     default_device_pixel_ratio: f32,
+    font_instances: SharedFontInstanceMap,
     size_of_ops: Option<MallocSizeOfOps>,
     hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
     simulate_slow_ms: u32,
@@ -297,6 +298,7 @@ impl SceneBuilderThread {
     pub fn new(
         config: FrameBuilderConfig,
         default_device_pixel_ratio: f32,
+        font_instances: SharedFontInstanceMap,
         size_of_ops: Option<MallocSizeOfOps>,
         hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
         channels: SceneBuilderThreadChannels,
@@ -310,6 +312,7 @@ impl SceneBuilderThread {
             api_tx,
             config,
             default_device_pixel_ratio,
+            font_instances,
             size_of_ops,
             hooks,
             simulate_slow_ms: 0,
@@ -708,7 +711,7 @@ impl SceneBuilderThread {
 
             let built = SceneBuilder::build(
                 &scene,
-                txn.fonts.clone(),
+                self.font_instances.clone(),
                 &doc.view,
                 &doc.output_pipelines,
                 &self.config,

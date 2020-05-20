@@ -9,7 +9,6 @@
 }
 
 .inline-preview-outer {
-  padding: 1px 0;
   background-color: var(--theme-inline-preview-background);
   border: 1px solid var(--theme-inline-preview-border-color);
   border-radius: 3px;

@@ -87,7 +87,7 @@ add_task(async function() {
     const tabEl = document.querySelectorAll(
       ".network-details-bar .tabs-menu a"
     )[0];
-    const tabpanel = document.querySelector(".network-details-bar .tab-panel");
+    const tabpanel = document.querySelector("#headers-panel");
 
     is(
       tabEl.getAttribute("aria-selected"),
@@ -96,19 +96,20 @@ add_task(async function() {
     );
     // Request URL
     is(
-      tabpanel.querySelectorAll(".tabpanel-summary-value")[0].innerText,
+      tabpanel.querySelector(".url-preview .url").innerText,
       SIMPLE_SJS,
       "The url summary value is incorrect."
     );
+
     // Request method
     is(
-      tabpanel.querySelectorAll(".tabpanel-summary-value")[1].innerText,
+      tabpanel.querySelectorAll(".treeLabel")[0].innerText,
       "GET",
       "The method summary value is incorrect."
     );
     // Remote address
     is(
-      tabpanel.querySelectorAll(".tabpanel-summary-value")[2].innerText,
+      tabpanel.querySelectorAll(".tabpanel-summary-value")[1].innerText,
       "127.0.0.1:8888",
       "The remote address summary value is incorrect."
     );
@@ -119,13 +120,13 @@ add_task(async function() {
       "The status summary code is incorrect."
     );
     is(
-      tabpanel.querySelector(".status-text").getAttribute("value"),
+      tabpanel.querySelector(".status").childNodes[1].textContent,
       "Och Aye",
       "The status summary value is incorrect."
     );
     // Version
     is(
-      tabpanel.querySelectorAll(".tabpanel-summary-value")[4].innerText,
+      tabpanel.querySelectorAll(".tabpanel-summary-value")[2].innerText,
       "HTTP/1.1",
       "The HTTP version is incorrect."
     );
@@ -139,7 +140,7 @@ add_task(async function() {
     );
 
     is(
-      tabpanel.querySelectorAll(".treeLabelCell").length,
+      tabpanel.querySelectorAll(".accordion .treeLabelCell").length,
       23,
       "There should be 23 header values displayed in this tabpanel."
     );

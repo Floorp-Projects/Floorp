@@ -60,6 +60,15 @@ pub enum VariableDeclarationKind {
 
 #[derive(Debug, PartialEq)]
 pub enum CompoundAssignmentOperator {
+    LogicalOr {
+        loc: SourceLocation,
+    },
+    LogicalAnd {
+        loc: SourceLocation,
+    },
+    Coalesce {
+        loc: SourceLocation,
+    },
     Add {
         loc: SourceLocation,
     },

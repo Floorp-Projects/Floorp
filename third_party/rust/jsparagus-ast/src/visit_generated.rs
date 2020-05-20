@@ -164,6 +164,15 @@ pub trait Pass<'alloc> {
     fn visit_compound_assignment_operator(&mut self, ast: &'alloc CompoundAssignmentOperator) {
         self.enter_compound_assignment_operator(ast);
         match ast {
+            CompoundAssignmentOperator::LogicalOr { .. } => {
+                self.visit_enum_compound_assignment_operator_variant_logical_or()
+            }
+            CompoundAssignmentOperator::LogicalAnd { .. } => {
+                self.visit_enum_compound_assignment_operator_variant_logical_and()
+            }
+            CompoundAssignmentOperator::Coalesce { .. } => {
+                self.visit_enum_compound_assignment_operator_variant_coalesce()
+            }
             CompoundAssignmentOperator::Add { .. } => {
                 self.visit_enum_compound_assignment_operator_variant_add()
             }
@@ -208,6 +217,15 @@ pub trait Pass<'alloc> {
     }
 
     fn leave_compound_assignment_operator(&mut self, ast: &'alloc CompoundAssignmentOperator) {
+    }
+
+    fn visit_enum_compound_assignment_operator_variant_logical_or(&mut self) {
+    }
+
+    fn visit_enum_compound_assignment_operator_variant_logical_and(&mut self) {
+    }
+
+    fn visit_enum_compound_assignment_operator_variant_coalesce(&mut self) {
     }
 
     fn visit_enum_compound_assignment_operator_variant_add(&mut self) {

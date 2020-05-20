@@ -762,6 +762,21 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
     return internEmptyGlobalScopeAsBody(bce);
   }
 
+  auto createScope = [globalsc, bce](JSContext* cx,
+                                     Handle<AbstractScopePtr> enclosing,
+                                     ScopeIndex* index) {
+    MOZ_ASSERT(!enclosing.get());
+    return ScopeCreationData::create(cx, bce->compilationInfo,
+                                     globalsc->scopeKind(), globalsc->bindings,
+                                     index);
+  };
+  if (!internBodyScopeCreationData(bce, createScope)) {
+    return false;
+  }
+
+  // See: JSScript::outermostScope.
+  MOZ_ASSERT(bce->bodyScopeIndex == 0, "Global scope must be index 0");
+
   // Resolve binding names and emit Def{Var,Let,Const} prologue ops.
   if (globalsc->bindings) {
     // Check for declaration conflicts before the Def* ops.
@@ -797,15 +812,7 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
     fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
   }
 
-  auto createScope = [globalsc, bce](JSContext* cx,
-                                     Handle<AbstractScopePtr> enclosing,
-                                     ScopeIndex* index) {
-    MOZ_ASSERT(!enclosing.get());
-    return ScopeCreationData::create(cx, bce->compilationInfo,
-                                     globalsc->scopeKind(), globalsc->bindings,
-                                     index);
-  };
-  return internBodyScopeCreationData(bce, createScope);
+  return true;
 }
 
 bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {

@@ -364,7 +364,8 @@ class nsWindow::GeckoViewSupport final
 
   auto OnLoadRequest(mozilla::jni::String::Param aUri, int32_t aWindowType,
                      int32_t aFlags, mozilla::jni::String::Param aTriggeringUri,
-                     bool aHasUserGesture) const -> java::GeckoResult::LocalRef;
+                     bool aHasUserGesture, bool aIsTopLevel) const
+      -> java::GeckoResult::LocalRef;
 };
 
 /**
@@ -1665,7 +1666,8 @@ nsIWidget* nsWindow::GetParent() { return mParent; }
 
 RefPtr<MozPromise<bool, bool, false>> nsWindow::OnLoadRequest(
     nsIURI* aUri, int32_t aWindowType, int32_t aFlags,
-    nsIPrincipal* aTriggeringPrincipal, bool aHasUserGesture) {
+    nsIPrincipal* aTriggeringPrincipal, bool aHasUserGesture,
+    bool aIsTopLevel) {
   if (!mGeckoViewSupport) {
     return MozPromise<bool, bool, false>::CreateAndResolve(false, __func__);
   }
@@ -1690,7 +1692,8 @@ RefPtr<MozPromise<bool, bool, false>> nsWindow::OnLoadRequest(
 
   auto geckoResult = mGeckoViewSupport->OnLoadRequest(
       spec.get(), aWindowType, aFlags,
-      isNullPrincipal ? nullptr : triggeringSpec.get(), aHasUserGesture);
+      isNullPrincipal ? nullptr : triggeringSpec.get(), aHasUserGesture,
+      aIsTopLevel);
   return geckoResult
              ? MozPromise<bool, bool, false>::FromGeckoResult(geckoResult)
              : nullptr;
@@ -2416,14 +2419,14 @@ void nsWindow::UpdateSafeAreaInsets(const ScreenIntMargin& aSafeAreaInsets) {
 
 auto nsWindow::GeckoViewSupport::OnLoadRequest(
     mozilla::jni::String::Param aUri, int32_t aWindowType, int32_t aFlags,
-    mozilla::jni::String::Param aTriggeringUri, bool aHasUserGesture) const
-    -> java::GeckoResult::LocalRef {
+    mozilla::jni::String::Param aTriggeringUri, bool aHasUserGesture,
+    bool aIsTopLevel) const -> java::GeckoResult::LocalRef {
   GeckoSession::Window::LocalRef window(mGeckoViewWindow);
   if (!window) {
     return nullptr;
   }
   return window->OnLoadRequest(aUri, aWindowType, aFlags, aTriggeringUri,
-                               aHasUserGesture);
+                               aHasUserGesture, aIsTopLevel);
 }
 
 already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {

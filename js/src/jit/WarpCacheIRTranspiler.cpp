@@ -6,6 +6,8 @@
 
 #include "jit/WarpCacheIRTranspiler.h"
 
+#include "jsmath.h"
+
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/CacheIROpsGenerated.h"
@@ -376,6 +378,13 @@ bool WarpCacheIRTranspiler::emitLoadObjectResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
   MOZ_ASSERT(obj->type() == MIRType::Object);
   pushResult(obj);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitLoadStringResult(StringOperandId strId) {
+  MDefinition* str = getOperand(strId);
+  MOZ_ASSERT(str->type() == MIRType::String);
+  pushResult(str);
   return true;
 }
 
@@ -953,6 +962,27 @@ bool WarpCacheIRTranspiler::emitMathAbsNumberResult(NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
   auto* ins = MAbs::New(alloc(), input, MIRType::Double);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MSqrt::New(alloc(), input, MIRType::Double);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMathFunctionNumberResult(
+    NumberOperandId inputId, UnaryMathFunction fun) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MMathFunction::New(alloc(), input, fun);
   add(ins);
 
   pushResult(ins);

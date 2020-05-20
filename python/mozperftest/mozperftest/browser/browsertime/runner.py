@@ -12,6 +12,7 @@ import shutil
 from mozbuild.util import mkdir
 import mozpack.path as mozpath
 
+from mozperftest.scriptinfo import ScriptInfo
 from mozperftest.utils import install_package
 from mozperftest.browser.noderunner import NodeRunner
 from mozperftest.browser.browsertime.setup import (
@@ -65,6 +66,7 @@ class BrowsertimeRunner(NodeRunner):
         self._mach_context = mach_cmd._mach_context
         self.virtualenv_manager = mach_cmd.virtualenv_manager
         self._created_dirs = []
+        self._test_info = {}
 
     @property
     def artifact_cache_path(self):
@@ -105,6 +107,9 @@ class BrowsertimeRunner(NodeRunner):
         """
         super(BrowsertimeRunner, self).setup()
         install_url = self.get_arg("install-url")
+
+        if self.get_arg("tests"):
+            self._test_info = ScriptInfo(self.get_arg("tests")[0])
 
         # installing Python deps on the fly
         for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
@@ -346,5 +351,12 @@ class BrowsertimeRunner(NodeRunner):
         command = [self.browsertime_js] + extra + args
         self.info("Running browsertime with this command %s" % " ".join(command))
         self.node(command)
-        metadata.add_result({"results": str(result_dir), "name": "browsertime"})
+
+        metadata.add_result(
+            {
+                "results": str(result_dir),
+                "name": self._test_info.get("test_name", ("browsertime",))[0],
+            }
+        )
+
         return metadata

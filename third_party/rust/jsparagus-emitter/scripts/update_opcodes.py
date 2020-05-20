@@ -349,10 +349,10 @@ def extract_function_types(paths):
     types = {}
 
     extract_enum(types, paths, 'FunctionKind', filename='FunctionFlags.h')
-    extract_enum(types, paths, 'GeneratorKind',
-                 filename='GeneratorAndAsyncKind.h')
-    extract_enum(types, paths, 'FunctionAsyncKind',
-                 filename='GeneratorAndAsyncKind.h')
+    #extract_enum(types, paths, 'GeneratorKind',
+    #             filename='GeneratorAndAsyncKind.h')
+    #extract_enum(types, paths, 'FunctionAsyncKind',
+    #             filename='GeneratorAndAsyncKind.h')
 
     return types
 
@@ -438,7 +438,7 @@ def parse_operands(opcode):
 
         if 'JOF_ATOM' in opcode.format_:
             assert ty == 'u32'
-            ty = 'ScriptAtomSetIndex'
+            ty = 'GCThingIndex'
 
         if 'JOF_ICINDEX' in opcode.format_ or 'JOF_LOOPHEAD' in opcode.format_:
             if ty == 'u32' and name == 'ic_index':

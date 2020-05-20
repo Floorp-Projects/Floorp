@@ -92,6 +92,9 @@ def _check_profile(profile_dir):
             # Raptor web extension won't be able to run.
             cleaned_prefs["extensions.startupScanScopes"] = 1
 
+            # adding a marker so we know it's a conditioned profile
+            cleaned_prefs["profile.conditioned"] = True
+
         with open(js_file, "w") as f:
             Preferences.write(f, cleaned_prefs)
 

@@ -4732,7 +4732,8 @@ AttachDecision TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
     writer.guardType(valId, val_.type());
   }
 
-  writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
+  writer.loadConstantStringResult(
+      TypeName(js::TypeOfValue(val_), cx_->names()));
   writer.returnFromIC();
   trackAttached("Primitive");
   return AttachDecision::Attach;
@@ -5026,6 +5027,35 @@ AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachToString(HandleFunction callee) {
+  // Need a single string argument.
+  // TODO(Warp): Support all or more conversions to strings.
+  if (argc_ != 1 || !args_[0].isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'ToString' intrinsic native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard that the argument is a string.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  StringOperandId strId = writer.guardToString(argId);
+
+  // Return the string.
+  writer.loadStringResult(strId);
+
+  // This stub does not need to be monitored, because it always
+  // returns a string.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("ToString");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
                                                     StringChar kind) {
   // Need one argument.
@@ -5111,6 +5141,65 @@ AttachDecision CallIRGenerator::tryAttachMathAbs(HandleFunction callee) {
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("MathAbs");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachMathSqrt(HandleFunction callee) {
+  // Need one argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!args_[0].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'sqrt' native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId argumentId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  NumberOperandId numberId = writer.guardIsNumber(argumentId);
+  writer.mathSqrtNumberResult(numberId);
+
+  // Math.sqrt always returns a double so we don't need type monitoring.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("MathSqrt");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
+                                                      UnaryMathFunction fun) {
+  // Need one argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!args_[0].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is this Math function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId argumentId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  NumberOperandId numberId = writer.guardIsNumber(argumentId);
+  writer.mathFunctionNumberResult(numberId, fun);
+
+  // These functions always return a double so we don't need type monitoring.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("MathFunction");
   return AttachDecision::Attach;
 }
 
@@ -5253,7 +5342,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
+AttachDecision CallIRGenerator::tryAttachInlinableNative(
     HandleFunction callee) {
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
   MOZ_ASSERT(callee->isNative());
@@ -5270,18 +5359,68 @@ AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
 
   // Check for special-cased native functions.
   switch (callee->jitInfo()->inlinableNative) {
+    // Array natives.
     case InlinableNative::ArrayPush:
       return tryAttachArrayPush(callee);
     case InlinableNative::ArrayJoin:
       return tryAttachArrayJoin(callee);
+
+    // Intrinsics.
     case InlinableNative::IntrinsicIsSuspendedGenerator:
       return tryAttachIsSuspendedGenerator(callee);
+    case InlinableNative::IntrinsicToString:
+      return tryAttachToString(callee);
+
+    // String natives.
     case InlinableNative::StringCharCodeAt:
       return tryAttachStringCharCodeAt(callee);
     case InlinableNative::StringCharAt:
       return tryAttachStringCharAt(callee);
+
+    // Math natives.
     case InlinableNative::MathAbs:
       return tryAttachMathAbs(callee);
+    case InlinableNative::MathSqrt:
+      return tryAttachMathSqrt(callee);
+    case InlinableNative::MathSin:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Sin);
+    case InlinableNative::MathTan:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Tan);
+    case InlinableNative::MathCos:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Cos);
+    case InlinableNative::MathExp:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Exp);
+    case InlinableNative::MathLog:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Log);
+    case InlinableNative::MathASin:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ASin);
+    case InlinableNative::MathATan:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ATan);
+    case InlinableNative::MathACos:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ACos);
+    case InlinableNative::MathLog10:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Log10);
+    case InlinableNative::MathLog2:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Log2);
+    case InlinableNative::MathLog1P:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Log1P);
+    case InlinableNative::MathExpM1:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ExpM1);
+    case InlinableNative::MathCosH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::CosH);
+    case InlinableNative::MathSinH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::SinH);
+    case InlinableNative::MathTanH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::TanH);
+    case InlinableNative::MathACosH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ACosH);
+    case InlinableNative::MathASinH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ASinH);
+    case InlinableNative::MathATanH:
+      return tryAttachMathFunction(callee, UnaryMathFunction::ATanH);
+    case InlinableNative::MathCbrt:
+      return tryAttachMathFunction(callee, UnaryMathFunction::Cbrt);
+
     default:
       return AttachDecision::NoAction;
   }
@@ -5562,7 +5701,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
 
   // Check for specific native-function optimizations.
   if (isSpecialized) {
-    TRY_ATTACH(tryAttachSpecialCaseCallNative(calleeFunc));
+    TRY_ATTACH(tryAttachInlinableNative(calleeFunc));
   }
 
   RootedObject templateObj(cx_);

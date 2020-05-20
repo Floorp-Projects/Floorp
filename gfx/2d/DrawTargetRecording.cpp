@@ -234,6 +234,7 @@ void DrawTargetRecording::Fill(const Path* aPath, const Pattern& aPattern,
 
 struct RecordingFontUserData {
   void* refPtr;
+  void* unscaledFont;
   RefPtr<DrawEventRecorderPrivate> recorder;
 };
 
@@ -244,6 +245,7 @@ static void RecordingFontUserDataDestroyFunc(void* aUserData) {
   userData->recorder->RecordEvent(
       RecordedScaledFontDestruction(ReferencePtr(userData->refPtr)));
   userData->recorder->RemoveScaledFont((ScaledFont*)userData->refPtr);
+  userData->recorder->DecrementUnscaledFontRefCount(userData->unscaledFont);
   delete userData;
 }
 
@@ -258,7 +260,7 @@ void DrawTargetRecording::FillGlyphs(ScaledFont* aFont,
     mRecorder->AddScaledFont(aFont);
   } else if (!aFont->GetUserData(userDataKey)) {
     UnscaledFont* unscaledFont = aFont->GetUnscaledFont();
-    if (!mRecorder->HasStoredUnscaledFont(unscaledFont)) {
+    if (mRecorder->IncrementUnscaledFontRefCount(unscaledFont) == 0) {
       RecordedFontData fontData(unscaledFont);
       RecordedFontDetails fontDetails;
       if (fontData.GetFontDetails(fontDetails)) {
@@ -281,11 +283,11 @@ void DrawTargetRecording::FillGlyphs(ScaledFont* aFont,
                           "UnscaledFont";
         }
       }
-      mRecorder->AddStoredUnscaledFont(unscaledFont);
     }
     mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, unscaledFont));
     RecordingFontUserData* userData = new RecordingFontUserData;
     userData->refPtr = aFont;
+    userData->unscaledFont = unscaledFont;
     userData->recorder = mRecorder;
     aFont->AddUserData(userDataKey, userData,
                        &RecordingFontUserDataDestroyFunc);

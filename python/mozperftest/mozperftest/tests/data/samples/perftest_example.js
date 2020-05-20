@@ -25,21 +25,16 @@ module.exports = {
   setUp,
   tearDown,
   test,
-  owner: "Performance Team",
-  description: "Measures cold process applink time",
+  owner: "Performance Testing Team",
+  test_name: "Example",
+  description: "The description of the example test.",
   long_description: `
-  This test launches the appropriate android app, simulating an app link
-  workflow. The application is launched with the intent action
-  android.intent.action.VIEW loading a trivially simple website. The reported
-  metric is the time from process start to navigationStart, reported as processLaunchToNavStart
+  This is a longer description of the test perhaps including information
+  about how it should be run locally or links to relevant information.
   `,
   usage: `
-  ./mach perftest testing/performance/perftest_applink.js \
-    --android-install-apk ~/fenix.v2.fennec-nightly.2020.04.22-arm32.apk \
-    --hooks testing/performance/hooks_applink.py \
-    --android-app-name org.mozilla.fennec_aurora \
-    --perfherder-metrics processLaunchToNavStart
+  ./mach perftest python/mozperftest/mozperftest/tests/data/samples/perftest_example.js
   `,
-  supported_browser: ["Fenix nightly", "Geckoview_example", "Fennec"],
-  platform: ["Android"],
+  supported_browser: ["Fenix nightly", "Geckoview_example", "Fennec", "Firefox"],
+  platform: ["Android", "Desktop"],
 };

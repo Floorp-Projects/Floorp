@@ -1877,7 +1877,7 @@ panelview[mainview] #PanelUI-whatsNew-content {
   margin-inline-start: -80px;
 }
 
-/* These checkbox styles have been pulled from `common.inc.css` and 
+/* These checkbox styles have been pulled from `common.inc.css` and
    duplicated here to ensure they apply correctly. See
    https://searchfox.org/mozilla-central/rev/7908ce29657cfd623993046bd8e38664e1c0b28e/toolkit/themes/shared/in-content/common.inc.css#559 */
 #PanelUI-whatsNew checkbox {
@@ -2327,4 +2327,14 @@ panelview[mainview] #PanelUI-whatsNew-content {
 
 #PanelUI-profiler-presets[disabled="true"]::part(label-box) {
   opacity: 0.5;
+}
+
+/**
+ * Override the specificity of `#PanelUI-profiler description`
+ */
+description#PanelUI-profiler-locked {
+  padding: 16px;
+  line-height: 1.5;
+  /* Make sure this description is wider than the header's */
+  max-width: 310px;
 }

@@ -45,6 +45,8 @@ class FuncExport;
 
 class StringObject;
 
+enum class UnaryMathFunction : uint8_t;
+
 namespace jit {
 
 // Forward declarations of MIR types.
@@ -5277,39 +5279,11 @@ class MSign : public MUnaryInstruction, public SignPolicy::Data {
 
 class MMathFunction : public MUnaryInstruction,
                       public FloatingPointPolicy<0>::Data {
- public:
-  enum Function {
-    Log,
-    Sin,
-    Cos,
-    Exp,
-    Tan,
-    ACos,
-    ASin,
-    ATan,
-    Log10,
-    Log2,
-    Log1P,
-    ExpM1,
-    CosH,
-    SinH,
-    TanH,
-    ACosH,
-    ASinH,
-    ATanH,
-    Trunc,
-    Cbrt,
-    Floor,
-    Ceil,
-    Round
-  };
-
- private:
-  Function function_;
+  UnaryMathFunction function_;
 
   // A nullptr cache means this function will neither access nor update the
   // cache.
-  MMathFunction(MDefinition* input, Function function)
+  MMathFunction(MDefinition* input, UnaryMathFunction function)
       : MUnaryInstruction(classOpcode, input), function_(function) {
     setResultType(MIRType::Double);
     specialization_ = MIRType::Double;
@@ -5320,7 +5294,7 @@ class MMathFunction : public MUnaryInstruction,
   INSTRUCTION_HEADER(MathFunction)
   TRIVIAL_NEW_WRAPPERS
 
-  Function function() const { return function_; }
+  UnaryMathFunction function() const { return function_; }
 
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isMathFunction()) {
@@ -5342,29 +5316,16 @@ class MMathFunction : public MUnaryInstruction,
   void printOpcode(GenericPrinter& out) const override;
 #endif
 
-  static const char* FunctionName(Function function);
+  static const char* FunctionName(UnaryMathFunction function);
 
-  bool isFloat32Commutative() const override {
-    return function_ == Floor || function_ == Ceil || function_ == Round ||
-           function_ == Trunc;
-  }
+  bool isFloat32Commutative() const override;
   void trySpecializeFloat32(TempAllocator& alloc) override;
+
   void computeRange(TempAllocator& alloc) override;
+
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    switch (function_) {
-      case Sin:
-      case Log:
-      case Ceil:
-      case Floor:
-      case Round:
-      case Trunc:
-        return true;
-      default:
-        return false;
-    }
-  }
+  bool canRecoverOnBailout() const override;
 
   ALLOW_CLONE(MMathFunction)
 };

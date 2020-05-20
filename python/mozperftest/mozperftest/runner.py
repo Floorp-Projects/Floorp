@@ -25,6 +25,7 @@ The --push-to-try flow is:
 """
 import sys
 import os
+import shutil
 
 
 HERE = os.path.dirname(__file__)
@@ -113,26 +114,37 @@ def run_tests(mach_cmd, **kwargs):
     from mozperftest import MachEnvironment, Metadata
 
     flavor = kwargs["flavor"]
-    kwargs["tests"] = build_test_list(kwargs["tests"], randomized=flavor != "doc")
+    kwargs["tests"], tmp_dir = build_test_list(
+        kwargs["tests"], randomized=flavor != "doc"
+    )
 
-    if flavor == "doc":
-        location = os.path.join(mach_cmd.topsrcdir, "third_party", "python", "esprima")
-        install_package(mach_cmd.virtualenv_manager, location)
-
-        from mozperftest.scriptinfo import ScriptInfo
-
-        for test in kwargs["tests"]:
-            print(ScriptInfo(test))
-        return
-
-    env = MachEnvironment(mach_cmd, **kwargs)
-    metadata = Metadata(mach_cmd, env, flavor)
-    env.run_hook("before_runs")
     try:
-        with env.frozen() as e:
-            e.run(metadata)
+        if flavor == "doc":
+            location = os.path.join(
+                mach_cmd.topsrcdir, "third_party", "python", "esprima"
+            )
+            install_package(mach_cmd.virtualenv_manager, location)
+
+            from mozperftest.scriptinfo import ScriptInfo
+
+            for test in kwargs["tests"]:
+                print(ScriptInfo(test))
+            return
+
+        env = MachEnvironment(mach_cmd, **kwargs)
+        try:
+            metadata = Metadata(mach_cmd, env, flavor)
+            env.run_hook("before_runs")
+            try:
+                with env.frozen() as e:
+                    e.run(metadata)
+            finally:
+                env.run_hook("after_runs")
+        finally:
+            env.cleanup()
     finally:
-        env.run_hook("after_runs")
+        if tmp_dir is not None:
+            shutil.rmtree(tmp_dir)
 
 
 def main(argv=sys.argv[1:]):

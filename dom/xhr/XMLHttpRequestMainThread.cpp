@@ -1803,6 +1803,11 @@ NS_IMETHODIMP
 XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
   AUTO_PROFILER_LABEL("XMLHttpRequestMainThread::OnStartRequest", NETWORK);
 
+  if (mFromPreload && !mChannel) {
+    mChannel = do_QueryInterface(request);
+    EnsureChannelContentType();
+  }
+
   nsresult rv = NS_OK;
   if (!mFirstStartRequestSeen && mRequestObserver) {
     mFirstStartRequestSeen = true;
@@ -2500,6 +2505,32 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
   nsresult rv;
   nsCOMPtr<nsIInputStream> uploadStream = std::move(aUploadStream);
 
+  if (!uploadStream) {
+    RefPtr<PreloaderBase> preload = FindPreload();
+    if (preload) {
+      // Because of bug 682305, we can't let listener be the XHR object itself
+      // because JS wouldn't be able to use it. So create a listener around
+      // 'this'. Make sure to hold a strong reference so that we don't leak the
+      // wrapper.
+      nsCOMPtr<nsIStreamListener> listener =
+          new net::nsStreamListenerWrapper(this);
+      rv = preload->AsyncConsume(listener);
+      if (NS_SUCCEEDED(rv)) {
+        mFromPreload = true;
+
+        // May be null when the preload has already finished, but the XHR code
+        // is safe to live with it.
+        mChannel = preload->Channel();
+        if (mChannel) {
+          EnsureChannelContentType();
+        }
+        return NS_OK;
+      }
+
+      preload = nullptr;
+    }
+  }
+
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
   // in turn keeps STOP button from becoming active.  If the consumer passed in
   // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
@@ -2639,17 +2670,7 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
     AddLoadFlags(mChannel, nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
   }
 
-  // Since we expect XML data, set the type hint accordingly
-  // if the channel doesn't know any content type.
-  // This means that we always try to parse local files as XML
-  // ignoring return value, as this is not critical. Use text/xml as fallback
-  // MIME type.
-  nsAutoCString contentType;
-  if (NS_FAILED(mChannel->GetContentType(contentType)) ||
-      contentType.IsEmpty() ||
-      contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
-    mChannel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
-  }
+  EnsureChannelContentType();
 
   // Set up the preflight if needed
   if (!IsSystemXHR()) {
@@ -2705,6 +2726,58 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
   return NS_OK;
 }
 
+already_AddRefed<PreloaderBase> XMLHttpRequestMainThread::FindPreload() {
+  Document* doc = GetDocumentIfCurrent();
+  if (!doc) {
+    return nullptr;
+  }
+  if (mPrincipal->IsSystemPrincipal() || IsSystemXHR()) {
+    return nullptr;
+  }
+  if (!mRequestMethod.EqualsLiteral("GET")) {
+    // Preload can only do GET.
+    return nullptr;
+  }
+  if (!mAuthorRequestHeaders.IsEmpty()) {
+    // Preload can't set headers.
+    return nullptr;
+  }
+
+  // mIsAnon overrules mFlagACwithCredentials.
+  CORSMode cors = (mIsAnon || !mFlagACwithCredentials)
+                      ? CORSMode::CORS_ANONYMOUS
+                      : CORSMode::CORS_USE_CREDENTIALS;
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateForFetch(mPrincipal, doc);
+  auto key = PreloadHashKey::CreateAsFetch(mRequestURL, cors,
+                                           referrerInfo->ReferrerPolicy());
+  RefPtr<PreloaderBase> preload = doc->Preloads().LookupPreload(&key);
+  if (!preload) {
+    return nullptr;
+  }
+
+  preload->RemoveSelf(doc);
+  preload->NotifyUsage(PreloaderBase::LoadBackground::Keep);
+
+  return preload.forget();
+}
+
+void XMLHttpRequestMainThread::EnsureChannelContentType() {
+  MOZ_ASSERT(mChannel);
+
+  // Since we expect XML data, set the type hint accordingly
+  // if the channel doesn't know any content type.
+  // This means that we always try to parse local files as XML
+  // ignoring return value, as this is not critical. Use text/xml as fallback
+  // MIME type.
+  nsAutoCString contentType;
+  if (NS_FAILED(mChannel->GetContentType(contentType)) ||
+      contentType.IsEmpty() ||
+      contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
+    mChannel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
+  }
+}
+
 void XMLHttpRequestMainThread::UnsuppressEventHandlingAndResume() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mFlagSynchronous);
@@ -2721,7 +2794,6 @@ void XMLHttpRequestMainThread::UnsuppressEventHandlingAndResume() {
 }
 
 void XMLHttpRequestMainThread::Send(
-    JSContext* aCx,
     const Nullable<
         DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
         aData,
@@ -3903,6 +3975,8 @@ RequestHeaders::RequestHeader* RequestHeaders::Find(const nsACString& aName) {
   }
   return nullptr;
 }
+
+bool RequestHeaders::IsEmpty() const { return mHeaders.IsEmpty(); }
 
 bool RequestHeaders::Has(const char* aName) {
   return Has(nsDependentCString(aName));

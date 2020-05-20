@@ -70,8 +70,6 @@ class SmooshScriptStencil : public ScriptStencil {
 
   MOZ_MUST_USE bool init(JSContext* cx,
                          UniquePtr<ImmutableScriptData> immutableData) {
-    natoms = result_.atoms.len;
-
     // A global script is a top-level context.
     bool isTopLevelContext = true;
     const JS::ReadOnlyCompileOptions& options = compilationInfo_.options;
@@ -127,13 +125,6 @@ class SmooshScriptStencil : public ScriptStencil {
     return true;
   }
 
-  virtual void initAtomMap(GCPtrAtom* atoms) const override {
-    for (uint32_t i = 0; i < natoms; i++) {
-      size_t index = result_.atoms.data[i];
-      atoms[i] = allAtoms_[index];
-    }
-  }
-
  private:
   bool createAtoms(JSContext* cx) {
     size_t numAtoms = result_.all_atoms_len;
@@ -169,6 +160,10 @@ class SmooshScriptStencil : public ScriptStencil {
       SmooshGCThing& item = result_.gcthings.data[i];
 
       switch (item.kind) {
+        case SmooshGCThingKind::AtomIndex: {
+          gcThings.infallibleAppend(mozilla::AsVariant(allAtoms_[item.index]));
+          break;
+        }
         case SmooshGCThingKind::ScopeIndex: {
           gcThings.infallibleAppend(mozilla::AsVariant(ScopeIndex(item.index)));
           break;

@@ -758,7 +758,7 @@ class MOZ_STACK_CLASS IonBuilder {
   InliningResult inlineMathTrunc(CallInfo& callInfo);
   InliningResult inlineMathSign(CallInfo& callInfo);
   InliningResult inlineMathFunction(CallInfo& callInfo,
-                                    MMathFunction::Function function);
+                                    UnaryMathFunction function);
 
   // String natives.
   InliningResult inlineStringObject(CallInfo& callInfo);

@@ -662,6 +662,10 @@ class nsDocShell final : public nsDocLoader,
   void SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
                                   const Maybe<nsISHEntry*>& aOSHE);
 
+  mozilla::dom::ChildSHistory* GetSessionHistory() {
+    return mBrowsingContext->GetChildSessionHistory();
+  }
+
   //
   // URI Load
   //

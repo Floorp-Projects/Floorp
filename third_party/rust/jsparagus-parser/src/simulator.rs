@@ -126,10 +126,10 @@ impl<'alloc, 'parser> Simulator<'alloc, 'parser> {
         }
     }
 
-    pub fn write_token(&mut self, token: &Token) -> Result<'alloc, ()> {
+    pub fn write_token(&mut self, t: TerminalId) -> Result<'alloc, ()> {
         // Shift the token with the associated StackValue.
         let accept = self.shift(TermValue {
-            term: Term::Terminal(token.terminal_id),
+            term: Term::Terminal(t),
             value: (),
         })?;
         // JavaScript grammar accepts empty inputs, therefore we can never

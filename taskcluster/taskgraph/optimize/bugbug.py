@@ -112,7 +112,7 @@ class SkipUnlessDebug(OptimizationStrategy):
     """Only run debug platforms."""
 
     def should_remove_task(self, task, params, arg):
-        return not (task.attributes.get('build_type') == "debug")
+        return "build_type" in task.attributes and task.attributes["build_type"] != "debug"
 
 
 @register_strategy("platform-disperse")

@@ -340,6 +340,14 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
 
   InternalRequest(const InternalRequest& aOther) = delete;
 
+  void SetEmbedderPolicy(nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) {
+    mEmbedderPolicy = aPolicy;
+  }
+
+  nsILoadInfo::CrossOriginEmbedderPolicy GetEmbedderPolicy() const {
+    return mEmbedderPolicy;
+  }
+
  private:
   struct ConstructorGuard {};
 
@@ -412,6 +420,8 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
   // It is illegal to pass such a Request object to a fetch() method unless
   // if the caller has chrome privileges.
   bool mContentPolicyTypeOverridden = false;
+  nsILoadInfo::CrossOriginEmbedderPolicy mEmbedderPolicy =
+      nsILoadInfo::EMBEDDER_POLICY_NULL;
 
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
 };

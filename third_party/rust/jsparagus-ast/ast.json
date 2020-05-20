@@ -35,6 +35,9 @@
   },
   "CompoundAssignmentOperator": {
     "_type": "enum",
+    "LogicalOr": null,
+    "LogicalAnd": null,
+    "Coalesce": null,
     "Add": null,
     "Sub": null,
     "Mul": null,

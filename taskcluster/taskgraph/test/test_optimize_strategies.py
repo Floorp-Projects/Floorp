@@ -63,7 +63,7 @@ default_tasks = list(generate_tasks(
     {'attributes': {'test_manifests': ['foo/test.ini', 'bar/test.ini']}},
     {'attributes': {'test_manifests': ['bar/test.ini'], 'build_type': 'debug'}},
     {'attributes': {'build_type': 'debug'}},
-    {'attributes': {'test_manifests': []}},
+    {'attributes': {'test_manifests': [], 'build_type': 'opt'}},
     {'attributes': {'build_type': 'opt'}},
 ))
 
@@ -106,7 +106,7 @@ def idfn(param):
         SkipUnlessDebug(),
         default_tasks,
         None,
-        ['task-1', 'task-2'],
+        ['task-0', 'task-1', 'task-2'],
     ),
 
     # disperse with no supplied importance

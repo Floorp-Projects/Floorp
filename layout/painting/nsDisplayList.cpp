@@ -1261,7 +1261,7 @@ void nsDisplayListBuilder::MarkFramesForDisplayList(
  */
 void nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(
     nsIFrame* aDirtyFrame) {
-  for (const auto& childList : aDirtyFrame->GetChildLists()) {
+  for (const auto& childList : aDirtyFrame->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       if (child->Combines3DTransformWithAncestors()) {
         MarkFrameForDisplay(child, aDirtyFrame);

@@ -11,6 +11,7 @@
 
 #include <algorithm>
 
+#include "jsmath.h"
 #include "jsnum.h"
 
 #include "jit/Ion.h"
@@ -1835,8 +1836,8 @@ void MArrayPush::computeRange(TempAllocator& alloc) {
 void MMathFunction::computeRange(TempAllocator& alloc) {
   Range opRange(getOperand(0));
   switch (function()) {
-    case Sin:
-    case Cos:
+    case UnaryMathFunction::Sin:
+    case UnaryMathFunction::Cos:
       if (!opRange.canBeInfiniteOrNaN()) {
         setRange(Range::NewDoubleRange(alloc, -1.0, 1.0));
       }

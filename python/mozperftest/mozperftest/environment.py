@@ -4,12 +4,15 @@
 import copy
 import contextlib
 import importlib
-import os
+from pathlib import Path
+import tempfile
+import shutil
 
 from mozperftest.browser import pick_browser
 from mozperftest.system import pick_system
 from mozperftest.metrics import pick_metrics
 from mozperftest.layers import Layers
+from mozperftest.utils import download_file
 
 
 SYSTEM, BROWSER, METRICS = 0, 1, 2
@@ -27,6 +30,7 @@ class MachEnvironment:
             raise NotImplementedError(flavor)
         for layer in (pick_system, pick_browser, pick_metrics):
             self.add_layer(layer(self, flavor, mach_cmd))
+        self.tmp_dir = tempfile.mkdtemp()
         self._load_hooks()
 
     @contextlib.contextmanager
@@ -94,14 +98,31 @@ class MachEnvironment:
         for layer in self.layers:
             layer.__exit__(type, value, traceback)
 
+    def cleanup(self):
+        if self.tmp_dir is None:
+            return
+        shutil.rmtree(self.tmp_dir)
+        self.tmp_dir = None
+
     def _load_hooks(self):
         self._hooks = None
         hooks = self.get_arg("hooks")
-        if hooks is not None and os.path.exists(hooks):
-            spec = importlib.util.spec_from_file_location("hooks", hooks)
+        if hooks is None:
+            return
+
+        if hooks.startswith("http"):
+            target = Path(self.tmp_dir, hooks.split("/")[-1])
+            hooks = download_file(hooks, target)
+        else:
+            hooks = Path(hooks)
+
+        if hooks.exists():
+            spec = importlib.util.spec_from_file_location("hooks", str(hooks))
             hooks = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(hooks)
             self._hooks = hooks
+        else:
+            raise IOError(str(hooks))
 
     def run_hook(self, name, **kw):
         if self._hooks is None:

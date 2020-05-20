@@ -43,6 +43,11 @@ def test_browser(*mocked):
     cmd = " ".join(mach_cmd.run_process.call_args[0][0])
     assert "--firefox.geckodriverPath GECKODRIVER" in cmd
 
+    results = metadata.get_results()
+    assert len(results) == 1
+    assert set(list(results[0].keys())) - set(["name", "results"]) == set()
+    assert results[0]["name"] == "Example"
+
 
 def test_add_options():
     mach_cmd, metadata, env = get_running_env()

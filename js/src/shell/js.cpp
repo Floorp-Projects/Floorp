@@ -146,7 +146,7 @@
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
 #include "vm/Monitor.h"
 #include "vm/MutexIDs.h"
-#include "vm/Printer.h"
+#include "vm/Printer.h"        // QuoteString
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Shape.h"
 #include "vm/SharedArrayObject.h"
@@ -1327,6 +1327,10 @@ static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (!js::AddMozDateTimeFormatConstructor(cx, intl)) {
+    return false;
+  }
+
+  if (!js::AddMozDisplayNamesConstructor(cx, intl)) {
     return false;
   }
 
@@ -3228,6 +3232,21 @@ static MOZ_MUST_USE bool GCThings(JSContext* cx, HandleScript script,
         if (!sp->put("\n")) {
           return false;
         }
+      }
+    } else if (gcThing.is<JSString>()) {
+      if (!sp->put("Atom       ")) {
+        return false;
+      }
+      RootedAtom atom(cx, &gcThing.as<JSString>().asAtom());
+      UniqueChars chars = QuoteString(cx, atom, '"');
+      if (!chars) {
+        return false;
+      }
+      if (!sp->put(chars.get())) {
+        return false;
+      }
+      if (!sp->put("\n")) {
+        return false;
       }
     } else {
       if (!sp->put("Unknown\n")) {

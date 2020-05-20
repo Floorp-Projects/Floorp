@@ -173,7 +173,8 @@ class LoadInfo final : public nsILoadInfo {
            uint32_t aHttpsOnlyStatus, bool aHasValidUserGestureActivation,
            bool aAllowDeprecatedSystemRequests, bool aParserCreatedScript,
            bool aHasStoragePermission, uint32_t aRequestBlockingReason,
-           nsINode* aLoadingContext);
+           nsINode* aLoadingContext,
+           nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx,
@@ -280,6 +281,12 @@ class LoadInfo final : public nsILoadInfo {
   // browsing context container.
   // See nsILoadInfo.isFromProcessingFrameAttributes
   bool mIsFromProcessingFrameAttributes;
+
+  // The cross origin embedder policy that the loading need to respect.
+  // If the value is nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP, CORP checking
+  // must be performed for the loading.
+  // See https://wicg.github.io/cross-origin-embedder-policy/#corp-check.
+  nsILoadInfo::CrossOriginEmbedderPolicy mLoadingEmbedderPolicy;
 };
 
 }  // namespace net
