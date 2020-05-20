@@ -516,13 +516,8 @@ pref("media.videocontrols.picture-in-picture.video-toggle.min-video-secs", 45);
 
   // These values (aec, agc, and noise) are from:
   // media/webrtc/trunk/webrtc/modules/audio_processing/include/audio_processing.h
-  #if defined(MOZ_WEBRTC_HARDWARE_AEC_NS)
-    pref("media.getusermedia.aec_enabled", false);
-    pref("media.getusermedia.noise_enabled", false);
-  #else
-    pref("media.getusermedia.aec_enabled", true);
-    pref("media.getusermedia.noise_enabled", true);
-  #endif
+  pref("media.getusermedia.aec_enabled", true);
+  pref("media.getusermedia.noise_enabled", true);
   pref("media.getusermedia.use_aec_mobile", false);
   pref("media.getusermedia.aec", 1); // kModerateSuppression
   pref("media.getusermedia.aec_extended_filter", true);
