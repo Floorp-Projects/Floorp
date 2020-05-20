@@ -14,6 +14,8 @@
 #include "new-regexp/regexp-shim.h"
 #include "new-regexp/regexp-stack.h"
 
+#include "vm/NativeObject-inl.h"
+
 namespace v8 {
 namespace internal {
 
@@ -190,7 +192,13 @@ Handle<ByteArray> Isolate::NewByteArray(int length, AllocationType alloc) {
 
 Handle<FixedArray> Isolate::NewFixedArray(int length) {
   MOZ_RELEASE_ASSERT(length >= 0);
-  return Handle<FixedArray>::fromHandleValue(JS::UndefinedHandleValue);
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
+  js::ArrayObject* array = js::NewDenseFullyAllocatedArray(cx(), length);
+  if (!array) {
+    oomUnsafe.crash("Irregexp NewFixedArray");
+  }
+  array->ensureDenseInitializedLength(cx(), 0, length);
+  return Handle<FixedArray>(JS::ObjectValue(*array), this);
 }
 
 template <typename CharT>

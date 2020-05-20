@@ -564,14 +564,22 @@ class HeapObject : public Object {
   }
 };
 
-// A fixed-size array with Objects (aka Values) as element types
-// Only used for named captures. Allocated during parsing, so
-// can't be a GC thing.
-// TODO: implement.
+// A fixed-size array with Objects (aka Values) as element types.
+// Implemented using the dense elements of an ArrayObject.
+// Used for named captures.
 class FixedArray : public HeapObject {
  public:
-  inline void set(uint32_t index, Object value) {}
-  inline static FixedArray cast(Object object) { MOZ_CRASH("TODO"); }
+  inline void set(uint32_t index, Object value) {
+    inner()->setDenseElement(index, value.value());
+  }
+  inline static FixedArray cast(Object object) {
+    FixedArray f;
+    f.setValue(object.value());
+    return f;
+  }
+  js::NativeObject* inner() {
+    return &value().toObject().as<js::NativeObject>();
+  }
 };
 
 /*
