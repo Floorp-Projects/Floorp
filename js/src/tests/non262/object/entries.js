@@ -32,7 +32,7 @@ if ("entries" in Object) {
 
     o = /./.exec("abc");
     entries = Object.entries(o);
-    assertDeepEq(entries, [["0", "a"], ["index", 0], ["input", "abc"]]);
+    assertDeepEq(entries, [["0", "a"], ["index", 0], ["input", "abc"], ["groups", undefined]]);
 
     o = { a: 1, b: 2, c: 3 };
     delete o.b;
