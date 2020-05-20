@@ -630,10 +630,7 @@ static bool DoAtomicsWait(JSContext* cx,
       cx, unwrappedTypedArray->bufferShared());
 
   // Step 11.
-  uint32_t offset =
-      unwrappedTypedArray->dataPointerShared().cast<uint8_t*>().unwrap(
-          /* arithmetic */) -
-      unwrappedSab->dataPointerShared().unwrap(/* arithmetic */);
+  uint32_t offset = unwrappedTypedArray->byteOffset();
 
   // Steps 12-13.
   // The computation will not overflow because range checks have been
@@ -791,10 +788,7 @@ bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
       cx, unwrappedTypedArray->bufferShared());
 
   // Step 6.
-  uint32_t offset =
-      unwrappedTypedArray->dataPointerShared().cast<uint8_t*>().unwrap(
-          /* arithmetic */) -
-      unwrappedSab->dataPointerShared().unwrap(/* arithmetic */);
+  uint32_t offset = unwrappedTypedArray->byteOffset();
 
   // Steps 7-9.
   // The computation will not overflow because range checks have been
