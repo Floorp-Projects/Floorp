@@ -20,7 +20,6 @@ const TEST_PAGE_LOAD = "pageload";
 const TEST_SCENARIO = "scenario";
 
 const GECKOVIEW_BROWSERS = ["fenix", "geckoview", "refbrow"];
-const GECKO_BROWSERS = GECKOVIEW_BROWSERS + ["firefox"];
 
 // when the browser starts this webext runner will start automatically; we
 // want to give the browser some time (ms) to settle before starting tests
@@ -35,8 +34,8 @@ var newTabPerCycle = false;
 var foregroundDelay = 5000;
 
 var browserName;
-var isGecko;
-var isGeckoView;
+var isGecko = false;
+var isGeckoView = false;
 var ext;
 var testName = null;
 var settingsURL = null;
@@ -199,23 +198,6 @@ async function getTestSettings() {
 
 async function sleep(delay) {
   return new Promise(resolve => setTimeout(resolve, delay));
-}
-
-async function getBrowserInfo() {
-  if (isGecko) {
-    const info = await ext.runtime.getBrowserInfo();
-    results.browser = `${info.name} ${info.version} ${info.buildID}`;
-  } else {
-    const info = window.navigator.userAgent.split(" ");
-    for (const entry in info) {
-      if (info[entry].indexOf("Chrome") > -1) {
-        results.browser = info[entry];
-        break;
-      }
-    }
-  }
-
-  raptorLog(`testing on ${results.browser}`);
 }
 
 async function startScenarioTimer() {
@@ -724,7 +706,6 @@ async function raptorRunner() {
     );
   }
 
-  await getBrowserInfo();
   await getTestSettings();
 
   raptorLog(`${testType} test start`);
@@ -771,12 +752,28 @@ async function init() {
   debugMode = config.debug_mode;
   browserCycle = config.browser_cycle;
 
-  isGecko = GECKO_BROWSERS.includes(browserName);
-  isGeckoView = GECKOVIEW_BROWSERS.includes(browserName);
+  try {
+    // Chromium based browsers do not support the "browser" namespace and
+    // raise an exception when accessing it.
+    const info = await browser.runtime.getBrowserInfo();
+    results.browser = `${info.name} ${info.version} ${info.buildID}`;
 
-  ext = isGecko ? browser : chrome;
+    ext = browser;
+    isGecko = true;
+    isGeckoView = GECKOVIEW_BROWSERS.includes(info.name.toLowerCase);
+  } catch (e) {
+    const regex = /(Chrome)\/([\w\.]+)/;
+    const userAgent = window.navigator.userAgent;
+    results.browser = regex
+      .exec(userAgent)
+      .splice(1, 2)
+      .join(" ");
+
+    ext = chrome;
+  }
 
   await postToControlServer("loaded");
+  await postToControlServer("status", `testing on ${results.browser}`);
   await postToControlServer("status", `test name is: ${testName}`);
   await postToControlServer("status", `test settings url is: ${settingsURL}`);
 
