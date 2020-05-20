@@ -464,11 +464,11 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     window.value == MediaManagerService.STATE_NOCAPTURE &&
     browser.value == MediaManagerService.STATE_NOCAPTURE
   ) {
-    return {};
+    return { remove: true };
   }
 
   if (aForRemove) {
-    return {};
+    return { remove: true };
   }
 
   let serializedDevices = [];
@@ -489,7 +489,6 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     screen: screen.value,
     window: window.value,
     browser: browser.value,
-    documentURI: aContentWindow.document.documentURI,
     devices: serializedDevices,
   };
 }
