@@ -183,6 +183,11 @@ PostMessageEvent::Run() {
     cloneDataPolicy.allowSharedMemoryObjects();
   }
 
+  if (mHolder.empty()) {
+    DispatchError(cx, targetWindow, eventTarget);
+    return NS_OK;
+  }
+
   StructuredCloneHolder* holder;
   if (mHolder.constructed<StructuredCloneHolder>()) {
     mHolder.ref<StructuredCloneHolder>().Read(

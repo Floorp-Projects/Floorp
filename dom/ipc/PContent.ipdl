@@ -1678,7 +1678,7 @@ child:
 both:
     async MaybeExitFullscreen(MaybeDiscardedBrowsingContext aContext);
     async WindowPostMessage(MaybeDiscardedBrowsingContext aContext,
-                            ClonedMessageData aMessage,
+                            ClonedOrErrorMessageData aMessage,
                             PostMessageData aData);
 
     /**

@@ -1732,24 +1732,71 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
     return;
   }
 
-  ipc::StructuredCloneData message;
-  message.Write(aCx, aMessage, transferArray, JS::CloneDataPolicy(), aError);
+  JS::CloneDataPolicy clonePolicy;
+  if (callerInnerWindow && callerInnerWindow->IsSharedMemoryAllowed()) {
+    clonePolicy.allowSharedMemoryObjects();
+  }
+
+  // We will see if the message is required to be in the same process or it can
+  // be in the different process after Write().
+  ipc::StructuredCloneData message = ipc::StructuredCloneData(
+      StructuredCloneHolder::StructuredCloneScope::UnknownDestination,
+      StructuredCloneHolder::TransferringSupported);
+  message.Write(aCx, aMessage, transferArray, clonePolicy, aError);
   if (NS_WARN_IF(aError.Failed())) {
     return;
   }
 
-  ClonedMessageData messageData;
+  ClonedOrErrorMessageData messageData;
   if (ContentChild* cc = ContentChild::GetSingleton()) {
-    if (!message.BuildClonedMessageDataForChild(cc, messageData)) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
+    // The clone scope gets set when we write the message data based on the
+    // requirements of that data that we're writing.
+    // If the message data contins a shared memory object, then CloneScope would
+    // return SameProcess. Otherwise, it returns DifferentProcess.
+    if (message.CloneScope() ==
+        StructuredCloneHolder::StructuredCloneScope::DifferentProcess) {
+      ClonedMessageData clonedMessageData;
+      if (!message.BuildClonedMessageDataForChild(cc, clonedMessageData)) {
+        aError.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+
+      messageData = std::move(clonedMessageData);
+    } else {
+      MOZ_ASSERT(message.CloneScope() ==
+                 StructuredCloneHolder::StructuredCloneScope::SameProcess);
+
+      messageData = ErrorMessageData();
+
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM Window"),
+          callerInnerWindow ? callerInnerWindow->GetDocument() : nullptr,
+          nsContentUtils::eDOM_PROPERTIES,
+          "PostMessageSharedMemoryObjectToCrossOriginWarning");
     }
 
     cc->SendWindowPostMessage(this, messageData, data);
   } else if (ContentParent* cp = Canonical()->GetContentParent()) {
-    if (!message.BuildClonedMessageDataForParent(cp, messageData)) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
+    if (message.CloneScope() ==
+        StructuredCloneHolder::StructuredCloneScope::DifferentProcess) {
+      ClonedMessageData clonedMessageData;
+      if (!message.BuildClonedMessageDataForParent(cp, clonedMessageData)) {
+        aError.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+
+      messageData = std::move(clonedMessageData);
+    } else {
+      MOZ_ASSERT(message.CloneScope() ==
+                 StructuredCloneHolder::StructuredCloneScope::SameProcess);
+
+      messageData = ErrorMessageData();
+
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM Window"),
+          callerInnerWindow ? callerInnerWindow->GetDocument() : nullptr,
+          nsContentUtils::eDOM_PROPERTIES,
+          "PostMessageSharedMemoryObjectToCrossOriginWarning");
     }
 
     Unused << cp->SendWindowPostMessage(this, messageData, data);
