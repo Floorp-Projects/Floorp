@@ -32,7 +32,7 @@ protection-report-settings-link = Manage your privacy and security settings
 
 etp-card-title-always = Enhanced Tracking Protection: Always On
 etp-card-title-custom-not-blocking = Enhanced Tracking Protection: OFF
-etp-card-content-summary = When unknown companies try to secretly follow you around the web, { -brand-short-name } automatically stops many of them.
+etp-card-content-description = { -brand-short-name } automatically stops companies from secretly following you around the web.
 protection-report-etp-card-content-custom-not-blocking = All protections are currently turned off. Choose which trackers to block by managing your { -brand-short-name } protections settings.
 protection-report-manage-protections = Manage Settings
 
