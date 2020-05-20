@@ -74,7 +74,4 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     if CONFIG['MOZ_ENABLE_DBUS']:
         CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
-if CONFIG['MOZ_LAYOUT_DEBUGGER']:
-    DEFINES['MOZ_LAYOUT_DEBUGGER'] = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
