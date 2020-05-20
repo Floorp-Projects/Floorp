@@ -24,7 +24,6 @@ about-networking-family = Family
 about-networking-trr = TRR
 about-networking-addresses = Addresses
 about-networking-expires = Expires (Seconds)
-about-networking-originAttributesSuffix = Isolation Key
 about-networking-messages-sent = Messages Sent
 about-networking-messages-received = Messages Received
 about-networking-bytes-sent = Bytes Sent
