@@ -106,7 +106,10 @@ class MachCommands(MachCommandBase):
             env['XPCOM_DEBUG_BREAK'] = 'warn'
 
             outputHandler = OutputHandler(self.log)
-            kp_kwargs = {'processOutputLine': [outputHandler]}
+            kp_kwargs = {
+                'processOutputLine': [outputHandler],
+                'universal_newlines': True,
+            }
 
             valgrind = 'valgrind'
             if not os.path.exists(valgrind):
