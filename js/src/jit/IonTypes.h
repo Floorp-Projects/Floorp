@@ -465,7 +465,7 @@ class SimdConstant {
     if (type() != rhs.type()) {
       return false;
     }
-    // Takes negative zero into accuont, as it's a bit comparison.
+    // Takes negative zero into account, as it's a bit comparison.
     return memcmp(&u, &rhs.u, sizeof(u)) == 0;
   }
   bool operator!=(const SimdConstant& rhs) const { return !operator==(rhs); }

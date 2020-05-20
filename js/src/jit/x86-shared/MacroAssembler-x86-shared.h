@@ -453,7 +453,7 @@ class MacroAssemblerX86Shared : public Assembler {
                       FloatRegister output,
                       const mozilla::Maybe<FloatRegister>& maybeFloatTemp,
                       const mozilla::Maybe<Register>& maybeTemp,
-                      uint8_t lanes[16]);
+                      const uint8_t lanes[16]);
 
   void compareInt8x16(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);

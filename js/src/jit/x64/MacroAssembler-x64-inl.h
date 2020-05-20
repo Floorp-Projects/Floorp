@@ -752,7 +752,10 @@ void MacroAssembler::spectreBoundsCheck32(Register index, const Address& length,
 }
 
 // ========================================================================
-// SIMD
+// SIMD.
+//
+// These are x64-only because they use ScratchRegister or they use a quadword
+// operation.  SSE4.1 or better is assumed.
 
 // Any lane true, ie any bit set
 
@@ -760,9 +763,11 @@ void MacroAssembler::anyTrueSimd128(FloatRegister src, Register dest) {
   ScratchRegisterScope one(*this);
   movl(Imm32(1), one);
   movl(Imm32(0), dest);
-  vptest(src, src);  // SSE4.1
+  vptest(src, src);
   cmovCCl(NonZero, one, dest);
 }
+
+// Integer Multiply
 
 void MacroAssembler::mulInt64x2(FloatRegister rhs, FloatRegister lhsDest,
                                 Register64 temp) {
@@ -778,6 +783,8 @@ void MacroAssembler::mulInt64x2(FloatRegister rhs, FloatRegister lhsDest,
   vpinsrq(1, t1, lhsDest, lhsDest);
 }
 
+// Right shift by scalar
+
 void MacroAssembler::rightShiftInt64x2(Register rhs, FloatRegister lhsDest) {
   ScratchRegisterScope scratch(*this);
 
@@ -791,15 +798,21 @@ void MacroAssembler::rightShiftInt64x2(Register rhs, FloatRegister lhsDest) {
   vpinsrq(1, scratch, lhsDest, lhsDest);
 }
 
+// Extract lane as scalar
+
 void MacroAssembler::extractLaneInt64x2(uint32_t lane, FloatRegister src,
                                         Register64 dest) {
   vpextrq(lane, src, dest.reg);
 }
 
+// Replace lane value
+
 void MacroAssembler::replaceLaneInt64x2(unsigned lane, Register64 rhs,
                                         FloatRegister lhsDest) {
   vpinsrq(lane, rhs.reg, lhsDest, lhsDest);
 }
+
+// Splat
 
 void MacroAssembler::splatX2(Register64 src, FloatRegister dest) {
   vpinsrq(0, src.reg, dest, dest);
