@@ -1459,7 +1459,7 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
       cx, NewDenseUnallocatedArray(cx, RegExpObject::MaxPairCount, nullptr,
                                    TenuredObject));
   if (!templateObject) {
-    return matchResultTemplateObject_;  // = nullptr
+    return nullptr;
   }
 
   // Create a new group for the template.
@@ -1467,7 +1467,7 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
   ObjectGroup* group = ObjectGroupRealm::makeGroup(
       cx, templateObject->realm(), templateObject->getClass(), proto);
   if (!group) {
-    return matchResultTemplateObject_;  // = nullptr
+    return nullptr;
   }
   templateObject->setGroup(group);
 
@@ -1475,22 +1475,39 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
   RootedValue index(cx, Int32Value(0));
   if (!NativeDefineDataProperty(cx, templateObject, cx->names().index, index,
                                 JSPROP_ENUMERATE)) {
-    return matchResultTemplateObject_;  // = nullptr
+    return nullptr;
   }
 
   /* Set dummy input property */
   RootedValue inputVal(cx, StringValue(cx->runtime()->emptyString));
   if (!NativeDefineDataProperty(cx, templateObject, cx->names().input, inputVal,
                                 JSPROP_ENUMERATE)) {
-    return matchResultTemplateObject_;  // = nullptr
+    return nullptr;
   }
 
+#ifdef ENABLE_NEW_REGEXP
+  /* Set dummy groups property */
+  RootedValue groupsVal(cx, UndefinedValue());
+  if (!NativeDefineDataProperty(cx, templateObject, cx->names().groups,
+                                groupsVal, JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+  AddTypePropertyId(cx, templateObject, NameToId(cx->names().groups),
+                    TypeSet::AnyObjectType());
+
   // Make sure that the properties are in the right slots.
-  DebugOnly<Shape*> shape = templateObject->lastProperty();
-  MOZ_ASSERT(shape->previous()->slot() == MatchResultObjectIndexSlot &&
-             shape->previous()->propidRef() == NameToId(cx->names().index));
-  MOZ_ASSERT(shape->slot() == MatchResultObjectInputSlot &&
-             shape->propidRef() == NameToId(cx->names().input));
+#  ifdef DEBUG
+  Shape* groupsShape = templateObject->lastProperty();
+  MOZ_ASSERT(groupsShape->slot() == MatchResultObjectGroupsSlot &&
+             groupsShape->propidRef() == NameToId(cx->names().groups));
+  Shape* inputShape = groupsShape->previous().get();
+  MOZ_ASSERT(inputShape->slot() == MatchResultObjectInputSlot &&
+             inputShape->propidRef() == NameToId(cx->names().input));
+  Shape* indexShape = inputShape->previous().get();
+  MOZ_ASSERT(indexShape->slot() == MatchResultObjectIndexSlot &&
+             indexShape->propidRef() == NameToId(cx->names().index));
+#  endif
+#endif
 
   // Make sure type information reflects the indexed properties which might
   // be added.

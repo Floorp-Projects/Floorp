@@ -196,6 +196,7 @@
   MACRO(global, global, "global")                                              \
   MACRO(globalThis, globalThis, "globalThis")                                  \
   MACRO(group, group, "group")                                                 \
+  MACRO(groups, groups, "groups")                                              \
   MACRO(Handle, Handle, "Handle")                                              \
   MACRO(has, has, "has")                                                       \
   MACRO(hasOwn, hasOwn, "hasOwn")                                              \
