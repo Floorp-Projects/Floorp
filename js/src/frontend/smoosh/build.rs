@@ -1,4 +1,4 @@
-use jsparagus::emitter::opcode_info;
+use jsparagus::stencil::opcode_info;
 
 fn compare(name: &str, orig: &str, copied: &str) {
     if copied != orig {

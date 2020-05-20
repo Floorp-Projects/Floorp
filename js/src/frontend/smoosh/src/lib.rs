@@ -20,11 +20,13 @@ use env_logger;
 use jsparagus::ast::source_atom_set::SourceAtomSet;
 use jsparagus::ast::source_slice_list::SourceSliceList;
 use jsparagus::ast::types::Program;
-use jsparagus::emitter::{
-    emit, EmitError, EmitOptions, EmitResult, GCThing, RegExpItem, ScopeNote,
-};
+use jsparagus::emitter::{emit, EmitError, EmitOptions};
 use jsparagus::parser::{parse_module, parse_script, ParseError, ParseOptions};
-use jsparagus::scope::data::{BindingName, ScopeData};
+use jsparagus::stencil::gcthings::GCThing;
+use jsparagus::stencil::regexp::RegExpItem;
+use jsparagus::stencil::result::EmitResult;
+use jsparagus::stencil::scope::{BindingName, ScopeData};
+use jsparagus::stencil::scope_notes::ScopeNote;
 use std::boxed::Box;
 use std::cell::RefCell;
 use std::os::raw::{c_char, c_void};

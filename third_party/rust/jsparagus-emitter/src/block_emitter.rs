@@ -1,6 +1,6 @@
 use crate::ast_emitter::AstEmitter;
 use crate::emitter::EmitError;
-use scope::data::ScopeIndex;
+use stencil::scope::ScopeIndex;
 
 pub struct BlockEmitter<'a, StmtT, StmtF>
 where

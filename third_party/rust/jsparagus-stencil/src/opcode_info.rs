@@ -6,10 +6,6 @@ pub fn get_bytecode_format_flags() -> &'static str {
     include_str!("copy/BytecodeFormatFlags.h")
 }
 
-pub fn get_check_is_callable_kind() -> &'static str {
-    include_str!("copy/CheckIsCallableKind.h")
-}
-
 pub fn get_check_is_object_kind() -> &'static str {
     include_str!("copy/CheckIsObjectKind.h")
 }
