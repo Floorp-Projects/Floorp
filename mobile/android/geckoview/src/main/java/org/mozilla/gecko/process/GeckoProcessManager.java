@@ -123,20 +123,6 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             return mPid;
         }
 
-        private String buildLogMsg(@NonNull final String msgStart) {
-            final StringBuilder builder = new StringBuilder(msgStart);
-            builder.append(" ");
-            builder.append(getType().toString());
-
-            int pid = getPid();
-            if (pid != INVALID_PID) {
-                builder.append(" with pid ");
-                builder.append(pid);
-            }
-
-            return builder.toString();
-        }
-
         private GeckoResult<IChildProcess> completeFailedBind(@NonNull final ServiceAllocator.BindException e) {
             XPCOMEventTarget.assertOnLauncherThread();
             Log.e(LOGTAG, "Failed bind", e);
@@ -167,7 +153,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             mPendingBind = new GeckoResult<>();
             try {
                 if (!bindService()) {
-                    throw new ServiceAllocator.BindException(buildLogMsg("Cannot connect to process"));
+                    throw new ServiceAllocator.BindException("Cannot connect to process");
                 }
             } catch (final ServiceAllocator.BindException e) {
                 return completeFailedBind(e);
