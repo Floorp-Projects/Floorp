@@ -337,7 +337,16 @@ function connectNativePort() {
       case 'show':
         async function showAsync(options) {
           try {
-            let doc = await Promise.any([fetchDocument(articleUrl), getPreparedDocument(id, articleUrl)]);
+            let doc;
+            if (typeof Promise.any === "function") {
+              doc = await Promise.any([fetchDocument(articleUrl), getPreparedDocument(id, articleUrl)]);
+            } else {
+              try {
+                doc = await getPreparedDocument(id, articleUrl);
+              } catch(e) {
+                doc = await fetchDocument(articleUrl);
+              }
+            }
             readerView.show(doc, articleUrl, options);
           } catch(e) {
             console.log(e);
