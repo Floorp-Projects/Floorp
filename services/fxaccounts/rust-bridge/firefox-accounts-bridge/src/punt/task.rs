@@ -372,7 +372,11 @@ impl PuntTask {
         let runnable = TaskRunnable::new(self.name, Box::new(self))?;
         // `may_block` schedules the task on the I/O thread pool, since we
         // expect most operations to wait on I/O.
-        runnable.dispatch_with_options(target, DispatchOptions::default().may_block(true))?;
+        TaskRunnable::dispatch_with_options(
+            runnable,
+            target,
+            DispatchOptions::default().may_block(true),
+        )?;
         Ok(())
     }
 

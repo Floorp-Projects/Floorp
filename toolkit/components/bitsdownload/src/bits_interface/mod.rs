@@ -130,7 +130,7 @@ impl BitsService {
         let runnable = TaskRunnable::new(task_runnable_name, task).map_err(|rv| {
             BitsTaskError::from_nsresult(FailedToConstructTaskRunnable, action, Pretask, rv)
         })?;
-        runnable.dispatch(&command_thread).map_err(|rv| {
+        TaskRunnable::dispatch(runnable, &command_thread).map_err(|rv| {
             BitsTaskError::from_nsresult(FailedToDispatchRunnable, action, Pretask, rv)
         })
     }
