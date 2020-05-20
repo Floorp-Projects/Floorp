@@ -7,6 +7,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ASRouterActions: ra } = ChromeUtils.import(
+  "resource://activity-stream/common/Actions.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -872,7 +875,7 @@ class PageAction {
           {
             type: "USER_ACTION",
             data: {
-              type: "OPEN_URL",
+              type: ra.OPEN_URL,
               data: {
                 args: message.content.action.url,
                 where: message.content.action.where,
