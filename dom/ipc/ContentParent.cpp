@@ -6318,7 +6318,7 @@ mozilla::ipc::IPCResult ContentParent::RecvMaybeExitFullscreen(
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
     const MaybeDiscarded<BrowsingContext>& aContext,
-    const ClonedMessageData& aMessage, const PostMessageData& aData) {
+    const ClonedOrErrorMessageData& aMessage, const PostMessageData& aData) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -6341,13 +6341,22 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
     return IPC_OK();
   }
 
+  ClonedOrErrorMessageData message;
   StructuredCloneData messageFromChild;
-  UnpackClonedMessageDataForParent(aMessage, messageFromChild);
+  if (aMessage.type() == ClonedOrErrorMessageData::TClonedMessageData) {
+    UnpackClonedMessageDataForParent(aMessage, messageFromChild);
 
-  ClonedMessageData message;
-  if (!BuildClonedMessageDataForParent(cp, messageFromChild, message)) {
-    // FIXME Logging?
-    return IPC_OK();
+    ClonedMessageData clonedMessageData;
+    if (BuildClonedMessageDataForParent(cp, messageFromChild,
+                                        clonedMessageData)) {
+      message = std::move(clonedMessageData);
+    } else {
+      // FIXME Logging?
+      message = ErrorMessageData();
+    }
+  } else {
+    MOZ_ASSERT(aMessage.type() == ClonedOrErrorMessageData::TErrorMessageData);
+    message = ErrorMessageData();
   }
 
   Unused << cp->SendWindowPostMessage(context, message, aData);

@@ -64,7 +64,11 @@ class PostMessageEvent final : public Runnable {
     mHolder.ref<StructuredCloneHolder>().Write(aCx, aMessage, aTransfer,
                                                aClonePolicy, aError);
   }
-  void UnpackFrom(const ClonedMessageData& aMessageData) {
+  void UnpackFrom(const ClonedOrErrorMessageData& aMessageData) {
+    if (aMessageData.type() != ClonedOrErrorMessageData::TClonedMessageData) {
+      return;
+    }
+
     mHolder.construct<ipc::StructuredCloneData>();
     // FIXME Want to steal!
     //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1516349.
