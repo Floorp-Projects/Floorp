@@ -26,10 +26,11 @@ using namespace mozilla;
 using namespace mozilla::tasktracer;
 #endif
 
-NS_IMPL_ISUPPORTS(TimerThread, nsIRunnable, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(TimerThread, Runnable, nsIObserver)
 
 TimerThread::TimerThread()
-    : mInitialized(false),
+    : Runnable("TimerThread"),
+      mInitialized(false),
       mMonitor("TimerThread.mMonitor"),
       mShutdown(false),
       mWaiting(false),

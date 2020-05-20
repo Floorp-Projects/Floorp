@@ -13,10 +13,8 @@
 
 using namespace mozilla;
 
-class nsThreadSafeAutoRefCntRunner final : public nsIRunnable {
+class nsThreadSafeAutoRefCntRunner final : public Runnable {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   NS_IMETHOD Run() final {
     for (int i = 0; i < 10000; i++) {
       if (++sRefCnt == 1) {
@@ -33,11 +31,11 @@ class nsThreadSafeAutoRefCntRunner final : public nsIRunnable {
   static Atomic<uint32_t, Relaxed> sIncToOne;
   static Atomic<uint32_t, Relaxed> sDecToZero;
 
+  nsThreadSafeAutoRefCntRunner() : Runnable("nsThreadSafeAutoRefCntRunner") {}
+
  private:
   ~nsThreadSafeAutoRefCntRunner() = default;
 };
-
-NS_IMPL_ISUPPORTS(nsThreadSafeAutoRefCntRunner, nsIRunnable)
 
 ThreadSafeAutoRefCnt nsThreadSafeAutoRefCntRunner::sRefCnt;
 Atomic<uint32_t, Relaxed> nsThreadSafeAutoRefCntRunner::sIncToOne(0);
