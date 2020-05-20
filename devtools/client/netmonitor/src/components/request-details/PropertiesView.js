@@ -62,6 +62,7 @@ class PropertiesView extends Component {
       selectPath: PropTypes.func,
       mode: PropTypes.symbol,
       defaultSelectFirstNode: PropTypes.bool,
+      useQuotes: PropTypes.bool,
     };
   }
 
@@ -71,6 +72,7 @@ class PropertiesView extends Component {
       enableFilter: true,
       expandableStrings: false,
       cropLimit: 1024,
+      useQuotes: true,
     };
   }
 
@@ -196,6 +198,7 @@ class PropertiesView extends Component {
       selectPath,
       cropLimit,
       defaultSelectFirstNode,
+      useQuotes,
     } = this.props;
 
     return div(
@@ -210,7 +213,7 @@ class PropertiesView extends Component {
           decorator,
           enableInput,
           expandableStrings,
-          useQuotes: true,
+          useQuotes,
           expandedNodes:
             expandedNodes ||
             TreeViewClass.getExpandedNodes(object, {

@@ -59,7 +59,7 @@ add_task(async function() {
   );
   is(
     values[values.length - 2].textContent,
-    '"application/x-www-form-urlencoded"',
+    "application/x-www-form-urlencoded",
     "The first request header value was incorrect."
   );
   is(
@@ -69,7 +69,7 @@ add_task(async function() {
   );
   is(
     values[values.length - 1].textContent,
-    '"hello world!"',
+    "hello world!",
     "The second request header value was incorrect."
   );
 
