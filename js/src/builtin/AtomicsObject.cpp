@@ -87,17 +87,25 @@ static bool ReportOutOfRange(JSContext* cx) {
   return false;
 }
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.1.1 ValidateSharedIntegerTypedArray ( typedArray [ , waitable ] )
 static bool GetSharedTypedArray(JSContext* cx, HandleValue v, bool waitable,
                                 MutableHandle<TypedArrayObject*> viewp) {
+  // Step 1 (implicit).
+
+  // Step 2.
   auto* unwrapped = UnwrapAndTypeCheckValue<TypedArrayObject>(
       cx, v, [cx]() { ReportBadArrayType(cx); });
   if (!unwrapped) {
     return false;
   }
+
+  // Steps 7-9.
   if (!unwrapped->isSharedMemory()) {
     return ReportBadArrayType(cx);
   }
-  viewp.set(unwrapped);
+
+  // Steps 3-6.
   if (waitable) {
     switch (unwrapped->type()) {
       case Scalar::Int32:
@@ -121,19 +129,31 @@ static bool GetSharedTypedArray(JSContext* cx, HandleValue v, bool waitable,
         return ReportBadArrayType(cx);
     }
   }
+
+  // Step 10 (modified to return the TypedArray).
+  viewp.set(unwrapped);
   return true;
 }
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.1.2 ValidateAtomicAccess ( typedArray, requestIndex )
 static bool GetTypedArrayIndex(JSContext* cx, HandleValue v,
                                Handle<TypedArrayObject*> view,
                                uint32_t* offset) {
+  // Step 1 (implicit).
+
+  // Step 2.
   uint64_t index;
   if (!ToIndex(cx, v, &index)) {
     return false;
   }
+
+  // Steps 3-5.
   if (index >= view->length()) {
     return ReportOutOfRange(cx);
   }
+
+  // Step 6.
   *offset = uint32_t(index);
   return true;
 }
@@ -290,6 +310,9 @@ struct DoCompareExchange {
   }
 };
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.4 Atomics.compareExchange ( typedArray, index, expectedValue,
+//                                  replacementValue )
 bool js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return perform<DoCompareExchange>(cx, args.get(0), args.get(1), args.get(2),
@@ -307,6 +330,8 @@ struct DoLoad {
   }
 };
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.7 Atomics.load ( typedArray, index )
 bool js::atomics_load(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return perform<DoLoad>(cx, args.get(0), args.get(1), args.rval());
@@ -337,12 +362,16 @@ struct DoStore {
   }
 };
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.9 Atomics.store ( typedArray, index, value )
 bool js::atomics_store(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return perform<DoStore>(cx, args.get(0), args.get(1), args.get(2),
                           args.rval());
 }
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.5 Atomics.exchange ( typedArray, index, value )
 bool js::atomics_exchange(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return perform<DoExchange>(cx, args.get(0), args.get(1), args.get(2),
@@ -403,6 +432,8 @@ class PerformAdd {
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAddSeqCst)
 };
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.2 Atomics.add ( typedArray, index, value )
 bool js::atomics_add(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return AtomicsBinop<PerformAdd>(cx, args.get(0), args.get(1), args.get(2),
@@ -414,6 +445,8 @@ class PerformSub {
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchSubSeqCst)
 };
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.10 Atomics.sub ( typedArray, index, value )
 bool js::atomics_sub(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return AtomicsBinop<PerformSub>(cx, args.get(0), args.get(1), args.get(2),
@@ -425,6 +458,8 @@ class PerformAnd {
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAndSeqCst)
 };
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.3 Atomics.and ( typedArray, index, value )
 bool js::atomics_and(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return AtomicsBinop<PerformAnd>(cx, args.get(0), args.get(1), args.get(2),
@@ -436,6 +471,8 @@ class PerformOr {
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchOrSeqCst)
 };
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.8 Atomics.or ( typedArray, index, value )
 bool js::atomics_or(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return AtomicsBinop<PerformOr>(cx, args.get(0), args.get(1), args.get(2),
@@ -447,15 +484,21 @@ class PerformXor {
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchXorSeqCst)
 };
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.13 Atomics.xor ( typedArray, index, value )
 bool js::atomics_xor(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return AtomicsBinop<PerformXor>(cx, args.get(0), args.get(1), args.get(2),
                                   args.rval());
 }
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.6 Atomics.isLockFree ( size )
 bool js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue v = args.get(0);
+
+  // Step 1.
   int32_t size;
   if (v.isInt32()) {
     size = v.toInt32();
@@ -464,11 +507,15 @@ bool js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp) {
     if (!ToInteger(cx, v, &dsize)) {
       return false;
     }
+
+    // Step 7 (non-integer case only).
     if (!mozilla::NumberEqualsInt32(dsize, &size)) {
       args.rval().setBoolean(false);
       return true;
     }
   }
+
+  // Steps 2-7.
   args.rval().setBoolean(jit::AtomicOperations::isLockfreeJS(size));
   return true;
 }
@@ -518,6 +565,8 @@ class AutoLockFutexAPI {
 
 }  // namespace js
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.11 Atomics.wait ( typedArray, index, value, timeout ), steps 8-9, 14-25.
 template <typename T>
 static FutexThread::WaitResult AtomicsWait(
     JSContext* cx, SharedArrayRawBuffer* sarb, uint32_t byteOffset, T value,
@@ -525,6 +574,7 @@ static FutexThread::WaitResult AtomicsWait(
   // Validation and other guards should ensure that this does not happen.
   MOZ_ASSERT(sarb, "wait is only applicable to shared memory");
 
+  // Steps 8-9.
   if (!cx->fx.canWait()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_ATOMICS_WAIT_NOT_ALLOWED);
@@ -534,14 +584,17 @@ static FutexThread::WaitResult AtomicsWait(
   SharedMem<T*> addr =
       sarb->dataPointerShared().cast<T*>() + (byteOffset / sizeof(T));
 
+  // Steps 15 (reordered), 17.a and 23 (through destructor).
   // This lock also protects the "waiters" field on SharedArrayRawBuffer,
   // and it provides the necessary memory fence.
   AutoLockFutexAPI lock;
 
+  // Steps 16-17.
   if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value) {
     return FutexThread::WaitResult::NotEqual;
   }
 
+  // Steps 14, 18-22.
   FutexWaiter w(byteOffset, cx);
   if (FutexWaiter* waiters = sarb->waiters()) {
     w.lower_pri = waiters;
@@ -565,6 +618,7 @@ static FutexThread::WaitResult AtomicsWait(
     }
   }
 
+  // Steps 24-25.
   return retval;
 }
 
@@ -580,17 +634,22 @@ FutexThread::WaitResult js::atomics_wait_impl(
   return AtomicsWait(cx, sarb, byteOffset, value, timeout);
 }
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.11 Atomics.wait ( typedArray, index, value, timeout ), steps 6-25.
 template <typename T>
 static bool DoAtomicsWait(JSContext* cx,
                           Handle<TypedArrayObject*> unwrappedView,
-                          uint32_t offset, T value, HandleValue timeoutv,
+                          uint32_t index, T value, HandleValue timeoutv,
                           MutableHandleValue r) {
   mozilla::Maybe<mozilla::TimeDuration> timeout;
   if (!timeoutv.isUndefined()) {
+    // Step 6.
     double timeout_ms;
     if (!ToNumber(cx, timeoutv, &timeout_ms)) {
       return false;
     }
+
+    // Step 7.
     if (!mozilla::IsNaN(timeout_ms)) {
       if (timeout_ms < 0) {
         timeout = mozilla::Some(mozilla::TimeDuration::FromSeconds(0.0));
@@ -601,18 +660,23 @@ static bool DoAtomicsWait(JSContext* cx,
     }
   }
 
+  // Step 10.
   Rooted<SharedArrayBufferObject*> unwrappedSab(cx,
                                                 unwrappedView->bufferShared());
+
+  // Step 11.
+  uint32_t offset = unwrappedView->dataPointerShared().cast<uint8_t*>().unwrap(
+                        /* arithmetic */) -
+                    unwrappedSab->dataPointerShared().unwrap(/* arithmetic */);
+
+  // Steps 12-13.
   // The computation will not overflow because range checks have been
   // performed.
-  uint32_t byteOffset =
-      offset * sizeof(T) +
-      (unwrappedView->dataPointerShared().cast<uint8_t*>().unwrap(
-           /* arithmetic */) -
-       unwrappedSab->dataPointerShared().unwrap(/* arithmetic */));
+  uint32_t indexedPosition = index * sizeof(T) + offset;
 
-  switch (atomics_wait_impl(cx, unwrappedSab->rawBufferObject(), byteOffset,
-                            value, timeout)) {
+  // Steps 8-9, 14-25.
+  switch (atomics_wait_impl(cx, unwrappedSab->rawBufferObject(),
+                            indexedPosition, value, timeout)) {
     case FutexThread::WaitResult::NotEqual:
       r.setString(cx->names().futexNotEqual);
       return true;
@@ -629,14 +693,17 @@ static bool DoAtomicsWait(JSContext* cx,
   }
 }
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.11 Atomics.wait ( typedArray, index, value, timeout )
 bool js::atomics_wait(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue objv = args.get(0);
-  HandleValue idxv = args.get(1);
+  HandleValue index = args.get(1);
   HandleValue valv = args.get(2);
   HandleValue timeoutv = args.get(3);
   MutableHandleValue r = args.rval();
 
+  // Step 1.
   Rooted<TypedArrayObject*> unwrappedView(cx);
   if (!GetSharedTypedArray(cx, objv, true, &unwrappedView)) {
     return false;
@@ -644,37 +711,50 @@ bool js::atomics_wait(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(unwrappedView->type() == Scalar::Int32 ||
              unwrappedView->type() == Scalar::BigInt64);
 
-  uint32_t offset;
-  if (!GetTypedArrayIndex(cx, idxv, unwrappedView, &offset)) {
+  // Step 2.
+  uint32_t intIndex;
+  if (!GetTypedArrayIndex(cx, index, unwrappedView, &intIndex)) {
     return false;
   }
 
   if (unwrappedView->type() == Scalar::Int32) {
+    // Step 5.
     int32_t value;
     if (!ToInt32(cx, valv, &value)) {
       return false;
     }
-    return DoAtomicsWait(cx, unwrappedView, offset, value, timeoutv, r);
+
+    // Steps 6-25.
+    return DoAtomicsWait(cx, unwrappedView, intIndex, value, timeoutv, r);
   }
 
   MOZ_ASSERT(unwrappedView->type() == Scalar::BigInt64);
-  RootedBigInt valbi(cx, ToBigInt(cx, valv));
-  if (!valbi) {
+
+  // Step 4.
+  RootedBigInt value(cx, ToBigInt(cx, valv));
+  if (!value) {
     return false;
   }
-  return DoAtomicsWait(cx, unwrappedView, offset, BigInt::toInt64(valbi),
+
+  // Steps 6-25.
+  return DoAtomicsWait(cx, unwrappedView, intIndex, BigInt::toInt64(value),
                        timeoutv, r);
 }
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.12 Atomics.notify ( typedArray, index, count ), steps 10-16.
 int64_t js::atomics_notify_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset,
                                 int64_t count) {
   // Validation should ensure this does not happen.
   MOZ_ASSERT(sarb, "notify is only applicable to shared memory");
 
+  // Steps 12 (reordered), 15 (through destructor).
   AutoLockFutexAPI lock;
 
+  // Step 11 (reordered).
   int64_t woken = 0;
 
+  // Steps 10, 13-14.
   FutexWaiter* waiters = sarb->waiters();
   if (waiters && count) {
     FutexWaiter* iter = waiters;
@@ -698,29 +778,34 @@ int64_t js::atomics_notify_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset,
     } while (count && iter != waiters);
   }
 
+  // Step 16.
   return woken;
 }
 
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.12 Atomics.notify ( typedArray, index, count )
 bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue objv = args.get(0);
-  HandleValue idxv = args.get(1);
+  HandleValue index = args.get(1);
   HandleValue countv = args.get(2);
   MutableHandleValue r = args.rval();
 
+  // Step 1.
   Rooted<TypedArrayObject*> unwrappedView(cx);
   if (!GetSharedTypedArray(cx, objv, true, &unwrappedView)) {
     return false;
   }
   MOZ_ASSERT(unwrappedView->type() == Scalar::Int32 ||
              unwrappedView->type() == Scalar::BigInt64);
-  uint32_t elementSize = unwrappedView->type() == Scalar::Int32
-                             ? sizeof(int32_t)
-                             : sizeof(int64_t);
-  uint32_t offset;
-  if (!GetTypedArrayIndex(cx, idxv, unwrappedView, &offset)) {
+
+  // Step 2.
+  uint32_t intIndex;
+  if (!GetTypedArrayIndex(cx, index, unwrappedView, &intIndex)) {
     return false;
   }
+
+  // Steps 3-4.
   int64_t count;
   if (countv.isUndefined()) {
     count = -1;
@@ -735,18 +820,24 @@ bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
     count = dcount < double(1ULL << 63) ? int64_t(dcount) : -1;
   }
 
+  // Step 5.
   Rooted<SharedArrayBufferObject*> unwrappedSab(cx,
                                                 unwrappedView->bufferShared());
+
+  // Step 6.
+  uint32_t offset = unwrappedView->dataPointerShared().cast<uint8_t*>().unwrap(
+                        /* arithmetic */) -
+                    unwrappedSab->dataPointerShared().unwrap(/* arithmetic */);
+
+  // Steps 7-9.
   // The computation will not overflow because range checks have been
   // performed.
-  uint32_t byteOffset =
-      offset * elementSize +
-      (unwrappedView->dataPointerShared().cast<uint8_t*>().unwrap(
-           /* arithmetic */) -
-       unwrappedSab->dataPointerShared().unwrap(/* arithmetic */));
+  uint32_t elementSize = Scalar::byteSize(unwrappedView->type());
+  uint32_t indexedPosition = intIndex * elementSize + offset;
 
-  r.setNumber(double(
-      atomics_notify_impl(unwrappedSab->rawBufferObject(), byteOffset, count)));
+  // Steps 10-16.
+  r.setNumber(double(atomics_notify_impl(unwrappedSab->rawBufferObject(),
+                                         indexedPosition, count)));
 
   return true;
 }
