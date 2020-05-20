@@ -570,10 +570,10 @@ struct ReftestEnvironment {
 }
 
 impl ReftestEnvironment {
-    fn new() -> Self {
+    fn new(wrench: &Wrench, window: &WindowWrapper) -> Self {
         Self {
-            platform: Self::platform(),
-            version: Self::version(),
+            platform: Self::platform(wrench, window),
+            version: Self::version(wrench, window),
             mode: Self::mode(),
         }
     }
@@ -594,8 +594,10 @@ impl ReftestEnvironment {
         env::var(envkey).is_ok()
     }
 
-    fn platform() -> &'static str {
-        if cfg!(target_os = "windows") {
+    fn platform(_wrench: &Wrench, window: &WindowWrapper) -> &'static str {
+        if window.is_software() {
+            "swgl"
+        } else if cfg!(target_os = "windows") {
             "win"
         } else if cfg!(target_os = "linux") {
             "linux"
@@ -608,8 +610,10 @@ impl ReftestEnvironment {
         }
     }
 
-    fn version() -> Option<semver::Version> {
-        if cfg!(target_os = "macos") {
+    fn version(_wrench: &Wrench, window: &WindowWrapper) -> Option<semver::Version> {
+        if window.is_software() {
+            None
+        } else if cfg!(target_os = "macos") {
             use std::str;
             let version_bytes = Command::new("defaults")
                 .arg("read")
@@ -652,7 +656,7 @@ pub struct ReftestHarness<'a> {
 }
 impl<'a> ReftestHarness<'a> {
     pub fn new(wrench: &'a mut Wrench, window: &'a mut WindowWrapper, rx: &'a Receiver<NotifierEvent>) -> Self {
-        let environment = ReftestEnvironment::new();
+        let environment = ReftestEnvironment::new(wrench, window);
         ReftestHarness { wrench, window, rx, environment }
     }
 
