@@ -107,7 +107,6 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
     if CONFIG['ENABLE_TESTS']:
         TEST_DIRS += [
             'signaling/gtest',
-            'trunk/gtest',
         ]
 
     # Add libFuzzer configuration directives

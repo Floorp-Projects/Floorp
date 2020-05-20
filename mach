@@ -59,7 +59,6 @@ py2commands="
     web-platform-tests-update
     webidl-example
     webidl-parser-test
-    webrtc-gtest
     wpt
     wpt-manifest-update
     wpt-metadata-merge
