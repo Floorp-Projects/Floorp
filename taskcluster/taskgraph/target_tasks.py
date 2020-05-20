@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
 from re import search
 
 import six
@@ -18,7 +19,7 @@ _target_task_methods = {}
 # Some tasks show up in the target task set, but are possibly special cases,
 # uncommon tasks, or tasks running against limited hardware set that they
 # should only be selectable with --full.
-TARGET_TASK_BLACKLIST = [
+UNCOMMON_TRY_TASK_LABELS = [
     # Platforms and/or Build types
     r'build-.*-gcp',  # Bug 1631990
     r'build-.*-aarch64',  # Bug 1631990
@@ -89,7 +90,7 @@ def filter_on_platforms(task, platforms):
     return (platform in platforms)
 
 
-def filter_tasks_by_blacklist(task, optional_filters=None):
+def filter_by_uncommon_try_tasks(task, optional_filters=None):
     """Filters tasks based on blacklist rules.
 
     Args:
@@ -101,11 +102,12 @@ def filter_tasks_by_blacklist(task, optional_filters=None):
         (Boolean): True if task does not match any known filters.
             False otherwise.
     """
+    filters = UNCOMMON_TRY_TASK_LABELS
     if optional_filters:
-        for item in optional_filters:
-            TARGET_TASK_BLACKLIST.append(item)
+        filters = copy.deepcopy(filters)
+        filters.extend(optional_filters)
 
-    return not any(search(pattern, task) for pattern in TARGET_TASK_BLACKLIST)
+    return not any(search(pattern, task) for pattern in UNCOMMON_TRY_TASK_LABELS)
 
 
 def filter_release_tasks(task, parameters):
@@ -161,7 +163,7 @@ def _try_option_syntax(full_task_graph, parameters, graph_config):
     parameters['message'] and, for context, the full task graph."""
     options = try_option_syntax.TryOptionSyntax(parameters, full_task_graph, graph_config)
     target_tasks_labels = [t.label for t in six.itervalues(full_task_graph.tasks)
-                           if options.task_matches(t) and filter_tasks_by_blacklist(t.label)]
+                           if options.task_matches(t) and filter_by_uncommon_try_tasks(t.label)]
 
     attributes = {
         k: getattr(options, k) for k in [
@@ -231,7 +233,7 @@ def target_tasks_try_auto(full_task_graph, parameters, graph_config):
     return [l for l, t in six.iteritems(full_task_graph.tasks)
             if standard_filter(t, parameters)
             and filter_out_nightly(t, parameters)
-            and filter_tasks_by_blacklist(t.label)]
+            and filter_by_uncommon_try_tasks(t.label)]
 
 
 @_target_task('default')

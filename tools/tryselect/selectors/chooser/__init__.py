@@ -12,7 +12,7 @@ from tryselect.cli import BaseTryParser
 from tryselect.push import check_working_directory, generate_try_task_config, push_to_try
 from tryselect.tasks import generate_tasks
 
-from taskgraph.target_tasks import filter_tasks_by_blacklist
+from taskgraph.target_tasks import filter_by_uncommon_try_tasks
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -46,7 +46,7 @@ def run(update=False, query=None, try_config=None, full=False, parameters=None,
     # Remove tasks that are not to be shown unless `--full` is specified.
     if not full:
         blacklisted_tasks = [label for label in tg.tasks.keys()
-                             if not filter_tasks_by_blacklist(label)]
+                             if not filter_by_uncommon_try_tasks(label)]
         for task in blacklisted_tasks:
             tg.tasks.pop(task)
 

@@ -23,7 +23,7 @@ from ..tasks import generate_tasks, filter_tasks_by_paths
 from ..push import check_working_directory, push_to_try, generate_try_task_config
 from ..util.manage_estimates import download_task_history_data, make_trimmed_taskgraph_cache
 
-from taskgraph.target_tasks import filter_tasks_by_blacklist
+from taskgraph.target_tasks import filter_by_uncommon_try_tasks
 
 terminal = Terminal()
 
@@ -317,7 +317,7 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
     if not full and not disable_target_task_filter:
         # Put all_tasks into a list because it's used multiple times, and "filter()"
         # returns a consumable iterator.
-        all_tasks = list(filter(filter_tasks_by_blacklist, all_tasks))
+        all_tasks = list(filter(filter_by_uncommon_try_tasks, all_tasks))
 
     if test_paths:
         all_tasks = filter_tasks_by_paths(all_tasks, test_paths)
