@@ -193,6 +193,9 @@ export class _DiscoveryStreamBase extends React.PureComponent {
       case "CardGrid":
         return (
           <CardGrid
+            enable_video_playheads={
+              !!component.properties.enable_video_playheads
+            }
             title={component.header && component.header.title}
             display_variant={component.properties.display_variant}
             data={component.data}

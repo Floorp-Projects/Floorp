@@ -4369,6 +4369,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
 
       case "CardGrid":
         return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_1__["CardGrid"], {
+          enable_video_playheads: !!component.properties.enable_video_playheads,
           title: component.header && component.header.title,
           display_variant: component.properties.display_variant,
           data: component.data,
@@ -4609,7 +4610,8 @@ class CardGrid extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComponen
         engagement: rec.engagement,
         display_engagement_labels: this.props.display_engagement_labels,
         cta: rec.cta,
-        cta_variant: this.props.cta_variant
+        cta_variant: this.props.cta_variant,
+        is_video: this.props.enable_video_playheads && rec.is_video
       }));
     } // Used for CSS overrides to default styling (eg: "hero")
 
@@ -4649,8 +4651,9 @@ class CardGrid extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComponen
 }
 CardGrid.defaultProps = {
   border: `border`,
-  items: 4 // Number of stories to display
-
+  items: 4,
+  // Number of stories to display
+  enable_video_playheads: false
 };
 
 /***/ }),
@@ -4876,8 +4879,9 @@ class _DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     }
 
     const isButtonCTA = this.props.cta_variant === "button";
+    const baseClass = `ds-card ${this.props.is_video ? `video-card` : ``}`;
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
-      className: "ds-card"
+      className: baseClass
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_5__["SafeAnchor"], {
       className: "ds-card-link",
       dispatch: this.props.dispatch,
@@ -4890,7 +4894,9 @@ class _DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
       source: this.props.image_src,
       rawSource: this.props.raw_image_src,
       sizes: this.dsImageSizes
-    })), isButtonCTA ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(CTAButtonMeta, {
+    }), this.props.is_video && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      className: "playhead"
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "Video Content"))), isButtonCTA ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(CTAButtonMeta, {
       display_engagement_labels: this.props.display_engagement_labels,
       source: this.props.source,
       title: this.props.title,
