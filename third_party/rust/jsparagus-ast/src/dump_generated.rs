@@ -140,6 +140,15 @@ impl<'alloc> ASTDump for CompoundAssignmentOperator {
         where W: io::Write
     {
         match self {
+            CompoundAssignmentOperator::LogicalOr { .. } => {
+                write!(out, "LogicalOr").expect("failed to dump");
+            }
+            CompoundAssignmentOperator::LogicalAnd { .. } => {
+                write!(out, "LogicalAnd").expect("failed to dump");
+            }
+            CompoundAssignmentOperator::Coalesce { .. } => {
+                write!(out, "Coalesce").expect("failed to dump");
+            }
             CompoundAssignmentOperator::Add { .. } => {
                 write!(out, "Add").expect("failed to dump");
             }

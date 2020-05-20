@@ -699,7 +699,10 @@ add_task(async function testDefaultTheme() {
 
   // Last updated.
   let lastUpdated = rows.shift();
-  is(lastUpdated, undefined, "No Last Updated row");
+  checkLabel(lastUpdated, "last-updated");
+  let dateText = lastUpdated.lastChild.textContent;
+  ok(dateText, "There is a date set");
+  ok(!dateText.includes("Invalid Date"), `"${dateText}" should be a date`);
 
   is(rows.length, 0, "There are no more rows");
 

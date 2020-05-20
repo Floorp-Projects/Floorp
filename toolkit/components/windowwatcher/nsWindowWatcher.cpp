@@ -503,8 +503,8 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
-  GetWindowTreeOwner(parentWindowOuter, getter_AddRefs(parentTreeOwner));
+  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner =
+      parentWindowOuter->GetTreeOwner();
   if (NS_WARN_IF(!parentTreeOwner)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -519,7 +519,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   SizeSpec sizeSpec;
   CalcSizeSpec(features, sizeSpec);
 
-  uint32_t chromeFlags = CalculateChromeFlagsForChild(features, sizeSpec);
+  uint32_t chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
 
   if (isPrivateBrowsingWindow) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -615,7 +615,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     return NS_ERROR_FAILURE;
   }
 
-  GetWindowTreeOwner(parentWindow, getter_AddRefs(parentTreeOwner));
+  if (parentWindow) {
+    parentTreeOwner = parentWindow->GetTreeOwner();
+  }
 
   // We expect BrowserParent to have provided us the absolute URI of the window
   // we're to open, so there's no need to call URIfromURL (or more importantly,
@@ -700,33 +702,46 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // the calculation sees the actual caller when doing its
   // security checks.
   if (isCallerChrome && XRE_IsParentProcess()) {
-    chromeFlags = CalculateChromeFlagsForParent(aParent, features, sizeSpec,
-                                                aDialog, uriToLoadIsChrome,
-                                                hasChromeParent, aCalledFromJS);
+    chromeFlags = CalculateChromeFlagsForSystem(
+        features, sizeSpec, aDialog, uriToLoadIsChrome, hasChromeParent);
   } else {
-    chromeFlags = CalculateChromeFlagsForChild(features, sizeSpec);
+    MOZ_DIAGNOSTIC_ASSERT(parentBC && parentBC->IsContent(),
+                          "content caller must provide content parent");
+    chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
 
     if (aDialog) {
       MOZ_ASSERT(XRE_IsParentProcess());
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
     }
+  }
 
-    // Propagate the remote & fission status of the parent window, if available,
-    // to the child.
-    if (parentWindow) {
-      auto* docShell = nsDocShell::Cast(parentWindow->GetDocShell());
+  bool windowTypeIsChrome =
+      chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
 
-      if (docShell->UseRemoteTabs()) {
-        chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
-      }
+  if (parentBC && !aForceNoOpener) {
+    if (parentBC->IsChrome() && !windowTypeIsChrome) {
+      NS_WARNING(
+          "Content windows may never have chrome windows as their openers.");
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (parentBC->IsContent() && windowTypeIsChrome) {
+      NS_WARNING(
+          "Chrome windows may never have content windows as their openers.");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
 
-      if (docShell->UseRemoteSubframes()) {
-        chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
-      }
-    } else if (XRE_IsContentProcess()) {
-      // If we don't have a parent window, but we're loaded in the content
-      // process, force ourselves into a remote window.
+  // If we're opening a content window from a content window, we need to exactly
+  // inherit fission and e10s status flags from parentBC. Only new toplevel
+  // windows may change these options.
+  if (parentBC && parentBC->IsContent() && !windowTypeIsChrome) {
+    chromeFlags &= ~(nsIWebBrowserChrome::CHROME_REMOTE_WINDOW |
+                     nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
+    if (parentBC->UseRemoteTabs()) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
+    }
+    if (parentBC->UseRemoteSubframes()) {
+      chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
     }
   }
 
@@ -734,24 +749,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // we affect the entry global) make more sense?  Or do we just want to affect
   // GetSubjectPrincipal()?
   dom::AutoJSAPI jsapiChromeGuard;
-
-  nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(aParent);
-
-  bool windowTypeIsChrome =
-      chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
-
-  if (!aForceNoOpener) {
-    if (chromeWin && !windowTypeIsChrome) {
-      NS_WARNING(
-          "Content windows may never have chrome windows as their openers.");
-      return NS_ERROR_INVALID_ARG;
-    }
-    if (aParent && !chromeWin && windowTypeIsChrome) {
-      NS_WARNING(
-          "Chrome windows may never have content windows as their openers.");
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
 
   if (isCallerChrome && !hasChromeParent && !windowTypeIsChrome) {
     // open() is called from chrome on a non-chrome window, initialize an
@@ -822,17 +819,13 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     // Now check whether it's ok to ask a window provider for a window.  Don't
     // do it if we're opening a dialog or if our parent is a chrome window or
     // if we're opening something that has modal, dialog, or chrome flags set.
-    if (!aDialog && !chromeWin &&
+    if (parentTreeOwner && !aDialog && parentBC->IsContent() &&
         !(chromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
                          nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                          nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
       MOZ_ASSERT(openWindowInfo);
 
-      nsCOMPtr<nsIWindowProvider> provider;
-      if (parentTreeOwner) {
-        provider = do_GetInterface(parentTreeOwner);
-      }
-
+      nsCOMPtr<nsIWindowProvider> provider = do_GetInterface(parentTreeOwner);
       if (provider) {
         rv = provider->ProvideWindow(openWindowInfo, chromeFlags, aCalledFromJS,
                                      sizeSpec.WidthSpecified(), uriToLoad, name,
@@ -952,7 +945,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
         nsCOMPtr<nsPIDOMWindowOuter> newWindow(do_GetInterface(newChrome));
         nsCOMPtr<nsIDocShellTreeItem> newDocShellItem;
         if (newWindow) {
-          GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
+          newDocShellItem = newWindow->GetDocShell();
         }
         if (!newDocShellItem) {
           newDocShellItem = do_GetInterface(newChrome);
@@ -1794,7 +1787,7 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
  * @return the chrome bitmask
  */
 // static
-uint32_t nsWindowWatcher::CalculateChromeFlagsForChild(
+uint32_t nsWindowWatcher::CalculateChromeFlagsForContent(
     const WindowFeatures& aFeatures, const SizeSpec& aSizeSpec) {
   if (aFeatures.IsEmpty()) {
     return nsIWebBrowserChrome::CHROME_ALL;
@@ -1809,19 +1802,16 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForChild(
 /**
  * Calculate the chrome bitmask from a string list of features for a new
  * privileged window.
- * @param aParent the opener window
  * @param aFeatures a string containing a list of named chrome features
  * @param aDialog affects the assumptions made about unnamed features
  * @param aChromeURL true if the window is being sent to a chrome:// URL
  * @param aHasChromeParent true if the parent window is privileged
- * @param aCalledFromJS true if the window open request came from script.
  * @return the chrome bitmask
  */
 // static
-uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
-    mozIDOMWindowProxy* aParent, const WindowFeatures& aFeatures,
-    const SizeSpec& aSizeSpec, bool aDialog, bool aChromeURL,
-    bool aHasChromeParent, bool aCalledFromJS) {
+uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
+    const WindowFeatures& aFeatures, const SizeSpec& aSizeSpec, bool aDialog,
+    bool aChromeURL, bool aHasChromeParent) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
 
@@ -2433,28 +2423,6 @@ void nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
   }
 
   treeOwnerAsWin->SetVisibility(true);
-}
-
-void nsWindowWatcher::GetWindowTreeItem(mozIDOMWindowProxy* aWindow,
-                                        nsIDocShellTreeItem** aResult) {
-  *aResult = 0;
-
-  if (aWindow) {
-    nsCOMPtr<nsIDocShell> docshell =
-        nsPIDOMWindowOuter::From(aWindow)->GetDocShell();
-    docshell.forget(aResult);
-  }
-}
-
-void nsWindowWatcher::GetWindowTreeOwner(nsPIDOMWindowOuter* aWindow,
-                                         nsIDocShellTreeOwner** aResult) {
-  *aResult = 0;
-
-  nsCOMPtr<nsIDocShellTreeItem> treeItem;
-  GetWindowTreeItem(aWindow, getter_AddRefs(treeItem));
-  if (treeItem) {
-    treeItem->GetTreeOwner(aResult);
-  }
 }
 
 /* static */

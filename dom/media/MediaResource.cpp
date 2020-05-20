@@ -36,9 +36,6 @@ void MediaResource::Destroy() {
   MOZ_ALWAYS_SUCCEEDS(rv);
 }
 
-NS_IMPL_ADDREF(MediaResource)
-NS_IMPL_RELEASE_WITH_DESTROY(MediaResource, Destroy())
-
 static const uint32_t kMediaResourceIndexCacheSize = 8192;
 static_assert(IsPowerOfTwo(kMediaResourceIndexCacheSize),
               "kMediaResourceIndexCacheSize cache size must be a power of 2");

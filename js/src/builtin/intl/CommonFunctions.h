@@ -116,11 +116,20 @@ static int32_t CallICU(JSContext* cx, const ICUStringFunction& strFn,
   int32_t size = strFn(chars.begin(), chars.length(), &status);
   if (status == U_BUFFER_OVERFLOW_ERROR) {
     MOZ_ASSERT(size >= 0);
+
+    // Some ICU functions (e.g. uloc_getDisplayName) return one less character
+    // than the actual minimum size when U_BUFFER_OVERFLOW_ERROR is raised,
+    // resulting in later reporting U_STRING_NOT_TERMINATED_WARNING. So add plus
+    // one here and then assert U_STRING_NOT_TERMINATED_WARNING isn't raised.
+    size++;
+
     if (!chars.resize(size_t(size))) {
       return -1;
     }
     status = U_ZERO_ERROR;
-    strFn(chars.begin(), size, &status);
+    size = strFn(chars.begin(), size, &status);
+
+    MOZ_ASSERT(status != U_STRING_NOT_TERMINATED_WARNING);
   }
   if (U_FAILURE(status)) {
     ReportInternalError(cx);

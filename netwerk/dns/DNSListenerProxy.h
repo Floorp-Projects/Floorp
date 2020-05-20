@@ -18,49 +18,43 @@ class nsICancelable;
 namespace mozilla {
 namespace net {
 
-class DNSListenerProxy final : public nsIDNSListener,
-                               public nsIDNSListenerProxy {
+#define DNS_LISTENER_PROXY_IID                       \
+  {                                                  \
+    0x8f172ca3, 0x7a7f, 0x4941, {                    \
+      0xa7, 0x0b, 0xbc, 0x72, 0x80, 0x2e, 0x9d, 0x9b \
+    }                                                \
+  }
+
+class DNSListenerProxy final : public nsIDNSListener {
  public:
   DNSListenerProxy(nsIDNSListener* aListener, nsIEventTarget* aTargetThread)
-      // Sometimes aListener is a main-thread only object like XPCWrappedJS, and
-      // sometimes it's a threadsafe object like nsSOCKSSocketInfo. Use a main-
-      // thread pointer holder, but disable strict enforcement of thread
-      // invariants. The AddRef implementation of XPCWrappedJS will assert if we
-      // go wrong here.
-      : mListener(new nsMainThreadPtrHolder<nsIDNSListener>(
-            "DNSListenerProxy::mListener", aListener, false)),
-        mTargetThread(aTargetThread) {}
+      // We want to make sure that |aListener| is only accessed on the target
+      // thread.
+      : mListener(aListener),
+        mTargetThread(aTargetThread),
+        mListenerAddress(reinterpret_cast<uintptr_t>(aListener)) {
+    MOZ_ASSERT(mListener);
+    MOZ_ASSERT(mTargetThread);
+  }
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
-  NS_DECL_NSIDNSLISTENERPROXY
+  NS_DECLARE_STATIC_IID_ACCESSOR(DNS_LISTENER_PROXY_IID)
 
-  class OnLookupCompleteRunnable : public Runnable {
-   public:
-    OnLookupCompleteRunnable(
-        const nsMainThreadPtrHandle<nsIDNSListener>& aListener,
-        nsICancelable* aRequest, nsIDNSRecord* aRecord, nsresult aStatus)
-        : Runnable("DNSListenerProxy::OnLookupCompleteRunnable"),
-          mListener(aListener),
-          mRequest(aRequest),
-          mRecord(aRecord),
-          mStatus(aStatus) {}
-
-    NS_DECL_NSIRUNNABLE
-
-   private:
-    nsMainThreadPtrHandle<nsIDNSListener> mListener;
-    nsCOMPtr<nsICancelable> mRequest;
-    nsCOMPtr<nsIDNSRecord> mRecord;
-    nsresult mStatus;
-  };
+  uintptr_t GetOriginalListenerAddress() const { return mListenerAddress; }
 
  private:
-  ~DNSListenerProxy() {}
+  ~DNSListenerProxy() {
+    NS_ProxyRelease("DNSListenerProxy::mListener", mTargetThread,
+                    mListener.forget());
+  }
 
-  nsMainThreadPtrHandle<nsIDNSListener> mListener;
+  nsCOMPtr<nsIDNSListener> mListener;
   nsCOMPtr<nsIEventTarget> mTargetThread;
+  uintptr_t mListenerAddress;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(DNSListenerProxy, DNS_LISTENER_PROXY_IID)
 
 }  // namespace net
 }  // namespace mozilla

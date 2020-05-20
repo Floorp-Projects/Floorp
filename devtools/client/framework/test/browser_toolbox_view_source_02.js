@@ -20,6 +20,12 @@ async function viewSource() {
 
   assertSelectedLocationInDebugger(debuggerPanel, 2, undefined);
 
+  // See Bug 1637793 and Bug 1621337.
+  // Ideally the debugger should only resolve when the worker targets have been
+  // retrieved, which should be fixed by Bug 1621337 or a followup.
+  info("Wait for all pending requests to settle on the DevToolsClient");
+  await toolbox.target.client.waitForRequestsToSettle();
+
   await closeToolboxAndTab(toolbox);
   finish();
 }

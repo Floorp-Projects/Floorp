@@ -1301,7 +1301,7 @@ void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
 
   mProxy->mInnerChannelId++;
 
-  mProxy->mXHR->Send(nullptr, payload, aRv);
+  mProxy->mXHR->Send(payload, aRv);
 
   if (!aRv.Failed()) {
     mProxy->mOutstandingSendCount++;
@@ -1853,7 +1853,6 @@ XMLHttpRequestUpload* XMLHttpRequestWorker::GetUpload(ErrorResult& aRv) {
 }
 
 void XMLHttpRequestWorker::Send(
-    JSContext* aCx,
     const Nullable<
         DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
         aData,

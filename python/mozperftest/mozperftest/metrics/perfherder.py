@@ -31,6 +31,22 @@ class Perfherder(Layer):
             "default": "",
             "help": "Prefix the output files with this string.",
         },
+        "app": {
+            "type": str,
+            "default": "firefox",
+            "choices": [
+                "firefox",
+                "chrome-m",
+                "chrome",
+                "chromium",
+                "fennec",
+                "geckoview",
+                "fenix",
+                "refbrow",
+            ],
+            "help": "Shorthand name of application that is "
+                    "being tested (used in perfherder data).",
+        },
         "metrics": {
             "nargs": "*",
             "default": [],
@@ -81,6 +97,9 @@ class Perfherder(Layer):
             self.warning("No results left after filtering")
             return metadata
 
+        # XXX Add version info into this data
+        app_info = {"name": self.get_arg("app", default="firefox")}
+
         all_perfherder_data = None
         for name, res in results.items():
             settings = fullsettings[name]
@@ -103,7 +122,7 @@ class Perfherder(Layer):
                 name=name,
                 extra_options=settings.get("extraOptions"),
                 should_alert=settings.get("shouldAlert", False),
-                application=None,  # XXX No way to get application name and version
+                application=app_info,
                 alert_threshold=settings.get("alertThreshold", 2.0),
                 lower_is_better=settings.get("lowerIsBetter", True),
                 unit=settings.get("unit", "ms"),

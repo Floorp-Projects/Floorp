@@ -13,7 +13,7 @@ def test_scriptinfo():
     assert info["author"] == "N/A"
 
     display = str(info)
-    assert "appropriate android app" in display
+    assert "The description of the example test." in display
 
 
 if __name__ == "__main__":

@@ -63,7 +63,6 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
   virtual XMLHttpRequestUpload* GetUpload(ErrorResult& aRv) = 0;
 
   virtual void Send(
-      JSContext* aCx,
       const Nullable<
           DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
           aData,

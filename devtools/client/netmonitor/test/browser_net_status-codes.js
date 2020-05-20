@@ -172,35 +172,31 @@ add_task(async function() {
       document.querySelectorAll(".request-list-item")[index]
     );
 
+    // wait till all the summary section is loaded
     await waitUntil(() =>
-      document.querySelector(
-        "#headers-panel .tabpanel-summary-value.textbox-input"
-      )
+      document.querySelector("#headers-panel .tabpanel-summary-value")
     );
-
     const panel = document.querySelector("#headers-panel");
-    const summaryValues = panel.querySelectorAll(
-      ".tabpanel-summary-value.textbox-input"
-    );
     const {
       method,
       correctUri,
       details: { status, statusText },
     } = data;
+
     const statusCode = panel.querySelector(".status-code");
-    const statusTextInput = panel.querySelector(".status-text");
+
     EventUtils.sendMouseEvent({ type: "mouseover" }, statusCode);
     await waitUntil(() => statusCode.title);
 
     is(
-      summaryValues[0].textContent,
+      panel.querySelector(".url-preview .url").textContent,
       correctUri,
       "The url summary value is incorrect."
     );
     is(
-      summaryValues[1].textContent,
+      panel.querySelectorAll(".treeLabel")[0].textContent,
       method,
-      "The method summary value is incorrect."
+      "The method value is incorrect."
     );
     is(
       statusCode.dataset.code,
@@ -211,11 +207,6 @@ add_task(async function() {
       statusCode.getAttribute("title"),
       status + " " + statusText,
       "The status summary value is incorrect."
-    );
-    is(
-      statusTextInput.value,
-      statusText,
-      "The status text value is incorrect."
     );
   }
 

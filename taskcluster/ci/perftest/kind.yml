@@ -77,6 +77,7 @@ jobs:
                 --android-install-apk fenix_fennec_nightly_armeabi_v7a
                 --hooks testing/performance/hooks_applink.py
                 --perfherder
+                --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
                 testing/performance/perftest_applink.js
@@ -100,6 +101,7 @@ jobs:
                 --android-activity org.mozilla.fenix.IntentReceiverActivity
                 --hooks testing/performance/hooks_applink.py
                 --perfherder
+                --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
                 testing/performance/perftest_applink.js
@@ -123,6 +125,7 @@ jobs:
                 --android-install-apk gve_nightly_api16
                 --hooks testing/performance/hooks_applink.py
                 --perfherder
+                --perfherder-app geckoview
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
                 testing/performance/perftest_applink.js
@@ -146,6 +149,7 @@ jobs:
                 --android-install-apk gve_nightly_api16
                 --hooks testing/performance/hooks_applink.py
                 --perfherder
+                --perfherder-app geckoview
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
                 testing/performance/perftest_applink.js

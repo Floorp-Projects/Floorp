@@ -224,6 +224,8 @@
   MACRO(InitializeCollator, InitializeCollator, "InitializeCollator")          \
   MACRO(InitializeDateTimeFormat, InitializeDateTimeFormat,                    \
         "InitializeDateTimeFormat")                                            \
+  MACRO(InitializeDisplayNames, InitializeDisplayNames,                        \
+        "InitializeDisplayNames")                                              \
   MACRO(InitializeListFormat, InitializeListFormat, "InitializeListFormat")    \
   MACRO(InitializeLocale, InitializeLocale, "InitializeLocale")                \
   MACRO(InitializeNumberFormat, InitializeNumberFormat,                        \

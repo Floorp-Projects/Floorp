@@ -1664,7 +1664,19 @@ public class GeckoViewActivity
             Log.d(LOGTAG, "onLoadRequest=" + request.uri +
                   " triggerUri=" + request.triggerUri +
                   " where=" + request.target +
-                  " isRedirect=" + request.isRedirect);
+                  " isRedirect=" + request.isRedirect +
+                  " isDirectNavigation=" + request.isDirectNavigation);
+
+            return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+        }
+
+        @Override
+        public GeckoResult<AllowOrDeny> onSubframeLoadRequest(final GeckoSession session,
+                                                              final LoadRequest request) {
+            Log.d(LOGTAG, "onSubframeLoadRequest=" + request.uri +
+                  " triggerUri=" + request.triggerUri +
+                  " isRedirect=" + request.isRedirect +
+                  "isDirectNavigation=" + request.isDirectNavigation);
 
             return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }

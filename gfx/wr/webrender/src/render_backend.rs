@@ -11,7 +11,7 @@
 use api::{ApiMsg, ClearCache, DebugCommand, DebugFlags};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, ScrollClamping};
-use api::{ScrollLocation, TransactionMsg, ResourceUpdate, BlobImageKey};
+use api::{ScrollLocation, TransactionMsg, ResourceUpdate};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 use api::units::*;
@@ -1329,17 +1329,9 @@ impl RenderBackend {
             .any(|transaction_msg| !transaction_msg.low_priority);
 
         let txns : Vec<Box<Transaction>> = document_ids.iter().zip(transaction_msgs.drain(..))
-            .map(|(&document_id, mut transaction_msg)| {
-
-                self.resource_cache.pre_scene_building_update(
-                    &mut transaction_msg.resource_updates,
-                    &mut profile_counters.resources,
-                );
-
-                let mut txn = Box::new(Transaction {
+            .map(|(&document_id, transaction_msg)| {
+                Box::new(Transaction {
                     document_id,
-                    blob_rasterizer: None,
-                    blob_requests: Vec::new(),
                     resource_updates: transaction_msg.resource_updates,
                     frame_ops: transaction_msg.frame_ops,
                     scene_ops: transaction_msg.scene_ops,
@@ -1347,18 +1339,9 @@ impl RenderBackend {
                     notifications: transaction_msg.notifications,
                     render_frame: transaction_msg.generate_frame,
                     invalidate_rendered_frame: transaction_msg.invalidate_rendered_frame,
-                    fonts: self.resource_cache.get_font_instances(),
-                });
-
-                let blobs_to_rasterize = get_blob_image_updates(&txn.resource_updates);
-                if !blobs_to_rasterize.is_empty() {
-                    let (blob_rasterizer, blob_requests) = self.resource_cache
-                        .create_blob_scene_builder_requests(&blobs_to_rasterize);
-
-                    txn.blob_requests = blob_requests;
-                    txn.blob_rasterizer = blob_rasterizer;
-                }
-                txn
+                    blob_requests: transaction_msg.blob_requests,
+                    blob_rasterizer: transaction_msg.blob_rasterizer,
+                })
             }).collect();
 
         use_scene_builder = use_scene_builder || txns.iter().any(|txn| {
@@ -1712,26 +1695,6 @@ impl RenderBackend {
             }
         }
     }
-}
-
-fn get_blob_image_updates(updates: &[ResourceUpdate]) -> Vec<BlobImageKey> {
-    let mut requests = Vec::new();
-    for update in updates {
-        match *update {
-            ResourceUpdate::AddBlobImage(ref img) => {
-                requests.push(img.key);
-            }
-            ResourceUpdate::UpdateBlobImage(ref img) => {
-                requests.push(img.key);
-            }
-            ResourceUpdate::SetBlobImageVisibleArea(key, ..) => {
-                requests.push(key);
-            }
-            _ => {}
-        }
-    }
-
-    requests
 }
 
 impl RenderBackend {

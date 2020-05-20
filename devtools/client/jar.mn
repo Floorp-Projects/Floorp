@@ -241,6 +241,8 @@ devtools.jar:
     content/netmonitor/src/assets/styles/StatusCode.css (netmonitor/src/assets/styles/StatusCode.css)
     content/netmonitor/src/assets/styles/websockets.css (netmonitor/src/assets/styles/websockets.css)
     content/netmonitor/src/assets/styles/search.css (netmonitor/src/assets/styles/search.css)
+    content/netmonitor/src/assets/styles/UrlPreview.css (netmonitor/src/assets/styles/UrlPreview.css)
+    content/netmonitor/src/assets/styles/HeadersPanel.css (netmonitor/src/assets/styles/HeadersPanel.css)
 
     # Application panel
     content/application/index.html (application/index.html)

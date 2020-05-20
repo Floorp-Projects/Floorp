@@ -46,7 +46,26 @@ class UrlbarValueFormatter {
     return this.urlbarInput.querySelector("#urlbar-scheme");
   }
 
-  update() {
+  async update() {
+    // _getUrlMetaData does URI fixup, which depends on the search service, so
+    // make sure it's initialized.  It can be uninitialized here on session
+    // restore.  Skip this if the service is already initialized in order to
+    // avoid the async call in the common case.  However, we can't access
+    // Service.search before first paint (delayed startup) because there's a
+    // performance test that prohibits it, so first bail if delayed startup
+    // isn't finished.
+    if (!this.window.gBrowserInit.delayedStartupFinished) {
+      return;
+    }
+    if (!Services.search.isInitialized) {
+      let instance = (this._updateInstance = {});
+      await Services.search.init();
+      if (this._updateInstance != instance) {
+        return;
+      }
+      delete this._updateInstance;
+    }
+
     // Cleanup that must be done in any case, even if there's no value.
     this.urlbarInput.removeAttribute("domaindir");
     this.scheme.value = "";

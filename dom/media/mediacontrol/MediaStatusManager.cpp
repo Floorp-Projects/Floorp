@@ -199,7 +199,7 @@ nsString MediaStatusManager::GetDefaultTitle() const {
     }
     defaultTitle.AppendLiteral(" is playing media");
   } else {
-    defaultTitle = globalParent->GetDocumentTitle();
+    globalParent->GetDocumentTitle(defaultTitle);
   }
   return defaultTitle;
 }

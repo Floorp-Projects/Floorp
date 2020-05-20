@@ -126,3 +126,18 @@ class MinidumpStackwalkInstall(object):
 
         self.install_toolchain_artifact(state_dir, checkout_root,
                                         minidump_stackwalk.LINUX_MINIDUMP_STACKWALK)
+
+
+class LinuxBootstrapper(
+        ClangStaticAnalysisInstall,
+        FixStacksInstall,
+        LucetcInstall,
+        MinidumpStackwalkInstall,
+        NasmInstall,
+        NodeInstall,
+        SccacheInstall,
+        StyloInstall,
+        WasiSysrootInstall):
+
+    def __init__(self, **kwargs):
+        pass

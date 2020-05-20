@@ -30,7 +30,11 @@ add_task(async function() {
       }
     }
     tab.addEventListener("TabAttrModified", TabAttrModifiedListener);
-    return () => {
+    return async () => {
+      await BrowserTestUtils.waitForCondition(
+        () => seenLabels.length == expectedLabels.length,
+        "saw " + seenLabels.length + " TabAttrModified events"
+      );
       tab.removeEventListener("TabAttrModified", TabAttrModifiedListener);
       is(
         JSON.stringify(seenLabels),
@@ -95,11 +99,11 @@ add_task(async function() {
   gBrowser.selectedTab = tab2;
   await browserLoadedPromise;
   ok(!tab2.hasAttribute("pending"), "second tab isn't pending anymore");
+  await finishObservingLabelChanges();
   ok(
     document.title.startsWith(ABOUT_ROBOTS_TITLE),
     "title bar displays content title"
   );
-  finishObservingLabelChanges();
 
   info("selecting the third tab");
   finishObservingLabelChanges = observeLabelChanges(tab3, [
@@ -114,11 +118,11 @@ add_task(async function() {
   gBrowser.selectedTab = tab3;
   await browserLoadedPromise;
   ok(!tab3.hasAttribute("pending"), "third tab isn't pending anymore");
+  await finishObservingLabelChanges();
   ok(
     document.title.startsWith(REMOTE_TITLE),
     "title bar displays content title"
   );
-  finishObservingLabelChanges();
 
   info("selecting the fourth tab");
   finishObservingLabelChanges = observeLabelChanges(tab4, [NO_TITLE_URL]);
@@ -130,12 +134,12 @@ add_task(async function() {
   gBrowser.selectedTab = tab4;
   await browserLoadedPromise;
   ok(!tab4.hasAttribute("pending"), "fourth tab isn't pending anymore");
+  await finishObservingLabelChanges();
   is(
     document.title,
     document.getElementById("bundle_brand").getString("brandFullName"),
     "title bar doesn't display content title since page doesn't have one"
   );
-  finishObservingLabelChanges();
 
   info("restoring the modified browser state");
   gBrowser.selectedTab = tab3;
@@ -172,7 +176,7 @@ add_task(async function() {
   );
   await tabContentRestored;
   ok(!tab1.hasAttribute("pending"), "first tab isn't pending anymore");
-  finishObservingLabelChanges();
+  await finishObservingLabelChanges();
 
   await promiseBrowserState(BACKUP_STATE);
 });

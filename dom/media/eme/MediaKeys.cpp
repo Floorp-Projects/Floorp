@@ -513,9 +513,9 @@ static bool IsSessionTypeSupported(const MediaKeySessionType aSessionType,
 }
 
 already_AddRefed<MediaKeySession> MediaKeys::CreateSession(
-    JSContext* aCx, MediaKeySessionType aSessionType, ErrorResult& aRv) {
-  EME_LOG("MediaKeys[%p]::CreateSession(aCx=%p, aSessionType=%" PRIu8 ")", this,
-          aCx, static_cast<uint8_t>(aSessionType));
+    MediaKeySessionType aSessionType, ErrorResult& aRv) {
+  EME_LOG("MediaKeys[%p]::CreateSession(aSessionType=%" PRIu8 ")", this,
+          static_cast<uint8_t>(aSessionType));
   if (!IsSessionTypeSupported(aSessionType, mConfig)) {
     EME_LOG("MediaKeys[%p]::CreateSession() failed, unsupported session type",
             this);
@@ -532,7 +532,7 @@ already_AddRefed<MediaKeySession> MediaKeys::CreateSession(
   EME_LOG("MediaKeys[%p] Creating session", this);
 
   RefPtr<MediaKeySession> session = new MediaKeySession(
-      aCx, GetParentObject(), this, mKeySystem, aSessionType, aRv);
+      GetParentObject(), this, mKeySystem, aSessionType, aRv);
 
   if (aRv.Failed()) {
     return nullptr;
@@ -540,9 +540,9 @@ already_AddRefed<MediaKeySession> MediaKeys::CreateSession(
   DDLINKCHILD("session", session.get());
 
   // Add session to the set of sessions awaiting their sessionId being ready.
-  EME_LOG("MediaKeys[%p]::CreateSession(aCx=%p, aSessionType=%" PRIu8
+  EME_LOG("MediaKeys[%p]::CreateSession(aSessionType=%" PRIu8
           ") putting session with token=%" PRIu32 " into mPendingSessions",
-          this, aCx, static_cast<uint8_t>(aSessionType), session->Token());
+          this, static_cast<uint8_t>(aSessionType), session->Token());
   mPendingSessions.Put(session->Token(), RefPtr{session});
 
   return session.forget();

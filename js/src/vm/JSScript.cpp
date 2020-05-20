@@ -534,6 +534,18 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
   MOZ_TRY(xdr->codeEnum32(&kind));
 
   switch (kind) {
+    case JS::TraceKind::String: {
+      RootedAtom atom(cx);
+      if (mode == XDR_ENCODE) {
+        atom = &thingp->as<JSString>().asAtom();
+      }
+      MOZ_TRY(XDRAtom(xdr, &atom));
+      if (mode == XDR_DECODE) {
+        *thingp = JS::GCCellPtr(atom.get());
+      }
+      break;
+    }
+
     case JS::TraceKind::Object: {
       RootedObject obj(cx);
       if (mode == XDR_ENCODE) {
@@ -899,58 +911,22 @@ static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
   return Ok();
 }
 
-RuntimeScriptData::RuntimeScriptData(uint32_t natoms) : natoms_(natoms) {
-  // Variable-length data begins immediately after RuntimeScriptData itself.
-  Offset cursor = sizeof(RuntimeScriptData);
-
-  // Default-initialize trailing arrays.
-  initElements<GCPtrAtom>(cursor, natoms);
-  cursor += natoms * sizeof(GCPtrAtom);
-
-  // Check that we correctly recompute the expected values.
-  MOZ_ASSERT(this->natoms() == natoms);
-
-  // Sanity check
-  MOZ_ASSERT(endOffset() == cursor);
-}
-
 template <XDRMode mode>
 /* static */
 XDRResult RuntimeScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
-  uint32_t natoms = 0;
-
   JSContext* cx = xdr->cx();
   RuntimeScriptData* rsd = nullptr;
 
   if (mode == XDR_ENCODE) {
     rsd = script->sharedData();
-
-    natoms = rsd->natoms();
   }
 
-  MOZ_TRY(xdr->codeUint32(&natoms));
-
   if (mode == XDR_DECODE) {
-    if (!script->createScriptData(cx, natoms)) {
+    if (!script->createScriptData(cx)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
 
     rsd = script->sharedData();
-  }
-
-  {
-    RootedAtom atom(cx);
-    GCPtrAtom* vector = rsd->atoms();
-
-    for (uint32_t i = 0; i != natoms; ++i) {
-      if (mode == XDR_ENCODE) {
-        atom = vector[i];
-      }
-      MOZ_TRY(XDRAtom(xdr, &atom));
-      if (mode == XDR_DECODE) {
-        vector[i].init(atom);
-      }
-    }
   }
 
   MOZ_TRY(XDRImmutableScriptData<mode>(xdr, rsd->isd_));
@@ -3956,36 +3932,10 @@ js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
   return result;
 }
 
-RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx, uint32_t natoms) {
-  // Compute size including trailing arrays.
-  CheckedInt<Offset> size = sizeof(RuntimeScriptData);
-  size += CheckedInt<Offset>(natoms) * sizeof(GCPtrAtom);
-  if (!size.isValid()) {
-    ReportAllocationOverflow(cx);
-    return nullptr;
-  }
-
-  // Allocate contiguous raw buffer
-  void* raw = cx->pod_malloc<uint8_t>(size.value());
-  MOZ_ASSERT(uintptr_t(raw) % alignof(RuntimeScriptData) == 0);
-  if (!raw) {
-    return nullptr;
-  }
-
-  // Constuct the RuntimeScriptData. Trailing arrays are uninitialized but
-  // GCPtrs are put into a safe state.
-  RuntimeScriptData* result = new (raw) RuntimeScriptData(natoms);
-
-  // Sanity check
-  MOZ_ASSERT(result->endOffset() == size.value());
-
-  return result;
-}
-
-bool JSScript::createScriptData(JSContext* cx, uint32_t natoms) {
+bool JSScript::createScriptData(JSContext* cx) {
   MOZ_ASSERT(!sharedData_);
 
-  RefPtr<RuntimeScriptData> rsd(RuntimeScriptData::new_(cx, natoms));
+  RefPtr<RuntimeScriptData> rsd(cx->new_<RuntimeScriptData>());
   if (!rsd) {
     return false;
   }
@@ -4282,7 +4232,7 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
   });
 
   /* The counts of indexed things must be checked during code generation. */
-  MOZ_ASSERT(stencil.natoms <= INDEX_LIMIT);
+  MOZ_ASSERT(stencil.gcThings.length() <= INDEX_LIMIT);
 
   // Note: These flags should already be correct when the BaseScript was
   // allocated, except that lazy BinAST parsing has incomplete set of flags.
@@ -4787,6 +4737,14 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
         }
       }
       scopeIndex++;
+    } else if (gcThing.is<JSString>()) {
+      JSAtom* atom = &gcThing.as<JSString>().asAtom();
+      if (cx->zone() != atom->zone()) {
+        cx->markAtom(atom);
+      }
+      if (!gcThings.append(JS::GCCellPtr(atom))) {
+        return false;
+      }
     } else {
       bigint = &gcThing.as<BigInt>();
       BigInt* clone = bigint;
@@ -4851,11 +4809,7 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
     return nullptr;
   }
 
-  // The RuntimeScriptData can be reused by any zone in the Runtime as long as
-  // we make sure to mark first (to sync Atom pointers).
-  if (cx->zone() != src->zoneFromAnyThread()) {
-    src->sharedData()->markForCrossZone(cx);
-  }
+  // The RuntimeScriptData can be reused by any zone in the Runtime.
   dst->initSharedData(src->sharedData());
 
   return dst;
@@ -5021,30 +4975,12 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
 bool RuntimeScriptData::InitFromStencil(JSContext* cx, js::HandleScript script,
                                         frontend::ScriptStencil& stencil) {
   // Allocate RuntimeScriptData
-  if (!script->createScriptData(cx, stencil.natoms)) {
+  if (!script->createScriptData(cx)) {
     return false;
   }
-  js::RuntimeScriptData* data = script->sharedData();
-
-  // Initialize trailing arrays
-  stencil.initAtomMap(data->atoms());
 
   script->initImmutableScriptData(std::move(stencil.immutableScriptData));
   return true;
-}
-
-void RuntimeScriptData::traceChildren(JSTracer* trc) {
-  MOZ_ASSERT(refCount() != 0);
-
-  for (uint32_t i = 0; i < natoms(); ++i) {
-    TraceNullableEdge(trc, &atoms()[i], "atom");
-  }
-}
-
-void RuntimeScriptData::markForCrossZone(JSContext* cx) {
-  for (uint32_t i = 0; i < natoms(); ++i) {
-    cx->markAtom(atoms()[i]);
-  }
 }
 
 void ScriptWarmUpData::trace(JSTracer* trc) {

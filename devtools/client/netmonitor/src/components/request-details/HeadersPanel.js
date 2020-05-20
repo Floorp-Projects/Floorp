@@ -21,7 +21,6 @@ const {
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   getHeadersURL,
-  getHTTPStatusCodeURL,
   getTrackingProtectionURL,
 } = require("devtools/client/netmonitor/src/utils/mdn-utils");
 const {
@@ -44,6 +43,9 @@ const SearchBox = createFactory(
 );
 const Accordion = createFactory(
   require("devtools/client/shared/components/Accordion")
+);
+const UrlPreview = createFactory(
+  require("devtools/client/netmonitor/src/components/previews/UrlPreview")
 );
 const StatusCode = createFactory(
   require("devtools/client/netmonitor/src/components/StatusCode")
@@ -70,7 +72,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const { button, div, input, label, span, textarea, tr, td } = dom;
+const { div, input, label, span, textarea, tr, td, button } = dom;
 
 const RESEND = L10N.getStr("netmonitor.context.resend.label");
 const EDIT_AND_RESEND = L10N.getStr("netmonitor.summary.editAndResend");
@@ -80,14 +82,17 @@ const HEADERS_FILTER_TEXT = L10N.getStr("headersFilterText");
 const REQUEST_HEADERS = L10N.getStr("requestHeaders");
 const REQUEST_HEADERS_FROM_UPLOAD = L10N.getStr("requestHeadersFromUpload");
 const RESPONSE_HEADERS = L10N.getStr("responseHeaders");
-const SUMMARY_ADDRESS = L10N.getStr("netmonitor.summary.address");
-const SUMMARY_METHOD = L10N.getStr("netmonitor.summary.method");
-const SUMMARY_URL = L10N.getStr("netmonitor.summary.url");
-const SUMMARY_STATUS = L10N.getStr("netmonitor.summary.status");
-const SUMMARY_VERSION = L10N.getStr("netmonitor.summary.version");
+const HEADERS_ADDRESS = L10N.getStr("netmonitor.headers.address");
+const HEADERS_STATUS = L10N.getStr("netmonitor.headers.status");
+const HEADERS_VERSION = L10N.getStr("netmonitor.headers.version");
+const HEADERS_TRANSFERRED = L10N.getStr("netmonitor.toolbar.transferred");
 const SUMMARY_STATUS_LEARN_MORE = L10N.getStr("netmonitor.summary.learnMore");
-const SUMMARY_REFERRER_POLICY = L10N.getStr(
-  "netmonitor.summary.referrerPolicy"
+const HEADERS_REFERRER = L10N.getStr("netmonitor.headers.referrer");
+const HEADERS_CONTENT_BLOCKING = L10N.getStr(
+  "netmonitor.headers.contentBlocking"
+);
+const HEADERS_ETP = L10N.getStr(
+  "netmonitor.trackingResource.enhancedTrackingProtection"
 );
 
 /**
@@ -260,20 +265,11 @@ class HeadersPanel extends Component {
         key: summaryLabel,
         className: "tabpanel-summary-container headers-summary",
       },
-      div(
-        { className: "tabpanel-summary-labelvalue" },
-        span(
-          { className: "tabpanel-summary-label headers-summary-label" },
-          summaryLabel
-        ),
-        span(
-          {
-            className:
-              "tabpanel-summary-value textbox-input devtools-monospace",
-          },
-          value
-        )
-      )
+      span(
+        { className: "tabpanel-summary-label headers-summary-label" },
+        summaryLabel
+      ),
+      span({ className: "tabpanel-summary-value" }, value)
     );
   }
 
@@ -517,6 +513,8 @@ class HeadersPanel extends Component {
         urlDetails,
         referrerPolicy,
         isThirdPartyTrackingResource,
+        contentSize,
+        transferredSize,
       },
       openRequestBlockingAndAddUrl,
     } = this.props;
@@ -526,7 +524,6 @@ class HeadersPanel extends Component {
       rawUploadHeadersOpened,
       filterText,
     } = this.state;
-    const item = { fromCache, fromServiceWorker, status, statusText };
 
     if (
       (!requestHeaders || !requestHeaders.headers.length) &&
@@ -634,100 +631,90 @@ class HeadersPanel extends Component {
       });
     }
 
-    // not showing #hash in url
-    const summaryUrl = urlDetails.url
-      ? this.renderSummary(SUMMARY_URL, urlDetails.url.split("#")[0])
-      : null;
-
-    const summaryMethod = method
-      ? this.renderSummary(SUMMARY_METHOD, method)
-      : null;
-
     const summaryAddress = remoteAddress
       ? this.renderSummary(
-          SUMMARY_ADDRESS,
+          HEADERS_ADDRESS,
           getFormattedIPAndPort(remoteAddress, remotePort)
         )
       : null;
 
+    const sizeText = L10N.getFormatStrWithNumbers(
+      "netmonitor.headers.sizeDetails",
+      getFormattedSize(transferredSize),
+      getFormattedSize(contentSize)
+    );
+
+    const summarySize = this.renderSummary(HEADERS_TRANSFERRED, sizeText);
+
     let summaryStatus;
-
     if (status) {
-      const statusCodeDocURL = getHTTPStatusCodeURL(status.toString());
-      const inputWidth = statusText.length + 1;
-
       summaryStatus = div(
         {
           key: "headers-summary",
           className: "tabpanel-summary-container headers-summary",
         },
-        div(
+        span(
           {
             className: "tabpanel-summary-label headers-summary-label",
           },
-          SUMMARY_STATUS
+          HEADERS_STATUS
         ),
-        StatusCode({ item }),
-        input({
-          className:
-            "tabpanel-summary-value textbox-input devtools-monospace" +
-            " status-text",
-          readOnly: true,
-          value: `${statusText}`,
-          size: `${inputWidth}`,
-        }),
-        statusCodeDocURL
-          ? MDNLink({
-              url: statusCodeDocURL,
-              title: SUMMARY_STATUS_LEARN_MORE,
-            })
-          : span({
-              className: "headers-summary learn-more-link",
-            })
+        span(
+          {
+            className: "tabpanel-summary-value status",
+            "data-code": status,
+          },
+          StatusCode({
+            item: { fromCache, fromServiceWorker, status, statusText },
+          }),
+          statusText
+        )
       );
     }
 
     let trackingProtectionStatus;
-
+    let trackingProtectionDetails = "";
     if (isThirdPartyTrackingResource) {
       const trackingProtectionDocURL = getTrackingProtectionURL();
 
-      trackingProtectionStatus = div(
-        {
-          key: "tracking-protection",
-          className: "tabpanel-summary-container tracking-protection",
-        },
-        div({
-          className: "tracking-resource",
-        }),
-        L10N.getStr("netmonitor.trackingResource.tooltip"),
-        trackingProtectionDocURL
-          ? MDNLink({
-              url: trackingProtectionDocURL,
-              title: SUMMARY_STATUS_LEARN_MORE,
-            })
-          : span({
-              className: "headers-summary learn-more-link",
-            })
+      trackingProtectionStatus = this.renderSummary(
+        HEADERS_CONTENT_BLOCKING,
+        div(null, span({ className: "tracking-resource" }), HEADERS_ETP)
+      );
+      trackingProtectionDetails = this.renderSummary(
+        "",
+        div(
+          {
+            key: "tracking-protection",
+            className: "tabpanel-summary-value tracking-protection",
+          },
+          L10N.getStr("netmonitor.trackingResource.tooltip"),
+          trackingProtectionDocURL
+            ? MDNLink({
+                url: trackingProtectionDocURL,
+                title: SUMMARY_STATUS_LEARN_MORE,
+              })
+            : span({ className: "headers-summary learn-more-link" })
+        )
       );
     }
 
     const summaryVersion = httpVersion
-      ? this.renderSummary(SUMMARY_VERSION, httpVersion)
+      ? this.renderSummary(HEADERS_VERSION, httpVersion)
       : null;
 
     const summaryReferrerPolicy = referrerPolicy
-      ? this.renderSummary(SUMMARY_REFERRER_POLICY, referrerPolicy)
+      ? this.renderSummary(HEADERS_REFERRER, referrerPolicy)
       : null;
 
     const summaryItems = [
-      summaryUrl,
-      trackingProtectionStatus,
-      summaryMethod,
-      summaryAddress,
       summaryStatus,
+      summaryAddress,
       summaryVersion,
+      summarySize,
       summaryReferrerPolicy,
+      trackingProtectionStatus,
+      trackingProtectionDetails,
     ].filter(summaryItem => summaryItem !== null);
 
     return div(
@@ -763,7 +750,11 @@ class HeadersPanel extends Component {
       ),
       div(
         { className: "panel-container" },
-        div({ className: "headers-overview" }, summaryItems),
+        div(
+          { className: "headers-overview" },
+          UrlPreview({ url: urlDetails.url, method }),
+          div({ className: "summary" }, summaryItems)
+        ),
         Accordion({ items })
       )
     );

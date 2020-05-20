@@ -26,6 +26,7 @@ async function test(context, commands) {
 module.exports = {
   test,
   owner: "Performance Team",
+  test_name: "App-link",
   description: "Measures cold process applink time",
   long_description: `
   This test launches the appropriate android app, simulating an app link

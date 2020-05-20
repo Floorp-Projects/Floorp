@@ -51,7 +51,7 @@ class MediaQueue : private nsDeque {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     T* item = aItem.take();
     MOZ_DIAGNOSTIC_ASSERT(item);
-    MOZ_ASSERT(item->GetEndTime() >= item->mTime);
+    MOZ_DIAGNOSTIC_ASSERT(item->GetEndTime() >= item->mTime);
     nsDeque::Push(item);
     mPushEvent.Notify(RefPtr<T>(item));
     // Pushing new data after queue has ended means that the stream is active
@@ -65,6 +65,7 @@ class MediaQueue : private nsDeque {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     RefPtr<T> rv = dont_AddRef(static_cast<T*>(nsDeque::PopFront()));
     if (rv) {
+      MOZ_DIAGNOSTIC_ASSERT(rv->GetEndTime() >= rv->mTime);
       mPopFrontEvent.Notify(rv);
     }
     return rv.forget();

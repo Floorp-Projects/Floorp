@@ -90,13 +90,12 @@ class nsWindowWatcher : public nsIWindowWatcher,
   static bool ShouldOpenPopup(const mozilla::dom::WindowFeatures& aFeatures,
                               const SizeSpec& aSizeSpec);
 
-  static uint32_t CalculateChromeFlagsForChild(
+  static uint32_t CalculateChromeFlagsForContent(
       const mozilla::dom::WindowFeatures& aFeatures, const SizeSpec& aSizeSpec);
 
-  static uint32_t CalculateChromeFlagsForParent(
-      mozIDOMWindowProxy* aParent,
+  static uint32_t CalculateChromeFlagsForSystem(
       const mozilla::dom::WindowFeatures& aFeatures, const SizeSpec& aSizeSpec,
-      bool aDialog, bool aChromeURL, bool aHasChromeParent, bool aCalledFromJS);
+      bool aDialog, bool aChromeURL, bool aHasChromeParent);
 
   /* Compute the right SizeSpec based on aFeatures */
   static void CalcSizeSpec(const mozilla::dom::WindowFeatures& aFeatures,
@@ -105,10 +104,6 @@ class nsWindowWatcher : public nsIWindowWatcher,
       nsIDocShellTreeOwner* aTreeOwner, mozIDOMWindowProxy* aParent,
       bool aIsCallerChrome, const SizeSpec& aSizeSpec,
       const mozilla::Maybe<float>& aOpenerFullZoom = mozilla::Nothing());
-  static void GetWindowTreeItem(mozIDOMWindowProxy* aWindow,
-                                nsIDocShellTreeItem** aResult);
-  static void GetWindowTreeOwner(nsPIDOMWindowOuter* aWindow,
-                                 nsIDocShellTreeOwner** aResult);
 
  private:
   nsresult CreateChromeWindow(nsIWebBrowserChrome* aParentChrome,

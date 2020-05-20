@@ -136,12 +136,12 @@ add_task(async function basic_tail() {
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
         suggestion: query + "oronto",
-        tail: "… toronto",
+        tail: "toronto",
       }),
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
         suggestion: query + "unisia",
-        tail: "… tunisia",
+        tail: "tunisia",
       }),
     ],
   });
@@ -188,12 +188,12 @@ add_task(async function mixed_results() {
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
         suggestion: query + "oronto",
-        tail: "… toronto",
+        tail: "toronto",
       }),
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
         suggestion: query + "unisia",
-        tail: "… tunisia",
+        tail: "tunisia",
       }),
     ],
   });
@@ -222,7 +222,7 @@ add_task(async function dedupe_local() {
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
         suggestion: query + "unisia",
-        tail: "… tunisia",
+        tail: "tunisia",
       }),
     ],
   });
@@ -246,7 +246,7 @@ add_task(async function limit_results() {
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
         suggestion: query + "oronto",
-        tail: "… toronto",
+        tail: "toronto",
       }),
     ],
   });

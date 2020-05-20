@@ -39,9 +39,8 @@ class MediaTimer {
  public:
   explicit MediaTimer(bool aFuzzy = false);
 
-  // We use a release with a custom Destroy().
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(MediaTimer,
+                                                     DispatchDestroy());
 
   RefPtr<MediaTimerPromise> WaitFor(const TimeDuration& aDuration,
                                     const char* aCallSite);
@@ -93,8 +92,6 @@ class MediaTimer {
     }
   };
 
-  ThreadSafeAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
   nsCOMPtr<nsIEventTarget> mThread;
   std::priority_queue<Entry> mEntries;
   Monitor mMonitor;

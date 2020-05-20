@@ -16,10 +16,7 @@ add_task(async function test_movePendingTabToNewWindow() {
   ];
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.sessionstore.restore_on_demand", true],
-      ["toolkit.cosmeticAnimations.enabled", false],
-    ],
+    set: [["browser.sessionstore.restore_on_demand", true]],
   });
 
   let state = {

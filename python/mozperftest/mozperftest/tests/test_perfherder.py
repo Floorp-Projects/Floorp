@@ -152,5 +152,47 @@ def test_perfherder_exlude_stats():
     )
 
 
+def test_perfherder_app_name():
+    options = {
+        "perfherder": True,
+        "perfherder-prefix": "",
+        "perfherder-app": "fenix",
+        "perfherder-metrics": ["firstPaint"],
+    }
+
+    metrics, metadata, env = setup_env(options)
+
+    with temp_file() as output:
+        env.set_arg("output", output)
+        with metrics as m, silence():
+            m(metadata)
+        output_file = metadata.get_output()
+        with open(output_file) as f:
+            output = json.loads(f.read())
+
+    # Make sure that application setting is correct
+    assert output["application"]["name"] == "fenix"
+    assert "version" not in output["application"]
+
+
+def test_perfherder_bad_app_name():
+    options = {
+        "perfherder": True,
+        "perfherder-prefix": "",
+        "perfherder-app": "this is not an app",
+        "perfherder-metrics": ["firstPaint"],
+    }
+
+    metrics, metadata, env = setup_env(options)
+
+    # This will raise an error because the options method
+    # we use in tests skips the `choices` checks.
+    with pytest.raises(jsonschema.ValidationError):
+        with temp_file() as output:
+            env.set_arg("output", output)
+            with metrics as m, silence():
+                m(metadata)
+
+
 if __name__ == "__main__":
     mozunit.main()

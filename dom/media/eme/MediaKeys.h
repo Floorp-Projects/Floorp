@@ -80,7 +80,7 @@ class MediaKeys final : public nsIDocumentActivity,
 
   // JavaScript: MediaKeys.createSession()
   already_AddRefed<MediaKeySession> CreateSession(
-      JSContext* aCx, MediaKeySessionType aSessionType, ErrorResult& aRv);
+      MediaKeySessionType aSessionType, ErrorResult& aRv);
 
   // JavaScript: MediaKeys.SetServerCertificate()
   already_AddRefed<DetailedPromise> SetServerCertificate(

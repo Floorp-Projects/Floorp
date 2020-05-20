@@ -52,6 +52,7 @@
                                                    \
   _(IntlGuardToCollator)                           \
   _(IntlGuardToDateTimeFormat)                     \
+  _(IntlGuardToDisplayNames)                       \
   _(IntlGuardToListFormat)                         \
   _(IntlGuardToNumberFormat)                       \
   _(IntlGuardToPluralRules)                        \

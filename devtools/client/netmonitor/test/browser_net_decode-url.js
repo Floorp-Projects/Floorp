@@ -19,20 +19,21 @@ add_task(async function() {
   // Execute request.
   await performRequests(monitor, tab, 1);
 
-  // Wait until the tab panel summary is displayed
-  const wait = waitUntil(
-    () => document.querySelectorAll(".tabpanel-summary-label")[0]
+  // Wait until the url preview ihas loaded
+  const wait = waitUntil(() =>
+    document.querySelector("#headers-panel .url-preview")
   );
+
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
+
   await wait;
 
-  const requestURL = document.querySelectorAll(".tabpanel-summary-value")[0];
-
+  const requestURL = document.querySelector("#headers-panel .url-preview .url");
   is(
-    requestURL.textContent.endsWith("foo+%23+bar"),
+    requestURL.textContent.endsWith("foo # bar"),
     true,
     "\"Request URL\" containing '#' is correctly decoded."
   );

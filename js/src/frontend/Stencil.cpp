@@ -201,11 +201,10 @@ bool ScopeCreationData::isArrow() const { return funbox_->isArrow(); }
 
 void ScriptStencilBase::trace(JSTracer* trc) {
   for (ScriptThingVariant& thing : gcThings) {
-    if (thing.is<ClosedOverBinding>()) {
-      JSAtom* atom = thing.as<ClosedOverBinding>();
-      TraceRoot(trc, &atom, "closed-over-binding");
-      MOZ_ASSERT(atom == thing.as<ClosedOverBinding>(),
-                 "Atoms should be unmovable");
+    if (thing.is<ScriptAtom>()) {
+      JSAtom* atom = thing.as<ScriptAtom>();
+      TraceRoot(trc, &atom, "script-atom");
+      MOZ_ASSERT(atom == thing.as<ScriptAtom>(), "Atoms should be unmovable");
     }
   }
 }

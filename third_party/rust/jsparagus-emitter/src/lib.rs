@@ -9,6 +9,7 @@ mod emitter;
 mod emitter_scope;
 mod expression_emitter;
 mod function;
+mod function_declaration_emitter;
 mod gcthings;
 mod object_emitter;
 pub mod opcode;
@@ -16,7 +17,6 @@ pub mod opcode_info;
 mod reference_op_emitter;
 mod regexp;
 mod scope_notes;
-mod script_atom_set;
 mod script_emitter;
 mod stencil;
 
@@ -112,12 +112,12 @@ mod tests {
             bytecode("dis()"),
             vec![
                 Opcode::GetGName as u8,
-                0,
+                1,
                 0,
                 0,
                 0,
                 Opcode::GImplicitThis as u8,
-                0,
+                1,
                 0,
                 0,
                 0,

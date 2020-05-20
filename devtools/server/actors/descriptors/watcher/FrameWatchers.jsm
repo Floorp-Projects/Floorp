@@ -46,7 +46,7 @@ async function registerWatcher(watcher, watchedBrowsingContextID) {
   watchers.set(prefix, watcher);
   if (watchers.size == 1) {
     // Register the JSWindowActor pair "DevToolsFrame" only once we register our first WindowGlobal Watcher
-    ActorManagerParent.addActors({
+    ActorManagerParent.addJSWindowActors({
       DevToolsFrame: {
         parent: {
           moduleURI:

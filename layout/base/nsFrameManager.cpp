@@ -163,7 +163,7 @@ void nsFrameManager::CaptureFrameState(nsIFrame* aFrame,
   CaptureFrameStateFor(aFrame, aState);
 
   // Now capture state recursively for the frame hierarchy rooted at aFrame
-  for (const auto& childList : aFrame->GetChildLists()) {
+  for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       if (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
         // We'll pick it up when we get to its placeholder
@@ -233,7 +233,7 @@ void nsFrameManager::RestoreFrameState(nsIFrame* aFrame,
   RestoreFrameStateFor(aFrame, aState);
 
   // Now restore state recursively for the frame hierarchy rooted at aFrame
-  for (const auto& childList : aFrame->GetChildLists()) {
+  for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       RestoreFrameState(child, aState);
     }

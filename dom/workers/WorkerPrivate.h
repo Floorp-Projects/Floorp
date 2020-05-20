@@ -933,8 +933,7 @@ class WorkerPrivate : public RelativeTimeline {
    * will, depending on the return type, return a value that will avoid
    * assertion failures or a value that won't block loads.
    */
-
-  Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> GetEmbedderPolicy() const;
+  nsILoadInfo::CrossOriginEmbedderPolicy GetEmbedderPolicy() const;
 
   // Fails if a policy has already been set or if `aPolicy` violates the owner's
   // policy, if an owner exists.
@@ -953,6 +952,8 @@ class WorkerPrivate : public RelativeTimeline {
   // Requires a policy to already have been set.
   bool MatchEmbedderPolicy(
       nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) const;
+
+  nsILoadInfo::CrossOriginEmbedderPolicy GetOwnerEmbedderPolicy() const;
 
  private:
   WorkerPrivate(
@@ -1059,7 +1060,13 @@ class WorkerPrivate : public RelativeTimeline {
 
   UniquePtr<ClientSource> CreateClientSource();
 
-  Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> GetOwnerEmbedderPolicy() const;
+  // This method is called when corresponding script loader processes the COEP
+  // header for the worker.
+  // This method should be called only once in the main thread.
+  // After this method is called the COEP value owner(window/parent worker) is
+  // cached in mOwnerEmbedderPolicy such that it can be accessed in other
+  // threads, i.e. WorkerThread.
+  void EnsureOwnerEmbedderPolicy();
 
   class EventTarget;
   friend class EventTarget;
@@ -1308,6 +1315,7 @@ class WorkerPrivate : public RelativeTimeline {
   // there isn't a strong reason to store it on the global scope other than
   // better consistency with the COEP spec.
   Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> mEmbedderPolicy;
+  Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> mOwnerEmbedderPolicy;
 };
 
 class AutoSyncLoopHolder {

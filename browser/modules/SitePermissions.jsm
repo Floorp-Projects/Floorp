@@ -950,8 +950,7 @@ var gPermissionObject = {
     ],
     getDefault() {
       if (
-        Services.prefs.getIntPref("network.cookie.cookieBehavior") ==
-        Ci.nsICookieService.BEHAVIOR_REJECT
+        Services.cookies.cookieBehavior == Ci.nsICookieService.BEHAVIOR_REJECT
       ) {
         return SitePermissions.BLOCK;
       }

@@ -15,7 +15,39 @@
 
 namespace js {
 
-using UnaryFunType = double (*)(double);
+using UnaryMathFunctionType = double (*)(double);
+
+// Used for inlining calls to double => double Math functions from JIT code.
+// Note that this list does not include all unary Math functions: abs and sqrt
+// for example are missing because the JITs optimize them without a C++ call.
+enum class UnaryMathFunction : uint8_t {
+  Log,
+  Sin,
+  Cos,
+  Exp,
+  Tan,
+  ACos,
+  ASin,
+  ATan,
+  Log10,
+  Log2,
+  Log1P,
+  ExpM1,
+  CosH,
+  SinH,
+  TanH,
+  ACosH,
+  ASinH,
+  ATanH,
+  Trunc,
+  Cbrt,
+  Floor,
+  Ceil,
+  Round,
+};
+
+extern UnaryMathFunctionType GetUnaryMathFunctionPtr(UnaryMathFunction fun);
+extern const char* GetUnaryMathFunctionName(UnaryMathFunction fun);
 
 /*
  * JS math functions.

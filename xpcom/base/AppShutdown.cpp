@@ -20,6 +20,7 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/LateWriteChecks.h"
+#include "mozilla/XULStore.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsDirectoryServiceUtils.h"
@@ -149,6 +150,8 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
     if (auto* cache = scache::StartupCache::GetSingletonNoInit()) {
       cache->EnsureShutdownWriteComplete();
     }
+    DebugOnly<nsresult> rv = XULStore::Shutdown();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "XULStore::Shutdown() failed.");
   }
   if (aPhase == sFastShutdownPhase) {
     StopLateWriteChecks();
