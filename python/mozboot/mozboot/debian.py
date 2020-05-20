@@ -62,7 +62,6 @@ class DebianBootstrapper(
         'libpulse-dev',
         'libx11-xcb-dev',
         'libxt-dev',
-        'python-dbus',
         'xvfb',
         'yasm',
     ]

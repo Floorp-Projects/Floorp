@@ -89,10 +89,6 @@ class CentOSFedoraBootstrapper(
                     'Development Tools',
                 ]
 
-                self.browser_packages += [
-                    'python-dbus',
-                ]
-
         elif self.distro == 'fedora':
             self.group_packages += [
                 'C Development Tools and Libraries',
@@ -102,10 +98,6 @@ class CentOSFedoraBootstrapper(
                 'npm',
                 'python2-devel',
                 'redhat-rpm-config',
-            ]
-
-            self.browser_packages += [
-                'python-dbus',
             ]
 
             self.mobile_android_packages += [
