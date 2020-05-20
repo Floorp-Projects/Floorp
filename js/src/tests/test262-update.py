@@ -26,7 +26,6 @@ UNSUPPORTED_FEATURES = set([
     "class-methods-private",
     "class-static-methods-private",
     "regexp-match-indices",
-    "regexp-named-groups",
     "export-star-as-namespace-from-module",
     "Intl.DateTimeFormat-quarter",
     "Intl.DateTimeFormat-datetimestyle",
