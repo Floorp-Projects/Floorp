@@ -1447,6 +1447,9 @@ pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sy
   pref("identity.sync.useOAuthForSyncToken", false);
 #endif
 
+// Using session tokens to fetch OAuth tokens
+pref("identity.fxaccounts.useSessionTokensForOAuth", true);
+
 // Auto-config URL for FxA self-hosters, makes an HTTP request to
 // [identity.fxaccounts.autoconfig.uri]/.well-known/fxa-client-configuration
 // This is now the prefered way of pointing to a custom FxA server, instead

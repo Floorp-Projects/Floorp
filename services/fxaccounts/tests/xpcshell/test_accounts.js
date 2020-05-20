@@ -13,9 +13,6 @@ const {
   ASSERTION_LIFETIME,
   CERT_LIFETIME,
   ERRNO_INVALID_AUTH_TOKEN,
-  ERRNO_INVALID_FXA_ASSERTION,
-  ERRNO_NETWORK,
-  ERROR_INVALID_FXA_ASSERTION,
   ERROR_NETWORK,
   ERROR_NO_ACCOUNT,
   KEY_LIFETIME,
@@ -36,7 +33,14 @@ var { AccountState } = ChromeUtils.import(
 
 const ONE_HOUR_MS = 1000 * 60 * 60;
 const ONE_DAY_MS = ONE_HOUR_MS * 24;
-const TWO_MINUTES_MS = 1000 * 60 * 2;
+const MOCK_TOKEN_RESPONSE = {
+  access_token:
+    "43793fdfffec22eb39fc3c44ed09193a6fde4c24e5d6a73f73178597b268af69",
+  token_type: "bearer",
+  scope: "https://identity.mozilla.com/apps/oldsync",
+  expires_in: 21600,
+  auth_at: 1589579900,
+};
 
 initTestLogging("Trace");
 
@@ -1378,6 +1382,95 @@ add_test(function test_getOAuthToken() {
       run_next_test();
     });
   });
+});
+
+add_test(async function test_getOAuthTokenWithSessionToken() {
+  Services.prefs.setBoolPref(
+    "identity.fxaccounts.useSessionTokensForOAuth",
+    true
+  );
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+  alice.verified = true;
+  let oauthTokenCalled = false;
+
+  let client = fxa._internal.fxAccountsClient;
+  client.accessTokenWithSessionToken = async (
+    sessionTokenHex,
+    clientId,
+    scope,
+    ttl
+  ) => {
+    oauthTokenCalled = true;
+    Assert.equal(sessionTokenHex, "alice's session token");
+    Assert.equal(clientId, "5882386c6d801776");
+    Assert.equal(scope, "profile");
+    Assert.equal(ttl, undefined);
+    return MOCK_TOKEN_RESPONSE;
+  };
+
+  await fxa.setSignedInUser(alice);
+  const result = await fxa.getOAuthToken({ scope: "profile" });
+  Assert.ok(oauthTokenCalled);
+  Assert.equal(result, MOCK_TOKEN_RESPONSE.access_token);
+  Services.prefs.setBoolPref(
+    "identity.fxaccounts.useSessionTokensForOAuth",
+    false
+  );
+  run_next_test();
+});
+
+add_task(async function test_getOAuthTokenCachedWithSessionToken() {
+  Services.prefs.setBoolPref(
+    "identity.fxaccounts.useSessionTokensForOAuth",
+    true
+  );
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+  alice.verified = true;
+  let numOauthTokenCalls = 0;
+
+  let client = fxa._internal.fxAccountsClient;
+  client.accessTokenWithSessionToken = async () => {
+    numOauthTokenCalls++;
+    return MOCK_TOKEN_RESPONSE;
+  };
+
+  await fxa.setSignedInUser(alice);
+  let result = await fxa.getOAuthToken({
+    scope: "profile",
+    service: "test-service",
+  });
+  Assert.equal(numOauthTokenCalls, 1);
+  Assert.equal(
+    result,
+    "43793fdfffec22eb39fc3c44ed09193a6fde4c24e5d6a73f73178597b268af69"
+  );
+
+  // requesting it again should not re-fetch the token.
+  result = await fxa.getOAuthToken({
+    scope: "profile",
+    service: "test-service",
+  });
+  Assert.equal(numOauthTokenCalls, 1);
+  Assert.equal(
+    result,
+    "43793fdfffec22eb39fc3c44ed09193a6fde4c24e5d6a73f73178597b268af69"
+  );
+  // But requesting the same service and a different scope *will* get a new one.
+  result = await fxa.getOAuthToken({
+    scope: "something-else",
+    service: "test-service",
+  });
+  Assert.equal(numOauthTokenCalls, 2);
+  Assert.equal(
+    result,
+    "43793fdfffec22eb39fc3c44ed09193a6fde4c24e5d6a73f73178597b268af69"
+  );
+  Services.prefs.setBoolPref(
+    "identity.fxaccounts.useSessionTokensForOAuth",
+    false
+  );
 });
 
 add_test(function test_getOAuthTokenScoped() {
