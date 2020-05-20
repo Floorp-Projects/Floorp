@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cr, components: Components } = require("chrome");
+const { Cc, Ci, Cr, Cu, components: Components } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 
@@ -25,6 +25,11 @@ loader.lazyRequireGetter(
   true
 );
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
+loader.lazyGetter(
+  this,
+  "WebExtensionPolicy",
+  () => Cu.getGlobalForObject(Cu).WebExtensionPolicy
+);
 
 // Network logging
 
@@ -510,6 +515,11 @@ NetworkResponseListener.prototype = {
       const properties = this.request.QueryInterface(Ci.nsIPropertyBag);
       reason = this.request.loadInfo.requestBlockingReason;
       id = properties.getProperty("cancelledByExtension");
+
+      // WebExtensionPolicy is not available for workers
+      if (typeof WebExtensionPolicy !== "undefined") {
+        id = WebExtensionPolicy.getByID(id).name;
+      }
     } catch (err) {
       // "cancelledByExtension" doesn't have to be available.
     }
