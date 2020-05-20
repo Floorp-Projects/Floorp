@@ -2300,6 +2300,8 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
       info.TRR = addrRec->addr_info->IsTRR();
     }
 
+    info.originAttributesSuffix = iter.Key().originSuffix;
+
     args->AppendElement(std::move(info));
   }
 }
