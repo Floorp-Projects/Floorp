@@ -978,6 +978,17 @@ bool WarpCacheIRTranspiler::emitMathAbsNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMathFloorToInt32Result(
+    NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MFloor::New(alloc(), input);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathRoundToInt32Result(
     NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
