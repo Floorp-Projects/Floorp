@@ -100,6 +100,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     let canShowPrivateSearch = context.results.length > 1;
     let resultsWithSuggestedIndex = [];
 
+    // If we find results other than the heuristic, "Search in Private Window,"
+    // or tail suggestions on the first pass, we should hide tail suggestions on
+    // the second, since tail suggestions are a "last resort".
+    let canShowTailSuggestions = true;
+
     // Do the first pass through the results.  We only collect info for the
     // second pass here.
     for (let result of context.results) {
@@ -107,12 +112,21 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // are other results and all of them are searches.  It should not be shown
       // if the user typed an alias because that's an explicit engine choice.
       if (
-        result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
-        result.payload.keywordOffer ||
-        (result.heuristic && result.payload.keyword)
+        canShowPrivateSearch &&
+        (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
+          result.payload.keywordOffer ||
+          (result.heuristic && result.payload.keyword))
       ) {
         canShowPrivateSearch = false;
-        break;
+      }
+
+      if (
+        canShowTailSuggestions &&
+        !result.heuristic &&
+        (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
+          (!result.payload.inPrivateWindow && !result.payload.tail))
+      ) {
+        canShowTailSuggestions = false;
       }
     }
 
@@ -139,6 +153,15 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
         result.payload.suggestion &&
         result.payload.suggestion.toLocaleLowerCase() === heuristicResultQuery
+      ) {
+        continue;
+      }
+
+      // Exclude tail suggestions if we have non-tail suggestions.
+      if (
+        !canShowTailSuggestions &&
+        groupFromResult(result) == UrlbarUtils.RESULT_GROUP.SUGGESTION &&
+        result.payload.tail
       ) {
         continue;
       }

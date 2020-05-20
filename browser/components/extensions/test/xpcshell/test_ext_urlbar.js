@@ -275,8 +275,7 @@ add_task(async function test_onProviderResultsRequested() {
 
   // Check the results.
   let expectedResults = [
-    // The first result should be a search result returned by
-    // UrlbarProviderSearchSuggestions.
+    // The first result should be a search result returned by UnifiedComplete.
     {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
