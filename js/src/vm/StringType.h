@@ -229,31 +229,35 @@ class JSString : public js::gc::Cell {
    * the predicate used to query whether a JSString instance is subtype
    * (reflexively) of that type.
    *
-   *   String        Instance     Subtype
-   *   type          encoding     predicate
-   *   ------------------------------------
-   *   Rope          000000       xxxx0x
-   *   Linear        -            xxxx1x
-   *   Dependent     000110       xxx1xx
-   *   External      100010       100010
-   *   Extensible    010010       010010
-   *   Inline        001010       xx1xxx
-   *   FatInline     011010       x11xxx
-   *   NormalAtom    000011       xxxxx1
-   *   PermanentAtom 100011       1xxxx1
-   *   InlineAtom    -            xx1xx1
-   *   FatInlineAtom -            x11xx1
+   *   String        Instance         Subtype
+   *   type          encoding         predicate
+   *   -----------------------------------------
+   *   Rope          000000 000       xxxx0x xxx
+   *   Linear        -                xxxx1x xxx
+   *   Dependent     000110 000       xxx1xx xxx
+   *   External      100010 000       100010 xxx
+   *   Extensible    010010 000       010010 xxx
+   *   Inline        001010 000       xx1xxx xxx
+   *   FatInline     011010 000       x11xxx xxx
+   *   NormalAtom    000011 000       xxxxx1 xxx
+   *   PermanentAtom 100011 000       1xxxx1 xxx
+   *   InlineAtom    -                xx1xx1 xxx
+   *   FatInlineAtom -                x11xx1 xxx
    *
-   * Note that the first 4 flag bits (from right to left in the previous table)
-   * have the following meaning and can be used for some hot queries:
+   * Bits 0..2 are reserved for use by the GC (see
+   * gc::CellFlagBitsReservedForGC). In particular, bit 0 is currently used for
+   * FORWARD_BIT for forwarded nursery cells. The other 2 bits are currently
+   * unused.
    *
-   *   Bit 0: IsAtom (Atom, PermanentAtom)
-   *   Bit 1: IsLinear
-   *   Bit 2: IsDependent
-   *   Bit 3: IsInline (Inline, FatInline)
+   * Note that the first 4 flag bits 3..6 (from right to left in the previous
+   * table) have the following meaning and can be used for some hot queries:
    *
+   *   Bit 3: IsAtom (Atom, PermanentAtom)
+   *   Bit 4: IsLinear
+   *   Bit 5: IsDependent
+   *   Bit 6: IsInline (Inline, FatInline)
    *
-   * If the INDEX_VALUE_BIT is set, flags will also hold an integer index.
+   * If INDEX_VALUE_BIT is set, bits 16 and up will also hold an integer index.
    */
 
   // The low bits of flag word are reserved by GC.
@@ -271,7 +275,7 @@ class JSString : public js::gc::Cell {
   static const uint32_t FAT_INLINE_MASK = INLINE_CHARS_BIT | js::Bit(7);
   static const uint32_t PERMANENT_ATOM_MASK = ATOM_BIT | js::Bit(8);
 
-  /* Initial flags for thin inline and fat inline strings. */
+  /* Initial flags for various types of strings. */
   static const uint32_t INIT_THIN_INLINE_FLAGS = LINEAR_BIT | INLINE_CHARS_BIT;
   static const uint32_t INIT_FAT_INLINE_FLAGS = LINEAR_BIT | FAT_INLINE_MASK;
   static const uint32_t INIT_ROPE_FLAGS = 0;
