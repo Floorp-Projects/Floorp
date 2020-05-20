@@ -63,9 +63,13 @@ class ResourceWatcher {
    *        - {Function} onDestroyed: This attribute is optional.
    *                                  Function which will be called each time a resource in
    *                                  the remote target is destroyed.
+   *        - {boolean} ignoreExistingResources:
+   *                                  This attribute is optional. Default value is false.
+   *                                  If set to true, onAvailable won't be called with
+   *                                  existing resources.
    */
   async watch(resources, options) {
-    const { onAvailable, onDestroyed } = options;
+    const { ignoreExistingResources = false } = options;
 
     // First ensuring enabling listening to targets.
     // This will call onTargetAvailable for all already existing targets,
@@ -75,11 +79,15 @@ class ResourceWatcher {
     await this._watchAllTargets();
 
     for (const resource of resources) {
-      this._availableListeners.on(resource, onAvailable);
-      if (onDestroyed) {
-        this._destroyedListeners.on(resource, onDestroyed);
+      if (ignoreExistingResources) {
+        // Register listeners after _startListening
+        // so that it avoids the listeners to get cached resources.
+        await this._startListening(resource);
+        this._registerListeners(resource, options);
+      } else {
+        this._registerListeners(resource, options);
+        await this._startListening(resource);
       }
-      await this._startListening(resource);
     }
   }
 
@@ -105,6 +113,20 @@ class ResourceWatcher {
     }
     if (listeners <= 0) {
       this._unwatchAllTargets();
+    }
+  }
+
+  /**
+   * Register listeners to watch for a given type of resource.
+   *
+   * @param {Object}
+   *        - {Function} onAvailable: mandatory
+   *        - {Function} onDestroyed: optional
+   */
+  _registerListeners(resource, { onAvailable, onDestroyed }) {
+    this._availableListeners.on(resource, onAvailable);
+    if (onDestroyed) {
+      this._destroyedListeners.on(resource, onDestroyed);
     }
   }
 
