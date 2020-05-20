@@ -4,6 +4,7 @@
 
 import { cardContextTypes } from "../../Card/types.js";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
+import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import React from "react";
 
 // Animation time is mirrored in DSContextFooter.scss
@@ -19,6 +20,33 @@ export const StatusMessage = ({ icon, fluentID }) => (
   </div>
 );
 
+export const SponsorLabel = ({ sponsored_by_override, sponsor, context }) => {
+  const classList = "story-sponsored-label clamp";
+  // If override is not false or an empty string.
+  if (sponsored_by_override) {
+    return <p className={classList}>{sponsored_by_override}</p>;
+  } else if (sponsored_by_override === "") {
+    // We specifically want to display nothing if the server returns an empty string.
+    // So the server can turn off the label.
+    // This is to support the use cases where the sponsored context is displayed elsewhere.
+    return null;
+  } else if (sponsor) {
+    return (
+      <p className={classList}>
+        <FluentOrText
+          message={{
+            id: `newtab-label-sponsored-by`,
+            values: { sponsor },
+          }}
+        />
+      </p>
+    );
+  } else if (context) {
+    return <p className={classList}>{context}</p>;
+  }
+  return null;
+};
+
 export class DSContextFooter extends React.PureComponent {
   render() {
     // display_engagement_labels is based on pref `browser.newtabpage.activity-stream.discoverystream.engagementLabelEnabled`
@@ -27,12 +55,14 @@ export class DSContextFooter extends React.PureComponent {
       context_type,
       engagement,
       display_engagement_labels,
+      sponsor,
+      sponsored_by_override,
     } = this.props;
     const { icon, fluentID } = cardContextTypes[context_type] || {};
 
     return (
       <div className="story-footer">
-        {context && <p className="story-sponsored-label clamp">{context}</p>}
+        {SponsorLabel({ sponsored_by_override, sponsor, context })}
         <TransitionGroup component={null}>
           {!context &&
             (context_type || (display_engagement_labels && engagement)) && (
