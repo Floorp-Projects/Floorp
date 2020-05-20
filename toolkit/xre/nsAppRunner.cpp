@@ -3578,26 +3578,33 @@ static void AnnotateLSBRelease(void*) {
 #endif  // defined(XP_LINUX) && !defined(ANDROID)
 
 #ifdef XP_WIN
-static void ReadAheadDll(const wchar_t* dllName) {
+static void ReadAheadSystemDll(const wchar_t* dllName) {
   wchar_t dllPath[MAX_PATH];
   if (ConstructSystem32Path(dllName, dllPath, MAX_PATH)) {
     ReadAheadLib(dllPath);
   }
 }
 
-static void PR_CALLBACK ReadAheadDlls_ThreadStart(void*) {
-  // Load DataExchange.dll and twinapi.appcore.dll for nsWindow::EnableDragDrop
-  ReadAheadDll(L"DataExchange.dll");
-  ReadAheadDll(L"twinapi.appcore.dll");
+static void ReadAheadPackagedDll(const wchar_t* dllName,
+                                 const wchar_t* aGREDir) {
+  wchar_t dllPath[MAX_PATH];
+  swprintf(dllPath, MAX_PATH, L"%s\\%s", aGREDir, dllName);
+  ReadAheadLib(dllPath);
+}
 
-  // Load twinapi.dll for WindowsUIUtils::UpdateTabletModeState
-  ReadAheadDll(L"twinapi.dll");
+static void PR_CALLBACK ReadAheadDlls_ThreadStart(void* arg) {
+  UniquePtr<wchar_t[]> greDir(static_cast<wchar_t*>(arg));
 
-  // Load explorerframe.dll for WinTaskbar::Initialize
-  ReadAheadDll(L"ExplorerFrame.dll");
+  // Prefetch the DLLs shipped with firefox
+  ReadAheadPackagedDll(L"libegl.dll", greDir.get());
+  ReadAheadPackagedDll(L"libGLESv2.dll", greDir.get());
+  ReadAheadPackagedDll(L"nssckbi.dll", greDir.get());
+  ReadAheadPackagedDll(L"freebl3.dll", greDir.get());
+  ReadAheadPackagedDll(L"softokn3.dll", greDir.get());
 
-  // Load WinTypes.dll for nsOSHelperAppService::GetApplicationDescription
-  ReadAheadDll(L"WinTypes.dll");
+  // Prefetch the system DLLs
+  ReadAheadSystemDll(L"DWrite.dll");
+  ReadAheadSystemDll(L"D3DCompiler_47.dll");
 }
 #endif
 
@@ -4286,9 +4293,20 @@ nsresult XREMain::XRE_mainRun() {
 
 #ifdef XP_WIN
   if (!PR_GetEnv("XRE_NO_DLL_READAHEAD")) {
-    PR_CreateThread(PR_USER_THREAD, ReadAheadDlls_ThreadStart, 0,
-                    PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD,
-                    0);
+    nsCOMPtr<nsIFile> greDir = mDirProvider.GetGREDir();
+    nsAutoString path;
+    rv = greDir->GetPath(path);
+    if (NS_SUCCEEDED(rv)) {
+      PRThread* readAheadThread;
+      wchar_t* pathRaw = new wchar_t[MAX_PATH];
+      wcscpy_s(pathRaw, MAX_PATH, path.get());
+      readAheadThread = PR_CreateThread(
+          PR_USER_THREAD, ReadAheadDlls_ThreadStart, (void*)pathRaw,
+          PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+      if (readAheadThread == NULL) {
+        delete[] pathRaw;
+      }
+    }
   }
 #endif
 
