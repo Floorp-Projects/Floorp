@@ -205,20 +205,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1568256",
-    platform: "android",
-    domain: "zertifikate.commerzbank.de",
-    bug: "1568256",
-    contentScripts: {
-      matches: ["*://*.zertifikate.commerzbank.de/webforms/mobile/*"],
-      css: [
-        {
-          file: "injections/css/bug1568256-zertifikate.commerzbank.de-flex.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1568908",
     platform: "desktop",
     domain: "console.cloud.google.com",
@@ -411,20 +397,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1629926",
-    platform: "desktop",
-    domain: "GMail Hangouts microphone fix",
-    bug: "1629926",
-    contentScripts: {
-      matches: ["https://mail.google.com/*"],
-      js: [
-        {
-          file: "injections/js/bug1629926-mail.google.com-hangouts-mic-fix.js",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1631960",
     platform: "all",
     domain: "websube.ckbogazici.com.tr",
@@ -449,6 +421,20 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1632019-everyman.co-gallery-width-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1633796",
+    platform: "android",
+    domain: "www.laposte.fr",
+    bug: "1633796",
+    contentScripts: {
+      matches: ["https://www.laposte.fr/*"],
+      css: [
+        {
+          file: "injections/css/bug1633796-www-la-poste-fr-placeholder-fix.css",
         },
       ],
     },
