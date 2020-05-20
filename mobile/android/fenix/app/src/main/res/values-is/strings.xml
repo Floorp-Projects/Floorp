@@ -415,8 +415,6 @@
     <string name="library_reading_list">Lestrarlisti</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Leit</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Safn</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Stillingar</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -1123,6 +1121,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Aðstoð</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Hrun</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Meðferð persónuupplýsinga</string>
     <!-- About page link text to open know your rights link -->
@@ -1260,6 +1260,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Virkja til að leyfa klemmu og aðdrátt, jafnvel á vefsíðum sem koma í veg fyrir þessa virkni.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nafn (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Síðast notað</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Raða innskráningarvalmyndinni</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Bæta við leitarvél</string>
     <!-- Title of the Edit search engine screen -->
@@ -1351,8 +1358,26 @@
     <string name="certificate_info_verified_by">Sannvottað af: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Eyða</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Breyta</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Ertu viss um að þú viljir eyða þessari innskráningu?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Eyða</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Innskráningarvalkostir</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Breytilegi textareiturinn fyrir veffang þessarar innskráningarinnar.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Breytilegi textareiturinn fyrir notandanafn innskráningarinnar.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Breytilegi textareiturinn fyrir lykilorð innskráningarinnar.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Vista breytingar á innskráningu.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Hætta við breytingar</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Breyta</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Lykilorðs krafist</string>
 </resources>

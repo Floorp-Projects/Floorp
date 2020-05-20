@@ -1137,7 +1137,7 @@
     <!-- About page link text to open support link -->
     <string name="about_support">Brukerstøtte</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
-    <string name="about_crashes">Krasjer</string>
+    <string name="about_crashes">Krasj</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Personvernbestemmelser</string>
     <!-- About page link text to open know your rights link -->

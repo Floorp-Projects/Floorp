@@ -1396,6 +1396,14 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="login_deletion_confirmation">Voulez-vous vraiment supprimer cet identifiant ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Supprimer</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Options de l’identifiant</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Le champ de texte modifiable pour l’adresse web de l’identifiant.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Le champ de texte modifiable pour le nom d’utilisateur de l’identifiant.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Le champ de texte modifiable pour le mot de passe de l’identifiant.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Enregistrez les modifications de l’identifiant.</string>
     <!--  The button description to discard changes to an edited login. -->
