@@ -74,6 +74,8 @@ class MainFrame extends Component {
       resetAccessiblity: PropTypes.func.isRequired,
       startListeningForLifecycleEvents: PropTypes.func.isRequired,
       stopListeningForLifecycleEvents: PropTypes.func.isRequired,
+      highlightAccessible: PropTypes.func.isRequired,
+      unhighlightAccessible: PropTypes.func.isRequired,
     };
   }
 
@@ -170,6 +172,8 @@ class MainFrame extends Component {
       audit,
       enableAccessibility,
       disableAccessibility,
+      highlightAccessible,
+      unhighlightAccessible,
     } = this.props;
 
     if (!enabled) {
@@ -213,9 +217,15 @@ class MainFrame extends Component {
                 getAccessibilityTreeRoot,
                 startListeningForAccessibilityEvents,
                 stopListeningForAccessibilityEvents,
+                highlightAccessible,
+                unhighlightAccessible,
               })
             ),
-            endPanel: RightSidebar({ toolbox }),
+            endPanel: RightSidebar({
+              highlightAccessible,
+              unhighlightAccessible,
+              toolbox,
+            }),
             vert: this.useLandscapeMode,
           })
         )

@@ -51,6 +51,8 @@ class AccessibilityTree extends Component {
       getAccessibilityTreeRoot: PropTypes.func.isRequired,
       startListeningForAccessibilityEvents: PropTypes.func.isRequired,
       stopListeningForAccessibilityEvents: PropTypes.func.isRequired,
+      highlightAccessible: PropTypes.func.isRequired,
+      unhighlightAccessible: PropTypes.func.isRequired,
     };
   }
 
@@ -205,6 +207,8 @@ class AccessibilityTree extends Component {
       toolboxDoc,
       filtered,
       getAccessibilityTreeRoot,
+      highlightAccessible,
+      unhighlightAccessible,
     } = this.props;
 
     const renderRow = rowProps => {
@@ -219,6 +223,8 @@ class AccessibilityTree extends Component {
               return highlighted ? ["highlighted"] : [];
             },
           },
+          highlightAccessible,
+          unhighlightAccessible,
         })
       );
     };

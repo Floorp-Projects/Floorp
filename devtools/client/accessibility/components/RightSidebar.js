@@ -19,7 +19,7 @@ const Checks = createFactory(
 );
 
 // Component that is responsible for rendering accessible panel's sidebar.
-function RightSidebar({ toolbox }) {
+function RightSidebar({ highlightAccessible, unhighlightAccessible, toolbox }) {
   const propertiesID = "accessibility-properties";
   const checksID = "accessibility-checks";
 
@@ -42,6 +42,8 @@ function RightSidebar({ toolbox }) {
           className: "accessible",
           component: Accessible,
           componentProps: {
+            highlightAccessible,
+            unhighlightAccessible,
             toolbox,
             labelledby: `${propertiesID}-header`,
           },
