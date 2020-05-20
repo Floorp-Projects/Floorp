@@ -162,6 +162,21 @@ xpcAccessible::GetIndexInParent(int32_t* aIndexInParent) {
 }
 
 NS_IMETHODIMP
+xpcAccessible::GetUniqueID(int64_t* aUniqueID) {
+  NS_ENSURE_ARG_POINTER(aUniqueID);
+
+  if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
+
+  if (IntlGeneric().IsAccessible()) {
+    *aUniqueID = reinterpret_cast<uintptr_t>(Intl()->UniqueID());
+  } else if (IntlGeneric().IsProxy()) {
+    *aUniqueID = IntlGeneric().AsProxy()->ID();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 xpcAccessible::GetDOMNode(nsINode** aDOMNode) {
   NS_ENSURE_ARG_POINTER(aDOMNode);
   *aDOMNode = nullptr;
