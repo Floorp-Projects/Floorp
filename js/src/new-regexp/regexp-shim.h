@@ -860,46 +860,29 @@ inline Vector<const uc16> String::GetCharVector(
 }
 
 // A flat string reader provides random access to the contents of a
-// string independent of the character width of the string.  The handle
-// must be valid as long as the reader is being used.
-// Origin:
-// https://github.com/v8/v8/blob/84f3877c15bc7f8956d21614da4311337525a3c8/src/objects/string.h#L807-L825
+// string independent of the character width of the string.
 class MOZ_STACK_CLASS FlatStringReader {
  public:
-  FlatStringReader(JSLinearString* string)
-    : length_(string->length()),
-      is_latin1_(string->hasLatin1Chars()) {
+  FlatStringReader(JSContext* cx, js::HandleLinearString string)
+    : string_(string), length_(string->length()) {}
 
-    if (is_latin1_) {
-      latin1_chars_ = string->latin1Chars(nogc_);
-    } else {
-      two_byte_chars_ = string->twoByteChars(nogc_);
-    }
-  }
-  FlatStringReader(const char16_t* chars, size_t length)
-    : two_byte_chars_(chars),
-      length_(length),
-      is_latin1_(false) {}
+  FlatStringReader(const mozilla::Range<const char16_t> range)
+    : string_(nullptr), range_(range), length_(range.length()) {}
 
   int length() { return length_; }
 
   inline char16_t Get(size_t index) {
     MOZ_ASSERT(index < length_);
-    if (is_latin1_) {
-      return latin1_chars_[index];
-    } else {
-      return two_byte_chars_[index];
+    if (string_) {
+      return string_->latin1OrTwoByteChar(index);
     }
+    return range_[index];
   }
 
  private:
-  union {
-    const JS::Latin1Char *latin1_chars_;
-    const char16_t* two_byte_chars_;
-  };
+  js::HandleLinearString string_;
+  const mozilla::Range<const char16_t> range_;
   size_t length_;
-  bool is_latin1_;
-  JS::AutoCheckCannotGC nogc_;
 };
 
 class JSRegExp : public HeapObject {
