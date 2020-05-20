@@ -173,7 +173,7 @@ class BrowserAwesomeBar @JvmOverloads constructor(
                     val start = SystemClock.elapsedRealtimeNanos()
                     val suggestions = withContext(jobDispatcher) { provider.block() }
                     val end = SystemClock.elapsedRealtimeNanos()
-                    emitProviderQueryTimingFact(provider, timing = end - start)
+                    emitProviderQueryTimingFact(provider, timingNs = end - start)
 
                     val processedSuggestions = processProviderSuggestions(suggestions)
                     suggestionsAdapter.addSuggestions(
