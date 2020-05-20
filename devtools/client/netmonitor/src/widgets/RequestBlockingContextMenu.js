@@ -18,12 +18,17 @@ class RequestBlockingContextMenu {
     this.props = props;
   }
 
-  createMenu() {
+  createMenu(contextMenuOptions) {
     const {
       removeAllBlockedUrls,
       disableAllBlockedUrls,
       enableAllBlockedUrls,
     } = this.props;
+
+    const {
+      disableDisableAllBlockedUrls,
+      disableEnableAllBlockedUrls,
+    } = contextMenuOptions;
 
     const menu = [
       {
@@ -32,6 +37,7 @@ class RequestBlockingContextMenu {
           "netmonitor.requestBlockingMenu.enableAllBlockedUrls"
         ),
         accesskey: "",
+        disabled: disableEnableAllBlockedUrls,
         visible: true,
         click: () => enableAllBlockedUrls(),
       },
@@ -41,6 +47,7 @@ class RequestBlockingContextMenu {
           "netmonitor.requestBlockingMenu.disableAllBlockedUrls"
         ),
         accesskey: "",
+        disabled: disableDisableAllBlockedUrls,
         visible: true,
         click: () => disableAllBlockedUrls(),
       },
@@ -58,8 +65,8 @@ class RequestBlockingContextMenu {
     return menu;
   }
 
-  open(event) {
-    const menu = this.createMenu();
+  open(event, contextMenuOptions) {
+    const menu = this.createMenu(contextMenuOptions);
 
     showMenu(menu, {
       screenX: event.screenX,
