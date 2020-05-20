@@ -140,10 +140,8 @@ TEST(Atoms, Table)
   EXPECT_EQ(NS_GetNumberOfAtoms(), count + 1);
 }
 
-class nsAtomRunner final : public nsIRunnable {
+class nsAtomRunner final : public Runnable {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   NS_IMETHOD Run() final {
     for (int i = 0; i < 10000; i++) {
       RefPtr<nsAtom> atom = NS_Atomize(u"A Testing Atom");
@@ -151,11 +149,11 @@ class nsAtomRunner final : public nsIRunnable {
     return NS_OK;
   }
 
+  nsAtomRunner() : Runnable("nsAtomRunner") {}
+
  private:
   ~nsAtomRunner() = default;
 };
-
-NS_IMPL_ISUPPORTS(nsAtomRunner, nsIRunnable)
 
 TEST(Atoms, ConcurrentAccessing)
 {

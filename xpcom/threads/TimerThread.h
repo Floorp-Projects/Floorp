@@ -27,7 +27,7 @@ namespace mozilla {
 class TimeStamp;
 }  // namespace mozilla
 
-class TimerThread final : public nsIRunnable, public nsIObserver {
+class TimerThread final : public mozilla::Runnable, public nsIObserver {
  public:
   typedef mozilla::Monitor Monitor;
   typedef mozilla::TimeStamp TimeStamp;
@@ -36,7 +36,7 @@ class TimerThread final : public nsIRunnable, public nsIObserver {
   TimerThread();
   nsresult InitLocks();
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
 

@@ -19,11 +19,10 @@
 
 using namespace mozilla;
 
-class Task final : public nsIRunnable {
+class Task final : public Runnable {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  Task(int i, Atomic<int>& aCounter) : mIndex(i), mCounter(aCounter) {}
+  Task(int i, Atomic<int>& aCounter)
+    : Runnable("TestThreadPool::Task"), mIndex(i), mCounter(aCounter) {}
 
   NS_IMETHOD Run() override {
     printf("###(%d) running from thread: %p\n", mIndex,
@@ -42,7 +41,6 @@ class Task final : public nsIRunnable {
   int mIndex;
   Atomic<int>& mCounter;
 };
-NS_IMPL_ISUPPORTS(Task, nsIRunnable)
 
 TEST(ThreadPool, Main)
 {
