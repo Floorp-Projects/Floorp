@@ -74,7 +74,8 @@ nsresult AsyncExecuteStatements::execute(
 AsyncExecuteStatements::AsyncExecuteStatements(
     StatementDataArray& aStatements, Connection* aConnection,
     sqlite3* aNativeConnection, mozIStorageStatementCallback* aCallback)
-    : mConnection(aConnection),
+    : Runnable("AsyncExecuteStatements"),
+      mConnection(aConnection),
       mNativeConnection(aNativeConnection),
       mHasTransaction(false),
       mCallback(aCallback),
@@ -433,8 +434,8 @@ nsresult AsyncExecuteStatements::notifyResultsOnCallingThread(
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(AsyncExecuteStatements, nsIRunnable,
-                  mozIStoragePendingStatement)
+NS_IMPL_ISUPPORTS_INHERITED(AsyncExecuteStatements, Runnable,
+                            mozIStoragePendingStatement)
 
 bool AsyncExecuteStatements::statementsNeedTransaction() {
   // If there is more than one write statement, run in a transaction.
