@@ -5012,6 +5012,15 @@ void LIRGenerator::visitObjectWithProto(MObjectWithProto* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitObjectStaticProto(MObjectStaticProto* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  auto* lir =
+      new (alloc()) LObjectStaticProto(useRegisterAtStart(ins->object()));
+  define(lir, ins);
+};
+
 void LIRGenerator::visitFunctionProto(MFunctionProto* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
 

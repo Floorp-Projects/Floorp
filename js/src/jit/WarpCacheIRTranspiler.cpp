@@ -414,6 +414,16 @@ bool WarpCacheIRTranspiler::emitLoadObject(ObjOperandId resultId,
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitLoadProto(ObjOperandId objId,
+                                          ObjOperandId resultId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MObjectStaticProto::New(alloc(), obj);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadDynamicSlotResult(ObjOperandId objId,
                                                       uint32_t offsetOffset) {
   int32_t offset = int32StubField(offsetOffset);

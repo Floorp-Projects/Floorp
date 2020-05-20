@@ -7514,6 +7514,16 @@ class LObjectWithProto : public LCallInstructionHelper<1, BOX_PIECES, 0> {
   }
 };
 
+class LObjectStaticProto : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(ObjectStaticProto)
+
+  explicit LObjectStaticProto(const LAllocation& object)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, object);
+  }
+};
+
 class LFunctionProto : public LCallInstructionHelper<1, 0, 0> {
  public:
   LIR_HEADER(FunctionProto)

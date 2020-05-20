@@ -433,7 +433,7 @@
 
 - name: LoadProto
   shared: true
-  transpile: false
+  transpile: true
   args:
     obj: ObjId
     result: ObjId
