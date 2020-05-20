@@ -253,7 +253,7 @@ task docs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask, overwrite: true) {
     }.each {
         classpath += files(it.android.getBootClasspath().join(File.pathSeparator))
         it.android.libraryVariants.all { variant ->
-            classpath += files(variant.javaCompile.classpath.files)
+            classpath += files(variant.javaCompileProvider.get().classpath.files)
         }
     }
 
