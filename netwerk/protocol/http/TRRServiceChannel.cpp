@@ -29,7 +29,43 @@ namespace mozilla {
 namespace net {
 
 NS_IMPL_ADDREF(TRRServiceChannel)
-NS_IMPL_RELEASE(TRRServiceChannel)
+
+// Because nsSupportsWeakReference isn't thread-safe we must ensure that
+// TRRServiceChannel is destroyed on the target thread. Any Release() called
+// on a different thread is dispatched to the target thread.
+bool TRRServiceChannel::DispatchRelease() {
+  if (mCurrentEventTarget->IsOnCurrentThread()) {
+    return false;
+  }
+
+  mCurrentEventTarget->Dispatch(
+      NewNonOwningRunnableMethod("net::TRRServiceChannel::Release", this,
+                                 &TRRServiceChannel::Release),
+      NS_DISPATCH_NORMAL);
+
+  return true;
+}
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+TRRServiceChannel::Release() {
+  nsrefcnt count = mRefCnt - 1;
+  if (DispatchRelease()) {
+    // Redispatched to the target thread.
+    return count;
+  }
+
+  MOZ_ASSERT(0 != mRefCnt, "dup release");
+  count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "TRRServiceChannel");
+
+  if (0 == count) {
+    mRefCnt = 1;
+    delete (this);
+    return 0;
+  }
+
+  return count;
+}
 
 NS_INTERFACE_MAP_BEGIN(TRRServiceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
