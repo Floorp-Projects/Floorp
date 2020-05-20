@@ -78,15 +78,75 @@ add_task(async function() {
           "cookie-1"
         );
 
+        let iframe = content.document.createElement("iframe");
+
         // Perform a load of example.com
         await new Promise(resolve => {
-          let iframe = content.document.createElement("iframe");
           iframe.setAttribute("src", "http://example.com");
           iframe.onload = resolve;
           content.document.body.appendChild(iframe);
         });
 
-        // After the load finishes, we should know about example.com, but not foo.bar.example.com
+        // After the load finishes, the iframe process should know about example.com, but not foo.bar.example.com
+        await content.SpecialPowers.spawn(iframe, [], async function() {
+          is(
+            Services.perms.testPermissionFromPrincipal(
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                "http://example.com"
+              ),
+              "perm1"
+            ),
+            Services.perms.ALLOW_ACTION,
+            "perm1-2"
+          );
+
+          is(
+            Services.perms.testPermissionFromPrincipal(
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                "http://foo.bar.example.com"
+              ),
+              "perm2"
+            ),
+            Services.perms.UNKNOWN_ACTION,
+            "perm2-2"
+          );
+
+          is(
+            Services.perms.testPermissionFromPrincipal(
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                "about:home"
+              ),
+              "perm3"
+            ),
+            Services.perms.ALLOW_ACTION,
+            "perm3-2"
+          );
+
+          is(
+            Services.perms.testPermissionFromPrincipal(
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                "https://example.com"
+              ),
+              "perm4"
+            ),
+            Services.perms.UNKNOWN_ACTION,
+            "perm4-2"
+          );
+
+          is(
+            Services.perms.testPermissionFromPrincipal(
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                "https://somerandomwebsite.com"
+              ),
+              "cookie"
+            ),
+            Services.perms.ALLOW_ACTION,
+            "cookie-2"
+          );
+        });
+
+        // In Fission only, the parent process should have no knowledge about the child
+        // process permissions
         is(
           Services.perms.testPermissionFromPrincipal(
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -94,9 +154,12 @@ add_task(async function() {
             ),
             "perm1"
           ),
-          Services.perms.ALLOW_ACTION,
-          "perm1-2"
+          SpecialPowers.useRemoteSubframes
+            ? Services.perms.UNKNOWN_ACTION
+            : Services.perms.ALLOW_ACTION,
+          "perm1-3"
         );
+
         is(
           Services.perms.testPermissionFromPrincipal(
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -105,18 +168,9 @@ add_task(async function() {
             "perm2"
           ),
           Services.perms.UNKNOWN_ACTION,
-          "perm2-2"
+          "perm2-3"
         );
-        is(
-          Services.perms.testPermissionFromPrincipal(
-            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-              "about:home"
-            ),
-            "perm3"
-          ),
-          Services.perms.ALLOW_ACTION,
-          "perm3-2"
-        );
+
         is(
           Services.perms.testPermissionFromPrincipal(
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -125,17 +179,7 @@ add_task(async function() {
             "perm4"
           ),
           Services.perms.UNKNOWN_ACTION,
-          "perm4-2"
-        );
-        is(
-          Services.perms.testPermissionFromPrincipal(
-            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-              "https://somerandomwebsite.com"
-            ),
-            "cookie"
-          ),
-          Services.perms.ALLOW_ACTION,
-          "cookie-2"
+          "perm4-3"
         );
       });
 
@@ -147,7 +191,7 @@ add_task(async function() {
 
       await SpecialPowers.spawn(aBrowser, [], async function() {
         // The new permissions should be available, but only for
-        // http://example.com, and about:home
+        // http://example.com (without Fission), and about:home.
         is(
           Services.perms.testPermissionFromPrincipal(
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -155,8 +199,10 @@ add_task(async function() {
             ),
             "perm1"
           ),
-          Services.perms.ALLOW_ACTION,
-          "perm1-3"
+          SpecialPowers.useRemoteSubframes
+            ? Services.perms.UNKNOWN_ACTION
+            : Services.perms.ALLOW_ACTION,
+          "perm1-4"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -165,8 +211,10 @@ add_task(async function() {
             ),
             "newperm1"
           ),
-          Services.perms.ALLOW_ACTION,
-          "newperm1-3"
+          SpecialPowers.useRemoteSubframes
+            ? Services.perms.UNKNOWN_ACTION
+            : Services.perms.ALLOW_ACTION,
+          "newperm1-1"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -176,7 +224,7 @@ add_task(async function() {
             "perm2"
           ),
           Services.perms.UNKNOWN_ACTION,
-          "perm2-3"
+          "perm2-4"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -186,7 +234,7 @@ add_task(async function() {
             "newperm2"
           ),
           Services.perms.UNKNOWN_ACTION,
-          "newperm2-3"
+          "newperm2-1"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -206,7 +254,7 @@ add_task(async function() {
             "newperm3"
           ),
           Services.perms.ALLOW_ACTION,
-          "newperm3-3"
+          "newperm3-1"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -216,7 +264,7 @@ add_task(async function() {
             "perm4"
           ),
           Services.perms.UNKNOWN_ACTION,
-          "perm4-3"
+          "perm4-4"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -226,7 +274,7 @@ add_task(async function() {
             "newperm4"
           ),
           Services.perms.UNKNOWN_ACTION,
-          "newperm4-3"
+          "newperm4-1"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -249,16 +297,56 @@ add_task(async function() {
           "othercookie-3"
         );
 
+        let iframe = content.document.createElement("iframe");
         // Loading a subdomain now, on https
         await new Promise(resolve => {
-          let iframe = content.document.createElement("iframe");
           iframe.setAttribute("src", "https://sub1.test1.example.com");
           iframe.onload = resolve;
           content.document.body.appendChild(iframe);
         });
 
-        // Now that the https subdomain has loaded, we want to make sure that the
-        // permissions are also available for its parent domain, https://example.com!
+        // After the load finishes, the iframe process should not know about
+        // the permissions of its base domain.
+        await content.SpecialPowers.spawn(iframe, [], async function() {
+          is(
+            Services.perms.testPermissionFromPrincipal(
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                "https://example.com"
+              ),
+              "perm4"
+            ),
+            Services.perms.ALLOW_ACTION,
+            "perm4-5"
+          );
+
+          // In Fission not across schemes, though.
+          is(
+            Services.perms.testPermissionFromPrincipal(
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                "http://example.com"
+              ),
+              "perm1"
+            ),
+            SpecialPowers.useRemoteSubframes
+              ? Services.perms.UNKNOWN_ACTION
+              : Services.perms.ALLOW_ACTION,
+            "perm1-5"
+          );
+          is(
+            Services.perms.testPermissionFromPrincipal(
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                "http://example.com"
+              ),
+              "newperm1"
+            ),
+            SpecialPowers.useRemoteSubframes
+              ? Services.perms.UNKNOWN_ACTION
+              : Services.perms.ALLOW_ACTION,
+            "newperm1-2"
+          );
+        });
+
+        // The parent process should still have no permission under Fission.
         is(
           Services.perms.testPermissionFromPrincipal(
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -266,7 +354,9 @@ add_task(async function() {
             ),
             "perm1"
           ),
-          Services.perms.ALLOW_ACTION,
+          SpecialPowers.useRemoteSubframes
+            ? Services.perms.UNKNOWN_ACTION
+            : Services.perms.ALLOW_ACTION,
           "perm1-4"
         );
         is(
@@ -276,8 +366,22 @@ add_task(async function() {
             ),
             "newperm1"
           ),
-          Services.perms.ALLOW_ACTION,
-          "newperm1-4"
+          SpecialPowers.useRemoteSubframes
+            ? Services.perms.UNKNOWN_ACTION
+            : Services.perms.ALLOW_ACTION,
+          "newperm1-3"
+        );
+        is(
+          Services.perms.testPermissionFromPrincipal(
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              "https://example.com"
+            ),
+            "perm4"
+          ),
+          SpecialPowers.useRemoteSubframes
+            ? Services.perms.UNKNOWN_ACTION
+            : Services.perms.ALLOW_ACTION,
+          "perm4-6"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -287,7 +391,7 @@ add_task(async function() {
             "perm2"
           ),
           Services.perms.UNKNOWN_ACTION,
-          "perm2-4"
+          "perm2-5"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -297,7 +401,7 @@ add_task(async function() {
             "newperm2"
           ),
           Services.perms.UNKNOWN_ACTION,
-          "newperm2-4"
+          "newperm2-2"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -317,27 +421,7 @@ add_task(async function() {
             "newperm3"
           ),
           Services.perms.ALLOW_ACTION,
-          "newperm3-4"
-        );
-        is(
-          Services.perms.testPermissionFromPrincipal(
-            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-              "https://example.com"
-            ),
-            "perm4"
-          ),
-          Services.perms.ALLOW_ACTION,
-          "perm4-4"
-        );
-        is(
-          Services.perms.testPermissionFromPrincipal(
-            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-              "https://example.com"
-            ),
-            "newperm4"
-          ),
-          Services.perms.ALLOW_ACTION,
-          "newperm4-4"
+          "newperm3-2"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
