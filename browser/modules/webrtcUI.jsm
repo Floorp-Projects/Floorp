@@ -49,6 +49,8 @@ var webrtcUI = {
         "privacy.webrtc.legacyGlobalIndicator",
         true
       );
+
+      Services.telemetry.setEventRecordingEnabled("webrtc.ui", true);
     }
   },
 
@@ -72,11 +74,23 @@ var webrtcUI = {
   SHARING_SCREEN: 2,
 
   // Set of browser windows that are being shared over WebRTC.
-  sharedWindows: new WeakSet(),
+  sharedBrowserWindows: new WeakSet(),
+
+  // True if one or more screens is being shared.
   sharingScreen: false,
+
   allowedSharedBrowsers: new WeakSet(),
   allowTabSwitchesForSession: false,
   tabSwitchCountForSession: 0,
+
+  // True if a window or screen is being shared.
+  sharingDisplay: false,
+
+  // The session ID is used to try to differentiate between instances
+  // where the user is sharing their display somehow. If the user
+  // transitions from a state of not sharing their display, to sharing a
+  // display, we bump the ID.
+  sharingDisplaySessionId: 0,
 
   // Map of browser elements to indicator data.
   perTabIndicators: new Map(),
@@ -301,24 +315,34 @@ var webrtcUI = {
       };
     }
 
+    let wasSharingDisplay = this.sharingDisplay;
+
     // Reset our internal notion of whether or not we're sharing
     // a screen or browser window. Now we'll go through the shared
     // devices and re-determine what's being shared.
     let sharingBrowserWindow = false;
     let sharedWindowRawDeviceIds = new Set();
+    this.sharingDisplay = false;
     this.sharingScreen = false;
     let suppressNotifications = false;
 
+    // First, go through the streams and collect the counts on things
+    // like the total number of shared windows, and whether or not we're
+    // sharing screens.
     for (let stream of this._streams) {
       let { state } = stream;
       suppressNotifications |= state.suppressNotifications;
 
       for (let device of state.devices) {
+        let mediaSource = device.mediaSource;
+
+        if (mediaSource == "window" || mediaSource == "screen") {
+          this.sharingDisplay = true;
+        }
+
         if (!device.scary) {
           continue;
         }
-
-        let mediaSource = device.mediaSource;
 
         if (mediaSource == "window") {
           sharedWindowRawDeviceIds.add(device.rawId);
@@ -337,7 +361,9 @@ var webrtcUI = {
       }
     }
 
-    this.sharedWindows = new WeakSet();
+    // Next, go through the list of shared windows, and map them
+    // to our browser windows so that we know which ones are shared.
+    this.sharedBrowserWindows = new WeakSet();
 
     for (let win of BrowserWindowTracker.orderedWindows) {
       let rawDeviceId;
@@ -350,7 +376,7 @@ var webrtcUI = {
         continue;
       }
       if (sharedWindowRawDeviceIds.has(rawDeviceId)) {
-        this.sharedWindows.add(win);
+        this.sharedBrowserWindows.add(win);
 
         // If we've shared a window, then the initially selected tab
         // in that window should be exempt from tab switch warnings,
@@ -359,6 +385,42 @@ var webrtcUI = {
         this.allowedSharedBrowsers.add(selectedBrowser.permanentKey);
 
         sharingBrowserWindow = true;
+      }
+    }
+
+    // If we weren't sharing a window or screen, and now are, bump
+    // the sharingDisplaySessionId. We use this ID for Event
+    // telemetry, and consider a transition from no shared displays
+    // to some shared displays as a new session.
+    if (!wasSharingDisplay && this.sharingDisplay) {
+      this.sharingDisplaySessionId++;
+    }
+
+    // If we were adding a new display stream, record some Telemetry for
+    // it with the most recent sharedDisplaySessionId. We do this separately
+    // from the loops above because those take into account the pre-existing
+    // streams that might already have been shared.
+    if (aData.devices) {
+      // The mixture of camelCase with under_score notation here is due to
+      // an unfortunate collision of conventions between this file and
+      // Event Telemetry.
+      let silence_notifs = suppressNotifications ? "true" : "false";
+      for (let device of aData.devices) {
+        if (device.mediaSource == "screen") {
+          this.recordEvent("share_display", "screen", {
+            silence_notifs,
+          });
+        } else if (device.mediaSource == "window") {
+          if (device.scary) {
+            this.recordEvent("share_display", "browser_window", {
+              silence_notifs,
+            });
+          } else {
+            this.recordEvent("share_display", "window", {
+              silence_notifs,
+            });
+          }
+        }
       }
     }
 
@@ -587,7 +649,7 @@ var webrtcUI = {
   getWindowShareState(window) {
     if (this.sharingScreen) {
       return this.SHARING_SCREEN;
-    } else if (this.sharedWindows.has(window)) {
+    } else if (this.sharedBrowserWindows.has(window)) {
       return this.SHARING_WINDOW;
     }
     return this.SHARING_NONE;
@@ -613,10 +675,15 @@ var webrtcUI = {
     }
 
     this.tabSwitchCountForSession++;
-    return (
+    let shouldShow =
       !this.allowTabSwitchesForSession &&
-      !this.allowedSharedBrowsers.has(browser.permanentKey)
-    );
+      !this.allowedSharedBrowsers.has(browser.permanentKey);
+
+    if (shouldShow) {
+      this.recordEvent("tab_switch_warning", "tab_switch_warning");
+    }
+
+    return shouldShow;
   },
 
   allowSharedTabSwitch(tab, allowForSession) {
@@ -625,6 +692,20 @@ var webrtcUI = {
     this.allowedSharedBrowsers.add(browser.permanentKey);
     gBrowser.selectedTab = tab;
     this.allowTabSwitchesForSession = allowForSession;
+
+    if (allowForSession) {
+      this.recordEvent("allow_all_tabs", "allow_all_tabs");
+    }
+  },
+
+  recordEvent(type, object, args = {}) {
+    Services.telemetry.recordEvent(
+      "webrtc.ui",
+      type,
+      object,
+      this.sharingDisplaySessionId.toString(),
+      args
+    );
   },
 };
 
