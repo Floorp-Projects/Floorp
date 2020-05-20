@@ -123,6 +123,11 @@ async function doCommandForFrameType() {
   saveFrameCommand.doCommand();
 }
 
+add_task(async function test_setup() {
+  // Make sure SearchService is ready for it to be called.
+  await Services.search.init();
+});
+
 add_task(async function testContextMenuSaveAs() {
   const TEST_DATA = [
     { type: "link", path: TEST_PATH, target: "#link1" },
@@ -132,7 +137,7 @@ add_task(async function testContextMenuSaveAs() {
     {
       type: "frame",
       path: TEST_PATH_FRAME,
-      target: "#frame1",
+      target: "body",
       doCommandFunc: doCommandForFrameType,
     },
   ];
@@ -149,6 +154,16 @@ add_task(async function testContextMenuSaveAs() {
       "popupshown"
     );
 
+    let browser = gBrowser.selectedBrowser;
+
+    if (data.type === "frame") {
+      browser = await SpecialPowers.spawn(
+        tab.linkedBrowser,
+        [],
+        () => content.document.getElementById("frame1").browsingContext
+      );
+    }
+
     info("Open the context menu.");
     await BrowserTestUtils.synthesizeMouseAtCenter(
       data.target,
@@ -156,7 +171,7 @@ add_task(async function testContextMenuSaveAs() {
         type: "contextmenu",
         button: 2,
       },
-      gBrowser.selectedBrowser
+      browser
     );
 
     await popupShownPromise;
