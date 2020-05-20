@@ -160,6 +160,12 @@ BlocklistInitFailed:
   type: boolean
   ping: true
 
+Breadcrumbs:
+  description: >
+    Trail of events that occurred before a report. this will consist of multiple breadcrumbs with
+    timestamp, message, category, level, type and data in JSON format.
+  type: string
+
 BreakpadReserveAddress:
   description: >
     Address of the buffer reserved by Breakpad.
