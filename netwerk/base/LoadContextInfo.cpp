@@ -121,8 +121,7 @@ LoadContextInfo* GetLoadContextInfo(nsIChannel* aChannel) {
   }
 
   OriginAttributes oa;
-  StoragePrincipalHelper::GetOriginAttributes(
-      aChannel, oa, StoragePrincipalHelper::eRegularPrincipal);
+  StoragePrincipalHelper::GetOriginAttributesForNetworkState(aChannel, oa);
   MOZ_ASSERT(pb == (oa.mPrivateBrowsingId > 0));
 
   return new LoadContextInfo(anon, oa);
