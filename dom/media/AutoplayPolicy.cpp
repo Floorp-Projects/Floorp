@@ -60,9 +60,13 @@ static uint32_t SiteAutoplayPerm(nsPIDOMWindowInner* aWindow) {
   if (!aWindow || !aWindow->GetBrowsingContext()) {
     return nsIPermissionManager::DENY_ACTION;
   }
-  return aWindow->GetBrowsingContext()
-      ->GetTopWindowContext()
-      ->GetAutoplayPermission();
+
+  WindowContext* topContext =
+      aWindow->GetBrowsingContext()->GetTopWindowContext();
+  if (!topContext) {
+    return nsIPermissionManager::DENY_ACTION;
+  }
+  return topContext->GetAutoplayPermission();
 }
 
 static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
