@@ -7,48 +7,13 @@
 /*
  * JS Atomics pseudo-module.
  *
- * See "Spec: JavaScript Shared Memory, Atomics, and Locks" for the
- * full specification.
- *
- * In addition to what is specified there, we throw an Error object if
- * the futex API hooks have not been installed on the runtime.
- * Essentially that is an implementation error at a higher level.
- *
- *
- * Note on the current implementation of atomic operations.
- *
- * The Mozilla atomics are not sufficient to implement these APIs
- * because we need to support 8-bit, 16-bit, and 32-bit data: the
- * Mozilla atomics only support 32-bit data.
- *
- * At the moment we include mozilla/Atomics.h, which will define
- * MOZ_HAVE_CXX11_ATOMICS and include <atomic> if we have C++11
- * atomics.
- *
- * If MOZ_HAVE_CXX11_ATOMICS is set we'll use C++11 atomics.
- *
- * Otherwise, if the compiler has them we'll fall back on gcc/Clang
- * intrinsics.
- *
- * Otherwise, if we're on VC++2012, we'll use C++11 atomics even if
- * MOZ_HAVE_CXX11_ATOMICS is not defined.  The compiler has the
- * atomics but they are disabled in Mozilla due to a performance bug.
- * That performance bug does not affect the Atomics code.  See
- * mozilla/Atomics.h for further comments on that bug.
- *
- * Otherwise, if we're on VC++2010 or VC++2008, we'll emulate the
- * gcc/Clang intrinsics with simple code below using the VC++
- * intrinsics, like the VC++2012 solution this is a stopgap since
- * we're about to start using VC++2013 anyway.
- *
- * If none of those options are available then the build must disable
- * shared memory, or compilation will fail with a predictable error.
+ * See chapter 24.4 "The Atomics Object" and chapter 27 "Memory Model" in
+ * ECMAScript 2021 for the full specification.
  */
 
 #include "builtin/AtomicsObject.h"
 
 #include "mozilla/Atomics.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
@@ -1051,6 +1016,3 @@ static const ClassSpec AtomicsClassSpec = {CreateAtomicsObject, nullptr,
 const JSClass AtomicsObject::class_ = {
     "Atomics", JSCLASS_HAS_CACHED_PROTO(JSProto_Atomics), JS_NULL_CLASS_OPS,
     &AtomicsClassSpec};
-
-#undef CXX11_ATOMICS
-#undef GNU_ATOMICS
