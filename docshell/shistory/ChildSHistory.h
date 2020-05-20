@@ -105,8 +105,6 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
   mozilla::LinkedList<PendingAsyncHistoryNavigation> mPendingNavigations;
 };
 
-already_AddRefed<nsISHEntry> CreateSHEntryForDocShell(nsISHistory* aSHistory);
-
 }  // namespace dom
 }  // namespace mozilla
 

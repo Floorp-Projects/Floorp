@@ -584,16 +584,6 @@ class ContentParent final
   bool DeallocPSessionStorageObserverParent(
       PSessionStorageObserverParent* aActor);
 
-  PSHEntryParent* AllocPSHEntryParent(PSHistoryParent* aSHistory,
-                                      uint64_t aSharedID);
-
-  void DeallocPSHEntryParent(PSHEntryParent*);
-
-  PSHistoryParent* AllocPSHistoryParent(
-      const MaybeDiscarded<BrowsingContext>& aContext);
-
-  void DeallocPSHistoryParent(PSHistoryParent* aActor);
-
   bool DeallocPURLClassifierLocalParent(PURLClassifierLocalParent* aActor);
 
   bool DeallocPURLClassifierParent(PURLClassifierParent* aActor);
@@ -1283,10 +1273,6 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvReportServiceWorkerShutdownProgress(
       uint32_t aShutdownStateId,
       ServiceWorkerShutdownState::Progress aProgress);
-
-  mozilla::ipc::IPCResult RecvUpdateSHEntriesInBC(
-      PSHEntryParent* aNewLSHE, PSHEntryParent* aNewOSHE,
-      const MaybeDiscarded<BrowsingContext>& aMaybeContext);
 
   mozilla::ipc::IPCResult RecvRawMessage(const JSActorMessageMeta& aMeta,
                                          const ClonedMessageData& aData,

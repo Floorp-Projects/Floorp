@@ -8,7 +8,6 @@
 #include "WebBrowserPersistDocumentParent.h"
 #include "WebBrowserPersistResourcesParent.h"
 #include "WebBrowserPersistSerializeParent.h"
-#include "SHEntryParent.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 
@@ -28,12 +27,6 @@ WebBrowserPersistRemoteDocument ::WebBrowserPersistRemoteDocument(
     mPrincipal = principalOrErr.unwrap();
   } else {
     NS_WARNING("Failed to obtain principal!");
-  }
-  if (mAttrs.sessionHistoryEntryOrCacheKey().type() ==
-      SessionHistoryEntryOrCacheKey::TPSHEntryParent) {
-    mSHEntry = static_cast<dom::SHEntryParent*>(
-                   mAttrs.sessionHistoryEntryOrCacheKey().get_PSHEntryParent())
-                   ->GetSHEntry();
   }
 }
 
@@ -102,11 +95,7 @@ NS_IMETHODIMP
 WebBrowserPersistRemoteDocument::GetCacheKey(uint32_t* aCacheKey) {
   *aCacheKey = 0;
   if (mAttrs.sessionHistoryEntryOrCacheKey().type() ==
-      SessionHistoryEntryOrCacheKey::TPSHEntryParent) {
-    if (mSHEntry) {
-      *aCacheKey = mSHEntry->GetCacheKey();
-    }
-  } else {
+      SessionHistoryEntryOrCacheKey::Tuint32_t) {
     *aCacheKey = mAttrs.sessionHistoryEntryOrCacheKey();
   }
   return NS_OK;
