@@ -25,7 +25,6 @@ describe("ToolbarPanelHub", () => {
   let fakeDispatch;
   let getEarliestRecordedDateStub;
   let getEventsByDateRangeStub;
-  let handleUserActionStub;
   let defaultSearchStub;
   let scriptloaderStub;
 
@@ -142,7 +141,6 @@ describe("ToolbarPanelHub", () => {
       new Date() - 500
     );
     getEventsByDateRangeStub = sandbox.stub().returns([]);
-    handleUserActionStub = sandbox.stub();
     defaultSearchStub = { defaultEngine: { name: "DDG" } };
     globals.set({
       EveryWindow: everyWindowStub,
@@ -164,6 +162,9 @@ describe("ToolbarPanelHub", () => {
       TrackingDBService: {
         getEarliestRecordedDate: getEarliestRecordedDateStub,
         getEventsByDateRange: getEventsByDateRangeStub,
+      },
+      SpecialMessageActions: {
+        handleAction: sandbox.stub(),
       },
     });
   });
@@ -354,7 +355,6 @@ describe("ToolbarPanelHub", () => {
       instance.init(waitForInitializedStub, {
         getMessages: getMessagesStub,
         dispatch: fakeDispatch,
-        handleUserAction: handleUserActionStub,
       });
     });
     it("should have correct state", async () => {
@@ -431,7 +431,7 @@ describe("ToolbarPanelHub", () => {
       }
       // Call the click handler to make coverage happy.
       eventListeners.mouseup();
-      assert.calledOnce(handleUserActionStub);
+      assert.calledOnce(global.SpecialMessageActions.handleAction);
     });
     it("should clear previous messages on 2nd renderMessages()", async () => {
       const messages = (await PanelTestProvider.getMessages()).filter(
@@ -549,12 +549,12 @@ describe("ToolbarPanelHub", () => {
       const buttonEl = createdElements.find(el => el.tagName === "button");
       const anchorEl = createdElements.find(el => el.tagName === "a");
 
-      assert.notCalled(handleUserActionStub);
+      assert.notCalled(global.SpecialMessageActions.handleAction);
 
       buttonEl.doCommand();
       anchorEl.doCommand();
 
-      assert.calledTwice(handleUserActionStub);
+      assert.calledTwice(global.SpecialMessageActions.handleAction);
     });
     it("should listen for panelhidden and remove the toolbar button", async () => {
       getMessagesStub.returns([]);
@@ -783,7 +783,6 @@ describe("ToolbarPanelHub", () => {
       await instance.init(waitForInitializedStub, {
         dispatch: fakeDispatch,
         getMessages: getMessagesStub,
-        handleUserAction: handleUserActionStub,
       });
     });
     it("should remember it showed", async () => {
@@ -829,17 +828,18 @@ describe("ToolbarPanelHub", () => {
 
       eventListeners.mouseup();
 
-      assert.calledOnce(handleUserActionStub);
-      assert.calledWithExactly(handleUserActionStub, {
-        target: fakeWindow,
-        data: {
+      assert.calledOnce(global.SpecialMessageActions.handleAction);
+      assert.calledWithExactly(
+        global.SpecialMessageActions.handleAction,
+        {
           type: "OPEN_URL",
           data: {
             args: sinon.match.string,
             where: "tabshifted",
           },
         },
-      });
+        fakeWindow.browser
+      );
     });
     it("should format the url", async () => {
       const stub = sandbox
@@ -854,17 +854,18 @@ describe("ToolbarPanelHub", () => {
 
       assert.calledOnce(stub);
       assert.calledWithExactly(stub, msg.content.cta_url);
-      assert.calledOnce(handleUserActionStub);
-      assert.calledWithExactly(handleUserActionStub, {
-        target: fakeWindow,
-        data: {
+      assert.calledOnce(global.SpecialMessageActions.handleAction);
+      assert.calledWithExactly(
+        global.SpecialMessageActions.handleAction,
+        {
           type: "OPEN_URL",
           data: {
             args: "formattedURL",
             where: "tabshifted",
           },
         },
-      });
+        fakeWindow.browser
+      );
     });
     it("should report format url errors", async () => {
       const stub = sandbox
@@ -880,17 +881,18 @@ describe("ToolbarPanelHub", () => {
 
       assert.calledOnce(stub);
       assert.calledOnce(global.Cu.reportError);
-      assert.calledOnce(handleUserActionStub);
-      assert.calledWithExactly(handleUserActionStub, {
-        target: fakeWindow,
-        data: {
+      assert.calledOnce(global.SpecialMessageActions.handleAction);
+      assert.calledWithExactly(
+        global.SpecialMessageActions.handleAction,
+        {
           type: "OPEN_URL",
           data: {
             args: msg.content.cta_url,
             where: "tabshifted",
           },
         },
-      });
+        fakeWindow.browser
+      );
     });
     it("should open link on click (directly attached to the message)", async () => {
       const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
@@ -903,25 +905,26 @@ describe("ToolbarPanelHub", () => {
 
       eventListeners.mouseup();
 
-      assert.calledOnce(handleUserActionStub);
-      assert.calledWithExactly(handleUserActionStub, {
-        target: fakeWindow,
-        data: {
+      assert.calledOnce(global.SpecialMessageActions.handleAction);
+      assert.calledWithExactly(
+        global.SpecialMessageActions.handleAction,
+        {
           type: "OPEN_URL",
           data: {
             args: sinon.match.string,
             where: "tabshifted",
           },
         },
-      });
+        fakeWindow.browser
+      );
     });
-    it("should handleUserAction from mouseup and keyup", async () => {
+    it("should handle user actions from mouseup and keyup", async () => {
       await fakeInsert();
 
       eventListeners.mouseup();
       eventListeners.keyup({ key: "Enter" });
       eventListeners.keyup({ key: " " });
-      assert.calledThrice(handleUserActionStub);
+      assert.calledThrice(global.SpecialMessageActions.handleAction);
     });
   });
 });

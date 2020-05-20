@@ -61,9 +61,7 @@ const createDummyRecommendation = ({
               value: "Cancel",
               attributes: { accesskey: "C" },
             },
-            action: {
-              type: "CANCEL",
-            },
+            action: { type: "CANCEL" },
           },
           {
             label: {
@@ -151,11 +149,10 @@ function checkCFRTrackingProtectionMilestone(notification) {
 }
 
 function clearNotifications() {
+  CFRPageActions.clearRecommendations();
   for (let notification of PopupNotifications._currentNotifications) {
     notification.remove();
   }
-
-  // Clicking the primary action also removes the notification
   Assert.equal(
     PopupNotifications._currentNotifications.length,
     0,
@@ -167,7 +164,7 @@ function trigger_cfr_panel(
   browser,
   trigger,
   {
-    action = { type: "FOO" },
+    action = { type: "OPEN_APPLICATIONS_MENU", data: { args: "fake" } },
     heading_text,
     category = "cfrAddons",
     layout,
@@ -194,7 +191,6 @@ function trigger_cfr_panel(
     ];
   }
 
-  clearNotifications();
   if (recommendation.template === "milestone_message") {
     return CFRPageActions.showMilestone(
       browser,
@@ -221,7 +217,6 @@ add_task(async function setup() {
   registerCleanupFunction(() => {
     CFRPageActions._fetchLatestAddonVersion = _fetchLatestAddonVersion;
     clearNotifications();
-    CFRPageActions.clearRecommendations();
   });
 });
 
@@ -332,17 +327,13 @@ add_task(async function test_cfr_notification_show() {
     PopupNotifications.panel,
     "popuphidden"
   );
+  // Clicking the primary action also removes the notification
   document
     .getElementById("contextual-feature-recommendation-notification")
     .button.click();
   await hidePanel;
 
-  // Clicking the primary action also removes the notification
-  Assert.equal(
-    PopupNotifications._currentNotifications.length,
-    0,
-    "Should have removed the notification"
-  );
+  clearNotifications();
 });
 
 add_task(async function test_cfr_notification_minimize() {
@@ -390,6 +381,7 @@ add_task(async function test_cfr_notification_minimize() {
     .getElementById("contextual-feature-recommendation-notification")
     .button.click();
   await hidePanel;
+  clearNotifications();
 });
 
 add_task(async function test_cfr_notification_minimize_2() {
@@ -451,7 +443,6 @@ add_task(async function test_cfr_notification_minimize_2() {
   );
 
   clearNotifications();
-  CFRPageActions.clearRecommendations();
 });
 
 add_task(async function test_cfr_addon_install() {
@@ -515,15 +506,25 @@ add_task(async function test_cfr_addon_install() {
 
 add_task(async function test_cfr_pin_tab_notification_show() {
   // addRecommendation checks that scheme starts with http and host matches
-  let browser = gBrowser.selectedBrowser;
-  await BrowserTestUtils.loadURI(browser, "http://example.com/");
-  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+  await BrowserTestUtils.loadURI(
+    gBrowser.selectedBrowser,
+    "http://example.com/"
+  );
+  await BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    "http://example.com/"
+  );
 
-  const response = await trigger_cfr_panel(browser, "example.com", {
-    action: { type: "PIN_CURRENT_TAB" },
-    category: "cfrFeatures",
-    layout: "message_and_animation",
-  });
+  const response = await trigger_cfr_panel(
+    gBrowser.selectedBrowser,
+    "example.com",
+    {
+      action: { type: "PIN_CURRENT_TAB" },
+      category: "cfrFeatures",
+      layout: "message_and_animation",
+    }
+  );
   Assert.ok(
     response,
     "Should return true if addRecommendation checks were successful"
