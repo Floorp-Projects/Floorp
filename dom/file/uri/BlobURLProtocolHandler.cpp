@@ -803,7 +803,15 @@ BlobURLProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   }
 
   if (blobURL->Revoked()) {
+#ifdef MOZ_WIDGET_ANDROID
+    // if the channel was not triggered by the system principal,
+    // then we return here because the URL had been revoked
+    if (aLoadInfo && !aLoadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
+      return NS_OK;
+    }
+#else
     return NS_OK;
+#endif
   }
 
   // We want to be sure that we stop the creation of the channel if the blob URL
