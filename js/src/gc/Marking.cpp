@@ -1280,10 +1280,10 @@ inline void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
   // types.
   gc::MarkStack& stack = currentStack();
   size_t savedPos = stack.position();
-  JS_DIAGNOSTICS_ASSERT(rope->getTraceKind() == JS::TraceKind::String);
+  MOZ_DIAGNOSTIC_ASSERT(rope->getTraceKind() == JS::TraceKind::String);
   while (true) {
-    JS_DIAGNOSTICS_ASSERT(rope->getTraceKind() == JS::TraceKind::String);
-    JS_DIAGNOSTICS_ASSERT(rope->JSString::isRope());
+    MOZ_DIAGNOSTIC_ASSERT(rope->getTraceKind() == JS::TraceKind::String);
+    MOZ_DIAGNOSTIC_ASSERT(rope->JSString::isRope());
     AssertShouldMarkInZone(rope);
     MOZ_ASSERT(rope->isMarkedAny());
     JSRope* next = nullptr;
