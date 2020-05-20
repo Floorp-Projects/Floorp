@@ -161,28 +161,6 @@ for (const type of [
   actionTypes[type] = type;
 }
 
-// These are acceptable actions for AS Router messages to have. They can show up
-// as call-to-action buttons in snippets, onboarding tour, etc.
-const ASRouterActions = {};
-for (const type of [
-  "HIGHLIGHT_FEATURE",
-  "INSTALL_ADDON_FROM_URL",
-  "OPEN_APPLICATIONS_MENU",
-  "OPEN_PRIVATE_BROWSER_WINDOW",
-  "OPEN_URL",
-  "OPEN_ABOUT_PAGE",
-  "OPEN_PREFERENCES_PAGE",
-  "SHOW_FIREFOX_ACCOUNTS",
-  "PIN_CURRENT_TAB",
-  "ENABLE_FIREFOX_MONITOR",
-  "OPEN_PROTECTION_PANEL",
-  "OPEN_PROTECTION_REPORT",
-  "DISABLE_STP_DOORHANGERS",
-  "SHOW_MIGRATION_WIZARD",
-]) {
-  ASRouterActions[type] = type;
-}
-
 // Helper function for creating routed actions between content and main
 // Not intended to be used by consumers
 function _RouteMessage(action, options) {
@@ -437,7 +415,6 @@ function WebExtEvent(type, data, importContext = globalImportContext) {
 }
 
 this.actionTypes = actionTypes;
-this.ASRouterActions = ASRouterActions;
 
 this.actionCreators = {
   BroadcastToContent,
@@ -515,7 +492,6 @@ const EXPORTED_SYMBOLS = [
   "actionTypes",
   "actionCreators",
   "actionUtils",
-  "ASRouterActions",
   "globalImportContext",
   "UI_CODE",
   "BACKGROUND_PROCESS",

@@ -18,6 +18,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const SpecialMessageActions = {
+  // This is overridden by ASRouter.init
+  blockMessageById() {
+    throw new Error("ASRouter not intialized yet");
+  },
+
   /**
    * loadAddonIconInURLBar - load addons-notification icon by displaying
    * box containing addons icon in urlbar. See Bug 1513882
@@ -142,8 +147,8 @@ const SpecialMessageActions = {
         );
         break;
       case "PIN_CURRENT_TAB":
-        let tab = browser.selectedTab;
-        browser.pinTab(tab);
+        let tab = window.gBrowser.selectedTab;
+        window.gBrowser.pinTab(tab);
         window.ConfirmationHint.show(tab, "pinTab", {
           showDescription: true,
         });
@@ -170,6 +175,17 @@ const SpecialMessageActions = {
         break;
       case "OPEN_AWESOME_BAR":
         window.gURLBar.search("");
+        break;
+      case "DISABLE_STP_DOORHANGERS":
+        await this.blockMessageById([
+          "SOCIAL_TRACKING_PROTECTION",
+          "FINGERPRINTERS_PROTECTION",
+          "CRYPTOMINERS_PROTECTION",
+        ]);
+        break;
+      case "CANCEL":
+        // A no-op used by CFRs that minimizes the notification but does not
+        // trigger a dismiss or block (it keeps the notification around)
         break;
       default:
         throw new Error(

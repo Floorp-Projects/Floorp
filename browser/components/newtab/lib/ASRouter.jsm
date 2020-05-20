@@ -9,9 +9,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  UITour: "resource:///modules/UITour.jsm",
-  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
@@ -34,17 +31,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   Downloader: "resource://services-settings/Attachments.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
-  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.jsm",
 });
 XPCOMUtils.defineLazyServiceGetters(this, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
 });
-const {
-  ASRouterActions: ra,
-  actionTypes: at,
-  actionCreators: ac,
-} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
+const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
+  "resource://activity-stream/common/Actions.jsm"
+);
 
 const { CFRMessageProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/CFRMessageProvider.jsm"
@@ -473,54 +469,6 @@ const MessageLoaderUtils = {
       lastUpdated,
       errors: MessageLoaderUtils.errors,
     };
-  },
-
-  /**
-   * _loadAddonIconInURLBar - load addons-notification icon by displaying
-   * box containing addons icon in urlbar. See Bug 1513882
-   *
-   * @param  {XULElement} Target browser element for showing addons icon
-   */
-  _loadAddonIconInURLBar(browser) {
-    if (!browser) {
-      return;
-    }
-    const chromeDoc = browser.ownerDocument;
-    let notificationPopupBox = chromeDoc.getElementById(
-      "notification-popup-box"
-    );
-    if (!notificationPopupBox) {
-      return;
-    }
-    if (
-      notificationPopupBox.style.display === "none" ||
-      notificationPopupBox.style.display === ""
-    ) {
-      notificationPopupBox.style.display = "block";
-    }
-  },
-
-  async installAddonFromURL(browser, url, telemetrySource = "amo") {
-    try {
-      MessageLoaderUtils._loadAddonIconInURLBar(browser);
-      const aUri = Services.io.newURI(url);
-      const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-
-      // AddonManager installation source associated to the addons installed from activitystream's CFR
-      // and RTAMO (source is going to be "amo" if not configured explicitly in the message provider).
-      const telemetryInfo = { source: telemetrySource };
-      const install = await AddonManager.getInstallForURL(aUri.spec, {
-        telemetryInfo,
-      });
-      await AddonManager.installAddonFromWebpage(
-        "application/x-xpinstall",
-        browser,
-        systemPrincipal,
-        install
-      );
-    } catch (e) {
-      Cu.reportError(e);
-    }
   },
 
   /**
@@ -962,7 +910,6 @@ class _ASRouter {
     ToolbarPanelHub.init(this.waitForInitialized, {
       getMessages: this.handleMessageRequest,
       dispatch: this.dispatch,
-      handleUserAction: this.handleUserAction,
     });
     MomentsPageHub.init(this.waitForInitialized, {
       handleMessageRequest: this.handleMessageRequest,
@@ -1019,6 +966,7 @@ class _ASRouter {
       })
     );
 
+    SpecialMessageActions.blockMessageById = this.blockMessageById;
     Services.obs.addObserver(this._onLocaleChanged, TOPIC_INTL_LOCALE_CHANGED);
     Services.prefs.addObserver(USE_REMOTE_L10N_PREF, this);
     // sets .initialized to true and resolves .waitForInitialized promise
@@ -1925,110 +1873,6 @@ class _ASRouter {
     await this.loadMessagesFromAllProviders();
   }
 
-  async handleUserAction({ data: action, target }) {
-    switch (action.type) {
-      case ra.SHOW_MIGRATION_WIZARD:
-        MigrationUtils.showMigrationWizard(target.browser.ownerGlobal, [
-          MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB,
-        ]);
-        break;
-      case ra.OPEN_PRIVATE_BROWSER_WINDOW:
-        // Forcefully open about:privatebrowsing
-        target.browser.ownerGlobal.OpenBrowserWindow({ private: true });
-        break;
-      case ra.OPEN_URL:
-        target.browser.ownerGlobal.openLinkIn(
-          Services.urlFormatter.formatURL(action.data.args),
-          action.data.where || "current",
-          {
-            private: false,
-            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-              {}
-            ),
-            csp: null,
-          }
-        );
-        break;
-      case ra.OPEN_ABOUT_PAGE:
-        let aboutPageURL = new URL(`about:${action.data.args}`);
-        if (action.data.entrypoint) {
-          aboutPageURL.search = action.data.entrypoint;
-        }
-        target.browser.ownerGlobal.openTrustedLinkIn(
-          aboutPageURL.toString(),
-          "tab"
-        );
-        break;
-      case ra.OPEN_PREFERENCES_PAGE:
-        target.browser.ownerGlobal.openPreferences(
-          action.data.category || action.data.args,
-          action.data.entrypoint && {
-            urlParams: { entrypoint: action.data.entrypoint },
-          }
-        );
-        break;
-      case ra.OPEN_APPLICATIONS_MENU:
-        UITour.showMenu(target.browser.ownerGlobal, action.data.args);
-        break;
-      case ra.HIGHLIGHT_FEATURE:
-        const highlight = await UITour.getTarget(
-          target.browser.ownerGlobal,
-          action.data.args
-        );
-        if (highlight) {
-          await UITour.showHighlight(
-            target.browser.ownerGlobal,
-            highlight,
-            "none",
-            { autohide: true }
-          );
-        }
-        break;
-      case ra.INSTALL_ADDON_FROM_URL:
-        this._updateOnboardingState();
-        await MessageLoaderUtils.installAddonFromURL(
-          target.browser,
-          action.data.url,
-          action.data.telemetrySource
-        );
-        break;
-      case ra.PIN_CURRENT_TAB:
-        let tab = target.browser.ownerGlobal.gBrowser.selectedTab;
-        target.browser.ownerGlobal.gBrowser.pinTab(tab);
-        target.browser.ownerGlobal.ConfirmationHint.show(tab, "pinTab", {
-          showDescription: true,
-        });
-        break;
-      case ra.SHOW_FIREFOX_ACCOUNTS:
-        const url = await FxAccounts.config.promiseConnectAccountURI(
-          "snippets"
-        );
-        // We want to replace the current tab.
-        target.browser.ownerGlobal.openLinkIn(url, "current", {
-          private: false,
-          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-            {}
-          ),
-          csp: null,
-        });
-        break;
-      case ra.OPEN_PROTECTION_PANEL:
-        let { gProtectionsHandler } = target.browser.ownerGlobal;
-        gProtectionsHandler.showProtectionsPopup({});
-        break;
-      case ra.OPEN_PROTECTION_REPORT:
-        target.browser.ownerGlobal.gProtectionsHandler.openProtections();
-        break;
-      case ra.DISABLE_STP_DOORHANGERS:
-        await this.blockMessageById([
-          "SOCIAL_TRACKING_PROTECTION",
-          "FINGERPRINTERS_PROTECTION",
-          "CRYPTOMINERS_PROTECTION",
-        ]);
-        break;
-    }
-  }
-
   /**
    * sendAsyncMessageToPreloaded - Sends an action to each preloaded browser, if any
    *
@@ -2157,9 +2001,11 @@ class _ASRouter {
   async onMessage({ data: action, target }) {
     switch (action.type) {
       case "USER_ACTION":
-        if (action.data.type in ra) {
-          await this.handleUserAction({ data: action.data, target });
+        // This is to support ReturnToAMO
+        if (action.data.type === "INSTALL_ADDON_FROM_URL") {
+          this._updateOnboardingState();
         }
+        await SpecialMessageActions.handleAction(action.data, target.browser);
         break;
       case "NEWTAB_MESSAGE_REQUEST":
         await this.waitForInitialized;
