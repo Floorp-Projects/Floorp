@@ -2491,6 +2491,7 @@ version = "0.1.0"
 dependencies = [
  "atomic_refcell",
  "crossbeam-utils 0.6.5",
+ "cstr",
  "failure",
  "lazy_static",
  "libc",
