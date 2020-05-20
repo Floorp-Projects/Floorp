@@ -68,19 +68,21 @@ this.StoragePrincipalHelper = {
         async obj => {
           await new content.Promise(resolve => {
             let ifr = content.document.createElement("iframe");
-            ifr.onload = __ => {
-              is(
-                ifr.contentWindow.document.nodePrincipal.originAttributes
-                  .firstPartyDomain,
-                "",
-                "We don't have first-party set on nodePrincipal"
-              );
-              is(
-                ifr.contentWindow.document.effectiveStoragePrincipal
-                  .originAttributes.firstPartyDomain,
-                "example.net",
-                "We have first-party set on storagePrincipal"
-              );
+            ifr.onload = async _ => {
+              await SpecialPowers.spawn(ifr, [], async _ => {
+                is(
+                  content.document.nodePrincipal.originAttributes
+                    .firstPartyDomain,
+                  "",
+                  "We don't have first-party set on nodePrincipal"
+                );
+                is(
+                  content.document.effectiveStoragePrincipal.originAttributes
+                    .firstPartyDomain,
+                  "example.net",
+                  "We have first-party set on storagePrincipal"
+                );
+              });
               info("Sending code to the 3rd party content");
               ifr.contentWindow.postMessage(obj.callback, "*");
             };
