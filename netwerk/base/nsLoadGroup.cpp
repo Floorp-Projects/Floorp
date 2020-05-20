@@ -107,6 +107,9 @@ nsLoadGroup::~nsLoadGroup() {
 
   if (mRequestContext) {
     mRequestContextService->RemoveRequestContext(mRequestContext->GetID());
+    if (IsNeckoChild() && gNeckoChild) {
+      gNeckoChild->SendRemoveRequestContext(mRequestContext->GetID());
+    }
   }
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
