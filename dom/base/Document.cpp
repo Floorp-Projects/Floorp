@@ -9817,12 +9817,14 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       size.height = clamped(size.height, effectiveMinSize.height,
                             float(kViewportMaxSize.height));
 
-      // In cases of user-scalable=no, if we have a positive scale, use it for
-      // both min and max. If we don't have a positive scale, assert that we
-      // are setting the auto scale flag.
+      // In cases of user-scalable=no, if we have a positive scale, clamp it to
+      // min and max, and then use the clamped value for the scale, the min, and
+      // the max. If we don't have a positive scale, assert that we are setting
+      // the auto scale flag.
       if (effectiveZoomFlag == nsViewportInfo::ZoomFlag::DisallowZoom &&
           scaleFloat > CSSToScreenScale(0.0f)) {
-        scaleMinFloat = scaleMaxFloat = scaleFloat;
+        scaleFloat = scaleMinFloat = scaleMaxFloat =
+            clamped(scaleFloat, scaleMinFloat, scaleMaxFloat);
       }
       MOZ_ASSERT(
           scaleFloat > CSSToScreenScale(0.0f) || !mValidScaleFloat,
