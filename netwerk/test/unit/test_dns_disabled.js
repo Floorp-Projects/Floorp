@@ -19,13 +19,13 @@ function makeListenerBlock(next) {
       Assert.ok(!Components.isSuccessCode(inStatus));
       next();
     },
-    QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
   };
 }
 
 function makeListenerDontBlock(next, expectedAnswer) {
   return {
     onLookupComplete(inRequest, inRecord, inStatus) {
+      Assert.equal(inStatus, Cr.NS_OK);
       var answer = inRecord.getNextAddrAsString();
       if (expectedAnswer) {
         Assert.equal(answer, expectedAnswer);
@@ -34,7 +34,6 @@ function makeListenerDontBlock(next, expectedAnswer) {
       }
       next();
     },
-    QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
   };
 }
 
@@ -69,22 +68,12 @@ function all_done() {
   do_test_finished();
 }
 
-// Cached hostnames should be resolved even if dns is disabled
-function testCached() {
-  do_test({
-    dnsDisabled: true,
-    mustBlock: false,
-    testDomain: "foo.bar",
-    nextCallback: all_done,
-  });
-}
-
 function testNotBlocked() {
   do_test({
     dnsDisabled: false,
     mustBlock: false,
     testDomain: "foo.bar",
-    nextCallback: testCached,
+    nextCallback: all_done,
   });
 }
 
