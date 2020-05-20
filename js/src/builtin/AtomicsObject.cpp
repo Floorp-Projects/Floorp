@@ -165,7 +165,7 @@ struct ArrayOps {
     if (!ToInt32(cx, v, &n)) {
       return cx->alreadyReportedError();
     }
-    return (T)n;
+    return static_cast<T>(n);
   }
 
   static JS::Result<T> convertValue(JSContext* cx, HandleValue v,
@@ -175,7 +175,7 @@ struct ArrayOps {
       return cx->alreadyReportedError();
     }
     result.setNumber(d);
-    return (T)JS::ToInt32(d);
+    return static_cast<T>(JS::ToInt32(d));
   }
 
   static JS::Result<> storeResult(JSContext* cx, T v,
@@ -254,34 +254,43 @@ struct ArrayOps<uint64_t> {
   }
 };
 
-template <template <typename> class F, typename... Args>
-bool perform(JSContext* cx, HandleValue objv, HandleValue idxv, Args... args) {
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.1.11 AtomicReadModifyWrite ( typedArray, index, value, op ), steps 1-2.
+// 24.4.1.12 AtomicLoad ( typedArray, index ), steps 1-2.
+// 24.4.4 Atomics.compareExchange ( typedArray, index, ... ), steps 1-2.
+// 24.4.9 Atomics.store ( typedArray, index, value ), steps 1-2.
+template <typename Op>
+bool AtomicAccess(JSContext* cx, HandleValue obj, HandleValue index, Op op) {
+  // Step 1.
   Rooted<TypedArrayObject*> unwrappedView(cx);
-  if (!GetSharedTypedArray(cx, objv, false, &unwrappedView)) {
+  if (!GetSharedTypedArray(cx, obj, false, &unwrappedView)) {
     return false;
   }
+
+  // Step 2.
   uint32_t offset;
-  if (!GetTypedArrayIndex(cx, idxv, unwrappedView, &offset)) {
+  if (!GetTypedArrayIndex(cx, index, unwrappedView, &offset)) {
     return false;
   }
+
   SharedMem<void*> viewData = unwrappedView->dataPointerShared();
   switch (unwrappedView->type()) {
     case Scalar::Int8:
-      return F<int8_t>::run(cx, viewData.cast<int8_t*>() + offset, args...);
+      return op(viewData.cast<int8_t*>() + offset);
     case Scalar::Uint8:
-      return F<uint8_t>::run(cx, viewData.cast<uint8_t*>() + offset, args...);
+      return op(viewData.cast<uint8_t*>() + offset);
     case Scalar::Int16:
-      return F<int16_t>::run(cx, viewData.cast<int16_t*>() + offset, args...);
+      return op(viewData.cast<int16_t*>() + offset);
     case Scalar::Uint16:
-      return F<uint16_t>::run(cx, viewData.cast<uint16_t*>() + offset, args...);
+      return op(viewData.cast<uint16_t*>() + offset);
     case Scalar::Int32:
-      return F<int32_t>::run(cx, viewData.cast<int32_t*>() + offset, args...);
+      return op(viewData.cast<int32_t*>() + offset);
     case Scalar::Uint32:
-      return F<uint32_t>::run(cx, viewData.cast<uint32_t*>() + offset, args...);
+      return op(viewData.cast<uint32_t*>() + offset);
     case Scalar::BigInt64:
-      return F<int64_t>::run(cx, viewData.cast<int64_t*>() + offset, args...);
+      return op(viewData.cast<int64_t*>() + offset);
     case Scalar::BigUint64:
-      return F<uint64_t>::run(cx, viewData.cast<uint64_t*>() + offset, args...);
+      return op(viewData.cast<uint64_t*>() + offset);
     case Scalar::Float32:
     case Scalar::Float64:
     case Scalar::Uint8Clamped:
@@ -293,203 +302,158 @@ bool perform(JSContext* cx, HandleValue objv, HandleValue idxv, Args... args) {
   MOZ_CRASH("Unsupported TypedArray type");
 }
 
-template <typename T>
-struct DoCompareExchange {
-  static bool run(JSContext* cx, SharedMem<T*> addr, HandleValue oldv,
-                  HandleValue newv, MutableHandleValue result) {
-    using Ops = ArrayOps<T>;
-    T oldval;
-    JS_TRY_VAR_OR_RETURN_FALSE(cx, oldval, Ops::convertValue(cx, oldv));
-    T newval;
-    JS_TRY_VAR_OR_RETURN_FALSE(cx, newval, Ops::convertValue(cx, newv));
-
-    oldval = jit::AtomicOperations::compareExchangeSeqCst(addr, oldval, newval);
-
-    JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, oldval, result));
-    return true;
-  }
-};
-
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.4 Atomics.compareExchange ( typedArray, index, expectedValue,
 //                                  replacementValue )
 bool js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return perform<DoCompareExchange>(cx, args.get(0), args.get(1), args.get(2),
-                                    args.get(3), args.rval());
-}
+  HandleValue typedArray = args.get(0);
+  HandleValue index = args.get(1);
 
-template <typename T>
-struct DoLoad {
-  static bool run(JSContext* cx, SharedMem<T*> addr,
-                  MutableHandleValue result) {
+  return AtomicAccess(cx, typedArray, index, [cx, &args](auto addr) {
+    using T = std::remove_pointer_t<decltype(addr.unwrap())>;
     using Ops = ArrayOps<T>;
-    T v = jit::AtomicOperations::loadSeqCst(addr);
-    JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, v, result));
+
+    HandleValue expectedValue = args.get(2);
+    HandleValue replacementValue = args.get(3);
+
+    T oldval;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, oldval,
+                               Ops::convertValue(cx, expectedValue));
+
+    T newval;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, newval,
+                               Ops::convertValue(cx, replacementValue));
+
+    oldval = jit::AtomicOperations::compareExchangeSeqCst(addr, oldval, newval);
+
+    JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, oldval, args.rval()));
     return true;
-  }
-};
+  });
+}
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.7 Atomics.load ( typedArray, index )
 bool js::atomics_load(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return perform<DoLoad>(cx, args.get(0), args.get(1), args.rval());
+  HandleValue typedArray = args.get(0);
+  HandleValue index = args.get(1);
+
+  return AtomicAccess(cx, typedArray, index, [cx, &args](auto addr) {
+    using T = std::remove_pointer_t<decltype(addr.unwrap())>;
+    using Ops = ArrayOps<T>;
+
+    T v = jit::AtomicOperations::loadSeqCst(addr);
+
+    JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, v, args.rval()));
+    return true;
+  });
 }
-
-template <typename T>
-struct DoExchange {
-  static bool run(JSContext* cx, SharedMem<T*> addr, HandleValue valv,
-                  MutableHandleValue result) {
-    using Ops = ArrayOps<T>;
-    T value;
-    JS_TRY_VAR_OR_RETURN_FALSE(cx, value, Ops::convertValue(cx, valv));
-    value = jit::AtomicOperations::exchangeSeqCst(addr, value);
-    JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, value, result));
-    return true;
-  }
-};
-
-template <typename T>
-struct DoStore {
-  static bool run(JSContext* cx, SharedMem<T*> addr, HandleValue valv,
-                  MutableHandleValue result) {
-    using Ops = ArrayOps<T>;
-    T value;
-    JS_TRY_VAR_OR_RETURN_FALSE(cx, value, Ops::convertValue(cx, valv, result));
-    jit::AtomicOperations::storeSeqCst(addr, value);
-    return true;
-  }
-};
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.9 Atomics.store ( typedArray, index, value )
 bool js::atomics_store(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return perform<DoStore>(cx, args.get(0), args.get(1), args.get(2),
-                          args.rval());
+  HandleValue typedArray = args.get(0);
+  HandleValue index = args.get(1);
+
+  return AtomicAccess(cx, typedArray, index, [cx, &args](auto addr) {
+    using T = std::remove_pointer_t<decltype(addr.unwrap())>;
+    using Ops = ArrayOps<T>;
+
+    HandleValue value = args.get(2);
+
+    T v;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, v,
+                               Ops::convertValue(cx, value, args.rval()));
+
+    jit::AtomicOperations::storeSeqCst(addr, v);
+    return true;
+  });
+}
+
+// ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
+// 24.4.1.11 AtomicReadModifyWrite ( typedArray, index, value, op )
+template <typename AtomicOp>
+static bool AtomicReadModifyWrite(JSContext* cx, const CallArgs& args,
+                                  AtomicOp op) {
+  HandleValue typedArray = args.get(0);
+  HandleValue index = args.get(1);
+
+  return AtomicAccess(cx, typedArray, index, [cx, &args, op](auto addr) {
+    using T = std::remove_pointer_t<decltype(addr.unwrap())>;
+    using Ops = ArrayOps<T>;
+
+    HandleValue value = args.get(2);
+
+    T v;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, v, Ops::convertValue(cx, value));
+
+    v = op(addr, v);
+
+    JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, v, args.rval()));
+    return true;
+  });
 }
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.5 Atomics.exchange ( typedArray, index, value )
 bool js::atomics_exchange(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return perform<DoExchange>(cx, args.get(0), args.get(1), args.get(2),
-                             args.rval());
+
+  return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
+    return jit::AtomicOperations::exchangeSeqCst(addr, val);
+  });
 }
-
-template <typename Operate>
-struct DoBinopWithOperation {
-  template <typename T>
-  struct DoBinop {
-    static bool run(JSContext* cx, SharedMem<T*> addr, HandleValue valv,
-                    MutableHandleValue result) {
-      using Ops = ArrayOps<T>;
-      T v;
-      JS_TRY_VAR_OR_RETURN_FALSE(cx, v, Ops::convertValue(cx, valv));
-      v = Operate::operate(addr, v);
-      JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, v, result));
-      return true;
-    }
-  };
-};
-
-template <typename Operate>
-static bool AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv,
-                         HandleValue valv, MutableHandleValue r) {
-  return perform<DoBinopWithOperation<Operate>::template DoBinop>(
-      cx, objv, idxv, valv, r);
-}
-
-#define INTEGRAL_TYPES_FOR_EACH(NAME)                              \
-  static int8_t operate(SharedMem<int8_t*> addr, int8_t v) {       \
-    return NAME(addr, v);                                          \
-  }                                                                \
-  static uint8_t operate(SharedMem<uint8_t*> addr, uint8_t v) {    \
-    return NAME(addr, v);                                          \
-  }                                                                \
-  static int16_t operate(SharedMem<int16_t*> addr, int16_t v) {    \
-    return NAME(addr, v);                                          \
-  }                                                                \
-  static uint16_t operate(SharedMem<uint16_t*> addr, uint16_t v) { \
-    return NAME(addr, v);                                          \
-  }                                                                \
-  static int32_t operate(SharedMem<int32_t*> addr, int32_t v) {    \
-    return NAME(addr, v);                                          \
-  }                                                                \
-  static uint32_t operate(SharedMem<uint32_t*> addr, uint32_t v) { \
-    return NAME(addr, v);                                          \
-  }                                                                \
-  static int64_t operate(SharedMem<int64_t*> addr, int64_t v) {    \
-    return NAME(addr, v);                                          \
-  }                                                                \
-  static uint64_t operate(SharedMem<uint64_t*> addr, uint64_t v) { \
-    return NAME(addr, v);                                          \
-  }
-
-class PerformAdd {
- public:
-  INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAddSeqCst)
-};
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.2 Atomics.add ( typedArray, index, value )
 bool js::atomics_add(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return AtomicsBinop<PerformAdd>(cx, args.get(0), args.get(1), args.get(2),
-                                  args.rval());
-}
 
-class PerformSub {
- public:
-  INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchSubSeqCst)
-};
+  return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
+    return jit::AtomicOperations::fetchAddSeqCst(addr, val);
+  });
+}
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.10 Atomics.sub ( typedArray, index, value )
 bool js::atomics_sub(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return AtomicsBinop<PerformSub>(cx, args.get(0), args.get(1), args.get(2),
-                                  args.rval());
-}
 
-class PerformAnd {
- public:
-  INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAndSeqCst)
-};
+  return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
+    return jit::AtomicOperations::fetchSubSeqCst(addr, val);
+  });
+}
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.3 Atomics.and ( typedArray, index, value )
 bool js::atomics_and(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return AtomicsBinop<PerformAnd>(cx, args.get(0), args.get(1), args.get(2),
-                                  args.rval());
-}
 
-class PerformOr {
- public:
-  INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchOrSeqCst)
-};
+  return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
+    return jit::AtomicOperations::fetchAndSeqCst(addr, val);
+  });
+}
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.8 Atomics.or ( typedArray, index, value )
 bool js::atomics_or(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return AtomicsBinop<PerformOr>(cx, args.get(0), args.get(1), args.get(2),
-                                 args.rval());
-}
 
-class PerformXor {
- public:
-  INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchXorSeqCst)
-};
+  return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
+    return jit::AtomicOperations::fetchOrSeqCst(addr, val);
+  });
+}
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
 // 24.4.13 Atomics.xor ( typedArray, index, value )
 bool js::atomics_xor(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return AtomicsBinop<PerformXor>(cx, args.get(0), args.get(1), args.get(2),
-                                  args.rval());
+
+  return AtomicReadModifyWrite(cx, args, [](auto addr, auto val) {
+    return jit::AtomicOperations::fetchXorSeqCst(addr, val);
+  });
 }
 
 // ES2021 draft rev bd868f20b8c574ad6689fba014b62a1dba819e56
