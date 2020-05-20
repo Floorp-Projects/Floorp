@@ -4,6 +4,8 @@
 
 package mozilla.components.lib.crash.ui
 
+import android.content.Context
+import android.content.Intent
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.format.DateUtils
@@ -60,6 +62,14 @@ internal class CrashListAdapter(
         )
 
         holder.footerView.text = SpannableStringBuilder(time).apply {
+            append(" - ")
+
+            append(holder.itemView.context.getString(R.string.mozac_lib_crash_share), object : ClickableSpan() {
+                override fun onClick(widget: View) {
+                    shareCrash(widget.context, crashWithReports)
+                }
+            }, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
             if (crashWithReports.reports.isNotEmpty()) {
                 append(" - ")
                 append(crashReporter, crashWithReports.reports, onSelection)
@@ -70,6 +80,34 @@ internal class CrashListAdapter(
     fun updateList(list: List<CrashWithReports>) {
         crashes = list
         notifyDataSetChanged()
+    }
+
+    private fun shareCrash(context: Context, crashWithReports: CrashWithReports) {
+        val text = StringBuilder()
+
+        text.append(crashWithReports.crash.uuid)
+        text.appendln()
+        text.append(crashWithReports.crash.stacktrace.lines().first())
+        text.appendln()
+
+        crashWithReports.reports.forEach { report ->
+            val service = crashReporter.getCrashReporterServiceById(report.serviceId)
+            text.append(" * ")
+            text.append(service?.name ?: report.serviceId)
+            text.append(": ")
+            text.append(service?.createCrashReportUrl(report.reportId) ?: "<No URL>")
+            text.appendln()
+        }
+
+        text.append("----")
+        text.appendln()
+        text.append(crashWithReports.crash.stacktrace)
+        text.appendln()
+
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_TEXT, text.toString())
+        context.startActivity(Intent.createChooser(intent, "Crash"))
     }
 }
 

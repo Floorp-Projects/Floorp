@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -22,6 +22,7 @@
         android:id="@+id/mozac_lib_crash_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/mozac_lib_crash_id"
         android:padding="2dp"
         android:textSize="14sp"
         android:textStyle="bold"
@@ -29,10 +30,11 @@
 
     <TextView
         android:id="@+id/mozac_lib_crash_footer"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/mozac_lib_crash_title"
         android:padding="2dp"
         android:textSize="12sp"
         tools:text="12 minutes ago - Sentry Socorro"/>
 
-</LinearLayout>
+</RelativeLayout>
