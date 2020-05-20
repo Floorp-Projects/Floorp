@@ -5100,6 +5100,11 @@ void LIRGenerator::visitWasmFloatConstant(MWasmFloatConstant* ins) {
     case MIRType::Float32:
       define(new (alloc()) LFloat32(ins->toFloat32()), ins);
       break;
+#ifdef ENABLE_WASM_SIMD
+    case MIRType::Simd128:
+      define(new (alloc()) LSimd128(ins->toSimd128()), ins);
+      break;
+#endif
     default:
       MOZ_CRASH("unexpected constant type");
   }
