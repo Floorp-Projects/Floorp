@@ -1290,29 +1290,44 @@ void nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsDisplayList* content = aLists.Content();
   nsDisplayListSet set(content, content, content, content, content, content);
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+  // Clip the placeholder and preview text to the root box, so that it doesn't,
+  // e.g., overlay with our <input type="number"> spin buttons.
+  //
+  // For other input types, this will be a noop since we size the root via
+  // ReflowTextControlChild, which sets the same available space for all
+  // children.
+  auto clipToRoot = [&](Maybe<DisplayListClipState::AutoSaveRestore>& aClip) {
+    if (mRootNode) {
+      if (auto* root = mRootNode->GetPrimaryFrame()) {
+        aClip.emplace(aBuilder);
+        nsRect rootBox(aBuilder->ToReferenceFrame(root), root->GetSize());
+        aClip->ClipContentDescendants(rootBox);
+      }
+    }
+  };
+
+  // We build the ::placeholder first so that it renders below mRootNode which
+  // draws the caret and we always want that on top (bug 1637476).
+  if (mPlaceholderDiv && control->GetPlaceholderVisibility() &&
+      mPlaceholderDiv->GetPrimaryFrame()) {
+    Maybe<DisplayListClipState::AutoSaveRestore> overlayTextClip;
+    clipToRoot(overlayTextClip);
+    auto* kid = mPlaceholderDiv->GetPrimaryFrame();
+    MOZ_ASSERT(kid->GetParent() == this);
+    BuildDisplayListForChild(aBuilder, kid, set, 0);
+  }
+
+  for (auto* kid : mFrames) {
     nsIContent* kidContent = kid->GetContent();
     Maybe<DisplayListClipState::AutoSaveRestore> overlayTextClip;
-    if (kidContent == mPlaceholderDiv && !control->GetPlaceholderVisibility()) {
-      continue;
+    if (kidContent == mPlaceholderDiv) {
+      continue;  // we handled mPlaceholderDiv explicitly above
     }
     if (kidContent == mPreviewDiv && !control->GetPreviewVisibility()) {
       continue;
     }
-    // Clip the preview text to the root box, so that it doesn't, e.g., overlay
-    // with our <input type="number"> spin buttons.
-    //
-    // For other input types, this will be a noop since we size the root via
-    // ReflowTextControlChild, which sets the same available space for all
-    // children.
-    if (kidContent == mPlaceholderDiv || kidContent == mPreviewDiv) {
-      if (mRootNode) {
-        if (auto* root = mRootNode->GetPrimaryFrame()) {
-          overlayTextClip.emplace(aBuilder);
-          nsRect rootBox(aBuilder->ToReferenceFrame(root), root->GetSize());
-          overlayTextClip->ClipContentDescendants(rootBox);
-        }
-      }
+    if (kidContent == mPreviewDiv) {
+      clipToRoot(overlayTextClip);
     }
     BuildDisplayListForChild(aBuilder, kid, set, 0);
   }
