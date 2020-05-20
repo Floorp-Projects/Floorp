@@ -25,20 +25,6 @@ class AtomicsObject : public NativeObject {
   static const JSClass class_;
 };
 
-MOZ_MUST_USE bool atomics_compareExchange(JSContext* cx, unsigned argc,
-                                          Value* vp);
-MOZ_MUST_USE bool atomics_exchange(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_load(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_store(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_add(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_sub(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_and(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_or(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_xor(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_wait(JSContext* cx, unsigned argc, Value* vp);
-MOZ_MUST_USE bool atomics_notify(JSContext* cx, unsigned argc, Value* vp);
-
 class FutexThread {
   friend class AutoLockFutexAPI;
 
