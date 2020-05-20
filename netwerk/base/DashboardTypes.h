@@ -32,6 +32,7 @@ struct DNSCacheEntries {
   int64_t expiration;
   nsCString netInterface;
   bool TRR;
+  nsCString originAttributesSuffix;
 };
 
 struct HttpConnInfo {
