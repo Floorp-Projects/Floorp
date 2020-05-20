@@ -16,7 +16,13 @@ const TEST_3RD_PARTY_DOMAIN_HTTP = "http://tracking.example.org/";
 const TEST_3RD_PARTY_DOMAIN_TP = "https://tracking.example.com/";
 const TEST_3RD_PARTY_DOMAIN_STP = "https://social-tracking.example.org/";
 const TEST_4TH_PARTY_DOMAIN = "http://not-tracking.example.com/";
-const TEST_ANOTHER_3RD_PARTY_DOMAIN = "https://another-tracking.example.net/";
+const TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTP =
+  "http://another-tracking.example.net/";
+const TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTPS =
+  "https://another-tracking.example.net/";
+const TEST_ANOTHER_3RD_PARTY_DOMAIN = SpecialPowers.useRemoteSubframes
+  ? TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTP
+  : TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTPS;
 
 const TEST_PATH = "browser/toolkit/components/antitracking/test/browser/";
 
@@ -43,6 +49,8 @@ const TEST_3RD_PARTY_PAGE_RELAY =
 const TEST_4TH_PARTY_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 const TEST_ANOTHER_3RD_PARTY_PAGE =
   TEST_ANOTHER_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
+const TEST_ANOTHER_3RD_PARTY_PAGE_HTTPS =
+  TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTPS + TEST_PATH + "3rdParty.html";
 const TEST_3RD_PARTY_STORAGE_PAGE =
   TEST_3RD_PARTY_DOMAIN_HTTP + TEST_PATH + "3rdPartyStorage.html";
 const TEST_3RD_PARTY_PAGE_WORKER =
