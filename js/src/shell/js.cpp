@@ -498,7 +498,7 @@ bool shell::enableWasmGc = false;
 bool shell::enableWasmMultiValue = true;
 #endif
 #ifdef ENABLE_WASM_SIMD
-bool shell::enableWasmSimd = false;
+bool shell::enableWasmSimd = true;
 #endif
 bool shell::enableWasmVerbose = false;
 bool shell::enableTestWasmAwaitTier2 = false;
@@ -10243,7 +10243,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableWasmMultiValue = !op.getBoolOption("no-wasm-multi-value");
 #endif
 #ifdef ENABLE_WASM_SIMD
-  enableWasmSimd = op.getBoolOption("wasm-simd");
+  enableWasmSimd = !op.getBoolOption("no-wasm-simd");
 #endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
@@ -11087,10 +11087,10 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "no-wasm-multi-value", "No-op") ||
 #endif
 #ifdef ENABLE_WASM_SIMD
-      !op.addBoolOption('\0', "wasm-simd",
-                        "Enable experimental wasm SIMD features") ||
+      !op.addBoolOption('\0', "no-wasm-simd",
+                        "Disable experimental wasm SIMD features") ||
 #else
-      !op.addBoolOption('\0', "wasm-simd", "No-op") ||
+      !op.addBoolOption('\0', "no-wasm-simd", "No-op") ||
 #endif
       !op.addBoolOption('\0', "no-native-regexp",
                         "Disable native regexp compilation") ||

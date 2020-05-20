@@ -645,5 +645,16 @@ js_option('--enable-wasm-simd',
           default=default_wasm_simd,
           help='{Enable|Disable} WebAssembly SIMD')
 
-set_config('ENABLE_WASM_SIMD', depends_if('--enable-wasm-simd')(lambda x: True))
-set_define('ENABLE_WASM_SIMD', depends_if('--enable-wasm-simd')(lambda x: True))
+@depends('--enable-wasm-simd', '--enable-jit', '--enable-simulator', target)
+def wasm_simd(value, jit_enabled, simulator, target):
+    if not value:
+        return
+
+    if jit_enabled and not simulator:
+        if target.cpu == 'x86_64':
+            return True
+
+    die('--enable-wasm-simd only possible when targeting the x86_64 jit')
+
+set_config('ENABLE_WASM_SIMD', wasm_simd)
+set_define('ENABLE_WASM_SIMD', wasm_simd)
