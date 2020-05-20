@@ -23,6 +23,8 @@ export const DefaultMeta = ({
   cta,
   engagement,
   cta_variant,
+  sponsor,
+  sponsored_by_override,
 }) => (
   <div className="meta">
     <div className="info-wrap">
@@ -38,6 +40,8 @@ export const DefaultMeta = ({
     <DSContextFooter
       context_type={context_type}
       context={context}
+      sponsor={sponsor}
+      sponsored_by_override={sponsored_by_override}
       display_engagement_labels={display_engagement_labels}
       engagement={engagement}
     />
@@ -54,6 +58,7 @@ export const CTAButtonMeta = ({
   cta,
   engagement,
   sponsor,
+  sponsored_by_override,
 }) => (
   <div className="meta">
     <div className="info-wrap">
@@ -77,6 +82,8 @@ export const CTAButtonMeta = ({
       <DSContextFooter
         context_type={context_type}
         context={context}
+        sponsor={sponsor}
+        sponsored_by_override={sponsored_by_override}
         display_engagement_labels={display_engagement_labels}
         engagement={engagement}
       />
@@ -250,6 +257,7 @@ export class _DSCard extends React.PureComponent {
               engagement={this.props.engagement}
               cta={this.props.cta}
               sponsor={this.props.sponsor}
+              sponsored_by_override={this.props.sponsored_by_override}
             />
           ) : (
             <DefaultMeta
@@ -262,6 +270,8 @@ export class _DSCard extends React.PureComponent {
               context_type={this.props.context_type}
               cta={this.props.cta}
               cta_variant={this.props.cta_variant}
+              sponsor={this.props.sponsor}
+              sponsored_by_override={this.props.sponsored_by_override}
             />
           )}
           <ImpressionStats

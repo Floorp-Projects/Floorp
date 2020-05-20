@@ -5,6 +5,7 @@ import {
 import React from "react";
 import { mount } from "enzyme";
 import { cardContextTypes } from "content-src/components/Card/types.js";
+import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText.jsx";
 
 describe("<DSContextFooter>", () => {
   let wrapper;
@@ -12,6 +13,7 @@ describe("<DSContextFooter>", () => {
   const bookmarkBadge = "bookmark";
   const removeBookmarkBadge = "removedBookmark";
   const context = "Sponsored by Babel";
+  const sponsored_by_override = "Sponsored override";
   const engagement = "Popular";
 
   beforeEach(() => {
@@ -71,6 +73,52 @@ describe("<DSContextFooter>", () => {
     assert.lengthOf(wrapper.find(".story-view-count"), 0);
     assert.lengthOf(wrapper.find(StatusMessage), 0);
     assert.equal(wrapper.find(".story-sponsored-label").text(), context);
+  });
+  it("should render a sponsored_by_override if passed a sponsored_by_override", async () => {
+    wrapper = mount(
+      <DSContextFooter
+        context_type={bookmarkBadge}
+        context={context}
+        sponsored_by_override={sponsored_by_override}
+        engagement={engagement}
+      />
+    );
+
+    assert.equal(
+      wrapper.find(".story-sponsored-label").text(),
+      sponsored_by_override
+    );
+  });
+  it("should render nothing with a sponsored_by_override empty string", async () => {
+    wrapper = mount(
+      <DSContextFooter
+        context_type={bookmarkBadge}
+        context={context}
+        sponsored_by_override=""
+        engagement={engagement}
+      />
+    );
+
+    assert.isFalse(wrapper.find(".story-sponsored-label").exists());
+  });
+  it("should render localized string with sponsor with no sponsored_by_override", async () => {
+    wrapper = mount(
+      <DSContextFooter
+        context_type={bookmarkBadge}
+        context={context}
+        sponsor="Nimoy"
+        engagement={engagement}
+      />
+    );
+
+    assert.equal(
+      wrapper
+        .find(".story-sponsored-label")
+        .children()
+        .at(0)
+        .type(),
+      FluentOrText
+    );
   });
   it("should render a new badge if props change from an old badge to a new one", async () => {
     wrapper = mount(<DSContextFooter context_type={bookmarkBadge} />);

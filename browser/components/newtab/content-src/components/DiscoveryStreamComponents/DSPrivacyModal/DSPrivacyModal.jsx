@@ -51,10 +51,9 @@ export class DSPrivacyModal extends React.PureComponent {
           />
           <button
             className="modal-link modal-link-manage"
+            data-l10n-id="newtab-privacy-modal-button-manage"
             onClick={this.onManageLinkClick}
-          >
-            Manage sponsored content settings
-          </button>
+          />
         </div>
         <section className="actions">
           <button
