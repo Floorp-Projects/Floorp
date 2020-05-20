@@ -512,28 +512,20 @@ function run() {
     expression_should_be_parseable(feature + ": 1  /1");
     expression_should_be_parseable(feature + ": 1  / \t\n1");
     expression_should_be_parseable(feature + ": 1/\r1");
-    if (SpecialPowers.getBoolPref('layout.css.aspect-ratio-number.enabled')) {
-      expression_should_be_parseable(feature + ": 1");
-      expression_should_be_parseable(feature + ": 0.5");
-      expression_should_be_parseable(feature + ": 1.0/1");
-      expression_should_be_parseable(feature + ": 1/1.0");
-      expression_should_be_parseable(feature + ": 1.0/1.0");
-      expression_should_be_parseable(feature + ": 1.5/1.2");
-      expression_should_be_parseable(feature + ": 1.5");
-      expression_should_be_parseable(feature + ": calc(1.2 * 1.3)");
-      expression_should_be_parseable(feature + ": 1.1/calc(2.2 * 2.3)");
-      expression_should_be_parseable(feature + ": calc(1.2 * 1.3)/2.2");
-      expression_should_be_parseable(feature + ": calc(1.2 * 1.3)/calc(2.2 * 2.3)");
-    } else {
-      expression_should_not_be_parseable(feature + ": 1");
-      expression_should_not_be_parseable(feature + ": 0.5");
-      expression_should_not_be_parseable(feature + ": 1.0/1");
-      expression_should_not_be_parseable(feature + ": 1/1.0");
-      expression_should_not_be_parseable(feature + ": 1.0/1.0");
-    }
-    expression_should_not_be_parseable(feature + ": 0/1");
-    expression_should_not_be_parseable(feature + ": 1/0");
-    expression_should_not_be_parseable(feature + ": 0/0");
+    expression_should_be_parseable(feature + ": 1");
+    expression_should_be_parseable(feature + ": 0.5");
+    expression_should_be_parseable(feature + ": 1.0/1");
+    expression_should_be_parseable(feature + ": 1/1.0");
+    expression_should_be_parseable(feature + ": 1.0/1.0");
+    expression_should_be_parseable(feature + ": 1.5/1.2");
+    expression_should_be_parseable(feature + ": 1.5");
+    expression_should_be_parseable(feature + ": calc(1.2 * 1.3)");
+    expression_should_be_parseable(feature + ": 1.1/calc(2.2 * 2.3)");
+    expression_should_be_parseable(feature + ": calc(1.2 * 1.3)/2.2");
+    expression_should_be_parseable(feature + ": calc(1.2 * 1.3)/calc(2.2 * 2.3)");
+    expression_should_be_parseable(feature + ": 0/1");
+    expression_should_be_parseable(feature + ": 1/0");
+    expression_should_be_parseable(feature + ": 0/0");
     expression_should_not_be_parseable(feature + ": -1/1");
     expression_should_not_be_parseable(feature + ": 1/-1");
     expression_should_not_be_parseable(feature + ": -1/-1");
