@@ -208,6 +208,27 @@ class AppLinksInterceptorTest {
     }
 
     @Test
+    fun `blacklisted schemes request always ignored even if the engine does not support it`() {
+        val engineSession: EngineSession = mock()
+        val supportedScheme = "supported"
+        val notSupportedScheme = "not_supported"
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = false,
+            engineSupportedSchemes = setOf(supportedScheme),
+            alwaysDeniedSchemes = setOf(notSupportedScheme),
+            launchInApp = { false },
+            useCases = mockUseCases
+        )
+
+        val notSupportedUrl = "$notSupportedScheme://example.com"
+        val notSupportedRedirect = AppLinkRedirect(Intent.parseUri(notSupportedUrl, 0), null, null)
+        whenever(mockGetRedirect.invoke(notSupportedUrl)).thenReturn(notSupportedRedirect)
+        val response = feature.onLoadRequest(engineSession, notSupportedUrl, false, false)
+        assertEquals(null, response)
+    }
+
+    @Test
     fun `not supported schemes request should not use fallback if user preference is launch in app`() {
         val engineSession: EngineSession = mock()
         val supportedScheme = "supported"

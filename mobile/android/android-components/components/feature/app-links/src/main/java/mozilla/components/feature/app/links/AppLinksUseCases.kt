@@ -39,13 +39,14 @@ internal const val APP_LINKS_CACHE_INTERVAL = 30 * 1000L // 30 seconds
  * of security concerns.
  * @param browserPackageNames Set of browser package names installed.
  * @param unguessableWebUrl URL is not likely to be opened by a native app but will fallback to a browser.
+ * @param alwaysDeniedSchemes List of schemes that will never be opened in a third-party app.
  */
 class AppLinksUseCases(
     private val context: Context,
     private val launchInApp: () -> Boolean = { false },
     browserPackageNames: Set<String>? = null,
     unguessableWebUrl: String = "https://${UUID.randomUUID()}.net",
-    private val alwaysDeniedSchemes: Set<String> = setOf("file", "javascript", "data", "about")
+    private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES
 ) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val browserPackageNames: Lazy<Set<String>>
@@ -267,5 +268,6 @@ class AppLinksUseCases(
         // list of scheme from https://searchfox.org/mozilla-central/source/netwerk/build/components.conf
         internal val ENGINE_SUPPORTED_SCHEMES: Set<String> = setOf("about", "data", "file", "ftp", "http",
             "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss")
+        internal val ALWAYS_DENY_SCHEMES: Set<String> = setOf("file", "javascript", "data", "about")
     }
 }
