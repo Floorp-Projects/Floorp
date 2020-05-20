@@ -832,8 +832,7 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
   }
 
   if (method == NS_FORM_METHOD_DIALOG) {
-    HTMLDialogElement* dialog =
-        AncestorsOfType<HTMLDialogElement>::First(*aForm);
+    HTMLDialogElement* dialog = aForm->FirstAncestorOfType<HTMLDialogElement>();
 
     // If there isn't one, or if it does not have an open attribute, do
     // nothing.

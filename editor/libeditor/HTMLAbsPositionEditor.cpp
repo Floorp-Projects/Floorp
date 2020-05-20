@@ -80,7 +80,7 @@ HTMLEditor::GetAbsolutelyPositionedSelectionContainer() const {
 
   AutoTArray<RefPtr<Element>, 24> arrayOfParentElements;
   for (Element* element :
-       InclusiveAncestorsOfType<Element>(*selectionContainerElement)) {
+       selectionContainerElement->InclusiveAncestorsOfType<Element>()) {
     arrayOfParentElements.AppendElement(element);
   }
 
