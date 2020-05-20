@@ -13,15 +13,15 @@
     "wasi-sysroot": "{MOZ_FETCHES_DIR}/wasi-sysroot",
     "patches": [
       "static-llvm-symbolizer.patch",
-      "find_symbolizer_linux-clang-9.patch",
-      "rename_gcov_flush-clang-9.patch",
+      "find_symbolizer_linux_clang_10.patch",
+      "rename_gcov_flush_clang_10.patch",
       "critical_section_on_gcov_flush-rG02ce9d8ef5a8.patch",
-      "rG7e18aeba5062-clang-9.patch",
-      "llvmorg-11-init-4265-g2dcbdba8540-clang-9.patch",
+      "rG7e18aeba5062_clang_10.patch",
+      "llvmorg-11-init-4265-g2dcbdba8540_clang_10.patch",
       "android-mangling-error.patch",
-      "unpoison-thread-stacks-clang-9.patch",
+      "unpoison-thread-stacks_clang_10.patch",
       "downgrade-mangling-error.patch",
-      "tsan-hang-be41a98ac222-clang-9.patch",
+      "tsan-hang-be41a98ac222_clang_10.patch",
       "loosen-msvc-detection.patch"
     ]
 }
