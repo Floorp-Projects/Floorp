@@ -300,7 +300,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   size_t index = compilationInfo.funcData.length();
   if (!compilationInfo.funcData.emplaceBack(
-          mozilla::AsVariant(ScriptStencilBase(cx_)))) {
+          mozilla::AsVariant(ScriptStencil(cx_)))) {
     return nullptr;
   }
 
@@ -1809,7 +1809,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 }
 
 static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
-                             Handle<ScriptStencilBase> stencil,
+                             Handle<ScriptStencil> stencil,
                              HandleFunction function, FunctionBox* funbox) {
   MOZ_ASSERT(function);
 
@@ -1865,8 +1865,7 @@ static bool MaybePublishFunction(JSContext* cx,
 
   // Pull the stencil out of the function box before we clobber the funcData
   // array entry with the JSFunction pointer.
-  Rooted<ScriptStencilBase> stencil(cx,
-                                    std::move(funbox->functionStencil().get()));
+  Rooted<ScriptStencil> stencil(cx, std::move(funbox->functionStencil().get()));
 
   RootedFunction fun(cx, funbox->createFunction(cx));
   if (!fun) {
