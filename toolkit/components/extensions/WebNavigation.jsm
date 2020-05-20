@@ -55,7 +55,7 @@ var Manager = {
 
     Services.obs.addObserver(this, "webNavigation-createdNavigationTarget");
 
-    if (AppConstants.platform != "android") {
+    if (AppConstants.MOZ_BUILD_APP == "browser") {
       ClickHandlerParent.addContentClickListener(this);
     }
 
@@ -76,7 +76,7 @@ var Manager = {
     Services.obs.removeObserver(this, "urlbar-user-start-navigation");
     Services.obs.removeObserver(this, "webNavigation-createdNavigationTarget");
 
-    if (AppConstants.platform != "android") {
+    if (AppConstants.MOZ_BUILD_APP == "browser") {
       ClickHandlerParent.removeContentClickListener(this);
     }
 
