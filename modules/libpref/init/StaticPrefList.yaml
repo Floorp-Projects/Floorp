@@ -6202,9 +6202,13 @@
   mirror: always
 
 # Is support for :is() and :where() enabled?
+#
+# TODO(emilio): when removing this pref it would make sense to implement
+# :-moz-any as an alias of :is or such, or maybe its own thing to preserve its
+# specificity.
 - name: layout.css.is-where-selectors.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
