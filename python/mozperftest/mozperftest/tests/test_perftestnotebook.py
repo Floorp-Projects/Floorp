@@ -65,7 +65,9 @@ def test_process(ptnbs, files):
     ]
 
     ptnb = ptnbs["ptnb_str"]
-    ptnb.transformer = SingleJsonRetriever()
+
+    # Set a custom transformer.
+    ptnb.transformer = Transformer([], SingleJsonRetriever())
 
     # Create expected result.
     expected_result = {

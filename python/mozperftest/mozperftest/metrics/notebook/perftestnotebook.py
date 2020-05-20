@@ -7,7 +7,7 @@ import os
 import pathlib
 from collections import OrderedDict
 
-from .transformer import SimplePerfherderTransformer
+from .transformer import Transformer, SimplePerfherderTransformer
 from .analyzer import NotebookAnalyzer
 from .constant import Constant
 from .logger import NotebookLogger
@@ -26,9 +26,7 @@ class PerftestNotebook(object):
         :param dict file_groups: A dict of file groupings. The value
             of each of the dict entries is the name of the data that
             will be produced.
-        :param str custom_transform: Path to a file containing custom
-            transformation logic. Must implement the Transformer
-            interface.
+        :param str custom_transform: The class name of a custom transformer.
         """
         self.fmt_data = {}
         self.file_groups = file_groups
@@ -50,12 +48,14 @@ class PerftestNotebook(object):
         if custom_transform:
             tfm_cls = tfms_dict.get(custom_transform)
             if tfm_cls:
-                self.transformer = tfm_cls(files=[])
+                self.transformer = Transformer(files=[], custom_transformer=tfm_cls())
                 logger.info(f"Found {custom_transform} transformer")
             else:
                 raise Exception(f"Could not get a {custom_transform} transformer.")
         else:
-            self.transformer = SimplePerfherderTransformer(files=[])
+            self.transformer = Transformer(
+                files=[], custom_transformer=SimplePerfherderTransformer()
+            )
 
         self.analyzer = NotebookAnalyzer(data=None)
 

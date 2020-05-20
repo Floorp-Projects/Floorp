@@ -1,6 +1,16 @@
 import mozunit
 import pytest
 from mozperftest.metrics.notebook.transformer import Transformer
+from mozperftest.metrics.exceptions import NotebookInvalidTransformError
+
+
+def test_init_failure(files):
+    class TempClass(object):
+        def temp_fun():
+            return 1
+
+    with pytest.raises(NotebookInvalidTransformError):
+        Transformer(custom_transformer=TempClass())
 
 
 def test_files_getter(files):
