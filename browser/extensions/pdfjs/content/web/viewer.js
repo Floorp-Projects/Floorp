@@ -1777,7 +1777,7 @@ function loadAndEnablePDFBug(enabledTabs) {
 function webViewerInitialized() {
   const appConfig = PDFViewerApplication.appConfig;
   let file;
-  file = window.location.href.split("#")[0];
+  file = window.location.href;
   appConfig.toolbar.openFile.setAttribute("hidden", "true");
   appConfig.secondaryToolbar.openFileButton.setAttribute("hidden", "true");
 
@@ -3631,9 +3631,14 @@ module.exports = pdfjsLib;
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.viewerCompatibilityParams = void 0;
 const compatibilityParams = Object.create(null);
 ;
-exports.viewerCompatibilityParams = Object.freeze(compatibilityParams);
+const viewerCompatibilityParams = Object.freeze(compatibilityParams);
+exports.viewerCompatibilityParams = viewerCompatibilityParams;
 
 /***/ }),
 /* 6 */
@@ -4693,7 +4698,7 @@ class PDFAttachmentViewer {
       }
 
       let viewerUrl;
-      viewerUrl = blobUrl + "?" + encodeURIComponent(filename);
+      viewerUrl = blobUrl + "#filename=" + encodeURIComponent(filename);
 
       try {
         window.open(viewerUrl);
@@ -4882,7 +4887,7 @@ class PDFDocumentProperties {
         metadata,
         contentDispositionFilename
       }) => {
-        return Promise.all([info, metadata, contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url || ""), this._parseFileSize(this.maybeFileSize), this._parseDate(info.CreationDate), this._parseDate(info.ModDate), this.pdfDocument.getPage(currentPageNumber).then(pdfPage => {
+        return Promise.all([info, metadata, contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url), this._parseFileSize(this.maybeFileSize), this._parseDate(info.CreationDate), this._parseDate(info.ModDate), this.pdfDocument.getPage(currentPageNumber).then(pdfPage => {
           return this._parsePageSize((0, _ui_utils.getPageSizeInches)(pdfPage), pagesRotation);
         }), this._parseLinearization(info.IsLinearized)]);
       }).then(([info, metadata, fileName, fileSize, creationDate, modDate, pageSize, isLinearized]) => {
@@ -6164,7 +6169,7 @@ class PDFHistory {
         hash,
         page,
         rotation
-      } = this._parseCurrentHash();
+      } = this._parseCurrentHash(true);
 
       if (!hash || reInitialized || resetHistory) {
         this._pushOrReplaceState(null, true);
@@ -6442,11 +6447,13 @@ class PDFHistory {
     this._numPositionUpdates = 0;
   }
 
-  _parseCurrentHash() {
+  _parseCurrentHash(checkNameddest = false) {
     const hash = unescape(getCurrentHash()).substring(1);
-    let page = (0, _ui_utils.parseQueryString)(hash).page | 0;
+    const params = (0, _ui_utils.parseQueryString)(hash);
+    const nameddest = params.nameddest || "";
+    let page = params.page | 0;
 
-    if (!(Number.isInteger(page) && page > 0 && page <= this.linkService.pagesCount)) {
+    if (!(Number.isInteger(page) && page > 0 && page <= this.linkService.pagesCount) || checkNameddest && nameddest.length > 0) {
       page = null;
     }
 
@@ -6836,11 +6843,6 @@ class PDFLinkService {
         });
       }
 
-      if ("nameddest" in params) {
-        this.navigateTo(params.nameddest);
-        return;
-      }
-
       if ("page" in params) {
         pageNumber = params.page | 0 || 1;
       }
@@ -6892,6 +6894,10 @@ class PDFLinkService {
           source: this,
           mode: params.pagemode
         });
+      }
+
+      if ("nameddest" in params) {
+        this.navigateTo(params.nameddest);
       }
     } else {
       dest = unescape(hash);
@@ -12063,6 +12069,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.BasePreferences = void 0;
+
+var _app_options = __webpack_require__(3);
+
 let defaultPreferences = null;
 
 function getDefaultPreferences() {
