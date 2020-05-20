@@ -265,4 +265,24 @@ bool StoragePrincipalHelper::GetRegularPrincipalOriginAttributes(
   return true;
 }
 
+// static
+bool StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+    nsIChannel* aChannel, OriginAttributes& aAttributes) {
+  return StoragePrincipalHelper::GetOriginAttributes(
+      aChannel, aAttributes,
+      StaticPrefs::privacy_partition_network_state() ? ePartitionedPrincipal
+                                                     : eRegularPrincipal);
+}
+
+// static
+void StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+    Document* aDocument, OriginAttributes& aAttributes) {
+  if (!StaticPrefs::privacy_partition_network_state()) {
+    aAttributes = aDocument->NodePrincipal()->OriginAttributesRef();
+    return;
+  }
+
+  aAttributes = aDocument->IntrinsicStoragePrincipal()->OriginAttributesRef();
+}
+
 }  // namespace mozilla

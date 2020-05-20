@@ -47,25 +47,29 @@ class nsHTMLDNSPrefetch {
   // the DNS system immediately. The URI version is somewhat lighter
   // weight, but its request is also more likely to be dropped due to a
   // full queue and it may only be used from the main thread.
+  //
+  // If you are planning to use the methods with the OriginAttributes param, be
+  // sure that you pass a partitioned one. See StoragePrincipalHelper.h to know
+  // more.
 
   static nsresult PrefetchHigh(mozilla::dom::Link* aElement);
   static nsresult PrefetchMedium(mozilla::dom::Link* aElement);
   static nsresult PrefetchLow(mozilla::dom::Link* aElement);
-  static nsresult PrefetchHigh(
+  static nsresult PrefetchLow(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes,
+      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
       nsIRequest::TRRMode aTRRMode);
   static nsresult PrefetchMedium(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes,
+      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
       nsIRequest::TRRMode aTRRMode);
-  static nsresult PrefetchLow(
+  static nsresult PrefetchHigh(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes,
+      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
       nsIRequest::TRRMode aTRRMode);
   static nsresult CancelPrefetchLow(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes,
+      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
       nsIRequest::TRRMode aTRRMode, nsresult aReason);
   static nsresult CancelPrefetchLow(mozilla::dom::Link* aElement,
                                     nsresult aReason);
@@ -73,14 +77,15 @@ class nsHTMLDNSPrefetch {
   static void LinkDestroyed(mozilla::dom::Link* aLink);
 
  private:
-  static nsresult Prefetch(const nsAString& host, bool isHttps,
-                           const mozilla::OriginAttributes& aOriginAttributes,
-                           uint32_t flags);
+  static nsresult Prefetch(
+      const nsAString& host, bool isHttps,
+      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
+      uint32_t flags);
   static nsresult Prefetch(mozilla::dom::Link* aElement, uint32_t flags);
   static nsresult CancelPrefetch(
       const nsAString& hostname, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes, uint32_t flags,
-      nsresult aReason);
+      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
+      uint32_t flags, nsresult aReason);
   static nsresult CancelPrefetch(mozilla::dom::Link* aElement, uint32_t flags,
                                  nsresult aReason);
 
