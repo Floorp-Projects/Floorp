@@ -57,7 +57,11 @@ class IssueItem extends PureComponent {
 
     e.preventDefault();
     e.stopPropagation();
-    openDocLink(url);
+
+    openDocLink(
+      url +
+        "?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
+    );
   }
 
   _getTestDataAttributes() {
@@ -127,9 +131,7 @@ class IssueItem extends PureComponent {
       dom.a(
         {
           className: "compatibility-issue-item__mdn-link devtools-monospace",
-          href:
-            url +
-            "?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default",
+          href: url,
           title: url,
           onClick: e => this._onLinkClicked(e),
         },
