@@ -187,6 +187,26 @@ class FirefoxConnector {
         // Support for FF68 or older
       }
     }
+
+    // Support for EventSource monitoring is currently hidden behind this pref.
+    if (
+      Services.prefs.getBoolPref(
+        "devtools.netmonitor.features.serverSentEvents"
+      )
+    ) {
+      const eventSourceFront = await this.currentTarget.getFront("eventSource");
+      eventSourceFront.startListening();
+
+      eventSourceFront.on(
+        "eventSourceConnectionOpened",
+        this.dataProvider.onEventSourceConnectionOpened
+      );
+      eventSourceFront.on(
+        "eventSourceConnectionClosed",
+        this.dataProvider.onEventSourceConnectionClosed
+      );
+      eventSourceFront.on("eventReceived", this.dataProvider.onEventReceived);
+    }
   }
 
   removeListeners() {
@@ -213,6 +233,19 @@ class FirefoxConnector {
         "networkEventUpdate",
         this.dataProvider.onNetworkEventUpdate
       );
+    }
+
+    const eventSourceFront = this.currentTarget.getCachedFront("eventSource");
+    if (eventSourceFront) {
+      eventSourceFront.off(
+        "eventSourceConnectionOpened",
+        this.dataProvider.onEventSourceConnectionOpened
+      );
+      eventSourceFront.off(
+        "eventSourceConnectionClosed",
+        this.dataProvider.onEventSourceConnectionClosed
+      );
+      eventSourceFront.off("eventReceived", this.dataProvider.onEventReceived);
     }
   }
 
