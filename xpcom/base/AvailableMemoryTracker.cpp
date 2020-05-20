@@ -305,7 +305,7 @@ NS_IMPL_ISUPPORTS(LowEventsReporter, nsIMemoryReporter)
  * other observers will synchronously free some memory that we'll be able to
  * purge here.
  */
-class nsJemallocFreeDirtyPagesRunnable final : public nsIRunnable {
+class nsJemallocFreeDirtyPagesRunnable final : public Runnable {
   ~nsJemallocFreeDirtyPagesRunnable() = default;
 
 #if defined(XP_WIN)
@@ -313,11 +313,10 @@ class nsJemallocFreeDirtyPagesRunnable final : public nsIRunnable {
 #endif
 
  public:
-  NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
-};
 
-NS_IMPL_ISUPPORTS(nsJemallocFreeDirtyPagesRunnable, nsIRunnable)
+  nsJemallocFreeDirtyPagesRunnable() : Runnable("nsJemallocFreeDirtyPagesRunnable") {}
+};
 
 NS_IMETHODIMP
 nsJemallocFreeDirtyPagesRunnable::Run() {
