@@ -70,7 +70,8 @@ let originalRequestLongerTimeout = requestLongerTimeout;
 // eslint-disable-next-line no-global-assign
 requestLongerTimeout = function AntiTrackingRequestLongerTimeout(factor) {
   let ccovMultiplier = AppConstants.MOZ_CODE_COVERAGE ? 2 : 1;
-  originalRequestLongerTimeout(ccovMultiplier * factor);
+  let fissionMultiplier = SpecialPowers.useRemoteSubframes ? 2 : 1;
+  originalRequestLongerTimeout(ccovMultiplier * fissionMultiplier * factor);
 };
 
 requestLongerTimeout(3);
