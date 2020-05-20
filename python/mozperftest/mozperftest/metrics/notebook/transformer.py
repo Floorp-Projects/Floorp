@@ -8,6 +8,7 @@ import os
 import pathlib
 
 from .logger import NotebookLogger
+from mozperftest.metrics.exceptions import NotebookInvalidTransformError
 
 logger = NotebookLogger()
 
@@ -16,12 +17,29 @@ class Transformer(object):
     """Abstract class for data transformers.
     """
 
-    def __init__(self, files=None):
+    def __init__(self, files=None, custom_transformer=None):
         """Initialize the transformer with files.
 
         :param list files: A list of files containing data to transform.
+        :param object custom_transformer: A custom transformer instance.
+            Must implement `transform` and `merge` methods.
         """
         self._files = files
+
+        if custom_transformer:
+            valid = (
+                hasattr(custom_transformer, "transform")
+                and hasattr(custom_transformer, "merge")
+                and callable(custom_transformer.transform)
+                and callable(custom_transformer.merge)
+            )
+
+            if not valid:
+                raise NotebookInvalidTransformError(
+                    "The custom transformer must contain `transform` and `merge` methods."
+                )
+
+        self._custom_transformer = custom_transformer
 
     @property
     def files(self):
@@ -33,25 +51,6 @@ class Transformer(object):
             logger.warning("`files` must be a list, got %s" % type(val))
             return
         self._files = val
-
-    def transform(self, data):
-        """Transform the data into the standardized data format.
-
-        The `data` entry can be of any type and the subclass is responsible
-        for knowing what they expect.
-
-        :param data: Data to transform.
-        :return: Data standardized in the perftest-notebook format.
-        """
-        raise NotImplementedError
-
-    def merge(self, standardized_data_entries):
-        """Merge multiple standardized entries into a timeseries.
-
-        :param list standardized_data_entries: List of standardized data entries.
-        :return: Merged standardized data entries.
-        """
-        raise NotImplementedError
 
     def open_data(self, file):
         """Opens a file of data.
@@ -80,14 +79,17 @@ class Transformer(object):
 
             # Open data
             try:
-                data = self.open_data(file)
+                if hasattr(self._custom_transformer, "open_data"):
+                    data = self._custom_transformer.open_data(file)
+                else:
+                    data = self.open_data(file)
             except Exception as e:
                 logger.warning("Failed to open file %s, skipping" % file)
                 logger.warning("%s %s" % (e.__class__.__name__, e))
 
             # Transform data
             try:
-                data = self.transform(data)
+                data = self._custom_transformer.transform(data)
                 if not isinstance(data, list):
                     data = [data]
                 for entry in data:
@@ -98,7 +100,7 @@ class Transformer(object):
                 logger.warning("Failed to transform file %s, skipping" % file)
                 logger.warning("%s %s" % (e.__class__.__name__, e))
 
-        merged = self.merge(trfmdata)
+        merged = self._custom_transformer.merge(trfmdata)
 
         if isinstance(merged, dict):
             merged["name"] = name
@@ -109,7 +111,7 @@ class Transformer(object):
         return merged
 
 
-class SimplePerfherderTransformer(Transformer):
+class SimplePerfherderTransformer:
     """Transforms perfherder data into the standardized data format.
     """
 

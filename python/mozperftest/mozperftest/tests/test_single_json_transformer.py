@@ -1,4 +1,5 @@
 import mozunit
+from mozperftest.metrics.notebook.transformer import Transformer
 from mozperftest.metrics.notebook.transforms.single_json import SingleJsonRetriever
 
 
@@ -50,7 +51,7 @@ def test_process(files):
     file_1 = files["file_1"]
     file_2 = files["file_2"]
 
-    tfm = SingleJsonRetriever()
+    tfm = Transformer([], SingleJsonRetriever())
     tfm.files = [file_1, file_2]
 
     expected_result = [
