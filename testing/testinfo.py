@@ -112,7 +112,7 @@ class TestInfoTests(TestInfo):
         else:
             return None
         try:
-            out = subprocess.check_output(cmd).splitlines()
+            out = subprocess.check_output(cmd, universal_newlines=True).splitlines()
         except subprocess.CalledProcessError:
             out = None
         return out
@@ -230,31 +230,40 @@ class TestInfoTests(TestInfo):
                   self.test_name)
             self.activedata_test_name = self.test_name
 
-    def get_run_types(self, record):
-        types_label = ""
-        if 'run' in record and 'type' in record['run']:
-            run_types = record['run']['type']
-            run_types = run_types if isinstance(run_types, list) else [run_types]
-            fission = True if 'fis' in run_types else False
-            for run_type in run_types:
-                # chunked is not interesting
-                if run_type == 'chunked':
-                    continue
-                # fission implies e10s
-                if fission and run_type == 'e10s':
-                    continue
-                types_label += "-" + run_type
-        return types_label
-
     def get_platform(self, record):
         if 'platform' in record['build']:
             platform = record['build']['platform']
         else:
             platform = "-"
-        tp = record['build']['type']
-        if type(tp) is list:
-            tp = "-".join(tp)
-        return "%s/%s%s:" % (platform, tp, self.get_run_types(record))
+        platform_words = platform.split('-')
+        types_label = ""
+        # combine run and build types and eliminate duplicates
+        run_types = []
+        if 'run' in record and 'type' in record['run']:
+            run_types = record['run']['type']
+            run_types = run_types if isinstance(run_types, list) else [run_types]
+        build_types = []
+        if 'build' in record and 'type' in record['build']:
+            build_types = record['build']['type']
+            build_types = build_types if isinstance(build_types, list) else [build_types]
+        run_types = list(set(run_types+build_types))
+        # '1proc' is used as a treeherder label but does not appear in run types
+        if 'e10s' not in run_types:
+            run_types = run_types + ['1proc']
+        for run_type in run_types:
+            # chunked is not interesting
+            if run_type == 'chunked':
+                continue
+            # e10s is the default: implied
+            if run_type == 'e10s':
+                continue
+            # sometimes a build/run type is already present in the build platform
+            if run_type in platform_words:
+                continue
+            if types_label:
+                types_label += "-"
+            types_label += run_type
+        return "%s/%s:" % (platform, types_label)
 
     def report_test_results(self):
         # Report test pass/fail summary from ActiveData
@@ -262,7 +271,7 @@ class TestInfoTests(TestInfo):
             "from": "unittest",
             "format": "list",
             "limit": 100,
-            "groupby": ["build.platform", "build.type", "run.type"],
+            "groupby": ["build.platform", "build.type"],
             "select": [
                 {"aggregate": "count"},
                 {
@@ -280,7 +289,8 @@ class TestInfoTests(TestInfo):
                     ]},
                     "aggregate": "sum",
                     "default": 0
-                }
+                },
+                {"value": "run.type", "aggregate": "union"}
             ],
             "where": {"and": [
                 {"eq": {"result.test": self.activedata_test_name}},
@@ -329,13 +339,14 @@ class TestInfoTests(TestInfo):
             "from": "unittest",
             "format": "list",
             "limit": 100,
-            "groupby": ["build.platform", "build.type", "run.type"],
+            "groupby": ["build.platform", "build.type"],
             "select": [
                 {"value": "result.duration",
                     "aggregate": "average", "name": "average"},
                 {"value": "result.duration", "aggregate": "min", "name": "min"},
                 {"value": "result.duration", "aggregate": "max", "name": "max"},
-                {"aggregate": "count"}
+                {"aggregate": "count"},
+                {"value": "run.type", "aggregate": "union"}
             ],
             "where": {"and": [
                 {"eq": {"result.ok": "T"}},
