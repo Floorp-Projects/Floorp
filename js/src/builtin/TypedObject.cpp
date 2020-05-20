@@ -2704,7 +2704,8 @@ JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_LOAD_REFERENCE_CLASS_IMPL)
 // Walking memory
 
 template <typename V>
-static void visitReferences(TypeDescr& descr, uint8_t* mem, V& visitor) {
+static void VisitReferences(TypeDescr& descr, uint8_t* base, V& visitor,
+                            size_t offset) {
   if (descr.transparent()) {
     return;
   }
@@ -2714,15 +2715,15 @@ static void visitReferences(TypeDescr& descr, uint8_t* mem, V& visitor) {
       return;
 
     case type::Reference:
-      visitor.visitReference(descr.as<ReferenceTypeDescr>(), mem);
+      visitor.visitReference(descr.as<ReferenceTypeDescr>(), base, offset);
       return;
 
     case type::Array: {
       ArrayTypeDescr& arrayDescr = descr.as<ArrayTypeDescr>();
       TypeDescr& elementDescr = arrayDescr.elementType();
       for (uint32_t i = 0; i < arrayDescr.length(); i++) {
-        visitReferences(elementDescr, mem, visitor);
-        mem += elementDescr.size();
+        VisitReferences(elementDescr, base, visitor, offset);
+        offset += elementDescr.size();
       }
       return;
     }
@@ -2731,8 +2732,8 @@ static void visitReferences(TypeDescr& descr, uint8_t* mem, V& visitor) {
       StructTypeDescr& structDescr = descr.as<StructTypeDescr>();
       for (size_t i = 0; i < structDescr.fieldCount(); i++) {
         TypeDescr& descr = structDescr.fieldDescr(i);
-        size_t offset = structDescr.fieldOffset(i);
-        visitReferences(descr, mem + offset, visitor);
+        VisitReferences(descr, base, visitor,
+                        offset + structDescr.fieldOffset(i));
       }
       return;
     }
@@ -2752,29 +2753,32 @@ class MemoryInitVisitor {
  public:
   explicit MemoryInitVisitor(const JSRuntime* rt) : rt_(rt) {}
 
-  void visitReference(ReferenceTypeDescr& descr, uint8_t* mem);
+  void visitReference(ReferenceTypeDescr& descr, uint8_t* base, size_t offset);
 };
 
 }  // namespace
 
-void MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr,
-                                       uint8_t* mem) {
+void MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* base,
+                                       size_t offset) {
   switch (descr.type()) {
     case ReferenceType::TYPE_ANY: {
-      js::GCPtrValue* heapValue = reinterpret_cast<js::GCPtrValue*>(mem);
+      js::GCPtrValue* heapValue =
+          reinterpret_cast<js::GCPtrValue*>(base + offset);
       heapValue->init(UndefinedValue());
       return;
     }
 
     case ReferenceType::TYPE_WASM_ANYREF:
     case ReferenceType::TYPE_OBJECT: {
-      js::GCPtrObject* objectPtr = reinterpret_cast<js::GCPtrObject*>(mem);
+      js::GCPtrObject* objectPtr =
+          reinterpret_cast<js::GCPtrObject*>(base + offset);
       objectPtr->init(nullptr);
       return;
     }
 
     case ReferenceType::TYPE_STRING: {
-      js::GCPtrString* stringPtr = reinterpret_cast<js::GCPtrString*>(mem);
+      js::GCPtrString* stringPtr =
+          reinterpret_cast<js::GCPtrString*>(base + offset);
       stringPtr->init(rt_->emptyString);
       return;
     }
@@ -2789,7 +2793,7 @@ void TypeDescr::initInstance(const JSRuntime* rt, uint8_t* mem) {
   // Initialize the instance
   memset(mem, 0, size());
   if (opaque()) {
-    visitReferences(*this, mem, visitor);
+    VisitReferences(*this, mem, visitor, 0);
   }
 }
 
@@ -2804,16 +2808,16 @@ class MemoryTracingVisitor {
  public:
   explicit MemoryTracingVisitor(JSTracer* trace) : trace_(trace) {}
 
-  void visitReference(ReferenceTypeDescr& descr, uint8_t* mem);
+  void visitReference(ReferenceTypeDescr& descr, uint8_t* base, size_t offset);
 };
 
 }  // namespace
 
 void MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr,
-                                          uint8_t* mem) {
+                                          uint8_t* base, size_t offset) {
   switch (descr.type()) {
     case ReferenceType::TYPE_ANY: {
-      GCPtrValue* heapValue = reinterpret_cast<js::GCPtrValue*>(mem);
+      GCPtrValue* heapValue = reinterpret_cast<js::GCPtrValue*>(base + offset);
       TraceEdge(trace_, heapValue, "reference-val");
       return;
     }
@@ -2822,13 +2826,15 @@ void MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr,
       // TODO/AnyRef-boxing: With boxed immediates and strings the tracing code
       // will be more complicated.  For now, tracing as an object is fine.
     case ReferenceType::TYPE_OBJECT: {
-      GCPtrObject* objectPtr = reinterpret_cast<js::GCPtrObject*>(mem);
+      GCPtrObject* objectPtr =
+          reinterpret_cast<js::GCPtrObject*>(base + offset);
       TraceNullableEdge(trace_, objectPtr, "reference-obj");
       return;
     }
 
     case ReferenceType::TYPE_STRING: {
-      GCPtrString* stringPtr = reinterpret_cast<js::GCPtrString*>(mem);
+      GCPtrString* stringPtr =
+          reinterpret_cast<js::GCPtrString*>(base + offset);
       TraceNullableEdge(trace_, stringPtr, "reference-str");
       return;
     }
@@ -2840,24 +2846,29 @@ void MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr,
 void TypeDescr::traceInstance(JSTracer* trace, uint8_t* mem) {
   MemoryTracingVisitor visitor(trace);
 
-  visitReferences(*this, mem, visitor);
+  VisitReferences(*this, mem, visitor, 0);
 }
 
 namespace {
 
 struct TraceListVisitor {
-  typedef Vector<int32_t, 0, SystemAllocPolicy> VectorType;
-  VectorType stringOffsets, objectOffsets, valueOffsets;
+  using OffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
+  OffsetVector stringOffsets;
+  OffsetVector objectOffsets;
+  OffsetVector valueOffsets;
 
-  void visitReference(ReferenceTypeDescr& descr, uint8_t* mem);
+  void visitReference(ReferenceTypeDescr& descr, uint8_t* base, size_t offset);
 
   bool fillList(Vector<uint32_t>& entries);
 };
 
 }  // namespace
 
-void TraceListVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem) {
-  VectorType* offsets;
+void TraceListVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* base,
+                                      size_t offset) {
+  MOZ_ASSERT(!base);
+
+  OffsetVector* offsets;
   // TODO/AnyRef-boxing: Once a WasmAnyRef is no longer just a JSObject*
   // we must revisit this structure.
   switch (descr.type()) {
@@ -2878,7 +2889,9 @@ void TraceListVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem) {
   }
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!offsets->append((uintptr_t)mem)) {
+
+  MOZ_ASSERT(offset <= UINT32_MAX);
+  if (!offsets->append(offset)) {
     oomUnsafe.crash("TraceListVisitor::visitReference");
   }
 }
@@ -2901,7 +2914,7 @@ static bool CreateTraceList(JSContext* cx, HandleTypeDescr descr) {
   }
 
   TraceListVisitor visitor;
-  visitReferences(*descr, nullptr, visitor);
+  VisitReferences(*descr, nullptr, visitor, 0);
 
   Vector<uint32_t> entries(cx);
   if (!visitor.fillList(entries)) {
