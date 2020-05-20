@@ -80,8 +80,8 @@ import org.mozilla.fenix.utils.RunWhenReadyQueue
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.browser.tabstray.TabsAdapter
 import mozilla.components.browser.tabstray.BrowserTabsTray
-import mozilla.components.browser.tabstray.DefaultTabViewHolder
 import org.mozilla.fenix.tabtray.TabTrayFragmentDirections
+import org.mozilla.fenix.tabtray.TabTrayViewHolder
 
 /**
  * The main activity of the application. The application is primarily a single Activity (this one)
@@ -222,14 +222,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         }.asView()
         TabsTray::class.java.name -> {
             val layout = LinearLayoutManager(context)
-            val adapter = TabsAdapter { parentView, tabsTray ->
-
-                DefaultTabViewHolder(
-                    LayoutInflater.from(parentView.context).inflate(
+            val adapter = TabsAdapter { parentView, _ ->
+                TabTrayViewHolder(
+                    LayoutInflater.from(this).inflate(
                         R.layout.tab_tray_item,
                         parentView,
-                        false),
-                    tabsTray
+                        false)
                 )
             }
             val decoration = DividerItemDecoration(

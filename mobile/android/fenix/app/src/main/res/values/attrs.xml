@@ -57,6 +57,7 @@
     <attr name="tabTrayItemSelectedBackground" format="reference" />
     <attr name="tabTrayToolbarBackground" format="reference" />
     <attr name="tabTrayItemDivider" format="reference" />
+    <attr name="tabTrayItemMediaBackground" format="reference" />
 
     <declare-styleable name="TrackingProtectionCategory">
         <attr name="categoryItemTitle" format="reference" />
