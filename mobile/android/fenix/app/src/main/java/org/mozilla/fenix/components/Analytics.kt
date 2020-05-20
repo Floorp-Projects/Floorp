@@ -14,8 +14,10 @@ import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.components.metrics.AdjustMetricsService
 import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.LeanplumMetricsService
@@ -43,7 +45,8 @@ class Analytics(
                 BuildConfig.SENTRY_TOKEN,
                 tags = mapOf("geckoview" to "$MOZ_APP_VERSION-$MOZ_APP_BUILDID"),
                 environment = BuildConfig.BUILD_TYPE,
-                sendEventForNativeCrashes = true
+                sendEventForNativeCrashes = true,
+                sentryProjectUrl = getSentryProjectUrl()
             )
 
             services.add(sentryService)
@@ -94,4 +97,17 @@ class Analytics(
     }
 }
 
-fun isSentryEnabled() = !BuildConfig.SENTRY_TOKEN.isNullOrEmpty()
+private fun isSentryEnabled() = !BuildConfig.SENTRY_TOKEN.isNullOrEmpty()
+
+private fun getSentryProjectUrl(): String? {
+    val baseUrl = "https://sentry.prod.mozaws.net/operations"
+    return when (Config.channel) {
+        ReleaseChannel.FenixProduction -> "$baseUrl/fenix"
+        ReleaseChannel.FenixBeta -> "$baseUrl/fenix-beta"
+        ReleaseChannel.FenixNightly -> "$baseUrl/fenix-nightly"
+        ReleaseChannel.FennecProduction -> "$baseUrl/fenix-fennec"
+        ReleaseChannel.FennecBeta -> "$baseUrl/fenix-fennec-beta"
+        ReleaseChannel.FennecNightly -> "$baseUrl/fenix-fennec-nightly"
+        else -> null
+    }
+}
