@@ -3979,7 +3979,7 @@ mozilla::ipc::IPCResult ContentChild::RecvMaybeExitFullscreen(
 
 mozilla::ipc::IPCResult ContentChild::RecvWindowPostMessage(
     const MaybeDiscarded<BrowsingContext>& aContext,
-    const ClonedMessageData& aMessage, const PostMessageData& aData) {
+    const ClonedOrErrorMessageData& aMessage, const PostMessageData& aData) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));

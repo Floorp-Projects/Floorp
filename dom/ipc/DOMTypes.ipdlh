@@ -71,6 +71,14 @@ struct ClonedMessageData
   MessagePortIdentifier[] identifiers;
 };
 
+struct ErrorMessageData {
+};
+
+union ClonedOrErrorMessageData {
+  ClonedMessageData;
+  ErrorMessageData;
+};
+
 struct RefMessageData {
   nsID uuid;
 };

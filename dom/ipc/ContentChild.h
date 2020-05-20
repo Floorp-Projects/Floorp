@@ -765,7 +765,7 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvWindowPostMessage(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      const ClonedMessageData& aMessage, const PostMessageData& aData);
+      const ClonedOrErrorMessageData& aMessage, const PostMessageData& aData);
 
   mozilla::ipc::IPCResult RecvCommitBrowsingContextTransaction(
       const MaybeDiscarded<BrowsingContext>& aContext,
