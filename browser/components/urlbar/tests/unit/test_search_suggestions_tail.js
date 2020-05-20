@@ -150,8 +150,9 @@ add_task(async function basic_tail() {
 
 /**
  * Tests a suggestions provider that returns both normal and tail suggestions.
+ * Only normal results should be shown.
  */
-add_task(async function mixed_results() {
+add_task(async function mixed_suggestions() {
   // When normal suggestions are mixed with tail suggestions, they appear at the
   // correct position in the google:suggestdetail array as empty objects.
   setSuggestionsFn(searchStr => {
@@ -185,24 +186,75 @@ add_task(async function mixed_results() {
         suggestion: "what is the time today texas",
         tail: undefined,
       }),
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        suggestion: query + "oronto",
-        tail: "toronto",
-      }),
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        suggestion: query + "unisia",
-        tail: "tunisia",
-      }),
     ],
   });
   await cleanUpSuggestions();
 });
 
 /**
+ * Tests a search that returns history results, bookmark results and tail
+ * suggestions. Only the history and bookmark results should be shown.
+ */
+add_task(async function mixed_results() {
+  await PlacesTestUtils.addVisits([
+    {
+      uri: Services.io.newURI("http://example.com/1"),
+      title: "what time is",
+    },
+  ]);
+
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://example.com/2",
+    title: "what time is",
+  });
+
+  // Tail suggestions should not be shown.
+  const query = "what time is";
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeBookmarkResult(context, {
+        uri: "http://example.com/2",
+        title: "what time is",
+      }),
+      makeVisitResult(context, {
+        uri: "http://example.com/1",
+        title: "what time is",
+      }),
+    ],
+  });
+
+  // Once we make the query specific enough to exclude the history and bookmark
+  // results, we should show tail suggestions.
+  const tQuery = "what time is it in t";
+  context = createContext(tQuery, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: ENGINE_NAME,
+        suggestion: tQuery + "oronto",
+        tail: "toronto",
+      }),
+      makeSearchResult(context, {
+        engineName: ENGINE_NAME,
+        suggestion: tQuery + "unisia",
+        tail: "tunisia",
+      }),
+    ],
+  });
+
+  await cleanUpSuggestions();
+});
+
+/**
  * Tests that tail suggestions are deduped if their full-text form is a dupe of
- * a local search suggestion.
+ * a local search suggestion. Remaining tail suggestions should also not be
+ * shown since we do not mix tail and non-tail suggestions.
  */
 add_task(async function dedupe_local() {
   Services.prefs.setIntPref("browser.urlbar.maxHistoricalSearchSuggestions", 1);
@@ -218,11 +270,6 @@ add_task(async function dedupe_local() {
         engineName: ENGINE_NAME,
         suggestion: query + "oronto",
         tail: undefined,
-      }),
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        suggestion: query + "unisia",
-        tail: "tunisia",
       }),
     ],
   });

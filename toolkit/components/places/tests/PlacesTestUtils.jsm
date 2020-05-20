@@ -168,7 +168,8 @@ var PlacesTestUtils = Object.freeze({
   },
 
   /**
-   * Adds a bookmark to the database.
+   * Adds a bookmark to the database. This should only be used when you need to
+   * add keywords. Otherwise, use `PlacesUtils.bookmarks.insert()`.
    * @param {string} aBookmarkObj.uri
    * @param {string} [aBookmarkObj.title]
    * @param {string} [aBookmarkObj.keyword]
