@@ -128,6 +128,21 @@ class nsIStyleSheetLinkingElement : public nsISupports {
   virtual void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) = 0;
 
   /**
+   * Used to obtain the style sheet linked in by this element.
+   *
+   * @return the style sheet associated with this element.
+   */
+  virtual mozilla::StyleSheet* GetStyleSheet() = 0;
+
+  /**
+   * Initialize the stylesheet linking element. If aDontLoadStyle is
+   * true the element will ignore the first modification to the
+   * element that would cause a stylesheet to be loaded. Subsequent
+   * modifications to the element will not be ignored.
+   */
+  virtual void InitStyleLinkElement(bool aDontLoadStyle) = 0;
+
+  /**
    * Tells this element to update the stylesheet.
    *
    * @param aObserver    observer to notify once the stylesheet is loaded.
@@ -152,6 +167,15 @@ class nsIStyleSheetLinkingElement : public nsISupports {
    * @param aCharset the charset
    */
   virtual void GetCharset(nsAString& aCharset) = 0;
+
+  /**
+   * Tells this element to use a different base URI. This is used for
+   * proper loading of xml-stylesheet processing instructions in XUL overlays
+   * and is only currently used by nsXMLStylesheetPI.
+   *
+   * @param aNewBaseURI the new base URI, nullptr to use the default base URI.
+   */
+  virtual void OverrideBaseURI(nsIURI* aNewBaseURI) = 0;
 
   // This doesn't entirely belong here since they only make sense for
   // some types of linking elements, but it's a better place than

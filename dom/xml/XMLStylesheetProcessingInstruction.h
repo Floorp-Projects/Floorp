@@ -47,14 +47,8 @@ class XMLStylesheetProcessingInstruction final : public ProcessingInstruction {
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
 
-  /**
-   * Tells this processing instruction to use a different base URI. This is used
-   * for proper loading of xml-stylesheet processing instructions in XUL
-   * overlays and is only currently used by nsXMLStylesheetPI.
-   *
-   * @param aNewBaseURI the new base URI, nullptr to use the default base URI.
-   */
-  void OverrideBaseURI(nsIURI* aNewBaseURI);
+  // nsIStyleSheetLinkingElement
+  virtual void OverrideBaseURI(nsIURI* aNewBaseURI) override;
 
   // nsStyleLinkElement
   void GetCharset(nsAString& aCharset) override;
