@@ -5887,6 +5887,13 @@ impl Renderer {
                                                          None);
                             }
 
+                            // If picture caching is disabled, we will be drawing the entire
+                            // framebuffer. In that case, we need to push a screen size dirty
+                            // rect, in case partial present is enabled (an empty array of
+                            // dirty rects when partial present is enabled is interpreted by
+                            // Gecko as meaning nothing has changed and a swap is not required).
+                            results.dirty_rects.push(frame.device_rect);
+
                             self.draw_color_target(
                                 draw_target,
                                 main_target,
