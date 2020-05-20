@@ -124,6 +124,7 @@ function displayDns(data) {
 
     row.appendChild(column);
     row.appendChild(col(data.entries[i].expiration));
+    row.appendChild(col(data.entries[i].originAttributesSuffix));
     new_cont.appendChild(row);
   }
 
