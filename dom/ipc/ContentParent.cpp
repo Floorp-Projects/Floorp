@@ -924,6 +924,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
   RefPtr<ContentParent> p;
   bool preallocated = false;
   if (!aRemoteType.EqualsLiteral(FILE_REMOTE_TYPE) &&
+      !aRemoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE) &&  // Bug 1638119
       (p = PreallocatedProcessManager::Take(aRemoteType)) &&
       !p->mShutdownPending) {
     // p may be a preallocated process, or (if not PREALLOC_REMOTE_TYPE)
@@ -998,7 +999,8 @@ ContentParent::GetNewOrUsedBrowserProcessInternal(Element* aFrameElement,
     // We have located a process. It may not have finished initializing,
     // this will be for the caller to handle.
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("GetNewOrUsedProcess: Used process %p", contentParent.get()));
+            ("GetNewOrUsedProcess: Used process %p (launching %d)",
+             contentParent.get(), contentParent->IsLaunching()));
     return contentParent.forget();
   }
 
@@ -2472,6 +2474,8 @@ ContentParent::~ContentParent() {
 bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   XPCOMInitData xpcomInit;
 
+  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+          ("ContentParent::InitInternal: %p", (void*)this));
   nsCOMPtr<nsIIOService> io(do_GetIOService());
   MOZ_ASSERT(io, "No IO service?");
   DebugOnly<nsresult> rv = io->GetOffline(&xpcomInit.isOffline());
