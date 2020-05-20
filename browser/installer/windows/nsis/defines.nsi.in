@@ -131,6 +131,10 @@
 !define MOZ_DEFAULT_BROWSER_AGENT
 #endif
 
+#ifdef NIGHTLY_BUILD
+!define NIGHTLY_BUILD
+#endif
+
 !if "@AB_CD@" == "en-US"
 !define MOZ_OPTIONAL_EXTENSIONS
 !else if "@AB_CD@" == "zh-CN"
