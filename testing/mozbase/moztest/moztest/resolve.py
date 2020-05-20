@@ -692,6 +692,22 @@ class TestResolver(MozbuildObject):
             return True
         return False
 
+    def get_wpt_group(self, test):
+        """Given a test object, set the group (aka manifest) that it belongs to.
+
+        Args:
+            test (dict): Test object for the particular suite and subsuite.
+
+        Returns:
+            str: The group the given test belongs to.
+        """
+        # Extract the first path component (top level directory) as the key.
+        # This value should match the path in manifest-runtimes JSON data.
+        # Mozilla WPT paths have one extra URL component in the front.
+        components = 3 if test['name'].startswith('/_mozilla') else 2
+        group = '/'.join(test['name'].split('/')[:components])
+        return group
+
     def add_wpt_manifest_data(self):
         """Adds manifest data for web-platform-tests into the list of available tests.
 
@@ -733,20 +749,29 @@ class TestResolver(MozbuildObject):
                 src_path = mozpath.relpath(full_path, self.topsrcdir)
 
                 for test in tests:
-                    self._tests.append({
+                    testobj = {
                         "head": "",
                         "support-files": "",
                         "path": full_path,
                         "flavor": "web-platform-tests",
                         "subsuite": test_type,
                         "here": mozpath.dirname(path),
-                        "manifest": mozpath.dirname(full_path),
-                        "manifest_relpath": mozpath.dirname(src_path),
                         "name": test.id,
                         "file_relpath": src_path,
                         "srcdir_relpath": src_path,
                         "dir_relpath": mozpath.dirname(src_path),
-                    })
+                    }
+                    group = self.get_wpt_group(testobj)
+                    testobj["manifest"] = group
+
+                    test_root = "tests"
+                    if group.startswith("/_mozilla"):
+                        test_root = os.path.join("mozilla", "tests")
+                        group = group[len("/_mozilla"):]
+
+                    group = group.lstrip("/")
+                    testobj["manifest_relpath"] = os.path.join(wpt_path, test_root, group)
+                    self._tests.append(testobj)
 
         self._wpt_loaded = True
 
