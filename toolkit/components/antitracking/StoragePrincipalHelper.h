@@ -12,108 +12,185 @@
 /**
  * StoragePrincipal
  * ~~~~~~~~~~~~~~~~
- *
+
  * StoragePrincipal is the nsIPrincipal to be used to open the cookie jar of a
  * resource's origin. Normally, the StoragePrincipal corresponds to the
- * resource's origin, but, in some scenarios, it can be different: it can have
- * some extra origin attributes.
+ * resource's origin, but, in some scenarios, it can be different: it has the
+ * `firstPartyDomain` attribute set to the top-level “site” (i.e., scheme plus
+ * eTLD+1 of the origin of the top-level document).
  *
- * Each storage component, should always use the StoragePrincipal instead of the
- * 'real' one in order to implement the partitioning correctly.
+ * Each storage component should always use the StoragePrincipal instead of the
+ * 'real' one in order to implement the partitioning correctly. See the list of
+ * the components here: https://privacycg.github.io/storage-partitioning/
  *
  * On the web, each resource has its own origin (see
  * https://html.spec.whatwg.org/multipage/origin.html#concept-origin) and each
  * origin has its own cookie jar, containing cookies, storage data, cache and so
  * on.
  *
- * In addition, gecko has a set of attributes to differentiate the same origin
- * in different contexts (OriginAttributes). The main ones are:
- * - privateBrowsingId, for private browsing navigation.
- * - userContextId, for containers
- * - firstPartyIsolation, for TOR.
- *
  * In gecko-world, the origin and its attributes are stored and managed by the
- * nsIPrincipal interface. Both resource's Principal and resource's
+ * nsIPrincipal interface. Both a resource's Principal and a resource's
  * StoragePrincipal are nsIPrincipal interfaces and, normally, they are the same
  * object.
  *
- * Here is the way you can obtain the two Principals:
+ * Naming and usage
+ * ~~~~~~~~~~~~~~~~
+ *
+ * StoragePrincipal exposes three types of principals for a resource:
+ * - Regular Principal:
+ *     A “first-party” principal derived from the origin of the resource. This
+ *     does not have the `first-party-domain` origin attribute set.
+ * - Partitioned Principal:
+ *     The regular principal plus the first-party-domain origin attribute set to
+ *     the site of the top-level document (i.e., scheme plus eTLD+1).
+ * - Storage Access Principal:
+ *     A dynamic principal that changes when a resource receives storage access.
+ *     By default, when storage access is denied, this is equal to the
+ *     Partitioned Principal. When storage access is granted, this is equal to
+ *     the Regular Principal.
+ *
+ * Consumers of StoragePrincipal can request the principal type that meets their
+ * needs. For example, storage that should always be partitioned should choose
+ * the Partitioned Principal, while storage that should change with storage
+ * access grants should choose the Storage Access Principal.
+ *
+ * You can obtain these nsIPrincipal objects:
+ *
  * From a Document:
- * - Document's principal: nsINode::NodePrincipal
- * - Document's StoragePrincipal: Document::EffectiveStoragePrincipal
+ * - Regular Principal: nsINode::NodePrincipal
+ * - Storage Access Principal: Document::EffectiveStoragePrincipal
+ * - Partitioned Principal: Document::IntrinsicStoragePrincipal
+ *
  * From a Global object:
- * - nsIScriptObjectPrincipal::getPrincipal
- * - nsIScriptObjectPrincipal::getEffectiveStoragePrincipal
+ * - Regular Principal: nsIScriptObjectPrincipal::GetPrincipal
+ * - Storage Access Principal:
+ *     nsIScriptObjectPrincipal::GetEffectiveStoragePrincipal
+ * - Partitioned Principal: nsIScriptObjectPrincipal::IntrinsicStoragePrincipal
+ *
  * From a Worker:
- * - WorkerPrivate::GetPrincipal().
- * - WorkerPrivate::GetEffectiveStoragePrincipal();
+ * - Regular Principal: WorkerPrivate::GetPrincipal
+ * - Storage Access Principal: WorkerPrivate::GetEffectiveStoragePrincipal
+ *
  * For a nsIChannel, the final principals must be calculated and they can be
  * obtained by calling:
- * - nsIScriptSecurityManager::getChannelResultPrincipal() or
- * - nsIScriptSecurityManager::getChannelResultStoragePrincipal().
+ * - Regular Principal: nsIScriptSecurityManager::getChannelResultPrincipal
+ * - Storage Access Principal:
+ *     nsIScriptSecurityManager::getChannelResultStoragePrincipal
  *
- * Principal VS StoragePrincipal
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Each use of nsIPrincipal is unique and it should be reviewed by anti-tracking
+ * peers. But we can group the use of nsIPrincipal in these categories:
  *
- * At the moment, we are experimenting the partitioning of cookie jars for 3rd
- * party trackers: each 3rd party origin, detected as a tracker, will have a
- * partitioned cookie jar, created by the tracker's origin, plus, the
- * first-party domain.
- *
- * This means that, for those origins, StoragePrincipal will be  equal to the
- * main Principal but it will also have the 'first-party-domain' attribute set
- * as the first-party URL's domain. Because of this, the tracker's cookie jar
- * will be partitioned and it will be unique per first-party domain.
- *
- * The naminig is important. This is why Document has the StoragePrincipal
- * stored in a member variable called mIntrinsicStoragePrincipal: this
- * storagePrincipal is immutable even when Document::EffectiveStoragePrincipal
- * returns the main principal.
+ * - Network loading: use the Regular Principal
+ * - Cache, not directly visible by content (network cache, HSTS, image cache,
+ *   etc): Use the Storage Access Principal (in the future we will use the
+ *   Partitioned Principal, but this part is not done yet)
+ * - Storage APIs or anything that is written on disk (or kept in memory in
+ *   private-browsing): use the Storage Access Principal
+ * - PostMessage: if in the agent-cluster, use the Regular Principal. Otherwise,
+ *   use the Storage Access Principal
  *
  * Storage access permission
  * ~~~~~~~~~~~~~~~~~~~~~~~~~
  *
- * A resource's origin and its attributes are immutable. StoragePrincipal can
- * change: when a tracker has the storage permission granted, its
- * StoragePrincipal becomes equal to its document's principal. In this way, the
- * tracker will have access to its first-party cookie jar, escaping from the
- * its partitioning.
+ * When the storage access permission is granted, any of the Storage Access
+ * Principal getter methods will return the Regular Principal instead of the
+ * Partitioned Principal, and each storage component should consider the new
+ * principal only.
  *
- * To know more about when the storage access permission is granted, see the
- * anti-tracking project's documentation.
- * See: https://developer.mozilla.org/en-US/docs/Web/API/Storage_Access_API and
- * https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Privacy/Storage_access_policy#Storage_access_grants
+ * The trackers and the 3rd parties (in dFPI) will have access to its
+ first-party
+ * cookie jar, escaping from its partitioning.
  *
+ * Storage access permissions can be granted in several ways:
+ * - The Storage Access API
+ *     (https://developer.mozilla.org/en-US/docs/Web/API/Storage_Access_API)
+ * - ETP’s heuristics
  *
- * When the storage access permission is granted, any of the StoragePrincipal
- * getter methods will return the main principal instead of the storage one, and
- * each storage component should consider the new Principal only.
+ (https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Privacy/Storage_access_policy#Storage_access_grants)
+ * - A dFPI-specific login heuristic
+ *     (https://bugzilla.mozilla.org/show_bug.cgi?id=1616585#c12)
  *
- * There are several ways to receive storage-permission notifications:
+ * There are several ways to receive storage-permission notifications. You can
+ * use these notifications to re-initialize components, to nullify or enable
+ them
+ * to use the “new” effective StoragePrincipal. The list of the notifications
+ is:
+ *
  * - Add some code in nsGlobalWindowInner::StorageAccessGranted().
  * - WorkerScope::FirstPartyStorageAccessGranted for Workers.
  * - observe the permission changes (not recommended)
+ *
+ * Scope of Storage Access
+ * ~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ * Immediately after access is granted, the permission is propagated and
+ notified
+ * to any contexts (windows and workers) in the same agent-cluster
+ * (BrowserContextGroup).
+ *
+ * This means that if A.com has 2 iframes with B.com, and one of the 2 Bs
+ obtains
+ * the storage access, the other B will be notified too. Other B.com, 3rd
+ parties
+ * in other agent clusters will not obtain the storage permission.
+ *
+ * When the page is reloaded or is loaded for the first time, if it contains
+ * B.com, and B.com has received the storage permission for the same first-party
+ * in a previous loading, B.com will have the storage access permission granted
+ * immediately.
+ *
+ * Cookies, LocalStorage, indexedDB
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ * When granting storage permission, several storage and channel API getters and
+ * constructors will start exposing first-party cookie jar objects
+ (localStorage,
+ * BroadcastChannel, etc).
+ *
+ * There is a side effect of this change: If a tracker has a reference to these
+ * objects pre-storage permission granting, it will be able to interact with the
+ * partitioned and the non-partitioned cookie jar at the same time. Note that
+ * similar synchronization can be done server-side too. Because of this, we
+ don’t
+ * think that privacy-wise, this is an issue.
+ *
+ * localStorage supports StoragePrincipal, and will be switched after storage
+ * access is granted. Trackers listed in the pref
+ * privacy.restrict3rdpartystorage.partitionedHosts will use another special
+ * partitioned session-only storage called PartitionedLocalStorage.
+ *
+ * sessionStorage is not covered by StoragePrincipal, but is double-keyed using
+ * the top-level site when dFPI is active
+ * (https://bugzilla.mozilla.org/show_bug.cgi?id=1629707).
  *
  * SharedWorkers and BroadcastChannels
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  * SharedWorker and BroadcastChannel instances latch the effective storage
- * principal at the moment of their creation.  Existing bindings to the
+ * principal at the moment of their creation. Existing bindings to the
  * partitioned storage principal will continue to exist and operate even as it
- * becomes possible to create bindings associated with the non-partitioned node
- * principal.  This makes it possible for such globals to bi-directionally
- * bridge information between partitioned and non-partitioned principals.
+ * becomes possible to create bindings associated with the Regular Principal.
+ * This makes it possible for such globals to bi-directionally bridge
+ information
+ * between partitioned and non-partitioned principals.
+ *
+ * This is true until the page is reloaded. After the reload, the partitioned
+ * cookie jar will no longer be accessible.
+ *
+ * We are planning to clear the partitioned site-data as soon as the page is
+ * reloaded or dismissed (not done yet - bug 1628313).
  *
  * {Dedicated,Shared,Service}Workers
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  * The storage access permission propagation happens with a ControlRunnable.
- * This could impact the use of sync event-loops. Take a reference of the
- * principal you want to use because it can change!
+ This
+ * could impact the use of sync event-loops. Take a reference of the principal
+ * you want to use because it can change!
  *
  * ServiceWorkers are currently disabled for partitioned contexts.
  *
- * Client API uses the main principal always because there is not a direct
+ * Client API uses the regular nsIPrincipal always because there is not a direct
  * connection between this API and the cookie jar. If we want to support
  * ServiceWorkers in partitioned context, this part must be revisited.
  */
