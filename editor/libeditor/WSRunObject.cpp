@@ -1316,7 +1316,8 @@ EditorDOMPointInText WSRunScanner::GetInclusiveNextEditableCharPoint(
   }
 
   EditorRawDOMPoint point;
-  if (nsIContent* child = aPoint.GetChild()) {
+  if (nsIContent* child =
+          aPoint.CanContainerHaveChildren() ? aPoint.GetChild() : nullptr) {
     nsIContent* leafContent = child->HasChildren()
                                   ? HTMLEditUtils::GetFirstLeafChild(
                                         *child, ChildBlockBoundary::Ignore)
@@ -1380,7 +1381,9 @@ EditorDOMPointInText WSRunScanner::GetPreviousEditableCharPoint(
   }
 
   EditorRawDOMPoint point;
-  if (nsIContent* previousChild = aPoint.GetPreviousSiblingOfChild()) {
+  if (nsIContent* previousChild = aPoint.CanContainerHaveChildren()
+                                      ? aPoint.GetPreviousSiblingOfChild()
+                                      : nullptr) {
     nsIContent* leafContent =
         previousChild->HasChildren()
             ? HTMLEditUtils::GetLastLeafChild(*previousChild,
