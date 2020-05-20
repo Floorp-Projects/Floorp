@@ -17,6 +17,10 @@
   test_invalid_selector("::slotted(*):host");
   test_invalid_selector("::slotted(*):host(div)");
   test_invalid_selector("::slotted(*):hover");
+  test_invalid_selector("::slotted(*):is(:hover)");
+  test_invalid_selector("::slotted(*):where(:hover)");
+  test_invalid_selector("::slotted(*):is(#id)");
+  test_invalid_selector("::slotted(*):where(#id)");
   test_invalid_selector("::slotted(*):read-only");
   test_invalid_selector("::slotted(*)::slotted(*)");
   test_invalid_selector("::slotted(*)::before::slotted(*)");

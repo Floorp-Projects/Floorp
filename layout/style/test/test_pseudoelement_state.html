@@ -75,6 +75,24 @@ var gTests = [
     active_test_style:      'body input::-moz-range-thumb:active { background: lime; }',
     active_reference_style: 'body input::-moz-range-thumb { background: lime; }' },
 
+  // Do the same as above, but using :is instead.
+  { markup:                 '<input type="range" value="50" min="0" max="100">',
+    pseudoelement:          '::-moz-range-thumb',
+    common_style:           'body input { -moz-appearance: none; } input::-moz-range-thumb { background: black; }',
+    hover_test_style:       'body input::-moz-range-thumb:is(:hover) { background: green; }',
+    hover_reference_style:  'body input::-moz-range-thumb { background: green; }',
+    active_test_style:      'body input::-moz-range-thumb:is(:active) { background: lime; }',
+    active_reference_style: 'body input::-moz-range-thumb { background: lime; }' },
+
+  // Do the same as above, but using :not instead.
+  { markup:                 '<input type="range" value="50" min="0" max="100">',
+    pseudoelement:          '::-moz-range-thumb',
+    common_style:           'input { -moz-appearance: none; } input::-moz-range-thumb { background: green } input::-moz-range-thumb:not(:hover) { background: black; }',
+    hover_test_style:       '',
+    hover_reference_style:  'input::-moz-range-thumb { background: green !important; }',
+    active_test_style:      'input::-moz-range-thumb:active { background: lime !important; }',
+    active_reference_style: 'input::-moz-range-thumb { background: lime !important; }' },
+
   // ::placeholder can't be tested, since the UA style sheet sets it to
   // be pointer-events:none.
 ];
