@@ -19,11 +19,9 @@
 #include "nsIStreamListener.h"
 #include "nsIRedirectHistoryEntry.h"
 #include "nsReadableUtils.h"
-#include "nsIXPConnect.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -733,9 +731,6 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  initalSecurityChecksDone: %s\n",
              aLoadInfo->GetInitialSecurityCheckDone() ? "true" : "false"));
-    MOZ_LOG(sCSMLog, LogLevel::Verbose,
-            ("  allowDeprecatedSystemRequests: %s\n",
-             aLoadInfo->GetAllowDeprecatedSystemRequests() ? "true" : "false"));
 
     // Log CSPrequestPrincipal
     nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadInfo->GetCsp();
@@ -771,77 +766,54 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
       !loadInfo->GetLoadingPrincipal()->IsSystemPrincipal()) {
     return NS_OK;
   }
-  // loads with the allow flag are waived through
-  // until refactored (e.g., Shavar, OCSP)
+
+  nsCOMPtr<nsIURI> finalURI;
+  NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalURI));
+
   if (loadInfo->GetAllowDeprecatedSystemRequests()) {
+    return NS_OK;
+  }
+  // nothing to do here if we are not loading a resource using http:, https:,
+  // etc.
+  if (!nsContentUtils::SchemeIs(finalURI, "http") &&
+      !nsContentUtils::SchemeIs(finalURI, "https") &&
+      !nsContentUtils::SchemeIs(finalURI, "ftp")) {
     return NS_OK;
   }
 
   nsContentPolicyType contentPolicyType =
       loadInfo->GetExternalContentPolicyType();
-  // allowing data fetches due to their lowered risk
-  // i.e., limited parsing, no rendering
-  if ((contentPolicyType == nsIContentPolicy::TYPE_FETCH) ||
-      (contentPolicyType == nsIContentPolicy::TYPE_XMLHTTPREQUEST) ||
-      (contentPolicyType == nsIContentPolicy::TYPE_WEBSOCKET)) {
-    return NS_OK;
-  }
 
-  // Allow the user interface (e.g., schemes like chrome, resource)
-  nsCOMPtr<nsIURI> finalURI;
-  NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalURI));
-  bool isUiResource = false;
-  if (NS_SUCCEEDED(NS_URIChainHasFlags(
-          finalURI, nsIProtocolHandler::URI_IS_UI_RESOURCE, &isUiResource)) &&
-      isUiResource) {
-    return NS_OK;
-  }
-  // For about: and extension-based URIs, which don't get
-  // URI_IS_UI_RESOURCE, first remove layers of view-source:, if present.
-  while (finalURI && finalURI->SchemeIs("view-source")) {
-    nsCOMPtr<nsINestedURI> nested = do_QueryInterface(finalURI);
-    if (nested) {
-      nested->GetInnerURI(getter_AddRefs(finalURI));
-    }
-  }
-  // This is our escape hatch, if things break in release.
-  // We expect to remove the pref in bug 1638770
-  bool cancelNonLocalSystemPrincipal =
-      Preferences::GetBool("security.cancel_non_local_systemprincipal");
-
-  // GetInnerURI can return null for malformed nested URIs like moz-icon:trash
-  if (!finalURI && cancelNonLocalSystemPrincipal) {
-    aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
-  // loads of userContent.css during startup and tests that show up as file:
-  if (finalURI->SchemeIs("file")) {
-    if ((contentPolicyType == nsIContentPolicy::TYPE_STYLESHEET) ||
-        (contentPolicyType == nsIContentPolicy::TYPE_OTHER)) {
+  // We distinguish between 2 cases:
+  // a) remote scripts
+  //    which should never be loaded into system privileged contexts
+  // b) remote documents/frames
+  //    which generally should also never be loaded into system
+  //    privileged contexts but with some exceptions.
+  if (contentPolicyType == nsIContentPolicy::TYPE_SCRIPT) {
+    if (StaticPrefs::
+            dom_security_skip_remote_script_assertion_in_system_priv_context()) {
       return NS_OK;
     }
-  }
-  // loads from within omni.ja and system add-ons use jar:
-  // this is safe to allow, because we do not support remote jar.
-  // about: resources are always allowed: they are part of the build.
-  if (finalURI->SchemeIs("jar") || finalURI->SchemeIs("about")) {
+    nsAutoCString scriptSpec;
+    finalURI->GetSpec(scriptSpec);
+    MOZ_LOG(
+        sCSMLog, LogLevel::Warning,
+        ("Do not load remote scripts into system privileged contexts, url: %s",
+         scriptSpec.get()));
+    MOZ_ASSERT(false,
+               "Do not load remote scripts into system privileged contexts");
+    // Bug 1607673: Do not only assert but cancel the channel and
+    // return NS_ERROR_CONTENT_BLOCKED.
     return NS_OK;
   }
-  // images need less stricter checks
-  if (contentPolicyType == nsIContentPolicy::TYPE_IMAGE) {
-    if (finalURI->SchemeIs("moz-extension") ||
-        finalURI->SchemeIs("page-icon") || finalURI->SchemeIs("data")) {
-      return NS_OK;
-    }
+
+  if ((contentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) &&
+      (contentPolicyType != nsIContentPolicy::TYPE_SUBDOCUMENT)) {
+    return NS_OK;
   }
 
-  // Relaxing restrictions for our test suites:
-  // (1) AreNonLocalConnectionsDisabled() disables network, so http://mochitest
-  // is actually local and allowed. (2) The marionette test framework uses
-  // injections and data URLs to execute scripts, checking for the environment
-  // variable breaks the attack but not the tests.
-  if (xpc::AreNonLocalConnectionsDisabled() ||
-      mozilla::EnvHasValue("MOZ_MARIONETTE")) {
+  if (xpc::AreNonLocalConnectionsDisabled()) {
     bool disallowSystemPrincipalRemoteDocuments = Preferences::GetBool(
         "security.disallow_non_local_systemprincipal_in_tests");
     if (disallowSystemPrincipalRemoteDocuments) {
@@ -860,13 +832,9 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
       sCSMLog, LogLevel::Warning,
       ("SystemPrincipal must not load remote documents. URL: %s", requestedURL)
           .get());
-
   MOZ_ASSERT(false, "SystemPrincipal must not load remote documents.");
-  if (cancelNonLocalSystemPrincipal) {
-    aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
-  return NS_OK;
+  aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
+  return NS_ERROR_CONTENT_BLOCKED;
 }
 
 /*
