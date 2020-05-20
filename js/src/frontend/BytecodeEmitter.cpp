@@ -2432,7 +2432,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   if (!intoScriptStencil(&stencil)) {
     return false;
   }
-  outputScript = stencil.intoScript(cx, compilationInfo, extent);
+  outputScript = JSScript::fromStencil(cx, compilationInfo, stencil, extent);
 
   return !!outputScript;
 }
