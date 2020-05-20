@@ -20,11 +20,14 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/LateWriteChecks.h"
-#include "mozilla/XULStore.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsDirectoryServiceUtils.h"
 #include "prenv.h"
+
+#ifdef MOZ_NEW_XULSTORE
+#  include "mozilla/XULStore.h"
+#endif
 
 namespace mozilla {
 
@@ -150,8 +153,11 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
     if (auto* cache = scache::StartupCache::GetSingletonNoInit()) {
       cache->EnsureShutdownWriteComplete();
     }
+
+#ifdef MOZ_NEW_XULSTORE
     DebugOnly<nsresult> rv = XULStore::Shutdown();
     NS_ASSERTION(NS_SUCCEEDED(rv), "XULStore::Shutdown() failed.");
+#endif
   }
   if (aPhase == sFastShutdownPhase) {
     StopLateWriteChecks();
