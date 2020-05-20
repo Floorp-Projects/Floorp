@@ -75,18 +75,14 @@ using ShapeType = nsFloatManager::ShapeType;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 
 static void MarkAllDescendantLinesDirty(nsBlockFrame* aBlock) {
-  nsLineList::iterator line = aBlock->LinesBegin();
-  nsLineList::iterator endLine = aBlock->LinesEnd();
-  while (line != endLine) {
-    if (line->IsBlock()) {
-      nsIFrame* f = line->mFirstChild;
-      nsBlockFrame* bf = do_QueryFrame(f);
+  for (auto& line : aBlock->Lines()) {
+    if (line.IsBlock()) {
+      nsBlockFrame* bf = do_QueryFrame(line.mFirstChild);
       if (bf) {
         MarkAllDescendantLinesDirty(bf);
       }
     }
-    line->MarkDirty();
-    ++line;
+    line.MarkDirty();
   }
 }
 
@@ -115,11 +111,10 @@ static bool BlockHasAnyFloats(nsIFrame* aFrame) {
   if (!block) return false;
   if (block->GetChildList(nsIFrame::kFloatList).FirstChild()) return true;
 
-  nsLineList::iterator line = block->LinesBegin();
-  nsLineList::iterator endLine = block->LinesEnd();
-  while (line != endLine) {
-    if (line->IsBlock() && BlockHasAnyFloats(line->mFirstChild)) return true;
-    ++line;
+  for (const auto& line : block->Lines()) {
+    if (line.IsBlock() && BlockHasAnyFloats(line.mFirstChild)) {
+      return true;
+    }
   }
   return false;
 }
@@ -418,9 +413,8 @@ void nsBlockFrame::AddSizeOfExcludingThisForTree(
   nsContainerFrame::AddSizeOfExcludingThisForTree(aWindowSizes);
 
   // Add the size of any nsLineBox::mFrames hashtables we might have:
-  for (ConstLineIterator line = LinesBegin(), line_end = LinesEnd();
-       line != line_end; ++line) {
-    line->AddSizeOfExcludingThis(aWindowSizes);
+  for (const auto& line : Lines()) {
+    line.AddSizeOfExcludingThis(aWindowSizes);
   }
   const FrameLines* overflowLines = GetOverflowLines();
   if (overflowLines) {
@@ -1211,14 +1205,11 @@ static bool ClearLineClampEllipsis(nsBlockFrame* aFrame) {
 
   aFrame->RemoveStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS);
 
-  nsBlockFrame::LineIterator line = aFrame->LinesBegin();
-  nsBlockFrame::LineIterator end = aFrame->LinesEnd();
-  while (line != end) {
-    if (line->HasLineClampEllipsis()) {
-      line->ClearHasLineClampEllipsis();
+  for (auto& line : aFrame->Lines()) {
+    if (line.HasLineClampEllipsis()) {
+      line.ClearHasLineClampEllipsis();
       return true;
     }
-    ++line;
   }
 
   // We didn't find a line with the ellipsis; it must have been deleted already.
@@ -1511,9 +1502,8 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     nsSize containerSize = aMetrics.PhysicalSize();
     nscoord deltaX = containerSize.width - state.ContainerSize().width;
     if (deltaX != 0) {
-      for (LineIterator line = LinesBegin(), end = LinesEnd(); line != end;
-           line++) {
-        UpdateLineContainerSize(line, containerSize);
+      for (auto& line : Lines()) {
+        UpdateLineContainerSize(&line, containerSize);
       }
       for (nsIFrame* f : mFloats) {
         nsPoint physicalDelta(deltaX, 0);
@@ -1683,22 +1673,15 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 }
 
 bool nsBlockFrame::CheckForCollapsedBEndMarginFromClearanceLine() {
-  LineIterator begin = LinesBegin();
-  LineIterator line = LinesEnd();
-
-  while (true) {
-    if (begin == line) {
+  for (auto& line : Reversed(Lines())) {
+    if (0 != line.BSize() || !line.CachedIsEmpty()) {
       return false;
     }
-    --line;
-    if (line->BSize() != 0 || !line->CachedIsEmpty()) {
-      return false;
-    }
-    if (line->HasClearance()) {
+    if (line.HasClearance()) {
       return true;
     }
   }
-  // not reached
+  return false;
 }
 
 static nsLineBox* FindLineClampTarget(nsBlockFrame*& aFrame,
@@ -2074,8 +2057,7 @@ void nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
   // the things that makes incremental reflow O(N^2).
   nsOverflowAreas areas(aBounds, aBounds);
   if (!ShouldApplyOverflowClipping(this, aDisplay)) {
-    for (LineIterator line = LinesBegin(), line_end = LinesEnd();
-         line != line_end; ++line) {
+    for (const auto& line : Lines()) {
       if (aDisplay->IsContainLayout()) {
         // If we have layout containment, we should only consider our child's
         // visual overflow, leaving the scrollable regions of the parent
@@ -2083,12 +2065,12 @@ void nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
         // Note: scrollable overflow is a subset of visual overflow,
         // so this has the same affect as unioning the child's visual and
         // scrollable overflow with its parent's visual overflow.
-        nsRect childVisualRect = line->GetVisualOverflowArea();
+        nsRect childVisualRect = line.GetVisualOverflowArea();
         nsOverflowAreas childVisualArea =
             nsOverflowAreas(childVisualRect, nsRect());
         areas.UnionWith(childVisualArea);
       } else {
-        areas.UnionWith(line->GetOverflowAreas());
+        areas.UnionWith(line.GetOverflowAreas());
       }
     }
 
@@ -2123,25 +2105,24 @@ void nsBlockFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
   // get cached and re-used otherwise. Lines aren't exposed as normal
   // frame children, so calling UnionChildOverflow alone will end up
   // using the old cached values.
-  for (LineIterator line = LinesBegin(), line_end = LinesEnd();
-       line != line_end; ++line) {
-    nsRect bounds = line->GetPhysicalBounds();
+  for (auto& line : Lines()) {
+    nsRect bounds = line.GetPhysicalBounds();
     nsOverflowAreas lineAreas(bounds, bounds);
 
-    int32_t n = line->GetChildCount();
-    for (nsIFrame* lineFrame = line->mFirstChild; n > 0;
+    int32_t n = line.GetChildCount();
+    for (nsIFrame* lineFrame = line.mFirstChild; n > 0;
          lineFrame = lineFrame->GetNextSibling(), --n) {
       ConsiderChildOverflow(lineAreas, lineFrame);
     }
 
     // Consider the overflow areas of the floats attached to the line as well
-    if (line->HasFloats()) {
-      for (nsFloatCache* fc = line->GetFirstFloat(); fc; fc = fc->Next()) {
+    if (line.HasFloats()) {
+      for (nsFloatCache* fc = line.GetFirstFloat(); fc; fc = fc->Next()) {
         ConsiderChildOverflow(lineAreas, fc->mFloat);
       }
     }
 
-    line->SetOverflowAreas(lineAreas);
+    line.SetOverflowAreas(lineAreas);
     aOverflowAreas.UnionWith(lineAreas);
   }
 
@@ -2306,9 +2287,8 @@ void nsBlockFrame::PrepareResizeReflow(BlockReflowInput& aState) {
     }
   } else {
     // Mark everything dirty
-    for (LineIterator line = LinesBegin(), line_end = LinesEnd();
-         line != line_end; ++line) {
-      line->MarkDirty();
+    for (auto& line : Lines()) {
+      line.MarkDirty();
     }
   }
 }
@@ -4004,11 +3984,9 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
                 NS_ASSERTION(
                     nifBlock,
                     "A block's child's next in flow's parent must be a block!");
-                for (LineIterator line = nifBlock->LinesBegin(),
-                                  line_end = nifBlock->LinesEnd();
-                     line != line_end; ++line) {
-                  if (line->Contains(nextFrame)) {
-                    line->MarkDirty();
+                for (auto& line : nifBlock->Lines()) {
+                  if (line.Contains(nextFrame)) {
+                    line.MarkDirty();
                     break;
                   }
                 }
@@ -4755,10 +4733,10 @@ bool nsBlockFrame::IsLastLine(BlockReflowInput& aState, LineIterator aLine) {
   // Try our next-in-flows lines to answer the question
   nsBlockFrame* nextInFlow = (nsBlockFrame*)GetNextInFlow();
   while (nullptr != nextInFlow) {
-    for (LineIterator line = nextInFlow->LinesBegin(),
-                      line_end = nextInFlow->LinesEnd();
-         line != line_end; ++line) {
-      if (0 != line->GetChildCount()) return line->IsBlock();
+    for (const auto& line : nextInFlow->Lines()) {
+      if (0 != line.GetChildCount()) {
+        return line.IsBlock();
+      }
     }
     nextInFlow = (nsBlockFrame*)nextInFlow->GetNextInFlow();
   }
@@ -5793,9 +5771,8 @@ void nsBlockFrame::AppendDirectlyOwnedAnonBoxes(
 void nsBlockFrame::RemoveFloatFromFloatCache(nsIFrame* aFloat) {
   // Find which line contains the float, so we can update
   // the float cache.
-  LineIterator line = LinesBegin(), line_end = LinesEnd();
-  for (; line != line_end; ++line) {
-    if (line->IsInline() && line->RemoveFloat(aFloat)) {
+  for (auto& line : Lines()) {
+    if (line.IsInline() && line.RemoveFloat(aFloat)) {
       break;
     }
   }
@@ -6749,10 +6726,9 @@ void nsBlockFrame::RecoverFloats(nsFloatManager& aFloatManager, WritingMode aWM,
   }
 
   // Recurse into our normal children
-  for (nsBlockFrame::LineIterator line = LinesBegin(); line != LinesEnd();
-       ++line) {
-    if (line->IsBlock()) {
-      RecoverFloatsFor(line->mFirstChild, aFloatManager, aWM, aContainerSize);
+  for (const auto& line : Lines()) {
+    if (line.IsBlock()) {
+      RecoverFloatsFor(line.mFirstChild, aFloatManager, aWM, aContainerSize);
     }
   }
 }
@@ -7469,16 +7445,15 @@ void nsBlockFrame::CheckFloats(BlockReflowInput& aState) {
 
   // Check that the float list is what we would have built
   AutoTArray<nsIFrame*, 8> lineFloats;
-  for (LineIterator line = LinesBegin(), line_end = LinesEnd();
-       line != line_end; ++line) {
-    if (line->HasFloats()) {
-      nsFloatCache* fc = line->GetFirstFloat();
+  for (auto& line : Lines()) {
+    if (line.HasFloats()) {
+      nsFloatCache* fc = line.GetFirstFloat();
       while (fc) {
         lineFloats.AppendElement(fc->mFloat);
         fc = fc->Next();
       }
     }
-    if (line->IsDirty()) {
+    if (line.IsDirty()) {
       anyLineDirty = true;
     }
   }
@@ -7791,18 +7766,17 @@ void nsBlockFrame::VerifyLines(bool aFinalCheckOK) {
   // Add up the counts on each line. Also validate that IsFirstLine is
   // set properly.
   int32_t count = 0;
-  LineIterator line, line_end;
-  for (line = LinesBegin(), line_end = LinesEnd(); line != line_end; ++line) {
-    if (line == cursor) {
+  for (const auto& line : Lines()) {
+    if (&line == cursor) {
       cursor = nullptr;
     }
     if (aFinalCheckOK) {
-      MOZ_ASSERT(line->GetChildCount(), "empty line");
-      if (line->IsBlock()) {
-        NS_ASSERTION(1 == line->GetChildCount(), "bad first line");
+      MOZ_ASSERT(line.GetChildCount(), "empty line");
+      if (line.IsBlock()) {
+        NS_ASSERTION(1 == line.GetChildCount(), "bad first line");
       }
     }
-    count += line->GetChildCount();
+    count += line.GetChildCount();
   }
 
   // Then count the frames
@@ -7815,7 +7789,8 @@ void nsBlockFrame::VerifyLines(bool aFinalCheckOK) {
   NS_ASSERTION(count == frameCount, "bad line list");
 
   // Next: test that each line has right number of frames on it
-  for (line = LinesBegin(), line_end = LinesEnd(); line != line_end;) {
+  for (LineIterator line = LinesBegin(), line_end = LinesEnd();
+       line != line_end;) {
     count = line->GetChildCount();
     frame = line->mFirstChild;
     while (--count >= 0) {
