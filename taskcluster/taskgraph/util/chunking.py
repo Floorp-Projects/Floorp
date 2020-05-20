@@ -98,13 +98,7 @@ def tests_by_top_directory(tests, depth):
         while path.count('/') >= depth + 1:
             path = os.path.dirname(path)
 
-        # Extract the first path component (top level directory) as the key.
-        # This value should match the path in manifest-runtimes JSON data.
-        # Mozilla WPT paths have one extra URL component in the front.
-        components = 3 if t['name'].startswith('/_mozilla') else 2
-        key = '/'.join(t['name'].split('/')[:components])
-
-        results[key].append(path)
+        results[t["manifest"]].append(path)
     return results
 
 
@@ -130,7 +124,7 @@ def get_chunked_manifests(flavor, subsuite, chunks, mozinfo):
     tests = get_tests(flavor, subsuite)
 
     if flavor == 'web-platform-tests':
-        paths = tests_by_top_directory(tests, 3)
+        paths = tests_by_top_directory(tests, depth=3)
 
         # Filter out non-web-platform-test runtime information.
         runtimes = get_runtimes(mozinfo['os'])
