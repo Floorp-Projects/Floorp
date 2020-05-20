@@ -131,8 +131,6 @@ void nsStyleLinkElement::SetStyleSheet(StyleSheet* aStyleSheet) {
   }
 }
 
-StyleSheet* nsStyleLinkElement::GetStyleSheet() { return mStyleSheet; }
-
 void nsStyleLinkElement::InitStyleLinkElement(bool aDontLoadStyle) {
   mDontLoadStyle = aDontLoadStyle;
 }
