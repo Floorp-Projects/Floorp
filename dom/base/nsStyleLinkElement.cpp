@@ -139,13 +139,6 @@ void nsStyleLinkElement::GetCharset(nsAString& aCharset) {
 }
 
 /* virtual */
-void nsStyleLinkElement::OverrideBaseURI(nsIURI* aNewBaseURI) {
-  MOZ_ASSERT_UNREACHABLE(
-      "Base URI can't be overriden in this implementation "
-      "of nsIStyleSheetLinkingElement.");
-}
-
-/* virtual */
 void nsStyleLinkElement::SetLineNumber(uint32_t aLineNumber) {
   mLineNumber = aLineNumber;
 }
