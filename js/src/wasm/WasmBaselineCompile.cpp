@@ -282,7 +282,7 @@ template <MIRType t>
 struct RegTypeOf {
 #ifdef ENABLE_WASM_SIMD
   static_assert(t == MIRType::Float32 || t == MIRType::Double ||
-                    t == MIRType::Int8x16,
+                    t == MIRType::Simd128,
                 "Float mask type");
 #else
   static_assert(t == MIRType::Float32 || t == MIRType::Double,
@@ -300,7 +300,7 @@ struct RegTypeOf<MIRType::Double> {
 };
 #ifdef ENABLE_WASM_SIMD
 template <>
-struct RegTypeOf<MIRType::Int8x16> {
+struct RegTypeOf<MIRType::Simd128> {
   static constexpr RegTypeName value = RegTypeName::Vector128;
 };
 #endif
@@ -880,10 +880,10 @@ class BaseRegAlloc {
 
 #ifdef ENABLE_WASM_SIMD
   MOZ_MUST_USE RegV128 needV128() {
-    if (!hasFPU<MIRType::Int8x16>()) {
+    if (!hasFPU<MIRType::Simd128>()) {
       bc->sync();
     }
-    return RegV128(allocFPU<MIRType::Int8x16>());
+    return RegV128(allocFPU<MIRType::Simd128>());
   }
 
   void needV128(RegV128 specific) {
@@ -1186,7 +1186,7 @@ void BaseLocalIter::settle() {
       case MIRType::Float32:
       case MIRType::RefOrNull:
 #ifdef ENABLE_WASM_SIMD
-      case MIRType::Int8x16:
+      case MIRType::Simd128:
 #endif
         if (argsIter_->argInRegister()) {
           frameOffset_ = pushLocal(MIRTypeToSize(concreteType));
@@ -3640,7 +3640,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   void loadLocalV128(const Stk& src, RegV128 dest) {
-    fr.loadLocalV128(localFromSlot(src.slot(), MIRType::Int8x16), dest);
+    fr.loadLocalV128(localFromSlot(src.slot(), MIRType::Simd128), dest);
   }
 
   void loadRegisterV128(const Stk& src, RegV128 dest) {
@@ -5219,7 +5219,7 @@ class BaseCompiler final : public BaseCompilerInterface {
           fr.storeLocalF32(RegF32(i->fpu()), l);
           break;
 #ifdef ENABLE_WASM_SIMD
-        case MIRType::Int8x16:
+        case MIRType::Simd128:
           fr.storeLocalV128(RegV128(i->fpu()), l);
           break;
 #endif
@@ -5583,7 +5583,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       }
       case ValType::V128: {
 #ifdef ENABLE_WASM_SIMD
-        ABIArg argLoc = call->abi.next(MIRType::Int8x16);
+        ABIArg argLoc = call->abi.next(MIRType::Simd128);
         switch (argLoc.kind()) {
           case ABIArg::Stack: {
             ScratchV128 scratch(*this);
@@ -9920,7 +9920,7 @@ void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
       break;
     }
 #ifdef ENABLE_WASM_SIMD
-    case MIRType::Int8x16: {
+    case MIRType::Simd128: {
       RegV128 rv = captureReturnedV128(call);
       pushV128(rv);
       break;
@@ -10445,7 +10445,7 @@ bool BaseCompiler::emitSetOrTeeLocal(uint32_t slot) {
 #ifdef ENABLE_WASM_SIMD
       RegV128 rv = popV128();
       syncLocal(slot);
-      fr.storeLocalV128(rv, localFromSlot(slot, MIRType::Int8x16));
+      fr.storeLocalV128(rv, localFromSlot(slot, MIRType::Simd128));
       if (isSetLocal) {
         freeV128(rv);
       } else {
@@ -14551,7 +14551,7 @@ bool BaseCompiler::emitBody() {
             NEXT();
           }
           case uint32_t(SimdOp::V128Load):
-            CHECK_NEXT(emitLoad(ValType::V128, Scalar::V128));
+            CHECK_NEXT(emitLoad(ValType::V128, Scalar::Simd128));
           case uint32_t(SimdOp::V8x16LoadSplat):
             CHECK_NEXT(emitLoadSplat(Scalar::Uint8));
           case uint32_t(SimdOp::V16x8LoadSplat):
@@ -14573,7 +14573,7 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I64x2LoadU32x2):
             CHECK_NEXT(emitLoadExtend(Scalar::Uint32));
           case uint32_t(SimdOp::V128Store):
-            CHECK_NEXT(emitStore(ValType::V128, Scalar::V128));
+            CHECK_NEXT(emitStore(ValType::V128, Scalar::Simd128));
           default:
             break;
         }  // switch (op.b1)

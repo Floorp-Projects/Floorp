@@ -3507,7 +3507,7 @@ OperandId SetPropIRGenerator::emitNumericGuard(ValOperandId valId,
 
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
-    case Scalar::V128:
+    case Scalar::Simd128:
       break;
   }
   MOZ_CRASH("Unsupported TypedArray type");

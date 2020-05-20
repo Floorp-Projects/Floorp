@@ -11809,7 +11809,7 @@ class MWasmLoadGlobalVar : public MUnaryInstruction, public NoTypePolicy::Data {
       : MUnaryInstruction(classOpcode, tlsPtr),
         globalDataOffset_(globalDataOffset),
         isConstant_(isConstant) {
-    MOZ_ASSERT(IsNumberType(type) || IsSimdType(type) ||
+    MOZ_ASSERT(IsNumberType(type) || type == MIRType::Simd128 ||
                type == MIRType::Pointer || type == MIRType::RefOrNull);
     setResultType(type);
     setMovable();

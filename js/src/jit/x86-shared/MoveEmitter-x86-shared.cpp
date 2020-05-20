@@ -163,11 +163,8 @@ void MoveEmitterX86::emit(const MoveResolver& moves) {
       case MoveOp::GENERAL:
         emitGeneralMove(from, to, moves, i);
         break;
-      case MoveOp::SIMD128INT:
-        emitSimd128IntMove(from, to);
-        break;
-      case MoveOp::SIMD128FLOAT:
-        emitSimd128FloatMove(from, to);
+      case MoveOp::SIMD128:
+        emitSimd128Move(from, to);
         break;
       default:
         MOZ_CRASH("Unexpected move type");
@@ -247,22 +244,13 @@ void MoveEmitterX86::breakCycle(const MoveOperand& to, MoveOp::Type type) {
   // This case handles (A -> B), which we reach first. We save B, then allow
   // the original move to continue.
   switch (type) {
-    case MoveOp::SIMD128INT:
+    case MoveOp::SIMD128:
       if (to.isMemory()) {
         ScratchSimd128Scope scratch(masm);
         masm.loadAlignedSimd128Int(toAddress(to), scratch);
         masm.storeAlignedSimd128Int(scratch, cycleSlot());
       } else {
         masm.storeAlignedSimd128Int(to.floatReg(), cycleSlot());
-      }
-      break;
-    case MoveOp::SIMD128FLOAT:
-      if (to.isMemory()) {
-        ScratchSimd128Scope scratch(masm);
-        masm.loadAlignedSimd128Float(toAddress(to), scratch);
-        masm.storeAlignedSimd128Float(scratch, cycleSlot());
-      } else {
-        masm.storeAlignedSimd128Float(to.floatReg(), cycleSlot());
       }
       break;
     case MoveOp::FLOAT32:
@@ -310,7 +298,7 @@ void MoveEmitterX86::completeCycle(const MoveOperand& to, MoveOp::Type type) {
   // This case handles (B -> A), which we reach last. We emit a move from the
   // saved value of B, to A.
   switch (type) {
-    case MoveOp::SIMD128INT:
+    case MoveOp::SIMD128:
       MOZ_ASSERT(pushedAtCycle_ != -1);
       MOZ_ASSERT(pushedAtCycle_ - pushedAtStart_ >= Simd128DataSize);
       if (to.isMemory()) {
@@ -319,17 +307,6 @@ void MoveEmitterX86::completeCycle(const MoveOperand& to, MoveOp::Type type) {
         masm.storeAlignedSimd128Int(scratch, toAddress(to));
       } else {
         masm.loadAlignedSimd128Int(cycleSlot(), to.floatReg());
-      }
-      break;
-    case MoveOp::SIMD128FLOAT:
-      MOZ_ASSERT(pushedAtCycle_ != -1);
-      MOZ_ASSERT(pushedAtCycle_ - pushedAtStart_ >= Simd128DataSize);
-      if (to.isMemory()) {
-        ScratchSimd128Scope scratch(masm);
-        masm.loadAlignedSimd128Float(cycleSlot(), scratch);
-        masm.storeAlignedSimd128Float(scratch, toAddress(to));
-      } else {
-        masm.loadAlignedSimd128Float(cycleSlot(), to.floatReg());
       }
       break;
     case MoveOp::FLOAT32:
@@ -485,8 +462,8 @@ void MoveEmitterX86::emitDoubleMove(const MoveOperand& from,
   }
 }
 
-void MoveEmitterX86::emitSimd128IntMove(const MoveOperand& from,
-                                        const MoveOperand& to) {
+void MoveEmitterX86::emitSimd128Move(const MoveOperand& from,
+                                     const MoveOperand& to) {
   MOZ_ASSERT_IF(from.isFloatReg(), from.floatReg().isSimd128());
   MOZ_ASSERT_IF(to.isFloatReg(), to.floatReg().isSimd128());
 
@@ -504,28 +481,6 @@ void MoveEmitterX86::emitSimd128IntMove(const MoveOperand& from,
     ScratchSimd128Scope scratch(masm);
     masm.loadAlignedSimd128Int(toAddress(from), scratch);
     masm.storeAlignedSimd128Int(scratch, toAddress(to));
-  }
-}
-
-void MoveEmitterX86::emitSimd128FloatMove(const MoveOperand& from,
-                                          const MoveOperand& to) {
-  MOZ_ASSERT_IF(from.isFloatReg(), from.floatReg().isSimd128());
-  MOZ_ASSERT_IF(to.isFloatReg(), to.floatReg().isSimd128());
-
-  if (from.isFloatReg()) {
-    if (to.isFloatReg()) {
-      masm.moveSimd128Float(from.floatReg(), to.floatReg());
-    } else {
-      masm.storeAlignedSimd128Float(from.floatReg(), toAddress(to));
-    }
-  } else if (to.isFloatReg()) {
-    masm.loadAlignedSimd128Float(toAddress(from), to.floatReg());
-  } else {
-    // Memory to memory move.
-    MOZ_ASSERT(from.isMemory());
-    ScratchSimd128Scope scratch(masm);
-    masm.loadAlignedSimd128Float(toAddress(from), scratch);
-    masm.storeAlignedSimd128Float(scratch, toAddress(to));
   }
 }
 

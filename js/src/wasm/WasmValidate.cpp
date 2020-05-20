@@ -1676,7 +1676,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
         offset = layout.addScalar(Scalar::Float64);
         break;
       case ValType::V128:
-        offset = layout.addScalar(Scalar::V128);
+        offset = layout.addScalar(Scalar::Simd128);
         break;
       case ValType::Ref:
         switch (fields[i].type.refTypeKind()) {

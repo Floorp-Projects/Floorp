@@ -712,7 +712,7 @@ bool DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp) {
       vp.set(ObjectOrNullValue(*(JSObject**)dataPtr));
       break;
 #ifdef ENABLE_WASM_SIMD
-    case jit::MIRType::Int8x16:
+    case jit::MIRType::Simd128:
       vp.set(NumberValue(0));
       break;
 #endif

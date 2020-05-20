@@ -213,7 +213,7 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
       break;
     case Scalar::BigInt64:
     case Scalar::BigUint64:
-    case Scalar::V128:
+    case Scalar::Simd128:
     case Scalar::Uint8Clamped:
     case Scalar::MaxTypedArrayViewType:
       MOZ_CRASH("unexpected array type");
