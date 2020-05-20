@@ -526,7 +526,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                       const WindowPostMessageOptions& aOptions,
                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aError);
 
-  void GetCustomUserAgent(nsString& aUserAgent) {
+  void GetCustomUserAgent(nsAString& aUserAgent) {
     aUserAgent = Top()->GetUserAgentOverride();
   }
   void SetCustomUserAgent(const nsAString& aUserAgent);

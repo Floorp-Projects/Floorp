@@ -98,7 +98,9 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     this._userAgentMode = aMode;
     const docShell = content && GeckoViewUtils.getRootDocShell(content);
     if (docShell) {
-      docShell.browsingContext.customUserAgent = this.userAgent;
+      // Bug 1637496: TODO - customUserAgent should only be set from parent
+      // process.
+      docShell.customUserAgent = this.userAgent;
     } else {
       warn`Failed to set custom user agent. Doc shell not found`;
     }
@@ -115,7 +117,9 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     this._userAgentOverride = aUserAgent;
     const docShell = content && GeckoViewUtils.getRootDocShell(content);
     if (docShell) {
-      docShell.browsingContext.customUserAgent = this.userAgent;
+      // Bug 1637496: TODO - customUserAgent should only be set from parent
+      // process.
+      docShell.customUserAgent = this.userAgent;
     } else {
       warn`Failed to set custom user agent. Doc shell not found`;
     }
