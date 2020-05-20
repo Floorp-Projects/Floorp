@@ -28,6 +28,25 @@ class InlineSpellCheckerParent extends JSWindowActorParent {
   }
 
   uninit() {
+    // This method gets called by InlineSpellChecker when the context menu
+    // goes away and the InlineSpellChecker instance is still alive.
+    // Stop referencing it and tidy the child end of us.
     this.sendAsyncMessage("InlineSpellChecker:uninit", {});
+  }
+
+  _destructionObservers = new Set();
+  registerDestructionObserver(obj) {
+    this._destructionObservers.add(obj);
+  }
+
+  unregisterDestructionObserver(obj) {
+    this._destructionObservers.delete(obj);
+  }
+
+  didDestroy() {
+    for (let obs of this._destructionObservers) {
+      obs.actorDestroyed(this);
+    }
+    this._destructionObservers = null;
   }
 }

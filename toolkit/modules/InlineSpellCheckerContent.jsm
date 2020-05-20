@@ -17,6 +17,7 @@ var InlineSpellCheckerContent = {
 
   initContextMenu(event, editFlags, actor) {
     this._actor = actor;
+    this._actor.registerDestructionObserver(this);
 
     let spellChecker;
     if (!(editFlags & (SpellCheckHelper.TEXTAREA | SpellCheckHelper.INPUT))) {
@@ -75,8 +76,15 @@ var InlineSpellCheckerContent = {
   },
 
   uninitContextMenu() {
+    if (this._actor) {
+      this._actor.unregisterDestructionObserver(this);
+    }
     this._actor = null;
     this._spellChecker = null;
+  },
+
+  actorDestroyed() {
+    this.uninitContextMenu();
   },
 
   _generateSpellSuggestions() {
