@@ -51,7 +51,6 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
   void SetEnableUpdates(bool aEnableUpdates) final;
   void GetCharset(nsAString& aCharset) override;
 
-  void OverrideBaseURI(nsIURI* aNewBaseURI) override;
   void SetLineNumber(uint32_t aLineNumber) final;
   uint32_t GetLineNumber() final;
   void SetColumnNumber(uint32_t aColumnNumber) final;
