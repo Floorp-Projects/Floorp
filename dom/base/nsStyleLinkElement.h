@@ -42,7 +42,6 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
 
   // nsIStyleSheetLinkingElement
   void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) override;
-  void InitStyleLinkElement(bool aDontLoadStyle) override;
 
   mozilla::Result<Update, nsresult> UpdateStyleSheet(
       nsICSSLoaderObserver*) override;
@@ -132,7 +131,6 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
 
  protected:
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  bool mDontLoadStyle;
   bool mUpdatesEnabled;
   uint32_t mLineNumber;
   uint32_t mColumnNumber;

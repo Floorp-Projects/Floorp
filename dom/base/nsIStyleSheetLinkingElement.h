@@ -127,15 +127,6 @@ class nsIStyleSheetLinkingElement : public nsISupports {
    */
   virtual void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) = 0;
 
-
-  /**
-   * Initialize the stylesheet linking element. If aDontLoadStyle is
-   * true the element will ignore the first modification to the
-   * element that would cause a stylesheet to be loaded. Subsequent
-   * modifications to the element will not be ignored.
-   */
-  virtual void InitStyleLinkElement(bool aDontLoadStyle) = 0;
-
   /**
    * Tells this element to update the stylesheet.
    *
