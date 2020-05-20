@@ -233,4 +233,14 @@ const SpecialMessageActionSchemas = {
     },
     type: "object",
   },
+  CANCEL: {
+    description: "Cancel (dismiss) the CFR doorhanger.",
+    properties: {
+      type: {
+        enum: ["CANCEL"],
+        type: "string",
+      },
+    },
+    type: "object",
+  },
 };
