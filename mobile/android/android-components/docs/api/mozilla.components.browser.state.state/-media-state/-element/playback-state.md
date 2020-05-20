@@ -2,7 +2,7 @@
 
 # playbackState
 
-`val playbackState: `[`PlaybackState`](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L45)
+`val playbackState: `[`PlaybackState`](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L46)
 
 The current [Media.PlaybackState](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) of this media element.
 

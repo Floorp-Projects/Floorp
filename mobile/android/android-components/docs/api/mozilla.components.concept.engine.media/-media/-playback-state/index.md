@@ -2,7 +2,7 @@
 
 # PlaybackState
 
-`enum class PlaybackState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L118)
+`enum class PlaybackState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L125)
 
 ### Enum Values
 

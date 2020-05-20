@@ -2,7 +2,7 @@
 
 # BrowserIcons
 
-`class BrowserIcons : `[`MemoryConsumer`](../../mozilla.components.support.base.memory/-memory-consumer/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/BrowserIcons.kt#L76)
+`class BrowserIcons : `[`MemoryConsumer`](../../mozilla.components.support.base.memory/-memory-consumer/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/BrowserIcons.kt#L77)
 
 Entry point for loading icons for websites.
 
@@ -10,7 +10,7 @@ Entry point for loading icons for websites.
 
 `generator` - The [IconGenerator](../../mozilla.components.browser.icons.generator/-icon-generator/index.md) to generate an icon if no icon could be loaded.
 
-`decoders` - List of [IconDecoder](../../mozilla.components.browser.icons.decoder/-icon-decoder/index.md) instances to use when decoding a loaded icon into a [android.graphics.Bitmap](#).
+`decoders` - List of [IconDecoder](#) instances to use when decoding a loaded icon into a [android.graphics.Bitmap](#).
 
 ### Constructors
 
@@ -25,8 +25,8 @@ Entry point for loading icons for websites.
         DiskIconLoader(sharedDiskCache),
         HttpIconLoader(httpClient),
         DataUriIconLoader()
-    ), decoders: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`IconDecoder`](../../mozilla.components.browser.icons.decoder/-icon-decoder/index.md)`> = listOf(
-        AndroidIconDecoder(),
+    ), decoders: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ImageDecoder`](../../mozilla.components.support.images.decoder/-image-decoder/index.md)`> = listOf(
+        AndroidImageDecoder(),
         ICOIconDecoder()
     ), processors: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`IconProcessor`](../../mozilla.components.browser.icons.processor/-icon-processor/index.md)`> = listOf(
         MemoryIconProcessor(sharedMemoryCache),

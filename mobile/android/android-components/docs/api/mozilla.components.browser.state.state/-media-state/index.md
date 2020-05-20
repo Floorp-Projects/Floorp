@@ -12,6 +12,7 @@ Value type that represents the state of the media elements and playback states.
 |---|---|
 | [Aggregate](-aggregate/index.md) | `data class Aggregate`<br>Value type representing the aggregated "global" media state. |
 | [Element](-element/index.md) | `data class Element`<br>Value type representing a media element on a website. |
+| [FullscreenOrientation](-fullscreen-orientation/index.md) | `enum class FullscreenOrientation`<br>Enum of predicted media screen orientation. |
 | [State](-state/index.md) | `enum class State`<br>Enum of "global" aggregated media state. |
 
 ### Constructors

@@ -17,6 +17,12 @@ Interface for states that contain a [ContentState](../-content-state/index.md) a
 | [id](id.md) | `abstract val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>the unique id of the session. |
 | [trackingProtection](tracking-protection.md) | `abstract val trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)<br>the [TrackingProtectionState](../-tracking-protection-state/index.md) of this session. |
 
+### Functions
+
+| Name | Summary |
+|---|---|
+| [createCopy](create-copy.md) | `abstract fun createCopy(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = this.id, content: `[`ContentState`](../-content-state/index.md)` = this.content, trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)` = this.trackingProtection, engineState: `[`EngineState`](../-engine-state/index.md)` = this.engineState, extensionState: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](../-web-extension-state/index.md)`> = this.extensionState, contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = this.contextId): `[`SessionState`](./index.md)<br>Copy the class and override some parameters. |
+
 ### Extension Functions
 
 | Name | Summary |
