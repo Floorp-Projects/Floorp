@@ -29,13 +29,7 @@ ABIArg ABIArgGenerator::next(MIRType type) {
       current_ = ABIArg(stackOffset_);
       stackOffset_ += sizeof(uint64_t);
       break;
-    case MIRType::Int8x16:
-    case MIRType::Int16x8:
-    case MIRType::Int32x4:
-    case MIRType::Float32x4:
-    case MIRType::Bool8x16:
-    case MIRType::Bool16x8:
-    case MIRType::Bool32x4:
+    case MIRType::Simd128:
       // On Win64, >64 bit args need to be passed by reference.  However, wasm
       // doesn't allow passing SIMD values to JS, so the only way to reach this
       // is wasm to wasm calls.  Ergo we can break the native ABI here and use

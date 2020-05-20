@@ -29,7 +29,7 @@ ABIArg ABIArgGenerator::next(MIRType type) {
 #if defined(XP_WIN)
   static_assert(NumIntArgRegs == NumFloatArgRegs);
   if (regIndex_ == NumIntArgRegs) {
-    if (IsSimdType(type)) {
+    if (type == MIRType::Simd128) {
       // On Win64, >64 bit args need to be passed by reference.  However, wasm
       // doesn't allow passing SIMD values to JS, so the only way to reach this
       // is wasm to wasm calls.  Ergo we can break the native ABI here and use
@@ -57,13 +57,7 @@ ABIArg ABIArgGenerator::next(MIRType type) {
     case MIRType::Double:
       current_ = ABIArg(FloatArgRegs[regIndex_++]);
       break;
-    case MIRType::Int8x16:
-    case MIRType::Int16x8:
-    case MIRType::Int32x4:
-    case MIRType::Float32x4:
-    case MIRType::Bool8x16:
-    case MIRType::Bool16x8:
-    case MIRType::Bool32x4:
+    case MIRType::Simd128:
       // On Win64, >64 bit args need to be passed by reference, but wasm
       // doesn't allow passing SIMD values to FFIs. The only way to reach
       // here is asm to asm calls, so we can break the ABI here.
@@ -100,13 +94,7 @@ ABIArg ABIArgGenerator::next(MIRType type) {
         current_ = ABIArg(FloatArgRegs[floatRegIndex_++]);
       }
       break;
-    case MIRType::Int8x16:
-    case MIRType::Int16x8:
-    case MIRType::Int32x4:
-    case MIRType::Float32x4:
-    case MIRType::Bool8x16:
-    case MIRType::Bool16x8:
-    case MIRType::Bool32x4:
+    case MIRType::Simd128:
       if (floatRegIndex_ == NumFloatArgRegs) {
         stackOffset_ = AlignBytes(stackOffset_, SimdMemoryAlignment);
         current_ = ABIArg(stackOffset_);

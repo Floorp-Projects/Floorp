@@ -423,13 +423,7 @@ void CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot,
       break;
     }
     case MIRType::Float32:
-    case MIRType::Int8x16:
-    case MIRType::Int16x8:
-    case MIRType::Int32x4:
-    case MIRType::Float32x4:
-    case MIRType::Bool8x16:
-    case MIRType::Bool16x8:
-    case MIRType::Bool32x4: {
+    case MIRType::Simd128: {
       LAllocation* payload = snapshot->payloadOfSlot(*allocIndex);
       if (payload->isConstant()) {
         MConstant* constant = mir->toConstant();

@@ -4194,11 +4194,8 @@ void CodeGenerator::visitMoveGroup(LMoveGroup* group) {
       case LDefinition::DOUBLE:
         moveType = MoveOp::DOUBLE;
         break;
-      case LDefinition::SIMD128INT:
-        moveType = MoveOp::SIMD128INT;
-        break;
-      case LDefinition::SIMD128FLOAT:
-        moveType = MoveOp::SIMD128FLOAT;
+      case LDefinition::SIMD128:
+        moveType = MoveOp::SIMD128;
         break;
       default:
         MOZ_CRASH("Unexpected move type");
@@ -8136,13 +8133,7 @@ void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
       break;
     // Aligned access: code is aligned on PageSize + there is padding
     // before the global data section.
-    case MIRType::Int8x16:
-    case MIRType::Int16x8:
-    case MIRType::Int32x4:
-    case MIRType::Bool8x16:
-    case MIRType::Bool16x8:
-    case MIRType::Bool32x4:
-    case MIRType::Float32x4:
+    case MIRType::Simd128:
     default:
       MOZ_CRASH("unexpected type in LoadPrimitiveValue");
   }
@@ -8171,13 +8162,7 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
       MOZ_CRASH("Bad type in visitWasmStoreSlot. Use LWasmStoreRef.");
     // Aligned access: code is aligned on PageSize + there is padding
     // before the global data section.
-    case MIRType::Int8x16:
-    case MIRType::Int16x8:
-    case MIRType::Int32x4:
-    case MIRType::Bool8x16:
-    case MIRType::Bool16x8:
-    case MIRType::Bool32x4:
-    case MIRType::Float32x4:
+    case MIRType::Simd128:
     default:
       MOZ_CRASH("unexpected type in StorePrimitiveValue");
   }

@@ -106,8 +106,7 @@ class StackSlotAllocator {
 #endif
       case LDefinition::DOUBLE:
         return 8;
-      case LDefinition::SIMD128INT:
-      case LDefinition::SIMD128FLOAT:
+      case LDefinition::SIMD128:
         return 16;
       case LDefinition::STACKRESULTS:
         MOZ_CRASH("Stack results area must be allocated manually");

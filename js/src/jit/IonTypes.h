@@ -275,10 +275,10 @@ inline const char* BailoutKindString(BailoutKind kind) {
 static const uint32_t ELEMENT_TYPE_BITS = 5;
 static const uint32_t ELEMENT_TYPE_SHIFT = 0;
 static const uint32_t ELEMENT_TYPE_MASK = (1 << ELEMENT_TYPE_BITS) - 1;
-static const uint32_t VECTOR_SCALE_BITS = 3;
-static const uint32_t VECTOR_SCALE_SHIFT =
+static const uint32_t VECTOR_TYPE_BITS = 1;
+static const uint32_t VECTOR_TYPE_SHIFT =
     ELEMENT_TYPE_BITS + ELEMENT_TYPE_SHIFT;
-static const uint32_t VECTOR_SCALE_MASK = (1 << VECTOR_SCALE_BITS) - 1;
+static const uint32_t VECTOR_TYPE_MASK = (1 << VECTOR_TYPE_BITS) - 1;
 
 // The integer SIMD types have a lot of operations that do the exact same thing
 // for signed and unsigned integer types. Sometimes it is simpler to treat
@@ -509,6 +509,7 @@ enum class MIRType : uint8_t {
   String,
   Symbol,
   BigInt,
+  Simd128,
   // Types above are primitive (including undefined and null).
   Object,
   MagicOptimizedArguments,    // JS_OPTIMIZED_ARGUMENTS magic value.
@@ -527,21 +528,8 @@ enum class MIRType : uint8_t {
   StackResults,  // Wasm multi-value stack result area, which may contain refs
   Shape,         // A Shape pointer.
   ObjectGroup,   // An ObjectGroup pointer.
-  Last = ObjectGroup,
-  // Representing both SIMD.IntBxN and SIMD.UintBxN.
-  Int8x16 = Int32 | (4 << VECTOR_SCALE_SHIFT),
-  Int16x8 = Int32 | (3 << VECTOR_SCALE_SHIFT),
-  Int32x4 = Int32 | (2 << VECTOR_SCALE_SHIFT),
-  Float32x4 = Float32 | (2 << VECTOR_SCALE_SHIFT),
-  Bool8x16 = Boolean | (4 << VECTOR_SCALE_SHIFT),
-  Bool16x8 = Boolean | (3 << VECTOR_SCALE_SHIFT),
-  Bool32x4 = Boolean | (2 << VECTOR_SCALE_SHIFT),
-  Doublex2 = Double | (1 << VECTOR_SCALE_SHIFT)
+  Last = ObjectGroup
 };
-
-static inline bool IsSimdType(MIRType type) {
-  return ((uint8_t(type) >> VECTOR_SCALE_SHIFT) & VECTOR_SCALE_MASK) != 0;
-}
 
 static inline MIRType MIRTypeFromValueType(JSValueType type) {
   // This function does not deal with magic types. Magic constants should be
@@ -617,7 +605,7 @@ static inline size_t MIRTypeToSize(MIRType type) {
       return 4;
     case MIRType::Double:
       return 8;
-    case MIRType::Int8x16:
+    case MIRType::Simd128:
       return 16;
     case MIRType::Pointer:
     case MIRType::RefOrNull:
@@ -681,22 +669,8 @@ static inline const char* StringFromMIRType(MIRType type) {
       return "Shape";
     case MIRType::ObjectGroup:
       return "ObjectGroup";
-    case MIRType::Int32x4:
-      return "Int32x4";
-    case MIRType::Int16x8:
-      return "Int16x8";
-    case MIRType::Int8x16:
-      return "Int8x16";
-    case MIRType::Float32x4:
-      return "Float32x4";
-    case MIRType::Bool32x4:
-      return "Bool32x4";
-    case MIRType::Bool16x8:
-      return "Bool16x8";
-    case MIRType::Bool8x16:
-      return "Bool8x16";
-    case MIRType::Doublex2:
-      return "Doublex2";
+    case MIRType::Simd128:
+      return "Simd128";
   }
   MOZ_CRASH("Unknown MIRType.");
 }
@@ -757,8 +731,8 @@ static inline MIRType ScalarTypeToMIRType(Scalar::Type type) {
     case Scalar::BigInt64:
     case Scalar::BigUint64:
       MOZ_CRASH("NYI");
-    case Scalar::V128:
-      return MIRType::Int8x16;
+    case Scalar::Simd128:
+      return MIRType::Simd128;
     case Scalar::MaxTypedArrayViewType:
       break;
   }

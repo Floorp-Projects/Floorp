@@ -176,7 +176,7 @@ class MoveOp {
   int cycleEndSlot_;
 
  public:
-  enum Type { GENERAL, INT32, FLOAT32, DOUBLE, SIMD128INT, SIMD128FLOAT };
+  enum Type { GENERAL, INT32, FLOAT32, DOUBLE, SIMD128 };
 
  protected:
   Type type_;
