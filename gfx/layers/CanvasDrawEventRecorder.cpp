@@ -330,7 +330,7 @@ bool CanvasEventRingBuffer::WaitForDataToRead(TimeDuration aTimeout,
 int32_t CanvasEventRingBuffer::ReadNextEvent() {
   int32_t nextEvent;
   ReadElement(*this, nextEvent);
-  while (nextEvent == kCheckpointEventType) {
+  while (nextEvent == kCheckpointEventType && good()) {
     ReadElement(*this, nextEvent);
   }
 
