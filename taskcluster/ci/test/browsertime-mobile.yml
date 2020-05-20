@@ -63,13 +63,22 @@ job-defaults:
             - raptor/android_hw_config.py
         extra-options:
             - --browsertime
+    optimization:
+        push-interval-25:
+            - android
 
 browsertime-tp6m:
     description: "Raptor (browsertime) tp6 page-load tests on android"
     raptor-test: tp6m
     raptor-subtests:
         by-app:
-            fenix:
+            fennec:
+                - amazon
+                - youtube
+            chrome-m:
+                - amazon
+                - youtube
+            default:
                 - allrecipes
                 - amazon
                 - amazon-search
@@ -97,23 +106,37 @@ browsertime-tp6m:
                 - wikipedia
                 - youtube
                 - youtube-watch
-            default:
-                - amazon
-                - youtube
     apps: ["geckoview", "fenix", "fennec", "chrome-m"]
     tier:
         by-raptor-test:
             amazon:
                 by-app:
                     fenix: 1
+                    geckoview: 1
                     default: 3
-            default: 3
+            default:
+                by-app:
+                    geckoview: 1
+                    default: 3
     run-on-projects:
         by-raptor-test:
             amazon:
                 by-app:
                     fenix: []
                     chrome-m: []
+                    geckoview:
+                        by-pageload:
+                            cold:
+                                by-test-platform:
+                                    android-hw-.*/opt: []
+                                    android-hw-p2-.*api-16/pgo: []
+                                    default: ['trunk', 'mozilla-beta']
+                            warm:
+                                by-test-platform:
+                                    android-hw-p2-.*-api-16/(?!opt).*: []
+                                    android-hw-p2-.*(?!-api-16)/opt.*: []
+                                    android-hw(?!-p2).*(?!-api-16)/opt.*: []
+                                    default: ['mozilla-central']
                     default:
                         by-test-platform:
                             android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
@@ -122,14 +145,46 @@ browsertime-tp6m:
                 by-app:
                     fenix: []
                     chrome-m: []
+                    geckoview:
+                        by-pageload:
+                            cold:
+                                by-test-platform:
+                                    android-hw-.*/opt: []
+                                    android-hw-p2-.*api-16/pgo: []
+                                    default: ['trunk', 'mozilla-beta']
+                            warm:
+                                by-test-platform:
+                                    android-hw-p2-.*-api-16/(?!opt).*: []
+                                    android-hw-p2-.*(?!-api-16)/opt.*: []
+                                    android-hw(?!-p2).*(?!-api-16)/opt.*: []
+                                    default: ['mozilla-central']
                     default:
                         by-test-platform:
                             android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
                             default: []
-            default: []
+            default:
+                by-pageload:
+                    cold:
+                        by-app:
+                            geckoview:
+                                by-test-platform:
+                                    android-hw-.*/opt: []
+                                    android-hw-p2-.*api-16/pgo: []
+                                    default: ['trunk', 'mozilla-beta']
+                            default: []
+                    warm:
+                        by-app:
+                            geckoview:
+                                by-test-platform:
+                                    android-hw-p2-.*-api-16/(?!opt).*: []
+                                    android-hw-p2-.*(?!-api-16)/opt.*: []
+                                    android-hw(?!-p2).*(?!-api-16)/opt.*: []
+                                    default: ['mozilla-central']
+                            default: []
     pageload:
         by-app:
             fenix: both
+            geckoview: both
             default: cold
     run-visual-metrics:
         by-app:
