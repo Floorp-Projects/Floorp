@@ -462,6 +462,7 @@ class HeadersPanel extends Component {
           provider: HeadersProvider,
           selectPath: this.getTargetHeaderPath,
           defaultSelectFirstNode: false,
+          useQuotes: false,
         },
         header: this.getHeadersTitle(responseHeaders, RESPONSE_HEADERS),
         buttons: this.renderRawHeadersBtn(
@@ -488,6 +489,7 @@ class HeadersPanel extends Component {
           provider: HeadersProvider,
           selectPath: this.getTargetHeaderPath,
           defaultSelectFirstNode: false,
+          useQuotes: false,
         },
         header: this.getHeadersTitle(requestHeaders, REQUEST_HEADERS),
         buttons: this.renderRawHeadersBtn(
@@ -520,6 +522,7 @@ class HeadersPanel extends Component {
           provider: HeadersProvider,
           selectPath: this.getTargetHeaderPath,
           defaultSelectFirstNode: false,
+          useQuotes: false,
         },
         header: this.getHeadersTitle(
           uploadHeaders,

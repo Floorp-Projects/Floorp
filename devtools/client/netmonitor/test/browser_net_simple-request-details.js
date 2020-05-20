@@ -208,7 +208,7 @@ add_task(async function() {
       );
       is(
         responseScope[header.index - 1].querySelector(".objectBox").innerHTML,
-        `"${header.value}"`,
+        `${header.value}`,
         `The ${header.pos} response header value was incorrect.`
       );
     });
@@ -247,7 +247,7 @@ add_task(async function() {
       );
       is(
         requestScope[header.index - 1].querySelector(".objectBox").innerHTML,
-        `"${header.value}"`,
+        `${header.value}`,
         `The ${header.pos} request header value was incorrect.`
       );
     });
