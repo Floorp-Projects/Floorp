@@ -11,8 +11,6 @@ add_task(async function() {
     "data:text/html;charset=utf8,<title>bug871156</title>\n" + "<p>hello world";
   const firstTab = gBrowser.selectedTab;
 
-  await pushPref("toolkit.cosmeticAnimations.enabled", false);
-
   let hud = await openNewTabAndConsole(TEST_URI);
 
   const tabClosed = defer();
