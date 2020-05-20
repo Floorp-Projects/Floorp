@@ -9141,6 +9141,7 @@ class MGuardObjectIdentity : public MBinaryInstruction,
                        bool bailOnEquality)
       : MBinaryInstruction(classOpcode, obj, expected),
         bailOnEquality_(bailOnEquality) {
+    MOZ_ASSERT(expected->isConstant());
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
@@ -9152,6 +9153,7 @@ class MGuardObjectIdentity : public MBinaryInstruction,
   NAMED_OPERANDS((0, object), (1, expected))
 
   bool bailOnEquality() const { return bailOnEquality_; }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isGuardObjectIdentity()) {
       return false;
