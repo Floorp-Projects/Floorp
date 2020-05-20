@@ -267,18 +267,18 @@ class CommandBar extends Component<Props> {
         />
         <MenuItem
           key="debugger-settings-menu-item-disable-inline-previews"
-          checked={!features.inlinePreview}
-          label={L10N.getStr("inlinePreview.disable.label")}
-          tooltip={L10N.getStr("inlinePreview.disable.tooltip")}
+          checked={features.inlinePreview}
+          label={L10N.getStr("inlinePreview.toggle.label")}
+          tooltip={L10N.getStr("inlinePreview.toggle.tooltip")}
           onClick={() =>
             this.props.toggleInlinePreview(!features.inlinePreview)
           }
         />
         <MenuItem
           key="debugger-settings-menu-item-disable-sourcemaps"
-          checked={!prefs.clientSourceMapsEnabled}
-          label={L10N.getStr("settings.disableSourceMaps.label")}
-          tooltip={L10N.getStr("settings.disableSourceMaps.tooltip")}
+          checked={prefs.clientSourceMapsEnabled}
+          label={L10N.getStr("settings.toggleSourceMaps.label")}
+          tooltip={L10N.getStr("settings.toggleSourceMaps.tooltip")}
           onClick={() =>
             this.props.toggleSourceMapsEnabled(!prefs.clientSourceMapsEnabled)
           }
