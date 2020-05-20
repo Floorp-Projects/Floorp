@@ -139,7 +139,8 @@ const startupPhases = {
     },
     {
       name: "PLayerTransaction::Msg_GetTextureFactoryIdentifier",
-      condition: !MAC && !WEBRENDER,
+      condition: (!MAC && !WEBRENDER) || (WIN && WEBRENDER),
+      ignoreIfUnused: true, // intermittently occurs in "before becoming idle"
       maxCount: 1,
     },
     {
@@ -184,13 +185,6 @@ const startupPhases = {
       ignoreIfUnused: true, // intermittently occurs in "before becoming idle"
       maxCount: 1,
     },
-    {
-      // bug 1554234
-      name: "PLayerTransaction::Msg_GetTextureFactoryIdentifier",
-      condition: WIN && WEBRENDER,
-      ignoreIfUnused: true, // intermittently occurs in "before becoming idle"
-      maxCount: 1,
-    },
   ],
 
   // Things that are expected to be completely out of the startup path
@@ -218,19 +212,19 @@ const startupPhases = {
     {
       // bug 1554234
       name: "PLayerTransaction::Msg_GetTextureFactoryIdentifier",
-      condition: WIN && WEBRENDER,
+      condition: WIN,
       ignoreIfUnused: true, // intermittently occurs in "before handling user events"
       maxCount: 1,
     },
     {
       name: "PCompositorBridge::Msg_Initialize",
-      condition: WIN && WEBRENDER,
+      condition: WIN,
       ignoreIfUnused: true, // Intermittently occurs in "before handling user events"
       maxCount: 1,
     },
     {
       name: "PCompositorWidget::Msg_Initialize",
-      condition: WIN && WEBRENDER,
+      condition: WIN,
       ignoreIfUnused: true, // Intermittently occurs in "before handling user events"
       maxCount: 1,
     },
