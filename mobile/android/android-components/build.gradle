@@ -123,7 +123,7 @@ subprojects {
             }
 
             // Format test output
-            tasks.matching {it instanceof Test}.all {
+            tasks.matching {it instanceof Test}.configureEach() {
                 systemProperty "robolectric.logging", "stdout"
                 systemProperty "logging.test-mode", "true"
 
