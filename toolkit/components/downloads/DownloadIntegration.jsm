@@ -803,6 +803,7 @@ var DownloadIntegration = {
         win.openTrustedLinkIn(fileURI.spec, "tab", {
           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
           userContextId: aDownload.source.userContextId,
+          openerBrowser: browsingContext?.top?.embedderElement,
         });
         return;
       }

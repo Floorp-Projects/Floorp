@@ -668,6 +668,7 @@ function openLinkIn(url, where, params) {
         allowInheritPrincipal: aAllowInheritPrincipal,
         csp: aCsp,
         focusUrlBar,
+        openerBrowser: params.openerBrowser,
       });
       targetBrowser = tabUsedForLoad.linkedBrowser;
 

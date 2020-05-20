@@ -56,6 +56,10 @@ add_task(async function test_check_open_with_internal_handler() {
     gBrowser,
     TEST_PATH + "file_pdfjs_test.pdf"
   );
+  // Add an extra tab after the loading tab so we can test that
+  // pdf.js is opened in the adjacent tab and not at the end of
+  // the tab strip.
+  let extraTab = await BrowserTestUtils.addTab(gBrowser, "about:blank");
   let dialogWindow = await dialogWindowPromise;
   is(
     dialogWindow.location,
@@ -77,6 +81,12 @@ add_task(async function test_check_open_with_internal_handler() {
   dialog.acceptDialog();
   info("waiting for new tab to open");
   let newTab = await newTabPromise;
+
+  is(
+    newTab._tPos - 1,
+    loadingTab._tPos,
+    "pdf.js should be opened in an adjacent tab"
+  );
 
   await ContentTask.spawn(newTab.linkedBrowser, null, async () => {
     await ContentTaskUtils.waitForCondition(
@@ -118,6 +128,7 @@ add_task(async function test_check_open_with_internal_handler() {
 
   BrowserTestUtils.removeTab(loadingTab);
   BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(extraTab);
 });
 
 /**
