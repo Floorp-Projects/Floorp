@@ -676,7 +676,7 @@
 
 - name: MathFloorToInt32Result
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: NumberId
 
