@@ -287,13 +287,13 @@ var webrtcUI = {
         break;
       }
     }
-    // If there's no documentURI, the update is actually a removal of the
-    // stream, triggered by the recording-window-ended notification.
-    if (!aData || !aData.documentURI) {
+    // The update is a removal of the stream, triggered by the
+    // recording-window-ended notification.
+    if (aData.remove) {
       if (index < this._streams.length) {
         this._streams.splice(index, 1);
       }
-    } else if (aData) {
+    } else {
       this._streams[index] = {
         browsingContext: aBrowsingContext,
         topBrowsingContext: aBrowsingContext.top,

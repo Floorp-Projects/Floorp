@@ -148,6 +148,7 @@ class WebRTCParent extends JSWindowActorParent {
         break;
       }
       case "webrtc:UpdateIndicators":
+        aMessage.data.documentURI = this.manager.documentURI?.spec;
         if (aMessage.data.windowId) {
           webrtcUI.streamAddedOrRemoved(this.browsingContext, aMessage.data);
         }
