@@ -466,7 +466,7 @@ add_task(async function test_show_hide_frame() {
           return WebNavigationFrames.getFrameId(contentWindow);
         }
       );
-      await openContextMenuInFrame("#frame");
+      await openContextMenuInFrame();
     },
     async doCloseMenu() {
       await closeExtensionContextMenu();

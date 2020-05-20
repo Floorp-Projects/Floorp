@@ -383,17 +383,16 @@ add_task(async function test_onclick_frameid() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  async function click(selector) {
-    const func = selector === "body" ? openContextMenu : openContextMenuInFrame;
-    const menu = await func(selector);
+  async function click(menu) {
     const items = menu.getElementsByAttribute("label", "modify");
+    is(items.length, 1, "found menu item");
     await closeExtensionContextMenu(items[0]);
     return extension.awaitMessage("click");
   }
 
-  let info = await click("body");
+  let info = await click(await openContextMenu("body"));
   is(info.frameId, 0, "top level click");
-  info = await click("#frame");
+  info = await click(await openContextMenuInFrame());
   isnot(info.frameId, undefined, "frame click, frameId is not undefined");
   isnot(info.frameId, 0, "frame click, frameId probably okay");
 
