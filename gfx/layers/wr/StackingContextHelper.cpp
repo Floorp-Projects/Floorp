@@ -37,7 +37,7 @@ StackingContextHelper::StackingContextHelper(
   if (aParams.mBoundTransform &&
       aParams.mBoundTransform->CanDraw2D(&transform2d) &&
       aParams.reference_frame_kind != wr::WrReferenceFrameKind::Perspective &&
-      aParams.transform_style != wr::TransformStyle::Preserve3D) {
+      !aContainerFrame->Combines3DTransformWithAncestors()) {
     mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
 
     int32_t apd = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
