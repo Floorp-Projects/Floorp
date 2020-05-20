@@ -61,8 +61,6 @@
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
-#include "mozilla/dom/SHEntryChild.h"
-#include "mozilla/dom/SHistoryChild.h"
 #include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WorkerDebugger.h"
@@ -3234,42 +3232,6 @@ bool ContentChild::DeallocPSessionStorageObserverChild(
   return true;
 }
 
-PSHEntryChild* ContentChild::AllocPSHEntryChild(PSHistoryChild* aSHistory,
-                                                uint64_t aSharedID) {
-  // We take a strong reference for the IPC layer. The Release implementation
-  // for SHEntryChild will ask the IPC layer to release it (through
-  // DeallocPSHEntryChild) if that is the only remaining reference.
-  RefPtr<SHEntryChild> child;
-  child = new SHEntryChild(static_cast<SHistoryChild*>(aSHistory), aSharedID);
-  return child.forget().take();
-}
-
-void ContentChild::DeallocPSHEntryChild(PSHEntryChild* aActor) {
-  // Release the strong reference we took in AllocPSHEntryChild for the IPC
-  // layer.
-  RefPtr<SHEntryChild> child(dont_AddRef(static_cast<SHEntryChild*>(aActor)));
-}
-
-PSHistoryChild* ContentChild::AllocPSHistoryChild(
-    const MaybeDiscarded<BrowsingContext>& aContext) {
-  // FIXME: How should SHistoryChild construction deal with a null or discarded
-  // BrowsingContext? This will likely kill the current child process.
-  if (NS_WARN_IF(aContext.IsNullOrDiscarded())) {
-    return nullptr;
-  }
-
-  // We take a strong reference for the IPC layer. The Release implementation
-  // for SHistoryChild will ask the IPC layer to release it (through
-  // DeallocPSHistoryChild) if that is the only remaining reference.
-  return do_AddRef(new SHistoryChild(aContext.get())).take();
-}
-
-void ContentChild::DeallocPSHistoryChild(PSHistoryChild* aActor) {
-  // Release the strong reference we took in AllocPSHistoryChild for the IPC
-  // layer.
-  RefPtr<SHistoryChild> child(dont_AddRef(static_cast<SHistoryChild*>(aActor)));
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvActivate(PBrowserChild* aTab) {
   BrowserChild* tab = static_cast<BrowserChild*>(aTab);
   return tab->RecvActivate();
@@ -3522,18 +3484,6 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaControlKeysEvent(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvDestroySHEntrySharedState(
-    const uint64_t& aID) {
-  SHEntryChildShared::Remove(aID);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvEvictContentViewers(
-    nsTArray<uint64_t>&& aToEvictSharedStateIDs) {
-  SHEntryChildShared::EvictContentViewers(std::move(aToEvictSharedStateIDs));
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvSessionStorageData(
     const uint64_t aTopContextId, const nsACString& aOriginAttrs,
     const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
@@ -3548,18 +3498,6 @@ mozilla::ipc::IPCResult ContentChild::RecvSessionStorageData(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvUpdateSHEntriesInDocShell(
-    CrossProcessSHEntry* aOldEntry, CrossProcessSHEntry* aNewEntry,
-    const MaybeDiscarded<BrowsingContext>& aContext) {
-  MOZ_ASSERT(!aContext.IsNull(), "Browsing context cannot be null");
-  nsDocShell* docshell =
-      static_cast<nsDocShell*>(aContext.GetMaybeDiscarded()->GetDocShell());
-  if (docshell) {
-    docshell->SwapHistoryEntries(aOldEntry->ToSHEntryChild(),
-                                 aNewEntry->ToSHEntryChild());
-  }
-  return IPC_OK();
-}
 
 mozilla::ipc::IPCResult ContentChild::RecvOnAllowAccessFor(
     const MaybeDiscarded<BrowsingContext>& aContext,
