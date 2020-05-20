@@ -376,14 +376,14 @@
                 data-l10n-id="main-context-menu-bidi-switch-page"
                 oncommand="gContextMenu.switchPageDirection();"/>
       <menuseparator id="inspect-separator" hidden="true"/>
-      <menuitem id="context-inspect"
-                hidden="true"
-                data-l10n-id="main-context-menu-inspect-element"
-                oncommand="gContextMenu.inspectNode();"/>
       <menuitem id="context-inspect-a11y"
                 hidden="true"
                 data-l10n-id="main-context-menu-inspect-a11y-properties"
                 oncommand="gContextMenu.inspectA11Y();"/>
+      <menuitem id="context-inspect"
+                hidden="true"
+                data-l10n-id="main-context-menu-inspect-element"
+                oncommand="gContextMenu.inspectNode();"/>
       <menuseparator id="context-media-eme-separator" hidden="true"/>
       <menuitem id="context-media-eme-learnmore"
                 class="menuitem-iconic"
