@@ -1308,7 +1308,14 @@ function runTests() {
     // CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE (none of which are
     // unprefixed).
     test_parseable("::-moz-color-swatch:hover");
+    test_parseable("::-moz-color-swatch:is(:hover)");
+    test_parseable("::-moz-color-swatch:not(:hover)");
+    test_parseable("::-moz-color-swatch:where(:hover)");
     test_balanced_unparseable("::-moz-color-swatch:not(.foo)");
+    test_balanced_unparseable("::-moz-color-swatch:where(.foo)");
+    test_balanced_unparseable("::-moz-color-swatch:is(.foo)");
+    test_balanced_unparseable("::-moz-color-swatch:where(p, :hover)");
+    test_balanced_unparseable("::-moz-color-swatch:is(p, :hover)");
     test_balanced_unparseable("::-moz-color-swatch:first-child");
     test_balanced_unparseable("::-moz-color-swatch:host");
     test_balanced_unparseable("::-moz-color-swatch:host(div)");
