@@ -27,15 +27,7 @@ InlineSpellChecker.prototype = {
 
   initFromRemote(aSpellInfo, aWindowGlobalParent) {
     if (this.mRemote) {
-      // We shouldn't get here, but let's just recover instead of bricking the
-      // menu by throwing exceptions:
-      Cu.reportError(new Error("Unexpected remote spellchecker present!"));
-      try {
-        this.mRemote.uninit();
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-      this.mRemote = null;
+      throw new Error("Unexpected state");
     }
     this.uninit();
 
@@ -498,7 +490,6 @@ function RemoteSpellChecker(aSpellInfo, aWindowGlobalParent) {
   this._spellInfo = aSpellInfo;
   this._suggestionGenerator = null;
   this._actor = aWindowGlobalParent.getActor("InlineSpellChecker");
-  this._actor.registerDestructionObserver(this);
 }
 
 RemoteSpellChecker.prototype = {
@@ -580,15 +571,6 @@ RemoteSpellChecker.prototype = {
     this._actor.recheckSpelling();
   },
   uninit() {
-    if (this._actor) {
-      this._actor.uninit();
-      this._actor.unregisterDestructionObserver(this);
-    }
-  },
-
-  actorDestroyed() {
-    // The actor lets us know if it gets destroyed, so we don't
-    // later try to call `.uninit()` on it.
-    this._actor = null;
+    this._actor.uninit();
   },
 };

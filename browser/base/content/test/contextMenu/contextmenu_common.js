@@ -352,8 +352,6 @@ let lastElementSelector = null;
  *        preCheckContextMenuFn: callback to run before opening menu
  *        onContextMenuShown: callback to run when the context menu is shown
  *        postCheckContextMenuFn: callback to run after opening menu
- *        keepMenuOpen: if true, we do not call hidePopup, the consumer is
- *                      responsible for calling it.
  * @return {Promise} resolved after the test finishes
  */
 async function test_contextmenu(selector, menuItems, options = {}) {
@@ -474,8 +472,6 @@ async function test_contextmenu(selector, menuItems, options = {}) {
     info("Completed postCheckContextMenuFn");
   }
 
-  if (!options.keepMenuOpen) {
-    contextMenu.hidePopup();
-    await awaitPopupHidden;
-  }
+  contextMenu.hidePopup();
+  await awaitPopupHidden;
 }
