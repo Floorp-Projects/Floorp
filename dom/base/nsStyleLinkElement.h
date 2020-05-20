@@ -32,6 +32,9 @@ class ShadowRoot;
 }  // namespace mozilla
 
 class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
+  template <typename V, typename E>
+  using Result = mozilla::Result<V, E>;
+
  public:
   nsStyleLinkElement();
   virtual ~nsStyleLinkElement();
@@ -41,19 +44,18 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
   mozilla::StyleSheet* GetSheet() const { return mStyleSheet; }
 
   // nsIStyleSheetLinkingElement
-  void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) override;
+  void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) final;
 
-  mozilla::Result<Update, nsresult> UpdateStyleSheet(
-      nsICSSLoaderObserver*) override;
+  Result<Update, nsresult> UpdateStyleSheet(nsICSSLoaderObserver*) final;
 
-  void SetEnableUpdates(bool aEnableUpdates) override;
+  void SetEnableUpdates(bool aEnableUpdates) final;
   void GetCharset(nsAString& aCharset) override;
 
   void OverrideBaseURI(nsIURI* aNewBaseURI) override;
-  void SetLineNumber(uint32_t aLineNumber) override;
-  uint32_t GetLineNumber() override;
-  void SetColumnNumber(uint32_t aColumnNumber) override;
-  uint32_t GetColumnNumber() override;
+  void SetLineNumber(uint32_t aLineNumber) final;
+  uint32_t GetLineNumber() final;
+  void SetColumnNumber(uint32_t aColumnNumber) final;
+  uint32_t GetColumnNumber() final;
 
   enum RelValue {
     ePREFETCH = 0x00000001,
@@ -86,7 +88,7 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
    *
    * TODO(emilio): Should probably pass a single DocumentOrShadowRoot.
    */
-  mozilla::Result<Update, nsresult> UpdateStyleSheetInternal(
+  Result<Update, nsresult> UpdateStyleSheetInternal(
       mozilla::dom::Document* aOldDocument,
       mozilla::dom::ShadowRoot* aOldShadowRoot, ForceUpdate = ForceUpdate::No);
 
