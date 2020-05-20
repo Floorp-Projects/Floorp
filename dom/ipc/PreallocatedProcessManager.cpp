@@ -40,6 +40,7 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   void RemoveBlocker(ContentParent* aParent);
   already_AddRefed<ContentParent> Take(const nsAString& aRemoteType);
   bool Provide(ContentParent* aParent);
+  void Erase(ContentParent* aParent);
 
  private:
   static const char* const kObserverTopics[];
@@ -214,6 +215,8 @@ already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
     // We took a preallocated process. Let's try to start up a new one
     // soon.
     AllocateOnIdle();
+    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+            ("Use " PREALLOC_REMOTE_TYPE " process %p", process.get()));
   }
   if (process) {
     ProcessPriorityManager::SetProcessPriority(process,
@@ -230,6 +233,8 @@ bool PreallocatedProcessManagerImpl::Provide(ContentParent* aParent) {
   // launch in progress; if that process hasn't been taken by the
   // time the launch completes, the new process will be shut down.
   if (mEnabled && !mShutdown && !mPreallocatedE10SProcess) {
+    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+            ("Store for reuse " DEFAULT_REMOTE_TYPE " process %p", aParent));
     mPreallocatedE10SProcess = aParent;
     return true;
   }
@@ -238,6 +243,13 @@ bool PreallocatedProcessManagerImpl::Provide(ContentParent* aParent) {
   // with the same ContentParent. Returning true here for both calls is
   // important to avoid the cached process to be destroyed.
   return aParent == mPreallocatedE10SProcess;
+}
+
+void PreallocatedProcessManagerImpl::Erase(ContentParent* aParent) {
+  // Ensure this ContentParent isn't cached
+  if (mPreallocatedE10SProcess == aParent) {
+    mPreallocatedE10SProcess = nullptr;
+  }
 }
 
 void PreallocatedProcessManagerImpl::Enable(uint32_t aProcesses) {
@@ -336,9 +348,10 @@ void PreallocatedProcessManagerImpl::AllocateNow() {
           // could push_front it, but that would require a bunch more
           // logic.
           mPreallocatedProcesses.push_back(process);
-          MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-                  ("Preallocated = %lu of %d processes",
-                   mPreallocatedProcesses.size(), mNumberPreallocs));
+          MOZ_LOG(
+              ContentParent::GetLog(), LogLevel::Debug,
+              ("Preallocated = %lu of %d processes",
+               (unsigned long)mPreallocatedProcesses.size(), mNumberPreallocs));
 
           // Continue prestarting processes if needed
           if (mPreallocatedProcesses.size() < mNumberPreallocs) {
@@ -369,6 +382,11 @@ void PreallocatedProcessManagerImpl::CloseProcesses() {
     mPreallocatedProcesses.pop_front();
     process->ShutDownProcess(ContentParent::SEND_SHUTDOWN_MESSAGE);
     // drop ref and let it free
+  }
+  if (mPreallocatedE10SProcess) {
+    mPreallocatedE10SProcess->ShutDownProcess(
+        ContentParent::SEND_SHUTDOWN_MESSAGE);
+    mPreallocatedE10SProcess = nullptr;
   }
 }
 
@@ -422,9 +440,13 @@ already_AddRefed<ContentParent> PreallocatedProcessManager::Take(
 }
 
 /* static */
-bool PreallocatedProcessManager::Provide(const nsAString& aRemoteType,
-                                         ContentParent* aParent) {
+bool PreallocatedProcessManager::Provide(ContentParent* aParent) {
   return GetPPMImpl()->Provide(aParent);
+}
+
+/* static */
+void PreallocatedProcessManager::Erase(ContentParent* aParent) {
+  GetPPMImpl()->Erase(aParent);
 }
 
 }  // namespace mozilla
