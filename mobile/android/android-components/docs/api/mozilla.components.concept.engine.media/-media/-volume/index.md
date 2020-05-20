@@ -2,7 +2,7 @@
 
 # Volume
 
-`data class Volume` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L190)
+`data class Volume` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L197)
 
 Volume associated with [Media](../index.md).
 

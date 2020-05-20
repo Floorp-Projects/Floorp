@@ -2,7 +2,7 @@
 
 # State
 
-`enum class State` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L92)
+`enum class State` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L99)
 
 A simplified media state deprived from the [playbackState](../playback-state.md) events.
 

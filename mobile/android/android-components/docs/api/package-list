@@ -198,6 +198,7 @@ mozilla.components.feature.intent.processing
 mozilla.components.feature.media
 mozilla.components.feature.media.ext
 mozilla.components.feature.media.facts
+mozilla.components.feature.media.fullscreen
 mozilla.components.feature.media.middleware
 mozilla.components.feature.media.service
 mozilla.components.feature.p2p
@@ -302,6 +303,8 @@ mozilla.components.support.base.log.sink
 mozilla.components.support.base.memory
 mozilla.components.support.base.observer
 mozilla.components.support.base.utils
+mozilla.components.support.images
+mozilla.components.support.images.decoder
 mozilla.components.support.ktx.android.arch.lifecycle
 mozilla.components.support.ktx.android.content
 mozilla.components.support.ktx.android.content.res

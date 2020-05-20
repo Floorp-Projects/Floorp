@@ -2,7 +2,7 @@
 
 # state
 
-`val state: `[`State`](../../../mozilla.components.concept.engine.media/-media/-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L44)
+`val state: `[`State`](../../../mozilla.components.concept.engine.media/-media/-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/MediaState.kt#L45)
 
 The current simplified [State](../-state/index.md) of this media element (derived from [playbackState](playback-state.md)
 events).

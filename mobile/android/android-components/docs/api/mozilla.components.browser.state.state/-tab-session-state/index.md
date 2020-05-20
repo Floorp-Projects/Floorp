@@ -25,6 +25,12 @@ Value type that represents the state of a tab (private or normal).
 | [readerState](reader-state.md) | `val readerState: `[`ReaderState`](../-reader-state/index.md)<br>the [ReaderState](../-reader-state/index.md) of this tab. |
 | [trackingProtection](tracking-protection.md) | `val trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)<br>the [TrackingProtectionState](../-tracking-protection-state/index.md) of this tab. |
 
+### Functions
+
+| Name | Summary |
+|---|---|
+| [createCopy](create-copy.md) | `fun createCopy(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, content: `[`ContentState`](../-content-state/index.md)`, trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)`, engineState: `[`EngineState`](../-engine-state/index.md)`, extensionState: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](../-web-extension-state/index.md)`>, contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?): `[`TabSessionState`](./index.md)<br>Copy the class and override some parameters. |
+
 ### Extension Functions
 
 | Name | Summary |

@@ -2,7 +2,7 @@
 
 # PAUSE
 
-`PAUSE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L138)
+`PAUSE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L145)
 
 Sent when the playback state is changed to paused.
 
