@@ -11,6 +11,8 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 add_task(async function() {
+  info("Test ResourceWatcher for DOCUMENT_EVENTS");
+
   // Open a test tab
   const tab = await addTab("data:text/html,Document Events");
 
@@ -34,7 +36,7 @@ add_task(async function() {
   await resourceWatcher.watch([ResourceWatcher.TYPES.DOCUMENT_EVENTS], {
     onAvailable: parameters => listener.dispatch(parameters),
   });
-  await assertEvents(onLoadingAtInit, onInteractiveAtInit, onCompleteAtInit);
+  await assertPromises(onLoadingAtInit, onInteractiveAtInit, onCompleteAtInit);
   ok(
     true,
     "Document events are fired even when the document was already loaded"
@@ -45,7 +47,7 @@ add_task(async function() {
   const onInteractiveAtReloaded = listener.once("dom-interactive");
   const onCompleteAtReloaded = listener.once("dom-complete");
   gBrowser.reloadTab(tab);
-  await assertEvents(
+  await assertPromises(
     onLoadingAtReloaded,
     onInteractiveAtReloaded,
     onCompleteAtReloaded
@@ -56,10 +58,43 @@ add_task(async function() {
   await client.close();
 });
 
-async function assertEvents(onLoading, onInteractive, onComplete) {
+add_task(async function() {
+  info("Test ignoreExistingResources option for DOCUMENT_EVENTS");
+
+  const tab = await addTab("data:text/html,Document Events");
+
+  const {
+    client,
+    resourceWatcher,
+    targetList,
+  } = await initResourceWatcherAndTarget(tab);
+
+  info("Check whether the existing document events will not be fired");
+  const documentEvents = [];
+  await resourceWatcher.watch([ResourceWatcher.TYPES.DOCUMENT_EVENTS], {
+    onAvailable: ({ resource }) => documentEvents.push(resource),
+    ignoreExistingResources: true,
+  });
+  is(documentEvents.length, 0, "Existing document events are not fired");
+
+  info("Check whether the future document events are fired");
+  gBrowser.reloadTab(tab);
+  info("Wait for dom-loading, dom-interactive and dom-complete events");
+  await waitUntil(() => documentEvents.length === 3);
+  assertEvents(...documentEvents);
+
+  await targetList.stopListening();
+  await client.close();
+});
+
+async function assertPromises(onLoading, onInteractive, onComplete) {
   const loadingEvent = await onLoading;
   const interactiveEvent = await onInteractive;
   const completeEvent = await onComplete;
+  assertEvents(loadingEvent, interactiveEvent, completeEvent);
+}
+
+function assertEvents(loadingEvent, interactiveEvent, completeEvent) {
   is(
     typeof loadingEvent.time,
     "number",
