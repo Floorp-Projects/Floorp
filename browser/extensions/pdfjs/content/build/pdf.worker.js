@@ -123,12 +123,20 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.5.153';
-const pdfjsBuild = 'bf2ce760f';
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "WorkerMessageHandler", {
+  enumerable: true,
+  get: function () {
+    return _worker.WorkerMessageHandler;
+  }
+});
 
-const pdfjsCoreWorker = __w_pdfjs_require__(1);
+var _worker = __w_pdfjs_require__(1);
 
-exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
+const pdfjsVersion = '2.5.179';
+const pdfjsBuild = '604a6f96a';
 
 /***/ }),
 /* 1 */
@@ -144,17 +152,17 @@ exports.WorkerMessageHandler = exports.WorkerTask = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _pdf_manager = __w_pdfjs_require__(5);
+var _pdf_manager = __w_pdfjs_require__(6);
 
-var _is_node = __w_pdfjs_require__(44);
+var _is_node = __w_pdfjs_require__(4);
 
 var _message_handler = __w_pdfjs_require__(45);
 
 var _worker_stream = __w_pdfjs_require__(46);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
 var WorkerTask = function WorkerTaskClosure() {
   function WorkerTask(name) {
@@ -223,7 +231,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.5.153';
+    const workerVersion = '2.5.179';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1502,10 +1510,26 @@ exports.createObjectURL = createObjectURL;
 "use strict";
 
 
+var _is_node = __w_pdfjs_require__(4);
+
 ;
 
 /***/ }),
 /* 4 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isNodeJS = void 0;
+const isNodeJS = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !process.versions.electron;
+exports.isNodeJS = isNodeJS;
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -1819,7 +1843,7 @@ function clearPrimitiveCaches() {
 }
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -1832,13 +1856,13 @@ exports.NetworkPdfManager = exports.LocalPdfManager = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _chunked_stream = __w_pdfjs_require__(6);
+var _chunked_stream = __w_pdfjs_require__(7);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _document = __w_pdfjs_require__(8);
+var _document = __w_pdfjs_require__(9);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
 class BasePdfManager {
   constructor() {
@@ -2026,7 +2050,7 @@ class NetworkPdfManager extends BasePdfManager {
 exports.NetworkPdfManager = NetworkPdfManager;
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -2039,7 +2063,7 @@ exports.ChunkedStreamManager = exports.ChunkedStream = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
 class ChunkedStream {
   constructor(length, chunkSize, manager) {
@@ -2639,7 +2663,7 @@ class ChunkedStreamManager {
 exports.ChunkedStreamManager = ChunkedStreamManager;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -2776,7 +2800,7 @@ function isWhiteSpace(ch) {
 }
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -2789,25 +2813,25 @@ exports.PDFDocument = exports.Page = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _obj = __w_pdfjs_require__(9);
+var _obj = __w_pdfjs_require__(10);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
-var _annotation = __w_pdfjs_require__(23);
+var _annotation = __w_pdfjs_require__(24);
 
-var _crypto = __w_pdfjs_require__(21);
+var _crypto = __w_pdfjs_require__(22);
 
-var _parser = __w_pdfjs_require__(10);
+var _parser = __w_pdfjs_require__(11);
 
-var _operator_list = __w_pdfjs_require__(24);
+var _operator_list = __w_pdfjs_require__(25);
 
-var _evaluator = __w_pdfjs_require__(25);
+var _evaluator = __w_pdfjs_require__(26);
 
-var _function = __w_pdfjs_require__(39);
+var _function = __w_pdfjs_require__(40);
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
@@ -3103,20 +3127,17 @@ class Page {
 
   get _parsedAnnotations() {
     const parsedAnnotations = this.pdfManager.ensure(this, "annotations").then(() => {
-      const annotationRefs = this.annotations;
       const annotationPromises = [];
 
-      for (let i = 0, ii = annotationRefs.length; i < ii; i++) {
-        annotationPromises.push(_annotation.AnnotationFactory.create(this.xref, annotationRefs[i], this.pdfManager, this.idFactory));
+      for (const annotationRef of this.annotations) {
+        annotationPromises.push(_annotation.AnnotationFactory.create(this.xref, annotationRef, this.pdfManager, this.idFactory).catch(function (reason) {
+          (0, _util.warn)(`_parsedAnnotations: "${reason}".`);
+          return null;
+        }));
       }
 
       return Promise.all(annotationPromises).then(function (annotations) {
-        return annotations.filter(function isDefined(annotation) {
-          return !!annotation;
-        });
-      }, function (reason) {
-        (0, _util.warn)(`_parsedAnnotations: "${reason}".`);
-        return [];
+        return annotations.filter(annotation => !!annotation);
       });
     });
     return (0, _util.shadow)(this, "_parsedAnnotations", parsedAnnotations);
@@ -3523,7 +3544,7 @@ class PDFDocument {
 exports.PDFDocument = PDFDocument;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -3536,15 +3557,15 @@ exports.FileSpec = exports.XRef = exports.ObjectLoader = exports.Catalog = void 
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _parser = __w_pdfjs_require__(10);
+var _parser = __w_pdfjs_require__(11);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _crypto = __w_pdfjs_require__(21);
+var _crypto = __w_pdfjs_require__(22);
 
-var _colorspace = __w_pdfjs_require__(22);
+var _colorspace = __w_pdfjs_require__(23);
 
 function fetchDestination(dest) {
   return (0, _primitives.isDict)(dest) ? dest.get("D") : dest;
@@ -5777,7 +5798,7 @@ const ObjectLoader = function () {
 exports.ObjectLoader = ObjectLoader;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -5788,21 +5809,21 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Parser = exports.Linearization = exports.Lexer = void 0;
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _ccitt_stream = __w_pdfjs_require__(12);
+var _ccitt_stream = __w_pdfjs_require__(13);
 
-var _jbig2_stream = __w_pdfjs_require__(14);
+var _jbig2_stream = __w_pdfjs_require__(15);
 
-var _jpeg_stream = __w_pdfjs_require__(17);
+var _jpeg_stream = __w_pdfjs_require__(18);
 
-var _jpx_stream = __w_pdfjs_require__(19);
+var _jpx_stream = __w_pdfjs_require__(20);
 
 const MAX_LENGTH_TO_CACHE = 1000;
 const MAX_ADLER32_LENGTH = 5552;
@@ -7084,7 +7105,7 @@ class Linearization {
 exports.Linearization = Linearization;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -7097,9 +7118,9 @@ exports.LZWStream = exports.StringStream = exports.StreamsSequenceStream = expor
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
 var Stream = function StreamClosure() {
   function Stream(arrayBuffer, start, length, dict) {
@@ -8386,7 +8407,7 @@ var NullStream = function NullStreamClosure() {
 exports.NullStream = NullStream;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -8397,11 +8418,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.CCITTFaxStream = void 0;
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _ccitt = __w_pdfjs_require__(13);
+var _ccitt = __w_pdfjs_require__(14);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
 var CCITTFaxStream = function CCITTFaxStreamClosure() {
   function CCITTFaxStream(str, maybeLength, params) {
@@ -8453,7 +8474,7 @@ var CCITTFaxStream = function CCITTFaxStreamClosure() {
 exports.CCITTFaxStream = CCITTFaxStream;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -9158,7 +9179,7 @@ const CCITTFaxDecoder = function CCITTFaxDecoder() {
 exports.CCITTFaxDecoder = CCITTFaxDecoder;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -9169,11 +9190,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Jbig2Stream = void 0;
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
-var _jbig = __w_pdfjs_require__(15);
+var _jbig = __w_pdfjs_require__(16);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -9242,7 +9263,7 @@ const Jbig2Stream = function Jbig2StreamClosure() {
 exports.Jbig2Stream = Jbig2Stream;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -9255,11 +9276,11 @@ exports.Jbig2Image = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _arithmetic_decoder = __w_pdfjs_require__(16);
+var _arithmetic_decoder = __w_pdfjs_require__(17);
 
-var _ccitt = __w_pdfjs_require__(13);
+var _ccitt = __w_pdfjs_require__(14);
 
 class Jbig2Error extends _util.BaseException {
   constructor(msg) {
@@ -11450,7 +11471,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
 exports.Jbig2Image = Jbig2Image;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -11804,7 +11825,7 @@ class ArithmeticDecoder {
 exports.ArithmeticDecoder = ArithmeticDecoder;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -11817,11 +11838,11 @@ exports.JpegStream = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _jpg = __w_pdfjs_require__(18);
+var _jpg = __w_pdfjs_require__(19);
 
 const JpegStream = function JpegStreamClosure() {
   function JpegStream(stream, maybeLength, dict, params) {
@@ -12031,7 +12052,7 @@ const JpegStream = function JpegStreamClosure() {
 exports.JpegStream = JpegStream;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -12044,7 +12065,7 @@ exports.JpegImage = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
 class JpegError extends _util.BaseException {
   constructor(msg) {
@@ -13272,7 +13293,7 @@ var JpegImage = function JpegImageClosure() {
 exports.JpegImage = JpegImage;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -13283,9 +13304,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.JpxStream = void 0;
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
-var _jpx = __w_pdfjs_require__(20);
+var _jpx = __w_pdfjs_require__(21);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -13359,7 +13380,7 @@ const JpxStream = function JpxStreamClosure() {
 exports.JpxStream = JpxStream;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -13372,9 +13393,9 @@ exports.JpxImage = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _arithmetic_decoder = __w_pdfjs_require__(16);
+var _arithmetic_decoder = __w_pdfjs_require__(17);
 
 class JpxError extends _util.BaseException {
   constructor(msg) {
@@ -15695,7 +15716,7 @@ var JpxImage = function JpxImageClosure() {
 exports.JpxImage = JpxImage;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -15708,9 +15729,9 @@ exports.calculateSHA512 = exports.calculateSHA384 = exports.calculateSHA256 = ex
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
 var ARCFourCipher = function ARCFourCipherClosure() {
   function ARCFourCipher(key) {
@@ -17285,7 +17306,7 @@ var CipherTransformFactory = function CipherTransformFactoryClosure() {
 exports.CipherTransformFactory = CipherTransformFactory;
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -17298,7 +17319,7 @@ exports.ColorSpace = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
 function resizeRgbImage(src, dest, w1, h1, w2, h2, alpha01) {
   const COMPONENTS = 3;
@@ -18331,7 +18352,7 @@ const LabCS = function LabCSClosure() {
 }();
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -18345,17 +18366,17 @@ exports.MarkupAnnotation = exports.AnnotationFactory = exports.AnnotationBorderS
 
 var _util = __w_pdfjs_require__(2);
 
-var _obj = __w_pdfjs_require__(9);
+var _obj = __w_pdfjs_require__(10);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _colorspace = __w_pdfjs_require__(22);
+var _colorspace = __w_pdfjs_require__(23);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _operator_list = __w_pdfjs_require__(24);
+var _operator_list = __w_pdfjs_require__(25);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
 class AnnotationFactory {
   static create(xref, ref, pdfManager, idFactory) {
@@ -19414,7 +19435,7 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
 }
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -20076,7 +20097,7 @@ var OperatorList = function OperatorListClosure() {
 exports.OperatorList = OperatorList;
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -20089,45 +20110,45 @@ exports.PartialEvaluator = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _cmap = __w_pdfjs_require__(26);
+var _cmap = __w_pdfjs_require__(27);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _fonts = __w_pdfjs_require__(27);
+var _fonts = __w_pdfjs_require__(28);
 
-var _encodings = __w_pdfjs_require__(30);
+var _encodings = __w_pdfjs_require__(31);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _unicode = __w_pdfjs_require__(33);
+var _unicode = __w_pdfjs_require__(34);
 
-var _standard_fonts = __w_pdfjs_require__(32);
+var _standard_fonts = __w_pdfjs_require__(33);
 
-var _pattern = __w_pdfjs_require__(36);
+var _pattern = __w_pdfjs_require__(37);
 
-var _parser = __w_pdfjs_require__(10);
+var _parser = __w_pdfjs_require__(11);
 
-var _bidi = __w_pdfjs_require__(37);
+var _bidi = __w_pdfjs_require__(38);
 
-var _colorspace = __w_pdfjs_require__(22);
+var _colorspace = __w_pdfjs_require__(23);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
-var _glyphlist = __w_pdfjs_require__(31);
+var _glyphlist = __w_pdfjs_require__(32);
 
-var _metrics = __w_pdfjs_require__(38);
+var _metrics = __w_pdfjs_require__(39);
 
-var _function = __w_pdfjs_require__(39);
+var _function = __w_pdfjs_require__(40);
 
-var _jpeg_stream = __w_pdfjs_require__(17);
+var _jpeg_stream = __w_pdfjs_require__(18);
 
-var _murmurhash = __w_pdfjs_require__(41);
+var _murmurhash = __w_pdfjs_require__(42);
 
-var _image_utils = __w_pdfjs_require__(42);
+var _image_utils = __w_pdfjs_require__(43);
 
-var _operator_list = __w_pdfjs_require__(24);
+var _operator_list = __w_pdfjs_require__(25);
 
-var _image = __w_pdfjs_require__(43);
+var _image = __w_pdfjs_require__(44);
 
 var PartialEvaluator = function PartialEvaluatorClosure() {
   const DefaultPartialEvaluatorOptions = {
@@ -23660,7 +23681,7 @@ var EvaluatorPreprocessor = function EvaluatorPreprocessorClosure() {
 }();
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -23673,13 +23694,13 @@ exports.CMapFactory = exports.IdentityCMap = exports.CMap = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _parser = __w_pdfjs_require__(10);
+var _parser = __w_pdfjs_require__(11);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
 var BUILT_IN_CMAPS = ["Adobe-GB1-UCS2", "Adobe-CNS1-UCS2", "Adobe-Japan1-UCS2", "Adobe-Korea1-UCS2", "78-EUC-H", "78-EUC-V", "78-H", "78-RKSJ-H", "78-RKSJ-V", "78-V", "78ms-RKSJ-H", "78ms-RKSJ-V", "83pv-RKSJ-H", "90ms-RKSJ-H", "90ms-RKSJ-V", "90msp-RKSJ-H", "90msp-RKSJ-V", "90pv-RKSJ-H", "90pv-RKSJ-V", "Add-H", "Add-RKSJ-H", "Add-RKSJ-V", "Add-V", "Adobe-CNS1-0", "Adobe-CNS1-1", "Adobe-CNS1-2", "Adobe-CNS1-3", "Adobe-CNS1-4", "Adobe-CNS1-5", "Adobe-CNS1-6", "Adobe-GB1-0", "Adobe-GB1-1", "Adobe-GB1-2", "Adobe-GB1-3", "Adobe-GB1-4", "Adobe-GB1-5", "Adobe-Japan1-0", "Adobe-Japan1-1", "Adobe-Japan1-2", "Adobe-Japan1-3", "Adobe-Japan1-4", "Adobe-Japan1-5", "Adobe-Japan1-6", "Adobe-Korea1-0", "Adobe-Korea1-1", "Adobe-Korea1-2", "B5-H", "B5-V", "B5pc-H", "B5pc-V", "CNS-EUC-H", "CNS-EUC-V", "CNS1-H", "CNS1-V", "CNS2-H", "CNS2-V", "ETHK-B5-H", "ETHK-B5-V", "ETen-B5-H", "ETen-B5-V", "ETenms-B5-H", "ETenms-B5-V", "EUC-H", "EUC-V", "Ext-H", "Ext-RKSJ-H", "Ext-RKSJ-V", "Ext-V", "GB-EUC-H", "GB-EUC-V", "GB-H", "GB-V", "GBK-EUC-H", "GBK-EUC-V", "GBK2K-H", "GBK2K-V", "GBKp-EUC-H", "GBKp-EUC-V", "GBT-EUC-H", "GBT-EUC-V", "GBT-H", "GBT-V", "GBTpc-EUC-H", "GBTpc-EUC-V", "GBpc-EUC-H", "GBpc-EUC-V", "H", "HKdla-B5-H", "HKdla-B5-V", "HKdlb-B5-H", "HKdlb-B5-V", "HKgccs-B5-H", "HKgccs-B5-V", "HKm314-B5-H", "HKm314-B5-V", "HKm471-B5-H", "HKm471-B5-V", "HKscs-B5-H", "HKscs-B5-V", "Hankaku", "Hiragana", "KSC-EUC-H", "KSC-EUC-V", "KSC-H", "KSC-Johab-H", "KSC-Johab-V", "KSC-V", "KSCms-UHC-H", "KSCms-UHC-HW-H", "KSCms-UHC-HW-V", "KSCms-UHC-V", "KSCpc-EUC-H", "KSCpc-EUC-V", "Katakana", "NWP-H", "NWP-V", "RKSJ-H", "RKSJ-V", "Roman", "UniCNS-UCS2-H", "UniCNS-UCS2-V", "UniCNS-UTF16-H", "UniCNS-UTF16-V", "UniCNS-UTF32-H", "UniCNS-UTF32-V", "UniCNS-UTF8-H", "UniCNS-UTF8-V", "UniGB-UCS2-H", "UniGB-UCS2-V", "UniGB-UTF16-H", "UniGB-UTF16-V", "UniGB-UTF32-H", "UniGB-UTF32-V", "UniGB-UTF8-H", "UniGB-UTF8-V", "UniJIS-UCS2-H", "UniJIS-UCS2-HW-H", "UniJIS-UCS2-HW-V", "UniJIS-UCS2-V", "UniJIS-UTF16-H", "UniJIS-UTF16-V", "UniJIS-UTF32-H", "UniJIS-UTF32-V", "UniJIS-UTF8-H", "UniJIS-UTF8-V", "UniJIS2004-UTF16-H", "UniJIS2004-UTF16-V", "UniJIS2004-UTF32-H", "UniJIS2004-UTF32-V", "UniJIS2004-UTF8-H", "UniJIS2004-UTF8-V", "UniJISPro-UCS2-HW-V", "UniJISPro-UCS2-V", "UniJISPro-UTF8-V", "UniJISX0213-UTF32-H", "UniJISX0213-UTF32-V", "UniJISX02132004-UTF32-H", "UniJISX02132004-UTF32-V", "UniKS-UCS2-H", "UniKS-UCS2-V", "UniKS-UTF16-H", "UniKS-UTF16-V", "UniKS-UTF32-H", "UniKS-UTF32-V", "UniKS-UTF8-H", "UniKS-UTF8-V", "V", "WP-Symbol"];
 
@@ -24557,7 +24578,7 @@ var CMapFactory = function CMapFactoryClosure() {
 exports.CMapFactory = CMapFactory;
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -24571,25 +24592,25 @@ exports.IdentityToUnicodeMap = exports.ToUnicodeMap = exports.FontFlags = export
 
 var _util = __w_pdfjs_require__(2);
 
-var _cff_parser = __w_pdfjs_require__(28);
+var _cff_parser = __w_pdfjs_require__(29);
 
-var _glyphlist = __w_pdfjs_require__(31);
+var _glyphlist = __w_pdfjs_require__(32);
 
-var _encodings = __w_pdfjs_require__(30);
+var _encodings = __w_pdfjs_require__(31);
 
-var _standard_fonts = __w_pdfjs_require__(32);
+var _standard_fonts = __w_pdfjs_require__(33);
 
-var _unicode = __w_pdfjs_require__(33);
+var _unicode = __w_pdfjs_require__(34);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _font_renderer = __w_pdfjs_require__(34);
+var _font_renderer = __w_pdfjs_require__(35);
 
-var _cmap = __w_pdfjs_require__(26);
+var _cmap = __w_pdfjs_require__(27);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
-var _type1_parser = __w_pdfjs_require__(35);
+var _type1_parser = __w_pdfjs_require__(36);
 
 const PRIVATE_USE_AREAS = [[0xe000, 0xf8ff], [0x100000, 0x10fffd]];
 var PDF_GLYPH_SPACE_UNITS = 1000;
@@ -27797,7 +27818,7 @@ var CFFFont = function CFFFontClosure() {
 }();
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -27810,9 +27831,9 @@ exports.CFFFDSelect = exports.CFFCompiler = exports.CFFPrivateDict = exports.CFF
 
 var _util = __w_pdfjs_require__(2);
 
-var _charsets = __w_pdfjs_require__(29);
+var _charsets = __w_pdfjs_require__(30);
 
-var _encodings = __w_pdfjs_require__(30);
+var _encodings = __w_pdfjs_require__(31);
 
 var MAX_SUBR_NESTING = 10;
 var CFFStandardStrings = [".notdef", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quoteright", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "quoteleft", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "exclamdown", "cent", "sterling", "fraction", "yen", "florin", "section", "currency", "quotesingle", "quotedblleft", "guillemotleft", "guilsinglleft", "guilsinglright", "fi", "fl", "endash", "dagger", "daggerdbl", "periodcentered", "paragraph", "bullet", "quotesinglbase", "quotedblbase", "quotedblright", "guillemotright", "ellipsis", "perthousand", "questiondown", "grave", "acute", "circumflex", "tilde", "macron", "breve", "dotaccent", "dieresis", "ring", "cedilla", "hungarumlaut", "ogonek", "caron", "emdash", "AE", "ordfeminine", "Lslash", "Oslash", "OE", "ordmasculine", "ae", "dotlessi", "lslash", "oslash", "oe", "germandbls", "onesuperior", "logicalnot", "mu", "trademark", "Eth", "onehalf", "plusminus", "Thorn", "onequarter", "divide", "brokenbar", "degree", "thorn", "threequarters", "twosuperior", "registered", "minus", "eth", "multiply", "threesuperior", "copyright", "Aacute", "Acircumflex", "Adieresis", "Agrave", "Aring", "Atilde", "Ccedilla", "Eacute", "Ecircumflex", "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis", "Igrave", "Ntilde", "Oacute", "Ocircumflex", "Odieresis", "Ograve", "Otilde", "Scaron", "Uacute", "Ucircumflex", "Udieresis", "Ugrave", "Yacute", "Ydieresis", "Zcaron", "aacute", "acircumflex", "adieresis", "agrave", "aring", "atilde", "ccedilla", "eacute", "ecircumflex", "edieresis", "egrave", "iacute", "icircumflex", "idieresis", "igrave", "ntilde", "oacute", "ocircumflex", "odieresis", "ograve", "otilde", "scaron", "uacute", "ucircumflex", "udieresis", "ugrave", "yacute", "ydieresis", "zcaron", "exclamsmall", "Hungarumlautsmall", "dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall", "parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader", "zerooldstyle", "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "commasuperior", "threequartersemdash", "periodsuperior", "questionsmall", "asuperior", "bsuperior", "centsuperior", "dsuperior", "esuperior", "isuperior", "lsuperior", "msuperior", "nsuperior", "osuperior", "rsuperior", "ssuperior", "tsuperior", "ff", "ffi", "ffl", "parenleftinferior", "parenrightinferior", "Circumflexsmall", "hyphensuperior", "Gravesmall", "Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall", "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall", "exclamdownsmall", "centoldstyle", "Lslashsmall", "Scaronsmall", "Zcaronsmall", "Dieresissmall", "Brevesmall", "Caronsmall", "Dotaccentsmall", "Macronsmall", "figuredash", "hypheninferior", "Ogoneksmall", "Ringsmall", "Cedillasmall", "questiondownsmall", "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds", "zerosuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior", "eightsuperior", "ninesuperior", "zeroinferior", "oneinferior", "twoinferior", "threeinferior", "fourinferior", "fiveinferior", "sixinferior", "seveninferior", "eightinferior", "nineinferior", "centinferior", "dollarinferior", "periodinferior", "commainferior", "Agravesmall", "Aacutesmall", "Acircumflexsmall", "Atildesmall", "Adieresissmall", "Aringsmall", "AEsmall", "Ccedillasmall", "Egravesmall", "Eacutesmall", "Ecircumflexsmall", "Edieresissmall", "Igravesmall", "Iacutesmall", "Icircumflexsmall", "Idieresissmall", "Ethsmall", "Ntildesmall", "Ogravesmall", "Oacutesmall", "Ocircumflexsmall", "Otildesmall", "Odieresissmall", "OEsmall", "Oslashsmall", "Ugravesmall", "Uacutesmall", "Ucircumflexsmall", "Udieresissmall", "Yacutesmall", "Thornsmall", "Ydieresissmall", "001.000", "001.001", "001.002", "001.003", "Black", "Bold", "Book", "Light", "Medium", "Regular", "Roman", "Semibold"];
@@ -29600,7 +29621,7 @@ var CFFCompiler = function CFFCompilerClosure() {
 exports.CFFCompiler = CFFCompiler;
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -29618,7 +29639,7 @@ const ExpertSubsetCharset = [".notdef", "space", "dollaroldstyle", "dollarsuperi
 exports.ExpertSubsetCharset = ExpertSubsetCharset;
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -29672,10 +29693,10 @@ function getEncoding(encodingName) {
 }
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
-var getLookupTableFactory = __w_pdfjs_require__(7).getLookupTableFactory;
+var getLookupTableFactory = __w_pdfjs_require__(8).getLookupTableFactory;
 var getGlyphsUnicode = getLookupTableFactory(function (t) {
  t.A = 0x0041;
  t.AE = 0x00c6;
@@ -34209,7 +34230,7 @@ exports.getGlyphsUnicode = getGlyphsUnicode;
 exports.getDingbatsGlyphsUnicode = getDingbatsGlyphsUnicode;
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -34220,7 +34241,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getSupplementalGlyphMapForCalibri = exports.getSupplementalGlyphMapForArialBlack = exports.getGlyphMapForStandardFonts = exports.getSymbolsFonts = exports.getSerifFonts = exports.getNonStdFontMap = exports.getStdFontMap = void 0;
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
 const getStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
   t.ArialNarrow = "Helvetica";
@@ -34953,10 +34974,10 @@ const getSupplementalGlyphMapForCalibri = (0, _core_utils.getLookupTableFactory)
 exports.getSupplementalGlyphMapForCalibri = getSupplementalGlyphMapForCalibri;
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
-var getLookupTableFactory = __w_pdfjs_require__(7).getLookupTableFactory;
+var getLookupTableFactory = __w_pdfjs_require__(8).getLookupTableFactory;
 var getSpecialPUASymbols = getLookupTableFactory(function (t) {
  t[63721] = 0x00a9;
  t[63193] = 0x00a9;
@@ -36930,7 +36951,7 @@ exports.getNormalizedUnicodes = getNormalizedUnicodes;
 exports.getUnicodeForGlyph = getUnicodeForGlyph;
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -36943,13 +36964,13 @@ exports.FontRendererFactory = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _cff_parser = __w_pdfjs_require__(28);
+var _cff_parser = __w_pdfjs_require__(29);
 
-var _glyphlist = __w_pdfjs_require__(31);
+var _glyphlist = __w_pdfjs_require__(32);
 
-var _encodings = __w_pdfjs_require__(30);
+var _encodings = __w_pdfjs_require__(31);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
 var FontRendererFactory = function FontRendererFactoryClosure() {
   function getLong(data, offset) {
@@ -37896,7 +37917,7 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
 exports.FontRendererFactory = FontRendererFactory;
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -37907,11 +37928,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Type1Parser = void 0;
 
-var _encodings = __w_pdfjs_require__(30);
+var _encodings = __w_pdfjs_require__(31);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -38607,7 +38628,7 @@ var Type1Parser = function Type1ParserClosure() {
 exports.Type1Parser = Type1Parser;
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -38621,11 +38642,11 @@ exports.Pattern = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _colorspace = __w_pdfjs_require__(22);
+var _colorspace = __w_pdfjs_require__(23);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
 var ShadingType = {
   FUNCTION_BASED: 1,
@@ -39546,7 +39567,7 @@ function getTilingPatternIR(operatorList, dict, args) {
 }
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -39858,7 +39879,7 @@ function bidi(str, startLevel, vertical) {
 }
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -39869,7 +39890,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getMetrics = void 0;
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
 var getMetrics = (0, _core_utils.getLookupTableFactory)(function (t) {
   t.Courier = 600;
@@ -42812,7 +42833,7 @@ var getMetrics = (0, _core_utils.getLookupTableFactory)(function (t) {
 exports.getMetrics = getMetrics;
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -42826,9 +42847,9 @@ exports.PostScriptCompiler = exports.PostScriptEvaluator = exports.PDFFunctionFa
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _ps_parser = __w_pdfjs_require__(40);
+var _ps_parser = __w_pdfjs_require__(41);
 
 class PDFFunctionFactory {
   constructor({
@@ -44162,7 +44183,7 @@ var PostScriptCompiler = function PostScriptCompilerClosure() {
 exports.PostScriptCompiler = PostScriptCompiler;
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -44175,9 +44196,9 @@ exports.PostScriptParser = exports.PostScriptLexer = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _core_utils = __w_pdfjs_require__(7);
+var _core_utils = __w_pdfjs_require__(8);
 
 class PostScriptParser {
   constructor(lexer) {
@@ -44416,7 +44437,7 @@ class PostScriptLexer {
 exports.PostScriptLexer = PostScriptLexer;
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -44542,7 +44563,7 @@ class MurmurHash3_64 {
 exports.MurmurHash3_64 = MurmurHash3_64;
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -44553,11 +44574,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.NativeImageDecoder = void 0;
 
-var _colorspace = __w_pdfjs_require__(22);
+var _colorspace = __w_pdfjs_require__(23);
 
-var _jpeg_stream = __w_pdfjs_require__(17);
+var _jpeg_stream = __w_pdfjs_require__(18);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
 class NativeImageDecoder {
   constructor({
@@ -44621,7 +44642,7 @@ class NativeImageDecoder {
 exports.NativeImageDecoder = NativeImageDecoder;
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -44634,15 +44655,15 @@ exports.PDFImage = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _primitives = __w_pdfjs_require__(4);
+var _primitives = __w_pdfjs_require__(5);
 
-var _colorspace = __w_pdfjs_require__(22);
+var _colorspace = __w_pdfjs_require__(23);
 
-var _stream = __w_pdfjs_require__(11);
+var _stream = __w_pdfjs_require__(12);
 
-var _jpeg_stream = __w_pdfjs_require__(17);
+var _jpeg_stream = __w_pdfjs_require__(18);
 
-var _jpx = __w_pdfjs_require__(20);
+var _jpx = __w_pdfjs_require__(21);
 
 var PDFImage = function PDFImageClosure() {
   function handleImageData(image, nativeDecoder) {
@@ -45311,20 +45332,6 @@ var PDFImage = function PDFImageClosure() {
 }();
 
 exports.PDFImage = PDFImage;
-
-/***/ }),
-/* 44 */
-/***/ (function(module, exports, __w_pdfjs_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.isNodeJS = void 0;
-const isNodeJS = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !process.versions.electron;
-exports.isNodeJS = isNodeJS;
 
 /***/ }),
 /* 45 */
