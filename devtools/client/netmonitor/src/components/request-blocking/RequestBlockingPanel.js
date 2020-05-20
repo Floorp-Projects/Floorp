@@ -224,7 +224,17 @@ class RequestBlockingPanel extends Component {
               enableAllBlockedUrls,
             });
           }
-          this.contextMenu.open(event);
+
+          const contextMenuOptions = {
+            disableDisableAllBlockedUrls: blockedUrls.every(
+              ({ enabled }) => enabled === false
+            ),
+            disableEnableAllBlockedUrls: blockedUrls.every(
+              ({ enabled }) => enabled === true
+            ),
+          };
+
+          this.contextMenu.open(event, contextMenuOptions);
         },
       },
       ul(
