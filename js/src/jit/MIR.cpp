@@ -1279,12 +1279,19 @@ bool MConstant::valueToBoolean(bool* res) const {
 }
 
 HashNumber MWasmFloatConstant::valueHash() const {
-  return ConstantValueHash(type(), u.bits_);
+#ifdef ENABLE_WASM_SIMD
+  return ConstantValueHash(type(), u.bits_[0] ^ u.bits_[1]);
+#else
+  return ConstantValueHash(type(), u.bits_[0]);
+#endif
 }
 
 bool MWasmFloatConstant::congruentTo(const MDefinition* ins) const {
   return ins->isWasmFloatConstant() && type() == ins->type() &&
-         u.bits_ == ins->toWasmFloatConstant()->u.bits_;
+#ifdef ENABLE_WASM_SIMD
+         u.bits_[1] == ins->toWasmFloatConstant()->u.bits_[1] &&
+#endif
+         u.bits_[0] == ins->toWasmFloatConstant()->u.bits_[0];
 }
 
 HashNumber MWasmNullConstant::valueHash() const {

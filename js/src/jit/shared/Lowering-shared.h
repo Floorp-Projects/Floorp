@@ -155,6 +155,9 @@ class LIRGeneratorShared {
       LDefinition::Policy policy = LDefinition::REGISTER);
   inline LDefinition tempFloat32();
   inline LDefinition tempDouble();
+#ifdef ENABLE_WASM_SIMD
+  inline LDefinition tempSimd128();
+#endif
   inline LDefinition tempCopy(MDefinition* input, uint32_t reusedInput);
 
   // Note that the fixed register has a GENERAL type,

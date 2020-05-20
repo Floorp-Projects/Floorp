@@ -1599,17 +1599,25 @@ class MWasmNullConstant : public MNullaryInstruction {
 };
 
 // Floating-point value as created by wasm. Just a constant value, used to
-// effectively inhibite all the MIR optimizations. This uses the same LIR nodes
+// effectively inhibit all the MIR optimizations. This uses the same LIR nodes
 // as a MConstant of the same type would.
 class MWasmFloatConstant : public MNullaryInstruction {
   union {
     float f32_;
     double f64_;
-    uint64_t bits_;
+#ifdef ENABLE_WASM_SIMD
+    int8_t s128_[16];
+    uint64_t bits_[2];
+#else
+    uint64_t bits_[1];
+#endif
   } u;
 
   explicit MWasmFloatConstant(MIRType type) : MNullaryInstruction(classOpcode) {
-    u.bits_ = 0;
+    u.bits_[0] = 0;
+#ifdef ENABLE_WASM_SIMD
+    u.bits_[1] = 0;
+#endif
     setResultType(type);
   }
 
@@ -1628,6 +1636,15 @@ class MWasmFloatConstant : public MNullaryInstruction {
     return ret;
   }
 
+#ifdef ENABLE_WASM_SIMD
+  static MWasmFloatConstant* NewSimd128(TempAllocator& alloc,
+                                        const SimdConstant& s) {
+    auto* ret = new (alloc) MWasmFloatConstant(MIRType::Simd128);
+    memcpy(ret->u.s128_, s.bytes(), 16);
+    return ret;
+  }
+#endif
+
   HashNumber valueHash() const override;
   bool congruentTo(const MDefinition* ins) const override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
@@ -1640,6 +1657,12 @@ class MWasmFloatConstant : public MNullaryInstruction {
     MOZ_ASSERT(type() == MIRType::Float32);
     return u.f32_;
   }
+#ifdef ENABLE_WASM_SIMD
+  const SimdConstant toSimd128() const {
+    MOZ_ASSERT(type() == MIRType::Simd128);
+    return SimdConstant::CreateX16(u.s128_);
+  }
+#endif
 };
 
 // Deep clone a constant JSObject.
@@ -12315,6 +12338,266 @@ class MRotate : public MBinaryInstruction, public NoTypePolicy::Data {
 
   ALLOW_CLONE(MRotate)
 };
+
+// Wasm SIMD.
+//
+// See comment in WasmIonCompile.cpp for a justification for these nodes.
+
+// (v128, v128, v128) -> v128 effect-free operation.
+class MWasmBitselectSimd128 : public MTernaryInstruction,
+                              public NoTypePolicy::Data {
+  MWasmBitselectSimd128(MDefinition* lhs, MDefinition* rhs,
+                        MDefinition* control)
+      : MTernaryInstruction(classOpcode, lhs, rhs, control) {
+    setMovable();
+    setResultType(MIRType::Simd128);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmBitselectSimd128)
+
+  static MWasmBitselectSimd128* New(TempAllocator& alloc, MDefinition* lhs,
+                                    MDefinition* rhs, MDefinition* control) {
+    return new (alloc) MWasmBitselectSimd128(lhs, rhs, control);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  MDefinition* lhs() const { return getOperand(0); }
+  MDefinition* rhs() const { return getOperand(1); }
+  MDefinition* control() const { return getOperand(2); }
+
+  ALLOW_CLONE(MWasmBitselectSimd128)
+};
+
+// (v128, v128) -> v128 effect-free operations.
+class MWasmBinarySimd128 : public MBinaryInstruction,
+                           public NoTypePolicy::Data {
+  wasm::SimdOp simdOp_;
+
+  MWasmBinarySimd128(MDefinition* lhs, MDefinition* rhs, bool commutative,
+                     wasm::SimdOp simdOp)
+      : MBinaryInstruction(classOpcode, lhs, rhs), simdOp_(simdOp) {
+    setMovable();
+    setResultType(MIRType::Simd128);
+    if (commutative) {
+      setCommutative();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmBinarySimd128)
+
+  static MWasmBinarySimd128* New(TempAllocator& alloc, MDefinition* lhs,
+                                 MDefinition* rhs, bool commutative,
+                                 wasm::SimdOp simdOp) {
+    return new (alloc) MWasmBinarySimd128(lhs, rhs, commutative, simdOp);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->toWasmBinarySimd128()->simdOp() == simdOp_ &&
+           congruentIfOperandsEqual(ins);
+  }
+
+  wasm::SimdOp simdOp() const { return simdOp_; }
+
+  ALLOW_CLONE(MWasmBinarySimd128)
+};
+
+// (v128, i32) -> v128 effect-free shift operations.
+class MWasmShiftSimd128 : public MBinaryInstruction, public NoTypePolicy::Data {
+  wasm::SimdOp simdOp_;
+
+  MWasmShiftSimd128(MDefinition* lhs, MDefinition* rhs, wasm::SimdOp simdOp)
+      : MBinaryInstruction(classOpcode, lhs, rhs), simdOp_(simdOp) {
+    setMovable();
+    setResultType(MIRType::Simd128);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmShiftSimd128)
+
+  static MWasmShiftSimd128* New(TempAllocator& alloc, MDefinition* lhs,
+                                MDefinition* rhs, wasm::SimdOp simdOp) {
+    return new (alloc) MWasmShiftSimd128(lhs, rhs, simdOp);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->toWasmShiftSimd128()->simdOp() == simdOp_ &&
+           congruentIfOperandsEqual(ins);
+  }
+
+  wasm::SimdOp simdOp() const { return simdOp_; }
+
+  ALLOW_CLONE(MWasmShiftSimd128)
+};
+
+// (v128, v128, mask) -> v128 effect-free operation.
+class MWasmShuffleSimd128 : public MBinaryInstruction,
+                            public NoTypePolicy::Data {
+  SimdConstant control_;
+
+  MWasmShuffleSimd128(MDefinition* lhs, MDefinition* rhs, SimdConstant control)
+      : MBinaryInstruction(classOpcode, lhs, rhs), control_(control) {
+    setMovable();
+    setResultType(MIRType::Simd128);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmShuffleSimd128)
+
+  static MWasmShuffleSimd128* New(TempAllocator& alloc, MDefinition* lhs,
+                                  MDefinition* rhs, SimdConstant control) {
+    return new (alloc) MWasmShuffleSimd128(lhs, rhs, control);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->toWasmShuffleSimd128()->control() == control_ &&
+           congruentIfOperandsEqual(ins);
+  }
+
+  SimdConstant control() const { return control_; }
+
+  ALLOW_CLONE(MWasmShuffleSimd128)
+};
+
+// (v128, scalar, imm) -> v128 effect-free operations.
+class MWasmReplaceLaneSimd128 : public MBinaryInstruction,
+                                public NoTypePolicy::Data {
+  uint32_t laneIndex_;
+  wasm::SimdOp simdOp_;
+
+  MWasmReplaceLaneSimd128(MDefinition* lhs, MDefinition* rhs,
+                          uint32_t laneIndex, wasm::SimdOp simdOp)
+      : MBinaryInstruction(classOpcode, lhs, rhs),
+        laneIndex_(laneIndex),
+        simdOp_(simdOp) {
+    setMovable();
+    setResultType(MIRType::Simd128);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmReplaceLaneSimd128)
+
+  static MWasmReplaceLaneSimd128* New(TempAllocator& alloc, MDefinition* lhs,
+                                      MDefinition* rhs, uint32_t laneIndex,
+                                      wasm::SimdOp simdOp) {
+    return new (alloc) MWasmReplaceLaneSimd128(lhs, rhs, laneIndex, simdOp);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->toWasmReplaceLaneSimd128()->simdOp() == simdOp_ &&
+           ins->toWasmReplaceLaneSimd128()->laneIndex() == laneIndex_ &&
+           congruentIfOperandsEqual(ins);
+  }
+
+  uint32_t laneIndex() const { return laneIndex_; }
+  wasm::SimdOp simdOp() const { return simdOp_; }
+
+  ALLOW_CLONE(MWasmReplaceLaneSimd128)
+};
+
+// (v128) -> v128 effect-free operations.
+class MWasmUnarySimd128 : public MUnaryInstruction, public NoTypePolicy::Data {
+  wasm::SimdOp simdOp_;
+
+  MWasmUnarySimd128(MDefinition* src, wasm::SimdOp simdOp)
+      : MUnaryInstruction(classOpcode, src), simdOp_(simdOp) {
+    setMovable();
+    setResultType(MIRType::Simd128);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmUnarySimd128)
+
+  static MWasmUnarySimd128* New(TempAllocator& alloc, MDefinition* src,
+                                wasm::SimdOp simdOp) {
+    return new (alloc) MWasmUnarySimd128(src, simdOp);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->toWasmUnarySimd128()->simdOp() == simdOp_ &&
+           congruentIfOperandsEqual(ins);
+  }
+
+  wasm::SimdOp simdOp() const { return simdOp_; }
+
+  ALLOW_CLONE(MWasmUnarySimd128)
+};
+
+// (scalar) -> v128 effect-free operations.
+class MWasmScalarToSimd128 : public MUnaryInstruction,
+                             public NoTypePolicy::Data {
+  wasm::SimdOp simdOp_;
+
+  MWasmScalarToSimd128(MDefinition* src, wasm::SimdOp simdOp)
+      : MUnaryInstruction(classOpcode, src), simdOp_(simdOp) {
+    setMovable();
+    setResultType(MIRType::Simd128);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmScalarToSimd128)
+
+  static MWasmScalarToSimd128* New(TempAllocator& alloc, MDefinition* src,
+                                   wasm::SimdOp simdOp) {
+    return new (alloc) MWasmScalarToSimd128(src, simdOp);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->toWasmScalarToSimd128()->simdOp() == simdOp_ &&
+           congruentIfOperandsEqual(ins);
+  }
+
+  wasm::SimdOp simdOp() const { return simdOp_; }
+
+  ALLOW_CLONE(MWasmScalarToSimd128)
+};
+
+// (v128, imm) -> scalar effect-free operations.
+class MWasmReduceSimd128 : public MUnaryInstruction, public NoTypePolicy::Data {
+  wasm::SimdOp simdOp_;
+  uint32_t imm_;
+
+  MWasmReduceSimd128(MDefinition* src, wasm::SimdOp simdOp, MIRType outType,
+                     uint32_t imm)
+      : MUnaryInstruction(classOpcode, src), simdOp_(simdOp), imm_(imm) {
+    setMovable();
+    setResultType(outType);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmReduceSimd128)
+
+  static MWasmReduceSimd128* New(TempAllocator& alloc, MDefinition* src,
+                                 wasm::SimdOp simdOp, MIRType outType,
+                                 uint32_t imm) {
+    return new (alloc) MWasmReduceSimd128(src, simdOp, outType, imm);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->toWasmReduceSimd128()->simdOp() == simdOp_ &&
+           ins->toWasmReduceSimd128()->imm() == imm_ &&
+           congruentIfOperandsEqual(ins);
+  }
+
+  uint32_t imm() const { return imm_; }
+  wasm::SimdOp simdOp() const { return simdOp_; }
+
+  ALLOW_CLONE(MWasmReduceSimd128)
+};
+
+// End Wasm SIMD
 
 class MUnknownValue : public MNullaryInstruction {
  protected:
