@@ -31,6 +31,7 @@ export class CardGrid extends React.PureComponent {
             type={this.props.type}
             context={rec.context}
             sponsor={rec.sponsor}
+            sponsored_by_override={rec.sponsored_by_override}
             dispatch={this.props.dispatch}
             source={rec.domain}
             pocket_id={rec.pocket_id}

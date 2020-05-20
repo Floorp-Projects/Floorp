@@ -4602,6 +4602,7 @@ class CardGrid extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComponen
         type: this.props.type,
         context: rec.context,
         sponsor: rec.sponsor,
+        sponsored_by_override: rec.sponsored_by_override,
         dispatch: this.props.dispatch,
         source: rec.domain,
         pocket_id: rec.pocket_id,
@@ -4700,7 +4701,9 @@ const DefaultMeta = ({
   context_type,
   cta,
   engagement,
-  cta_variant
+  cta_variant,
+  sponsor,
+  sponsored_by_override
 }) => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
   className: "meta"
 }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
@@ -4718,6 +4721,8 @@ const DefaultMeta = ({
 }, cta)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DSContextFooter_DSContextFooter_jsx__WEBPACK_IMPORTED_MODULE_6__["DSContextFooter"], {
   context_type: context_type,
   context: context,
+  sponsor: sponsor,
+  sponsored_by_override: sponsored_by_override,
   display_engagement_labels: display_engagement_labels,
   engagement: engagement
 }));
@@ -4730,7 +4735,8 @@ const CTAButtonMeta = ({
   context_type,
   cta,
   engagement,
-  sponsor
+  sponsor,
+  sponsored_by_override
 }) => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
   className: "meta"
 }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
@@ -4753,6 +4759,8 @@ const CTAButtonMeta = ({
 }, cta), !context && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DSContextFooter_DSContextFooter_jsx__WEBPACK_IMPORTED_MODULE_6__["DSContextFooter"], {
   context_type: context_type,
   context: context,
+  sponsor: sponsor,
+  sponsored_by_override: sponsored_by_override,
   display_engagement_labels: display_engagement_labels,
   engagement: engagement
 }));
@@ -4905,7 +4913,8 @@ class _DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
       context_type: this.props.context_type,
       engagement: this.props.engagement,
       cta: this.props.cta,
-      sponsor: this.props.sponsor
+      sponsor: this.props.sponsor,
+      sponsored_by_override: this.props.sponsored_by_override
     }) : react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(DefaultMeta, {
       display_engagement_labels: this.props.display_engagement_labels,
       source: this.props.source,
@@ -4915,7 +4924,9 @@ class _DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
       engagement: this.props.engagement,
       context_type: this.props.context_type,
       cta: this.props.cta,
-      cta_variant: this.props.cta_variant
+      cta_variant: this.props.cta_variant,
+      sponsor: this.props.sponsor,
+      sponsored_by_override: this.props.sponsored_by_override
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__["ImpressionStats"], {
       flightId: this.props.flightId,
       rows: [{
@@ -6190,15 +6201,18 @@ class SafeAnchor extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCompon
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "StatusMessage", function() { return StatusMessage; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SponsorLabel", function() { return SponsorLabel; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DSContextFooter", function() { return DSContextFooter; });
 /* harmony import */ var _Card_types_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(37);
 /* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(38);
 /* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_transition_group__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(39);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
  // Animation time is mirrored in DSContextFooter.scss
@@ -6207,41 +6221,80 @@ const ANIMATION_DURATION = 3000;
 const StatusMessage = ({
   icon,
   fluentID
-}) => react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+}) => react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
   className: "status-message"
-}, react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("span", {
+}, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("span", {
   "aria-haspopup": "true",
   className: `story-badge-icon icon icon-${icon}`
-}), react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+}), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
   className: "story-context-label",
   "data-l10n-id": fluentID
 }));
-class DSContextFooter extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComponent {
+const SponsorLabel = ({
+  sponsored_by_override,
+  sponsor,
+  context
+}) => {
+  const classList = "story-sponsored-label clamp"; // If override is not false or an empty string.
+
+  if (sponsored_by_override) {
+    return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
+      className: classList
+    }, sponsored_by_override);
+  } else if (sponsored_by_override === "") {
+    // We specifically want to display nothing if the server returns an empty string.
+    // So the server can turn off the label.
+    // This is to support the use cases where the sponsored context is displayed elsewhere.
+    return null;
+  } else if (sponsor) {
+    return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
+      className: classList
+    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_2__["FluentOrText"], {
+      message: {
+        id: `newtab-label-sponsored-by`,
+        values: {
+          sponsor
+        }
+      }
+    }));
+  } else if (context) {
+    return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
+      className: classList
+    }, context);
+  }
+
+  return null;
+};
+class DSContextFooter extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent {
   render() {
     // display_engagement_labels is based on pref `browser.newtabpage.activity-stream.discoverystream.engagementLabelEnabled`
     const {
       context,
       context_type,
       engagement,
-      display_engagement_labels
+      display_engagement_labels,
+      sponsor,
+      sponsored_by_override
     } = this.props;
     const {
       icon,
       fluentID
     } = _Card_types_js__WEBPACK_IMPORTED_MODULE_0__["cardContextTypes"][context_type] || {};
-    return react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+    return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: "story-footer"
-    }, context && react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("p", {
-      className: "story-sponsored-label clamp"
-    }, context), react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_1__["TransitionGroup"], {
+    }, SponsorLabel({
+      sponsored_by_override,
+      sponsor,
+      context
+    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_1__["TransitionGroup"], {
       component: null
-    }, !context && (context_type || display_engagement_labels && engagement) && react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_1__["CSSTransition"], {
+    }, !context && (context_type || display_engagement_labels && engagement) && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_1__["CSSTransition"], {
       key: fluentID,
       timeout: ANIMATION_DURATION,
       classNames: "story-animate"
-    }, engagement && !context_type ? react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+    }, engagement && !context_type ? react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: "story-view-count"
-    }, engagement) : react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(StatusMessage, {
+    }, engagement) : react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(StatusMessage, {
       icon: icon,
       fluentID: fluentID
     }))));
@@ -7385,8 +7438,9 @@ class DSPrivacyModal extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCo
       href: "https://help.getpocket.com/article/1142-firefox-new-tab-recommendations-faq"
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "modal-link modal-link-manage",
+      "data-l10n-id": "newtab-privacy-modal-button-manage",
       onClick: this.onManageLinkClick
-    }, "Manage sponsored content settings")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", {
+    })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", {
       className: "actions"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "done",
