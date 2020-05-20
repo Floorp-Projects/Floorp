@@ -454,6 +454,11 @@ bool DocumentLoadListener::Open(
     timedChannel->SetAsyncOpen(aAsyncOpenTime);
   }
 
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel)) {
+    Unused << httpChannel->SetRequestContextID(
+        browsingContext->GetRequestContextId());
+  }
+
   // nsViewSourceChannel normally replaces the nsIRequest passed to
   // OnStart/StopRequest with itself. We don't need this, and instead
   // we want the original request so that we get different ones for
