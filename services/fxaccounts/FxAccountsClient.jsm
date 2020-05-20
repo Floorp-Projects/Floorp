@@ -489,6 +489,32 @@ FxAccountsClient.prototype = {
   },
 
   /**
+   * Obtain an OAuth access token by authenticating using a session token.
+   *
+   * @param {String} sessionTokenHex
+   *        The session token encoded in hex
+   * @param {String} clientId
+   * @param {String} scope
+   *        List of space-separated scopes.
+   * @param {Number} ttl
+   *        Token time to live.
+   * @return {Promise<Object>} Object containing an `access_token`.
+   */
+  async accessTokenWithSessionToken(sessionTokenHex, clientId, scope, ttl) {
+    const credentials = await deriveHawkCredentials(
+      sessionTokenHex,
+      "sessionToken"
+    );
+    const body = {
+      client_id: clientId,
+      grant_type: "fxa-credentials",
+      scope,
+      ttl,
+    };
+    return this._request("/oauth/token", "POST", credentials, body);
+  },
+
+  /**
    * Determine if an account exists
    *
    * @param email

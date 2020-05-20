@@ -116,6 +116,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "USE_SESSION_TOKENS_FOR_OAUTH",
+  "identity.fxaccounts.useSessionTokensForOAuth"
+);
+
 // An AccountState object holds all state related to one specific account.
 // It is considered "private" to the FxAccounts modules.
 // Only one AccountState is ever "current" in the FxAccountsInternal object -
@@ -1577,8 +1583,9 @@ FxAccountsInternal.prototype = {
    * @private
    */
   async _doTokenFetch(scopeString, ttl) {
-    // Ideally, we would auth this call directly with our `sessionToken` rather than
-    // going via a BrowserID assertion. Before we can do so we need to resolve some
+    // Ideally, we would auth this call directly with our `sessionToken`
+    // using the `_doTokenFetchWithSessionToken` method rather than going
+    // via a BrowserID assertion. Before we can do so we need to resolve some
     // data-volume processing issues in the server-side FxA metrics pipeline.
     let token;
     let oAuthURL = this.fxAccountsOAuthGrantClient.serverURL.href;
@@ -1609,6 +1616,26 @@ FxAccountsInternal.prototype = {
       token = result.access_token;
     }
     return token;
+  },
+
+  /**
+   * Does the actual fetch of an oauth token for getOAuthToken()
+   * using the account session token.
+   * @param {String} scopeString
+   * @param {Number} ttl
+   * @returns {Promise<string>}
+   * @private
+   */
+  async _doTokenFetchWithSessionToken(scopeString, ttl) {
+    return this.withSessionToken(async sessionToken => {
+      const result = await this.fxAccountsClient.accessTokenWithSessionToken(
+        sessionToken,
+        FX_OAUTH_CLIENT_ID,
+        scopeString,
+        ttl
+      );
+      return result.access_token;
+    });
   },
 
   getOAuthToken(options = {}) {
@@ -1646,10 +1673,13 @@ FxAccountsInternal.prototype = {
         log.debug("getOAuthToken has an in-flight request for this scope");
         return maybeInFlight;
       }
-
+      let fetchFunction = this._doTokenFetch.bind(this);
+      if (USE_SESSION_TOKENS_FOR_OAUTH) {
+        fetchFunction = this._doTokenFetchWithSessionToken.bind(this);
+      }
       // We need to start a new fetch and stick the promise in our in-flight map
       // and remove it when it resolves.
-      let promise = this._doTokenFetch(scopeString, options.ttl)
+      let promise = fetchFunction(scopeString, options.ttl)
         .then(token => {
           // As a sanity check, ensure something else hasn't raced getting a token
           // of the same scope. If something has we just make noise rather than
