@@ -11,6 +11,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EveryWindow: "resource:///modules/EveryWindow.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.jsm",
 });
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -51,10 +53,9 @@ class _ToolbarPanelHub {
     this.state = {};
   }
 
-  async init(waitForInitialized, { getMessages, dispatch, handleUserAction }) {
+  async init(waitForInitialized, { getMessages, dispatch }) {
     this._getMessages = getMessages;
     this._dispatch = dispatch;
-    this._handleUserAction = handleUserAction;
     // Wait for ASRouter messages to become available in order to know
     // if we can show the What's New panel
     await waitForInitialized;
@@ -239,16 +240,16 @@ class _ToolbarPanelHub {
       Cu.reportError(e);
       url = message.content.cta_url;
     }
-    this._handleUserAction({
-      target: win,
-      data: {
+    SpecialMessageActions.handleAction(
+      {
         type: message.content.cta_type,
         data: {
           args: url,
           where: "tabshifted",
         },
       },
-    });
+      win.browser
+    );
 
     this.sendUserEventTelemetry(win, "CLICK", message);
   }

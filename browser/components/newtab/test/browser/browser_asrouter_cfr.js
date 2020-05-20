@@ -167,7 +167,7 @@ function trigger_cfr_panel(
   browser,
   trigger,
   {
-    action = { type: "FOO" },
+    action = { type: "CANCEL" },
     heading_text,
     category = "cfrAddons",
     layout,
