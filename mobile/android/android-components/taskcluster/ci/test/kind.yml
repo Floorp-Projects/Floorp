@@ -84,6 +84,13 @@ jobs:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-pwa', 'arm', '1']
         treeherder:
             symbol: 'unit-feature-pwa'
+    android-feature-share:
+        description: 'Run unit tests on device for feature share'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-share', 'arm', '1']
+        treeherder:
+            symbol: 'unit-share'
     android-feature-sitepermissions:
         description: 'Run unit tests on device for feature site permissions'
         run:
