@@ -7,13 +7,11 @@
 DIRS += [
     'actions',
     'components',
-    'lib',
     'reducers',
     'utils',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
 DevToolsModules(
     'CompatibilityView.js',

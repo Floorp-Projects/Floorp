@@ -7,8 +7,8 @@
 const nodeConstants = require("devtools/shared/dom-node-constants");
 
 loader.lazyGetter(this, "mdnCompatibility", () => {
-  const MDNCompatibility = require("devtools/client/inspector/compatibility/lib/MDNCompatibility");
-  const cssPropertiesCompatData = require("devtools/client/inspector/compatibility/lib/dataset/css-properties.json");
+  const MDNCompatibility = require("devtools/shared/compatibility/MDNCompatibility");
+  const cssPropertiesCompatData = require("devtools/shared/compatibility/dataset/css-properties.json");
   return new MDNCompatibility(cssPropertiesCompatData);
 });
 
