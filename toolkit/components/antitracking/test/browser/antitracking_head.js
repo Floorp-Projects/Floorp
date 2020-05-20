@@ -569,7 +569,7 @@ this.AntiTracking = {
         typeof options.accessRemoval == "string" &&
         options.cookieBehavior == BEHAVIOR_REJECT_TRACKER &&
         !options.allowList;
-      let id = await SpecialPowers.spawn(
+      await SpecialPowers.spawn(
         browser,
         [
           {
@@ -672,8 +672,6 @@ this.AntiTracking = {
                 break;
             }
           }
-
-          return id;
         }
       );
 
@@ -695,15 +693,24 @@ this.AntiTracking = {
           browser,
           [
             {
-              id,
+              page: thirdPartyPage,
               callbackAfterRemoval: options.callbackAfterRemoval
                 ? options.callbackAfterRemoval.toString()
                 : null,
+              iframeSandbox: options.iframeSandbox,
             },
           ],
           async function(obj) {
-            let ifr = content.document.getElementById(obj.id);
-            ifr.contentWindow.postMessage(obj.callbackAfterRemoval, "*");
+            let ifr = content.document.createElement("iframe");
+            ifr.onload = function() {
+              info(
+                "Sending code to the 3rd party content to verify accessRemoval"
+              );
+              ifr.contentWindow.postMessage(obj.callbackAfterRemoval, "*");
+            };
+            if (typeof obj.iframeSandbox == "string") {
+              ifr.setAttribute("sandbox", obj.iframeSandbox);
+            }
 
             content.addEventListener("message", function msg(event) {
               if (event.data.type == "finish") {
@@ -723,6 +730,9 @@ this.AntiTracking = {
 
               ok(false, "Unknown message");
             });
+
+            content.document.body.appendChild(ifr);
+            ifr.src = obj.page;
           }
         );
       }
