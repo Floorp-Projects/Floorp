@@ -84,8 +84,11 @@ async function testInterleaving({ threadFront, debuggee }) {
   equal(step2.frame.where.column, 43);
 
   const step3 = await resumeAndWaitForPause(threadFront);
-  equal(step3.frame.where.line, 9);
+  equal(step3.frame.where.line, 8);
   equal(debuggee.result, "yay");
+  const step4 = await resumeAndWaitForPause(threadFront);
+  equal(step4.frame.where.line, 9);
+
   resume(threadFront);
 }
 
