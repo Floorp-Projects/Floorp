@@ -1783,7 +1783,7 @@ function loadAndEnablePDFBug(enabledTabs) {
 function webViewerInitialized() {
   const appConfig = PDFViewerApplication.appConfig;
   let file;
-  file = window.location.href.split("#")[0];
+  file = window.location.href;
   appConfig.toolbar.openFile.setAttribute("hidden", "true");
   appConfig.secondaryToolbar.openFileButton.setAttribute("hidden", "true");
 
@@ -4693,7 +4693,7 @@ class PDFAttachmentViewer {
       }
 
       let viewerUrl;
-      viewerUrl = blobUrl + "?" + encodeURIComponent(filename);
+      viewerUrl = blobUrl + "#filename=" + encodeURIComponent(filename);
       window.open(viewerUrl);
       return false;
     };
@@ -4873,7 +4873,7 @@ class PDFDocumentProperties {
         metadata,
         contentDispositionFilename
       }) => {
-        return Promise.all([info, metadata, contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url || ""), this._parseFileSize(this.maybeFileSize), this._parseDate(info.CreationDate), this._parseDate(info.ModDate), this.pdfDocument.getPage(currentPageNumber).then(pdfPage => {
+        return Promise.all([info, metadata, contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url), this._parseFileSize(this.maybeFileSize), this._parseDate(info.CreationDate), this._parseDate(info.ModDate), this.pdfDocument.getPage(currentPageNumber).then(pdfPage => {
           return this._parsePageSize((0, _ui_utils.getPageSizeInches)(pdfPage), pagesRotation);
         }), this._parseLinearization(info.IsLinearized)]);
       }).then(([info, metadata, fileName, fileSize, creationDate, modDate, pageSize, isLinearized]) => {
