@@ -19,10 +19,6 @@
   color: var(--theme-highlight-blue);
 }
 
-.frames-group .frames-list [role="listitem"] {
-  padding-inline-start: 30px;
-}
-
 .frames-group .frames-list {
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);

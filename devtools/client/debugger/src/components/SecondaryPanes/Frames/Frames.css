@@ -71,6 +71,10 @@
   padding-inline-start: 10px;
 }
 
+.frames-group .title {
+  padding-inline-start: 40px;
+}
+
 .frames [role="list"] [role="listitem"]:hover,
 .frames [role="list"] [role="listitem"]:focus {
   background-color: var(--theme-toolbar-background-alt);
@@ -156,6 +160,10 @@
   padding-inline-start: 17px;
   width: 100%;
   pointer-events: none;
+}
+
+.frames-group .location-async-cause {
+  padding-inline-start: 47px;
 }
 
 .call-stack-pane [role="listitem"] .location-async-cause::after {
