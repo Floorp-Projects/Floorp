@@ -46,7 +46,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/ProcessingInstruction.h"
-#include "mozilla/dom/XMLStylesheetProcessingInstruction.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
@@ -344,11 +343,7 @@ nsresult PrototypeDocumentContentSink::CreateAndInsertPI(
 
   nsresult rv;
   if (aProtoPI->mTarget.EqualsLiteral("xml-stylesheet")) {
-    MOZ_ASSERT(
-        nsCOMPtr<nsIStyleSheetLinkingElement>(do_QueryInterface(node)),
-        "XML Stylesheet node does not implement nsIStyleSheetLinkingElement!");
-    auto* pi = static_cast<XMLStylesheetProcessingInstruction*>(node.get());
-    rv = InsertXMLStylesheetPI(aProtoPI, aParent, aBeforeThis, pi);
+    rv = InsertXMLStylesheetPI(aProtoPI, aParent, aBeforeThis, node);
   } else {
     // No special processing, just add the PI to the document.
     rv = aParent->InsertChildBefore(
@@ -361,25 +356,30 @@ nsresult PrototypeDocumentContentSink::CreateAndInsertPI(
 
 nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
     const nsXULPrototypePI* aProtoPI, nsINode* aParent, nsINode* aBeforeThis,
-    XMLStylesheetProcessingInstruction* aPINode) {
+    nsIContent* aPINode) {
+  nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aPINode));
+  NS_ASSERTION(ssle,
+               "passed XML Stylesheet node does not "
+               "implement nsIStyleSheetLinkingElement!");
 
   nsresult rv;
 
+  ssle->InitStyleLinkElement(false);
   // We want to be notified when the style sheet finishes loading, so
   // disable style sheet loading for now.
-  aPINode->SetEnableUpdates(false);
-  aPINode->OverrideBaseURI(mCurrentPrototype->GetURI());
+  ssle->SetEnableUpdates(false);
+  ssle->OverrideBaseURI(mCurrentPrototype->GetURI());
 
   rv = aParent->InsertChildBefore(
       aPINode->AsContent(), aBeforeThis ? aBeforeThis->AsContent() : nullptr,
       false);
   if (NS_FAILED(rv)) return rv;
 
-  aPINode->SetEnableUpdates(true);
+  ssle->SetEnableUpdates(true);
 
   // load the stylesheet if necessary, passing ourselves as
   // nsICSSObserver
-  auto result = aPINode->UpdateStyleSheet(this);
+  auto result = ssle->UpdateStyleSheet(this);
   if (result.isErr()) {
     // Ignore errors from UpdateStyleSheet; we don't want failure to
     // do that to break the XUL document load.  But do propagate out

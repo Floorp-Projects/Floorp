@@ -32,9 +32,6 @@ class ShadowRoot;
 }  // namespace mozilla
 
 class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
-  template <typename V, typename E>
-  using Result = mozilla::Result<V, E>;
-
  public:
   nsStyleLinkElement();
   virtual ~nsStyleLinkElement();
@@ -44,17 +41,21 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
   mozilla::StyleSheet* GetSheet() const { return mStyleSheet; }
 
   // nsIStyleSheetLinkingElement
-  void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) final;
+  void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) override;
+  mozilla::StyleSheet* GetStyleSheet() override;
+  void InitStyleLinkElement(bool aDontLoadStyle) override;
 
-  Result<Update, nsresult> UpdateStyleSheet(nsICSSLoaderObserver*) final;
+  mozilla::Result<Update, nsresult> UpdateStyleSheet(
+      nsICSSLoaderObserver*) override;
 
-  void SetEnableUpdates(bool aEnableUpdates) final;
+  void SetEnableUpdates(bool aEnableUpdates) override;
   void GetCharset(nsAString& aCharset) override;
 
-  void SetLineNumber(uint32_t aLineNumber) final;
-  uint32_t GetLineNumber() final;
-  void SetColumnNumber(uint32_t aColumnNumber) final;
-  uint32_t GetColumnNumber() final;
+  void OverrideBaseURI(nsIURI* aNewBaseURI) override;
+  void SetLineNumber(uint32_t aLineNumber) override;
+  uint32_t GetLineNumber() override;
+  void SetColumnNumber(uint32_t aColumnNumber) override;
+  uint32_t GetColumnNumber() override;
 
   enum RelValue {
     ePREFETCH = 0x00000001,
@@ -87,7 +88,7 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
    *
    * TODO(emilio): Should probably pass a single DocumentOrShadowRoot.
    */
-  Result<Update, nsresult> UpdateStyleSheetInternal(
+  mozilla::Result<Update, nsresult> UpdateStyleSheetInternal(
       mozilla::dom::Document* aOldDocument,
       mozilla::dom::ShadowRoot* aOldShadowRoot, ForceUpdate = ForceUpdate::No);
 
@@ -132,6 +133,7 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
 
  protected:
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  bool mDontLoadStyle;
   bool mUpdatesEnabled;
   uint32_t mLineNumber;
   uint32_t mColumnNumber;

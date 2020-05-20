@@ -501,6 +501,7 @@ nsresult nsXMLContentSink::CreateElement(
       aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
     if (ssle) {
+      ssle->InitStyleLinkElement(false);
       if (aFromParser) {
         ssle->SetEnableUpdates(false);
       }
@@ -1167,6 +1168,7 @@ nsXMLContentSink::HandleProcessingInstruction(const char16_t* aTarget,
   nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
       do_QueryInterface(ToSupports(node));
   if (ssle) {
+    ssle->InitStyleLinkElement(false);
     ssle->SetEnableUpdates(false);
     mPrettyPrintXML = false;
   }
