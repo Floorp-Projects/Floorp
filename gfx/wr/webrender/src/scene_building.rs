@@ -810,7 +810,7 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_store.push_clip_root(
             Some(ClipId::root(iframe_pipeline_id)),
-            false,
+            true,
         );
 
         let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
