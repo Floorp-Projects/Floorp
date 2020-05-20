@@ -44,7 +44,6 @@ py2commands="
     raptor-test
     reftest
     release
-    remote
     repackage
     rusttests
     static-analysis
