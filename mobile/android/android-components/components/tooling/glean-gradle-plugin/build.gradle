@@ -20,7 +20,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
-task sourcesJar(type: Jar) {
+tasks.register("sourcesJar", Jar) {
     classifier = 'sources'
     from sourceSets.main.allSource
 }
@@ -73,7 +73,7 @@ publishing {
     }
 }
 
-task lintRelease {
+tasks.register("lintRelease") {
   doLast {
     // Do nothing. We execute the same set of tasks for all our modules in parallel on taskcluster.
     // This project doesn't have a lint task. To avoid special casing our automation I just added
@@ -81,21 +81,21 @@ task lintRelease {
   }
 }
 
-task assembleAndroidTest {
+tasks.register("assembleAndroidTest") {
   doLast {
     // Do nothing. Like the `lint` task above this is just a dummy task so that this module
     // behaves like our others and we do not need to special case it in automation.
   }
 }
 
-task assembleRelease {
+tasks.register("assembleRelease") {
   doLast {
     // Do nothing. Like the `lint` task above this is just a dummy task so that this module
     // behaves like our others and we do not need to special case it in automation.
   }
 }
 
-task testRelease {
+tasks.register("testRelease") {
   doLast {
     // Do nothing. Like the `lint` task above this is just a dummy task so that this module
     // behaves like our others and we do not need to special case it in automation.

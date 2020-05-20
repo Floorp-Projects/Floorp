@@ -17,14 +17,14 @@ dependencies {
     testImplementation Dependencies.tools_detekt_test
 }
 
-task lintRelease {
+tasks.register("lintRelease") {
     doLast {
         // Do nothing. We execute the same set of tasks for all our modules in parallel on taskcluster.
         // This project doesn't have a lint task.
     }
 }
 
-task assembleAndroidTest {
+tasks.register("assembleAndroidTest") {
     doLast {
         // Do nothing. Like the `lint` task above this is just a dummy task so that this module
         // behaves like our others and we do not need to special case it in automation.
