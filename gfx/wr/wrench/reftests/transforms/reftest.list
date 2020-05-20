@@ -48,3 +48,4 @@ skip_on(android) fuzzy-range(<=3,*3077,<=10,*133,<=93,*490) == raster_root_A_819
 skip_on(android) fuzzy(60,917) == raster_root_B_8192.yaml raster_root_B_ref.yaml
 # Make sure we don't panic
 != raster-root-large-mask.yaml blank.yaml
+skip_on(android) == raster-root-scaling.yaml raster-root-scaling-ref.yaml
