@@ -1310,6 +1310,9 @@ function runTests() {
     test_parseable("::-moz-color-swatch:hover");
     test_balanced_unparseable("::-moz-color-swatch:not(.foo)");
     test_balanced_unparseable("::-moz-color-swatch:first-child");
+    test_balanced_unparseable("::-moz-color-swatch:host");
+    test_balanced_unparseable("::-moz-color-swatch:host(div)");
+    test_balanced_unparseable("::-moz-color-swatch:nth-child(1)");
     test_balanced_unparseable("::-moz-color-swatch:hover#foo");
     test_balanced_unparseable(".foo::after:not(.bar) ~ h3");
 
