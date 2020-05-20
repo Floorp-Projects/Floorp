@@ -321,10 +321,7 @@ class WebRenderBridgeParent final
       CompositionPayload& aPayload,
       const std::pair<wr::PipelineId, wr::Epoch>& aKey);
 
-  nsTArray<CompositionPayload>* GetPendingScrollPayload(
-      const std::pair<wr::PipelineId, wr::Epoch>& aKey);
-
-  bool RemovePendingScrollPayload(
+  nsTArray<CompositionPayload> TakePendingScrollPayload(
       const std::pair<wr::PipelineId, wr::Epoch>& aKey);
 
  private:

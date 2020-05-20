@@ -868,16 +868,16 @@ void WebRenderBridgeParent::AddPendingScrollPayload(
   payloads->AppendElement(aPayload);
 }
 
-nsTArray<CompositionPayload>* WebRenderBridgeParent::GetPendingScrollPayload(
+nsTArray<CompositionPayload> WebRenderBridgeParent::TakePendingScrollPayload(
     const std::pair<wr::PipelineId, wr::Epoch>& aKey) {
   auto pendingScrollPayloads = mPendingScrollPayloads.Lock();
-  return pendingScrollPayloads->Get(aKey);
-}
-
-bool WebRenderBridgeParent::RemovePendingScrollPayload(
-    const std::pair<wr::PipelineId, wr::Epoch>& aKey) {
-  auto pendingScrollPayloads = mPendingScrollPayloads.Lock();
-  return pendingScrollPayloads->Remove(aKey);
+  nsTArray<CompositionPayload> payload;
+  if (nsTArray<CompositionPayload>* storedPayload =
+          pendingScrollPayloads->Get(aKey)) {
+    payload.AppendElements(std::move(*storedPayload));
+    pendingScrollPayloads->Remove(aKey);
+  }
+  return payload;
 }
 
 CompositorBridgeParent* WebRenderBridgeParent::GetRootCompositorBridgeParent()
