@@ -51,8 +51,10 @@ class MediaNotificationTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(videoTestPage.url) {
+            verifyPageContent(videoTestPage.content)
             clickMediaPlayerPlayButton()
             waitForPlaybackToStart()
+            verifyPageContent("Media file is playing")
         }.openNotificationShade {
             verifySystemNotificationExists(videoTestPage.title)
             clickMediaSystemNotificationControlButton("Pause")
@@ -119,6 +121,7 @@ class MediaNotificationTest {
             verifyPageContent(audioTestPage.content)
             clickMediaPlayerPlayButton()
             waitForPlaybackToStart()
+            verifyPageContent("Media file is playing")
         }.openHomeScreen {
             verifyTabMediaControlButtonState("Pause")
             clickTabMediaControlButton()
@@ -139,6 +142,7 @@ class MediaNotificationTest {
             verifyPageContent(audioTestPage.content)
             clickMediaPlayerPlayButton()
             waitForPlaybackToStart()
+            verifyPageContent("Media file is playing")
         }.openNotificationShade {
             verifySystemNotificationExists("A site is playing media")
             clickMediaSystemNotificationControlButton("Pause")
@@ -159,7 +163,8 @@ class MediaNotificationTest {
             verifySystemNotificationGone("A site is playing media")
         }
 
-        // close notification shade before the next test
+        // close notification shade before and go back to regular mode before the next test
         mDevice.pressBack()
+        homeScreen { }.togglePrivateBrowsingMode()
     }
 }
