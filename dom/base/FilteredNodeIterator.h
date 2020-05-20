@@ -23,11 +23,6 @@ class FilteredNodeIterator : public Iter {
     EnsureValid();
   }
 
-  static T* First(const nsINode& aNode) {
-    FilteredNodeIterator iter(aNode);
-    return *iter;
-  }
-
   FilteredNodeIterator& begin() { return *this; }
   using Iter::end;
 

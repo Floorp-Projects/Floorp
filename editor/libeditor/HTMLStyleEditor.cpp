@@ -777,7 +777,7 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
 
   AutoTArray<OwningNonNull<nsIContent>, 24> arrayOfParents;
   for (nsIContent* content :
-       InclusiveAncestorsOfType<nsIContent>(*aPointToSplit.GetContainer())) {
+       aPointToSplit.GetContainer()->InclusiveAncestorsOfType<nsIContent>()) {
     if (HTMLEditUtils::IsBlockElement(*content) || !content->GetParent() ||
         !EditorUtils::IsEditableContent(*content->GetParent(),
                                         EditorType::HTML)) {
@@ -1207,7 +1207,7 @@ nsresult HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange) {
   }
   EditorRawDOMPoint newRangeStart(aRange.StartRef());
   for (Element* element :
-       InclusiveAncestorsOfType<Element>(*aRange.GetStartContainer())) {
+       aRange.GetStartContainer()->InclusiveAncestorsOfType<Element>()) {
     if (element->IsHTMLElement(nsGkAtoms::body)) {
       break;
     }
@@ -1227,7 +1227,7 @@ nsresult HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange) {
 
   EditorRawDOMPoint newRangeEnd(aRange.EndRef());
   for (Element* element :
-       InclusiveAncestorsOfType<Element>(*aRange.GetEndContainer())) {
+       aRange.GetEndContainer()->InclusiveAncestorsOfType<Element>()) {
     if (element->IsHTMLElement(nsGkAtoms::body)) {
       break;
     }
@@ -1262,7 +1262,7 @@ nsresult HTMLEditor::PromoteInlineRange(nsRange& aRange) {
   }
   EditorRawDOMPoint newRangeStart(aRange.StartRef());
   for (nsIContent* content :
-       InclusiveAncestorsOfType<nsIContent>(*aRange.GetStartContainer())) {
+       aRange.GetStartContainer()->InclusiveAncestorsOfType<nsIContent>()) {
     MOZ_ASSERT(newRangeStart.GetContainer() == content);
     if (content->IsHTMLElement(nsGkAtoms::body) ||
         !EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
@@ -1280,7 +1280,7 @@ nsresult HTMLEditor::PromoteInlineRange(nsRange& aRange) {
 
   EditorRawDOMPoint newRangeEnd(aRange.EndRef());
   for (nsIContent* content :
-       InclusiveAncestorsOfType<nsIContent>(*aRange.GetEndContainer())) {
+       aRange.GetEndContainer()->InclusiveAncestorsOfType<nsIContent>()) {
     MOZ_ASSERT(newRangeEnd.GetContainer() == content);
     if (content->IsHTMLElement(nsGkAtoms::body) ||
         !EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
