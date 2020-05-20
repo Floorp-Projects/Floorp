@@ -547,6 +547,29 @@ this.AntiTracking = {
         prepareTestEnvironmentOnPage();
       }
 
+      let consoleWarningPromise;
+
+      if (options.expectedBlockingNotifications) {
+        consoleWarningPromise = new Promise(resolve => {
+          let consoleListener = {
+            observe(msg) {
+              if (
+                msg
+                  .QueryInterface(Ci.nsIScriptError)
+                  .category.startsWith("cookieBlocked")
+              ) {
+                Services.console.unregisterListener(consoleListener);
+                resolve();
+              }
+            },
+          };
+
+          Services.console.registerListener(consoleListener);
+        });
+      } else {
+        consoleWarningPromise = Promise.resolve();
+      }
+
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(win.gBrowser, topPage);
       win.gBrowser.selectedTab = tab;
@@ -736,6 +759,9 @@ this.AntiTracking = {
           }
         );
       }
+
+      // Wait until the message appears on the console.
+      await consoleWarningPromise;
 
       let allMessages = Services.console.getMessageArray().filter(msg => {
         try {
