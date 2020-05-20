@@ -365,13 +365,7 @@ class ScriptStencilBase {
 // Data used to instantiate the non-lazy script.
 class ScriptStencil : public ScriptStencilBase {
  public:
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-
   explicit ScriptStencil(JSContext* cx) : ScriptStencilBase(cx) {}
-
-  bool isFunction() const {
-    return immutableFlags.hasFlag(ImmutableFlags::IsFunction);
-  }
 
   // Allocate a JSScript and initialize it with bytecode. This consumes
   // allocations within this stencil.
