@@ -77,3 +77,58 @@ add_task(async function() {
   targetList.stopListening();
   await client.close();
 });
+
+add_task(async function() {
+  info("Test ignoreExistingResources option for PLATFORM_MESSAGES");
+
+  // Disable the preloaded process as it creates processes intermittently
+  // which forces the emission of RDP requests we aren't correctly waiting for.
+  await pushPref("dom.ipc.processPrelaunch.enabled", false);
+
+  const {
+    client,
+    resourceWatcher,
+    targetList,
+  } = await initResourceWatcherAndTarget();
+
+  info(
+    "Check whether onAvailable will not be called with existing platform messages"
+  );
+  const expectedMessages = ["This is 1st message", "This is 2nd message"];
+  Services.console.logStringMessage(expectedMessages[0]);
+  Services.console.logStringMessage(expectedMessages[1]);
+
+  const availableResources = [];
+  await resourceWatcher.watch([ResourceWatcher.TYPES.PLATFORM_MESSAGES], {
+    onAvailable: ({ resource }) => {
+      if (!expectedMessages.includes(resource.message)) {
+        return;
+      }
+
+      availableResources.push(resource);
+    },
+    ignoreExistingResources: true,
+  });
+  is(
+    availableResources.length,
+    0,
+    "onAvailable wasn't called for existing platform messages"
+  );
+
+  info(
+    "Check whether onAvailable will be called with the future platform messages"
+  );
+  Services.console.logStringMessage(expectedMessages[0]);
+  Services.console.logStringMessage(expectedMessages[1]);
+
+  await waitUntil(() => availableResources.length === expectedMessages.length);
+  for (let i = 0; i < expectedMessages.length; i++) {
+    const { message } = availableResources[i];
+    const expected = expectedMessages[i];
+    is(message, expected, `Message[${i}] is correct`);
+  }
+
+  Services.console.reset();
+  await targetList.stopListening();
+  await client.close();
+});
