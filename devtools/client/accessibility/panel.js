@@ -213,6 +213,8 @@ AccessibilityPanel.prototype = {
         .startListeningForLifecycleEvents,
       stopListeningForLifecycleEvents: this.accessibilityProxy
         .stopListeningForLifecycleEvents,
+      highlightAccessible: this.accessibilityProxy.highlightAccessible,
+      unhighlightAccessible: this.accessibilityProxy.unhighlightAccessible,
     });
   },
 

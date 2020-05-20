@@ -45,6 +45,8 @@ class AccessibilityProxy {
     this.stopListeningForLifecycleEvents = this.stopListeningForLifecycleEvents.bind(
       this
     );
+    this.highlightAccessible = this.highlightAccessible.bind(this);
+    this.unhighlightAccessible = this.unhighlightAccessible.bind(this);
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
   }
 
@@ -220,6 +222,46 @@ class AccessibilityProxy {
           : this.accessibilityFront;
       this._off(accessibilityFront, type, listeners);
     }
+  }
+
+  highlightAccessible(accessibleFront, options) {
+    if (!accessibleFront) {
+      return;
+    }
+
+    const accessibleWalkerFront = accessibleFront.getParent();
+    if (!accessibleWalkerFront) {
+      return;
+    }
+
+    accessibleWalkerFront
+      .highlightAccessible(accessibleFront, options)
+      .catch(error => {
+        // Only report an error where there's still a toolbox. Ignore cases
+        // where toolbox is already destroyed.
+        if (this.toolbox) {
+          console.error(error);
+        }
+      });
+  }
+
+  unhighlightAccessible(accessibleFront) {
+    if (!accessibleFront) {
+      return;
+    }
+
+    const accessibleWalkerFront = accessibleFront.getParent();
+    if (!accessibleWalkerFront) {
+      return;
+    }
+
+    accessibleWalkerFront.unhighlight().catch(error => {
+      // Only report an error where there's still a toolbox. Ignore cases
+      // where toolbox is already destroyed.
+      if (this.toolbox) {
+        console.error(error);
+      }
+    });
   }
 
   /**

@@ -92,6 +92,10 @@ AccessibilityView.prototype = {
    * - stopListeningForLifecycleEvents       {Function}
    *                                         Remove listeners for accessibility
    *                                         service lifecycle events.
+   * - highlightAccessible                   {Function}
+   *                                         Highlight accessible object.
+   * - unhighlightAccessible                 {Function}
+   *                                         Unhighlight accessible object.
    */
   async initialize({
     supports,
@@ -107,6 +111,8 @@ AccessibilityView.prototype = {
     resetAccessiblity,
     startListeningForLifecycleEvents,
     stopListeningForLifecycleEvents,
+    highlightAccessible,
+    unhighlightAccessible,
   }) {
     // Make sure state is reset every time accessibility panel is initialized.
     await this.store.dispatch(reset(resetAccessiblity, supports));
@@ -124,6 +130,8 @@ AccessibilityView.prototype = {
       resetAccessiblity,
       startListeningForLifecycleEvents,
       stopListeningForLifecycleEvents,
+      highlightAccessible,
+      unhighlightAccessible,
     });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);
