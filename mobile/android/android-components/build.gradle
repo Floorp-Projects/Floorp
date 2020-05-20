@@ -242,7 +242,7 @@ subprojects {
 
 evaluationDependsOnChildren()
 
-task docs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask, overwrite: true) {
+tasks.register("docs", org.jetbrains.dokka.gradle.DokkaAndroidTask) {
     moduleName = "$rootProject.name"
     outputDirectory = "$buildDir/javadoc"
     outputFormat = "gfm"
