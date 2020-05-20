@@ -75,6 +75,13 @@ interface nsIAccessible : nsISupports
   readonly attribute long indexInParent;
 
   /**
+   * The unique identifier of the accessible. ID is only guaranteed to be unique
+   * per document (Windows IDs are unique even across documents, but that is
+   * Windows specific and not exposed to core).
+   */
+  readonly attribute long long uniqueID;
+
+  /**
    * The DOM node this nsIAccessible is associated with.
    */
   readonly attribute Node DOMNode;

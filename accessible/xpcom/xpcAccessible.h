@@ -34,6 +34,7 @@ class xpcAccessible : public nsIAccessible {
   NS_IMETHOD GetChildren(nsIArray** aChildren) final;
   NS_IMETHOD GetIndexInParent(int32_t* aIndexInParent) final;
 
+  NS_IMETHOD GetUniqueID(int64_t* aUniqueID) final;
   NS_IMETHOD GetDOMNode(nsINode** aDOMNode) final;
   NS_IMETHOD GetId(nsAString& aID) final;
   NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument) final;
