@@ -856,6 +856,12 @@ class EditorUtils final {
   }
 
   /**
+   * IsContentPreformatted() checks the style info for the node for the
+   * preformatted text style.  This does NOT flush layout.
+   */
+  static bool IsContentPreformatted(nsIContent& aContent);
+
+  /**
    * Helper method for `AppendString()` and `AppendSubString()`.  This should
    * be called only when `aText` is in a password field.  This method masks
    * A part of or all of `aText` (`aStartOffsetInText` and later) should've
