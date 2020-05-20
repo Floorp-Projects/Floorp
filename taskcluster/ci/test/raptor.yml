@@ -739,6 +739,9 @@ raptor-youtube-playback-av1-sfr-firefox:
             windows10-64-ref-hw-2017/opt: ['mozilla-central', 'try']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-central', 'try']
+    limit-platforms:
+        - windows10-64-ref-hw-2017/opt
+        - macosx1014-64-shippable/opt
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
