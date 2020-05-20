@@ -26,7 +26,6 @@ class OpenSUSEBootstrapper(
     BROWSER_PACKAGES = [
         'alsa-devel',
         'gcc-c++',
-        'python3-dbus-python',
         'python3-wheel',
         'gtk3-devel',
         'dbus-1-glib-devel',
