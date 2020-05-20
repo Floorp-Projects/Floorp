@@ -89,10 +89,17 @@ name=org.mozilla.firefox
 runtime=org.freedesktop.Platform/${ARCH}/${FREEDESKTOP_VERSION}
 sdk=org.freedesktop.Sdk/${ARCH}/${FREEDESKTOP_VERSION}
 base=app/org.mozilla.Firefox.BaseApp/${ARCH}/${FIREFOX_BASEAPP_CHANNEL}
+
 [Extension org.mozilla.firefox.Locale]
 directory=share/runtime/langpack
 autodelete=true
 locale-subset=true
+
+[Extension org.freedesktop.Platform.ffmpeg-full]
+directory=lib/ffmpeg
+add-ld-path=.
+no-autodownload=true
+version=${FREEDESKTOP_VERSION}
 EOF
 
 cat <<EOF > build/metadata.locale
@@ -111,6 +118,7 @@ install -D -m644 -t "${appdir}/share/applications" org.mozilla.firefox.desktop
 for size in 16 32 48 64 128; do
     install -D -m644 "${appdir}/lib/firefox/browser/chrome/icons/default/default${size}.png" "${appdir}/share/icons/hicolor/${size}x${size}/apps/org.mozilla.firefox.png"
 done
+mkdir -p "${appdir}/lib/ffmpeg"
 
 appstream-compose --prefix="${appdir}" --origin=flatpak --basename=org.mozilla.firefox org.mozilla.firefox
 appstream-util mirror-screenshots "${appdir}"/share/app-info/xmls/org.mozilla.firefox.xml.gz "https://dl.flathub.org/repo/screenshots/org.mozilla.firefox-${FLATPAK_BRANCH}" build/screenshots "build/screenshots/org.mozilla.firefox-${FLATPAK_BRANCH}"
