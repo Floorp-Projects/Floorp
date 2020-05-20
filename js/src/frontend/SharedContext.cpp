@@ -252,9 +252,7 @@ JSFunction* FunctionBox::createFunction(JSContext* cx) {
 }
 
 bool FunctionBox::hasFunctionStencil() const {
-  return compilationInfo_.funcData[funcDataIndex_]
-      .get()
-      .is<ScriptStencilBase>();
+  return compilationInfo_.funcData[funcDataIndex_].get().is<ScriptStencil>();
 }
 
 bool FunctionBox::hasFunction() const {
@@ -429,8 +427,8 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
   setFlag(ImmutableFlags::HasModuleGoal);
 }
 
-MutableHandle<ScriptStencilBase> FunctionBox::functionStencil() const {
-  return compilationInfo_.funcData[funcDataIndex_].as<ScriptStencilBase>();
+MutableHandle<ScriptStencil> FunctionBox::functionStencil() const {
+  return compilationInfo_.funcData[funcDataIndex_].as<ScriptStencil>();
 }
 
 }  // namespace frontend

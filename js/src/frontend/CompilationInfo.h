@@ -25,7 +25,7 @@
 namespace js {
 namespace frontend {
 
-using FunctionType = mozilla::Variant<JSFunction*, ScriptStencilBase>;
+using FunctionType = mozilla::Variant<JSFunction*, ScriptStencil>;
 
 // ScopeContext hold information derivied from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.

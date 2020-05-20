@@ -199,7 +199,7 @@ uint32_t ScopeCreationData::nextFrameSlot() const {
 
 bool ScopeCreationData::isArrow() const { return funbox_->isArrow(); }
 
-void ScriptStencilBase::trace(JSTracer* trc) {
+void ScriptStencil::trace(JSTracer* trc) {
   for (ScriptThingVariant& thing : gcThings) {
     if (thing.is<ScriptAtom>()) {
       JSAtom* atom = thing.as<ScriptAtom>();
