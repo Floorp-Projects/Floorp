@@ -44,6 +44,11 @@ var _Services = ChromeUtils.import("resource://gre/modules/Services.jsm", null)
   .Services;
 _register_modules_protocol_handler();
 
+var _AppConstants = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm",
+  null
+).AppConstants;
+
 var _PromiseTestUtils = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm",
   null
@@ -677,6 +682,23 @@ function _execute_test() {
   } finally {
     // It's important to terminate the module to avoid crashes on shutdown.
     _PromiseTestUtils.uninit();
+  }
+
+  // Skip the normal shutdown path for optimized builds that don't do leak checking.
+  if (
+    runningInParent &&
+    !_AppConstants.RELEASE_OR_BETA &&
+    !_AppConstants.DEBUG &&
+    !_AppConstants.MOZ_CODE_COVERAGE &&
+    !_AppConstants.ASAN &&
+    !_AppConstants.TSAN
+  ) {
+    // Setting this pref is required for Cu.isInAutomation to return true.
+    _Services.prefs.setBoolPref(
+      "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+      true
+    );
+    Cu.exitIfInAutomation();
   }
 }
 
@@ -1656,11 +1678,6 @@ try {
  * so we help out users by loading at least the dynamic-builtin probes.
  */
 try {
-  let _AppConstants = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm",
-    null
-  ).AppConstants;
-
   // We only need to run this in the parent process.
   // We only want to run this for local developer builds (which should have a "default" update channel).
   if (runningInParent && _AppConstants.MOZ_UPDATE_CHANNEL == "default") {
