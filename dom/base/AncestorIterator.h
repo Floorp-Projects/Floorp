@@ -56,9 +56,18 @@ namespace dom {
         : Inclusive##name_(aNode.method_()) {}                           \
   };                                                                     \
   template <typename T>                                                  \
-  using name_##OfType = FilteredNodeIterator<T, name_>;                  \
+  class name_##OfTypeIterator : public FilteredNodeIterator<T, name_> {  \
+   public:                                                               \
+    explicit name_##OfTypeIterator(const nsINode& aNode)                 \
+        : FilteredNodeIterator<T, name_>(aNode) {}                       \
+  };                                                                     \
   template <typename T>                                                  \
-  using Inclusive##name_##OfType = FilteredNodeIterator<T, Inclusive##name_>;
+  class Inclusive##name_##OfTypeIterator                                 \
+      : public FilteredNodeIterator<T, Inclusive##name_> {               \
+   public:                                                               \
+    explicit Inclusive##name_##OfTypeIterator(const nsINode& aNode)      \
+        : FilteredNodeIterator<T, Inclusive##name_>(aNode) {}            \
+  };
 
 DEFINE_ANCESTOR_ITERATOR(Ancestors, GetParentNode)
 DEFINE_ANCESTOR_ITERATOR(FlatTreeAncestors, GetFlattenedTreeParentNode)
@@ -67,5 +76,34 @@ DEFINE_ANCESTOR_ITERATOR(FlatTreeAncestors, GetFlattenedTreeParentNode)
 
 }  // namespace dom
 }  // namespace mozilla
+
+template <typename T>
+inline mozilla::dom::AncestorsOfTypeIterator<T> nsINode::AncestorsOfType()
+    const {
+  return mozilla::dom::AncestorsOfTypeIterator<T>(*this);
+}
+
+template <typename T>
+inline mozilla::dom::InclusiveAncestorsOfTypeIterator<T>
+nsINode::InclusiveAncestorsOfType() const {
+  return mozilla::dom::InclusiveAncestorsOfTypeIterator<T>(*this);
+}
+
+template <typename T>
+inline mozilla::dom::FlatTreeAncestorsOfTypeIterator<T>
+nsINode::FlatTreeAncestorsOfType() const {
+  return mozilla::dom::FlatTreeAncestorsOfTypeIterator<T>(*this);
+}
+
+template <typename T>
+inline mozilla::dom::InclusiveFlatTreeAncestorsOfTypeIterator<T>
+nsINode::InclusiveFlatTreeAncestorsOfType() const {
+  return mozilla::dom::InclusiveFlatTreeAncestorsOfTypeIterator<T>(*this);
+}
+
+template <typename T>
+inline T* nsINode::FirstAncestorOfType() const {
+  return *(AncestorsOfType<T>());
+}
 
 #endif  // mozilla_dom_AncestorIterator.h

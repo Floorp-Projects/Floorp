@@ -720,7 +720,7 @@ nsIContent* WSRunScanner::GetEditableBlockParentOrTopmotEditableInlineContent(
   //     it's not collapsed only when inserting composition string so that
   //     it's possible but shouldn't occur actually.
   nsIContent* editableBlockParentOrTopmotEditableInlineContent = nullptr;
-  for (nsIContent* content : InclusiveAncestorsOfType<nsIContent>(*aContent)) {
+  for (nsIContent* content : aContent->InclusiveAncestorsOfType<nsIContent>()) {
     if (!EditorUtils::IsEditableContent(*content, EditorType::HTML)) {
       break;
     }

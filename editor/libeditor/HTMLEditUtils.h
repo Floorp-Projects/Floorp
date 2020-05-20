@@ -267,8 +267,7 @@ class HTMLEditUtils final {
         NS_WARNING("Reached orphan node while climbing up the DOM tree");
         return nullptr;
       }
-      for (Element* parentElement : dom::InclusiveAncestorsOfType<Element>(
-               *aStartContent.GetParentNode())) {
+      for (Element* parentElement : aStartContent.AncestorsOfType<Element>()) {
         if (parentElement == &aCurrentBlock) {
           return nullptr;
         }
@@ -380,8 +379,7 @@ class HTMLEditUtils final {
         NS_WARNING("Reached orphan node while climbing up the DOM tree");
         return nullptr;
       }
-      for (Element* parentElement : dom::InclusiveAncestorsOfType<Element>(
-               *aStartContent.GetParentNode())) {
+      for (Element* parentElement : aStartContent.AncestorsOfType<Element>()) {
         if (parentElement == &aCurrentBlock) {
           return nullptr;
         }
@@ -486,12 +484,7 @@ class HTMLEditUtils final {
       return nullptr;
     }
 
-    if (!aContent.GetParent()) {
-      return nullptr;
-    }
-
-    for (Element* element : dom::InclusiveAncestorsOfType<Element>(
-             const_cast<nsIContent&>(*aContent.GetParent()))) {
+    for (Element* element : aContent.AncestorsOfType<Element>()) {
       if (HTMLEditUtils::IsBlockElement(*element)) {
         return element;
       }
@@ -534,8 +527,7 @@ class HTMLEditUtils final {
     if (!aContent.GetParent()) {
       return nullptr;
     }
-    for (Element* element : dom::InclusiveAncestorsOfType<Element>(
-             const_cast<nsIContent&>(aContent))) {
+    for (Element* element : aContent.InclusiveAncestorsOfType<Element>()) {
       if (HTMLEditUtils::IsTable(element)) {
         return element;
       }

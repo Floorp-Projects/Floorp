@@ -73,6 +73,8 @@ inline bool IsSpaceCharacter(char aChar) {
          aChar == '\f';
 }
 class AccessibleNode;
+template <typename T>
+class AncestorsOfTypeIterator;
 struct BoxQuadOptions;
 struct ConvertCoordinateOptions;
 class DocGroup;
@@ -84,6 +86,12 @@ class DOMQuad;
 class DOMRectReadOnly;
 class Element;
 class EventHandlerNonNull;
+template <typename T>
+class FlatTreeAncestorsOfTypeIterator;
+template <typename T>
+class InclusiveAncestorsOfTypeIterator;
+template <typename T>
+class InclusiveFlatTreeAncestorsOfTypeIterator;
 class MutationObservers;
 template <typename T>
 class Optional;
@@ -1089,6 +1097,28 @@ class nsINode : public mozilla::dom::EventTarget {
       s->mMutationObservers.RemoveElement(aMutationObserver);
     }
   }
+
+  /**
+   * Helper methods to access ancestor node(s) of type T.
+   * The implementations of the methods are in mozilla/dom/AncestorIterator.h.
+   */
+  template <typename T>
+  inline mozilla::dom::AncestorsOfTypeIterator<T> AncestorsOfType() const;
+
+  template <typename T>
+  inline mozilla::dom::InclusiveAncestorsOfTypeIterator<T>
+  InclusiveAncestorsOfType() const;
+
+  template <typename T>
+  inline mozilla::dom::FlatTreeAncestorsOfTypeIterator<T>
+  FlatTreeAncestorsOfType() const;
+
+  template <typename T>
+  inline mozilla::dom::InclusiveFlatTreeAncestorsOfTypeIterator<T>
+  InclusiveFlatTreeAncestorsOfType() const;
+
+  template <typename T>
+  T* FirstAncestorOfType() const;
 
  private:
   /**

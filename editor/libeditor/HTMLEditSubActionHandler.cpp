@@ -1011,7 +1011,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
   }
 
   for (nsIContent* containerContent :
-       InclusiveAncestorsOfType<nsIContent>(*editTargetContent)) {
+       editTargetContent->InclusiveAncestorsOfType<nsIContent>()) {
     // If the node is a parent `<table>` element of edit target, let's break
     // here to materialize the 'inline-block' behaviour of html tables
     // regarding to text alignment.
@@ -8869,8 +8869,7 @@ nsIContent* HTMLEditor::GetMostAncestorInlineElement(nsINode& aNode) const {
 
   // Looks for the highest inline parent in the editing host.
   nsIContent* topMostInlineContent = aNode.AsContent();
-  for (nsIContent* content :
-       InclusiveAncestorsOfType<nsIContent>(*aNode.GetParent())) {
+  for (nsIContent* content : aNode.AncestorsOfType<nsIContent>()) {
     if (content == host || !HTMLEditUtils::IsInlineElement(*content)) {
       break;
     }
