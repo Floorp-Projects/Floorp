@@ -75,6 +75,8 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
 
   nsISHistory* LegacySHistory();
 
+  void SetLength(uint32_t aLength) { mLength = aLength; }
+
  private:
   virtual ~ChildSHistory() = default;
 
@@ -103,6 +105,7 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
   RefPtr<BrowsingContext> mBrowsingContext;
   nsCOMPtr<nsISHistory> mHistory;
   mozilla::LinkedList<PendingAsyncHistoryNavigation> mPendingNavigations;
+  uint32_t mLength = 0;
 };
 
 }  // namespace dom

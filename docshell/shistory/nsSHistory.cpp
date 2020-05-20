@@ -928,8 +928,9 @@ nsSHistory::EvictAllContentViewers() {
   return NS_OK;
 }
 
-static void LoadURIs(nsTArray<nsSHistory::LoadEntryResult>& aLoadResults) {
-  for (nsSHistory::LoadEntryResult& loadEntry : aLoadResults) {
+/* static */
+void nsSHistory::LoadURIs(nsTArray<LoadEntryResult>& aLoadResults) {
+  for (LoadEntryResult& loadEntry : aLoadResults) {
     loadEntry.mBrowsingContext->LoadURI(loadEntry.mLoadState, false);
   }
 }
