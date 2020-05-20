@@ -188,7 +188,10 @@ nsHyphenator::nsHyphenator(nsIURI* aURI, bool aHyphenateCapitalized)
     }
   }
 
-  MOZ_ASSERT_UNREACHABLE("invalid hyphenation resource?");
+  nsAutoCString msg;
+  aURI->GetSpec(msg);
+  msg.Insert("Invalid hyphenation resource: ", 0);
+  NS_ASSERTION(false, msg.get());
 }
 
 bool nsHyphenator::IsValid() {
