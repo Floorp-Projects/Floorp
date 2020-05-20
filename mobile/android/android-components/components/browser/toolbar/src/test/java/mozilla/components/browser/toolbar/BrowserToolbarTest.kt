@@ -22,6 +22,7 @@ import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -119,6 +120,30 @@ class BrowserToolbarTest {
 
         verify(display).url = "https://www.mozilla.org"
         verify(edit, never()).updateUrl(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean(), ArgumentMatchers.anyBoolean())
+    }
+
+    @Test
+    fun `displayUrl is truncated to prevent extreme cases from slowing down the UI`() {
+        val toolbar = BrowserToolbar(testContext)
+        val display: DisplayToolbar = mock()
+        val edit: EditToolbar = mock()
+
+        toolbar.display = display
+        toolbar.edit = edit
+
+        toolbar.url = "a".repeat(MAX_URI_LENGTH + 1)
+        toolbar.url = "b".repeat(MAX_URI_LENGTH)
+        toolbar.url = "c".repeat(MAX_URI_LENGTH - 1)
+
+        val urlCaptor = argumentCaptor<String>()
+        verify(display, times(3)).url = urlCaptor.capture()
+
+        val capturedValues = urlCaptor.allValues
+        // Value was too long and should've been truncated
+        assertEquals("a".repeat(MAX_URI_LENGTH), capturedValues[0])
+        // Values should be the same as before
+        assertEquals("b".repeat(MAX_URI_LENGTH), capturedValues[1])
+        assertEquals("c".repeat(MAX_URI_LENGTH - 1), capturedValues[2])
     }
 
     @Test
