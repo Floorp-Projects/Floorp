@@ -216,9 +216,10 @@ export class _DSCard extends React.PureComponent {
       );
     }
     const isButtonCTA = this.props.cta_variant === "button";
+    const baseClass = `ds-card ${this.props.is_video ? `video-card` : ``}`;
 
     return (
-      <div className="ds-card">
+      <div className={baseClass}>
         <SafeAnchor
           className="ds-card-link"
           dispatch={this.props.dispatch}
@@ -232,6 +233,11 @@ export class _DSCard extends React.PureComponent {
               rawSource={this.props.raw_image_src}
               sizes={this.dsImageSizes}
             />
+            {this.props.is_video && (
+              <div className="playhead">
+                <span>Video Content</span>
+              </div>
+            )}
           </div>
           {isButtonCTA ? (
             <CTAButtonMeta

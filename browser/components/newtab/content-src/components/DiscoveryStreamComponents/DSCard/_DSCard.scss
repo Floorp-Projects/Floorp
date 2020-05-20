@@ -9,6 +9,39 @@ $excerpt-line-height: 20;
   flex-direction: column;
   position: relative;
 
+  .playhead {
+    background: $blue-60 url('../data/content/assets/glyph-playhead.svg') no-repeat 12px center;
+    border-radius: 20px;
+    bottom: -16px;
+    color: $white-0;
+    display: flex;
+    flex-direction: column;
+    height: 40px;
+    justify-content: center;
+    left: 16px;
+    min-width: 40px;
+    padding: 0 0 0 40px;
+    position: absolute;
+    transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
+    z-index: 1;
+
+    &:hover {
+      color: $white-100;
+      padding: 0 20px 0 40px;
+    }
+
+    span {
+      display: none;
+    }
+
+    &:hover span {
+      display: inline;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 13px;
+    }
+  }
+
   &.placeholder {
     background: transparent;
     box-shadow: inset $inner-box-shadow;
@@ -18,6 +51,7 @@ $excerpt-line-height: 20;
 
   .img-wrapper {
     width: 100%;
+    position: relative;
   }
 
   .img {
@@ -82,6 +116,10 @@ $excerpt-line-height: 20;
         color: $blue-70;
       }
     }
+  }
+
+  &.video-card .meta {
+    margin-top: 4px;
   }
 
   .meta {
