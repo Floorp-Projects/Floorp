@@ -5,7 +5,7 @@
 
 // Test whether the deprecated CSS property is shown as issue correctly or not.
 
-const MDNCompatibility = require("devtools/client/inspector/compatibility/lib/MDNCompatibility");
+const MDNCompatibility = require("devtools/shared/compatibility/MDNCompatibility");
 
 const TEST_URI = `
   <style>
