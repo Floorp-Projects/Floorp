@@ -1010,6 +1010,28 @@ bool WarpCacheIRTranspiler::emitMathFunctionNumberResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitArrayPush(ObjOperandId objId,
+                                          ValOperandId rhsId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* value = getOperand(rhsId);
+
+  auto* elements = MElements::New(alloc(), obj);
+  add(elements);
+
+  auto* initLength = MInitializedLength::New(alloc(), elements);
+  add(initLength);
+
+  auto* barrier =
+      MPostWriteElementBarrier::New(alloc(), obj, value, initLength);
+  add(barrier);
+
+  auto* ins = MArrayPush::New(alloc(), obj, value);
+  addEffectful(ins);
+  pushResult(ins);
+
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
                                                       uint8_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
