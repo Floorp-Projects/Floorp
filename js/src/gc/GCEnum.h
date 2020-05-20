@@ -111,6 +111,7 @@ enum class ZealMode {
   _(RareArgumentsData)                     \
   _(RegExpStatics)                         \
   _(RegExpSharedBytecode)                  \
+  _(RegExpSharedNamedCaptureData)          \
   _(TypedArrayElements)                    \
   _(TypeDescrTraceList)                    \
   _(NativeIterator)                        \
