@@ -410,17 +410,19 @@ class nsLineBox final : public nsLineLink {
                                        const nsSize& aContainerSize) {
     return mozilla::LogicalRect(aWM, GetOverflowArea(aType), aContainerSize);
   }
-  nsRect GetOverflowArea(nsOverflowType aType) {
+  nsRect GetOverflowArea(nsOverflowType aType) const {
     return mData ? mData->mOverflowAreas.Overflow(aType) : GetPhysicalBounds();
   }
-  nsOverflowAreas GetOverflowAreas() {
+  nsOverflowAreas GetOverflowAreas() const {
     if (mData) {
       return mData->mOverflowAreas;
     }
     nsRect bounds = GetPhysicalBounds();
     return nsOverflowAreas(bounds, bounds);
   }
-  nsRect GetVisualOverflowArea() { return GetOverflowArea(eVisualOverflow); }
+  nsRect GetVisualOverflowArea() const {
+    return GetOverflowArea(eVisualOverflow);
+  }
   nsRect GetScrollableOverflowArea() {
     return GetOverflowArea(eScrollableOverflow);
   }
