@@ -670,9 +670,6 @@ nsresult Dashboard::GetDNSCacheEntries(DnsData* dnsData) {
     } else {
       entry.mFamily.AssignLiteral(u"ipv4");
     }
-
-    entry.mOriginAttributesSuffix =
-        NS_ConvertUTF8toUTF16(dnsData->mData[i].originAttributesSuffix);
   }
 
   JS::RootedValue val(cx);

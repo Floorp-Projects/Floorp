@@ -66,7 +66,6 @@ dictionary DnsCacheEntry {
   DOMString family = "";
   double expiration = 0;
   boolean trr = false;
-  DOMString originAttributesSuffix = "";
 };
 
 [GenerateConversionToJS]
