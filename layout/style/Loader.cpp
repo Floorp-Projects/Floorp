@@ -391,8 +391,9 @@ SheetLoadData::SheetLoadData(
 }
 
 SheetLoadData::~SheetLoadData() {
-  MOZ_DIAGNOSTIC_ASSERT(mSheetCompleteCalled,
-                        "Should always call SheetComplete");
+  MOZ_DIAGNOSTIC_ASSERT(mSheetCompleteCalled || mIntentionallyDropped,
+                        "Should always call SheetComplete, except when "
+                        "dropping the load");
 
   // Do this iteratively to avoid blowing up the stack.
   RefPtr<SheetLoadData> next = std::move(mNext);
@@ -1899,8 +1900,16 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
     } else {
 #endif
       SheetLoadDataHashKey key(aLoadData);
-      NS_ASSERTION(sheet->IsComplete(),
-                   "Should only be caching complete sheets");
+      MOZ_ASSERT(sheet->IsComplete(), "Should only be caching complete sheets");
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      for (const auto& entry : mSheets->mCompleteSheets) {
+        MOZ_DIAGNOSTIC_ASSERT(
+            entry.GetData() != sheet || key.KeyEquals(entry.GetKey()),
+            "Same sheet, different keys?");
+      }
+#endif
+
       mSheets->mCompleteSheets.Put(&key, RefPtr{sheet});
 #ifdef MOZ_XUL
     }
@@ -2097,15 +2106,28 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
 
   nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(
       do_QueryInterface(aInfo.mContent));
+  // We may get here with no content for Link: headers for example.
+  MOZ_ASSERT(!!owningElement == !!aInfo.mContent,
+             "If there is any node, it should be an "
+             "nsIStyleSheetLinkingElement");
 
+  auto data = MakeRefPtr<SheetLoadData>(
+      this, aInfo.mTitle, aInfo.mURI, sheet, syncLoad, owningElement,
+      isAlternate, matched, IsPreload::No, aObserver, principal,
+      aInfo.mReferrerInfo, context);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete: 0x%p", sheet.get()));
     if (aObserver || !mObservers.IsEmpty() || owningElement) {
-      rv = PostLoadEvent(aInfo.mURI, sheet, aObserver, isAlternate, matched,
-                         aInfo.mReferrerInfo, owningElement);
+      rv = PostLoadEvent(std::move(data));
       if (NS_FAILED(rv)) {
         return Err(rv);
       }
+    } else {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      // We don't have to notify anyone of this load, as it was complete, so
+      // drop it intentionally.
+      data->mIntentionallyDropped = true;
+#endif
     }
 
     // The load hasn't been completed yet, will be done in PostLoadEvent.
@@ -2113,10 +2135,6 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   }
 
   // Now we need to actually load it.
-  auto data = MakeRefPtr<SheetLoadData>(
-      this, aInfo.mTitle, aInfo.mURI, sheet, syncLoad, owningElement,
-      isAlternate, matched, IsPreload::No, aObserver, principal,
-      aInfo.mReferrerInfo, context);
 
   auto result = LoadSheetResult{Completed::No, isAlternate, matched};
 
@@ -2349,21 +2367,26 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   PrepareSheet(*sheet, EmptyString(), EmptyString(), nullptr, IsAlternate::No,
                IsExplicitlyEnabled::No);
 
+  auto data = MakeRefPtr<SheetLoadData>(
+      this, aURL, sheet, syncLoad, aUseSystemPrincipal, aIsPreload,
+      aPreloadEncoding, aObserver, aOriginPrincipal, aReferrerInfo, mDocument);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete"));
     if (aObserver || !mObservers.IsEmpty()) {
-      rv = PostLoadEvent(aURL, sheet, aObserver, IsAlternate::No,
-                         MediaMatched::Yes, aReferrerInfo, nullptr);
+      rv = PostLoadEvent(std::move(data));
       if (NS_FAILED(rv)) {
         return Err(rv);
       }
+    } else {
+      // We don't have to notify anyone of this load, as it was complete, so
+      // drop it intentionally.
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      data->mIntentionallyDropped = true;
+#endif
     }
     return sheet;
   }
 
-  auto data = MakeRefPtr<SheetLoadData>(
-      this, aURL, sheet, syncLoad, aUseSystemPrincipal, aIsPreload,
-      aPreloadEncoding, aObserver, aOriginPrincipal, aReferrerInfo, mDocument);
   rv = LoadSheet(*data, state);
   if (NS_FAILED(rv)) {
     return Err(rv);
@@ -2374,27 +2397,12 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   return sheet;
 }
 
-nsresult Loader::PostLoadEvent(nsIURI* aURI, StyleSheet* aSheet,
-                               nsICSSLoaderObserver* aObserver,
-                               IsAlternate aWasAlternate,
-                               MediaMatched aMediaMatched,
-                               nsIReferrerInfo* aReferrerInfo,
-                               nsIStyleSheetLinkingElement* aElement) {
+nsresult Loader::PostLoadEvent(RefPtr<SheetLoadData> aLoadData) {
   LOG(("css::Loader::PostLoadEvent"));
-  MOZ_ASSERT(aSheet, "Must have sheet");
-  MOZ_ASSERT(aObserver || !mObservers.IsEmpty() || aElement,
-             "Must have observer or element");
-
-  RefPtr<SheetLoadData> evt = new SheetLoadData(
-      this,
-      EmptyString(),  // title doesn't matter here
-      aURI, aSheet, false, aElement, aWasAlternate, aMediaMatched,
-      IsPreload::No, aObserver, nullptr, aReferrerInfo, mDocument);
-
-  mPostedEvents.AppendElement(evt);
+  mPostedEvents.AppendElement(aLoadData);
 
   nsresult rv;
-  RefPtr<SheetLoadData> runnable(evt);
+  RefPtr<SheetLoadData> runnable(aLoadData);
   if (mDocument) {
     rv = mDocument->Dispatch(TaskCategory::Other, runnable.forget());
   } else if (mDocGroup) {
@@ -2405,22 +2413,22 @@ nsresult Loader::PostLoadEvent(nsIURI* aURI, StyleSheet* aSheet,
 
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch stylesheet load event");
-    mPostedEvents.RemoveElement(evt);
+    mPostedEvents.RemoveElement(aLoadData);
   } else {
     // We'll unblock onload when we handle the event.
     BlockOnload();
 
     // We want to notify the observer for this data.
-    evt->mMustNotify = true;
-    evt->mSheetAlreadyComplete = true;
+    aLoadData->mMustNotify = true;
+    aLoadData->mSheetAlreadyComplete = true;
 
     // If we get to this code, aSheet loaded correctly at some point, so
     // we can just schedule a load event and don't need to touch the
     // data's mLoadFailed.  Note that we do this here and not from
     // inside our SheetComplete so that we don't end up running the load
     // event async.
-    MOZ_ASSERT(!evt->mLoadFailed, "Why are we marked as failed?");
-    evt->ScheduleLoadEventIfNeeded();
+    MOZ_ASSERT(!aLoadData->mLoadFailed, "Why are we marked as failed?");
+    aLoadData->ScheduleLoadEventIfNeeded();
   }
 
   return rv;
