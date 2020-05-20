@@ -14,7 +14,7 @@ Build Platforms
 
 .. csv-table::
    :header: "Platform", "Owner", "Why?"
-   :widths: 20, 40, 40
+   :widths: 40, 20, 40
 
    Linux, ,
    Linux DevEdition, ,
@@ -100,7 +100,7 @@ We have some platforms used to run the tests to make sure they run correctly on 
 
 .. csv-table::
    :header: "Platform", "Owner", "Why?"
-   :widths: 20, 40, 40
+   :widths: 40, 20, 40
 
    Linux 18.04 shippable, ,
    Linux 18.04 x64, ,
@@ -134,7 +134,7 @@ or prevening some classes of errors (memory, threading, etc).
 
 .. csv-table::
    :header: "Platform", "Owner", "Why?"
-   :widths: 20, 40, 40
+   :widths: 40, 20, 40
 
    Linux 18.04 x64 tsan, Christian Holler, Identify threading issues with ThreadSanitizer
    Linux x64 asan, "| Christian Holler
@@ -172,7 +172,7 @@ The decision tasks responsible for creating the task graph.
 
 .. csv-table::
    :header: "Task", "Owner", "Why?"
-   :widths: 20, 40, 40
+   :widths: 40, 20, 40
 
    Gecko Decision Task, , Define the tasks to run and their order
    Firefox Release Tasks, ,
@@ -187,7 +187,7 @@ Others
 
 .. csv-table::
    :header: "Platform", "Owner", "Why?"
-   :widths: 20, 40, 40
+   :widths: 40, 20, 40
 
    Docker Images, ,
    Fetch, ,
