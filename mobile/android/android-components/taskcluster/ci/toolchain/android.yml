@@ -45,9 +45,7 @@ linux64-android-gradle-dependencies:
             - taskcluster/scripts/toolchain/android-gradle-dependencies.sh
             - taskcluster/scripts/toolchain/android-gradle-dependencies/**
             - buildSrc/src/main/java/Dependencies.kt
-            - '*.gradle'
-            - components/**/build.gradle
-            - samples/**/build.gradle
+            - build.gradle
         toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
         toolchain-alias: android-gradle-dependencies
     treeherder:
