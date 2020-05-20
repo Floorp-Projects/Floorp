@@ -362,11 +362,6 @@ class ScriptStencil {
   // This traces any JSAtoms in the gcThings array. This will be removed once
   // atoms are deferred from parsing.
   void trace(JSTracer* trc);
-
-  // Allocate a JSScript and initialize it with bytecode. This consumes
-  // allocations within this stencil.
-  JSScript* intoScript(JSContext* cx, CompilationInfo& compilationInfo,
-                       SourceExtent extent);
 };
 
 } /* namespace js::frontend */
