@@ -15,7 +15,6 @@ UNIFIED_SOURCES += [
     'TestColorNames.cpp',
     'TestConfigManager.cpp',
     'TestGfxWidgets.cpp',
-    'TestJobScheduler.cpp',
     'TestLayers.cpp',
     'TestMatrix.cpp',
     'TestMoz2D.cpp',
