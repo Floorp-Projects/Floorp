@@ -66,6 +66,7 @@ class PropOpEmitter;
 class OptionalEmitter;
 class TDZCheckCache;
 class TryEmitter;
+class ScriptStencil;
 
 enum class ValueIsOnStack { Yes, No };
 
@@ -308,6 +309,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   void reportError(ParseNode* pn, unsigned errorNumber, ...);
   void reportError(const mozilla::Maybe<uint32_t>& maybeOffset,
                    unsigned errorNumber, ...);
+
+  // Fill in a ScriptStencil using this BCE data.
+  bool intoScriptStencil(ScriptStencil* stencil);
 
   // If pn contains a useful expression, return true with *answer set to true.
   // If pn contains a useless expression, return true with *answer set to
