@@ -9,7 +9,7 @@ const Services = require("Services");
 loader.lazyRequireGetter(
   this,
   "browsersDataset",
-  "devtools/client/inspector/compatibility/lib/dataset/browsers.json"
+  "devtools/shared/compatibility/dataset/browsers.json"
 );
 
 const TARGET_BROWSER_ID = [

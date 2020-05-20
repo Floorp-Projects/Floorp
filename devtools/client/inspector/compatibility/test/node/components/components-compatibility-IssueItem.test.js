@@ -10,7 +10,7 @@
 const { shallow } = require("enzyme");
 const React = require("react");
 
-const MDNCompatibility = require("devtools/client/inspector/compatibility/lib/MDNCompatibility");
+const MDNCompatibility = require("devtools/shared/compatibility/MDNCompatibility");
 const IssueItem = React.createFactory(
   require("devtools/client/inspector/compatibility/components/IssueItem")
 );
