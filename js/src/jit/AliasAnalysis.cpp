@@ -145,6 +145,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::SuperFunction:
     case MDefinition::Opcode::InitHomeObject:
     case MDefinition::Opcode::HomeObjectSuperBase:
+    case MDefinition::Opcode::ObjectStaticProto:
       object = ins->getOperand(0);
       break;
     case MDefinition::Opcode::GetPropertyCache:

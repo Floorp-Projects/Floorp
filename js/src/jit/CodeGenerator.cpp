@@ -14496,6 +14496,23 @@ void CodeGenerator::visitObjectWithProto(LObjectWithProto* lir) {
   callVM<Fn, js::ObjectWithProtoOperation>(lir);
 }
 
+void CodeGenerator::visitObjectStaticProto(LObjectStaticProto* lir) {
+  Register obj = ToRegister(lir->input());
+  Register output = ToRegister(lir->output());
+
+  masm.loadObjProto(obj, output);
+
+#ifdef DEBUG
+  // We shouldn't encounter a null or lazy proto.
+  MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
+
+  Label done;
+  masm.branchPtr(Assembler::Above, output, ImmWord(1), &done);
+  masm.assumeUnreachable("Unexpected null or lazy proto in MObjectStaticProto");
+  masm.bind(&done);
+#endif
+}
+
 void CodeGenerator::visitFunctionProto(LFunctionProto* lir) {
   using Fn = JSObject* (*)(JSContext*);
   callVM<Fn, js::FunctionProtoOperation>(lir);
