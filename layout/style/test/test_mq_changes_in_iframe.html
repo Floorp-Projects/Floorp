@@ -15,7 +15,14 @@
 add_task(async () => {
   const mqString = "(prefers-reduced-motion: reduce)";
 
-  SpecialPowers.DOMWindowUtils.setPrefersReducedMotionOverrideForTest(false);
+// Bug 1638618: Theme changes (and thus LookAndFeel, including reduced-motion)
+// aren't propagated to processes that don't have PresContexts in them
+// (i.e. only to processes with open tabs), and so preallocated processes
+// have the Theme/LookAndFeel values current when they were prestarted.
+// It can also affect e10s processes that are recycled via Provide/Take.
+// Add an extra level of handshake to ensure we change reduced-motion
+// after the iframe's process is loaded.   When that is fixed we could
+// restore the pre-iframe-creation setting to false here.
 
   iframe.src = SimpleTest.getTestFileURL("mq_changes_child.html")
                          .replace("mochi.test:8888", "example.com");
@@ -24,9 +31,19 @@ add_task(async () => {
       resolve();
     }
   }, { once: true } ));
+  // Must be after loading the iframe (bug 1638618).
+  // This may or make not trigger a 'change' event in the iframe, depending
+  // on the initial value of reduced-motion the frame's process has.
+
+  SpecialPowers.DOMWindowUtils.setPrefersReducedMotionOverrideForTest(false);
 
   const mql = matchMedia(mqString);
-  ok(!mql.matches, `Doesn't matches ${mqString}`);
+  // Wait if needed for the value to propagate
+  if (mql.matches) {
+    await new Promise(resolve => mql.addEventListener("change", resolve,
+                                                      { once: true }));
+  }
+  ok(!mql.matches, `Doesn't match ${mqString}`);
 
   const changedInThisDocument = new Promise(resolve => {
     mql.addEventListener("change", event => { resolve(event.matches); });
@@ -39,6 +56,8 @@ add_task(async () => {
     }, { once: true });
   });
 
+  // This will trigger a change event in the iframe always, and will send a
+  // match event back to us
   SpecialPowers.DOMWindowUtils.setPrefersReducedMotionOverrideForTest(true);
 
   const results =
