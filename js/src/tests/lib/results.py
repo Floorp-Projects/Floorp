@@ -292,8 +292,20 @@ class ResultsSink:
                     print(escape_cmdline(output.cmd), file=self.fp)
 
                 if show_output:
-                    self.fp.write(output.out)
-                    self.fp.write(output.err)
+                    def write_with_fallback(fp, data):
+                        try:
+                            fp.write(data)
+                        except UnicodeEncodeError as e:
+                            # In case the data contains something not directly
+                            # encodable, use \uXXXX.
+                            fp.write('WARNING: Falling back from exception: {}\n'.format(e))
+                            fp.write('WARNING: The following output is escaped, ')
+                            fp.write('and may be different than original one.\n')
+                            fp.write(data.encode('ascii', 'namereplace')
+                                     .decode('ascii'))
+
+                    write_with_fallback(self.fp, output.out)
+                    write_with_fallback(self.fp, output.err)
 
             self.n += 1
 
