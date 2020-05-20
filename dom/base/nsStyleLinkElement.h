@@ -42,7 +42,6 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
 
   // nsIStyleSheetLinkingElement
   void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) override;
-  mozilla::StyleSheet* GetStyleSheet() override;
   void InitStyleLinkElement(bool aDontLoadStyle) override;
 
   mozilla::Result<Update, nsresult> UpdateStyleSheet(
