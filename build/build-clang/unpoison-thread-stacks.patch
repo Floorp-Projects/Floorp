@@ -12,11 +12,9 @@ upstream in a different form, as the TLS handler `asan_thread_exit`, but that
 variant causes failures in our test suite, so revert the TLS handler in favor of
 the interceptor approach from the first patch.
 
-diff --git a/compiler-rt/lib/asan/asan_win.cpp b/compiler-rt/lib/asan/asan_win.cpp
-index 417892aaedd..5fe86db44f4 100644
---- a/compiler-rt/lib/asan/asan_win.cpp
-+++ b/compiler-rt/lib/asan/asan_win.cpp
-@@ -154,6 +154,14 @@ INTERCEPTOR_WINAPI(HANDLE, CreateThread, LPSECURITY_ATTRIBUTES security,
+--- a/compiler-rt/lib/asan/asan_win.cc
++++ b/compiler-rt/lib/asan/asan_win.cc
+@@ -154,6 +154,14 @@
                              thr_flags, tid);
  }
  
@@ -31,7 +29,7 @@ index 417892aaedd..5fe86db44f4 100644
  // }}}
  
  namespace __asan {
-@@ -168,7 +176,9 @@ void InitializePlatformInterceptors() {
+@@ -168,7 +176,9 @@
  
    ASAN_INTERCEPT_FUNC(CreateThread);
    ASAN_INTERCEPT_FUNC(SetUnhandledExceptionFilter);
@@ -42,7 +40,7 @@ index 417892aaedd..5fe86db44f4 100644
  #ifdef _WIN64
    ASAN_INTERCEPT_FUNC(__C_specific_handler);
  #else
-@@ -380,19 +390,6 @@ __declspec(allocate(".CRT$XLAB")) void(NTAPI *__asan_tls_init)(
+@@ -380,19 +390,6 @@
      void *, unsigned long, void *) = asan_thread_init;
  #endif
  
@@ -55,7 +53,7 @@ index 417892aaedd..5fe86db44f4 100644
 -  }
 -}
 -
--#pragma section(".CRT$XLY", long, read)
+-#pragma section(".CRT$XLY", long, read)  // NOLINT
 -__declspec(allocate(".CRT$XLY")) void(NTAPI *__asan_tls_exit)(
 -    void *, unsigned long, void *) = asan_thread_exit;
 -
