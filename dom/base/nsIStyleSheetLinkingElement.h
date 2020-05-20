@@ -127,12 +127,6 @@ class nsIStyleSheetLinkingElement : public nsISupports {
    */
   virtual void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) = 0;
 
-  /**
-   * Used to obtain the style sheet linked in by this element.
-   *
-   * @return the style sheet associated with this element.
-   */
-  virtual mozilla::StyleSheet* GetStyleSheet() = 0;
 
   /**
    * Initialize the stylesheet linking element. If aDontLoadStyle is
