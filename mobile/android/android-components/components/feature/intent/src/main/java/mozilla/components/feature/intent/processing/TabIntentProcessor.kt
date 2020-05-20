@@ -50,8 +50,13 @@ class TabIntentProcessor(
         return if (url.isNullOrEmpty()) {
             false
         } else {
-            val session = createSession(url, private = isPrivate, source = Source.ACTION_VIEW)
-            loadUrlUseCase(url, session, LoadUrlFlags.external())
+            val existingSession = sessionManager.sessions.find { it.url == url }
+            if (existingSession != null) {
+                sessionManager.select(existingSession)
+            } else {
+                loadUrlUseCase(url, createSession(url, private = isPrivate,
+                        source = Source.ACTION_VIEW), LoadUrlFlags.external())
+            }
             true
         }
     }
