@@ -77,8 +77,11 @@ impl StorageSyncArea {
         let task = PuntTask::new(Arc::downgrade(&*self.store()?), punt, callback)?;
         let runnable = TaskRunnable::new(name, Box::new(task))?;
         // `may_block` schedules the runnable on a dedicated I/O pool.
-        runnable
-            .dispatch_with_options(self.queue.coerce(), DispatchOptions::new().may_block(true))?;
+        TaskRunnable::dispatch_with_options(
+            runnable,
+            self.queue.coerce(),
+            DispatchOptions::new().may_block(true),
+        )?;
         Ok(())
     }
 
@@ -240,15 +243,8 @@ impl StorageSyncArea {
             Some(store) => {
                 // Interrupt any currently-running statements.
                 store.interrupt();
-                // If dispatching the runnable fails, we'll drop the store and
-                // close its database connection on the main thread. This is a
-                // last resort, and can also happen if the last `RefPtr` to this
-                // storage area is released without calling `teardown`. In that
-                // case, the destructor for `self.store` will run, which
-                // automatically closes its database connection. mozStorage's
-                // `Connection::Release` also falls back to closing the
-                // connection on the main thread if it can't dispatch to the
-                // background thread.
+                // If dispatching the runnable fails, we'll leak the store
+                // without closing its database connection.
                 teardown(&self.queue, store, callback)?;
             }
             None => return Err(Error::AlreadyTornDown),
@@ -264,7 +260,11 @@ fn teardown(
 ) -> Result<()> {
     let task = TeardownTask::new(store, callback)?;
     let runnable = TaskRunnable::new(TeardownTask::name(), Box::new(task))?;
-    runnable.dispatch_with_options(queue.coerce(), DispatchOptions::new().may_block(true))?;
+    TaskRunnable::dispatch_with_options(
+        runnable,
+        queue.coerce(),
+        DispatchOptions::new().may_block(true),
+    )?;
     Ok(())
 }
 

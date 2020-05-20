@@ -100,7 +100,7 @@ impl dogear::Driver for Driver {
                 "bookmark_sync::Driver::record_telemetry_event",
                 Box::new(task),
             )
-            .and_then(|r| r.dispatch(progress.owning_thread()));
+            .and_then(|r| TaskRunnable::dispatch(r, progress.owning_thread()));
         }
     }
 }
@@ -140,7 +140,7 @@ impl Log for Logger {
                         message,
                     };
                     let _ = TaskRunnable::new("bookmark_sync::Logger::log", Box::new(task))
-                        .and_then(|r| r.dispatch(logger.owning_thread()));
+                        .and_then(|r| TaskRunnable::dispatch(r, logger.owning_thread()));
                 }
                 Err(_) => {}
             }

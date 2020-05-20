@@ -183,17 +183,30 @@ impl TaskRunnable {
         }))
     }
 
+    /// Dispatches this task runnable to an event target with the default
+    /// options.
     #[inline]
-    pub fn dispatch(&self, target_thread: &nsIEventTarget) -> Result<(), nsresult> {
-        self.dispatch_with_options(target_thread, DispatchOptions::default())
+    pub fn dispatch(this: RefPtr<Self>, target: &nsIEventTarget) -> Result<(), nsresult> {
+        Self::dispatch_with_options(this, target, DispatchOptions::default())
     }
 
+    /// Dispatches this task runnable to an event target, like a thread or a
+    /// task queue, with the given options.
+    ///
+    /// Note that this is an associated function, not a method, because it takes
+    /// an owned reference to the runnable, and must be called like
+    /// `TaskRunnable::dispatch_with_options(runnable, options)` and *not*
+    /// `runnable.dispatch_with_options(options)`.
+    ///
+    /// ### Safety
+    ///
+    /// This function leaks the runnable if dispatch fails.
     pub fn dispatch_with_options(
-        &self,
-        target_thread: &nsIEventTarget,
+        this: RefPtr<Self>,
+        target: &nsIEventTarget,
         options: DispatchOptions,
     ) -> Result<(), nsresult> {
-        unsafe { target_thread.DispatchFromScript(self.coerce(), options.flags()) }.to_result()
+        unsafe { target.DispatchFromScript(this.coerce(), options.flags()) }.to_result()
     }
 
     xpcom_method!(run => Run());
@@ -205,7 +218,7 @@ impl TaskRunnable {
             Ok(_) => {
                 assert!(!is_current_thread(&self.original_thread));
                 self.task.run();
-                self.dispatch(&self.original_thread)
+                Self::dispatch(RefPtr::new(self), &self.original_thread)
             }
             Err(_) => {
                 assert!(is_current_thread(&self.original_thread));
