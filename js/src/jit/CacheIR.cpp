@@ -4875,6 +4875,11 @@ AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
+  // Check that the array is completely initialized (no holes).
+  if (thisarray->getDenseInitializedLength() != thisarray->length()) {
+    return AttachDecision::NoAction;
+  }
+
   MOZ_ASSERT(!thisarray->denseElementsAreFrozen(),
              "Extensible arrays should not have frozen elements");
   MOZ_ASSERT(thisarray->lengthIsWritable());

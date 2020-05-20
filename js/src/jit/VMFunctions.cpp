@@ -476,6 +476,10 @@ bool ArrayPushDense(JSContext* cx, HandleArrayObject arr, HandleValue v,
     return true;
   }
 
+  // Without TI this should not happen, we should have bailed out before
+  // calling the VM function if we are about to overflow.
+  MOZ_ASSERT(IsTypeInferenceEnabled());
+
   // array_push changed the length to be larger than INT32_MAX. In this case
   // OBJECT_FLAG_LENGTH_OVERFLOW was set, TI invalidated the script, and the
   // AutoDetectInvalidation instance on the stack will replace *length with

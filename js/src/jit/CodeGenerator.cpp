@@ -10394,6 +10394,23 @@ void CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), elementsTemp);
   masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), length);
 
+  // TODO(Warp) Adjust jit::ArrayPushDense to instead bailout for non-int32.
+  if (!IsTypeInferenceEnabled()) {
+    // Bailout if incrementing the length would overflow INT32_MAX.
+    bailoutCmp32(Assembler::Equal, length, Imm32(INT32_MAX), lir->snapshot());
+  }
+
+#ifdef DEBUG
+  // Assert that there are no copy-on-write elements.
+  Label success;
+  Address elementsFlags(elementsTemp, ObjectElements::offsetOfFlags());
+  masm.branchTest32(Assembler::Zero, elementsFlags,
+                    Imm32(ObjectElements::COPY_ON_WRITE), &success);
+  masm.assumeUnreachable(
+      "ArrayPush must not be used with copy-on-write elements");
+  masm.bind(&success);
+#endif
+
   // Guard length == initializedLength.
   Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());
   masm.branch32(Assembler::NotEqual, initLength, length, ool->entry());

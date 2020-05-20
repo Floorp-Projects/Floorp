@@ -645,7 +645,7 @@
 
 - name: ArrayPush
   shared: false
-  transpile: false
+  transpile: true
   args:
     obj: ObjId
     rhs: ValId
