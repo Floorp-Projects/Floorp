@@ -230,7 +230,6 @@ impl WindowWrapper {
         }
     }
 
-    #[cfg(feature = "software")]
     pub fn software_gl(&self) -> Option<&swgl::Context> {
         match *self {
             WindowWrapper::WindowedContext(_, _, ref swgl) |
@@ -254,6 +253,10 @@ impl WindowWrapper {
         } else {
             self.native_gl()
         }
+    }
+
+    pub fn is_software(&self) -> bool {
+        self.software_gl().is_some()
     }
 
     #[cfg(not(feature = "software"))]
