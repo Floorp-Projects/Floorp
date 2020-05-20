@@ -499,7 +499,11 @@ ${EndIf}
   ; An empty string is used for the 4th & 5th params because the following
   ; protocol handlers already have a display name and the additional keys
   ; required for a protocol handler.
+!ifndef NIGHTLY_BUILD
+  ; Keep the compile-time conditional synchronized with the
+  ; "network.ftp.enabled" compile-time conditional.
   ${AddDisabledDDEHandlerValues} "ftp" "$2" "$8,1" "" ""
+!endif ; !NIGHTLY_BUILD
   ${AddDisabledDDEHandlerValues} "http" "$2" "$8,1" "" ""
   ${AddDisabledDDEHandlerValues} "https" "$2" "$8,1" "" ""
   ${AddDisabledDDEHandlerValues} "mailto" "$2" "$8,1" "" ""
@@ -583,7 +587,16 @@ ${EndIf}
 
   WriteRegStr ${RegKey} "$0\Capabilities\StartMenu" "StartMenuInternet" "$1"
 
+!ifndef NIGHTLY_BUILD
+  ; Keep the compile-time conditional synchronized with the
+  ; "network.ftp.enabled" compile-time conditional.
   WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "ftp"    "FirefoxURL$2"
+!else
+  ; We don't delete and re-create the entire key, so we need to remove
+  ; any existing registration.
+  DeleteRegValue ${RegKey} "$0\Capabilities\URLAssociations" "ftp"
+!endif ; !NIGHTLY_BUILD
+
   WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "http"   "FirefoxURL$2"
   WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "https"  "FirefoxURL$2"
   WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "mailto" "FirefoxURL$2"
@@ -980,9 +993,16 @@ ${EndIf}
   ; An empty string is used for the 4th & 5th params because the following
   ; protocol handlers already have a display name and the additional keys
   ; required for a protocol handler.
+
   ${IsHandlerForInstallDir} "ftp" $R9
   ${If} "$R9" == "true"
+!ifndef NIGHTLY_BUILD
+    ; Keep the compile-time conditional synchronized with the
+    ; "network.ftp.enabled" compile-time conditional.
     ${AddDisabledDDEHandlerValues} "ftp" "$2" "$8,1" "" ""
+!else
+    ${AddDisabledDDEHandlerValues} "ftp" "$2" "$8,1" "" "delete"
+!endif ; !NIGHTLY_BUILD
   ${EndIf}
 
   ${IsHandlerForInstallDir} "http" $R9

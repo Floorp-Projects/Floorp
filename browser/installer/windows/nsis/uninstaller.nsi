@@ -326,7 +326,11 @@ Section "Uninstall"
 
   ${un.RegCleanAppHandler} "FirefoxURL-$AppUserModelID"
   ${un.RegCleanAppHandler} "FirefoxHTML-$AppUserModelID"
+!ifndef NIGHTLY_BUILD
+  ; Keep the compile-time conditional synchronized with the
+  ; "network.ftp.enabled" compile-time conditional.
   ${un.RegCleanProtocolHandler} "ftp"
+!endif ; NIGHTLY_BUILD
   ${un.RegCleanProtocolHandler} "http"
   ${un.RegCleanProtocolHandler} "https"
   ${un.RegCleanProtocolHandler} "mailto"
