@@ -488,6 +488,9 @@ async function openContextMenuInSidebar(selector = "body") {
   return contentAreaContextMenu;
 }
 
+// `selector` should refer to the content in the frame. If invalid the test can
+// fail intermittently because the click could inadvertently be registered on
+// the upper-left corner of the frame (instead of inside the frame).
 async function openContextMenuInFrame(selector = "body", frameIndex = 0) {
   let contentAreaContextMenu = document.getElementById(
     "contentAreaContextMenu"
