@@ -40,6 +40,7 @@ export class CardGrid extends React.PureComponent {
             display_engagement_labels={this.props.display_engagement_labels}
             cta={rec.cta}
             cta_variant={this.props.cta_variant}
+            is_video={this.props.enable_video_playheads && rec.is_video}
           />
         )
       );
@@ -99,4 +100,5 @@ export class CardGrid extends React.PureComponent {
 CardGrid.defaultProps = {
   border: `border`,
   items: 4, // Number of stories to display
+  enable_video_playheads: false,
 };

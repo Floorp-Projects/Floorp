@@ -2767,13 +2767,39 @@ main {
   display: flex;
   flex-direction: column;
   position: relative; }
+  .ds-card .playhead {
+    background: #0060DF url("../data/content/assets/glyph-playhead.svg") no-repeat 12px center;
+    border-radius: 20px;
+    bottom: -16px;
+    color: rgba(255, 255, 255, 0);
+    display: flex;
+    flex-direction: column;
+    height: 40px;
+    justify-content: center;
+    left: 16px;
+    min-width: 40px;
+    padding: 0 0 0 40px;
+    position: absolute;
+    transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
+    z-index: 1; }
+    .ds-card .playhead:hover {
+      color: white;
+      padding: 0 20px 0 40px; }
+    .ds-card .playhead span {
+      display: none; }
+    .ds-card .playhead:hover span {
+      display: inline;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 13px; }
   .ds-card.placeholder {
     background: transparent;
     box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
     border-radius: 4px;
     min-height: 300px; }
   .ds-card .img-wrapper {
-    width: 100%; }
+    width: 100%;
+    position: relative; }
   .ds-card .img {
     height: 0;
     padding-top: 50%; }
@@ -2826,6 +2852,8 @@ main {
         color: #003EAA; }
         [lwt-newtab-brighttext] .ds-card .ds-card-link:active header {
           color: #0A84FF; }
+  .ds-card.video-card .meta {
+    margin-top: 4px; }
   .ds-card .meta {
     display: flex;
     flex-direction: column;
