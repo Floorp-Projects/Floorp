@@ -110,10 +110,10 @@ addAccessibleTask(
     );
 
     let actions = dewey.actionNames;
-    ok(actions.includes("AXPick"), "Has pick action");
+    ok(actions.includes("AXPress"), "Has press action");
 
     let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "huey");
-    dewey.performAction("AXPick");
+    dewey.performAction("AXPress");
     await stateChanged;
     is(
       dewey.getAttributeValue("AXValue"),

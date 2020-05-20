@@ -602,18 +602,10 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   // Check if the accessible has an existing gecko
   // action, and add the corresponding Mac action to
   // the actions array. `count` is guaranteed to be 0 or 1
+  // If an action exists, add a "AXPress" action
+  // to our native object.
   if (count) {
-    nsAutoString name;
-    if (accWrap) {
-      accWrap->ActionNameAt(0, name);
-    } else if (proxy) {
-      proxy->ActionNameAt(0, name);
-    }
-    if (name.EqualsLiteral("select")) {
-      [actions addObject:NSAccessibilityPickAction];
-    } else {
-      [actions addObject:NSAccessibilityPressAction];
-    }
+    [actions addObject:NSAccessibilityPressAction];
   }
 
   // Regardless of `count`, add actions that should be
