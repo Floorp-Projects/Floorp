@@ -15,7 +15,7 @@ import mozpack.path as mozpath
 from mozbuild.repackaging.application_ini import get_application_ini_value
 from mozbuild.util import (
     ensureParentDir,
-    ensure_bytes,
+    ensure_subprocess_env,
 )
 
 
@@ -33,7 +33,7 @@ def repackage_mar(
         raise Exception("Package file %s is not a valid .zip or .tar file." % package)
     if arch and arch not in _BCJ_OPTIONS:
         raise Exception("Unknown architecture {}, available architectures: {}".format(
-            arch, _BCJ_OPTIONS.keys()))
+            arch, list(_BCJ_OPTIONS.keys())))
 
     ensureParentDir(output)
     tmpdir = tempfile.mkdtemp()
@@ -82,9 +82,7 @@ def repackage_mar(
             # make_full_update.sh is a bash script, and Windows needs to
             # explicitly call out the shell to execute the script from Python.
             cmd.insert(0, env['MOZILLABUILD'] + '/msys/bin/bash.exe')
-        # in py2 env needs str not unicode.
-        env = {ensure_bytes(k): ensure_bytes(v) for k, v in env.iteritems()}
-        subprocess.check_call(cmd, env=env)
+        subprocess.check_call(cmd, env=ensure_subprocess_env(env))
 
     finally:
         shutil.rmtree(tmpdir)
