@@ -250,6 +250,13 @@ class StoragePrincipalHelper final {
 
   static bool GetRegularPrincipalOriginAttributes(
       nsILoadGroup* aLoadGroup, OriginAttributes& aAttributes);
+
+  // These methods return the correct originAttributes to be used for network
+  // state components (HSTS, network cache, image-cache, and so on).
+  static bool GetOriginAttributesForNetworkState(nsIChannel* aChanel,
+                                                 OriginAttributes& aAttributes);
+  static void GetOriginAttributesForNetworkState(dom::Document* aDocument,
+                                                 OriginAttributes& aAttributes);
 };
 
 }  // namespace mozilla
