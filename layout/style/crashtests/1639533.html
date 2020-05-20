@@ -1,0 +1,15 @@
+<!doctype html>
+<style>
+.tweak ::-moz-range-thumb:is(:hover) {
+  background: red;
+}
+</style>
+<div>
+  <input type=range>
+</div>
+<script>
+  onload = function() {
+    document.querySelector("div").getBoundingClientRect();
+    document.querySelector("div").classList.add("tweak");
+  }
+</script>
