@@ -2300,10 +2300,10 @@ void CompositorBridgeParent::NotifyPipelineRendered(
       }
 
       std::pair<wr::PipelineId, wr::Epoch> key(aPipelineId, aEpoch);
-      if (nsTArray<CompositionPayload>* payloads =
-              mWrBridge->GetPendingScrollPayload(key)) {
-        RecordCompositionPayloadsPresented(*payloads);
-        mWrBridge->RemovePendingScrollPayload(key);
+      nsTArray<CompositionPayload> payload =
+          mWrBridge->TakePendingScrollPayload(key);
+      if (!payload.IsEmpty()) {
+        RecordCompositionPayloadsPresented(payload);
       }
 
       TransactionId transactionId = mWrBridge->FlushTransactionIdsForEpoch(
@@ -2327,10 +2327,10 @@ void CompositorBridgeParent::NotifyPipelineRendered(
     wrBridge->RemoveEpochDataPriorTo(aEpoch);
     if (!mPaused) {
       std::pair<wr::PipelineId, wr::Epoch> key(aPipelineId, aEpoch);
-      if (nsTArray<CompositionPayload>* payloads =
-              wrBridge->GetPendingScrollPayload(key)) {
-        RecordCompositionPayloadsPresented(*payloads);
-        wrBridge->RemovePendingScrollPayload(key);
+      nsTArray<CompositionPayload> payload =
+          wrBridge->TakePendingScrollPayload(key);
+      if (!payload.IsEmpty()) {
+        RecordCompositionPayloadsPresented(payload);
       }
 
       TransactionId transactionId = wrBridge->FlushTransactionIdsForEpoch(
