@@ -102,6 +102,10 @@ class nsBlockFrame : public nsContainerFrame {
     return mLines.rbegin(aList);
   }
 
+  // Methods declared to be used in 'range-based-for-loop'
+  nsLineList& Lines() { return mLines; }
+  const nsLineList& Lines() const { return mLines; }
+
   friend nsBlockFrame* NS_NewBlockFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
