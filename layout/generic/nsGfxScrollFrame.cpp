@@ -4568,13 +4568,24 @@ static nsSize GetScrollPortSizeExcludingHeadersAndFooters(
 }
 
 nsSize ScrollFrameHelper::GetPageScrollAmount() const {
-  nsSize lineScrollAmount = GetLineScrollAmount();
+  nsSize effectiveScrollPortSize;
 
-  // Reduce effective scrollport height by the height of any
-  // fixed-pos/sticky-pos headers or footers
-  nsSize effectiveScrollPortSize = GetScrollPortSizeExcludingHeadersAndFooters(
-      mOuter, mIsRoot ? mOuter->PresShell()->GetRootFrame() : nullptr,
-      mScrollPort);
+  PresShell* presShell = mOuter->PresShell();
+  if (mIsRoot && presShell->IsVisualViewportSizeSet()) {
+    // We want to use the visual viewport size if one is set.
+    // The headers/footers adjustment is too complicated to do if there is a
+    // visual viewport that differs from the layout viewport, this is probably
+    // okay.
+    effectiveScrollPortSize = presShell->GetVisualViewportSize();
+  } else {
+    // Reduce effective scrollport height by the height of any
+    // fixed-pos/sticky-pos headers or footers
+    effectiveScrollPortSize = GetScrollPortSizeExcludingHeadersAndFooters(
+        mOuter, mIsRoot ? mOuter->PresShell()->GetRootFrame() : nullptr,
+        mScrollPort);
+  }
+
+  nsSize lineScrollAmount = GetLineScrollAmount();
 
   // The page increment is the size of the page, minus the smaller of
   // 10% of the size or 2 lines.
