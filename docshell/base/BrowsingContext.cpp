@@ -29,6 +29,7 @@
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/SyncedContextInlines.h"
 #include "mozilla/net/DocumentLoadListener.h"
+#include "mozilla/net/RequestContextService.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -305,6 +306,16 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
       inherit ? inherit->GetUseGlobalHistory() : false;
   context->mFields.SetWithoutSyncing<IDX_UseGlobalHistory>(useGlobalHistory);
 
+  nsCOMPtr<nsIRequestContextService> rcsvc =
+      net::RequestContextService::GetOrCreate();
+  if (rcsvc) {
+    nsCOMPtr<nsIRequestContext> requestContext;
+    nsresult rv = rcsvc->NewRequestContext(getter_AddRefs(requestContext));
+    if (NS_SUCCEEDED(rv) && requestContext) {
+      context->mRequestContextId = requestContext->GetID();
+    }
+  }
+
   return context.forget();
 }
 
@@ -369,6 +380,7 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
   context->SetOriginAttributes(aInit.mOriginAttributes);
   context->SetRemoteTabs(aInit.mUseRemoteTabs);
   context->SetRemoteSubframes(aInit.mUseRemoteSubframes);
+  context->mRequestContextId = aInit.mRequestContextId;
   // NOTE: Private browsing ID is set by `SetOriginAttributes`.
 
   Register(context);
@@ -551,6 +563,12 @@ void BrowsingContext::Detach(bool aFromIPC) {
           ("%s: Detaching 0x%08" PRIx64 " from 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child", Id(),
            GetParent() ? GetParent()->Id() : 0));
+
+  nsCOMPtr<nsIRequestContextService> rcsvc =
+      net::RequestContextService::GetOrCreate();
+  if (rcsvc) {
+    rcsvc->RemoveRequestContext(GetRequestContextId());
+  }
 
   // This will only ever be null if the cycle-collector has unlinked us. Don't
   // try to detach ourselves in that case.
@@ -1840,6 +1858,7 @@ BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
   init.mUseRemoteSubframes = mUseRemoteSubframes;
   init.mOriginAttributes = mOriginAttributes;
   init.mHasSessionHistory = mChildSessionHistory != nullptr;
+  init.mRequestContextId = mRequestContextId;
   init.mFields = mFields.Fields();
   return init;
 }
