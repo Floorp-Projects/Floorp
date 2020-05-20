@@ -88,6 +88,55 @@ add_task(async function() {
   await client.close();
 });
 
+add_task(async function() {
+  info("Test ignoreExistingResources option for ERROR_MESSAGES");
+
+  // Disable the preloaded process as it creates processes intermittently
+  // which forces the emission of RDP requests we aren't correctly waiting for.
+  await pushPref("dom.ipc.processPrelaunch.enabled", false);
+
+  const tab = await addTab(TEST_URI);
+
+  const {
+    client,
+    resourceWatcher,
+    targetList,
+  } = await initResourceWatcherAndTarget(tab);
+
+  info(
+    "Check whether onAvailable will not be called with existing error messages"
+  );
+  await triggerErrors(tab);
+
+  const availableResources = [];
+  await resourceWatcher.watch([ResourceWatcher.TYPES.ERROR_MESSAGES], {
+    onAvailable: ({ resource }) => availableResources.push(resource),
+    ignoreExistingResources: true,
+  });
+  is(
+    availableResources.length,
+    0,
+    "onAvailable wasn't called for existing error messages"
+  );
+
+  info(
+    "Check whether onAvailable will be called with the future error messages"
+  );
+  await triggerErrors(tab);
+
+  const expectedMessages = Array.from(expectedPageErrors.values());
+  await waitUntil(() => availableResources.length === expectedMessages.length);
+  for (let i = 0; i < expectedMessages.length; i++) {
+    const { pageError } = availableResources[i];
+    const expected = expectedMessages[i];
+    checkObject(pageError, expected);
+  }
+
+  Services.console.reset();
+  await targetList.stopListening();
+  await client.close();
+});
+
 /**
  * Triggers all the errors in the content page.
  */
