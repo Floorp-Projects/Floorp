@@ -635,6 +635,18 @@
       }
     },
 
+    "PictureInPicture": {
+      "type": "object",
+      "properties": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "Permissions": {
       "type": "object",
       "properties": {
