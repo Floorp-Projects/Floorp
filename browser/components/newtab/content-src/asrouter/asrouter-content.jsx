@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  actionCreators as ac,
-  actionTypes as at,
-  ASRouterActions as ra,
-} from "common/Actions.jsm";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME } from "content-src/lib/init-store";
 import { generateBundles } from "./rich-text-strings";
 import { ImpressionsWrapper } from "./components/ImpressionsWrapper/ImpressionsWrapper";
@@ -349,9 +345,9 @@ export class ASRouterUISurface extends React.PureComponent {
   async onUserAction(action) {
     switch (action.type) {
       // This needs to be handled locally because its
-      case ra.ENABLE_FIREFOX_MONITOR:
+      case "ENABLE_FIREFOX_MONITOR":
         const url = await this.getMonitorUrl(action.data.args);
-        ASRouterUtils.executeAction({ type: ra.OPEN_URL, data: { args: url } });
+        ASRouterUtils.executeAction({ type: "OPEN_URL", data: { args: url } });
         break;
       default:
         ASRouterUtils.executeAction(action);

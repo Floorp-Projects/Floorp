@@ -41,6 +41,7 @@ describe("ASRouterFeed", () => {
       ToolbarBadgeHub: FakeToolbarBadgeHub,
       ToolbarPanelHub: FakeToolbarPanelHub,
       MomentsPageHub: FakeMomentsPageHub,
+      SpecialMessageActions: {},
     });
 
     Router = new _ASRouter({ providers: [FAKE_LOCAL_PROVIDER] });
