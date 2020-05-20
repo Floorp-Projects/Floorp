@@ -16,6 +16,10 @@ class Base64UtilsSupport final
     : public java::Base64Utils::Natives<Base64UtilsSupport> {
  public:
   static jni::ByteArray::LocalRef Decode(jni::String::Param data) {
+    if (!data) {
+      return nullptr;
+    }
+
     FallibleTArray<uint8_t> bytes;
     if (NS_FAILED(Base64URLDecode(
             data->ToCString(), Base64URLDecodePaddingPolicy::Ignore, bytes))) {
@@ -27,6 +31,10 @@ class Base64UtilsSupport final
   }
 
   static jni::String::LocalRef Encode(jni::ByteArray::Param data) {
+    if (!data) {
+      return nullptr;
+    }
+
     nsTArray<int8_t> bytes = data->GetElements();
     nsCString result;
     if (NS_FAILED(
