@@ -34,7 +34,6 @@ class MediaEnginePrefs {
         mAgc(0),
         mRoutingMode(0),
         mNoise(0),
-        mFullDuplex(false),
         mExtendedFilter(false),
         mDelayAgnostic(false),
         mFakeDeviceChangeEventOn(false),
@@ -53,7 +52,6 @@ class MediaEnginePrefs {
   int32_t mAgc;
   int32_t mRoutingMode;
   int32_t mNoise;
-  bool mFullDuplex;
   bool mExtendedFilter;
   bool mDelayAgnostic;
   bool mFakeDeviceChangeEventOn;

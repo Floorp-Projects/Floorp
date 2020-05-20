@@ -537,13 +537,6 @@ void MediaEncoder::ConnectMediaStreamTrack(MediaStreamTrack* aTrack) {
     LOG(LogLevel::Info, ("Connected to audio track %p", aTrack));
 
     mAudioTrack = audio;
-    // With full duplex we don't risk having audio come in late to the MTG
-    // so we won't need a direct listener.
-    const bool enableDirectListener =
-        !Preferences::GetBool("media.navigator.audio.full_duplex", false);
-    if (enableDirectListener) {
-      audio->AddDirectListener(mAudioListener);
-    }
     audio->AddListener(mAudioListener);
   } else if (VideoStreamTrack* video = aTrack->AsVideoStreamTrack()) {
     if (!mVideoEncoder) {
