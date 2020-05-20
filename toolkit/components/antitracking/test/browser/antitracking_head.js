@@ -376,26 +376,18 @@ this.AntiTracking = {
   },
 
   async interactWithTracker() {
-    let windowClosed = new Promise(resolve => {
-      Services.ww.registerNotification(function notification(
-        aSubject,
-        aTopic,
-        aData
-      ) {
-        if (aTopic == "domwindowclosed") {
-          Services.ww.unregisterNotification(notification);
-          resolve();
-        }
-      });
-    });
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    await BrowserTestUtils.withNewTab(
+      { gBrowser: win.gBrowser, url: TEST_3RD_PARTY_PAGE },
+      async function(browser) {
+        info("Let's interact with the tracker");
 
-    info("Let's interact with the tracker");
-    window.open(
-      TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyOpenUI.html",
-      "",
-      "noopener"
+        await SpecialPowers.spawn(browser, [], async function() {
+          SpecialPowers.wrap(content.document).userInteractionForTesting();
+        });
+      }
     );
-    await windowClosed;
+    await BrowserTestUtils.closeWindow(win);
   },
 
   async _setupTest(win, cookieBehavior, extraPrefs) {
@@ -1248,7 +1240,10 @@ this.AntiTracking = {
       function Listener() {}
       Listener.prototype = {
         onStartRequest(request) {},
-        onDataAvailable(request, stream, off, cnt) {},
+        onDataAvailable(request, stream, off, cnt) {
+          // Consume the data to prevent hitting the assertion.
+          NetUtil.readInputStreamToString(stream, cnt);
+        },
         onStopRequest(request, st) {
           let status = request.QueryInterface(Ci.nsIHttpChannel).responseStatus;
           if (status == 200) {
