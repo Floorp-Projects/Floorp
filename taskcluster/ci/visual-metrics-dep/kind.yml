@@ -41,3 +41,6 @@ job-template:
         using: run-task
         command: /builds/worker/bin/run-visual-metrics.py -- --orange --perceptual --contentful --force --renderignore 5 --json --viewport
         checkout: false
+    optimization:
+        push-interval-25:
+            - android
