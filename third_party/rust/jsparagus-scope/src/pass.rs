@@ -8,10 +8,10 @@
 //! no AST is built. So we try to keep AST use separate from the analysis code.
 
 use crate::builder::ScopeDataMapBuilder;
-use crate::data::ScopeDataMap;
 use ast::arena;
 use ast::associated_data::AssociatedData;
 use ast::{types::*, visit::Pass};
+use stencil::scope::ScopeDataMap;
 
 /// The result of scope analysis.
 pub struct ScopeDataMapAndFunctionMap<'alloc> {

@@ -33,10 +33,6 @@
 //!
 //! [1]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
 
-use crate::data::{
-    BindingName, FunctionScopeData, GlobalScopeData, LexicalScopeData, ScopeData, ScopeDataList,
-    ScopeDataMap, ScopeIndex, VarScopeData,
-};
 use crate::free_name_tracker::FreeNameTracker;
 use ast::associated_data::{AssociatedData, Key as AssociatedDataKey};
 use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSetIndex};
@@ -44,6 +40,10 @@ use ast::source_location_accessor::SourceLocationAccessor;
 use ast::type_id::NodeTypeIdAccessor;
 use indexmap::set::IndexSet;
 use std::collections::HashSet;
+use stencil::scope::{
+    BindingName, FunctionScopeData, GlobalScopeData, LexicalScopeData, ScopeData, ScopeDataList,
+    ScopeDataMap, ScopeIndex, VarScopeData,
+};
 
 /// The kind of items inside the result of VarScopedDeclarations.
 ///

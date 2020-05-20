@@ -2,14 +2,14 @@
 //! the program.
 //!
 //! EmitterScopes exist only while the bytecode emitter is working.
-//! Longer-lived scope information is stored in `scope::ScopeDataMap`.
+//! Longer-lived scope information is stored in `ScopeDataMap`.
 
 use crate::emitter::InstructionWriter;
-use crate::scope_notes::ScopeNoteIndex;
 use ast::source_atom_set::SourceAtomSetIndex;
-use scope::data::{BindingKind, GlobalScopeData, LexicalScopeData, ScopeDataMap, ScopeIndex};
-use scope::frame_slot::FrameSlot;
 use std::collections::HashMap;
+use stencil::frame_slot::FrameSlot;
+use stencil::scope::{BindingKind, GlobalScopeData, LexicalScopeData, ScopeDataMap, ScopeIndex};
+use stencil::scope_notes::ScopeNoteIndex;
 
 /// Result of looking up a name.
 ///

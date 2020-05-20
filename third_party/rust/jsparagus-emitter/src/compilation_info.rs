@@ -2,7 +2,7 @@ use ast::associated_data::AssociatedData;
 use ast::source_atom_set::SourceAtomSet;
 use ast::source_slice_list::SourceSliceList;
 use ast::types::Function;
-use scope::data::ScopeDataMap;
+use stencil::scope::ScopeDataMap;
 
 pub struct CompilationInfo<'alloc> {
     pub atoms: SourceAtomSet<'alloc>,

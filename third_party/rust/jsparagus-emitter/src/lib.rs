@@ -1,33 +1,22 @@
 mod array_emitter;
 mod ast_emitter;
 mod block_emitter;
-mod bytecode_offset;
 mod compilation_info;
 mod control_structures;
 mod dis;
 mod emitter;
 mod emitter_scope;
 mod expression_emitter;
-mod function;
 mod function_declaration_emitter;
-mod gcthings;
 mod object_emitter;
-pub mod opcode;
-pub mod opcode_info;
 mod reference_op_emitter;
-mod regexp;
-mod scope_notes;
 mod script_emitter;
-mod stencil;
 
 extern crate jsparagus_ast as ast;
 extern crate jsparagus_scope as scope;
+extern crate jsparagus_stencil as stencil;
 
 pub use crate::emitter::{EmitError, EmitOptions};
-pub use crate::gcthings::GCThing;
-pub use crate::regexp::RegExpItem;
-pub use crate::scope_notes::ScopeNote;
-pub use crate::stencil::{EmitResult, ScriptStencil};
 pub use dis::dis;
 
 use crate::compilation_info::CompilationInfo;
@@ -35,6 +24,7 @@ use crate::compilation_info::CompilationInfo;
 use ast::source_atom_set::SourceAtomSet;
 use ast::source_slice_list::SourceSliceList;
 use scope::ScopeDataMapAndFunctionMap;
+use stencil::result::EmitResult;
 
 pub fn emit<'alloc>(
     ast: &'alloc ast::types::Program<'alloc>,
@@ -56,13 +46,13 @@ mod tests {
 
     use super::{emit, EmitOptions};
     use crate::dis::*;
-    use crate::opcode::*;
     use ast::source_atom_set::SourceAtomSet;
     use ast::source_slice_list::SourceSliceList;
     use bumpalo::Bump;
     use parser::{parse_script, ParseOptions};
     use std::cell::RefCell;
     use std::rc::Rc;
+    use stencil::opcode::*;
 
     fn bytecode(source: &str) -> Vec<u8> {
         let alloc = &Bump::new();
