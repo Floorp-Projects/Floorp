@@ -1098,14 +1098,6 @@ void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
 // ========================================================================
 // Wasm SIMD
 //
-// For vector operations of the form "operationSimd128" we currently bias in
-// favor of an integer representation on x86, but this is subject to later
-// adjustment based on an analysis of use cases and actual programs.
-//
-// The order of operations here follows the header file.
-
-// Moves.
-//
 // Some parts of the masm API are currently agnostic as to the data's
 // interpretation as int or float, despite the Intel architecture having
 // separate functional units and sometimes penalizing type-specific instructions
@@ -1115,12 +1107,18 @@ void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
 // forced to choose blind, but whether that is right or wrong depends on the
 // application.  This applies to moveSimd128, zeroSimd128, loadConstantSimd128,
 // loadUnalignedSimd128, and storeUnalignedSimd128, at least.
+//
+// SSE4.1 or better is assumed.
+//
+// The order of operations here follows the header file.
+
+// Moves.  See comments above regarding integer operation.
 
 void MacroAssembler::moveSimd128(FloatRegister src, FloatRegister dest) {
   MacroAssemblerX86Shared::moveSimd128Int(src, dest);
 }
 
-// Constants.  See comments at moveSimd128, above.
+// Constants.  See comments above regarding integer operation.
 
 void MacroAssembler::zeroSimd128(FloatRegister dest) {
   MacroAssemblerX86Shared::zeroSimd128Int(dest);
@@ -1225,7 +1223,7 @@ void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister rhs,
 
 // Shuffle - permute with immediate indices
 
-void MacroAssembler::shuffleInt8x16(uint8_t lanes[16], FloatRegister rhs,
+void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
                                     FloatRegister lhsDest, FloatRegister temp) {
   MacroAssemblerX86Shared::shuffleInt8x16(
       lhsDest, rhs, lhsDest, mozilla::Some(temp), mozilla::Nothing(), lanes);
@@ -1689,7 +1687,7 @@ void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
   }
 }
 
-// Load.  See comment at moveSimd128, above.
+// Load.  See comments above regarding integer operation.
 
 void MacroAssembler::loadUnalignedSimd128(const Address& src,
                                           FloatRegister dest) {
@@ -1701,7 +1699,7 @@ void MacroAssembler::loadUnalignedSimd128(const BaseIndex& src,
   loadUnalignedSimd128Int(src, dest);
 }
 
-// Store.  See comment at moveSimd128, above.
+// Store.  See comments above regarding integer operation.
 
 void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
                                            const Address& dest) {

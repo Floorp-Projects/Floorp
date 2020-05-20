@@ -247,10 +247,10 @@ void MoveEmitterX86::breakCycle(const MoveOperand& to, MoveOp::Type type) {
     case MoveOp::SIMD128:
       if (to.isMemory()) {
         ScratchSimd128Scope scratch(masm);
-        masm.loadAlignedSimd128Int(toAddress(to), scratch);
-        masm.storeAlignedSimd128Int(scratch, cycleSlot());
+        masm.loadUnalignedSimd128(toAddress(to), scratch);
+        masm.storeUnalignedSimd128(scratch, cycleSlot());
       } else {
-        masm.storeAlignedSimd128Int(to.floatReg(), cycleSlot());
+        masm.storeUnalignedSimd128(to.floatReg(), cycleSlot());
       }
       break;
     case MoveOp::FLOAT32:
@@ -303,10 +303,10 @@ void MoveEmitterX86::completeCycle(const MoveOperand& to, MoveOp::Type type) {
       MOZ_ASSERT(pushedAtCycle_ - pushedAtStart_ >= Simd128DataSize);
       if (to.isMemory()) {
         ScratchSimd128Scope scratch(masm);
-        masm.loadAlignedSimd128Int(cycleSlot(), scratch);
-        masm.storeAlignedSimd128Int(scratch, toAddress(to));
+        masm.loadUnalignedSimd128(cycleSlot(), scratch);
+        masm.storeUnalignedSimd128(scratch, toAddress(to));
       } else {
-        masm.loadAlignedSimd128Int(cycleSlot(), to.floatReg());
+        masm.loadUnalignedSimd128(cycleSlot(), to.floatReg());
       }
       break;
     case MoveOp::FLOAT32:
@@ -469,18 +469,18 @@ void MoveEmitterX86::emitSimd128Move(const MoveOperand& from,
 
   if (from.isFloatReg()) {
     if (to.isFloatReg()) {
-      masm.moveSimd128Int(from.floatReg(), to.floatReg());
+      masm.moveSimd128(from.floatReg(), to.floatReg());
     } else {
-      masm.storeAlignedSimd128Int(from.floatReg(), toAddress(to));
+      masm.storeUnalignedSimd128(from.floatReg(), toAddress(to));
     }
   } else if (to.isFloatReg()) {
-    masm.loadAlignedSimd128Int(toAddress(from), to.floatReg());
+    masm.loadUnalignedSimd128(toAddress(from), to.floatReg());
   } else {
     // Memory to memory move.
     MOZ_ASSERT(from.isMemory());
     ScratchSimd128Scope scratch(masm);
-    masm.loadAlignedSimd128Int(toAddress(from), scratch);
-    masm.storeAlignedSimd128Int(scratch, toAddress(to));
+    masm.loadUnalignedSimd128(toAddress(from), scratch);
+    masm.storeUnalignedSimd128(scratch, toAddress(to));
   }
 }
 
