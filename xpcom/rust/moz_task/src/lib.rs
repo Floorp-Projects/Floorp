@@ -46,6 +46,7 @@ extern "C" {
         name: *const libc::c_char,
         target: *mut *const nsISerialEventTarget,
     ) -> nsresult;
+    fn NS_DispatchBackgroundTask(event: *const nsIRunnable, flags: u32) -> nsresult;
 }
 
 pub fn get_current_thread() -> Result<RefPtr<nsIThread>, nsresult> {
@@ -70,10 +71,40 @@ pub fn is_current_thread(thread: &nsIThread) -> bool {
     unsafe { NS_IsCurrentThread(thread.coerce()) }
 }
 
+/// Creates a queue that runs tasks on the background thread pool. The tasks
+/// will run in the order they're dispatched, one after the other.
 pub fn create_background_task_queue(
     name: &'static CStr,
 ) -> Result<RefPtr<nsISerialEventTarget>, nsresult> {
     getter_addrefs(|p| unsafe { NS_CreateBackgroundTaskQueue(name.as_ptr(), p) })
+}
+
+/// Dispatches a one-shot task runnable to the background thread pool with the
+/// default options.
+#[inline]
+pub fn dispatch_background_task(runnable: RefPtr<nsIRunnable>) -> Result<(), nsresult> {
+    dispatch_background_task_with_options(runnable, DispatchOptions::default())
+}
+
+/// Dispatches a one-shot task runnable to the background thread pool with the
+/// given options. The task may run concurrently with other background tasks.
+/// If you need tasks to run in a specific order, please create a background
+/// task queue using `create_background_task_queue`, and dispatch tasks to it
+/// instead.
+///
+/// ### Safety
+///
+/// This function leaks the runnable if dispatch fails. This avoids a race where
+/// a runnable can be destroyed on either the original or target thread, which
+/// is important if the runnable holds thread-unsafe members.
+pub fn dispatch_background_task_with_options(
+    runnable: RefPtr<nsIRunnable>,
+    options: DispatchOptions,
+) -> Result<(), nsresult> {
+    // This eventually calls the non-`already_AddRefed<nsIRunnable>` overload of
+    // `nsIEventTarget::Dispatch` (see xpcom/threads/nsIEventTarget.idl#20-25),
+    // which adds an owning reference and leaks if dispatch fails.
+    unsafe { NS_DispatchBackgroundTask(runnable.coerce(), options.flags()) }.to_result()
 }
 
 /// Options to control how task runnables are dispatched.

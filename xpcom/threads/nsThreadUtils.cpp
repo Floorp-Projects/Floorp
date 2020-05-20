@@ -540,12 +540,6 @@ nsresult NS_DispatchBackgroundTask(already_AddRefed<nsIRunnable> aEvent,
                                                            aDispatchFlags);
 }
 
-nsresult NS_DispatchBackgroundTask(nsIRunnable* aEvent,
-                                   uint32_t aDispatchFlags) {
-  return nsThreadManager::get().DispatchToBackgroundThread(aEvent,
-                                                           aDispatchFlags);
-}
-
 // nsAutoLowPriorityIO
 nsAutoLowPriorityIO::nsAutoLowPriorityIO() {
 #if defined(XP_WIN)
@@ -678,6 +672,12 @@ nsresult NS_NewNamedThreadWithDefaultStackSize(const nsACString& aName,
 
 bool NS_IsCurrentThread(nsIEventTarget* aThread) {
   return aThread->IsOnCurrentThread();
+}
+
+nsresult NS_DispatchBackgroundTask(nsIRunnable* aEvent,
+                                   uint32_t aDispatchFlags) {
+  return nsThreadManager::get().DispatchToBackgroundThread(aEvent,
+                                                           aDispatchFlags);
 }
 
 nsresult NS_CreateBackgroundTaskQueue(const char* aName,
