@@ -148,6 +148,12 @@ class RegExpShared : public gc::TenuredCell {
   bool canStringMatch = false;
 #endif
 
+#ifdef ENABLE_NEW_REGEXP
+  uint32_t numNamedCaptures_ = {};
+  uint32_t* namedCaptureIndices_ = {};
+  GCPtr<PlainObject*> groupsTemplate_ = {};
+#endif
+
   static int CompilationIndex(bool latin1) { return latin1 ? 0 : 1; }
 
   // Tables referenced by JIT code.
@@ -209,6 +215,10 @@ class RegExpShared : public gc::TenuredCell {
   // Use the regular expression engine for this regexp.
   void useRegExpMatch(size_t parenCount);
 
+  static bool initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
+                                      HandleNativeObject namedCaptures);
+  PlainObject* getGroupsTemplate() { return groupsTemplate_; }
+
   void tierUpTick();
   bool markedForTierUp() const;
 
@@ -227,6 +237,13 @@ class RegExpShared : public gc::TenuredCell {
   uint32_t getMaxRegisters() const { return maxRegisters_; }
   void updateMaxRegisters(uint32_t numRegisters) {
     maxRegisters_ = std::max(maxRegisters_, numRegisters);
+  }
+
+  uint32_t numNamedCaptures() const { return numNamedCaptures_; }
+  int32_t getNamedCaptureIndex(uint32_t idx) const {
+    MOZ_ASSERT(idx < numNamedCaptures());
+    MOZ_ASSERT(namedCaptureIndices_);
+    return namedCaptureIndices_[idx];
   }
 
 #endif

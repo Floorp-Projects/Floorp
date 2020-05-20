@@ -497,7 +497,15 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
       }
     }
     // Add one to account for the whole-match capture
-    re->useRegExpMatch(data.capture_count + 1);
+    uint32_t pairCount = data.capture_count + 1;
+    re->useRegExpMatch(pairCount);
+
+    if (!data.capture_name_map.is_null()) {
+      RootedNativeObject namedCaptures(cx, data.capture_name_map->inner());
+      if (!RegExpShared::initializeNamedCaptures(cx, re, namedCaptures)) {
+        return false;
+      }
+    }
   }
 
   MOZ_ASSERT(re->kind() == RegExpShared::Kind::RegExp);
