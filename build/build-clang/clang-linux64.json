@@ -22,6 +22,7 @@
       "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
       "tsan-hang-be41a98ac222.patch",
+      "llvmorg-11-init-14017-g02b303321d3-libclang.patch",
       "loosen-msvc-detection.patch"
     ]
 }
