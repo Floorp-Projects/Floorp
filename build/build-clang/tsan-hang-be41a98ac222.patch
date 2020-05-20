@@ -15,11 +15,11 @@ in the pthread_atfork callbacks to prevent the deadlock.
  2 files changed, 58 insertions(+)
  create mode 100644 compiler-rt/test/tsan/pthread_atfork_deadlock2.c
 
-diff --git a/compiler-rt/lib/tsan/rtl/tsan_rtl.cpp b/compiler-rt/lib/tsan/rtl/tsan_rtl.cpp
-index 3f3c0cce119..5e324a0a5fd 100644
---- a/compiler-rt/lib/tsan/rtl/tsan_rtl.cpp
-+++ b/compiler-rt/lib/tsan/rtl/tsan_rtl.cpp
-@@ -494,14 +494,23 @@ int Finalize(ThreadState *thr) {
+diff --git a/compiler-rt/lib/tsan/rtl/tsan_rtl.cc b/compiler-rt/lib/tsan/rtl/tsan_rtl.ccc
+index fe469faad2a2..13c9b770f50a 100644
+--- a/compiler-rt/lib/tsan/rtl/tsan_rtl.cc
++++ b/compiler-rt/lib/tsan/rtl/tsan_rtl.cc
+@@ -495,14 +495,23 @@ int Finalize(ThreadState *thr) {
  void ForkBefore(ThreadState *thr, uptr pc) {
    ctx->thread_registry->Lock();
    ctx->report_mtx.Lock();
@@ -45,7 +45,7 @@ index 3f3c0cce119..5e324a0a5fd 100644
  
 diff --git a/compiler-rt/test/tsan/pthread_atfork_deadlock2.c b/compiler-rt/test/tsan/pthread_atfork_deadlock2.c
 new file mode 100644
-index 00000000000..700507c1e63
+index 000000000000..700507c1e637
 --- /dev/null
 +++ b/compiler-rt/test/tsan/pthread_atfork_deadlock2.c
 @@ -0,0 +1,49 @@
