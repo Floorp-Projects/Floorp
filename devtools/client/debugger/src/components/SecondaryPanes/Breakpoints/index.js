@@ -108,13 +108,12 @@ class Breakpoints extends Component<Props> {
       return null;
     }
 
-    const sources = [
-      ...breakpointSources.map(({ source, breakpoints }) => source),
-    ];
+    const editor = this.getEditor();
+    const sources = [...breakpointSources.map(({ source }) => source)];
 
     return (
       <div className="pane breakpoints-list">
-        {breakpointSources.map(({ source, breakpoints, i }) => {
+        {breakpointSources.map(({ source, breakpoints }) => {
           const sortedBreakpoints = sortSelectedBreakpoints(
             breakpoints,
             selectedSource
@@ -131,7 +130,7 @@ class Breakpoints extends Component<Props> {
                 breakpoint={breakpoint}
                 source={source}
                 selectedSource={selectedSource}
-                editor={this.getEditor()}
+                editor={editor}
                 key={makeBreakpointId(
                   getSelectedLocation(breakpoint, selectedSource)
                 )}
