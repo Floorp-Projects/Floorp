@@ -1,4 +1,3 @@
-// |reftest| skip -- regexp-named-groups is not supported
 // Copyright 2017 Aleksey Shvayka. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
