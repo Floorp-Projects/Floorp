@@ -1008,6 +1008,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
                           FloatRegister dest) PER_SHARED_ARCH;
   inline void sqrtDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
+  void floorFloat32ToInt32(FloatRegister src, Register dest,
+                           Label* fail) PER_SHARED_ARCH;
+  void floorDoubleToInt32(FloatRegister src, Register dest,
+                          Label* fail) PER_SHARED_ARCH;
+
   void roundFloat32ToInt32(FloatRegister src, Register dest, FloatRegister temp,
                            Label* fail) PER_SHARED_ARCH;
   void roundDoubleToInt32(FloatRegister src, Register dest, FloatRegister temp,
