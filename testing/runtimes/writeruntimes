@@ -141,6 +141,10 @@ def compute_manifest_runtimes(suites, platform):
     for suite in suites:
         data = query_activedata(suite, platform)
 
+        if suite == "web-platform-tests":
+            wpt_groups = {t["name"]: t["manifest"]
+                          for t in resolver.resolve_tests(flavor="web-platform-tests")}
+
         for path, duration in data.items():
             # Returned data did not contain a test path, so go to next result.
             if not path:
@@ -160,15 +164,9 @@ def compute_manifest_runtimes(suites, platform):
             elif suite == 'xpcshell' and ':' in path:
                 path = path.split(':', 1)[-1]
 
-            if suite in EXCEED_LIMIT:
-                depth = 2
-                if path.startswith('/_mozilla'):
-                    depth = 3
-                path = os.path.join('/', *path.split('/')[:depth])
-
-                # Use the previously calculated path to the web-platform-test
-                # group as the key.
-                manifest_runtimes[path] += duration
+            if suite == "web-platform-tests":
+                if path in wpt_groups:
+                    manifest_runtimes[wpt_groups[path]] += duration
                 continue
 
             if path not in resolver.tests_by_path:
