@@ -261,11 +261,11 @@ void MacroAssembler::absDouble(FloatRegister src, FloatRegister dest) {
 }
 
 void MacroAssembler::sqrtFloat32(FloatRegister src, FloatRegister dest) {
-  vsqrtss(src, src, dest);
+  vsqrtss(src, dest, dest);
 }
 
 void MacroAssembler::sqrtDouble(FloatRegister src, FloatRegister dest) {
-  vsqrtsd(src, src, dest);
+  vsqrtsd(src, dest, dest);
 }
 
 void MacroAssembler::minFloat32(FloatRegister other, FloatRegister srcDest,

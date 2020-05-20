@@ -4,12 +4,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import requests
-import redo
-
 import logging
 
-from taskgraph.util.scriptworker import BALROG_SCOPE_ALIAS_TO_PROJECT, BALROG_SERVER_SCOPES
+import requests
+import six
+
+import redo
+from taskgraph.util.scriptworker import (BALROG_SCOPE_ALIAS_TO_PROJECT,
+                                         BALROG_SERVER_SCOPES)
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +128,7 @@ def get_partials_info_from_params(release_history, platform, locale):
 def _retry_on_http_errors(url, verify, params, errors):
     if params:
         params_str = "&".join("=".join([k, str(v)])
-                              for k, v in params.iteritems())
+                              for k, v in six.iteritems(params))
     else:
         params_str = ''
     logger.info("Connecting to %s?%s", url, params_str)

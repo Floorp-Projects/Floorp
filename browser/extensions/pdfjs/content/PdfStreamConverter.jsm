@@ -496,7 +496,7 @@ class ChromeActions {
     } else {
       message = getLocalizedString(strings, "unsupported_feature");
     }
-    PdfJsTelemetry.onFallback();
+    PdfJsTelemetry.onFallback(featureId);
     PdfjsContentUtils.displayWarning(
       domWindow,
       message,

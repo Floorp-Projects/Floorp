@@ -2745,7 +2745,7 @@ void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
           }
         }
 
-        for (const auto& childList : f->GetChildLists()) {
+        for (const auto& childList : f->ChildLists()) {
           for (nsIFrame* kid : childList.mList) {
             if (styleChange) {
               kid->MarkIntrinsicISizesDirty();
@@ -3990,7 +3990,7 @@ static void AssertFrameSubtreeIsSane(const nsIFrame& aRoot) {
                "Node not in the flattened tree still has a frame?");
   }
 
-  for (const auto& childList : aRoot.GetChildLists()) {
+  for (const auto& childList : aRoot.ChildLists()) {
     for (const nsIFrame* child : childList.mList) {
       AssertFrameSubtreeIsSane(*child);
     }
@@ -5828,7 +5828,7 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
   // We assume all frames in popups are visible, so we skip them here.
   const nsIFrame::ChildListIDs skip = {nsIFrame::kPopupList,
                                        nsIFrame::kSelectPopupList};
-  for (const auto& [list, listID] : aFrame->GetChildLists()) {
+  for (const auto& [list, listID] : aFrame->ChildLists()) {
     if (skip.contains(listID)) {
       continue;
     }
@@ -9933,8 +9933,8 @@ static bool CompareTrees(nsPresContext* aFirstPresContext,
   // if (aFirstFrame->IsScrollbarFrame())
   //  return true;
   bool ok = true;
-  const auto& childLists1 = aFirstFrame->GetChildLists();
-  const auto& childLists2 = aSecondFrame->GetChildLists();
+  const auto& childLists1 = aFirstFrame->ChildLists();
+  const auto& childLists2 = aSecondFrame->ChildLists();
   auto iterLists1 = childLists1.begin();
   auto iterLists2 = childLists2.begin();
   do {

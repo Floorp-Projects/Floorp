@@ -23,6 +23,11 @@ interface nsICookieJarSettings : nsISupports
   [infallible] readonly attribute unsigned long cookieBehavior;
 
   /**
+   * First-Party Isolation state at the loading of the document.
+   */
+  [infallible] readonly attribute boolean isFirstPartyIsolated;
+
+  /**
    * Whether our cookie behavior mandates rejecting third-party contexts.
    */
   [infallible] readonly attribute boolean rejectThirdPartyContexts;

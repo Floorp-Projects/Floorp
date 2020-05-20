@@ -439,7 +439,7 @@ static inline unsigned GetOpLength(JSOp op) {
   return CodeSpec(op).length;
 }
 
-static inline unsigned GetBytecodeLength(jsbytecode* pc) {
+static inline unsigned GetBytecodeLength(const jsbytecode* pc) {
   JSOp op = (JSOp)*pc;
   return GetOpLength(op);
 }

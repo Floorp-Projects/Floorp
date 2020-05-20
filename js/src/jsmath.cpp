@@ -52,8 +52,6 @@ using mozilla::NumberEqualsInt32;
 using mozilla::PositiveInfinity;
 using mozilla::WrappingMultiply;
 
-using UnaryMathFunctionType = double (*)(double);
-
 template <UnaryMathFunctionType F>
 static bool math_function(JSContext* cx, HandleValue val,
                           MutableHandleValue res) {
@@ -63,7 +61,8 @@ static bool math_function(JSContext* cx, HandleValue val,
   }
 
   // NB: Always stored as a double so the math function can be inlined
-  // through MMathFunction.
+  // through MMathFunction. We also rely on this to avoid type monitoring
+  // in CallIRGenerator::tryAttachMathSqrt.
   double z = F(x);
   res.setDouble(z);
   return true;
@@ -878,6 +877,110 @@ static bool math_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setString(cx->names().Math);
   return true;
+}
+
+UnaryMathFunctionType js::GetUnaryMathFunctionPtr(UnaryMathFunction fun) {
+  switch (fun) {
+    case UnaryMathFunction::Log:
+      return math_log_impl;
+    case UnaryMathFunction::Sin:
+      return math_sin_impl;
+    case UnaryMathFunction::Cos:
+      return math_cos_impl;
+    case UnaryMathFunction::Exp:
+      return math_exp_impl;
+    case UnaryMathFunction::Tan:
+      return math_tan_impl;
+    case UnaryMathFunction::ATan:
+      return math_atan_impl;
+    case UnaryMathFunction::ASin:
+      return math_asin_impl;
+    case UnaryMathFunction::ACos:
+      return math_acos_impl;
+    case UnaryMathFunction::Log10:
+      return math_log10_impl;
+    case UnaryMathFunction::Log2:
+      return math_log2_impl;
+    case UnaryMathFunction::Log1P:
+      return math_log1p_impl;
+    case UnaryMathFunction::ExpM1:
+      return math_expm1_impl;
+    case UnaryMathFunction::CosH:
+      return math_cosh_impl;
+    case UnaryMathFunction::SinH:
+      return math_sinh_impl;
+    case UnaryMathFunction::TanH:
+      return math_tanh_impl;
+    case UnaryMathFunction::ACosH:
+      return math_acosh_impl;
+    case UnaryMathFunction::ASinH:
+      return math_asinh_impl;
+    case UnaryMathFunction::ATanH:
+      return math_atanh_impl;
+    case UnaryMathFunction::Trunc:
+      return math_trunc_impl;
+    case UnaryMathFunction::Cbrt:
+      return math_cbrt_impl;
+    case UnaryMathFunction::Floor:
+      return math_floor_impl;
+    case UnaryMathFunction::Ceil:
+      return math_ceil_impl;
+    case UnaryMathFunction::Round:
+      return math_round_impl;
+  }
+  MOZ_CRASH("Unknown function");
+}
+
+const char* js::GetUnaryMathFunctionName(UnaryMathFunction fun) {
+  switch (fun) {
+    case UnaryMathFunction::Log:
+      return "Log";
+    case UnaryMathFunction::Sin:
+      return "Sin";
+    case UnaryMathFunction::Cos:
+      return "Cos";
+    case UnaryMathFunction::Exp:
+      return "Exp";
+    case UnaryMathFunction::Tan:
+      return "Tan";
+    case UnaryMathFunction::ACos:
+      return "ACos";
+    case UnaryMathFunction::ASin:
+      return "ASin";
+    case UnaryMathFunction::ATan:
+      return "ATan";
+    case UnaryMathFunction::Log10:
+      return "Log10";
+    case UnaryMathFunction::Log2:
+      return "Log2";
+    case UnaryMathFunction::Log1P:
+      return "Log1P";
+    case UnaryMathFunction::ExpM1:
+      return "ExpM1";
+    case UnaryMathFunction::CosH:
+      return "CosH";
+    case UnaryMathFunction::SinH:
+      return "SinH";
+    case UnaryMathFunction::TanH:
+      return "TanH";
+    case UnaryMathFunction::ACosH:
+      return "ACosH";
+    case UnaryMathFunction::ASinH:
+      return "ASinH";
+    case UnaryMathFunction::ATanH:
+      return "ATanH";
+    case UnaryMathFunction::Trunc:
+      return "Trunc";
+    case UnaryMathFunction::Cbrt:
+      return "Cbrt";
+    case UnaryMathFunction::Floor:
+      return "Floor";
+    case UnaryMathFunction::Ceil:
+      return "Ceil";
+    case UnaryMathFunction::Round:
+      return "Round";
+  }
+  MOZ_CRASH("Unknown function");
 }
 
 static const JSFunctionSpec math_static_methods[] = {

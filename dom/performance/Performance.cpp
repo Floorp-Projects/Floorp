@@ -576,6 +576,12 @@ class NotifyObserversTask final : public CancelableRunnable {
   RefPtr<Performance> mPerformance;
 };
 
+void Performance::QueueNotificationObserversTask() {
+  if (!mPendingNotificationObserversTask) {
+    RunNotificationObserversTask();
+  }
+}
+
 void Performance::RunNotificationObserversTask() {
   mPendingNotificationObserversTask = true;
   nsCOMPtr<nsIRunnable> task = new NotifyObserversTask(this);
@@ -612,9 +618,7 @@ void Performance::QueueEntry(PerformanceEntry* aEntry) {
   NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(
       interestedObservers, PerformanceObserver, QueueEntry, (aEntry));
 
-  if (!mPendingNotificationObserversTask) {
-    RunNotificationObserversTask();
-  }
+  QueueNotificationObserversTask();
 }
 
 void Performance::MemoryPressure() { mUserEntries.Clear(); }

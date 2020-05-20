@@ -1475,38 +1475,32 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
   PrivateScriptData& operator=(const PrivateScriptData&) = delete;
 };
 
-// Script data that is shareable across a JSRuntime.
-class alignas(uintptr_t) RuntimeScriptData final : public TrailingArray {
+// Wrapper type for ImmutableScriptData to allow sharing across a JSRuntime.
+//
+// Note: This is distinct from ImmutableScriptData because it contains a mutable
+//       ref-count while the ImmutableScriptData may live in read-only memory.
+//
+// Note: This is *not* directly inlined into the RuntimeScriptDataTable because
+//       scripts point directly to object and table resizing moves entries. This
+//       allows for fast finalization by decrementing the ref-count directly
+//       without doing a hash-table lookup.
+class RuntimeScriptData {
   // This class is reference counted as follows: each pointer from a JSScript
   // counts as one reference plus there may be one reference from the shared
   // script data table.
   mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> refCount_ = {};
 
-  uint32_t natoms_ = 0;
-
   js::UniquePtr<ImmutableScriptData> isd_ = nullptr;
 
-  // NOTE: The raw bytes of this structure are used for hashing so use explicit
-  // padding values as needed for predicatable results across compilers.
+  // End of fields.
 
   friend class ::JSScript;
 
- private:
-  // Layout helpers
-  Offset atomsOffset() { return offsetOfAtoms(); }
-  Offset endOffset() const {
-    uintptr_t size = natoms_ * sizeof(GCPtrAtom);
-    return offsetOfAtoms() + size;
-  }
-
-  // Initialize to GC-safe state.
-  explicit RuntimeScriptData(uint32_t natoms);
-
  public:
+  RuntimeScriptData() = default;
+
   // Hash over the contents of RuntimeScriptData and its ImmutableScriptData.
   struct Hasher;
-
-  static RuntimeScriptData* new_(JSContext* cx, uint32_t natoms);
 
   uint32_t refCount() const { return refCount_; }
   void AddRef() { refCount_++; }
@@ -1519,31 +1513,13 @@ class alignas(uintptr_t) RuntimeScriptData final : public TrailingArray {
     }
   }
 
-  uint32_t natoms() const { return natoms_; }
-  GCPtrAtom* atoms() {
-    Offset offset = offsetOfAtoms();
-    return offsetToPointer<GCPtrAtom>(offset);
-  }
-
-  mozilla::Span<const GCPtrAtom> atomsSpan() const {
-    Offset offset = offsetOfAtoms();
-    return mozilla::MakeSpan(offsetToPointer<GCPtrAtom>(offset), natoms_);
-  }
-
-  static constexpr size_t offsetOfAtoms() { return sizeof(RuntimeScriptData); }
-
   static constexpr size_t offsetOfISD() {
     return offsetof(RuntimeScriptData, isd_);
   }
 
-  void traceChildren(JSTracer* trc);
-
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
                                     js::HandleScript script);
-
-  // Mark this RuntimeScriptData for use in a new zone.
-  void markForCrossZone(JSContext* cx);
 
   static bool InitFromStencil(JSContext* cx, js::HandleScript script,
                               js::frontend::ScriptStencil& stencil);
@@ -1564,16 +1540,11 @@ struct RuntimeScriptData::Hasher {
 
   static HashNumber hash(const Lookup& l) {
     mozilla::Span<const uint8_t> immutableData = l->isd_->immutableData();
-
-    HashNumber h =
-        mozilla::HashBytes(immutableData.data(), immutableData.size());
-    return mozilla::AddToHash(
-        h, mozilla::HashBytes(l->atoms(), l->natoms() * sizeof(GCPtrAtom)));
+    return mozilla::HashBytes(immutableData.data(), immutableData.size());
   }
 
   static bool match(RuntimeScriptData* entry, const Lookup& lookup) {
-    return (entry->atomsSpan() == lookup->atomsSpan()) &&
-           (entry->isd_->immutableData() == lookup->isd_->immutableData());
+    return (entry->isd_->immutableData() == lookup->isd_->immutableData());
   }
 };
 
@@ -2279,8 +2250,18 @@ class JSScript : public js::BaseScript {
     return pc;
   }
 
+  // Note: ArgBytes is optional, but if specified then containsPC will also
+  //       check that the opcode arguments are in bounds.
+  template <size_t ArgBytes = 0>
   bool containsPC(const jsbytecode* pc) const {
-    return pc >= code() && pc < codeEnd();
+    MOZ_ASSERT_IF(ArgBytes,
+                  js::GetBytecodeLength(pc) == sizeof(jsbytecode) + ArgBytes);
+    const jsbytecode* lastByte = pc + ArgBytes;
+    return pc >= code() && lastByte < codeEnd();
+  }
+  template <typename ArgType>
+  bool containsPC(const jsbytecode* pc) const {
+    return containsPC<sizeof(ArgType)>(pc);
   }
 
   bool contains(const js::BytecodeLocation& loc) const {
@@ -2548,7 +2529,7 @@ class JSScript : public js::BaseScript {
  private:
   bool createJitScript(JSContext* cx);
 
-  bool createScriptData(JSContext* cx, uint32_t natoms);
+  bool createScriptData(JSContext* cx);
   void initImmutableScriptData(js::UniquePtr<js::ImmutableScriptData>&& data) {
     MOZ_ASSERT(!sharedData_->isd_);
     sharedData_->isd_ = std::move(data);
@@ -2644,22 +2625,12 @@ class JSScript : public js::BaseScript {
     return immutableScriptData()->notes();
   }
 
-  size_t natoms() const {
-    MOZ_ASSERT(sharedData_);
-    return sharedData_->natoms();
-  }
-  js::GCPtrAtom* atoms() const {
-    MOZ_ASSERT(sharedData_);
-    return sharedData_->atoms();
+  JSAtom* getAtom(size_t index) const {
+    return &gcthings()[index].as<JSString>().asAtom();
   }
 
-  js::GCPtrAtom& getAtom(size_t index) const {
-    MOZ_ASSERT(index < natoms());
-    return atoms()[index];
-  }
-
-  js::GCPtrAtom& getAtom(jsbytecode* pc) const {
-    MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
+  JSAtom* getAtom(jsbytecode* pc) const {
+    MOZ_ASSERT(containsPC<uint32_t>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE((JSOp)*pc) == JOF_ATOM);
     return getAtom(GET_UINT32_INDEX(pc));
   }
@@ -2678,7 +2649,7 @@ class JSScript : public js::BaseScript {
   }
 
   JSObject* getObject(jsbytecode* pc) const {
-    MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
+    MOZ_ASSERT(containsPC<uint32_t>(pc));
     return getObject(GET_UINT32_INDEX(pc));
   }
 
@@ -2690,7 +2661,7 @@ class JSScript : public js::BaseScript {
     // This method is used to get a scope directly using a JSOp with an
     // index. To search through ScopeNotes to look for a Scope using pc,
     // use lookupScope.
-    MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
+    MOZ_ASSERT(containsPC<uint32_t>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE(JSOp(*pc)) == JOF_SCOPE,
                "Did you mean to use lookupScope(pc)?");
     return getScope(GET_UINT32_INDEX(pc));
@@ -2708,7 +2679,7 @@ class JSScript : public js::BaseScript {
   }
 
   js::BigInt* getBigInt(jsbytecode* pc) const {
-    MOZ_ASSERT(containsPC(pc));
+    MOZ_ASSERT(containsPC<uint32_t>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE(JSOp(*pc)) == JOF_BIGINT);
     return getBigInt(GET_UINT32_INDEX(pc));
   }

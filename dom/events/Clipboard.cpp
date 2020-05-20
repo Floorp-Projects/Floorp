@@ -29,8 +29,8 @@ Clipboard::Clipboard(nsPIDOMWindowInner* aWindow)
 Clipboard::~Clipboard() = default;
 
 already_AddRefed<Promise> Clipboard::ReadHelper(
-    JSContext* aCx, nsIPrincipal& aSubjectPrincipal,
-    ClipboardReadType aClipboardReadType, ErrorResult& aRv) {
+    nsIPrincipal& aSubjectPrincipal, ClipboardReadType aClipboardReadType,
+    ErrorResult& aRv) {
   // Create a new promise
   RefPtr<Promise> p = dom::Promise::Create(GetOwnerGlobal(), aRv);
   if (aRv.Failed()) {
@@ -86,19 +86,17 @@ already_AddRefed<Promise> Clipboard::ReadHelper(
   return p.forget();
 }
 
-already_AddRefed<Promise> Clipboard::Read(JSContext* aCx,
-                                          nsIPrincipal& aSubjectPrincipal,
+already_AddRefed<Promise> Clipboard::Read(nsIPrincipal& aSubjectPrincipal,
                                           ErrorResult& aRv) {
-  return ReadHelper(aCx, aSubjectPrincipal, eRead, aRv);
+  return ReadHelper(aSubjectPrincipal, eRead, aRv);
 }
 
-already_AddRefed<Promise> Clipboard::ReadText(JSContext* aCx,
-                                              nsIPrincipal& aSubjectPrincipal,
+already_AddRefed<Promise> Clipboard::ReadText(nsIPrincipal& aSubjectPrincipal,
                                               ErrorResult& aRv) {
-  return ReadHelper(aCx, aSubjectPrincipal, eReadText, aRv);
+  return ReadHelper(aSubjectPrincipal, eReadText, aRv);
 }
 
-already_AddRefed<Promise> Clipboard::Write(JSContext* aCx, DataTransfer& aData,
+already_AddRefed<Promise> Clipboard::Write(DataTransfer& aData,
                                            nsIPrincipal& aSubjectPrincipal,
                                            ErrorResult& aRv) {
   // Create a promise
@@ -160,8 +158,7 @@ already_AddRefed<Promise> Clipboard::Write(JSContext* aCx, DataTransfer& aData,
   return p.forget();
 }
 
-already_AddRefed<Promise> Clipboard::WriteText(JSContext* aCx,
-                                               const nsAString& aData,
+already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
                                                nsIPrincipal& aSubjectPrincipal,
                                                ErrorResult& aRv) {
   // We create a data transfer with text/plain format so that
@@ -171,7 +168,7 @@ already_AddRefed<Promise> Clipboard::WriteText(JSContext* aCx,
                                                        /* clipboard type */ -1);
   dataTransfer->SetData(NS_LITERAL_STRING(kTextMime), aData, aSubjectPrincipal,
                         aRv);
-  return Write(aCx, *dataTransfer, aSubjectPrincipal, aRv);
+  return Write(*dataTransfer, aSubjectPrincipal, aRv);
 }
 
 JSObject* Clipboard::WrapObject(JSContext* aCx,

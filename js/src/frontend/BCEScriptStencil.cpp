@@ -16,14 +16,12 @@ using namespace js::frontend;
 
 BCEScriptStencil::BCEScriptStencil(BytecodeEmitter& bce,
                                    UniquePtr<ImmutableScriptData> immutableData)
-    : ScriptStencil(bce.cx), bce_(bce) {
+    : ScriptStencil(bce.cx) {
   init(bce, std::move(immutableData));
 }
 
 void BCEScriptStencil::init(BytecodeEmitter& bce,
                             UniquePtr<ImmutableScriptData> immutableData) {
-  natoms = bce.perScriptData().atomIndices()->count();
-
   immutableFlags = bce.sc->immutableFlags();
 
   MOZ_ASSERT(bce.outermostScope().hasOnChain(ScopeKind::NonSyntactic) ==
@@ -53,15 +51,4 @@ void BCEScriptStencil::init(BytecodeEmitter& bce,
                              funbox->isLikelyConstructorWrapper());
     }
   } /* isFunctionBox */
-}
-
-void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {
-  const AtomIndexMap& indices = *bce_.perScriptData().atomIndices();
-
-  for (AtomIndexMap::Range r = indices.all(); !r.empty(); r.popFront()) {
-    JSAtom* atom = r.front().key();
-    uint32_t index = r.front().value();
-    MOZ_ASSERT(index < indices.count());
-    atoms[index].init(atom);
-  }
 }

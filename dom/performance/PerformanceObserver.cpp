@@ -194,6 +194,7 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
     return;
   }
 
+  bool needQueueNotificationObserverTask = false;
   /* 3.3.1.5 */
   if (mObserverType == ObserverTypeMultiple) {
     const Sequence<nsString>& entryTypes = maybeEntryTypes.Value();
@@ -287,6 +288,7 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
       mPerformance->GetEntriesByType(type, existingEntries);
       if (!existingEntries.IsEmpty()) {
         mQueuedEntries.AppendElements(existingEntries);
+        needQueueNotificationObserverTask = true;
       }
     }
   }
@@ -294,6 +296,10 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
    * observers, if necessary. (3.3.1.5.4,5; 3.3.1.6.4)
    */
   mPerformance->AddObserver(this);
+
+  if (needQueueNotificationObserverTask) {
+    mPerformance->QueueNotificationObserversTask();
+  }
   mConnected = true;
 }
 

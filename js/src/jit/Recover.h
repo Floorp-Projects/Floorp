@@ -488,7 +488,7 @@ class RSign final : public RInstruction {
 
 class RMathFunction final : public RInstruction {
  private:
-  uint8_t function_;
+  UnaryMathFunction function_;
 
  public:
   RINSTRUCTION_HEADER_NUM_OP_(MathFunction, 1)

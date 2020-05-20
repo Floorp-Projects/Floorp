@@ -9,6 +9,8 @@
 
 #include "mozilla/Maybe.h"
 
+#include "jsmath.h"
+
 #include "NamespaceImports.h"
 
 #include "gc/Rooting.h"
@@ -606,6 +608,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
                   "MetaTwoByteKind must fit in a byte");
     buffer_.writeByte(uint8_t(kind));
   }
+  void writeUnaryMathFunctionImm(UnaryMathFunction fun) {
+    static_assert(sizeof(UnaryMathFunction) == sizeof(uint8_t),
+                  "UnaryMathFunction must fit in a byte");
+    buffer_.writeByte(uint8_t(fun));
+  }
   void writeBoolImm(bool b) { buffer_.writeByte(uint32_t(b)); }
 
   void writeByteImm(uint32_t b) {
@@ -934,6 +941,10 @@ class MOZ_RAII CacheIRReader {
 
   ReferenceType referenceTypeDescrType() {
     return ReferenceType(buffer_.readByte());
+  }
+
+  UnaryMathFunction unaryMathFunction() {
+    return UnaryMathFunction(buffer_.readByte());
   }
 
   CallFlags callFlags() {
@@ -1502,15 +1513,19 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachArrayPush(HandleFunction callee);
   AttachDecision tryAttachArrayJoin(HandleFunction callee);
   AttachDecision tryAttachIsSuspendedGenerator(HandleFunction callee);
+  AttachDecision tryAttachToString(HandleFunction callee);
   AttachDecision tryAttachStringChar(HandleFunction callee, StringChar kind);
   AttachDecision tryAttachStringCharCodeAt(HandleFunction callee);
   AttachDecision tryAttachStringCharAt(HandleFunction callee);
   AttachDecision tryAttachMathAbs(HandleFunction callee);
+  AttachDecision tryAttachMathSqrt(HandleFunction callee);
+  AttachDecision tryAttachMathFunction(HandleFunction callee,
+                                       UnaryMathFunction fun);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
   AttachDecision tryAttachCallScripted(HandleFunction calleeFunc);
-  AttachDecision tryAttachSpecialCaseCallNative(HandleFunction calleeFunc);
+  AttachDecision tryAttachInlinableNative(HandleFunction calleeFunc);
   AttachDecision tryAttachCallNative(HandleFunction calleeFunc);
   AttachDecision tryAttachCallHook(HandleObject calleeObj);
 

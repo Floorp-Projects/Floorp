@@ -12,10 +12,8 @@
 ''':'
 py2commands="
     android
-    android-emulator
     awsy-test
     browsertime
-    cargo
     check-spidermonkey
     clang-format
     cppunittest
@@ -47,7 +45,6 @@ py2commands="
     raptor-test
     reftest
     release
-    release-history
     remote
     repackage
     rusttests

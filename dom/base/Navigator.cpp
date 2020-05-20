@@ -67,6 +67,7 @@
 #include "nsRFPService.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
+#include "nsICookieManager.h"
 #include "nsICookieService.h"
 #include "nsIHttpChannel.h"
 #include "nsStreamUtils.h"
@@ -507,7 +508,7 @@ StorageManager* Navigator::Storage() {
 }
 
 bool Navigator::CookieEnabled() {
-  bool cookieEnabled = (StaticPrefs::network_cookie_cookieBehavior() !=
+  bool cookieEnabled = (nsICookieManager::GetCookieBehavior() !=
                         nsICookieService::BEHAVIOR_REJECT);
 
   // Check whether an exception overrides the global cookie behavior
@@ -522,18 +523,15 @@ bool Navigator::CookieEnabled() {
     return cookieEnabled;
   }
 
-  nsCOMPtr<nsIURI> contentURI;
-  BasePrincipal::Cast(doc->NodePrincipal())->GetURI(getter_AddRefs(contentURI));
-
-  if (!contentURI) {
+  uint32_t rejectedReason = 0;
+  bool granted = false;
+  nsresult rv = doc->NodePrincipal()->HasFirstpartyStorageAccess(
+      mWindow, &rejectedReason, &granted);
+  if (NS_FAILED(rv)) {
     // Not a content, so technically can't set cookies, but let's
     // just return the default value.
     return cookieEnabled;
   }
-
-  uint32_t rejectedReason = 0;
-  bool granted = ContentBlocking::ShouldAllowAccessFor(mWindow, contentURI,
-                                                       &rejectedReason);
 
   ContentBlockingNotifier::OnDecision(
       mWindow,

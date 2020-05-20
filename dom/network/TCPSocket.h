@@ -96,8 +96,8 @@ class TCPSocket final : public DOMEventTargetHelper,
   void Resume(ErrorResult& aRv);
   void Close();
   void CloseImmediately();
-  bool Send(JSContext* aCx, const nsACString& aData, ErrorResult& aRv);
-  bool Send(JSContext* aCx, const ArrayBuffer& aData, uint32_t aByteOffset,
+  bool Send(const nsACString& aData, ErrorResult& aRv);
+  bool Send(const ArrayBuffer& aData, uint32_t aByteOffset,
             const Optional<uint32_t>& aByteLength, ErrorResult& aRv);
   TCPReadyState ReadyState();
   TCPSocketBinaryType BinaryType();

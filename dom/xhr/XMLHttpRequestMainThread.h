@@ -154,6 +154,7 @@ class RequestHeaders {
     bool Next();
   };
 
+  bool IsEmpty() const;
   bool Has(const char* aName);
   bool Has(const nsACString& aName);
   void Get(const char* aName, nsACString& aValue);
@@ -314,7 +315,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
  public:
   virtual void Send(
-      JSContext* aCx,
       const Nullable<
           DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
           aData,
@@ -465,7 +465,14 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   // determines if the onreadystatechange listener should be called.
   nsresult ChangeState(uint16_t aState, bool aBroadcast = true);
   already_AddRefed<nsILoadGroup> GetLoadGroup() const;
-  nsIURI* GetBaseURI();
+
+  // Finds a preload for this XHR.  If it is found it's removed from the preload
+  // table of the document and marked as used.  The called doesn't need to do
+  // any more comparative checks.
+  already_AddRefed<PreloaderBase> FindPreload();
+  // If no or unknown mime type is set on the channel this method ensures it's
+  // set to "text/xml".
+  void EnsureChannelContentType();
 
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
   already_AddRefed<nsIJARChannel> GetCurrentJARChannel();
@@ -754,6 +761,10 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   // processed all the bytes but not the EOF and having
   // processed all the bytes and the EOF.
   bool mEofDecoded;
+
+  // This flag will be set in `Send()` when we successfully reuse a "fetch"
+  // preload to satisfy this XHR.
+  bool mFromPreload = false;
 
   // Our parse-end listener, if we are parsing.
   RefPtr<nsXHRParseEndListener> mParseEndListener;

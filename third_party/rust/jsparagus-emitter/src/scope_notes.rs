@@ -62,6 +62,13 @@ impl ScopeNoteList {
         ScopeNoteIndex::new(note_index)
     }
 
+    pub fn get_scope_hole_gcthing_index(&self, scope_note_index: &ScopeNoteIndex) -> GCThingIndex {
+        self.notes
+            .get(scope_note_index.index)
+            .expect("Scope note should exist")
+            .index
+    }
+
     pub fn leave_scope(&mut self, index: ScopeNoteIndex, offset: BytecodeOffset) {
         self.notes[usize::from(index)].end = offset;
     }

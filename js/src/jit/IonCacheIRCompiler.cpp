@@ -1168,7 +1168,7 @@ bool IonCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult(
   return true;
 }
 
-bool IonCacheIRCompiler::emitLoadStringResult(uint32_t strOffset) {
+bool IonCacheIRCompiler::emitLoadConstantStringResult(uint32_t strOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   MOZ_CRASH("not used in ion");
 }

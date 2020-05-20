@@ -204,12 +204,12 @@ void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
   }
 }
 
-nsSHistory::nsSHistory(BrowsingContext* aRootBC, const nsID& aRootDocShellID)
+nsSHistory::nsSHistory(BrowsingContext* aRootBC)
     : mRootBC(aRootBC),
       mIsRemote(false),
       mIndex(-1),
       mRequestedIndex(-1),
-      mRootDocShellID(aRootDocShellID) {
+      mRootDocShellID(aRootBC->GetHistoryID()) {
   // Add this new SHistory object to the list
   gSHistoryList.insertBack(this);
 
@@ -804,9 +804,6 @@ nsresult nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist,
 
   return NS_OK;
 }
-
-NS_IMETHODIMP_(void)
-nsSHistory::ClearRootBrowsingContext() { mRootBC = nullptr; }
 
 /* Get size of the history list */
 NS_IMETHODIMP

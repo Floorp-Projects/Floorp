@@ -2,17 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AddFont, BlobImageResources, AsyncBlobImageRasterizer, ResourceUpdate};
-use api::{BlobImageDescriptor, BlobImageHandler, BlobImageRequest, RasterizedBlobImage};
+use api::{AddFont, BlobImageResources, ResourceUpdate};
+use api::{BlobImageRequest, RasterizedBlobImage};
 use api::{ClearCache, DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
-use api::{ExternalImageData, ExternalImageType, BlobImageResult, BlobImageParams};
-use api::{FontInstanceData, FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
+use api::{ExternalImageData, ExternalImageType, BlobImageResult, FontInstanceData};
 use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
-use api::{BlobImageData, BlobImageKey, MemoryReport, VoidPtrToSizeFn};
+use api::{BlobImageKey, MemoryReport, VoidPtrToSizeFn};
 use api::{SharedFontInstanceMap, BaseFontInstance};
 use api::image_tiling::{compute_tile_size, compute_tile_range};
-use api::image_tiling::{compute_valid_tiles_if_bounds_change, for_each_tile_in_range, compute_tile_rect};
 use api::units::*;
 #[cfg(feature = "capture")]
 use crate::capture::ExternalCaptureImage;
@@ -22,7 +20,6 @@ use crate::capture::PlainExternalImage;
 use crate::capture::CaptureConfig;
 use crate::composite::{NativeSurfaceId, NativeSurfaceOperation, NativeTileId, NativeSurfaceOperationDetails};
 use crate::device::TextureFilter;
-use euclid::{point2, size2};
 use crate::glyph_cache::GlyphCache;
 use crate::glyph_cache::GlyphCacheEntry;
 use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
@@ -34,6 +31,7 @@ use crate::render_backend::{FrameId, FrameStamp};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey};
 use crate::render_task_cache::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};
+use euclid::point2;
 use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::collections::hash_map::{Iter, IterMut};
@@ -51,7 +49,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::SystemTime;
 use std::u32;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
-use crate::util::drain_filter;
 
 // Counter for generating unique native surface ids
 static NEXT_NATIVE_SURFACE_ID: AtomicUsize = AtomicUsize::new(0);
@@ -165,23 +162,6 @@ enum State {
 
 /// Post scene building state.
 type RasterizedBlob = FastHashMap<TileOffset, RasterizedBlobImage>;
-
-/// Pre scene building state.
-/// We use this to generate the async blob rendering requests.
-struct BlobImageTemplate {
-    descriptor: ImageDescriptor,
-    tile_size: TileSize,
-    dirty_rect: BlobDirtyRect,
-    /// See ImageResource::visible_rect.
-    visible_rect: DeviceIntRect,
-    // If the active rect of the blob changes, this represents the
-    // range of tiles that remain valid. This must be taken into
-    // account in addition to the valid rect when submitting blob
-    // rasterization requests.
-    // `None` means the bounds have not changed (tiles are still valid).
-    // `Some(TileRange::zero())` means all of the tiles are invalid.
-    valid_tiles_after_bounds_change: Option<TileRange>,
-}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -409,7 +389,6 @@ impl ImageResult {
 
 type ImageCache = ResourceClassCache<ImageKey, ImageResult, ()>;
 
-#[derive(Default)]
 struct Resources {
     font_templates: FastHashMap<FontKey, FontTemplate>,
     font_instances: SharedFontInstanceMap,
@@ -464,9 +443,7 @@ pub struct ResourceCache {
     /// both blobs and regular images.
     pending_image_requests: FastHashSet<ImageRequest>,
 
-    blob_image_handler: Option<Box<dyn BlobImageHandler>>,
     rasterized_blob_images: FastHashMap<BlobImageKey, RasterizedBlob>,
-    blob_image_templates: FastHashMap<BlobImageKey, BlobImageTemplate>,
 
     /// A log of the last three frames worth of deleted image keys kept
     /// for debugging purposes.
@@ -481,22 +458,24 @@ impl ResourceCache {
         texture_cache: TextureCache,
         glyph_rasterizer: GlyphRasterizer,
         cached_glyphs: GlyphCache,
-        blob_image_handler: Option<Box<dyn BlobImageHandler>>,
+        font_instances: SharedFontInstanceMap,
     ) -> Self {
         ResourceCache {
             cached_glyphs,
             cached_images: ResourceClassCache::new(),
             cached_render_tasks: RenderTaskCache::new(),
-            resources: Resources::default(),
+            resources: Resources {
+                font_instances,
+                font_templates: FastHashMap::default(),
+                image_templates: ImageTemplates::default(),
+            },
             cached_glyph_dimensions: FastHashMap::default(),
             texture_cache,
             state: State::Idle,
             current_frame_id: FrameId::INVALID,
             pending_image_requests: FastHashSet::default(),
             glyph_rasterizer,
-            blob_image_handler,
             rasterized_blob_images: FastHashMap::default(),
-            blob_image_templates: FastHashMap::default(),
             // We want to keep three frames worth of delete blob keys
             deleted_blob_keys: vec![Vec::new(), Vec::new(), Vec::new()].into(),
             pending_native_surface_updates: Vec::new(),
@@ -511,9 +490,6 @@ impl ResourceCache {
 
     pub fn enable_multithreading(&mut self, enable: bool) {
         self.glyph_rasterizer.enable_multithreading(enable);
-        if let Some(ref mut handler) = self.blob_image_handler {
-            handler.enable_multithreading(enable);
-        }
     }
 
     fn should_tile(limit: i32, descriptor: &ImageDescriptor, data: &CachedImageData) -> bool {
@@ -611,6 +587,9 @@ impl ResourceCache {
                 ResourceUpdate::DeleteImage(img) => {
                     self.delete_image_template(img);
                 }
+                ResourceUpdate::DeleteBlobImage(img) => {
+                    self.delete_image_template(img.as_image());
+                }
                 ResourceUpdate::DeleteFont(font) => {
                     self.delete_font_template(font);
                 }
@@ -621,86 +600,22 @@ impl ResourceCache {
                     self.discard_tiles_outside_visible_area(key, &area);
                     self.set_image_visible_rect(key.as_image(), &area);
                 }
-                ResourceUpdate::AddFont(_) |
-                ResourceUpdate::AddFontInstance(_) => {
-                    // Handled in update_resources_pre_scene_building
-                }
-            }
-        }
-    }
-
-    pub fn pre_scene_building_update(
-        &mut self,
-        updates: &mut Vec<ResourceUpdate>,
-        profile_counters: &mut ResourceProfileCounters,
-    ) {
-        #[cfg(feature = "capture")]
-        match updates.is_empty() {
-            false => self.capture_dirty = true,
-            _ => {},
-        }
-
-        for update in updates.iter() {
-            match *update {
-                ResourceUpdate::AddBlobImage(ref img) => {
-                    self.add_blob_image(
-                        img.key,
-                        &img.descriptor,
-                        img.tile_size,
-                        Arc::clone(&img.data),
-                        &img.visible_rect,
-                    );
-                }
-                ResourceUpdate::UpdateBlobImage(ref img) => {
-                    debug_assert_eq!(img.visible_rect.size, img.descriptor.size);
-                    self.update_blob_image(
-                        img.key,
-                        Some(&img.descriptor),
-                        Some(&img.dirty_rect),
-                        Some(Arc::clone(&img.data)),
-                        &img.visible_rect,
-                    );
-                }
-                ResourceUpdate::SetBlobImageVisibleArea(ref key, ref area) => {
-                    self.update_blob_image(*key, None, None, None, area);
-                }
-                _ => {}
-            }
-        }
-
-        drain_filter(
-            updates,
-            |update| match *update {
-                ResourceUpdate::AddFont(_) |
-                ResourceUpdate::AddFontInstance(_) => true,
-                _ => false,
-            },
-            // Updates that were moved out of the array:
-            |update: ResourceUpdate| match update {
                 ResourceUpdate::AddFont(font) => {
                     match font {
                         AddFont::Raw(id, bytes, index) => {
                             profile_counters.font_templates.inc(bytes.len());
-                            self.add_font_template(id, FontTemplate::Raw(Arc::new(bytes), index));
+                            self.add_font_template(id, FontTemplate::Raw(bytes, index));
                         }
                         AddFont::Native(id, native_font_handle) => {
                             self.add_font_template(id, FontTemplate::Native(native_font_handle));
                         }
                     }
                 }
-                ResourceUpdate::AddFontInstance(instance) => {
-                    self.add_font_instance(
-                        instance.key,
-                        instance.font_key,
-                        instance.glyph_size,
-                        instance.options,
-                        instance.platform_options,
-                        instance.variations,
-                    );
+                ResourceUpdate::AddFontInstance(..) => {
+                    // Already added in ApiResources.
                 }
-                _ => { unreachable!(); }
             }
-        );
+        }
     }
 
     pub fn add_rasterized_blob_images(
@@ -754,36 +669,10 @@ impl ResourceCache {
         self.resources.font_templates.remove(&font_key);
         self.cached_glyphs
             .clear_fonts(&mut self.texture_cache, |font| font.font_key == font_key);
-        if let Some(ref mut r) = self.blob_image_handler {
-            r.delete_font(font_key);
-        }
-    }
-
-    pub fn add_font_instance(
-        &mut self,
-        instance_key: FontInstanceKey,
-        font_key: FontKey,
-        size: Au,
-        options: Option<FontInstanceOptions>,
-        platform_options: Option<FontInstancePlatformOptions>,
-        variations: Vec<FontVariation>,
-    ) {
-        self.resources.font_instances.add_font_instance(
-            instance_key,
-            font_key,
-            size,
-            options,
-            platform_options,
-            variations,
-        );
     }
 
     pub fn delete_font_instance(&mut self, instance_key: FontInstanceKey) {
         self.resources.font_instances.delete_font_instance(instance_key);
-
-        if let Some(ref mut r) = self.blob_image_handler {
-            r.delete_font_instance(instance_key);
-        }
     }
 
     pub fn get_font_instances(&self) -> SharedFontInstanceMap {
@@ -886,81 +775,6 @@ impl ResourceCache {
         };
     }
 
-    // Happens before scene building.
-    pub fn add_blob_image(
-        &mut self,
-        key: BlobImageKey,
-        descriptor: &ImageDescriptor,
-        tile_size: TileSize,
-        data: Arc<BlobImageData>,
-        visible_rect: &DeviceIntRect,
-    ) {
-        self.blob_image_handler.as_mut().unwrap().add(key, data, visible_rect, tile_size);
-
-        self.blob_image_templates.insert(
-            key,
-            BlobImageTemplate {
-                descriptor: *descriptor,
-                tile_size,
-                dirty_rect: DirtyRect::All,
-                valid_tiles_after_bounds_change: None,
-                visible_rect: *visible_rect,
-            },
-        );
-    }
-
-    // Happens before scene building.
-    pub fn update_blob_image(
-        &mut self,
-        key: BlobImageKey,
-        descriptor: Option<&ImageDescriptor>,
-        dirty_rect: Option<&BlobDirtyRect>,
-        data: Option<Arc<BlobImageData>>,
-        visible_rect: &DeviceIntRect,
-    ) {
-        if let Some(data) = data {
-            let dirty_rect = dirty_rect.unwrap();
-            self.blob_image_handler.as_mut().unwrap().update(key, data, visible_rect, dirty_rect);
-        }
-
-        let image = self.blob_image_templates
-            .get_mut(&key)
-            .expect("Attempt to update non-existent blob image");
-
-        let mut valid_tiles_after_bounds_change = compute_valid_tiles_if_bounds_change(
-            &image.visible_rect,
-            visible_rect,
-            image.tile_size,
-        );
-
-        match (image.valid_tiles_after_bounds_change, valid_tiles_after_bounds_change) {
-            (Some(old), Some(ref mut new)) => {
-                *new = new.intersection(&old).unwrap_or_else(TileRange::zero);
-            }
-            (Some(old), None) => {
-                valid_tiles_after_bounds_change = Some(old);
-            }
-            _ => {}
-        }
-
-        let blob_size = visible_rect.size;
-
-        if let Some(descriptor) = descriptor {
-            image.descriptor = *descriptor;
-        } else {
-            // make sure the descriptor size matches the visible rect.
-            // This might not be necessary but let's stay on the safe side.
-            image.descriptor.size = blob_size;
-        }
-
-        if let Some(dirty_rect) = dirty_rect {
-            image.dirty_rect = image.dirty_rect.union(dirty_rect);
-        }
-
-        image.valid_tiles_after_bounds_change = valid_tiles_after_bounds_change;
-        image.visible_rect = *visible_rect;
-    }
-
     pub fn delete_image_template(&mut self, image_key: ImageKey) {
         // Remove the template.
         let value = self.resources.image_templates.remove(image_key);
@@ -973,9 +787,7 @@ impl ResourceCache {
         match value {
             Some(image) => if image.data.is_blob() {
                 let blob_key = BlobImageKey(image_key);
-                self.blob_image_handler.as_mut().unwrap().delete(blob_key);
                 self.deleted_blob_keys.back_mut().unwrap().push(blob_key);
-                self.blob_image_templates.remove(&blob_key);
                 self.rasterized_blob_images.remove(&blob_key);
             },
             None => {
@@ -1105,95 +917,13 @@ impl ResourceCache {
         }
     }
 
-    pub fn create_blob_scene_builder_requests(
-        &mut self,
-        keys: &[BlobImageKey]
-    ) -> (Option<Box<dyn AsyncBlobImageRasterizer>>, Vec<BlobImageParams>) {
-        if self.blob_image_handler.is_none() || keys.is_empty() {
-            return (None, Vec::new());
-        }
-
-        let mut blob_request_params = Vec::new();
-        for key in keys {
-            let template = self.blob_image_templates.get_mut(key).unwrap();
-
-            // If we know that only a portion of the blob image is in the viewport,
-            // only request these visible tiles since blob images can be huge.
-            let tiles = compute_tile_range(
-                &template.visible_rect,
-                template.tile_size,
-            );
-
-            let image_dirty_rect = to_image_dirty_rect(&template.dirty_rect);
-            // Don't request tiles that weren't invalidated.
-            let dirty_tiles = match image_dirty_rect {
-                DirtyRect::Partial(dirty_rect) => {
-                    let dirty_rect = DeviceIntRect {
-                        origin: point2(
-                            dirty_rect.origin.x,
-                            dirty_rect.origin.y,
-                        ),
-                        size: size2(
-                            dirty_rect.size.width,
-                            dirty_rect.size.height,
-                        ),
-                    };
-
-                    compute_tile_range(
-                        &dirty_rect,
-                        template.tile_size,
-                    )
-                }
-                DirtyRect::All => tiles,
-            };
-
-            for_each_tile_in_range(&tiles, |tile| {
-                let still_valid = template.valid_tiles_after_bounds_change
-                    .map(|valid_tiles| valid_tiles.contains(tile))
-                    .unwrap_or(true);
-
-                if still_valid && !dirty_tiles.contains(tile) {
-                    return;
-                }
-
-                let descriptor = BlobImageDescriptor {
-                    rect: blob_rect(compute_tile_rect(
-                        &template.visible_rect,
-                        template.tile_size,
-                        tile,
-                    )),
-                    format: template.descriptor.format,
-                };
-
-                assert!(descriptor.rect.size.width > 0 && descriptor.rect.size.height > 0);
-                // TODO: We only track dirty rects for non-tiled blobs but we
-                // should also do it with tiled ones unless we settle for a small
-                // tile size.
-                blob_request_params.push(
-                    BlobImageParams {
-                        request: BlobImageRequest { key: *key, tile },
-                        descriptor,
-                        dirty_rect: DirtyRect::All,
-                    }
-                );
-            });
-
-            template.dirty_rect = DirtyRect::empty();
-            template.valid_tiles_after_bounds_change = None;
-        }
-
-        let handler = self.blob_image_handler.as_mut().unwrap();
-        handler.prepare_resources(&self.resources, &blob_request_params);
-        (Some(handler.create_blob_rasterizer()), blob_request_params)
-    }
-
     fn discard_tiles_outside_visible_area(
         &mut self,
         key: BlobImageKey,
         area: &DeviceIntRect
     ) {
-        let template = match self.blob_image_templates.get(&key) {
-            Some(template) => template,
+        let tile_size = match self.resources.image_templates.get(key.as_image()) {
+            Some(template) => template.tiling.unwrap(),
             None => {
                 //println!("Missing image template (key={:?})!", key);
                 return;
@@ -1207,7 +937,7 @@ impl ResourceCache {
 
         let tile_range = compute_tile_range(
             &area,
-            template.tile_size,
+            tile_size,
         );
 
         tiles.retain(|tile, _| { tile_range.contains(*tile) });
@@ -1657,10 +1387,6 @@ impl ResourceCache {
             .retain(|key, _| key.0 != namespace);
         self.cached_glyphs
             .clear_fonts(&mut self.texture_cache, |font| font.font_key.0 == namespace);
-
-        if let Some(ref mut r) = self.blob_image_handler {
-            r.clear_namespace(namespace);
-        }
     }
 
     /// Reports the CPU heap usage of this ResourceCache.
@@ -1726,7 +1452,6 @@ impl ResourceCache {
             let blob_f = |key: &BlobImageKey| { f(&key.as_image()) };
             assert!(!self.resources.image_templates.images.keys().any(&f));
             assert!(!self.cached_images.resources.keys().any(&f));
-            assert!(!self.blob_image_templates.keys().any(&blob_f));
             assert!(!self.rasterized_blob_images.keys().any(&blob_f));
         }
     }
@@ -2106,22 +1831,5 @@ impl ResourceCache {
         } else {
             Vec::new()
         }
-    }
-}
-
-/// For now the blob's coordinate space have the same pixel sizes as the
-/// rendered texture's device space (only a translation is applied).
-/// So going from one to the other is only a matter of casting away the unit
-/// for sizes.
-#[inline]
-fn blob_size(device_size: DeviceIntSize) -> LayoutIntSize {
-    size2(device_size.width, device_size.height)
-}
-
-#[inline]
-fn blob_rect(device_rect: DeviceIntRect) -> LayoutIntRect {
-    LayoutIntRect {
-        origin: point2(device_rect.origin.x, device_rect.origin.y),
-        size: blob_size(device_rect.size),
     }
 }

@@ -668,6 +668,19 @@
   args:
     input: NumberId
 
+- name: MathSqrtNumberResult
+  shared: true
+  transpile: true
+  args:
+    input: NumberId
+
+- name: MathFunctionNumberResult
+  shared: true
+  transpile: true
+  args:
+    input: NumberId
+    fun: UnaryMathFunctionImm
+
 - name: StoreTypedArrayElement
   shared: true
   transpile: true
@@ -979,6 +992,12 @@
   args:
     obj: ObjId
 
+- name: LoadStringResult
+  shared: true
+  transpile: true
+  args:
+    str: StringId
+
 - name: LoadInt32Result
   shared: true
   transpile: true
@@ -1074,7 +1093,7 @@
   args:
     val: BoolImm
 
-- name: LoadStringResult
+- name: LoadConstantStringResult
   shared: false
   transpile: false
   args:

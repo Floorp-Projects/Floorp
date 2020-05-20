@@ -33,6 +33,9 @@ function test() {
           highlightUpdated: true,
           removableColumns: true,
           wrapTextInElements: true,
+          l10n: {
+            setAttributes: function() {},
+          },
         });
         startTests();
       });

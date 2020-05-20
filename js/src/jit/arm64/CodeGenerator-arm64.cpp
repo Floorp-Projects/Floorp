@@ -197,18 +197,6 @@ void CodeGenerator::visitMinMaxF(LMinMaxF* ins) {
   }
 }
 
-void CodeGenerator::visitSqrtD(LSqrtD* ins) {
-  ARMFPRegister input(ToFloatRegister(ins->input()), 64);
-  ARMFPRegister output(ToFloatRegister(ins->output()), 64);
-  masm.Fsqrt(output, input);
-}
-
-void CodeGenerator::visitSqrtF(LSqrtF* ins) {
-  ARMFPRegister input(ToFloatRegister(ins->input()), 32);
-  ARMFPRegister output(ToFloatRegister(ins->output()), 32);
-  masm.Fsqrt(output, input);
-}
-
 // FIXME: Uh, is this a static function? It looks like it is...
 template <typename T>
 ARMRegister toWRegister(const T* a) {

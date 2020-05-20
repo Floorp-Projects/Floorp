@@ -365,6 +365,25 @@
   flex-shrink: 1;
 }
 
+/* Tail suggestions */
+.urlbarView-tail-prefix {
+  display: none;
+  justify-content: flex-end;
+  white-space: pre;
+}
+
+.urlbarView-row[tail-suggestion] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-tail-prefix {
+  display: inline-flex;
+}
+
+.urlbarView-tail-prefix > .urlbarView-tail-prefix-string {
+  visibility: hidden;
+}
+
+.urlbarView-tail-prefix > .urlbarView-tail-prefix-char {
+  position: absolute;
+}
+
 /* Title separator */
 
 .urlbarView-title-separator::before {

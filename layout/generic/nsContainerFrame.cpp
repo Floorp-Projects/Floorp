@@ -995,7 +995,7 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
   // view for popups is managed by the parent. Currently only nsMenuFrame
   // and nsPopupSetFrame have a popupList and during layout will adjust the
   // view manually to position the popup.
-  for (const auto& [list, listID] : aFrame->GetChildLists()) {
+  for (const auto& [list, listID] : aFrame->ChildLists()) {
     if (listID == kPopupList) {
       continue;
     }
@@ -2423,7 +2423,7 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
                "At start of reflow, we should've pulled items back from all "
                "NIFs and cleared the state bit stored in didPushItemsBit in "
                "the process.");
-    for (const auto& [list, listID] : f->GetChildLists()) {
+    for (const auto& [list, listID] : f->ChildLists()) {
       if (!itemLists.contains(listID)) {
         MOZ_ASSERT(absLists.contains(listID) || listID == kBackdropList,
                    "unexpected non-empty child list");
@@ -2484,7 +2484,7 @@ void nsContainerFrame::List(FILE* out, const char* aPrefix,
 
   // Output the children
   bool outputOneList = false;
-  for (const auto& [list, listID] : nsIFrame::GetChildLists()) {
+  for (const auto& [list, listID] : ChildLists()) {
     if (outputOneList) {
       str += aPrefix;
     }
@@ -2529,7 +2529,7 @@ void nsContainerFrame::ListWithMatchedRules(FILE* out,
   childPrefix += aPrefix;
   childPrefix += "  ";
 
-  for (const auto& childList : nsIFrame::GetChildLists()) {
+  for (const auto& childList : ChildLists()) {
     for (const nsIFrame* kid : childList.mList) {
       kid->ListWithMatchedRules(out, childPrefix.get());
     }

@@ -110,24 +110,24 @@ class PerftestTests(MachCommandBase):
 
         # include in sys.path all deps
         _setup_path()
-
         try:
-            import black  # noqa
+            import coverage  # noqa
         except ImportError:
-            # install the tests scripts in the virtualenv
-            # this step will be removed once Bug 1635573 is done
-            # so we don't have to hit pypi or our internal mirror at all
             pydeps = Path(self.topsrcdir, "third_party", "python")
+            vendors = ["coverage"]
+            pypis = ["flake8"]
 
-            for name in (
-                # installing pyrsistent and attrs so we don't pick newer ones
-                str(pydeps / "pyrsistent"),
-                str(pydeps / "attrs"),
-                "coverage",
-                "black",
-                "flake8",
-            ):
-                install_package(self.virtualenv_manager, name)
+            # if we're not on try we want to install black
+            if not ON_TRY:
+                pypis.append("black")
+
+            # these are the deps we are getting from pypi
+            for dep in pypis:
+                install_package(self.virtualenv_manager, dep)
+
+            # pip-installing dependencies that require compilation or special setup
+            for dep in vendors:
+                install_package(self.virtualenv_manager, str(Path(pydeps, dep)))
 
         here = Path(__file__).parent.resolve()
         if not ON_TRY:
@@ -135,7 +135,8 @@ class PerftestTests(MachCommandBase):
             assert self._run_python_script("black", str(here))
 
         # checking flake8 correctness
-        assert self._run_python_script("flake8", str(here))
+        if not (ON_TRY and sys.platform == "darwin"):
+            assert self._run_python_script("flake8", str(here))
 
         # running pytest with coverage
         # coverage is done in three steps:

@@ -10,6 +10,7 @@
 #include "nsIXPConnect.h"
 #include "nsIProtocolProxyService.h"
 #include "nsNetCID.h"
+#include "nsQueryObject.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/net/NeckoChild.h"
@@ -61,7 +62,7 @@ ChildDNSService::ChildDNSService()
 void ChildDNSService::GetDNSRecordHashKey(
     const nsACString& aHost, const nsACString& aTrrServer, uint16_t aType,
     const OriginAttributes& aOriginAttributes, uint32_t aFlags,
-    nsIDNSListener* aListener, nsACString& aHashKey) {
+    uintptr_t aListenerAddr, nsACString& aHashKey) {
   aHashKey.Assign(aHost);
   aHashKey.Assign(aTrrServer);
   aHashKey.AppendInt(aType);
@@ -71,7 +72,7 @@ void ChildDNSService::GetDNSRecordHashKey(
   aHashKey.Append(originSuffix);
 
   aHashKey.AppendInt(aFlags);
-  aHashKey.AppendPrintf("%p", aListener);
+  aHashKey.AppendPrintf("0x%" PRIxPTR, aListenerAddr);
 }
 
 nsresult ChildDNSService::AsyncResolveInternal(
@@ -92,7 +93,7 @@ nsresult ChildDNSService::AsyncResolveInternal(
   }
 
   // We need original listener for the pending requests hash.
-  nsIDNSListener* originalListener = listener;
+  uintptr_t originalListenerAddr = reinterpret_cast<uintptr_t>(listener);
 
   // make sure JS callers get notification on the main thread
   nsCOMPtr<nsIEventTarget> target = target_;
@@ -119,7 +120,7 @@ nsresult ChildDNSService::AsyncResolveInternal(
     MutexAutoLock lock(mPendingRequestsLock);
     nsCString key;
     GetDNSRecordHashKey(hostname, aTrrServer, type, aOriginAttributes, flags,
-                        originalListener, key);
+                        originalListenerAddr, key);
     auto entry = mPendingRequests.LookupForAdd(key);
     if (entry) {
       entry.Data()->AppendElement(sender);
@@ -149,8 +150,9 @@ nsresult ChildDNSService::CancelAsyncResolveInternal(
   MutexAutoLock lock(mPendingRequestsLock);
   nsTArray<RefPtr<DNSRequestSender>>* hashEntry;
   nsCString key;
+  uintptr_t listenerAddr = reinterpret_cast<uintptr_t>(aListener);
   GetDNSRecordHashKey(aHostname, aTrrServer, aType, aOriginAttributes, aFlags,
-                      aListener, key);
+                      listenerAddr, key);
   if (mPendingRequests.Get(key, &hashEntry)) {
     // We cancel just one.
     hashEntry->ElementAt(0)->Cancel(aReason);
@@ -417,14 +419,11 @@ ChildDNSService::GetMyHostName(nsACString& result) {
 void ChildDNSService::NotifyRequestDone(DNSRequestSender* aDnsRequest) {
   // We need the original flags and listener for the pending requests hash.
   uint32_t originalFlags = aDnsRequest->mFlags & ~RESOLVE_OFFLINE;
-  nsCOMPtr<nsIDNSListener> originalListener = aDnsRequest->mListener;
-  nsCOMPtr<nsIDNSListenerProxy> wrapper = do_QueryInterface(originalListener);
+  uintptr_t originalListenerAddr =
+      reinterpret_cast<uintptr_t>(aDnsRequest->mListener.get());
+  RefPtr<DNSListenerProxy> wrapper = do_QueryObject(aDnsRequest->mListener);
   if (wrapper) {
-    wrapper->GetOriginalListener(getter_AddRefs(originalListener));
-    if (NS_WARN_IF(!originalListener)) {
-      MOZ_ASSERT(originalListener);
-      return;
-    }
+    originalListenerAddr = wrapper->GetOriginalListenerAddress();
   }
 
   MutexAutoLock lock(mPendingRequestsLock);
@@ -432,7 +431,7 @@ void ChildDNSService::NotifyRequestDone(DNSRequestSender* aDnsRequest) {
   nsCString key;
   GetDNSRecordHashKey(aDnsRequest->mHost, aDnsRequest->mTrrServer,
                       aDnsRequest->mType, aDnsRequest->mOriginAttributes,
-                      originalFlags, originalListener, key);
+                      originalFlags, originalListenerAddr, key);
 
   nsTArray<RefPtr<DNSRequestSender>>* hashEntry;
 

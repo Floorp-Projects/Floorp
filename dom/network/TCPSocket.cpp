@@ -9,6 +9,7 @@
 #include "TCPSocket.h"
 #include "TCPServerSocket.h"
 #include "TCPSocketChild.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TCPSocketBinding.h"
 #include "mozilla/dom/TCPSocketErrorEvent.h"
 #include "mozilla/dom/TCPSocketErrorEventBinding.h"
@@ -721,8 +722,7 @@ void TCPSocket::CloseHelper(bool waitForUnsentData) {
   }
 }
 
-bool TCPSocket::Send(JSContext* aCx, const nsACString& aData,
-                     mozilla::ErrorResult& aRv) {
+bool TCPSocket::Send(const nsACString& aData, mozilla::ErrorResult& aRv) {
   if (mReadyState != TCPReadyState::Open) {
     aRv.Throw(NS_ERROR_FAILURE);
     return false;
@@ -748,8 +748,7 @@ bool TCPSocket::Send(JSContext* aCx, const nsACString& aData,
   return Send(stream, byteLength);
 }
 
-bool TCPSocket::Send(JSContext* aCx, const ArrayBuffer& aData,
-                     uint32_t aByteOffset,
+bool TCPSocket::Send(const ArrayBuffer& aData, uint32_t aByteOffset,
                      const Optional<uint32_t>& aByteLength,
                      mozilla::ErrorResult& aRv) {
   if (mReadyState != TCPReadyState::Open) {
@@ -770,7 +769,7 @@ bool TCPSocket::Send(JSContext* aCx, const ArrayBuffer& aData,
       return false;
     }
   } else {
-    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*aData.Obj()));
+    JS::Rooted<JS::Value> value(RootingCx(), JS::ObjectValue(*aData.Obj()));
 
     stream = do_CreateInstance("@mozilla.org/io/arraybuffer-input-stream;1");
     nsresult rv = stream->SetData(value, aByteOffset, byteLength);

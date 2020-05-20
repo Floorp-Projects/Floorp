@@ -65,7 +65,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     uint32_t i;
     mozilla::Span<JS::GCCellPtr>& output;
 
-    bool operator()(const ClosedOverBinding& data) {
+    bool operator()(const ScriptAtom& data) {
       JSAtom* atom = data;
       output[i] = JS::GCCellPtr(atom);
       return true;

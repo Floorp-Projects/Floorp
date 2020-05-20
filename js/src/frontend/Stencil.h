@@ -327,12 +327,12 @@ class EmptyGlobalScopeType {};
 // The lazy closed-over-binding info is represented by these types that will
 // convert to a GCCellPtr(nullptr), GCCellPtr(JSAtom*).
 class NullScriptThing {};
-using ClosedOverBinding = JSAtom*;
+using ScriptAtom = JSAtom*;
 
 // These types all end up being baked into GC things as part of stencil
 // instantiation.
 using ScriptThingVariant =
-    mozilla::Variant<ClosedOverBinding, NullScriptThing, BigIntIndex,
+    mozilla::Variant<ScriptAtom, NullScriptThing, BigIntIndex,
                      ObjLiteralCreationData, RegExpIndex, ScopeIndex,
                      FunctionIndex, EmptyGlobalScopeType>;
 
@@ -353,7 +353,6 @@ class ScriptStencilBase {
   ScriptThingsVector gcThings;
 
   // See `BaseScript::sharedData_`.
-  uint32_t natoms = 0;
   js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
 
   explicit ScriptStencilBase(JSContext* cx) : gcThings(cx) {}
@@ -378,10 +377,6 @@ class ScriptStencil : public ScriptStencilBase {
   // allocations within this stencil.
   JSScript* intoScript(JSContext* cx, CompilationInfo& compilationInfo,
                        SourceExtent extent);
-
-  // Store all atoms into `atoms`
-  // `atoms` is the pointer to `this.natoms`-length array of `GCPtrAtom`.
-  virtual void initAtomMap(GCPtrAtom* atoms) const = 0;
 };
 
 } /* namespace js::frontend */

@@ -233,7 +233,7 @@ You can find the list of Message Manager Actors (or "Legacy Actors") in `Browser
 .. note::
   The split in Message Manager Actors defined between ``BrowserGlue`` and ``ActorManagerParent`` is mainly to keep Firefox Desktop specific Actors separate from Actors that can (in theory) be instantiated for non-Desktop browsers (like Fennec and GeckoView-based browsers). Firefox Desktop-specific Actors should be registered in ``BrowserGlue``. Shared "toolkit" Actors should go into ``ActorManagerParent``.
 
-"Porting" these Actors often means doing what is necessary in order to move their registration entries from ``LEGACY_ACTORS`` to the ``ACTORS`` list.
+"Porting" these Actors often means doing what is necessary in order to move their registration entries from ``LEGACY_ACTORS`` to the ``JSWINDOWACTORS`` list.
 
 Figuring out the lifetime of a new Actor pair
 `````````````````````````````````````````````
@@ -256,9 +256,9 @@ For example, when porting the content area context menu for Firefox, it was note
 Registering a new JSWindowActor
 ```````````````````````````````
 
-``ChromeUtils`` exposes an API for registering window actors, but both ``BrowserGlue`` and ``ActorManagerParent`` are the main entry points where the registration occurs. If you want to register an actor, you should put them in one of the ``ACTORS`` lists in one of those two files. See :ref:`fission.message-manager-actors` for details.
+``ChromeUtils`` exposes an API for registering window actors, but both ``BrowserGlue`` and ``ActorManagerParent`` are the main entry points where the registration occurs. If you want to register an actor, you should put them in one of the ``JSWINDOWACTORS`` lists in one of those two files. See :ref:`fission.message-manager-actors` for details.
 
-The ``ACTORS`` lists expect a key-value pair, where the key is the name of the actor pair (example: ``ContextMenu``), and the value is an ``Object`` of registration parameters.
+The ``JSWINDOWACTORS`` lists expect a key-value pair, where the key is the name of the actor pair (example: ``ContextMenu``), and the value is an ``Object`` of registration parameters.
 
 The full list of registration parameters can be found in the `JSWindowActor.webidl`_ file as ``WindowActorOptions``, ``WindowActorSidedOptions`` and ``WindowActorChildOptions``.
 

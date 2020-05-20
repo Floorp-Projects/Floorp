@@ -35,8 +35,8 @@ class Options:
             "nargs": "*",
             "metavar": "TEST",
             "default": [],
-            "help": "Test to run. Can be a single test file or a directory of tests "
-            "(to run recursively). If omitted, the entire suite is run.",
+            "help": "Test to run. Can be a single test file or URL or a directory"
+            " of tests (to run recursively). If omitted, the entire suite is run.",
         },
         "--output": {
             "type": str,
@@ -44,7 +44,11 @@ class Options:
             "help": "Path to where data will be stored, defaults to a top-level "
             "`artifacts` folder.",
         },
-        "--hooks": {"type": str, "default": "", "help": "Python hooks"},
+        "--hooks": {
+            "type": str,
+            "default": "",
+            "help": "Script containing hooks. Can be a path or a URL.",
+        },
         "--verbose": {"action": "store_true", "default": False, "help": "Verbose mode"},
         "--push-to-try": {
             "action": "store_true",

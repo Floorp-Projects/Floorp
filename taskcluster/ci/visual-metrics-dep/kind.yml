@@ -29,14 +29,11 @@ job-template:
 
     worker:
         docker-image: {in-tree: visual-metrics}
-        max-run-time: 900
+        max-run-time: 1800
         artifacts:
-            - type: file
-              name: public/perfherder-data.json
-              path: /builds/worker/artifacts/perfherder-data.json
-            - type: file
-              name: public/summary.json
-              path: /builds/worker/artifacts/summary.json
+            - type: directory
+              name: public/
+              path: /builds/worker/artifacts/
     fetches:
         fetch:
             - visual-metrics

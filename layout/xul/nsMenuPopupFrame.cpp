@@ -550,7 +550,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
     mPrefSize = prefSize;
 #if MOZ_WAYLAND
     nsIWidget* widget = GetWidget();
-    if (widget) {
+    if (widget && mPopupState != ePopupShown) {
       // When the popup size changed in the DOM, we need to flush widget
       // preferred popup rect to avoid showing it in wrong size.
       widget->FlushPreferredPopupRect();

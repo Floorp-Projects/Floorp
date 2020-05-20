@@ -17,19 +17,11 @@ from mozunit import main
 
 CLANG_TESTS = [
     ('foobar.cpp:123:10: warning: you messed up [-Wfoo]',
-     'foobar.cpp', 123, 10, 'you messed up', '-Wfoo'),
-    ("c_locale_dummy.c:457:1: warning: (near initialization for "
-     "'full_wmonthname[0]') [-Wpointer-sign]",
-     'c_locale_dummy.c', 457, 1,
-     "(near initialization for 'full_wmonthname[0]')", '-Wpointer-sign')
-]
-
-MSVC_TESTS = [
-    ("C:/mozilla-central/test/foo.cpp(793) : warning C4244: 'return' : "
-     "conversion from 'double' to 'uint32_t', possible loss of data",
-     'C:/mozilla-central/test/foo.cpp', 793, 'C4244',
-     "'return' : conversion from 'double' to 'uint32_t', possible loss of "
-     'data')
+     'foobar.cpp', 123, 10, 'warning', 'you messed up', '-Wfoo'),
+    ("c_locale_dummy.c:457:1: error: (near initialization for "
+     "'full_wmonthname[0]') [clang-diagnostic-error]",
+     'c_locale_dummy.c', 457, 1, 'error',
+     "(near initialization for 'full_wmonthname[0]')", 'clang-diagnostic-error')
 ]
 
 CURRENT_LINE = 1
@@ -127,9 +119,9 @@ class TestCompilerWarning(unittest.TestCase):
         self.assertGreaterEqual(w1, w2)
 
 
-class TestWarningsParsing(unittest.TestCase):
+class TestWarningsAndErrorsParsing(unittest.TestCase):
     def test_clang_parsing(self):
-        for source, filename, line, column, message, flag in CLANG_TESTS:
+        for source, filename, line, column, diag_type, message, flag in CLANG_TESTS:
             collector = WarningsCollector(lambda w: None)
             warning = collector.process_line(source)
 
@@ -138,20 +130,9 @@ class TestWarningsParsing(unittest.TestCase):
             self.assertEqual(warning['filename'], filename)
             self.assertEqual(warning['line'], line)
             self.assertEqual(warning['column'], column)
+            self.assertEqual(warning['type'], diag_type)
             self.assertEqual(warning['message'], message)
             self.assertEqual(warning['flag'], flag)
-
-    def test_msvc_parsing(self):
-        for source, filename, line, flag, message in MSVC_TESTS:
-            collector = WarningsCollector(lambda w: None)
-            warning = collector.process_line(source)
-
-            self.assertIsNotNone(warning)
-
-            self.assertEqual(warning['filename'], os.path.normpath(filename))
-            self.assertEqual(warning['line'], line)
-            self.assertEqual(warning['flag'], flag)
-            self.assertEqual(warning['message'], message)
 
 
 class TestWarningsDatabase(unittest.TestCase):

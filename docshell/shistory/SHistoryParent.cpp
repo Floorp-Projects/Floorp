@@ -21,9 +21,8 @@ namespace mozilla {
 namespace dom {
 
 LegacySHistory::LegacySHistory(SHistoryParent* aSHistoryParent,
-                               CanonicalBrowsingContext* aRootBC,
-                               const nsID& aDocShellID)
-    : nsSHistory(aRootBC, aDocShellID), mSHistoryParent(aSHistoryParent) {
+                               CanonicalBrowsingContext* aRootBC)
+    : nsSHistory(aRootBC), mSHistoryParent(aSHistoryParent) {
   mIsRemote = true;
   aRootBC->SetSessionHistory(this);
 }
@@ -47,7 +46,7 @@ static void FillInLoadResult(
 }
 
 SHistoryParent::SHistoryParent(CanonicalBrowsingContext* aContext)
-    : mHistory(new LegacySHistory(this, aContext, nsID())) {}
+    : mHistory(new LegacySHistory(this, aContext)) {}
 
 SHistoryParent::~SHistoryParent() { mHistory->mSHistoryParent = nullptr; }
 

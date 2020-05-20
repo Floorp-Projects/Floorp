@@ -17,6 +17,9 @@ from .. import types
 
 
 TERMINAL_NAMES = {
+    '&&=': 'LogicalAndAssign',
+    '||=': 'LogicalOrAssign',
+    '??=': 'CoalesceAssign',
     '{': 'OpenBrace',
     '}': 'CloseBrace',
     '(': 'OpenParenthesis',

@@ -18,6 +18,8 @@
 #  endif
 #  include <stdarg.h>
 
+#  include "jsmath.h"
+
 #  include "util/Text.h"
 #  include "vm/JSFunction.h"
 #  include "vm/JSObject.h"
@@ -109,6 +111,10 @@ class MOZ_RAII CacheIROpsJitSpewer {
   }
   void spewMetaTwoByteKindImm(const char* name, MetaTwoByteKind kind) {
     out_.printf("%s MetaTwoByteKind(%u)", name, unsigned(kind));
+  }
+  void spewUnaryMathFunctionImm(const char* name, UnaryMathFunction fun) {
+    const char* funName = GetUnaryMathFunctionName(fun);
+    out_.printf("%s UnaryMathFunction::%s", name, funName);
   }
   void spewValueTypeImm(const char* name, ValueType type) {
     out_.printf("%s ValueType(%u)", name, unsigned(type));
@@ -246,6 +252,10 @@ class MOZ_RAII CacheIROpsJSONSpewer {
   }
   void spewMetaTwoByteKindImm(const char* name, MetaTwoByteKind kind) {
     spewArgImpl(name, "Imm", unsigned(kind));
+  }
+  void spewUnaryMathFunctionImm(const char* name, UnaryMathFunction fun) {
+    const char* funName = GetUnaryMathFunctionName(fun);
+    spewArgImpl(name, "MathFunction", funName);
   }
   void spewValueTypeImm(const char* name, ValueType type) {
     spewArgImpl(name, "Imm", unsigned(type));

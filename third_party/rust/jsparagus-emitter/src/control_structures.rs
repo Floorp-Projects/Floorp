@@ -2,6 +2,7 @@ use crate::ast_emitter::AstEmitter;
 use crate::bytecode_offset::{BytecodeOffset, BytecodeOffsetDiff};
 use crate::emitter::EmitError;
 use crate::emitter::InstructionWriter;
+use crate::emitter_scope::EmitterScopeDepth;
 use ast::source_atom_set::SourceAtomSetIndex;
 
 // Control structures
@@ -122,7 +123,9 @@ pub trait Continuable {
     fn emit_continue_target_and_patch(&mut self, emit: &mut InstructionWriter);
 }
 
+#[derive(Debug, PartialEq)]
 pub struct LoopControl {
+    enclosing_emitter_scope_depth: EmitterScopeDepth,
     breaks: Vec<BytecodeOffset>,
     continues: Vec<BytecodeOffset>,
     head: BytecodeOffset,
@@ -153,9 +156,14 @@ impl Continuable for LoopControl {
 }
 
 impl LoopControl {
-    pub fn new(emit: &mut InstructionWriter, depth: u8) -> Self {
+    pub fn new(
+        emit: &mut InstructionWriter,
+        depth: u8,
+        enclosing_emitter_scope_depth: EmitterScopeDepth,
+    ) -> Self {
         let offset = LoopControl::open_loop(emit, depth);
         Self {
+            enclosing_emitter_scope_depth,
             breaks: Vec::new(),
             continues: Vec::new(),
             head: offset,
@@ -184,8 +192,9 @@ impl LoopControl {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct LabelControl {
+    enclosing_emitter_scope_depth: EmitterScopeDepth,
     name: SourceAtomSetIndex,
     breaks: Vec<BytecodeOffset>,
     head: BytecodeOffset,
@@ -199,14 +208,21 @@ impl Breakable for LabelControl {
     }
 
     fn emit_break_target_and_patch(&mut self, emit: &mut InstructionWriter) {
-        emit.emit_jump_target_and_patch(&self.breaks);
+        if !self.breaks.is_empty() {
+            emit.emit_jump_target_and_patch(&self.breaks);
+        }
     }
 }
 
 impl LabelControl {
-    pub fn new(name: SourceAtomSetIndex, emit: &mut InstructionWriter) -> Self {
+    pub fn new(
+        name: SourceAtomSetIndex,
+        emit: &mut InstructionWriter,
+        enclosing_emitter_scope_depth: EmitterScopeDepth,
+    ) -> Self {
         let offset = emit.bytecode_offset();
         Self {
+            enclosing_emitter_scope_depth,
             name,
             head: offset,
             breaks: Vec::new(),
@@ -214,9 +230,19 @@ impl LabelControl {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Control {
     Loop(LoopControl),
     Label(LabelControl),
+}
+
+impl Control {
+    fn enclosing_emitter_scope_depth(&self) -> EmitterScopeDepth {
+        match self {
+            Control::Loop(control) => control.enclosing_emitter_scope_depth,
+            Control::Label(control) => control.enclosing_emitter_scope_depth,
+        }
+    }
 }
 
 // Compared to C++ impl, this uses explicit stack struct,
@@ -233,21 +259,31 @@ impl ControlStructureStack {
         }
     }
 
-    pub fn open_loop(&mut self, emit: &mut InstructionWriter) {
+    pub fn open_loop(
+        &mut self,
+        emit: &mut InstructionWriter,
+        enclosing_emitter_scope_depth: EmitterScopeDepth,
+    ) {
         let depth = (self.control_stack.len() + 1) as u8;
 
-        let new_loop = Control::Loop(LoopControl::new(emit, depth));
+        let new_loop = Control::Loop(LoopControl::new(emit, depth, enclosing_emitter_scope_depth));
 
         self.control_stack.push(new_loop);
     }
 
-    pub fn open_label(&mut self, name: SourceAtomSetIndex, emit: &mut InstructionWriter) {
-        let new_label = LabelControl::new(name, emit);
+    pub fn open_label(
+        &mut self,
+        name: SourceAtomSetIndex,
+        emit: &mut InstructionWriter,
+        enclosing_emitter_scope_depth: EmitterScopeDepth,
+    ) {
+        let new_label = LabelControl::new(name, emit, enclosing_emitter_scope_depth);
         self.control_stack.push(Control::Label(new_label));
     }
 
     pub fn register_break(&mut self, offset: BytecodeOffset) {
         let innermost = self.innermost();
+
         match innermost {
             Control::Label(control) => control.register_break(offset),
             Control::Loop(control) => control.register_break(offset),
@@ -265,12 +301,9 @@ impl ControlStructureStack {
     }
 
     pub fn register_labelled_break(&mut self, label: SourceAtomSetIndex, offset: BytecodeOffset) {
-        if let Some(control) = self.find_labelled_loop(label) {
-            control.register_break(offset);
-        } else {
-            panic!(
-                "A labelled break was passed, but no label was found. This should be caught by early errors"
-            )
+        match self.find_labelled_control(label) {
+            Control::Label(control) => control.register_break(offset),
+            Control::Loop(control) => control.register_break(offset),
         }
     }
 
@@ -289,7 +322,7 @@ impl ControlStructureStack {
     }
 
     pub fn find_labelled_loop(&mut self, label: SourceAtomSetIndex) -> Option<&mut LoopControl> {
-        let label_index = self.find_labelled_index(label)?;
+        let label_index = self.find_labelled_index(label);
         // To find the associated loop for a label, we can take the label's index + 1, as the
         // associated loop should always be in the position after the label.
         let control = self.control_stack.get_mut(label_index + 1);
@@ -299,16 +332,34 @@ impl ControlStructureStack {
         }
     }
 
-    pub fn find_labelled_index(&mut self, label: SourceAtomSetIndex) -> Option<usize> {
-        self.control_stack.iter().position(|control| match control {
-            Control::Label(control) => {
-                if control.name == label {
-                    return true;
+    pub fn find_labelled_control(&mut self, label: SourceAtomSetIndex) -> &mut Control {
+        self.control_stack
+            .iter_mut()
+            .find(|control| match control {
+                Control::Label(control) => {
+                    if control.name == label {
+                        return true;
+                    }
+                    false
                 }
-                false
-            }
-            _ => false,
-        })
+                _ => false,
+            })
+            .expect("there should be a control with this label")
+    }
+
+    pub fn find_labelled_index(&mut self, label: SourceAtomSetIndex) -> usize {
+        self.control_stack
+            .iter()
+            .position(|control| match control {
+                Control::Label(control) => {
+                    if control.name == label {
+                        return true;
+                    }
+                    false
+                }
+                _ => false,
+            })
+            .expect("there should be a control with this label")
     }
 
     pub fn emit_continue_target_and_patch(&mut self, emit: &mut InstructionWriter) {
@@ -353,74 +404,74 @@ impl ControlStructureStack {
     }
 }
 
-// Struct for multiple jumps that point to the same target. Examples are breaks and loop conditions.
-pub struct BreakEmitter {
-    pub jump: JumpKind,
-    pub label: Option<SourceAtomSetIndex>,
+struct RegisteredJump<F1>
+where
+    F1: Fn(&mut AstEmitter, BytecodeOffset),
+{
+    kind: JumpKind,
+    // This callback registers the bytecode offset of the jump in a list of bytecode offsets
+    // associated with a loop or a label.
+    register_offset: F1,
 }
 
-impl Jump for BreakEmitter {
+impl<F1> Jump for RegisteredJump<F1>
+where
+    F1: Fn(&mut AstEmitter, BytecodeOffset),
+{
     fn jump_kind(&mut self) -> &JumpKind {
-        &self.jump
+        &self.kind
     }
+}
+
+impl<F1> RegisteredJump<F1>
+where
+    F1: Fn(&mut AstEmitter, BytecodeOffset),
+{
+    pub fn emit(&mut self, emitter: &mut AstEmitter) {
+        let offset = emitter.emit.bytecode_offset();
+        self.emit_jump(emitter);
+        (self.register_offset)(emitter, offset);
+    }
+}
+
+// Struct for multiple jumps that point to the same target. Examples are breaks and loop conditions.
+pub struct BreakEmitter {
+    pub label: Option<SourceAtomSetIndex>,
 }
 
 impl BreakEmitter {
     pub fn emit(&mut self, emitter: &mut AstEmitter) {
-        // TODO: For 'break' statements in non local loops, we need to emit some extra bytecode.
-        // see https://searchfox.org/mozilla-central/rev/a707541ff423ade0d81cef6488e6ecfa09273886/js/src/frontend/BytecodeEmitter.cpp#702-840
-        let offset = emitter.emit.bytecode_offset();
-        match self.label {
-            Some(label) => emitter.control_stack.register_labelled_break(label, offset),
-            None => emitter.control_stack.register_break(offset),
+        NonLocalExitControl {
+            registered_jump: RegisteredJump {
+                kind: JumpKind::Goto,
+                register_offset: |emitter, offset| match self.label {
+                    Some(label) => emitter.control_stack.register_labelled_break(label, offset),
+                    None => emitter.control_stack.register_break(offset),
+                },
+            },
         }
-
-        self.emit_jump(emitter);
-    }
-}
-
-// Struct for multiple jumps that point to the same target. Examples are breaks and loop conditions.
-pub struct InternalBreakEmitter {
-    pub jump: JumpKind,
-}
-
-impl Jump for InternalBreakEmitter {
-    fn jump_kind(&mut self) -> &JumpKind {
-        &self.jump
-    }
-}
-
-impl InternalBreakEmitter {
-    pub fn emit(&mut self, emitter: &mut AstEmitter) {
-        let offset = emitter.emit.bytecode_offset();
-        emitter.control_stack.register_break(offset);
-        self.emit_jump(emitter);
+        .emit(emitter, self.label);
     }
 }
 
 pub struct ContinueEmitter {
-    pub jump: JumpKind,
     pub label: Option<SourceAtomSetIndex>,
-}
-
-impl Jump for ContinueEmitter {
-    fn jump_kind(&mut self) -> &JumpKind {
-        &self.jump
-    }
 }
 
 impl ContinueEmitter {
     pub fn emit(&mut self, emitter: &mut AstEmitter) {
-        // TODO: For 'continue' statements in non local loops, we need to emit some extra bytecode.
-        // see https://searchfox.org/mozilla-central/rev/a707541ff423ade0d81cef6488e6ecfa09273886/js/src/frontend/BytecodeEmitter.cpp#702-840
-        let offset = emitter.emit.bytecode_offset();
-        match self.label {
-            Some(label) => emitter
-                .control_stack
-                .register_labelled_continue(label, offset),
-            None => emitter.control_stack.register_continue(offset),
+        NonLocalExitControl {
+            registered_jump: RegisteredJump {
+                kind: JumpKind::Goto,
+                register_offset: |emitter, offset| match self.label {
+                    Some(label) => emitter
+                        .control_stack
+                        .register_labelled_continue(label, offset),
+                    None => emitter.control_stack.register_continue(offset),
+                },
+            },
         }
-        self.emit_jump(emitter);
+        .emit(emitter, self.label);
     }
 }
 
@@ -429,6 +480,7 @@ where
     F1: Fn(&mut AstEmitter) -> Result<(), EmitError>,
     F2: Fn(&mut AstEmitter) -> Result<(), EmitError>,
 {
+    pub enclosing_emitter_scope_depth: EmitterScopeDepth,
     pub test: F1,
     pub block: F2,
 }
@@ -438,12 +490,16 @@ where
     F2: Fn(&mut AstEmitter) -> Result<(), EmitError>,
 {
     pub fn emit(&mut self, emitter: &mut AstEmitter) -> Result<(), EmitError> {
-        emitter.control_stack.open_loop(&mut emitter.emit);
+        emitter
+            .control_stack
+            .open_loop(&mut emitter.emit, self.enclosing_emitter_scope_depth);
 
         (self.test)(emitter)?;
 
-        InternalBreakEmitter {
-            jump: JumpKind::IfEq,
+        // add a registered jump for the conditional statement
+        RegisteredJump {
+            kind: JumpKind::IfEq,
+            register_offset: |emitter, offset| emitter.control_stack.register_break(offset),
         }
         .emit(emitter);
 
@@ -464,6 +520,7 @@ where
     F1: Fn(&mut AstEmitter) -> Result<(), EmitError>,
     F2: Fn(&mut AstEmitter) -> Result<(), EmitError>,
 {
+    pub enclosing_emitter_scope_depth: EmitterScopeDepth,
     pub block: F2,
     pub test: F1,
 }
@@ -473,7 +530,9 @@ where
     F2: Fn(&mut AstEmitter) -> Result<(), EmitError>,
 {
     pub fn emit(&mut self, emitter: &mut AstEmitter) -> Result<(), EmitError> {
-        emitter.control_stack.open_loop(&mut emitter.emit);
+        emitter
+            .control_stack
+            .open_loop(&mut emitter.emit, self.enclosing_emitter_scope_depth);
 
         (self.block)(emitter)?;
 
@@ -483,8 +542,10 @@ where
 
         (self.test)(emitter)?;
 
-        InternalBreakEmitter {
-            jump: JumpKind::IfEq,
+        // add a registered jump for the conditional statement
+        RegisteredJump {
+            kind: JumpKind::IfEq,
+            register_offset: |emitter, offset| emitter.control_stack.register_break(offset),
         }
         .emit(emitter);
 
@@ -501,6 +562,7 @@ where
     UpdateFn: Fn(&mut AstEmitter, &ExprT) -> Result<(), EmitError>,
     BlockFn: Fn(&mut AstEmitter) -> Result<(), EmitError>,
 {
+    pub enclosing_emitter_scope_depth: EmitterScopeDepth,
     pub maybe_init: &'a Option<CondT>,
     pub maybe_test: &'a Option<ExprT>,
     pub maybe_update: &'a Option<ExprT>,
@@ -525,14 +587,18 @@ where
         }
 
         // Emit loop head
-        emitter.control_stack.open_loop(&mut emitter.emit);
+        emitter
+            .control_stack
+            .open_loop(&mut emitter.emit, self.enclosing_emitter_scope_depth);
 
         // if there is a test condition (ie x < 3) emit it
         if let Some(test) = self.maybe_test {
             (self.test)(emitter, &test)?;
 
-            InternalBreakEmitter {
-                jump: JumpKind::IfEq,
+            // add a registered jump for the conditional statement
+            RegisteredJump {
+                kind: JumpKind::IfEq,
+                register_offset: |emitter, offset| emitter.control_stack.register_break(offset),
             }
             .emit(emitter);
         }
@@ -560,6 +626,7 @@ pub struct LabelEmitter<F1>
 where
     F1: Fn(&mut AstEmitter) -> Result<(), EmitError>,
 {
+    pub enclosing_emitter_scope_depth: EmitterScopeDepth,
     pub name: SourceAtomSetIndex,
     pub body: F1,
 }
@@ -569,13 +636,69 @@ where
     F1: Fn(&mut AstEmitter) -> Result<(), EmitError>,
 {
     pub fn emit(&mut self, emitter: &mut AstEmitter) -> Result<(), EmitError> {
-        emitter
-            .control_stack
-            .open_label(self.name, &mut emitter.emit);
+        emitter.control_stack.open_label(
+            self.name,
+            &mut emitter.emit,
+            self.enclosing_emitter_scope_depth,
+        );
 
         (self.body)(emitter)?;
 
         emitter.control_stack.close_label(&mut emitter.emit);
         Ok(())
+    }
+}
+
+pub struct NonLocalExitControl<F1>
+where
+    F1: Fn(&mut AstEmitter, BytecodeOffset),
+{
+    registered_jump: RegisteredJump<F1>,
+}
+
+impl<F1> NonLocalExitControl<F1>
+where
+    F1: Fn(&mut AstEmitter, BytecodeOffset),
+{
+    pub fn emit(&mut self, emitter: &mut AstEmitter, label: Option<SourceAtomSetIndex>) {
+        // Step 1: find the enclosing emitter scope
+        let enclosing_emitter_scope_depth = match label {
+            Some(label) => emitter
+                .control_stack
+                .find_labelled_control(label)
+                .enclosing_emitter_scope_depth(),
+            None => emitter
+                .control_stack
+                .innermost()
+                .enclosing_emitter_scope_depth(),
+        };
+
+        // Step 2: find the current emitter scope
+        let current_scope_index = emitter.scope_stack.current_depth();
+
+        // Step 3: iterate over scopes that have been entered since the enclosing scope,
+        // add a scope note hole for each one as we exit
+        let mut holes = Vec::new();
+        let scope_indicies = emitter
+            .scope_stack
+            .scope_note_indices_from_to(&enclosing_emitter_scope_depth, &current_scope_index);
+        let mut parent_scope_note_index = emitter
+            .scope_stack
+            .get_scope_note_index_for(current_scope_index);
+        for maybe_scope_note_index in scope_indicies.iter().rev() {
+            let scope_note_index = emitter
+                .emit
+                .enter_scope_hole(maybe_scope_note_index, parent_scope_note_index);
+            holes.push(scope_note_index);
+            parent_scope_note_index = Some(scope_note_index);
+        }
+
+        // Step 4: perform the jump
+        self.registered_jump.emit(emitter);
+
+        // Step 5: close each scope hole after the jump
+        for scope_note_hole_index in holes.iter() {
+            emitter.emit.leave_scope_hole(*scope_note_hole_index);
+        }
     }
 }

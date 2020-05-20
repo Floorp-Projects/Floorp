@@ -570,12 +570,13 @@
 }
 
 .table-widget-body {
+  width: 100%;
+  height: 100%;
   overflow: auto;
 }
 
-.table-widget-body,
-.table-widget-empty-text {
-  background-color: var(--theme-body-background);
+.table-widget-body[empty="empty"] {
+  display: none;
 }
 
 /* Column Headers */
@@ -674,9 +675,7 @@
 
 .table-widget-empty-text {
   display: none;
-  text-align: center;
   font-size: large;
-  margin-top: -20px !important;
 }
 
 .table-widget-body:empty + .table-widget-empty-text:not([value=""]),

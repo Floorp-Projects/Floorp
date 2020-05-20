@@ -10,9 +10,6 @@
 
 namespace mozilla {
 
-NS_IMPL_ADDREF(GMPCrashHelper)
-NS_IMPL_RELEASE_WITH_DESTROY(GMPCrashHelper, Destroy())
-
 void GMPCrashHelper::Destroy() {
   if (NS_IsMainThread()) {
     delete this;

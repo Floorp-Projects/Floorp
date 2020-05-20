@@ -6,4 +6,5 @@ DevToolsModules(
   'HtmlPreview.js',
   'ImagePreview.js',
   'SourcePreview.js',
+  'UrlPreview.js'
 )

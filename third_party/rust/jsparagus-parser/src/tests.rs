@@ -181,8 +181,8 @@ fn assert_same_tokens<'alloc>(left: &str, right: &str) {
         if left_token.terminal_id == TerminalId::End {
             break;
         }
-        left_parser.write_token(&left_token).unwrap();
-        right_parser.write_token(&right_token).unwrap();
+        left_parser.write_token(left_token).unwrap();
+        right_parser.write_token(right_token).unwrap();
     }
     left_parser.close(left_lexer.offset()).unwrap();
     right_parser.close(left_lexer.offset()).unwrap();
@@ -203,7 +203,7 @@ fn assert_can_close_after<'alloc, T: IntoChunks<'alloc>>(code: T) {
         if t.terminal_id == TerminalId::End {
             break;
         }
-        parser.write_token(&t).unwrap();
+        parser.write_token(t).unwrap();
     }
     assert!(parser.can_close());
 }

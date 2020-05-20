@@ -5,30 +5,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from mozboot.base import BaseBootstrapper
-from mozboot.linux_common import (
-    ClangStaticAnalysisInstall,
-    FixStacksInstall,
-    LucetcInstall,
-    MinidumpStackwalkInstall,
-    NasmInstall,
-    NodeInstall,
-    SccacheInstall,
-    StyloInstall,
-    WasiSysrootInstall,
-)
+from mozboot.linux_common import LinuxBootstrapper
 
 
 class OpenSUSEBootstrapper(
-        ClangStaticAnalysisInstall,
-        FixStacksInstall,
-        LucetcInstall,
-        MinidumpStackwalkInstall,
-        NasmInstall,
-        NodeInstall,
-        SccacheInstall,
-        StyloInstall,
-        WasiSysrootInstall,
-        BaseBootstrapper):
+        LinuxBootstrapper, BaseBootstrapper):
     '''openSUSE experimental bootstrapper.'''
 
     SYSTEM_PACKAGES = [

@@ -1,0 +1,7 @@
+{
+  "ui:order": [
+    "thirdPartyId",
+    "overridesId",
+    "urls"
+  ]
+}

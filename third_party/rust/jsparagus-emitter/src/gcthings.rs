@@ -1,18 +1,20 @@
 use crate::function::FunctionCreationDataIndex;
 use crate::regexp::RegExpIndex;
+use ast::source_atom_set::SourceAtomSetIndex;
 use scope::data::ScopeIndex;
 
 /// Corresponds to js::frontend::GCThingList::ListType
 /// in m-c/js/src/frontend/BytecodeSection.h.
 #[derive(Debug)]
 pub enum GCThing {
+    Atom(SourceAtomSetIndex),
     Function(FunctionCreationDataIndex),
     RegExp(RegExpIndex),
     Scope(ScopeIndex),
 }
 
 /// Index into GCThingList.things.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GCThingIndex {
     index: usize,
 }
@@ -40,6 +42,12 @@ pub struct GCThingList {
 impl GCThingList {
     pub fn new() -> Self {
         Self { things: Vec::new() }
+    }
+
+    pub fn push_atom(&mut self, atom_index: SourceAtomSetIndex) -> GCThingIndex {
+        let index = self.things.len();
+        self.things.push(GCThing::Atom(atom_index));
+        GCThingIndex::new(index)
     }
 
     pub fn push_function(&mut self, fun_index: FunctionCreationDataIndex) -> GCThingIndex {
