@@ -2885,13 +2885,23 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
                       &matchResultFallback);
   masm.bind(&matchResultJoin);
 
-  // Initialize slots of result object.
+#ifdef ENABLE_NEW_REGEXP
+  MOZ_ASSERT(nativeTemplateObj.numFixedSlots() == 0);
+  MOZ_ASSERT(nativeTemplateObj.numDynamicSlots() == 3);
+  static_assert(RegExpRealm::MatchResultObjectIndexSlot == 0,
+                "First slot holds the 'index' property");
+  static_assert(RegExpRealm::MatchResultObjectInputSlot == 1,
+                "Second slot holds the 'input' property");
+  static_assert(RegExpRealm::MatchResultObjectGroupsSlot == 2,
+                "Third slot holds the 'groups' property");
+#else
   MOZ_ASSERT(nativeTemplateObj.numFixedSlots() == 0);
   MOZ_ASSERT(nativeTemplateObj.numDynamicSlots() == 2);
   static_assert(RegExpRealm::MatchResultObjectIndexSlot == 0,
                 "First slot holds the 'index' property");
   static_assert(RegExpRealm::MatchResultObjectInputSlot == 1,
                 "Second slot holds the 'input' property");
+#endif
 
   masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
   masm.storeValue(

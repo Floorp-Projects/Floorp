@@ -32,7 +32,8 @@ MOZ_MUST_USE bool ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res,
                                       MutableHandleValue rval);
 
 // Translation from MatchPairs to a JS array in regexp_exec()'s output format.
-MOZ_MUST_USE bool CreateRegExpMatchResult(JSContext* cx, HandleString input,
+MOZ_MUST_USE bool CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
+                                          HandleString input,
                                           const MatchPairs& matches,
                                           MutableHandleValue rval);
 

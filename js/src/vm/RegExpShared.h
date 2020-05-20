@@ -391,6 +391,9 @@ class RegExpRealm {
 
   static const size_t MatchResultObjectIndexSlot = 0;
   static const size_t MatchResultObjectInputSlot = 1;
+#ifdef ENABLE_NEW_REGEXP
+  static const size_t MatchResultObjectGroupsSlot = 2;
+#endif
 
   /* Get or create template object used to base the result of .exec() on. */
   ArrayObject* getOrCreateMatchResultTemplateObject(JSContext* cx) {
