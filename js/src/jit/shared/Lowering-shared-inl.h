@@ -297,8 +297,21 @@ void LIRGeneratorShared::defineReturn(LInstruction* lir, MDefinition* mir) {
       break;
     default:
       LDefinition::Type type = LDefinition::TypeFrom(mir->type());
-      MOZ_ASSERT(type != LDefinition::DOUBLE && type != LDefinition::FLOAT32);
-      lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
+      switch (type) {
+        case LDefinition::GENERAL:
+        case LDefinition::INT32:
+        case LDefinition::OBJECT:
+        case LDefinition::SLOTS:
+        case LDefinition::STACKRESULTS:
+          lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
+          break;
+        case LDefinition::DOUBLE:
+        case LDefinition::FLOAT32:
+        case LDefinition::SIMD128:
+          MOZ_CRASH("Float cases must have been handled earlier");
+        default:
+          MOZ_CRASH("Unexpected type");
+      }
       break;
   }
 

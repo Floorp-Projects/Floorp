@@ -1908,7 +1908,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Shuffle - permute with immediate indices
 
-  inline void shuffleInt8x16(uint8_t lanes[16], FloatRegister rhs,
+  inline void shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
                              FloatRegister lhsDest, FloatRegister temp)
       DEFINED_ON(x86_shared);
 

@@ -540,7 +540,7 @@ void MacroAssemblerX86Shared::swizzleFloat32x4(FloatRegister input,
 void MacroAssemblerX86Shared::shuffleInt8x16(
     FloatRegister lhs, FloatRegister rhs, FloatRegister output,
     const Maybe<FloatRegister>& maybeFloatTemp,
-    const Maybe<Register>& maybeTemp, uint8_t lanes[16]) {
+    const Maybe<Register>& maybeTemp, const uint8_t lanes[16]) {
   DebugOnly<bool> hasSSSE3 = AssemblerX86Shared::HasSSSE3();
   MOZ_ASSERT(hasSSSE3 == !!maybeFloatTemp);
   MOZ_ASSERT(!hasSSSE3 == !!maybeTemp);
