@@ -18,7 +18,8 @@
 }
 
 .inline-preview-label {
-  padding: 1px 2px 1px 4px;
+  padding: 0px 2px 0px 4px;
+  border-radius: 2px 0 0 2px;
   color: var(--theme-inline-preview-label-color);
   background-color: var(--theme-inline-preview-label-background);
 }
