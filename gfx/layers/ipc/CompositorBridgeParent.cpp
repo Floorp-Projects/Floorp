@@ -2504,6 +2504,9 @@ bool CompositorBridgeParent::IsSameProcess() const {
 
 void CompositorBridgeParent::NotifyWebRenderContextPurge() {
   MOZ_ASSERT(CompositorThread()->IsOnCurrentThread());
+  if (!mWrBridge) {
+    return;
+  }
   RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
   api->ClearAllCaches();
 }
