@@ -235,7 +235,8 @@ TEST_SUITES = {
     'web-platform-tests-reftest': {
         'aliases': ('wpt',),
         'mach_command': 'web-platform-tests',
-        'kwargs': {'include': []},
+        'build_flavor': 'web-platform-tests',
+        'kwargs': {'subsuite': 'reftest'},
         'task_regex': ['web-platform-tests-reftest($|.*(-1|[^0-9])$)',
                        'test-verify-wpt'],
     },
