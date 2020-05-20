@@ -23,3 +23,9 @@ class PerfherderValidDataError(Exception):
     """Raised when no valid data (int/float) can be found to build perfherder blob."""
 
     pass
+
+
+class NotebookInvalidTransformError(Exception):
+    """Raised when an invalid custom transformer is set."""
+
+    pass

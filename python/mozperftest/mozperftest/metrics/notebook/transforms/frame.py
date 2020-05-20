@@ -6,7 +6,6 @@ from sys import stdout
 
 import cv2
 from ..logger import NotebookLogger
-from ..transformer import Transformer
 
 logger = NotebookLogger()
 
@@ -21,7 +20,7 @@ def finish_same_line():
     stdout.write("\r  \r\n")
 
 
-class FrameRetriever(Transformer):
+class FrameRetriever:
     entry_number = 0
 
     def open_data(self, file):

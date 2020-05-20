@@ -1,11 +1,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from ..transformer import Transformer
 from ..utilities import flat
 
 
-class SingleJsonRetriever(Transformer):
+class SingleJsonRetriever:
     """Transforms perfherder data into the standardized data format.
     """
 
