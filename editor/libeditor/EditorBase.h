@@ -1744,8 +1744,6 @@ class EditorBase : public nsIEditor,
    */
   nsresult CollapseSelectionToEnd();
 
-  static bool IsPreformatted(nsINode* aNode);
-
   /**
    * AllowsTransactionsToChangeSelection() returns true if editor allows any
    * transactions to change Selection.  Otherwise, transactions shouldn't
