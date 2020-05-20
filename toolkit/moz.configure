@@ -1400,7 +1400,8 @@ option('--enable-layout-debugger',
        default=layout_debugger,
        help='{Enable|Disable} layout debugger')
 
-set_config('MOZ_LAYOUT_DEBUGGER', depends_if('--enable-layout-debugger')(lambda _: True))
+set_config('MOZ_LAYOUT_DEBUGGER', True, when='--enable-layout-debugger')
+set_define('MOZ_LAYOUT_DEBUGGER', True, when='--enable-layout-debugger')
 
 
 # Shader Compiler for Windows (and MinGW Cross Compile)
