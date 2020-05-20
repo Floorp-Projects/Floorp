@@ -131,8 +131,10 @@ async function callRequestStorageAccess(callback, expectFail) {
     window.location.search != "?disableWaitUntilPermission" &&
     origin != "https://another-tracking.example.net"
   ) {
-    // Wait until the permission is visible in our process to avoid race
-    // conditions.
+    // Wait until the permission is visible in parent process to avoid race
+    // conditions. We don't need to wait the permission to be visible in content
+    // processes since the content process doesn't rely on the permission to
+    // know the storage access is updated.
     await waitUntilPermission(
       "http://example.net/browser/toolkit/components/antitracking/test/browser/page.html",
       "3rdPartyStorage^" + window.origin
@@ -142,27 +144,21 @@ async function callRequestStorageAccess(callback, expectFail) {
   return [threw, rejected];
 }
 
-// Creates principal with private browsing id OA where applicable
-function createPrincipal(url) {
-  let oa = {};
-  if (SpecialPowers.isContentWindowPrivate(window)) {
-    oa.privateBrowsingId = 1;
-  }
-  return SpecialPowers.Services.scriptSecurityManager.createContentPrincipal(
-    SpecialPowers.Services.io.newURI(url),
-    oa
-  );
-}
-
 async function waitUntilPermission(url, name) {
-  let principal = createPrincipal(url);
+  let originAttributes = SpecialPowers.isContentWindowPrivate(window)
+    ? { privateBrowsingId: 1 }
+    : {};
   await new Promise(resolve => {
-    let id = setInterval(_ => {
+    let id = setInterval(async _ => {
       if (
-        SpecialPowers.Services.perms.testPermissionFromPrincipal(
-          principal,
-          name
-        ) == SpecialPowers.Services.perms.ALLOW_ACTION
+        await SpecialPowers.testPermission(
+          name,
+          SpecialPowers.Services.perms.ALLOW_ACTION,
+          {
+            url,
+            originAttributes,
+          }
+        )
       ) {
         clearInterval(id);
         resolve();
