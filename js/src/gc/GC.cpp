@@ -4205,8 +4205,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
    */
   {
     AutoLockHelperThreadState helperLock;
-    HelperThreadState().startHandlingCompressionTasks(
-        helperLock, GlobalHelperThreadState::ScheduleCompressionTask::GC);
+    HelperThreadState().startHandlingCompressionTasks(helperLock);
   }
 
   return true;
