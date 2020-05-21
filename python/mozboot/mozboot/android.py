@@ -136,9 +136,12 @@ def install_mobile_android_sdk_or_ndk(url, path):
             subprocess.check_call(cmd, stdout=stdout)
 
         print('Unpacking %s... DONE' % abspath)
-
+        # Now delete the archive
+        os.unlink(abspath)
     finally:
         os.chdir(old_path)
+        # Remove the download directory
+        os.rmdir(download_path)
 
 
 def get_paths(os_name):
@@ -167,7 +170,8 @@ def ensure_dir(dir):
                 raise
 
 
-def ensure_android(os_name, artifact_mode=False, ndk_only=False, no_interactive=False):
+def ensure_android(os_name, artifact_mode=False, ndk_only=False,
+                   emulator_only=False, no_interactive=False):
     '''
     Ensure the Android SDK (and NDK, if `artifact_mode` is falsy) are
     installed.  If not, fetch and unpack the SDK and/or NDK from the
@@ -189,7 +193,8 @@ def ensure_android(os_name, artifact_mode=False, ndk_only=False, no_interactive=
                                sdk_path=sdk_path, sdk_url=sdk_url,
                                ndk_path=ndk_path, ndk_url=ndk_url,
                                artifact_mode=artifact_mode,
-                               ndk_only=ndk_only)
+                               ndk_only=ndk_only,
+                               emulator_only=emulator_only)
 
     if ndk_only:
         return
@@ -197,11 +202,12 @@ def ensure_android(os_name, artifact_mode=False, ndk_only=False, no_interactive=
     # We expect the |sdkmanager| tool to be at
     # ~/.mozbuild/android-sdk-$OS_NAME/tools/bin/sdkmanager.
     ensure_android_packages(sdkmanager_tool=sdkmanager_tool(sdk_path),
+                            emulator_only=emulator_only,
                             no_interactive=no_interactive)
 
 
 def ensure_android_sdk_and_ndk(mozbuild_path, os_name, sdk_path, sdk_url, ndk_path, ndk_url,
-                               artifact_mode, ndk_only):
+                               artifact_mode, ndk_only, emulator_only):
     '''
     Ensure the Android SDK and NDK are found at the given paths.  If not, fetch
     and unpack the SDK and/or NDK from the given URLs into
@@ -212,7 +218,7 @@ def ensure_android_sdk_and_ndk(mozbuild_path, os_name, sdk_path, sdk_url, ndk_pa
     # a while to unpack, so let's avoid the disk activity if possible.  The SDK
     # may prompt about licensing, so we do this first.
     # Check for Android NDK only if we are not in artifact mode.
-    if not artifact_mode:
+    if not artifact_mode and not emulator_only:
         if os.path.isdir(ndk_path):
             print(ANDROID_NDK_EXISTS % ndk_path)
         else:
@@ -259,7 +265,7 @@ def get_packages_to_install(packages_file_name):
         return map(lambda package: package.strip(), package_file.readlines())
 
 
-def ensure_android_packages(sdkmanager_tool, packages=None, no_interactive=False):
+def ensure_android_packages(sdkmanager_tool, emulator_only=False, no_interactive=False):
     '''
     Use the given sdkmanager tool (like 'sdkmanager') to install required
     Android packages.
@@ -267,8 +273,12 @@ def ensure_android_packages(sdkmanager_tool, packages=None, no_interactive=False
 
     # This tries to install all the required Android packages.  The user
     # may be prompted to agree to the Android license.
-    package_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                     'android-packages.txt'))
+    if emulator_only:
+        package_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                         'android-emulator-packages.txt'))
+    else:
+        package_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                         'android-packages.txt'))
     print(INSTALLING_ANDROID_PACKAGES % open(package_file_name, 'rt').read())
 
     args = [sdkmanager_tool]
@@ -343,11 +353,16 @@ def main(argv):
                       help='If true, install only the Android NDK (and not the Android SDK).')
     parser.add_option('--no-interactive', dest='no_interactive', action='store_true',
                       help='Accept the Android SDK licenses without user interaction.')
+    parser.add_option('--emulator-only', dest='emulator_only', action='store_true',
+                      help='If true, install only the Android emulator (and not the SDK or NDK).')
 
     options, _ = parser.parse_args(argv)
 
     if options.artifact_mode and options.ndk_only:
         raise NotImplementedError('Use no options to install the NDK and the SDK.')
+
+    if options.artifact_mode and options.emulator_only:
+        raise NotImplementedError('Use no options to install the SDK and emulators.')
 
     os_name = None
     if platform.system() == 'Darwin':
@@ -362,6 +377,7 @@ def main(argv):
 
     ensure_android(os_name, artifact_mode=options.artifact_mode,
                    ndk_only=options.ndk_only,
+                   emulator_only=options.emulator_only,
                    no_interactive=options.no_interactive)
     suggest_mozconfig(os_name, options.artifact_mode)
 

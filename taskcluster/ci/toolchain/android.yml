@@ -24,6 +24,22 @@ linux64-android-sdk-linux-repack:
         toolchain-artifact: project/gecko/android-sdk/android-sdk-linux.tar.xz
         toolchain-alias: android-sdk-linux
 
+linux64-android-emulator-linux-repack:
+    description: "Android Emulator (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(android-emulator-linux)
+    worker:
+        artifacts:
+            - name: project/gecko/android-emulator
+              path: /builds/worker/project/gecko/android-emulator/
+              type: directory
+    run:
+        script: repack-android-emulator-linux.sh
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-emulator/android-emulator-linux.tar.xz
+        toolchain-alias: android-emulator-linux
+
 linux64-android-ndk-linux-repack:
     description: "Android NDK (Linux) repack toolchain build"
     treeherder:
