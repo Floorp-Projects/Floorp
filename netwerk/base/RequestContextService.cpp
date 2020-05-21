@@ -476,6 +476,10 @@ already_AddRefed<nsIRequestContextService>
 RequestContextService::GetOrCreate() {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (sShutdown) {
+    return nullptr;
+  }
+
   RefPtr<RequestContextService> svc;
   if (gSingleton) {
     svc = gSingleton;
@@ -547,10 +551,6 @@ RequestContextService::NewRequestContext(nsIRequestContext** rc) {
 
 NS_IMETHODIMP
 RequestContextService::RemoveRequestContext(const uint64_t rcID) {
-  if (IsNeckoChild() && gNeckoChild) {
-    gNeckoChild->SendRemoveRequestContext(rcID);
-  }
-
   MOZ_ASSERT(NS_IsMainThread());
   mTable.Remove(rcID);
   return NS_OK;
