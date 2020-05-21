@@ -21,6 +21,12 @@
 - (int)isChecked;
 @end
 
+// Accessible for a radio button
+@interface mozRadioButtonAccessible : mozCheckboxAccessible
+- (id)accessibilityAttributeValue:(NSString*)attribute;
+- (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute;
+@end
+
 /**
  * Accessible for a PANE
  */

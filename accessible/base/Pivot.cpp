@@ -533,3 +533,21 @@ Accessible* Pivot::AtPoint(int32_t aX, int32_t aY, PivotRule& aRule) {
 
   return match;
 }
+
+// Role Rule
+
+PivotRoleRule::PivotRoleRule(mozilla::a11y::role aRole) : mRole(aRole) {}
+
+uint16_t PivotRoleRule::Match(Accessible* aAccessible) {
+  uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
+
+  if (nsAccUtils::MustPrune(aAccessible)) {
+    result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+  }
+
+  if (aAccessible->Role() == mRole) {
+    result |= nsIAccessibleTraversalRule::FILTER_MATCH;
+  }
+
+  return result;
+}
