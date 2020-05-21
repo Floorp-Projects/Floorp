@@ -259,6 +259,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return mDocShell ? mDocShell->GetWindow() : nullptr;
   }
 
+  uint64_t GetRequestContextId() const { return mRequestContextId; }
+
   // Detach the current BrowsingContext from its parent, in both the
   // child and the parent process.
   void Detach(bool aFromIPC = false);
@@ -564,6 +566,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     bool mUseRemoteSubframes = false;
     bool mHasSessionHistory = false;
     OriginAttributes mOriginAttributes;
+    uint64_t mRequestContextId = 0;
 
     FieldTuple mFields;
 
@@ -573,6 +576,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
              mUseRemoteTabs == aOther.mUseRemoteTabs &&
              mUseRemoteSubframes == aOther.mUseRemoteSubframes &&
              mOriginAttributes == aOther.mOriginAttributes &&
+             mRequestContextId == aOther.mRequestContextId &&
              mFields == aOther.mFields;
     }
   };
@@ -803,6 +807,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // OriginAttributes for this BrowsingContext. May not be changed after this
   // BrowsingContext is attached.
   OriginAttributes mOriginAttributes;
+
+  // The network request context id, representing the nsIRequestContext
+  // associated with this BrowsingContext, and LoadGroups created for it.
+  uint64_t mRequestContextId = 0;
 
   // Determines if private browsing should be used. May not be changed after
   // this BrowsingContext is attached. This field matches mOriginAttributes in
