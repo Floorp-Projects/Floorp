@@ -408,56 +408,69 @@ nsresult RangeUpdater::SelAdjJoinNodes(nsINode& aLeftNode, nsINode& aRightNode,
   return NS_OK;
 }
 
-void RangeUpdater::SelAdjInsertText(const Text& aTextNode, int32_t aOffset,
-                                    const nsAString& aString) {
+void RangeUpdater::SelAdjReplaceText(const Text& aTextNode, int32_t aOffset,
+                                     int32_t aReplacedLength,
+                                     int32_t aInsertedLength) {
   if (mLocked) {
     // lock set by Will/DidReplaceParent, etc...
     return;
   }
 
-  uint32_t length = aString.Length();
+  // First, adjust selection for insertion because when offset is in the
+  // replaced range, it's adjusted to aOffset and never modified by the
+  // insertion if we adjust selection for deletion first.
+  SelAdjInsertText(aTextNode, aOffset, aInsertedLength);
+
+  // Then, adjust selection for deletion.
+  SelAdjDeleteText(aTextNode, aOffset, aReplacedLength);
+}
+
+void RangeUpdater::SelAdjInsertText(const Text& aTextNode, int32_t aOffset,
+                                    int32_t aInsertedLength) {
+  if (mLocked) {
+    // lock set by Will/DidReplaceParent, etc...
+    return;
+  }
+
   for (RefPtr<RangeItem>& rangeItem : mArray) {
     MOZ_ASSERT(rangeItem);
 
     if (rangeItem->mStartContainer == &aTextNode &&
         rangeItem->mStartOffset > aOffset) {
-      rangeItem->mStartOffset += length;
+      rangeItem->mStartOffset += aInsertedLength;
     }
     if (rangeItem->mEndContainer == &aTextNode &&
         rangeItem->mEndOffset > aOffset) {
-      rangeItem->mEndOffset += length;
+      rangeItem->mEndOffset += aInsertedLength;
     }
   }
 }
 
-nsresult RangeUpdater::SelAdjDeleteText(const Text& aTextNode, int32_t aOffset,
-                                        int32_t aLength) {
+void RangeUpdater::SelAdjDeleteText(const Text& aTextNode, int32_t aOffset,
+                                    int32_t aDeletedLength) {
   if (mLocked) {
     // lock set by Will/DidReplaceParent, etc...
-    return NS_OK;
+    return;
   }
 
   for (RefPtr<RangeItem>& rangeItem : mArray) {
-    if (NS_WARN_IF(!rangeItem)) {
-      return NS_ERROR_FAILURE;
-    }
+    MOZ_ASSERT(rangeItem);
 
     if (rangeItem->mStartContainer == &aTextNode &&
         rangeItem->mStartOffset > aOffset) {
-      rangeItem->mStartOffset -= aLength;
+      rangeItem->mStartOffset -= aDeletedLength;
       if (rangeItem->mStartOffset < 0) {
         rangeItem->mStartOffset = 0;
       }
     }
     if (rangeItem->mEndContainer == &aTextNode &&
         rangeItem->mEndOffset > aOffset) {
-      rangeItem->mEndOffset -= aLength;
+      rangeItem->mEndOffset -= aDeletedLength;
       if (rangeItem->mEndOffset < 0) {
         rangeItem->mEndOffset = 0;
       }
     }
   }
-  return NS_OK;
 }
 
 void RangeUpdater::DidReplaceContainer(const Element& aRemovedElement,

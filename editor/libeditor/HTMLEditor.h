@@ -694,6 +694,14 @@ class HTMLEditor final : public TextEditor,
                                                         uint32_t aLength);
 
   /**
+   * ReplaceTextWithTransaction() replaces text in the range with
+   * aStringToInsert.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ReplaceTextWithTransaction(
+      dom::Text& aTextNode, uint32_t aOffset, uint32_t aLength,
+      const nsAString& aStringToInsert);
+
+  /**
    * DeleteParentBlocksIfEmpty() removes parent block elements if they
    * don't have visible contents.  Note that due performance issue of
    * WSRunObject, this call may be expensive.  And also note that this

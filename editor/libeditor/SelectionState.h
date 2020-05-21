@@ -143,9 +143,11 @@ class MOZ_STACK_CLASS RangeUpdater final {
                            nsINode& aParent, int32_t aOffset,
                            int32_t aOldLeftNodeLength);
   void SelAdjInsertText(const dom::Text& aTextNode, int32_t aOffset,
-                        const nsAString& aString);
-  nsresult SelAdjDeleteText(const dom::Text& aTextNode, int32_t aOffset,
-                            int32_t aLength);
+                        int32_t aInsertedLength);
+  void SelAdjDeleteText(const dom::Text& aTextNode, int32_t aOffset,
+                        int32_t aDeletedLength);
+  void SelAdjReplaceText(const dom::Text& aTextNode, int32_t aOffset,
+                         int32_t aReplacedLength, int32_t aInsertedLength);
   // the following gravity routines need will/did sandwiches, because the other
   // gravity routines will be called inside of these sandwiches, but should be
   // ignored.
