@@ -3,15 +3,15 @@
 root:
   items:
     - type: scroll-frame
-      bounds: [0, 0, 500, 100]
-      content-size: [500, 100]
+      bounds: [0, 0, 500, 200]
+      content-size: [500, 500]
       id: 2
       items:
       - type: rect
-        bounds: [0, 0, 500, 100]
+        bounds: [0, 0, 500, 200]
         color: white
     - type: rect
-      bounds: [0, 0, 500, 100]
+      bounds: [0, 0, 500, 200]
       color: white
     - text: "The sun has frightened off the night!"
       origin: 20 40

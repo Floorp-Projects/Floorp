@@ -652,8 +652,26 @@ impl SpatialTree {
                             break;
                         }
                         ScrollFrameKind::Explicit => {
-                            // Store the explicit scroll root, keep looking up the tree
-                            scroll_root = node_index;
+                            // If the scroll root has no scrollable area, we don't want to
+                            // consider it. This helps pages that have a nested scroll root
+                            // within a redundant scroll root to avoid selecting the wrong
+                            // reference spatial node for a picture cache.
+                            if info.scrollable_size.width > 0.0 ||
+                               info.scrollable_size.height > 0.0 {
+                                // Since we are skipping redundant scroll roots, we may end up
+                                // selecting inner scroll roots that are very small. There is
+                                // no performance benefit to creating a slice for these roots,
+                                // as they are cheap to rasterize. The size comparison is in
+                                // local-space, but makes for a reasonable estimate. The value
+                                // is arbitrary, but is generally small enough to ignore things
+                                // like scroll roots around text input elements.
+                                if info.viewport_rect.size.width > 128.0 &&
+                                   info.viewport_rect.size.height > 128.0 {
+                                    // If we've found a root that is scrollable, and a reasonable
+                                    // size, select that as the current root for this node
+                                    scroll_root = node_index;
+                                }
+                            }
                         }
                     }
                 }
