@@ -546,7 +546,9 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSizeTopLeft">16dp</item>
         <item name="cornerSizeTopRight">16dp</item>
-        <item name="colorSurface">?foundation</item>
+        <item name="colorSurface">@color/photonPurple50</item>
+        <item name="android:backgroundTint">@color/photonPurple50</item>
+        <item name="android:colorBackground">@color/photonPurple50</item>
     </style>
 
     <style name="BottomSheetModal" parent="Widget.Design.BottomSheet.Modal">

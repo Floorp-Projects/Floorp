@@ -11,7 +11,7 @@
     android:layout_height="wrap_content"
     android:layout_gravity="bottom|end"
     android:layout_margin="16dp"
-    android:backgroundTint="@color/photonBlue50"
+    android:backgroundTint="?accent"
     android:contentDescription="TODO: Changeme"
     app:srcCompat="@drawable/ic_new"
     app:tint="@color/photonWhite" />

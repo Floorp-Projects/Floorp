@@ -19,7 +19,7 @@ import org.mozilla.fenix.R
 class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     interface Interactor {
         fun onTabSelected(tab: Tab)
-        fun onNewTabTapped()
+        fun onNewTabTapped(private: Boolean)
     }
 
     private lateinit var tabTrayView: TabTrayView
@@ -62,7 +62,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     }
 
     override fun onNewTabTapped(private: Boolean) {
-        interactor?.onNewTabTapped()
+        interactor?.onNewTabTapped(private)
     }
 
     override fun onTabTrayDismissed() {

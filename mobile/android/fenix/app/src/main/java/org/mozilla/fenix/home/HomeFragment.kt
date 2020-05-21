@@ -366,7 +366,8 @@ class HomeFragment : Fragment() {
                     (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
                 }
 
-                override fun onNewTabTapped() {
+                override fun onNewTabTapped(private: Boolean) {
+                    (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.fromBoolean(private)
                     tabTrayDialog.dismiss()
                 }
             }

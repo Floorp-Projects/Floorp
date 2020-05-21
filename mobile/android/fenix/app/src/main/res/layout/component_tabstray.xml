@@ -11,8 +11,8 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:layout_marginTop="40dp"
-    android:background="?foundation"
     style="@style/BottomSheetModal"
+    android:backgroundTint="?foundation"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
     <View
         android:id="@+id/handle"
@@ -28,7 +28,10 @@
         android:id="@+id/tab_layout"
         android:layout_width="0dp"
         android:layout_height="80dp"
+        app:tabSelectedTextColor="?accent"
+        app:tabTextColor="?secondaryText"
         app:tabIndicatorColor="?accent"
+        app:tabIconTint="@color/tab_icon"
         app:tabRippleColor="@android:color/transparent"
         app:layout_constraintWidth_percent="0.5"
         app:layout_constraintTop_toBottomOf="@+id/handle"
@@ -45,7 +48,7 @@
             android:id="@+id/private_tab_item"
             android:layout_height="match_parent"
             android:layout_width="0dp"
-            android:icon="@drawable/private_browsing_button"
+            android:icon="@drawable/ic_private_browsing"
             android:text="Private" />
     </com.google.android.material.tabs.TabLayout>
     <ImageButton
@@ -69,7 +72,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tab_layout"
-        mozac:tabsTrayItemBackgroundColor="?tabTrayItemBackground"
+        mozac:tabsTrayItemBackgroundColor="?foundation"
         mozac:tabsTrayItemTextColor="?tabTrayItemText"
         mozac:tabsTraySelectedItemBackgroundColor="?tabTrayItemSelectedBackground"
         mozac:tabsTraySelectedItemTextColor="?tabTrayItemText"
