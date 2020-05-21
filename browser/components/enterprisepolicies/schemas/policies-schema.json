@@ -786,6 +786,18 @@
       }
     },
 
+    "PictureInPicture": {
+      "type": "object",
+      "properties": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "PopupBlocking": {
       "type": "object",
       "properties": {
