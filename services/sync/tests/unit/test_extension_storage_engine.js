@@ -6,13 +6,50 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   BridgedRecord: "resource://services-sync/bridged_engine.js",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
-  ExtensionStorageEngineBridge:
-    "resource://services-sync/engines/extension-storage.js",
   Service: "resource://services-sync/service.js",
 });
 
-Services.prefs.setBoolPref("webextensions.storage.sync.kinto", false); // shouldn't need this
+const {
+  ExtensionStorageEngineBridge,
+  ExtensionStorageEngineKinto,
+} = ChromeUtils.import("resource://services-sync/engines/extension-storage.js");
+
 Services.prefs.setStringPref("webextensions.storage.sync.log.level", "debug");
+
+add_task(async function test_switching_between_kinto_and_bridged() {
+  function assertUsingKinto(message) {
+    let kintoEngine = Service.engineManager.get("extension-storage");
+    Assert.ok(kintoEngine instanceof ExtensionStorageEngineKinto, message);
+  }
+  function assertUsingBridged(message) {
+    let bridgedEngine = Service.engineManager.get("extension-storage");
+    Assert.ok(bridgedEngine instanceof ExtensionStorageEngineBridge, message);
+  }
+
+  let isUsingKinto = Services.prefs.getBoolPref(
+    "webextensions.storage.sync.kinto",
+    false
+  );
+  if (isUsingKinto) {
+    assertUsingKinto("Should use Kinto engine before flipping pref");
+  } else {
+    assertUsingBridged("Should use bridged engine before flipping pref");
+  }
+
+  _("Flip pref");
+  Services.prefs.setBoolPref("webextensions.storage.sync.kinto", !isUsingKinto);
+  await Service.engineManager.switchAlternatives();
+
+  if (isUsingKinto) {
+    assertUsingBridged("Should use bridged engine after flipping pref");
+  } else {
+    assertUsingKinto("Should use Kinto engine after flipping pref");
+  }
+
+  _("Clean up");
+  Services.prefs.clearUserPref("webextensions.storage.sync.kinto");
+  await Service.engineManager.switchAlternatives();
+});
 
 // It's difficult to know what to test - there's already tests for the bridged
 // engine etc - so we just try and check that this engine conforms to the
