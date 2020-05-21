@@ -2626,8 +2626,7 @@ Matrix4x4Flagged nsLayoutUtils::GetTransformToAncestor(
                                           &parent, aFlags);
   while (parent && parent != aAncestor.mFrame &&
          (!(aFlags & nsIFrame::STOP_AT_STACKING_CONTEXT_AND_DISPLAY_PORT) ||
-          (!parent->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
-           !parent->IsStackingContext() && !FrameHasDisplayPort(parent)))) {
+          (!parent->IsStackingContext() && !FrameHasDisplayPort(parent)))) {
     if (!parent->Extend3DContext()) {
       ctm.ProjectTo2D();
     }
