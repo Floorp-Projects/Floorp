@@ -1637,8 +1637,13 @@ def security_hardening_cflags(hardening_flag, asan, debug, optimize, c_compiler,
         # Control Flow Guard (CFG) ----------------------------
         if c_compiler.type == 'clang-cl' and c_compiler.version >= '8' and \
            (target.cpu != 'aarch64' or c_compiler.version >= '8.0.1'):
-            flags.append("-guard:cf")
-            js_flags.append("-guard:cf")
+            if target.cpu == 'aarch64' and c_compiler.version >= '10.0.0':
+                # The added checks in clang 10 make arm64 builds crash. (Bug 1639318)
+                flags.append("-guard:cf,nochecks")
+                js_flags.append("-guard:cf,nochecks")
+            else:
+                flags.append("-guard:cf")
+                js_flags.append("-guard:cf")
             # nolongjmp is needed because clang doesn't emit the CFG tables of
             # setjmp return addresses https://bugs.llvm.org/show_bug.cgi?id=40057
             ldflags.append("-guard:cf,nolongjmp")
