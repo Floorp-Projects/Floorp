@@ -336,10 +336,10 @@ def get_release_config(config):
     return release_config
 
 
-def get_signing_cert_scope_per_platform(build_platform, is_nightly, config):
+def get_signing_cert_scope_per_platform(build_platform, is_shippable, config):
     if 'devedition' in build_platform:
         return get_devedition_signing_cert_scope(config)
-    elif is_nightly:
+    elif is_shippable:
         return get_signing_cert_scope(config)
     else:
         return add_scope_prefix(config, 'signing:cert:dep-signing')

@@ -557,8 +557,6 @@ class TryOptionSyntax(object):
         attr = task.attributes.get
 
         def check_run_on_projects():
-            if attr('nightly') and not self.include_nightly:
-                return False
             return set(['try', 'all']) & set(attr('run_on_projects', []))
 
         # Don't schedule fission tests when try option syntax is used

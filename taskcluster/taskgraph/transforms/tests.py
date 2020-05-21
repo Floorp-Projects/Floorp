@@ -860,7 +860,6 @@ def set_tier(config, tasks):
         if 'tier' not in task or task['tier'] == 'default':
             if task['test-platform'] in [
                 'linux64/opt',
-                'linux64-nightly/opt',
                 'linux64/debug',
                 'linux64-pgo/opt',
                 'linux64-shippable/opt',
@@ -882,7 +881,6 @@ def set_tier(config, tasks):
                 'windows7-32/opt',
                 'windows7-32-pgo/opt',
                 'windows7-32-devedition/opt',
-                'windows7-32-nightly/opt',
                 'windows7-32-shippable/opt',
                 'windows10-aarch64/opt',
                 'windows10-64/debug',
@@ -890,7 +888,6 @@ def set_tier(config, tasks):
                 'windows10-64-pgo/opt',
                 'windows10-64-shippable/opt',
                 'windows10-64-devedition/opt',
-                'windows10-64-nightly/opt',
                 'windows10-64-asan/opt',
                 'windows10-64-qr/opt',
                 'windows10-64-qr/debug',
@@ -898,7 +895,6 @@ def set_tier(config, tasks):
                 'windows10-64-shippable-qr/opt',
                 'macosx1014-64/opt',
                 'macosx1014-64/debug',
-                'macosx1014-64-nightly/opt',
                 'macosx1014-64-shippable/opt',
                 'macosx1014-64-devedition/opt',
                 'macosx1014-64-qr/opt',
