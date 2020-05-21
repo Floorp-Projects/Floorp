@@ -1996,10 +1996,6 @@ SyncEngine.prototype = {
 
   async _syncCleanup() {
     this._needWeakUpload.clear();
-    if (!this._modified) {
-      return;
-    }
-
     try {
       // Mark failed WBOs as changed again so they are reuploaded next time.
       await this.trackRemainingChanges();
