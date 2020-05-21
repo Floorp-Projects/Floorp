@@ -1715,13 +1715,6 @@ class nsIWidget : public nsISupports {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  virtual nsresult SetPrefersReducedMotionOverrideForTest(bool aValue) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  virtual nsresult ResetPrefersReducedMotionOverrideForTest() {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   // Get rectangle of the screen where the window is placed.
   // It's used to detect popup overflow under Wayland because
   // Screenmanager does not work under it.

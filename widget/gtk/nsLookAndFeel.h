@@ -100,6 +100,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   bool mCSDCloseButton = false;
   bool mCSDReversedPlacement = false;
   bool mSystemUsesDarkTheme = false;
+  bool mPrefersReducedMotion = false;
   bool mHighContrast = false;
   bool mInitialized = false;
 

@@ -492,9 +492,6 @@ class nsChildView final : public nsBaseWidget {
 
   void SwipeFinished();
 
-  nsresult SetPrefersReducedMotionOverrideForTest(bool aValue) override;
-  nsresult ResetPrefersReducedMotionOverrideForTest() override;
-
   // Called when the main thread enters a phase during which visual changes
   // are imminent and any layer updates on the compositor thread would interfere
   // with visual atomicity.

@@ -17,12 +17,6 @@
 using namespace mozilla;
 using mozilla::dom::ContentChild;
 
-bool nsLookAndFeel::mInitializedSystemColors = false;
-AndroidSystemColors nsLookAndFeel::mSystemColors;
-
-bool nsLookAndFeel::mInitializedShowPassword = false;
-bool nsLookAndFeel::mShowPassword = true;
-
 static const char16_t UNICODE_BULLET = 0x2022;
 
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel() {}
@@ -78,18 +72,11 @@ void nsLookAndFeel::NativeInit() {
 
 /* virtual */
 void nsLookAndFeel::RefreshImpl() {
-  if (mShouldRetainCacheForTest) {
-    return;
-  }
-
   nsXPLookAndFeel::RefreshImpl();
 
   mInitializedSystemColors = false;
   mInitializedShowPassword = false;
-
-  if (XRE_IsParentProcess()) {
-    mPrefersReducedMotionCached = false;
-  }
+  mPrefersReducedMotionCached = false;
 }
 
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
@@ -387,6 +374,7 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       if (!mPrefersReducedMotionCached && XRE_IsParentProcess()) {
         mPrefersReducedMotion =
             java::GeckoSystemStateListener::PrefersReducedMotion() ? 1 : 0;
+        mPrefersReducedMotionCached = true;
       }
       aResult = mPrefersReducedMotion;
       break;

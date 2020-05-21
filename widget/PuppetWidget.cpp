@@ -1448,23 +1448,5 @@ nsresult PuppetWidget::GetSystemFont(nsCString& aFontName) {
   return NS_OK;
 }
 
-nsresult PuppetWidget::SetPrefersReducedMotionOverrideForTest(bool aValue) {
-  if (!mBrowserChild) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mBrowserChild->SendSetPrefersReducedMotionOverrideForTest(aValue);
-  return NS_OK;
-}
-
-nsresult PuppetWidget::ResetPrefersReducedMotionOverrideForTest() {
-  if (!mBrowserChild) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mBrowserChild->SendResetPrefersReducedMotionOverrideForTest();
-  return NS_OK;
-}
-
 }  // namespace widget
 }  // namespace mozilla

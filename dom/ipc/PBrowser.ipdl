@@ -681,9 +681,6 @@ parent:
     sync SetSystemFont(nsCString aFontName);
     sync GetSystemFont() returns (nsCString retval);
 
-    sync SetPrefersReducedMotionOverrideForTest(bool aValue);
-    sync ResetPrefersReducedMotionOverrideForTest();
-
     /**
      * Called once this PBrowser's OOP subdoc no longer blocks its
      * embedding element's and embedding doc's 'load' events.

@@ -98,10 +98,6 @@ static nscolor GetColorFromNSColorWithAlpha(NSColor* aColor, float alpha) {
 void nsLookAndFeel::NativeInit() { EnsureInit(); }
 
 void nsLookAndFeel::RefreshImpl() {
-  if (mShouldRetainCacheForTest) {
-    return;
-  }
-
   nsXPLookAndFeel::RefreshImpl();
 
   // We should only clear the cache if we're in the main browser process.
