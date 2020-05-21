@@ -326,13 +326,22 @@ class PackageFrontend(MachCommandBase):
                              'Could not find a toolchain build named `{build}`')
                     return 1
 
+                artifact_name = task.attributes.get('toolchain-artifact')
+                self.log(logging.DEBUG, 'artifact',
+                         {'name': artifact_name,
+                          'index': task.optimization.get('index-search')},
+                         'Searching for {name} in {index}')
                 task_id = IndexSearch().should_replace_task(
                     task, {}, task.optimization.get('index-search', []))
-                artifact_name = task.attributes.get('toolchain-artifact')
                 if task_id in (True, False) or not artifact_name:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
                              _COULD_NOT_FIND_ARTIFACTS_TEMPLATE)
                     return 1
+
+                self.log(logging.DEBUG, 'artifact',
+                         {'name': artifact_name,
+                          'task_id': task_id},
+                         'Found {name} in {task_id}')
 
                 record = ArtifactRecord(task_id, artifact_name)
                 records[record.filename] = record
@@ -428,7 +437,16 @@ class PackageFrontend(MachCommandBase):
                     'sha256': h.hexdigest(),
                 }
             if record.unpack and not no_unpack:
-                unpack_file(local)
+                # Try to unpack the file. If we get an exception importing
+                # zstandard when calling unpack_file, we can try installing
+                # zstandard locally and trying again
+                try:
+                    unpack_file(local)
+                except ImportError as e:
+                    if e.name != "zstandard":
+                        raise
+                    self._ensure_zstd()
+                    unpack_file(local)
                 os.unlink(local)
 
         if not downloaded:
