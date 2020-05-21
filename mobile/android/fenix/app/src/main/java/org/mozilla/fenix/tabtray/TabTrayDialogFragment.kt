@@ -35,15 +35,13 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
         tabLayout.setOnClickListener { dismissAllowingStateLoss() }
 
-//        view.tabLayout.setOnApplyWindowInsetsListener { v, insets ->
-//            v.updatePadding(
-//                left = insets.systemWindowInsetLeft,
-//                right = insets.systemWindowInsetRight,
-//                top = insets.systemWindowInsetTop,
-//                bottom = insets.systemWindowInsetBottom
-//            )
-//            insets
-//        }
+        view.tabLayout.setOnApplyWindowInsetsListener { v, insets ->
+            v.updatePadding(
+                left = insets.systemWindowInsetLeft,
+                right = insets.systemWindowInsetRight
+            )
+            insets
+        }
     }
 
     override fun onTabSelected(tab: Tab) {
