@@ -42,6 +42,29 @@ static ComPtr<IInputPane2> GetInputPane(HWND aHwnd) {
   inputPane.As(&inputPane2);
   return inputPane2;
 }
+
+#  ifdef DEBUG
+static bool IsInputPaneVisible(ComPtr<IInputPane2>& aInputPane2) {
+  ComPtr<IInputPaneControl> inputPaneControl;
+  aInputPane2.As(&inputPaneControl);
+  if (NS_WARN_IF(!inputPaneControl)) {
+    return false;
+  }
+  boolean visible = false;
+  inputPaneControl->get_Visible(&visible);
+  return visible;
+}
+
+static bool IsForegroundApp() {
+  HWND foregroundWnd = ::GetForegroundWindow();
+  if (!foregroundWnd) {
+    return false;
+  }
+  DWORD pid;
+  ::GetWindowThreadProcessId(foregroundWnd, &pid);
+  return pid == ::GetCurrentProcessId();
+}
+#  endif
 #endif
 
 // static
@@ -53,7 +76,9 @@ void OSKInputPaneManager::ShowOnScreenKeyboard(HWND aWnd) {
   }
   boolean result;
   inputPane2->TryShow(&result);
-  NS_WARNING_ASSERTION(result, "IInputPane2::TryShow is faiure");
+  NS_WARNING_ASSERTION(
+      result || !IsForegroundApp() || IsInputPaneVisible(inputPane2),
+      "IInputPane2::TryShow is failure");
 #endif
 }
 
@@ -66,7 +91,9 @@ void OSKInputPaneManager::DismissOnScreenKeyboard(HWND aWnd) {
   }
   boolean result;
   inputPane2->TryHide(&result);
-  NS_WARNING_ASSERTION(result, "IInputPane2::TryHide is failure");
+  NS_WARNING_ASSERTION(
+      result || !IsForegroundApp() || !IsInputPaneVisible(inputPane2),
+      "IInputPane2::TryHide is failure");
 #endif
 }
 
