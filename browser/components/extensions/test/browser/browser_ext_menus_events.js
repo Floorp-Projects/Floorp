@@ -33,7 +33,6 @@ async function testShowHideEvent({
   doCloseMenu,
   expectedShownEvent,
   expectedShownEventWithPermissions = null,
-  forceTabToBackground = false,
 }) {
   async function background() {
     function awaitMessage(expectedId) {
@@ -103,9 +102,6 @@ async function testShowHideEvent({
     browser.test.sendMessage("onShown-event-data2", shownEvents[1]);
   }
 
-  const someOtherTab = gBrowser.selectedTab;
-  // Tab must initially open as a foreground tab, because the test extension
-  // looks for the active tab.
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -126,11 +122,7 @@ async function testShowHideEvent({
   extension.sendMessage("create-params", menuCreateParams);
   let menuId = await extension.awaitMessage("menu-registered");
 
-  if (forceTabToBackground) {
-    gBrowser.selectedTab = someOtherTab;
-  }
-
-  await doOpenMenu(extension, tab);
+  await doOpenMenu(extension);
   extension.sendMessage("assert-menu-shown");
   let shownEvent = await extension.awaitMessage("onShown-event-data");
 
@@ -149,7 +141,7 @@ async function testShowHideEvent({
       permissions: [],
       origins: [PAGE_HOST_PATTERN],
     });
-    await doOpenMenu(extension, tab);
+    await doOpenMenu(extension);
     extension.sendMessage("optional-menu-shown-with-permissions");
     let shownEvent2 = await extension.awaitMessage("onShown-event-data2");
     Assert.deepEqual(
@@ -353,15 +345,8 @@ add_task(async function test_show_hide_browserAction_popup() {
   });
 });
 
-// Common code used by test_show_hide_tab and test_show_hide_tab_via_tab_panel.
-async function testShowHideTabMenu({
-  doOpenTabContextMenu,
-  doCloseTabContextMenu,
-}) {
+add_task(async function test_show_hide_tab() {
   await testShowHideEvent({
-    // To verify that the event matches the contextmenu target, switch to
-    // an unrelated tab before opening a contextmenu on the desired tab.
-    forceTabToBackground: true,
     menuCreateParams: {
       title: "tab menu item",
       contexts: ["tab"],
@@ -377,84 +362,13 @@ async function testShowHideTabMenu({
       editable: false,
       pageUrl: PAGE,
     },
-    async doOpenMenu(extension, contextTab) {
-      await doOpenTabContextMenu(contextTab);
+    async doOpenMenu() {
+      await openTabContextMenu();
     },
     async doCloseMenu() {
-      await doCloseTabContextMenu();
-    },
-  });
-}
-
-add_task(async function test_show_hide_tab() {
-  await testShowHideTabMenu({
-    async doOpenTabContextMenu(contextTab) {
-      await openTabContextMenu(contextTab);
-    },
-    async doCloseTabContextMenu() {
       await closeTabContextMenu();
     },
   });
-});
-
-// Checks that right-clicking on a tab in the tabs panel (the one that appears
-// when there are many tabs, or when browser.tabs.tabmanager.enabled = true)
-// results in an event that is associated with the expected tab.
-add_task(async function test_show_hide_tab_via_tab_panel() {
-  const tabContainer = document.getElementById("tabbrowser-tabs");
-  let shouldAddOverflow = !tabContainer.hasAttribute("overflow");
-  const revertTabContainerAttribute = () => {
-    if (shouldAddOverflow) {
-      // Revert attribute if it was changed.
-      tabContainer.removeAttribute("overflow");
-      // The function is going to be called twice, but let's run the logic once.
-      shouldAddOverflow = false;
-    }
-  };
-  if (shouldAddOverflow) {
-    // Ensure the visibility of the "all tabs menu" button (#alltabs-button).
-    tabContainer.setAttribute("overflow", "true");
-    // Register cleanup function in case the test fails before we reach the end.
-    registerCleanupFunction(revertTabContainerAttribute);
-  }
-
-  const allTabsView = document.getElementById("allTabsMenu-allTabsView");
-
-  await testShowHideTabMenu({
-    async doOpenTabContextMenu(contextTab) {
-      // Show the tabs panel.
-      let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(
-        allTabsView,
-        "ViewShown"
-      );
-      gTabsPanel.showAllTabsPanel();
-      await allTabsPopupShownPromise;
-
-      // Find the menu item that is associated with the given tab
-      let index = Array.prototype.findIndex.call(
-        gTabsPanel.allTabsViewTabs.children,
-        toolbaritem => toolbaritem.tab === contextTab
-      );
-      ok(index !== -1, "sanity check: tabs panel has item for the tab");
-
-      // Finally, open the context menu on it.
-      await openChromeContextMenu(
-        "tabContextMenu",
-        `.all-tabs-item:nth-child(${index + 1})`
-      );
-    },
-    async doCloseTabContextMenu() {
-      await closeTabContextMenu();
-      let allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(
-        allTabsView.panelMultiView,
-        "PanelMultiViewHidden"
-      );
-      gTabsPanel.hideAllTabsPanel();
-      await allTabsPopupHiddenPromise;
-    },
-  });
-
-  revertTabContainerAttribute();
 });
 
 add_task(async function test_show_hide_tools_menu() {
