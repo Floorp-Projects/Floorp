@@ -488,38 +488,35 @@ class UrlbarInput {
 
     // This is not a URL and there's no selected element, because likely the
     // view is closed, or paste&go was used.
+    // We must act consistently here, having or not an open view should not
+    // make a difference if the search string is the same.
 
-    // If we have a result for the current value, just use it.
+    // If we have a result for the current value, we can just use it.
     if (this._resultForCurrentValue) {
       this.pickResult(this._resultForCurrentValue, event);
       return;
     }
 
-    // Otherwise, fall back to an imperfect clone of what the heuristic result
-    // would do.
-    // TODO: Run a search to get just the heuristic result here, and then use
-    // pickResult.
-
+    // Otherwise, we must fetch the heuristic result for the current value.
     // TODO (Bug 1604927): If the urlbar results are restricted to a specific
     // engine, here we must search with that specific engine; indeed the
     // docshell wouldn't know about our engine restriction.
     // Also remember to invoke this._recordSearch, after replacing url with
     // the appropriate engine submission url.
-
     let browser = this.window.gBrowser.selectedBrowser;
     let lastLocationChange = browser.lastLocationChange;
-    UrlbarUtils.getShortcutOrURIAndPostData(url).then(data => {
+    UrlbarUtils.getHeuristicResultFor(url).then(newResult => {
       // Because this happens asynchronously, we must verify that the browser
       // location did not change in the meanwhile.
       if (
         where != "current" ||
         browser.lastLocationChange == lastLocationChange
       ) {
-        openParams.postData = data.postData;
-        openParams.allowInheritPrincipal = data.mayInheritPrincipal;
-        this._loadURL(data.url, where, openParams, null, browser);
+        this.pickResult(newResult, event, null, browser);
       }
     });
+    // Don't add further handling here, the getHeuristicResultFor call above is
+    // our last resort.
   }
 
   handleRevert() {
@@ -550,8 +547,14 @@ class UrlbarInput {
    * @param {UrlbarResult} result The result that was picked.
    * @param {Event} event The event that picked the result.
    * @param {DOMElement} element the picked view element, if available.
+   * @param {object} browser The browser to use for the load.
    */
-  pickResult(result, event, element = null) {
+  pickResult(
+    result,
+    event,
+    element = null,
+    browser = this.window.gBrowser.selectedBrowser
+  ) {
     let originalUntrimmedValue = this.untrimmedValue;
     let isCanonized = this.setValueFromResult(result, event);
     let where = this._whereToOpen(event);
@@ -572,7 +575,7 @@ class UrlbarInput {
         selIndex,
         selType: "canonized",
       });
-      this._loadURL(this.value, where, openParams);
+      this._loadURL(this.value, where, openParams, browser);
       return;
     }
 
@@ -804,10 +807,16 @@ class UrlbarInput {
       selType: this.controller.engagementEvent.typeFromElement(element),
     });
 
-    this._loadURL(url, where, openParams, {
-      source: result.source,
-      type: result.type,
-    });
+    this._loadURL(
+      url,
+      where,
+      openParams,
+      {
+        source: result.source,
+        type: result.type,
+      },
+      browser
+    );
   }
 
   /**

@@ -22,50 +22,61 @@ async function checkShortcutLoading(modifierKeys) {
     opening: "about:robots",
   });
 
-  // We stub getShortcutOrURIAndPostData so that we can guarentee it doesn't resolve
-  // until after we've loaded a new page.
+  // We stub getHeuristicResultFor to guarentee it doesn't resolve until after
+  // we've loaded a new page.
+  let original = UrlbarUtils.getHeuristicResultFor;
   sandbox
-    .stub(UrlbarUtils, "getShortcutOrURIAndPostData")
-    .callsFake(() => deferred.promise);
+    .stub(UrlbarUtils, "getHeuristicResultFor")
+    .callsFake(async searchString => {
+      await deferred.promise;
+      return original.call(this, searchString);
+    });
 
+  // This load will be blocked until the deferred is resolved.
+  // Use a string that will be interepreted as a local URL to avoid hitting the
+  // network.
   gURLBar.focus();
-  gURLBar.value = "search";
+  gURLBar.value = "example.com";
   gURLBar.userTypedValue = true;
   EventUtils.synthesizeKey("KEY_Enter", modifierKeys);
 
   Assert.ok(
-    UrlbarUtils.getShortcutOrURIAndPostData.calledOnce,
-    "should have called getShortcutOrURIAndPostData"
+    UrlbarUtils.getHeuristicResultFor.calledOnce,
+    "should have called getHeuristicResultFor"
   );
 
+  // Now load a different page.
   BrowserTestUtils.loadURI(tab.linkedBrowser, "about:license");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  Assert.equal(gBrowser.visibleTabs.length, 2, "Should have 2 tabs");
 
-  let openedTab;
-  function listener(event) {
-    openedTab = event.target;
-  }
-  window.addEventListener("TabOpen", listener);
-
-  deferred.resolve({
-    url: "https://example.com/1/",
-    postData: {},
-    mayInheritPrincipal: true,
-  });
-
-  await deferred.promise;
-
+  // Now that the new page has loaded, unblock the previous urlbar load.
+  deferred.resolve();
   if (modifierKeys) {
-    Assert.ok(openedTab, "Should have attempted to open the shortcut page");
-    BrowserTestUtils.removeTab(openedTab);
-  } else {
+    let openedTab = await new Promise(resolve => {
+      window.addEventListener(
+        "TabOpen",
+        event => {
+          resolve(event.target);
+        },
+        { once: true }
+      );
+    });
+    await BrowserTestUtils.browserLoaded(openedTab.linkedBrowser);
     Assert.ok(
-      !openedTab,
-      "Should have not attempted to open the shortcut page"
+      openedTab.linkedBrowser.currentURI.spec.includes("example.com"),
+      "Should have attempted to open the shortcut page"
     );
+    BrowserTestUtils.removeTab(openedTab);
   }
 
-  window.removeEventListener("TabOpen", listener);
+  Assert.equal(
+    tab.linkedBrowser.currentURI.spec,
+    "about:license",
+    "Tab url should not have changed"
+  );
+  Assert.equal(gBrowser.visibleTabs.length, 2, "Should still have 2 tabs");
+
   BrowserTestUtils.removeTab(tab);
   sandbox.restore();
 }
