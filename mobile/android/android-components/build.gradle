@@ -92,15 +92,6 @@ subprojects {
     }
 
     project.configurations.all {
-        // Robolectric, through `com.google.android.apps.common.testing.accessibility.framework`
-        // depends on an old version of protobuf that conflict with the Application Services one.
-        // See:
-        // - https://github.com/mozilla/application-services/issues/2952
-        // - https://github.com/google/tink/issues/282
-        // - https://github.com/robolectric/robolectric/issues/2643
-        // The good news is the next version of Robolectric will not depend on this lib anymore.
-        // (https://github.com/robolectric/robolectric/pull/5547)
-        all*.exclude group: 'com.google.protobuf', module: 'protobuf-java'
         // Enforce that all (transitive) dependencies are using the same support library version as we do.
         resolutionStrategy.eachDependency { details ->
             if (details.requested.group == 'com.android.support'

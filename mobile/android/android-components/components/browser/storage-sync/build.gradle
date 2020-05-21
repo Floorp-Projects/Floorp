@@ -38,6 +38,10 @@ configurations {
     // correct runtime classpath when invoked with Android Studio's built-in JUnit test runner.
     // Success!
     jnaForTest
+    // Robolectric, through `com.google.android.apps.common.testing.accessibility.framework`
+    // depends on an old version of protobuf that conflict with the Application Services one.
+    // See: https://github.com/mozilla/application-services/issues/2952
+    all*.exclude group: 'com.google.protobuf', module: 'protobuf-java'
 }
 
 dependencies {
