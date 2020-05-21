@@ -279,8 +279,7 @@ void CanvasTranslator::Flush() {
     return;
   }
 
-  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
-      GetReferenceDrawTarget()->GetBackendType());
+  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(GetBackendType());
   RefPtr<ID3D11DeviceContext> deviceContext;
   mDevice->GetImmediateContext(getter_AddRefs(deviceContext));
   deviceContext->Flush();
@@ -312,6 +311,9 @@ bool CanvasTranslator::CreateReferenceTexture() {
 
   mReferenceTextureData->Lock(OpenMode::OPEN_READ_WRITE);
   mBaseDT = mReferenceTextureData->BorrowDrawTarget();
+  if (mBaseDT) {
+    mBackendType = mBaseDT->GetBackendType();
+  }
   return true;
 }
 
@@ -381,8 +383,7 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
     // It is important that AutoSerializeWithMoz2D is called within the loop
     // and doesn't hold during calls to CheckForFreshCanvasDevice, because that
     // might cause a deadlock with device reset code on the main thread.
-    gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
-        GetReferenceDrawTarget()->GetBackendType());
+    gfx::AutoSerializeWithMoz2D serializeWithMoz2D(GetBackendType());
     TextureData* textureData = CreateTextureData(mTextureType, aSize, aFormat);
     if (textureData) {
       textureData->Lock(OpenMode::OPEN_READ_WRITE);
@@ -398,8 +399,7 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
 
 void CanvasTranslator::RemoveDrawTarget(gfx::ReferencePtr aDrawTarget) {
   InlineTranslator::RemoveDrawTarget(aDrawTarget);
-  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
-      GetReferenceDrawTarget()->GetBackendType());
+  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(GetBackendType());
   mTextureDatas.erase(aDrawTarget);
 
   // It is possible that the texture from the content process has never been
