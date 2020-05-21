@@ -393,10 +393,10 @@ constexpr int kUC16Size = sizeof(uc16);
 inline constexpr bool IsDecimalDigit(uc32 c) { return c >= '0' && c <= '9'; }
 
 inline bool is_uint24(int64_t val) {
-  return !(val >> 24);
+  return (val >> 24) == 0;
 }
 inline bool is_int24(int64_t val) {
-  int64_t limit = 1 << 23;
+  int64_t limit = int64_t(1) << 23;
   return (-limit <= val) && (val < limit);
 }
 
