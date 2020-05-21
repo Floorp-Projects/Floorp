@@ -197,6 +197,8 @@ class BytecodeLocation {
 
   bool isNameOp() const { return IsNameOp(getOp()); }
 
+  bool isSpreadOp() const { return IsSpreadOp(getOp()); }
+
   bool resultIsPopped() const {
     MOZ_ASSERT(StackDefs(rawBytecode_) == 1);
     return BytecodeIsPopped(rawBytecode_);
