@@ -711,7 +711,11 @@ pub struct ReferenceFrameDisplayListItem {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub enum ReferenceFrameKind {
+    /// Zoom reference frames must be a scale + translation only
+    Zoom,
+    /// A normal transform matrix, may contain perspective (the CSS transform property)
     Transform,
+    /// A perspective transform, that optionally scrolls relative to a specific scroll node
     Perspective {
         scrolling_relative_to: Option<ExternalScrollId>,
     }

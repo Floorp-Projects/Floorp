@@ -631,15 +631,30 @@ impl SpatialTree {
         while node_index != ROOT_SPATIAL_NODE_INDEX {
             let node = &self.spatial_nodes[node_index.0 as usize];
             match node.node_type {
-                SpatialNodeType::ReferenceFrame(..) |
-                SpatialNodeType::StickyFrame(..) => {
-                    // TODO(gw): In future, we may need to consider sticky frames.
+                SpatialNodeType::ReferenceFrame(ref info) => {
+                    match info.kind {
+                        ReferenceFrameKind::Zoom => {
+                            // We can handle scroll nodes that pass through a zoom node
+                        }
+                        ReferenceFrameKind::Transform |
+                        ReferenceFrameKind::Perspective { .. } => {
+                            // When a reference frame is encountered, forget any scroll roots
+                            // we have encountered, as they may end up with a non-axis-aligned transform.
+                            scroll_root = ROOT_SPATIAL_NODE_INDEX;
+                        }
+                    }
                 }
+                SpatialNodeType::StickyFrame(..) => {}
                 SpatialNodeType::ScrollFrame(ref info) => {
-                    // If we found an explicit scroll root, store that
-                    // and keep looking up the tree.
-                    if let ScrollFrameKind::Explicit = info.frame_kind {
-                        scroll_root = node_index;
+                    match info.frame_kind {
+                        ScrollFrameKind::PipelineRoot => {
+                            // Once we encounter a pipeline root, there is no need to look further
+                            break;
+                        }
+                        ScrollFrameKind::Explicit => {
+                            // Store the explicit scroll root, keep looking up the tree
+                            scroll_root = node_index;
+                        }
                     }
                 }
             }

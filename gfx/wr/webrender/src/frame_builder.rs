@@ -6,7 +6,7 @@ use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipChainStack, ClipInstance};
-use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
+use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState};
 use crate::debug_render::DebugItem;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
@@ -153,10 +153,11 @@ impl<'a> FrameVisibilityState<'a> {
     pub fn push_surface(
         &mut self,
         surface_index: SurfaceIndex,
-        shared_clips: &[ClipInstance]
+        shared_clips: &[ClipInstance],
+        spatial_tree: &SpatialTree,
     ) {
         self.surface_stack.push(surface_index);
-        self.clip_chain_stack.push_surface(shared_clips);
+        self.clip_chain_stack.push_surface(shared_clips, spatial_tree);
     }
 
     pub fn pop_surface(&mut self) {
@@ -566,8 +567,7 @@ impl FrameBuilder {
                 let spatial_node = &scene
                     .spatial_tree
                     .spatial_nodes[spatial_node_index.0 as usize];
-                spatial_node.coordinate_system_id != CoordinateSystemId::root() ||
-                    spatial_node.is_ancestor_or_self_zooming
+                spatial_node.is_ancestor_or_self_zooming
             });
 
         let mut composite_state = CompositeState::new(
