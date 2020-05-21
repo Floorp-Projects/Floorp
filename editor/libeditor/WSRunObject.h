@@ -788,11 +788,15 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToSplitAcrossBlocksPriv();
 
   /**
-   * InsertNBSPAndRemoveFollowingASCIIWhitespaces() inserts an NBSP first.
-   * Then, if following characters are ASCII whitespaces, will remove them.
+   * ReplaceASCIIWhitespacesWithOneNBSP() replaces all adjuscent ASCII
+   * whitespaces which includes aPointAtASCIIWitespace with an NBSP. Then, if
+   * Note that this may remove ASCII whitespaces which are not in container of
+   * aPointAtASCIIWhitespace.
+   *
+   * @param aPointAtASCIIWhitespace     Point of an ASCII whitespace.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertNBSPAndRemoveFollowingASCIIWhitespaces(
-      const EditorDOMPointInText& aPoint);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ReplaceASCIIWhitespacesWithOneNBSP(
+      const EditorDOMPointInText& aPointAtASCIIWhitespace);
 
   /**
    * GetASCIIWhitespacesBounds() returns a range from start of whitespaces

@@ -236,12 +236,11 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
             atPreviousCharOfNextCharOfInsertionPoint.IsEndOfContainer() ||
             !atPreviousCharOfNextCharOfInsertionPoint.IsCharASCIISpace()) {
           // We are at start of non-nbsps.  Convert to a single nbsp.
-          nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(
-              atNextCharOfInsertionPoint);
+          nsresult rv =
+              ReplaceASCIIWhitespacesWithOneNBSP(atNextCharOfInsertionPoint);
           if (NS_FAILED(rv)) {
             NS_WARNING(
-                "WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces() "
-                "failed");
+                "WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
             return nullptr;
           }
         }
@@ -1187,13 +1186,11 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
           // mScanStartPoint will be referred bellow so that we need to keep
           // it a valid point.
           AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
-          nsresult rv =
-              aEndObject->InsertNBSPAndRemoveFollowingASCIIWhitespaces(
-                  nextCharOfStartOfEnd);
+          nsresult rv = aEndObject->ReplaceASCIIWhitespacesWithOneNBSP(
+              nextCharOfStartOfEnd);
           if (NS_FAILED(rv)) {
             NS_WARNING(
-                "WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces() "
-                "failed");
+                "WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
             return rv;
           }
         }
@@ -1234,11 +1231,10 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
         NS_WARNING_ASSERTION(end.IsSet(),
                              "WSRunObject::GetASCIIWhitespacesBounds() didn't "
                              "return end point, but ignored");
-        nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(start);
+        nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(start);
         if (NS_FAILED(rv)) {
           NS_WARNING(
-              "WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces() "
-              "failed");
+              "WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
           return rv;
         }
       }
@@ -1267,12 +1263,9 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
       // mScanStartPoint will be referred bellow so that we need to keep
       // it a valid point.
       AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
-      nsresult rv =
-          InsertNBSPAndRemoveFollowingASCIIWhitespaces(atNextCharOfStart);
+      nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(atNextCharOfStart);
       if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces() "
-            "failed");
+        NS_WARNING("WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
         return rv;
       }
     }
@@ -1295,11 +1288,9 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
       NS_WARNING_ASSERTION(end.IsSet(),
                            "WSRunObject::GetASCIIWhitespacesBounds() didn't "
                            "return end point, but ignored");
-      nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(start);
+      nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(start);
       if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces() "
-            "failed");
+        NS_WARNING("WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
         return rv;
       }
     }
@@ -1446,48 +1437,40 @@ EditorDOMPointInText WSRunScanner::GetPreviousEditableCharPoint(
   return EditorDOMPointInText();
 }
 
-nsresult WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(
-    const EditorDOMPointInText& aPoint) {
-  // MOOSE: this routine needs to be modified to preserve the integrity of the
-  // wsFragment info.
-  if (NS_WARN_IF(!aPoint.IsSet())) {
-    return NS_ERROR_NULL_POINTER;
-  }
+nsresult WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP(
+    const EditorDOMPointInText& aPointAtASCIIWhitespace) {
+  MOZ_ASSERT(aPointAtASCIIWhitespace.IsSet());
+  MOZ_ASSERT(!aPointAtASCIIWhitespace.IsEndOfContainer());
+  MOZ_ASSERT(aPointAtASCIIWhitespace.IsCharASCIISpace());
 
-  // First, insert an NBSP.
+  EditorDOMPointInText start, end;
+  Tie(start, end) = GetASCIIWhitespacesBounds(eAfter, aPointAtASCIIWhitespace);
+  if (NS_WARN_IF(!start.IsSet()) || NS_WARN_IF(!end.IsSet())) {
+    return NS_OK;
+  }
+  MOZ_ASSERT(start.GetContainer() != end.GetContainer() ||
+             end.Offset() > start.Offset());
+
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-  nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                    .InsertTextIntoTextNodeWithTransaction(
-                        nsDependentSubstring(&kNBSP, 1), aPoint, true);
+  nsresult rv =
+      MOZ_KnownLive(mHTMLEditor)
+          .ReplaceTextWithTransaction(
+              MOZ_KnownLive(*start.ContainerAsText()), start.Offset(),
+              end.Offset() - start.Offset(), nsDependentSubstring(&kNBSP, 1));
   if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
+    NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
     return rv;
   }
 
-  // Now, the text node may have been modified by mutation observer.
-  // So, the NBSP may have gone.
-  if (!aPoint.IsSetAndValid() || aPoint.IsEndOfContainer() ||
-      !aPoint.IsCharNBSP()) {
-    // This is just preparation of an edit action.  Let's return NS_OK.
-    // XXX Perhaps, we should return another success code which indicates
-    //     mutation observer touched the DOM tree.  However, that should
-    //     be returned from each transaction's DoTransaction.
+  if (start.GetContainer() == end.GetContainer()) {
     return NS_OK;
   }
 
-  // Next, find range of whitespaces it will be replaced.
-  EditorDOMPointInText start, end;
-  Tie(start, end) = GetASCIIWhitespacesBounds(eAfter, aPoint.NextPoint());
-  if (!start.IsSet()) {
-    return NS_OK;
-  }
-  NS_WARNING_ASSERTION(end.IsSet(),
-                       "WSRunObject::GetASCIIWhitespacesBounds() didn't return "
-                       "end point, but ignored");
-
-  // Finally, delete that replaced ws, if any
+  // We need to remove the following unnecessary ASCII whitespaces because we
+  // collapsed them into the start node.
   rv = MOZ_KnownLive(mHTMLEditor)
-           .DeleteTextAndTextNodesWithTransaction(start, end);
+           .DeleteTextAndTextNodesWithTransaction(
+               EditorDOMPointInText::AtEndOf(*start.ContainerAsText()), end);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -1523,6 +1506,8 @@ WSRunObject::GetASCIIWhitespacesBounds(
   }
 
   if (aDir & eBefore) {
+    // XXX Different from eAfter case, this may cross element boundaries with
+    //     this call.  I think that it's not expected case.
     EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
     if (atPreviousChar.IsSet()) {
       // We found a text node, at least.
@@ -1695,43 +1680,15 @@ nsresult WSRunObject::NormalizeWhitespacesAtEndOf(const WSFragment& aRun) {
     // by visible contents (or immediately before a <br> element).
     if (maybeNBSPFollowingVisibleContent &&
         followedByVisibleContentOrBRElement) {
-      // Now replace nbsp with space.  First, insert a space
       AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
       nsresult rv =
           MOZ_KnownLive(mHTMLEditor)
-              .InsertTextIntoTextNodeWithTransaction(
-                  NS_LITERAL_STRING(" "), atPreviousCharOfEndOfRun, true);
-      if (NS_WARN_IF(mHTMLEditor.Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-        return rv;
-      }
-
-      if (atPreviousCharOfEndOfRun.IsEndOfContainer() ||
-          atPreviousCharOfEndOfRun.IsAtLastContent()) {
-        NS_WARNING("The text node was modified by mutation event listener");
-        return NS_OK;
-      }
-
-      // Finally, delete that nbsp
-      NS_ASSERTION(atPreviousCharOfEndOfRun.IsNextCharNBSP(),
-                   "Trying to remove an NBSP, but it's gone from the "
-                   "expected position");
-      EditorDOMPointInText atNextCharOfPreviousCharOfEndOfRun =
-          atPreviousCharOfEndOfRun.NextPoint();
-      rv = MOZ_KnownLive(mHTMLEditor)
-               .DeleteTextAndTextNodesWithTransaction(
-                   atNextCharOfPreviousCharOfEndOfRun,
-                   atNextCharOfPreviousCharOfEndOfRun.NextPoint());
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-        return rv;
-      }
-      return NS_OK;
+              .ReplaceTextWithTransaction(
+                  MOZ_KnownLive(*atPreviousCharOfEndOfRun.ContainerAsText()),
+                  atPreviousCharOfEndOfRun.Offset(), 1, NS_LITERAL_STRING(" "));
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "HTMLEditor::ReplaceTextWithTransaction() failed");
+      return rv;
     }
   }
 
@@ -1747,49 +1704,59 @@ nsresult WSRunObject::NormalizeWhitespacesAtEndOf(const WSFragment& aRun) {
     return NS_OK;
   }
 
+  // Currently, we're at an NBSP following an ASCII space (in theory,
+  // GetASCIIWhitespacesBounds() may return earlier text node's ASCII
+  // whitespace point to `start` though).  Then, we need to replace it with
+  // `"&nbsp; "` for avoiding collapsing whitespaces.
   MOZ_ASSERT(!atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer());
+  // XXX `eBoth` is required even though the following code does not refer
+  //     `end` because GetASCIIWhitespacesBounds() may not set `start` nor
+  //     `end` if `eBefore`.
   EditorDOMPointInText start, end;
-  // XXX end won't be used, whey `eBoth`?
-  Tie(start, end) = GetASCIIWhitespacesBounds(
-      eBoth, atPreviousCharOfPreviousCharOfEndOfRun.NextPoint());
-  NS_WARNING_ASSERTION(
+  Tie(start, end) = GetASCIIWhitespacesBounds(eBoth, atPreviousCharOfEndOfRun);
+  MOZ_ASSERT(
       start.IsSet(),
       "WSRunObject::GetASCIIWhitespacesBounds() didn't return start point");
-  NS_WARNING_ASSERTION(end.IsSet(),
-                       "WSRunObject::GetASCIIWhitespacesBounds() didn't "
-                       "return end point, but ignored");
+  MOZ_ASSERT(start.GetContainer() != atPreviousCharOfEndOfRun.GetContainer() ||
+                 start.Offset() < atPreviousCharOfEndOfRun.Offset(),
+             "There must be at least one ASCII whitespace");
 
-  // Delete that nbsp
-  NS_ASSERTION(!atPreviousCharOfEndOfRun.IsEndOfContainer(),
-               "The text node was modified by mutation event listener");
-  if (!atPreviousCharOfEndOfRun.IsEndOfContainer()) {
-    NS_ASSERTION(atPreviousCharOfEndOfRun.IsCharNBSP(),
-                 "Trying to remove an NBSP, but it's gone from the "
-                 "expected position");
-    nsresult rv =
-        MOZ_KnownLive(mHTMLEditor)
-            .DeleteTextAndTextNodesWithTransaction(
-                atPreviousCharOfEndOfRun, atPreviousCharOfEndOfRun.NextPoint());
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-      return rv;
-    }
+  AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
+  uint32_t numberOfASCIIWhitespacesInStartNode =
+      start.ContainerAsText() == atPreviousCharOfEndOfRun.ContainerAsText()
+          ? atPreviousCharOfEndOfRun.Offset() - start.Offset()
+          : start.ContainerAsText()->Length() - start.Offset();
+  // Replace all preceding ASCII whitespaces **and** the NBSP.
+  uint32_t replaceLengthInStartNode =
+      numberOfASCIIWhitespacesInStartNode +
+      (start.ContainerAsText() == atPreviousCharOfEndOfRun.ContainerAsText()
+           ? 1
+           : 0);
+  nsresult rv =
+      MOZ_KnownLive(mHTMLEditor)
+          .ReplaceTextWithTransaction(MOZ_KnownLive(*start.ContainerAsText()),
+                                      start.Offset(), replaceLengthInStartNode,
+                                      NS_LITERAL_STRING(u"\x00A0 "));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
+    return rv;
   }
 
-  // Finally, insert that nbsp before the ASCII ws run
-  NS_ASSERTION(start.IsSetAndValid(),
-               "The text node was modified by mutation event listener");
-  if (start.IsSetAndValid()) {
-    AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-    nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                      .InsertTextIntoTextNodeWithTransaction(
-                          nsDependentSubstring(&kNBSP, 1), start, true);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-      return rv;
-    }
+  if (start.GetContainer() == atPreviousCharOfEndOfRun.GetContainer()) {
+    return NS_OK;
   }
-  return NS_OK;
+
+  // We need to remove the following unnecessary ASCII whitespaces and
+  // NBSP at atPreviousCharOfEndOfRun because we collapsed them into
+  // the start node.
+  rv = MOZ_KnownLive(mHTMLEditor)
+           .DeleteTextAndTextNodesWithTransaction(
+               EditorDOMPointInText::AtEndOf(*start.ContainerAsText()),
+               atPreviousCharOfEndOfRun.NextPoint());
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+  return rv;
 }
 
 nsresult WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhitespace(
@@ -1823,36 +1790,13 @@ nsresult WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhitespace(
     return NS_OK;
   }
 
-  // First, insert a space before the previous NBSP.
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
   nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                    .InsertTextIntoTextNodeWithTransaction(
-                        NS_LITERAL_STRING(" "), atPreviousChar, true);
-  if (NS_WARN_IF(mHTMLEditor.Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-    return rv;
-  }
-
-  // If the insertion causes unexpected DOM tree, we should abort it.
-  if (atPreviousChar.IsEndOfContainer() || atPreviousChar.IsAtLastContent()) {
-    NS_WARNING("The text node was modified by mutation event listener");
-    return NS_OK;
-  }
-
-  // Finally, delete the previous NBSP.
-  NS_ASSERTION(
-      atPreviousChar.IsNextCharNBSP(),
-      "Trying to remove an NBSP, but it's gone from the expected position");
-  EditorDOMPointInText atNextCharOfPreviousChar = atPreviousChar.NextPoint();
-  rv = MOZ_KnownLive(mHTMLEditor)
-           .DeleteTextAndTextNodesWithTransaction(
-               atNextCharOfPreviousChar, atNextCharOfPreviousChar.NextPoint());
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+                    .ReplaceTextWithTransaction(
+                        MOZ_KnownLive(*atPreviousChar.ContainerAsText()),
+                        atPreviousChar.Offset(), 1, NS_LITERAL_STRING(" "));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::ReplaceTextWithTransaction() failed");
   return rv;
 }
 
@@ -1887,36 +1831,13 @@ nsresult WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhitespace(
     return NS_OK;
   }
 
-  // First, insert an ASCII whitespace.
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
   nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                    .InsertTextIntoTextNodeWithTransaction(
-                        NS_LITERAL_STRING(" "), atNextChar, true);
-  if (NS_WARN_IF(mHTMLEditor.Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-    return rv;
-  }
-
-  // If the insertion causes unexpected DOM tree, we should abort it.
-  if (atNextChar.IsEndOfContainer() || atNextChar.IsAtLastContent()) {
-    NS_WARNING("The text node was modified by mutation event listener");
-    return NS_OK;
-  }
-
-  // Finally, delete that nbsp
-  NS_ASSERTION(
-      atNextChar.IsNextCharNBSP(),
-      "Trying to remove an NBSP, but it's gone from the expected position");
-  EditorDOMPointInText atNextCharOfNextChar = atNextChar.NextPoint();
-  rv = MOZ_KnownLive(mHTMLEditor)
-           .DeleteTextAndTextNodesWithTransaction(
-               atNextCharOfNextChar, atNextCharOfNextChar.NextPoint());
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+                    .ReplaceTextWithTransaction(
+                        MOZ_KnownLive(*atNextChar.ContainerAsText()),
+                        atNextChar.Offset(), 1, NS_LITERAL_STRING(" "));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::ReplaceTextWithTransaction() failed");
   return rv;
 }
 
