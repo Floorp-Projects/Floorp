@@ -124,3 +124,60 @@ add_task(async function test_reconcile() {
   localRecord.deleted = true;
   ok(!(await engine._reconcile(localRecord)), "Skip incoming local if deleted");
 });
+
+add_task(async function test_modified_after_fail() {
+  let [engine, store] = await getMocks();
+  store.getWindowEnumerator = () =>
+    mockGetWindowEnumerator("http://example.com", 1, 1);
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  try {
+    _("First sync; create collection and tabs record on server");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let collection = server.user("foo").collection("tabs");
+    deepEqual(
+      collection.cleartext(engine.service.clientsEngine.localID).tabs,
+      [
+        {
+          title: "title",
+          urlHistory: ["http://example.com"],
+          icon: "",
+          lastUsed: 1,
+        },
+      ],
+      "Should upload mock local tabs on first sync"
+    );
+    ok(
+      !engine._tracker.modified,
+      "Tracker shouldn't be modified after first sync"
+    );
+
+    _("Second sync; flag tracker as modified and throw on upload");
+    engine._tracker.modified = true;
+    let oldPost = collection.post;
+    collection.post = () => {
+      throw new Error("Sync this!");
+    };
+    await Assert.rejects(
+      sync_engine_and_validate_telem(engine, true),
+      ex => ex.success === false
+    );
+    ok(
+      engine._tracker.modified,
+      "Tracker should remain modified after failed sync"
+    );
+
+    _("Third sync");
+    collection.post = oldPost;
+    await sync_engine_and_validate_telem(engine, false);
+    ok(
+      !engine._tracker.modified,
+      "Tracker shouldn't be modified again after third sync"
+    );
+  } finally {
+    await promiseStopServer(server);
+  }
+});

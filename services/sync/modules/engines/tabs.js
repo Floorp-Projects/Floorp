@@ -108,6 +108,12 @@ TabEngine.prototype = {
 
     return SyncEngine.prototype._reconcile.call(this, item);
   },
+
+  async trackRemainingChanges() {
+    if (this._modified.count() > 0) {
+      this._tracker.modified = true;
+    }
+  },
 };
 
 function TabStore(name, engine) {
@@ -275,10 +281,6 @@ TabStore.prototype = {
 
   async update(record) {
     this._log.trace("Ignoring tab updates as local ones win");
-  },
-
-  async trackRemainingChanges() {
-    this._tracker.modified = true;
   },
 };
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["PrefsEngine", "PrefRec"];
+var EXPORTED_SYMBOLS = ["PrefsEngine", "PrefRec", "PREFS_GUID"];
 
 const PREF_SYNC_PREFS_PREFIX = "services.sync.prefs.sync.";
 
@@ -126,6 +126,12 @@ PrefsEngine.prototype = {
       return true;
     }
     return SyncEngine.prototype._reconcile.call(this, item);
+  },
+
+  async trackRemainingChanges() {
+    if (this._modified.count() > 0) {
+      this._tracker.modified = true;
+    }
   },
 };
 
@@ -358,10 +364,6 @@ PrefStore.prototype = {
 
   async wipe() {
     this._log.trace("Ignoring wipe request");
-  },
-
-  async trackRemainingChanges() {
-    this._tracker.modified = true;
   },
 };
 
