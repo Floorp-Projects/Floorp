@@ -395,6 +395,7 @@ def virtualenv_python3(venv):
 
 set_config('PYTHON3', virtualenv_python3.path)
 set_config('PYTHON3_VERSION', virtualenv_python3.str_version)
+add_old_configure_assignment('PYTHON3', virtualenv_python3.path)
 
 
 # Inject mozconfig options
