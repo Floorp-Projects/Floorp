@@ -62,6 +62,7 @@
     <color name="onboarding_illustration_deselected_light_theme">#9915141A</color>
     <color name="add_on_private_browsing_exterior_circle_background_light_theme">@color/accent_bright_light_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_light_theme">#FFFFFF</color>
+    <color name="prompt_login_edit_text_cursor_color_light_theme">#312a64</color>
 
     <!-- Tab Tray -->
     <color name="tab_tray_item_text_light_theme">@color/ink_80</color>
@@ -115,6 +116,7 @@
     <color name="onboarding_illustration_deselected_dark_theme">#99FBFBFE</color>
     <color name="add_on_private_browsing_exterior_circle_background_dark_theme">@color/accent_dark_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_dark_theme">#FFFFFF</color>
+    <color name="prompt_login_edit_text_cursor_color_dark_theme">#9059ff</color>
 
     <!-- Tab Tray -->
     <color name="tab_tray_item_text_dark_theme">@color/light_grey_05</color>
@@ -166,6 +168,7 @@
     <color name="onboarding_illustration_deselected_private_theme">@color/onboarding_illustration_deselected_dark_theme</color>
     <color name="add_on_private_browsing_exterior_circle_background_private_theme">@color/accent_private_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_private_theme">#FFFFFF</color>
+    <color name="prompt_login_edit_text_cursor_color_private_theme">#9059ff</color>
 
     <!-- Tab Tray -->
     <color name="tab_tray_item_text_private_theme">@color/light_grey_05</color>
@@ -216,6 +219,7 @@
     <color name="onboarding_illustration_deselected_normal_theme">@color/onboarding_illustration_deselected_light_theme</color>
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/add_on_private_browsing_exterior_circle_background_light_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/add_on_private_browsing_interior_icon_background_light_theme</color>
+    <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/prompt_login_edit_text_cursor_color_light_theme</color>
 
     <!-- Tab tray -->
     <color name="tab_tray_item_text_normal_theme">@color/tab_tray_item_text_light_theme</color>
