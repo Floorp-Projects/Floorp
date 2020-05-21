@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <optional>
+
 #include <initguid.h>
 #include "DrawTargetD2D1.h"
 #include "FilterNodeSoftware.h"
@@ -2255,6 +2257,31 @@ already_AddRefed<SourceSurface> DrawTargetD2D1::OptimizeSourceSurface(
   }
 
   RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+
+  std::optional<SurfaceFormat> convertTo;
+  switch (data->GetFormat()) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+      convertTo = SurfaceFormat::B8G8R8X8;
+      break;
+    case gfx::SurfaceFormat::R8G8B8A8:
+      convertTo = SurfaceFormat::B8G8R8X8;
+      break;
+    default:
+      break;
+  }
+
+  if (convertTo) {
+    const auto size = data->GetSize();
+    const RefPtr<DrawTarget> dt =
+        Factory::CreateDrawTarget(BackendType::SKIA, size, *convertTo);
+    if (!dt) {
+      return nullptr;
+    }
+    dt->CopySurface(data, {{}, size}, {});
+
+    const RefPtr<SourceSurface> snapshot = dt->Snapshot();
+    data = snapshot->GetDataSurface();
+  }
 
   RefPtr<ID2D1Bitmap1> bitmap;
   {
