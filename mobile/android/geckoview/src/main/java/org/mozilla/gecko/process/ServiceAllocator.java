@@ -214,7 +214,11 @@ import java.util.Map.Entry;
         protected boolean bindService() {
             if (mIsDefunct) {
                 final String errorMsg = "Attempt to bind a defunct InstanceInfo for " + mType + " child process";
-                throw new BindException(errorMsg);
+                if (BuildConfig.DEBUG) {
+                    throw new AssertionError(errorMsg);
+                } else {
+                    throw new BindException(errorMsg);
+                }
             }
 
             return updateBindings();
