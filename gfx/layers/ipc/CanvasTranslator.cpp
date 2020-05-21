@@ -159,6 +159,10 @@ void CanvasTranslator::StartTranslation() {
 }
 
 void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
+  if (!mTranslationTaskQueue) {
+    return FinishShutdown();
+  }
+
   mTranslationTaskQueue->BeginShutdown()->Then(
       MessageLoop::current()->SerialEventTarget(), __func__, this,
       &CanvasTranslator::FinishShutdown, &CanvasTranslator::FinishShutdown);
