@@ -16,7 +16,8 @@ namespace dom {
 bool CallbackInterface::GetCallableProperty(
     BindingCallContext& cx, JS::Handle<jsid> aPropId,
     JS::MutableHandle<JS::Value> aCallable) {
-  if (!JS_GetPropertyById(cx, CallbackKnownNotGray(), aPropId, aCallable)) {
+  JS::Rooted<JSObject*> obj(cx, CallbackKnownNotGray());
+  if (!JS_GetPropertyById(cx, obj, aPropId, aCallable)) {
     return false;
   }
   if (!aCallable.isObject() || !JS::IsCallable(&aCallable.toObject())) {
