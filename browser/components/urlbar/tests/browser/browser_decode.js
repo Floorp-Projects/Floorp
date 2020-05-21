@@ -84,6 +84,7 @@ add_task(async function actionURILosslessDecode() {
 
 add_task(async function test_resultsDisplayDecoded() {
   await PlacesUtils.history.clear();
+  await UrlbarTestUtils.formHistory.clear();
 
   await PlacesTestUtils.addVisits("http://example.com/%E9%A1%B5");
 

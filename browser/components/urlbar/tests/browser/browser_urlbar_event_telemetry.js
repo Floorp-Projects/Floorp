@@ -355,6 +355,68 @@ const tests = [
   },
 
   async function(win) {
+    info("Type something, select remote search suggestion, Enter.");
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window: win,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "foo",
+      fireInputEvent: true,
+    });
+    while (win.gURLBar.untrimmedValue != "foofoo") {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    }
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "3",
+        selIndex: val => parseInt(val) > 0,
+        selType: "searchsuggestion",
+      },
+    };
+  },
+
+  async function(win) {
+    info("Type something, select form history, Enter.");
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.maxHistoricalSearchSuggestions", 2]],
+    });
+    await UrlbarTestUtils.formHistory.add(["foofoo", "foobar"]);
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window: win,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "foo",
+      fireInputEvent: true,
+    });
+    while (win.gURLBar.untrimmedValue != "foofoo") {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    }
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "3",
+        selIndex: val => parseInt(val) > 0,
+        selType: "formhistory",
+      },
+    };
+  },
+
+  async function(win) {
     info("Type @, Enter on a keywordoffer");
     win.gURLBar.select();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -997,6 +1059,7 @@ add_task(async function test() {
     await PlacesUtils.keywords.remove("kw");
     await PlacesUtils.bookmarks.remove(bm);
     await PlacesUtils.history.clear();
+    await UrlbarTestUtils.formHistory.clear(window);
   });
 
   // This is not necessary after each loop, because assertEvents does it.
@@ -1011,6 +1074,7 @@ add_task(async function test() {
     // Always blur to ensure it's not accounted as an additional abandonment.
     gURLBar.blur();
     TelemetryTestUtils.assertEvents(events, { category: "urlbar" });
+    await UrlbarTestUtils.formHistory.clear(window);
   }
 
   for (let i = 0; i < noEventTests.length; i++) {

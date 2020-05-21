@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
+  FormHistory: "resource://gre/modules/FormHistory.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -35,6 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
+const DEFAULT_FORM_HISTORY_NAME = "searchbar-history";
 const SEARCH_BUTTON_ID = "urlbar-search-button";
 
 let getBoundsWithoutFlushing = element =>
@@ -92,6 +94,7 @@ class UrlbarInput {
     });
     this.view = new UrlbarView(this);
     this.valueIsTyped = false;
+    this.formHistoryName = DEFAULT_FORM_HISTORY_NAME;
     this.lastQueryContextPromise = Promise.resolve();
     this._actionOverrideKeyCount = 0;
     this._autofillPlaceholder = "";
@@ -678,10 +681,28 @@ class UrlbarInput {
 
         const actionDetails = {
           isSuggestion: !!result.payload.suggestion,
+          isFormHistory: result.source == UrlbarUtils.RESULT_SOURCE.HISTORY,
           alias: result.payload.keyword,
         };
         const engine = Services.search.getEngineByName(result.payload.engine);
         this._recordSearch(engine, event, actionDetails);
+
+        // Add the search to form history.  This also updates any existing form
+        // history for the search.
+        if (!this.isPrivate && !result.payload.inPrivateWindow) {
+          FormHistory.update(
+            {
+              op: "bump",
+              fieldname: this.formHistoryName,
+              value: result.payload.suggestion || result.payload.query,
+            },
+            {
+              handleError(error) {
+                Cu.reportError(`Error saving form history: ${error}`);
+              },
+            }
+          );
+        }
         break;
       }
       case UrlbarUtils.RESULT_TYPE.TIP: {
@@ -942,6 +963,7 @@ class UrlbarInput {
           "usercontextid"
         ),
         currentPage: this.window.gBrowser.currentURI.spec,
+        formHistoryName: this.formHistoryName,
         allowSearchSuggestions:
           !event ||
           !UrlbarUtils.isPasteEvent(event) ||
@@ -1510,8 +1532,10 @@ class UrlbarInput {
    *   The details associated with this search query.
    * @param {boolean} searchActionDetails.isSuggestion
    *   True if this query was initiated from a suggestion from the search engine.
-   * @param {alias} searchActionDetails.alias
+   * @param {boolean} searchActionDetails.alias
    *   True if this query was initiated via a search alias.
+   * @param {boolean} searchActionDetails.isFormHistory
+   *   True if this query was initiated from a form history result.
    */
   _recordSearch(engine, event, searchActionDetails = {}) {
     const isOneOff = this.view.oneOffSearchButtons.maybeRecordTelemetry(event);

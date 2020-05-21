@@ -49,6 +49,7 @@ add_task(async function startup() {
     false
   );
   await AddonTestUtils.promiseStartupManager();
+  await UrlbarTestUtils.initXPCShellDependencies();
 
   // Add a test engine and make it default so that when we do searches below,
   // Firefox doesn't try to include search suggestions from the actual default

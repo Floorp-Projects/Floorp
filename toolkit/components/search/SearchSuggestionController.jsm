@@ -285,11 +285,6 @@ SearchSuggestionController.prototype = {
   stop() {
     if (this._request) {
       this._request.abort();
-    } else if (!this.maxRemoteResults) {
-      Cu.reportError(
-        "SearchSuggestionController: Cannot stop fetching if remote results were not " +
-          "requested"
-      );
     }
     this._reset();
   },

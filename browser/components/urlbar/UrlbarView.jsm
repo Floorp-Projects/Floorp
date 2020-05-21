@@ -897,7 +897,7 @@ class UrlbarView {
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH ||
       result.type == UrlbarUtils.RESULT_TYPE.KEYWORD
     ) {
-      favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
+      favicon.src = this._iconForSearchResult(result);
     } else {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }
@@ -1025,6 +1025,18 @@ class UrlbarView {
     }
 
     item._elements.get("titleSeparator").hidden = !action && !setURL;
+  }
+
+  _iconForSearchResult(result, engineOverride = null) {
+    return (
+      (result.source == UrlbarUtils.RESULT_SOURCE.HISTORY &&
+        UrlbarUtils.ICON.HISTORY) ||
+      (engineOverride &&
+        engineOverride.iconURI &&
+        engineOverride.iconURI.spec) ||
+      result.payload.icon ||
+      UrlbarUtils.ICON.SEARCH_GLASS
+    );
   }
 
   _updateRowForTip(item, result) {
@@ -1493,6 +1505,7 @@ class UrlbarView {
       } else if (!engine) {
         favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
       }
+      favicon.src = this._iconForSearchResult(result, engine);
     }
   }
 

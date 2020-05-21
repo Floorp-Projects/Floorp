@@ -18,9 +18,11 @@ add_task(async function init() {
 
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
+    await UrlbarTestUtils.formHistory.clear();
   });
 
   await PlacesUtils.history.clear();
+  await UrlbarTestUtils.formHistory.clear();
 
   let visits = [];
   for (let i = 0; i < gMaxResults; i++) {
@@ -228,6 +230,7 @@ add_task(async function oneOffClick() {
   await resultsPromise;
 
   gBrowser.removeTab(gBrowser.selectedTab);
+  await UrlbarTestUtils.formHistory.clear();
 });
 
 // Presses the Return key when a one-off is selected.
@@ -259,6 +262,7 @@ add_task(async function oneOffReturn() {
   await resultsPromise;
 
   gBrowser.removeTab(gBrowser.selectedTab);
+  await UrlbarTestUtils.formHistory.clear();
 });
 
 add_task(async function hiddenOneOffs() {

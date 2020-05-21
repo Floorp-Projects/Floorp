@@ -41,6 +41,10 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
+add_task(async function initXPCShellDependencies() {
+  await UrlbarTestUtils.initXPCShellDependencies();
+});
+
 /**
  * @param {string} searchString The search string to insert into the context.
  * @param {object} properties Overrides for the default values.
@@ -355,8 +359,35 @@ function makeSearchResult(
     })
   );
 
+  if (typeof suggestion == "string") {
+    result.payload.lowerCaseSuggestion = result.payload.suggestion.toLocaleLowerCase();
+  }
+
   result.heuristic = heuristic;
   return result;
+}
+
+/**
+ * Creates a UrlbarResult for a form history result.
+ * @param {UrlbarQueryContext} queryContext
+ *   The context that this result will be displayed in.
+ * @param {string} options.suggestion
+ *   The form history suggestion.
+ * @param {string} options.engineName
+ *   The name of the engine that will do the search when the result is picked.
+ * @returns {UrlbarResult}
+ */
+function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
+  UrlbarTokenizer.tokenize(queryContext);
+  return new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_SOURCE.HISTORY,
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      engine: engineName,
+      suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+      lowerCaseSuggestion: suggestion.toLocaleLowerCase(),
+    })
+  );
 }
 
 /**
@@ -377,7 +408,7 @@ function makeSearchResult(
  */
 function makeVisitResult(
   queryContext,
-  { title, uri, iconUri, tags = [], heuristic = false }
+  { title, uri, iconUri, tags = null, heuristic = false }
 ) {
   UrlbarTokenizer.tokenize(queryContext);
 
@@ -388,8 +419,8 @@ function makeVisitResult(
     title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
   };
 
-  if (!heuristic) {
-    payload.tags = [tags, UrlbarUtils.HIGHLIGHT.TYPED];
+  if (!heuristic || tags) {
+    payload.tags = [tags || [], UrlbarUtils.HIGHLIGHT.TYPED];
   }
 
   let result = new UrlbarResult(
@@ -469,6 +500,7 @@ async function check_results({ context, matches = [] } = {}) {
           href: AppConstants.BROWSER_CHROME_URL,
         },
       },
+      autofillFirstResult() {},
     },
   });
   await controller.startQuery(context);
