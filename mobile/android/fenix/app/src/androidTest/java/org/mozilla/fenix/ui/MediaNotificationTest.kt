@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.test.uiautomator.UiSelector
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -43,6 +44,12 @@ class MediaNotificationTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+        // verify if the notification tray is expanded and should be closed before the next test
+        val notificationShade =
+            mDevice.findObject(UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller"))
+
+        if (notificationShade.exists())
+            mDevice.pressBack()
     }
 
     @Test
