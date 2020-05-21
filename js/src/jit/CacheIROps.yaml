@@ -825,7 +825,7 @@
 # Meta ops generate no code, but contain data for BaselineInspector.
 - name: MetaTwoByte
   shared: true
-  transpile: false
+  transpile: true
   custom_writer: true
   args:
     kind: MetaTwoByteKindImm

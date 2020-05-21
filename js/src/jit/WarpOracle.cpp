@@ -431,6 +431,9 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::StrictSetProp:
       case JSOp::Call:
       case JSOp::CallIgnoresRv:
+      case JSOp::FunCall:
+      case JSOp::FunApply:
+      case JSOp::New:
       case JSOp::ToNumeric:
       case JSOp::Pos:
       case JSOp::Inc:
@@ -559,9 +562,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::EndIter:
       case JSOp::IsNoIter:
       case JSOp::CallIter:
-      case JSOp::FunCall:
-      case JSOp::FunApply:
-      case JSOp::New:
       case JSOp::SuperCall:
       case JSOp::DelProp:
       case JSOp::StrictDelProp:
