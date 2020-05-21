@@ -325,8 +325,6 @@ class DefaultBrowserToolbarController(
 
     private fun animateTabAndNavigateHome() {
         if (activity.settings().useNewTabTray) {
-//            val directions = BrowserFragmentDirections.actionBrowserFragmentToTabsTrayFragment()
-//            navController.navigate(directions)
             onTabCounterClicked.invoke()
             return
         }

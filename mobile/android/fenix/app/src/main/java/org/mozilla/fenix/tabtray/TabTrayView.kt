@@ -10,9 +10,9 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.component_tabstray.*
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
-import kotlinx.android.synthetic.main.fragment_tab_tray.*
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.tabstray.Tab
@@ -20,7 +20,6 @@ import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-
 
 interface TabTrayInteractor {
     fun onTabSelected(tab: Tab)
@@ -48,11 +47,11 @@ class TabTrayView(
         get() = container
 
     init {
-        fabView.new_tab_button.compatElevation = 41.0f
+        fabView.new_tab_button.compatElevation = ELEVATION
 
         behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                if (slideOffset > -0.4) {
+                if (slideOffset > SLIDE_OFFSET) {
                     fabView.new_tab_button.show()
                 } else {
                     fabView.new_tab_button.hide()
@@ -67,9 +66,9 @@ class TabTrayView(
         })
 
         val selectedTabIndex = if (!isPrivate) {
-            0
+            DEFAULT_TAB_ID
         } else {
-            1
+            PRIVATE_TAB_ID
         }
 
         view.tab_layout.getTabAt(selectedTabIndex)?.also {
@@ -97,27 +96,28 @@ class TabTrayView(
         tabsFeature.start()
     }
 
-    override fun onTabClosed(tab: Tab) {}
-
     override fun onTabSelected(tab: Tab) {
         interactor.onTabSelected(tab)
     }
 
-    override fun onTabReselected(tab: TabLayout.Tab?) {
-
-    }
-
-    override fun onTabUnselected(tab: TabLayout.Tab?) {
-
-    }
-
     override fun onTabSelected(tab: TabLayout.Tab?) {
-        // Todo: We need a better way to determine which tab was selected.
+        // We need a better way to determine which tab was selected.
         val filter: (TabSessionState) -> Boolean = when (tab?.position) {
             1 -> { state -> state.content.private }
             else -> { state -> !state.content.private }
         }
 
         tabsFeature.filterTabs(filter)
+    }
+
+    override fun onTabClosed(tab: Tab) { /*noop*/ }
+    override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/ }
+    override fun onTabUnselected(tab: TabLayout.Tab?) { /*noop*/ }
+
+    companion object {
+        private const val DEFAULT_TAB_ID = 0
+        private const val PRIVATE_TAB_ID = 1
+        private const val SLIDE_OFFSET = 0.4
+        private const val ELEVATION = 41f
     }
 }

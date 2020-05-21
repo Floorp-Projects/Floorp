@@ -114,7 +114,8 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = readerModeController,
             sessionManager = mockk(),
-            sharedViewModel = mockk()
+            sharedViewModel = mockk(),
+            onTabCounterClicked = { }
         )
 
         mockkStatic(
@@ -207,7 +208,8 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
-            sharedViewModel = mockk()
+            sharedViewModel = mockk(),
+            onTabCounterClicked = { }
         )
 
         controller.handleBrowserMenuDismissed(itemList)
@@ -370,7 +372,8 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
-            sharedViewModel = mockk()
+            sharedViewModel = mockk(),
+            onTabCounterClicked = { }
         )
         controller.ioScope = this
 
@@ -574,7 +577,8 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
-            sharedViewModel = mockk()
+            sharedViewModel = mockk(),
+            onTabCounterClicked = { }
         )
 
         val sessionManager: SessionManager = mockk(relaxed = true)
@@ -613,7 +617,8 @@ class DefaultBrowserToolbarControllerTest {
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
-            sharedViewModel = mockk()
+            sharedViewModel = mockk(),
+            onTabCounterClicked = { }
         )
 
         controller.handleToolbarItemInteraction(item)
