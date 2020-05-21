@@ -1485,10 +1485,13 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     cleanedUpResponseHead = *responseHead;
     cleanedUpResponseHead.ClearHeader(nsHttp::Set_Cookie);
     if (multiPartID) {
-      nsCOMPtr<nsIChannel> chan = do_QueryInterface(aRequest);
-      MOZ_ASSERT(chan);
+      nsCOMPtr<nsIChannel> multiPartChannel = do_QueryInterface(aRequest);
+      // For the multipart channel, use the parsed subtype instead. Note that
+      // `chan` is the underlying base channel of the multipart channel in this
+      // case, which is different from `multiPartChannel`.
+      MOZ_ASSERT(multiPartChannel);
       nsAutoCString contentType;
-      chan->GetContentType(contentType);
+      multiPartChannel->GetContentType(contentType);
       cleanedUpResponseHead.SetContentType(contentType);
     }
     responseHead = &cleanedUpResponseHead;
