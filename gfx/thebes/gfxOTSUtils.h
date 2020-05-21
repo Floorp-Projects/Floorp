@@ -27,7 +27,8 @@ class gfxOTSExpandingMemoryStream : public ots::OTSStream {
   // limit output/expansion to 256MB by default
   enum { DEFAULT_LIMIT = 256 * 1024 * 1024 };
 
-  gfxOTSExpandingMemoryStream(size_t initial, size_t limit = DEFAULT_LIMIT)
+  explicit gfxOTSExpandingMemoryStream(size_t initial,
+                                       size_t limit = DEFAULT_LIMIT)
       : mLength(initial), mLimit(limit), mOff(0) {
     mPtr = mAlloc.Grow(nullptr, mLength);
   }
