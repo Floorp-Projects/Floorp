@@ -236,6 +236,8 @@ mozilla::gfx::Config* Factory::sConfig = nullptr;
 void Factory::Init(const Config& aConfig) {
   MOZ_ASSERT(!sConfig);
   sConfig = new Config(aConfig);
+
+  NativeFontResource::RegisterMemoryReporter();
 }
 
 void Factory::ShutDown() {
