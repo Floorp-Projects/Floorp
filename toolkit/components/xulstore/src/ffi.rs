@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate as XULStore;
-use crate::{iter::XULStoreIterator, persist::clear_on_shutdown, statics::update_profile_dir};
+use crate::{iter::XULStoreIterator, statics::update_profile_dir};
 use libc::{c_char, c_void};
 use nserror::{nsresult, NS_ERROR_NOT_IMPLEMENTED, NS_OK};
 use nsstring::{nsAString, nsString};
@@ -209,27 +209,6 @@ impl ProfileChangeObserver {
 
     pub(crate) fn new() -> RefPtr<ProfileChangeObserver> {
         ProfileChangeObserver::allocate(InitProfileChangeObserver {})
-    }
-}
-
-#[derive(xpcom)]
-#[xpimplements(nsIObserver)]
-#[refcnt = "nonatomic"]
-pub(crate) struct InitXpcomShutdownObserver {}
-impl XpcomShutdownObserver {
-    #[allow(non_snake_case)]
-    unsafe fn Observe(
-        &self,
-        _subject: *const nsISupports,
-        _topic: *const c_char,
-        _data: *const i16,
-    ) -> nsresult {
-        clear_on_shutdown();
-        NS_OK
-    }
-
-    pub(crate) fn new() -> RefPtr<XpcomShutdownObserver> {
-        XpcomShutdownObserver::allocate(InitXpcomShutdownObserver {})
     }
 }
 
