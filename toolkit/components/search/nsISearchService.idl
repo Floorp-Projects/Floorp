@@ -499,6 +499,19 @@ interface nsISearchService : nsISupports
   Promise setDefaultPrivate(in nsISearchEngine engine);
 
   /**
+   * Allows the add-on manager to discover if a WebExtension based search engine
+   * may change the default to an application provided search engine.
+   * If that WebExtension is on the allow list, then it will override the
+   * built-in engine's urls and parameters.
+   *
+   *  @param extension
+   *        The extension to load from.
+   *  @returns A boolean that indicates if the WebExtension engine may set the
+   *           named engine as default (because it is application provided).
+   */
+  Promise maybeSetAndOverrideDefault(in jsval extension);
+
+  /**
    * Gets a representation of the default engine in an anonymized JSON
    * string suitable for recording in the Telemetry environment.
    *

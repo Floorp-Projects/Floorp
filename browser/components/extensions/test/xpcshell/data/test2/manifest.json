@@ -1,0 +1,23 @@
+{
+  "name": "MozParamsTest2",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "test2@search.mozilla.org"
+    }
+  },
+  "description": "A second test search engine",
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "MozParamsTest2",
+      "search_url": "https://example.com/2/?q={searchTerms}",
+      "params": [
+        {
+          "name": "simple2",
+          "value": "5"
+        }
+      ]
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "default": {
     "searchDefault": "test",
     "visibleDefaultEngines": [
-      "test"
+      "test", "test2"
     ]
   }
 }

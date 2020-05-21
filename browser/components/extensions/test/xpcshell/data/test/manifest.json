@@ -7,7 +7,6 @@
       "id": "test@search.mozilla.org"
     }
   },
-  "hidden": true,
   "description": "A test search engine (based on Google search)",
   "chrome_settings_overrides": {
     "search_provider": {
