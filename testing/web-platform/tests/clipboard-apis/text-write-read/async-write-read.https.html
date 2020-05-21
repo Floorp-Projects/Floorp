@@ -7,9 +7,14 @@
 <link rel="help" href="https://w3c.github.io/clipboard-apis/#async-clipboard-api">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 <script>
 async function readWriteTest(textInput) {
   promise_test(async t => {
+    test_driver.set_permission({name: 'clipboard-read'}, 'granted');
+    test_driver.set_permission({name: 'clipboard-write'}, 'granted');
+
     const blobInput = new Blob([textInput], {type: 'text/plain'});
     const clipboardItemInput = new ClipboardItem({'text/plain': blobInput});
 
@@ -30,8 +35,3 @@ async function readWriteTest(textInput) {
 readWriteTest('Clipboard write ([text/plain ClipboardItem]) -> read ([text/plain ClipboardItem]) test');
 readWriteTest('non-Latin1 text encoding test データ');
 </script>
-<p>
-  Note: This is a manual test because it writes/reads to the shared system
-  clipboard and thus cannot be run async with other tests that might interact
-  with the clipboard.
-</p>

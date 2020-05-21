@@ -6,6 +6,8 @@
 <link rel="help" href="https://w3c.github.io/clipboard-apis/#async-clipboard-api">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 
 <script>
 async function loadBlob(fileName) {
@@ -14,6 +16,9 @@ async function loadBlob(fileName) {
 }
 
 promise_test(async t => {
+  test_driver.set_permission({name: 'clipboard-read'}, 'granted');
+  test_driver.set_permission({name: 'clipboard-write'}, 'granted');
+
   const blobText = new Blob(['test text'], {type: 'text/plain'});
   const blobImage = await loadBlob('resources/greenbox.png');
 
@@ -37,8 +42,3 @@ promise_test(async t => {
   assert_equals(blobImageOutput.type, 'image/png');
 }, 'Verify write and read clipboard (multiple types)');
 </script>
-<p>
-  Note: This is a manual test because it writes/reads to the shared system
-  clipboard and thus cannot be run async with other tests that might interact
-  with the clipboard.
-</p>
