@@ -683,3 +683,26 @@ def sixgill(value):
     return value[0]
 
 set_config('SIXGILL_PATH', sixgill)
+
+
+# Support for readline
+# =====================================================
+@depends('--enable-js-shell', target_is_windows, compile_environment)
+def editline(js_shell, is_windows, compile_environment):
+    return js_shell and not is_windows and compile_environment
+
+js_option('--enable-readline', help='Link js shell to system readline library',
+          when=editline)
+
+has_readline = check_symbol('readline', flags=['-lreadline'], when='--enable-readline',
+                            onerror=lambda: die('No system readline library found'))
+
+set_config('EDITLINE_LIBS', ['-lreadline'], when=has_readline)
+
+@depends('--enable-readline', editline, when=editline)
+def bundled_editline(readline, editline):
+    return editline and not readline
+
+set_config('JS_BUNDLED_EDITLINE', bundled_editline)
+
+set_define('EDITLINE', True, when=editline)
