@@ -346,9 +346,13 @@ android.applicationVariants.all { variant ->
     }
 
     def buildDate = Config.generateBuildDate()
-    buildConfigField 'String', 'BUILD_DATE', '"' + buildDate + '"'
-
-    def variantName = variant.getName()
+    // Setting buildDate with every build changes the generated BuildConfig, which slows down the
+    // build. Only do this for non-debug builds, to speed-up builds produced during local development.
+    if (isDebug) {
+        buildConfigField 'String', 'BUILD_DATE', '"debug build"'
+    } else {
+        buildConfigField 'String', 'BUILD_DATE', '"' + buildDate + '"'
+    }
 
 // -------------------------------------------------------------------------------------------------
 // Adjust: Read token from local file if it exists (Only release builds)
