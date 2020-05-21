@@ -27,7 +27,7 @@ cd build/stage1
 # Need the macosx64 native llvm-symbolizer since this gets shipped with sanitizer builds
 mv clang/bin/llvm-symbolizer $MOZ_FETCHES_DIR/clang/bin/
 cp --remove-destination -lr $MOZ_FETCHES_DIR/clang/* clang/
-tar -c -J -f $MOZ_FETCHES_DIR/llvm-project/clang.tar.xz clang
+tar -c clang | $GECKO_PATH/taskcluster/scripts/misc/zstdpy > $MOZ_FETCHES_DIR/llvm-project/clang.tar.zst
 )
 
 set -x

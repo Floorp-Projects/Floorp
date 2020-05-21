@@ -6,13 +6,13 @@ set -x -e -v
 cd $MOZ_FETCHES_DIR
 
 # We already have the Linux clang extracted in $MOZ_FETCHES_DIR/clang by fetch-content
-# We have a non-extracted clang.tar.bz2 for Windows clang-cl that we need to extract
+# We have a non-extracted clang-cl/clang.tar.zst for Windows clang-cl that we need to extract
 # files from.
 
-tar -jxf clang.tar.bz2 --wildcards clang/lib/clang/*/lib/windows clang/bin/clang-cl.exe
+$GECKO_PATH/taskcluster/scripts/misc/zstdpy -d clang-cl/clang.tar.zst | tar -x --wildcards clang/lib/clang/*/lib/windows clang/bin/clang-cl.exe
 chmod +x clang/bin/clang-cl.exe
-tar -Jcf clang.tar.xz clang
+tar -c clang | $GECKO_PATH/taskcluster/scripts/misc/zstdpy > clang.tar.zst
 
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
-cp clang.tar.xz $UPLOAD_DIR
+cp clang.tar.zst $UPLOAD_DIR
