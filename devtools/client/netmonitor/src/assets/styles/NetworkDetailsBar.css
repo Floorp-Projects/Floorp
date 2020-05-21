@@ -107,7 +107,7 @@
   position: relative;
   height: 100%;
   width: 100%;
-  overflow: hidden;
+  overflow: auto;
   flex: 1;
 }
 
@@ -274,6 +274,10 @@
   height: 100%;
   overflow: hidden;
   position: relative;
+}
+
+.network-monitor .headers-panel-container .treeTable {
+  overflow: hidden;
 }
 
 .network-monitor .headers-panel-container .panel-container {
