@@ -55,6 +55,13 @@ function handleRequest(request, response) {
     response.setHeader("Content-Type", "application/json", false);
     switch (request.queryString) {
     case "getLastBeacon":
+      // Allow CORS responses of the last beacon
+      var originHeader = request.getHeader("origin");
+      response.setHeader("Access-Control-Allow-Headers", "content-type", false);
+      response.setHeader("Access-Control-Allow-Methods", "POST, GET", false);
+      response.setHeader("Access-Control-Allow-Origin", originHeader, false);
+      response.setHeader("Access-Control-Allow-Credentials", "true", false);
+
       var state = getOurState();
       if (state === "unblocked") {
         finishControlResponse(response);
