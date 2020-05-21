@@ -658,3 +658,13 @@ def wasm_simd(value, jit_enabled, simulator, target):
 
 set_config('ENABLE_WASM_SIMD', wasm_simd)
 set_define('ENABLE_WASM_SIMD', wasm_simd)
+
+
+# Options for generating the shell as a script
+# ============================================
+js_option('--with-qemu-exe', nargs=1, help='Use path as an arm emulator on host platforms')
+set_config('QEMU_EXE', depends_if('--with-qemu-exe')(lambda x: x))
+
+js_option('--with-cross-lib', nargs=1, default=depends(target.alias)(lambda x: '/usr/%s' % x),
+          help='Use dir as the location for arm libraries')
+set_config('CROSS_LIB', depends_if('--with-cross-lib')(lambda x: x))
