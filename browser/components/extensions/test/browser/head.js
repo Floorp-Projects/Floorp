@@ -669,15 +669,14 @@ function closeActionContextMenu(itemToSelect, kind, win = window) {
   return closeChromeContextMenu(menuID, itemToSelect, win);
 }
 
-function openTabContextMenu(tab = gBrowser.selectedTab) {
+function openTabContextMenu(win = window) {
   // The TabContextMenu initializes its strings only on a focus or mouseover event.
   // Calls focus event on the TabContextMenu before opening.
-  tab.focus();
-  let indexOfTab = Array.prototype.indexOf.call(tab.parentNode.children, tab);
+  gBrowser.selectedTab.focus();
   return openChromeContextMenu(
     "tabContextMenu",
-    `.tabbrowser-tab:nth-child(${indexOfTab + 1})`,
-    tab.ownerGlobal
+    ".tabbrowser-tab[selected]",
+    win
   );
 }
 
