@@ -50,7 +50,11 @@ function fileHandler(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-function doBefore() {
+async function doBefore() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.partition.network_state", false]],
+  });
+
   // reset hit counter
   info("XXX resetting gHits");
   gHits = 0;

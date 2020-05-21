@@ -13,13 +13,20 @@ const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 function test() {
   waitForExplicitFinish();
 
-  Sanitizer.sanitize(["cache"], { ignoreTimespan: false });
+  SpecialPowers.pushPrefEnv(
+    {
+      set: [["privacy.partition.network_state", false]],
+    },
+    function() {
+      Sanitizer.sanitize(["cache"], { ignoreTimespan: false });
 
-  getStorageEntryCount("regular", function(nrEntriesR1) {
-    is(nrEntriesR1, 0, "Disk cache reports 0KB and has no entries");
+      getStorageEntryCount("regular", function(nrEntriesR1) {
+        is(nrEntriesR1, 0, "Disk cache reports 0KB and has no entries");
 
-    get_cache_for_private_window();
-  });
+        get_cache_for_private_window();
+      });
+    }
+  );
 }
 
 function getStorageEntryCount(device, goon) {
