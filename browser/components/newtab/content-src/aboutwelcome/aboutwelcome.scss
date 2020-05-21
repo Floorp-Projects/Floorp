@@ -8,6 +8,7 @@
 $break-point-medium: 610px;
 $break-point-large: 866px;
 $break-point-widest: 1122px;
+$logo-size: 112px;
 
 html {
   height: 100%;
@@ -16,6 +17,7 @@ html {
 body {
   // sass-lint:disable no-color-literals
   --grey-subtitle: #4A4A4F;
+  --grey-subtitle-1: #80808F;
   --newtab-background-color: #EDEDF0;
   --newtab-text-primary-color: #0C0C0D;
   --newtab-text-conditional-color: #4A4A4F;
@@ -23,6 +25,7 @@ body {
   --newtab-card-background-color: #FFF;
   --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
   --welcome-header-text-color: #2B2156;
+  --welcome-header-text-color-1: #20133A;
   --welcome-card-button-background-color: rgba(12, 12, 13, 0.1);
   --welcome-card-button-background-hover-color: rgba(12, 12, 13, 0.2);
   --welcome-card-button-background-active-color: rgba(12, 12, 13, 0.3);
@@ -230,5 +233,159 @@ body {
 
   &:active {
     background: var(--welcome-button-background-active-color);
+  }
+}
+
+
+.multistageContainer {
+  text-align: center;
+  overflow-x: auto;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--newtab-card-background-color);
+
+  .screen {
+    display: flex;
+    flex-flow: column nowrap;
+    height: 100%;
+  }
+
+  .brand-logo {
+    background: url('chrome://branding/content/about-logo.png') top
+    center / $logo-size no-repeat;
+    padding: $logo-size 0 20px;
+    margin-top: 25px;
+  }
+
+  .welcome-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h1,
+    h2 {
+      width: 860px;
+      @media (max-width: $break-point-large) {
+        width: 530px;
+      }
+
+      @media (max-width: $break-point-medium) {
+        width: 430px;
+      }
+    }
+
+    h1 {
+      font-size: 48px;
+      line-height: 56px;
+      font-weight: bold;
+      margin: 0 6px;
+      color: var(--welcome-header-text-color-1);
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: normal;
+      margin: 0 6px;
+      color: var(--grey-subtitle-1);
+      line-height: 28px;
+    }
+  }
+
+  .tiles-section {
+    height: 96px;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: 0;
+
+    &.primary {
+      font-size: 16px;
+      margin-inline-start: 12px;
+      margin: 26px 0 0;
+      padding: 12px 50px;
+      white-space: nowrap;
+      background-color: var(--newtab-button-primary-color);
+      color: var(--welcome-button-text-color);
+      border-radius: 4px;
+
+      &:focus {
+        background: var(--welcome-button-background-hover-color);
+        box-shadow: 0 0 0 1px var(--welcome-button-box-shadow-inset-color) inset,
+        0 0 0 1px var(--welcome-button-box-shadow-inset-color),
+        0 0 0 4px var(--welcome-button-box-shadow-color);
+      }
+
+      &:hover {
+        background: var(--welcome-button-background-hover-color);
+      }
+
+      &:active {
+        background: var(--welcome-button-background-active-color);
+      }
+    }
+
+    &.secondary {
+      background-color: initial;
+      text-decoration: underline;
+      display: block;
+      padding: 0;
+      width: auto;
+      color: var(--newtab-button-primary-color);
+      margin-top: 14px;
+
+      &:hover,
+      &:focus,
+      &:active {
+        background-color: initial;
+      }
+    }
+  }
+
+  .secondary-cta {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    font-size: 14px;
+
+    &.top {
+      justify-content: end;
+      align-items: end;
+      padding-inline-end: 30px;
+      padding-top: 4px;
+
+      @media (max-width: $break-point-medium) {
+        justify-content: center;
+      }
+    }
+
+    span {
+      color: var(--grey-subtitle-1);
+      margin: 0 4px;
+    }
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: auto;
+    padding: 32px 0;
+
+    .indicator {
+      width: 60px;
+      height: 4px;
+      margin-inline-end: 8px;
+      background: var(--grey-subtitle-1);
+      border-radius: 5px;
+      opacity: 0.25;
+
+      &.current {
+        opacity: 1;
+      }
+    }
   }
 }

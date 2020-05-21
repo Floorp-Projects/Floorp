@@ -64,7 +64,12 @@ class AboutWelcome extends React.PureComponent {
     // Create SimpleAboutWelcome that renders default about welcome
     // See Bug 1638087
     if (props.screens) {
-      return <MultiStageAboutWelcome screens={props.screens} />;
+      return (
+        <MultiStageAboutWelcome
+          screens={props.screens}
+          metricsFlowUri={this.state.metricsFlowUri}
+        />
+      );
     }
 
     let UTMTerm =

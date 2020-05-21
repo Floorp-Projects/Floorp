@@ -3,8 +3,59 @@
 const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF =
   "browser.aboutwelcome.overrideContent";
-const TEST_MULTISTAGE_JSON =
-  '{"id": "multi-stage-welcome","screens": [{"id": "AW_STEP1","order": 0,"content": {"title": "Step 1","primary_button": {"label": "Next"}}},{"id": "AW_STEP2","order": 1,"content": {"title": "Step 2","primary_button": {"label": "Next"}}},{"id": "AW_STEP3","order": 2,"content": {"title": "Step 3","primary_button": {"label": "Next"}}}]}';
+
+const TEST_MULTISTAGE_JSON = JSON.stringify({
+  id: "multi-stage-welcome",
+  screens: [
+    {
+      id: "AW_STEP1",
+      order: 0,
+      content: {
+        title: "Step 1",
+        primary_button: {
+          label: "Next",
+          action: {
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: "link top",
+          position: "top",
+        },
+      },
+    },
+    {
+      id: "AW_STEP2",
+      order: 1,
+      content: {
+        title: "Step 2",
+        primary_button: {
+          label: "Next",
+          action: {
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: "link",
+          position: "bottom",
+        },
+      },
+    },
+    {
+      id: "AW_STEP3",
+      order: 2,
+      content: {
+        title: "Step 3",
+        primary_button: {
+          label: "Next",
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+  ],
+});
 
 /**
  * Sets the aboutwelcome pref to enabled simplified welcome UI
@@ -35,7 +86,7 @@ async function openAboutWelcome() {
 /**
  * Setup and test simplified welcome UI
  */
-async function test_about_welcome(
+async function test_screen_content(
   browser,
   experiment,
   expectedSelectors = [],
@@ -61,6 +112,20 @@ async function test_about_welcome(
           `Should not render ${selector} in ${experimentName}`
         );
       }
+
+      if (experimentName === "home") {
+        Assert.equal(
+          content.document.location.href,
+          "about:home",
+          "Navigated to about:home"
+        );
+      } else {
+        Assert.equal(
+          content.document.location.href,
+          "about:welcome",
+          "Navigated to a welcome screen"
+        );
+      }
     }
   );
 }
@@ -71,10 +136,10 @@ async function onNavigate(browser, message) {
     { message },
     async ({ message: messageText }) => {
       await ContentTaskUtils.waitForCondition(
-        () => content.document.querySelector("button"),
+        () => content.document.querySelector("button.primary"),
         messageText
       );
-      let button = content.document.querySelector("button");
+      let button = content.document.querySelector("button.primary");
       button.click();
     }
   );
@@ -83,34 +148,54 @@ async function onNavigate(browser, message) {
 /**
  * Test the multistage welcome UI rendered using TEST_MULTISTAGE_JSON
  */
-add_task(async function test_Separate_About_Welcome_branches() {
+add_task(async function test_Multistage_About_Welcome_branches() {
   let browser = await openAboutWelcome();
 
-  await test_about_welcome(
+  await test_screen_content(
     browser,
     "multistage step 1",
     // Expected selectors:
-    ["div.welcomeCardGrid", "div.AW_STEP1"],
+    [
+      "div.multistageContainer",
+      "main.AW_STEP1",
+      "div.secondary-cta.top",
+      "button.secondary",
+      "div.indicator.current",
+    ],
     // Unexpected selectors:
-    ["div.AW_STEP2", "div.AW_STEP3"]
+    ["main.AW_STEP2", "main.AW_STEP3"]
   );
 
   await onNavigate(browser, "Step 1");
-  await test_about_welcome(
+  await test_screen_content(
     browser,
     "multistage step 2",
     // Expected selectors:
-    ["div.welcomeCardGrid", "div.AW_STEP2"],
+    ["div.multistageContainer", "main.AW_STEP2", "button.secondary"],
     // Unexpected selectors:
-    ["div.AW_STEP1", "div.AW_STEP3"]
+    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
   );
   await onNavigate(browser, "Step 2");
-  await test_about_welcome(
+  await test_screen_content(
     browser,
     "multistage step 3",
     // Expected selectors:
-    ["div.welcomeCardGrid", "div.AW_STEP3"],
+    [
+      "div.multistageContainer",
+      "main.AW_STEP3",
+      "div.brand-logo",
+      "div.welcome-text",
+    ],
     // Unexpected selectors:
-    ["div.AW_STEP1", "div.AW_STEP2"]
+    ["main.AW_STEP1", "main.AW_STEP2"]
+  );
+  await onNavigate(browser, "Step 3");
+  await test_screen_content(
+    browser,
+    "home",
+    // Expected selectors:
+    ["body.activity-stream"],
+    // Unexpected selectors:
+    ["div.multistageContainer"]
   );
 });
