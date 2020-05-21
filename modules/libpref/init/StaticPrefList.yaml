@@ -9121,7 +9121,9 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+#endif
 
+#ifdef MOZ_WIDGET_GTK
 # Always use xdg-desktop-portal to access system resources like file dialog
 # and print dialog.
 - name: widget.use-xdg-desktop-portal
