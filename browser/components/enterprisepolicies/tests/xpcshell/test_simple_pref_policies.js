@@ -700,6 +700,20 @@ const POLICIES_TESTS = [
       "pdfjs.enablePermissions": true,
     },
   },
+
+  // POLICY: PictureInPicture
+
+  {
+    policies: {
+      PictureInPicture: {
+        Enabled: false,
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "media.videocontrols.picture-in-picture.video-toggle.enabled": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {
