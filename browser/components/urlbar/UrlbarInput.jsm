@@ -476,36 +476,50 @@ class UrlbarInput {
       selType,
     });
 
+    let isValidUrl = false;
     try {
       new URL(url);
-    } catch (ex) {
-      // This is not a URL, so it must be a search or a keyword.
-
-      // TODO (Bug 1604927): If the urlbar results are restricted to a specific
-      // engine, here we must search with that specific engine; indeed the
-      // docshell wouldn't know about our engine restriction.
-      // Also remember to invoke this._recordSearch, after replacing url with
-      // the appropriate engine submission url.
-
-      let browser = this.window.gBrowser.selectedBrowser;
-      let lastLocationChange = browser.lastLocationChange;
-      UrlbarUtils.getShortcutOrURIAndPostData(url).then(data => {
-        // Because this happens asynchronously, we must verify that the browser
-        // location did not change in the meanwhile.
-        if (
-          where != "current" ||
-          browser.lastLocationChange == lastLocationChange
-        ) {
-          openParams.postData = data.postData;
-          openParams.allowInheritPrincipal = data.mayInheritPrincipal;
-          this._loadURL(data.url, where, openParams, null, browser);
-        }
-      });
-      // Bail out, because we will handle the _loadURL call asynchronously.
+      isValidUrl = true;
+    } catch (ex) {}
+    if (isValidUrl) {
+      this._loadURL(url, where, openParams);
       return;
     }
 
-    this._loadURL(url, where, openParams);
+    // This is not a URL and there's no selected element, because likely the
+    // view is closed, or paste&go was used.
+
+    // If we have a result for the current value, just use it.
+    if (this._resultForCurrentValue) {
+      this.pickResult(this._resultForCurrentValue, event);
+      return;
+    }
+
+    // Otherwise, fall back to an imperfect clone of what the heuristic result
+    // would do.
+    // TODO: Run a search to get just the heuristic result here, and then use
+    // pickResult.
+
+    // TODO (Bug 1604927): If the urlbar results are restricted to a specific
+    // engine, here we must search with that specific engine; indeed the
+    // docshell wouldn't know about our engine restriction.
+    // Also remember to invoke this._recordSearch, after replacing url with
+    // the appropriate engine submission url.
+
+    let browser = this.window.gBrowser.selectedBrowser;
+    let lastLocationChange = browser.lastLocationChange;
+    UrlbarUtils.getShortcutOrURIAndPostData(url).then(data => {
+      // Because this happens asynchronously, we must verify that the browser
+      // location did not change in the meanwhile.
+      if (
+        where != "current" ||
+        browser.lastLocationChange == lastLocationChange
+      ) {
+        openParams.postData = data.postData;
+        openParams.allowInheritPrincipal = data.mayInheritPrincipal;
+        this._loadURL(data.url, where, openParams, null, browser);
+      }
+    });
   }
 
   handleRevert() {
@@ -517,17 +531,28 @@ class UrlbarInput {
   }
 
   /**
-   * Called by the view when an element is picked.
+   * Called when an element of the view is picked.
    *
    * @param {Element} element The element that was picked.
    * @param {Event} event The event that picked the element.
    */
   pickElement(element, event) {
-    let originalUntrimmedValue = this.untrimmedValue;
     let result = this.view.getResultFromElement(element);
     if (!result) {
       return;
     }
+    this.pickResult(result, event, element);
+  }
+
+  /**
+   * Called when a result is picked.
+   *
+   * @param {UrlbarResult} result The result that was picked.
+   * @param {Event} event The event that picked the result.
+   * @param {DOMElement} element the picked view element, if available.
+   */
+  pickResult(result, event, element = null) {
+    let originalUntrimmedValue = this.untrimmedValue;
     let isCanonized = this.setValueFromResult(result, event);
     let where = this._whereToOpen(event);
     let openParams = {
@@ -881,13 +906,13 @@ class UrlbarInput {
 
   /**
    * Invoked by the view when the first result is received.
-   * To prevent selection flickering, we apply autofill on input through a
-   * placeholder, without waiting for results.
-   * But, if the first result is not an autofill one, the autofill prediction
-   * was wrong and we should restore the original user typed string.
    * @param {UrlbarResult} firstResult The first result received.
    */
-  maybeClearAutofillPlaceholder(firstResult) {
+  onFirstResult(firstResult) {
+    // To prevent selection flickering, we apply autofill on input through a
+    // placeholder, without waiting for results. But, if the first result is
+    // not an autofill one, the autofill prediction was wrong and we should
+    // restore the original user typed string.
     if (
       this._autofillPlaceholder &&
       !firstResult.autofill &&
@@ -895,6 +920,10 @@ class UrlbarInput {
       !this.value.endsWith(" ")
     ) {
       this._setValue(this.window.gBrowser.userTypedValue, false);
+    }
+
+    if (firstResult.heuristic) {
+      this._resultForCurrentValue = firstResult;
     }
   }
 
