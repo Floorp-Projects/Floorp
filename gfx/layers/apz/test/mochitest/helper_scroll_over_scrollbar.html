@@ -11,6 +11,12 @@ function* test(testDriver) {
 
   // scroll over the scrollbar, and make sure the subframe scrolls
   var scrollPos = subframe.scrollTop;
+  if (subframe.clientWidth == 200) {
+    // No scrollbar, abort the test. This can happen e.g. on local macOS runs
+    // with OS settings to only show scrollbars on trackpad/mouse activity.
+    ok(false, "No scrollbars found, cannot run this test!");
+    return;
+  }
   var scrollbarX = (200 + subframe.clientWidth) / 2;
   yield synthesizeNativeWheelAndWaitForScrollEvent(subframe, scrollbarX, 100,
       0, -10, testDriver);

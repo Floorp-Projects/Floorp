@@ -33,6 +33,13 @@ function* test(testDriver) {
     setTimeout(testDriver, 0);
   }, {once: true});
 
+  if (window.innerWidth == root.clientWidth) {
+    // No scrollbar, abort the test. This can happen e.g. on local macOS runs
+    // with OS settings to only show scrollbars on trackpad/mouse activity.
+    ok(false, "No scrollbars found, cannot run this test!");
+    return;
+  }
+
   var scrollbarX = (window.innerWidth + root.clientWidth) / 2;
   // Move the mouse to the scrollbar
   yield synthesizeNativeMouseEvent(root, scrollbarX, 100, nativeMouseMoveEventMsg(), testDriver);
