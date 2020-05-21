@@ -46,6 +46,12 @@ cd /build
 . install-mercurial.sh
 
 ###
+# zstandard
+###
+pip install zstandard==0.13.0
+pip3 install zstandard==0.13.0
+
+###
 # ESLint Setup
 ###
 
