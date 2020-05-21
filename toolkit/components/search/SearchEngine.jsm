@@ -773,7 +773,7 @@ function SearchEngine(options = {}) {
   }
   this._isBuiltin = options.isBuiltin;
   // The alias coming from the engine definition (via webextension
-  // keyword field for example) may be overriden in the metaData
+  // keyword field for example) may be overridden in the metaData
   // with a user defined alias.
   this._definedAlias = null;
   this._urls = [];
@@ -1482,7 +1482,33 @@ SearchEngine.prototype = {
     this._locale = params.locale;
     this._orderHint = params.orderHint;
     this._telemetryId = params.telemetryId;
+    this._name = engineName;
+    if (params.shortName) {
+      this._shortName = params.shortName;
+    }
+    this._definedAlias = params.alias?.trim() || null;
+    this._description = params.description;
+    if (params.iconURL) {
+      this._setIcon(params.iconURL, true);
+    }
+    // Other sizes
+    if (params.icons) {
+      for (let icon of params.icons) {
+        this._addIconToMap(icon.size, icon.size, icon.url);
+      }
+    }
+    this._setUrls(params);
+  },
 
+  /**
+   * This sets the urls for the search engine based on the supplied parameters.
+   * If you add anything here, please consider if it needs to be handled in the
+   * overrideWithExtension / removeExtensionOverride functions as well.
+   *
+   * @param {object} params
+   *   The parameters to set.
+   */
+  _setUrls(params) {
     this._initEngineURLFromMetaData(SearchUtils.URL_TYPE.SEARCH, {
       method: (params.searchPostParams && "POST") || params.method || "GET",
       template: params.template,
@@ -1508,22 +1534,7 @@ SearchEngine.prototype = {
       }
     }
 
-    this._name = engineName;
-    if (params.shortName) {
-      this._shortName = params.shortName;
-    }
-    this._definedAlias = params.alias?.trim() || null;
-    this._description = params.description;
     this.__searchForm = params.searchForm;
-    if (params.iconURL) {
-      this._setIcon(params.iconURL, true);
-    }
-    // Other sizes
-    if (params.icons) {
-      for (let icon of params.icons) {
-        this._addIconToMap(icon.size, icon.size, icon.url);
-      }
-    }
   },
 
   /**
@@ -1538,6 +1549,42 @@ SearchEngine.prototype = {
     this._iconMapObj = null;
     this._initFromMetadata(params.name, params);
     SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
+  },
+
+  /**
+   * Overrides the urls/parameters with those of the provided extension.
+   * The parameters are not saved to the search cache - the code handling
+   * the extension should set these on every restart, this avoids potential
+   * third party modifications and means that we can verify the WebExtension is
+   * still in the allow list.
+   *
+   * @param {object} params
+   *   The extension parameters.
+   */
+  overrideWithExtension(params) {
+    this._overriddenData = {
+      urls: this._urls,
+      queryCharset: this._queryCharset,
+      searchForm: this.__searchForm,
+    };
+    this._urls = [];
+    this.setAttr("overriddenBy", params.extensionID);
+    this._setUrls(params);
+    SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
+  },
+
+  /**
+   * Resets the overrides for the engine if it has been overridden.
+   */
+  removeExtensionOverride() {
+    if (this.getAttr("overriddenBy")) {
+      this._urls = this._overriddenData.urls;
+      this._queryCharset = this._overriddenData.queryCharset;
+      this.__searchForm = this._overriddenData.searchForm;
+      delete this._overriddenData;
+      this.clearAttr("overriddenBy");
+      SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
+    }
   },
 
   /**
@@ -1844,6 +1891,10 @@ SearchEngine.prototype = {
 
   getAttr(name) {
     return this._metaData[name] || undefined;
+  },
+
+  clearAttr(name) {
+    delete this._metaData[name];
   },
 
   // nsISearchEngine
