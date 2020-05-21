@@ -83,6 +83,10 @@ bool YCbCrTextureClientAllocationHelper::IsCompatible(
   if (!bufferData || aTextureClient->GetSize() != mData.mYSize ||
       bufferData->GetCbCrSize().isNothing() ||
       bufferData->GetCbCrSize().ref() != mData.mCbCrSize ||
+      bufferData->GetYStride().isNothing() ||
+      bufferData->GetYStride().ref() != mData.mYStride ||
+      bufferData->GetCbCrStride().isNothing() ||
+      bufferData->GetCbCrStride().ref() != mData.mCbCrStride ||
       bufferData->GetYUVColorSpace().isNothing() ||
       bufferData->GetYUVColorSpace().ref() != mData.mYUVColorSpace ||
       bufferData->GetColorDepth().isNothing() ||
