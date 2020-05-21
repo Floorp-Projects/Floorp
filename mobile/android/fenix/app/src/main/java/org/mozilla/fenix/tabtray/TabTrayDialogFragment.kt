@@ -14,6 +14,7 @@ import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
 import mozilla.components.concept.tabstray.Tab
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 
 class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
@@ -38,7 +39,11 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        tabTrayView = TabTrayView(view.tabLayout, this)
+        tabTrayView = TabTrayView(
+            view.tabLayout,
+            this,
+            (activity as HomeActivity).browsingModeManager.mode.isPrivate
+        )
 
         tabLayout.setOnClickListener { dismissAllowingStateLoss() }
 

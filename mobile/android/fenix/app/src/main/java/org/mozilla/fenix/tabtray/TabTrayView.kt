@@ -32,7 +32,8 @@ interface TabTrayInteractor {
  */
 class TabTrayView(
     private val container: ViewGroup,
-    private val interactor: TabTrayInteractor
+    private val interactor: TabTrayInteractor,
+    private val isPrivate: Boolean
 ) : LayoutContainer, TabsTray.Observer, TabLayout.OnTabSelectedListener {
     val fabView = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabstray_fab, container, true)
@@ -47,7 +48,7 @@ class TabTrayView(
         get() = container
 
     init {
-        fabView.new_tab_button.compatElevation = 80.0f
+        fabView.new_tab_button.compatElevation = 41.0f
 
         behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
@@ -65,13 +66,23 @@ class TabTrayView(
             }
         })
 
+        val selectedTabIndex = if (!isPrivate) {
+            0
+        } else {
+            1
+        }
+
+        view.tab_layout.getTabAt(selectedTabIndex)?.also {
+            view.tab_layout.selectTab(it, true)
+        }
+
         view.tab_layout.addOnTabSelectedListener(this)
 
         tabsFeature = TabsFeature(
             view.tabsTray,
             view.context.components.core.store,
             view.context.components.useCases.tabsUseCases,
-            { true },
+            { it.content.private == isPrivate },
             { })
 
         (view.tabsTray as? BrowserTabsTray)?.also { tray ->
