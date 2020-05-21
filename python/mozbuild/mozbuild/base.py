@@ -859,6 +859,13 @@ class MozbuildObject(ProcessExecutionMixin):
         self.ensure_pipenv()
         self.virtualenv_manager.activate_pipenv(pipfile, populate, python)
 
+    def _ensure_zstd(self):
+        try:
+            import zstandard  # noqa: F401
+        except (ImportError, AttributeError):
+            self._activate_virtualenv()
+            self.virtualenv_manager.install_pip_package('zstandard>=0.9.0,<=0.13.0')
+
 
 class MachCommandBase(MozbuildObject):
     """Base class for mach command providers that wish to be MozbuildObjects.

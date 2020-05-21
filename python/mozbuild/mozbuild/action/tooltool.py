@@ -888,7 +888,7 @@ CHECKSUM_SUFFIX = ".checksum"
 
 def unpack_file(filename):
     """Untar `filename`, assuming it is uncompressed or compressed with bzip2,
-    xz, gzip, or unzip a zip file. The file is assumed to contain a single
+    xz, gzip, zst, or unzip a zip file. The file is assumed to contain a single
     directory with a name matching the base of the given filename.
     Xz support is handled by shelling out to 'tar'."""
     if os.path.isfile(filename) and tarfile.is_tarfile(filename):
@@ -914,6 +914,16 @@ def unpack_file(filename):
         tar = tarfile.open(fileobj=fileobj, mode='r|')
         tar.extractall()
         tar.close()
+    elif os.path.isfile(filename) and filename.endswith('.tar.zst'):
+        import zstandard
+        base_file = filename.replace('.tar.zst', '')
+        clean_path(base_file)
+        log.info('untarring "%s"' % filename)
+        dctx = zstandard.ZstdDecompressor()
+        with dctx.stream_reader(open(filename, "rb")) as fileobj:
+            tar = tarfile.open(fileobj=fileobj, mode='r|')
+            tar.extractall()
+            tar.close()
     elif os.path.isfile(filename) and zipfile.is_zipfile(filename):
         base_file = filename.replace('.zip', '')
         clean_path(base_file)
