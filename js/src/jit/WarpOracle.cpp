@@ -637,6 +637,16 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
   return scriptSnapshot;
 }
 
+static void LineNumberAndColumn(HandleScript script, BytecodeLocation loc,
+                                unsigned* line, unsigned* column) {
+#ifdef DEBUG
+  *line = PCToLineNumber(script, loc.toRawBytecode(), column);
+#else
+  *line = script->lineno();
+  *column = script->column();
+#endif
+}
+
 AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
                                             HandleScript script,
                                             BytecodeLocation loc) {
@@ -653,13 +663,25 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   ICStub* stub = entry.firstStub();
 
   if (stub->isFallback()) {
+    [[maybe_unused]] unsigned line, column;
+    LineNumberAndColumn(script, loc, &line, &column);
+
     // No optimized stubs.
-    // TODO: add logging for failure/success cases.
+    JitSpew(JitSpew_WarpTranspiler,
+            "fallback stub (entered-count: %" PRIu32
+            ") for JSOp::%s @ %s:%u:%u",
+            stub->toFallbackStub()->enteredCount(), CodeName(loc.getOp()),
+            script->filename(), line, column);
     return Ok();
   }
 
   if (!stub->next()->isFallback()) {
+    [[maybe_unused]] unsigned line, column;
+    LineNumberAndColumn(script, loc, &line, &column);
+
     // More than one optimized stub.
+    JitSpew(JitSpew_WarpTranspiler, "multiple stubs for JSOp::%s @ %s:%u:%u",
+            CodeName(loc.getOp()), script->filename(), line, column);
     return Ok();
   }
 
@@ -706,12 +728,17 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
       CACHE_IR_TRANSPILER_OPS(DEFINE_OP)
 #undef DEFINE_OP
 
-      default:
-        // Unsupported opcode.
+      default: {
+        [[maybe_unused]] unsigned line, column;
+        LineNumberAndColumn(script, loc, &line, &column);
+
+        // Unsupported CacheIR opcode.
         JitSpew(JitSpew_WarpTranspiler,
-                "unsupported CacheIR opcode: %s @ JSOp::%s",
-                CacheIROpNames[size_t(op)], CodeName(loc.getOp()));
+                "unsupported CacheIR opcode %s for JSOp::%s @ %s:%u:%u",
+                CacheIROpNames[size_t(op)], CodeName(loc.getOp()),
+                script->filename(), line, column);
         return Ok();
+      }
     }
   }
 
