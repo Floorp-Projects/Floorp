@@ -12,8 +12,9 @@ def main(request, response):
 
     content = '''
 <script>
-  window.opener.postMessage("%s" , "*");
+  let messagee = window.opener || window.parent;
+  messagee.postMessage("%s" , "*");
 </script>
 ''' % (result)
-    headers = [("Content-Type", "text/html")]
+    headers = [("Content-Type", "text/html"), ("Access-Control-Allow-Origin", "*")]
     return 200, headers, content
