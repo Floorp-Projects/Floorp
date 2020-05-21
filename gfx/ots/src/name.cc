@@ -6,35 +6,44 @@
 
 #include <algorithm>
 #include <cstring>
+#include <cctype>
 
 // name - Naming Table
 // http://www.microsoft.com/typography/otspec/name.htm
 
 namespace {
 
-bool ValidInPsName(char c) {
-  return (c > 0x20 && c < 0x7f && !std::strchr("[](){}<>/%", c));
+// We disallow characters outside the URI spec "unreserved characters"
+// set; any chars outside this set will be replaced by underscore.
+bool AllowedInPsName(char c) {
+  return isalnum(c) || std::strchr("-._~", c);
 }
 
-bool CheckPsNameAscii(const std::string& name) {
+bool SanitizePsNameAscii(std::string& name) {
+  if (name.size() > 63)
+    return false;
+
   for (unsigned i = 0; i < name.size(); ++i) {
-    if (!ValidInPsName(name[i])) {
-      return false;
+    if (!AllowedInPsName(name[i])) {
+      name[i] = '_';
     }
   }
   return true;
 }
 
-bool CheckPsNameUtf16Be(const std::string& name) {
+bool SanitizePsNameUtf16Be(std::string& name) {
   if ((name.size() & 1) != 0)
+    return false;
+  if (name.size() > 2 * 63)
     return false;
 
   for (unsigned i = 0; i < name.size(); i += 2) {
     if (name[i] != 0) {
+      // non-Latin1 char in psname? reject it altogether
       return false;
     }
-    if (!ValidInPsName(name[i+1])) {
-      return false;
+    if (!AllowedInPsName(name[i+1])) {
+      name[i] = '_';
     }
   }
   return true;
@@ -131,13 +140,15 @@ bool OpenTypeNAME::Parse(const uint8_t* data, size_t length) {
     rec.text.assign(string_base + name_offset, name_length);
 
     if (rec.name_id == 6) {
-      // PostScript name: check that it is valid, if not then discard it
+      // PostScript name: "sanitize" it by replacing any chars outside the
+      // URI spec "unreserved" set by underscore, or reject the name entirely
+      // (and use a fallback) if it looks really broken.
       if (rec.platform_id == 1) {
-        if (!CheckPsNameAscii(rec.text)) {
+        if (!SanitizePsNameAscii(rec.text)) {
           continue;
         }
       } else if (rec.platform_id == 0 || rec.platform_id == 3) {
-        if (!CheckPsNameUtf16Be(rec.text)) {
+        if (!SanitizePsNameUtf16Be(rec.text)) {
           continue;
         }
       }
