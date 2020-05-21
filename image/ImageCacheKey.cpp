@@ -170,6 +170,17 @@ nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
     return EmptyCString();
   }
 
+  // Network-state isolation
+  if (StaticPrefs::privacy_partition_network_state()) {
+    OriginAttributes oa;
+    StoragePrincipalHelper::GetOriginAttributesForNetworkState(aDocument, oa);
+
+    nsAutoCString suffix;
+    oa.CreateSuffix(suffix);
+
+    return std::move(suffix);
+  }
+
   // If the window is 3rd party resource, let's see if first-party storage
   // access is granted for this image.
   if (nsContentUtils::IsThirdPartyWindowOrChannel(aDocument->GetInnerWindow(),
