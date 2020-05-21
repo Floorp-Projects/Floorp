@@ -340,7 +340,7 @@ impl SpatialNode {
                                 .post_translate(-scroll_offset)
                         }
                         ReferenceFrameKind::Perspective { scrolling_relative_to: None } |
-                        ReferenceFrameKind::Transform => source_transform,
+                        ReferenceFrameKind::Transform | ReferenceFrameKind::Zoom => source_transform,
                     };
 
                     let resolved_transform =
