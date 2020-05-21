@@ -488,5 +488,5 @@ class ExperimentalOverride(object):
 
 tryselect = ExperimentalOverride(experimental, {
     'build': Any('skip-unless-schedules', 'bugbug-reduced', split_args=tuple),
-    'build-fuzzing': Any('skip-unless-schedules', 'bugbug-reduced', split_args=tuple),
+    'build-fuzzing': Alias('bugbug-reduced'),
 })
