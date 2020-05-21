@@ -28,10 +28,12 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
       const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) override;
 
  protected:
-  static bool mInitializedSystemColors;
-  static mozilla::AndroidSystemColors mSystemColors;
-  static bool mInitializedShowPassword;
-  static bool mShowPassword;
+  bool mInitializedSystemColors = false;
+  mozilla::AndroidSystemColors mSystemColors;
+  bool mInitializedShowPassword = false;
+  bool mShowPassword = false;
+  int32_t mPrefersReducedMotion = -1;
+  bool mPrefersReducedMotionCached = false;
 
   nsresult GetSystemColors();
 

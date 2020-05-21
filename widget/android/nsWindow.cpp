@@ -2390,19 +2390,6 @@ void nsWindow::UpdateDynamicToolbarOffset(ScreenIntCoord aOffset) {
   }
 }
 
-nsresult nsWindow::SetPrefersReducedMotionOverrideForTest(bool aValue) {
-  LookAndFeel::SetPrefersReducedMotionOverrideForTest(aValue);
-
-  // Notify as if the corresponding setting changed.
-  java::GeckoSystemStateListener::NotifyPrefersReducedMotionChangedForTest();
-  return NS_OK;
-}
-
-nsresult nsWindow::ResetPrefersReducedMotionOverrideForTest() {
-  LookAndFeel::ResetPrefersReducedMotionOverrideForTest();
-  return NS_OK;
-}
-
 ScreenIntMargin nsWindow::GetSafeAreaInsets() const { return mSafeAreaInsets; }
 
 void nsWindow::UpdateSafeAreaInsets(const ScreenIntMargin& aSafeAreaInsets) {
@@ -2428,7 +2415,6 @@ auto nsWindow::GeckoViewSupport::OnLoadRequest(
   return window->OnLoadRequest(aUri, aWindowType, aFlags, aTriggeringUri,
                                aHasUserGesture, aIsTopLevel);
 }
-
 already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {
   nsCOMPtr<nsIWidget> window = new nsWindow();
   return window.forget();

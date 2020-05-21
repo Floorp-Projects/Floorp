@@ -108,13 +108,6 @@ public class GeckoSystemStateListener
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void notifyPrefersReducedMotionChangedForTest() {
-        ContentResolver contentResolver = sApplicationContext.getContentResolver();
-        Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
-        contentResolver.notifyChange(animationSetting, null);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
     /**
      * For prefers-color-scheme media queries feature.
      */

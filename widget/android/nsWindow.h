@@ -332,9 +332,6 @@ class nsWindow final : public nsBaseWidget {
     return mDynamicToolbarMaxHeight;
   }
 
-  nsresult SetPrefersReducedMotionOverrideForTest(bool aValue) override;
-  nsresult ResetPrefersReducedMotionOverrideForTest() override;
-
   void UpdateDynamicToolbarOffset(mozilla::ScreenIntCoord aOffset);
 
   virtual mozilla::ScreenIntMargin GetSafeAreaInsets() const override;

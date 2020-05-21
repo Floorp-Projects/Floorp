@@ -75,9 +75,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
   virtual void SetIntCacheImpl(
       const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {}
-  void SetShouldRetainCacheImplForTest(bool aValue) {
-    mShouldRetainCacheForTest = aValue;
-  }
 
   virtual void NativeInit() = 0;
 
@@ -111,12 +108,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   static nsXPLookAndFeel* sInstance;
   static bool sShutdown;
-
-  int32_t mPrefersReducedMotion = -1;
-  bool mPrefersReducedMotionCached = false;
-  // True if we shouldn't clear the cache value in RefreshImpl().
-  // NOTE: This should be used only for testing.
-  bool mShouldRetainCacheForTest = false;
 };
 
 #endif
