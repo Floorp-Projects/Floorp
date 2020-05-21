@@ -12,9 +12,11 @@
 
 class nsAlertsIconListener;
 
-class nsSystemAlertsService : public nsIAlertsService {
+class nsSystemAlertsService : public nsIAlertsService,
+                              public nsIAlertsDoNotDisturb {
  public:
   NS_DECL_NSIALERTSSERVICE
+  NS_DECL_NSIALERTSDONOTDISTURB
   NS_DECL_ISUPPORTS
 
   nsSystemAlertsService();
@@ -33,6 +35,9 @@ class nsSystemAlertsService : public nsIAlertsService {
                    nsAlertsIconListener* aListener);
 
   nsDataHashtable<nsStringHashKey, nsAlertsIconListener*> mActiveListeners;
+
+ private:
+  bool mSuppressForScreenSharing = false;
 };
 
 #endif /* nsSystemAlertsService_h__ */
