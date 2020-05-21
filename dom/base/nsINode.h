@@ -92,6 +92,7 @@ template <typename T>
 class InclusiveAncestorsOfTypeIterator;
 template <typename T>
 class InclusiveFlatTreeAncestorsOfTypeIterator;
+class LinkStyle;
 class MutationObservers;
 template <typename T>
 class Optional;
@@ -508,6 +509,13 @@ class nsINode : public mozilla::dom::EventTarget {
   bool IsElement() const { return GetBoolFlag(NodeIsElement); }
 
   virtual bool IsTextControlElement() const { return false; }
+
+  // Returns non-null if this element subclasses `LinkStyle`.
+  virtual const mozilla::dom::LinkStyle* AsLinkStyle() const { return nullptr; }
+  mozilla::dom::LinkStyle* AsLinkStyle() {
+    return const_cast<mozilla::dom::LinkStyle*>(
+        static_cast<const nsINode*>(this)->AsLinkStyle());
+  }
 
   /**
    * Return this node as an Element.  Should only be used for nodes

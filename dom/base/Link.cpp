@@ -15,7 +15,6 @@
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
 #include "nsISizeOf.h"
-#include "nsStyleLinkElement.h"
 
 #include "nsEscape.h"
 #include "nsGkAtoms.h"

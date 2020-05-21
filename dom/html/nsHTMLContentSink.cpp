@@ -48,11 +48,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsNameSpaceManager.h"
 
-#include "nsIStyleSheetLinkingElement.h"
 #include "nsError.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIScriptContext.h"
-#include "nsStyleLinkElement.h"
 
 #include "nsLayoutCID.h"
 

@@ -38,7 +38,6 @@
 #include "nsIClassOfService.h"
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
-#include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsThreadUtils.h"
 #include "nsGkAtoms.h"
@@ -274,12 +273,14 @@ namespace css {
  ********************************/
 NS_IMPL_ISUPPORTS(SheetLoadData, nsIRunnable, nsIThreadObserver)
 
-SheetLoadData::SheetLoadData(
-    Loader* aLoader, const nsAString& aTitle, nsIURI* aURI, StyleSheet* aSheet,
-    bool aSyncLoad, nsIStyleSheetLinkingElement* aOwningElement,
-    IsAlternate aIsAlternate, MediaMatched aMediaMatches, IsPreload aIsPreload,
-    nsICSSLoaderObserver* aObserver, nsIPrincipal* aLoaderPrincipal,
-    nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode)
+SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
+                             nsIURI* aURI, StyleSheet* aSheet, bool aSyncLoad,
+                             nsINode* aOwningNode, IsAlternate aIsAlternate,
+                             MediaMatched aMediaMatches, IsPreload aIsPreload,
+                             nsICSSLoaderObserver* aObserver,
+                             nsIPrincipal* aLoaderPrincipal,
+                             nsIReferrerInfo* aReferrerInfo,
+                             nsINode* aRequestingNode)
     : mLoader(aLoader),
       mTitle(aTitle),
       mEncoding(nullptr),
@@ -302,12 +303,14 @@ SheetLoadData::SheetLoadData(
       mBlockResourceTiming(false),
       mLoadFailed(false),
       mIsPreload(aIsPreload),
-      mOwningElement(aOwningElement),
+      mOwningNode(aOwningNode),
       mObserver(aObserver),
       mLoaderPrincipal(aLoaderPrincipal),
       mReferrerInfo(aReferrerInfo),
       mRequestingNode(aRequestingNode),
       mPreloadEncoding(nullptr) {
+  MOZ_ASSERT(!mOwningNode || dom::LinkStyle::FromNode(*mOwningNode),
+             "Must implement LinkStyle");
   MOZ_ASSERT(mLoader, "Must have a loader!");
 }
 
@@ -339,7 +342,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
       mBlockResourceTiming(false),
       mLoadFailed(false),
       mIsPreload(IsPreload::No),
-      mOwningElement(nullptr),
+      mOwningNode(nullptr),
       mObserver(aObserver),
       mLoaderPrincipal(aLoaderPrincipal),
       mReferrerInfo(aReferrerInfo),
@@ -381,7 +384,7 @@ SheetLoadData::SheetLoadData(
       mBlockResourceTiming(false),
       mLoadFailed(false),
       mIsPreload(aIsPreload),
-      mOwningElement(nullptr),
+      mOwningNode(nullptr),
       mObserver(aObserver),
       mLoaderPrincipal(aLoaderPrincipal),
       mReferrerInfo(aReferrerInfo),
@@ -439,8 +442,8 @@ void SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread) {
   aThread->RemoveObserver(this);
 
   // Now fire the event
-  nsCOMPtr<nsINode> node = do_QueryInterface(mOwningElement);
-  NS_ASSERTION(node, "How did that happen???");
+  nsCOMPtr<nsINode> node = mOwningNode;
+  MOZ_ASSERT(node, "How did that happen???");
 
   nsContentUtils::DispatchTrustedEvent(
       node->OwnerDoc(), node,
@@ -452,7 +455,7 @@ void SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread) {
 }
 
 void SheetLoadData::ScheduleLoadEventIfNeeded() {
-  if (!mOwningElement) {
+  if (!mOwningNode) {
     return;
   }
 
@@ -794,9 +797,9 @@ NotNull<const Encoding*> SheetLoadData::DetermineNonBOMEncoding(
 
   // Now try the charset on the <link> or processing instruction
   // that loaded us
-  if (mOwningElement) {
+  if (mOwningNode) {
     nsAutoString label16;
-    mOwningElement->GetCharset(label16);
+    LinkStyle::FromNode(*mOwningNode)->GetCharset(label16);
     encoding = Encoding::ForLabel(label16);
     if (encoding) {
       return WrapNotNull(encoding);
@@ -898,10 +901,9 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
             aStatus)) {
       if (Document* doc = mLoader->GetDocument()) {
         for (SheetLoadData* data = this; data; data = data->mNext) {
-          // mOwningElement may be null but AddBlockTrackingNode can cope
-          nsCOMPtr<nsIContent> content =
-              do_QueryInterface(data->mOwningElement);
-          doc->AddBlockedNodeByClassifier(content);
+          // mOwningNode may be null but AddBlockTrackingNode can cope
+          doc->AddBlockedNodeByClassifier(
+              nsIContent::FromNodeOrNull(data->mOwningNode));
         }
       }
     }
@@ -1251,10 +1253,8 @@ void Loader::InsertSheetInTree(StyleSheet& aSheet,
                  aLinkingContent->IsInShadowTree(),
              "Why would we insert it anywhere?");
 
-  nsCOMPtr<nsIStyleSheetLinkingElement> linkingElement =
-      do_QueryInterface(aLinkingContent);
-  if (linkingElement) {
-    linkingElement->SetStyleSheet(&aSheet);
+  if (auto* linkStyle = LinkStyle::FromNodeOrNull(aLinkingContent)) {
+    linkStyle->SetStyleSheet(&aSheet);
   }
 
   ShadowRoot* shadow =
@@ -1940,6 +1940,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     const SheetInfo& aInfo, const nsAString& aBuffer, uint32_t aLineNumber,
     nsICSSLoaderObserver* aObserver) {
   LOG(("css::Loader::LoadInlineStyle"));
+  MOZ_ASSERT(aInfo.mContent);
 
   if (!mEnabled) {
     LOG_WARN(("  Not enabled"));
@@ -1950,9 +1951,8 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     return Err(NS_ERROR_NOT_INITIALIZED);
   }
 
-  nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(
-      do_QueryInterface(aInfo.mContent));
-  NS_ASSERTION(owningElement, "Element is not a style linking element!");
+  MOZ_ASSERT(LinkStyle::FromNodeOrNull(aInfo.mContent),
+             "Element is not a style linking element!");
 
   // Since we're not planning to load a URI, no need to hand a principal to the
   // load data or to CreateSheet().
@@ -2013,7 +2013,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     completed = Completed::Yes;
   } else {
     auto data = MakeRefPtr<SheetLoadData>(
-        this, aInfo.mTitle, nullptr, sheet, false, owningElement, isAlternate,
+        this, aInfo.mTitle, nullptr, sheet, false, aInfo.mContent, isAlternate,
         matched, IsPreload::No, aObserver, nullptr, aInfo.mReferrerInfo,
         aInfo.mContent);
     data->mLineNumber = aLineNumber;
@@ -2105,20 +2105,16 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
 
   InsertSheetInTree(*sheet, aInfo.mContent);
 
-  nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(
-      do_QueryInterface(aInfo.mContent));
   // We may get here with no content for Link: headers for example.
-  MOZ_ASSERT(!!owningElement == !!aInfo.mContent,
-             "If there is any node, it should be an "
-             "nsIStyleSheetLinkingElement");
-
+  MOZ_ASSERT(!aInfo.mContent || LinkStyle::FromNode(*aInfo.mContent),
+             "If there is any node, it should be a LinkStyle");
   auto data = MakeRefPtr<SheetLoadData>(
-      this, aInfo.mTitle, aInfo.mURI, sheet, syncLoad, owningElement,
+      this, aInfo.mTitle, aInfo.mURI, sheet, syncLoad, aInfo.mContent,
       isAlternate, matched, IsPreload::No, aObserver, principal,
       aInfo.mReferrerInfo, context);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete: 0x%p", sheet.get()));
-    if (aObserver || !mObservers.IsEmpty() || owningElement) {
+    if (aObserver || !mObservers.IsEmpty() || aInfo.mContent) {
       rv = PostLoadEvent(std::move(data));
       if (NS_FAILED(rv)) {
         return Err(rv);

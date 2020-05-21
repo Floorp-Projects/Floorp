@@ -12,7 +12,6 @@
 #include "gfxTextRun.h"
 #include "nsArray.h"
 #include "nsString.h"
-#include "nsIStyleSheetLinkingElement.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "ChildIterator.h"
@@ -269,19 +268,14 @@ uint32_t InspectorUtils::GetRelativeRuleLine(GlobalObject& aGlobal,
   // a 0 lineNumber.
   StyleSheet* sheet = aRule.GetStyleSheet();
   if (sheet && lineNumber != 0) {
-    nsINode* owningNode = sheet->GetOwnerNode();
-    if (owningNode) {
-      nsCOMPtr<nsIStyleSheetLinkingElement> link =
-          do_QueryInterface(owningNode);
-      if (link) {
-        // Check for underflow, which is one indication that we're
-        // trying to remap an already relative lineNumber.
-        uint32_t linkLineIndex0 = link->GetLineNumber() - 1;
-        if (linkLineIndex0 > lineNumber) {
-          lineNumber = 0;
-        } else {
-          lineNumber -= linkLineIndex0;
-        }
+    if (auto* link = LinkStyle::FromNodeOrNull(sheet->GetOwnerNode())) {
+      // Check for underflow, which is one indication that we're
+      // trying to remap an already relative lineNumber.
+      uint32_t linkLineIndex0 = link->GetLineNumber() - 1;
+      if (linkLineIndex0 > lineNumber) {
+        lineNumber = 0;
+      } else {
+        lineNumber -= linkLineIndex0;
       }
     }
   }

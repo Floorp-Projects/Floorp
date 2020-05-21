@@ -9,9 +9,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Link.h"
+#include "mozilla/dom/LinkStyle.h"
 #include "mozilla/WeakPtr.h"
 #include "nsGenericHTMLElement.h"
-#include "nsStyleLinkElement.h"
 #include "nsDOMTokenList.h"
 
 namespace mozilla {
@@ -22,7 +22,7 @@ namespace dom {
 // NOTE(emilio): If we stop inheriting from Link, we need to remove the
 // IsHTMLElement(nsGkAtoms::link) checks in Link.cpp.
 class HTMLLinkElement final : public nsGenericHTMLElement,
-                              public nsStyleLinkElement,
+                              public LinkStyle,
                               public Link {
  public:
   explicit HTMLLinkElement(
@@ -206,7 +206,9 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   static bool IsCSSMimeTypeAttributeForLinkElement(
       const mozilla::dom::Element&);
 
-  // nsStyleLinkElement
+  // LinkStyle
+  nsIContent& AsContent() final { return *this; }
+  const LinkStyle* AsLinkStyle() const final { return this; }
   Maybe<SheetInfo> GetStyleSheetInfo() final;
 
   RefPtr<nsDOMTokenList> mRelList;

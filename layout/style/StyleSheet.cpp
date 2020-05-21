@@ -1255,11 +1255,8 @@ void StyleSheet::ReparseSheet(const nsACString& aInput, ErrorResult& aRv) {
   Inner().mChildren.Clear();
 
   uint32_t lineNumber = 1;
-  if (mOwningNode) {
-    nsCOMPtr<nsIStyleSheetLinkingElement> link = do_QueryInterface(mOwningNode);
-    if (link) {
-      lineNumber = link->GetLineNumber();
-    }
+  if (auto* linkStyle = LinkStyle::FromNodeOrNull(mOwningNode)) {
+    lineNumber = linkStyle->GetLineNumber();
   }
 
   // Notify to the stylesets about the old rules going away.
