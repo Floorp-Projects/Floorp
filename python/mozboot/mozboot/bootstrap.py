@@ -192,10 +192,14 @@ Build system telemetry
 Mozilla collects data about local builds in order to make builds faster and
 improve developer tooling. To learn more about the data we intend to collect
 read here:
-https://firefox-source-docs.mozilla.org/build/buildsystem/telemetry.html.
 
-If you have questions, please ask in #build in irc.mozilla.org. If you would
-like to opt out of data collection, select (N) at the prompt.
+  https://firefox-source-docs.mozilla.org/build/buildsystem/telemetry.html
+
+If you have questions, please ask in #build on Matrix:
+
+  https://chat.mozilla.org/#/room/#build:mozilla.org
+
+If you would like to opt out of data collection, select (N) at the prompt.
 
 Would you like to enable build system telemetry?'''
 
