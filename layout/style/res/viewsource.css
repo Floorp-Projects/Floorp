@@ -94,8 +94,8 @@ span[id] {
  unicode-bidi: isolate;
 }
 .highlight .error,
-.highlight .error > :-moz-any(.start-tag, .end-tag, .comment, .cdata, .doctype,
-                              .pi, .entity, .attribute-name, .attribute-value) {
+.highlight .error > :is(.start-tag, .end-tag, .comment, .cdata, .doctype,
+                        .pi, .entity, .attribute-name, .attribute-value) {
   color: red;
   font-weight: bold;
 }
