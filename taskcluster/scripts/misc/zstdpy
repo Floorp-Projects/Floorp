@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+"""This script compresses and decompresses data using the zstandard compression
+format, as provided by the python-zstandard module.
+
+Data is provided on stdin and output on stdout."""
+
+import sys
+import zstandard
+from argparse import ArgumentParser
+
+
+def main(argv=None):
+    parser = ArgumentParser(description=__doc__)
+    parser.set_defaults(mode="compress")
+    parser.add_argument(
+        "-z",
+        "--compress",
+        dest="mode",
+        action="store_const",
+        const="compress",
+        help="compress the data (this is the default)",
+    )
+    parser.add_argument(
+        "-d",
+        "--decompress",
+        dest="mode",
+        action="store_const",
+        const="decompress",
+        help="decompress the data",
+    )
+    parser.add_argument(
+        "-T",
+        "--threads",
+        dest="threads",
+        default=1,
+        type=int,
+        help="Compress using # working threads. If 0, use number of CPUs on the system. (default 1)",
+    )
+    parser.add_argument(
+        "-l",
+        "--level",
+        dest="level",
+        default=3,
+        type=int,
+        help="Compression level from 1-22 (default 3)",
+    )
+    parser.add_argument(
+        "file",
+        nargs="?",
+        help="File to compress/decompress. Default is stdin.",
+    )
+
+    args = parser.parse_args(argv)
+
+    # The zstd commandline tool uses 0 to specify number of threads equal to
+    # the number of CPUs whereas the python module uses negative numbers to
+    # flag this behavior. Emulate the zstd commandline utility's behavior here
+    if args.threads == 0:
+        args.threads = -1
+
+    if args.file:
+        in_file = open(args.file, "rb")
+    else:
+        in_file = sys.stdin.buffer
+
+    if args.mode == "compress":
+        ctx = zstandard.ZstdCompressor(level=args.level, threads=args.threads)
+    elif args.mode == "decompress":
+        ctx = zstandard.ZstdDecompressor()
+
+    ctx.copy_stream(in_file, sys.stdout.buffer)
+
+
+if __name__ == "__main__":
+    main()
