@@ -15,6 +15,7 @@
 
 #include "nsDocLoader.h"
 #include "nsDocShell.h"
+#include "nsLoadGroup.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
 #include "nsIWebNavigation.h"
@@ -132,6 +133,24 @@ nsresult nsDocLoader::SetDocLoaderParent(nsDocLoader* aParent) {
 nsresult nsDocLoader::Init() {
   nsresult rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), this);
   if (NS_FAILED(rv)) return rv;
+
+  MOZ_LOG(gDocLoaderLog, LogLevel::Debug,
+          ("DocLoader:%p: load group %p.\n", this, mLoadGroup.get()));
+
+  return NS_OK;
+}
+
+nsresult nsDocLoader::InitWithBrowsingContext(
+    BrowsingContext* aBrowsingContext) {
+  RefPtr<net::nsLoadGroup> loadGroup = new net::nsLoadGroup();
+  nsresult rv = loadGroup->InitWithRequestContextId(
+      aBrowsingContext->GetRequestContextId());
+  if (NS_FAILED(rv)) return rv;
+
+  rv = loadGroup->SetGroupObserver(this);
+  if (NS_FAILED(rv)) return rv;
+
+  mLoadGroup = loadGroup;
 
   MOZ_LOG(gDocLoaderLog, LogLevel::Debug,
           ("DocLoader:%p: load group %p.\n", this, mLoadGroup.get()));
