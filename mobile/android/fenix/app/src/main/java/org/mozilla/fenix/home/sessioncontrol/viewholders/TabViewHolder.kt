@@ -11,6 +11,7 @@ import android.view.ViewOutlineProvider
 import androidx.appcompat.content.res.AppCompatResources
 import kotlinx.android.synthetic.main.tab_list_row.*
 import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.support.ktx.android.util.dpToFloat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -81,7 +82,12 @@ class TabViewHolder(
     internal fun bindSession(tab: Tab) {
         updateTab(tab)
         updateTitle(tab.title)
-        updateHostname(tab.hostname)
+        // Truncate to MAX_URI_LENGTH to prevent the UI from locking up for
+        // extremely large URLs such as data URIs or bookmarklets. The same
+        // is done in the toolbar and awesomebar:
+        // https://github.com/mozilla-mobile/fenix/issues/1824
+        // https://github.com/mozilla-mobile/android-components/issues/6985
+        updateHostname(tab.hostname.take(MAX_URI_LENGTH))
         updateFavIcon(tab.url, tab.icon)
         updateSelected(tab.selected ?: false)
         updatePlayPauseButton(tab.mediaState)

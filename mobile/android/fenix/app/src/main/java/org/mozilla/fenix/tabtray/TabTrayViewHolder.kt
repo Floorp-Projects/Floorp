@@ -8,11 +8,13 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
+import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.media.ext.pauseIfPlaying
@@ -37,7 +39,8 @@ class TabTrayViewHolder(itemView: View) : TabViewHolder(itemView) {
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
-    private val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
+    @VisibleForTesting
+    internal val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
     private val playPauseButtonView: ImageButton = itemView.findViewById(R.id.play_pause_button)
 
     override var tab: Tab? = null
@@ -132,10 +135,16 @@ class TabTrayViewHolder(itemView: View) : TabViewHolder(itemView) {
         titleView.text = title
     }
     private fun updateUrl(tab: Tab) {
-        urlView?.text = tab.url.tryGetHostFromUrl()
+        // Truncate to MAX_URI_LENGTH to prevent the UI from locking up for
+        // extremely large URLs such as data URIs or bookmarklets. The same
+        // is done in the toolbar and awesomebar:
+        // https://github.com/mozilla-mobile/fenix/issues/1824
+        // https://github.com/mozilla-mobile/android-components/issues/6985
+        urlView?.text = tab.url.tryGetHostFromUrl().take(MAX_URI_LENGTH)
     }
 
-    private fun updateBackgroundColor(isSelected: Boolean) {
+    @VisibleForTesting
+    internal fun updateBackgroundColor(isSelected: Boolean) {
         val itemBackground = if (isSelected) {
             R.attr.tabTrayItemSelectedBackground
         } else {
