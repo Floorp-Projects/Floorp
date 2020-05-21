@@ -6754,6 +6754,8 @@ var gCSSProperties = {
     domProp: "opacity",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
     applies_to_placeholder: true,
     applies_to_cue: true,
     initial_values: [
