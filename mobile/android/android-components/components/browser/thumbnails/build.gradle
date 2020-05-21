@@ -35,6 +35,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 dependencies {
     implementation project(':browser-state')
     implementation project(':concept-engine')
+    implementation project(':support-images')
     implementation project(':support-ktx')
 
     implementation Dependencies.androidx_annotation

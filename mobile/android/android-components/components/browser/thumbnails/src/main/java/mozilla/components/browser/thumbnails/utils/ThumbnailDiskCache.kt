@@ -6,6 +6,7 @@ package mozilla.components.browser.thumbnails.utils
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.annotation.VisibleForTesting
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
@@ -22,6 +23,12 @@ class ThumbnailDiskCache {
     private val logger = Logger("ThumbnailDiskCache")
     private var thumbnailCache: DiskLruCache? = null
     private val thumbnailCacheWriteLock = Any()
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    internal fun clear(context: Context) {
+        getThumbnailCache(context).delete()
+        thumbnailCache = null
+    }
 
     /**
      * Retrieves the thumbnail data from the disk cache for the given session ID or URL.

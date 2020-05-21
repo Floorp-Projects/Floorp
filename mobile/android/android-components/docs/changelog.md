@@ -15,6 +15,15 @@ permalink: /changelog/
 * **browser-engine-gecko-nightly**
   * Added support for [onbeforeunload prompt](https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onbeforeunload)
 
+* **feature-tabs**
+  * ⚠️ **This is a breaking change**: Added a dependency on `ThumbnailsUseCases` to `TabsFeature` and `TabsTrayPresenter`
+    for loading a tab's thumbnail.
+
+* **browser-thumbnails**
+  * Adds `LoadThumbnailUseCase` in `ThumbnailsUseCases` for loading the thumbnail of a tab.
+  * Adds `ThumbnailStorage` as a storage layer for handling saving and loading a thumbnail from the
+    disk cache.
+
 # 43.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v42.0.0...v43.0.0)
@@ -90,7 +99,7 @@ permalink: /changelog/
 
 * **browser-menu**
   * Added `AbstractParentBrowserMenuItem` and `ParentBrowserMenuItem` for handling nested sub menu items on view click.
-  * ⚠️ **This is a breaking change**: `WebExtensionBrowserMenuBuilder` now returns as a sub menu entry for add-ons. The sub 
+  * ⚠️ **This is a breaking change**: `WebExtensionBrowserMenuBuilder` now returns as a sub menu entry for add-ons. The sub
     menu also contains an access entry for Add-ons Manager, for which `onAddonsManagerTapped` needs to be passed in the
     constructor.
 

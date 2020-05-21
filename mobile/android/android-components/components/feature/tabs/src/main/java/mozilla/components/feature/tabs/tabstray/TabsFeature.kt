@@ -7,6 +7,7 @@ package mozilla.components.feature.tabs.tabstray
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.thumbnails.ThumbnailsUseCases
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.tabs.ext.toTabs
@@ -18,10 +19,12 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * @param defaultTabsFilter A tab filter that is used for the initial presenting of tabs that will be used by
  * [TabsFeature.filterTabs] by default as well.
  */
+@Suppress("LongParameterList")
 class TabsFeature(
     tabsTray: TabsTray,
     private val store: BrowserStore,
     tabsUseCases: TabsUseCases,
+    thumbnailsUseCases: ThumbnailsUseCases,
     private val defaultTabsFilter: (TabSessionState) -> Boolean = { true },
     closeTabsTray: () -> Unit
 ) : LifecycleAwareFeature {
@@ -29,6 +32,7 @@ class TabsFeature(
     internal var presenter = TabsTrayPresenter(
         tabsTray,
         store,
+        thumbnailsUseCases,
         defaultTabsFilter,
         closeTabsTray
     )
