@@ -27,7 +27,8 @@ android {
 dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
-    implementation Dependencies.androidx_lifecycle_extensions
+    implementation Dependencies.androidx_fragment
+    implementation Dependencies.androidx_lifecycle_process
 
     implementation project(':support-ktx')
 

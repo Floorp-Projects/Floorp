@@ -36,7 +36,6 @@ dependencies {
     implementation project(':ui-icons')
 
     implementation Dependencies.androidx_core_ktx
-    implementation Dependencies.androidx_lifecycle_extensions
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.google_material
     implementation Dependencies.androidx_constraintlayout
