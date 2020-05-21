@@ -22,11 +22,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
 });
 
 var UrlbarUtils = {
@@ -568,6 +570,37 @@ var UrlbarUtils = {
   looksLikeSingleWordHost(value) {
     let str = value.trim();
     return this.REGEXP_SINGLE_WORD.test(str);
+  },
+
+  /**
+   * Runs a search for the given string, and returns the heuristic result.
+   * @param {string} searchString The string to search for.
+   * @param {nsIDOMWindow} window The window requesting it.
+   * @returns {UrlbarResult} an heuristic result.
+   */
+  async getHeuristicResultFor(
+    searchString,
+    window = BrowserWindowTracker.getTopWindow()
+  ) {
+    if (!searchString) {
+      throw new Error("Must pass a non-null search string");
+    }
+    let context = new UrlbarQueryContext({
+      allowAutofill: false,
+      isPrivate: PrivateBrowsingUtils.isWindowPrivate(window),
+      maxResults: 1,
+      searchString,
+      userContextId: window.gBrowser.selectedBrowser.getAttribute(
+        "usercontextid"
+      ),
+      allowSearchSuggestions: false,
+      providers: ["UnifiedComplete"],
+    });
+    await UrlbarProvidersManager.startQuery(context);
+    if (!context.heuristicResult) {
+      throw new Error("There should always be an heuristic result");
+    }
+    return context.heuristicResult;
   },
 };
 
