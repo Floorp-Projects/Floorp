@@ -1032,7 +1032,7 @@ win32-devedition/opt:
     index:
         product: devedition
         job-name: win32-opt
-        type: nightly
+        type: shippable
     attributes:
         shippable: true
         enable-full-crashsymbols: true
@@ -1050,7 +1050,7 @@ win32-devedition/opt:
     shipping-product: devedition
     treeherder:
         platform: windows2012-32-devedition/opt
-        symbol: N
+        symbol: B
         tier: 1
     worker-type: b-linux
     worker:
@@ -1099,7 +1099,7 @@ win64-devedition/opt:
     index:
         product: devedition
         job-name: win64-opt
-        type: nightly
+        type: shippable
     attributes:
         shippable: true
         enable-full-crashsymbols: true
@@ -1107,7 +1107,7 @@ win64-devedition/opt:
     shipping-product: devedition
     treeherder:
         platform: windows2012-64-devedition/opt
-        symbol: N
+        symbol: B
         tier: 1
     worker-type: b-linux
     worker:
@@ -1475,7 +1475,7 @@ win64-aarch64-devedition/opt:
     index:
         product: devedition
         job-name: win64-aarch64-opt
-        type: nightly
+        type: shippable
     attributes:
         shippable: true
         enable-full-crashsymbols: true
@@ -1486,7 +1486,7 @@ win64-aarch64-devedition/opt:
     shipping-product: devedition
     treeherder:
         platform: windows2012-aarch64-devedition/opt
-        symbol: N
+        symbol: B
         tier: 1
     worker-type: b-linux
     worker:
@@ -1574,7 +1574,7 @@ win64-aarch64-devedition-no-eme/opt:
     index:
         product: devedition
         job-name: win64-aarch64-no-eme-opt
-        type: nightly
+        type: shippable
     attributes:
         enable-full-crashsymbols: true
         # We need to package tests in order for the actual
