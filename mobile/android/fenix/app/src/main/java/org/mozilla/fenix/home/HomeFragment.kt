@@ -99,6 +99,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
+import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.Settings
@@ -357,7 +358,8 @@ class HomeFragment : Fragment() {
         view.tab_button.setOnClickListener {
             invokePendingDeleteJobs()
             hideOnboardingIfNeeded()
-            findNavController().navigate(HomeFragmentDirections.actionGlobalTabTrayFragment())
+            val tabTrayDialog = TabTrayDialogFragment()
+            tabTrayDialog.show(parentFragmentManager, null)
         }
 
         PrivateBrowsingButtonView(
