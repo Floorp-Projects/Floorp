@@ -21,7 +21,7 @@ linux64-android-sdk-linux-repack:
         script: repack-android-sdk-linux.sh
         resources:
             - 'python/mozboot/**/*android*'
-        toolchain-artifact: project/gecko/android-sdk/android-sdk-linux.tar.xz
+        toolchain-artifact: project/gecko/android-sdk/android-sdk-linux.tar.zst
         toolchain-alias: android-sdk-linux
 
 linux64-android-emulator-linux-repack:
@@ -37,7 +37,7 @@ linux64-android-emulator-linux-repack:
         script: repack-android-emulator-linux.sh
         resources:
             - 'python/mozboot/**/*android*'
-        toolchain-artifact: project/gecko/android-emulator/android-emulator-linux.tar.xz
+        toolchain-artifact: project/gecko/android-emulator/android-emulator-linux.tar.zst
         toolchain-alias: android-emulator-linux
 
 linux64-android-ndk-linux-repack:
@@ -53,7 +53,7 @@ linux64-android-ndk-linux-repack:
         script: repack-android-ndk-linux.sh
         resources:
             - 'python/mozboot/**/*android*'
-        toolchain-artifact: project/gecko/android-ndk/android-ndk.tar.xz
+        toolchain-artifact: project/gecko/android-ndk/android-ndk.tar.zst
         toolchain-alias: android-ndk-linux
 
 linux64-android-gradle-dependencies:
@@ -73,7 +73,7 @@ linux64-android-gradle-dependencies:
             - 'mobile/android/config/mozconfigs/android-api-16-gradle-dependencies/**'
             - 'mobile/android/config/mozconfigs/common*'
             - 'mobile/android/gradle.configure'
-        toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
+        toolchain-artifact: public/build/android-gradle-dependencies.tar.zst
         toolchain-alias: android-gradle-dependencies
     fetches:
         toolchain:
