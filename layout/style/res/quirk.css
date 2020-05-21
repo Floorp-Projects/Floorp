@@ -13,15 +13,12 @@ li {
 }
 
 /* restore outside position for lists inside LIs */
-li ul, li ol, li dir, li menu {
+li :is(ul, ol, dir, menu) {
   list-style-position: outside;
 }
 
 /* undo previous two rules for properly nested lists */
-  ul ul,   ul ol,   ul dir,   ul menu,   ul li,
-  ol ul,   ol ol,   ol dir,   ol menu,   ol li,
- dir ul,  dir ol,  dir dir,  dir menu,  dir li,
-menu ul, menu ol, menu dir, menu menu, menu li {
+:is(ul, ol, dir, menu) :is(ul, ol, dir, menu, li) {
   list-style-position: unset;
 }
 
@@ -59,27 +56,10 @@ table {
  * tags, it's slower, since we have to do the :-moz-first-node or :-moz-last-node
  * check on every single element in the document.  If we list all the
  * element names for which the UA stylesheet specifies a margin, the
- * selectors will be hashed in the RuleHash and things will be much more
+ * selectors will be hashed in the selector maps and things will be much more
  * efficient.
  */
-body > p:-moz-first-node, td > p:-moz-first-node, th > p:-moz-first-node,
-body > dl:-moz-first-node, td > dl:-moz-first-node, th > dl:-moz-first-node,
-body > multicol:-moz-first-node, td > multicol:-moz-first-node, th > multicol:-moz-first-node,
-body > blockquote:-moz-first-node, td > blockquote:-moz-first-node, th > blockquote:-moz-first-node,
-body > h1:-moz-first-node, td > h1:-moz-first-node, th > h1:-moz-first-node,
-body > h2:-moz-first-node, td > h2:-moz-first-node, th > h2:-moz-first-node,
-body > h3:-moz-first-node, td > h3:-moz-first-node, th > h3:-moz-first-node,
-body > h4:-moz-first-node, td > h4:-moz-first-node, th > h4:-moz-first-node,
-body > h5:-moz-first-node, td > h5:-moz-first-node, th > h5:-moz-first-node,
-body > h6:-moz-first-node, td > h6:-moz-first-node, th > h6:-moz-first-node,
-body > listing:-moz-first-node, td > listing:-moz-first-node, th > listing:-moz-first-node,
-body > plaintext:-moz-first-node, td > plaintext:-moz-first-node, th > plaintext:-moz-first-node,
-body > xmp:-moz-first-node, td > xmp:-moz-first-node, th > xmp:-moz-first-node,
-body > pre:-moz-first-node, td > pre:-moz-first-node, th > pre:-moz-first-node,
-body > ul:-moz-first-node, td > ul:-moz-first-node, th > ul:-moz-first-node,
-body > menu:-moz-first-node, td > menu:-moz-first-node, th > menu:-moz-first-node,
-body > dir:-moz-first-node, td > dir:-moz-first-node, th > dir:-moz-first-node,
-body > ol:-moz-first-node, td > ol:-moz-first-node, th > ol:-moz-first-node {
+:is(body, td, th) > :is(p, dl, multicol, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-first-node {
   margin-block-start: 0;
 }
 
@@ -91,55 +71,11 @@ td > p:-moz-last-node, th > p:-moz-last-node {
  *  collapse the bottom or top margins of empty elements
  *  - see bug 97361
  */
-body > p:-moz-only-whitespace:-moz-first-node,
-td > p:-moz-only-whitespace:-moz-first-node, th > p:-moz-only-whitespace:-moz-first-node,
-body > dl:-moz-only-whitespace:-moz-first-node, td > dl:-moz-only-whitespace:-moz-first-node,
-th > dl:-moz-only-whitespace:-moz-first-node, body > multicol:-moz-only-whitespace:-moz-first-node,
-td > multicol:-moz-only-whitespace:-moz-first-node, th > multicol:-moz-only-whitespace:-moz-first-node,
-body > blockquote:-moz-only-whitespace:-moz-first-node, td > blockquote:-moz-only-whitespace:-moz-first-node,
-th > blockquote:-moz-only-whitespace:-moz-first-node, body > h1:-moz-only-whitespace:-moz-first-node,
-td > h1:-moz-only-whitespace:-moz-first-node, th > h1:-moz-only-whitespace:-moz-first-node,
-body > h2:-moz-only-whitespace:-moz-first-node, td > h2:-moz-only-whitespace:-moz-first-node,
-th > h2:-moz-only-whitespace:-moz-first-node, body > h3:-moz-only-whitespace:-moz-first-node,
-td > h3:-moz-only-whitespace:-moz-first-node, th > h3:-moz-only-whitespace:-moz-first-node,
-body > h4:-moz-only-whitespace:-moz-first-node, td > h4:-moz-only-whitespace:-moz-first-node,
-th > h4:-moz-only-whitespace:-moz-first-node, body > h5:-moz-only-whitespace:-moz-first-node,
-td > h5:-moz-only-whitespace:-moz-first-node, th > h5:-moz-only-whitespace:-moz-first-node,
-body > h6:-moz-only-whitespace:-moz-first-node, td > h6:-moz-only-whitespace:-moz-first-node,
-th > h6:-moz-only-whitespace:-moz-first-node, body > listing:-moz-only-whitespace:-moz-first-node,
-td > listing:-moz-only-whitespace:-moz-first-node, th > listing:-moz-only-whitespace:-moz-first-node,
-body > plaintext:-moz-only-whitespace:-moz-first-node, td > plaintext:-moz-only-whitespace:-moz-first-node,
-th > plaintext:-moz-only-whitespace:-moz-first-node, body > xmp:-moz-only-whitespace:-moz-first-node,
-td > xmp:-moz-only-whitespace:-moz-first-node, th > xmp:-moz-only-whitespace:-moz-first-node,
-body > pre:-moz-only-whitespace:-moz-first-node, td > pre:-moz-only-whitespace:-moz-first-node,
-th > pre:-moz-only-whitespace:-moz-first-node, body > ul:-moz-only-whitespace:-moz-first-node,
-td > ul:-moz-only-whitespace:-moz-first-node, th > ul:-moz-only-whitespace:-moz-first-node,
-body > menu:-moz-only-whitespace:-moz-first-node, td > menu:-moz-only-whitespace:-moz-first-node,
-th > menu:-moz-only-whitespace:-moz-first-node, body > dir:-moz-only-whitespace:-moz-first-node,
-td > dir:-moz-only-whitespace:-moz-first-node, th > dir:-moz-only-whitespace:-moz-first-node,
-body > ol:-moz-only-whitespace:-moz-first-node, td > ol:-moz-only-whitespace:-moz-first-node,
-th > ol:-moz-only-whitespace:-moz-first-node {
+:is(body, td, th) > :is(p, dl, multicol, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-only-whitespace:-moz-first-node {
   margin-block-end: 0;
 }
 
-td > p:-moz-only-whitespace:-moz-last-node, th > p:-moz-only-whitespace:-moz-last-node,
-td > dl:-moz-only-whitespace:-moz-last-node, th > dl:-moz-only-whitespace:-moz-last-node,
-td > multicol:-moz-only-whitespace:-moz-last-node, th > multicol:-moz-only-whitespace:-moz-last-node,
-td > blockquote:-moz-only-whitespace:-moz-last-node, th > blockquote:-moz-only-whitespace:-moz-last-node,
-td > h1:-moz-only-whitespace:-moz-last-node, th > h1:-moz-only-whitespace:-moz-last-node,
-td > h2:-moz-only-whitespace:-moz-last-node, th > h2:-moz-only-whitespace:-moz-last-node,
-td > h3:-moz-only-whitespace:-moz-last-node, th > h3:-moz-only-whitespace:-moz-last-node,
-td > h4:-moz-only-whitespace:-moz-last-node, th > h4:-moz-only-whitespace:-moz-last-node,
-td > h5:-moz-only-whitespace:-moz-last-node, th > h5:-moz-only-whitespace:-moz-last-node,
-td > h6:-moz-only-whitespace:-moz-last-node, th > h6:-moz-only-whitespace:-moz-last-node,
-td > listing:-moz-only-whitespace:-moz-last-node, th > listing:-moz-only-whitespace:-moz-last-node,
-td > plaintext:-moz-only-whitespace:-moz-last-node, th > plaintext:-moz-only-whitespace:-moz-last-node,
-td > xmp:-moz-only-whitespace:-moz-last-node, th > xmp:-moz-only-whitespace:-moz-last-node,
-td > pre:-moz-only-whitespace:-moz-last-node, th > pre:-moz-only-whitespace:-moz-last-node,
-td > ul:-moz-only-whitespace:-moz-last-node, th > ul:-moz-only-whitespace:-moz-last-node,
-td > menu:-moz-only-whitespace:-moz-last-node, th > menu:-moz-only-whitespace:-moz-last-node,
-td > dir:-moz-only-whitespace:-moz-last-node, th > dir:-moz-only-whitespace:-moz-last-node,
-td > ol:-moz-only-whitespace:-moz-last-node, th > ol:-moz-only-whitespace:-moz-last-node {
+:is(td, th) > :is(p, dl, multicol, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-only-whitespace:-moz-last-node {
   margin-block-start: 0;
 }
 
