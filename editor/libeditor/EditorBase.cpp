@@ -2732,28 +2732,16 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
   RangeUpdaterRef().SelAdjReplaceText(aTextNode, 0, length, aString.Length());
 
   // Let listeners know what happened
-  if (!mActionListeners.IsEmpty()) {
+  if (!mActionListeners.IsEmpty() && !aString.IsEmpty()) {
     for (auto& listener : mActionListeners.Clone()) {
-      if (length) {
-        DebugOnly<nsresult> rvIgnored =
-            listener->DidDeleteText(&aTextNode, 0, length, NS_OK);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            "nsIEditActionListener::DidDeleteText() failed, but ignored");
+      DebugOnly<nsresult> rvIgnored =
+          listener->DidInsertText(&aTextNode, 0, aString, NS_OK);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
       }
-      if (!aString.IsEmpty()) {
-        DebugOnly<nsresult> rvIgnored =
-            listener->DidInsertText(&aTextNode, 0, aString, NS_OK);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            "nsIEditActionListener::DidInsertText() failed, but ignored");
-      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "nsIEditActionListener::DidInsertText() failed, but ignored");
     }
   }
 
@@ -2800,17 +2788,6 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
   if (AsHTMLEditor()) {
     TopLevelEditSubActionDataRef().DidDeleteText(
         *this, EditorRawDOMPoint(&aTextNode, aOffset));
-  }
-
-  // Let listeners know what happened
-  if (!mActionListeners.IsEmpty()) {
-    for (auto& listener : mActionListeners.Clone()) {
-      DebugOnly<nsresult> rvIgnored =
-          listener->DidDeleteText(&aTextNode, aOffset, aLength, rv);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "nsIEditActionListener::WillDeleteText() failed, but ignored");
-    }
   }
 
   return rv;
@@ -4127,19 +4104,7 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
                             "nsIEditActionListener::DidDeleteSelection() must "
                             "not destroy the editor");
     }
-  } else if (deleteCharData) {
-    for (auto& listener : mActionListeners) {
-      // XXX Why don't we notify listeners of actual length?
-      DebugOnly<nsresult> rvIgnored =
-          listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, rv);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "nsIEditActionListener::DidDeleteText() failed, but ignored");
-      MOZ_DIAGNOSTIC_ASSERT(
-          destroyedByTransaction || !Destroyed(),
-          "nsIEditActionListener::DidDeleteText() must not destroy the editor");
-    }
-  } else {
+  } else if (!deleteCharData) {
     for (auto& listener : mActionListeners) {
       DebugOnly<nsresult> rvIgnored =
           listener->DidDeleteNode(deleteContent, rv);
