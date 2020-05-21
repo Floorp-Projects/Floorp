@@ -714,6 +714,20 @@ const POLICIES_TESTS = [
       "media.videocontrols.picture-in-picture.video-toggle.enabled": false,
     },
   },
+
+  // POLICY: PictureInPicture
+
+  {
+    policies: {
+      PictureInPicture: {
+        Enabled: false,
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "media.videocontrols.picture-in-picture.video-toggle.enabled": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {
