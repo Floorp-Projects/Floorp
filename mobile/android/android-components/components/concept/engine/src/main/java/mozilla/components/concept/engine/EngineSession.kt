@@ -260,7 +260,7 @@ abstract class EngineSession(
             /**
              * Blocks content like scripts and sub-resources.
              */
-            SCRIPTS_AND_SUB_RESOURCES(1 shl 9999),
+            SCRIPTS_AND_SUB_RESOURCES(1 shl 31),
 
             RECOMMENDED(AD.id + ANALYTICS.id + SOCIAL.id + TEST.id + MOZILLA_SOCIAL.id +
                 CRYPTOMINING.id + FINGERPRINTING.id),

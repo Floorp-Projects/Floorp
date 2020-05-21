@@ -1050,10 +1050,6 @@ class GeckoEngineSessionTest {
         engineSession.disableTrackingProtection()
         assertTrue(trackerBlockingDisabledObserved)
         assertFalse(engineSession.geckoSession.settings.useTrackingProtection)
-        verify(runtime.settings.contentBlocking).setAntiTracking(ContentBlocking.AntiTracking.NONE)
-        verify(runtime.settings.contentBlocking).setCookieBehavior(GeckoCookieBehavior.ACCEPT_ALL)
-        verify(runtime.settings.contentBlocking).setStrictSocialTrackingProtection(false)
-        verify(runtime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(ContentBlocking.EtpLevel.NONE)
     }
 
     @Test
@@ -1531,24 +1527,6 @@ class GeckoEngineSessionTest {
             privateMode = false, defaultSettings = defaultSettings)
 
         verify(geckoSession.settings).useTrackingProtection = false
-    }
-
-    @Test
-    fun `WHEN disabling tracking protection THEN CookieBehavior and AntiTracking category must be set to ACCEPT_ALL and NONE`() {
-        whenever(runtime.settings.contentBlocking).thenReturn(mock())
-
-        val defaultSettings =
-            DefaultSettings(trackingProtectionPolicy = TrackingProtectionPolicy.recommended())
-
-        val session = GeckoEngineSession(
-            runtime, geckoSessionProvider = geckoSessionProvider,
-            privateMode = false, defaultSettings = defaultSettings
-        )
-
-        session.disableTrackingProtection()
-        verify(geckoSession.settings, times(2)).useTrackingProtection = false
-        verify(runtime.settings.contentBlocking).setAntiTracking(ContentBlocking.AntiTracking.NONE)
-        verify(runtime.settings.contentBlocking).setCookieBehavior(ContentBlocking.CookieBehavior.ACCEPT_ALL)
     }
 
     @Test
