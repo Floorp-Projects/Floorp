@@ -294,3 +294,22 @@ add_task(async function limit_results() {
   });
   await cleanUpSuggestions();
 });
+
+/**
+ * Tests that tail suggestions are hidden if the pref is disabled.
+ */
+add_task(async function disable_pref() {
+  let oldPrefValue = Services.prefs.getBoolPref(TAIL_SUGGESTIONS_PREF);
+  Services.prefs.setBoolPref(TAIL_SUGGESTIONS_PREF, false);
+  const query = "what time is it in t";
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  Services.prefs.setBoolPref(TAIL_SUGGESTIONS_PREF, oldPrefValue);
+  await cleanUpSuggestions();
+});

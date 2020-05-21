@@ -422,10 +422,12 @@ class ProviderSearchSuggestions extends UrlbarProvider {
         continue;
       }
 
-      let tail, tailPrefix;
-      if (UrlbarPrefs.get("richSuggestions.tail")) {
-        tail = entry.tail;
-        tailPrefix = entry.matchPrefix;
+      let tail = entry.tail;
+      let tailPrefix = entry.matchPrefix;
+
+      // Skip tail suggestions if the pref is disabled.
+      if (tail && !UrlbarPrefs.get("richSuggestions.tail")) {
+        continue;
       }
 
       if (!tail) {
