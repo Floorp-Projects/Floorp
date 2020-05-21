@@ -74,7 +74,8 @@ class DefaultBrowserToolbarController(
     private val scope: CoroutineScope,
     private val tabCollectionStorage: TabCollectionStorage,
     private val topSiteStorage: TopSiteStorage,
-    private val sharedViewModel: SharedViewModel
+    private val sharedViewModel: SharedViewModel,
+    private val onTabCounterClicked: () -> Unit
 ) : BrowserToolbarController {
 
     private val currentSession
@@ -324,8 +325,9 @@ class DefaultBrowserToolbarController(
 
     private fun animateTabAndNavigateHome() {
         if (activity.settings().useNewTabTray) {
-            val directions = BrowserFragmentDirections.actionBrowserFragmentToTabsTrayFragment()
-            navController.navigate(directions)
+//            val directions = BrowserFragmentDirections.actionBrowserFragmentToTabsTrayFragment()
+//            navController.navigate(directions)
+            onTabCounterClicked.invoke()
             return
         }
 

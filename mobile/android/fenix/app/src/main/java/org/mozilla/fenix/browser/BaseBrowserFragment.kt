@@ -93,6 +93,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.SharedViewModel
+import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
@@ -208,7 +209,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 scope = viewLifecycleOwner.lifecycleScope,
                 tabCollectionStorage = requireComponents.core.tabCollectionStorage,
                 topSiteStorage = requireComponents.core.topSiteStorage,
-                sharedViewModel = sharedViewModel
+                sharedViewModel = sharedViewModel,
+                onTabCounterClicked = {
+                    val tabTrayDialog = TabTrayDialogFragment()
+                    tabTrayDialog.show(parentFragmentManager, null)
+                }
             )
 
             _browserInteractor = BrowserInteractor(

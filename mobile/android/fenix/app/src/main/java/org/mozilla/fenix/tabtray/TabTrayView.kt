@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.tabtray
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -52,7 +51,6 @@ class TabTrayView(
 
         behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
-
                 if (slideOffset > -0.4) {
                     fabView.new_tab_button.show()
                 } else {
