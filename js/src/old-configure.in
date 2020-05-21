@@ -530,6 +530,7 @@ case "$target" in
         TARGET_COMPILER_ABI=msvc
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
+        PKG_SKIP_STRIP=1
         # aarch64 doesn't support subsystems below 6.02
         if test "$CPU_ARCH" = "aarch64"; then
             WIN32_SUBSYSTEM_VERSION=6.02
@@ -781,6 +782,19 @@ freebsd*)
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
     ;;
 esac
+
+MOZ_ARG_ENABLE_BOOL(dtrace,
+              [  --enable-dtrace         build with dtrace support if available (default=no)],
+              [enable_dtrace="yes"],)
+if test "x$enable_dtrace" = "xyes"; then
+  MOZ_CHECK_HEADER(sys/sdt.h, HAVE_DTRACE=1)
+  if test -n "$HAVE_DTRACE"; then
+      AC_DEFINE(INCLUDE_MOZILLA_DTRACE)
+  else
+      AC_MSG_ERROR([dtrace enabled but sys/sdt.h not found]);
+  fi
+fi
+AC_SUBST(HAVE_DTRACE)
 
 dnl Checks for libraries.
 dnl ========================================================
@@ -1272,6 +1286,39 @@ MOZ_CONFIG_CLANG_PLUGIN
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
+dnl = Enable static checking using sixgill
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(sixgill,
+[  --with-sixgill=path/to/sixgill
+                          Enable static checking of code using sixgill],
+    SIXGILL_PATH=$withval,
+    SIXGILL_PATH= )
+
+if test -n "$SIXGILL_PATH"; then
+    if test ! -x "$SIXGILL_PATH/bin/xdbfind" || test ! -f "$SIXGILL_PATH/gcc/xgill.so" || test ! -x "$SIXGILL_PATH/scripts/wrap_gcc/g++"; then
+        AC_MSG_ERROR([The sixgill plugin and binaries are not at the specified path.])
+    fi
+fi
+AC_SUBST(SIXGILL_PATH)
+
+dnl ========================================================
+dnl = Enable stripping of libs & executables
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(strip,
+[  --enable-strip          Enable stripping of libs & executables ],
+    ENABLE_STRIP=1,
+    ENABLE_STRIP= )
+
+dnl ========================================================
+dnl = Enable stripping of libs & executables when packaging
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(install-strip,
+[  --enable-install-strip  Enable stripping of libs & executables when packaging ],
+    PKG_SKIP_STRIP= ,
+    PKG_SKIP_STRIP=1)
+
+dnl ========================================================
 dnl =
 dnl = Profiling and Instrumenting
 dnl =
@@ -1355,12 +1402,62 @@ AC_LANG_C
 MOZ_EXPAND_LIBS
 
 dnl ========================================================
+dnl = Link js shell to system readline
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(readline,
+[  --enable-readline       Link js shell to system readline library],
+    JS_WANT_READLINE=1,
+    JS_WANT_READLINE= )
+
+JS_BUNDLED_EDITLINE=
+EDITLINE_LIBS=
+
+case "$target" in
+*-mingw*)
+    NO_EDITLINE=1
+    ;;
+*)
+    ;;
+esac
+
+if test -z "$SKIP_LIBRARY_CHECKS" -a -z "$NO_EDITLINE"; then
+  if test -n "$JS_WANT_READLINE"; then
+    AC_CHECK_LIB(readline, readline,
+                 EDITLINE_LIBS="-lreadline",
+                 AC_MSG_ERROR([No system readline library found.]))
+  else
+    dnl By default, we use editline
+    JS_BUNDLED_EDITLINE=1
+  fi
+
+  dnl Either way, we want to build with line editing support.
+  AC_DEFINE(EDITLINE)
+fi
+AC_SUBST(JS_BUNDLED_EDITLINE)
+AC_SUBST_LIST(EDITLINE_LIBS)
+
+dnl ========================================================
 dnl =
 dnl = Standalone module options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 
+dnl ========================================================
+dnl =
+dnl = Options for generating the shell as a script
+dnl =
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(qemu-exe,
+[  --with-qemu-exe=path   Use path as an arm emulator on host platforms],
+    QEMU_EXE=$withval)
+AC_SUBST(QEMU_EXE)
+MOZ_ARG_WITH_STRING(cross-lib,
+[  --with-cross-lib=dir   Use dir as the location for arm libraries],
+    CROSS_LIB=$withval,
+    CROSS_LIB=/usr/$target)
+AC_SUBST(CROSS_LIB)
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
@@ -1377,6 +1474,8 @@ AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST_LIST(WARNINGS_CFLAGS)
 AC_SUBST(LIBICONV)
 
+AC_SUBST(ENABLE_STRIP)
+AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(INCREMENTAL_LINKER)
 
 AC_SUBST_LIST(MOZ_FIX_LINK_PATHS)

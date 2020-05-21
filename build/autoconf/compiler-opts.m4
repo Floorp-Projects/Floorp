@@ -11,6 +11,11 @@ dnl the user the option of enabling it.
 dnl ============================================================================
 AC_DEFUN([MOZ_RTTI],
 [
+MOZ_ARG_ENABLE_BOOL(cpp-rtti,
+[  --enable-cpp-rtti       Enable C++ RTTI ],
+[ _MOZ_USE_RTTI=1 ],
+[ _MOZ_USE_RTTI= ])
+
 if test -z "$_MOZ_USE_RTTI"; then
     if test "$GNU_CC"; then
         CXXFLAGS="$CXXFLAGS -fno-rtti"
@@ -93,6 +98,11 @@ fi
 dnl ========================================================
 dnl = Identical Code Folding
 dnl ========================================================
+
+MOZ_ARG_DISABLE_BOOL(icf,
+[  --disable-icf          Disable Identical Code Folding],
+    MOZ_DISABLE_ICF=1,
+    MOZ_DISABLE_ICF= )
 
 if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$MOZ_DISABLE_ICF" -a -z "$DEVELOPER_OPTIONS"; then
     AC_CACHE_CHECK([whether the linker supports Identical Code Folding],
