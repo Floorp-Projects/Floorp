@@ -9,6 +9,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Timer.jsm"
 );
 
+const { SiteDataTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SiteDataTestUtils.jsm"
+);
+
 const COOKIE = {
   host: "example.com",
   name: "test_cookie",
@@ -63,6 +67,28 @@ async function setUpCookies() {
   addCookie(COOKIE_ORG);
 }
 
+async function setUpCache() {
+  Services.cache2.clear();
+
+  // Add cache entries for different domains.
+  for (const domain of ["example.net", "example.org", "example.com"]) {
+    await SiteDataTestUtils.addCacheEntry(`http://${domain}/`, "disk");
+    await SiteDataTestUtils.addCacheEntry(`http://${domain}/`, "memory");
+  }
+}
+
+function hasCacheEntry(domain) {
+  const disk = SiteDataTestUtils.hasCacheEntry(`http://${domain}/`, "disk");
+  const memory = SiteDataTestUtils.hasCacheEntry(`http://${domain}/`, "memory");
+
+  equal(
+    disk,
+    memory,
+    `For ${domain} either either both or neither caches need to exists.`
+  );
+  return disk;
+}
+
 add_task(async function testCache() {
   function background() {
     browser.test.onMessage.addListener(async msg => {
@@ -83,12 +109,14 @@ add_task(async function testCache() {
   });
 
   async function testRemovalMethod(method) {
-    // We can assume the notification works properly, so we only need to observe
-    // the notification to know the cache was cleared.
-    let awaitNotification = TestUtils.topicObserved("cacheservice:empty-cache");
+    await setUpCache();
+
     extension.sendMessage(method);
-    await awaitNotification;
     await extension.awaitMessage("cacheRemoved");
+
+    ok(!hasCacheEntry("example.net"), "example.net cache was removed");
+    ok(!hasCacheEntry("example.org"), "example.org cache was removed");
+    ok(!hasCacheEntry("example.com"), "example.com cache was removed");
   }
 
   await extension.startup();
@@ -229,9 +257,8 @@ add_task(async function testCacheAndCookies() {
 
   // Clear cache and cookies with a recent since value.
   await setUpCookies();
-  let awaitNotification = TestUtils.topicObserved("cacheservice:empty-cache");
+  await setUpCache();
   extension.sendMessage({ since });
-  await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
   ok(
@@ -248,12 +275,21 @@ add_task(async function testCacheAndCookies() {
     "Recent cookie was removed."
   );
 
+  // Cache does not support |since| and deletes everything!
+  ok(!hasCacheEntry("example.net"), "example.net cache was removed");
+  ok(!hasCacheEntry("example.org"), "example.org cache was removed");
+  ok(!hasCacheEntry("example.com"), "example.com cache was removed");
+
   // Clear cache and cookies with an old since value.
   await setUpCookies();
-  awaitNotification = TestUtils.topicObserved("cacheservice:empty-cache");
+  await setUpCache();
   extension.sendMessage({ since: since - 100000 });
-  await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
+
+  // Cache does not support |since| and deletes everything!
+  ok(!hasCacheEntry("example.net"), "example.net cache was removed");
+  ok(!hasCacheEntry("example.org"), "example.org cache was removed");
+  ok(!hasCacheEntry("example.com"), "example.com cache was removed");
 
   ok(
     !Services.cookies.cookieExists(
@@ -271,11 +307,10 @@ add_task(async function testCacheAndCookies() {
 
   // Clear cache and cookies with hostnames value.
   await setUpCookies();
-  awaitNotification = TestUtils.topicObserved("cacheservice:empty-cache");
+  await setUpCache();
   extension.sendMessage({
     hostnames: ["example.net", "example.org", "unknown.com"],
   });
-  await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
   ok(
@@ -301,11 +336,14 @@ add_task(async function testCacheAndCookies() {
     `Cookie ${COOKIE_ORG.name}  was removed.`
   );
 
+  ok(!hasCacheEntry("example.net"), "example.net cache was removed");
+  ok(!hasCacheEntry("example.org"), "example.org cache was removed");
+  ok(hasCacheEntry("example.com"), "example.com cache was not removed");
+
   // Clear cache and cookies with (empty) hostnames value.
   await setUpCookies();
-  awaitNotification = TestUtils.topicObserved("cacheservice:empty-cache");
+  await setUpCache();
   extension.sendMessage({ hostnames: [] });
-  await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
   ok(
@@ -331,11 +369,14 @@ add_task(async function testCacheAndCookies() {
     `Cookie ${COOKIE_ORG.name}  was not removed.`
   );
 
+  ok(hasCacheEntry("example.net"), "example.net cache was not removed");
+  ok(hasCacheEntry("example.org"), "example.org cache was not removed");
+  ok(hasCacheEntry("example.com"), "example.com cache was not removed");
+
   // Clear cache and cookies with both hostnames and since values.
+  await setUpCache();
   await setUpCookies();
-  awaitNotification = TestUtils.topicObserved("cacheservice:empty-cache");
   extension.sendMessage({ hostnames: ["example.com"], since });
-  await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
   ok(
@@ -370,11 +411,14 @@ add_task(async function testCacheAndCookies() {
     "Cookie with different hostname was not removed"
   );
 
+  ok(hasCacheEntry("example.net"), "example.net cache was not removed");
+  ok(hasCacheEntry("example.org"), "example.org cache was not removed");
+  ok(!hasCacheEntry("example.com"), "example.com cache was removed");
+
   // Clear cache and cookies with no since or hostnames value.
+  await setUpCache();
   await setUpCookies();
-  awaitNotification = TestUtils.topicObserved("cacheservice:empty-cache");
   extension.sendMessage({});
-  await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
   ok(
@@ -408,6 +452,10 @@ add_task(async function testCacheAndCookies() {
     ),
     `Cookie ${COOKIE_ORG.name}  was removed.`
   );
+
+  ok(!hasCacheEntry("example.net"), "example.net cache was removed");
+  ok(!hasCacheEntry("example.org"), "example.org cache was removed");
+  ok(!hasCacheEntry("example.com"), "example.com cache was removed");
 
   await extension.unload();
 });

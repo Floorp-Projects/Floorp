@@ -39,9 +39,43 @@ const makeRange = options => {
     : [PlacesUtils.toPRTime(options.since), PlacesUtils.toPRTime(Date.now())];
 };
 
-const clearCache = () => {
-  // Clearing the cache does not support timestamps.
-  return Sanitizer.items.cache.clear();
+// General implementation for clearing data using Services.clearData.
+// Currently Sanitizer.items uses this under the hood.
+async function clearData(options, flags) {
+  if (options.hostnames) {
+    await Promise.all(
+      options.hostnames.map(
+        host =>
+          new Promise(resolve => {
+            // Set aIsUserRequest to true. This means when the ClearDataService
+            // "Cleaner" implementation doesn't support clearing by host
+            // it will delete all data instead.
+            // This is appropriate for cases like |cache|, which doesn't
+            // support clearing by a time range.
+            // In future when we use this for other data types, we have to
+            // evaluate if that behavior is still acceptable.
+            Services.clearData.deleteDataFromHost(host, true, flags, resolve);
+          })
+      )
+    );
+    return;
+  }
+
+  if (options.since) {
+    const range = makeRange(options);
+    await new Promise(resolve => {
+      Services.clearData.deleteDataInTimeRange(...range, true, flags, resolve);
+    });
+    return;
+  }
+
+  // Don't return the promise here and above to prevent leaking the resolved
+  // value.
+  await new Promise(resolve => Services.clearData.deleteData(flags, resolve));
+}
+
+const clearCache = options => {
+  return clearData(options, Ci.nsIClearDataService.CLEAR_ALL_CACHES);
 };
 
 const clearCookies = async function(options) {
@@ -233,7 +267,7 @@ const clearPasswords = async function(options) {
 };
 
 const clearPluginData = options => {
-  return Sanitizer.items.pluginData.clear(makeRange(options));
+  return clearData(options, Ci.nsIClearDataService.CLEAR_PLUGIN_DATA);
 };
 
 const clearServiceWorkers = options => {
@@ -265,7 +299,7 @@ const doRemoval = (options, dataToRemove, extension) => {
     if (dataToRemove[dataType]) {
       switch (dataType) {
         case "cache":
-          removalPromises.push(clearCache());
+          removalPromises.push(clearCache(options));
           break;
         case "cookies":
           removalPromises.push(clearCookies(options));
