@@ -2280,7 +2280,7 @@ HttpChannelChild::Cancel(nsresult aStatus) {
     mCanceled = true;
     mStatus = aStatus;
     if (RemoteChannelExists()) {
-      SendCancel(aStatus);
+      SendCancel(aStatus, mLoadInfo->GetRequestBlockingReason());
     }
 
     // If the channel is intercepted and already pumping, then just
