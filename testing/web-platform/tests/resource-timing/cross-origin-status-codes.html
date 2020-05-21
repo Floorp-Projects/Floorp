@@ -31,7 +31,6 @@ async_test(t => {
       if (!entry.name.includes("status-code"))
         return;
 
-      assert_equals(nameMap[entry.name], undefined, `Found duplicate entry for ${entry.name}`);
       nameMap[entry.name] = true;
       if (!firstEntry) {
         firstEntry = entry;
