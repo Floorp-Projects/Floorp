@@ -75,7 +75,7 @@ NS_IMETHODIMP InsertTextTransaction::DoTransaction() {
   // XXX Other transactions do not do this but its callers do.
   //     Why do this transaction do this by itself?
   editorBase->RangeUpdaterRef().SelAdjInsertText(textNode, mOffset,
-                                                 mStringToInsert);
+                                                 mStringToInsert.Length());
 
   return NS_OK;
 }
