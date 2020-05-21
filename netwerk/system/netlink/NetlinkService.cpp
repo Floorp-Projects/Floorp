@@ -878,6 +878,9 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
     }
   }
 
+  // Address change on the interface can change its status
+  linkInfo->UpdateStatus();
+
   // Don't treat address changes during initial scan as a network change
   if (mInitialScanFinished) {
     // Send network event change regardless of whether the ID has changed or not
