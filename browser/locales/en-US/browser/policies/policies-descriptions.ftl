@@ -151,6 +151,8 @@ policy-Permissions2 = Configure permissions for camera, microphone, location, no
 
 policy-PictureInPicture = Enable or disable Picture-in-Picture.
 
+policy-PictureInPicture = Enable or disable Picture-in-Picture.
+
 policy-PopupBlocking = Allow certain websites to display popups by default.
 
 policy-Preferences = Set and lock the value for a subset of preferences.
