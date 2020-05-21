@@ -482,7 +482,7 @@ function prompt(aActor, aBrowser, aRequest) {
   let chromeDoc = aBrowser.ownerDocument;
   let stringBundle = chromeDoc.defaultView.gNavigatorBundle;
   let localization = new Localization(
-    ["branding/brand.ftl", "preview/popup-notifications.ftl"],
+    ["branding/brand.ftl", "browser/browser.ftl"],
     true
   );
 
