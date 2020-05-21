@@ -71,6 +71,12 @@ add_task(async function() {
 
   await Promise.all([wait, waitForPropsView]);
 
+  // Scroll the properties view to the bottom
+  const lastItem = document.querySelector(
+    "#response-panel .properties-view tr.treeRow:last-child"
+  );
+  lastItem.scrollIntoView();
+
   testJsonAccordionInResposeTab();
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
@@ -116,6 +122,9 @@ add_task(async function() {
       '"Hello long string JSON!"',
       "The second json property value was incorrect."
     );
+
+    const view = tabpanel.querySelector(".properties-view .treeTable");
+    is(scrolledToBottom(view), true, "The view is not scrollable");
   }
 
   function testResponseTab() {
@@ -166,5 +175,9 @@ add_task(async function() {
       L10N.getStr("jsonScopeName"),
       "The json view section doesn't have the correct title."
     );
+  }
+
+  function scrolledToBottom(element) {
+    return element.scrollTop + element.clientHeight >= element.scrollHeight;
   }
 });
