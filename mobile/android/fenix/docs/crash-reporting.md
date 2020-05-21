@@ -12,6 +12,8 @@ Documentation for the specific libraries is included in the [Android Components 
 
 The Glean crash ping format is documented [here](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/docs/metrics.md).
 
+To opt in or out of Glean telemetry reporting, visit the Data collection menu under Settings.
+
 ## Breadcrumbs
 
 [Breadcrumbs](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt) are trail of events that are sent with each crash report to both Socorro and Sentry.  
@@ -28,9 +30,13 @@ These crashes contain hardware information and some app metadata, but no persona
 
 A sample Firefox Preview crash report can be found [here](https://crash-stats.mozilla.org/report/index/bbbcc019-f30c-4fbb-8cbd-543940190923).
 
+A crash report is only sent when the user confirms and submits it through the crash reporter notification or dialog. Crash reports are never automatically sent.
+
 ## Sentry
 
 [Sentry](https://sentry.io) is an open source crash reporting and aggregation platform. Both the client SDK, [github.com/getsentry/sentry-java](https://github.com/getsentry/sentry-java), and the server, [github.com/getsentry/sentry](https://github.com/getsentry/sentry), are open source.
+
+A crash report is only sent when the user confirms and submits it through the crash reporter notification or dialog. Crash reports are never automatically sent.
 
 ### High-Level Summary
 
