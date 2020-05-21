@@ -1046,7 +1046,7 @@ bool WarpCacheIRTranspiler::emitArrayPush(ObjOperandId objId,
 bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
                                                       uint8_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
-  MOZ_ASSERT(loc_.is(JSOp::Call) || loc_.is(JSOp::CallIgnoresRv));
+  MOZ_ASSERT(!loc_.isSpreadOp());
 
   // Layout:
   // <NewTarget> | Args.. | ThisValue | Callee
@@ -1102,6 +1102,9 @@ bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
              static_cast<int32_t>(callInfo_->argc()));
 #  endif
 
+  // TODO: For non-normal calls the arguments need to be changed.
+  MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard);
+
   // CacheIR emits the following for specialized native calls:
   //     GuardSpecificObject <callee> <func>
   //     CallNativeFunction <callee> ..
@@ -1140,6 +1143,12 @@ bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
   return resumeAfter(call);
 }
 #endif
+
+bool WarpCacheIRTranspiler::emitMetaTwoByte(MetaTwoByteKind kind,
+                                            uint32_t functionObjectOffset,
+                                            uint32_t templateObjectOffset) {
+  return true;
+}
 
 bool WarpCacheIRTranspiler::emitTypeMonitorResult() {
   MOZ_ASSERT(pushedResult_, "Didn't push result MDefinition");
