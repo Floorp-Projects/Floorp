@@ -645,6 +645,12 @@ set_config('HAVE_DTRACE', True, when=dtrace)
 set_define('INCLUDE_MOZILLA_DTRACE', True, when=dtrace)
 add_old_configure_assignment('enable_dtrace', 'yes', when=dtrace)
 
+
+js_option('--disable-icf', help='Disable Identical Code Folding')
+
+add_old_configure_assignment(
+    'MOZ_DISABLE_ICF', '1', when=depends('--enable-icf')(lambda x: not x))
+
 # Please do not add configure checks from here on.
 
 # Fallthrough to autoconf-based configure
