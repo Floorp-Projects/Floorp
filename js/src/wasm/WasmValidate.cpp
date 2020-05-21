@@ -2563,8 +2563,6 @@ static bool DecodeStartSection(Decoder& d, ModuleEnvironment* env) {
     return d.fail("unknown start function");
   }
 
-  env->validForRefFunc.setBit(funcIndex);
-
   const FuncType& funcType = *env->funcTypes[funcIndex];
   if (funcType.results().length() > 0) {
     return d.fail("start function must not return anything");
