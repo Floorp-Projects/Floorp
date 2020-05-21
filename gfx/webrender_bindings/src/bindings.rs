@@ -2240,6 +2240,7 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
 pub enum WrReferenceFrameKind {
     Transform,
     Perspective,
+    Zoom,
 }
 
 /// IMPORTANT: If you add fields to this struct, you need to also add initializers
@@ -2353,6 +2354,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
         let reference_frame_kind = match params.reference_frame_kind {
             WrReferenceFrameKind::Transform => ReferenceFrameKind::Transform,
             WrReferenceFrameKind::Perspective => ReferenceFrameKind::Perspective { scrolling_relative_to },
+            WrReferenceFrameKind::Zoom => ReferenceFrameKind::Zoom,
         };
         wr_spatial_id = state.frame_builder.dl_builder.push_reference_frame(
             bounds.origin,
