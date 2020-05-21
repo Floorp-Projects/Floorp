@@ -283,6 +283,19 @@ class AppLinksUseCasesTest {
     }
 
     @Test
+    fun `A intent scheme denied should return no app intent`() {
+        val uri = "intent://details/#Intent"
+        val context = createContext(uri to appPackage)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage),
+            alwaysDeniedSchemes = setOf("intent"))
+
+        val redirect = subject.interceptedAppLinkRedirect.invoke(uri)
+
+        assertNull(redirect.appIntent)
+        assertFalse(redirect.hasExternalApp())
+    }
+
+    @Test
     fun `An openAppLink use case starts an activity`() {
         val context = createContext()
         val appIntent = Intent()

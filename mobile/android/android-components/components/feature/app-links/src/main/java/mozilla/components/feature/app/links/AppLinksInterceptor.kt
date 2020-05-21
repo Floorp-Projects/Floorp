@@ -41,13 +41,15 @@ import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SU
  * have registered to open.
  * @param launchFromInterceptor If {true} then the interceptor will launch the link in third-party apps if available.
  */
+@Suppress("LongParameterList")
 class AppLinksInterceptor(
     private val context: Context,
     private val interceptLinkClicks: Boolean = false,
     private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES,
     private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES,
     private val launchInApp: () -> Boolean = { false },
-    private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp, alwaysDeniedSchemes),
+    private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp,
+        alwaysDeniedSchemes = alwaysDeniedSchemes),
     private val launchFromInterceptor: Boolean = false
 ) : RequestInterceptor {
 

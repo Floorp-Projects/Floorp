@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session.engine
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -691,6 +692,22 @@ class EngineObserverTest {
 
         assertFalse(triggeredByRedirect)
         assertFalse(triggeredByWebContent)
+    }
+
+    @Test
+    fun `onLaunchIntentRequest is set to launchIntentMetadata`() {
+        val url = "https://www.mozilla.org"
+        val session = Session(url)
+
+        val observer = EngineObserver(session)
+        val intent: Intent = mock()
+        observer.onLaunchIntentRequest(url = url, appIntent = intent)
+
+        val appUrl = session.launchIntentMetadata.url
+        val appIntent = session.launchIntentMetadata.appIntent
+
+        assertEquals(url, appUrl)
+        assertEquals(intent, appIntent)
     }
 
     @Test

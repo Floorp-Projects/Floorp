@@ -375,33 +375,7 @@ class GeckoEngineSession(
                 initialLoad = true
             }
 
-            val interceptor = settings.requestInterceptor
-            val response = if (
-                interceptor != null && (!request.isDirectNavigation || interceptor.interceptsAppInitiatedRequests())
-            ) {
-                val engineSession = this@GeckoEngineSession
-                val isSameDomain = engineSession.currentUrl?.tryGetHostFromUrl() == request.uri.tryGetHostFromUrl()
-                interceptor.onLoadRequest(
-                    engineSession,
-                    request.uri,
-                    request.hasUserGesture,
-                    isSameDomain
-                )?.apply {
-                    when (this) {
-                        is InterceptionResponse.Content -> loadData(data, mimeType, encoding)
-                        is InterceptionResponse.Url -> loadUrl(url)
-                        is InterceptionResponse.AppIntent -> {
-                            notifyObservers {
-                                onLaunchIntentRequest(url = url, appIntent = appIntent)
-                            }
-                        }
-                    }
-                }
-            } else {
-                null
-            }
-
-            return if (response != null) {
+            return if (maybeInterceptRequest(request) != null) {
                 GeckoResult.fromValue(AllowOrDeny.DENY)
             } else {
                 notifyObservers {
@@ -412,6 +386,23 @@ class GeckoEngineSession(
                     )
                 }
 
+                GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        }
+
+        override fun onSubframeLoadRequest(
+            session: GeckoSession,
+            request: NavigationDelegate.LoadRequest
+        ): GeckoResult<AllowOrDeny> {
+            if (request.target == NavigationDelegate.TARGET_WINDOW_NEW) {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+
+            return if (maybeInterceptRequest(request) != null) {
+                GeckoResult.fromValue(AllowOrDeny.DENY)
+            } else {
+                // Not notifying session observer because of performance concern and currently there
+                // is no use case.
                 GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
         }
@@ -454,6 +445,36 @@ class GeckoEngineSession(
                 }
             }
             return GeckoResult.fromValue(uriToLoad)
+        }
+
+        private fun maybeInterceptRequest(
+            request: NavigationDelegate.LoadRequest
+        ): InterceptionResponse? {
+            val interceptor = settings.requestInterceptor
+            return if (
+                interceptor != null && (!request.isDirectNavigation || interceptor.interceptsAppInitiatedRequests())
+            ) {
+                val engineSession = this@GeckoEngineSession
+                val isSameDomain = engineSession.currentUrl?.tryGetHostFromUrl() == request.uri.tryGetHostFromUrl()
+                interceptor.onLoadRequest(
+                    engineSession,
+                    request.uri,
+                    request.hasUserGesture,
+                    isSameDomain
+                )?.apply {
+                    when (this) {
+                        is InterceptionResponse.Content -> loadData(data, mimeType, encoding)
+                        is InterceptionResponse.Url -> loadUrl(url)
+                        is InterceptionResponse.AppIntent -> {
+                            notifyObservers {
+                                onLaunchIntentRequest(url = url, appIntent = appIntent)
+                            }
+                        }
+                    }
+                }
+            } else {
+                null
+            }
         }
     }
 
