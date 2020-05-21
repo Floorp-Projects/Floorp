@@ -553,6 +553,6 @@
     <style name="BottomSheetModal" parent="Widget.Design.BottomSheet.Modal">
         <item name="shapeAppearance">@style/BottomSheetShapeAppearance</item>
         <item name="behavior_halfExpandedRatio">0.4</item>
-        <item name="behavior_fitToContents">false</item>
+        <item name="behavior_fitToContents">true</item>
     </style>
 </resources>

@@ -2,20 +2,9 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/tabLayout"
     android:layout_height="match_parent"
-    android:layout_width="match_parent">
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/new_tab_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:backgroundTint="@color/photonBlue50"
-        android:contentDescription="TODO: Changeme"
-        app:srcCompat="@drawable/ic_new"
-        app:tint="@color/photonWhite" />
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    android:layout_width="match_parent" />

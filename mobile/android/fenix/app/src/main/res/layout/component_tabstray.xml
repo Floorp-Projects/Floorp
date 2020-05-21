@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:mozac="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/tab_wrapper"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:background="?foundation"
+    style="@style/BottomSheetModal"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+    <View
+        android:id="@+id/handle"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="8dp"
+        android:background="?secondaryText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.1"
+        app:layout_constraintTop_toTopOf="parent" />
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        app:tabIndicatorColor="?accent"
+        app:tabRippleColor="@android:color/transparent"
+        app:layout_constraintWidth_percent="0.5"
+        app:layout_constraintTop_toBottomOf="@+id/handle"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.tabs.TabItem
+            android:id="@+id/default_tab_item"
+            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:icon="@drawable/ic_tabs"
+            android:text="Default" />
+
+        <com.google.android.material.tabs.TabItem
+            android:id="@+id/private_tab_item"
+            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:icon="@drawable/private_browsing_button"
+            android:text="Private" />
+    </com.google.android.material.tabs.TabLayout>
+    <ImageButton
+        android:id="@+id/tab_tray_overflow"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/open_tabs_menu"
+        app:srcCompat="@drawable/ic_menu"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tab_layout"
+        app:layout_constraintBottom_toBottomOf="@id/tab_layout"/>
+    <mozilla.components.concept.tabstray.TabsTray
+        android:id="@+id/tabsTray"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tab_layout"
+        mozac:tabsTrayItemBackgroundColor="?tabTrayItemBackground"
+        mozac:tabsTrayItemTextColor="?tabTrayItemText"
+        mozac:tabsTraySelectedItemBackgroundColor="?tabTrayItemSelectedBackground"
+        mozac:tabsTraySelectedItemTextColor="?tabTrayItemText"
+        mozac:tabsTrayItemUrlTextColor="?tabTrayItemUrl"
+        mozac:tabsTraySelectedItemUrlTextColor="?tabTrayItemUrl"
+        android:clipToPadding="false"
+        android:paddingBottom="90dp"/>
+</androidx.constraintlayout.widget.ConstraintLayout>
