@@ -23,31 +23,33 @@ Build Platforms
    Linux x64, ,
    Linux x64 addon, ,
    Linux x64 DevEdition, , 
-   Linux x64 WebRender pgo, ,
-   Linux x64 WebRender Shippable, , 
+   Linux x64 WebRender Shippable, ,
    Linux x64 WebRender, ,
    Linux x64 Nightly, , 
-   Linux x64 shippable, , What we ship to our users
-   Linux x64 Stylo-Seq, ,
-   Linux x64 NoOpt, ,
+   Linux x64 shippable, , "| What we ship to our users.
+   | Builds with PGO"
+   Linux x64 NoOpt, , "| Developer build - Disable optimizations, enable debug options
+   | Only runs on m-c"
    Linux AArch64, ,
    OS X 10.14, ,
    OS X Cross Compiled, ,
    OS X 10.14 shippable, , 
    OS X Cross Compiled shippable, , What we ship to our users
-   OS X Cross Compiled NoOpt, ,
+   OS X Cross Compiled NoOpt, , "| Developer build - Disable optimizations, enable debug options
+   | Only runs on m-c"
    OS X Cross Compiled addon, , 
    OS X Cross Compiled DevEdition, ,
    OS X 10.14, ,
-   OS X 10.14 WebRender, , 
+   OS X 10.14 WebRender, ,
    OS X 10.14 Shippable, , 
    OS X 10.14 WebRender Shippable, ,
    OS X 10.14 DevEdition, , 
    OS X 10.14 Nightly, ,
    Windows 2012, ,
-   Windows 2012 shippable, , 
+   Windows 2012 shippable, , What we ship to our users
    Windows 2012 addon, , 
-   Windows 2012 NoOpt, , 
+   Windows 2012 NoOpt, , "| Developer build - Disable optimizations, enable debug options
+   | Only runs on m-c"
    Windows 2012 DevEdition, , 
    Windows 2012 x64, , 
    Windows 2012 x64 shippable, , 
@@ -55,10 +57,13 @@ Build Platforms
    Windows 2012 AArch64 Shippable, , 
    Windows 2012 AArch64 DevEdition, , 
    Windows 2012 x64 addon, ,
-   Windows 2012 x64 NoOpt, ,
+   Windows 2012 x64 NoOpt, , "| Developer build - Disable optimizations, enable debug options
+   | Only runs on m-c"
    Windows 2012 x64 DevEdition, ,
-   Windows MinGW, Tom Ritter, the Tor project uses MinGW; make sure we test that for them
-   Android 4.0 API16+, , 
+   Windows MinGW, Tom Ritter, "| the Tor project uses MinGW; make sure we test that for them
+   | Only runs on autoland, m-c and m-esr"
+   Android 4.0 API16+, , "| All Android jobs are for GeckoView. Fenix uses m-b and Focus uses m-r.
+   | We run these tests in the CI to make sure that GeckoView tests do not regress."
    Android 4.0 API16+ Beta, ,
    Android 4.0 API16+ Release, ,
    Android 4.0 API16+ GeckoView multi-arch fat AAR, ,
@@ -107,22 +112,23 @@ We have some platforms used to run the tests to make sure they run correctly on 
    Linux 18.04 x64 DevEdition, ,
    Linux 18.04 x64 WebRender Shippable, ,
    Linux 18.04 x64 WebRender, ,
-   Linux 18.04 x64 shippable, , What we ship to our users
+   Linux 18.04 x64 shippable, ,
    Linux 18.04 x64 Stylo-Seq, ,
    Windows 7, ,
    Windows 7 DevEdition, ,
    Windows 7 VM Nightly, ,
    Windows 7 Shippable, ,
-   Windows 7 MinGW, Tom Ritter, the Tor project uses MinGW; make sure we test that for them
+   Windows 7 MinGW, Tom Ritter, "| the Tor project uses MinGW; make sure we test that for them
+   | Only runs on autoland, m-c and m-esr"
    Windows 10 x64, ,
    Windows 10 x64 DevEdition, ,
    Windows 10 x64 Nightly, ,
-   Windows 10 x64 WebRender pgo, ,
    Windows 10 x64 Shippable, ,
    Windows 10 x64 WebRender Shippable, ,
    Windows 10 x64 WebRender, ,
    Windows 10 x64 2017 Ref HW, ,
-   Windows 10 x64 MinGW, Tom Ritter, the Tor project uses MinGW; make sure we test that for them
+   Windows 10 x64 MinGW, Tom Ritter, "| the Tor project uses MinGW; make sure we test that for them
+   | Only runs on autoland, m-c and m-esr"
    Windows 10 AArch64, ,
 
 
@@ -161,7 +167,8 @@ or prevening some classes of errors (memory, threading, etc).
    Diffoscope, Mike Hommey, Make sure the build remains reproducible
    Linting, "| Sylvestre Ledru
    | Andrew Halberstadt", "| Identify :ref:`code quality` earlier
-   | Also contains some Bugzilla and :ref:`Documentation jobs <Managing Documentation>`"
+   | Also contains some Bugzilla and :ref:`Documentation jobs <Managing Documentation>`
+   | Run on all branches (except the Bugzilla task)"
 
 
 
