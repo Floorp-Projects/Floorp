@@ -325,7 +325,8 @@ class chunk_by_runtime(InstanceFilter):
         self.total_chunks = total_chunks
         self.runtimes = {normsep(m): r for m, r in runtimes.items()}
 
-    def get_manifest(self, test):
+    @classmethod
+    def get_manifest(cls, test):
         manifest = normsep(test.get('ancestor_manifest', ''))
 
         # Ignore ancestor_manifests that live at the root (e.g, don't have a
