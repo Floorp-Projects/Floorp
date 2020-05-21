@@ -1385,41 +1385,6 @@ AC_LANG_C
 MOZ_EXPAND_LIBS
 
 dnl ========================================================
-dnl = Link js shell to system readline
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(readline,
-[  --enable-readline       Link js shell to system readline library],
-    JS_WANT_READLINE=1,
-    JS_WANT_READLINE= )
-
-JS_BUNDLED_EDITLINE=
-EDITLINE_LIBS=
-
-case "$target" in
-*-mingw*)
-    NO_EDITLINE=1
-    ;;
-*)
-    ;;
-esac
-
-if test -z "$SKIP_LIBRARY_CHECKS" -a -z "$NO_EDITLINE"; then
-  if test -n "$JS_WANT_READLINE"; then
-    AC_CHECK_LIB(readline, readline,
-                 EDITLINE_LIBS="-lreadline",
-                 AC_MSG_ERROR([No system readline library found.]))
-  else
-    dnl By default, we use editline
-    JS_BUNDLED_EDITLINE=1
-  fi
-
-  dnl Either way, we want to build with line editing support.
-  AC_DEFINE(EDITLINE)
-fi
-AC_SUBST(JS_BUNDLED_EDITLINE)
-AC_SUBST_LIST(EDITLINE_LIBS)
-
-dnl ========================================================
 dnl =
 dnl = Standalone module options
 dnl =
