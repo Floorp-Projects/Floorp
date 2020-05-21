@@ -290,6 +290,11 @@ class RegExpShared : public gc::TenuredCell {
            (CompilationIndex(latin1) * sizeof(RegExpCompilation)) +
            offsetof(RegExpCompilation, jitCode);
   }
+#ifdef ENABLE_NEW_REGEXP
+  static size_t offsetOfGroupsTemplate() {
+    return offsetof(RegExpShared, groupsTemplate_);
+  }
+#endif
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
