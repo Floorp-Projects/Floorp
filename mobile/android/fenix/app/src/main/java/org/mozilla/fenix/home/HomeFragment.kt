@@ -72,6 +72,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
@@ -829,7 +830,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun emitSessionChanges() {
-        homeFragmentStore.dispatch(HomeFragmentAction.TabsChange(getListOfTabs()))
+        runIfFragmentIsAttached {
+            homeFragmentStore.dispatch(HomeFragmentAction.TabsChange(getListOfTabs()))
+        }
     }
 
     private fun getListOfSessions(): List<Session> {
