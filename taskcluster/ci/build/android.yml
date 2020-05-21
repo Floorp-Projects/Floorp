@@ -114,9 +114,6 @@ android-x86-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         shippable: true
-        nightly: true
-        # Android nightlies don't run tests in gecko, but are needed for github projects
-        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
     index:
@@ -177,7 +174,6 @@ android-api-16/pgo:
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -192,9 +188,6 @@ android-api-16-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         shippable: true
-        nightly: true
-        # Android nightlies don't run tests in gecko, but are needed for github projects
-        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
     index:
@@ -255,7 +248,6 @@ android-aarch64/pgo:
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -293,9 +285,6 @@ android-aarch64-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         shippable: true
-        nightly: true
-        # Android nightlies don't run tests in gecko, but are needed for github projects
-        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
     index:
@@ -347,9 +336,6 @@ android-x86_64-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         shippable: true
-        nightly: true
-        # Android nightlies don't run tests in gecko, but are needed for github projects
-        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
     index:
