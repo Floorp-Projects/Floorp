@@ -44,7 +44,7 @@ def get_geckoview_template_vars(config, platform, update_channel):
 
     return {
         'artifact_id': get_geckoview_artifact_id(
-            platform, update_channel
+            config, platform, update_channel,
         ),
         'build_date': config.params['moz_build_date'],
         'major_version': major_version,
@@ -52,6 +52,14 @@ def get_geckoview_template_vars(config, platform, update_channel):
     }
 
 
-def get_geckoview_artifact_id(platform, update_channel=None):
-    update_channel = '' if update_channel in (None, 'release') else '-{}'.format(update_channel)
+def get_geckoview_artifact_id(config, platform, update_channel=None):
+    if update_channel == 'release':
+        update_channel = ''
+    elif update_channel is not None:
+        update_channel = '-{}'.format(update_channel)
+    else:
+        # For shippable builds, mozharness defaults to using
+        # "nightly-{project}" for the update channel.  For other builds, the
+        # update channel is not set, but the value is not substituted.
+        update_channel = '-nigthly-{}'.format(config.params['project'])
     return _ARTIFACT_ID_PER_PLATFORM[platform].format(update_channel=update_channel)
