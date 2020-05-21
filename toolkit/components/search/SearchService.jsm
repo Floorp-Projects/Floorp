@@ -842,6 +842,76 @@ SearchService.prototype = {
     return false;
   },
 
+  async _getSearchDefaultOverrideAllowlist() {
+    return [];
+  },
+
+  async _canOverrideDefault(extension, appProvidedExtensionId) {
+    const overrideTable = await this._getSearchDefaultOverrideAllowlist();
+
+    let entry = overrideTable.find(e => e.thirdPartyId == extension.id);
+    if (!entry) {
+      return false;
+    }
+
+    if (appProvidedExtensionId != entry.overridesId) {
+      return false;
+    }
+    let searchProvider =
+      extension.manifest.chrome_settings_overrides.search_provider;
+    return entry.urls.some(
+      e =>
+        searchProvider.search_url == e.search_url &&
+        searchProvider.search_form == e.search_form &&
+        searchProvider.search_url_get_params == e.search_url_get_params &&
+        searchProvider.search_url_post_params == e.search_url_post_params
+    );
+  },
+
+  async maybeSetAndOverrideDefault(extension) {
+    let searchProvider =
+      extension.manifest.chrome_settings_overrides.search_provider;
+    let engine = this._engines.get(searchProvider.name);
+    if (!engine || !engine.isAppProvided) {
+      return false;
+    }
+    let params = this.getEngineParams(
+      extension,
+      extension.manifest,
+      SearchUtils.DEFAULT_TAG
+    );
+
+    if (
+      extension.startupReason === "ADDON_INSTALL" ||
+      extension.startupReason === "ADDON_ENABLE"
+    ) {
+      // Don't allow an extension to set the default if it is already the default.
+      if (this.defaultEngine.name == searchProvider.name) {
+        return false;
+      }
+      if (!(await this._canOverrideDefault(extension, engine._extensionID))) {
+        // We don't allow overriding the engine in this case, but we can allow
+        // the extension to change the default engine.
+        return true;
+      }
+      if (extension.startupReason === "ADDON_INSTALL") {
+        // We're ok to override.
+        engine.overrideWithExtension(params);
+        return true;
+      }
+    }
+
+    if (
+      engine.getAttr("overriddenBy") == extension.id &&
+      (await this._canOverrideDefault(extension, engine._extensionID))
+    ) {
+      engine.overrideWithExtension(params);
+      return true;
+    }
+
+    return false;
+  },
+
   /**
    * Handles the search configuration being - adds a wait on the user
    * being idle, before the search engine update gets handled.
@@ -3083,6 +3153,9 @@ SearchService.prototype = {
     if (newCurrentEngine == this[currentEngine]) {
       return;
     }
+
+    // Ensure that we reset an engine override if it was previously overridden.
+    this[currentEngine]?.removeExtensionOverride();
 
     this[currentEngine] = newCurrentEngine;
 
