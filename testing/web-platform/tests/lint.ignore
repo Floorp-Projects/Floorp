@@ -760,9 +760,3 @@ TESTHARNESS-IN-OTHER-TYPE: svg/svg-in-svg/svg-in-svg-circular-filter-reference-c
 
 PRINT STATEMENT: webdriver/tests/print/printcmd.py
 PRINT STATEMENT: webdriver/tests/print/user_prompts.py
-
-
-# Create conflicting -expected.txt files in WebKit and Blink; one of them
-# should be renamed.
-DUPLICATE-BASENAME-PATH: dom/nodes/Document-createCDATASection.html
-DUPLICATE-BASENAME-PATH: dom/nodes/Document-createCDATASection.xhtml
