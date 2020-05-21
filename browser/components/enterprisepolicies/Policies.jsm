@@ -1282,38 +1282,6 @@ var Policies = {
     },
   },
 
-  PictureInPicture: {
-    onBeforeAddons(manager, param) {
-      if ("Enabled" in param) {
-        setDefaultPref(
-          "media.videocontrols.picture-in-picture.video-toggle.enabled",
-          param.Enabled
-        );
-      }
-      if (param.Locked) {
-        Services.prefs.lockPref(
-          "media.videocontrols.picture-in-picture.video-toggle.enabled"
-        );
-      }
-    },
-  },
-
-  PictureInPicture: {
-    onBeforeAddons(manager, param) {
-      if ("Enabled" in param) {
-        setDefaultPref(
-          "media.videocontrols.picture-in-picture.video-toggle.enabled",
-          param.Enabled
-        );
-      }
-      if (param.Locked) {
-        Services.prefs.lockPref(
-          "media.videocontrols.picture-in-picture.video-toggle.enabled"
-        );
-      }
-    },
-  },
-
   PopupBlocking: {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("popup", param.Allow, null);
