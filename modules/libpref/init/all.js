@@ -915,6 +915,7 @@ pref("nglayout.debug.paint_flashing_chrome", false);
 pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
+pref("browser.fixup.fallback-to-https", true);
 
 // Print header customization
 // Use the following codes:

@@ -186,6 +186,7 @@ add_task(async function test_decode_error() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.decoder-doctor.new-issue-endpoint", "http://127.0.0.1/webcompat"],
+      ["browser.fixup.fallback-to-https", false],
     ],
   });
   let message = gNavigatorBundle.getString("decoder.decodeError.message");
