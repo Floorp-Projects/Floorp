@@ -91,7 +91,15 @@ function generateOrientationData(alpha, beta, gamma, absolute) {
 
 async function setMockSensorDataForType(sensorProvider, sensorType, mockDataArray) {
   const createdSensor = await sensorProvider.getCreatedSensor(sensorType);
-  return createdSensor.setSensorReading([mockDataArray]);
+  // We call setSensorReadingAndUpdateSharedBuffer() rather than
+  // setSensorReading() to accommodate Blink's Device Orientation
+  // implementation, which uses its own timer to read the sensor's shared
+  // memory buffer rather than relying on SensorReadingChanged(). This timer
+  // may fire out of sync with the JS timer in MockSensor.startReading(), so
+  // the former might read the shared memory buffer before the latter has
+  // updated |this.buffer_|. We thus immediately update the buffer here
+  // (without consuming data from the ring buffer).
+  return createdSensor.setSensorReadingImmediately([mockDataArray]);
 }
 
 // Device[Orientation|Motion]EventPump treat NaN as a missing value.
