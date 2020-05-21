@@ -15,11 +15,11 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_content.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/MutationObservers.h"
+#include "mozilla/dom/LinkStyle.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/StoragePrincipalHelper.h"
-#include "nsStyleLinkElement.h"
 #include "nsIDocShell.h"
 #include "nsILoadContext.h"
 #include "nsIPrefetchService.h"
@@ -629,7 +629,7 @@ nsresult nsContentSink::ProcessLinkFromHeader(
     const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aType,
     const nsAString& aMedia, const nsAString& aCrossOrigin,
     const nsAString& aReferrerPolicy, const nsAString& aAs) {
-  uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(aRel);
+  uint32_t linkTypes = LinkStyle::ParseLinkTypes(aRel);
 
   // The link relation may apply to a different resource, specified
   // in the anchor parameter. For the link relations supported so far,
@@ -641,31 +641,30 @@ nsresult nsContentSink::ProcessLinkFromHeader(
 
   if (nsContentUtils::PrefetchPreloadEnabled(mDocShell)) {
     // prefetch href if relation is "next" or "prefetch"
-    if ((linkTypes & nsStyleLinkElement::eNEXT) ||
-        (linkTypes & nsStyleLinkElement::ePREFETCH)) {
+    if ((linkTypes & LinkStyle::eNEXT) || (linkTypes & LinkStyle::ePREFETCH)) {
       PrefetchHref(aHref, aAs, aType, aMedia);
     }
 
-    if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::eDNS_PREFETCH)) {
+    if (!aHref.IsEmpty() && (linkTypes & LinkStyle::eDNS_PREFETCH)) {
       PrefetchDNS(aHref);
     }
 
-    if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::ePRECONNECT)) {
+    if (!aHref.IsEmpty() && (linkTypes & LinkStyle::ePRECONNECT)) {
       Preconnect(aHref, aCrossOrigin);
     }
 
-    if (linkTypes & nsStyleLinkElement::ePRELOAD) {
+    if (linkTypes & LinkStyle::ePRELOAD) {
       PreloadHref(aHref, aAs, aType, aMedia, aIntegrity, aSrcset, aSizes,
                   aCrossOrigin, aReferrerPolicy);
     }
   }
 
   // is it a stylesheet link?
-  if (!(linkTypes & nsStyleLinkElement::eSTYLESHEET)) {
+  if (!(linkTypes & LinkStyle::eSTYLESHEET)) {
     return NS_OK;
   }
 
-  bool isAlternate = linkTypes & nsStyleLinkElement::eALTERNATE;
+  bool isAlternate = linkTypes & LinkStyle::eALTERNATE;
   return ProcessStyleLinkFromHeader(aHref, isAlternate, aTitle, aIntegrity,
                                     aType, aMedia, aReferrerPolicy);
 }

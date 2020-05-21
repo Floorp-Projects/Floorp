@@ -8,15 +8,15 @@
 #define mozilla_dom_HTMLStyleElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/LinkStyle.h"
 #include "nsGenericHTMLElement.h"
-#include "nsStyleLinkElement.h"
 #include "nsStubMutationObserver.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLStyleElement final : public nsGenericHTMLElement,
-                               public nsStyleLinkElement,
+                               public LinkStyle,
                                public nsStubMutationObserver {
  public:
   explicit HTMLStyleElement(
@@ -71,6 +71,8 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
  protected:
   virtual ~HTMLStyleElement();
 
+  nsIContent& AsContent() final { return *this; }
+  const LinkStyle* AsLinkStyle() const final { return this; }
   Maybe<SheetInfo> GetStyleSheetInfo() final;
 
   /**
