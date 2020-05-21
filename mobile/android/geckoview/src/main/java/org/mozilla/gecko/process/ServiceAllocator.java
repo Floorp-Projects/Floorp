@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.process;
 
-import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.XPCOMEventTarget;
@@ -210,11 +209,7 @@ import java.util.Map.Entry;
         protected boolean bindService() {
             if (mIsDefunct) {
                 final String errorMsg = "Attempt to bind a defunct InstanceInfo for " + mType + " child process";
-                if (BuildConfig.DEBUG) {
-                    throw new AssertionError(errorMsg);
-                } else {
-                    throw new BindException(errorMsg);
-                }
+                throw new BindException(errorMsg);
             }
 
             return updateBindings();
