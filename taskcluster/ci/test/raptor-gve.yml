@@ -10,14 +10,16 @@ job-defaults:
         by-test-name:
             raptor-tp6m-.*-cold:
                 by-test-platform:
-                    android-hw-.*/opt: []
+                    android-hw-.*(?<!-shippable)/opt: []
                     android-hw-p2-.*api-16/pgo: []
+                    android-hw-p2-.*api-16-shippable/opt: []
                     default: ['trunk', 'mozilla-beta']
             default:
                 by-test-platform:
                     android-hw-p2-.*-api-16/(?!opt).*: []
-                    android-hw-p2-.*(?!-api-16)/opt.*: []
-                    android-hw(?!-p2).*(?!-api-16)/opt.*: []
+                    android-hw-p2-.*-api-16-shippable/opt: []
+                    android-hw-p2-.*?(?<!-aarch64-shippable)/opt.*: []
+                    android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
                     default: ['mozilla-central']
     target: geckoview_example.apk
     tier: 1
@@ -131,10 +133,12 @@ raptor-speedometer-geckoview:
     treeherder-symbol: Rap(sp)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: []
+            android-hw-.*(?<!-shippable)/opt: []
             android-hw-p2-.*api-16/pgo: []
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
+            android-hw-p2-.*aarch64-shippable/opt: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
+            android-hw-g5.*-shippable/opt: ['trunk', 'mozilla-beta']
             default: ['mozilla-central', 'mozilla-beta']
     max-run-time: 900
     mozharness:
@@ -285,9 +289,11 @@ raptor-unity-webgl-geckoview:
     treeherder-symbol: Rap(ugl)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: []
+            android-hw-.*(?<!-shippable)/opt: []
             android-hw-p2-.*api-16/pgo: []
+            android-hw-p2-.*api-16-shippable/opt: []
             android-hw-(?!p2-.*api-16)/pgo: ['trunk', 'mozilla-beta']
+            android-hw-(?!p2-.*api-16)-shippable/opt: ['trunk', 'mozilla-beta']
             default: ['mozilla-central', 'mozilla-beta']
     max-run-time: 900
     mozharness:
@@ -307,7 +313,9 @@ raptor-youtube-playback-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
             android-hw-g5.*/pgo: ['mozilla-central']
+            android-hw-g5.*-shippable/opt: ['mozilla-central']
             default: []
     max-run-time: 3000
     mozharness:
@@ -327,7 +335,9 @@ raptor-youtube-playback-av1-sfr-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
             android-hw-g5.*/pgo: ['mozilla-central']
+            android-hw-g5.*-shippable/opt: ['mozilla-central']
             default: []
     mozharness:
         extra-options:
@@ -343,7 +353,9 @@ raptor-youtube-playback-h264-sfr-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
             android-hw-g5.*/pgo: ['mozilla-central']
+            android-hw-g5.*-shippable/opt: ['mozilla-central']
             default: []
     mozharness:
         extra-options:
@@ -359,6 +371,7 @@ raptor-youtube-playback-vp9-sfr-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
             default: []
     mozharness:
         extra-options:
