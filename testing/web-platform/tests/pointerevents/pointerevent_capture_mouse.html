@@ -116,7 +116,7 @@
                             pointermoveCaptureGot0 = true;
                             // Fourth dispatch a pointer move to target0.
                             actions_promise4 = actions_promise3.then( () => {
-                                new test_driver.Actions().pointerMove(0, 0, {origin: target0}).send();
+                                return new test_driver.Actions().pointerMove(0, 0, {origin: target0}).send();
                             });
                         }
                         if((event.clientX > target0.getBoundingClientRect().left)&&
