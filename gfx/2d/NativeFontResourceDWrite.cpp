@@ -238,7 +238,8 @@ already_AddRefed<NativeFontResourceDWrite> NativeFontResourceDWrite::Create(
   }
 
   RefPtr<NativeFontResourceDWrite> fontResource = new NativeFontResourceDWrite(
-      factory, fontFile.forget(), ffsRef.forget(), faceType, numberOfFaces);
+      factory, fontFile.forget(), ffsRef.forget(), faceType, numberOfFaces,
+      aDataLength);
   return fontResource.forget();
 }
 

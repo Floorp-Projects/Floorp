@@ -13,7 +13,8 @@ namespace mozilla::gfx {
 NativeFontResourceFreeType::NativeFontResourceFreeType(
     UniquePtr<uint8_t[]>&& aFontData, uint32_t aDataLength,
     FT_Library aFTLibrary)
-    : mFontData(std::move(aFontData)),
+    : NativeFontResource(aDataLength),
+      mFontData(std::move(aFontData)),
       mDataLength(aDataLength),
       mFTLibrary(aFTLibrary) {}
 

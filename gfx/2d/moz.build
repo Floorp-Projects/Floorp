@@ -189,6 +189,7 @@ UNIFIED_SOURCES += [
     'ImageScaling.cpp',
     'JobScheduler.cpp',
     'Matrix.cpp',
+    'NativeFontResource.cpp',
     'Path.cpp',
     'PathCairo.cpp',
     'PathCapture.cpp',

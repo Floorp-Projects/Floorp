@@ -26,7 +26,7 @@ already_AddRefed<NativeFontResourceGDI> NativeFontResourceGDI::Create(
   }
 
   RefPtr<NativeFontResourceGDI> fontResouce =
-      new NativeFontResourceGDI(fontResourceHandle);
+      new NativeFontResourceGDI(fontResourceHandle, aDataLength);
 
   return fontResouce.forget();
 }

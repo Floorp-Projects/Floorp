@@ -38,8 +38,10 @@ class NativeFontResourceDWrite final : public NativeFontResource {
   NativeFontResourceDWrite(
       IDWriteFactory* aFactory, already_AddRefed<IDWriteFontFile> aFontFile,
       already_AddRefed<IDWriteFontFileStream> aFontFileStream,
-      DWRITE_FONT_FACE_TYPE aFaceType, uint32_t aNumberOfFaces)
-      : mFactory(aFactory),
+      DWRITE_FONT_FACE_TYPE aFaceType, uint32_t aNumberOfFaces,
+      size_t aDataLength)
+      : NativeFontResource(aDataLength),
+        mFactory(aFactory),
         mFontFile(aFontFile),
         mFontFileStream(aFontFileStream),
         mFaceType(aFaceType),
