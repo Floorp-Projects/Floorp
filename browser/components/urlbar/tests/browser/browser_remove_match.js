@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FormHistory: "resource://gre/modules/FormHistory.jsm",
+});
+
 add_task(async function test_remove_history() {
   const TEST_URL = "http://remove.me/from_urlbar/";
   await PlacesTestUtils.addVisits(TEST_URL);
@@ -45,6 +49,81 @@ add_task(async function test_remove_history() {
   }
 
   await UrlbarTestUtils.promisePopupClose(window);
+});
+
+add_task(async function test_remove_form_history() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
+  });
+
+  let formHistoryValue = "foobar";
+  await UrlbarTestUtils.formHistory.add([formHistoryValue]);
+
+  let formHistory = (
+    await UrlbarTestUtils.formHistory.search({
+      value: formHistoryValue,
+    })
+  ).map(entry => entry.value);
+  Assert.deepEqual(
+    formHistory,
+    [formHistoryValue],
+    "Should find form history after adding it"
+  );
+
+  let promiseRemoved = UrlbarTestUtils.formHistory.promiseChanged("remove");
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "foo",
+  });
+
+  let index = 1;
+  let count = UrlbarTestUtils.getResultCount(window);
+  for (; index < count; index++) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+    if (
+      result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+      result.source == UrlbarUtils.RESULT_SOURCE.HISTORY
+    ) {
+      break;
+    }
+  }
+  Assert.ok(index < count, "Result found");
+
+  EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
+  Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), index);
+  EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
+  await promiseRemoved;
+
+  await TestUtils.waitForCondition(
+    () => UrlbarTestUtils.getResultCount(window) == count - 1,
+    "Waiting for the result to disappear"
+  );
+
+  for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    Assert.ok(
+      result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
+        result.source != UrlbarUtils.RESULT_SOURCE.HISTORY,
+      "Should not find the form history result in the remaining results"
+    );
+  }
+
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  formHistory = (
+    await UrlbarTestUtils.formHistory.search({
+      value: formHistoryValue,
+    })
+  ).map(entry => entry.value);
+  Assert.deepEqual(
+    formHistory,
+    [],
+    "Should not find form history after removing it"
+  );
+
+  await SpecialPowers.popPrefEnv();
 });
 
 // We shouldn't be able to remove a bookmark item.

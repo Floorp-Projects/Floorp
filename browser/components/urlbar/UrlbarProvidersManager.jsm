@@ -338,30 +338,27 @@ class Query {
       return;
     }
 
-    this.context.activeProviders = new Set(activeProviders.map(p => p.name));
-
     // Start querying active providers.
     let queryPromises = [];
     for (let provider of activeProviders) {
-      let promise;
       if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
-        promise = provider.tryMethod(
-          "startQuery",
-          this.context,
-          this.add.bind(this)
+        queryPromises.push(
+          provider.tryMethod("startQuery", this.context, this.add.bind(this))
         );
-      } else {
-        if (!this._sleepTimer) {
-          // Tracks the delay timer. We will fire (in this specific case, cancel
-          // would do the same, since the callback is empty) the timer when the
-          // search is canceled, unblocking start().
-          this._sleepTimer = new SkippableTimer({
-            name: "Query provider timer",
-            time: UrlbarPrefs.get("delay"),
-            logger,
-          });
-        }
-        promise = this._sleepTimer.promise.then(() => {
+        continue;
+      }
+      if (!this._sleepTimer) {
+        // Tracks the delay timer. We will fire (in this specific case, cancel
+        // would do the same, since the callback is empty) the timer when the
+        // search is canceled, unblocking start().
+        this._sleepTimer = new SkippableTimer({
+          name: "Query provider timer",
+          time: UrlbarPrefs.get("delay"),
+          logger,
+        });
+      }
+      queryPromises.push(
+        this._sleepTimer.promise.then(() => {
           if (this.canceled) {
             return undefined;
           }
@@ -370,18 +367,7 @@ class Query {
             this.context,
             this.add.bind(this)
           );
-        });
-      }
-      queryPromises.push(
-        promise
-          .catch(Cu.reportError)
-          .then(() => {
-            if (!this.canceled) {
-              this.context.activeProviders.delete(provider.name);
-              this._notifyResultsFromProvider(provider);
-            }
-          })
-          .catch(Cu.reportError)
+        })
       );
     }
 
@@ -432,7 +418,14 @@ class Query {
     }
     // Check if the result source should be filtered out. Pay attention to the
     // heuristic result though, that is supposed to be added regardless.
-    if (!this.acceptableSources.includes(result.source) && !result.heuristic) {
+    if (
+      !this.acceptableSources.includes(result.source) &&
+      !result.heuristic &&
+      // Treat form history as searches for the purpose of acceptableSources.
+      (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
+        result.source != UrlbarUtils.RESULT_SOURCE.HISTORY ||
+        !this.acceptableSources.includes(UrlbarUtils.RESULT_SOURCE.SEARCH))
+    ) {
       return;
     }
 
@@ -473,10 +466,7 @@ class Query {
   }
 
   _notifyResults() {
-    if (!this.muxer.sort(this.context) || !this.context.results.length) {
-      // The muxer needs more results before it can decide how to sort them.
-      return;
-    }
+    this.muxer.sort(this.context);
 
     if (this._chunkTimer) {
       this._chunkTimer.cancel().catch(Cu.reportError);

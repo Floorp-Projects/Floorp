@@ -3,14 +3,6 @@
 
 "use strict";
 
-add_task(async function setup() {
-  // These two lines are necessary because UrlbarMuxerUnifiedComplete.sort calls
-  // PlacesSearchAutocompleteProvider.parseSubmissionURL, so we need engines and
-  // PlacesSearchAutocompleteProvider.
-  await AddonTestUtils.promiseStartupManager();
-  await PlacesSearchAutocompleteProvider.ensureReady();
-});
-
 add_task(async function test_muxer() {
   Assert.throws(
     () => UrlbarProvidersManager.registerMuxer(),
@@ -182,6 +174,8 @@ add_task(async function test_preselectedHeuristic_multiProviders() {
 });
 
 add_task(async function test_suggestions() {
+  Services.prefs.setIntPref("browser.urlbar.maxHistoricalSearchSuggestions", 1);
+
   let matches = [
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
@@ -195,11 +189,22 @@ add_task(async function test_suggestions() {
     ),
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      {
+        engine: "mozSearch",
+        query: "moz",
+        suggestion: "mozzarella",
+        lowerCaseSuggestion: "mozzarella",
+      }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       {
         engine: "mozSearch",
         query: "moz",
         suggestion: "mozilla",
+        lowerCaseSuggestion: "mozilla",
       }
     ),
     new UrlbarResult(
@@ -226,13 +231,16 @@ add_task(async function test_suggestions() {
   });
   let controller = UrlbarTestUtils.newMockController();
 
-  info("Check results, the order should be: moz, a, b, @moz, c");
+  info("Check results, the order should be: mozzarella, moz, a, b, @moz, c");
   await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, [
     matches[2],
+    matches[3],
     matches[0],
     matches[1],
-    matches[3],
     matches[4],
+    matches[5],
   ]);
+
+  Services.prefs.clearUserPref("browser.urlbar.maxHistoricalSearchSuggestions");
 });

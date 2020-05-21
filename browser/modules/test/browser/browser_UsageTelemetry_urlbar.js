@@ -149,10 +149,10 @@ add_task(async function test_simpleQuery() {
     "FX_URLBAR_SELECTED_RESULT_INDEX"
   );
   let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE"
+    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
   );
   let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE"
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
   );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
@@ -246,10 +246,10 @@ add_task(async function test_searchAlias() {
     "FX_URLBAR_SELECTED_RESULT_INDEX"
   );
   let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE"
+    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
   );
   let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE"
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
   );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
@@ -394,10 +394,10 @@ add_task(async function test_oneOff_enter() {
     "FX_URLBAR_SELECTED_RESULT_INDEX"
   );
   let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE"
+    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
   );
   let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE"
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
   );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
@@ -560,15 +560,16 @@ add_task(async function test_oneOff_click() {
 add_task(async function test_suggestion_click() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
+  await UrlbarTestUtils.formHistory.clear();
 
   let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_INDEX"
   );
   let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE"
+    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
   );
   let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE"
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
   );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
@@ -746,6 +747,238 @@ add_task(async function test_suggestion_enterSelection() {
     );
 
     BrowserTestUtils.removeTab(tab);
+  });
+});
+
+// Clicks a form history result.
+add_task(async function test_formHistory_click() {
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+  await UrlbarTestUtils.formHistory.clear();
+  await UrlbarTestUtils.formHistory.add(["foobar"]);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
+  });
+
+  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
+    "FX_URLBAR_SELECTED_RESULT_INDEX"
+  );
+  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
+    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
+  );
+  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
+  );
+  let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
+    "FX_URLBAR_SELECTED_RESULT_METHOD"
+  );
+  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
+    "SEARCH_COUNTS"
+  );
+
+  await withNewSearchEngine(async engine => {
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:blank"
+    );
+
+    info("Type a query. There should be form history.");
+    let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    await searchInAwesomebar("foo");
+    info("Clicking the form history.");
+    await clickURLBarSuggestion("foobar");
+    await p;
+
+    // Check if the scalars contain the expected values.
+    const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      SCALAR_URLBAR,
+      "search_formhistory",
+      1
+    );
+    Assert.equal(
+      Object.keys(scalars[SCALAR_URLBAR]).length,
+      1,
+      "This search must only increment one entry in the scalar."
+    );
+
+    // SEARCH_COUNTS should be incremented.
+    let searchEngineId = "other-" + engine.name;
+    TelemetryTestUtils.assertKeyedHistogramSum(
+      search_hist,
+      searchEngineId + ".urlbar",
+      1
+    );
+
+    // Also check events.
+    TelemetryTestUtils.assertEvents(
+      [
+        [
+          "navigation",
+          "search",
+          "urlbar",
+          "formhistory",
+          { engine: searchEngineId },
+        ],
+      ],
+      { category: "navigation", method: "search" }
+    );
+
+    // Check the histograms as well.
+    TelemetryTestUtils.assertHistogram(resultIndexHist, 2, 1);
+
+    TelemetryTestUtils.assertHistogram(
+      resultTypeHist,
+      URLBAR_SELECTED_RESULT_TYPES.formhistory,
+      1
+    );
+
+    TelemetryTestUtils.assertKeyedHistogramValue(
+      resultIndexByTypeHist,
+      "formhistory",
+      2,
+      1
+    );
+
+    TelemetryTestUtils.assertHistogram(
+      resultMethodHist,
+      URLBAR_SELECTED_RESULT_METHODS.click,
+      1
+    );
+
+    BrowserTestUtils.removeTab(tab);
+    await UrlbarTestUtils.formHistory.clear();
+    await SpecialPowers.popPrefEnv();
+  });
+});
+
+// Selects and presses the Return (Enter) key on a form history result.  This
+// only tests the FX_URLBAR_SELECTED_RESULT_METHOD histogram since
+// test_formHistory_click covers everything else.
+add_task(async function test_formHistory_arrowEnterSelection() {
+  Services.telemetry.clearScalars();
+  let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
+    "FX_URLBAR_SELECTED_RESULT_METHOD"
+  );
+
+  await UrlbarTestUtils.formHistory.clear();
+  await UrlbarTestUtils.formHistory.add(["foobar"]);
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
+  });
+
+  await withNewSearchEngine(async function() {
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:blank"
+    );
+
+    info("Type a query. There should be form history.");
+    let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    await searchInAwesomebar("foo");
+    info("Select the form history result and press Return.");
+    while (gURLBar.untrimmedValue != "foobar") {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    EventUtils.synthesizeKey("KEY_Enter");
+    await p;
+
+    TelemetryTestUtils.assertHistogram(
+      resultMethodHist,
+      URLBAR_SELECTED_RESULT_METHODS.arrowEnterSelection,
+      1
+    );
+
+    BrowserTestUtils.removeTab(tab);
+    await UrlbarTestUtils.formHistory.clear();
+    await SpecialPowers.popPrefEnv();
+  });
+});
+
+// Selects through tab and presses the Return (Enter) key on a form history
+// result.
+add_task(async function test_formHistory_tabEnterSelection() {
+  Services.telemetry.clearScalars();
+  let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
+    "FX_URLBAR_SELECTED_RESULT_METHOD"
+  );
+
+  await UrlbarTestUtils.formHistory.clear();
+  await UrlbarTestUtils.formHistory.add(["foobar"]);
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
+  });
+
+  await withNewSearchEngine(async function() {
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:blank"
+    );
+
+    info("Type a query. There should be form history.");
+    let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    await searchInAwesomebar("foo");
+    info("Select the form history result and press Return.");
+    while (gURLBar.untrimmedValue != "foobar") {
+      EventUtils.synthesizeKey("KEY_Tab");
+    }
+    EventUtils.synthesizeKey("KEY_Enter");
+    await p;
+
+    TelemetryTestUtils.assertHistogram(
+      resultMethodHist,
+      URLBAR_SELECTED_RESULT_METHODS.tabEnterSelection,
+      1
+    );
+
+    BrowserTestUtils.removeTab(tab);
+    await UrlbarTestUtils.formHistory.clear();
+    await SpecialPowers.popPrefEnv();
+  });
+});
+
+// Selects through code and presses the Return (Enter) key on a form history
+// result.
+add_task(async function test_formHistory_enterSelection() {
+  Services.telemetry.clearScalars();
+  let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
+    "FX_URLBAR_SELECTED_RESULT_METHOD"
+  );
+
+  await UrlbarTestUtils.formHistory.clear();
+  await UrlbarTestUtils.formHistory.add(["foobar"]);
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
+  });
+
+  await withNewSearchEngine(async function() {
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:blank"
+    );
+
+    info("Type a query. There should be form history.");
+    let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    await searchInAwesomebar("foo");
+    info("Select the second result and press Return.");
+    let index = 1;
+    while (gURLBar.untrimmedValue != "foobar") {
+      UrlbarTestUtils.setSelectedRowIndex(window, index++);
+    }
+    EventUtils.synthesizeKey("KEY_Enter");
+    await p;
+
+    TelemetryTestUtils.assertHistogram(
+      resultMethodHist,
+      URLBAR_SELECTED_RESULT_METHODS.enterSelection,
+      1
+    );
+
+    BrowserTestUtils.removeTab(tab);
+    await UrlbarTestUtils.formHistory.clear();
+    await SpecialPowers.popPrefEnv();
   });
 });
 

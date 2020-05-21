@@ -18,8 +18,12 @@ const serverInfo = {
 
 add_task(async function init() {
   await PlacesUtils.history.clear();
+  await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.searches", true]],
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.maxHistoricalSearchSuggestions", 2],
+    ],
   });
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
@@ -35,45 +39,85 @@ add_task(async function init() {
     await Services.search.setDefault(oldDefaultEngine);
 
     await PlacesUtils.history.clear();
+    await UrlbarTestUtils.formHistory.clear();
   });
 });
 
-async function withSecondSuggestion(testFn) {
+async function withSuggestions(testFn) {
+  // First run with remote suggestions, and then run with form history.
+  await withSuggestionOnce(false, testFn);
+  await withSuggestionOnce(true, testFn);
+}
+
+async function withSuggestionOnce(useFormHistory, testFn) {
+  if (useFormHistory) {
+    // Add foofoo twice so it's more frecent so it appears first so that the
+    // order of form history results matches the order of remote suggestion
+    // results.
+    await UrlbarTestUtils.formHistory.add(["foofoo", "foofoo", "foobar"]);
+  }
   await BrowserTestUtils.withNewTab(gBrowser, async () => {
-    let typedValue = "foo";
+    let value = "foo";
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
-      value: typedValue,
+      value,
       fireInputEvent: true,
+      waitForFocus: SimpleTest.waitForFocus,
     });
     let index = await UrlbarTestUtils.promiseSuggestionsPresent(window);
-    assertState(0, -1, typedValue);
-
-    // Down to select the first search suggestion.
-    for (let i = index; i > 0; --i) {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
-    }
-    assertState(index, -1, "foofoo");
-
-    // Down to select the next search suggestion.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    assertState(index + 1, -1, "foobar");
-
+    await assertState({
+      inputValue: value,
+      resultIndex: 0,
+    });
     await withHttpServer(serverInfo, () => {
-      return testFn(index + 1);
+      return testFn(index, useFormHistory);
     });
   });
   await PlacesUtils.history.clear();
+  await UrlbarTestUtils.formHistory.clear();
+}
+
+async function selectSecondSuggestion(index, isFormHistory) {
+  // Down to select the first search suggestion.
+  for (let i = index; i > 0; --i) {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+  }
+  await assertState({
+    inputValue: "foofoo",
+    resultIndex: index,
+    suggestion: {
+      isFormHistory,
+    },
+  });
+
+  // Down to select the next search suggestion.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  await assertState({
+    inputValue: "foobar",
+    resultIndex: index + 1,
+    suggestion: {
+      isFormHistory,
+    },
+  });
 }
 
 // Presses the Return key when a one-off is selected after selecting a search
 // suggestion.
 add_task(async function test_returnAfterSuggestion() {
-  await withSecondSuggestion(async index => {
+  await withSuggestions(async (index, usingFormHistory) => {
+    await selectSecondSuggestion(index, usingFormHistory);
+
     // Alt+Down to select the first one-off.
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    assertState(index, 0, "foobar");
+    await assertState({
+      inputValue: "foobar",
+      resultIndex: index + 1,
+      oneOffIndex: 0,
+      suggestion: {
+        isFormHistory: usingFormHistory,
+      },
+    });
+
     let heuristicResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.ok(
       !BrowserTestUtils.is_visible(heuristicResult.element.action),
@@ -93,11 +137,20 @@ add_task(async function test_returnAfterSuggestion() {
 // Presses the Return key when a non-default one-off is selected after selecting
 // a search suggestion.
 add_task(async function test_returnAfterSuggestion_nonDefault() {
-  await withSecondSuggestion(async index => {
+  await withSuggestions(async (index, usingFormHistory) => {
+    await selectSecondSuggestion(index, usingFormHistory);
+
     // Alt+Down twice to select the second one-off.
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    assertState(index, 1, "foobar");
+    await assertState({
+      inputValue: "foobar",
+      resultIndex: index + 1,
+      oneOffIndex: 1,
+      suggestion: {
+        isFormHistory: usingFormHistory,
+      },
+    });
 
     let resultsPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
@@ -111,7 +164,9 @@ add_task(async function test_returnAfterSuggestion_nonDefault() {
 
 // Clicks a one-off engine after selecting a search suggestion.
 add_task(async function test_clickAfterSuggestion() {
-  await withSecondSuggestion(async () => {
+  await withSuggestions(async (index, usingFormHistory) => {
+    await selectSecondSuggestion(index, usingFormHistory);
+
     let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
       window
     ).getSelectableButtons(true);
@@ -127,7 +182,9 @@ add_task(async function test_clickAfterSuggestion() {
 
 // Clicks a non-default one-off engine after selecting a search suggestion.
 add_task(async function test_clickAfterSuggestion_nonDefault() {
-  await withSecondSuggestion(async () => {
+  await withSuggestions(async (index, usingFormHistory) => {
+    await selectSecondSuggestion(index, usingFormHistory);
+
     let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
       window
     ).getSelectableButtons(true);
@@ -141,23 +198,17 @@ add_task(async function test_clickAfterSuggestion_nonDefault() {
   });
 });
 
-// Selects a non-default one-off engine and then selects a search suggestion.
+// Selects a non-default one-off engine and then clicks a search suggestion.
 add_task(async function test_selectOneOffThenSuggestion() {
-  await BrowserTestUtils.withNewTab(gBrowser, async () => {
-    let typedValue = "foo";
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      waitForFocus: SimpleTest.waitForFocus,
-      value: typedValue,
-      fireInputEvent: true,
-    });
-    let index = await UrlbarTestUtils.promiseSuggestionsPresent(window);
-    assertState(0, -1, typedValue);
-
+  await withSuggestions(async (index, usingFormHistory) => {
     // Select a non-default one-off engine.
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    assertState(0, 1, "foo");
+    await assertState({
+      inputValue: "foo",
+      resultIndex: 0,
+      oneOffIndex: 1,
+    });
 
     let heuristicResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.ok(
@@ -166,20 +217,15 @@ add_task(async function test_selectOneOffThenSuggestion() {
     );
 
     // Now click the second suggestion.
-    await withHttpServer(serverInfo, async () => {
-      let result = await UrlbarTestUtils.getDetailsOfResultAt(
-        window,
-        index + 1
-      );
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index + 1);
 
-      let resultsPromise = BrowserTestUtils.browserLoaded(
-        gBrowser.selectedBrowser,
-        false,
-        `http://localhost:20709/?terms=foobar`
-      );
-      EventUtils.synthesizeMouseAtCenter(result.element.row, {});
-      await resultsPromise;
-    });
+    let resultsPromise = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      `http://localhost:20709/?terms=foobar`
+    );
+    EventUtils.synthesizeMouseAtCenter(result.element.row, {});
+    await resultsPromise;
   });
 });
 
@@ -200,11 +246,25 @@ add_task(async function overridden_engine_not_reused() {
     for (let i = index; i > 0; --i) {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
-    assertState(index, -1, "foofoo");
+    await assertState({
+      inputValue: "foofoo",
+      resultIndex: index,
+      suggestion: {
+        isFormHistory: false,
+      },
+    });
+
     // ALT+Down to select the second search engine.
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    assertState(index, 1, "foofoo");
+    await assertState({
+      inputValue: "foofoo",
+      resultIndex: index,
+      oneOffIndex: 1,
+      suggestion: {
+        isFormHistory: false,
+      },
+    });
 
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
     let label = result.displayed.action;
@@ -217,7 +277,10 @@ add_task(async function overridden_engine_not_reused() {
       fireInputEvent: true,
     });
     index = await UrlbarTestUtils.promiseSuggestionsPresent(window);
-    assertState(0, -1, "foo");
+    await assertState({
+      inputValue: "foo",
+      resultIndex: 0,
+    });
     result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
     Assert.notEqual(
       result.displayed.action,
@@ -227,10 +290,15 @@ add_task(async function overridden_engine_not_reused() {
   });
 });
 
-function assertState(expectedIndex, oneOffIndex, textValue = undefined) {
+async function assertState({
+  resultIndex,
+  inputValue,
+  oneOffIndex = -1,
+  suggestion = null,
+}) {
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
-    expectedIndex,
+    resultIndex,
     "Expected result should be selected"
   );
   Assert.equal(
@@ -238,7 +306,42 @@ function assertState(expectedIndex, oneOffIndex, textValue = undefined) {
     oneOffIndex,
     "Expected one-off should be selected"
   );
-  if (textValue !== undefined) {
-    Assert.equal(gURLBar.value, textValue, "Expected textValue");
+  if (inputValue !== undefined) {
+    Assert.equal(gURLBar.value, inputValue, "Expected input value");
+  }
+
+  if (suggestion) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(
+      window,
+      resultIndex
+    );
+    Assert.equal(
+      result.type,
+      UrlbarUtils.RESULT_TYPE.SEARCH,
+      "Result type should be SEARCH"
+    );
+    if (suggestion.isFormHistory) {
+      Assert.equal(
+        result.source,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        "Result source should be HISTORY"
+      );
+    } else {
+      Assert.equal(
+        result.source,
+        UrlbarUtils.RESULT_SOURCE.SEARCH,
+        "Result source should be SEARCH"
+      );
+    }
+    Assert.equal(
+      typeof result.searchParams.suggestion,
+      "string",
+      "Result should have a suggestion"
+    );
+    Assert.equal(
+      result.searchParams.suggestion,
+      suggestion.value || inputValue,
+      "Result should have the expected suggestion"
+    );
   }
 }

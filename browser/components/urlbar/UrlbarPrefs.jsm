@@ -81,9 +81,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // number of characters before fetching results.
   ["maxCharsForSearchSuggestions", 20],
 
-  // May be removed in the future.  Usually (when this pref is at its default of
-  // zero), search engine results do not include results from the user's local
-  // browser history.  This value can be set to include such results.
+  // The maximum number of form history results to include.
   ["maxHistoricalSearchSuggestions", 0],
 
   // The maximum number of results in the urlbar popup.

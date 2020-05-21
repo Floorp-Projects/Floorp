@@ -83,11 +83,6 @@ add_task(async function setup() {
   Services.prefs.setBoolPref(PRIVATE_SEARCH_PREF, false);
   Services.prefs.setBoolPref(TAIL_SUGGESTIONS_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
-
-  // We must make sure the FormHistoryStartup component is initialized.
-  Cc["@mozilla.org/satchel/form-history-startup;1"]
-    .getService(Ci.nsIObserver)
-    .observe(null, "profile-after-change", null);
 });
 
 /**
@@ -258,7 +253,7 @@ add_task(async function mixed_results() {
  */
 add_task(async function dedupe_local() {
   Services.prefs.setIntPref("browser.urlbar.maxHistoricalSearchSuggestions", 1);
-  await updateSearchHistory("bump", "what time is it in toronto");
+  await UrlbarTestUtils.formHistory.add(["what time is it in toronto"]);
 
   const query = "what time is it in t";
   let context = createContext(query, { isPrivate: false });
@@ -266,10 +261,9 @@ add_task(async function dedupe_local() {
     context,
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
-      makeSearchResult(context, {
+      makeFormHistoryResult(context, {
         engineName: ENGINE_NAME,
         suggestion: query + "oronto",
-        tail: undefined,
       }),
     ],
   });
@@ -283,6 +277,7 @@ add_task(async function dedupe_local() {
  * maxResults is limited, even when tail suggestions are returned.
  */
 add_task(async function limit_results() {
+  await UrlbarTestUtils.formHistory.clear();
   const query = "what time is it in t";
   let context = createContext(query, { isPrivate: false });
   context.maxResults = 2;
@@ -299,24 +294,3 @@ add_task(async function limit_results() {
   });
   await cleanUpSuggestions();
 });
-
-function updateSearchHistory(op, value) {
-  return new Promise((resolve, reject) => {
-    FormHistory.update(
-      { op, fieldname: "searchbar-history", value },
-      {
-        handleError(error) {
-          do_throw("Error occurred updating form history: " + error);
-          reject(error);
-        },
-        handleCompletion(reason) {
-          if (reason) {
-            reject(reason);
-          } else {
-            resolve();
-          }
-        },
-      }
-    );
-  });
-}

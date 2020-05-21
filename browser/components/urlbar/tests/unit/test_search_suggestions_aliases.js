@@ -40,7 +40,7 @@ add_task(async function engineWithSuggestions() {
       if (alias[0] != "@") {
         expectedMatches.push(
           makeVisitResult(context, {
-            uri: "http://localhost:9000/search",
+            uri: "http://localhost:9000/search?terms=",
             title: historyTitle,
           })
         );
@@ -64,7 +64,7 @@ add_task(async function engineWithSuggestions() {
       if (alias[0] != "@") {
         expectedMatches.push(
           makeVisitResult(context, {
-            uri: "http://localhost:9000/search",
+            uri: "http://localhost:9000/search?terms=",
             title: historyTitle,
           })
         );
@@ -110,7 +110,7 @@ add_task(async function engineWithSuggestions() {
       if (alias[0] != "@") {
         expectedMatches.push(
           makeVisitResult(context, {
-            uri: "http://localhost:9000/search",
+            uri: "http://localhost:9000/search?terms=",
             title: historyTitle,
           })
         );

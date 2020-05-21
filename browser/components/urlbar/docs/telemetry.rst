@@ -51,6 +51,9 @@ FX_URLBAR_SELECTED_RESULT_INDEX
   It's an enumerated histogram with 17 buckets.
 
 FX_URLBAR_SELECTED_RESULT_TYPE
+  This probe was replaced with FX_URLBAR_SELECTED_RESULT_TYPE_2 in Firefox 78
+  because we needed more buckets.
+
   This probe tracks the types of picked results.
   It's an enumerated histogram with 14 buckets.
   Values can be:
@@ -70,7 +73,38 @@ FX_URLBAR_SELECTED_RESULT_TYPE
     12. tip
     13. topsite
 
+FX_URLBAR_SELECTED_RESULT_TYPE_2
+  This probe tracks the types of picked results.
+  It's an enumerated histogram with 32 buckets.
+  Values can be:
+
+    0. autofill
+    1. bookmark
+    2. history
+    3. keyword
+    4. searchengine
+    5. searchsuggestion
+    6. switchtab
+    7. tag
+    8. visiturl
+    9. remotetab
+    10. extension
+    11. preloaded-top-site
+    12. tip
+    13. topsite
+    14. formhistory
+
 FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE
+  This probe was replaced with FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2 in
+  Firefox 78 because we needed more buckets.
+
+  This probe tracks picked result type, for each one it tracks the index where
+  it appeared.
+  It's a keyed histogram where the keys are result types (see
+  URLBAR_SELECTED_RESULT_TYPES). For each key, this records the indexes of
+  picked results for that result type.
+
+FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2
   This probe tracks picked result type, for each one it tracks the index where
   it appeared.
   It's a keyed histogram where the keys are result types (see
@@ -213,7 +247,7 @@ Event Extra
     It can be one of: ``none``, ``autofill``, ``visit``, ``bookmark``,
     ``history``, ``keyword``, ``search``, ``searchsuggestion``, ``switchtab``,
     ``remotetab``, ``extension``, ``oneoff``, ``keywordoffer``, ``canonized``,
-    ``tip``, ``tiphelp``
+    ``tip``, ``tiphelp``, ``formhistory``
   - ``selIndex``
     Index of the selected result in the urlbar panel, or -1 for no selection.
     There won't be a selection when a one-off button is the only selection, and
@@ -269,18 +303,19 @@ browser.engagement.navigation.*
 
     - ``search``
       Used for any search from ``contextmenu``, ``system`` and ``webextension``.
+    - ``search_alias``
+      For ``urlbar``, indicates the user confirmed a search through an alias.
     - ``search_enter``
       For ``about_home`` and ``about:newtab`` this counts any search.
       For the other SAPs it tracks typing and then pressing Enter.
+    - ``search_formhistory``
+      For ``urlbar``, indicates the user picked a form history result.
     - ``search_oneoff``
       For ``urlbar`` or ``searchbar``, indicates the user confirmed a search
       using a one-off button.
     - ``search_suggestion``
       For ``urlbar`` or ``searchbar``, indicates the user confirmed a search
       suggestion.
-    - ``search_alias``
-      For ``urlbar``, indicates the user confirmed a search through an alias.
-
 
 navigation.search
   This is a legacy and disabled event telemetry that is currently under

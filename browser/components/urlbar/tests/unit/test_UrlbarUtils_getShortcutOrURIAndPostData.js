@@ -177,10 +177,6 @@ var testData = [
   [{ keyword: "http://gavinsharp.com" }, new keywordResult(null, null, true)],
 ];
 
-add_task(async function setup() {
-  await AddonTestUtils.promiseStartupManager();
-});
-
 add_task(async function test_getshortcutoruri() {
   await setupKeywords();
 
