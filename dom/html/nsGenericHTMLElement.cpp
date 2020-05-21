@@ -1325,7 +1325,7 @@ void nsGenericHTMLElement::MapImageSizeAttributesInto(
     }
 
     if (w && h && *w != 0 && *h != 0) {
-      aDecls.SetNumberValue(eCSSProperty_aspect_ratio, *w / *h);
+      aDecls.SetAspectRatio(*w, *h);
     }
   }
 }
