@@ -1363,7 +1363,7 @@ static bool CanOptimizeAwayDueToOpacity(const KeyframeEffect& aEffect,
   if (IsDefinitivelyInvisibleDueToOpacity(aFrame)) {
     return true;
   }
-  return !aEffect.HasOpacityChange();
+  return !aEffect.HasOpacityChange() && !aFrame.HasAnimationOfOpacity();
 }
 
 bool KeyframeEffect::CanThrottleIfNotVisible(nsIFrame& aFrame) const {
