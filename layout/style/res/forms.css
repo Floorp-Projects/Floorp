@@ -124,7 +124,7 @@ textarea {
 }
 
 /* A few properties that we don't want to inherit by default: */
-input, textarea, select, button {
+input, textarea, select, button, ::file-chooser-button {
   text-align: initial;
   text-indent: initial;
   text-shadow: initial;
@@ -461,44 +461,6 @@ input[type="image"]:disabled {
   cursor: unset;
 }
 
-
-/* file selector */
-input[type="file"] {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  overflow-clip-box: padding-box;
-  color: unset;
-
-  /* Revert rules which apply on all inputs. */
-  -moz-appearance: none;
-  cursor: default;
-
-  border: none;
-  background-color: transparent;
-  padding: unset;
-}
-
-input[type="file"] > label {
-  display: inline-block;
-  min-inline-size: 12em;
-  padding-inline-start: 5px;
-  text-align: match-parent;
-
-  color: unset;
-  font-size: unset;
-  letter-spacing: unset;
-
-  user-select: none;
-  unicode-bidi: plaintext;
-}
-
-/* button part of file selector */
-input[type="file"] > button {
-  font-size: unset;
-  letter-spacing: unset;
-  cursor: unset;
-}
-
 /* colored part of the color selector button */
 ::-moz-color-swatch {
   width: 100%;
@@ -564,6 +526,7 @@ input[type="search"] {
 /* Non text-related properties for buttons: these ones are shared with
    input[type="color"] */
 button,
+::file-chooser-button,
 input:is([type="color"], [type="reset"], [type="button"], [type="submit"]) {
   -moz-appearance: button;
   /* The sum of border and padding on block-start and block-end
@@ -581,6 +544,7 @@ input:is([type="color"], [type="reset"], [type="button"], [type="submit"]) {
 /* Text-related properties for buttons: these ones are not shared with
    input[type="color"] */
 button,
+::file-chooser-button,
 input:is([type="reset"], [type="button"], [type="submit"]) {
   color: ButtonText;
   font: -moz-button;
@@ -594,7 +558,8 @@ input[type="color"] {
   block-size: 23px;
 }
 
-button {
+button,
+::file-chooser-button {
   /* Buttons should lay out like "normal" html, mostly */
   white-space: unset;
   text-indent: 0;
@@ -636,16 +601,19 @@ button {
   justify-items: inherit;
 }
 
+::file-chooser-button:hover,
 button:hover,
 input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):hover {
   background-color: -moz-buttonhoverface;
 }
 
+::file-chooser-button:hover,
 button:hover,
 input:is([type="reset"], [type="button"], [type="submit"]):hover {
   color: -moz-buttonhovertext;
 }
 
+::file-chooser-button:active:hover,
 button:active:hover,
 input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):active:hover {
 %ifndef XP_MACOSX
@@ -656,6 +624,7 @@ input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):activ
   background-color: ButtonFace;
 }
 
+::file-chooser-button:active:hover,
 button:active:hover,
 input:is([type="reset"], [type="button"], [type="submit"]):active:hover {
 %ifdef MOZ_WIDGET_GTK
@@ -676,6 +645,7 @@ input:is([type="reset"], [type="button"], [type="submit"]):active:hover {
   border-color: currentColor;
 }
 
+:is(:disabled, :disabled:active)::file-chooser-button,
 button:is(:disabled, :disabled:active),
 input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):is(:disabled, :disabled:active),
 select:is(:disabled, :disabled:active) > button {
@@ -687,10 +657,48 @@ select:is(:disabled, :disabled:active) > button {
   cursor: unset;
 }
 
+:is(:disabled, :disabled:active)::file-chooser-button,
 button:is(:disabled, :disabled:active),
 input:is([type="reset"], [type="button"], [type="submit"]):is(:disabled, :disabled:active),
 select:is(:disabled, :disabled:active) > button {
   color: GrayText;
+}
+
+/* file selector */
+input[type="file"] {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  overflow-clip-box: padding-box;
+  color: unset;
+
+  /* Revert rules which apply on all inputs. */
+  -moz-appearance: none;
+  cursor: default;
+
+  border: none;
+  background-color: transparent;
+  padding: unset;
+}
+
+input[type="file"] > label {
+  display: inline-block;
+  min-inline-size: 12em;
+  padding-inline-start: 5px;
+  text-align: match-parent;
+
+  color: unset;
+  font-size: unset;
+  letter-spacing: unset;
+
+  user-select: none;
+  unicode-bidi: plaintext;
+}
+
+/* button part of file selector */
+::file-chooser-button {
+  font-size: unset;
+  letter-spacing: unset;
+  cursor: unset;
 }
 
  /*
