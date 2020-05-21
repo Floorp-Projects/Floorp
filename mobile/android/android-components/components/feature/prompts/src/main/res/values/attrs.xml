@@ -3,5 +3,6 @@
     <declare-styleable name="LoginPanelTextInputLayout">
         <attr name="mozacInputLayoutErrorTextColor" format="reference"/>
         <attr name="mozacInputLayoutErrorIconColor" format="reference"/>
+        <attr name="mozacPromptLoginEditTextCursorColor" format="reference"/>
     </declare-styleable>
 </resources>

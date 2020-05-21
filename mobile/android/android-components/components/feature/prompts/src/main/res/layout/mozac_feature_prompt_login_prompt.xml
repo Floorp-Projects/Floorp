@@ -86,7 +86,6 @@
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/password_field"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/mozac_feature_prompt_password_hint"

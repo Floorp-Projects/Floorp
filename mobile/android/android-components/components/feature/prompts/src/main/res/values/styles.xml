@@ -3,9 +3,13 @@
     <style name="MozTextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <item name="boxStrokeColor">@color/mozacBoxStrokeColor</item>
         <item name="boxStrokeWidth">2dp</item>
+        <item name="android:theme">@style/MozacPromptLoginTextInputLayoutCursorAppearance</item>
     </style>
     <style name="MozDialogStyle" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+    <style name="MozacPromptLoginTextInputLayoutCursorAppearance" parent="ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="colorControlActivated">?mozacPromptLoginEditTextCursorColor</item>
     </style>
 </resources>
