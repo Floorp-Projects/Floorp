@@ -72,7 +72,7 @@ public class GeckoJavaSampler {
             // Setting a limit of 100000 for now to make sure we are not
             // allocating too much.
             mSampleCount = Math.min(aSampleCount, 100000);
-            mSamples = new Sample[aSampleCount];
+            mSamples = new Sample[mSampleCount];
             mSamplePos = 0;
 
             // Find the main thread
