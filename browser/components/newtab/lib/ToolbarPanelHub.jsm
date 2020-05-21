@@ -85,13 +85,7 @@ class _ToolbarPanelHub {
   }
 
   toggleWhatsNewPref(event) {
-    event.stopPropagation();
-    event.preventDefault();
-    const [checkbox] = event.target.getElementsByTagName("checkbox");
-    const value = checkbox.checked;
-
-    checkbox.checked = !value;
-    Preferences.set(WHATSNEW_ENABLED_PREF, !value);
+    Preferences.set(WHATSNEW_ENABLED_PREF, event.target.checked);
   }
 
   maybeInsertFTL(win) {
