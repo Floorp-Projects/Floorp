@@ -971,19 +971,6 @@ if test "$ac_cv_sockaddr_sa_len" = true ; then
   AC_DEFINE(HAVE_SA_LEN)
 fi
 
-MOZ_ARG_ENABLE_BOOL(dtrace,
-              [  --enable-dtrace         build with dtrace support if available (default=no)],
-              [enable_dtrace="yes"],)
-if test "x$enable_dtrace" = "xyes"; then
-  MOZ_CHECK_HEADER(sys/sdt.h, HAVE_DTRACE=1)
-  if test -n "$HAVE_DTRACE"; then
-      AC_DEFINE(INCLUDE_MOZILLA_DTRACE)
-  else
-      AC_MSG_ERROR([dtrace enabled but sys/sdt.h not found]);
-  fi
-fi
-AC_SUBST(HAVE_DTRACE)
-
 dnl Checks for libraries.
 dnl ========================================================
 AC_CHECK_LIB(c_r, gethostbyname_r)
