@@ -1035,12 +1035,11 @@ nsPrintDialogServiceGTK::ShowPageSetup(nsPIDOMWindowOuter* aParent,
   g_object_unref(newPageSetup);
 
   if (psService)
-    // XXX We should probably only be saving the values for the settings that
-    // we showed to the user in the page settings dialog.  Does using
-    // kInitSaveAll cause us to incorrectly overwrite settings that we should
-    // leave alone?
-    psService->SavePrintSettingsToPrefs(aNSSettings, true,
-                                        nsIPrintSettings::kInitSaveAll);
+    psService->SavePrintSettingsToPrefs(
+        aNSSettings, true,
+        nsIPrintSettings::kInitSaveOrientation |
+            nsIPrintSettings::kInitSavePaperSize |
+            nsIPrintSettings::kInitSaveUnwriteableMargins);
 
   return NS_OK;
 }
