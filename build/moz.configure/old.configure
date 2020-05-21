@@ -210,7 +210,6 @@ def old_configure_options(*options):
 @old_configure_options(
     '--cache-file',
     '--datadir',
-    '--enable-cpp-rtti',
     '--enable-crashreporter',
     '--enable-dbus',
     '--enable-debug-js-modules',
