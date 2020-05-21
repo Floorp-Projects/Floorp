@@ -20,6 +20,9 @@ permalink: /changelog/
     into a new component `support-images`, which provides helpers for handling images. `AndroidIconDecoder` and `IconDecoder`
     are renamed to `AndroidImageDecoder` and `ImageDecoder` in `support-images`.
 
+* **browser-thumbnails**
+  * Adds `ThumbnailDiskCache` for storing and restoring thumbnail bitmaps into a disk cache.
+
 # 42.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v41.0.0...42.0.0)
