@@ -14,6 +14,7 @@ NS_IMPL_RELEASE(nsSystemAlertsService)
 NS_INTERFACE_MAP_BEGIN(nsSystemAlertsService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAlertsService)
   NS_INTERFACE_MAP_ENTRY(nsIAlertsService)
+  NS_INTERFACE_MAP_ENTRY(nsIAlertsDoNotDisturb)
 NS_INTERFACE_MAP_END
 
 nsSystemAlertsService::nsSystemAlertsService() = default;
@@ -58,6 +59,11 @@ NS_IMETHODIMP nsSystemAlertsService::ShowAlert(nsIAlertNotification* aAlert,
       new nsAlertsIconListener(this, alertName);
   if (!alertListener) return NS_ERROR_OUT_OF_MEMORY;
 
+  if (mSuppressForScreenSharing) {
+    alertListener->SendClosed();
+    return NS_OK;
+  }
+
   AddListener(alertName, alertListener);
   return alertListener->InitAlertAsync(aAlert, aAlertListener);
 }
@@ -70,6 +76,27 @@ NS_IMETHODIMP nsSystemAlertsService::CloseAlert(const nsAString& aAlertName,
   }
   mActiveListeners.Remove(aAlertName);
   return listener->Close();
+}
+
+NS_IMETHODIMP nsSystemAlertsService::GetManualDoNotDisturb(bool* aRetVal) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsSystemAlertsService::SetManualDoNotDisturb(bool aDoNotDisturb) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsSystemAlertsService::GetSuppressForScreenSharing(
+    bool* aRetVal) {
+  NS_ENSURE_ARG(aRetVal);
+  *aRetVal = mSuppressForScreenSharing;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSystemAlertsService::SetSuppressForScreenSharing(
+    bool aSuppress) {
+  mSuppressForScreenSharing = aSuppress;
+  return NS_OK;
 }
 
 bool nsSystemAlertsService::IsActiveListener(const nsAString& aAlertName,
