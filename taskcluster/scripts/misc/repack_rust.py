@@ -17,9 +17,13 @@ import hashlib
 import os
 import shutil
 import subprocess
+from contextlib import contextmanager
+import tarfile
 
 import requests
 import pytoml as toml
+
+import zstandard
 
 
 def log(msg):
@@ -248,10 +252,28 @@ def fetch_optional(manifest, pkg, host):
         return None
 
 
-def tar_for_host(host):
-    tar_options = 'cJf'
-    tar_ext = '.tar.xz'
-    return tar_options, tar_ext
+@contextmanager
+def chdir(path):
+    d = os.getcwd()
+    log('cd "%s"' % path)
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        log('cd "%s"' % d)
+        os.chdir(d)
+
+
+def build_tar_package(name, base, directory):
+    name = os.path.realpath(name)
+    log('tarring {} from {}/{}'.format(name, base, directory))
+    assert name.endswith(".tar.zst")
+
+    cctx = zstandard.ZstdCompressor()
+    with open(name, "wb") as f, cctx.stream_writer(f) as z:
+        with tarfile.open(mode="w|", fileobj=z) as tf:
+            with chdir(base):
+                tf.add(directory)
 
 
 def fetch_manifest(channel='stable'):
@@ -308,10 +330,8 @@ def repack(host, targets, channel='stable', cargo_channel=None):
         pass
 
     log('Creating archive...')
-    tar_options, tar_ext = tar_for_host(host)
-    tar_file = install_dir + tar_ext
-    subprocess.check_call(
-        ['tar', tar_options, tar_file, install_dir])
+    tar_file = install_dir + ".tar.zst"
+    build_tar_package(tar_file, ".", install_dir)
     shutil.rmtree(install_dir)
     log('%s is ready.' % tar_file)
 
@@ -366,9 +386,8 @@ def repack_cargo(host, channel='nightly'):
     install(os.path.basename(cargo['url']), install_dir)
     tar_basename = 'cargo-%s-repack' % host
     log('Tarring %s...' % tar_basename)
-    tar_options, tar_ext = tar_for_host(host)
-    subprocess.check_call(
-        ['tar', tar_options, tar_basename + tar_ext, install_dir])
+    tar_file = tar_basename + ".tar.zst"
+    build_tar_package(tar_file, ".", install_dir)
     shutil.rmtree(install_dir)
 
 
