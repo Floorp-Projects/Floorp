@@ -277,8 +277,22 @@ bool StoragePrincipalHelper::GetOriginAttributesForNetworkState(
 // static
 void StoragePrincipalHelper::GetOriginAttributesForNetworkState(
     Document* aDocument, OriginAttributes& aAttributes) {
+  aAttributes = aDocument->NodePrincipal()->OriginAttributesRef();
+
   if (!StaticPrefs::privacy_partition_network_state()) {
-    aAttributes = aDocument->NodePrincipal()->OriginAttributesRef();
+    return;
+  }
+
+  // This part is required because the intrisicStoragePrincipal is not always
+  // partitioned. This should probably change. TODO - bug 1639833.
+  nsCOMPtr<nsICookieJarSettings> cjs = aDocument->CookieJarSettings();
+  MOZ_ASSERT(cjs);
+
+  nsAutoString domain;
+  Unused << cjs->GetFirstPartyDomain(domain);
+
+  if (!domain.IsEmpty()) {
+    aAttributes.SetFirstPartyDomain(false, domain, true /* aForced */);
     return;
   }
 
