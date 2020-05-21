@@ -421,12 +421,12 @@ def early_options():
 early_options = early_options()
 
 
-@depends(mozconfig, 'MOZ_AUTOMATION', '--help')
+@depends(mozconfig, early_options, 'MOZ_AUTOMATION', '--help')
 # This gives access to the sandbox. Don't copy this blindly.
 @imports('__sandbox__')
 @imports('os')
 @imports('six')
-def mozconfig_options(mozconfig, automation, help):
+def mozconfig_options(mozconfig, early_options, automation, help):
     if mozconfig['path']:
         if 'MOZ_AUTOMATION_MOZCONFIG' in mozconfig['env']['added']:
             if not automation:
@@ -449,7 +449,8 @@ def mozconfig_options(mozconfig, automation, help):
             if key.isupper():
                 arg = '%s=%s' % (key, value)
                 log.info('  %s' % arg)
-                helper.add(arg, origin='mozconfig', args=helper._args)
+                if key not in early_options:
+                    helper.add(arg, origin='mozconfig', args=helper._args)
 
         for key, value in six.iteritems(mozconfig['env']['added']):
             add(key, value)
