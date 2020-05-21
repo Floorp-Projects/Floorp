@@ -87,6 +87,7 @@ class ListItemElementSelectionState;
 class ParagraphStateAtSelection;
 class PlaceholderTransaction;
 class PresShell;
+class ReplaceTextTransaction;
 class SplitNodeResult;
 class SplitNodeTransaction;
 class TextComposition;
@@ -2237,6 +2238,15 @@ class EditorBase : public nsIEditor,
       const nsRange& aCollapsedRange,
       HowToHandleCollapsedRange aHowToHandleCollapsedRange);
 
+  /**
+   * ComputeInsertedRange() returns actual range modified by inserting string
+   * in a text node.  If mutation event listener changed the text data, this
+   * returns a range which covers all over the text data.
+   */
+  Tuple<EditorDOMPointInText, EditorDOMPointInText> ComputeInsertedRange(
+      const EditorDOMPointInText& aInsertedPoint,
+      const nsAString& aInsertedString) const;
+
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
   RefPtr<Document> mDocument;
@@ -2526,6 +2536,7 @@ class EditorBase : public nsIEditor,
   friend class ListElementSelectionState;
   friend class ListItemElementSelectionState;
   friend class ParagraphStateAtSelection;
+  friend class ReplaceTextTransaction;
   friend class SplitNodeTransaction;
   friend class TypeInState;
   friend class WSRunObject;

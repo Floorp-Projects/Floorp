@@ -99,8 +99,11 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
       return error.StealNSResult();
     }
     editorBase->RangeUpdaterRef().SelAdjInsertText(textNode, mOffset,
-                                                   mStringToInsert);
+                                                   mStringToInsert.Length());
   } else {
+    // If composition string is split to multiple text nodes, we should put
+    // whole new composition string to the first text node and remove the
+    // compostion string in other nodes.
     uint32_t replaceableLength = textNode->TextLength() - mOffset;
     ErrorResult error;
     editorBase->DoReplaceText(textNode, mOffset, mReplaceLength,
@@ -109,33 +112,38 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
       NS_WARNING("EditorBase::DoReplaceText() failed");
       return error.StealNSResult();
     }
-    DebugOnly<nsresult> rvIgnored =
-        editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, mOffset,
-                                                       mReplaceLength);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "RangeUpdater::SelAdjDeleteText() failed, but ignored");
-    editorBase->RangeUpdaterRef().SelAdjInsertText(textNode, mOffset,
-                                                   mStringToInsert);
 
-    // If IME text node is multiple node, ReplaceData doesn't remove all IME
-    // text.  So we need remove remained text into other text node.
-    // XXX I think that this shouldn't occur.  Composition string should be
-    //     in a text node.
+    // Don't use RangeUpdaterRef().SelAdjReplaceText() here because undoing
+    // this transaction will remove whole composition string.  Therefore,
+    // selection should be restored at start of composition string.
+    // XXX Perhaps, this is a bug of our selection managemnt at undoing.
+    editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, mOffset,
+                                                   replaceableLength);
+    // But some ranges which after the composition string should be restored
+    // as-is.
+    editorBase->RangeUpdaterRef().SelAdjInsertText(textNode, mOffset,
+                                                   mStringToInsert.Length());
+
     if (replaceableLength < mReplaceLength) {
+      // XXX Perhaps, scanning following sibling text nodes with composition
+      //     string length which we know is wrong because there may be
+      //     non-empty text nodes which are inserted by JS.  Instead, we
+      //     should remove all text in the ranges of IME selections.
       int32_t remainLength = mReplaceLength - replaceableLength;
       IgnoredErrorResult ignoredError;
       for (nsIContent* nextSibling = textNode->GetNextSibling();
            nextSibling && nextSibling->IsText() && remainLength;
            nextSibling = nextSibling->GetNextSibling()) {
-        OwningNonNull<Text> textNode = *static_cast<Text*>(nextSibling);
-        uint32_t textLength = textNode->TextLength();
-        editorBase->DoDeleteText(textNode, 0, remainLength, ignoredError);
+        OwningNonNull<Text> followingTextNode =
+            *static_cast<Text*>(nextSibling);
+        uint32_t textLength = followingTextNode->TextLength();
+        editorBase->DoDeleteText(followingTextNode, 0, remainLength,
+                                 ignoredError);
         NS_WARNING_ASSERTION(!ignoredError.Failed(),
                              "EditorBase::DoDeleteText() failed, but ignored");
         ignoredError.SuppressException();
         // XXX Needs to check whether the text is deleted as expected.
-        editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, 0,
+        editorBase->RangeUpdaterRef().SelAdjDeleteText(followingTextNode, 0,
                                                        remainLength);
         remainLength -= textLength;
       }

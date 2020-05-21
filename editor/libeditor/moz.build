@@ -66,6 +66,7 @@ UNIFIED_SOURCES += [
     'InternetCiter.cpp',
     'JoinNodeTransaction.cpp',
     'PlaceholderTransaction.cpp',
+    'ReplaceTextTransaction.cpp',
     'SelectionState.cpp',
     'SplitNodeTransaction.cpp',
     'TextEditor.cpp',

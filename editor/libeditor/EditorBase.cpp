@@ -2484,6 +2484,28 @@ AdjustTextInsertionRange(const EditorDOMPointInText& aInsertedPoint,
       EditorDOMPointInText::AtEndOf(*aInsertedPoint.ContainerAsText()));
 }
 
+Tuple<EditorDOMPointInText, EditorDOMPointInText>
+EditorBase::ComputeInsertedRange(const EditorDOMPointInText& aInsertedPoint,
+                                 const nsAString& aInsertedString) const {
+  MOZ_ASSERT(aInsertedPoint.IsSet());
+
+  // The DOM was potentially modified during the transaction. This is possible
+  // through mutation event listeners. That is, the node could've been removed
+  // from the doc or otherwise modified.
+  if (!MaybeHasMutationEventListeners(
+          NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
+    EditorDOMPointInText endOfInsertion(
+        aInsertedPoint.ContainerAsText(),
+        aInsertedPoint.Offset() + aInsertedString.Length());
+    return MakeTuple(aInsertedPoint, endOfInsertion);
+  }
+  if (aInsertedPoint.ContainerAsText()->IsInComposedDoc()) {
+    EditorDOMPointInText begin, end;
+    return AdjustTextInsertionRange(aInsertedPoint, aInsertedString);
+  }
+  return MakeTuple(EditorDOMPointInText(), EditorDOMPointInText());
+}
+
 nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
     const nsAString& aStringToInsert,
     const EditorDOMPointInText& aPointToInsert, bool aSuppressIME) {
@@ -2521,20 +2543,9 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   EndUpdateViewBatch();
 
   if (AsHTMLEditor() && pointToInsert.IsSet()) {
-    // The DOM was potentially modified during the transaction. This is possible
-    // through mutation event listeners. That is, the node could've been removed
-    // from the doc or otherwise modified.
-    if (!MaybeHasMutationEventListeners(
-            NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
-      EditorDOMPointInText endOfInsertion(
-          pointToInsert.ContainerAsText(),
-          pointToInsert.Offset() + aStringToInsert.Length());
-      TopLevelEditSubActionDataRef().DidInsertText(*this, pointToInsert,
-                                                   endOfInsertion);
-    } else if (pointToInsert.ContainerAsText()->IsInComposedDoc()) {
-      EditorDOMPointInText begin, end;
-      Tie(begin, end) =
-          AdjustTextInsertionRange(pointToInsert, aStringToInsert);
+    EditorDOMPointInText begin, end;
+    Tie(begin, end) = ComputeInsertedRange(pointToInsert, aStringToInsert);
+    if (begin.IsSet() && end.IsSet()) {
       TopLevelEditSubActionDataRef().DidInsertText(*this, begin, end);
     }
   }
@@ -2718,10 +2729,7 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
   NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
                "Selection::Collapse() failed, but ignored");
 
-  rvIgnored = RangeUpdaterRef().SelAdjDeleteText(aTextNode, 0, length);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "RangeUpdater::SelAdjDeleteText() failed, but ignored");
-  RangeUpdaterRef().SelAdjInsertText(aTextNode, 0, aString);
+  RangeUpdaterRef().SelAdjReplaceText(aTextNode, 0, length, aString.Length());
 
   // Let listeners know what happened
   if (!mActionListeners.IsEmpty()) {
