@@ -276,10 +276,10 @@ linux64-devedition/opt:
     index:
         product: devedition
         job-name: linux64-opt
-        type: nightly
+        type: shippable
     treeherder:
         platform: linux64-devedition/opt
-        symbol: N
+        symbol: B
     worker-type: b-linux
     worker:
         max-run-time: 7200
@@ -654,10 +654,10 @@ linux-devedition/opt:
     index:
         product: devedition
         job-name: linux-opt
-        type: nightly
+        type: shippable
     treeherder:
         platform: linux32-devedition/opt
-        symbol: N
+        symbol: B
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian8-i386-build}
