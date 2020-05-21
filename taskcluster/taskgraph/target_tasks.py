@@ -53,8 +53,9 @@ def get_method(method):
     return _target_task_methods[method]
 
 
-def filter_out_nightly(task, parameters):
+def filter_out_shipping_phase(task, parameters):
     return (
+        # nightly still here because of geckodriver
         not task.attributes.get('nightly') and
         task.attributes.get('shipping_phase') in (None, 'build')
         )
@@ -232,7 +233,7 @@ def target_tasks_try_auto(full_task_graph, parameters, graph_config):
     parameters = Parameters(**params)
     return [l for l, t in six.iteritems(full_task_graph.tasks)
             if standard_filter(t, parameters)
-            and filter_out_nightly(t, parameters)
+            and filter_out_shipping_phase(t, parameters)
             and filter_by_uncommon_try_tasks(t.label)]
 
 
@@ -242,7 +243,7 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
     via the `run_on_projects` attributes."""
     return [l for l, t in six.iteritems(full_task_graph.tasks)
             if standard_filter(t, parameters)
-            and filter_out_nightly(t, parameters)
+            and filter_out_shipping_phase(t, parameters)
             and filter_out_devedition(t, parameters)]
 
 
@@ -433,8 +434,8 @@ def target_tasks_pine(full_task_graph, parameters, graph_config):
         # disable asan
         if platform == 'linux64-asan':
             return False
-        # disable non-pine and nightly tasks
-        if standard_filter(task, parameters) or filter_out_nightly(task, parameters):
+        # disable non-pine and tasks with a shipping phase
+        if standard_filter(task, parameters) or filter_out_shipping_phase(task, parameters):
             return True
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
 
@@ -572,10 +573,7 @@ def make_desktop_nightly_filter(platforms):
         return all([
             filter_on_platforms(task, platforms),
             filter_for_project(task, parameters),
-            any([
-                task.attributes.get('nightly', False),
-                task.attributes.get('shippable', False),
-            ]),
+            task.attributes.get('shippable', False),
             # Tests and nightly only builds don't have `shipping_product` set
             task.attributes.get('shipping_product') in {None, "firefox", "thunderbird"},
             task.kind not in {'l10n'},  # no on-change l10n
@@ -589,7 +587,7 @@ def target_tasks_nightly_linux(full_task_graph, parameters, graph_config):
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     filter = make_desktop_nightly_filter({
-        'linux64-nightly', 'linux-nightly', 'linux64-shippable', 'linux-shippable'
+        'linux64-shippable', 'linux-shippable'
         })
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
 
@@ -599,7 +597,7 @@ def target_tasks_nightly_macosx(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of macosx. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_desktop_nightly_filter({'macosx64-nightly', 'macosx64-shippable'})
+    filter = make_desktop_nightly_filter({'macosx64-shippable'})
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
 
 
@@ -608,7 +606,7 @@ def target_tasks_nightly_win32(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_desktop_nightly_filter({'win32-nightly', 'win32-shippable'})
+    filter = make_desktop_nightly_filter({'win32-shippable'})
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
 
 
@@ -617,7 +615,7 @@ def target_tasks_nightly_win64(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_desktop_nightly_filter({'win64-nightly', 'win64-shippable'})
+    filter = make_desktop_nightly_filter({'win64-shippable'})
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
 
 
@@ -626,7 +624,7 @@ def target_tasks_nightly_win64_aarch64(full_task_graph, parameters, graph_config
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_desktop_nightly_filter({'win64-aarch64-nightly', 'win64-aarch64-shippable'})
+    filter = make_desktop_nightly_filter({'win64-aarch64-shippable'})
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
 
 
