@@ -391,7 +391,14 @@ constexpr int kInt64Size = sizeof(int64_t);
 constexpr int kUC16Size = sizeof(uc16);
 
 inline constexpr bool IsDecimalDigit(uc32 c) { return c >= '0' && c <= '9'; }
-inline bool is_uint24(int val) { return (val & 0x00ffffff) == val; }
+
+inline bool is_uint24(int64_t val) {
+  return !(val >> 24);
+}
+inline bool is_int24(int64_t val) {
+  int64_t limit = 1 << 23;
+  return (-limit <= val) && (val < limit);
+}
 
 inline bool IsIdentifierStart(uc32 c) {
   return js::unicode::IsIdentifierStart(uint32_t(c));
