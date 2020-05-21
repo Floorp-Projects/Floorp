@@ -96,4 +96,3 @@ Detailed Docs
   first-run
   targeting-attributes
   targeting-guide
-  user-actions
