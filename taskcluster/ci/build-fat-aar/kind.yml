@@ -99,18 +99,17 @@ jobs:
     android-geckoview-fat-aar-shippable/opt:
         description: "Android GeckoView multi-architecture fat AAR Shippable"
         attributes:
-            nightly: true
             shippable: true
             enable-full-crashsymbols: true
             disable-push-apk: true
         shipping-phase: build
         shipping-product: fennec
         index:
-            job-name: android-geckoview-fat-aar-nightly
-            type: nightly-with-multi-l10n
+            job-name: android-geckoview-fat-aar-opt
+            type: shippable-with-multi-l10n
         treeherder:
-            platform: android-4-0-geckoview-fat-aar/opt
-            symbol: Ngv
+            platform: android-4-0-geckoview-fat-aar-shippable/opt
+            symbol: Bgv
         dependencies:
             android-x86-shippable: build-android-x86-shippable/opt
             android-x86_64-shippable: build-android-x86_64-shippable/opt
