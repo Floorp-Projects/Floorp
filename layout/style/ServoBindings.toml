@@ -414,6 +414,7 @@ opaque-types = [
 # FIXME(emilio): We probably want to automate this somehow...
 cbindgen-types = [
     { gecko = "StyleAppearance", servo = "values::specified::Appearance" },
+    { gecko = "StyleAspectRatio", servo = "values::computed::position::AspectRatio" },
     { gecko = "StyleComputedFontStretchRange", servo = "font_face::ComputedFontStretchRange" },
     { gecko = "StyleComputedFontStyleDescriptor", servo = "font_face::ComputedFontStyleDescriptor" },
     { gecko = "StyleComputedFontWeightRange", servo = "font_face::ComputedFontWeightRange" },

@@ -13,6 +13,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "align-items",
       "align-self",
       "align-tracks",
+      "aspect-ratio",
       "-moz-appearance",
       "backface-visibility",
       "background-attachment",

@@ -94,6 +94,7 @@ template <typename T>
 struct StyleForgottenArcSlicePtr;
 
 struct AnimationPropertySegment;
+struct AspectRatio;
 struct ComputedTiming;
 struct URLExtraData;
 
