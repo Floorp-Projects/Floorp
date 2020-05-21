@@ -33,7 +33,6 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
 
   nsresult InitWithProcess(BrowserParent* aParentBrowser,
                            ContentParent* aContentParent,
-                           const nsString& aPresentationURL,
                            const WindowGlobalInit& aWindowInit,
                            uint32_t aChromeFlags, TabId aTabId);
 

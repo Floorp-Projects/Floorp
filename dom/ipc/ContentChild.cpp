@@ -953,13 +953,6 @@ nsresult ContentChild::ProvideWindowCommon(
     browsingContext->SetPendingInitialization(false);
   });
 
-  // Awkwardly manually construct the new TabContext in order to ensure our
-  // OriginAttributes perfectly matches it.
-  MutableTabContext newTabContext;
-  newTabContext.SetTabContext(
-      aTabOpener->ChromeOuterWindowID(), aTabOpener->ShowFocusRings(),
-      aTabOpener->PresentationURL(), aTabOpener->MaxTouchPoints());
-
   // The initial about:blank document we generate within the nsDocShell will
   // almost certainly be replaced at some point. Unfortunately, getting the
   // principal right here causes bugs due to frame scripts not getting events
@@ -979,7 +972,7 @@ nsresult ContentChild::ProvideWindowCommon(
     return NS_ERROR_ABORT;
   }
 
-  auto newChild = MakeRefPtr<BrowserChild>(this, tabId, newTabContext,
+  auto newChild = MakeRefPtr<BrowserChild>(this, tabId, *aTabOpener,
                                            browsingContext, aChromeFlags,
                                            /* aIsTopLevel */ true);
 
