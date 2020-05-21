@@ -66,7 +66,7 @@ job-defaults:
                     - macosx64-minidump-stackwalk
                     - macosx64-fix-stacks
                 android-em-7.*:
-                    - android-sdk-linux
+                    - android-emulator-linux
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
                 default:
