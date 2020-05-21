@@ -32,6 +32,16 @@ const TELEMETRY_DATA = [
     timestamp: null,
     category: "devtools.main",
     method: "tool_timer",
+    object: "compatibilityview",
+    value: null,
+    extra: {
+      time_open: "",
+    },
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "tool_timer",
     object: "computedview",
     value: null,
     extra: {
@@ -57,6 +67,15 @@ add_task(async function() {
     inspector.sidebar.getCurrentTabID(),
     "fontinspector",
     "Font Inspector is selected"
+  );
+
+  info("Selecting compatibility view.");
+  inspector.sidebar.select("compatibilityview");
+
+  is(
+    inspector.sidebar.getCurrentTabID(),
+    "compatibilityview",
+    "Compatibility View is selected"
   );
 
   info("Selecting computed view.");
