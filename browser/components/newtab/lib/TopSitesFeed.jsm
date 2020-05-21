@@ -84,6 +84,8 @@ const SEARCH_FILTERS = [
   "ask",
   "duckduckgo",
 ];
+const AMAZON_SEARCH_TILE_OVERRIDE_PREF =
+  "browser.newtabpage.amazonSearchTileOverride.url";
 
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
@@ -122,11 +124,13 @@ this.TopSitesFeed = class TopSitesFeed {
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     this.refresh({ broadcast: true });
     Services.obs.addObserver(this, "browser-search-engine-modified");
+    Services.prefs.addObserver(AMAZON_SEARCH_TILE_OVERRIDE_PREF, this);
   }
 
   uninit() {
     PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
+    Services.prefs.removeObserver(AMAZON_SEARCH_TILE_OVERRIDE_PREF, this);
   }
 
   observe(subj, topic, data) {
@@ -139,6 +143,11 @@ this.TopSitesFeed = class TopSitesFeed {
     ) {
       delete this._currentSearchHostname;
       this._currentSearchHostname = getShortURLForCurrentSearch();
+      this.refresh({ broadcast: true });
+    } else if (
+      topic === "nsPref:changed" &&
+      data === AMAZON_SEARCH_TILE_OVERRIDE_PREF
+    ) {
       this.refresh({ broadcast: true });
     }
   }
@@ -396,6 +405,11 @@ this.TopSitesFeed = class TopSitesFeed {
     // Insert the original pinned sites into the deduped frecent and defaults
     const withPinned = insertPinned(checkedAdult, pinned).slice(0, numItems);
 
+    const amazonSearchTileOverrideURL = Services.prefs.getCharPref(
+      AMAZON_SEARCH_TILE_OVERRIDE_PREF,
+      ""
+    );
+
     // Now, get a tippy top icon, a rich icon, or screenshot for every item
     for (const link of withPinned) {
       if (link) {
@@ -413,6 +427,14 @@ this.TopSitesFeed = class TopSitesFeed {
 
         // Indicate that these links should get a frecency bonus when clicked
         link.typedBonus = true;
+
+        if (amazonSearchTileOverrideURL) {
+          if (link.searchTopSite && link.label === "@amazon") {
+            delete link.searchTopSite;
+            delete link.label;
+            link.url = amazonSearchTileOverrideURL;
+          }
+        }
       }
     }
 
