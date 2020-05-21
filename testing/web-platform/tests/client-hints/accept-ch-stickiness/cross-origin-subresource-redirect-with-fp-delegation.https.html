@@ -9,7 +9,7 @@
 
 <script>
 // Make sure a cross origin subresource that gets redirected with Feature Policy delegation keeps the initial request's Client Hints.
-const test_name = "cross-origin subresource redirect with Feature Policy delegaation";
+const test_name = "cross-origin subresource redirect with Feature Policy delegation";
 verify_subresource_state("resources/accept-ch-and-redir.py?url=" + get_host_info()["HTTPS_REMOTE_ORIGIN"] + "/client-hints/accept-ch-stickiness/resources/expect-received.py", test_name);
 </script>
 </body>
