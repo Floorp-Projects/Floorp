@@ -191,34 +191,9 @@ describe("ToolbarPanelHub", () => {
     assert.calledTwice(everyWindowStub.unregisterCallback);
   });
   describe("#toggleWhatsNewPref", () => {
-    it("should prevent clicks from bubbling", () => {
+    it("should call Preferences.set() with the checkbox value", () => {
       let checkbox = {};
-      let event = {
-        target: {
-          getElementsByTagName: fakeDocument.getElementsByTagName
-            .withArgs("checkbox")
-            .returns([checkbox]),
-        },
-        stopPropagation: sinon.stub(),
-        preventDefault: sinon.stub(),
-      };
-
-      instance.toggleWhatsNewPref(event);
-
-      assert.calledOnce(event.stopPropagation);
-      assert.calledOnce(event.preventDefault);
-    });
-    it("should call Preferences.set() with true when the checkbox is checked", () => {
-      let checkbox = {};
-      let event = {
-        target: {
-          getElementsByTagName: fakeDocument.getElementsByTagName
-            .withArgs("checkbox")
-            .returns([checkbox]),
-        },
-        stopPropagation: sinon.stub(),
-        preventDefault: sinon.stub(),
-      };
+      let event = { target: checkbox };
       // checkbox starts false
       checkbox.checked = false;
 
@@ -229,31 +204,7 @@ describe("ToolbarPanelHub", () => {
       assert.calledWith(
         preferencesStub.set,
         "browser.messaging-system.whatsNewPanel.enabled",
-        true
-      );
-    });
-    it("should call Preferences.set() with false when the checkbox is unchecked", () => {
-      let checkbox = {};
-      let event = {
-        target: {
-          getElementsByTagName: fakeDocument.getElementsByTagName
-            .withArgs("checkbox")
-            .returns([checkbox]),
-        },
-        stopPropagation: sinon.stub(),
-        preventDefault: sinon.stub(),
-      };
-      // checkbox starts true
-      checkbox.checked = true;
-
-      // toggling the checkbox to set the value to false
-      instance.toggleWhatsNewPref(event);
-
-      assert.calledOnce(preferencesStub.set);
-      assert.calledWith(
-        preferencesStub.set,
-        "browser.messaging-system.whatsNewPanel.enabled",
-        false
+        checkbox.checked
       );
     });
   });

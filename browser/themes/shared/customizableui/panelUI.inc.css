@@ -1874,7 +1874,19 @@ panelview[mainview] #PanelUI-whatsNew-content {
 }
 
 #PanelUI-whatsNew .panelMenu-toggleWhatsNew-checkbox {
-  margin-inline-start: -80px;
+  background-color: var(--arrowpanel-dimmed);
+  border-top: 1px solid var(--panel-separator-color);
+  padding-inline-start: 18px;
+  min-height: 41px;
+}
+
+#PanelUI-whatsNew .panelMenu-toggleWhatsNew-checkbox:hover,
+#PanelUI-whatsNew .panelMenu-toggleWhatsNew-checkbox:focus {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+#PanelUI-whatsNew .panelMenu-toggleWhatsNew-checkbox:active {
+  background-color: var(--arrowpanel-dimmed-even-further);
 }
 
 /* These checkbox styles have been pulled from `common.inc.css` and
@@ -1883,10 +1895,10 @@ panelview[mainview] #PanelUI-whatsNew-content {
 #PanelUI-whatsNew checkbox {
   -moz-appearance: none;
   height: 30px;
-  margin: 2px 0;
+  margin: 0;
 }
 
-#PanelUI-whatsNew checkbox[checked].panelMenu-toggleWhatsNew-checkbox {
+#PanelUI-whatsNew checkbox[checked] {
   list-style-image: url("chrome://global/skin/icons/check.svg");
   -moz-context-properties: fill;
   fill: #2292d0;
@@ -1904,6 +1916,10 @@ panelview[mainview] #PanelUI-whatsNew-content {
   background-color: #FFF;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+#PanelUI-whatsNew checkbox:hover .checkbox-check {
+  border-color: #0a84ff;
 }
 
 #PanelUI-whatsNew .checkbox-icon {
