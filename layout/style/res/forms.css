@@ -138,12 +138,9 @@ textarea > scrollbar {
   cursor: default;
 }
 
-textarea::-moz-text-control-editing-root,
-input::-moz-text-control-editing-root,
-input::placeholder,
-textarea::placeholder,
-input::-moz-text-control-preview,
-textarea::-moz-text-control-preview {
+::-moz-text-control-editing-root,
+::placeholder,
+::-moz-text-control-preview {
   overflow: auto;
   border: 0;
   padding: inherit;
@@ -181,10 +178,8 @@ textarea::-moz-text-control-editing-root {
   overflow: inherit;
 }
 
-input::placeholder,
-textarea::placeholder,
-input::-moz-text-control-preview,
-textarea::-moz-text-control-preview {
+::placeholder,
+::-moz-text-control-preview {
   /*
    * Changing display to inline can leads to broken behaviour and will assert.
    */
@@ -204,8 +199,7 @@ textarea::-moz-text-control-preview {
   pointer-events: none;
 }
 
-input::placeholder,
-textarea::placeholder {
+::placeholder {
   opacity: 0.54;
 }
 
@@ -251,9 +245,7 @@ select:active:hover {
 /* Need the "select[size][multiple]" selector to override the settings on
    'select[size="1"]', eg if one has <select size="1" multiple> */
 
-select[size],
-select[multiple],
-select[size][multiple] {
+select:is([size], [multiple], [size][multiple]) {
   /* Different alignment and padding for listbox vs combobox */
   background-color: -moz-Field;
   color: -moz-FieldText;
@@ -263,8 +255,7 @@ select[size][multiple] {
   -moz-appearance: listbox;
 }
 
-select[size="0"],
-select[size="1"] {
+select:is([size="0"], [size="1"]) {
   /* Except this is not a listbox */
   background-color: -moz-Combobox;
   color: -moz-ComboboxText;
@@ -509,7 +500,7 @@ input[type="file"] > button {
 }
 
 /* colored part of the color selector button */
-input[type="color"]::-moz-color-swatch {
+::-moz-color-swatch {
   width: 100%;
   height: 100%;
   min-width: 3px;
@@ -547,14 +538,7 @@ input[type="checkbox"] {
   color: unset;
 }
 
-input[type="radio"]:disabled,
-input[type="radio"]:disabled:active,
-input[type="radio"]:disabled:hover,
-input[type="radio"]:disabled:hover:active,
-input[type="checkbox"]:disabled,
-input[type="checkbox"]:disabled:active,
-input[type="checkbox"]:disabled:hover,
-input[type="checkbox"]:disabled:hover:active {
+input:is([type="radio"], [type="checkbox"]):is(:disabled, :disabled:active, :disabled:hover:active) {
   cursor: unset;
 }
 
@@ -580,10 +564,7 @@ input[type="search"] {
 /* Non text-related properties for buttons: these ones are shared with
    input[type="color"] */
 button,
-input[type="color"],
-input[type="reset"],
-input[type="button"],
-input[type="submit"] {
+input:is([type="color"], [type="reset"], [type="button"], [type="submit"]) {
   -moz-appearance: button;
   /* The sum of border and padding on block-start and block-end
      must be the same here, for text inputs, and for <select>.
@@ -600,9 +581,7 @@ input[type="submit"] {
 /* Text-related properties for buttons: these ones are not shared with
    input[type="color"] */
 button,
-input[type="reset"],
-input[type="button"],
-input[type="submit"] {
+input:is([type="reset"], [type="button"], [type="submit"]) {
   color: ButtonText;
   font: -moz-button;
   white-space: pre;
@@ -658,25 +637,17 @@ button {
 }
 
 button:hover,
-input[type="color"]:hover,
-input[type="reset"]:hover,
-input[type="button"]:hover,
-input[type="submit"]:hover {
+input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):hover {
   background-color: -moz-buttonhoverface;
 }
 
 button:hover,
-input[type="reset"]:hover,
-input[type="button"]:hover,
-input[type="submit"]:hover {
+input:is([type="reset"], [type="button"], [type="submit"]):hover {
   color: -moz-buttonhovertext;
 }
 
 button:active:hover,
-input[type="color"]:active:hover,
-input[type="reset"]:active:hover,
-input[type="button"]:active:hover,
-input[type="submit"]:active:hover {
+input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):active:hover {
 %ifndef XP_MACOSX
   padding-block: 0;
   padding-inline: 9px 7px;
@@ -686,9 +657,7 @@ input[type="submit"]:active:hover {
 }
 
 button:active:hover,
-input[type="reset"]:active:hover,
-input[type="button"]:active:hover,
-input[type="submit"]:active:hover {
+input:is([type="reset"], [type="button"], [type="submit"]):active:hover {
 %ifdef MOZ_WIDGET_GTK
   color: -moz-gtk-buttonactivetext;
 %else
@@ -696,37 +665,20 @@ input[type="submit"]:active:hover {
 %endif
 }
 
-
-button::-moz-focus-inner,
-input[type="color"]::-moz-focus-inner,
-input[type="reset"]::-moz-focus-inner,
-input[type="button"]::-moz-focus-inner,
-input[type="submit"]::-moz-focus-inner {
+::-moz-focus-inner {
   /* Note this padding only affects the -moz-focus-inner ring, not the button itself */
   padding-block: 0;
   padding-inline: 2px;
   border: 1px dotted transparent;
 }
 
-button:-moz-focusring::-moz-focus-inner,
-input[type="color"]:-moz-focusring::-moz-focus-inner,
-input[type="reset"]:-moz-focusring::-moz-focus-inner,
-input[type="button"]:-moz-focusring::-moz-focus-inner,
-input[type="submit"]:-moz-focusring::-moz-focus-inner {
+:-moz-focusring::-moz-focus-inner {
   border-color: currentColor;
 }
 
-button:disabled:active, button:disabled,
-input[type="color"]:disabled:active,
-input[type="color"]:disabled,
-input[type="reset"]:disabled:active,
-input[type="reset"]:disabled,
-input[type="button"]:disabled:active,
-input[type="button"]:disabled,
-select:disabled > button,
-select:disabled > button,
-input[type="submit"]:disabled:active,
-input[type="submit"]:disabled {
+button:is(:disabled, :disabled:active),
+input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):is(:disabled, :disabled:active),
+select:is(:disabled, :disabled:active) > button {
   /* The sum of border and padding on block-start and block-end
      must be the same here and for text inputs */
   padding-block: 0;
@@ -735,15 +687,9 @@ input[type="submit"]:disabled {
   cursor: unset;
 }
 
-button:disabled:active, button:disabled,
-input[type="reset"]:disabled:active,
-input[type="reset"]:disabled,
-input[type="button"]:disabled:active,
-input[type="button"]:disabled,
-select:disabled > button,
-select:disabled > button,
-input[type="submit"]:disabled:active,
-input[type="submit"]:disabled {
+button:is(:disabled, :disabled:active),
+input:is([type="reset"], [type="button"], [type="submit"]):is(:disabled, :disabled:active),
+select:is(:disabled, :disabled:active) > button {
   color: GrayText;
 }
 
@@ -765,10 +711,8 @@ input[type="submit"]:disabled {
   *  the <optgroup> gets displayed. The <option>s don't use anonymous boxes,
   *  so they need no special rules.
   */
-textarea::-moz-text-control-editing-root,
-input::-moz-text-control-editing-root,
-input::placeholder,
-textarea::placeholder,
+::-moz-text-control-editing-root,
+::placeholder,
 *|*::-moz-button-content,
 *|*::-moz-display-comboboxcontrol-frame,
 optgroup:before {
@@ -779,15 +723,16 @@ optgroup:before {
 /**
  * Set default style for invalid elements.
  */
-:not(output):-moz-ui-invalid {
+:-moz-ui-invalid {
   box-shadow: 0 0 1.5px 1px red;
 }
 
-:not(output):-moz-ui-invalid:-moz-focusring {
+:-moz-ui-invalid:-moz-focusring {
   box-shadow: 0 0 2px 2px rgba(255,0,0,0.4);
 }
 
 output:-moz-ui-invalid {
+  box-shadow: initial;
   color: red;
 }
 
@@ -1049,10 +994,7 @@ input[type="time"] {
   cursor: default;
 }
 
-input[type="date"]:disabled,
-input[type="time"]:disabled,
-input[type="date"]:read-only,
-input[type="time"]:read-only {
+input:is([type="date"], [type="time"]):is(:disabled, :read-only) {
   color: GrayText;
 }
 
