@@ -21,7 +21,7 @@ linux64-clang-5.0:
             - 'build/build-clang/clang-5.0-linux64.json'
         resources:
             - 'build/build-clang/clang-5.0-linux64.json'
-        toolchain-artifact: public/build/clang.tar.xz
+        toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-5.0
@@ -39,7 +39,7 @@ linux64-clang-7:
             - 'build/build-clang/clang-7-linux64.json'
         resources:
             - 'build/build-clang/clang-7-linux64.json'
-        toolchain-artifact: public/build/clang.tar.xz
+        toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-7
@@ -59,7 +59,7 @@ linux64-clang-9:
         resources:
             - 'build/build-clang/clang-linux64.json'
         toolchain-alias: linux64-clang
-        toolchain-artifact: public/build/clang.tar.xz
+        toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-9
@@ -80,7 +80,7 @@ linux64-clang-9-mingw-x86:
         resources:
             - 'build/build-clang/clang-9-mingw.json'
         toolchain-alias: linux64-clang-mingw-x86
-        toolchain-artifact: public/build/clangmingw.tar.xz
+        toolchain-artifact: public/build/clangmingw.tar.zst
     fetches:
         fetch:
             - clang-9
@@ -105,7 +105,7 @@ linux64-clang-9-mingw-x64:
         resources:
             - 'build/build-clang/clang-9-mingw.json'
         toolchain-alias: linux64-clang-mingw-x64
-        toolchain-artifact: public/build/clangmingw.tar.xz
+        toolchain-artifact: public/build/clangmingw.tar.zst
     fetches:
         fetch:
             - clang-9
@@ -129,7 +129,7 @@ linux64-clang-9-android-cross:
         resources:
             - 'build/build-clang/clang-android.json'
         toolchain-alias: linux64-clang-android-cross
-        toolchain-artifact: public/build/clang.tar.xz
+        toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-9
@@ -154,7 +154,7 @@ linux64-clang-9-aarch64-cross:
         resources:
             - 'build/build-clang/clang-linux64-aarch64-cross.json'
         toolchain-alias: linux64-clang-aarch64-cross
-        toolchain-artifact: public/build/clang.tar.xz
+        toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-9
@@ -179,7 +179,7 @@ linux64-clang-9-macosx-cross:
             - 'build/build-clang/clang-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-macosx-cross
-        toolchain-artifact: public/build/clang.tar.xz
+        toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
         fetch:
@@ -200,14 +200,16 @@ linux64-clang-9-win-cross:
     run:
         script: build-clang-linux-win-cross.sh
         toolchain-alias: linux64-clang-win-cross
-        toolchain-artifact: public/build/clang.tar.xz
+        toolchain-artifact: public/build/clang.tar.zst
     dependencies:
         win64-clang-cl-2stage: toolchain-win64-clang-cl-2stage
     fetches:
         toolchain:
             - linux64-clang-9
         win64-clang-cl-2stage:
-            - artifact: clang.tar.bz2
+            # Put this into a new directory so it doesn't conflict with the linux toolchain
+            - artifact: clang.tar.zst
+              dest: clang-cl
               extract: false
 
 
@@ -222,7 +224,7 @@ linux64-clang-10:
             - 'build/build-clang/clang-10-linux64.json'
         resources:
             - 'build/build-clang/clang-10-linux64.json'
-        toolchain-artifact: public/build/clang.tar.xz
+        toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-10
@@ -250,7 +252,7 @@ macosx64-clang:
         resources:
             - 'build/build-clang/clang-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/clang.tar.xz
+        toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-9
@@ -276,7 +278,7 @@ win64-clang-cl:
         resources:
             - 'build/build-clang/clang-win64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/clang.tar.bz2
+        toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
         fetch:
@@ -299,7 +301,7 @@ win64-clang-cl-2stage:
         resources:
             - 'build/build-clang/clang-win64-2stage.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/clang.tar.bz2
+        toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
         fetch:
