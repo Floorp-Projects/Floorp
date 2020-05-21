@@ -46,7 +46,7 @@ SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
 TextureClientRecycleAllocator* SharedPlanarYCbCrImage::RecycleAllocator() {
   static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
 
-  if (!mRecycleAllocator && mCompositable && mCompositable) {
+  if (!mRecycleAllocator && mCompositable) {
     if (!mCompositable->HasTextureClientRecycler()) {
       // Initialize TextureClientRecycler
       mCompositable->GetTextureClientRecycler()->SetMaxPoolSize(

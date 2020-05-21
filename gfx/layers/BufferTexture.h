@@ -61,6 +61,10 @@ class BufferTextureData : public TextureData {
 
   Maybe<gfx::IntSize> GetCbCrSize() const;
 
+  Maybe<int32_t> GetYStride() const;
+
+  Maybe<int32_t> GetCbCrStride() const;
+
   Maybe<gfx::YUVColorSpace> GetYUVColorSpace() const;
 
   Maybe<gfx::ColorDepth> GetColorDepth() const;
