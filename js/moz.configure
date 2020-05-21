@@ -668,3 +668,18 @@ set_config('QEMU_EXE', depends_if('--with-qemu-exe')(lambda x: x))
 js_option('--with-cross-lib', nargs=1, default=depends(target.alias)(lambda x: '/usr/%s' % x),
           help='Use dir as the location for arm libraries')
 set_config('CROSS_LIB', depends_if('--with-cross-lib')(lambda x: x))
+
+# Enable static checking using sixgill
+# ====================================
+
+js_option('--with-sixgill', nargs=1, help='Enable static checking of code using sixgill')
+
+@depends_if('--with-sixgill')
+@imports('os')
+def sixgill(value):
+    for f in ('bin/xdbfind', 'gcc/xgill.so', 'scripts/wrap_gcc/g++'):
+        if not os.path.exists(os.path.join(value[0], f)):
+            die('The sixgill plugin and binaries are not at the specified path')
+    return value[0]
+
+set_config('SIXGILL_PATH', sixgill)

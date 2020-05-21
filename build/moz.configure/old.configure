@@ -259,7 +259,6 @@ def old_configure_options(*options):
     '--with-nspr-prefix',
     '--with-nss-exec-prefix',
     '--with-nss-prefix',
-    '--with-sixgill',
     '--with-system-icu',
     '--with-system-libevent',
     '--with-system-nspr',
