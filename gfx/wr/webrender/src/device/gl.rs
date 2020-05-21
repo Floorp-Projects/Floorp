@@ -1105,6 +1105,10 @@ pub struct Device {
     /// are null-terminated, to work around driver bugs.
     requires_null_terminated_shader_source: bool,
 
+    /// Whether we must unbind any texture from GL_TEXTURE_EXTERNAL_OES before
+    /// binding to GL_TEXTURE_2D, to work around an android emulator bug.
+    requires_texture_external_unbind: bool,
+
     // GL extensions
     extensions: Vec<String>,
 
@@ -1527,6 +1531,10 @@ impl Device {
         // strings are not null-terminated. See bug 1591945.
         let requires_null_terminated_shader_source = is_emulator;
 
+        // The android emulator gets confused if you don't explicitly unbind any texture
+        // from GL_TEXTURE_EXTERNAL_OES before binding another to GL_TEXTURE_2D. See bug 1636085.
+        let requires_texture_external_unbind = is_emulator;
+
         let is_amd_macos = cfg!(target_os = "macos") && renderer_name.starts_with("AMD");
 
         // On certain GPUs PBO texture upload is only performed asynchronously
@@ -1598,6 +1606,7 @@ impl Device {
             extensions,
             texture_storage_usage,
             requires_null_terminated_shader_source,
+            requires_texture_external_unbind,
             optimal_pbo_stride,
             dump_shader_source,
             surface_origin_is_top_left,
@@ -1814,6 +1823,11 @@ impl Device {
 
         if self.bound_textures[slot.0] != id || set_swizzle.is_some() {
             self.gl.active_texture(gl::TEXTURE0 + slot.0 as gl::GLuint);
+            // The android emulator gets confused if you don't explicitly unbind any texture
+            // from GL_TEXTURE_EXTERNAL_OES before binding to GL_TEXTURE_2D. See bug 1636085.
+            if target == gl::TEXTURE_2D && self.requires_texture_external_unbind {
+                self.gl.bind_texture(gl::TEXTURE_EXTERNAL_OES, 0);
+            }
             self.gl.bind_texture(target, id);
             if let Some(swizzle) = set_swizzle {
                 if self.capabilities.supports_texture_swizzle {
