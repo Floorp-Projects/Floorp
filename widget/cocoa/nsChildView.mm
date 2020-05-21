@@ -2237,31 +2237,6 @@ void nsChildView::LookUpDictionary(const nsAString& aText,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsresult nsChildView::SetPrefersReducedMotionOverrideForTest(bool aValue) {
-  LookAndFeel::SetPrefersReducedMotionOverrideForTest(aValue);
-
-  if (nsCocoaFeatures::OnMojaveOrLater() &&
-      NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
-    [[[NSWorkspace sharedWorkspace] notificationCenter]
-        postNotificationName:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
-                      object:nil];
-  } else if (nsCocoaFeatures::OnYosemiteOrLater() &&
-             NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
-    [[NSNotificationCenter defaultCenter]
-        postNotificationName:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
-                      object:nil];
-  } else {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-nsresult nsChildView::ResetPrefersReducedMotionOverrideForTest() {
-  LookAndFeel::ResetPrefersReducedMotionOverrideForTest();
-  return NS_OK;
-}
-
 #ifdef ACCESSIBILITY
 already_AddRefed<a11y::Accessible> nsChildView::GetDocumentAccessible() {
   if (!mozilla::a11y::ShouldA11yBeEnabled()) return nullptr;

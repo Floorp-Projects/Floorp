@@ -48,6 +48,9 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   int32_t mSystemUsesDarkTheme;
   bool mSystemUsesDarkThemeCached;
 
+  int32_t mPrefersReducedMotion = -1;
+  bool mPrefersReducedMotionCached = false;
+
   nscolor mColorTextSelectBackground;
   nscolor mColorTextSelectBackgroundDisabled;
   nscolor mColorHighlight;

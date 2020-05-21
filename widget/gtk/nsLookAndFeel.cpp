@@ -264,10 +264,6 @@ nsresult nsLookAndFeel::InitCellHighlightColors() {
 void nsLookAndFeel::NativeInit() { EnsureInit(); }
 
 void nsLookAndFeel::RefreshImpl() {
-  if (mShouldRetainCacheForTest) {
-    return;
-  }
-
   nsXPLookAndFeel::RefreshImpl();
   moz_gtk_refresh();
 
@@ -275,9 +271,6 @@ void nsLookAndFeel::RefreshImpl() {
   mButtonFontCached = false;
   mFieldFontCached = false;
   mMenuFontCached = false;
-  if (XRE_IsParentProcess()) {
-    mPrefersReducedMotionCached = false;
-  }
 
   mInitialized = false;
 }
@@ -307,7 +300,6 @@ void nsLookAndFeel::SetIntCacheImpl(
         break;
       case eIntID_PrefersReducedMotion:
         mPrefersReducedMotion = entry.value;
-        mPrefersReducedMotionCached = true;
         break;
       case eIntID_UseAccessibilityTheme:
         mHighContrast = entry.value;
@@ -743,13 +735,6 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = mCSDReversedPlacement;
       break;
     case eIntID_PrefersReducedMotion: {
-      if (!mPrefersReducedMotionCached && XRE_IsParentProcess()) {
-        gboolean enableAnimations;
-        GtkSettings* settings = gtk_settings_get_default();
-        g_object_get(settings, "gtk-enable-animations", &enableAnimations,
-                     nullptr);
-        mPrefersReducedMotion = enableAnimations ? 0 : 1;
-      }
       aResult = mPrefersReducedMotion;
       break;
     }
@@ -1031,6 +1016,11 @@ void nsLookAndFeel::EnsureInit() {
 
     mHighContrast = StaticPrefs::widget_content_gtk_high_contrast_enabled() &&
                     GetGtkTheme().Find(NS_LITERAL_CSTRING("HighContrast")) >= 0;
+
+    gboolean enableAnimations = false;
+    g_object_get(settings, "gtk-enable-animations", &enableAnimations,
+                 nullptr);
+    mPrefersReducedMotion = !enableAnimations;
   }
 
   // The label is not added to a parent widget, but shared for constructing

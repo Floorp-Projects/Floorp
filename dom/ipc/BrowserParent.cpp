@@ -1809,24 +1809,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvClearNativeTouchSequence(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-BrowserParent::RecvSetPrefersReducedMotionOverrideForTest(const bool& aValue) {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget) {
-    widget->SetPrefersReducedMotionOverrideForTest(aValue);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-BrowserParent::RecvResetPrefersReducedMotionOverrideForTest() {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget) {
-    widget->ResetPrefersReducedMotionOverrideForTest();
-  }
-  return IPC_OK();
-}
-
 void BrowserParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
   if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
     return;

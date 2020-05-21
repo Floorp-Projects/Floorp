@@ -15,7 +15,7 @@
 add_task(async () => {
   const mqString = "(prefers-reduced-motion: reduce)";
 
-  SpecialPowers.DOMWindowUtils.setPrefersReducedMotionOverrideForTest(false);
+  await SpecialPowers.pushPrefEnv({ set: [['ui.prefersReducedMotion', 0]]});
 
   iframe.src = SimpleTest.getTestFileURL("mq_changes_child.html")
                          .replace("mochi.test:8888", "example.com");
@@ -39,7 +39,7 @@ add_task(async () => {
     }, { once: true });
   });
 
-  SpecialPowers.DOMWindowUtils.setPrefersReducedMotionOverrideForTest(true);
+  await SpecialPowers.pushPrefEnv({ set: [['ui.prefersReducedMotion', 1]]});
 
   const results =
       await Promise.allSettled([ changedInThisDocument, changedInIFrame ]);
@@ -48,8 +48,6 @@ add_task(async () => {
     is(result.status, "fulfilled");
     ok(result.value, `Matches ${mqString}`);
   });
-
-  SpecialPowers.DOMWindowUtils.resetPrefersReducedMotionOverrideForTest();
 });
 </script>
 </body>

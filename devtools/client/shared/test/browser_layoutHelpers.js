@@ -104,6 +104,7 @@ async function runTest(win) {
   is(win.scrollX, xPos, "scrollX position has not changed.");
 
   // Check smooth flag (scroll goes below the viewport)
+  await pushPref("ui.prefersReducedMotion", 0);
 
   info("Checking smooth flag");
   is(
