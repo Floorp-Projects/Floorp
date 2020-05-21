@@ -30,17 +30,16 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLStyleElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLStyleElement,
                                                   nsGenericHTMLElement)
-  tmp->nsStyleLinkElement::Traverse(cb);
+  tmp->LinkStyle::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLStyleElement,
                                                 nsGenericHTMLElement)
-  tmp->nsStyleLinkElement::Unlink();
+  tmp->LinkStyle::Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLStyleElement,
                                              nsGenericHTMLElement,
-                                             nsIStyleSheetLinkingElement,
                                              nsIMutationObserver)
 
 NS_IMPL_ELEMENT_CLONE(HTMLStyleElement)
@@ -163,7 +162,7 @@ void HTMLStyleElement::SetTextContentInternal(const nsAString& aTextContent,
   Unused << UpdateStyleSheetInternal(nullptr, nullptr);
 }
 
-Maybe<nsStyleLinkElement::SheetInfo> HTMLStyleElement::GetStyleSheetInfo() {
+Maybe<LinkStyle::SheetInfo> HTMLStyleElement::GetStyleSheetInfo() {
   if (!IsCSSMimeTypeAttributeForStyleElement(*this)) {
     return Nothing();
   }

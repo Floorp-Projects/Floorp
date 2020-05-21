@@ -10,7 +10,7 @@
  * stylesheets (<style>, <link>, processing instructions, etc).
  */
 
-#include "nsStyleLinkElement.h"
+#include "mozilla/dom/LinkStyle.h"
 
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -31,10 +31,10 @@
 #include "nsStyleUtil.h"
 #include "nsQueryObject.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
-nsStyleLinkElement::SheetInfo::SheetInfo(
+LinkStyle::SheetInfo::SheetInfo(
     const Document& aDocument, nsIContent* aContent,
     already_AddRefed<nsIURI> aURI,
     already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
@@ -62,20 +62,15 @@ nsStyleLinkElement::SheetInfo::SheetInfo(
              "Integrity only applies to <link>");
 }
 
-nsStyleLinkElement::SheetInfo::~SheetInfo() = default;
+LinkStyle::SheetInfo::~SheetInfo() = default;
 
-nsStyleLinkElement::nsStyleLinkElement()
-    : mUpdatesEnabled(true),
-      mLineNumber(1),
-      mColumnNumber(1) {}
+LinkStyle::LinkStyle()
+    : mUpdatesEnabled(true), mLineNumber(1), mColumnNumber(1) {}
 
-nsStyleLinkElement::~nsStyleLinkElement() {
-  nsStyleLinkElement::SetStyleSheet(nullptr);
-}
+LinkStyle::~LinkStyle() { LinkStyle::SetStyleSheet(nullptr); }
 
-void nsStyleLinkElement::GetTitleAndMediaForElement(const Element& aSelf,
-                                                    nsString& aTitle,
-                                                    nsString& aMedia) {
+void LinkStyle::GetTitleAndMediaForElement(const Element& aSelf,
+                                           nsString& aTitle, nsString& aMedia) {
   // Only honor title as stylesheet name for elements in the document (that is,
   // ignore for Shadow DOM), per [1] and [2]. See [3].
   //
@@ -96,8 +91,7 @@ void nsStyleLinkElement::GetTitleAndMediaForElement(const Element& aSelf,
   nsContentUtils::ASCIIToLower(aMedia);
 }
 
-bool nsStyleLinkElement::IsCSSMimeTypeAttributeForStyleElement(
-    const Element& aSelf) {
+bool LinkStyle::IsCSSMimeTypeAttributeForStyleElement(const Element& aSelf) {
   // Per
   // https://html.spec.whatwg.org/multipage/semantics.html#the-style-element:update-a-style-block
   // step 4, for style elements we should only accept empty and "text/css" type
@@ -107,74 +101,47 @@ bool nsStyleLinkElement::IsCSSMimeTypeAttributeForStyleElement(
   return type.IsEmpty() || type.LowerCaseEqualsLiteral("text/css");
 }
 
-void nsStyleLinkElement::Unlink() {
-  nsStyleLinkElement::SetStyleSheet(nullptr);
-}
+void LinkStyle::Unlink() { LinkStyle::SetStyleSheet(nullptr); }
 
-void nsStyleLinkElement::Traverse(nsCycleCollectionTraversalCallback& cb) {
-  nsStyleLinkElement* tmp = this;
+void LinkStyle::Traverse(nsCycleCollectionTraversalCallback& cb) {
+  LinkStyle* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheet);
 }
 
-void nsStyleLinkElement::SetStyleSheet(StyleSheet* aStyleSheet) {
+void LinkStyle::SetStyleSheet(StyleSheet* aStyleSheet) {
   if (mStyleSheet) {
     mStyleSheet->SetOwningNode(nullptr);
   }
 
   mStyleSheet = aStyleSheet;
   if (mStyleSheet) {
-    nsCOMPtr<nsINode> node = do_QueryObject(this);
-    if (node) {
-      mStyleSheet->SetOwningNode(node);
-    }
+    mStyleSheet->SetOwningNode(&AsContent());
   }
 }
 
-void nsStyleLinkElement::SetEnableUpdates(bool aEnableUpdates) {
-  mUpdatesEnabled = aEnableUpdates;
-}
-
-void nsStyleLinkElement::GetCharset(nsAString& aCharset) {
-  aCharset.Truncate();
-}
-
-/* virtual */
-void nsStyleLinkElement::SetLineNumber(uint32_t aLineNumber) {
-  mLineNumber = aLineNumber;
-}
-
-/* virtual */
-uint32_t nsStyleLinkElement::GetLineNumber() { return mLineNumber; }
-
-/* virtual */
-void nsStyleLinkElement::SetColumnNumber(uint32_t aColumnNumber) {
-  mColumnNumber = aColumnNumber;
-}
-
-/* virtual */
-uint32_t nsStyleLinkElement::GetColumnNumber() { return mColumnNumber; }
+void LinkStyle::GetCharset(nsAString& aCharset) { aCharset.Truncate(); }
 
 static uint32_t ToLinkMask(const nsAString& aLink) {
   // Keep this in sync with sRelValues in HTMLLinkElement.cpp
   if (aLink.EqualsLiteral("prefetch"))
-    return nsStyleLinkElement::ePREFETCH;
+    return LinkStyle::ePREFETCH;
   else if (aLink.EqualsLiteral("dns-prefetch"))
-    return nsStyleLinkElement::eDNS_PREFETCH;
+    return LinkStyle::eDNS_PREFETCH;
   else if (aLink.EqualsLiteral("stylesheet"))
-    return nsStyleLinkElement::eSTYLESHEET;
+    return LinkStyle::eSTYLESHEET;
   else if (aLink.EqualsLiteral("next"))
-    return nsStyleLinkElement::eNEXT;
+    return LinkStyle::eNEXT;
   else if (aLink.EqualsLiteral("alternate"))
-    return nsStyleLinkElement::eALTERNATE;
+    return LinkStyle::eALTERNATE;
   else if (aLink.EqualsLiteral("preconnect"))
-    return nsStyleLinkElement::ePRECONNECT;
+    return LinkStyle::ePRECONNECT;
   else if (aLink.EqualsLiteral("preload"))
-    return nsStyleLinkElement::ePRELOAD;
+    return LinkStyle::ePRELOAD;
   else
     return 0;
 }
 
-uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes) {
+uint32_t LinkStyle::ParseLinkTypes(const nsAString& aTypes) {
   uint32_t linkMask = 0;
   nsAString::const_iterator start, done;
   aTypes.BeginReading(start);
@@ -207,29 +174,23 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes) {
   return linkMask;
 }
 
-Result<nsStyleLinkElement::Update, nsresult>
-nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver) {
+Result<LinkStyle::Update, nsresult> LinkStyle::UpdateStyleSheet(
+    nsICSSLoaderObserver* aObserver) {
   return DoUpdateStyleSheet(nullptr, nullptr, aObserver, ForceUpdate::No);
 }
 
-Result<nsStyleLinkElement::Update, nsresult>
-nsStyleLinkElement::UpdateStyleSheetInternal(Document* aOldDocument,
-                                             ShadowRoot* aOldShadowRoot,
-                                             ForceUpdate aForceUpdate) {
+Result<LinkStyle::Update, nsresult> LinkStyle::UpdateStyleSheetInternal(
+    Document* aOldDocument, ShadowRoot* aOldShadowRoot,
+    ForceUpdate aForceUpdate) {
   return DoUpdateStyleSheet(aOldDocument, aOldShadowRoot, nullptr,
                             aForceUpdate);
 }
 
-Result<nsStyleLinkElement::Update, nsresult>
-nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
-                                       ShadowRoot* aOldShadowRoot,
-                                       nsICSSLoaderObserver* aObserver,
-                                       ForceUpdate aForceUpdate) {
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
-  // All instances of nsStyleLinkElement should implement nsIContent.
-  MOZ_ASSERT(thisContent);
-
-  if (thisContent->IsInSVGUseShadowTree()) {
+Result<LinkStyle::Update, nsresult> LinkStyle::DoUpdateStyleSheet(
+    Document* aOldDocument, ShadowRoot* aOldShadowRoot,
+    nsICSSLoaderObserver* aObserver, ForceUpdate aForceUpdate) {
+  nsIContent& thisContent = AsContent();
+  if (thisContent.IsInSVGUseShadowTree()) {
     // Stylesheets in <use>-cloned subtrees are disabled until we figure out
     // how they should behave.
     return Update{};
@@ -254,7 +215,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
     SetStyleSheet(nullptr);
   }
 
-  Document* doc = thisContent->GetComposedDoc();
+  Document* doc = thisContent.GetComposedDoc();
 
   // Loader could be null during unlink, see bug 1425866.
   if (!doc || !doc->CSSLoader() || !doc->CSSLoader()->GetEnabled()) {
@@ -279,8 +240,8 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
   }
 
   if (mStyleSheet) {
-    if (thisContent->IsInShadowTree()) {
-      ShadowRoot* containingShadow = thisContent->GetContainingShadow();
+    if (thisContent.IsInShadowTree()) {
+      ShadowRoot* containingShadow = thisContent.GetContainingShadow();
       // Could be null only during unlink.
       if (MOZ_LIKELY(containingShadow)) {
         containingShadow->RemoveStyleSheet(*mStyleSheet);
@@ -289,7 +250,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
       doc->RemoveStyleSheet(*mStyleSheet);
     }
 
-    nsStyleLinkElement::SetStyleSheet(nullptr);
+    LinkStyle::SetStyleSheet(nullptr);
   }
 
   if (!info) {
@@ -303,17 +264,17 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
 
   if (info->mIsInline) {
     nsAutoString text;
-    if (!nsContentUtils::GetNodeTextContent(thisContent, false, text,
+    if (!nsContentUtils::GetNodeTextContent(&thisContent, false, text,
                                             fallible)) {
       return Err(NS_ERROR_OUT_OF_MEMORY);
     }
 
-    MOZ_ASSERT(thisContent->NodeInfo()->NameAtom() != nsGkAtoms::link,
+    MOZ_ASSERT(thisContent.NodeInfo()->NameAtom() != nsGkAtoms::link,
                "<link> is not 'inline', and needs different CSP checks");
-    MOZ_ASSERT(thisContent->IsElement());
+    MOZ_ASSERT(thisContent.IsElement());
     nsresult rv = NS_OK;
     if (!nsStyleUtil::CSPAllowsInlineStyle(
-            thisContent->AsElement(), doc, info->mTriggeringPrincipal,
+            thisContent.AsElement(), doc, info->mTriggeringPrincipal,
             mLineNumber, mColumnNumber, text, &rv)) {
       if (NS_FAILED(rv)) {
         return Err(rv);
@@ -325,13 +286,13 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
     return doc->CSSLoader()->LoadInlineStyle(*info, text, mLineNumber,
                                              aObserver);
   }
-  if (thisContent->IsElement()) {
+  if (thisContent.IsElement()) {
     nsAutoString integrity;
-    thisContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity,
-                                      integrity);
+    thisContent.AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity,
+                                     integrity);
     if (!integrity.IsEmpty()) {
       MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
-              ("nsStyleLinkElement::DoUpdateStyleSheet, integrity=%s",
+              ("LinkStyle::DoUpdateStyleSheet, integrity=%s",
                NS_ConvertUTF16toUTF8(integrity).get()));
     }
   }
@@ -344,3 +305,6 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
   }
   return resultOrError;
 }
+
+}  // namespace dom
+}  // namespace mozilla

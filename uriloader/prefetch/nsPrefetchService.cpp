@@ -32,7 +32,6 @@
 #include "nsINode.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
-#include "nsStyleLinkElement.h"
 #include "mozilla/AsyncEventDispatcher.h"
 
 using namespace mozilla;

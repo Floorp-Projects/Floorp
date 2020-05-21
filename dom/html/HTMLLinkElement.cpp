@@ -26,11 +26,9 @@
 #include "mozilla/dom/Document.h"
 #include "nsINode.h"
 #include "nsIPrefetchService.h"
-#include "nsIStyleSheetLinkingElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
-#include "nsStyleLinkElement.h"
 #include "nsUnicharUtils.h"
 #include "nsWindowSizes.h"
 #include "nsIContentPolicy.h"
@@ -73,21 +71,20 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLLinkElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLLinkElement,
                                                   nsGenericHTMLElement)
-  tmp->nsStyleLinkElement::Traverse(cb);
+  tmp->LinkStyle::Traverse(cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSizes)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLLinkElement,
                                                 nsGenericHTMLElement)
-  tmp->nsStyleLinkElement::Unlink();
+  tmp->LinkStyle::Unlink();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRelList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSizes)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLLinkElement,
-                                             nsGenericHTMLElement,
-                                             nsIStyleSheetLinkingElement, Link)
+                                             nsGenericHTMLElement, Link)
 
 NS_IMPL_ELEMENT_CLONE(HTMLLinkElement)
 
@@ -396,13 +393,13 @@ void HTMLLinkElement::GetLinkTarget(nsAString& aTarget) {
 
 static const DOMTokenListSupportedToken sSupportedRelValues[] = {
     // Keep this and the one below in sync with ToLinkMask in
-    // nsStyleLinkElement.cpp.
+    // LinkStyle.cpp.
     // "preload" must come first because it can be disabled.
     "preload",   "prefetch",   "dns-prefetch", "stylesheet", "next",
     "alternate", "preconnect", "icon",         "search",     nullptr};
 
 static const DOMTokenListSupportedToken sSupportedRelValuesWithManifest[] = {
-    // Keep this in sync with ToLinkMask in nsStyleLinkElement.cpp.
+    // Keep this in sync with ToLinkMask in LinkStyle.cpp.
     // "preload" and "manifest" must come first because they can be disabled.
     "preload",   "manifest",   "prefetch", "dns-prefetch", "stylesheet", "next",
     "alternate", "preconnect", "icon",     "search",       nullptr};
@@ -431,7 +428,7 @@ already_AddRefed<nsIURI> HTMLLinkElement::GetHrefURI() const {
   return GetHrefURIForAnchors();
 }
 
-Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
+Maybe<LinkStyle::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
   nsAutoString rel;
   GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
   uint32_t linkTypes = ParseLinkTypes(rel);

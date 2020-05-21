@@ -27,19 +27,18 @@ JSObject* SVGStyleElement::WrapNode(JSContext* aCx,
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(SVGStyleElement,
                                              SVGStyleElementBase,
-                                             nsIStyleSheetLinkingElement,
                                              nsIMutationObserver)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SVGStyleElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGStyleElement,
                                                   SVGStyleElementBase)
-  tmp->nsStyleLinkElement::Traverse(cb);
+  tmp->LinkStyle::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGStyleElement,
                                                 SVGStyleElementBase)
-  tmp->nsStyleLinkElement::Unlink();
+  tmp->LinkStyle::Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 //----------------------------------------------------------------------
@@ -172,7 +171,7 @@ void SVGStyleElement::SetTitle(const nsAString& aTitle, ErrorResult& rv) {
 //----------------------------------------------------------------------
 // nsStyleLinkElement methods
 
-Maybe<nsStyleLinkElement::SheetInfo> SVGStyleElement::GetStyleSheetInfo() {
+Maybe<LinkStyle::SheetInfo> SVGStyleElement::GetStyleSheetInfo() {
   if (!IsCSSMimeTypeAttributeForStyleElement(*this)) {
     return Nothing();
   }

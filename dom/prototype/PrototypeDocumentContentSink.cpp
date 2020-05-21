@@ -11,7 +11,6 @@
 #include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsIStyleSheetLinkingElement.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -26,7 +25,6 @@
 #include "mozilla/Logging.h"
 #include "nsRect.h"
 #include "nsIScriptElement.h"
-#include "nsStyleLinkElement.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIChannel.h"
@@ -344,6 +342,8 @@ nsresult PrototypeDocumentContentSink::CreateAndInsertPI(
 
   nsresult rv;
   if (aProtoPI->mTarget.EqualsLiteral("xml-stylesheet")) {
+    MOZ_ASSERT(LinkStyle::FromNode(*node),
+               "XML Stylesheet node does not implement LinkStyle!");
     auto* pi = static_cast<XMLStylesheetProcessingInstruction*>(node.get());
     rv = InsertXMLStylesheetPI(aProtoPI, aParent, aBeforeThis, pi);
   } else {
@@ -368,8 +368,7 @@ nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
   aPINode->OverrideBaseURI(mCurrentPrototype->GetURI());
 
   rv = aParent->InsertChildBefore(
-      aPINode->AsContent(), aBeforeThis ? aBeforeThis->AsContent() : nullptr,
-      false);
+      aPINode, aBeforeThis ? aBeforeThis->AsContent() : nullptr, false);
   if (NS_FAILED(rv)) return rv;
 
   aPINode->SetEnableUpdates(true);
@@ -454,12 +453,11 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
               element->NodeInfo()->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
             // XXX sucks that we have to do this -
             // see bug 370111
-            nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
-                do_QueryInterface(element);
-            NS_ASSERTION(ssle,
+            auto* linkStyle = LinkStyle::FromNode(*element);
+            NS_ASSERTION(linkStyle,
                          "<html:style> doesn't implement "
                          "nsIStyleSheetLinkingElement?");
-            Unused << ssle->UpdateStyleSheet(nullptr);
+            Unused << linkStyle->UpdateStyleSheet(nullptr);
           }
         }
         // Now pop the context stack back up to the parent

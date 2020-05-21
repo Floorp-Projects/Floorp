@@ -9,14 +9,15 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/LinkStyle.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "nsIURI.h"
-#include "nsStyleLinkElement.h"
 
 namespace mozilla {
 namespace dom {
 
-class XMLStylesheetProcessingInstruction final : public ProcessingInstruction {
+class XMLStylesheetProcessingInstruction final : public ProcessingInstruction,
+                                                 public LinkStyle {
  public:
   XMLStylesheetProcessingInstruction(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -32,10 +33,8 @@ class XMLStylesheetProcessingInstruction final : public ProcessingInstruction {
                 nsGkAtoms::xml_stylesheet),
             aData) {}
 
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
   // CC
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLStylesheetProcessingInstruction,
                                            ProcessingInstruction)
 
@@ -56,7 +55,7 @@ class XMLStylesheetProcessingInstruction final : public ProcessingInstruction {
    */
   void OverrideBaseURI(nsIURI* aNewBaseURI);
 
-  // nsStyleLinkElement
+  // LinkStyle
   void GetCharset(nsAString& aCharset) override;
 
   virtual void SetData(const nsAString& aData,
@@ -73,6 +72,8 @@ class XMLStylesheetProcessingInstruction final : public ProcessingInstruction {
 
   nsCOMPtr<nsIURI> mOverriddenBaseURI;
 
+  nsIContent& AsContent() final { return *this; }
+  const LinkStyle* AsLinkStyle() const final { return this; }
   Maybe<SheetInfo> GetStyleSheetInfo() final;
 
   already_AddRefed<CharacterData> CloneDataNode(
