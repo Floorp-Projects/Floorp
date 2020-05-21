@@ -56,7 +56,6 @@ class nsLoadGroup : public nsILoadGroup,
   nsLoadGroup();
 
   nsresult Init();
-  nsresult InitWithRequestContextId(const uint64_t& aRequestContextId);
 
  protected:
   virtual ~nsLoadGroup();
@@ -93,7 +92,6 @@ class nsLoadGroup : public nsILoadGroup,
   bool mIsCanceling;
   bool mDefaultLoadIsTimed;
   bool mBrowsingContextDiscarded;
-  bool mExternalRequestContext;
 
   /* Telemetry */
   mozilla::TimeStamp mDefaultRequestCreationTime;
