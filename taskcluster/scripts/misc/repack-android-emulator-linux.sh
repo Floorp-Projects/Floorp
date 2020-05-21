@@ -18,6 +18,6 @@ mkdir /builds/worker/.mozbuild/android-sdk-linux/system-images
 mkdir /builds/worker/.mozbuild/android-sdk-linux/platforms
 find /builds/worker/.mozbuild/android-sdk-linux/emulator/qemu -type f -not -name "*x86*" -print -delete
 
-tar cv -C /builds/worker/.mozbuild android-sdk-linux | xz > $UPLOAD_DIR/android-emulator-linux.tar.xz
+tar cv -C /builds/worker/.mozbuild android-sdk-linux | $GECKO_PATH/taskcluster/scripts/misc/zstdpy > $UPLOAD_DIR/android-emulator-linux.tar.zst
 
 ls -al $UPLOAD_DIR
