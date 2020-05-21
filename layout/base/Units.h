@@ -828,6 +828,11 @@ struct CoordOfImpl<gfx::IntRectTyped<Units>> {
   typedef gfx::IntCoordTyped<Units> Type;
 };
 
+template <typename Units>
+struct CoordOfImpl<gfx::SizeTyped<Units>> {
+  typedef gfx::CoordTyped<Units> Type;
+};
+
 template <typename T>
 using CoordOf = typename CoordOfImpl<T>::Type;
 

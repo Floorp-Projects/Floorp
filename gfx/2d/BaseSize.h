@@ -42,6 +42,9 @@ struct BaseSize {
 
   bool IsSquare() const { return width == height; }
 
+  MOZ_ALWAYS_INLINE T Width() const { return width; }
+  MOZ_ALWAYS_INLINE T Height() const { return height; }
+
   // Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
 
