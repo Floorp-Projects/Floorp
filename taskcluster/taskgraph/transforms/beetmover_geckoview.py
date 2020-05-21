@@ -134,7 +134,7 @@ def craft_release_properties(config, job):
     release_properties = beetmover_craft_release_properties(config, job)
 
     release_properties['artifact-id'] = get_geckoview_artifact_id(
-        job['attributes']['build_platform'], job['attributes'].get('update-channel')
+        config, job['attributes']['build_platform'], job['attributes'].get('update-channel')
     )
     release_properties['app-name'] = 'geckoview'
 
