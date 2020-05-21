@@ -229,6 +229,26 @@ popup-select-microphone =
     .accesskey = M
 popup-all-windows-shared = All visible windows on your screen will be shared.
 
+popup-screen-sharing-not-now =
+  .label = Not Now
+  .accesskey = w
+
+popup-screen-sharing-never =
+  .label = Never Allow
+  .accesskey = N
+
+popup-silence-notifications-checkbox = Disable notifications from { -brand-short-name } while sharing
+popup-silence-notifications-checkbox-warning = { -brand-short-name } will not display notifications while you are sharing.
+
+## WebRTC window or screen share tab switch warning
+
+sharing-warning-window = You are sharing { -brand-short-name }. Other people can see when you switch to a new tab.
+sharing-warning-screen = You are sharing your entire screen. Other people can see when you switch to a new tab.
+sharing-warning-proceed-to-tab =
+  .label = Proceed to Tab
+sharing-warning-disable-for-session =
+  .label = Disable sharing protection for this session
+
 ## DevTools F12 popup
 
 enable-devtools-popup-description = To use the F12 shortcut, first open DevTools via the Web Developer menu.
