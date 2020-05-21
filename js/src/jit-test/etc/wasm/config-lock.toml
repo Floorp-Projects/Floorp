@@ -1,27 +1,15 @@
 [[repos]]
-name = 'spec'
-commit = 'c0e7b84c'
-
-[[repos]]
-name = 'sign-extension-ops'
-commit = 'a09a028e'
-
-[[repos]]
-name = 'nontrapping-float-to-int-conversions'
-commit = 'aa25b24d'
-
-[[repos]]
-name = 'multi-value'
-commit = '0032d27f'
-
-[[repos]]
 name = 'threads'
 commit = 'dfdcb81a'
 
 [[repos]]
 name = 'bulk-memory-operations'
-commit = 'ffdbb6e3'
+commit = '66d90a7d'
 
 [[repos]]
 name = 'reference-types'
-commit = 'c8d58c73'
+commit = 'c90e289a'
+
+[[repos]]
+name = 'spec'
+commit = '7c4cbf32'

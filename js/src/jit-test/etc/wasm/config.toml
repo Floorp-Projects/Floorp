@@ -22,14 +22,10 @@ excluded_tests = [
   "names.wast",
   # false-positive error on invalid UTF-8 custom section name (utf8-custom-section-id.wast:6)
   "utf8-custom-section-id.wast",
-  # testing that multi-value isn't implemented (func.wast:492)
-  "func.wast",
-  # testing that multi-value isn't implemented (type.wast:52)
-  "type.wast",
-  # invalid without bottom-type added in reference-types (unreached-invalid.wast:538)
-  "unreached-invalid.wast",
   # invalid table maximum length for web embeddings
-  "table.wast"
+  "table.wast",
+  # fac-ssa returns incorrect value (fac.wast:107)
+  "fac.wast",
 ]
 
 [[repos]]
@@ -38,30 +34,16 @@ url = "https://github.com/WebAssembly/spec"
 excluded_tests = []
 
 [[repos]]
-name = "sign-extension-ops"
-url = "https://github.com/WebAssembly/sign-extension-ops"
-parent = "spec"
-
-[[repos]]
-name = "nontrapping-float-to-int-conversions"
-url = "https://github.com/WebAssembly/nontrapping-float-to-int-conversions"
-parent = "spec"
-
-[[repos]]
-name = "multi-value"
-url = "https://github.com/WebAssembly/multi-value"
-parent = "spec"
-excluded_tests = ["call.wast", "fac.wast", "if.wast"]
-# Skip in WPT where we can't guard on features being enabled
-skip_wpt = true
-# Skip in jit-test when it's not enabled
-directive = "; skip-if: !wasmMultiValueEnabled()"
-
-[[repos]]
 name = "threads"
 url = "https://github.com/WebAssembly/threads"
 parent = "spec"
-excluded_tests = ["atomic.wast"]
+excluded_tests = [
+  "atomic.wast",
+  # testing that multi-value isn't implemented (func.wast:492)
+  "func.wast",
+  # testing that multi-value isn't implemented (type.wast:52)
+  "type.wast"
+]
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled
@@ -71,12 +53,7 @@ directive = "; skip-if: !wasmThreadsSupported()"
 name = "bulk-memory-operations"
 url = "https://github.com/WebAssembly/bulk-memory-operations"
 parent = "spec"
-excluded_tests = [
-  # invalid encoding, needs to merge with latest reference-types
-  "binary.wast",
-  # invalid encoding, needs to merge with latest reference-types
-  "bulk.wast"
-]
+excluded_tests = []
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled
@@ -86,7 +63,7 @@ directive = "; skip-if: !wasmBulkMemSupported()"
 name = "reference-types"
 url = "https://github.com/WebAssembly/reference-types"
 parent = "spec"
-excluded_tests = ["call.wast", "fac.wast", "if.wast"]
+excluded_tests = []
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled

@@ -224,7 +224,8 @@ function get(instance, name) {
     if (instance.isError())
         return instance;
 
-    return ValueResult(instance.value.exports[name]);
+    let v = instance.value.exports[name];
+    return ValueResult((v instanceof WebAssembly.Global) ? v.value : v);
 }
 
 function exports(name, instance) {
@@ -306,22 +307,31 @@ function assert_exhaustion(action) {
     }, "A wast module that must exhaust the stack space.");
 }
 
-function assert_return(action, expected) {
-    if (expected instanceof Result) {
-        if (expected.isError())
-            return;
-        expected = expected.value;
-    }
-
+function assert_return(action, ...expected) {
     let result = action();
-
     _assert(result instanceof Result);
 
     uniqueTest(() => {
         assert_true(!result.isError(), `expected success result, got: ${result.value}.`);
-        if (!result.isError()) {
-            assert_equals(result.value, expected);
-        };
+
+        let actual = result.value;
+        if (actual === undefined) {
+            actual = [];
+        } else if (!Array.isArray(actual)) {
+            actual = [actual];
+        }
+        if (actual.length !== expected.length) {
+            throw new Error(expected.length + " value(s) expected, got " + actual.length);
+        }
+
+        for (let i = 0; i < actual.length; ++i) {
+            if (expected[i] instanceof Result) {
+                if (expected[i].isError())
+                    return;
+                expected[i] = expected[i].value;
+            }
+            assert_equals(actual[i], expected[i]);
+        }
     }, "A wast module that must return a particular value.");
 };
 

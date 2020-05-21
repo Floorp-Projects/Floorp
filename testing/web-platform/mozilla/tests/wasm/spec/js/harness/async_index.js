@@ -236,14 +236,26 @@ function assert_trap(action) {
     .catch(_ => {});
 }
 
-function assert_return(action, expected) {
+function assert_return(action, ...expected) {
   const test = "Test that a WebAssembly code returns a specific result";
   const loc = new Error().stack.toString().replace("Error", "");
   chain = Promise.all([action(), chain])
     .then(
       values => {
         uniqueTest(_ => {
-          assert_equals(values[0], expected, loc);
+          let actual = values[0];
+          if (actual === undefined) {
+              actual = [];
+          } else if (!Array.isArray(actual)) {
+              actual = [actual];
+          }
+          if (actual.length !== expected.length) {
+              throw new Error(expected.length + " value(s) expected, got " + actual.length);
+          }
+
+          for (let i = 0; i < actual.length; ++i) {
+              assert_equals(actual[i], expected[i], loc);
+          }
         }, test);
       },
       error => {
@@ -362,7 +374,8 @@ function get(instance, name) {
   const loc = new Error().stack.toString().replace("Error", "");
   chain = Promise.all([instance, chain]).then(
     values => {
-      return values[0].exports[name];
+      let v = values[0].exports[name];
+      return (v instanceof WebAssembly.Global) ? v.value : v;
     },
     _ => {
       uniqueTest(_ => {
