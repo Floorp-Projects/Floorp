@@ -6,6 +6,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/FunctionRef.h"
+#include "mozilla/UniquePtr.h"
 
 #define CHECK(c)                                       \
   do {                                                 \
@@ -18,6 +19,8 @@ int addConstRefs(const int& arg1, const int& arg2) { return arg1 + arg2; }
 void incrementPointer(int* arg) { (*arg)++; }
 
 int increment(int arg) { return arg + 1; }
+
+int incrementUnique(mozilla::UniquePtr<int> ptr) { return *ptr + 1; }
 
 static bool helloWorldCalled = false;
 
@@ -114,6 +117,12 @@ static void TestImplicitFunctionPointerTypeConversion() {
   CHECK(f(x) == 2);
 }
 
+static void TestMoveOnlyArguments() {
+  mozilla::FunctionRef<int(mozilla::UniquePtr<int>)> f(&incrementUnique);
+
+  CHECK(f(mozilla::MakeUnique<int>(5)) == 6);
+}
+
 int main() {
   TestNonmemberFunction();
   TestStaticMemberFunction();
@@ -126,6 +135,7 @@ int main() {
   TestImplicitFunctorTypeConversion();
   TestImplicitLambdaTypeConversion();
   TestImplicitFunctionPointerTypeConversion();
+  TestMoveOnlyArguments();
 
   printf("TestFunctionRef OK!\n");
   return 0;
