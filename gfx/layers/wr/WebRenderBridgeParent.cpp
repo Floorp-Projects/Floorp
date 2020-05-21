@@ -8,7 +8,7 @@
 
 #include "CompositableHost.h"
 #include "gfxEnv.h"
-#include "gfxEnv.h"
+#include "gfxOTSUtils.h"
 #include "GeckoProfiler.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
@@ -430,6 +430,48 @@ void WebRenderBridgeParent::Destroy() {
   ClearResources();
 }
 
+struct WROTSAlloc {
+  wr::Vec<uint8_t> mVec;
+
+  void* Grow(void* aPtr, size_t aLength) {
+    if (aLength > mVec.Length()) {
+      mVec.Reserve(aLength - mVec.Length());
+    }
+    return mVec.inner.data;
+  }
+  wr::Vec<uint8_t> ShrinkToFit(void* aPtr, size_t aLength) {
+    wr::Vec<uint8_t> result(std::move(mVec));
+    result.inner.length = aLength;
+    return result;
+  }
+  void Free(void* aPtr) {}
+};
+
+static bool ReadRawFont(const OpAddRawFont& aOp, wr::ShmSegmentsReader& aReader,
+                        wr::TransactionBuilder& aUpdates) {
+  wr::Vec<uint8_t> sourceBytes;
+  Maybe<Range<uint8_t>> ptr =
+      aReader.GetReadPointerOrCopy(aOp.bytes(), sourceBytes);
+  if (ptr.isNothing()) {
+    return false;
+  }
+  Range<uint8_t>& source = ptr.ref();
+  // Attempt to sanitize the font before passing it along for updating
+  size_t lengthHint = gfxOTSContext::GuessSanitizedFontSize(
+      source.begin().get(), source.length());
+  if (!lengthHint) {
+    return false;
+  }
+  gfxOTSExpandingMemoryStream<WROTSAlloc> output(lengthHint);
+  gfxOTSContext otsContext;
+  if (!otsContext.Process(&output, source.begin().get(), source.length())) {
+    return false;
+  }
+  wr::Vec<uint8_t> bytes = output.forget();
+  aUpdates.AddRawFont(aOp.key(), bytes, aOp.fontIndex());
+  return true;
+}
+
 bool WebRenderBridgeParent::UpdateResources(
     const nsTArray<OpUpdateResource>& aResourceUpdates,
     const nsTArray<RefCountedShmem>& aSmallShmems,
@@ -529,12 +571,9 @@ bool WebRenderBridgeParent::UpdateResources(
         break;
       }
       case OpUpdateResource::TOpAddRawFont: {
-        const auto& op = cmd.get_OpAddRawFont();
-        wr::Vec<uint8_t> bytes;
-        if (!reader.Read(op.bytes(), bytes)) {
+        if (!ReadRawFont(cmd.get_OpAddRawFont(), reader, aUpdates)) {
           return false;
         }
-        aUpdates.AddRawFont(op.key(), bytes, op.fontIndex());
         break;
       }
       case OpUpdateResource::TOpAddFontDescriptor: {
