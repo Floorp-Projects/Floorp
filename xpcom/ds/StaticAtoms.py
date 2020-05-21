@@ -2489,6 +2489,7 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_mozColorSwatch", ":-moz-color-swatch"),
     PseudoElementAtom("PseudoElement_mozTextControlEditingRoot", ":-moz-text-control-editing-root"),
     PseudoElementAtom("PseudoElement_mozTextControlPreview", ":-moz-text-control-preview"),
+    PseudoElementAtom("PseudoElement_fileChooserButton", ":file-chooser-button"),
 
     # CSS anonymous boxes -- these must appear in the same order as
     # in nsCSSAnonBoxList.h
