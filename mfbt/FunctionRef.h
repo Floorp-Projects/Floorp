@@ -17,6 +17,7 @@
 
 #include <cstddef>      // std::nullptr_t
 #include <type_traits>  // std::{declval,integral_constant}, std::is_{convertible,same,void}_v, std::{enable_if,remove_reference,remove_cv}_t
+#include <utility>      // std::forward
 
 // This concept and its implementation are substantially inspired by foonathan's
 // prior art:
@@ -135,7 +136,7 @@ class FunctionRef<Ret(Params...)> {
   static Ret CallFunctionPointer(const Payload& aPayload,
                                  Params... aParams) noexcept {
     auto func = reinterpret_cast<RealFuncPtr>(aPayload.mFuncPtr);
-    return static_cast<Ret>(func(static_cast<Params>(aParams)...));
+    return static_cast<Ret>(func(std::forward<Params>(aParams)...));
   }
 
   template <typename Ret2, typename... Params2>
@@ -178,6 +179,11 @@ class FunctionRef<Ret(Params...)> {
   MOZ_IMPLICIT FunctionRef(Callable& aCallable) noexcept
       : mAdaptor([](const Payload& aPayload, Params... aParams) {
           auto& func = *static_cast<Callable*>(aPayload.mObject);
+          // Unable to use std::forward here due to llvm windows bug
+          // https://bugs.llvm.org/show_bug.cgi?id=28299
+          //
+          // This prevents use of move-only arguments for functors and lambdas.
+          // Move only arguments can be used when using function pointers
           return static_cast<Ret>(func(static_cast<Params>(aParams)...));
         }) {
     ::new (KnownNotNull, &mPayload.mObject) void*(&aCallable);
@@ -208,7 +214,7 @@ class FunctionRef<Ret(Params...)> {
 
   /** Call the callable stored in this with the given arguments. */
   Ret operator()(Params... params) const {
-    return mAdaptor(mPayload, static_cast<Params>(params)...);
+    return mAdaptor(mPayload, std::forward<Params>(params)...);
   }
 
   /** Return true iff this wasn't created from |nullptr|. */
