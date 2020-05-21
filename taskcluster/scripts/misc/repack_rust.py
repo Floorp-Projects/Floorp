@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -70,7 +70,7 @@ def setup_gpg():
     signature checks can succeed or fail cleanly.'''
     keyid = '0x85AB96E6FA1BE5FE'
     log('Importing signing key %s...' % keyid)
-    key = '''
+    key = b'''
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 
 mQINBFJEwMkBEADlPACa2K7reD4x5zd8afKx75QYKmxqZwywRbgeICeD4bKiQoJZ
@@ -159,7 +159,7 @@ Mve696B5tlHyc1KxjHR6w9GRsh4=
 '''
     check_call_with_input(['gpg', '--import'], key)
     check_call_with_input(['gpg', '--command-fd', '0', '--edit-key', keyid],
-                          'trust\n5\ny\n')
+                          b'trust\n5\ny\n')
 
 
 def verify_sha(filename, sha):
@@ -432,7 +432,7 @@ def args():
     if not args.host:
         args.host = 'linux64'
     args.host = expand_platform(args.host)
-    args.targets = map(expand_platform, args.targets)
+    args.targets = [expand_platform(t) for t in args.targets]
 
     return args
 
