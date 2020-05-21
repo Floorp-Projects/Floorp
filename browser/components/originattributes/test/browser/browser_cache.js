@@ -151,6 +151,7 @@ async function doInit(aMode) {
     set: [
       ["network.predictor.enabled", false],
       ["network.predictor.enable-prefetch", false],
+      ["privacy.partition.network_state", false],
     ],
   });
   clearAllImageCaches();
