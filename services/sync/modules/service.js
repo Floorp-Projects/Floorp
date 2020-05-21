@@ -107,7 +107,7 @@ function getEngineModules() {
     whenFalse: "BookmarksEngine",
     whenTrue: "BufferedBookmarksEngine",
   };
-  result.ExtensionStorage = {
+  result["Extension-Storage"] = {
     module: "extension-storage.js",
     controllingPref: "webextensions.storage.sync.kinto",
     whenTrue: "ExtensionStorageEngineKinto",
