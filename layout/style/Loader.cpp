@@ -131,6 +131,8 @@ static const char* const gStateStrings[] = {"Unknown", "NeedsParser", "Pending",
 namespace mozilla {
 
 class SheetLoadDataHashKey : public nsURIHashKey {
+  using IsPreload = css::Loader::IsPreload;
+
  public:
   typedef SheetLoadDataHashKey* KeyType;
   typedef const SheetLoadDataHashKey* KeyTypePointer;
@@ -149,14 +151,14 @@ class SheetLoadDataHashKey : public nsURIHashKey {
   SheetLoadDataHashKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
                        nsIReferrerInfo* aReferrerInfo, CORSMode aCORSMode,
                        css::SheetParsingMode aParsingMode,
-                       const SRIMetadata& aSRIMetadata, bool aIsLinkPreload)
+                       const SRIMetadata& aSRIMetadata, IsPreload aIsPreload)
       : nsURIHashKey(aURI),
         mPrincipal(aPrincipal),
         mReferrerInfo(aReferrerInfo),
         mCORSMode(aCORSMode),
         mParsingMode(aParsingMode),
         mSRIMetadata(aSRIMetadata),
-        mIsLinkPreload(aIsLinkPreload) {
+        mIsLinkPreload(aIsPreload == IsPreload::FromLink) {
     MOZ_COUNT_CTOR(SheetLoadDataHashKey);
   }
 
@@ -1146,7 +1148,7 @@ std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
     nsIURI* aURI, nsIContent* aLinkingContent, nsIPrincipal* aLoaderPrincipal,
     css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
     nsIReferrerInfo* aLoadingReferrerInfo, const nsAString& aIntegrity,
-    bool aSyncLoad) {
+    bool aSyncLoad, IsPreload aIsPreload) {
   MOZ_ASSERT(aURI, "This path is not taken for inline stylesheets");
   LOG(("css::Loader::CreateSheet(%s)", aURI->GetSpecOrDefault().get()));
 
@@ -1167,8 +1169,7 @@ std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
   }
 
   SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
-                           aCORSMode, aParsingMode, sriMetadata,
-                           false /** TODO - is-link-preload **/);
+                           aCORSMode, aParsingMode, sriMetadata, aIsPreload);
   auto cacheResult = mSheets->Lookup(key, aSyncLoad);
   if (const auto& [styleSheet, sheetState] = cacheResult; styleSheet) {
     LOG(("  Hit cache with state: %s", gStateStrings[size_t(sheetState)]));
@@ -2094,8 +2095,8 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   // Check IsAlternateSheet now, since it can mutate our document and make
   // pending sheets go to the non-pending state.
   auto isAlternate = IsAlternateSheet(aInfo.mTitle, aInfo.mHasAlternateRel);
-  auto [sheet, state] =
-      CreateSheet(aInfo, principal, eAuthorSheetFeatures, syncLoad);
+  auto [sheet, state] = CreateSheet(aInfo, principal, eAuthorSheetFeatures,
+                                    syncLoad, IsPreload::No);
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
@@ -2270,7 +2271,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
         CreateSheet(aURL, nullptr, principal, aParentSheet.ParsingMode(),
                     CORS_NONE, aParentSheet.GetReferrerInfo(),
                     EmptyString(),  // integrity is only checked on main sheet
-                    aParentData ? aParentData->mSyncLoad : false);
+                    aParentData && aParentData->mSyncLoad, IsPreload::No);
     PrepareSheet(*sheet, EmptyString(), EmptyString(), aMedia, IsAlternate::No,
                  IsExplicitlyEnabled::No);
   }
@@ -2362,7 +2363,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   bool syncLoad = !aObserver;
   auto [sheet, state] =
       CreateSheet(aURL, nullptr, aOriginPrincipal, aParsingMode, aCORSMode,
-                  aReferrerInfo, aIntegrity, syncLoad);
+                  aReferrerInfo, aIntegrity, syncLoad, aIsPreload);
 
   PrepareSheet(*sheet, EmptyString(), EmptyString(), nullptr, IsAlternate::No,
                IsExplicitlyEnabled::No);
