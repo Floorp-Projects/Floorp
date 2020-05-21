@@ -93,6 +93,8 @@ apt_packages+=('x11-xserver-utils')
 apt_packages+=('python-dev')
 apt_packages+=('python-pip')
 
+apt_packages+=('python3-pip')
+
 apt-get update
 # This allows ubuntu-desktop to be installed without human interaction
 export DEBIAN_FRONTEND=noninteractive
@@ -105,6 +107,8 @@ dpkg-reconfigure locales
 
 pip install pip==9.0.3
 pip install virtualenv==15.2.0
+pip install zstandard==0.13.0
+pip3 install zstandard==0.13.0
 
 . /setup/install-node.sh
 

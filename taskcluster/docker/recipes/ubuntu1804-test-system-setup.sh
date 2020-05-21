@@ -74,6 +74,7 @@ apt_packages+=('pulseaudio-module-bluetooth')
 apt_packages+=('pulseaudio-module-gconf')
 apt_packages+=('python-dev')
 apt_packages+=('python-pip')
+apt_packages+=('python3-pip')
 apt_packages+=('qemu-kvm')
 apt_packages+=('rlwrap')
 apt_packages+=('screen')
@@ -128,6 +129,9 @@ apt-get install -y -f "${apt_packages[@]}" && rm -rf /var/lib/apt/lists/*
 pip install --upgrade pip==19.2.3
 hash -r
 pip install virtualenv==15.2.0
+
+pip install zstandard==0.13.0
+pip3 install zstandard==0.13.0
 
 # Build a list of packages to purge from the image.
 apt_packages=()
