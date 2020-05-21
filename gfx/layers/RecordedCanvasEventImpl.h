@@ -302,6 +302,10 @@ inline bool RecordedPrepareDataForSurface::PlayCanvasEvent(
 
   auto preparedMap = MakeUnique<gfx::DataSourceSurface::ScopedMap>(
       dataSurface, gfx::DataSourceSurface::READ);
+  if (!preparedMap->IsMapped()) {
+    return false;
+  }
+
   aTranslator->SetPreparedMap(mSurface, std::move(preparedMap));
 
   return true;
