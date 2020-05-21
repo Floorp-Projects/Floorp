@@ -213,7 +213,6 @@ def old_configure_options(*options):
     '--enable-crashreporter',
     '--enable-dbus',
     '--enable-debug-js-modules',
-    '--enable-dtrace',
     '--enable-dump-painting',
     '--enable-extensions',
     '--enable-icf',
