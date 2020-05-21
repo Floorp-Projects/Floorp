@@ -2926,12 +2926,6 @@ TextServicesDocument::WillDeleteText(CharacterData* aTextNode, int32_t aOffset,
 }
 
 NS_IMETHODIMP
-TextServicesDocument::DidDeleteText(CharacterData* aTextNode, int32_t aOffset,
-                                    int32_t aLength, nsresult aResult) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TextServicesDocument::WillDeleteSelection(Selection* aSelection) {
   return NS_OK;
 }

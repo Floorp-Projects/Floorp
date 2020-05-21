@@ -100,18 +100,6 @@ interface nsIEditActionListener : nsISupports
                       in long                aLength);
 
   /**
-   * Called before the editor deletes text.
-   * @param aTextNode   This node getting text deleted.
-   * @param aOffset     The offset in aTextNode to delete at.
-   * @param aLength     The amount of text to delete.
-   * @param aResult     The result of the delete text operation.
-   */
-  void DidDeleteText(in CharacterData       aTextNode,
-                     in long                aOffset,
-                     in long                aLength,
-                     in nsresult            aResult);
-
-  /**
    * Called before the editor deletes the selection.
    * @param aSelection   The selection to be deleted
    */
