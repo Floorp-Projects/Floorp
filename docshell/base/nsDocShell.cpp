@@ -6112,7 +6112,9 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                 getter_AddRefs(newPostData), getter_AddRefs(newURI));
           }
         }
-      } else if (aStatus == NS_ERROR_CONNECTION_REFUSED) {
+      } else if (aStatus == NS_ERROR_CONNECTION_REFUSED &&
+                 Preferences::GetBool("browser.fixup.fallback-to-https",
+                                      false)) {
         // Try HTTPS, since http didn't work
         if (SchemeIsHTTP(url)) {
           int32_t port = 0;
