@@ -55,3 +55,5 @@ Which browser is currently set as the system default web browser. This is simply
 Which browser was set as the system default before it was changed to the current setting. The possible values are the same as for ``default_browser``.
 
 The OS does not keep track of previous default settings, so the agent records this information itself. That means that it will be inaccurate until the first time the default is changed after the agent task begins running. Before then, the value of ``previous_default_browser`` will be the same as ``default_browser``.
+
+This value is updated every time the Default Browser Agent runs, so when the default browser is first changed the values for ``default_browser`` and ``previous_default_browser`` will be different. But on subsequent executions of the Default Browser Agent, the two values will be the same.
