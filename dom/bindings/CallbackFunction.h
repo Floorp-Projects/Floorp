@@ -37,11 +37,9 @@ class CallbackFunction : public CallbackObject {
       : CallbackObject(aCallable, aCallableGlobal, aAsyncStack,
                        aIncumbentGlobal) {}
 
-  JS::Handle<JSObject*> CallableOrNull() const { return CallbackOrNull(); }
+  JSObject* CallableOrNull() const { return CallbackOrNull(); }
 
-  JS::Handle<JSObject*> CallablePreserveColor() const {
-    return CallbackPreserveColor();
-  }
+  JSObject* CallablePreserveColor() const { return CallbackPreserveColor(); }
 
  protected:
   explicit CallbackFunction(CallbackFunction* aCallbackFunction)
