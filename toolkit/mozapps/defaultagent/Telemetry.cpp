@@ -97,11 +97,9 @@ static TelemetryFieldResult GetDefaultBrowser() {
 
 static TelemetryFieldResult GetPreviousDefaultBrowser(
     std::string& currentDefault) {
-  // This function uses two registry values which store the current and the
-  // previous default browser. If the actual current default browser is
-  // different from the one we have stored, both values will be updated and the
-  // new previous default value reported. Otherwise, we'll just report the
-  // existing previous default value.
+  // This function uses a registry value which stores the current default
+  // browser. It returns the data stored in that registry value and replaces the
+  // stored string with the current default browser string that was passed in.
 
   // We'll need the currentDefault string in UTF-16 so that we can use it
   // in and around the registry.
@@ -112,7 +110,7 @@ static TelemetryFieldResult GetPreviousDefaultBrowser(
   MultiByteToWideChar(CP_UTF8, 0, currentDefault.c_str(), -1,
                       wCurrentDefault.get(), currentDefaultLen);
 
-  // We don't really need to store these values using names that include the
+  // We don't really need to store this value using a name that includes the
   // install path, because the default browser is a system (per-user) setting,
   // but we're doing it anyway as a means of avoiding concurrency issues if
   // multiple instances of the task are running at once.
@@ -123,11 +121,9 @@ static TelemetryFieldResult GetPreviousDefaultBrowser(
   }
   std::wstring currentDefaultRegistryValueName(installPath.get());
   currentDefaultRegistryValueName.append(L"|CurrentDefault");
-  std::wstring previousDefaultRegistryValueName(installPath.get());
-  previousDefaultRegistryValueName.append(L"|PreviousDefault");
 
   // First, read the "current default" value that is already stored in the
-  // registry, or write a value there if there isn't one.
+  // registry.
   wchar_t oldCurrentDefault[MAX_PATH + 1] = L"";
   DWORD regStrLen = MAX_PATH + 1;
   LSTATUS ls =
@@ -135,46 +131,20 @@ static TelemetryFieldResult GetPreviousDefaultBrowser(
                    currentDefaultRegistryValueName.c_str(), RRF_RT_REG_SZ,
                    nullptr, &oldCurrentDefault, &regStrLen);
   if (ls != ERROR_SUCCESS) {
-    RegSetKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
-                    currentDefaultRegistryValueName.c_str(), REG_SZ,
-                    wCurrentDefault.get(), currentDefaultLen * sizeof(wchar_t));
     wcsncpy_s(oldCurrentDefault, MAX_PATH, wCurrentDefault.get(), _TRUNCATE);
   }
 
-  // Repeat the above for the "previous default" value.
-  wchar_t oldPreviousDefault[MAX_PATH + 1] = L"";
-  regStrLen = MAX_PATH + 1;
-  ls = RegGetValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
-                    previousDefaultRegistryValueName.c_str(), RRF_RT_REG_SZ,
-                    nullptr, &oldPreviousDefault, &regStrLen);
-  if (ls != ERROR_SUCCESS) {
-    RegSetKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
-                    previousDefaultRegistryValueName.c_str(), REG_SZ,
-                    wCurrentDefault.get(), currentDefaultLen * sizeof(wchar_t));
-    wcsncpy_s(oldPreviousDefault, MAX_PATH, wCurrentDefault.get(), _TRUNCATE);
-  }
-
-  // Now, see if the two registry values need to be updated because the actual
-  // default browser setting has changed since we last ran.
-  std::wstring previousDefault(oldPreviousDefault);
-  if (wcsnicmp(oldCurrentDefault, wCurrentDefault.get(), currentDefaultLen)) {
-    previousDefault = oldCurrentDefault;
-
-    RegSetKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
-                    previousDefaultRegistryValueName.c_str(), REG_SZ,
-                    oldCurrentDefault,
-                    (wcslen(oldCurrentDefault) + 1) * sizeof(wchar_t));
-    RegSetKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
-                    currentDefaultRegistryValueName.c_str(), REG_SZ,
-                    wCurrentDefault.get(), currentDefaultLen * sizeof(wchar_t));
-  }
+  // Next, store the string passed in into the registry value
+  RegSetKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
+                  currentDefaultRegistryValueName.c_str(), REG_SZ,
+                  wCurrentDefault.get(), currentDefaultLen * sizeof(wchar_t));
 
   // We need the previous default string in UTF-8 so we can submit it.
   int previousDefaultLen = WideCharToMultiByte(
-      CP_UTF8, 0, previousDefault.c_str(), -1, nullptr, 0, nullptr, nullptr);
+      CP_UTF8, 0, oldCurrentDefault, -1, nullptr, 0, nullptr, nullptr);
   mozilla::UniquePtr<char[]> narrowPreviousDefault =
       mozilla::MakeUnique<char[]>(previousDefaultLen);
-  WideCharToMultiByte(CP_UTF8, 0, previousDefault.c_str(), -1,
+  WideCharToMultiByte(CP_UTF8, 0, oldCurrentDefault, -1,
                       narrowPreviousDefault.get(), previousDefaultLen, nullptr,
                       nullptr);
   return std::string(narrowPreviousDefault.get());
