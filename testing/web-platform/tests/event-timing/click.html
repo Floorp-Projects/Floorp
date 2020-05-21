@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <meta charset=utf-8 />
-<title>Event Timing auxclick.</title>
+<title>Event Timing click.</title>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <script src=/resources/testdriver.js></script>
@@ -11,7 +11,7 @@
 <div id='target'>Click me</div>
 <script>
   promise_test(async t => {
-    return testEventType(t, 'auxclick');
+    return testEventType(t, 'click');
   })
 </script>
 </html>
