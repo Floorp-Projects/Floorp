@@ -16,22 +16,24 @@ add_task(async function test_duplicates() {
   let context = createContext(searchString, { isPrivate: false });
   await controller.startQuery(context);
 
+  // The first result will be a search heuristic, which we don't care about for
+  // this test.
   info(
     "Results:\n" +
       context.results.map(m => `${m.title} - ${m.payload.url}`).join("\n")
   );
   Assert.equal(
     context.results.length,
-    1,
+    2,
     "Found the expected number of matches"
   );
   Assert.equal(
-    context.results[0].type,
+    context.results[1].type,
     UrlbarUtils.RESULT_TYPE.URL,
     "Should have a history  result"
   );
   Assert.equal(
-    context.results[0].payload.url,
+    context.results[1].payload.url,
     TEST_URL + "#",
     "Check result URL"
   );

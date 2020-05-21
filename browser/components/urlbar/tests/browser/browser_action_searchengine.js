@@ -33,6 +33,7 @@ add_task(async function setup() {
     await Services.search.removeEngine(engine);
     await Services.search.removeEngine(engine2);
     await PlacesUtils.history.clear();
+    await UrlbarTestUtils.formHistory.clear();
   });
 });
 

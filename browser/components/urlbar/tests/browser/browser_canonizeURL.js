@@ -8,6 +8,11 @@
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 add_task(async function checkCtrlWorks() {
+  registerCleanupFunction(async function() {
+    await PlacesUtils.history.clear();
+    await UrlbarTestUtils.formHistory.clear();
+  });
+
   let defaultEngine = await Services.search.getDefault();
   let testcases = [
     ["example", "http://www.example.com/", { ctrlKey: true }],

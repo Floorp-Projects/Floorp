@@ -10,5 +10,7 @@
 <Url type="text/html"
      method="GET"
      template="http://localhost:9000/search"
-     rel="searchform"/>
+     rel="searchform">
+  <Param name="terms" value="{searchTerms}"/>
+</Url>
 </SearchPlugin>

@@ -15,9 +15,11 @@ add_task(async function init() {
 
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
+    await UrlbarTestUtils.formHistory.clear();
   });
 
   await PlacesUtils.history.clear();
+  await UrlbarTestUtils.formHistory.clear();
 
   let visits = [];
   for (let i = 0; i < gMaxResults; i++) {

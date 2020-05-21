@@ -39,6 +39,7 @@ add_task(async function() {
       /* tab may have already been closed in case of failure */
     }
     await PlacesUtils.history.clear();
+    await UrlbarTestUtils.formHistory.clear();
   });
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
