@@ -45,7 +45,8 @@ from taskgraph.util.schema import (
     Schema,
 )
 from taskgraph.util.chunking import (
-    get_chunked_manifests,
+    chunk_manifests,
+    get_manifests,
     guess_mozinfo_from_task,
 )
 from taskgraph.util.taskcluster import (
@@ -473,7 +474,10 @@ test_description_schema = Schema({
     },
 
     # The set of test manifests to run.
-    Optional('test-manifests'): [text_type],
+    Optional('test-manifests'): Any(
+        [text_type],
+        {'active': [text_type], 'skipped': [text_type]},
+    ),
 
     # The current chunk (if chunking is enabled).
     Optional('this-chunk'): int,
@@ -1351,24 +1355,22 @@ def set_test_verify_chunks(config, tasks):
 
 
 @transforms.add
-def set_chunked_manifests(config, tasks):
-    """Determine the set of test manifests that should run against this task
-    and divide them into chunks.
-    """
+def set_test_manifests(config, tasks):
+    """Determine the set of test manifests that should run in this task."""
 
     for task in tasks:
-        if taskgraph.fast or task['suite'] in CHUNK_SUITES_BLACKLIST:
+        if taskgraph.fast or task['suite'] in CHUNK_SUITES_BLACKLIST or 'test-manifests' in task:
             yield task
             continue
 
         suite_definition = TEST_SUITES[task['suite']]
         mozinfo = guess_mozinfo_from_task(task)
-        task['chunked-manifests'] = get_chunked_manifests(
+        task['test-manifests'] = get_manifests(
             suite_definition['build_flavor'],
             suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
-            task['chunks'],
             frozenset(mozinfo.items()),
         )
+
         yield task
 
 
@@ -1380,7 +1382,26 @@ def split_chunks(config, tasks):
     """
 
     for task in tasks:
-        chunked_manifests = task.pop('chunked-manifests', None)
+        # If test-manifests are set, chunk them ahead of time to avoid running
+        # the algorithm more than once.
+        chunked_manifests = None
+        if 'test-manifests' in task:
+            suite_definition = TEST_SUITES[task['suite']]
+            manifests = task['test-manifests']
+            if isinstance(manifests, list):
+                manifests = {'active': manifests, 'skipped': []}
+
+            chunked_manifests = chunk_manifests(
+                suite_definition['build_flavor'],
+                task['test-platform'],
+                task['chunks'],
+                manifests['active'],
+            )
+
+            # Add all skipped manifests to the first chunk so they still show up in the
+            # logs. They won't impact runtime much.
+            chunked_manifests[0].extend(manifests['skipped'])
+
         for i in range(task['chunks']):
             this_chunk = i + 1
 
