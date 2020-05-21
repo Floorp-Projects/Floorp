@@ -83,7 +83,8 @@ static void CheckCanonicalNaN() {
   double hardwareNaN = infinity - infinity;
   uint64_t bits = mozilla::BitwiseCast<uint64_t>(hardwareNaN);
   bits &= ~mozilla::FloatingPoint<double>::kSignBit;
-  MOZ_RELEASE_ASSERT(bits == JS::detail::CanonicalizedNaNBits);
+  MOZ_RELEASE_ASSERT(bits == JS::detail::CanonicalizedNaNBits,
+                     "Unexpected default hardware NaN value");
 #endif
 }
 
