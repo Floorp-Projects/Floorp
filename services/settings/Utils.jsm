@@ -166,6 +166,12 @@ var Utils = {
     let changes = [];
     // If no changes since last time, go on with empty list of changes.
     if (response.status != 304) {
+      if (response.status >= 500) {
+        throw new Error(
+          `Server error ${response.status} ${response.statusText}`
+        );
+      }
+
       const is404FromCustomServer =
         response.status == 404 &&
         Services.prefs.prefHasUserValue("services.settings.server");

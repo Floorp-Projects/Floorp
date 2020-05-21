@@ -687,6 +687,31 @@ add_task(async function test_server_error() {
 });
 add_task(clear_state);
 
+add_task(async function test_server_error_5xx() {
+  const startHistogram = getUptakeTelemetrySnapshot(
+    TELEMETRY_HISTOGRAM_POLL_KEY
+  );
+
+  function simulateErrorResponse(request, response) {
+    response.setHeader("Date", new Date(3000).toUTCString());
+    response.setHeader("Content-Type", "text/html; charset=UTF-8");
+    response.write("<html></html>");
+    response.setStatusLine(null, 504, "Gateway Timeout");
+  }
+  server.registerPathHandler(CHANGES_PATH, simulateErrorResponse);
+
+  try {
+    await RemoteSettings.pollChanges();
+  } catch (e) {}
+
+  const endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_POLL_KEY);
+  const expectedIncrements = {
+    [UptakeTelemetry.STATUS.SERVER_ERROR]: 1,
+  };
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+add_task(clear_state);
+
 add_task(async function test_client_error() {
   const startHistogram = getUptakeTelemetrySnapshot(
     TELEMETRY_HISTOGRAM_SYNC_KEY
