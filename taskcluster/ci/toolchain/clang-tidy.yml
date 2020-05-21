@@ -10,7 +10,7 @@ job-defaults:
     worker:
         max-run-time: 3600
     run:
-        toolchain-artifact: public/build/clang-tidy.tar.xz
+        toolchain-artifact: public/build/clang-tidy.tar.zst
         resources:
             - 'build/clang-plugin/**/*.cpp'
             - 'build/clang-plugin/**/*.h'

@@ -18,10 +18,13 @@ import glob
 import errno
 import re
 import sys
+import tarfile
 from contextlib import contextmanager
 from distutils.dir_util import copy_tree
 
 from shutil import which
+
+import zstandard
 
 
 def symlink(source, link_name):
@@ -73,12 +76,20 @@ def check_run(args):
 
 
 def run_in(path, args):
+    with chdir(path):
+        check_run(args)
+
+
+@contextmanager
+def chdir(path):
     d = os.getcwd()
     print('cd "%s"' % path, file=sys.stderr)
     os.chdir(path)
-    check_run(args)
-    print('cd "%s"' % d, file=sys.stderr)
-    os.chdir(d)
+    try:
+        yield
+    finally:
+        print('cd "%s"' % d, file=sys.stderr)
+        os.chdir(d)
 
 
 def patch(patch, srcdir):
@@ -121,21 +132,16 @@ def updated_env(env):
     os.environ.update(old_env)
 
 
-def build_tar_package(tar, name, base, directory):
+def build_tar_package(name, base, directory):
     name = os.path.realpath(name)
-    # On Windows, we have to convert this into an msys path so that tar can
-    # understand it.
-    if is_windows():
-        name = name.replace('\\', '/')
+    print('tarring {} from {}/{}'.format(name, base, directory), file=sys.stderr)
+    assert name.endswith(".tar.zst")
 
-        def f(match):
-            return '/' + match.group(1).lower()
-        name = re.sub(r'^([A-Za-z]):', f, name)
-    run_in(base, [tar,
-                  "-c",
-                  "-%s" % ("J" if ".xz" in name else "j"),
-                  "-f",
-                  name, directory])
+    cctx = zstandard.ZstdCompressor()
+    with open(name, "wb") as f, cctx.stream_writer(f) as z:
+        with tarfile.open(mode="w|", fileobj=z) as tf:
+            with chdir(base):
+                tf.add(directory)
 
 
 def mkdir_p(path):
@@ -897,5 +903,4 @@ if __name__ == "__main__":
                 copy_tree(srcdir, destdir)
 
     if not args.skip_tar:
-        ext = "bz2" if is_darwin() or is_windows() else "xz"
-        build_tar_package("tar", "%s.tar.%s" % (package_name, ext), final_stage_dir, package_name)
+        build_tar_package("%s.tar.zst" % package_name, final_stage_dir, package_name)
