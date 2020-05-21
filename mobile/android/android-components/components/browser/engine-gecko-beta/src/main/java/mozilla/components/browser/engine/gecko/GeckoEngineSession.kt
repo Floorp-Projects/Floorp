@@ -196,10 +196,7 @@ class GeckoEngineSession(
         val shouldBlockContent =
             policy.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
 
-        geckoSession.settings.useTrackingProtection = shouldBlockContent
-        if (!enabled) {
-            disableTrackingProtectionOnGecko()
-        }
+        geckoSession.settings.useTrackingProtection = shouldBlockContent && enabled
         notifyAtLeastOneObserver { onTrackerBlockingEnabledChange(enabled) }
     }
 
@@ -207,7 +204,7 @@ class GeckoEngineSession(
      * See [EngineSession.disableTrackingProtection]
      */
     override fun disableTrackingProtection() {
-        disableTrackingProtectionOnGecko()
+        geckoSession.settings.useTrackingProtection = false
         notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
 
@@ -224,16 +221,6 @@ class GeckoEngineSession(
                 onResult(false)
             }
         }
-    }
-
-    // To fully disable tracking protection we need to change the different tracking protection
-    // variables to none.
-    private fun disableTrackingProtectionOnGecko() {
-        geckoSession.settings.useTrackingProtection = false
-        runtime.settings.contentBlocking.setAntiTracking(ContentBlocking.AntiTracking.NONE)
-        runtime.settings.contentBlocking.cookieBehavior = ContentBlocking.CookieBehavior.ACCEPT_ALL
-        runtime.settings.contentBlocking.setStrictSocialTrackingProtection(false)
-        runtime.settings.contentBlocking.setEnhancedTrackingProtectionLevel(ContentBlocking.EtpLevel.NONE)
     }
 
     /**
