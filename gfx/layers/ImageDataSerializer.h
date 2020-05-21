@@ -60,6 +60,11 @@ gfx::IntSize SizeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(
     const BufferDescriptor& aDescriptor);
 
+Maybe<int32_t> YStrideFromBufferDescriptor(const BufferDescriptor& aDescriptor);
+
+Maybe<int32_t> CbCrStrideFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor);
+
 Maybe<gfx::YUVColorSpace> YUVColorSpaceFromBufferDescriptor(
     const BufferDescriptor& aDescriptor);
 

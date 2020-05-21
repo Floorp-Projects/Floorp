@@ -227,6 +227,14 @@ Maybe<gfx::IntSize> BufferTextureData::GetCbCrSize() const {
   return ImageDataSerializer::CbCrSizeFromBufferDescriptor(mDescriptor);
 }
 
+Maybe<int32_t> BufferTextureData::GetYStride() const {
+  return ImageDataSerializer::YStrideFromBufferDescriptor(mDescriptor);
+}
+
+Maybe<int32_t> BufferTextureData::GetCbCrStride() const {
+  return ImageDataSerializer::CbCrStrideFromBufferDescriptor(mDescriptor);
+}
+
 Maybe<gfx::YUVColorSpace> BufferTextureData::GetYUVColorSpace() const {
   return ImageDataSerializer::YUVColorSpaceFromBufferDescriptor(mDescriptor);
 }
