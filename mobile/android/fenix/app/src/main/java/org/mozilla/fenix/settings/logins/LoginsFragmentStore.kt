@@ -84,11 +84,13 @@ private fun savedLoginsStateReducer(
     action: LoginsAction
 ): LoginsListState {
     return when (action) {
-        is LoginsAction.UpdateLoginsList -> state.copy(
-            isLoading = false,
-            loginList = action.list,
-            filteredItems = action.list
-        )
+        is LoginsAction.UpdateLoginsList -> {
+            state.copy(
+                isLoading = false,
+                loginList = action.list,
+                filteredItems = state.sortingStrategy(action.list)
+            )
+        }
         is LoginsAction.FilterLogins -> {
             filterItems(
                 action.newText,
