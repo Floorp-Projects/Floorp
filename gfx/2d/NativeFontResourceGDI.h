@@ -38,8 +38,9 @@ class NativeFontResourceGDI final : public NativeFontResource {
       uint32_t aInstanceDataLength) final;
 
  private:
-  explicit NativeFontResourceGDI(HANDLE aFontResourceHandle)
-      : mFontResourceHandle(aFontResourceHandle) {}
+  explicit NativeFontResourceGDI(HANDLE aFontResourceHandle, size_t aDataLength)
+      : NativeFontResource(aDataLength),
+        mFontResourceHandle(aFontResourceHandle) {}
 
   HANDLE mFontResourceHandle;
 };

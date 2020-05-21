@@ -1040,7 +1040,13 @@ class NativeFontResource
       uint32_t aIndex, const uint8_t* aInstanceData,
       uint32_t aInstanceDataLength) = 0;
 
-  virtual ~NativeFontResource() = default;
+  NativeFontResource(size_t aDataLength);
+  virtual ~NativeFontResource();
+
+  static void RegisterMemoryReporter();
+
+ private:
+  size_t mDataLength;
 };
 
 class DrawTargetCapture;
