@@ -48,55 +48,6 @@ class BustedProvider(object):
 
 
 @CommandProvider
-class SearchProvider(object):
-    @Command('searchfox', category='misc',
-             description='Search for something in Searchfox.')
-    @CommandArgument('term', nargs='+', help='Term(s) to search for.')
-    def searchfox(self, term):
-        import webbrowser
-        term = ' '.join(term)
-        uri = 'https://searchfox.org/mozilla-central/search?q=%s' % term
-        webbrowser.open_new_tab(uri)
-    @Command('dxr', category='misc',
-             description='Search for something in DXR.')
-    @CommandArgument('term', nargs='+', help='Term(s) to search for.')
-    def dxr(self, term):
-        import webbrowser
-        term = ' '.join(term)
-        uri = 'http://dxr.mozilla.org/mozilla-central/search?q=%s&redirect=true' % term
-        webbrowser.open_new_tab(uri)
-
-    @Command('mdn', category='misc',
-             description='Search for something on MDN.')
-    @CommandArgument('term', nargs='+', help='Term(s) to search for.')
-    def mdn(self, term):
-        import webbrowser
-        term = ' '.join(term)
-        uri = 'https://developer.mozilla.org/search?q=%s' % term
-        webbrowser.open_new_tab(uri)
-
-    @Command('google', category='misc',
-             description='Search for something on Google.')
-    @CommandArgument('term', nargs='+', help='Term(s) to search for.')
-    def google(self, term):
-        import webbrowser
-        term = ' '.join(term)
-        uri = 'https://www.google.com/search?q=%s' % term
-        webbrowser.open_new_tab(uri)
-
-    @Command('search', category='misc',
-             description='Search for something on the Internets. '
-             'This will open 4 new browser tabs and search for the term on Google, '
-             'MDN, DXR, and Searchfox.')
-    @CommandArgument('term', nargs='+', help='Term(s) to search for.')
-    def search(self, term):
-        self.google(term)
-        self.mdn(term)
-        self.dxr(term)
-        self.searchfox(term)
-
-
-@CommandProvider
 class UUIDProvider(object):
     @Command('uuid', category='misc',
              description='Generate a uuid.')
