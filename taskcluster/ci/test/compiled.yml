@@ -86,7 +86,7 @@ jittest:
             (?=linux).*(?!-ccov)...../.*: []  # redundant with SM(...)
             (?=windows).*(?!-ccov)...../.*: []  # redundant with SM(p)
             android-hw-.*-aarch64/debug: ['try', 'mozilla-central', 'release']
-            android-hw-.*-api-16/.*: ['try', 'mozilla-central', 'release']
+            android-hw-.*-api-16(?:-shippable)?/.*: ['try', 'mozilla-central', 'release']
             default: built-projects
     chunks:
         by-test-platform:

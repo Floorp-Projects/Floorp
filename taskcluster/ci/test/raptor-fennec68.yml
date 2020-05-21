@@ -320,7 +320,9 @@ raptor-youtube-playback-fennec68:
     run-on-projects:
         by-test-platform:
             android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
             android-hw-g5.*/pgo: ['mozilla-central']
+            android-hw-g5.*-shippable/opt: ['mozilla-central']
             default: []
     mozharness:
         extra-options:
@@ -346,7 +348,9 @@ raptor-youtube-playback-h264-sfr-fennec68:
     run-on-projects:
         by-test-platform:
             android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
             android-hw-g5.*/pgo: ['mozilla-central']
+            android-hw-g5.*-shippable/opt: ['mozilla-central']
             default: []
     mozharness:
         extra-options:
@@ -361,6 +365,7 @@ raptor-youtube-playback-vp9-sfr-fennec68:
     run-on-projects:
         by-test-platform:
             android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
             default: []
     mozharness:
         extra-options:
