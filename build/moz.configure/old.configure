@@ -215,7 +215,6 @@ def old_configure_options(*options):
     '--enable-debug-js-modules',
     '--enable-dump-painting',
     '--enable-extensions',
-    '--enable-icf',
     '--enable-install-strip',
     '--enable-libproxy',
     '--enable-logrefcnt',

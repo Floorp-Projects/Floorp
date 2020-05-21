@@ -94,11 +94,6 @@ dnl ========================================================
 dnl = Identical Code Folding
 dnl ========================================================
 
-MOZ_ARG_DISABLE_BOOL(icf,
-[  --disable-icf          Disable Identical Code Folding],
-    MOZ_DISABLE_ICF=1,
-    MOZ_DISABLE_ICF= )
-
 if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$MOZ_DISABLE_ICF" -a -z "$DEVELOPER_OPTIONS"; then
     AC_CACHE_CHECK([whether the linker supports Identical Code Folding],
         LD_SUPPORTS_ICF,
