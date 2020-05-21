@@ -2488,8 +2488,3 @@ ar = check_prog('AR', ar_config.names, paths=toolchain_search_path)
 add_old_configure_assignment('AR', ar)
 
 set_config('AR_FLAGS', ar_config.flags)
-
-
-js_option('--enable-cpp-rtti', help='Enable C++ RTTI')
-
-add_old_configure_assignment('_MOZ_USE_RTTI', '1', when='--enable-cpp-rtti')
