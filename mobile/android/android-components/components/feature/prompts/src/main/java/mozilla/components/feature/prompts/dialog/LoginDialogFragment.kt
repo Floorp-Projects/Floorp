@@ -21,11 +21,13 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -84,10 +86,22 @@ internal class LoginDialogFragment : PromptDialogFragment() {
         return BottomSheetDialog(requireContext(), R.style.MozDialogStyle).apply {
             setCancelable(true)
             setOnShowListener {
-                val bottomSheet =
-                    findViewById<View>(MaterialR.id.design_bottom_sheet) as FrameLayout
-                val behavior = BottomSheetBehavior.from(bottomSheet)
-                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                /*
+                 Note: we must include a short delay before expanding the bottom sheet.
+                 This is because the keyboard is still in the process of hiding when `onShowListener` is triggered.
+                 Because of this, we'll only be given a small portion of the screen to draw on which will set the bottom
+                 anchor of this view incorrectly to somewhere in the center of the view. If we delay a small amount we
+                 are given the correct amount of space and are properly anchored.
+                 */
+                CoroutineScope(IO).launch {
+                    delay(KEYBOARD_HIDING_DELAY)
+                    launch(Main) {
+                        val bottomSheet =
+                            findViewById<View>(MaterialR.id.design_bottom_sheet) as FrameLayout
+                        val behavior = BottomSheetBehavior.from(bottomSheet)
+                        behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                    }
+                }
             }
         }
     }
@@ -294,6 +308,8 @@ internal class LoginDialogFragment : PromptDialogFragment() {
     }
 
     companion object {
+        private const val KEYBOARD_HIDING_DELAY = 50L
+
         /**
          * A builder method for creating a [LoginDialogFragment]
          * @param sessionId the id of the session for which this dialog will be created.
