@@ -681,7 +681,10 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // for font list changes that affect all documents
   void ForceGlobalReflow();
 
-  void RebuildLocalFonts();
+  // If aForgetLocalFaces is true, all gfxFontEntries for src:local fonts must
+  // be discarded (not potentially reused to satisfy the rebuilt rules),
+  // because they may no longer be valid.
+  void RebuildLocalFonts(bool aForgetLocalFaces = false);
 
   void ResolveGenericFontNames(mozilla::StyleGenericFontFamily aGenericType,
                                eFontPrefLang aPrefLang,
