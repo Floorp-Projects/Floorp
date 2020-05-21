@@ -7,7 +7,8 @@
 <link rel="help" href="https://w3c.github.io/clipboard-apis/#async-clipboard-api">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 <p>
   <p>The bottom image should display the same image as the top image.</p>
   <p>Original Image:</p>
@@ -39,6 +40,9 @@ async function loadBlob(fileName) {
 }
 
 promise_test(async t => {
+  test_driver.set_permission({name: 'clipboard-read'}, 'granted');
+  test_driver.set_permission({name: 'clipboard-write'}, 'granted');
+
   const blobInput = await loadBlob('resources/greenbox.png');
 
   assert_equals(blobInput.type, 'image/png');
@@ -63,15 +67,13 @@ promise_test(async t => {
 }, 'Verify write and read clipboard [image/png Blob]');
 
 promise_test(async t => {
+  test_driver.set_permission({name: 'clipboard-read'}, 'granted');
+  test_driver.set_permission({name: 'clipboard-write'}, 'granted');
+
   const invalidPngBlob = new Blob(['this text is not a valid png image'],
-      {type: "image/png"});
+      {type: 'image/png'});
   const clipboardItemInput = new ClipboardItem({'image/png' : invalidPngBlob});
-  await promise_rejects_dom(t, "DataError",
+  await promise_rejects_dom(t, 'DataError',
       navigator.clipboard.write([clipboardItemInput]));
 }, 'Verify write error on malformed data [image/png ClipboardItem]');
 </script>
-<p>
-  Note: This is a manual test because it writes/reads to the shared system
-  clipboard and thus cannot be run async with other tests that might interact
-  with the clipboard.
-</p>
