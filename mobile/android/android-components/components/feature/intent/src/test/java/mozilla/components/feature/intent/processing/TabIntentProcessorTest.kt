@@ -32,6 +32,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyList
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -74,6 +75,14 @@ class TabIntentProcessorTest {
         whenever(intent.dataString).thenReturn("http://mozilla.org")
         handler.process(intent)
         verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
+
+        // try to send a request to open a tab with the same url as before
+        whenever(intent.dataString).thenReturn("http://mozilla.org")
+        handler.process(intent)
+        verify(sessionManager).select(any())
+        verify(sessionManager, never()).add(anyList())
+
+        assertEquals(sessionManager.sessions.size, 1)
 
         val session = sessionManager.all[0]
         assertNotNull(session)
