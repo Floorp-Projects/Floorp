@@ -82,7 +82,10 @@
                     name: `Isolated Cache`,
                     steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
                     prefs: {
-                        set: [["browser.cache.cache_isolation", true]],
+                        set: [
+                            ["browser.cache.cache_isolation", true],
+                            ["privacy.partition.network_state", false]
+                        ],
                     },
                 })
         );
@@ -94,7 +97,10 @@
                     name: `Non Isolated Cache`,
                     steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 1]],
                     prefs: {
-                        set: [["browser.cache.cache_isolation", false]],
+                        set: [
+                            ["browser.cache.cache_isolation", false],
+                            ["privacy.partition.network_state", false]
+                        ],
                     },
                 })
         );
@@ -108,6 +114,7 @@
                         set: [
                             ["privacy.firstparty.isolate", true],
                             ["browser.cache.cache_isolation", true],
+                            ["privacy.partition.network_state", false],
                         ],
                     },
                 })
@@ -124,6 +131,7 @@
                                 ["privacy.firstparty.isolate", false],
                                 ["browser.cache.cache_isolation", true],
                                 ["network.cookie.cookieBehavior", i],
+                                ["privacy.partition.network_state", false],
                             ],
                         },
                     })
@@ -136,8 +144,9 @@
                     steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
                     prefs: {
                         set: [
-                        ["privacy.firstparty.isolate", true],
-                        ["browser.cache.cache_isolation", false],
+                          ["privacy.firstparty.isolate", true],
+                          ["browser.cache.cache_isolation", false],
+                          ["privacy.partition.network_state", false],
                         ],
                     },
                 })
