@@ -94,7 +94,7 @@ class CallbackObject : public nsISupports {
   // This means that any native callee which receives a CallbackObject as an
   // argument can safely rely on the callback being non-null so long as it
   // doesn't trigger any scripts before it accesses it.
-  JS::Handle<JSObject*> CallbackOrNull() const {
+  JSObject* CallbackOrNull() const {
     mCallback.exposeToActiveJS();
     return CallbackPreserveColor();
   }
@@ -119,23 +119,10 @@ class CallbackObject : public nsISupports {
   /*
    * This getter does not change the color of the JSObject meaning that the
    * object returned is not guaranteed to be kept alive past the next CC.
-   *
-   * This should only be called if you are certain that the return value won't
-   * be passed into a JS API function and that it won't be stored without being
-   * rooted (or otherwise signaling the stored value to the CC).
-   *
-   * Note that calling Reset() will also affect the value of any handle
-   * previously returned here. Don't call Reset() if a handle is still in use.
    */
-  JS::Handle<JSObject*> CallbackPreserveColor() const {
-    // Calling fromMarkedLocation() is safe because we trace our mCallback, and
-    // because the value of mCallback cannot change after if has been set
-    // (except for calling Reset() as described above).
-    return JS::Handle<JSObject*>::fromMarkedLocation(mCallback.address());
-  }
-  JS::Handle<JSObject*> CallbackGlobalPreserveColor() const {
-    // The comment in CallbackPreserveColor applies here as well.
-    return JS::Handle<JSObject*>::fromMarkedLocation(mCallbackGlobal.address());
+  JSObject* CallbackPreserveColor() const { return mCallback.unbarrieredGet(); }
+  JSObject* CallbackGlobalPreserveColor() const {
+    return mCallbackGlobal.unbarrieredGet();
   }
 
   /*
@@ -143,7 +130,7 @@ class CallbackObject : public nsISupports {
    * used instead of CallbackOrNull() to avoid the overhead of
    * ExposeObjectToActiveJS().
    */
-  JS::Handle<JSObject*> CallbackKnownNotGray() const {
+  JSObject* CallbackKnownNotGray() const {
     JS::AssertObjectIsNotGray(mCallback);
     return CallbackPreserveColor();
   }
@@ -618,9 +605,7 @@ class MOZ_RAII MOZ_IS_SMARTPTR_TO_REFCOUNTED RootedCallback
   void operator=(decltype(nullptr) arg) { this->get().operator=(arg); }
 
   // Codegen relies on being able to do CallbackOrNull() and Callback() on us.
-  JS::Handle<JSObject*> CallbackOrNull() const {
-    return this->get()->CallbackOrNull();
-  }
+  JSObject* CallbackOrNull() const { return this->get()->CallbackOrNull(); }
 
   JSObject* Callback(JSContext* aCx) const {
     return this->get()->Callback(aCx);

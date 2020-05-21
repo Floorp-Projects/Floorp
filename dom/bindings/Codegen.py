@@ -4522,7 +4522,7 @@ class CastableObjectUnwrapper():
                 // that already has a content reflection...
                 if (!IsDOMObject(js::UncheckedUnwrap(&${source}.toObject()))) {
                   nsCOMPtr<nsIGlobalObject> contentGlobal;
-                  JS::Handle<JSObject*> callback = CallbackOrNull();
+                  JS::Rooted<JSObject*> callback(cx, CallbackOrNull());
                   if (!callback ||
                       !GetContentGlobalForJSImplementedObject(cx, callback, getter_AddRefs(contentGlobal))) {
                     $*{exceptionCode}
@@ -16884,7 +16884,8 @@ class CGJSImplClass(CGBindingImplClass):
             if (!JS_WrapObject(aCx, &obj)) {
               return nullptr;
             }
-            if (!JS_DefineProperty(aCx, mImpl->CallbackOrNull(), "__DOM_IMPL__", obj, 0)) {
+            JS::Rooted<JSObject*> callback(aCx, mImpl->CallbackOrNull());
+            if (!JS_DefineProperty(aCx, callback, "__DOM_IMPL__", obj, 0)) {
               return nullptr;
             }
             return obj;
@@ -17332,7 +17333,7 @@ class CallbackMember(CGNativeMember):
     def __init__(self, sig, name, descriptorProvider, needThisHandling,
                  rethrowContentException=False,
                  spiderMonkeyInterfacesAreStructs=False,
-                 wrapScope='CallbackKnownNotGray()',
+                 wrapScope=None,
                  canRunScript=False):
         """
         needThisHandling is True if we need to be able to accept a specified
@@ -17466,6 +17467,7 @@ class CallbackMember(CGNativeMember):
             jsvalIndex = "%d" % i
             if arg.canHaveMissingValue():
                 argval += ".Value()"
+
         if arg.type.isDOMString():
             # XPConnect string-to-JS conversion wants to mutate the string.  So
             # let's give it a string it can mutate
@@ -17475,6 +17477,10 @@ class CallbackMember(CGNativeMember):
         else:
             result = argval
             prepend = ""
+
+        if arg.type.isUnion() and self.wrapScope is None:
+            prepend += "JS::Rooted<JSObject*> callbackObj(cx, CallbackKnownNotGray());\n"
+            self.wrapScope = "callbackObj"
 
         conversion = prepend + wrapForType(
             arg.type, self.descriptorProvider,
@@ -17828,10 +17834,11 @@ class CallbackSetter(CallbackAccessor):
         return fill(
             """
             MOZ_ASSERT(argv.length() == 1);
+            JS::Rooted<JSObject*> callback(cx, CallbackKnownNotGray());
             ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
             if ((JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)) &&
                  !InitIds(cx, atomsCache)) ||
-                !JS_SetPropertyById(cx, CallbackKnownNotGray(), atomsCache->${attrAtomName}, argv[0])) {
+                !JS_SetPropertyById(cx, callback, atomsCache->${attrAtomName}, argv[0])) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
             }
