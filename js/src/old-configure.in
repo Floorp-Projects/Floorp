@@ -530,7 +530,6 @@ case "$target" in
         TARGET_COMPILER_ABI=msvc
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
-        PKG_SKIP_STRIP=1
         # aarch64 doesn't support subsystems below 6.02
         if test "$CPU_ARCH" = "aarch64"; then
             WIN32_SUBSYSTEM_VERSION=6.02
@@ -1273,22 +1272,6 @@ MOZ_CONFIG_CLANG_PLUGIN
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl = Enable stripping of libs & executables
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(strip,
-[  --enable-strip          Enable stripping of libs & executables ],
-    ENABLE_STRIP=1,
-    ENABLE_STRIP= )
-
-dnl ========================================================
-dnl = Enable stripping of libs & executables when packaging
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(install-strip,
-[  --enable-install-strip  Enable stripping of libs & executables when packaging ],
-    PKG_SKIP_STRIP= ,
-    PKG_SKIP_STRIP=1)
-
-dnl ========================================================
 dnl =
 dnl = Profiling and Instrumenting
 dnl =
@@ -1394,8 +1377,6 @@ AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST_LIST(WARNINGS_CFLAGS)
 AC_SUBST(LIBICONV)
 
-AC_SUBST(ENABLE_STRIP)
-AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(INCREMENTAL_LINKER)
 
 AC_SUBST_LIST(MOZ_FIX_LINK_PATHS)
