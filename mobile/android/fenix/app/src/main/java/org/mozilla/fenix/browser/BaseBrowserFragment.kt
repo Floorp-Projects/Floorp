@@ -64,6 +64,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -213,6 +214,16 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 onTabCounterClicked = {
                     val tabTrayDialog = TabTrayDialogFragment()
                     tabTrayDialog.show(parentFragmentManager, null)
+                    tabTrayDialog.interactor = object : TabTrayDialogFragment.Interactor {
+                        override fun onTabSelected(tab: mozilla.components.concept.tabstray.Tab) {
+                            tabTrayDialog.dismiss()
+                        }
+
+                        override fun onNewTabTapped() {
+                            tabTrayDialog.dismiss()
+                            findNavController().navigate(BrowserFragmentDirections.actionGlobalHome())
+                        }
+                    }
                 }
             )
 

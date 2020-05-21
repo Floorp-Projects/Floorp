@@ -360,6 +360,16 @@ class HomeFragment : Fragment() {
             hideOnboardingIfNeeded()
             val tabTrayDialog = TabTrayDialogFragment()
             tabTrayDialog.show(parentFragmentManager, null)
+            tabTrayDialog.interactor = object : TabTrayDialogFragment.Interactor {
+                override fun onTabSelected(tab: mozilla.components.concept.tabstray.Tab) {
+                    tabTrayDialog.dismiss()
+                    (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
+                }
+
+                override fun onNewTabTapped() {
+                    tabTrayDialog.dismiss()
+                }
+            }
         }
 
         PrivateBrowsingButtonView(

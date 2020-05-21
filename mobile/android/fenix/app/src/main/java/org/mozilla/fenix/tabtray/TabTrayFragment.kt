@@ -109,7 +109,6 @@ class TabTrayFragment : Fragment(R.layout.fragment_tab_tray), TabsTray.Observer,
 
     override fun onResume() {
         super.onResume()
-
         onTabsChanged()
     }
 

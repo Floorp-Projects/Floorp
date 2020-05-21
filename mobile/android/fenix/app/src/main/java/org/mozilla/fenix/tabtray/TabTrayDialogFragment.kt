@@ -17,7 +17,13 @@ import mozilla.components.concept.tabstray.Tab
 import org.mozilla.fenix.R
 
 class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
+    interface Interactor {
+        fun onTabSelected(tab: Tab)
+        fun onNewTabTapped()
+    }
+
     private lateinit var tabTrayView: TabTrayView
+    var interactor: Interactor? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,11 +58,11 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     }
 
     override fun onTabSelected(tab: Tab) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        interactor?.onTabSelected(tab)
     }
 
     override fun onNewTabTapped(private: Boolean) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        interactor?.onNewTabTapped()
     }
 
     override fun onTabTrayDismissed() {
