@@ -182,10 +182,8 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
 
     case roles::CHECKBUTTON:
     case roles::TOGGLE_BUTTON:
-      return [mozCheckboxAccessible class];
-
     case roles::RADIOBUTTON:
-      return [mozRadioButtonAccessible class];
+      return [mozCheckboxAccessible class];
 
     case roles::SPINBUTTON:
     case roles::SLIDER:
