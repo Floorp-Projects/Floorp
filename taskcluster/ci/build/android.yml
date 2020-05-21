@@ -160,28 +160,6 @@ android-api-16/opt:
             - linux64-clang
             - linux64-sccache
 
-android-api-16/pgo:
-    description: "Android 4.0 api-16+ PGO"
-    use-pgo: android-api-16-shippable/opt
-    index:
-        job-name: android-api-16-pgo
-    attributes:
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: android-4-0-armv7-api16/pgo
-        symbol: Bpgo(B)
-    worker-type: b-linux
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-    run:
-        actions: [get-secrets, build]
-        config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: api-16
-    fetches:
-        toolchain:
-            - linux64-clang
-
 android-api-16-shippable/opt:
     description: "Android 4.0 api-16+ Shippable"
     use-pgo: true
@@ -233,28 +211,6 @@ android-aarch64/opt:
         toolchain:
             - linux64-clang
             - linux64-sccache
-
-android-aarch64/pgo:
-    description: "Android 5.0 AArch64 PGO"
-    use-pgo: android-api-16-shippable/opt
-    index:
-        job-name: android-aarch64-pgo
-    attributes:
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: android-5-0-aarch64/pgo
-        symbol: Bpgo(B)
-    worker-type: b-linux
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-    run:
-        actions: [get-secrets, build]
-        config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: aarch64
-    fetches:
-        toolchain:
-            - linux64-clang
 
 android-aarch64/debug:
     description: "Android 5.0 AArch64 Debug"
