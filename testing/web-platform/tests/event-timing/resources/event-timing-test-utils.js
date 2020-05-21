@@ -28,8 +28,8 @@ function verifyEvent(entry, eventType, targetId, isFirst=false, minDuration=104,
   assert_equals(entry.entryType, 'event');
   assert_greater_than_equal(entry.duration, minDuration,
       "The entry's duration should be greater than or equal to " + minDuration + " ms.");
-  assert_greater_than(entry.processingStart, entry.startTime,
-      "The entry's processingStart should be greater than startTime.");
+  assert_greater_than_equal(entry.processingStart, entry.startTime,
+      "The entry's processingStart should be greater than or equal to startTime.");
   assert_greater_than_equal(entry.processingEnd, entry.processingStart,
       "The entry's processingEnd must be at least as large as processingStart.");
   // |duration| is a number rounded to the nearest 8 ms, so add 4 to get a lower bound
