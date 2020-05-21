@@ -192,10 +192,10 @@ macosx64-devedition/opt:
     index:
         product: devedition
         job-name: macosx64-opt
-        type: nightly
+        type: shippable
     treeherder:
         platform: osx-cross-devedition/opt
-        symbol: N
+        symbol: B
         tier: 1
     worker-type: b-linux
     worker:
