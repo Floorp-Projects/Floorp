@@ -443,9 +443,8 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Complete(
   // Create and initialize our new BrowserBridgeParent.
   TabId tabId(nsContentUtils::GenerateTabId());
   RefPtr<BrowserBridgeParent> bridge = new BrowserBridgeParent();
-  nsresult rv =
-      bridge->InitWithProcess(embedderBrowser, aContentParent, EmptyString(),
-                              windowInit, chromeFlags, tabId);
+  nsresult rv = bridge->InitWithProcess(embedderBrowser, aContentParent,
+                                        windowInit, chromeFlags, tabId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Cancel(rv);
     return;
