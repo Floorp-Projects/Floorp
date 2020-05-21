@@ -8,7 +8,6 @@ Support for running toolchain-building jobs via dedicated scripts
 from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.shellutil import quote as shell_quote
-from mozpack import path
 
 from six import text_type
 from taskgraph.util.schema import Schema
@@ -149,17 +148,10 @@ def docker_worker_toolchain(config, job, taskdesc):
             'digest-data': get_digest_data(config, run, taskdesc),
         }
 
-    # Use `mach` to invoke python scripts so in-tree libraries are available.
-    if run['script'].endswith('.py'):
-        wrapper = [path.join(gecko_path, 'mach'), 'python']
-    else:
-        wrapper = []
-
     run['using'] = 'run-task'
     run['cwd'] = run['workdir']
     run["command"] = (
-        wrapper
-        + ["workspace/build/src/taskcluster/scripts/misc/{}".format(run.pop("script"))]
+        ["workspace/build/src/taskcluster/scripts/misc/{}".format(run.pop("script"))]
         + run.pop("arguments", [])
     )
 
