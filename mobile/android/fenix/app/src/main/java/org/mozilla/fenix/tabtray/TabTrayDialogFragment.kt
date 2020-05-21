@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.view.updatePadding
+import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
 import mozilla.components.concept.tabstray.Tab
@@ -38,8 +39,14 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
         view.tabLayout.setOnApplyWindowInsetsListener { v, insets ->
             v.updatePadding(
                 left = insets.systemWindowInsetLeft,
-                right = insets.systemWindowInsetRight
+                right = insets.systemWindowInsetRight,
+                bottom = insets.systemWindowInsetBottom
             )
+
+            tabTrayView.view.tab_wrapper.updatePadding(
+                bottom = insets.systemWindowInsetBottom
+            )
+
             insets
         }
     }

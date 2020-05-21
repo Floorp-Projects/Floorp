@@ -532,13 +532,12 @@
 
     <style name="TabTrayDialogStyle" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/BottomSheetModal</item>
-        <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
-        <item name="android:colorBackground">?foundation</item>
+<!--        <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>-->
+<!--        <item name="android:colorBackground">?foundation</item>-->
 
-        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
+<!--        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>-->
         <item name="android:windowIsFloating">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?foundation</item>
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
@@ -552,7 +551,7 @@
 
     <style name="BottomSheetModal" parent="Widget.Design.BottomSheet.Modal">
         <item name="shapeAppearance">@style/BottomSheetShapeAppearance</item>
-        <item name="behavior_halfExpandedRatio">0.4</item>
+        <item name="behavior_halfExpandedRatio">0.6</item>
         <item name="behavior_fitToContents">true</item>
     </style>
 </resources>

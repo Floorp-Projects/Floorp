@@ -52,7 +52,7 @@ class TabTrayView(
 
         behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                Log.e("slideOffset", "$slideOffset")
+
                 if (slideOffset > -0.4) {
                     fabView.new_tab_button.show()
                 } else {

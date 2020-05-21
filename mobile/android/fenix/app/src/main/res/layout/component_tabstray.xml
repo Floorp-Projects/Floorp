@@ -10,6 +10,7 @@
     android:id="@+id/tab_wrapper"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
+    android:layout_marginTop="40dp"
     android:background="?foundation"
     style="@style/BottomSheetModal"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
@@ -62,6 +63,8 @@
         android:id="@+id/tabsTray"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -71,7 +74,5 @@
         mozac:tabsTraySelectedItemBackgroundColor="?tabTrayItemSelectedBackground"
         mozac:tabsTraySelectedItemTextColor="?tabTrayItemText"
         mozac:tabsTrayItemUrlTextColor="?tabTrayItemUrl"
-        mozac:tabsTraySelectedItemUrlTextColor="?tabTrayItemUrl"
-        android:clipToPadding="false"
-        android:paddingBottom="90dp"/>
+        mozac:tabsTraySelectedItemUrlTextColor="?tabTrayItemUrl" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -14,5 +14,4 @@
     android:backgroundTint="@color/photonBlue50"
     android:contentDescription="TODO: Changeme"
     app:srcCompat="@drawable/ic_new"
-    app:tint="@color/photonWhite"
-    android:fitsSystemWindows="true" />
+    app:tint="@color/photonWhite" />
