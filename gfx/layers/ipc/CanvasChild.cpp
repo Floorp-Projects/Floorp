@@ -212,7 +212,7 @@ void CanvasChild::EndTransaction() {
 
 bool CanvasChild::ShouldBeCleanedUp() const {
   // We can only be cleaned up if nothing else references our recorder.
-  if (!mRecorder->hasOneRef()) {
+  if (mRecorder && !mRecorder->hasOneRef()) {
     return false;
   }
 
