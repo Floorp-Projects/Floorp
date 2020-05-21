@@ -11,11 +11,6 @@ dnl the user the option of enabling it.
 dnl ============================================================================
 AC_DEFUN([MOZ_RTTI],
 [
-MOZ_ARG_ENABLE_BOOL(cpp-rtti,
-[  --enable-cpp-rtti       Enable C++ RTTI ],
-[ _MOZ_USE_RTTI=1 ],
-[ _MOZ_USE_RTTI= ])
-
 if test -z "$_MOZ_USE_RTTI"; then
     if test "$GNU_CC"; then
         CXXFLAGS="$CXXFLAGS -fno-rtti"
