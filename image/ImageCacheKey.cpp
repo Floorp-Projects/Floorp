@@ -10,13 +10,11 @@
 #include "mozilla/ContentBlocking.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/StorageAccess.h"
-#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
-#include "mozilla/StaticPrefs_privacy.h"
 #include "nsContentUtils.h"
 #include "nsHashKeys.h"
 #include "nsLayoutUtils.h"
@@ -47,7 +45,7 @@ ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
     : mURI(aURI),
       mOriginAttributes(aAttrs),
       mControlledDocument(GetSpecialCaseDocumentToken(aDocument)),
-      mIsolationKey(GetIsolationKey(aDocument, aURI)),
+      mTopLevelBaseDomain(GetTopLevelBaseDomain(aDocument, aURI)),
       mIsChrome(false) {
   if (mURI->SchemeIs("blob")) {
     mBlobSerial = BlobSerial(mURI);
@@ -62,7 +60,7 @@ ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
       mBlobRef(aOther.mBlobRef),
       mOriginAttributes(aOther.mOriginAttributes),
       mControlledDocument(aOther.mControlledDocument),
-      mIsolationKey(aOther.mIsolationKey),
+      mTopLevelBaseDomain(aOther.mTopLevelBaseDomain),
       mHash(aOther.mHash),
       mIsChrome(aOther.mIsChrome) {}
 
@@ -72,7 +70,7 @@ ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
       mBlobRef(std::move(aOther.mBlobRef)),
       mOriginAttributes(aOther.mOriginAttributes),
       mControlledDocument(aOther.mControlledDocument),
-      mIsolationKey(aOther.mIsolationKey),
+      mTopLevelBaseDomain(aOther.mTopLevelBaseDomain),
       mHash(aOther.mHash),
       mIsChrome(aOther.mIsChrome) {}
 
@@ -84,8 +82,8 @@ bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
   }
   // Don't share the image cache between two top-level documents of different
   // base domains.
-  if (!mIsolationKey.Equals(aOther.mIsolationKey,
-                            nsCaseInsensitiveCStringComparator())) {
+  if (!mTopLevelBaseDomain.Equals(aOther.mTopLevelBaseDomain,
+                                  nsCaseInsensitiveCStringComparator())) {
     return false;
   }
   // The origin attributes always have to match.
@@ -140,7 +138,7 @@ void ImageCacheKey::EnsureHash() const {
     hash = HashString(spec);
   }
 
-  hash = AddToHash(hash, HashString(suffix), HashString(mIsolationKey),
+  hash = AddToHash(hash, HashString(suffix), HashString(mTopLevelBaseDomain),
                    HashString(ptr));
   mHash.emplace(hash);
 }
@@ -165,20 +163,10 @@ void* ImageCacheKey::GetSpecialCaseDocumentToken(Document* aDocument) {
 }
 
 /* static */
-nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
+nsCString ImageCacheKey::GetTopLevelBaseDomain(Document* aDocument,
+                                               nsIURI* aURI) {
   if (!aDocument || !aDocument->GetInnerWindow()) {
     return EmptyCString();
-  }
-
-  // Network-state isolation
-  if (StaticPrefs::privacy_partition_network_state()) {
-    OriginAttributes oa;
-    StoragePrincipalHelper::GetOriginAttributesForNetworkState(aDocument, oa);
-
-    nsAutoCString suffix;
-    oa.CreateSuffix(suffix);
-
-    return std::move(suffix);
   }
 
   // If the window is 3rd party resource, let's see if first-party storage
