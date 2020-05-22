@@ -41,7 +41,7 @@ ConsoleListener.prototype = {
 
   waitFor(cb) {
     return new Promise(resolve => {
-      this._cb = SpecialPowers.wrapCallback(cb);
+      this._cb = cb;
       this._resolve = resolve;
     });
   },
@@ -106,10 +106,7 @@ async function runTest() {
   ok(true, "Console.count == 1 received!");
 }
 
-runTest().then(() => {
-  listener.shutdown();
-  SimpleTest.finish();
-});
+runTest().then(SimpleTest.finish);
 
   </script>
 </body>
