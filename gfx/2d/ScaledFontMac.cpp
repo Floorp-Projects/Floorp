@@ -244,10 +244,10 @@ struct TableRecord {
   CFDataRef data;
 };
 
-static int maxPow2LessThan(int a) {
+static int maxPow2LessThanEqual(int a) {
   int x = 1;
   int shift = 0;
-  while ((x << (shift + 1)) < a) {
+  while ((x << (shift + 1)) <= a) {
     shift++;
   }
   return shift;
@@ -332,10 +332,10 @@ bool UnscaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback,
     buf.writeElement(CFSwapInt32HostToBig(0x00010000));
   }
   buf.writeElement(CFSwapInt16HostToBig(count));
-  buf.writeElement(CFSwapInt16HostToBig((1 << maxPow2LessThan(count)) * 16));
-  buf.writeElement(CFSwapInt16HostToBig(maxPow2LessThan(count)));
-  buf.writeElement(
-      CFSwapInt16HostToBig(count * 16 - ((1 << maxPow2LessThan(count)) * 16)));
+  int maxPow2Count = maxPow2LessThanEqual(count);
+  buf.writeElement(CFSwapInt16HostToBig((1 << maxPow2Count) * 16));
+  buf.writeElement(CFSwapInt16HostToBig(maxPow2Count));
+  buf.writeElement(CFSwapInt16HostToBig((count - (1 << maxPow2Count)) * 16));
 
   // write table record entries
   for (CFIndex i = 0; i < count; i++) {
