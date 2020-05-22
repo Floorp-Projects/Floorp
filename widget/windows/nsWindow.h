@@ -306,6 +306,10 @@ class nsWindow final : public nsWindowBase {
   void SetSmallIcon(HICON aIcon);
   void SetBigIcon(HICON aIcon);
 
+  static void SetIsRestoringSession(const bool aIsRestoringSession) {
+    sIsRestoringSession = aIsRestoringSession;
+  }
+
   /**
    * AssociateDefaultIMC() associates or disassociates the default IMC for
    * the window.
@@ -621,6 +625,7 @@ class nsWindow final : public nsWindowBase {
   static bool sJustGotActivate;
   static bool sIsInMouseCapture;
   static bool sHaveInitializedPrefs;
+  static bool sIsRestoringSession;
 
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
 
