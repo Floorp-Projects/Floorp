@@ -226,14 +226,25 @@ body.dark blockquote {
 /*======= Controls toolbar =======*/
 
 .toolbar-container {
-  position: fixed;
+  position: sticky;
   z-index: 1;
-  top: var(--body-padding);
-  bottom: 0;
-  inset-inline-start: 0;
-  /* Ensure we have the same width as the body padding: */
-  font-size: var(--font-size);
-  width: max(var(--body-padding), calc((100% - var(--content-width)) / 2));
+  top: 32px;
+  height: 0; /* take up no space, so body is at the top. */
+
+  /* As a stick container, we're positioned relative to the body. Move us to
+   * the edge of the viewport using margins, and take the width of
+   * the body padding into account for calculating our width.
+   */
+  margin-left: calc(-1 * var(--body-padding));
+  width: max(var(--body-padding), calc((100% - var(--content-width)) / 2 + var(--body-padding)));
+  font-size: var(--font-size); /* Needed to ensure `em` units match, is reset for .reader-controls */
+}
+
+/* Have to do this manually (instead of using margin-inline-start),
+ * because dir=rtl is not set on its parent. */
+.toolbar-container[dir=rtl] {
+  margin-left: auto;
+  margin-right: calc(-1 * var(--body-padding));
 }
 
 .toolbar {
@@ -243,7 +254,6 @@ body.dark blockquote {
   box-shadow: 0 2px 8px var(--toolbar-box-shadow);
 
   width: 32px; /* basic width, without padding/border */
-  float: inline-end; /* float this towards the body */
 
   /* padding should be 16px, except if there's not enough space for that, in
    * which case use half the available space for padding (=25% on each side).
@@ -254,9 +264,13 @@ body.dark blockquote {
   padding-inline: var(--inline-padding);
 
   /* Keep a maximum of 96px distance to the body, but center once the margin
-   * gets too small. To center, use 50% of the container, subtract half our
-   * own width (16px) and half the border (1px) and the inline padding. */
-  margin-inline-end: min(calc(50% - 17px - var(--inline-padding)), 96px);
+   * gets too small. We need to set the start margin, however...
+   * To center, we'd want 50% of the container, but we'd subtract half our
+   * own width (16px) and half the border (1px) and the inline padding.
+   * When the other margin would be 96px, we want 100% - 96px - the complete
+   * width of the actual toolbar (34px + 2 * padding)
+   */
+  margin-inline-start: max(calc(50% - 17px - var(--inline-padding)), calc(100% - 96px - 34px - 2 * var(--inline-padding)));
 
   font-family: Helvetica, Arial, sans-serif;
   list-style: none;
@@ -282,6 +296,15 @@ body.dark blockquote {
   .toolbar-container.scrolled .toolbar:not(:hover) .button {
     opacity: 0.6;
   }
+
+  .toolbar-container.transition-location {
+    transition-duration: 250ms;
+    transition-property: width;
+  }
+}
+
+.toolbar-container.overlaps .button {
+  opacity: 0.1;
 }
 
 .dropdown-open .toolbar {
