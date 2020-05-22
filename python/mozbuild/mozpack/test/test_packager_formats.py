@@ -316,9 +316,9 @@ def get_contents(registry, read_all=False, mode='rt'):
             result[k] = get_contents(v)
         elif isinstance(v, ManifestFile) or read_all:
             if 'b' in mode:
-                result[k] = v.open(mode).read()
+                result[k] = v.open().read()
             else:
-                result[k] = v.open(mode).read().splitlines()
+                result[k] = six.ensure_text(v.open().read()).splitlines()
         else:
             result[k] = v
     return result
