@@ -140,6 +140,30 @@ geckoview:
       - perfteam@mozilla.com
     expires: never
 
+  per_document_site_origins:
+    type: custom_distribution
+    description: >
+      When a document is unloaded, report the highest number of
+      [site origins](https://searchfox.org/
+      mozilla-central/rev/
+      3300072e993ae05d50d5c63d815260367eaf9179/
+      caps/nsIPrincipal.idl#264) loaded simultaneously in that
+      document.
+    range_min: 0
+    range_max: 100
+    bucket_count: 50
+    histogram_type: exponential
+    unit: number of site origins per document
+    gecko_datapoint: FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_DOCUMENT
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1603185
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1603185#c13
+    notification_emails:
+      - barret@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
 gfx:
   composite_time:
     type: timing_distribution

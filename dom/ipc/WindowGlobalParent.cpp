@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/WindowGlobalParent.h"
 
+#include <algorithm>
+
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ipc/InProcessParent.h"
@@ -25,6 +27,7 @@
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/Telemetry.h"
 #include "mozJSComponentLoader.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
@@ -138,6 +141,43 @@ void WindowGlobalParent::Init() {
   if (obs) {
     obs->NotifyObservers(ToSupports(this), "window-global-created", nullptr);
   }
+
+  if (!BrowsingContext()->IsDiscarded() && ShouldTrackSiteOriginTelemetry()) {
+    mOriginCounter.emplace();
+    mOriginCounter->UpdateSiteOriginsFrom(this, /* aIncrease = */ true);
+  }
+}
+
+void WindowGlobalParent::OriginCounter::UpdateSiteOriginsFrom(
+    WindowGlobalParent* aParent, bool aIncrease) {
+  MOZ_RELEASE_ASSERT(aParent);
+
+  if (aParent->DocumentPrincipal()->GetIsContentPrincipal()) {
+    nsAutoCString origin;
+    aParent->DocumentPrincipal()->GetSiteOrigin(origin);
+
+    if (aIncrease) {
+      int32_t& count = mOriginMap.GetOrInsert(origin);
+      count += 1;
+      mMaxOrigins = std::max(mMaxOrigins, mOriginMap.Count());
+    } else if (auto entry = mOriginMap.Lookup(origin)) {
+      entry.Data() -= 1;
+
+      if (entry.Data() == 0) {
+        entry.Remove();
+      }
+    }
+  }
+}
+
+void WindowGlobalParent::OriginCounter::Accumulate() {
+  mozilla::Telemetry::Accumulate(
+      mozilla::Telemetry::HistogramID::
+          FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_DOCUMENT,
+      mMaxOrigins);
+
+  mMaxOrigins = 0;
+  mOriginMap.Clear();
 }
 
 /* static */
@@ -725,6 +765,10 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (obs) {
     obs->NotifyObservers(ToSupports(this), "window-global-destroyed", nullptr);
   }
+
+  if (mOriginCounter) {
+    mOriginCounter->Accumulate();
+  }
 }
 
 WindowGlobalParent::~WindowGlobalParent() {
@@ -747,6 +791,30 @@ nsIContentParent* WindowGlobalParent::GetContentParent() {
   }
 
   return browserParent->Manager();
+}
+
+void WindowGlobalParent::DidBecomeCurrentWindowGlobal(bool aCurrent) {
+  WindowGlobalParent* top = BrowsingContext()->GetTopWindowContext();
+  if (top && top->mOriginCounter) {
+    top->mOriginCounter->UpdateSiteOriginsFrom(this,
+                                               /* aIncrease = */ aCurrent);
+  }
+}
+
+bool WindowGlobalParent::ShouldTrackSiteOriginTelemetry() {
+  CanonicalBrowsingContext* bc = BrowsingContext();
+
+  if (!bc->IsTopContent()) {
+    return false;
+  }
+
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  if (!browserParent ||
+      !IsWebRemoteType(browserParent->Manager()->GetRemoteType())) {
+    return false;
+  }
+
+  return DocumentPrincipal()->GetIsContentPrincipal();
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,

@@ -9,6 +9,7 @@
 
 #include "mozilla/ContentBlockingLog.h"
 #include "mozilla/ContentBlockingNotifier.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ClientIPCTypes.h"
@@ -16,6 +17,7 @@
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/WindowContext.h"
+#include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
@@ -184,6 +186,8 @@ class WindowGlobalParent final : public WindowContext,
 
   bool GetDocumentUpgradeInsecureRequests() { return mUpgradeInsecureRequests; }
 
+  void DidBecomeCurrentWindowGlobal(bool aCurrent);
+
  protected:
   const nsAString& GetRemoteType() override;
   JSActor::Type GetSide() override { return JSActor::Type::Parent; }
@@ -239,6 +243,8 @@ class WindowGlobalParent final : public WindowContext,
 
   ~WindowGlobalParent();
 
+  bool ShouldTrackSiteOriginTelemetry();
+
   // NOTE: This document principal doesn't reflect possible |document.domain|
   // mutations which may have been made in the actual document.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
@@ -261,6 +267,20 @@ class WindowGlobalParent final : public WindowContext,
   // Fields being mirrored from the corresponding document
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
   uint32_t mSandboxFlags;
+
+  struct OriginCounter {
+    void UpdateSiteOriginsFrom(WindowGlobalParent* aParent, bool aIncrease);
+    void Accumulate();
+
+    nsDataHashtable<nsCStringHashKey, int32_t> mOriginMap;
+    uint32_t mMaxOrigins = 0;
+  };
+
+  // Used to collect unique site origin telemetry.
+  //
+  // Is only Some() on top-level content windows.
+  Maybe<OriginCounter> mOriginCounter;
+
   bool mDocumentHasLoaded;
   bool mDocumentHasUserInteracted;
   bool mBlockAllMixedContent;
