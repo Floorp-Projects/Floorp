@@ -6979,6 +6979,18 @@
     "alert_emails": ["sefeng@mozilla.com", "perfteam@mozilla.com"],
     "releaseChannelCollection": "opt-out"
   },
+  "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_DOCUMENT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "geckoview_streaming"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 50,
+    "description": "When a document is unloaded, report the highest number of site origins loaded simultaneously in that document.",
+    "bug_numbers": [1603185],
+    "alert_emails": ["barret@mozilla.com", "perfteam@mozilla.com"],
+    "releaseChannelCollection": "opt-out"
+  },
   "FX_TAB_SWITCH_REQUEST_TAB_WARMING_STATE": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
