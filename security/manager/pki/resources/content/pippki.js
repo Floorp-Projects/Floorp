@@ -31,7 +31,7 @@ async function viewCertHelper(parent, cert, openingOption = "tab") {
   }
 
   if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let win = Services.wm.getMostRecentBrowserWindow();
     let results = await asyncDetermineUsages(cert);
     let chain = getBestChain(results);
     if (!chain) {

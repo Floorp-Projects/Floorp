@@ -67,7 +67,7 @@ interface nsIWindowMediator: nsISupports
   mozIDOMWindowProxy getMostRecentWindow(in wstring aWindowType);
 
   /** This is a shortcut for getMostRecentWindow('navigator:browser'), but
-    * it also tries 'navigator:geckoview' if that fails.
+    * if that fails it also tries 'navigator:geckoview' and 'mail:3pane'.
     *
     * @return the topmost browser window
     */
