@@ -49,6 +49,12 @@ class nsPrintObject {
    */
   void SetPrintAsIs(bool aAsIs);
 
+  /**
+   * Recursively sets all the PO items to be printed
+   * from the given item down into the tree
+   */
+  void EnablePrinting(bool aEnable);
+
   // Data Members
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIDocShellTreeOwner> mTreeOwner;
