@@ -298,7 +298,19 @@ body {
       color: var(--grey-subtitle-1);
       line-height: 28px; }
   .multistageContainer .tiles-section {
-    height: 96px; }
+    display: grid;
+    grid-gap: 24px;
+    grid-template-columns: repeat(5, auto);
+    margin: auto; }
+    @media (max-width: 610px) {
+      .multistageContainer .tiles-section {
+        grid-template-columns: repeat(3, auto); } }
+    .multistageContainer .tiles-section .icon {
+      background-size: cover;
+      border-radius: 4px;
+      box-shadow: var(--newtab-card-shadow);
+      height: 96px;
+      width: 96px; }
   .multistageContainer button {
     font-family: inherit;
     cursor: pointer;

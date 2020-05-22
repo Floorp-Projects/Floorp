@@ -16,6 +16,16 @@ export const MultiStageAboutWelcome = props => {
           type: "OPEN_ABOUT_PAGE",
           data: { args: "home", where: "current" },
         });
+
+  const [topSites] = useState([
+    "resource://activity-stream/data/content/tippytop/images/youtube-com@2x.png",
+    "resource://activity-stream/data/content/tippytop/images/facebook-com@2x.png",
+    "resource://activity-stream/data/content/tippytop/images/amazon@2x.png",
+    "resource://activity-stream/data/content/tippytop/images/reddit-com@2x.png",
+    "resource://activity-stream/data/content/tippytop/images/wikipedia-org@2x.png",
+    "resource://activity-stream/data/content/tippytop/images/twitter-com@2x.png",
+  ]);
+
   return (
     <React.Fragment>
       <div className={`multistageContainer`}>
@@ -27,6 +37,7 @@ export const MultiStageAboutWelcome = props => {
               order={screen.order}
               content={screen.content}
               navigate={handleTransition}
+              topSites={topSites}
             />
           ) : null;
         })}
@@ -72,8 +83,16 @@ export class WelcomeScreen extends React.PureComponent {
   }
 
   renderTiles() {
-    return this.props.content.tiles.topSites ? (
-      <div className="tiles-section" />
+    return this.props.content.tiles && this.props.topSites ? (
+      <div className="tiles-section">
+        {this.props.topSites.slice(0, 5).map(icon => (
+          <div
+            className="icon"
+            key={icon}
+            style={{ backgroundImage: `url(${icon})` }}
+          />
+        ))}
+      </div>
     ) : null;
   }
 
