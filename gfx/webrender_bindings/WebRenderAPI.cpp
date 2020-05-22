@@ -116,8 +116,9 @@ class NewRenderer : public RendererEvent {
             compositor->ShouldUseNativeCompositor() ? compositor.get()
                                                     : nullptr,
             compositor->GetMaxUpdateRects(),
-            compositor->GetMaxPartialPresentRects(), mDocHandle, &wrRenderer,
-            mMaxTextureSize,
+            compositor->GetMaxPartialPresentRects(),
+            compositor->ShouldDrawPreviousPartialPresentRegions(), mDocHandle,
+            &wrRenderer, mMaxTextureSize,
             StaticPrefs::gfx_webrender_enable_gpu_markers_AtStartup(),
             panic_on_gl_error)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false

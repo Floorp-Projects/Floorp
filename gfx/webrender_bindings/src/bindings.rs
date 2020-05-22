@@ -1318,6 +1318,7 @@ pub extern "C" fn wr_window_new(
     compositor: *mut c_void,
     max_update_rects: usize,
     max_partial_present_rects: usize,
+    draw_previous_partial_present_regions: bool,
     out_handle: &mut *mut DocumentHandle,
     out_renderer: &mut *mut Renderer,
     out_max_texture_size: *mut i32,
@@ -1396,6 +1397,7 @@ pub extern "C" fn wr_window_new(
     } else {
         CompositorConfig::Draw {
             max_partial_present_rects,
+            draw_previous_partial_present_regions,
         }
     };
 
