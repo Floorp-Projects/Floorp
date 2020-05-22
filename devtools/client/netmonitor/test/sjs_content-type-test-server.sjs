@@ -37,6 +37,7 @@ function handleRequest(request, response) {
   let format = (params.filter((s) => s.includes("fmt="))[0] || "").split("=")[1];
   let status = (params.filter((s) => s.includes("sts="))[0] || "").split("=")[1] || 200;
   let cookies = (params.filter((s) => s.includes("cookies="))[0] || "").split("=")[1] || 0;
+  let cors = request.queryString.includes("cors=1");
 
   let cachedCount = 0;
   let cacheExpire = 60; // seconds
@@ -61,6 +62,12 @@ function handleRequest(request, response) {
     if (cookies) {
       response.setHeader("Set-Cookie", "name1=value1; Domain=.foo.example.com", true);
       response.setHeader("Set-Cookie", "name2=value2; Domain=.example.com", true);
+    }
+  }
+
+  function setAllowOriginHeaders() {
+    if (cors) {
+      response.setHeader("Access-Control-Allow-Origin", "*", false);
     }
   }
 
@@ -101,6 +108,7 @@ function handleRequest(request, response) {
         let content = (params.filter((s) => s.includes("res="))[0] || "").split("=")[1];
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "text/html; charset=utf-8", false);
+        setAllowOriginHeaders();
         setCacheHeaders();
         setCookieHeaders();
         response.write(content || "<p>Hello HTML!</p>");
@@ -202,6 +210,7 @@ function handleRequest(request, response) {
       case "font": {
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "font/woff", false);
+        setAllowOriginHeaders();
         setCacheHeaders();
         response.finish();
         break;
