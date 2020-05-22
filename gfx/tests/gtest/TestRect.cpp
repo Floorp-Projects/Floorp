@@ -7,7 +7,6 @@
 
 #include "gtest/gtest.h"
 
-#include "gfxTypes.h"
 #include "nsRect.h"
 #include "gfxRect.h"
 #include "mozilla/gfx/Rect.h"
