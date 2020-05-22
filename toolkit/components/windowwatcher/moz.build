@@ -12,6 +12,7 @@ TEST_DIRS += ['test']
 XPIDL_SOURCES += [
     'nsIDialogParamBlock.idl',
     'nsIOpenWindowInfo.idl',
+    'nsIPromptCollection.idl',
     'nsIPromptFactory.idl',
     'nsIPromptService.idl',
     'nsIWindowWatcher.idl',
