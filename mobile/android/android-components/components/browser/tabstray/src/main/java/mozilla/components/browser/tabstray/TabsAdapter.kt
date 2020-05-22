@@ -23,7 +23,7 @@ typealias ViewHolderProvider = (ViewGroup, BrowserTabsTray) -> TabViewHolder
  * @param viewHolderProvider a function that creates a `TabViewHolder`.
  */
 @Suppress("TooManyFunctions")
-class TabsAdapter(
+open class TabsAdapter(
     delegate: Observable<TabsTray.Observer> = ObserverRegistry(),
     private val viewHolderProvider: ViewHolderProvider = { parent, tabsTray ->
         DefaultTabViewHolder(
