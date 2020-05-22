@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ipc/ProcessChild.h"
+
 #include "nsDebug.h"
 
 #ifdef XP_WIN
@@ -14,12 +16,13 @@
 
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ipc/IOThreadChild.h"
-#include "mozilla/ipc/ProcessChild.h"
 
 namespace mozilla {
 namespace ipc {
 
 ProcessChild* ProcessChild::gProcessChild;
+
+static Atomic<bool> sExpectingShutdown(false);
 
 ProcessChild::ProcessChild(ProcessId aParentPid)
     : ChildProcess(new IOThreadChild()),
@@ -31,6 +34,12 @@ ProcessChild::ProcessChild(ProcessId aParentPid)
 }
 
 ProcessChild::~ProcessChild() { gProcessChild = nullptr; }
+
+/* static */
+void ProcessChild::NotifyImpendingShutdown() { sExpectingShutdown = true; }
+
+/* static */
+bool ProcessChild::ExpectingShutdown() { return sExpectingShutdown; }
 
 /* static */
 void ProcessChild::QuickExit() { AppShutdown::DoImmediateExit(); }

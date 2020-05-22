@@ -177,6 +177,12 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
   // sends, to avoid deadlocks.
   bool OpenOnSameThread(MessageChannel* aTargetChan, Side aSide);
 
+  /**
+   * This sends a special message that is processed on the IO thread, so that
+   * other actors can know that the process will soon shutdown.
+   */
+  void NotifyImpendingShutdown();
+
   // Close the underlying transport channel.
   void Close();
 

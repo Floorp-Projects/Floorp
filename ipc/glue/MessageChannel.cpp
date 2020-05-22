@@ -1150,6 +1150,10 @@ bool MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg) {
       IPC_LOG("Build IDs match message");
       mBuildIDsConfirmedMatch = true;
       return true;
+    } else if (IMPENDING_SHUTDOWN_MESSAGE_TYPE == aMsg.type()) {
+      IPC_LOG("Impending Shutdown received");
+      ProcessChild::NotifyImpendingShutdown();
+      return true;
     }
   }
   return false;
@@ -2686,6 +2690,17 @@ void MessageChannel::CloseWithTimeout() {
   }
   SynchronouslyClose();
   mChannelState = ChannelTimeout;
+}
+
+void MessageChannel::NotifyImpendingShutdown() {
+  UniquePtr<Message> msg =
+      MakeUnique<Message>(MSG_ROUTING_NONE, IMPENDING_SHUTDOWN_MESSAGE_TYPE);
+  MonitorAutoLock lock(*mMonitor);
+  if (Connected()) {
+    MOZ_DIAGNOSTIC_ASSERT(mIsCrossProcess);
+    // SendMessage takes ownership of the message.
+    mLink->SendMessage(msg.release());
+  }
 }
 
 void MessageChannel::Close() {
