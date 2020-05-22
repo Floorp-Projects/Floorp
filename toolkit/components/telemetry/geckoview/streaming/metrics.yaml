@@ -46,6 +46,21 @@ geckoview:
       - ktaeleman@mozilla.com
     expires: 2021-02-01
 
+  content_process_lifetime:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: GV_CONTENT_PROCESS_LIFETIME_MS
+    description: >
+      The uptime of content processes in ms
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1625325
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1625325#c2
+    notification_emails:
+      - geckoview-team@mozilla.com
+      - aklotz@mozilla.com
+    expires: never
+
   page_load_progress_time:
     type: timing_distribution
     time_unit: millisecond
