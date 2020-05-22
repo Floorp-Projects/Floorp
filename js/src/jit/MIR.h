@@ -2663,13 +2663,12 @@ class WrappedFunction : public TempObject {
 
 class MCall : public MVariadicInstruction, public CallPolicy::Data {
  private:
-  // An MCall uses the MPrepareCall, MDefinition for the function, and
-  // MPassArg instructions. They are stored in the same list.
-  static const size_t FunctionOperandIndex = 0;
+  // The callee, this, and the actual arguments are all operands of MCall.
+  static const size_t CalleeOperandIndex = 0;
   static const size_t NumNonArgumentOperands = 1;
 
  protected:
-  // Monomorphic cache of single target from TI, or nullptr.
+  // Monomorphic cache for MCalls with a single JSFunction target.
   WrappedFunction* target_;
 
   // Original value of argc from the bytecode.
@@ -2707,9 +2706,7 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
                     bool ignoresReturnValue, bool isDOMCall,
                     DOMObjectKind objectKind);
 
-  void initFunction(MDefinition* func) {
-    initOperand(FunctionOperandIndex, func);
-  }
+  void initCallee(MDefinition* func) { initOperand(CalleeOperandIndex, func); }
 
   bool needsArgCheck() const { return needsArgCheck_; }
   void disableArgCheck() { needsArgCheck_ = false; }
@@ -2726,9 +2723,9 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
     needsThisCheck_ = true;
   }
 
-  MDefinition* getFunction() const { return getOperand(FunctionOperandIndex); }
-  void replaceFunction(MInstruction* newfunc) {
-    replaceOperand(FunctionOperandIndex, newfunc);
+  MDefinition* getCallee() const { return getOperand(CalleeOperandIndex); }
+  void replaceCallee(MInstruction* newfunc) {
+    replaceOperand(CalleeOperandIndex, newfunc);
   }
 
   void addArg(size_t argnum, MDefinition* arg);
@@ -2745,7 +2742,7 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
     return NumNonArgumentOperands + index;
   }
 
-  // For TI-informed monomorphic callsites.
+  // For monomorphic callsites.
   WrappedFunction* getSingleTarget() const { return target_; }
 
   bool isConstructing() const { return construct_; }
