@@ -199,21 +199,3 @@ test_newtab({
     );
   },
 });
-
-test_newtab({
-  async before() {
-    await setDefaultTopSites();
-    Services.prefs.setStringPref(
-      "browser.newtabpage.amazonSearchTileOverride.url",
-      "https://imaginarydomain.org/"
-    );
-  },
-  test: async function test_search_topsite_override() {
-    // Stub, expand in bug 1637219.
-  },
-  after() {
-    Services.prefs.clearUserPref(
-      "browser.newtabpage.amazonSearchTileOverride.url"
-    );
-  },
-});
