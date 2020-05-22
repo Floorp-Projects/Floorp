@@ -294,7 +294,24 @@ body {
   }
 
   .tiles-section {
-    height: 96px;
+    $tile-size: 96px;
+
+    display: grid;
+    grid-gap: 24px;
+    grid-template-columns: repeat(5, auto);
+    margin: auto;
+
+    @media (max-width: $break-point-medium) {
+      grid-template-columns: repeat(3, auto);
+    }
+
+    .icon {
+      background-size: cover;
+      border-radius: 4px;
+      box-shadow: var(--newtab-card-shadow);
+      height: $tile-size;
+      width: $tile-size;
+    }
   }
 
   button {
