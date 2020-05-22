@@ -282,7 +282,9 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         break;
       }
       case CanvasContextType::NoContext:
-        return false;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("unknown canvas context type");
     }
     return true;
   }
