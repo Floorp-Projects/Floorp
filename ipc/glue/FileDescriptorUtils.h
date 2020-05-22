@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/FileDescriptor.h"
-#include "nsIRunnable.h"
+#include "nsThreadUtils.h"
 #include <stdio.h>
 
 namespace mozilla {
@@ -18,21 +18,15 @@ namespace ipc {
 // When Dispatch() is called (from main thread) this class arranges to close the
 // provided FileDescriptor on one of the socket transport service threads (to
 // avoid main thread I/O).
-class CloseFileRunnable final : public nsIRunnable {
+class CloseFileRunnable final : public Runnable {
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
 
   FileDescriptor mFileDescriptor;
 
  public:
-  explicit CloseFileRunnable(const FileDescriptor& aFileDescriptor)
-#ifdef DEBUG
-      ;
-#else
-      : mFileDescriptor(aFileDescriptor) {
-  }
-#endif
+  explicit CloseFileRunnable(const FileDescriptor& aFileDescriptor);
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
 
   void Dispatch();
