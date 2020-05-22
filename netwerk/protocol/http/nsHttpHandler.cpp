@@ -796,25 +796,6 @@ nsresult nsHttpHandler::GetIOService(nsIIOService** result) {
   return NS_OK;
 }
 
-uint32_t nsHttpHandler::Get32BitsOfPseudoRandom() {
-  // only confirm rand seeding on socket thread
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  // rand() provides different amounts of PRNG on different platforms.
-  // 15 or 31 bits are common amounts.
-
-  static_assert(RAND_MAX >= 0xfff, "RAND_MAX should be >= 12 bits");
-
-#if RAND_MAX < 0xffffU
-  return ((uint16_t)rand() << 20) | (((uint16_t)rand() & 0xfff) << 8) |
-         ((uint16_t)rand() & 0xff);
-#elif RAND_MAX < 0xffffffffU
-  return ((uint16_t)rand() << 16) | ((uint16_t)rand() & 0xffff);
-#else
-  return (uint32_t)rand();
-#endif
-}
-
 void nsHttpHandler::NotifyObservers(nsIChannel* chan, const char* event) {
   LOG(("nsHttpHandler::NotifyObservers [chan=%p event=\"%s\"]\n", chan, event));
   nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
