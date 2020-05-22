@@ -240,17 +240,25 @@ class Doctor(object):
         return results
 
     def check_mount_lastaccess(self, mount):
-        partitions = psutil.disk_partitions()
+        partitions = psutil.disk_partitions(all=True)
         atime_opts = {'atime', 'noatime', 'relatime', 'norelatime'}
         option = ''
+        fstype = ''
         for partition in partitions:
             if partition.mountpoint == mount:
                 mount_opts = set(partition.opts.split(','))
                 intersection = list(atime_opts & mount_opts)
+                fstype = partition.fstype
                 if len(intersection) == 1:
                     option = intersection[0]
                 break
-        if not option:
+
+        if fstype == 'tmpfs':
+            status = 'GOOD'
+            desc = '%s is a tmpfs so noatime/reltime is not needed' % (
+                mount
+            )
+        elif not option:
             status = 'BAD'
             if self.platform == 'linux':
                 option = 'noatime/relatime'
