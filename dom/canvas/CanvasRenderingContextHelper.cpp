@@ -21,6 +21,9 @@
 namespace mozilla {
 namespace dom {
 
+CanvasRenderingContextHelper::CanvasRenderingContextHelper()
+    : mCurrentContextType(CanvasContextType::NoContext) {}
+
 void CanvasRenderingContextHelper::ToBlob(
     JSContext* aCx, nsIGlobalObject* aGlobal, BlobCallback& aCallback,
     const nsAString& aType, JS::Handle<JS::Value> aParams, bool aUsePlaceholder,
