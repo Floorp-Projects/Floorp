@@ -109,16 +109,20 @@ var AboutReader = function(actor, articlePromise) {
     doc.querySelector(".container")
   );
 
-  this._scrollOffset = win.pageYOffset;
-
   doc.addEventListener("mousedown", this);
   doc.addEventListener("click", this);
   doc.addEventListener("touchstart", this);
 
   win.addEventListener("pagehide", this);
-  win.addEventListener("mozvisualscroll", this, { mozSystemGroup: true });
   win.addEventListener("resize", this);
   win.addEventListener("wheel", this, { passive: false });
+
+  this._topScrollChange = this._topScrollChange.bind(this);
+  this._intersectionObs = new win.IntersectionObserver(this._topScrollChange, {
+    root: null,
+    threshold: [0, 1],
+  });
+  this._intersectionObs.observe(doc.querySelector(".top-anchor"));
 
   Services.obs.addObserver(this, "inner-window-destroyed");
 
@@ -382,26 +386,18 @@ AboutReader.prototype = {
           this._toggleDropdownClicked(aEvent);
         }
         break;
-      case "mozvisualscroll":
-        const vv = aEvent.originalTarget; // VisualViewport
-        let tbc = this._toolbarContainerElement;
-
-        if (gIsFirefoxDesktop) {
+      case "scroll":
+        let lastHeight = this._lastHeight;
+        let { windowUtils } = this._win;
+        this._lastHeight = windowUtils.getBoundsWithoutFlushing(
+          this._doc.body
+        ).height;
+        // Only close dropdowns if the scroll events are not a result of line
+        // height / font-size changes that caused a page height change.
+        if (lastHeight == this._lastHeight) {
           this._closeDropdowns(true);
-          tbc.classList.toggle("scrolled", vv.pageTop > 0);
-        } else if (this._scrollOffset != vv.pageTop) {
-          // hide the system UI and the "reader-toolbar" only if the dropdown is not opened
-          let selector = ".dropdown.open";
-          let openDropdowns = this._doc.querySelectorAll(selector);
-          if (openDropdowns.length) {
-            break;
-          }
-
-          let isScrollingUp = this._scrollOffset > vv.pageTop;
-          this._setToolbarVisibility(isScrollingUp);
         }
 
-        this._scrollOffset = vv.pageTop;
         break;
       case "resize":
         this._updateImageMargins();
@@ -446,11 +442,12 @@ AboutReader.prototype = {
         break;
 
       case "pagehide":
-        // Close the Banners Font-dropdown, cleanup Android BackPressListener.
         this._closeDropdowns();
 
         this._actor.readerModeHidden();
         this.clearActor();
+        this._intersectionObs.unobserve(this._doc.querySelector(".top-anchor"));
+        delete this._intersectionObs;
         break;
     }
   },
@@ -838,28 +835,6 @@ AboutReader.prototype = {
     bodyClasses.add(this._fontType);
 
     AsyncPrefs.set("reader.font_type", this._fontType);
-  },
-
-  _setToolbarVisibility(visible) {
-    let tb = this._toolbarElement;
-
-    if (visible) {
-      if (tb.style.opacity != "1") {
-        tb.removeAttribute("hidden");
-        tb.style.opacity = "1";
-      }
-    } else if (tb.style.opacity != "0") {
-      tb.addEventListener(
-        "transitionend",
-        evt => {
-          if (tb.style.opacity == "0") {
-            tb.setAttribute("hidden", "");
-          }
-        },
-        { once: true }
-      );
-      tb.style.opacity = "0";
-    }
   },
 
   async _loadArticle() {
@@ -1254,9 +1229,14 @@ AboutReader.prototype = {
 
     this._closeDropdowns();
 
-    // Trigger BackPressListener initialization in Android.
+    // Get the height of the doc and start handling scrolling:
+    let { windowUtils } = this._win;
+    this._lastHeight = windowUtils.getBoundsWithoutFlushing(
+      this._doc.body
+    ).height;
+    this._doc.addEventListener("scroll", this);
+
     dropdown.classList.add("open");
-    let { windowUtils } = this._winRef.get();
     let toggle = dropdown.querySelector(".dropdown-toggle");
     let anchorWidth = windowUtils.getBoundsWithoutFlushing(toggle).width;
     dropdown.style.setProperty("--popup-anchor-width", anchorWidth + "px");
@@ -1277,6 +1257,20 @@ AboutReader.prototype = {
     for (let dropdown of openDropdowns) {
       dropdown.classList.remove("open");
     }
+
+    // Stop handling scrolling:
+    this._doc.removeEventListener("scroll", this);
+  },
+
+  _topScrollChange(entries) {
+    if (!entries.length) {
+      return;
+    }
+    // If we don't intersect the item at the top of the document, we're
+    // scrolled down:
+    let scrolled = !entries[entries.length - 1].isIntersecting;
+    let tbc = this._toolbarContainerElement;
+    tbc.classList.toggle("scrolled", scrolled);
   },
 
   /*
