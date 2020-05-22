@@ -70,7 +70,7 @@ class Histogram {
   // Initialize maximum number of buckets in histograms as 16,384.
   static const size_t kBucketCount_MAX;
 
-  typedef CopyableTArray<Count> Counts;
+  typedef nsTArray<Count> Counts;
   typedef const Sample* Ranges;
 
   // These enums are used to facilitate deserialization of renderer histograms
@@ -122,6 +122,7 @@ class Histogram {
    public:
     explicit SampleSet();
     ~SampleSet();
+    SampleSet(SampleSet&&) = default;
 
     // None of the methods in this class are thread-safe.  Callers
     // must deal with locking themselves.
@@ -142,6 +143,20 @@ class Histogram {
     int64_t sum() const { return sum_; }
     int64_t redundant_count() const { return redundant_count_; }
     size_t size() const { return counts_.Length(); }
+    SampleSet Clone() const {
+      SampleSet result;
+      result.counts_ = counts_.Clone();
+      result.sum_ = sum_;
+      result.redundant_count_ = redundant_count_;
+      return result;
+    }
+    void Clear() {
+      sum_ = 0;
+      redundant_count_ = 0;
+      for (int& i : counts_) {
+        i = 0;
+      }
+    }
 
    protected:
     // Actual histogram data is stored in buckets, showing the count of values
@@ -211,10 +226,7 @@ class Histogram {
   uint32_t range_checksum() const { return range_checksum_; }
   virtual size_t bucket_count() const;
 
-  // Do a safe atomic snapshot of sample data.  The caller is assumed to
-  // have exclusive access to the destination, |*sample|, and no locking
-  // of it is done here.
-  virtual void SnapshotSample(SampleSet* sample) const;
+  virtual SampleSet SnapshotSample() const;
 
   virtual bool HasConstructorArguments(Sample minimum, Sample maximum,
                                        size_t bucket_count);
