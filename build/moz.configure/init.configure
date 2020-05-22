@@ -406,10 +406,10 @@ add_old_configure_assignment('PYTHON3', virtualenv_python3.path)
 
 @template
 def early_options():
-    @dependable
+    @depends('--help')
     @imports('__sandbox__')
     @imports(_from='six', _import='itervalues')
-    def early_options():
+    def early_options(_):
         return set(
             option.env
             for option in itervalues(__sandbox__._options)
