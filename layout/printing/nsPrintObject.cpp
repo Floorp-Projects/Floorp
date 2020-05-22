@@ -238,3 +238,19 @@ void nsPrintObject::DestroyPresentation() {
   mPresContext = nullptr;
   mViewManager = nullptr;
 }
+
+void nsPrintObject::SetPrintAsIs(bool aAsIs) {
+  mPrintAsIs = aAsIs;
+  for (const UniquePtr<nsPrintObject>& kid : mKids) {
+    kid->SetPrintAsIs(aAsIs);
+  }
+}
+
+void nsPrintObject::EnablePrinting(bool aEnable) {
+  // Set whether to print flag
+  mDontPrint = !aEnable;
+
+  for (const UniquePtr<nsPrintObject>& kid : mKids) {
+    kid->EnablePrinting(aEnable);
+  }
+}

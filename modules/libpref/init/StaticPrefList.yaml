@@ -2583,7 +2583,7 @@
 # cycles.
 - name: dom.sidebar.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Whether automatic storage access granting heuristics should be turned on.

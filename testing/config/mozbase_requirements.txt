@@ -5,6 +5,7 @@
 ../mozbase/mozdebug
 ../mozbase/mozdevice
 ../mozbase/mozfile
+../mozbase/mozgeckoprofiler
 ../mozbase/mozhttpd
 ../mozbase/mozinfo
 ../mozbase/mozinstall

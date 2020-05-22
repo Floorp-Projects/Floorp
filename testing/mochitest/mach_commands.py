@@ -121,6 +121,7 @@ class MochitestRunner(MozbuildObject):
 
         options = Namespace(**kwargs)
         options.topsrcdir = self.topsrcdir
+        options.topobjdir = self.topobjdir
 
         from manifestparser import TestManifest
         if tests and not options.manifestFile:

@@ -312,6 +312,10 @@ impl AverageIntProfileCounter {
         self.accum += 1;
     }
 
+    pub fn get_accum(&mut self) -> u64{
+        self.accum
+    }
+
     /// Returns either the most up to date value if the counter is updated
     /// with add add inc, or the average over the previous time slice.
     pub fn get(&self) -> usize {

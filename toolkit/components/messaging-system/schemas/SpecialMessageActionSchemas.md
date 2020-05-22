@@ -45,7 +45,13 @@ Example:
 
 ### `OPEN_ABOUT_PAGE`
 
-* args: `string` (a valid about page without the `about:` prefix)
+* args:
+```ts
+{
+  args: string, // (a valid about page without the `about:` prefix)
+  entrypoint?: string, // URL search param used for referrals
+}
+```
 
 Opens a given about page
 
@@ -60,7 +66,11 @@ Example:
 
 ### `OPEN_PREFERENCES_PAGE`
 
-* args: `string` (a category accessible via a `#`)
+* args:
+```
+{
+  args?: string, // (a category accessible via a `#`)
+  entrypoint?: string // URL search param used to referrals
 
 Opens `about:preferences` with an optional category accessible via a `#` in the URL (e.g. `about:preferences#home`).
 
@@ -107,7 +117,7 @@ Pins the currently focused tab.
 
 Opens an oauth flow to enable Firefox Monitor at a given `url` and adds Firefox metrics that user given a set of `flowRequestParams`.
 
-### `url`
+#### `url`
 
 The URL should start with `https://monitor.firefox.com/oauth/init` and add various metrics tags as search params, including:
 
@@ -118,7 +128,7 @@ The URL should start with `https://monitor.firefox.com/oauth/init` and add vario
 
 You should verify the values of these search params with whoever is doing the data analysis (e.g. Leif Oines).
 
-### `flowRequestParams`
+#### `flowRequestParams`
 
 These params are used by Firefox to add information specific to that individual user to the final oauth URL. You should include:
 
@@ -130,7 +140,7 @@ The `entrypoint` and `form_type` values should match the encoded values in your 
 
 You should verify the values with whoever is doing the data analysis (e.g. Leif Oines).
 
-### Example
+#### Example
 
 ```json
 {
@@ -145,3 +155,48 @@ You should verify the values with whoever is doing the data analysis (e.g. Leif 
   }
 }
 ```
+
+### `HIGHLIGHT_FEATURE`
+
+Can be used to highlight (show a light blue overlay) a certain button or part of the browser UI.
+
+* args: `string` a [valid targeting defined in the UITour](https://searchfox.org/mozilla-central/rev/7fd1c1c34923ece7ad8c822bee062dd0491d64dc/browser/components/uitour/UITour.jsm#108)
+
+### `INSTALL_ADDON_FROM_URL`
+
+Can be used to install an addon from addons.mozilla.org.
+
+* args:
+```ts
+{
+  url: string,
+  telemetrySource?: string
+};
+```
+
+### `OPEN_PROTECTION_REPORT`
+
+Opens `about:protections`
+
+### `OPEN_PROTECTION_PANEL`
+
+Opens the protection panel behind on the lock icon of the awesomebar
+
+### `DISABLE_STP_DOORHANGERS`
+
+Disables all Social Tracking Protection messages
+
+* args: (none)
+
+### `OPEN_AWESOME_BAR`
+
+Focuses and expands the awesome bar.
+
+* args: (none)
+
+### `CANCEL`
+
+No-op action used to dismiss CFR notifications (but not remove or block them)
+
+* args: (none)
+

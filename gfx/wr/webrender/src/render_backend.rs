@@ -754,6 +754,7 @@ pub struct RenderBackend {
     result_tx: Sender<ResultMsg>,
     scene_tx: Sender<SceneBuilderRequest>,
     low_priority_scene_tx: Sender<SceneBuilderRequest>,
+    backend_scene_tx: Sender<BackendSceneBuilderRequest>,
     scene_rx: Receiver<SceneBuilderResult>,
 
     default_device_pixel_ratio: f32,
@@ -785,6 +786,7 @@ impl RenderBackend {
         result_tx: Sender<ResultMsg>,
         scene_tx: Sender<SceneBuilderRequest>,
         low_priority_scene_tx: Sender<SceneBuilderRequest>,
+        backend_scene_tx: Sender<BackendSceneBuilderRequest>,
         scene_rx: Receiver<SceneBuilderResult>,
         default_device_pixel_ratio: f32,
         resource_cache: ResourceCache,
@@ -800,6 +802,7 @@ impl RenderBackend {
             result_tx,
             scene_tx,
             low_priority_scene_tx,
+            backend_scene_tx,
             scene_rx,
             default_device_pixel_ratio,
             resource_cache,
@@ -1159,7 +1162,7 @@ impl RenderBackend {
                     DebugCommand::FetchDocuments => {
                         // Ask SceneBuilderThread to send JSON presentation of the documents,
                         // that will be forwarded to Renderer.
-                        self.scene_tx.send(SceneBuilderRequest::DocumentsForDebugger).unwrap();
+                        self.send_backend_message(BackendSceneBuilderRequest::DocumentsForDebugger);
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::FetchClipScrollTree => {
@@ -1283,9 +1286,8 @@ impl RenderBackend {
                 info!("Recycling stats: {:?}", self.recycler);
                 return RenderBackendStatus::ShutDown(sender);
             }
-            ApiMsg::UpdateDocuments(document_ids, transaction_msgs) => {
+            ApiMsg::UpdateDocuments(transaction_msgs) => {
                 self.prepare_transactions(
-                    document_ids,
                     transaction_msgs,
                     frame_counter,
                     profile_counters,
@@ -1297,9 +1299,11 @@ impl RenderBackend {
     }
 
     fn update_frame_builder_config(&self) {
-        self.low_priority_scene_tx.send(SceneBuilderRequest::SetFrameBuilderConfig(
-            self.frame_config.clone()
-        )).unwrap();
+        self.send_backend_message(
+            BackendSceneBuilderRequest::SetFrameBuilderConfig(
+                self.frame_config.clone()
+            )
+        );
     }
 
     fn prepare_for_frames(&mut self) {
@@ -1318,34 +1322,19 @@ impl RenderBackend {
 
     fn prepare_transactions(
         &mut self,
-        document_ids: Vec<DocumentId>,
-        mut transaction_msgs: Vec<TransactionMsg>,
+        txns: Vec<Box<TransactionMsg>>,
         frame_counter: &mut u32,
         profile_counters: &mut BackendProfileCounters,
     ) {
-        let mut use_scene_builder = transaction_msgs.iter()
+        let mut use_scene_builder = txns.iter()
             .any(|transaction_msg| transaction_msg.use_scene_builder_thread);
-        let use_high_priority = transaction_msgs.iter()
+        let use_high_priority = txns.iter()
             .any(|transaction_msg| !transaction_msg.low_priority);
 
-        let txns : Vec<Box<Transaction>> = document_ids.iter().zip(transaction_msgs.drain(..))
-            .map(|(&document_id, transaction_msg)| {
-                Box::new(Transaction {
-                    document_id,
-                    resource_updates: transaction_msg.resource_updates,
-                    frame_ops: transaction_msg.frame_ops,
-                    scene_ops: transaction_msg.scene_ops,
-                    rasterized_blobs: Vec::new(),
-                    notifications: transaction_msg.notifications,
-                    render_frame: transaction_msg.generate_frame,
-                    invalidate_rendered_frame: transaction_msg.invalidate_rendered_frame,
-                    blob_requests: transaction_msg.blob_requests,
-                    blob_rasterizer: transaction_msg.blob_rasterizer,
-                })
-            }).collect();
-
         use_scene_builder = use_scene_builder || txns.iter().any(|txn| {
-            !txn.can_skip_scene_builder() || txn.blob_rasterizer.is_some()
+            !txn.scene_ops.is_empty()
+                || !txn.blob_requests.is_empty()
+                || txn.blob_rasterizer.is_some()
         });
 
         if !use_scene_builder {
@@ -1362,7 +1351,7 @@ impl RenderBackend {
                     txn.resource_updates.take(),
                     txn.frame_ops.take(),
                     txn.notifications.take(),
-                    txn.render_frame,
+                    txn.generate_frame,
                     txn.invalidate_rendered_frame,
                     frame_counter,
                     profile_counters,
@@ -1627,6 +1616,11 @@ impl RenderBackend {
         build_frame
     }
 
+    fn send_backend_message(&self, msg: BackendSceneBuilderRequest) {
+        self.backend_scene_tx.send(msg).unwrap();
+        self.low_priority_scene_tx.send(SceneBuilderRequest::BackendMessage).unwrap();
+    }
+
     #[cfg(not(feature = "debugger"))]
     fn get_spatial_tree_for_debugger(&self) -> String {
         String::new()
@@ -1670,7 +1664,9 @@ impl RenderBackend {
         // Send a message to report memory on the scene-builder thread, which
         // will add its report to this one and send the result back to the original
         // thread waiting on the request.
-        self.scene_tx.send(SceneBuilderRequest::ReportMemory(report, tx)).unwrap();
+        self.send_backend_message(
+            BackendSceneBuilderRequest::ReportMemory(report, tx)
+        );
     }
 
     #[cfg(feature = "capture")]
@@ -1775,7 +1771,9 @@ impl RenderBackend {
         }
 
         debug!("\tscene builder");
-        self.scene_tx.send(SceneBuilderRequest::SaveScene(config.clone())).unwrap();
+        self.send_backend_message(
+            BackendSceneBuilderRequest::SaveScene(config.clone())
+        );
 
         debug!("\tresource cache");
         let (resources, deferred) = self.resource_cache.save_capture(&config.root);
@@ -1822,14 +1820,18 @@ impl RenderBackend {
         root: PathBuf,
         bits: CaptureBits,
     ) {
-        self.scene_tx.send(SceneBuilderRequest::StartCaptureSequence(CaptureConfig::new(root, bits))).unwrap();
+        self.send_backend_message(
+            BackendSceneBuilderRequest::StartCaptureSequence(CaptureConfig::new(root, bits))
+        );
     }
 
     #[cfg(feature = "capture")]
     fn stop_capture_sequence(
         &mut self,
     ) {
-        self.scene_tx.send(SceneBuilderRequest::StopCaptureSequence).unwrap();
+        self.send_backend_message(
+            BackendSceneBuilderRequest::StopCaptureSequence
+        );
     }
 
     #[cfg(feature = "replay")]
@@ -1990,9 +1992,9 @@ impl RenderBackend {
         }
 
         if !scenes_to_build.is_empty() {
-            self.low_priority_scene_tx.send(
-                SceneBuilderRequest::LoadScenes(scenes_to_build)
-            ).unwrap();
+            self.send_backend_message(
+                BackendSceneBuilderRequest::LoadScenes(scenes_to_build)
+            );
         }
     }
 }

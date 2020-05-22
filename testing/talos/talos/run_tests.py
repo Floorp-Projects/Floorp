@@ -7,7 +7,6 @@ from __future__ import absolute_import, print_function
 
 import copy
 import os
-import subprocess
 import sys
 import time
 import traceback
@@ -24,6 +23,7 @@ from talos.config import get_configs, ConfigurationError
 from talos.results import TalosResults
 from talos.ttest import TTest
 from talos.utils import TalosError, TalosRegression
+from mozgeckoprofiler import view_gecko_profile
 
 # directory of this file
 here = os.path.dirname(os.path.realpath(__file__))
@@ -340,64 +340,21 @@ function FindProxyForURL(url, host) {
         if os.environ.get('DISABLE_PROFILE_LAUNCH', '0') == '1':
             LOG.info("Not launching profiler.firefox.com because DISABLE_PROFILE_LAUNCH=1")
         else:
-            view_gecko_profile(config['browser_path'])
+            view_gecko_profile_from_talos()
 
     # we will stop running tests on a failed test, or we will return 0 for
     # green
     return 0
 
 
-def view_gecko_profile(ffox_bin):
-    # automatically load the latest talos gecko-profile archive in profiler.firefox.com
-    if sys.platform.startswith('win') and not ffox_bin.endswith(".exe"):
-        ffox_bin = ffox_bin + ".exe"
-
-    if not os.path.exists(ffox_bin):
-        LOG.info("unable to find Firefox bin, cannot launch view-gecko-profile")
-        return
-
-    profile_zip = os.environ.get('TALOS_LATEST_GECKO_PROFILE_ARCHIVE', None)
-    if profile_zip is None or not os.path.exists(profile_zip):
+def view_gecko_profile_from_talos():
+    profile_zip_path = os.environ.get('TALOS_LATEST_GECKO_PROFILE_ARCHIVE', None)
+    if profile_zip_path is None or not os.path.exists(profile_zip_path):
         LOG.info("No local talos gecko profiles were found so not launching profiler.firefox.com")
         return
 
-    # need the view-gecko-profile tool, it's in repo/testing/tools
-    repo_dir = os.environ.get('MOZ_DEVELOPER_REPO_DIR', None)
-    if repo_dir is None:
-        LOG.info("unable to find MOZ_DEVELOPER_REPO_DIR, can't launch view-gecko-profile")
-        return
-
-    view_gp = os.path.join(repo_dir, 'testing', 'tools',
-                           'view_gecko_profile', 'view_gecko_profile.py')
-    if not os.path.exists(view_gp):
-        LOG.info("unable to find the view-gecko-profile tool, cannot launch it")
-        return
-
-    command = ['python',
-               view_gp,
-               '-b', ffox_bin,
-               '-p', profile_zip]
-
-    LOG.info('Auto-loading this profile in perfhtml.io: %s' % profile_zip)
-    LOG.info(command)
-
-    # if the view-gecko-profile tool fails to launch for some reason, we don't
-    # want to crash talos! just dump error and finsh up talos as usual
-    try:
-        view_profile = subprocess.Popen(command,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
-        # that will leave it running in own instance and let talos finish up
-    except Exception as e:
-        LOG.info("failed to launch view-gecko-profile tool, exeption: %s" % e)
-        return
-
-    time.sleep(5)
-    ret = view_profile.poll()
-    if ret is None:
-        LOG.info("view-gecko-profile successfully started as pid %d" % view_profile.pid)
-    else:
-        LOG.error('view-gecko-profile process failed to start, poll returned: %s' % ret)
+    LOG.info("Profile saved locally to: %s" % profile_zip_path)
+    view_gecko_profile(profile_zip_path)
 
 
 def make_comparison_result(base_and_reference_results):

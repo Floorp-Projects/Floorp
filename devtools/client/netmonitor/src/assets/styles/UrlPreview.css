@@ -33,8 +33,9 @@
   margin: 6px 7px 6px 20px;
 }
 
-.url-preview .url {
+.url-preview .treeValueCell .url {
   display: inline;
+  white-space: normal;
 }
 
 .url-preview .treeTable .treeRow:not(.selected):hover {

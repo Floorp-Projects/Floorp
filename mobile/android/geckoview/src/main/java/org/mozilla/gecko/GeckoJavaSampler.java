@@ -69,10 +69,10 @@ public class GeckoJavaSampler {
         public SamplingRunnable(final int aInterval, final int aSampleCount) {
             // Sanity check of sampling interval.
             mInterval = Math.max(1, aInterval);
-            // Setting a limit of 100000 for now to make sure we are not
-            // allocating too much.
-            mSampleCount = Math.min(aSampleCount, 100000);
-            mSamples = new Sample[aSampleCount];
+            // Setting a limit of 120000 (2 mins with 1ms interval) for now to
+            // make sure we are not allocating too much.
+            mSampleCount = Math.min(aSampleCount, 120000);
+            mSamples = new Sample[mSampleCount];
             mSamplePos = 0;
 
             // Find the main thread

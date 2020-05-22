@@ -247,17 +247,9 @@ static bool CheckPatternSyntaxImpl(JSContext* cx, FlatStringReader* pattern,
 bool CheckPatternSyntax(JSContext* cx, TokenStreamAnyChars& ts,
                         const mozilla::Range<const char16_t> chars,
                         JS::RegExpFlags flags) {
-  FlatStringReader reader(chars.begin().get(), chars.length());
+  FlatStringReader reader(chars);
   RegExpCompileData result;
   if (!CheckPatternSyntaxImpl(cx, &reader, flags, &result)) {
-    ReportSyntaxError(ts, result, chars.begin().get(), chars.length());
-    return false;
-  }
-  if (!result.capture_name_map.is_null()) {
-    // We can parse named captures, but we don't support them yet.
-    // Until we do, this will report a syntax error:
-    //  "invalid capture group name in regular expression"
-    result.error = RegExpError::kInvalidCaptureGroupName;
     ReportSyntaxError(ts, result, chars.begin().get(), chars.length());
     return false;
   }
@@ -266,17 +258,9 @@ bool CheckPatternSyntax(JSContext* cx, TokenStreamAnyChars& ts,
 
 bool CheckPatternSyntax(JSContext* cx, TokenStreamAnyChars& ts,
                         HandleAtom pattern, JS::RegExpFlags flags) {
-  FlatStringReader reader(pattern);
+  FlatStringReader reader(cx, pattern);
   RegExpCompileData result;
   if (!CheckPatternSyntaxImpl(cx, &reader, flags, &result)) {
-    ReportSyntaxError(ts, result, pattern);
-    return false;
-  }
-  if (!result.capture_name_map.is_null()) {
-    // We can parse named captures, but we don't support them yet.
-    // Until we do, this will report a syntax error:
-    //  "invalid capture group name in regular expression"
-    result.error = RegExpError::kInvalidCaptureGroupName;
     ReportSyntaxError(ts, result, pattern);
     return false;
   }
@@ -324,18 +308,17 @@ static bool UseBoyerMoore(HandleAtom pattern, JS::AutoAssertNoGC& nogc) {
 }
 
 // Sample character frequency information for use in Boyer-Moore.
-static void SampleCharacters(HandleLinearString input,
+static void SampleCharacters(FlatStringReader* sample_subject,
                              RegExpCompiler& compiler) {
   static const int kSampleSize = 128;
   int chars_sampled = 0;
 
-  FlatStringReader sample_subject(input);
-  int length = sample_subject.length();
+  int length = sample_subject->length();
 
   int half_way = (length - kSampleSize) / 2;
   for (int i = std::max(0, half_way); i < length && chars_sampled < kSampleSize;
        i++, chars_sampled++) {
-    compiler.frequency_collator()->CountCharacter(sample_subject.Get(i));
+    compiler.frequency_collator()->CountCharacter(sample_subject->Get(i));
   }
 }
 
@@ -463,7 +446,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
 
   RegExpCompileData data;
   {
-    FlatStringReader patternBytes(pattern);
+    FlatStringReader patternBytes(cx, pattern);
     if (!RegExpParser::ParseRegExp(cx->isolate, &zone, &patternBytes, flags,
                                    &data)) {
       JS::CompileOptions options(cx);
@@ -498,7 +481,15 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
       }
     }
     // Add one to account for the whole-match capture
-    re->useRegExpMatch(data.capture_count + 1);
+    uint32_t pairCount = data.capture_count + 1;
+    re->useRegExpMatch(pairCount);
+
+    if (!data.capture_name_map.is_null()) {
+      RootedNativeObject namedCaptures(cx, data.capture_name_map->inner());
+      if (!RegExpShared::initializeNamedCaptures(cx, re, namedCaptures)) {
+        return false;
+      }
+    }
   }
 
   MOZ_ASSERT(re->kind() == RegExpShared::Kind::RegExp);
@@ -509,7 +500,8 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
 
   bool isLatin1 = input->hasLatin1Chars();
 
-  SampleCharacters(input, compiler);
+  FlatStringReader sample_subject(cx, input);
+  SampleCharacters(&sample_subject, compiler);
   data.node = compiler.PreprocessRegExp(&data, flags, isLatin1);
   data.error = AnalyzeRegExp(cx->isolate, isLatin1, data.node);
   if (data.error != RegExpError::kNone) {
