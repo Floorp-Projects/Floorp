@@ -7,6 +7,9 @@
 const EXPORTED_SYMBOLS = ["SharedDataMap"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "PromiseUtils",
@@ -26,8 +29,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
-class SharedDataMap {
+class SharedDataMap extends EventEmitter {
   constructor(sharedDataKey, options = { isParent: IS_MAIN_PROCESS }) {
+    super();
+
     this._sharedDataKey = sharedDataKey;
     this._isParent = options.isParent;
     this._isReady = false;
@@ -87,10 +92,21 @@ class SharedDataMap {
     this._store.data[key] = value;
     this._store.saveSoon();
     this._syncToChildren();
+    this._notifyUpdate();
   }
 
   has(key) {
     return Boolean(this._data[key]);
+  }
+
+  /**
+   * Notify store listeners of updates
+   * Called both from Main and Content process
+   */
+  _notifyUpdate() {
+    for (let key of Object.keys(this._data)) {
+      this.emit(`update:${key}`, this._data[key]);
+    }
   }
 
   _syncToChildren({ flush = false } = {}) {
@@ -103,6 +119,7 @@ class SharedDataMap {
   _syncFromParent() {
     this._data = Services.cpmm.sharedData.get(this.sharedDataKey);
     this._checkIfReady();
+    this._notifyUpdate();
   }
 
   _checkIfReady() {
