@@ -729,6 +729,19 @@ pwmgr:
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     expiry_version: never
+  saved_login_used:
+    objects: ["form_login", "form_password", "auth_login", "prompt_login"]
+    description: >
+      Each time a saved login is used in a form or authentication dialog.
+    bug_numbers: [1631130]
+    notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org"]
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      filled: Whether the browser filled the login details for the user vs. typing saved values.
 
 fxa:
   connect:
