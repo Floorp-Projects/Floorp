@@ -212,7 +212,7 @@ async function testOpenPDFPreview({
   info("Got download pathname:" + download.target.path);
 
   let pdfFileURI = NetUtil.newURI(new FileUtils.File(download.target.path));
-  info("pdfFileURI:" + pdfFileURI.spec);
+  info("pdfFileURI:" + pdfFileURI);
 
   let uiWindow = window;
   let initialTab = gBrowser.selectedTab;
