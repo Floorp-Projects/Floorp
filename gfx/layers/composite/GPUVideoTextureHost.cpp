@@ -9,6 +9,8 @@
 #include "ImageContainer.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/VideoBridgeParent.h"
+#include "mozilla/webrender/RenderTextureHostWrapper.h"
+#include "mozilla/webrender/RenderThread.h"
 
 namespace mozilla {
 namespace layers {
@@ -38,7 +40,15 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
       VideoBridgeParent::GetSingleton(sd.source())->LookupTexture(sd.handle());
 
   if (mWrappedTextureHost && mExternalImageId.isSome()) {
-    mWrappedTextureHost->CreateRenderTexture(mExternalImageId.ref());
+    // External image id is allocated by mWrappedTextureHost.
+    mWrappedTextureHost->EnsureRenderTexture(Nothing());
+    MOZ_ASSERT(mWrappedTextureHost->mExternalImageId.isSome());
+    auto wrappedId = mWrappedTextureHost->mExternalImageId.ref();
+
+    RefPtr<wr::RenderTextureHost> texture =
+        new wr::RenderTextureHostWrapper(wrappedId);
+    wr::RenderThread::Get()->RegisterExternalImage(
+        wr::AsUint64(mExternalImageId.ref()), texture.forget());
   }
 
   return mWrappedTextureHost;
@@ -141,7 +151,15 @@ void GPUVideoTextureHost::CreateRenderTexture(
   // In other cases, EnsureWrappedTextureHost() handles CreateRenderTexture().
 
   if (mWrappedTextureHost) {
-    mWrappedTextureHost->CreateRenderTexture(aExternalImageId);
+    // External image id is allocated by mWrappedTextureHost.
+    mWrappedTextureHost->EnsureRenderTexture(Nothing());
+    MOZ_ASSERT(mWrappedTextureHost->mExternalImageId.isSome());
+    auto wrappedId = mWrappedTextureHost->mExternalImageId.ref();
+
+    RefPtr<wr::RenderTextureHost> texture =
+        new wr::RenderTextureHostWrapper(wrappedId);
+    wr::RenderThread::Get()->RegisterExternalImage(
+        wr::AsUint64(mExternalImageId.ref()), texture.forget());
     return;
   }
 
