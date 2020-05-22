@@ -1,5 +1,22 @@
 /* import-globals-from antitracking_head.js */
 
+function waitStoragePermission() {
+  return new Promise(resolve => {
+    let id = setInterval(async _ => {
+      if (
+        await SpecialPowers.testPermission(
+          `3rdPartyStorage^${TEST_3RD_PARTY_DOMAIN.slice(0, -1)}`,
+          SpecialPowers.Services.perms.ALLOW_ACTION,
+          TEST_DOMAIN
+        )
+      ) {
+        clearInterval(id);
+        resolve();
+      }
+    }, 0);
+  });
+}
+
 add_task(async function() {
   info("Starting subResources test");
 
@@ -413,6 +430,9 @@ add_task(async function testUserInteractionHeuristic() {
 });
 
 add_task(async function() {
+  info("Wait until the storage permission is ready before cleaning up.");
+  await waitStoragePermission();
+
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
@@ -655,6 +675,9 @@ add_task(async function testDoublyNestedUserInteractionHeuristic() {
 });
 
 add_task(async function() {
+  info("Wait until the storage permission is ready before cleaning up.");
+  await waitStoragePermission();
+
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
