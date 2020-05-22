@@ -16,7 +16,7 @@ import fnmatch
 import mozfile
 
 from logger.logger import RaptorLogger
-from profiler import symbolication, profiling
+from mozgeckoprofiler import ProfileSymbolicator, save_gecko_profile
 
 here = os.path.dirname(os.path.realpath(__file__))
 LOG = RaptorLogger(component='raptor-gecko-profile')
@@ -100,7 +100,7 @@ class GeckoProfile(object):
                 profile,
                 missing_symbols_zip)
             symbolicator.symbolicate_profile(profile)
-            profiling.save_profile(profile, profile_path)
+            save_gecko_profile(profile, profile_path)
         except MemoryError:
             LOG.critical(
                 "Ran out of memory while trying"
@@ -138,7 +138,7 @@ class GeckoProfile(object):
             LOG.error("No profiles collected")
             return
 
-        symbolicator = symbolication.ProfileSymbolicator({
+        symbolicator = ProfileSymbolicator({
             # Trace-level logging (verbose)
             "enableTracing": 0,
             # Fallback server if symbol is not found locally

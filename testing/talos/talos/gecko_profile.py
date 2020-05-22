@@ -14,7 +14,7 @@ import zipfile
 
 import mozfile
 from mozlog import get_proxy_logger
-from talos.profiler import symbolication, profiling
+from mozgeckoprofiler import ProfileSymbolicator, save_gecko_profile
 
 LOG = get_proxy_logger()
 
@@ -97,7 +97,7 @@ class GeckoProfile(object):
                 profile,
                 missing_symbols_zip)
             symbolicator.symbolicate_profile(profile)
-            profiling.save_profile(profile, profile_path)
+            save_gecko_profile(profile, profile_path)
         except MemoryError:
             LOG.critical(
                 "Ran out of memory while trying"
@@ -117,7 +117,7 @@ class GeckoProfile(object):
 
         :param cycle: the number of the cycle of the test currently run.
         """
-        symbolicator = symbolication.ProfileSymbolicator({
+        symbolicator = ProfileSymbolicator({
             # Trace-level logging (verbose)
             "enableTracing": 0,
             # Fallback server if symbol is not found locally
