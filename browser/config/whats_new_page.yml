@@ -18,30 +18,26 @@
       # This is done by taskgraph.
       versions: ["<{version.major_number}.0"]
       locales:
-          - be
-          - cs
           - cy
           - de
-          - dab
           - en-CA
           - en-GB
-          - en-US
           - es-AR
+          - es-CL
           - es-ES
           - fr
           - fy-NL
           - gn
-          - hub
+          - hsb
           - ia
           - id
           - it
+          - ka
           - kab
           - nl
-          - nn-NO
-          - pa-IN
           - pl
           - pt-BR
-          - sk
+          - pt-PT
           - sq
           - sv-SE
           - tr
