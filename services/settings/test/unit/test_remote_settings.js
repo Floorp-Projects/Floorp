@@ -178,13 +178,18 @@ add_task(async function test_sync_event_is_sent_even_if_up_to_date() {
     // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
     return;
   }
+  // First, determine what is the dump timestamp. Sync will load it.
+  // Use a timestamp inferior to latest record in dump.
+  await clientWithDump._importJSONDump();
+  const uptodateTimestamp = await clientWithDump.db.getLastModified();
+  await clear_state();
+
+  // Now, simulate that server data wasn't changed since dump was released.
   const startHistogram = getUptakeTelemetrySnapshot(clientWithDump.identifier);
   let received;
   clientWithDump.on("sync", ({ data }) => (received = data));
-  // Use a timestamp inferior to latest record in dump.
-  const timestamp = 1000000000000; // Sun Sep 09 2001
 
-  await clientWithDump.maybeSync(timestamp);
+  await clientWithDump.maybeSync(uptodateTimestamp);
 
   ok(received.current.length > 0, "Dump records are listed as created");
   equal(received.current.length, received.created.length);
@@ -412,10 +417,11 @@ add_task(
     ok(records.length > 0, "dump is loaded");
     ok(!called, "signature is missing but not verified");
 
-    // Synchronize the collection (local data is up-to-date, collection last modified > 42)
+    // Synchronize the collection (local data is up-to-date).
     // Signature verification is disabled (see `clear_state()`), so we don't bother with
     // fetching metadata.
-    await clientWithDump.maybeSync(42);
+    const uptodateTimestamp = await clientWithDump.db.getLastModified();
+    await clientWithDump.maybeSync(uptodateTimestamp);
     let metadata = await clientWithDump.db.getMetadata();
     ok(!metadata, "metadata was not fetched");
 
