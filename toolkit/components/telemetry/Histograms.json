@@ -14668,6 +14668,20 @@
     "alert_emails": ["ttung@mozilla.com", "storage-telemetry@mozilla.com"],
     "description": "True if the first initialization attempt succeeded, keyed by the initialization type."
   },
+  "GV_CONTENT_PROCESS_LIFETIME_MS": {
+    "record_in_processes": ["main"],
+    "products": ["geckoview_streaming"],
+    "alert_emails": [
+      "geckoview-team@mozilla.com",
+      "aklotz@mozilla.com"
+    ],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 3600000,
+    "n_buckets": 100,
+    "bug_numbers": [1625325],
+    "description": "GeckoView: The uptime of content processes in ms"
+  },
   "GV_PAGE_LOAD_PROGRESS_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview", "geckoview_streaming"],
