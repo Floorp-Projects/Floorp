@@ -356,7 +356,12 @@ class LoginManagerPrompter {
       ) {
         // We only want to touch the login's use count and last used time.
         log.debug("persistData: Touch matched login", loginToUpdate.guid);
-        Services.logins.recordPasswordUse(loginToUpdate);
+        Services.logins.recordPasswordUse(
+          loginToUpdate,
+          PrivateBrowsingUtils.isBrowserPrivate(browser),
+          loginToUpdate.username ? "form_password" : "form_login",
+          !!autoFilledLoginGuid
+        );
       } else {
         log.debug("persistData: Update matched login", loginToUpdate.guid);
         this._updateLogin(loginToUpdate, login);
@@ -747,6 +752,10 @@ class LoginManagerPrompter {
     propBag.setProperty("timePasswordChanged", now);
     propBag.setProperty("timeLastUsed", now);
     propBag.setProperty("timesUsedIncrement", 1);
+    // Note that we don't call `recordPasswordUse` so telemetry won't record a
+    // use in this case though that is normally correct since we would instead
+    // record the save/update in a separate probe and recording it in both would
+    // be wrong.
     Services.logins.modifyLogin(login, propBag);
   }
 

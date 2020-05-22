@@ -388,12 +388,31 @@ LoginManager.prototype = {
   /**
    * Record that the password of a saved login was used (e.g. submitted or copied).
    */
-  recordPasswordUse(login) {
+  recordPasswordUse(
+    login,
+    privateContextWithoutExplicitConsent,
+    loginType,
+    filled
+  ) {
     log.debug(
       "Recording password use",
+      loginType,
       login.QueryInterface(Ci.nsILoginMetaInfo).guid
     );
-    this._storage.recordPasswordUse(login);
+    if (!privateContextWithoutExplicitConsent) {
+      // don't record non-interactive use in private browsing
+      this._storage.recordPasswordUse(login);
+    }
+
+    Services.telemetry.recordEvent(
+      "pwmgr",
+      "saved_login_used",
+      loginType,
+      null,
+      {
+        filled: "" + filled,
+      }
+    );
   },
 
   /**
