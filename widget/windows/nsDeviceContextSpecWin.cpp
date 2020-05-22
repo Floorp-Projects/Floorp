@@ -202,7 +202,8 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 //----------------------------------------------------------
 
 already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
-  NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
+  NS_ASSERTION(mDevMode || mOutputFormat == nsIPrintSettings::kOutputFormatPDF,
+               "DevMode can't be NULL here unless we're printing to PDF.");
 
 #ifdef MOZ_ENABLE_SKIA_PDF
   if (mPrintViaSkPDF) {
