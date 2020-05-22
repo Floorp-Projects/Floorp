@@ -33,6 +33,8 @@ open class BrowserMenu internal constructor(
 ) {
     protected var currentPopup: PopupWindow? = null
     private var menuList: RecyclerView? = null
+    internal var currAnchor: View? = null
+    internal var isShown = false
 
     /**
      * @param anchor the view on which to pin the popup window.
@@ -79,12 +81,16 @@ open class BrowserMenu internal constructor(
             setOnDismissListener {
                 adapter.menu = null
                 currentPopup = null
+                isShown = false
                 onDismiss()
             }
 
-            displayPopup(view, anchor, orientation)
+            displayPopup(view, anchor, orientation).also {
+                currAnchor = anchor
+            }
         }.also {
             currentPopup = it
+            isShown = true
         }
     }
 

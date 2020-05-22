@@ -214,7 +214,18 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     // Menu
-    val menuBuilder by lazy { WebExtensionBrowserMenuBuilder(menuItems, store = store) }
+    val menuBuilder by lazy {
+        WebExtensionBrowserMenuBuilder(
+            menuItems,
+            store = store,
+            webExtIconTintColorResource = R.color.photonGrey90,
+            onAddonsManagerTapped = {
+                val intent = Intent(applicationContext, AddonsActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                applicationContext.startActivity(intent)
+            }
+        )
+    }
 
     private val menuItems by lazy {
         val items = mutableListOf(
@@ -232,11 +243,6 @@ open class DefaultComponents(private val applicationContext: Context) {
             },
             SimpleBrowserMenuItem("Settings") {
                 Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
-            },
-            SimpleBrowserMenuItem("Add-ons") {
-                val intent = Intent(applicationContext, AddonsActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                applicationContext.startActivity(intent)
             },
             SimpleBrowserMenuItem("Find In Page") {
                 FindInPageIntegration.launch?.invoke()
