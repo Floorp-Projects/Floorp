@@ -88,7 +88,7 @@ class TestResourceMonitor(unittest.TestCase):
 
         t0 = time.time()
         monitor.record_event('t0')
-        time.sleep(0.5)
+        time.sleep(2)
 
         monitor.record_event('t1')
         time.sleep(0.5)
