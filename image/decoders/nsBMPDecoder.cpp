@@ -36,7 +36,7 @@
 //
 // WinBMPv3. This is the most widely used version.
 // - It changed the info header to 40 bytes by taking the WinBMPv2 info
-//   header, enlargening its width and height fields, and adding more fields
+//   header, enlarging its width and height fields, and adding more fields
 //   including: a compression type (|mCompression|) and number of colors
 //   (|mNumColors|).
 // - The semi-optional color table is now 4 bytes per value (BGR0), and its
@@ -48,7 +48,11 @@
 // - It did not change the info header layout from WinBMPv3.
 // - |mBpp| can now be 16 or 32, in which case |mCompression| can be RGB or the
 //   new BITFIELDS value; in the latter case an additional 12 bytes of color
-//   bitfields follow the info header.
+//   bitfields follow the info header (52 bytes total).
+//
+// WinBMPv3-NT-Alpha. A variant of WinBMPv3-NT with support for alpha channels.
+//   Adds an additional 4 bytes in in the info header (now 56 bytes total), and
+//   supports an alpha channel in the BITFIELDS sections.
 //
 // WinBMPv4.
 // - It extended the info header to 108 bytes, including the 12 bytes of color
@@ -494,6 +498,8 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadInfoHeaderSize(
 
   bool bihSizeOk = mH.mBIHSize == InfoHeaderLength::WIN_V2 ||
                    mH.mBIHSize == InfoHeaderLength::WIN_V3 ||
+                   mH.mBIHSize == InfoHeaderLength::WIN_V3_NT ||
+                   mH.mBIHSize == InfoHeaderLength::WIN_V3_NT_ALPHA ||
                    mH.mBIHSize == InfoHeaderLength::WIN_V4 ||
                    mH.mBIHSize == InfoHeaderLength::WIN_V5 ||
                    (mH.mBIHSize >= InfoHeaderLength::OS2_V2_MIN &&
@@ -611,6 +617,8 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadInfoHeaderRest(
        // For BITFIELDS compression we require an exact match for one of the
        // WinBMP BIH sizes; this clearly isn't an OS2 BMP.
        (mH.mBIHSize == InfoHeaderLength::WIN_V3 ||
+        mH.mBIHSize == InfoHeaderLength::WIN_V3_NT ||
+        mH.mBIHSize == InfoHeaderLength::WIN_V3_NT_ALPHA ||
         mH.mBIHSize == InfoHeaderLength::WIN_V4 ||
         mH.mBIHSize == InfoHeaderLength::WIN_V5) &&
        (mH.mBpp == 16 || mH.mBpp == 32));
@@ -633,7 +641,7 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadInfoHeaderRest(
   size_t bitFieldsLengthStillToRead = 0;
   if (mH.mCompression == Compression::BITFIELDS) {
     // Need to read bitfields.
-    if (mH.mBIHSize >= InfoHeaderLength::WIN_V4) {
+    if (mH.mBIHSize >= InfoHeaderLength::WIN_V3_NT) {
       // Bitfields are present in the info header, so we can read them
       // immediately.
       mBitFields.ReadFromHeader(aData + 36, /* aReadAlpha = */ true);
@@ -1039,8 +1047,7 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadPixelRow(
       break;
 
     case 32:
-      if (mH.mCompression == Compression::RGB && mIsWithinICO &&
-          mH.mBpp == 32) {
+      if (mH.mCompression == Compression::RGB && mIsWithinICO) {
         // This is a special case only used for 32bpp WinBMPv3-ICO files, which
         // could be in either 0RGB or ARGB format. We start by assuming it's
         // an 0RGB image. If we hit a non-zero alpha value, then we know it's
