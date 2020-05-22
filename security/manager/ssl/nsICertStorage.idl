@@ -163,7 +163,8 @@ interface nsICertStorage : nsISupports {
 
   /**
    * Given the contents of a CRLite filter and its creation date as seconds since the epoch,
-   * replaces any existing filter with the new one.
+   * replaces any existing filter with the new one. Also clears any previously-set incremental
+   * revocation updates ("stashes").
    */
   [must_use]
   void setFullCRLiteFilter(in Array<octet> filter, in uint64_t timestamp,
@@ -189,6 +190,32 @@ interface nsICertStorage : nsISupports {
                                  in Array<octet> issuerSPKI,
                                  in Array<octet> serialNumber,
                                  out uint64_t validBefore);
+
+  /**
+   * Given the contents of a CRLite incremental revocation update ("stash"), adds the revocation
+   * information to the current set of stashed revocations. The basic unit of the stash file is an
+   * issuer subject public key info hash (sha-256) followed by a number of serial numbers
+   * corresponding to revoked certificates issued by that issuer. More specifically, each unit
+   * consists of:
+   *   4 bytes little-endian: the number of serial numbers following the issuer spki hash
+   *   1 byte: the length of the issuer spki hash
+   *   issuer spki hash length bytes: the issuer spki hash
+   *   as many times as the indicated serial numbers:
+   *     1 byte: the length of the serial number
+   *     serial number length bytes: the serial number
+   * The stash file consists of any number of these units concatenated together.
+   */
+  [must_use]
+  void addCRLiteStash(in Array<octet> stash, in nsICertStorageCallback callback);
+
+  /**
+   * Given a DER-encoded issuer subject public key info and the bytes of the value of the serial
+   * number (so, not including the DER tag and length), determines if the certificate identified by
+   * this issuer SPKI and serial number is revoked according to the current set of stashed CRLite
+   * revocation information.
+   */
+  [must_use]
+  bool isCertRevokedByStash(in Array<octet> issuerSPKI, in Array<octet> serialNumber);
 
   /**
    * Trust flags to use when adding a adding a certificate.
