@@ -111,7 +111,7 @@ using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
 // Helper class to manage call state.
 class MOZ_STACK_CLASS CallInfo {
-  MDefinition* fun_;
+  MDefinition* callee_;
   MDefinition* thisArg_;
   MDefinition* newTargetArg_;
   MDefinitionVector args_;
@@ -130,7 +130,7 @@ class MOZ_STACK_CLASS CallInfo {
  public:
   CallInfo(TempAllocator& alloc, jsbytecode* pc, bool constructing,
            bool ignoresReturnValue)
-      : fun_(nullptr),
+      : callee_(nullptr),
         thisArg_(nullptr),
         newTargetArg_(nullptr),
         args_(alloc),
@@ -143,7 +143,7 @@ class MOZ_STACK_CLASS CallInfo {
   MOZ_MUST_USE bool init(CallInfo& callInfo) {
     MOZ_ASSERT(constructing_ == callInfo.constructing());
 
-    fun_ = callInfo.fun();
+    callee_ = callInfo.callee();
     thisArg_ = callInfo.thisArg();
     ignoresReturnValue_ = callInfo.ignoresReturnValue();
 
@@ -175,9 +175,9 @@ class MOZ_STACK_CLASS CallInfo {
     }
     current->popn(argc);
 
-    // Get |this| and |fun|
+    // Get |this| and |callee|
     setThis(current->pop());
-    setFun(current->pop());
+    setCallee(current->pop());
 
     return true;
   }
@@ -219,7 +219,7 @@ class MOZ_STACK_CLASS CallInfo {
       }
     }
 
-    current->push(fun());
+    current->push(callee());
     current->push(thisArg());
 
     for (uint32_t i = 0; i < argc(); i++) {
@@ -286,15 +286,15 @@ class MOZ_STACK_CLASS CallInfo {
   bool isSetter() const { return setter_; }
   void markAsSetter() { setter_ = true; }
 
-  MDefinition* fun() const {
-    MOZ_ASSERT(fun_);
-    return fun_;
+  MDefinition* callee() const {
+    MOZ_ASSERT(callee_);
+    return callee_;
   }
 
-  void setFun(MDefinition* fun) { fun_ = fun; }
+  void setCallee(MDefinition* callee) { callee_ = callee; }
 
   void setImplicitlyUsedUnchecked() {
-    fun_->setImplicitlyUsedUnchecked();
+    callee_->setImplicitlyUsedUnchecked();
     thisArg_->setImplicitlyUsedUnchecked();
     if (newTargetArg_) {
       newTargetArg_->setImplicitlyUsedUnchecked();

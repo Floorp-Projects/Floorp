@@ -1074,7 +1074,7 @@ bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
 
   // Callee
   MOZ_ASSERT(slotIndex == callInfo_->argc() + 1);
-  return defineOperand(resultId, callInfo_->fun());
+  return defineOperand(resultId, callInfo_->callee());
 }
 
 bool WarpCacheIRTranspiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,

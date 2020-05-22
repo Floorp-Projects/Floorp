@@ -450,7 +450,7 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
     // Don't inline if creating |this| for this target is complicated, for
     // example when the newTarget.prototype lookup may be effectful.
     if (!target->constructorNeedsUninitializedThis() &&
-        callInfo.getNewTarget() != callInfo.fun()) {
+        callInfo.getNewTarget() != callInfo.callee()) {
       JSFunction* newTargetFun =
           getSingleCallTarget(callInfo.getNewTarget()->resultTypeSet());
       if (!newTargetFun) {
@@ -1080,7 +1080,7 @@ AbortReasonOr<Ok> IonBuilder::buildInline(IonBuilder* callerBuilder,
 
   // Initialize the env chain now that all resume points operands are
   // initialized.
-  MOZ_TRY(initEnvironmentChain(callInfo.fun()));
+  MOZ_TRY(initEnvironmentChain(callInfo.callee()));
 
   auto clearLastPriorResumePoint = mozilla::MakeScopeExit([&] {
     // Discard unreferenced & pre-allocated resume points.
@@ -4021,7 +4021,7 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   // Create new |this| on the caller-side for inlined constructors.
   if (callInfo.constructing()) {
     MDefinition* thisDefn =
-        createThis(target, callInfo.fun(), callInfo.getNewTarget(),
+        createThis(target, callInfo.callee(), callInfo.getNewTarget(),
                    /* inlining = */ true);
     callInfo.setThis(thisDefn);
   }
@@ -4036,9 +4036,9 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   }
   current->setOuterResumePoint(outerResumePoint);
 
-  // Pop formals again, except leave |fun| on stack for duration of call.
+  // Pop formals again, except leave |callee| on stack for duration of call.
   callInfo.popCallStack(current);
-  current->push(callInfo.fun());
+  current->push(callInfo.callee());
 
   JSScript* calleeScript = target->nonLazyScript();
   BaselineInspector inspector(calleeScript);
@@ -4603,7 +4603,7 @@ MGetPropertyCache* IonBuilder::getInlineableGetPropertyCache(
     return nullptr;
   }
 
-  MDefinition* funcDef = callInfo.fun();
+  MDefinition* funcDef = callInfo.callee();
   if (funcDef->type() != MIRType::Object) {
     return nullptr;
   }
@@ -4683,7 +4683,7 @@ IonBuilder::InliningResult IonBuilder::inlineCallsite(
     // Inlining will elminate uses of the original callee, but it needs to
     // be preserved in phis if we bail out.  Mark the old callee definition as
     // implicitly used to ensure this happens.
-    callInfo.fun()->setImplicitlyUsedUnchecked();
+    callInfo.callee()->setImplicitlyUsedUnchecked();
 
     // If the callee is not going to be a lambda (which may vary across
     // different invocations), then the callee definition can be replaced by a
@@ -4692,10 +4692,10 @@ IonBuilder::InliningResult IonBuilder::inlineCallsite(
       // Replace the function with an MConstant.
       MConstant* constFun = constant(ObjectValue(*target));
       if (callInfo.constructing() &&
-          callInfo.getNewTarget() == callInfo.fun()) {
+          callInfo.getNewTarget() == callInfo.callee()) {
         callInfo.setNewTarget(constFun);
       }
-      callInfo.setFun(constFun);
+      callInfo.setCallee(constFun);
     }
 
     return inlineSingleCall(callInfo, target);
@@ -4744,10 +4744,10 @@ AbortReasonOr<Ok> IonBuilder::inlineObjectGroupFallback(
     MBasicBlock* dispatchBlock, MObjectGroupDispatch* dispatch,
     MGetPropertyCache* cache, MBasicBlock** fallbackTarget) {
   // Getting here implies the following:
-  // 1. The call function is an MGetPropertyCache, or an MGetPropertyCache
+  // 1. The callee is an MGetPropertyCache, or an MGetPropertyCache
   //    followed by an MTypeBarrier.
-  MOZ_ASSERT(callInfo.fun()->isGetPropertyCache() ||
-             callInfo.fun()->isTypeBarrier());
+  MOZ_ASSERT(callInfo.callee()->isGetPropertyCache() ||
+             callInfo.callee()->isTypeBarrier());
 
   // 2. The MGetPropertyCache has inlineable cases by guarding on the
   // ObjectGroup.
@@ -4755,8 +4755,8 @@ AbortReasonOr<Ok> IonBuilder::inlineObjectGroupFallback(
 
   // 3. The MGetPropertyCache (and, if applicable, MTypeBarrier) only
   //    have at most a single use.
-  MOZ_ASSERT_IF(callInfo.fun()->isGetPropertyCache(), !cache->hasUses());
-  MOZ_ASSERT_IF(callInfo.fun()->isTypeBarrier(), cache->hasOneUse());
+  MOZ_ASSERT_IF(callInfo.callee()->isGetPropertyCache(), !cache->hasUses());
+  MOZ_ASSERT_IF(callInfo.callee()->isTypeBarrier(), cache->hasOneUse());
 
   // This means that no resume points yet capture the MGetPropertyCache,
   // so everything from the MGetPropertyCache up until the call is movable.
@@ -4780,7 +4780,7 @@ AbortReasonOr<Ok> IonBuilder::inlineObjectGroupFallback(
   DebugOnly<size_t> preCallFuncIndex =
       preCallResumePoint->stackDepth() - callInfo.numFormals();
   MOZ_ASSERT(preCallResumePoint->getOperand(preCallFuncIndex) ==
-             fallbackInfo.fun());
+             fallbackInfo.callee());
 
   // In the dispatch block, replace the function's slot entry with Undefined.
   MConstant* undefined = MConstant::New(alloc(), UndefinedValue());
@@ -4815,12 +4815,12 @@ AbortReasonOr<Ok> IonBuilder::inlineObjectGroupFallback(
   MOZ_ASSERT(checkObject == cache->value());
 
   // Move the MGetPropertyCache and friends into the getPropBlock.
-  if (fallbackInfo.fun()->isGetPropertyCache()) {
-    MOZ_ASSERT(fallbackInfo.fun()->toGetPropertyCache() == cache);
+  if (fallbackInfo.callee()->isGetPropertyCache()) {
+    MOZ_ASSERT(fallbackInfo.callee()->toGetPropertyCache() == cache);
     getPropBlock->addFromElsewhere(cache);
     getPropBlock->push(cache);
   } else {
-    MTypeBarrier* barrier = callInfo.fun()->toTypeBarrier();
+    MTypeBarrier* barrier = callInfo.callee()->toTypeBarrier();
     MOZ_ASSERT(barrier->type() == MIRType::Object);
     MOZ_ASSERT(barrier->input()->isGetPropertyCache());
     MOZ_ASSERT(barrier->input()->toGetPropertyCache() == cache);
@@ -4876,9 +4876,9 @@ AbortReasonOr<Ok> IonBuilder::inlineCalls(CallInfo& callInfo,
   if (maybeCache) {
     dispatch = MObjectGroupDispatch::New(alloc(), maybeCache->value(),
                                          maybeCache->propTable());
-    callInfo.fun()->setImplicitlyUsedUnchecked();
+    callInfo.callee()->setImplicitlyUsedUnchecked();
   } else {
-    dispatch = MFunctionDispatch::New(alloc(), callInfo.fun());
+    dispatch = MFunctionDispatch::New(alloc(), callInfo.callee());
   }
 
   MOZ_ASSERT(dispatchBlock->stackDepth() >= callInfo.numFormals());
@@ -4942,7 +4942,7 @@ AbortReasonOr<Ok> IonBuilder::inlineCalls(CallInfo& callInfo,
     if (target->isSingleton()) {
       funcDef = MConstant::New(alloc(), ObjectValue(*target), constraints());
     } else {
-      funcDef = MPolyInlineGuard::New(alloc(), callInfo.fun());
+      funcDef = MPolyInlineGuard::New(alloc(), callInfo.callee());
     }
 
     funcDef->setImplicitlyUsedUnchecked();
@@ -4961,9 +4961,10 @@ AbortReasonOr<Ok> IonBuilder::inlineCalls(CallInfo& callInfo,
       return abort(AbortReason::Alloc);
     }
     inlineInfo.popCallStack(inlineBlock);
-    inlineInfo.setFun(funcDef);
+    inlineInfo.setCallee(funcDef);
 
-    if (callInfo.constructing() && callInfo.getNewTarget() == callInfo.fun()) {
+    if (callInfo.constructing() &&
+        callInfo.getNewTarget() == callInfo.callee()) {
       inlineInfo.setNewTarget(funcDef);
     }
 
@@ -5050,10 +5051,10 @@ AbortReasonOr<Ok> IonBuilder::inlineCalls(CallInfo& callInfo,
         // The object group dispatch handles all possible incoming
         // objects, so the cache and barrier will not be reached and
         // can be eliminated.
-        if (callInfo.fun()->isGetPropertyCache()) {
-          MOZ_ASSERT(callInfo.fun() == maybeCache);
+        if (callInfo.callee()->isGetPropertyCache()) {
+          MOZ_ASSERT(callInfo.callee() == maybeCache);
         } else {
-          MTypeBarrier* barrier = callInfo.fun()->toTypeBarrier();
+          MTypeBarrier* barrier = callInfo.callee()->toTypeBarrier();
           MOZ_ASSERT(!barrier->hasUses());
           MOZ_ASSERT(barrier->type() == MIRType::Object);
           MOZ_ASSERT(barrier->input()->isGetPropertyCache());
@@ -5947,13 +5948,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_funapplyarguments(uint32_t argc) {
     }
   }
 
-  // This
+  // Pop this.
   MDefinition* argThis = current->pop();
   callInfo.setThis(argThis);
 
-  // Pop function parameter.
+  // Pop callee.
   MDefinition* argFunc = current->pop();
-  callInfo.setFun(argFunc);
+  callInfo.setCallee(argFunc);
 
   // Pop apply function.
   MDefinition* nativeFunc = current->pop();
@@ -6183,7 +6184,7 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
   if (callInfo.constructing()) {
     // Inline the this-object allocation on the caller-side.
     MDefinition* create =
-        createThis(target, callInfo.fun(), callInfo.getNewTarget(),
+        createThis(target, callInfo.callee(), callInfo.getNewTarget(),
                    /* inlining = */ false);
     callInfo.thisArg()->setImplicitlyUsedUnchecked();
     callInfo.setThis(create);
@@ -6267,7 +6268,7 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
     }
   }
 
-  call->initFunction(callInfo.fun());
+  call->initFunction(callInfo.callee());
 
   current->add(call);
   return call;
@@ -6371,7 +6372,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_eval(uint32_t argc) {
     }
     callInfo.setImplicitlyUsedUnchecked();
 
-    callInfo.fun()->setImplicitlyUsedUnchecked();
+    callInfo.callee()->setImplicitlyUsedUnchecked();
 
     MDefinition* envChain = current->environmentChain();
     MDefinition* string = callInfo.getArg(0);
@@ -13035,7 +13036,7 @@ MDefinition* IonBuilder::getCallee() {
     return callee;
   }
 
-  return inlineCallInfo_->fun();
+  return inlineCallInfo_->callee();
 }
 
 void IonBuilder::addAbortedPreliminaryGroup(ObjectGroup* group) {

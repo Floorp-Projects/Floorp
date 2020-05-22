@@ -1612,7 +1612,7 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
   bool needsThisCheck = false;
   if (callInfo.constructing()) {
     // Inline the this-object allocation on the caller-side.
-    MDefinition* callee = callInfo.fun();
+    MDefinition* callee = callInfo.callee();
     MDefinition* newTarget = callInfo.getNewTarget();
     MCreateThis* createThis = MCreateThis::New(alloc(), callee, newTarget);
     current->add(createThis);
