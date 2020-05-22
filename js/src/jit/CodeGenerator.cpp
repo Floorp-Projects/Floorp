@@ -2921,14 +2921,14 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
   masm.storeValue(
       nativeTemplateObj.getSlot(RegExpRealm::MatchResultObjectIndexSlot),
-      Address(temp2, 0));
+      Address(temp2, RegExpRealm::offsetOfMatchResultObjectIndexSlot()));
   masm.storeValue(
       nativeTemplateObj.getSlot(RegExpRealm::MatchResultObjectInputSlot),
-      Address(temp2, sizeof(Value)));
+      Address(temp2, RegExpRealm::offsetOfMatchResultObjectInputSlot()));
 #ifdef ENABLE_NEW_REGEXP
   masm.storeValue(
       nativeTemplateObj.getSlot(RegExpRealm::MatchResultObjectGroupsSlot),
-      Address(temp2, 2 * sizeof(Value)));
+      Address(temp2, RegExpRealm::offsetOfMatchResultObjectGroupsSlot()));
 #endif
 
   // clang-format off
