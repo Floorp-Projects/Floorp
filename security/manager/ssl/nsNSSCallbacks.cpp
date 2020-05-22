@@ -1010,6 +1010,12 @@ static void AccumulateCipherSuite(Telemetry::HistogramID probe,
     case TLS_RSA_WITH_SEED_CBC_SHA:
       value = 67;
       break;
+    case TLS_RSA_WITH_AES_128_GCM_SHA256:
+      value = 68;
+      break;
+    case TLS_RSA_WITH_AES_256_GCM_SHA384:
+      value = 69;
+      break;
     // TLS 1.3 PSK resumption
     case TLS_AES_128_GCM_SHA256:
       value = 70;
