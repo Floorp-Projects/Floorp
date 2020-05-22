@@ -10,6 +10,10 @@
   position: relative;
 }
 
+.network-monitor .headers-panel-container .treeTable {
+  overflow: hidden;
+}
+
 .network-monitor .headers-panel-container .panel-container {
   position: absolute;
   top: calc(var(--theme-toolbar-height) + 1px);
@@ -51,10 +55,6 @@
   justify-content: flex-end;
   align-items: center;
   cursor: pointer;
-}
-
-.network-monitor .accordion-header-label {
-  color: var(--theme-icon-dimmed-color)
 }
 
 .network-monitor .raw-headers-toggle .headers-summary-label {
@@ -125,44 +125,6 @@
 .network-monitor .headers-summary .status-text {
   width: auto !important;
   margin-inline-start: 4px;
-}
-
-/* Status codes */
-
-.headers-overview .summary .status .status-code {
-  display: inline;
-  margin-right: 5px;
-  background-color: transparent;
-  color: inherit;
-}
-
-.headers-overview .summary .status[data-code^="1"] {
-  color: var(--status-code-color-1xx);
-}
-
-.headers-overview .summary .status[data-code^="2"] {
-  color: var(--status-code-color-2xx);
-}
-
-.headers-overview .summary .status[data-code^="3"] {
-  color: inherit;
-}
-
-.headers-overview .summary .status[data-code^="4"] {
-  color: var(--status-code-color-4xx);
-}
-
-.headers-overview .summary .status[data-code^="5"] {
-  color: var(--status-code-color-5xx);
-}
-
-/* Non-standard status codes are styled like 5XX */
-.headers-overview .summary .status[data-code^="0"],
-.headers-overview .summary .status[data-code^="6"],
-.headers-overview .summary .status[data-code^="7"],
-.headers-overview .summary .status[data-code^="8"],
-.headers-overview .summary .status[data-code^="9"] {
-  color: var(--status-code-color-5xx);
 }
 
 /* Summary tabpanel */

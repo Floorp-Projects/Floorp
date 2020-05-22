@@ -383,7 +383,7 @@
   cursor: default;
 }
 
-.message.network .status {
+.message.network .message-body .status {
   flex: none;
   cursor: default;
   margin-left: 1ch;
@@ -747,8 +747,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .network.message .network-info .panels {
-  max-height: 250px;
-  min-height: 100px;
+  min-height: 250px;
 }
 /* Response panel needs an absolute height size as the
  * sizing of its content depends on it, it also needs override
