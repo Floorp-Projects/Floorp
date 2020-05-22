@@ -129,11 +129,7 @@ void Histogram::AddBoolean(bool value) { DCHECK(false); }
 
 void Histogram::AddSampleSet(const SampleSet& sample) { sample_.Add(sample); }
 
-void Histogram::Clear() {
-  SampleSet ss;
-  ss.Resize(*this);
-  sample_ = ss;
-}
+void Histogram::Clear() { sample_.Clear(); }
 
 void Histogram::SetRangeDescriptions(const DescriptionPair descriptions[]) {
   DCHECK(false);
@@ -188,7 +184,9 @@ Histogram::Sample Histogram::ranges(size_t i) const { return ranges_[i]; }
 
 size_t Histogram::bucket_count() const { return bucket_count_; }
 
-void Histogram::SnapshotSample(SampleSet* sample) const { *sample = sample_; }
+Histogram::SampleSet Histogram::SnapshotSample() const {
+  return sample_.Clone();
+}
 
 bool Histogram::HasConstructorArguments(Sample minimum, Sample maximum,
                                         size_t bucket_count) {
