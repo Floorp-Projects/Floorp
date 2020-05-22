@@ -1633,8 +1633,8 @@ class StaticAnalysis(MachCommandBase):
     @CommandArgument('--path', '-p', nargs='+', default=None,
                      help='Specify the path(s) to reformat')
     @CommandArgument('--commit', '-c', default=None,
-                     help='Specify a commit to reformat from.'
-                          'For git you can also pass a range of commits (foo..bar)'
+                     help='Specify a commit to reformat from. '
+                          'For git you can also pass a range of commits (foo..bar) '
                           'to format all of them at the same time.')
     @CommandArgument('--output', '-o', default=None, dest='output_path',
                      help='Specify a file handle to write clang-format raw output instead of '
@@ -1644,7 +1644,7 @@ class StaticAnalysis(MachCommandBase):
                      help='Specify the output format used: diff is the raw patch provided by '
                      'clang-format, json is a list of atomic changes to process.')
     @CommandArgument('--outgoing', default=False, action='store_true',
-                     help='Run clang-format on outgoing files from mercurial repository')
+                     help='Run clang-format on outgoing files from mercurial repository.')
     def clang_format(self, assume_filename, path, commit, output_path=None, output_format='diff',
                      verbose=False, outgoing=False):
         # Run clang-format or clang-format-diff on the local changes
