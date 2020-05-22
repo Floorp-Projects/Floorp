@@ -663,7 +663,6 @@ button:disabled {
 .moz-reader-content {
   display: none;
   font-size: 1em;
-  line-height: 1.6em;
 }
 
 @media print {
