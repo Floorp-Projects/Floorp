@@ -530,7 +530,6 @@ var ExtensionsUI = {
           AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS
         );
       }
-      setCheckbox(window);
 
       async function actionResolve(win) {
         let checkbox = win.document.getElementById("addon-incognito-checkbox");
