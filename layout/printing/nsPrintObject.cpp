@@ -245,3 +245,12 @@ void nsPrintObject::SetPrintAsIs(bool aAsIs) {
     kid->SetPrintAsIs(aAsIs);
   }
 }
+
+void nsPrintObject::EnablePrinting(bool aEnable) {
+  // Set whether to print flag
+  mDontPrint = !aEnable;
+
+  for (const UniquePtr<nsPrintObject>& kid : mKids) {
+    kid->EnablePrinting(aEnable);
+  }
+}
