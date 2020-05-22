@@ -34,6 +34,9 @@ EXPORTS.mozilla.gfx += [
     'HelpersCairo.h',
     'InlineTranslator.h',
     'IterableArena.h',
+    'JobScheduler.h',
+    'JobScheduler_posix.h',
+    'JobScheduler_win32.h',
     'Logging.h',
     'LoggingConstants.h',
     'Matrix.h',
@@ -83,6 +86,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'DrawTargetD2D1.cpp',
         'ExtendInputEffectD2D1.cpp',
         'FilterNodeD2D1.cpp',
+        'JobScheduler_win32.cpp',
         'NativeFontResourceDWrite.cpp',
         'NativeFontResourceGDI.cpp',
         'PathD2D.cpp',
@@ -92,6 +96,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SourceSurfaceD2D1.cpp',
     ]
     DEFINES['WIN32'] = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
+    SOURCES += [
+        'JobScheduler_posix.cpp',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk'):
     EXPORTS.mozilla.gfx += [
@@ -164,6 +173,7 @@ UNIFIED_SOURCES += [
     'DataSourceSurface.cpp',
     'DataSurfaceHelpers.cpp',
     'DrawEventRecorder.cpp',
+    'DrawingJob.cpp',
     'DrawTarget.cpp',
     'DrawTargetCairo.cpp',
     'DrawTargetCapture.cpp',
@@ -177,6 +187,7 @@ UNIFIED_SOURCES += [
     'FilterProcessing.cpp',
     'FilterProcessingScalar.cpp',
     'ImageScaling.cpp',
+    'JobScheduler.cpp',
     'Matrix.cpp',
     'NativeFontResource.cpp',
     'Path.cpp',
