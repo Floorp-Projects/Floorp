@@ -1741,7 +1741,7 @@ void RecordedEvent::ReadStrokeOptions(S& aStream,
   aStrokeOptions.mLineJoin = joinStyle;
   aStrokeOptions.mLineCap = capStyle;
 
-  if (!aStrokeOptions.mDashLength) {
+  if (!aStrokeOptions.mDashLength || !aStream.good()) {
     return;
   }
 
@@ -2388,6 +2388,10 @@ RecordedFillGlyphs::RecordedFillGlyphs(S& aStream)
   ReadDrawOptions(aStream, mOptions);
   ReadPatternData(aStream, mPattern);
   ReadElement(aStream, mNumGlyphs);
+  if (!aStream.good()) {
+    return;
+  }
+
   mGlyphs = new Glyph[mNumGlyphs];
   aStream.read((char*)mGlyphs, sizeof(Glyph) * mNumGlyphs);
 }
@@ -3042,6 +3046,10 @@ RecordedSourceSurfaceCreation::RecordedSourceSurfaceCreation(S& aStream)
   ReadElement(aStream, mSize);
   ReadElementConstrained(aStream, mFormat, SurfaceFormat::A8R8G8B8_UINT32,
                          SurfaceFormat::UNKNOWN);
+  if (!aStream.good()) {
+    return;
+  }
+
   size_t size = mSize.width * mSize.height * BytesPerPixel(mFormat);
   mData = new (fallible) uint8_t[size];
   if (!mData) {
@@ -3231,6 +3239,10 @@ RecordedGradientStopsCreation::RecordedGradientStopsCreation(S& aStream)
   ReadElementConstrained(aStream, mExtendMode, ExtendMode::CLAMP,
                          ExtendMode::REFLECT);
   ReadElement(aStream, mNumStops);
+  if (!aStream.good()) {
+    return;
+  }
+
   mStops = new GradientStop[mNumStops];
 
   aStream.read((char*)mStops, mNumStops * sizeof(GradientStop));
@@ -3442,6 +3454,10 @@ RecordedFontData::RecordedFontData(S& aStream)
   ReadElementConstrained(aStream, mType, FontType::DWRITE, FontType::UNKNOWN);
   ReadElement(aStream, mFontDetails.fontDataKey);
   ReadElement(aStream, mFontDetails.size);
+  if (!aStream.good()) {
+    return;
+  }
+
   mData = new (fallible) uint8_t[mFontDetails.size];
   if (!mData) {
     gfxCriticalNote
@@ -3499,6 +3515,10 @@ RecordedFontDescriptor::RecordedFontDescriptor(S& aStream)
 
   size_t size;
   ReadElement(aStream, size);
+  if (!aStream.good()) {
+    return;
+  }
+
   mData.resize(size);
   aStream.read((char*)mData.data(), size);
 }
@@ -3548,6 +3568,10 @@ RecordedUnscaledFontCreation::RecordedUnscaledFontCreation(S& aStream)
 
   size_t size;
   ReadElement(aStream, size);
+  if (!aStream.good()) {
+    return;
+  }
+
   mInstanceData.resize(size);
   aStream.read((char*)mInstanceData.data(), size);
 }
@@ -3625,10 +3649,18 @@ RecordedScaledFontCreation::RecordedScaledFontCreation(S& aStream)
 
   size_t size;
   ReadElement(aStream, size);
+  if (!aStream.good()) {
+    return;
+  }
+
   mInstanceData.resize(size);
   aStream.read((char*)mInstanceData.data(), size);
   size_t numVariations;
   ReadElement(aStream, numVariations);
+  if (!aStream.good()) {
+    return;
+  }
+
   mVariations.resize(numVariations);
   aStream.read((char*)mVariations.data(),
                sizeof(FontVariation) * numVariations);
@@ -3756,6 +3788,10 @@ RecordedFilterNodeSetAttribute::RecordedFilterNodeSetAttribute(S& aStream)
                          ArgType::ARGTYPE_FLOAT_ARRAY);
   uint64_t size;
   ReadElement(aStream, size);
+  if (!aStream.good()) {
+    return;
+  }
+
   mPayload.resize(size_t(size));
   aStream.read((char*)&mPayload.front(), size);
 }
