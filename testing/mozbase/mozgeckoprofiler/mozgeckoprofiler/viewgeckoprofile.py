@@ -20,7 +20,7 @@ import SocketServer
 import SimpleHTTPServer
 
 here = os.path.abspath(os.path.dirname(__file__))
-LOG = get_proxy_logger('profiler')
+LOG = get_proxy_logger("profiler")
 
 
 class ProfileServingHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -40,21 +40,22 @@ class ViewGeckoProfile(object):
         self.gecko_profile_dir = os.path.dirname(gecko_profile_data_path)
         self.profiler_url = "https://profiler.firefox.com/from-url/"
         self.httpd = None
-        self.host = '127.0.0.1'
+        self.host = "127.0.0.1"
         self.port = None
         self.oldcwd = os.getcwd()
 
     def setup_http_server(self):
         # pick a free port
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(('', 0))
+        sock.bind(("", 0))
         self.port = sock.getsockname()[1]
         sock.close()
 
         # Temporarily change the directory to the profile directory.
         os.chdir(self.gecko_profile_dir)
-        self.httpd = SocketServer.TCPServer((self.host, self.port),
-                                            ProfileServingHTTPRequestHandler)
+        self.httpd = SocketServer.TCPServer(
+            (self.host, self.port), ProfileServingHTTPRequestHandler
+        )
 
     def handle_single_request(self):
         self.httpd.handle_request()
@@ -63,10 +64,11 @@ class ViewGeckoProfile(object):
 
     def encode_url(self):
         # Encode url i.e.: https://profiler.firefox.com/from-url/http...
-        file_url = "http://{}:{}/{}".format(self.host, self.port,
-                                            os.path.basename(self.gecko_profile_data_path))
+        file_url = "http://{}:{}/{}".format(
+            self.host, self.port, os.path.basename(self.gecko_profile_data_path)
+        )
 
-        self.profiler_url = self.profiler_url + urllib.quote(file_url, safe='')
+        self.profiler_url = self.profiler_url + urllib.quote(file_url, safe="")
         LOG.info("Temporarily serving the profile from: %s" % file_url)
 
     def open_profile_in_browser(self):
@@ -79,8 +81,13 @@ def create_parser(mach_interface=False):
     parser = argparse.ArgumentParser()
     add_arg = parser.add_argument
 
-    add_arg('-p', '--profile-zip', required=True, dest='profile_zip',
-            help="path to the gecko profiles zip file to open in profiler.firefox.com")
+    add_arg(
+        "-p",
+        "--profile-zip",
+        required=True,
+        dest="profile_zip",
+        help="path to the gecko profiles zip file to open in profiler.firefox.com",
+    )
 
     add_logging_group(parser)
     return parser
@@ -115,7 +122,7 @@ def view_gecko_profile(profile_path):
 
 def start_from_command_line():
     args = parse_args(sys.argv[1:])
-    commandline.setup_logging('view-gecko-profile', args, {'tbpl': sys.stdout})
+    commandline.setup_logging("view-gecko-profile", args, {"tbpl": sys.stdout})
 
     view_gecko_profile(args.profile_zip)
 

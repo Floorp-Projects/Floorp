@@ -61,8 +61,9 @@ class TestViewGeckoProfile(unittest.TestCase):
             encoded_file_url = firefox_profiler_url.split("/")[-1]
             decoded_file_url = urllib.unquote(encoded_file_url)
             # Extract the actual file from the path.
-            self.thread = threading.Thread(target=access_profiler_link,
-                                           args=(decoded_file_url, self.response))
+            self.thread = threading.Thread(
+                target=access_profiler_link, args=(decoded_file_url, self.response)
+            )
             print("firefox_profiler_url %s" % firefox_profiler_url)
             print("encoded_file_url %s" % encoded_file_url)
             print("decoded_file_url %s" % decoded_file_url)
@@ -75,14 +76,22 @@ class TestViewGeckoProfile(unittest.TestCase):
         self.thread.join()
 
         # Compare the URLs, but replace the PORT value supplied, as that is dynamic.
-        expected_url = ("https://profiler.firefox.com/from-url/"
-                        "http%3A%2F%2F127.0.0.1%3A{PORT}%2Ffakeprofile.json")
+        expected_url = (
+            "https://profiler.firefox.com/from-url/"
+            "http%3A%2F%2F127.0.0.1%3A{PORT}%2Ffakeprofile.json"
+        )
         actual_url = re.sub("%3A\d+%2F", "%3A{PORT}%2F", self.firefox_profiler_url)
 
-        self.assertEqual(actual_url, expected_url,
-                         "The URL generated was correct for the Firefox Profiler.")
-        self.assertEqual(self.response[0], "FAKE_PROFILE",
-                         "The response from the serve provided the profile contents.")
+        self.assertEqual(
+            actual_url,
+            expected_url,
+            "The URL generated was correct for the Firefox Profiler.",
+        )
+        self.assertEqual(
+            self.response[0],
+            "FAKE_PROFILE",
+            "The response from the serve provided the profile contents.",
+        )
 
         shutil.rmtree(temp_dir)
 
