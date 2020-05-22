@@ -52,6 +52,7 @@ namespace {
 // protocol 0.  Oops!  We can get away with this until protocol 0
 // starts approaching its 65,536th message.
 enum {
+  IMPENDING_SHUTDOWN_MESSAGE_TYPE = kuint16max - 9,
   BUILD_IDS_MATCH_MESSAGE_TYPE = kuint16max - 8,
   BUILD_ID_MESSAGE_TYPE = kuint16max - 7,  // unused
   CHANNEL_OPENED_MESSAGE_TYPE = kuint16max - 6,
@@ -443,6 +444,12 @@ class IToplevelProtocol : public IProtocol {
   // will crash.
   bool OpenOnSameThread(MessageChannel* aChannel,
                         mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
+
+  /**
+   * This sends a special message that is processed on the IO thread, so that
+   * other actors can know that the process will soon shutdown.
+   */
+  void NotifyImpendingShutdown();
 
   void Close();
 

@@ -614,6 +614,10 @@ bool IToplevelProtocol::OpenOnSameThread(MessageChannel* aChannel, Side aSide) {
   return GetIPCChannel()->OpenOnSameThread(aChannel, aSide);
 }
 
+void IToplevelProtocol::NotifyImpendingShutdown() {
+  GetIPCChannel()->NotifyImpendingShutdown();
+}
+
 void IToplevelProtocol::Close() { GetIPCChannel()->Close(); }
 
 void IToplevelProtocol::SetReplyTimeoutMs(int32_t aTimeoutMs) {
