@@ -715,6 +715,29 @@ Result NSSCertDBTrustDomain::CheckRevocation(
             CRLiteLookupResult::CertificateValid;
       }
     }
+
+    // Also check stashed CRLite revocations. This information is
+    // deterministic and has already been validated by our infrastructure (it
+    // comes from signed CRLs), so if the stash says a certificate is revoked,
+    // it is.
+    bool isRevokedByStash = false;
+    rv = mCertStorage->IsCertRevokedByStash(
+        issuerSubjectPublicKeyInfoBytes, serialNumberBytes, &isRevokedByStash);
+    if (NS_FAILED(rv)) {
+      MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+              ("NSSCertDBTrustDomain::CheckRevocation: IsCertRevokedByStash "
+               "failed"));
+      if (mCRLiteMode == CRLiteMode::Enforce) {
+        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+      }
+    } else if (isRevokedByStash) {
+      MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+              ("NSSCertDBTrustDomain::CheckRevocation: IsCertRevokedByStash "
+               "returned true"));
+      if (mCRLiteMode == CRLiteMode::Enforce) {
+        return Result::ERROR_REVOKED_CERTIFICATE;
+      }
+    }
   }
 #else
   // "use" these fields to stop the compiler from complaining when
