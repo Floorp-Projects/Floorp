@@ -359,6 +359,19 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   already_AddRefed<ComputedStyle> ResolveComputedStyle(nsIContent* aContent);
 
+  enum class ItemFlag : uint8_t {
+    // Allow page-break before and after items to be created if the
+    // style asks for them.
+    AllowPageBreak,
+    IsGeneratedContent,
+    IsWithinSVGText,
+    AllowTextPathChild,
+    // The item is content created by an nsIAnonymousContentCreator frame.
+    IsAnonymousContentCreatorContent,
+  };
+
+  using ItemFlags = mozilla::EnumSet<ItemFlag>;
+
   // Add the frame construction items for the given aContent and aParentFrame
   // to the list.  This might add more than one item in some rare cases.
   // If aSuppressWhiteSpaceOptimizations is true, optimizations that
@@ -369,7 +382,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                  bool aSuppressWhiteSpaceOptimizations,
                                  const InsertionPoint& aInsertion,
                                  FrameConstructionItemList& aItems,
-                                 uint32_t aFlags = 0);
+                                 ItemFlags = {});
 
   // Helper method for AddFrameConstructionItems etc.
   // Unsets the need-frame/restyle bits on aContent.
@@ -386,7 +399,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                    bool aSuppressWhiteSpaceOptimizations,
                                    nsContainerFrame* aParentFrame,
                                    FrameConstructionItemList& aItems,
-                                   uint32_t aFlags = 0);
+                                   ItemFlags = {});
 
   // Construct the frames for the document element.  This can return null if the
   // document element is display:none, or if the document element has a
@@ -749,18 +762,18 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   const FrameConstructionData* FindDataForContent(nsIContent&, ComputedStyle&,
                                                   nsIFrame* aParentFrame,
-                                                  uint32_t aFlags);
+                                                  ItemFlags aFlags);
 
   // aParentFrame might be null.  If it is, that means it was an inline frame.
   static const FrameConstructionData* FindTextData(const Text&,
                                                    nsIFrame* aParentFrame);
   const FrameConstructionData* FindElementData(const Element&, ComputedStyle&,
                                                nsIFrame* aParentFrame,
-                                               uint32_t aFlags);
+                                               ItemFlags aFlags);
   const FrameConstructionData* FindElementTagData(const Element&,
                                                   ComputedStyle&,
                                                   nsIFrame* aParentFrame,
-                                                  uint32_t aFlags);
+                                                  ItemFlags aFlags);
 
   /* A function that takes an integer, content, style, and array of
      FrameConstructionDataByInts and finds the appropriate frame construction
@@ -1374,20 +1387,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                       nsContainerFrame* aParentFrame,
                                       nsFrameList& aFrameList);
 
-  // possible flags for AddFrameConstructionItemInternal's aFlags argument
-  /* Allow xbl:base to affect the tag/namespace used. */
-#define ITEM_ALLOW_XBL_BASE 0x1
-  /* Allow page-break before and after items to be created if the
-     style asks for them. */
-#define ITEM_ALLOW_PAGE_BREAK 0x2
-  /* The item is a generated content item. */
-#define ITEM_IS_GENERATED_CONTENT 0x4
-  /* The item is within an SVG text block frame. */
-#define ITEM_IS_WITHIN_SVG_TEXT 0x8
-  /* The item allows items to be created for SVG <textPath> children. */
-#define ITEM_ALLOWS_TEXT_PATH_CHILD 0x10
-  /* The item is content created by an nsIAnonymousContentCreator frame */
-#define ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT 0x20
   // The guts of AddFrameConstructionItems
   // aParentFrame might be null.  If it is, that means it was an
   // inline frame.
@@ -1395,8 +1394,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                          nsIContent* aContent,
                                          nsContainerFrame* aParentFrame,
                                          bool aSuppressWhiteSpaceOptimizations,
-                                         ComputedStyle* aComputedStyle,
-                                         uint32_t aFlags,
+                                         ComputedStyle*, ItemFlags,
                                          FrameConstructionItemList& aItems);
 
   /**
@@ -1545,7 +1543,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   void AddFCItemsForAnonymousContent(
       nsFrameConstructorState& aState, nsContainerFrame* aFrame,
       const nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonymousItems,
-      FrameConstructionItemList& aItemsToConstruct, uint32_t aExtraFlags = 0);
+      FrameConstructionItemList& aItemsToConstruct, ItemFlags aExtraFlags = {});
 
   /**
    * Construct the frames for the children of aContent.  "children" is defined
