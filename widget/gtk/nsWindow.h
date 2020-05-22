@@ -540,6 +540,7 @@ class nsWindow final : public nsBaseWidget {
   uint32_t mHasMappedToplevel : 1, mIsFullyObscured : 1, mRetryPointerGrab : 1;
   nsSizeMode mSizeState;
   float mAspectRatio;
+  float mAspectRatioSaved;
   nsIntPoint mClientOffset;
 
 #if GTK_CHECK_VERSION(3, 4, 0)
