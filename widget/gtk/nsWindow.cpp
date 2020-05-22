@@ -417,6 +417,7 @@ nsWindow::nsWindow() {
   mSizeState = nsSizeMode_Normal;
   mBoundsAreValid = true;
   mAspectRatio = 0.0f;
+  mAspectRatioSaved = 0.0f;
   mLastSizeMode = nsSizeMode_Normal;
   mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
 
@@ -5984,6 +5985,11 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
 
     if (mIsPIPWindow) {
       gtk_window_set_type_hint(GTK_WINDOW(mShell), GDK_WINDOW_TYPE_HINT_NORMAL);
+      if (gUseAspectRatio) {
+        mAspectRatioSaved = mAspectRatio;
+        mAspectRatio = 0.0f;
+        ApplySizeConstraints();
+      }
     }
 
     gtk_window_fullscreen(GTK_WINDOW(mShell));
@@ -5994,6 +6000,10 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
     if (mIsPIPWindow) {
       gtk_window_set_type_hint(GTK_WINDOW(mShell),
                                GDK_WINDOW_TYPE_HINT_UTILITY);
+      if (gUseAspectRatio) {
+        mAspectRatio = mAspectRatioSaved;
+        // ApplySizeConstraints();
+      }
     }
   }
 
