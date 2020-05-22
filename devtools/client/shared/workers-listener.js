@@ -12,8 +12,9 @@
  * Only supports one listener at a time.
  */
 class WorkersListener {
-  constructor(rootFront) {
+  constructor(rootFront, { registrationsOnly = false } = {}) {
     this.rootFront = rootFront;
+    this.registrationsOnly = registrationsOnly;
 
     // bind handlers
     this._onContentProcessTargetAvailable = this._onContentProcessTargetAvailable.bind(
@@ -48,12 +49,15 @@ class WorkersListener {
     }
 
     this._listener = listener;
-    this.rootFront.on("workerListChanged", this._listener);
-    this.rootFront.watchFronts(
-      "processDescriptor",
-      this._onProcessDescriptorAvailable,
-      this._onProcessDescriptorDestroyed
-    );
+    if (!this.registrationsOnly) {
+      this.rootFront.on("workerListChanged", this._listener);
+      this.rootFront.watchFronts(
+        "processDescriptor",
+        this._onProcessDescriptorAvailable,
+        this._onProcessDescriptorDestroyed
+      );
+      this.rootFront.on("processListChanged", this._listener);
+    }
 
     this.rootFront.watchFronts(
       "serviceWorkerRegistration",
@@ -62,7 +66,6 @@ class WorkersListener {
     );
 
     this.rootFront.on("serviceWorkerRegistrationListChanged", this._listener);
-    this.rootFront.on("processListChanged", this._listener);
   }
 
   removeListener(listener) {

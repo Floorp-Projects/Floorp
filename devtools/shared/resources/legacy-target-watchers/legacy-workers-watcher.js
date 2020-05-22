@@ -11,6 +11,10 @@ loader.lazyRequireGetter(
   true
 );
 
+const {
+  LegacyProcessesWatcher,
+} = require("devtools/shared/resources/legacy-target-watchers/legacy-processes-watcher");
+
 class LegacyWorkersWatcher {
   constructor(targetList, onTargetAvailable, onTargetDestroyed) {
     this.targetList = targetList;
@@ -82,6 +86,10 @@ class LegacyWorkersWatcher {
 
     // Fetch the list of already existing worker targets for this process target front.
     const existingTargets = this.targetsByProcess.get(targetFront);
+    if (!existingTargets) {
+      // unlisten was called while processing the workerListChanged callback.
+      return;
+    }
 
     // Process the new list to detect the ones being destroyed
     // Force destroying the targets
@@ -118,9 +126,26 @@ class LegacyWorkersWatcher {
         this._onProcessAvailable,
         this._onProcessDestroyed
       );
+
       // The ParentProcessTarget front is considered to be a FRAME instead of a PROCESS.
       // So process it manually here.
       await this._onProcessAvailable({ targetFront: this.target });
+    } else if (this._isServiceWorkerWatcher) {
+      this._legacyProcessesWatcher = new LegacyProcessesWatcher(
+        this.targetList,
+        targetFront => {
+          // Service workers only live in content processes.
+          if (!targetFront.isParentProcess) {
+            this._onProcessAvailable({ targetFront });
+          }
+        },
+        targetFront => {
+          if (!targetFront.isParentProcess) {
+            this._onProcessDestroyed({ targetFront });
+          }
+        }
+      );
+      await this._legacyProcessesWatcher.listen();
     } else {
       this.targetsByProcess.set(this.target, new Set());
       this._workerListChangedListener = this._workerListChanged.bind(
@@ -132,21 +157,33 @@ class LegacyWorkersWatcher {
     }
   }
 
+  _getProcessTargets() {
+    return this.targetList.getAllTargets(TargetList.TYPES.PROCESS);
+  }
+
   unlisten() {
+    // Stop listening for new process targets.
     if (this.target.isParentProcess) {
-      for (const targetFront of this.targetList.getAllTargets(
-        TargetList.TYPES.PROCESS
-      )) {
-        const listener = this.targetsListeners.get(targetFront);
-        targetFront.off("workerListChanged", listener);
-        this.targetsByProcess.delete(targetFront);
-        this.targetsListeners.delete(targetFront);
-      }
       this.targetList.unwatchTargets(
         [TargetList.TYPES.PROCESS],
         this._onProcessAvailable,
         this._onProcessDestroyed
       );
+    } else if (this._isServiceWorkerWatcher) {
+      this._legacyProcessesWatcher.unlisten();
+    }
+
+    // Cleanup the targetsByProcess/targetsListeners maps, and unsubscribe from
+    // all targetFronts. Process target fronts are either stored locally when
+    // watching service workers for the content toolbox, or can be retrieved via
+    // the TargetList API otherwise (see _getProcessTargets implementations).
+    if (this.target.isParentProcess || this._isServiceWorkerWatcher) {
+      for (const targetFront of this._getProcessTargets()) {
+        const listener = this.targetsListeners.get(targetFront);
+        targetFront.off("workerListChanged", listener);
+        this.targetsByProcess.delete(targetFront);
+        this.targetsListeners.delete(targetFront);
+      }
     } else {
       this.target.off("workerListChanged", this._workerListChangedListener);
       delete this._workerListChangedListener;

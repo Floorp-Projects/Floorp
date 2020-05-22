@@ -549,8 +549,6 @@ function BuildConditionSandbox(aURL) {
     sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists;
     sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
 
-    sandbox.skiaPdf = false;
-
 #ifdef RELEASE_OR_BETA
     sandbox.release_or_beta = true;
 #else

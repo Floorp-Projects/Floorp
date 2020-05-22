@@ -1459,8 +1459,9 @@ class UrlbarView {
     let engine =
       this.oneOffSearchButtons.selectedButton &&
       this.oneOffSearchButtons.selectedButton.engine;
-    for (let i = 0; i < this._queryContext.results.length; i++) {
-      let result = this._queryContext.results[i];
+
+    for (let item of this._rows.children) {
+      let result = item.result;
       if (
         result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
         (!result.heuristic &&
@@ -1478,7 +1479,6 @@ class UrlbarView {
         result.payload.engine = result.payload.originalEngine;
         delete result.payload.originalEngine;
       }
-      let item = this._rows.children[i];
       // If a one-off button is the only selection, force the heuristic result
       // to show its action text, so the engine name is visible.
       if (result.heuristic && engine && !this.selectedElement) {

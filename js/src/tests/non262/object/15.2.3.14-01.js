@@ -55,7 +55,7 @@ assertEq(arraysEqual(keys, ["0", "1", "2"]), true,
 
 o = /./.exec("abc");
 keys = Object.keys(o);
-assertEq(arraysEqual(keys, ["0", "index", "input"]), true,
+assertEq(arraysEqual(keys, ["0", "index", "input", "groups"]), true,
          "" + keys);
 
 o = { a: 1, b: 2, c: 3 };

@@ -32,7 +32,7 @@ if ("values" in Object) {
 
     o = /./.exec("abc");
     values = Object.values(o);
-    assertDeepEq(values, ["a", 0, "abc"]);
+    assertDeepEq(values, ["a", 0, "abc", undefined]);
 
     o = { a: 1, b: 2, c: 3 };
     delete o.b;

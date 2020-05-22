@@ -1764,6 +1764,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // confirmed the issue occurs with. On beta/release, we block everything
     // earlier to minimize the probability of missing a particular driver.
 #ifdef EARLY_BETA_OR_EARLIER
+#ifndef NIGHTLY_BUILD
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(
         OperatingSystem::Windows, DeviceFamily::IntelAll,
         nsIGfxInfo::FEATURE_WEBRENDER,
@@ -1785,6 +1786,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(21, 20, 16, 4471), V(21, 20, 16, 4565),
         "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_21.20.16.4471_21.20.16.4565",
         "Intel driver >= 21.20.16.4590");
+#endif
 #else
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows, DeviceFamily::IntelAll,

@@ -1,4 +1,4 @@
-// |reftest| skip -- regexp-named-groups,regexp-match-indices is not supported
+// |reftest| skip -- regexp-match-indices is not supported
 // Copyright 2019 Ron Buckton. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

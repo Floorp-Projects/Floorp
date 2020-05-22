@@ -294,19 +294,6 @@ static nsresult GetSeqFrameAndCountPagesInternal(
 }
 
 /**
- * Recursively sets the PO items to be printed "As Is"
- * from the given item down into the treei
- */
-static void SetPrintAsIs(nsPrintObject* aPO, bool aAsIs = true) {
-  NS_ASSERTION(aPO, "Pointer is null!");
-
-  aPO->mPrintAsIs = aAsIs;
-  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-    SetPrintAsIs(kid.get(), aAsIs);
-  }
-}
-
-/**
  * This method is key to the entire print mechanism.
  *
  * This "maps" or figures out which sub-doc represents a
@@ -355,7 +342,7 @@ static void MapContentForPO(const UniquePtr<nsPrintObject>& aPO,
         } else {
           // Assume something iframe-like, i.e. iframe, object, or embed
           po->mFrameType = eIFrame;
-          SetPrintAsIs(po, true);
+          po->SetPrintAsIs(true);
           NS_ASSERTION(po->mParent, "The root must be a parent");
           po->mParent->mPrintAsIs = true;
         }
@@ -1232,20 +1219,6 @@ bool nsPrintJob::IsThereAnIFrameSelected(nsIDocShell* aDocShell,
   return iFrameIsSelected;
 }
 
-//---------------------------------------------------------------------
-// Recursively sets all the PO items to be printed
-// from the given item down into the tree
-void nsPrintJob::SetPrintPO(nsPrintObject* aPO, bool aPrint) {
-  NS_ASSERTION(aPO, "Pointer is null!");
-
-  // Set whether to print flag
-  aPO->mDontPrint = !aPrint;
-
-  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-    SetPrintPO(kid.get(), aPrint);
-  }
-}
-
 // static
 void nsPrintJob::GetDisplayTitleAndURL(Document& aDoc,
                                        nsIPrintSettings* aSettings,
@@ -1705,7 +1678,7 @@ nsresult nsPrintJob::ReflowDocList(const UniquePtr<nsPrintObject>& aPO,
     nsIFrame* frame =
         aPO->mContent ? aPO->mContent->GetPrimaryFrame() : nullptr;
     if (!frame || !frame->StyleVisibility()->IsVisible()) {
-      SetPrintPO(aPO.get(), false);
+      aPO->EnablePrinting(false);
       aPO->mInvisible = true;
       return NS_OK;
     }
@@ -1966,7 +1939,7 @@ nsresult nsPrintJob::SetRootView(nsPrintObject* aPO, bool& doReturn,
     // Without a frame, this document can't be displayed; therefore, there is no
     // point to reflowing it
     if (!frame) {
-      SetPrintPO(aPO, false);
+      aPO->EnablePrinting(false);
       doReturn = true;
       return NS_OK;
     }
@@ -2712,7 +2685,7 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   if (treatAsNonFrameset &&
       (printRangeType == nsIPrintSettings::kRangeAllPages ||
        printRangeType == nsIPrintSettings::kRangeSpecifiedPageRange)) {
-    SetPrintPO(printData->mPrintObject.get(), true);
+    printData->mPrintObject->EnablePrinting(true);
 
     // Set the children so they are PrinAsIs
     // In this case, the children are probably IFrames
@@ -2720,7 +2693,7 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
       for (const UniquePtr<nsPrintObject>& po :
            printData->mPrintObject->mKids) {
         NS_ASSERTION(po, "nsPrintObject can't be null!");
-        SetPrintAsIs(po.get());
+        po->SetPrintAsIs(true);
       }
     }
     PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
@@ -2737,10 +2710,10 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
                                                   printData->mCurrentFocusWin);
       if (po) {
         // Makes sure all of its children are be printed "AsIs"
-        SetPrintAsIs(po);
+        po->SetPrintAsIs(true);
 
         // Now, only enable this POs (the selected PO) and all of its children
-        SetPrintPO(po, true);
+        po->EnablePrinting(true);
 
         // check to see if we have a range selection,
         // as oppose to a insert selection
@@ -2765,7 +2738,7 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
         nsCOMPtr<nsPIDOMWindowOuter> domWin = po->mDocShell->GetWindow();
         if (IsThereARangeSelection(domWin)) {
           printData->mCurrentFocusWin = std::move(domWin);
-          SetPrintPO(po, true);
+          po->EnablePrinting(true);
           break;
         }
       }
@@ -2774,8 +2747,8 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   }
 
   if (printRangeType != nsIPrintSettings::kRangeSelection) {
-    SetPrintAsIs(printData->mPrintObject.get());
-    SetPrintPO(printData->mPrintObject.get(), true);
+    printData->mPrintObject->SetPrintAsIs(true);
+    printData->mPrintObject->EnablePrinting(true);
     return NS_OK;
   }
 
@@ -2789,11 +2762,11 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
       // because then the "DoEndPage" gets called and it shouldn't
       if (po->mKids.Length() > 0) {
         // Makes sure that itself, and all of its children are printed "AsIs"
-        SetPrintAsIs(po);
+        po->SetPrintAsIs(true);
       }
 
       // Now, only enable this POs (the selected PO) and all of its children
-      SetPrintPO(po, true);
+      po->EnablePrinting(true);
     }
   }
 

@@ -27,7 +27,11 @@ graph-week-summary-private-window = Trackers { -brand-short-name } blocked this 
 
 protection-report-webpage-title = Protections Dashboard
 protection-report-page-content-title = Protections Dashboard
+# This message shows when all privacy protections are turned off, which is why we use the word "can", Firefox is able to protect your privacy, but it is currently not.
 protection-report-page-summary = { -brand-short-name } can protect your privacy behind the scenes while you browse. This is a personalized summary of those protections, including tools to take control of your online security.
+# This message shows when at least some protections are turned on, we are more assertive compared to the message above, Firefox is actively protecting you.
+protection-report-page-summary-default = { -brand-short-name } protects your privacy behind the scenes while you browse. This is a personalized summary of those protections, including tools to take control of your online security.
+
 protection-report-settings-link = Manage your privacy and security settings
 
 etp-card-title-always = Enhanced Tracking Protection: Always On

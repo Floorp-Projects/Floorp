@@ -1519,7 +1519,7 @@ static bool intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp) {
 static bool intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc,
                                             Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 5);
+  MOZ_ASSERT(args.length() == 6);
 
   RootedArrayObject matchResult(cx, &args[0].toObject().as<ArrayObject>());
 
@@ -1539,9 +1539,12 @@ static bool intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc,
   int32_t firstDollarIndex = int32_t(args[4].toNumber());
   MOZ_ASSERT(firstDollarIndex >= 0);
 
+  RootedValue namedCaptures(cx, args[5]);
+  MOZ_ASSERT(namedCaptures.isUndefined() || namedCaptures.isObject());
+
   return RegExpGetSubstitution(cx, matchResult, string, size_t(position),
                                replacement, size_t(firstDollarIndex),
-                               args.rval());
+                               namedCaptures, args.rval());
 }
 
 static bool intrinsic_StringReplaceString(JSContext* cx, unsigned argc,

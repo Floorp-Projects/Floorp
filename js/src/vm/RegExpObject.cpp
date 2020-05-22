@@ -961,6 +961,7 @@ void RegExpShared::traceChildren(JSTracer* trc) {
     for (auto& comp : compilationArray) {
       TraceNullableEdge(trc, &comp.jitCode, "RegExpShared code");
     }
+    TraceNullableEdge(trc, &groupsTemplate_, "RegExpShared groups template");
   }
 #else
   for (auto& comp : compilationArray) {
@@ -985,6 +986,13 @@ void RegExpShared::finalize(JSFreeOp* fop) {
       fop->free_(this, comp.byteCode, length, MemoryUse::RegExpSharedBytecode);
     }
   }
+#ifdef ENABLE_NEW_REGEXP
+  if (namedCaptureIndices_) {
+    size_t length = numNamedCaptures() * sizeof(uint32_t);
+    fop->free_(this, namedCaptureIndices_, length,
+               MemoryUse::RegExpSharedNamedCaptureData);
+  }
+#endif
   tables.~JitCodeTables();
 }
 
@@ -1124,6 +1132,66 @@ void RegExpShared::useRegExpMatch(size_t pairCount) {
   kind_ = RegExpShared::Kind::RegExp;
   pairCount_ = pairCount;
   ticks_ = jit::JitOptions.regexpWarmUpThreshold;
+}
+
+/* static */
+bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
+                                           HandleNativeObject namedCaptures) {
+  MOZ_ASSERT(re->kind() == RegExpShared::Kind::RegExp);
+  MOZ_ASSERT(!re->groupsTemplate_);
+  MOZ_ASSERT(!re->namedCaptureIndices_);
+
+  // The irregexp parser returns named capture information in the form
+  // of an ArrayObject, where even elements store the capture name and
+  // odd elements store the corresponding capture index. We create a
+  // template object with a property for each capture name, and store
+  // the capture indices as a heap-allocated array.
+  uint32_t numNamedCaptures = namedCaptures->getDenseInitializedLength() / 2;
+
+  // Create a plain template object.
+  RootedPlainObject templateObject(
+      cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+  if (!templateObject) {
+    return false;
+  }
+
+  // Create a new group for the template.
+  Rooted<TaggedProto> proto(cx, templateObject->taggedProto());
+  ObjectGroup* group = ObjectGroupRealm::makeGroup(
+      cx, templateObject->realm(), templateObject->getClass(), proto);
+  if (!group) {
+    return false;
+  }
+  templateObject->setGroup(group);
+
+  // Initialize the properties of the template.
+  RootedValue dummyString(cx, StringValue(cx->runtime()->emptyString));
+  for (uint32_t i = 0; i < numNamedCaptures; i++) {
+    RootedString name(cx, namedCaptures->getDenseElement(i * 2).toString());
+    RootedId id(cx, NameToId(name->asAtom().asPropertyName()));
+    if (!NativeDefineDataProperty(cx, templateObject, id, dummyString,
+                                  JSPROP_ENUMERATE)) {
+      return false;
+    }
+  }
+
+  // Allocate the capture index array.
+  uint32_t arraySize = numNamedCaptures * sizeof(uint32_t);
+  uint32_t* captureIndices = static_cast<uint32_t*>(js_malloc(arraySize));
+  if (!captureIndices) {
+    return false;
+  }
+
+  // Populate the capture index array
+  for (uint32_t i = 0; i < numNamedCaptures; i++) {
+    captureIndices[i] = namedCaptures->getDenseElement(i * 2 + 1).toInt32();
+  }
+
+  re->numNamedCaptures_ = numNamedCaptures;
+  re->groupsTemplate_ = templateObject;
+  re->namedCaptureIndices_ = captureIndices;
+  js::AddCellMemory(re, arraySize, MemoryUse::RegExpSharedNamedCaptureData);
+  return true;
 }
 
 void RegExpShared::tierUpTick() {
@@ -1391,7 +1459,7 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
       cx, NewDenseUnallocatedArray(cx, RegExpObject::MaxPairCount, nullptr,
                                    TenuredObject));
   if (!templateObject) {
-    return matchResultTemplateObject_;  // = nullptr
+    return nullptr;
   }
 
   // Create a new group for the template.
@@ -1399,7 +1467,7 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
   ObjectGroup* group = ObjectGroupRealm::makeGroup(
       cx, templateObject->realm(), templateObject->getClass(), proto);
   if (!group) {
-    return matchResultTemplateObject_;  // = nullptr
+    return nullptr;
   }
   templateObject->setGroup(group);
 
@@ -1407,22 +1475,39 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
   RootedValue index(cx, Int32Value(0));
   if (!NativeDefineDataProperty(cx, templateObject, cx->names().index, index,
                                 JSPROP_ENUMERATE)) {
-    return matchResultTemplateObject_;  // = nullptr
+    return nullptr;
   }
 
   /* Set dummy input property */
   RootedValue inputVal(cx, StringValue(cx->runtime()->emptyString));
   if (!NativeDefineDataProperty(cx, templateObject, cx->names().input, inputVal,
                                 JSPROP_ENUMERATE)) {
-    return matchResultTemplateObject_;  // = nullptr
+    return nullptr;
   }
 
+#ifdef ENABLE_NEW_REGEXP
+  /* Set dummy groups property */
+  RootedValue groupsVal(cx, UndefinedValue());
+  if (!NativeDefineDataProperty(cx, templateObject, cx->names().groups,
+                                groupsVal, JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+  AddTypePropertyId(cx, templateObject, NameToId(cx->names().groups),
+                    TypeSet::AnyObjectType());
+
   // Make sure that the properties are in the right slots.
-  DebugOnly<Shape*> shape = templateObject->lastProperty();
-  MOZ_ASSERT(shape->previous()->slot() == MatchResultObjectIndexSlot &&
-             shape->previous()->propidRef() == NameToId(cx->names().index));
-  MOZ_ASSERT(shape->slot() == MatchResultObjectInputSlot &&
-             shape->propidRef() == NameToId(cx->names().input));
+#  ifdef DEBUG
+  Shape* groupsShape = templateObject->lastProperty();
+  MOZ_ASSERT(groupsShape->slot() == MatchResultObjectGroupsSlot &&
+             groupsShape->propidRef() == NameToId(cx->names().groups));
+  Shape* inputShape = groupsShape->previous().get();
+  MOZ_ASSERT(inputShape->slot() == MatchResultObjectInputSlot &&
+             inputShape->propidRef() == NameToId(cx->names().input));
+  Shape* indexShape = inputShape->previous().get();
+  MOZ_ASSERT(indexShape->slot() == MatchResultObjectIndexSlot &&
+             indexShape->propidRef() == NameToId(cx->names().index));
+#  endif
+#endif
 
   // Make sure type information reflects the indexed properties which might
   // be added.
