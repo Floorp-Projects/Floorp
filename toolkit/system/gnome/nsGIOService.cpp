@@ -12,7 +12,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsArray.h"
 #include "nsPrintfCString.h"
-#include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/Preferences.h"
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -20,6 +20,8 @@
 #  include <dbus/dbus-glib.h>
 #  include <dbus/dbus-glib-lowlevel.h>
 #endif
+
+using namespace mozilla;
 
 // We use the same code as gtk_should_use_portal() to detect if we're in flatpak
 // env
@@ -39,8 +41,8 @@ static bool GetFlatpakPortalEnv() {
 
 static bool GetShouldUseFlatpakPortal() {
   static bool sFlatpakPortalEnv = GetFlatpakPortalEnv();
-  return mozilla::StaticPrefs::widget_use_xdg_desktop_portal()
-             ? true
+  return Preferences::HasUserValue("widget.use-xdg-desktop-portal")
+             ? Preferences::GetBool("widget.use-xdg-desktop-portal", false)
              : sFlatpakPortalEnv;
 }
 
