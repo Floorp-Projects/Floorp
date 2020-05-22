@@ -704,10 +704,6 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                                      os.path.basename(_python_interp),
                                      'site-packages')
 
-            # If running gecko profiling, install its requirements
-            if self.gecko_profile:
-                self._install_view_gecko_profile_req()
-
             sys.path.append(_path)
             return
 
@@ -740,10 +736,6 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                                        'requirements.txt')]
         )
 
-        # If we're running gecko profiling, install its requirements
-        if self.gecko_profile:
-            self._install_view_gecko_profile_req()
-
     def install(self):
         if not self.config.get('noinstall', False):
             if self.app in self.firefox_android_browsers:
@@ -751,17 +743,6 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                 self.install_apk(self.installer_path)
             else:
                 super(Raptor, self).install()
-
-    def _install_view_gecko_profile_req(self):
-        # If running locally and gecko profiing is on, we will be using the
-        # view-gecko-profile tool which has its own requirements too
-        if self.gecko_profile and self.run_local:
-            tools = os.path.join(self.config['repo_path'], 'testing', 'tools')
-            view_gecko_profile_req = os.path.join(tools,
-                                                  'view_gecko_profile',
-                                                  'requirements.txt')
-            self.info("Installing requirements for the view-gecko-profile tool")
-            self.install_module(requirements=[view_gecko_profile_req])
 
     def _artifact_perf_data(self, src, dest):
         if not os.path.isdir(os.path.dirname(dest)):
