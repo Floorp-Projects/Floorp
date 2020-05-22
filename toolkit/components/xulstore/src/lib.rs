@@ -7,8 +7,6 @@ extern crate crossbeam_utils;
 extern crate cstr;
 #[macro_use]
 extern crate failure;
-#[macro_use]
-extern crate lazy_static;
 extern crate libc;
 extern crate lmdb;
 #[macro_use]
@@ -16,6 +14,7 @@ extern crate log;
 extern crate moz_task;
 extern crate nserror;
 extern crate nsstring;
+extern crate once_cell;
 extern crate rkv;
 extern crate serde_json;
 extern crate tempfile;
