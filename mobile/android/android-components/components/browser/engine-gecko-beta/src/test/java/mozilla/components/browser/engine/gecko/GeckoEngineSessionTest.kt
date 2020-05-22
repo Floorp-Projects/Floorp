@@ -22,6 +22,7 @@ import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -867,6 +868,43 @@ class GeckoEngineSessionTest {
         historyDelegate.value.getVisited(geckoSession, arrayOf("https://www.mozilla.com", "https://www.mozilla.org"))
             engineSession.job.children.forEach { it.join() }
             verify(historyTrackingDelegate, never()).getVisited(anyList())
+    }
+
+    @Test
+    fun `notifies configured history delegate of state changes`() = runBlockingTest {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider,
+            context = coroutineContext)
+        val observer = mock<EngineSession.Observer>()
+        engineSession.register(observer)
+
+        captureDelegates()
+
+        class MockHistoryList(
+            items: List<GeckoSession.HistoryDelegate.HistoryItem>,
+            private val currentIndex: Int
+        ) : ArrayList<GeckoSession.HistoryDelegate.HistoryItem>(items), GeckoSession.HistoryDelegate.HistoryList {
+            override fun getCurrentIndex() = currentIndex
+        }
+
+        fun mockHistoryItem(title: String, uri: String): GeckoSession.HistoryDelegate.HistoryItem {
+            val item = mock<GeckoSession.HistoryDelegate.HistoryItem>()
+            whenever(item.title).thenReturn(title)
+            whenever(item.uri).thenReturn(uri)
+            return item
+        }
+
+        historyDelegate.value.onHistoryStateChange(mock(), MockHistoryList(emptyList(), 0))
+        verify(observer).onHistoryStateChanged(emptyList(), 0)
+
+        historyDelegate.value.onHistoryStateChange(mock(), MockHistoryList(listOf(
+            mockHistoryItem("Firefox", "https://firefox.com"),
+            mockHistoryItem("Mozilla", "http://mozilla.org")
+        ), 1))
+        verify(observer).onHistoryStateChanged(listOf(
+            HistoryItem("Firefox", "https://firefox.com"),
+            HistoryItem("Mozilla", "http://mozilla.org")
+        ), 1)
     }
 
     @Test

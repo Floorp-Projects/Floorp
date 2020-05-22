@@ -26,6 +26,12 @@ permalink: /changelog/
 * **browser-thumbnails**
   * Adds `ThumbnailDiskCache` for storing and restoring thumbnail bitmaps into a disk cache.
 
+* **concept-engine**
+  * Adds `onHistoryStateChanged` method and corresponding `HistoryItem` data class.
+
+* **browser-state**
+  * Adds `history` to `ContentState` to check the back and forward history list.
+
 # 42.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v41.0.0...42.0.0)

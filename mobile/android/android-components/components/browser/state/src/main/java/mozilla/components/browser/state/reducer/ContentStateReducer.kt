@@ -9,6 +9,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.content.HistoryState
 
 internal object ContentStateReducer {
     /**
@@ -119,6 +120,9 @@ internal object ContentStateReducer {
             }
             is ContentAction.UpdateFirstContentfulPaintStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(firstContentfulPaint = action.firstContentfulPaint)
+            }
+            is ContentAction.UpdateHistoryStateAction -> updateContentState(state, action.sessionId) {
+                it.copy(history = HistoryState(action.historyList, action.currentIndex))
             }
         }
     }

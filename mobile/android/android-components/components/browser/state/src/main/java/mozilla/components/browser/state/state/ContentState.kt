@@ -7,6 +7,7 @@ package mozilla.components.browser.state.state
 import android.graphics.Bitmap
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
+import mozilla.components.browser.state.state.content.HistoryState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.prompt.PromptRequest
@@ -62,5 +63,6 @@ data class ContentState(
     val canGoBack: Boolean = false,
     val canGoForward: Boolean = false,
     val webAppManifest: WebAppManifest? = null,
-    val firstContentfulPaint: Boolean = false
+    val firstContentfulPaint: Boolean = false,
+    val history: HistoryState = HistoryState()
 )
