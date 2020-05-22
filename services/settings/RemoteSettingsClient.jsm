@@ -286,6 +286,8 @@ class RemoteSettingsClient extends EventEmitter {
 
   /**
    * Retrieve the collection timestamp for the last synchronization.
+   * This is an opaque and comparable value assigned automatically by
+   * the server.
    *
    * @returns {number}
    *          The timestamp in milliseconds, returns -1 if retrieving
@@ -477,11 +479,10 @@ class RemoteSettingsClient extends EventEmitter {
           Cu.reportError(e);
         }
       }
-
       let syncResult;
       try {
         // Is local timestamp up to date with the server?
-        if (expectedTimestamp <= collectionLastModified) {
+        if (expectedTimestamp == collectionLastModified) {
           console.debug(`${this.identifier} local data is up-to-date`);
           reportStatus = UptakeTelemetry.STATUS.UP_TO_DATE;
 
@@ -519,8 +520,9 @@ class RemoteSettingsClient extends EventEmitter {
             deleted: [],
           };
         } else {
-          // Local data is outdated.
-          // Fetch changes from server, and make sure we overwrite local data.
+          // Local data is either outdated or tampered.
+          // In both cases we will fetch changes from server,
+          // and make sure we overwrite local data.
           const startSyncDB = Cu.now() * 1000;
           syncResult = await this._importChanges(
             localRecords,
