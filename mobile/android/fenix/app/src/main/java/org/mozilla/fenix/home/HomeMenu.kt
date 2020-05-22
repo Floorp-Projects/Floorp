@@ -8,6 +8,9 @@ import android.content.Context
 import androidx.core.content.ContextCompat.getColor
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.ext.getHighlight
@@ -174,21 +177,31 @@ class HomeMenu(
             }
             context.components.backgroundServices.accountManager.register(object : AccountObserver {
                 override fun onAuthenticationProblems() {
-                    onMenuBuilderChanged(BrowserMenuBuilder(
-                        listOf(reconnectToSyncItem) + coreMenuItems
-                    ))
+                    lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                        onMenuBuilderChanged(BrowserMenuBuilder(
+                            listOf(reconnectToSyncItem) + coreMenuItems
+                        ))
+                    }
                 }
 
                 override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-                    onMenuBuilderChanged(BrowserMenuBuilder(
-                        coreMenuItems
-                    ))
+                    lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                        onMenuBuilderChanged(
+                            BrowserMenuBuilder(
+                                coreMenuItems
+                            )
+                        )
+                    }
                 }
 
                 override fun onLoggedOut() {
-                    onMenuBuilderChanged(BrowserMenuBuilder(
-                        coreMenuItems
-                    ))
+                    lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                        onMenuBuilderChanged(
+                            BrowserMenuBuilder(
+                                coreMenuItems
+                            )
+                        )
+                    }
                 }
             }, lifecycleOwner)
         }
