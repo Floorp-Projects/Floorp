@@ -526,6 +526,7 @@ class LookAndFeel {
    */
   static nsTArray<LookAndFeelInt> GetIntCache();
   static void SetIntCache(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache);
+  static void NotifyChangedAllWindows();
 };
 
 }  // namespace mozilla

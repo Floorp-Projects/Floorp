@@ -279,7 +279,7 @@ void nsXPLookAndFeel::IntPrefChanged(nsLookAndFeelIntPref* data) {
 #endif
   }
 
-  NotifyPrefChanged();
+  NotifyChangedAllWindows();
 }
 
 // static
@@ -305,7 +305,7 @@ void nsXPLookAndFeel::FloatPrefChanged(nsLookAndFeelFloatPref* data) {
 #endif
   }
 
-  NotifyPrefChanged();
+  NotifyChangedAllWindows();
 }
 
 // static
@@ -339,15 +339,7 @@ void nsXPLookAndFeel::ColorPrefChanged(unsigned int index,
 #endif
   }
 
-  NotifyPrefChanged();
-}
-
-// static
-void nsXPLookAndFeel::NotifyPrefChanged() {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    obs->NotifyObservers(nullptr, "look-and-feel-pref-changed", nullptr);
-  }
+  NotifyChangedAllWindows();
 }
 
 void nsXPLookAndFeel::InitFromPref(nsLookAndFeelIntPref* aPref) {
@@ -1017,6 +1009,13 @@ void nsXPLookAndFeel::RecordTelemetry() {
 }
 
 namespace mozilla {
+
+// static
+void LookAndFeel::NotifyChangedAllWindows() {
+  if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+    obs->NotifyObservers(nullptr, "look-and-feel-changed", nullptr);
+  }
+}
 
 // static
 nsresult LookAndFeel::GetColor(ColorID aID, nscolor* aResult) {
