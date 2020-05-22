@@ -39,7 +39,7 @@ ConsoleListener.prototype = {
 
   waitFor(cb) {
     return new Promise(resolve => {
-      this._cb = SpecialPowers.wrapCallback(cb);
+      this._cb = cb;
       this._resolve = resolve;
     });
   },

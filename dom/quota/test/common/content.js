@@ -48,7 +48,21 @@ function requestFinished(request) {
   return new Promise(function(resolve, reject) {
     request.callback = SpecialPowers.wrapCallback(function(req) {
       if (req.resultCode === SpecialPowers.Cr.NS_OK) {
-        resolve(req.result);
+        let result = req.result;
+        if (
+          SpecialPowers.call_Instanceof(result, SpecialPowers.Ci.nsISDBResult)
+        ) {
+          let wrapper = {};
+          for (let i in result) {
+            if (typeof result[i] == "function") {
+              wrapper[i] = SpecialPowers.unwrap(result[i]);
+            } else {
+              wrapper[i] = result[i];
+            }
+          }
+          result = wrapper;
+        }
+        resolve(result);
       } else {
         reject(req.resultCode);
       }
