@@ -682,6 +682,14 @@ static uint32_t GetSpoofedVersion() {
   uint32_t firefoxVersion = appVersion.ToInteger(&rv);
   NS_ENSURE_SUCCESS(rv, kKnownEsrVersion);
 
+  // Some add-on tests set the Firefox version to low numbers like 1 or 42,
+  // which causes the spoofed version calculation's unsigned int subtraction
+  // below to wrap around zero to Firefox versions like 4294967287. This
+  // function should always return an ESR version, so return a good one now.
+  if (firefoxVersion < kKnownEsrVersion) {
+    return kKnownEsrVersion;
+  }
+
 #ifdef DEBUG
   // If we are running in Firefox ESR, determine whether the formula of ESR
   // version has changed.  Once changed, we must update the formula in this
@@ -699,13 +707,6 @@ static uint32_t GetSpoofedVersion() {
   // until ESR 104±1 in 2022. :) We have a debug assert above to catch if the
   // spoofed version doesn't match the actual ESR version then.
   // We infer the last and closest ESR version based on this rule.
-
-  if (firefoxVersion < 78) {
-    // 68 is the last ESR version from the old six-week release cadence. After
-    // 78 we can assume the four-week new release cadence.
-    return 68;
-  }
-
   uint32_t spoofedVersion =
       firefoxVersion - ((firefoxVersion - kKnownEsrVersion) % 13);
 
