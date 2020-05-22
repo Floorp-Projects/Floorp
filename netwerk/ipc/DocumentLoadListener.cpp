@@ -820,6 +820,7 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
 
   if (!mRedirectChannelId) {
     if (!aSucceeded) {
+      mChannel->Cancel(NS_BINDING_ABORTED);
       mChannel->Resume();
       return;
     }
@@ -859,6 +860,7 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
     if (redirectChannel) {
       redirectChannel->Delete();
     }
+    mChannel->Cancel(NS_BINDING_ABORTED);
     mChannel->Resume();
     if (auto* ctx = GetBrowsingContext()) {
       ctx->EndDocumentLoad(this);
