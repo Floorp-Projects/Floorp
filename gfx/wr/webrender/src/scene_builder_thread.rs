@@ -97,7 +97,7 @@ pub struct LoadScene {
     pub interners: Interners,
 }
 
-// Message from render backend to scene builder.
+// Message to the scene builder thread.
 pub enum SceneBuilderRequest {
     Transactions(Vec<Box<TransactionMsg>>),
     ExternalEvent(ExternalEvent),
@@ -106,12 +106,19 @@ pub enum SceneBuilderRequest {
     GetGlyphDimensions(GlyphDimensionRequest),
     GetGlyphIndices(GlyphIndexRequest),
     WakeUp,
+    Stop,
     Flush(Sender<()>),
     ClearNamespace(IdNamespace),
-    SetFrameBuilderConfig(FrameBuilderConfig),
     SimulateLongSceneBuild(u32),
     SimulateLongLowPrioritySceneBuild(u32),
-    Stop,
+    /// Enqueue this to inform the scene builder to pick one message from
+    /// backend_rx.
+    BackendMessage,
+}
+
+/// Message from render backend to scene builder.
+pub enum BackendSceneBuilderRequest {
+    SetFrameBuilderConfig(FrameBuilderConfig),
     ReportMemory(Box<MemoryReport>, Sender<Box<MemoryReport>>),
     #[cfg(feature = "capture")]
     SaveScene(CaptureConfig),
@@ -237,6 +244,7 @@ impl Document {
 pub struct SceneBuilderThread {
     documents: FastHashMap<DocumentId, Document>,
     rx: Receiver<SceneBuilderRequest>,
+    backend_rx: Receiver<BackendSceneBuilderRequest>,
     tx: Sender<SceneBuilderResult>,
     api_tx: Sender<ApiMsg>,
     config: FrameBuilderConfig,
@@ -252,6 +260,7 @@ pub struct SceneBuilderThread {
 
 pub struct SceneBuilderThreadChannels {
     rx: Receiver<SceneBuilderRequest>,
+    backend_rx: Receiver<BackendSceneBuilderRequest>,
     tx: Sender<SceneBuilderResult>,
     api_tx: Sender<ApiMsg>,
 }
@@ -259,16 +268,19 @@ pub struct SceneBuilderThreadChannels {
 impl SceneBuilderThreadChannels {
     pub fn new(
         api_tx: Sender<ApiMsg>
-    ) -> (Self, Sender<SceneBuilderRequest>, Receiver<SceneBuilderResult>) {
+    ) -> (Self, Sender<SceneBuilderRequest>, Sender<BackendSceneBuilderRequest>, Receiver<SceneBuilderResult>) {
         let (in_tx, in_rx) = channel();
         let (out_tx, out_rx) = channel();
+        let (backend_tx, backend_rx) = channel();
         (
             Self {
                 rx: in_rx,
+                backend_rx,
                 tx: out_tx,
                 api_tx,
             },
             in_tx,
+            backend_tx,
             out_rx,
         )
     }
@@ -283,11 +295,12 @@ impl SceneBuilderThread {
         hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
         channels: SceneBuilderThreadChannels,
     ) -> Self {
-        let SceneBuilderThreadChannels { rx, tx, api_tx } = channels;
+        let SceneBuilderThreadChannels { rx, backend_rx, tx, api_tx } = channels;
 
         Self {
             documents: Default::default(),
             rx,
+            backend_rx,
             tx,
             api_tx,
             config,
@@ -347,36 +360,10 @@ impl SceneBuilderThread {
                 Ok(SceneBuilderRequest::DeleteDocument(document_id)) => {
                     self.documents.remove(&document_id);
                 }
-                Ok(SceneBuilderRequest::SetFrameBuilderConfig(cfg)) => {
-                    self.config = cfg;
-                }
                 Ok(SceneBuilderRequest::ClearNamespace(id)) => {
                     self.documents.retain(|doc_id, _doc| doc_id.namespace_id != id);
                     self.send(SceneBuilderResult::ClearNamespace(id));
                 }
-                #[cfg(feature = "replay")]
-                Ok(SceneBuilderRequest::LoadScenes(msg)) => {
-                    self.load_scenes(msg);
-                }
-                #[cfg(feature = "capture")]
-                Ok(SceneBuilderRequest::SaveScene(config)) => {
-                    self.save_scene(config);
-                }
-                #[cfg(feature = "capture")]
-                Ok(SceneBuilderRequest::StartCaptureSequence(config)) => {
-                    self.start_capture_sequence(config);
-                }
-                #[cfg(feature = "capture")]
-                Ok(SceneBuilderRequest::StopCaptureSequence) => {
-                    // FIXME(aosmond): clear config for frames and resource cache without scene
-                    // rebuild?
-                    self.capture_config = None;
-                }
-                Ok(SceneBuilderRequest::DocumentsForDebugger) => {
-                    let json = self.get_docs_for_debugger();
-                    self.send(SceneBuilderResult::DocumentsForDebugger(json));
-                }
-
                 Ok(SceneBuilderRequest::ExternalEvent(evt)) => {
                     self.send(SceneBuilderResult::ExternalEvent(evt));
                 }
@@ -392,14 +379,44 @@ impl SceneBuilderThread {
                     // get the Stop when the RenderBackend loop is exiting.
                     break;
                 }
-                Ok(SceneBuilderRequest::ReportMemory(mut report, tx)) => {
-                    (*report) += self.report_memory();
-                    tx.send(report).unwrap();
-                }
                 Ok(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)) => {
                     self.simulate_slow_ms = time_ms
                 }
                 Ok(SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(_)) => {}
+                Ok(SceneBuilderRequest::BackendMessage) => {
+                    let msg = self.backend_rx.try_recv().unwrap();
+                    match msg {
+                        BackendSceneBuilderRequest::ReportMemory(mut report, tx) => {
+                            (*report) += self.report_memory();
+                            tx.send(report).unwrap();
+                        }
+                        BackendSceneBuilderRequest::SetFrameBuilderConfig(cfg) => {
+                            self.config = cfg;
+                        }
+                        #[cfg(feature = "replay")]
+                        BackendSceneBuilderRequest::LoadScenes(msg) => {
+                            self.load_scenes(msg);
+                        }
+                        #[cfg(feature = "capture")]
+                        BackendSceneBuilderRequest::SaveScene(config) => {
+                            self.save_scene(config);
+                        }
+                        #[cfg(feature = "capture")]
+                        BackendSceneBuilderRequest::StartCaptureSequence(config) => {
+                            self.start_capture_sequence(config);
+                        }
+                        #[cfg(feature = "capture")]
+                        BackendSceneBuilderRequest::StopCaptureSequence => {
+                            // FIXME(aosmond): clear config for frames and resource cache without scene
+                            // rebuild?
+                            self.capture_config = None;
+                        }
+                        BackendSceneBuilderRequest::DocumentsForDebugger => {
+                            let json = self.get_docs_for_debugger();
+                            self.send(SceneBuilderResult::DocumentsForDebugger(json));
+                        }
+                    }
+                }
                 Err(_) => {
                     break;
                 }
