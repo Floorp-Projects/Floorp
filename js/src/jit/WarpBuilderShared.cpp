@@ -79,9 +79,9 @@ MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
     call->addArg(i + 1, callInfo.getArg(i));
   }
 
-  // Pass |this| and function.
+  // Pass |this| and callee.
   call->addArg(0, callInfo.thisArg());
-  call->initFunction(callInfo.fun());
+  call->initFunction(callInfo.callee());
 
   return call;
 }
