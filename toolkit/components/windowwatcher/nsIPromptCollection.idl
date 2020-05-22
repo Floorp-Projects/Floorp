@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl BrowsingContext;
+
+/**
+ * This interface contains various specialized prompts that the app can
+ * implement.
+ */
+[scriptable, uuid(7913837c-9623-11ea-bb37-0242ac130002)]
+interface nsIPromptCollection : nsISupports
+{
+  /**
+   * Puts up a dialog for the before unload prompt.
+   *
+   * @param aBrowsingContext
+   *        The browsing context the prompt should be opened for.
+   *
+   * @return true if the page should be allowed to navigate away
+   */
+  boolean beforeUnloadCheck(in BrowsingContext aBrowsingContext);
+};
