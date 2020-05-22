@@ -944,66 +944,6 @@ LoginManagerAuthPrompter.prototype = {
   },
 
   /**
-   * Called when we detect a new login in a form submission,
-   * asks the user what to do.
-   */
-  _showSaveLoginDialog(aLogin) {
-    const buttonFlags =
-      Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
-      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0 +
-      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1 +
-      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2;
-
-    var displayHost = this._getShortDisplayHost(aLogin.origin);
-
-    var dialogText;
-    if (aLogin.username) {
-      var displayUser = this._sanitizeUsername(aLogin.username);
-      dialogText = this._getLocalizedString("rememberPasswordMsg", [
-        displayUser,
-        displayHost,
-      ]);
-    } else {
-      dialogText = this._getLocalizedString("rememberPasswordMsgNoUsername", [
-        displayHost,
-      ]);
-    }
-    var dialogTitle = this._getLocalizedString("savePasswordTitle");
-    var neverButtonText = this._getLocalizedString("neverForSiteButtonText");
-    var rememberButtonText = this._getLocalizedString("rememberButtonText");
-    var notNowButtonText = this._getLocalizedString("notNowButtonText");
-
-    this.log("Prompting user to save/ignore login");
-    var userChoice = Services.prompt.confirmEx(
-      this._chromeWindow,
-      dialogTitle,
-      dialogText,
-      buttonFlags,
-      rememberButtonText,
-      notNowButtonText,
-      neverButtonText,
-      null,
-      {}
-    );
-    //  Returns:
-    //   0 - Save the login
-    //   1 - Ignore the login this time
-    //   2 - Never save logins for this site
-    if (userChoice == 2) {
-      this.log("Disabling " + aLogin.origin + " logins by request.");
-      Services.logins.setLoginSavingEnabled(aLogin.origin, false);
-    } else if (userChoice == 0) {
-      this.log("Saving login for " + aLogin.origin);
-      Services.logins.addLogin(aLogin);
-    } else {
-      // userChoice == 1 --> just ignore the login.
-      this.log("Ignoring login.");
-    }
-
-    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
-  },
-
-  /**
    * Shows the Change Password popup notification.
    *
    * @param aBrowser
@@ -1060,48 +1000,6 @@ LoginManagerAuthPrompter.prototype = {
         autoSavedLoginGuid,
       }
     );
-
-    let oldGUID = aOldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
-    Services.obs.notifyObservers(
-      aNewLogin,
-      "passwordmgr-prompt-change",
-      oldGUID
-    );
-  },
-
-  /**
-   * Shows the Change Password dialog.
-   */
-  _showChangeLoginDialog(aOldLogin, aNewLogin) {
-    const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
-
-    var dialogText;
-    if (aOldLogin.username) {
-      dialogText = this._getLocalizedString("updatePasswordMsg", [
-        aOldLogin.username,
-      ]);
-    } else {
-      dialogText = this._getLocalizedString("updatePasswordMsgNoUser");
-    }
-
-    var dialogTitle = this._getLocalizedString("passwordChangeTitle");
-
-    // returns 0 for yes, 1 for no.
-    var ok = !Services.prompt.confirmEx(
-      this._chromeWindow,
-      dialogTitle,
-      dialogText,
-      buttonFlags,
-      null,
-      null,
-      null,
-      null,
-      {}
-    );
-    if (ok) {
-      this.log("Updating password for user " + aOldLogin.username);
-      this._updateLogin(aOldLogin, aNewLogin);
-    }
 
     let oldGUID = aOldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
     Services.obs.notifyObservers(
