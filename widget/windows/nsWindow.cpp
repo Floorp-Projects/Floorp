@@ -274,6 +274,7 @@ LONG nsWindow::sLastClickCount = 0L;
 BYTE nsWindow::sLastMouseButton = 0;
 
 bool nsWindow::sHaveInitializedPrefs = false;
+bool nsWindow::sIsRestoringSession = false;
 
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
@@ -1615,7 +1616,10 @@ void nsWindow::Show(bool bState) {
               ::ShowWindow(mWnd, SW_SHOWNORMAL);
             } else {
               ::ShowWindow(mWnd, SW_SHOWNOACTIVATE);
-              Unused << GetAttention(2);
+              // Don't flicker the window if we're restoring session
+              if (!sIsRestoringSession) {
+                Unused << GetAttention(2);
+              }
             }
             break;
         }

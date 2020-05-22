@@ -40,11 +40,8 @@ class nsAppShell : public nsBaseAppShell {
  protected:
   NS_IMETHOD Run() override;
   NS_IMETHOD Exit() override;
-
-#if defined(ACCESSIBILITY)
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override;
-#endif  // defined(ACCESSIBILITY)
 
   virtual void ScheduleNativeEventCallback();
   virtual bool ProcessNextNativeEvent(bool mayWait);
