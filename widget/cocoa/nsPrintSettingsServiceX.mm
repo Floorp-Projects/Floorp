@@ -112,9 +112,6 @@ nsresult nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* a
   }
 
   data->numCopies() = [[dict objectForKey:NSPrintCopies] intValue];
-  data->printAllPages() = [[dict objectForKey:NSPrintAllPages] boolValue];
-  data->startPageRange() = [[dict objectForKey:NSPrintFirstPage] intValue];
-  data->endPageRange() = [[dict objectForKey:NSPrintLastPage] intValue];
   data->mustCollate() = [[dict objectForKey:NSPrintMustCollate] boolValue];
   data->printReversed() = [[dict objectForKey:NSPrintReversePageOrder] boolValue];
   data->pagesAcross() = [[dict objectForKey:NSPrintPagesAcross] unsignedShortValue];
