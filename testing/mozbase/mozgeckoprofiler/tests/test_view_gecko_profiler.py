@@ -12,9 +12,16 @@ import requests
 import threading
 import time
 import re
-import urllib
 import mock
+import six
 from mozgeckoprofiler import view_gecko_profile
+
+if six.PY2:
+    # Import for Python 2
+    from urllib import unquote
+else:
+    # Import for Python 3
+    from urllib.parse import unquote
 
 
 def access_profiler_link(file_url, response):
@@ -59,7 +66,7 @@ class TestViewGeckoProfile(unittest.TestCase):
         def mocked_open_new_tab(firefox_profiler_url):
             self.firefox_profiler_url = firefox_profiler_url
             encoded_file_url = firefox_profiler_url.split("/")[-1]
-            decoded_file_url = urllib.unquote(encoded_file_url)
+            decoded_file_url = unquote(encoded_file_url)
             # Extract the actual file from the path.
             self.thread = threading.Thread(
                 target=access_profiler_link, args=(decoded_file_url, self.response)
