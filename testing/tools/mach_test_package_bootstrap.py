@@ -21,6 +21,7 @@ SEARCH_PATHS = [
     'mozbase/mozdebug',
     'mozbase/mozdevice',
     'mozbase/mozfile',
+    'mozbase/mozgeckoprofile',
     'mozbase/mozhttpd',
     'mozbase/mozinfo',
     'mozbase/mozinstall',
