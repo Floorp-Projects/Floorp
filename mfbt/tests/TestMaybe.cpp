@@ -302,6 +302,21 @@ static bool TestBasicFeatures() {
   MOZ_RELEASE_ASSERT(mayCValue2.isSome());
   MOZ_RELEASE_ASSERT(*mayCValue2 == BasicValue(6));
 
+  // Check that take works
+  mayValue = Some(BasicValue(6));
+  Maybe taken = mayValue.take();
+  MOZ_RELEASE_ASSERT(taken->GetStatus() == eWasMoveConstructed);
+  MOZ_RELEASE_ASSERT(taken == Some(BasicValue(6)));
+  MOZ_RELEASE_ASSERT(!mayValue.isSome());
+  MOZ_RELEASE_ASSERT(mayValue.take() == Nothing());
+
+  // Check that extract works
+  mayValue = Some(BasicValue(7));
+  BasicValue extracted = mayValue.extract();
+  MOZ_RELEASE_ASSERT(extracted.GetStatus() == eWasMoveConstructed);
+  MOZ_RELEASE_ASSERT(extracted == BasicValue(7));
+  MOZ_RELEASE_ASSERT(!mayValue.isSome());
+
   return true;
 }
 
@@ -350,6 +365,26 @@ static void TestMoveMaybe() {
 
     MOZ_RELEASE_ASSERT(1 == sUndestroyedObjects);
     MOZ_RELEASE_ASSERT(dstMoveAssigned->GetStatus() == eWasMoveConstructed);
+  }
+
+  {
+    MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
+
+    Maybe<T> src = Some(T());
+    Maybe<T> dstMoveConstructed = src.take();
+
+    MOZ_RELEASE_ASSERT(1 == sUndestroyedObjects);
+    MOZ_RELEASE_ASSERT(dstMoveConstructed->GetStatus() == eWasMoveConstructed);
+  }
+
+  {
+    MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
+
+    Maybe<T> src = Some(T());
+    T dstMoveConstructed = src.extract();
+
+    MOZ_RELEASE_ASSERT(1 == sUndestroyedObjects);
+    MOZ_RELEASE_ASSERT(dstMoveConstructed.GetStatus() == eWasMoveConstructed);
   }
 }
 
