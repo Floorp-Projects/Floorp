@@ -123,6 +123,14 @@ class LinuxSymbolDumper:
 
 
 class ProfileSymbolicator:
+    """This class orchestrates symbolication for a Gecko profile.
+
+    It can be used by multiple pieces of testing infrastructure that generate Gecko
+    performance profiles.
+
+    Args:
+        options (obj): See SymFileManager for details on these options.
+    """
 
     def __init__(self, options):
         self.options = options

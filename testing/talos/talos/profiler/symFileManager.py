@@ -38,7 +38,23 @@ class SymbolInfo:
 
 
 class SymFileManager:
-    # Symbol cache data structures
+    """This class fetches symbols from files and caches the results.
+
+    options (obj)
+        symbolPaths : dictionary
+            Paths to .SYM files, expressed internally as a mapping of app or platform
+            names to directories. App & OS names from requests are converted to
+            all-uppercase internally
+            e.g. { "FIREFOX": "/tmp/path" }
+        maxCacheEntries : number
+            Maximum number of symbol files to keep in memory
+        prefetchInterval : number
+            Frequency of checking for recent symbols to cache (in hours)
+        prefetchThreshold : number
+            Oldest file age to prefetch (in hours)
+        prefetchMaxSymbolsPerLib : (number)
+            Maximum number of library versions to pre-fetch per library
+    """
     sCache = {}
     sCacheCount = 0
     sCacheLock = threading.Lock()
@@ -182,6 +198,7 @@ class SymFileManager:
         return SymbolInfo(symbolMap)
 
     def PrefetchRecentSymbolFiles(self):
+        """This method runs in a loop. Use the options "prefetchThreshold" to adjust"""
         global PREFETCHED_LIBS
 
         LogMessage("Prefetching recent symbol files")
