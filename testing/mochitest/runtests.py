@@ -1494,8 +1494,11 @@ toolbar#nav-bar {
                         self.log.error("runtime file %s not found!" % runtime_file)
                         sys.exit(1)
 
+                    # Given the mochitest flavor, load the runtimes information
+                    # for only that flavor due to manifest runtime format change in Bug 1637463.
                     with open(runtime_file, 'r') as f:
-                        runtimes = json.loads(f.read())
+                        runtimes = json.load(f).get(options.suite_name, {})
+
                     filters.append(
                         chunk_by_runtime(options.thisChunk,
                                          options.totalChunks,
