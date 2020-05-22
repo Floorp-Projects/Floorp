@@ -364,9 +364,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsICookieService* GetCookieService();  // not addrefed
   nsISiteSecurityService* GetSSService();
 
-  // callable from socket thread only
-  uint32_t Get32BitsOfPseudoRandom();
-
   // Called by the channel synchronously during asyncOpen
   void OnFailedOpeningRequest(nsIHttpChannel* chan) {
     NotifyObservers(chan, NS_HTTP_ON_FAILED_OPENING_REQUEST_TOPIC);
