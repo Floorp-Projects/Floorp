@@ -12,6 +12,7 @@
 #include "WinTaskbar.h"
 #include "WinMouseScrollHandler.h"
 #include "nsWindowDefs.h"
+#include "nsWindow.h"
 #include "nsString.h"
 #include "WinIMEHandler.h"
 #include "mozilla/widget/AudioSession.h"
@@ -281,32 +282,51 @@ static void InitUIADetection() {
   }
 }
 
+#endif  // defined(ACCESSIBILITY)
+
 NS_IMETHODIMP
 nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
                     const char16_t* aData) {
-  if (XRE_IsParentProcess() && !strcmp(aTopic, "dll-loaded-main-thread")) {
-    if (a11y::PlatformDisabledState() != a11y::ePlatformIsDisabled &&
-        !gUiaHook) {
-      nsDependentString dllName(aData);
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsIObserverService> obsServ(
+        mozilla::services::GetObserverService());
 
-      if (StringEndsWith(dllName, NS_LITERAL_STRING("uiautomationcore.dll"),
-                         nsCaseInsensitiveStringComparator())) {
-        InitUIADetection();
+#if defined(ACCESSIBILITY)
+    if (!strcmp(aTopic, "dll-loaded-main-thread")) {
+      if (a11y::PlatformDisabledState() != a11y::ePlatformIsDisabled &&
+          !gUiaHook) {
+        nsDependentString dllName(aData);
 
-        // Now that we've handled the observer notification, we can remove it
-        nsCOMPtr<nsIObserverService> obsServ(
-            mozilla::services::GetObserverService());
-        obsServ->RemoveObserver(this, "dll-loaded-main-thread");
+        if (StringEndsWith(dllName, NS_LITERAL_STRING("uiautomationcore.dll"),
+                           nsCaseInsensitiveStringComparator())) {
+          InitUIADetection();
+
+          // Now that we've handled the observer notification, we can remove it
+          obsServ->RemoveObserver(this, "dll-loaded-main-thread");
+        }
       }
+
+      return NS_OK;
+    }
+#endif  // defined(ACCESSIBILITY)
+
+    if (!strcmp(aTopic, "sessionstore-restoring-on-startup")) {
+      nsWindow::SetIsRestoringSession(true);
+      // Now that we've handled the observer notification, we can remove it
+      obsServ->RemoveObserver(this, "sessionstore-restoring-on-startup");
+      return NS_OK;
     }
 
-    return NS_OK;
+    if (!strcmp(aTopic, "sessionstore-windows-restored")) {
+      nsWindow::SetIsRestoringSession(false);
+      // Now that we've handled the observer notification, we can remove it
+      obsServ->RemoveObserver(this, "sessionstore-windows-restored");
+      return NS_OK;
+    }
   }
 
   return nsBaseAppShell::Observe(aSubject, aTopic, aData);
 }
-
-#endif  // defined(ACCESSIBILITY)
 
 nsresult nsAppShell::Init() {
   LSPAnnotate();
@@ -374,12 +394,16 @@ nsresult nsAppShell::Init() {
       ScreenHelperWin::RefreshScreens();
     }
 
+    nsCOMPtr<nsIObserverService> obsServ(
+        mozilla::services::GetObserverService());
+
+    obsServ->AddObserver(this, "sessionstore-restoring-on-startup", false);
+    obsServ->AddObserver(this, "sessionstore-windows-restored", false);
+
 #if defined(ACCESSIBILITY)
     if (::GetModuleHandleW(L"uiautomationcore.dll")) {
       InitUIADetection();
     } else {
-      nsCOMPtr<nsIObserverService> obsServ(
-          mozilla::services::GetObserverService());
       obsServ->AddObserver(this, "dll-loaded-main-thread", false);
     }
 #endif  // defined(ACCESSIBILITY)
