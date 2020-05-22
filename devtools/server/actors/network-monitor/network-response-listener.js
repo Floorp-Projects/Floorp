@@ -524,6 +524,12 @@ NetworkResponseListener.prototype = {
       // "cancelledByExtension" doesn't have to be available.
     }
 
+    // The request is canceled, so make sure the reason is always set.
+    // (otherwise it wouldn't be marked a blocked in the Network panel)
+    if (this.request.canceled && !reason) {
+      reason = "unknown";
+    }
+
     this.httpActivity.owner.addResponseContent(response, {
       discardResponseBody: this.httpActivity.discardResponseBody,
       truncated: this.truncated,
