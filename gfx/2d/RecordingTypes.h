@@ -60,7 +60,7 @@ template <class S, class T>
 void ReadVector(S& aStream, std::vector<T>& aVector) {
   size_t size;
   ReadElement(aStream, size);
-  if (size) {
+  if (size && aStream.good()) {
     aVector.resize(size);
     aStream.read(reinterpret_cast<char*>(aVector.data()), sizeof(T) * size);
   } else {
