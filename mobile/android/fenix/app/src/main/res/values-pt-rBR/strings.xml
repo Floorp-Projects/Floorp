@@ -1099,7 +1099,7 @@
     <string name="etp_tracking_content_title">Conteúdo de rastreamento</string>
 
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">Impede o carregamento de anúncios, vídeos e outros conteúdos externos que contenham código de rastreamento. Pode afetar funcionalidades de alguns sites.</string>
+    <string name="etp_tracking_content_description">Impede o carregamento de anúncios, vídeos e outros conteúdos externos que contêm código de rastreamento. Pode afetar funcionalidades de alguns sites.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_message_2">O escudo fica roxo para indicar que o %s está bloqueando rastreadores neste site. Toque no escudo para ver o que foi bloqueado.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->

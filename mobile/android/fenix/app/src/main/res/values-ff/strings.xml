@@ -834,6 +834,15 @@
 
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description">Ina daaƴa rewindotooɓe famarɓe kono ina yamira kelle yo loow no haanirta</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Eto banngogol junngo wooto e palal kuutorɗe les ngal walla dirtin ngal faade dow.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Wanngo e suturo</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Uddit tabbere suuriinde laawol gootol: Ñoƴƴu maandel %s ngel.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Uddit tabbe cuuriiɗe kala sahaa: Hesɗitin teelte banngogol maa suturo.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Uddit teelte</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -849,6 +858,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Suɓo siŋkoore maa</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Ina fonnda e teelte kaɓirgal maa</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">Siŋkoore niɓɓiɗnde</string>
     <!-- Theme setting for light mode -->
@@ -873,6 +884,10 @@
     <string name="sign_in_with_camera">Seŋoro kameraa maa</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Huutoro ɗoo iimeel</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Maa Firefox dartin jahdingol e konte maa, kono momtataa hay wootere e keɓe banngogol maa e ngal kaɓirgal gal.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">Maa %s dartin jahdingol e konte maa, kono momtataa hay wootere e keɓe banngogol maa e ngal kaɓirgal gal.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Seŋtondir</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -894,8 +909,12 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ɓeydu humpito</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_option">Gaadanteejo</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Gaadanteejo (basiyaaɗo)</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ƴagguɗo</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Ko ndeenka dewindol ƴagguka daaƴi</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Kuukiije</string>
@@ -909,6 +928,8 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Dewindagol loowdi</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Nder tabbe ɗee fof</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">E tabbe cuuriiɗe tan</string>
     <string name="enhanced_tracking_protection_blocked">Faddaama</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Yamiraama</string>
@@ -921,6 +942,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Wallitorde</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Kooki</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Tintinol suturo</string>
     <!-- About page link text to open know your rights link -->
@@ -954,8 +977,18 @@
     <string name="preferences_passwords_logins_and_passwords">Ceŋorɗe e pinle</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Danndu ceŋorɗe e pinle</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Naamno danndude</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Hoto danndu abada</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Huɓɓii</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Ñifii</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Seŋo kadi</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Seŋo e Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Ceŋorɗe danndaaɗe</string>
     <!-- Preference to access list of saved logins -->
