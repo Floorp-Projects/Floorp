@@ -44,7 +44,6 @@ EXPORTS += [
     'gfxLineSegment.h',
     'gfxMathTable.h',
     'gfxMatrix.h',
-    'gfxOTSUtils.h',
     'gfxPattern.h',
     'gfxPlatform.h',
     'gfxPlatformFontList.h',

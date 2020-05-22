@@ -17,7 +17,9 @@
 #include "gfxPlatformFontList.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/PostTraversalTask.h"
-#include "gfxOTSUtils.h"
+
+#include "opentype-sanitiser.h"
+#include "ots-memory-stream.h"
 
 using namespace mozilla;
 
@@ -32,6 +34,69 @@ mozilla::LogModule* gfxUserFontSet::GetUserFontsLog() {
   MOZ_LOG_TEST(gfxUserFontSet::GetUserFontsLog(), mozilla::LogLevel::Debug)
 
 static uint64_t sFontSetGeneration = 0;
+
+// Based on ots::ExpandingMemoryStream from ots-memory-stream.h,
+// adapted to use Mozilla allocators and to allow the final
+// memory buffer to be adopted by the client.
+class ExpandingMemoryStream : public ots::OTSStream {
+ public:
+  ExpandingMemoryStream(size_t initial, size_t limit)
+      : mLength(initial), mLimit(limit), mOff(0) {
+    mPtr = moz_xmalloc(mLength);
+  }
+
+  ~ExpandingMemoryStream() { free(mPtr); }
+
+  // Return the buffer, resized to fit its contents (as it may have been
+  // over-allocated during growth), and give up ownership of it so the
+  // caller becomes responsible to call free() when finished with it.
+  void* forget() {
+    void* p = moz_xrealloc(mPtr, mOff);
+    mPtr = nullptr;
+    return p;
+  }
+
+  bool WriteRaw(const void* data, size_t length) override {
+    if ((mOff + length > mLength) ||
+        (mLength > std::numeric_limits<size_t>::max() - mOff)) {
+      if (mLength == mLimit) {
+        return false;
+      }
+      size_t newLength = (mLength + 1) * 2;
+      if (newLength < mLength) {
+        return false;
+      }
+      if (newLength > mLimit) {
+        newLength = mLimit;
+      }
+      mPtr = moz_xrealloc(mPtr, newLength);
+      mLength = newLength;
+      return WriteRaw(data, length);
+    }
+    std::memcpy(static_cast<char*>(mPtr) + mOff, data, length);
+    mOff += length;
+    return true;
+  }
+
+  bool Seek(off_t position) override {
+    if (position < 0) {
+      return false;
+    }
+    if (static_cast<size_t>(position) > mLength) {
+      return false;
+    }
+    mOff = position;
+    return true;
+  }
+
+  off_t Tell() const override { return mOff; }
+
+ private:
+  void* mPtr;
+  size_t mLength;
+  const size_t mLimit;
+  off_t mOff;
+};
 
 gfxUserFontEntry::gfxUserFontEntry(
     gfxUserFontSet* aFontSet, const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
@@ -115,10 +180,47 @@ gfxFont* gfxUserFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle) {
   return nullptr;
 }
 
-class MOZ_STACK_CLASS gfxOTSMessageContext : public gfxOTSContext {
+class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
  public:
-  virtual ~gfxOTSMessageContext() {
+  gfxOTSContext() {
+    // Whether to apply OTS validation to OpenType Layout tables
+    mCheckOTLTables = StaticPrefs::gfx_downloadable_fonts_otl_validation();
+    // Whether to preserve Variation tables in downloaded fonts
+    mCheckVariationTables =
+        StaticPrefs::gfx_downloadable_fonts_validate_variation_tables();
+    // Whether to preserve color bitmap glyphs
+    mKeepColorBitmaps =
+        StaticPrefs::gfx_downloadable_fonts_keep_color_bitmaps();
+  }
+
+  virtual ~gfxOTSContext() {
     MOZ_ASSERT(mMessages.IsEmpty(), "should have called TakeMessages");
+  }
+
+  virtual ots::TableAction GetTableAction(uint32_t aTag) override {
+    // Preserve Graphite, color glyph and SVG tables,
+    // and possibly OTL and Variation tables (depending on prefs)
+    if ((!mCheckOTLTables && (aTag == TRUETYPE_TAG('G', 'D', 'E', 'F') ||
+                              aTag == TRUETYPE_TAG('G', 'P', 'O', 'S') ||
+                              aTag == TRUETYPE_TAG('G', 'S', 'U', 'B'))) ||
+        (!mCheckVariationTables &&
+         (aTag == TRUETYPE_TAG('a', 'v', 'a', 'r') ||
+          aTag == TRUETYPE_TAG('c', 'v', 'a', 'r') ||
+          aTag == TRUETYPE_TAG('f', 'v', 'a', 'r') ||
+          aTag == TRUETYPE_TAG('g', 'v', 'a', 'r') ||
+          aTag == TRUETYPE_TAG('H', 'V', 'A', 'R') ||
+          aTag == TRUETYPE_TAG('M', 'V', 'A', 'R') ||
+          aTag == TRUETYPE_TAG('S', 'T', 'A', 'T') ||
+          aTag == TRUETYPE_TAG('V', 'V', 'A', 'R'))) ||
+        aTag == TRUETYPE_TAG('S', 'V', 'G', ' ') ||
+        aTag == TRUETYPE_TAG('C', 'O', 'L', 'R') ||
+        aTag == TRUETYPE_TAG('C', 'P', 'A', 'L') ||
+        (mKeepColorBitmaps && (aTag == TRUETYPE_TAG('C', 'B', 'D', 'T') ||
+                               aTag == TRUETYPE_TAG('C', 'B', 'L', 'C'))) ||
+        false) {
+      return ots::TABLE_ACTION_PASSTHRU;
+    }
+    return ots::TABLE_ACTION_DEFAULT;
   }
 
   virtual void Message(int level, const char* format,
@@ -157,6 +259,9 @@ class MOZ_STACK_CLASS gfxOTSMessageContext : public gfxOTSContext {
  private:
   nsTHashtable<nsCStringHashKey> mWarningsIssued;
   nsTArray<gfxUserFontEntry::OTSMessage> mMessages;
+  bool mCheckOTLTables;
+  bool mCheckVariationTables;
+  bool mKeepColorBitmaps;
 };
 
 // Call the OTS library to sanitize an sfnt before attempting to use it.
@@ -167,15 +272,22 @@ const uint8_t* gfxUserFontEntry::SanitizeOpenTypeData(
   aFontType = gfxFontUtils::DetermineFontDataType(aData, aLength);
   Telemetry::Accumulate(Telemetry::WEBFONT_FONTTYPE, uint32_t(aFontType));
 
-  size_t lengthHint = gfxOTSContext::GuessSanitizedFontSize(aLength, aFontType);
-  if (!lengthHint) {
+  if (aFontType == GFX_USERFONT_UNKNOWN) {
     aSaneLength = 0;
     return nullptr;
   }
 
-  gfxOTSExpandingMemoryStream output(lengthHint);
+  uint32_t lengthHint = aLength;
+  if (aFontType == GFX_USERFONT_WOFF) {
+    lengthHint *= 2;
+  } else if (aFontType == GFX_USERFONT_WOFF2) {
+    lengthHint *= 3;
+  }
 
-  gfxOTSMessageContext otsContext;
+  // limit output/expansion to 256MB
+  ExpandingMemoryStream output(lengthHint, 1024 * 1024 * 256);
+
+  gfxOTSContext otsContext;
   if (!otsContext.Process(&output, aData, aLength, aMessages)) {
     // Failed to decode/sanitize the font, so discard it.
     aSaneLength = 0;
