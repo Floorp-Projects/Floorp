@@ -8,7 +8,7 @@ import re
 import urllib2
 from mozlog import get_proxy_logger
 
-LOG = get_proxy_logger('profiler')
+LOG = get_proxy_logger("profiler")
 
 # Precompiled regex for validating lib names
 # Empty lib name means client couldn't associate frame with any lib
@@ -30,7 +30,6 @@ except NameError:
 
 
 class ModuleV3:
-
     def __init__(self, libName, breakpadId):
         self.libName = libName
         self.breakpadId = breakpadId
@@ -49,7 +48,6 @@ def getModuleV3(libName, breakpadId):
 
 
 class SymbolicationRequest:
-
     def __init__(self, symFileManager, rawRequests):
         self.Reset()
         self.symFileManager = symFileManager
@@ -85,19 +83,16 @@ class SymbolicationRequest:
 
             if "forwarded" in rawRequests:
                 if not isinstance(rawRequests["forwarded"], (int, int)):
-                    LOG.debug("Invalid 'forwards' field: %s"
-                              % rawRequests["forwarded"])
+                    LOG.debug("Invalid 'forwards' field: %s" % rawRequests["forwarded"])
                     return
                 self.forwardCount = rawRequests["forwarded"]
 
             # Client specifies which sets of symbols should be used
             if "symbolSources" in rawRequests:
                 try:
-                    sourceList = [x.upper()
-                                  for x in rawRequests["symbolSources"]]
+                    sourceList = [x.upper() for x in rawRequests["symbolSources"]]
                     for source in sourceList:
-                        if source in self.symFileManager\
-                                .sOptions["symbolPaths"]:
+                        if source in self.symFileManager.sOptions["symbolPaths"]:
                             self.symbolSources.append(source)
                         else:
                             LOG.debug("Unrecognized symbol source: " + source)
@@ -107,10 +102,8 @@ class SymbolicationRequest:
                     pass
 
             if not self.symbolSources:
-                self.symbolSources.append(
-                    self.symFileManager.sOptions["defaultApp"])
-                self.symbolSources.append(
-                    self.symFileManager.sOptions["defaultOs"])
+                self.symbolSources.append(self.symFileManager.sOptions["defaultApp"])
+                self.symbolSources.append(self.symFileManager.sOptions["defaultOs"])
 
             if "memoryMap" not in rawRequests:
                 LOG.debug("Request is missing 'memoryMap' field")
@@ -131,13 +124,13 @@ class SymbolicationRequest:
             cleanMemoryMap = []
             for module in memoryMap:
                 if not isinstance(module, list):
-                    LOG.debug(
-                        "Entry in memory map is not a list: " + str(module))
+                    LOG.debug("Entry in memory map is not a list: " + str(module))
                     return
 
                 if len(module) != 2:
-                    LOG.debug("Entry in memory map is not a 2 item list: " +
-                              str(module))
+                    LOG.debug(
+                        "Entry in memory map is not a 2 item list: " + str(module)
+                    )
                     return
                 module = getModuleV3(*module)
 
@@ -200,7 +193,7 @@ class SymbolicationRequest:
                     "stacks": [rawStack],
                     "memoryMap": rawModules,
                     "forwarded": self.forwardCount + 1,
-                    "version": requestVersion
+                    "version": requestVersion,
                 }
                 requestJson = json.dumps(requestObj)
                 headers = {"Content-Type": "application/json"}
@@ -223,23 +216,29 @@ class SymbolicationRequest:
         try:
             responseJson = json.loads(response.read())
         except Exception as e:
-            LOG.error("Exception while reading server response to forwarded"
-                      " request: " + str(e))
+            LOG.error(
+                "Exception while reading server response to forwarded"
+                " request: " + str(e)
+            )
             return
 
         try:
             if succeededVersion == 4:
-                responseKnownModules = responseJson['knownModules']
+                responseKnownModules = responseJson["knownModules"]
                 for newIndex, known in enumerate(responseKnownModules):
                     if known and newIndex in newIndexToOldIndex:
                         self.knownModules[newIndexToOldIndex[newIndex]] = True
 
-                responseSymbols = responseJson['symbolicatedStacks'][0]
+                responseSymbols = responseJson["symbolicatedStacks"][0]
             else:
                 responseSymbols = responseJson[0]
             if len(responseSymbols) != len(stack):
-                LOG.error(str(len(responseSymbols)) + " symbols in response, " +
-                          str(len(stack)) + " PCs in request!")
+                LOG.error(
+                    str(len(responseSymbols))
+                    + " symbols in response, "
+                    + str(len(stack))
+                    + " PCs in request!"
+                )
                 return
 
             for index in range(0, len(stack)):
@@ -247,16 +246,20 @@ class SymbolicationRequest:
                 originalIndex = indexes[index]
                 symbolicatedStack[originalIndex] = symbol
         except Exception as e:
-            LOG.error("Exception while parsing server response to forwarded"
-                      " request: " + str(e))
+            LOG.error(
+                "Exception while parsing server response to forwarded"
+                " request: " + str(e)
+            )
             return
 
     def Symbolicate(self, stackNum):
         # Check if we should forward requests when required sym files don't
         # exist
         shouldForwardRequests = False
-        if self.symFileManager.sOptions["remoteSymbolServer"] and \
-                self.forwardCount < MAX_FORWARDED_REQUESTS:
+        if (
+            self.symFileManager.sOptions["remoteSymbolServer"]
+            and self.forwardCount < MAX_FORWARDED_REQUESTS
+        ):
             shouldForwardRequests = True
 
         # Symbolicate each PC
@@ -269,9 +272,9 @@ class SymbolicationRequest:
         stack = self.stacks[stackNum]
 
         for moduleIndex, module in enumerate(self.combinedMemoryMap):
-            if not self.symFileManager.GetLibSymbolMap(module.libName,
-                                                       module.breakpadId,
-                                                       self.symbolSources):
+            if not self.symFileManager.GetLibSymbolMap(
+                module.libName, module.breakpadId, self.symbolSources
+            ):
                 missingSymFiles.append((module.libName, module.breakpadId))
                 if shouldForwardRequests:
                     unresolvedModules.append((moduleIndex, module))
@@ -291,26 +294,23 @@ class SymbolicationRequest:
                 if shouldForwardRequests:
                     unresolvedIndexes.append(pcIndex)
                     unresolvedStack.append(entry)
-                symbolicatedStack.append(
-                    hex(offset) + " (in " + module.libName + ")")
+                symbolicatedStack.append(hex(offset) + " (in " + module.libName + ")")
                 continue
 
             functionName = None
             libSymbolMap = self.symFileManager.GetLibSymbolMap(
-                module.libName,
-                module.breakpadId,
-                self.symbolSources
+                module.libName, module.breakpadId, self.symbolSources
             )
             functionName = libSymbolMap.Lookup(offset)
 
             if functionName is None:
                 functionName = hex(offset)
-            symbolicatedStack.append(
-                functionName + " (in " + module.libName + ")")
+            symbolicatedStack.append(functionName + " (in " + module.libName + ")")
 
         # Ask another server for help symbolicating unresolved addresses
         if len(unresolvedStack) > 0 or len(unresolvedModules) > 0:
-            self.ForwardRequest(unresolvedIndexes, unresolvedStack,
-                                unresolvedModules, symbolicatedStack)
+            self.ForwardRequest(
+                unresolvedIndexes, unresolvedStack, unresolvedModules, symbolicatedStack
+            )
 
         return symbolicatedStack

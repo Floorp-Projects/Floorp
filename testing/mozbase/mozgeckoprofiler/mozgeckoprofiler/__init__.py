@@ -12,8 +12,8 @@ from .symbolication import ProfileSymbolicator
 from .viewgeckoprofile import view_gecko_profile
 
 __all__ = [
-  'save_gecko_profile',
-  'symbolicate_profile_json',
-  'ProfileSymbolicator',
-  'view_gecko_profile'
+    "save_gecko_profile",
+    "symbolicate_profile_json",
+    "ProfileSymbolicator",
+    "view_gecko_profile",
 ]
