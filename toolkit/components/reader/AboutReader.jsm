@@ -120,7 +120,6 @@ var AboutReader = function(actor, articlePromise) {
 
   Services.obs.addObserver(this, "inner-window-destroyed");
 
-  this._setupStyleDropdown();
   this._setupButton(
     "close-button",
     this._onReaderClose.bind(this),
@@ -151,12 +150,7 @@ var AboutReader = function(actor, articlePromise) {
   this._setColorSchemePref(colorScheme);
 
   let styleButton = this._doc.querySelector(".style-button");
-  styleButton.textContent = gStrings.GetStringFromName(
-    "aboutReader.toolbar.typeControls"
-  );
-
-  let closeButton = this._doc.querySelector(".close-button");
-  closeButton.textContent = gStrings.GetStringFromName("readerView.done.label");
+  this._setButtonTip(styleButton, "aboutReader.toolbar.typeControls");
 
   let fontTypeSample = gStrings.GetStringFromName("aboutReader.fontTypeSample");
   let fontTypeOptions = [
@@ -309,14 +303,12 @@ AboutReader.prototype = {
           let btn = this._doc.createElement("button");
           btn.dataset.buttonid = message.data.id;
           btn.className = "button " + message.data.id;
-          btn.textContent = message.data.label;
+          let tip = this._doc.createElement("span");
+          tip.className = "hover-label";
+          tip.textContent = message.data.label;
+          btn.append(tip);
+          btn.setAttribute("aria-label", message.data.label);
           btn.style.backgroundImage = "url('" + message.data.image + "')";
-          if (message.data.title) {
-            btn.title = message.data.title;
-          }
-          if (message.data.text) {
-            btn.textContent = message.data.text;
-          }
           if (message.data.width && message.data.height) {
             btn.style.backgroundSize = `${message.data.width}px ${message.data.height}px`;
           }
@@ -527,16 +519,10 @@ AboutReader.prototype = {
   },
 
   _setContentWidth(newContentWidth) {
-    let containerClasses = this._containerElement.classList;
-
-    if (this._contentWidth > 0) {
-      containerClasses.remove("content-width" + this._contentWidth);
-    }
-
     this._contentWidth = newContentWidth;
     this._displayContentWidth(newContentWidth);
     let width = 20 + 5 * (this._contentWidth - 1) + "em";
-    this._containerElement.style.setProperty("--content-width", width);
+    this._doc.body.style.setProperty("--content-width", width);
     return AsyncPrefs.set("reader.content_width", this._contentWidth);
   },
 
@@ -1059,15 +1045,12 @@ AboutReader.prototype = {
     }
   },
 
-  _setupButton(id, callback, titleEntity, textEntity) {
+  _setupButton(id, callback, titleEntity) {
+    let button = this._doc.querySelector("." + id);
     if (titleEntity) {
-      this._setButtonTip(id, titleEntity);
+      this._setButtonTip(button, titleEntity);
     }
 
-    let button = this._doc.getElementsByClassName(id)[0];
-    if (textEntity) {
-      button.textContent = gStrings.GetStringFromName(textEntity);
-    }
     button.removeAttribute("hidden");
     button.addEventListener(
       "click",
@@ -1084,23 +1067,16 @@ AboutReader.prototype = {
   },
 
   /**
-   * Sets a toolTip for a button. Performed at initial button setup
-   * and dynamically as button state changes.
+   * Sets a tooltip-style label on a button.
    * @param   Localizable string providing UI element usage tip.
    */
-  _setButtonTip(id, titleEntity) {
-    let button = this._doc.getElementsByClassName(id)[0];
-    button.setAttribute("title", gStrings.GetStringFromName(titleEntity));
-  },
-
-  _setupStyleDropdown() {
-    let dropdownToggle = this._doc.querySelector(
-      ".style-dropdown .dropdown-toggle"
-    );
-    dropdownToggle.setAttribute(
-      "title",
-      gStrings.GetStringFromName("aboutReader.toolbar.typeControls")
-    );
+  _setButtonTip(button, titleEntity) {
+    let tip = this._doc.createElement("span");
+    let localizedString = gStrings.GetStringFromName(titleEntity);
+    tip.textContent = localizedString;
+    tip.className = "hover-label";
+    button.setAttribute("aria-label", localizedString);
+    button.append(tip);
   },
 
   _toggleDropdownClicked(event) {
@@ -1137,9 +1113,8 @@ AboutReader.prototype = {
     this._doc.addEventListener("scroll", this);
 
     dropdown.classList.add("open");
-    let toggle = dropdown.querySelector(".dropdown-toggle");
-    let anchorWidth = windowUtils.getBoundsWithoutFlushing(toggle).width;
-    dropdown.style.setProperty("--popup-anchor-width", anchorWidth + "px");
+
+    this._toolbarContainerElement.classList.add("dropdown-open");
   },
 
   /*
@@ -1157,6 +1132,8 @@ AboutReader.prototype = {
     for (let dropdown of openDropdowns) {
       dropdown.classList.remove("open");
     }
+
+    this._toolbarContainerElement.classList.remove("dropdown-open");
 
     // Stop handling scrolling:
     this._doc.removeEventListener("scroll", this);
