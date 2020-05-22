@@ -96,6 +96,7 @@ TEST_HARNESS_FILES.gtest += [
     'perf_ycbcr.jpg',
     'rle4.bmp',
     'rle8.bmp',
+    'stackcheck.avif',
     'transparent-ico-with-and-mask.ico',
     'transparent-if-within-ico.bmp',
     'transparent-no-alpha-header.webp',

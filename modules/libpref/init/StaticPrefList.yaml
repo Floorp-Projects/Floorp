@@ -4627,6 +4627,12 @@
   value: false
   mirror: always
 
+# Whether we use dav1d (true) or libaom (false) to decode AVIF image
+- name: image.avif.use-dav1d
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "intl."
 #---------------------------------------------------------------------------

@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// clang-format off
+
 #ifndef MEDIA_BASE_YUV_CONVERT_H_
 #define MEDIA_BASE_YUV_CONVERT_H_
 
@@ -17,7 +19,8 @@ namespace gfx {
 enum YUVType {
   YV12 = 0,           // YV12 is half width and half height chroma channels.
   YV16 = 1,           // YV16 is half width and full height chroma channels.
-  YV24 = 2            // YV24 is full width and full height chroma channels.
+  YV24 = 2,           // YV24 is full width and full height chroma channels.
+  Y8 = 3              // Y8 is monochrome: no chroma channels.
 };
 
 // Mirror means flip the image horizontally, as in looking in a mirror.

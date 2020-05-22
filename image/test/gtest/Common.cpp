@@ -434,6 +434,14 @@ ImageTestCase GreenAVIFTestCase() {
       .WithSurfaceFlags(SurfaceFlags::TO_SRGB_COLORSPACE);
 }
 
+// Forcing sRGB is required until nsAVIFDecoder supports ICC profiles
+// See bug 1634741
+ImageTestCase StackCheckAVIFTestCase() {
+  return ImageTestCase("stackcheck.avif", "image/avif", IntSize(4096, 2924),
+                       TEST_CASE_IGNORE_OUTPUT)
+      .WithSurfaceFlags(SurfaceFlags::TO_SRGB_COLORSPACE);
+}
+
 ImageTestCase LargeWebPTestCase() {
   return ImageTestCase("large.webp", "image/webp", IntSize(1200, 660),
                        TEST_CASE_IGNORE_OUTPUT);

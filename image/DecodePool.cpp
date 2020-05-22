@@ -298,6 +298,11 @@ class DecodePoolWorker final : public Runnable {
   bool mShutdownIdle;
 };
 
+/// dav1d (used for AVIF decoding) crashes when decoding some images if the
+/// stack is too small. See related issue for AV1 decoding: bug 1474684.
+static constexpr uint32_t DECODE_POOL_STACK_SIZE =
+    std::max(nsIThreadManager::kThreadPoolStackSize, 512u * 1024u);
+
 bool DecodePoolImpl::CreateThread() {
   mMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mAvailableThreads > 0);
@@ -305,9 +310,10 @@ bool DecodePoolImpl::CreateThread() {
   bool shutdownIdle = mThreads.Length() >= mMaxIdleThreads;
   nsCOMPtr<nsIRunnable> worker = new DecodePoolWorker(this, shutdownIdle);
   nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread(mThreadNaming.GetNextThreadName("ImgDecoder"),
-                                  getter_AddRefs(thread), worker,
-                                  nsIThreadManager::kThreadPoolStackSize);
+  nsresult rv =
+      NS_NewNamedThread(mThreadNaming.GetNextThreadName("ImgDecoder"),
+                        getter_AddRefs(thread), worker, DECODE_POOL_STACK_SIZE);
+
   if (NS_FAILED(rv) || !thread) {
     MOZ_ASSERT_UNREACHABLE("Should successfully create image decoding threads");
     return false;
