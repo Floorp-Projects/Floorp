@@ -1026,14 +1026,15 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::PerformAsyncLaunch() {
 }
 
 bool BaseProcessLauncher::DoSetup() {
-#ifdef MOZ_GECKO_PROFILER
+#if defined(MOZ_GECKO_PROFILER) || defined(MOZ_MEMORY)
   RefPtr<BaseProcessLauncher> self = this;
+#  ifdef MOZ_GECKO_PROFILER
   GetProfilerEnvVarsForChildProcess([self](const char* key, const char* value) {
     self->mLaunchOptions->env_map[ENVIRONMENT_STRING(key)] =
         ENVIRONMENT_STRING(value);
   });
-#endif
-#ifdef MOZ_MEMORY
+#  endif
+#  ifdef MOZ_MEMORY
   if (mProcessType == GeckoProcessType_Content) {
     nsAutoCString mallocOpts(PR_GetEnv("MALLOC_OPTIONS"));
     // Disable randomization of small arenas in content.
@@ -1041,6 +1042,7 @@ bool BaseProcessLauncher::DoSetup() {
     self->mLaunchOptions->env_map[ENVIRONMENT_LITERAL("MALLOC_OPTIONS")] =
         ENVIRONMENT_STRING(mallocOpts.get());
   }
+#  endif
 #endif
 
   MapChildLogging();
