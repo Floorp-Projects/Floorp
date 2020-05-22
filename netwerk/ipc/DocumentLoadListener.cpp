@@ -8,6 +8,7 @@
 #include "DocumentLoadListener.h"
 
 #include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
 #include "mozilla/StaticPrefs_fission.h"
@@ -412,6 +413,15 @@ bool DocumentLoadListener::Open(
       // If this is for the top level loading, the top window URI should be the
       // URI which we are loading.
       topWindowURI = uriBeingLoaded;
+
+      // Update the IsOnContentBlockingAllowList flag in the CookieJarSettings
+      // if this is a top level loading. For sub-document loading, this flag
+      // would inherit from the parent.
+      nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+      Unused << loadInfo->GetCookieJarSettings(
+          getter_AddRefs(cookieJarSettings));
+      net::CookieJarSettings::Cast(cookieJarSettings)
+          ->UpdateIsOnContentBlockingAllowList(mChannel);
     } else if (RefPtr<WindowGlobalParent> topWindow = AntiTrackingUtils::
                    GetTopWindowExcludingExtensionAccessibleContentFrames(
                        browsingContext, uriBeingLoaded)) {
