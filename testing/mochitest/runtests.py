@@ -73,7 +73,7 @@ from mozprofile.cli import parse_preferences, parse_key_value, KeyValueParseErro
 from mozprofile.permissions import ServerLocations
 from urllib import quote_plus as encodeURIComponent
 from mozlog.formatters import TbplFormatter
-from mozlog import commandline
+from mozlog import commandline, get_proxy_logger
 from mozrunner.utils import get_stack_fixer_function, test_environment
 from mozscreenshot import dump_screen
 import mozleak
@@ -2728,11 +2728,11 @@ toolbar#nav-bar {
         if self.browserEnv and "MOZ_PROFILER_SHUTDOWN" in self.browserEnv:
             profile_path = self.browserEnv["MOZ_PROFILER_SHUTDOWN"]
 
-            print("TEST-INFO | Shutdown profiling was enabled")
-            print("TEST-INFO | Profile saved locally to: %s" % profile_path)
-            print("TEST-INFO | Symbolicating the profile... This could take a couple of minutes.")
+            profiler_logger = get_proxy_logger("profiler")
+            profiler_logger.info("Shutdown performance profiling was enabled")
+            profiler_logger.info("Profile saved locally to: %s" % profile_path)
             symbolicate_profile_json(profile_path, options.topobjdir)
-            view_gecko_profile_from_mochitest(profile_path, options)
+            view_gecko_profile_from_mochitest(profile_path, options, profiler_logger)
 
             # Clean up the temporary file if it exists.
             if self.profiler_tempdir:
@@ -3235,7 +3235,7 @@ if __name__ == "__main__":
     sys.exit(cli())
 
 
-def view_gecko_profile_from_mochitest(profile_path, options):
+def view_gecko_profile_from_mochitest(profile_path, options, profiler_logger):
     """Getting shutdown performance profiles from just the command line arguments is
     difficult. This function makes the developer ergonomics a bit easier by taking the
     generated Gecko profile, and automatically serving it to profiler.firefox.com. The
@@ -3253,9 +3253,10 @@ def view_gecko_profile_from_mochitest(profile_path, options):
         return
 
     if not os.path.exists(profile_path):
-        print("\tNo profile was found at the profile path, cannot launch profiler.firefox.com.")
+        profiler_logger.error("No profile was found at the profile path, cannot "
+                              "launch profiler.firefox.com.")
         return
 
-    print('TEST-INFO | Loading this profile in profiler.firefox.com')
+    profiler_logger.info('Loading this profile in the Firefox Profiler')
 
     view_gecko_profile(profile_path)
