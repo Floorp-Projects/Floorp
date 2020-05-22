@@ -16,7 +16,7 @@
 #include "nsIURI.h"
 #include "nsIWidget.h"
 #include "nsIFile.h"
-#include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/Preferences.h"
 
 #include "nsArrayEnumerator.h"
 #include "nsMemory.h"
@@ -163,7 +163,8 @@ nsFilePicker::nsFilePicker()
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   // Due to Bug 1635718 always use portal for file dialog on Wayland.
   if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
-    mUseNativeFileChooser = true;
+    mUseNativeFileChooser =
+        Preferences::GetBool("widget.use-xdg-desktop-portal", true);
   } else {
     giovfs->ShouldUseFlatpakPortal(&mUseNativeFileChooser);
   }
