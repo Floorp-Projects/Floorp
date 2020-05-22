@@ -23,13 +23,13 @@ namespace image {
 static LazyLogModule sAVIFLog("AVIFDecoder");
 
 // Wrapper to allow rust to call our read adaptor.
-intptr_t nsAVIFDecoder::read_source(uint8_t* aDestBuf, uintptr_t aDestBufSize,
-                                    void* aUserData) {
+intptr_t nsAVIFDecoder::ReadSource(uint8_t* aDestBuf, uintptr_t aDestBufSize,
+                                   void* aUserData) {
   MOZ_ASSERT(aDestBuf);
   MOZ_ASSERT(aUserData);
 
   MOZ_LOG(sAVIFLog, LogLevel::Verbose,
-          ("AVIF read_source, aDestBufSize: %zu", aDestBufSize));
+          ("AVIF ReadSource, aDestBufSize: %zu", aDestBufSize));
 
   auto* decoder = reinterpret_cast<nsAVIFDecoder*>(aUserData);
 
@@ -38,9 +38,9 @@ intptr_t nsAVIFDecoder::read_source(uint8_t* aDestBuf, uintptr_t aDestBufSize,
   size_t bufferLength = decoder->mBufferedData.end() - decoder->mReadCursor;
   size_t n_bytes = std::min(aDestBufSize, bufferLength);
 
-  MOZ_LOG(sAVIFLog, LogLevel::Verbose,
-          ("AVIF read_source, %zu bytes ready, copying %zu", bufferLength,
-           n_bytes));
+  MOZ_LOG(
+      sAVIFLog, LogLevel::Verbose,
+      ("AVIF ReadSource, %zu bytes ready, copying %zu", bufferLength, n_bytes));
 
   memcpy(aDestBuf, decoder->mReadCursor, n_bytes);
   decoder->mReadCursor += n_bytes;
@@ -59,15 +59,272 @@ nsAVIFDecoder::~nsAVIFDecoder() {
           ("[this=%p] nsAVIFDecoder::~nsAVIFDecoder", this));
 
   if (mParser) {
+    MOZ_LOG(sAVIFLog, LogLevel::Debug,
+            ("[this=%p] freeing parser due to nsAVIFDecoder destructor", this));
     mp4parse_avif_free(mParser);
+    mParser = nullptr;
+  }
+
+  if (mDav1dPicture) {
+    // TODO: Make this more ergonomic, see bug 1639637
+    dav1d_picture_unref(mDav1dPicture.ptr());
+    mDav1dPicture.reset();
   }
 
   if (mCodecContext) {
-    aom_codec_err_t res = aom_codec_destroy(mCodecContext.ptr());
-
+    if (mCodecContext->is<Dav1dContext*>()) {
+      dav1d_close(&mCodecContext->as<Dav1dContext*>());
+      MOZ_LOG(sAVIFLog, LogLevel::Debug, ("[this=%p] dav1d_close", this));
+    } else {
+      MOZ_ASSERT(mCodecContext->is<aom_codec_ctx_t>());
+      aom_codec_err_t res =
+          aom_codec_destroy(&mCodecContext->as<aom_codec_ctx_t>());
+      MOZ_LOG(sAVIFLog, LogLevel::Debug,
+              ("[this=%p] aom_codec_destroy -> %d", this, res));
+    }
+  } else {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
-            ("[this=%p] aom_codec_destroy -> %d", this, res));
+            ("[this=%p] no codec context to destruct", this));
   }
+}
+
+void nsAVIFDecoder::FreeDav1dData(const uint8_t* buf, void* cookie) {
+  auto* decoder = static_cast<nsAVIFDecoder*>(cookie);
+  if (decoder->mParser) {
+    MOZ_LOG(sAVIFLog, LogLevel::Debug,
+            ("[this=%p] freeing parser %p due to dav1d_data_wrap callback",
+             decoder, decoder->mParser));
+    mp4parse_avif_free(decoder->mParser);
+    decoder->mParser = nullptr;
+  }
+}
+
+bool nsAVIFDecoder::DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
+                                    layers::PlanarYCbCrData& aDecodedData) {
+  Dav1dSettings settings;
+  dav1d_default_settings(&settings);
+  // TODO: tune settings a la DAV1DDecoder for AV1
+
+  Dav1dContext* ctx = nullptr;
+  int res = dav1d_open(&ctx, &settings);
+
+  if (res == 0) {
+    mCodecContext = Some(AsVariant(ctx));
+  } else {
+    return false;
+  }
+
+  Dav1dData dav1dData;
+  res = dav1d_data_wrap(&dav1dData, aPrimaryItem.data, aPrimaryItem.length,
+                        nsAVIFDecoder::FreeDav1dData, this);
+
+  if (res != 0) {
+    MOZ_LOG(sAVIFLog, LogLevel::Error,
+            ("[this=%p] dav1d_data_wrap(%p, %zu) -> %d", this, dav1dData.data,
+             dav1dData.sz, res));
+    return false;
+  }
+
+  res = dav1d_send_data(ctx, &dav1dData);
+
+  if (res != 0) {
+    MOZ_LOG(sAVIFLog, LogLevel::Error,
+            ("[this=%p] dav1d_send_data -> %d", this, res));
+    return false;
+  }
+
+  MOZ_ASSERT(!mDav1dPicture.isSome());
+  mDav1dPicture.emplace();
+  res = dav1d_get_picture(ctx, mDav1dPicture.ptr());
+
+  if (res != 0) {
+    MOZ_LOG(sAVIFLog, LogLevel::Error,
+            ("[this=%p] dav1d_get_picture -> %d", this, res));
+    return false;
+  }
+
+  static_assert(std::is_same<int, decltype(mDav1dPicture->p.w)>::value);
+  static_assert(std::is_same<int, decltype(mDav1dPicture->p.h)>::value);
+
+  aDecodedData.mYChannel = static_cast<uint8_t*>(mDav1dPicture->data[0]);
+  aDecodedData.mYStride = mDav1dPicture->stride[0];
+  aDecodedData.mYSize = gfx::IntSize(mDav1dPicture->p.w, mDav1dPicture->p.h);
+  aDecodedData.mYSkip = mDav1dPicture->stride[0] - mDav1dPicture->p.w;
+  aDecodedData.mCbChannel = static_cast<uint8_t*>(mDav1dPicture->data[1]);
+  aDecodedData.mCrChannel = static_cast<uint8_t*>(mDav1dPicture->data[2]);
+  aDecodedData.mCbCrStride = mDav1dPicture->stride[1];
+
+  switch (mDav1dPicture->p.layout) {
+    case DAV1D_PIXEL_LAYOUT_I400:  // Monochrome, so no Cb or Cr channels
+      aDecodedData.mCbCrSize = gfx::IntSize(0, 0);
+      break;
+    case DAV1D_PIXEL_LAYOUT_I420:
+      aDecodedData.mCbCrSize = gfx::IntSize((mDav1dPicture->p.w + 1) / 2,
+                                            (mDav1dPicture->p.h + 1) / 2);
+      break;
+    case DAV1D_PIXEL_LAYOUT_I422:
+      aDecodedData.mCbCrSize =
+          gfx::IntSize((mDav1dPicture->p.w + 1) / 2, mDav1dPicture->p.h);
+      break;
+    case DAV1D_PIXEL_LAYOUT_I444:
+      aDecodedData.mCbCrSize =
+          gfx::IntSize(mDav1dPicture->p.w, mDav1dPicture->p.h);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown pixel layout");
+  }
+
+  aDecodedData.mCbSkip = mDav1dPicture->stride[1] - mDav1dPicture->p.w;
+  aDecodedData.mCrSkip = mDav1dPicture->stride[1] - mDav1dPicture->p.w;
+  aDecodedData.mPicX = 0;
+  aDecodedData.mPicY = 0;
+  aDecodedData.mPicSize = aDecodedData.mYSize;
+  aDecodedData.mStereoMode = StereoMode::MONO;
+  aDecodedData.mColorDepth = ColorDepthForBitDepth(mDav1dPicture->p.bpc);
+
+  switch (mDav1dPicture->seq_hdr->pri) {
+    case DAV1D_COLOR_PRI_BT601:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+      break;
+    case DAV1D_COLOR_PRI_BT709:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::BT709;
+      break;
+    case DAV1D_COLOR_PRI_BT2020:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
+      break;
+    case DAV1D_COLOR_PRI_UNKNOWN:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
+      break;
+    default:
+      MOZ_LOG(sAVIFLog, LogLevel::Debug,
+              ("[this=%p] unsupported color primaries value: %u", this,
+               mDav1dPicture->seq_hdr->pri));
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
+  }
+
+  aDecodedData.mColorRange = mDav1dPicture->seq_hdr->color_range
+                                 ? gfx::ColorRange::FULL
+                                 : gfx::ColorRange::LIMITED;
+
+  return true;
+}
+
+bool nsAVIFDecoder::DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
+                                  layers::PlanarYCbCrData& aDecodedData) {
+  aom_codec_iface_t* iface = aom_codec_av1_dx();
+  aom_codec_ctx_t ctx;
+  aom_codec_err_t res =
+      aom_codec_dec_init(&ctx, iface, /* cfg = */ nullptr, /* flags = */ 0);
+
+  MOZ_LOG(
+      sAVIFLog, LogLevel::Error,
+      ("[this=%p] aom_codec_dec_init -> %d, name = %s", this, res, ctx.name));
+
+  if (res == AOM_CODEC_OK) {
+    mCodecContext = Some(AsVariant(ctx));
+  } else {
+    return false;
+  }
+
+  res = aom_codec_decode(&mCodecContext->as<aom_codec_ctx_t>(),
+                         aPrimaryItem.data, aPrimaryItem.length, nullptr);
+
+  if (res != AOM_CODEC_OK) {
+    MOZ_LOG(sAVIFLog, LogLevel::Error,
+            ("[this=%p] aom_codec_decode -> %d", this, res));
+    return false;
+  }
+
+  MOZ_LOG(sAVIFLog, LogLevel::Debug,
+          ("[this=%p] aom_codec_decode -> %d", this, res));
+
+  aom_codec_iter_t iter = nullptr;
+  const aom_image_t* img =
+      aom_codec_get_frame(&mCodecContext->as<aom_codec_ctx_t>(), &iter);
+
+  if (img == nullptr) {
+    MOZ_LOG(sAVIFLog, LogLevel::Error,
+            ("[this=%p] aom_codec_get_frame -> %p", this, img));
+    return false;
+  }
+
+  const CheckedInt<int> decoded_width = img->d_w;
+  const CheckedInt<int> decoded_height = img->d_h;
+
+  if (!decoded_height.isValid() || !decoded_width.isValid()) {
+    MOZ_LOG(
+        sAVIFLog, LogLevel::Debug,
+        ("[this=%p] image dimensions can't be stored in int: d_w: %u, d_h: %u",
+         this, img->d_w, img->d_h));
+    return false;
+  }
+
+  PostSize(decoded_width.value(), decoded_height.value());
+
+  MOZ_ASSERT(img->stride[AOM_PLANE_Y] == img->stride[AOM_PLANE_ALPHA]);
+  MOZ_ASSERT(img->stride[AOM_PLANE_Y] >= aom_img_plane_width(img, AOM_PLANE_Y));
+  MOZ_ASSERT(img->stride[AOM_PLANE_U] == img->stride[AOM_PLANE_V]);
+  MOZ_ASSERT(img->stride[AOM_PLANE_U] >= aom_img_plane_width(img, AOM_PLANE_U));
+  MOZ_ASSERT(img->stride[AOM_PLANE_V] >= aom_img_plane_width(img, AOM_PLANE_V));
+  MOZ_ASSERT(aom_img_plane_width(img, AOM_PLANE_U) ==
+             aom_img_plane_width(img, AOM_PLANE_V));
+  MOZ_ASSERT(aom_img_plane_height(img, AOM_PLANE_U) ==
+             aom_img_plane_height(img, AOM_PLANE_V));
+
+  aDecodedData.mYChannel = img->planes[AOM_PLANE_Y];
+  aDecodedData.mYStride = img->stride[AOM_PLANE_Y];
+  aDecodedData.mYSize = gfx::IntSize(aom_img_plane_width(img, AOM_PLANE_Y),
+                                     aom_img_plane_height(img, AOM_PLANE_Y));
+  aDecodedData.mYSkip =
+      img->stride[AOM_PLANE_Y] - aom_img_plane_width(img, AOM_PLANE_Y);
+  aDecodedData.mCbChannel = img->planes[AOM_PLANE_U];
+  aDecodedData.mCrChannel = img->planes[AOM_PLANE_V];
+  aDecodedData.mCbCrStride = img->stride[AOM_PLANE_U];
+  aDecodedData.mCbCrSize = gfx::IntSize(aom_img_plane_width(img, AOM_PLANE_U),
+                                        aom_img_plane_height(img, AOM_PLANE_U));
+  aDecodedData.mCbSkip =
+      img->stride[AOM_PLANE_U] - aom_img_plane_width(img, AOM_PLANE_U);
+  aDecodedData.mCrSkip =
+      img->stride[AOM_PLANE_V] - aom_img_plane_width(img, AOM_PLANE_V);
+  aDecodedData.mPicX = 0;
+  aDecodedData.mPicY = 0;
+  aDecodedData.mPicSize =
+      gfx::IntSize(decoded_width.value(), decoded_height.value());
+  aDecodedData.mStereoMode = StereoMode::MONO;
+  aDecodedData.mColorDepth = ColorDepthForBitDepth(img->bit_depth);
+
+  switch (img->cp) {
+    case AOM_CICP_CP_BT_601:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+      break;
+    case AOM_CICP_CP_BT_709:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::BT709;
+      break;
+    case AOM_CICP_CP_BT_2020:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
+      break;
+    case AOM_CICP_CP_UNSPECIFIED:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
+      break;
+    default:
+      MOZ_LOG(sAVIFLog, LogLevel::Debug,
+              ("[this=%p] unsupported aom_color_primaries value: %u", this,
+               img->cp));
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
+  }
+
+  switch (img->range) {
+    case AOM_CR_STUDIO_RANGE:
+      aDecodedData.mColorRange = gfx::ColorRange::LIMITED;
+      break;
+    case AOM_CR_FULL_RANGE:
+      aDecodedData.mColorRange = gfx::ColorRange::FULL;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown color range");
+  }
+
+  return true;
 }
 
 LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
@@ -117,7 +374,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
     }
   }
 
-  Mp4parseIo io = {nsAVIFDecoder::read_source, this};
+  Mp4parseIo io = {nsAVIFDecoder::ReadSource, this};
   if (!mParser) {
     Mp4parseStatus status = mp4parse_avif_new(&io, &mParser);
 
@@ -129,63 +386,31 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
     return LexerResult(TerminalState::FAILURE);
   }
 
-  Mp4parseByteData mdat = {};  // change the name to 'primary_item' or something
-  Mp4parseStatus status = mp4parse_avif_get_primary_item(mParser, &mdat);
+  Mp4parseByteData primaryItem = {};
+  Mp4parseStatus status = mp4parse_avif_get_primary_item(mParser, &primaryItem);
 
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
-          ("[this=%p] mp4parse_avif_get_primary_item -> %d", this, status));
+          ("[this=%p] mp4parse_avif_get_primary_item -> %d; length: %u", this,
+           status, primaryItem.length));
 
   if (status != MP4PARSE_STATUS_OK) {
     return LexerResult(TerminalState::FAILURE);
   }
 
-  aom_codec_iface_t* iface = aom_codec_av1_dx();
-  aom_codec_ctx_t ctx;
-  aom_codec_err_t res =
-      aom_codec_dec_init(&ctx, iface, /* cfg = */ nullptr, /* flags = */ 0);
-
-  MOZ_LOG(
-      sAVIFLog, LogLevel::Error,
-      ("[this=%p] aom_codec_dec_init -> %d, name = %s", this, res, ctx.name));
-
-  if (res == AOM_CODEC_OK) {
-    mCodecContext = Some(ctx);
-  } else {
-    return LexerResult(TerminalState::FAILURE);
-  }
-
-  res = aom_codec_decode(mCodecContext.ptr(), mdat.data, mdat.length, nullptr);
-
-  if (res != AOM_CODEC_OK) {
-    MOZ_LOG(sAVIFLog, LogLevel::Error,
-            ("[this=%p] aom_codec_decode -> %d", this, res));
-    return LexerResult(TerminalState::FAILURE);
-  }
+  layers::PlanarYCbCrData decodedData;
+  bool decodeOK = StaticPrefs::image_avif_use_dav1d()
+                      ? DecodeWithDav1d(primaryItem, decodedData)
+                      : DecodeWithAOM(primaryItem, decodedData);
 
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
-          ("[this=%p] aom_codec_decode -> %d", this, res));
-
-  aom_codec_iter_t iter = nullptr;
-  const aom_image_t* img = aom_codec_get_frame(mCodecContext.ptr(), &iter);
-
-  if (img == nullptr) {
-    MOZ_LOG(sAVIFLog, LogLevel::Error,
-            ("[this=%p] aom_codec_get_frame -> %p", this, img));
+          ("[this=%p] DecodeWith%s() -> %s", this,
+           StaticPrefs::image_avif_use_dav1d() ? "Dav1d" : "AOM",
+           decodeOK ? "OK" : "Fail"));
+  if (!decodeOK) {
     return LexerResult(TerminalState::FAILURE);
   }
 
-  const CheckedInt<int> decoded_width = img->d_w;
-  const CheckedInt<int> decoded_height = img->d_h;
-
-  if (!decoded_height.isValid() || !decoded_width.isValid()) {
-    MOZ_LOG(
-        sAVIFLog, LogLevel::Debug,
-        ("[this=%p] image dimensions can't be stored in int: d_w: %u, d_h: %u",
-         this, img->d_w, img->d_h));
-    return LexerResult(TerminalState::FAILURE);
-  }
-
-  PostSize(decoded_width.value(), decoded_height.value());
+  PostSize(decodedData.mPicSize.width, decodedData.mPicSize.height);
 
   // TODO: This doesn't account for the alpha plane in a separate frame
   const bool hasAlpha = false;
@@ -197,72 +422,12 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
     return LexerResult(TerminalState::SUCCESS);
   }
 
-  MOZ_ASSERT(img->stride[AOM_PLANE_Y] == img->stride[AOM_PLANE_ALPHA]);
-  MOZ_ASSERT(img->stride[AOM_PLANE_Y] >= aom_img_plane_width(img, AOM_PLANE_Y));
-  MOZ_ASSERT(img->stride[AOM_PLANE_U] == img->stride[AOM_PLANE_V]);
-  MOZ_ASSERT(img->stride[AOM_PLANE_U] >= aom_img_plane_width(img, AOM_PLANE_U));
-  MOZ_ASSERT(img->stride[AOM_PLANE_V] >= aom_img_plane_width(img, AOM_PLANE_V));
-  MOZ_ASSERT(aom_img_plane_width(img, AOM_PLANE_U) ==
-             aom_img_plane_width(img, AOM_PLANE_V));
-  MOZ_ASSERT(aom_img_plane_height(img, AOM_PLANE_U) ==
-             aom_img_plane_height(img, AOM_PLANE_V));
-
-  layers::PlanarYCbCrData data;
-  data.mYChannel = img->planes[AOM_PLANE_Y];
-  data.mYStride = img->stride[AOM_PLANE_Y];
-  data.mYSize = gfx::IntSize(aom_img_plane_width(img, AOM_PLANE_Y),
-                             aom_img_plane_height(img, AOM_PLANE_Y));
-  data.mYSkip =
-      img->stride[AOM_PLANE_Y] - aom_img_plane_width(img, AOM_PLANE_Y);
-  data.mCbChannel = img->planes[AOM_PLANE_U];
-  data.mCrChannel = img->planes[AOM_PLANE_V];
-  data.mCbCrStride = img->stride[AOM_PLANE_U];
-  data.mCbCrSize = gfx::IntSize(aom_img_plane_width(img, AOM_PLANE_U),
-                                aom_img_plane_height(img, AOM_PLANE_U));
-  data.mCbSkip =
-      img->stride[AOM_PLANE_U] - aom_img_plane_width(img, AOM_PLANE_U);
-  data.mCrSkip =
-      img->stride[AOM_PLANE_V] - aom_img_plane_width(img, AOM_PLANE_V);
-  data.mPicX = 0;
-  data.mPicY = 0;
-  data.mPicSize = gfx::IntSize(decoded_width.value(), decoded_height.value());
-  data.mStereoMode = StereoMode::MONO;
-  data.mColorDepth = ColorDepthForBitDepth(img->bit_depth);
-
-  switch (img->cp) {
-    case AOM_CICP_CP_BT_601:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
-      break;
-    case AOM_CICP_CP_BT_709:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT709;
-      break;
-    case AOM_CICP_CP_BT_2020:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
-      break;
-    default:
-      MOZ_LOG(sAVIFLog, LogLevel::Debug,
-              ("[this=%p] unsupported aom_color_primaries value: %u", this,
-               img->cp));
-      data.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
-  }
-
-  switch (img->range) {
-    case AOM_CR_STUDIO_RANGE:
-      data.mColorRange = gfx::ColorRange::LIMITED;
-      break;
-    case AOM_CR_FULL_RANGE:
-      data.mColorRange = gfx::ColorRange::FULL;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unknown color range");
-  }
-
   gfx::SurfaceFormat format =
       hasAlpha ? SurfaceFormat::OS_RGBA : SurfaceFormat::OS_RGBX;
   const IntSize intrinsicSize = Size();
   IntSize rgbSize = intrinsicSize;
 
-  gfx::GetYCbCrToRGBDestFormatAndSize(data, format, rgbSize);
+  gfx::GetYCbCrToRGBDestFormatAndSize(decodedData, format, rgbSize);
   const int bytesPerPixel = BytesPerPixel(format);
 
   const CheckedInt rgbStride = CheckedInt<int>(rgbSize.width) * bytesPerPixel;
@@ -287,9 +452,13 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
     return LexerResult(TerminalState::FAILURE);
   }
 
-  gfx::ConvertYCbCrToRGB(data, format, rgbSize, rgbBuf.get(),
+  MOZ_LOG(sAVIFLog, LogLevel::Debug,
+          ("[this=%p] calling gfx::ConvertYCbCrToRGB", this));
+  gfx::ConvertYCbCrToRGB(decodedData, format, rgbSize, rgbBuf.get(),
                          rgbStride.value());
 
+  MOZ_LOG(sAVIFLog, LogLevel::Debug,
+          ("[this=%p] calling SurfacePipeFactory::CreateSurfacePipe", this));
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
       this, rgbSize, OutputSize(), FullFrame(), format, format, Nothing(),
       nullptr, SurfacePipeFlags());
@@ -300,6 +469,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
     return LexerResult(TerminalState::FAILURE);
   }
 
+  MOZ_LOG(sAVIFLog, LogLevel::Debug, ("[this=%p] writing to surface", this));
   WriteState writeBufferResult = WriteState::NEED_MORE_DATA;
   for (uint8_t* rowPtr = rgbBuf.get(); rowPtr < endOfRgbBuf;
        rowPtr += rgbStride.value()) {
@@ -320,10 +490,8 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
     }
   }
 
-  // We don't support image sequences yet
-  DebugOnly<aom_image_t*> next_img =
-      aom_codec_get_frame(mCodecContext.ptr(), &iter);
-  MOZ_ASSERT(next_img == nullptr);
+  MOZ_LOG(sAVIFLog, LogLevel::Debug,
+          ("[this=%p] writing to surface complete", this));
 
   if (writeBufferResult == WriteState::FINISHED) {
     PostFrameStop(hasAlpha ? Opacity::SOME_TRANSPARENCY

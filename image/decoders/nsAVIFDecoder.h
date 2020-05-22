@@ -12,6 +12,7 @@
 #include "SurfacePipe.h"
 
 #include "aom/aom_decoder.h"
+#include "dav1d/dav1d.h"
 
 namespace mozilla {
 namespace image {
@@ -33,11 +34,20 @@ class nsAVIFDecoder final : public Decoder {
   // Decoders should only be instantiated via DecoderFactory.
   explicit nsAVIFDecoder(RasterImage* aImage);
 
-  static intptr_t read_source(uint8_t* aDestBuf, uintptr_t aDestBufSize,
-                              void* aUserData);
+  static intptr_t ReadSource(uint8_t* aDestBuf, uintptr_t aDestBufSize,
+                             void* aUserData);
+
+  static void FreeDav1dData(const uint8_t* buf, void* cookie);
+
+  bool DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
+                       layers::PlanarYCbCrData& aDecodedData);
+  bool DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
+                     layers::PlanarYCbCrData& aDecodedData);
 
   Mp4parseAvifParser* mParser;
-  Maybe<aom_codec_ctx_t> mCodecContext;
+  Maybe<Variant<aom_codec_ctx_t, Dav1dContext*>> mCodecContext;
+
+  Maybe<Dav1dPicture> mDav1dPicture;
 
   Vector<uint8_t> mBufferedData;
 

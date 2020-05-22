@@ -471,6 +471,8 @@ ImageTestCase GreenIconTestCase();
 ImageTestCase GreenWebPTestCase();
 ImageTestCase GreenAVIFTestCase();
 
+ImageTestCase StackCheckAVIFTestCase();
+
 ImageTestCase LargeWebPTestCase();
 ImageTestCase GreenWebPIccSrgbTestCase();
 

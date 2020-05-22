@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,6 +13,8 @@
 
 namespace mozilla {
 namespace gfx {
+
+// clang-format off
 
 void
 GetYCbCrToRGBDestFormatAndSize(const layers::PlanarYCbCrData& aData,
@@ -97,11 +99,13 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                   int32_t aStride)
 {
   // ConvertYCbCrToRGB et al. assume the chroma planes are rounded up if the
-  // luma plane is odd sized.
-  MOZ_ASSERT((aData.mCbCrSize.width == aData.mYSize.width ||
-              aData.mCbCrSize.width == (aData.mYSize.width + 1) >> 1) &&
-             (aData.mCbCrSize.height == aData.mYSize.height ||
-              aData.mCbCrSize.height == (aData.mYSize.height + 1) >> 1));
+  // luma plane is odd sized. Monochrome images have 0-sized CbCr planes
+  MOZ_ASSERT(aData.mCbCrSize.width == aData.mYSize.width ||
+             aData.mCbCrSize.width == (aData.mYSize.width + 1) >> 1 ||
+             aData.mCbCrSize.width == 0);
+  MOZ_ASSERT(aData.mCbCrSize.height == aData.mYSize.height ||
+             aData.mCbCrSize.height == (aData.mYSize.height + 1) >> 1 ||
+             aData.mCbCrSize.height == 0);
 
   // Used if converting to 8 bits YUV.
   UniquePtr<uint8_t[]> yChannel;
@@ -128,16 +132,13 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
     size_t ySize = GetAlignedStride<1>(dstData.mYStride, aData.mYSize.height);
     size_t cbcrSize =
       GetAlignedStride<1>(dstData.mCbCrStride, aData.mCbCrSize.height);
-    if (ySize == 0 || cbcrSize == 0) {
+    if (ySize == 0) {
+      MOZ_DIAGNOSTIC_ASSERT(cbcrSize == 0, "CbCr without Y makes no sense");
       return;
     }
     yChannel = MakeUnique<uint8_t[]>(ySize);
-    cbChannel = MakeUnique<uint8_t[]>(cbcrSize);
-    crChannel = MakeUnique<uint8_t[]>(cbcrSize);
 
     dstData.mYChannel = yChannel.get();
-    dstData.mCbChannel = cbChannel.get();
-    dstData.mCrChannel = crChannel.get();
 
     int bitDepth = BitDepthForColorDepth(aData.mColorDepth);
 
@@ -149,21 +150,29 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                           aData.mYSize.height,
                           bitDepth);
 
-    ConvertYCbCr16to8Line(dstData.mCbChannel,
-                          dstData.mCbCrStride,
-                          reinterpret_cast<uint16_t*>(aData.mCbChannel),
-                          aData.mCbCrStride / 2,
-                          aData.mCbCrSize.width,
-                          aData.mCbCrSize.height,
-                          bitDepth);
+    if (cbcrSize) {
+      cbChannel = MakeUnique<uint8_t[]>(cbcrSize);
+      crChannel = MakeUnique<uint8_t[]>(cbcrSize);
 
-    ConvertYCbCr16to8Line(dstData.mCrChannel,
-                          dstData.mCbCrStride,
-                          reinterpret_cast<uint16_t*>(aData.mCrChannel),
-                          aData.mCbCrStride / 2,
-                          aData.mCbCrSize.width,
-                          aData.mCbCrSize.height,
-                          bitDepth);
+      dstData.mCbChannel = cbChannel.get();
+      dstData.mCrChannel = crChannel.get();
+
+      ConvertYCbCr16to8Line(dstData.mCbChannel,
+                            dstData.mCbCrStride,
+                            reinterpret_cast<uint16_t*>(aData.mCbChannel),
+                            aData.mCbCrStride / 2,
+                            aData.mCbCrSize.width,
+                            aData.mCbCrSize.height,
+                            bitDepth);
+
+      ConvertYCbCr16to8Line(dstData.mCrChannel,
+                            dstData.mCbCrStride,
+                            reinterpret_cast<uint16_t*>(aData.mCrChannel),
+                            aData.mCbCrStride / 2,
+                            aData.mCbCrSize.width,
+                            aData.mCbCrSize.height,
+                            bitDepth);
+    }
   }
 
   YUVType yuvtype =
