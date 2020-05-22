@@ -19,7 +19,7 @@ const TEST_BENCHMARK = "benchmark";
 const TEST_PAGE_LOAD = "pageload";
 const TEST_SCENARIO = "scenario";
 
-const GECKOVIEW_BROWSERS = ["fenix", "geckoview", "refbrow"];
+const ANDROID_BROWSERS = ["fennec", "fenix", "geckoview", "refbrow"];
 
 // when the browser starts this webext runner will start automatically; we
 // want to give the browser some time (ms) to settle before starting tests
@@ -34,7 +34,7 @@ var newTabPerCycle = false;
 var foregroundDelay = 5000;
 
 var isGecko = false;
-var isGeckoView = false;
+var isGeckoAndroid = false;
 var ext;
 var testName = null;
 var settingsURL = null;
@@ -240,7 +240,7 @@ async function getCurrentTabId() {
 }
 
 async function openTab() {
-  await postToControlServer("status", "openinig new tab");
+  await postToControlServer("status", "opening new tab");
 
   let tab;
   if (isGecko) {
@@ -719,8 +719,7 @@ async function raptorRunner() {
   await postToControlServer("status", text);
   await sleep(postStartupDelay);
 
-  // GeckoView doesn't support tabs
-  if (!isGeckoView) {
+  if (!isGeckoAndroid) {
     await openTab();
   }
 
@@ -758,7 +757,7 @@ async function init() {
 
     ext = browser;
     isGecko = true;
-    isGeckoView = GECKOVIEW_BROWSERS.includes(info.name.toLowerCase);
+    isGeckoAndroid = ANDROID_BROWSERS.includes(info.name.toLowerCase);
   } catch (e) {
     const regex = /(Chrome)\/([\w\.]+)/;
     const userAgent = window.navigator.userAgent;
