@@ -149,6 +149,63 @@ class Settings private constructor(
             preferences.getBoolean(appContext.getString(R.string.pref_key_migrating_from_firefox_nightly_tip), true) &&
             preferences.getBoolean(appContext.getString(R.string.pref_key_migrating_from_fenix_tip), true)
 
+    private val activeSearchCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_count),
+        default = 0
+    )
+
+    fun incrementActiveSearchCount() {
+        preferences.edit().putInt(
+            appContext.getPreferenceKey(R.string.pref_key_search_count),
+            activeSearchCount + 1
+        ).apply()
+    }
+
+    private val isActiveSearcher: Boolean
+        get() = activeSearchCount > 2
+
+    fun shouldDisplaySearchWidgetCFR(): Boolean =
+        isActiveSearcher &&
+        searchWidgetCFRDismissCount < 3 &&
+        !searchWidgetInstalled &&
+        !searchWidgetCFRManuallyDismissed
+
+    private val searchWidgetCFRDisplayCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_display_count),
+        default = 0
+    )
+
+    fun incrementSearchWidgetCFRDisplayed() {
+        preferences.edit().putInt(
+            appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_display_count),
+            searchWidgetCFRDisplayCount + 1
+        ).apply()
+    }
+
+    private val searchWidgetCFRManuallyDismissed by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_manually_dismissed),
+        default = false
+    )
+
+    fun manuallyDismissSearchWidgetCFR() {
+        preferences.edit().putBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_manually_dismissed),
+            true
+        ).apply()
+    }
+
+    private val searchWidgetCFRDismissCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_dismiss_count),
+        default = 0
+    )
+
+    fun incrementSearchWidgetCFRDismissed() {
+        preferences.edit().putInt(
+            appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_dismiss_count),
+            searchWidgetCFRDismissCount + 1
+        ).apply()
+    }
+
     var defaultSearchEngineName by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_engine),
         default = ""

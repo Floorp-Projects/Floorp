@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_gravity="center_horizontal"
+    android:paddingHorizontal="16dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:visibility="gone"
+        android:id="@+id/drop_down_triangle"
+        android:layout_width="@dimen/tp_onboarding_triangle_width"
+        android:layout_height="@dimen/tp_onboarding_triangle_height"
+        android:importantForAccessibility="no"
+        android:rotation="0"
+        app:srcCompat="@drawable/ic_pbm_triangle"
+        android:layout_gravity="center" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/message"
+        android:layout_width="@dimen/etp_onboarding_popup_width"
+        android:layout_height="wrap_content"
+        android:background="@drawable/cfr_background_gradient"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/cfr_image"
+            app:srcCompat="@drawable/search_widget_illustration"
+            android:padding="16dp"
+            android:scaleType="fitCenter"
+            android:layout_width="0dp"
+            android:layout_height="140dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <TextView
+            android:id="@+id/cfr_message"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:lineSpacingExtra="2dp"
+            android:text="@string/search_widget_cfr_message"
+            android:textColor="@color/primary_text_dark_theme"
+            android:textSize="16sp"
+            app:fontFamily="@font/metropolis_medium"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cfr_image" />
+
+
+        <Button
+            android:id="@+id/cfr_pos_button"
+            style="@style/MetropolisButton"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/rounded_gray_corners"
+            android:text="@string/search_widget_cfr_pos_button_text"
+            android:textAllCaps="false"
+            android:textColor="@color/above_dark_theme"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@id/cfr_neg_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cfr_message" />
+
+        <Button
+            android:id="@+id/cfr_neg_button"
+            style="@style/MetropolisButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:text="@string/search_widget_cfr_neg_button_text"
+            android:textAllCaps="false"
+            android:textColor="@color/white_color"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cfr_pos_button" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/pop_up_triangle"
+        android:layout_width="16dp"
+        android:layout_height="@dimen/tp_onboarding_triangle_height"
+        android:importantForAccessibility="no"
+        android:rotation="180"
+        app:srcCompat="@drawable/ic_pbm_triangle"
+        android:layout_gravity="center" />
+</LinearLayout>

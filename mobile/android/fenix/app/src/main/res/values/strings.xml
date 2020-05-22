@@ -36,13 +36,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Delete session</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Add a shortcut to open private tabs from your Home screen.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Add shortcut</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">No thanks</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. Placeholder text replaced with app name. -->
+    <string name="search_widget_cfr_message">Get to Firefox faster. Add a widget to your Home screen.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Add widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Not now</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

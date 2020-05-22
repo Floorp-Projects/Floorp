@@ -81,6 +81,8 @@ class DefaultSearchController(
         val event = if (url.isUrl()) {
             Event.EnteredUrl(false)
         } else {
+            context.settings().incrementActiveSearchCount()
+
             val searchAccessPoint = when (store.state.searchAccessPoint) {
                 NONE -> ACTION
                 else -> store.state.searchAccessPoint
@@ -142,6 +144,8 @@ class DefaultSearchController(
     }
 
     override fun handleSearchTermsTapped(searchTerms: String) {
+        context.settings().incrementActiveSearchCount()
+
         activity.openToBrowserAndLoad(
             searchTermOrURL = searchTerms,
             newTab = store.state.session == null,
