@@ -256,7 +256,7 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
 
   // Don't inline if we're constructing and new.target != callee. This can
   // happen with Reflect.construct or derived class constructors.
-  if (callInfo.constructing() && callInfo.getNewTarget() != callInfo.fun()) {
+  if (callInfo.constructing() && callInfo.getNewTarget() != callInfo.callee()) {
     return InliningStatus_NotInlined;
   }
 
@@ -756,7 +756,7 @@ IonBuilder::InliningResult IonBuilder::inlineMathFunction(
     return InliningStatus_NotInlined;
   }
 
-  callInfo.fun()->setImplicitlyUsedUnchecked();
+  callInfo.callee()->setImplicitlyUsedUnchecked();
   callInfo.thisArg()->setImplicitlyUsedUnchecked();
 
   MMathFunction* ins =
