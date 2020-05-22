@@ -294,30 +294,57 @@ class RAPL {
 
     // This is similar to arch/x86/kernel/cpu/perf_event_intel_rapl.c in
     // linux-4.1.5/.
+    //
+    // By linux-5.6.14/, this stuff had moved into
+    // arch/x86/events/intel/rapl.c, which references processor families in
+    // arch/x86/include/asm/intel-family.h.
     switch (cpuModel) {
-      case 60:  // 0x3c: Haswell
-      case 69:  // 0x45: Haswell-Celeron
-      case 70:  // 0x46: Haswell
-      case 61:  // 0x3d: Broadwell
-        // Supports package, cores, GPU, RAM.
-        mIsGpuSupported = true;
-        mIsRamSupported = true;
-        break;
-
-      case 42:  // 0x2a: Sandy Bridge
-      case 58:  // 0x3a: Ivy Bridge
+      case 0x2a:  // Sandy Bridge
+      case 0x3a:  // Ivy Bridge
         // Supports package, cores, GPU.
         mIsGpuSupported = true;
         mIsRamSupported = false;
         break;
 
-      case 63:  // 0x3f: Haswell-Server
+      case 0x3f:  // Haswell X
+      case 0x4f:  // Broadwell X
+      case 0x55:  // Skylake X
+      case 0x56:  // Broadwell D
+        // Supports package, cores, RAM. Has the units quirk.
+        mIsGpuSupported = false;
+        mIsRamSupported = true;
         mHasRamUnitsQuirk = true;
-        [[fallthrough]];
-      case 45:  // 0x2d: Sandy Bridge-EP
-      case 62:  // 0x3e: Ivy Bridge-E
+        break;
+
+      case 0x2d:  // Sandy Bridge X
+      case 0x3e:  // Ivy Bridge X
         // Supports package, cores, RAM.
         mIsGpuSupported = false;
+        mIsRamSupported = true;
+        break;
+
+      case 0x3c:  // Haswell
+      case 0x3d:  // Broadwell
+      case 0x45:  // Haswell L
+      case 0x46:  // Haswell G
+      case 0x47:  // Broadwell G
+        // Supports package, cores, GPU, RAM.
+        mIsGpuSupported = true;
+        mIsRamSupported = true;
+        break;
+
+      case 0x4e:  // Skylake L
+      case 0x5e:  // Skylake
+      case 0x8e:  // Kaby Lake L
+      case 0x9e:  // Kaby Lake
+      case 0x66:  // Cannon Lake L
+      case 0x7d:  // Ice Lake
+      case 0x7e:  // Ice Lake L
+      case 0xa5:  // Comet Lake
+      case 0xa6:  // Comet Lake L
+        // Supports package, cores, GPU, RAM, PSYS.
+        // XXX: this tool currently doesn't measure PSYS.
+        mIsGpuSupported = true;
         mIsRamSupported = true;
         break;
 
