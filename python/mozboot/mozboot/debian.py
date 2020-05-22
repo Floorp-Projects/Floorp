@@ -113,7 +113,8 @@ class DebianBootstrapper(
         # install if found.
         packages = list(self.packages)
 
-        have_python3 = any([self.which('python3'), self.which('python3.6'),
+        have_python3 = any([self.which('python3'), self.which('python3.8'),
+                            self.which('python3.7'), self.which('python3.6'),
                             self.which('python3.5')])
         python3_packages = self.check_output(
             ['apt-cache', 'pkgnames', 'python3'], universal_newlines=True)
