@@ -3,12 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
-import cStringIO
 import hashlib
 import os
 import platform
 import subprocess
-import urllib2
+import six
 import zipfile
 from distutils import spawn
 from mozlog import get_proxy_logger
@@ -18,14 +17,17 @@ from .symbolicationRequest import SymbolicationRequest
 
 LOG = get_proxy_logger("profiler")
 
-"""
-Symbolication is broken when using type 'str' in python 2.7, so we use 'basestring'.
-But for python 3.0 compatibility, 'basestring' isn't defined, but the 'str' type works.
-So we force 'basestring' to 'str'.
-"""
-try:
-    basestring
-except NameError:
+if six.PY2:
+    # Import for Python 2
+    from cStringIO import StringIO
+    from urllib2 import urlopen
+else:
+    # Import for Python 3
+    from io import StringIO
+    from urllib.request import urlopen
+    # Symbolication is broken when using type 'str' in python 2.7, so we use 'basestring'.
+    # But for python 3.0 compatibility, 'basestring' isn't defined, but the 'str' type works.
+    # So we force 'basestring' to 'str'.
     basestring = str
 
 
@@ -163,8 +165,8 @@ class ProfileSymbolicator:
             )
         )
         try:
-            io = urllib2.urlopen(symbol_zip_url, None, 30)
-            with zipfile.ZipFile(cStringIO.StringIO(io.read())) as zf:
+            io = urlopen(symbol_zip_url, None, 30)
+            with zipfile.ZipFile(StringIO(io.read())) as zf:
                 self.integrate_symbol_zip(zf)
             self._create_file_if_not_exists(self._marker_file(symbol_zip_url))
         except IOError:
