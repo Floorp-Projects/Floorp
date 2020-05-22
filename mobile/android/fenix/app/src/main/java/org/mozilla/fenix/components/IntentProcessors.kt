@@ -69,9 +69,12 @@ class IntentProcessors(
                 store = customTabsStore
             ),
             WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, manifestStorage),
-            FennecBookmarkShortcutsIntentProcessor(sessionManager, sessionUseCases.loadUrl),
             FennecWebAppIntentProcessor(context, sessionManager, sessionUseCases.loadUrl, manifestStorage)
         )
+    }
+
+    val fennecPageShortcutIntentProcessor by lazy {
+        FennecBookmarkShortcutsIntentProcessor(sessionManager, sessionUseCases.loadUrl)
     }
 
     val migrationIntentProcessor by lazy {

@@ -75,6 +75,7 @@ class IntentReceiverActivity : Activity() {
 
         return listOf(components.intentProcessors.migrationIntentProcessor) +
             components.intentProcessors.externalAppIntentProcessors +
+            components.intentProcessors.fennecPageShortcutIntentProcessor +
             modeDependentProcessors +
             NewTabShortcutIntentProcessor()
     }

@@ -42,6 +42,7 @@ fun IntentProcessors.getType(processor: IntentProcessor?) = when {
             customTabIntentProcessor == processor ||
             privateCustomTabIntentProcessor == processor -> IntentProcessorType.EXTERNAL_APP
     intentProcessor == processor ||
-            privateIntentProcessor == processor -> IntentProcessorType.NEW_TAB
+            privateIntentProcessor == processor ||
+            fennecPageShortcutIntentProcessor == processor -> IntentProcessorType.NEW_TAB
     else -> IntentProcessorType.OTHER
 }
