@@ -173,7 +173,7 @@ const uint8_t* gfxUserFontEntry::SanitizeOpenTypeData(
     return nullptr;
   }
 
-  gfxOTSExpandingMemoryStream output(lengthHint);
+  gfxOTSExpandingMemoryStream<gfxOTSMozAlloc> output(lengthHint);
 
   gfxOTSMessageContext otsContext;
   if (!otsContext.Process(&output, aData, aLength, aMessages)) {
