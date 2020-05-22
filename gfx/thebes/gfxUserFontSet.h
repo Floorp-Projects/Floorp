@@ -181,11 +181,11 @@ class gfxUserFontFamily : public gfxFontFamily {
 };
 
 class gfxUserFontEntry;
-class gfxOTSMessageContext;
+class gfxOTSContext;
 
 class gfxUserFontSet {
   friend class gfxUserFontEntry;
-  friend class gfxOTSMessageContext;
+  friend class gfxOTSContext;
 
  public:
   typedef mozilla::FontStretch FontStretch;
@@ -531,7 +531,7 @@ class gfxUserFontEntry : public gfxFontEntry {
   friend class gfxUserFontSet;
   friend class nsUserFontSet;
   friend class nsFontFaceLoader;
-  friend class gfxOTSMessageContext;
+  friend class gfxOTSContext;
 
  public:
   enum UserFontLoadState {

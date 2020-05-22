@@ -652,17 +652,11 @@ struct Vec<uint8_t> final {
     inner.length = 0;
   }
 
-  uint8_t* Data() { return inner.data; }
-
   size_t Length() { return inner.length; }
-
-  Range<uint8_t> GetRange() { return Range<uint8_t>(Data(), Length()); }
 
   void PushBytes(Range<uint8_t> aBytes) {
     wr_vec_u8_push_bytes(&inner, RangeToByteSlice(aBytes));
   }
-
-  void Reserve(size_t aLength) { wr_vec_u8_reserve(&inner, aLength); }
 
   ~Vec() {
     if (inner.data) {
