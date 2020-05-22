@@ -830,6 +830,7 @@ package org.mozilla.geckoview {
   public static interface GeckoSession.PromptDelegate {
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onAlertPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AlertPrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onAuthPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AuthPrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onBeforeUnloadPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.BeforeUnloadPrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onButtonPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ButtonPrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onChoicePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ChoicePrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onColorPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ColorPrompt);
@@ -884,6 +885,11 @@ package org.mozilla.geckoview {
     method @UiThread public boolean isComplete();
     method @UiThread @NonNull protected GeckoSession.PromptDelegate.PromptResponse confirm();
     field @Nullable public final String title;
+  }
+
+  public static class GeckoSession.PromptDelegate.BeforeUnloadPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected BeforeUnloadPrompt();
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@Nullable AllowOrDeny);
   }
 
   public static class GeckoSession.PromptDelegate.ButtonPrompt extends GeckoSession.PromptDelegate.BasePrompt {

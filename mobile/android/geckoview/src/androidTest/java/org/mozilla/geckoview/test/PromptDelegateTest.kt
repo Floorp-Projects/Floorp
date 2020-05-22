@@ -114,8 +114,10 @@ class PromptDelegateTest : BaseSessionTest() {
         })
     }
 
-    @Ignore // TODO: Reenable when 1501574 is fixed.
     @Test fun buttonTest() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+
         sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onButtonPrompt(session: GeckoSession, prompt: PromptDelegate.ButtonPrompt): GeckoResult<PromptDelegate.PromptResponse> {
@@ -139,6 +141,57 @@ class PromptDelegateTest : BaseSessionTest() {
         assertThat("Result should match",
                 sessionRule.session.waitForJS("confirm('Confirm?')") as Boolean,
                 equalTo(false))
+    }
+
+    @Test
+    fun onBeforeUnloadTest() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "dom.require_user_interaction_for_beforeunload" to false
+        ))
+        sessionRule.session.loadTestPath(BEFORE_UNLOAD)
+        sessionRule.waitForPageStop()
+
+        val result = GeckoResult<Void>()
+        sessionRule.delegateUntilTestEnd(object: Callbacks.ProgressDelegate {
+            override fun onPageStart(session: GeckoSession, url: String) {
+                assertThat("Only HELLO2_HTML_PATH should load", url, endsWith(HELLO2_HTML_PATH))
+                result.complete(null)
+            }
+        })
+
+        var promptResult = GeckoResult<PromptDelegate.PromptResponse>()
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+            override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                // We have to return something here because otherwise the delegate will be invoked
+                // before we have a chance to override it in the waitUntilCalled call below
+                return promptResult
+            }
+        })
+
+        // This will try to load "hello.html" but will be denied, if the request
+        // goes through anyway the onLoadRequest delegate above will throw an exception
+        sessionRule.session.evaluateJS("document.querySelector('#navigateAway').click()")
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                promptResult.complete(prompt.confirm(AllowOrDeny.DENY))
+                return promptResult
+            }
+        })
+
+        // This request will go through and end the test. Doing the negative case first will
+        // ensure that if either of this tests fail the test will fail.
+        promptResult = GeckoResult()
+        sessionRule.session.evaluateJS("document.querySelector('#navigateAway2').click()")
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                promptResult.complete(prompt.confirm(AllowOrDeny.ALLOW))
+                return promptResult
+            }
+        })
+
+        sessionRule.waitForResult(result)
     }
 
     @Test fun textTest() {
