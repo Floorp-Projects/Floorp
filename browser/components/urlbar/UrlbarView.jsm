@@ -510,8 +510,9 @@ class UrlbarView {
             trimmedValue.length != 1)
       );
 
-      // Notify the input, so it can make adjustments based on the first result.
-      this.input.onFirstResult(firstResult);
+      // The input field applies autofill on input, without waiting for results.
+      // Once we get results, we can ask it to correct wrong predictions.
+      this.input.maybeClearAutofillPlaceholder(firstResult);
     }
 
     if (
