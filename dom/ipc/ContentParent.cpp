@@ -1856,6 +1856,8 @@ void ContentParent::StartForceKillTimer() {
     return;
   }
 
+  NotifyImpendingShutdown();
+
   int32_t timeoutSecs = StaticPrefs::dom_ipc_tabs_shutdownTimeoutSecs();
   if (timeoutSecs > 0) {
     NS_NewTimerWithFuncCallback(getter_AddRefs(mForceKillTimer),
