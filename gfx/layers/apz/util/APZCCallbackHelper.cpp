@@ -47,16 +47,12 @@ uint64_t APZCCallbackHelper::sLastTargetAPZCNotificationInputBlock =
     uint64_t(-1);
 
 ScreenMargin APZCCallbackHelper::AdjustDisplayPortForScrollDelta(
-    const RepaintRequest& aRequest, const CSSPoint& aActualScrollOffset) {
-  // Correct the display-port by the difference between the requested scroll
-  // offset and the resulting scroll offset after setting the requested value.
-  ScreenPoint shift = (aRequest.GetScrollOffset() - aActualScrollOffset) *
-                      aRequest.DisplayportPixelsPerCSSPixel();
-  ScreenMargin margins = aRequest.GetDisplayPortMargins();
-  margins.left -= shift.x;
-  margins.right += shift.x;
-  margins.top -= shift.y;
-  margins.bottom += shift.y;
+    ScreenMargin aMargins, ScreenPoint aScrollDelta) {
+  ScreenMargin margins = aMargins;
+  margins.left -= aScrollDelta.x;
+  margins.right += aScrollDelta.x;
+  margins.top -= aScrollDelta.y;
+  margins.bottom += aScrollDelta.y;
   return margins;
 }
 
@@ -184,6 +180,7 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
   ScreenMargin displayPortMargins = aRequest.GetDisplayPortMargins();
   CSSPoint apzScrollOffset = aRequest.GetScrollOffset();
   CSSPoint actualScrollOffset = ScrollFrameTo(sf, aRequest, scrollUpdated);
+  CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
 
   if (scrollUpdated) {
     if (aRequest.IsScrollInfoLayer()) {
@@ -197,23 +194,24 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
         frame->SchedulePaint();
       }
     } else {
-      // Correct the display port due to the difference between mScrollOffset
-      // and the actual scroll offset.
+      // Correct the display port due to the difference between the requested
+      // and actual scroll offsets.
       displayPortMargins = APZCCallbackHelper::AdjustDisplayPortForScrollDelta(
-          aRequest, actualScrollOffset);
+          aRequest.GetDisplayPortMargins(),
+          scrollDelta * aRequest.DisplayportPixelsPerCSSPixel());
     }
   } else if (aRequest.IsRootContent() &&
-             aRequest.GetScrollOffset() !=
-                 aRequest.GetLayoutViewport().TopLeft()) {
+             apzScrollOffset != aRequest.GetLayoutViewport().TopLeft()) {
     // APZ uses the visual viewport's offset to calculate where to place the
     // display port, so the display port is misplaced when a pinch zoom occurs.
     //
     // We need to force a display port adjustment in the following paint to
-    // account for a difference between mScrollOffset and the actual scroll
-    // offset in repaints requested by
+    // account for a difference between the requested and actual scroll
+    // offsets in repaints requested by
     // AsyncPanZoomController::NotifyLayersUpdated.
     displayPortMargins = APZCCallbackHelper::AdjustDisplayPortForScrollDelta(
-        aRequest, actualScrollOffset);
+        aRequest.GetDisplayPortMargins(),
+        scrollDelta * aRequest.DisplayportPixelsPerCSSPixel());
   } else {
     // For whatever reason we couldn't update the scroll offset on the scroll
     // frame, which means the data APZ used for its displayport calculation is
@@ -238,7 +236,6 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
       sf && sf->CurrentScrollGeneration() != aRequest.GetScrollGeneration() &&
       nsLayoutUtils::CanScrollOriginClobberApz(sf->LastScrollOrigin());
   if (aContent && !mainThreadScrollChanged) {
-    CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
     aContent->SetProperty(nsGkAtoms::apzCallbackTransform,
                           new CSSPoint(scrollDelta),
                           nsINode::DeleteProperty<CSSPoint>);
