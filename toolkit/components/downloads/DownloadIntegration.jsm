@@ -784,65 +784,39 @@ var DownloadIntegration = {
       mimeInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
 
       this.launchFile(file, mimeInfo);
+      // After an attempt has been made to launch the download, clear the
+      // launchWhenSucceeded bit so future attempts to open the download can go
+      // through Firefox when possible.
+      aDownload.launchWhenSucceeded = false;
       return;
     }
 
-    if (aDownload.handleInternally) {
-      let win = Services.wm.getMostRecentBrowserWindow();
-      let browsingContext =
-        win && win.BrowsingContext.get(aDownload.source.browsingContextId);
-      win = Services.wm.getOuterWindowWithId(
-        browsingContext &&
-          browsingContext.embedderWindowGlobal &&
-          browsingContext.embedderWindowGlobal.outerWindowId
-      );
-      let fileURI = Services.io.newFileURI(file);
-      if (win) {
-        // TODO: Replace openTrustedLinkIn with openUILink once
-        //       we have access to the event.
-        win.openTrustedLinkIn(fileURI.spec, "tab", {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-          userContextId: aDownload.source.userContextId,
-          openerBrowser: browsingContext?.top?.embedderElement,
-        });
-        return;
-      }
-      let features = "chrome,dialog=no,all";
-      if (aDownload.source.isPrivate) {
-        features += ",private";
-      }
-      let args = Cc["@mozilla.org/supports-string;1"].createInstance(
-        Ci.nsISupportsString
-      );
-      args.data = fileURI.spec;
-      win = Services.ww.openWindow(
-        null,
-        AppConstants.BROWSER_CHROME_URL,
-        "_blank",
-        features,
-        args
-      );
+    const PDF_CONTENT_TYPE = "application/pdf";
+    if (
+      aDownload.handleInternally ||
+      (mimeInfo &&
+        mimeInfo.type == PDF_CONTENT_TYPE &&
+        !mimeInfo.alwaysAskBeforeHandling &&
+        mimeInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally &&
+        !aDownload.launchWhenSucceeded)
+    ) {
+      DownloadUIHelper.loadFileIn(file, {
+        browsingContextId: aDownload.source.browsingContextId,
+        isPrivate: aDownload.source.isPrivate,
+        openWhere,
+        userContextId: aDownload.source.userContextId,
+      });
       return;
     }
+
+    // An attempt will now be made to launch the download, clear the
+    // launchWhenSucceeded bit so future attempts to open the download can go
+    // through Firefox when possible.
+    aDownload.launchWhenSucceeded = false;
 
     // No custom application chosen, let's launch the file with the default
     // handler. First, let's try to launch it through the MIME service.
     if (mimeInfo) {
-      const PDF_CONTENT_TYPE = "application/pdf";
-      // Open PDFs internally unless explicitly configured to do otherwise
-      if (
-        mimeInfo.type == PDF_CONTENT_TYPE &&
-        !mimeInfo.alwaysAskBeforeHandling &&
-        mimeInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally
-        // TODO: also preview for save to disk and always ask file actions?
-      ) {
-        DownloadUIHelper.loadFileIn(file, {
-          isPrivate: aDownload.source.isPrivate,
-          openWhere,
-        });
-        return;
-      }
-
       mimeInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
       try {
         this.launchFile(file, mimeInfo);
