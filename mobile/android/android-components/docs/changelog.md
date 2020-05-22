@@ -54,6 +54,9 @@ permalink: /changelog/
 * **service-experiments**
   * ⚠️ **This is a breaking change**: Mako's configuration now requires explicitly setting an http client. Users need to pass one at construction.
 
+* **feature-prompts**
+  * Added `mozacPromptLoginEditTextCursorColor` attribute to be able to change cursor color of TextInputEditTexts from `mozac_feature_prompt_login_prompt`.
+
 # 41.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v40.0.0...v41.0.0)
