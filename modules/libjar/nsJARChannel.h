@@ -9,6 +9,7 @@
 #include "mozilla/net/MemoryDownloader.h"
 #include "nsIJARChannel.h"
 #include "nsIJARURI.h"
+#include "nsIEventTarget.h"
 #include "nsIInputStreamPump.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
@@ -103,6 +104,9 @@ class nsJARChannel final : public nsIJARChannel,
   nsCOMPtr<nsIURI> mJarBaseURI;
   nsCString mJarEntry;
   nsCString mInnerJarEntry;
+
+  // use StreamTransportService as background thread
+  nsCOMPtr<nsIEventTarget> mWorker;
 };
 
 #endif  // nsJARChannel_h__
