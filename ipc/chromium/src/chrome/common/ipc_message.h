@@ -288,6 +288,9 @@ class Message : public Pickle {
     return true;
   }
 
+  // We should not be sending messages that are smaller than our header size.
+  void AssertAsLargeAsHeader() const;
+
   // Used for async messages with no parameters.
   static void Log(const Message* msg, std::wstring* l) {}
 

@@ -488,7 +488,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
 
         // How much data from this message remains to be added to
         // incoming_message_?
-        MOZ_ASSERT(message_length > m.CurrentSize());
+        MOZ_DIAGNOSTIC_ASSERT(message_length > m.CurrentSize());
         uint32_t remaining = message_length - m.CurrentSize();
 
         // How much data from this message is stored in input_buf_?
@@ -733,8 +733,11 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     if (static_cast<size_t>(bytes_written) != amt_to_write) {
       // If write() fails with EAGAIN then bytes_written will be -1.
       if (bytes_written > 0) {
+        MOZ_DIAGNOSTIC_ASSERT(static_cast<size_t>(bytes_written) < amt_to_write);
         partial_write_iter_.ref().AdvanceAcrossSegments(msg->Buffers(),
                                                         bytes_written);
+        // We should not hit the end of the buffer.
+        MOZ_DIAGNOSTIC_ASSERT(!partial_write_iter_.ref().Done());
       }
 
       // Tell libevent to call us back once things are unblocked.
@@ -844,6 +847,7 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id) {
 #endif
 
 void Channel::ChannelImpl::OutputQueuePush(Message* msg) {
+  msg->AssertAsLargeAsHeader();
   output_queue_.push(msg);
   output_queue_length_++;
 }
