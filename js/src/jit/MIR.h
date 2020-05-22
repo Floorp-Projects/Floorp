@@ -2627,34 +2627,33 @@ class MInitElemGetterSetter
 class WrappedFunction : public TempObject {
   CompilerFunction fun_;
   uint16_t nargs_;
-  bool isNative_ : 1;
-  bool isNativeWithJitEntry_ : 1;
-  bool isConstructor_ : 1;
-  bool isClassConstructor_ : 1;
-  bool isSelfHostedBuiltin_ : 1;
-  bool isExtended_ : 1;
-  bool hasJitInfo_ : 1;
+  js::FunctionFlags flags_;
 
  public:
   explicit WrappedFunction(JSFunction* fun);
   size_t nargs() const { return nargs_; }
 
-  bool isNative() const { return isNative_; }
-  bool isNativeWithJitEntry() const { return isNativeWithJitEntry_; }
+  bool isNative() const { return flags_.isNative(); }
+  bool isNativeWithJitEntry() const { return flags_.isNativeWithJitEntry(); }
   bool isNativeWithCppEntry() const {
     return isNative() && !isNativeWithJitEntry();
   }
 
-  bool isConstructor() const { return isConstructor_; }
-  bool isClassConstructor() const { return isClassConstructor_; }
-  bool isSelfHostedBuiltin() const { return isSelfHostedBuiltin_; }
-  bool isExtended() const { return isExtended_; }
-  bool hasJitInfo() const { return hasJitInfo_; }
+  bool isConstructor() const { return flags_.isConstructor(); }
+  bool isClassConstructor() const { return flags_.isClassConstructor(); }
 
-  // fun->native() and fun->jitInfo() can safely be called off-thread: these
-  // fields never change.
-  JSNative native() const { return fun_->native(); }
-  const JSJitInfo* jitInfo() const { return fun_->jitInfo(); }
+  // These fields never change, they can be accessed off-main thread.
+  JSNative native() const {
+    MOZ_ASSERT(isNative());
+    return fun_->nativeUnchecked();
+  }
+  bool hasJitInfo() const {
+    return flags_.isBuiltinNative() && fun_->jitInfoUnchecked();
+  }
+  const JSJitInfo* jitInfo() const {
+    MOZ_ASSERT(hasJitInfo());
+    return fun_->jitInfoUnchecked();
+  }
 
   JSFunction* rawJSFunction() const { return fun_; }
 

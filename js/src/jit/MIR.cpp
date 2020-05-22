@@ -1454,15 +1454,7 @@ bool MParameter::congruentTo(const MDefinition* ins) const {
 }
 
 WrappedFunction::WrappedFunction(JSFunction* fun)
-    : fun_(fun),
-      nargs_(fun->nargs()),
-      isNative_(fun->isNative()),
-      isNativeWithJitEntry_(fun->isNativeWithJitEntry()),
-      isConstructor_(fun->isConstructor()),
-      isClassConstructor_(fun->isClassConstructor()),
-      isSelfHostedBuiltin_(fun->isSelfHostedBuiltin()),
-      isExtended_(fun->isExtended()),
-      hasJitInfo_(fun->hasJitInfo()) {}
+    : fun_(fun), nargs_(fun->nargs()), flags_(fun->flags()) {}
 
 MCall* MCall::New(TempAllocator& alloc, JSFunction* target, size_t maxArgc,
                   size_t numActualArgs, bool construct, bool ignoresReturnValue,
