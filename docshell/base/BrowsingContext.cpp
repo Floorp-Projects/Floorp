@@ -2123,6 +2123,7 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_CurrentInnerWindowId>,
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_CurrentInnerWindowId>) {
+  RefPtr<WindowContext> prevWindowContext = mCurrentWindowContext.forget();
   mCurrentWindowContext = WindowContext::GetById(GetCurrentInnerWindowId());
   MOZ_ASSERT(
       !mCurrentWindowContext || mWindowContexts.Contains(mCurrentWindowContext),
@@ -2133,6 +2134,14 @@ void BrowsingContext::DidSet(FieldIndex<IDX_CurrentInnerWindowId>) {
   BrowsingContext_Binding::ClearCachedChildrenValue(this);
 
   if (XRE_IsParentProcess()) {
+    if (prevWindowContext != mCurrentWindowContext) {
+      if (prevWindowContext) {
+        prevWindowContext->Canonical()->DidBecomeCurrentWindowGlobal(false);
+      }
+      if (mCurrentWindowContext) {
+        mCurrentWindowContext->Canonical()->DidBecomeCurrentWindowGlobal(true);
+      }
+    }
     BrowserParent::UpdateFocusFromBrowsingContext();
   }
 }
