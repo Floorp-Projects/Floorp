@@ -37,6 +37,12 @@ class RenderCompositorEGL : public RenderCompositor {
 
   CompositorCapabilities GetCompositorCapabilities() override;
 
+  // Interface for partial present
+  bool UsePartialPresent() override;
+  bool RequestFullRender() override;
+  uint32_t GetMaxPartialPresentRects() override;
+  bool ShouldDrawPreviousPartialPresentRegions() override;
+
  protected:
   EGLSurface CreateEGLSurface();
 
@@ -47,6 +53,8 @@ class RenderCompositorEGL : public RenderCompositor {
   // On android we must track our own surface size.
   LayoutDeviceIntSize mEGLSurfaceSize;
 #endif
+
+  EGLint mBufferAge;
 };
 
 }  // namespace wr

@@ -1488,7 +1488,8 @@ impl RenderBackend {
         // external image with NativeTexture or when platform requested to composite frame.
         if invalidate_rendered_frame {
             doc.rendered_frame_is_valid = false;
-            if let CompositorKind::Draw { max_partial_present_rects } = doc.scene.config.compositor_kind {
+            if let CompositorKind::Draw { max_partial_present_rects, .. } = doc.scene.config.compositor_kind {
+
               // When partial present is enabled, we need to force redraw.
               if max_partial_present_rects > 0 {
                   let msg = ResultMsg::ForceRedraw;

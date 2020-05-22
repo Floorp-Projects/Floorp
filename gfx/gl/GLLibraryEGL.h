@@ -91,6 +91,7 @@ class GLLibraryEGL final {
     MOZ_create_context_provoking_vertex_dont_care,
     EXT_swap_buffers_with_damage,
     KHR_swap_buffers_with_damage,
+    EXT_buffer_age,
     Extensions_Max
   };
 
