@@ -266,6 +266,91 @@ void nsPrintSettingsX::GetAdjustedPaperSize(double* aWidth, double* aHeight) {
   *aHeight = mAdjustedPaperHeight;
 }
 
+NS_IMETHODIMP nsPrintSettingsX::SetPrintRange(int16_t aPrintRange) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // In this case (PrintRange) we store the state in the base class in both the
+  // parent and content process since the platform specific NSPrintInfo isn't
+  // capable of representing the kRangeSelection state:
+  nsPrintSettings::SetPrintRange(aPrintRange);
+
+  // However, we do need to keep NSPrintAllPages on mPrintInfo in sync in the
+  // parent process so that the object returned by GetCocoaPrintInfo is valid:
+  if (XRE_IsParentProcess()) {
+    BOOL allPages = aPrintRange == nsIPrintSettings::kRangeSpecifiedPageRange ? NO : YES;
+    NSMutableDictionary* dict = [mPrintInfo dictionary];
+    [dict setObject:[NSNumber numberWithBool:allPages] forKey:NSPrintAllPages];
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsPrintSettingsX::GetStartPageRange(int32_t* aStartPageRange) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  MOZ_ASSERT(aStartPageRange);
+
+  // Only use NSPrintInfo data in the parent process.
+  if (XRE_IsParentProcess()) {
+    NSDictionary* dict = [mPrintInfo dictionary];
+    *aStartPageRange = [[dict objectForKey:NSPrintFirstPage] intValue];
+  } else {
+    nsPrintSettings::GetStartPageRange(aStartPageRange);
+  }
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsPrintSettingsX::SetStartPageRange(int32_t aStartPageRange) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Only use NSPrintInfo data in the parent process.
+  if (XRE_IsParentProcess()) {
+    NSMutableDictionary* dict = [mPrintInfo dictionary];
+    [dict setObject:[NSNumber numberWithInt:aStartPageRange] forKey:NSPrintFirstPage];
+  } else {
+    nsPrintSettings::SetStartPageRange(aStartPageRange);
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsPrintSettingsX::GetEndPageRange(int32_t* aEndPageRange) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  MOZ_ASSERT(aEndPageRange);
+
+  // Only use NSPrintInfo data in the parent process.
+  if (XRE_IsParentProcess()) {
+    NSDictionary* dict = [mPrintInfo dictionary];
+    *aEndPageRange = [[dict objectForKey:NSPrintLastPage] intValue];
+  } else {
+    nsPrintSettings::GetEndPageRange(aEndPageRange);
+  }
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsPrintSettingsX::SetEndPageRange(int32_t aEndPageRange) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Only use NSPrintInfo data in the parent process.
+  if (XRE_IsParentProcess()) {
+    NSMutableDictionary* dict = [mPrintInfo dictionary];
+    [dict setObject:[NSNumber numberWithInt:aEndPageRange] forKey:NSPrintLastPage];
+  } else {
+    nsPrintSettings::SetEndPageRange(aEndPageRange);
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 NS_IMETHODIMP
 nsPrintSettingsX::SetScaling(double aScaling) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
