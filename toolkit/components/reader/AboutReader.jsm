@@ -381,6 +381,7 @@ AboutReader.prototype = {
         break;
       case "resize":
         this._updateImageMargins();
+        this._scheduleToolbarOverlapHandler();
         break;
 
       case "wheel":
@@ -516,6 +517,7 @@ AboutReader.prototype = {
       Services.prefs.getIntPref("reader.font_size") + changeAmount;
     this._setFontSize(currentSize);
     this._updateFontSizeButtonControls();
+    this._scheduleToolbarOverlapHandler();
   },
 
   _setContentWidth(newContentWidth) {
@@ -523,6 +525,7 @@ AboutReader.prototype = {
     this._displayContentWidth(newContentWidth);
     let width = 20 + 5 * (this._contentWidth - 1) + "em";
     this._doc.body.style.setProperty("--content-width", width);
+    this._scheduleToolbarOverlapHandler();
     return AsyncPrefs.set("reader.content_width", this._contentWidth);
   },
 
@@ -1115,6 +1118,7 @@ AboutReader.prototype = {
     dropdown.classList.add("open");
 
     this._toolbarContainerElement.classList.add("dropdown-open");
+    this._toggleToolbarFixedPosition(true);
   },
 
   /*
@@ -1129,14 +1133,77 @@ AboutReader.prototype = {
     }
 
     let openDropdowns = this._doc.querySelectorAll(selector);
+    let haveOpenDropdowns = openDropdowns.length;
     for (let dropdown of openDropdowns) {
       dropdown.classList.remove("open");
     }
 
     this._toolbarContainerElement.classList.remove("dropdown-open");
+    if (haveOpenDropdowns) {
+      this._toggleToolbarFixedPosition(false);
+    }
 
     // Stop handling scrolling:
     this._doc.removeEventListener("scroll", this);
+  },
+
+  _toggleToolbarFixedPosition(shouldBeFixed) {
+    let el = this._toolbarContainerElement;
+    let fontSize = this._doc.body.style.getPropertyValue("--font-size");
+    let contentWidth = this._doc.body.style.getPropertyValue("--content-width");
+    if (shouldBeFixed) {
+      el.style.setProperty("--font-size", fontSize);
+      el.style.setProperty("--content-width", contentWidth);
+      el.classList.add("transition-location");
+    } else {
+      let expectTransition =
+        el.style.getPropertyValue("--font-size") != fontSize ||
+        el.style.getPropertyValue("--content-width") != contentWidth;
+      if (expectTransition) {
+        el.addEventListener(
+          "transitionend",
+          () => el.classList.remove("transition-location"),
+          { once: true }
+        );
+      } else {
+        el.classList.remove("transition-location");
+      }
+      el.style.removeProperty("--font-size");
+      el.style.removeProperty("--content-width");
+      el.classList.remove("overlaps");
+    }
+  },
+
+  _scheduleToolbarOverlapHandler() {
+    if (this._enqueuedToolbarOverlapHandler) {
+      return;
+    }
+    this._enqueuedToolbarOverlapHandler = this._win.requestAnimationFrame(
+      () => {
+        this._win.setTimeout(() => this._toolbarOverlapHandler(), 0);
+      }
+    );
+  },
+
+  _toolbarOverlapHandler() {
+    delete this._enqueuedToolbarOverlapHandler;
+    // Ensure the dropdown is still open to avoid racing with that changing.
+    if (this._toolbarContainerElement.classList.contains("dropdown-open")) {
+      let { windowUtils } = this._win;
+      let toolbarBounds = windowUtils.getBoundsWithoutFlushing(
+        this._toolbarElement.parentNode
+      );
+      let textBounds = windowUtils.getBoundsWithoutFlushing(
+        this._containerElement
+      );
+      let overlaps = false;
+      if (Services.locale.isAppLocaleRTL) {
+        overlaps = textBounds.right > toolbarBounds.left;
+      } else {
+        overlaps = textBounds.left < toolbarBounds.right;
+      }
+      this._toolbarContainerElement.classList.toggle("overlaps", overlaps);
+    }
   },
 
   _topScrollChange(entries) {
