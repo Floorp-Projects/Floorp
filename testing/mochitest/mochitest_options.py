@@ -608,6 +608,22 @@ class MochitestArguments(ArgumentContainer):
           "default": False,
           "help": "Enable the WebRender compositor in Gecko.",
           }],
+        [["--profiler"],
+         {"action": "store_true",
+          "dest": "profiler",
+          "default": False,
+          "help": "Run the Firefox Profiler and get a performance profile of the "
+                  "mochitest. This is useful to find performance issues, and also "
+                  "to see what exactly the test is doing. To get profiler options run: "
+                  "`MOZ_PROFILER_HELP=1 ./mach run`"
+          }],
+        [["--profiler-save-only"],
+         {"action": "store_true",
+          "dest": "profilerSaveOnly",
+          "default": False,
+          "help": "Run the Firefox Profiler and save it to the path specified by the "
+                  "MOZ_UPLOAD_DIR environment variable."
+          }],
     ]
 
     defaults = {

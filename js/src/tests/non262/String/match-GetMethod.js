@@ -15,6 +15,7 @@ function create(value) {
 var expected = ["-"];
 expected.index = 1;
 expected.input = "a-a";
+expected.groups = undefined;
 
 for (let v of [null, undefined]) {
     assertDeepEq("a-a".match(create(v)), expected);

@@ -29,14 +29,6 @@ XPCOMUtils.defineLazyGetter(this, "OS", function() {
     return OS;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PDFJS", function() {
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-    return {
-        main: require('resource://pdf.js/build/pdf.js'),
-        worker: require('resource://pdf.js/build/pdf.worker.js')
-    };
-});
-
 function HasUnexpectedResult()
 {
     return g.testResults.Exception > 0 ||
@@ -293,18 +285,14 @@ function InitAndStartRefTests()
         g.compareRetainedDisplayLists = prefs.getBoolPref("reftest.compareRetainedDisplayLists");
     } catch (e) {}
 
-#ifdef MOZ_ENABLE_SKIA_PDF
     try {
-        // We have to disable printing via parent or else silent print operations
-        // (the type that we use here) would be treated as non-silent -- in other
-        // words, a print dialog would appear for each print operation, which
-        // would interrupt the test run.
-        // See http://searchfox.org/mozilla-central/rev/bd39b6170f04afeefc751a23bb04e18bbd10352b/layout/printing/nsPrintEngine.cpp#617
-        prefs.setBoolPref("print.print_via_parent", false);
+        // We have to set print.always_print_silent or a print dialog would
+        // appear for each print operation, which would interrupt the test run.
+        prefs.setBoolPref("print.always_print_silent", true);
     } catch (e) {
         /* uh oh, print reftests may not work... */
+        logger.warning("Failed to set silent printing pref, EXCEPTION: " + e);
     }
-#endif
 
     g.windowUtils = g.containingWindow.windowUtils;
     if (!g.windowUtils || !g.windowUtils.compareCanvases)
@@ -1758,32 +1746,44 @@ function SendResetRenderingState()
     g.browserMessageManager.sendAsyncMessage("reftest:ResetRenderingState");
 }
 
+var pdfjsHasLoaded;
+
+function pdfjsHasLoadedPromise() {
+  if (pdfjsHasLoaded === undefined) {
+    pdfjsHasLoaded = new Promise((resolve, reject) => {
+      let doc = g.containingWindow.document;
+      const script = doc.createElement("script");
+      script.src = "resource://pdf.js/build/pdf.js";
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("PDF.js script load failed."));
+      doc.documentElement.appendChild(script);
+    });
+  }
+
+  return pdfjsHasLoaded;
+}
+
 function readPdf(path, callback) {
     OS.File.open(path, { read: true }).then(function (file) {
-        file.flush().then(function() {
-            file.read().then(function (data) {
-                let fakePort = new PDFJS.main.LoopbackPort(true);
-                PDFJS.worker.WorkerMessageHandler.initializeFromPort(fakePort);
-                let myWorker = new PDFJS.main.PDFWorker("worker", fakePort);
-                PDFJS.main.GlobalWorkerOptions.workerSrc = "resource://pdf.js/build/pdf.worker.js";
-                PDFJS.main.getDocument({
-                    worker: myWorker,
-                    data: data
-                }).promise.then(function (pdf) {
-                    callback(null, pdf);
-                }, function () {
-                    callback(new Error("Couldn't parse " + path));
-                });
-                return;
-            }, function () {
-                callback(new Error("Couldn't read PDF"));
+        file.read().then(function (data) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = "resource://pdf.js/build/pdf.worker.js";
+            pdfjsLib.getDocument({
+                data: data
+            }).promise.then(function (pdf) {
+                callback(null, pdf);
+            }, function (e) {
+                callback(new Error(`Couldn't parse ${path}, exception: ${e}`));
             });
+            return;
+        }, function (e) {
+            callback(new Error(`Couldn't read PDF ${path}, exception: ${e}`));
         });
     });
 }
 
 function comparePdfs(pathToTestPdf, pathToRefPdf, callback) {
-    Promise.all([pathToTestPdf, pathToRefPdf].map(function(path) {
+    pdfjsHasLoadedPromise().then(() =>
+      Promise.all([pathToTestPdf, pathToRefPdf].map(function(path) {
         return new Promise(function(resolve, reject) {
             readPdf(path, function(error, pdf) {
                 // Resolve or reject outer promise. reject and resolve are
@@ -1796,7 +1796,7 @@ function comparePdfs(pathToTestPdf, pathToRefPdf, callback) {
                 }
             });
         });
-    })).then(function(pdfs) {
+    }))).then(function(pdfs) {
         let numberOfPages = pdfs[1].numPages;
         let sameNumberOfPages = numberOfPages === pdfs[0].numPages;
 

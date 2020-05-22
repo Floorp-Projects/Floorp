@@ -8,13 +8,13 @@
 use pkcs11::types::*;
 use sha2::{Digest, Sha256};
 use std::convert::TryInto;
-use std::ffi::{CStr, CString, c_void};
+use std::ffi::{c_void, CStr, CString};
 use std::ops::Deref;
 use std::slice;
 use winapi::shared::bcrypt::*;
+use winapi::shared::minwindef::{DWORD, PBYTE};
 use winapi::um::ncrypt::*;
 use winapi::um::wincrypt::*;
-use winapi::shared::minwindef::{DWORD, PBYTE};
 
 use crate::util::*;
 

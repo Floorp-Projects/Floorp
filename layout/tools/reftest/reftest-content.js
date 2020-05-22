@@ -252,10 +252,11 @@ function printToPdf(callback) {
         }
     }
 
-    let fileName = "reftest-print.pdf";
+    let fileName =`reftest-print-${Date.now()}-`;
+    content.crypto.getRandomValues(new Uint8Array(4)).forEach(x => fileName += x.toString(16));
+    fileName += ".pdf"
     let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
     file.append(fileName);
-    file.createUnique(file.NORMAL_FILE_TYPE, 0o644);
 
     let PSSVC = Cc[PRINTSETTINGS_CONTRACTID].getService(Ci.nsIPrintSettingsService);
     let ps = PSSVC.newPrintSettings;

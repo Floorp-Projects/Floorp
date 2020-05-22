@@ -57,13 +57,24 @@ class Buffer final {
   }
 
   /**
+   * Move assignment. Sets the moved-from Buffer to zero-length
+   * state.
+   */
+  Buffer<T>& operator=(Buffer<T>&& aOther) {
+    mData = std::move(aOther.mData);
+    mLength = aOther.mLength;
+    aOther.mLength = 0;
+    return *this;
+  }
+
+  /**
    * Construct by copying the elements of a Span.
    *
    * Allocates the internal buffer infallibly. Use CopyFrom for fallible
    * allocation.
    */
   explicit Buffer(mozilla::Span<const T> aSpan)
-      : mData(mozilla::MakeUnique<T[]>(aSpan.Length())),
+      : mData(mozilla::MakeUniqueForOverwrite<T[]>(aSpan.Length())),
         mLength(aSpan.Length()) {
     std::copy(aSpan.cbegin(), aSpan.cend(), mData.get());
   }
@@ -74,7 +85,11 @@ class Buffer final {
    * Allocates the internal buffer fallibly.
    */
   static mozilla::Maybe<Buffer<T>> CopyFrom(mozilla::Span<const T> aSpan) {
-    auto data = mozilla::MakeUniqueFallible<T[]>(aSpan.Length());
+    if (aSpan.IsEmpty()) {
+      return Some(Buffer());
+    }
+
+    auto data = mozilla::MakeUniqueForOverwriteFallible<T[]>(aSpan.Length());
     if (!data) {
       return mozilla::Nothing();
     }
@@ -108,6 +123,22 @@ class Buffer final {
       return mozilla::Nothing();
     }
     return mozilla::Some(Buffer(std::move(data), aLength));
+  }
+
+  /**
+   * Create a new Buffer with an internal buffer of requested length.
+   *
+   * This uses MakeUniqueFallibleForOverwrite so the contents will be
+   * default-initialized.
+   *
+   * Allocates the internal buffer fallibly.
+   */
+  static Maybe<Buffer<T>> AllocForOverwrite(size_t aLength) {
+    auto data = MakeUniqueForOverwriteFallible<T[]>(aLength);
+    if (!data) {
+      return Nothing();
+    }
+    return Some(Buffer(std::move(data), aLength));
   }
 
   mozilla::Span<const T> AsSpan() const {

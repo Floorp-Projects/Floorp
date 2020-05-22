@@ -46,7 +46,6 @@ exclude =
     testing/parse_build_tests_ccov.py,
     testing/runtimes/writeruntimes.py,
     testing/tools/iceserver/iceserver.py,
-    testing/tools/view_gecko_profile/view_gecko_profile.py,
     testing/tools/websocketprocessbridge/websocketprocessbridge.py,
     testing/web-platform,
     toolkit/components/featuregates,

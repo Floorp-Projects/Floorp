@@ -393,10 +393,10 @@ constexpr int kUC16Size = sizeof(uc16);
 inline constexpr bool IsDecimalDigit(uc32 c) { return c >= '0' && c <= '9'; }
 
 inline bool is_uint24(int64_t val) {
-  return !(val >> 24);
+  return (val >> 24) == 0;
 }
 inline bool is_int24(int64_t val) {
-  int64_t limit = 1 << 23;
+  int64_t limit = int64_t(1) << 23;
   return (-limit <= val) && (val < limit);
 }
 
@@ -564,14 +564,22 @@ class HeapObject : public Object {
   }
 };
 
-// A fixed-size array with Objects (aka Values) as element types
-// Only used for named captures. Allocated during parsing, so
-// can't be a GC thing.
-// TODO: implement.
+// A fixed-size array with Objects (aka Values) as element types.
+// Implemented using the dense elements of an ArrayObject.
+// Used for named captures.
 class FixedArray : public HeapObject {
  public:
-  inline void set(uint32_t index, Object value) {}
-  inline static FixedArray cast(Object object) { MOZ_CRASH("TODO"); }
+  inline void set(uint32_t index, Object value) {
+    inner()->setDenseElement(index, value.value());
+  }
+  inline static FixedArray cast(Object object) {
+    FixedArray f;
+    f.setValue(object.value());
+    return f;
+  }
+  js::NativeObject* inner() {
+    return &value().toObject().as<js::NativeObject>();
+  }
 };
 
 /*
@@ -860,46 +868,29 @@ inline Vector<const uc16> String::GetCharVector(
 }
 
 // A flat string reader provides random access to the contents of a
-// string independent of the character width of the string.  The handle
-// must be valid as long as the reader is being used.
-// Origin:
-// https://github.com/v8/v8/blob/84f3877c15bc7f8956d21614da4311337525a3c8/src/objects/string.h#L807-L825
+// string independent of the character width of the string.
 class MOZ_STACK_CLASS FlatStringReader {
  public:
-  FlatStringReader(JSLinearString* string)
-    : length_(string->length()),
-      is_latin1_(string->hasLatin1Chars()) {
+  FlatStringReader(JSContext* cx, js::HandleLinearString string)
+    : string_(string), length_(string->length()) {}
 
-    if (is_latin1_) {
-      latin1_chars_ = string->latin1Chars(nogc_);
-    } else {
-      two_byte_chars_ = string->twoByteChars(nogc_);
-    }
-  }
-  FlatStringReader(const char16_t* chars, size_t length)
-    : two_byte_chars_(chars),
-      length_(length),
-      is_latin1_(false) {}
+  FlatStringReader(const mozilla::Range<const char16_t> range)
+    : string_(nullptr), range_(range), length_(range.length()) {}
 
   int length() { return length_; }
 
   inline char16_t Get(size_t index) {
     MOZ_ASSERT(index < length_);
-    if (is_latin1_) {
-      return latin1_chars_[index];
-    } else {
-      return two_byte_chars_[index];
+    if (string_) {
+      return string_->latin1OrTwoByteChar(index);
     }
+    return range_[index];
   }
 
  private:
-  union {
-    const JS::Latin1Char *latin1_chars_;
-    const char16_t* two_byte_chars_;
-  };
+  js::HandleLinearString string_;
+  const mozilla::Range<const char16_t> range_;
   size_t length_;
-  bool is_latin1_;
-  JS::AutoCheckCannotGC nogc_;
 };
 
 class JSRegExp : public HeapObject {

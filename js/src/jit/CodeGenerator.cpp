@@ -2878,6 +2878,18 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
     return nullptr;
   }
 
+#ifdef ENABLE_NEW_REGEXP
+  // If a regexp has named captures, fall back to the OOL stub, which
+  // will end up calling CreateRegExpMatchResults.
+  Register shared = temp2;
+  masm.loadPtr(Address(regexp, NativeObject::getFixedSlotOffset(
+                                   RegExpObject::PRIVATE_SLOT)),
+               shared);
+  masm.branchPtr(Assembler::NotEqual,
+                 Address(shared, RegExpShared::offsetOfGroupsTemplate()),
+                 ImmWord(0), &oolEntry);
+#endif
+
   // Construct the result.
   Register object = temp1;
   Label matchResultFallback, matchResultJoin;
@@ -2885,14 +2897,27 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
                       &matchResultFallback);
   masm.bind(&matchResultJoin);
 
-  // Initialize slots of result object.
+#ifdef ENABLE_NEW_REGEXP
+  MOZ_ASSERT(nativeTemplateObj.numFixedSlots() == 0);
+  // Dynamic slot count is always rounded to a power of 2
+  MOZ_ASSERT(nativeTemplateObj.numDynamicSlots() == 4);
+  static_assert(RegExpRealm::MatchResultObjectIndexSlot == 0,
+                "First slot holds the 'index' property");
+  static_assert(RegExpRealm::MatchResultObjectInputSlot == 1,
+                "Second slot holds the 'input' property");
+  static_assert(RegExpRealm::MatchResultObjectGroupsSlot == 2,
+                "Third slot holds the 'groups' property");
+#else
   MOZ_ASSERT(nativeTemplateObj.numFixedSlots() == 0);
   MOZ_ASSERT(nativeTemplateObj.numDynamicSlots() == 2);
   static_assert(RegExpRealm::MatchResultObjectIndexSlot == 0,
                 "First slot holds the 'index' property");
   static_assert(RegExpRealm::MatchResultObjectInputSlot == 1,
                 "Second slot holds the 'input' property");
+#endif
 
+  // Initialize the slots of the result object with the dummy values
+  // defined in createMatchResultTemplateObject.
   masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
   masm.storeValue(
       nativeTemplateObj.getSlot(RegExpRealm::MatchResultObjectIndexSlot),
@@ -2900,6 +2925,11 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   masm.storeValue(
       nativeTemplateObj.getSlot(RegExpRealm::MatchResultObjectInputSlot),
       Address(temp2, sizeof(Value)));
+#ifdef ENABLE_NEW_REGEXP
+  masm.storeValue(
+      nativeTemplateObj.getSlot(RegExpRealm::MatchResultObjectGroupsSlot),
+      Address(temp2, 2 * sizeof(Value)));
+#endif
 
   // clang-format off
    /*

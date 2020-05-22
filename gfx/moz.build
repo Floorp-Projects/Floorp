@@ -47,3 +47,9 @@ SPHINX_TREES['/gfx'] = 'docs'
 
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
+
+with Files('wr/**'):
+    SCHEDULES.exclusive = ['webrender']
+
+with Files('webrender_bindings/**'):
+    SCHEDULES.exclusive = ['webrender']

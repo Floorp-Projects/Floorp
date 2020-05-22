@@ -54,6 +54,16 @@ class nsPrintSettingsX : public nsPrintSettings {
   void SetInchesScale(float aWidthScale, float aHeightScale);
   void GetInchesScale(float* aWidthScale, float* aHeightScale);
 
+  // GetPrintRange doesn't need overriding because SetPrintRange always calls
+  // nsPrintSettings::SetPrintRange.
+  NS_IMETHOD SetPrintRange(int16_t aPrintRange) final;
+
+  NS_IMETHOD GetStartPageRange(int32_t* aStartPageRange) final;
+  NS_IMETHOD SetStartPageRange(int32_t aStartPageRange) final;
+
+  NS_IMETHOD GetEndPageRange(int32_t* aEndPageRange) final;
+  NS_IMETHOD SetEndPageRange(int32_t aEndPageRange) final;
+
   NS_IMETHOD SetScaling(double aScaling) override;
   NS_IMETHOD GetScaling(double* aScaling) override;
 
