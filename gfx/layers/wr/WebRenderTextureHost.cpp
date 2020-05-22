@@ -51,7 +51,7 @@ WebRenderTextureHost::WebRenderTextureHost(
 
   MOZ_COUNT_CTOR(WebRenderTextureHost);
 
-  mWrappedTextureHost->EnsureRenderTexture(aExternalImageId);
+  mWrappedTextureHost->EnsureRenderTexture(Some(aExternalImageId));
 }
 
 WebRenderTextureHost::~WebRenderTextureHost() {
