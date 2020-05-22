@@ -454,6 +454,8 @@ class nsDocShell final : public nsDocLoader,
     return static_cast<nsDocShell*>(aDocShell);
   }
 
+  static bool CanLoadInParentProcess(nsIURI* aURI);
+
   // Returns true if the current load is a force reload (started by holding
   // shift while triggering reload)
   bool IsForceReloading();
