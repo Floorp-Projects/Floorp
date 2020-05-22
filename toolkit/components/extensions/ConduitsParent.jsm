@@ -246,23 +246,47 @@ class BroadcastConduit extends BaseConduit {
       // Target Messengers in extension pages by extensionId and envType.
       messenger: r =>
         r.verified &&
-        r.recv.includes(method) &&
         r.id !== arg.sender.contextId &&
         r.extensionId === arg.extensionId &&
+        r.recv.includes(method) &&
         // TODO: Bug 1453343 - get rid of this:
         (r.envType === "addon_child" || arg.sender.envType !== "content_child"),
 
       // Target content Messengers by extensionId, tabId (topBC) and frameId.
       tab: remote =>
-        remote.recv.includes(method) &&
+        !remote.verified &&
         remote.extensionId === arg.extensionId &&
         remote.actor.manager.browsingContext.top.id === arg.topBC &&
-        (arg.frameId == null || remote.frameId === arg.frameId),
+        (arg.frameId == null || remote.frameId === arg.frameId) &&
+        remote.recv.includes(method),
     };
 
     let targets = Array.from(Hub.remotes.values()).filter(filters[kind]);
-    let responses = targets.map(c => this._send(method, true, c.id, arg));
-    return Promise.allSettled(responses);
+    let promises = targets.map(c => this._send(method, true, c.id, arg));
+
+    return arg.firstResponse
+      ? this._raceResponses(promises)
+      : Promise.allSettled(promises);
+  }
+
+  /**
+   * Custom Promise.race() function that ignores certain resolutions and errors.
+   * @param {Promise<response>[]} promises
+   * @returns {Promise<response?>}
+   */
+  _raceResponses(promises) {
+    return new Promise((resolve, reject) => {
+      promises.map(p =>
+        p
+          // Ignore responses from child Messengers without any listeners.
+          .then(value => value && resolve(value))
+
+          // Ignore errors trying to query child Messengers being destroyed.
+          .catch(err => err.result !== Cr.NS_ERROR_NOT_AVAILABLE && reject(err))
+      );
+      // Ensure resolveing when there are no (actual) responses.
+      Promise.allSettled(promises).then(() => resolve());
+    });
   }
 
   async close() {
