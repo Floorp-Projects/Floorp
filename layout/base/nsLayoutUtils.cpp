@@ -9695,9 +9695,11 @@ static void UpdateDisplayPortMarginsForPendingMetrics(
 
   CSSPoint frameScrollOffset =
       CSSPoint::FromAppUnits(frame->GetScrollPosition());
+  CSSPoint scrollDelta = aMetrics.GetScrollOffset() - frameScrollOffset;
   ScreenMargin displayPortMargins =
-      APZCCallbackHelper::AdjustDisplayPortForScrollDelta(aMetrics,
-                                                          frameScrollOffset);
+      APZCCallbackHelper::AdjustDisplayPortForScrollDelta(
+          aMetrics.GetDisplayPortMargins(),
+          scrollDelta * aMetrics.DisplayportPixelsPerCSSPixel());
 
   nsLayoutUtils::SetDisplayPortMargins(content, presShell, displayPortMargins,
                                        0);
