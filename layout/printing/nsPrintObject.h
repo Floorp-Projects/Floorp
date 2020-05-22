@@ -43,6 +43,12 @@ class nsPrintObject {
   bool IsPrintable() { return !mDontPrint; }
   void DestroyPresentation();
 
+  /**
+   * Recursively sets the PO items to be printed "As Is"
+   * from the given item down into the treei
+   */
+  void SetPrintAsIs(bool aAsIs);
+
   // Data Members
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIDocShellTreeOwner> mTreeOwner;
