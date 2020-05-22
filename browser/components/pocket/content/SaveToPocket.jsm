@@ -285,17 +285,12 @@ var SaveToPocket = {
       PocketOverlay.shutdown();
       Services.obs.addObserver(this, "browser-delayed-startup-finished");
     } else {
+      AboutReaderParent.broadcastAsyncMessage(
+        "Reader:AddButton",
+        this._readerButtonData
+      );
       Services.obs.removeObserver(this, "browser-delayed-startup-finished");
       PocketOverlay.startup();
-      // The title for the button is extracted from browser.xhtml where it comes from a DTD.
-      // If we don't have this, there's also no possibility of there being a reader
-      // mode tab already loaded. We'll get an Reader:OnSetup message when that happens.
-      if (this._readerButtonData.title) {
-        AboutReaderParent.broadcastAsyncMessage(
-          "Reader:AddButton",
-          this._readerButtonData
-        );
-      }
     }
     this.updateElements(newValue);
   },
@@ -325,13 +320,6 @@ var SaveToPocket = {
     }
     switch (message.name) {
       case "Reader:OnSetup": {
-        // We must have a browser window; get the tooltip for the button if we don't
-        // have it already.
-        if (!this._readerButtonData.title) {
-          let doc = message.target.ownerDocument;
-          let button = doc.getElementById("pocket-button");
-          this._readerButtonData.title = button.getAttribute("tooltiptext");
-        }
         // Tell the reader about our button.
         message.target.sendMessageToActor(
           "Reader:AddButton",

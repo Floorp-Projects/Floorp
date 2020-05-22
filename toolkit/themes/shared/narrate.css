@@ -62,7 +62,6 @@ body.dark .narrate-word-highlight {
 }
 
 .narrate-toggle {
-  margin: 0;
   background-image: url("chrome://global/skin/narrate/headphone.svg");
 }
 
@@ -77,7 +76,15 @@ body.dark .narrate-word-highlight {
 
 .narrate-dropdown > .dropdown-popup button:enabled:hover,
 .narrate-dropdown > .dropdown-popup button:enabled:focus {
-  background-color: var(--toolbar-hover);
+  background-color: var(--popup-button-hover);
+}
+
+.narrate-dropdown > .dropdown-popup {
+  top: -34px;
+}
+
+.narrate-dropdown .dropdown-arrow {
+  top: 40px;
 }
 
 .narrate-row {
@@ -223,7 +230,7 @@ body.dark .narrate-word-highlight {
 }
 
 body.dark .voiceselect > .options:not(.hovering) > button.option:focus {
-  background-color: var(--toolbar-hover);
+  background-color: var(--popup-button-hover);
 }
 
 .voiceselect > .options:not(.hovering) > button.option:hover:not(:focus) {
