@@ -6268,7 +6268,7 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
     }
   }
 
-  call->initFunction(callInfo.callee());
+  call->initCallee(callInfo.callee());
 
   current->add(call);
   return call;

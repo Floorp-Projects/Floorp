@@ -910,12 +910,12 @@ template bool ObjectPolicy<3>::staticAdjustInputs(TempAllocator& alloc,
 bool CallPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   MCall* call = ins->toCall();
 
-  MDefinition* func = call->getFunction();
+  MDefinition* func = call->getCallee();
   if (func->type() != MIRType::Object) {
     MInstruction* unbox =
         MUnbox::New(alloc, func, MIRType::Object, MUnbox::Fallible);
     call->block()->insertBefore(call, unbox);
-    call->replaceFunction(unbox);
+    call->replaceCallee(unbox);
 
     if (!unbox->typePolicy()->adjustInputs(alloc, unbox)) {
       return false;
