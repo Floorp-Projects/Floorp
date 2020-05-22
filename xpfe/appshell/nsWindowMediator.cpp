@@ -245,6 +245,13 @@ nsWindowMediator::GetMostRecentBrowserWindow(mozIDOMWindowProxy** outWindow) {
   }
 #endif
 
+#ifdef MOZ_THUNDERBIRD
+  if (!*outWindow) {
+    rv = GetMostRecentWindow(u"mail:3pane", outWindow);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+#endif
+
   return NS_OK;
 }
 
