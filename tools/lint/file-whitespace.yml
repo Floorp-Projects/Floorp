@@ -51,7 +51,6 @@ file-whitespace:
         - testing/mozharness/configs/web_platform_tests/test_config_windows.py
         - testing/mozharness/external_tools/virtualenv/virtualenv_embedded/distutils-init.py
         - testing/talos/talos/cmanager_base.py
-        - testing/talos/talos/profiler/profiling.py
         - testing/talos/talos/unittests/conftest.py
         - testing/talos/talos/unittests/test_test.py
         - testing/talos/talos/unittests/test_xtalos.py

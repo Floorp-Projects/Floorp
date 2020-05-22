@@ -5,6 +5,7 @@
 --editable ../mozbase/mozdebug
 --editable ../mozbase/mozdevice
 --editable ../mozbase/mozfile
+--editable ../mozbase/mozgeckoprofiler
 --editable ../mozbase/mozhttpd
 --editable ../mozbase/mozinfo
 --editable ../mozbase/mozinstall
