@@ -186,6 +186,10 @@ pub enum CompositorConfig {
         /// then the operating system supports a form of 'partial present' where
         /// only dirty regions of the framebuffer need to be updated.
         max_partial_present_rects: usize,
+        /// If this is true, WR would draw the previous frame's dirty region when
+        /// doing a partial present. This is used for EGL which requires the front
+        /// buffer to always be fully consistent.
+        draw_previous_partial_present_regions: bool,
     },
     /// Use a native OS compositor to draw tiles. This requires clients to implement
     /// the Compositor trait, but can be significantly more power efficient on operating
@@ -218,6 +222,7 @@ impl Default for CompositorConfig {
     fn default() -> Self {
         CompositorConfig::Draw {
             max_partial_present_rects: 0,
+            draw_previous_partial_present_regions: false,
         }
     }
 }
@@ -233,6 +238,8 @@ pub enum CompositorKind {
     Draw {
         /// Partial present support.
         max_partial_present_rects: usize,
+        /// Draw previous regions when doing partial present.
+        draw_previous_partial_present_regions: bool,
     },
     /// Native OS compositor.
     Native {
@@ -248,6 +255,7 @@ impl Default for CompositorKind {
     fn default() -> Self {
         CompositorKind::Draw {
             max_partial_present_rects: 0,
+            draw_previous_partial_present_regions: false,
         }
     }
 }

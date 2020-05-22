@@ -2114,6 +2114,11 @@ pub struct Renderer {
 
     /// State related to the debug / profiling overlays
     debug_overlay_state: DebugOverlayState,
+
+    /// The dirty rectangle from the previous frame, used on platforms that
+    /// require keeping the front buffer fully correct when doing
+    /// partial present (e.g. unix desktop with EGL_EXT_buffer_age).
+    prev_dirty_rect: DeviceRect,
 }
 
 #[derive(Debug)]
@@ -2391,8 +2396,8 @@ impl Renderer {
         };
 
         let compositor_kind = match options.compositor_config {
-            CompositorConfig::Draw { max_partial_present_rects } => {
-                CompositorKind::Draw { max_partial_present_rects }
+            CompositorConfig::Draw { max_partial_present_rects, draw_previous_partial_present_regions } => {
+                CompositorKind::Draw { max_partial_present_rects, draw_previous_partial_present_regions }
             }
             CompositorConfig::Native { ref compositor, max_update_rects, .. } => {
                 let capabilities = compositor.get_capabilities();
@@ -2668,6 +2673,7 @@ impl Renderer {
             current_compositor_kind: compositor_kind,
             allocated_native_surfaces: FastHashSet::default(),
             debug_overlay_state: DebugOverlayState::new(),
+            prev_dirty_rect: DeviceRect::zero(),
         };
 
         // We initially set the flags to default and then now call set_debug_flags
@@ -4876,6 +4882,7 @@ impl Renderer {
         projection: &default::Transform3D<f32>,
         results: &mut RenderResults,
         max_partial_present_rects: usize,
+        draw_previous_partial_present_regions: bool,
     ) {
         let _gm = self.gpu_profile.start_marker("framebuffer");
         let _timer = self.gpu_profile.start_timer(GPU_TAG_COMPOSITE);
@@ -4909,9 +4916,18 @@ impl Renderer {
                     results.dirty_rects.push(combined_dirty_rect_i32);
                 }
 
+                // If the implementation requires manually keeping the buffer consistent,
+                // combine the previous frame's damage for tile clipping.
+                // (Not for the returned region though, that should be from this frame only)
                 partial_present_mode = Some(PartialPresentMode::Single {
-                    dirty_rect: combined_dirty_rect,
+                    dirty_rect: if draw_previous_partial_present_regions {
+                        combined_dirty_rect.union(&self.prev_dirty_rect)
+                    } else { combined_dirty_rect },
                 });
+
+                if draw_previous_partial_present_regions {
+                    self.prev_dirty_rect = combined_dirty_rect;
+                }
             } else {
                 // If we don't have a valid partial present scenario, return a single
                 // dirty rect to the client that covers the entire framebuffer.
@@ -4920,6 +4936,10 @@ impl Renderer {
                     draw_target.dimensions(),
                 );
                 results.dirty_rects.push(fb_rect);
+
+                if draw_previous_partial_present_regions {
+                    self.prev_dirty_rect = fb_rect.to_f32();
+                }
             }
 
             self.force_redraw = false;
@@ -5875,7 +5895,7 @@ impl Renderer {
                                     let compositor = self.compositor_config.compositor().unwrap();
                                     frame.composite_state.composite_native(&mut **compositor);
                                 }
-                                CompositorKind::Draw { max_partial_present_rects, .. } => {
+                                CompositorKind::Draw { max_partial_present_rects, draw_previous_partial_present_regions, .. } => {
                                     self.composite_simple(
                                         &frame.composite_state,
                                         clear_framebuffer,
@@ -5883,6 +5903,7 @@ impl Renderer {
                                         &projection,
                                         results,
                                         max_partial_present_rects,
+                                        draw_previous_partial_present_regions,
                                     );
                                 }
                             }

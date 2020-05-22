@@ -81,6 +81,9 @@ class GLContextEGL : public GLContext {
 
   EGLSurface GetEGLSurface() const { return mSurface; }
 
+  bool HasBufferAge() const;
+  EGLint GetBufferAge() const;
+
   bool BindTex2DOffscreen(GLContext* aOffscreen);
   void UnbindTex2DOffscreen(GLContext* aOffscreen);
   void BindOffscreenFramebuffer();

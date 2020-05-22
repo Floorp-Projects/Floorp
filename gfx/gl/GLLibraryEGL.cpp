@@ -76,7 +76,8 @@ static const char* sEGLExtensionNames[] = {
     "EGL_KHR_create_context_no_error",
     "EGL_MOZ_create_context_provoking_vertex_dont_care",
     "EGL_EXT_swap_buffers_with_damage",
-    "EGL_KHR_swap_buffers_with_damage"};
+    "EGL_KHR_swap_buffers_with_damage",
+    "EGL_EXT_buffer_age"};
 
 PRLibrary* LoadApitraceLibrary() {
   const char* path = nullptr;

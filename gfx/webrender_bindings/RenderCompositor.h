@@ -107,6 +107,7 @@ class RenderCompositor {
   virtual bool UsePartialPresent() { return false; }
   virtual bool RequestFullRender() { return false; }
   virtual uint32_t GetMaxPartialPresentRects() { return 0; }
+  virtual bool ShouldDrawPreviousPartialPresentRegions() { return false; }
 
   // Whether the surface origin is top-left.
   virtual bool SurfaceOriginIsTopLeft() { return false; }
