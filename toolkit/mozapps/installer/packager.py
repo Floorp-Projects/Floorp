@@ -51,8 +51,7 @@ class RemovedFiles(GeneratedFile):
             return
         if self.copier.contains(f):
             errors.error('Removal of packaged file(s): %s' % f)
-        ensure = six.ensure_binary if 'b' in self._mode else six.ensure_text
-        self.content += ensure(f) + ensure('\n')
+        self.content += six.ensure_binary(f) + b'\n'
 
 
 def split_define(define):

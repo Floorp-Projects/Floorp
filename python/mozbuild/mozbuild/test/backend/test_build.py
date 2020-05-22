@@ -7,6 +7,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import buildconfig
 import os
 import shutil
+import six
 import sys
 import unittest
 import mozpack.path as mozpath
@@ -153,7 +154,7 @@ class TestBuild(unittest.TestCase):
                                  'test', 'backend', 'data', 'build')
 
         result = {
-            p: f.open(mode='r').read()
+            p: six.ensure_text(f.open().read())
             for p, f in FileFinder(mozpath.join(config.topobjdir, 'dist'))
         }
         self.assertTrue(len(result))

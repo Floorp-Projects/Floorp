@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import codecs
 import errno
 import inspect
 import os
@@ -95,27 +96,25 @@ class Dest(object):
     '''
 
     def __init__(self, path):
-        self.path = ensure_unicode(path)
+        self.file = None
         self.mode = None
+        self.path = ensure_unicode(path)
 
     @property
     def name(self):
         return self.path
 
-    def read(self, length=-1, mode='rb'):
+    def read(self, length=-1):
         if self.mode != 'r':
-            self.file = _open(self.path, mode)
+            self.file = _open(self.path, mode='rb')
             self.mode = 'r'
         return self.file.read(length)
 
-    def write(self, data, mode='wb'):
+    def write(self, data):
         if self.mode != 'w':
-            self.file = _open(self.path, mode)
+            self.file = _open(self.path, mode='wb')
             self.mode = 'w'
-        if 'b' in mode:
-            to_write = six.ensure_binary(data)
-        else:
-            to_write = six.ensure_text(data)
+        to_write = six.ensure_binary(data)
         return self.file.write(to_write)
 
     def exists(self):
@@ -125,6 +124,7 @@ class Dest(object):
         if self.mode:
             self.mode = None
             self.file.close()
+            self.file = None
 
 
 class BaseFile(object):
@@ -227,7 +227,7 @@ class BaseFile(object):
                 shutil.copyfileobj(self.open(), dest)
             return True
 
-        src = self.open('rb')
+        src = self.open()
         copy_content = b''
         while True:
             dest_content = dest.read(32768)
@@ -246,14 +246,14 @@ class BaseFile(object):
             shutil.copystat(self.path, dest.path)
         return True
 
-    def open(self, mode='rb'):
+    def open(self):
         '''
         Return a file-like object allowing to read() the content of the
         associated file. This is meant to be overloaded in subclasses to return
         a custom file-like object.
         '''
         assert self.path is not None
-        return _open(self.path, mode=mode)
+        return open(self.path, 'rb')
 
     def read(self):
         raise NotImplementedError('BaseFile.read() not implemented. Bug 1170329.')
@@ -301,7 +301,7 @@ class File(BaseFile):
 
     def read(self):
         '''Return the contents of the file.'''
-        with _open(self.path, 'rb') as fh:
+        with open(self.path, 'rb') as fh:
             return fh.read()
 
     def size(self):
@@ -632,23 +632,19 @@ class GeneratedFile(BaseFile):
 
     def __init__(self, content):
         self._content = content
-        self._mode = 'rb'
 
     @property
     def content(self):
-        ensure = (six.ensure_binary if 'b' in self._mode else six.ensure_text)
         if inspect.isfunction(self._content):
-            self._content = ensure(self._content())
-        return ensure(self._content)
+            self._content = self._content()
+        return six.ensure_binary(self._content)
 
     @content.setter
     def content(self, content):
         self._content = content
 
-    def open(self, mode='rb'):
-        self._mode = mode
-        return (BytesIO(self.content) if 'b' in self._mode
-                else six.StringIO(self.content))
+    def open(self):
+        return BytesIO(self.content)
 
     def read(self):
         return self.content
@@ -671,7 +667,7 @@ class DeflatedFile(BaseFile):
         assert isinstance(file, JarFileReader)
         self.file = file
 
-    def open(self, mode='rb'):
+    def open(self):
         self.file.seek(0)
         return self.file
 
@@ -740,7 +736,7 @@ class ManifestFile(BaseFile):
         else:
             self._entries.remove(entry)
 
-    def open(self, mode='rt'):
+    def open(self):
         '''
         Return a file-like object allowing to read() the serialized content of
         the manifest.
@@ -748,9 +744,7 @@ class ManifestFile(BaseFile):
         content = ''.join(
             '%s\n' % e.rebase(self._base)
             for e in chain(self._entries, self._interfaces))
-        if 'b' in mode:
-            return BytesIO(six.ensure_binary(content))
-        return six.StringIO(six.ensure_text(content))
+        return BytesIO(six.ensure_binary(content))
 
     def __iter__(self):
         '''
@@ -775,18 +769,16 @@ class MinifiedProperties(BaseFile):
         assert isinstance(file, BaseFile)
         self._file = file
 
-    def open(self, mode='r'):
+    def open(self):
         '''
         Return a file-like object allowing to read() the minified content of
         the properties file.
         '''
         content = ''.join(
             l for l in [
-                six.ensure_text(s) for s in self._file.open(mode).readlines()
+                six.ensure_text(s) for s in self._file.open().readlines()
             ] if not l.startswith('#'))
-        if 'b' in mode:
-            return BytesIO(six.ensure_binary(content))
-        return six.StringIO(content)
+        return BytesIO(six.ensure_binary(content))
 
 
 class MinifiedJavaScript(BaseFile):
@@ -799,19 +791,21 @@ class MinifiedJavaScript(BaseFile):
         self._file = file
         self._verify_command = verify_command
 
-    def open(self, mode='r'):
+    def open(self):
         output = six.StringIO()
-        minify = JavascriptMinify(self._file.open('r'), output, quote_chars="'\"`")
+        minify = JavascriptMinify(codecs.getreader('utf-8')(self._file.open()),
+                                  output, quote_chars="'\"`")
         minify.minify()
         output.seek(0)
+        output_source = six.ensure_binary(output.getvalue())
+        output = BytesIO(output_source)
 
         if not self._verify_command:
             return output
 
-        input_source = self._file.open('r').read()
-        output_source = output.getvalue()
+        input_source = self._file.open().read()
 
-        with NamedTemporaryFile('w+') as fh1, NamedTemporaryFile('w+') as fh2:
+        with NamedTemporaryFile('wb+') as fh1, NamedTemporaryFile('wb+') as fh2:
             fh1.write(input_source)
             fh2.write(output_source)
             fh1.flush()
@@ -1159,10 +1153,8 @@ class MercurialFile(BaseFile):
         self._content = client.cat([six.ensure_binary(path)],
                                    rev=six.ensure_binary(rev))
 
-    def open(self, mode='rb'):
-        if 'b' in mode:
-            return BytesIO(six.ensure_binary(self._content))
-        return six.StringIO(six.ensure_text(self._content))
+    def open(self):
+        return BytesIO(six.ensure_binary(self._content))
 
     def read(self):
         return self._content

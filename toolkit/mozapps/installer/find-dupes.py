@@ -53,8 +53,7 @@ def find_dupes(source, allowed_dupes, bail=True):
     for p, f in UnpackFinder(source):
         md5 = hashlib.md5()
         content_size = 0
-        for buf in iter(functools.partial(f.open('rb').read, md5_chunk_size),
-                        b''):
+        for buf in iter(functools.partial(f.open().read, md5_chunk_size), b''):
             md5.update(six.ensure_binary(buf))
             content_size += len(six.ensure_binary(buf))
         m = md5.digest()
