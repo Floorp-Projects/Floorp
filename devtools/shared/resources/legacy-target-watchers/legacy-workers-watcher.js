@@ -82,6 +82,10 @@ class LegacyWorkersWatcher {
 
     // Fetch the list of already existing worker targets for this process target front.
     const existingTargets = this.targetsByProcess.get(targetFront);
+    if (!existingTargets) {
+      // unlisten was called while processing the workerListChanged callback.
+      return;
+    }
 
     // Process the new list to detect the ones being destroyed
     // Force destroying the targets
