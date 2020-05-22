@@ -340,22 +340,14 @@ function FindProxyForURL(url, host) {
         if os.environ.get('DISABLE_PROFILE_LAUNCH', '0') == '1':
             LOG.info("Not launching profiler.firefox.com because DISABLE_PROFILE_LAUNCH=1")
         else:
-            view_gecko_profile(config['browser_path'])
+            view_gecko_profile_from_talos()
 
     # we will stop running tests on a failed test, or we will return 0 for
     # green
     return 0
 
 
-def view_gecko_profile(ffox_bin):
-    # automatically load the latest talos gecko-profile archive in profiler.firefox.com
-    if sys.platform.startswith('win') and not ffox_bin.endswith(".exe"):
-        ffox_bin = ffox_bin + ".exe"
-
-    if not os.path.exists(ffox_bin):
-        LOG.info("unable to find Firefox bin, cannot launch view-gecko-profile")
-        return
-
+def view_gecko_profile_from_talos():
     profile_zip = os.environ.get('TALOS_LATEST_GECKO_PROFILE_ARCHIVE', None)
     if profile_zip is None or not os.path.exists(profile_zip):
         LOG.info("No local talos gecko profiles were found so not launching profiler.firefox.com")
@@ -375,18 +367,15 @@ def view_gecko_profile(ffox_bin):
 
     command = ['python',
                view_gp,
-               '-b', ffox_bin,
                '-p', profile_zip]
 
-    LOG.info('Auto-loading this profile in perfhtml.io: %s' % profile_zip)
-    LOG.info(command)
+    LOG.info('Auto-loading this profile in profiler.firefox.com: %s' % profile_zip)
+    LOG.info(' '.join(command))
 
     # if the view-gecko-profile tool fails to launch for some reason, we don't
     # want to crash talos! just dump error and finsh up talos as usual
     try:
-        view_profile = subprocess.Popen(command,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
+        view_profile = subprocess.Popen(command)
         # that will leave it running in own instance and let talos finish up
     except Exception as e:
         LOG.info("failed to launch view-gecko-profile tool, exeption: %s" % e)
