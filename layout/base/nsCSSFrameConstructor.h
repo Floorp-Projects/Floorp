@@ -365,6 +365,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     AllowPageBreak,
     IsGeneratedContent,
     IsWithinSVGText,
+    // The item allows items to be created for SVG <textPath> children.
     AllowTextPathChild,
     // The item is content created by an nsIAnonymousContentCreator frame.
     IsAnonymousContentCreatorContent,

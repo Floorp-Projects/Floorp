@@ -5305,9 +5305,9 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
     case kNameSpaceID_MathML:
       return FindMathMLData(aElement, aStyle);
     case kNameSpaceID_SVG:
-      return FindSVGData(
-          aElement, aParentFrame, aFlags.contains(ItemFlag::IsWithinSVGText),
-          aFlags.contains(ItemFlag::AllowTextPathChild), aStyle);
+      return FindSVGData(aElement, aParentFrame,
+                         aFlags.contains(ItemFlag::IsWithinSVGText),
+                         aFlags.contains(ItemFlag::AllowTextPathChild), aStyle);
     case kNameSpaceID_XUL:
       return FindXULTagData(aElement, aStyle);
     default:
