@@ -55,7 +55,6 @@
     'rijndael.c',
     'rsa.c',
     'rsapkcs.c',
-    'sha512.c',
     'sha_fast.c',
     'shvfy.c',
     'sysrand.c',
