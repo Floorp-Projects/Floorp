@@ -45,13 +45,11 @@ MockObjectRegisterer.prototype = {
         if (aOuter != null) {
           throw SpecialPowers.Cr.NS_ERROR_NO_AGGREGATION;
         }
-        var inst = new providedConstructor();
+        var inst = new providedConstructor().QueryInterface(aIid);
         if (!isChrome) {
-          var QI = inst.QueryInterface;
           inst = SpecialPowers.wrapCallbackObject(inst);
-          inst.QueryInterface = QI;
         }
-        return inst.QueryInterface(aIid);
+        return inst;
       },
     };
     if (!isChrome) {

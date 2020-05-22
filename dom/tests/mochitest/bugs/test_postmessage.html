@@ -30,7 +30,7 @@
     var Cu = SpecialPowers.Cu;
     var princ = SpecialPowers.wrap(window.document).nodePrincipal;
     var sandbox = Cu.Sandbox(princ, { sameZoneAs: this });
-    sandbox.win = window.frames.diffDomain;
+    SpecialPowers.unwrap(sandbox).win = window.frames.diffDomain;
     var err = `Failed to execute ‘postMessage’ on ‘DOMWindow’: The target origin provided (‘https://example.com’) does not match the recipient window’s origin (‘https://example.org’).`;
     let consolePromise = waitForErrorMessage(err);
     Cu.evalInSandbox(
