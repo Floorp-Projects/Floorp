@@ -72,7 +72,7 @@ preBuild.finalizedBy("generateComponentEnum")
 /**
  * Generates a "Components" enum listing all published components.
  */
-task generateComponentEnum {
+tasks.register("generateComponentEnum") {
     doLast {
         generatedSrcDir.mkdirs()
 
