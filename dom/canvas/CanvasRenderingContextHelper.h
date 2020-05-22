@@ -37,6 +37,8 @@ enum class CanvasContextType : uint8_t {
  */
 class CanvasRenderingContextHelper {
  public:
+  CanvasRenderingContextHelper();
+
   virtual already_AddRefed<nsISupports> GetContext(
       JSContext* aCx, const nsAString& aContextId,
       JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv);
