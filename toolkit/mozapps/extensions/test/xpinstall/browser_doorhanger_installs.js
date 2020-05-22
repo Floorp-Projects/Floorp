@@ -397,7 +397,7 @@ var TESTS = [
     let addon = await AddonManager.getAddonByID(
       "amosigned-xpi@tests.mozilla.org"
     );
-    addon.uninstall();
+    await addon.uninstall();
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   },
@@ -532,7 +532,7 @@ var TESTS = [
       "private browsing permission was not granted"
     );
 
-    addon.uninstall();
+    await addon.uninstall();
 
     PermissionTestUtils.remove("http://example.com/", "install");
 
@@ -740,7 +740,7 @@ var TESTS = [
       { actionType: "privateBrowsingAllowed" }
     );
 
-    addon.uninstall();
+    await addon.uninstall();
 
     Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 
@@ -1014,10 +1014,134 @@ var TESTS = [
       { actionType: "privateBrowsingAllowed" }
     );
 
-    addon.uninstall();
+    await addon.uninstall();
 
     await removeTabAndWaitForNotificationClose();
     await SpecialPowers.popPrefEnv();
+  },
+
+  async function test_incognito_checkbox_new_window() {
+    SpecialPowers.pushPrefEnv({
+      set: [["extensions.allowPrivateBrowsingByDefault", false]],
+    });
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    await SimpleTest.promiseFocus(win);
+    // Grant permission up front.
+    const permissionName = "internal:privateBrowsingAllowed";
+    let incognitoPermission = {
+      permissions: [permissionName],
+      origins: [],
+    };
+    await ExtensionPermissions.add(
+      "amosigned-xpi@tests.mozilla.org",
+      incognitoPermission
+    );
+
+    let panelEventPromise = new Promise(resolve => {
+      win.PopupNotifications.panel.addEventListener(
+        "PanelUpdated",
+        function eventListener(e) {
+          if (e.detail.includes("addon-webext-permissions")) {
+            win.PopupNotifications.panel.removeEventListener(
+              "PanelUpdated",
+              eventListener
+            );
+            resolve();
+          }
+        }
+      );
+    });
+
+    win.gBrowser.selectedTab = BrowserTestUtils.addTab(
+      win.gBrowser,
+      "about:blank"
+    );
+    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    win.gURLBar.value = TESTROOT + "amosigned.xpi";
+    win.gURLBar.focus();
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
+
+    await panelEventPromise;
+    await waitForTick();
+
+    let panel = win.PopupNotifications.panel;
+    let installDialog = panel.childNodes[0];
+
+    let notificationPromise = new Promise(resolve => {
+      function popupshown() {
+        let notification = win.AppMenuNotifications.activeNotification;
+        if (!notification) {
+          return;
+        }
+
+        ok(win.PanelUI.isNotificationPanelOpen, "notification panel open");
+
+        win.PanelUI.notificationPanel.removeEventListener(
+          "popupshown",
+          popupshown
+        );
+
+        let checkbox = win.document.getElementById("addon-incognito-checkbox");
+        ok(!checkbox.hidden, "checkbox visibility is correct");
+        ok(checkbox.checked, "checkbox is marked as expected");
+        checkbox.checked = false;
+
+        // Dismiss the panel by clicking the primary button.
+        let popupnotificationID = win.PanelUI._getPopupId(notification);
+        let popupnotification = win.document.getElementById(
+          popupnotificationID
+        );
+        popupnotification.button.click();
+        resolve();
+      }
+      win.document.addEventListener("popupshown", popupshown);
+    });
+
+    installDialog.button.click();
+
+    await notificationPromise;
+
+    let installs = await AddonManager.getAllInstalls();
+    is(installs.length, 0, "Should be no pending installs");
+
+    let addon = await AddonManager.getAddonByID(
+      "amosigned-xpi@tests.mozilla.org"
+    );
+    // The panel is reloading the addon due to the permission change, we need some way
+    // to wait for the reload to finish. addon.startupPromise doesn't do it for
+    // us, so we'll just restart again.
+    await AddonTestUtils.promiseWebExtensionStartup(
+      "amosigned-xpi@tests.mozilla.org"
+    );
+
+    // This addon should no longer have private browsing permission.
+    let policy = WebExtensionPolicy.getByID(addon.id);
+    ok(!policy.privateBrowsingAllowed, "private browsing permission removed");
+
+    // Verify that the expected telemetry event has been collected for the extension allowed on
+    // PB windows from the "post install" notification doorhanger.
+    assertActionAMTelemetryEvent(
+      [
+        {
+          method: "action",
+          object: "doorhanger",
+          value: "off",
+          extra: {
+            action: "privateBrowsingAllowed",
+            view: "postInstall",
+            addonId: addon.id,
+            type: "extension",
+          },
+        },
+      ],
+      "Expect telemetry events for privateBrowsingAllowed action",
+      { actionType: "privateBrowsingAllowed" }
+    );
+
+    await addon.uninstall();
+
+    await SpecialPowers.popPrefEnv();
+    await BrowserTestUtils.closeWindow(win);
   },
 ];
 
