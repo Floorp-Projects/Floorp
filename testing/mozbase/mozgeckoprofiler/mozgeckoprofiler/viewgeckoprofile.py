@@ -10,26 +10,34 @@ import argparse
 import os
 import socket
 import sys
-import urllib
+import six
 import webbrowser
 
 from mozlog import commandline, get_proxy_logger
 from mozlog.commandline import add_logging_group
 
-import SocketServer
-import SimpleHTTPServer
-
 here = os.path.abspath(os.path.dirname(__file__))
 LOG = get_proxy_logger("profiler")
 
+if six.PY2:
+    # Import for Python 2
+    from SocketServer import TCPServer
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
+    from urllib import quote
+else:
+    # Import for Python 3
+    from socketserver import TCPServer
+    from http.server import SimpleHTTPRequestHandler
+    from urllib.parse import quote
 
-class ProfileServingHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+
+class ProfileServingHTTPRequestHandler(SimpleHTTPRequestHandler):
     """Extends the basic SimpleHTTPRequestHandler (which serves a directory
     of files) to include request headers required by profiler.firefox.com"""
 
     def end_headers(self):
         self.send_header("Access-Control-Allow-Origin", "https://profiler.firefox.com")
-        SimpleHTTPServer.SimpleHTTPRequestHandler.end_headers(self)
+        SimpleHTTPRequestHandler.end_headers(self)
 
 
 class ViewGeckoProfile(object):
@@ -53,7 +61,7 @@ class ViewGeckoProfile(object):
 
         # Temporarily change the directory to the profile directory.
         os.chdir(self.gecko_profile_dir)
-        self.httpd = SocketServer.TCPServer(
+        self.httpd = TCPServer(
             (self.host, self.port), ProfileServingHTTPRequestHandler
         )
 
@@ -68,7 +76,7 @@ class ViewGeckoProfile(object):
             self.host, self.port, os.path.basename(self.gecko_profile_data_path)
         )
 
-        self.profiler_url = self.profiler_url + urllib.quote(file_url, safe="")
+        self.profiler_url = self.profiler_url + quote(file_url, safe="")
         LOG.info("Temporarily serving the profile from: %s" % file_url)
 
     def open_profile_in_browser(self):
