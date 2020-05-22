@@ -18,10 +18,12 @@
     const CHILD_WORKER_URL = "WorkerDebugger.console_childWorker.js";
     const DEBUGGER_URL = BASE_URL + "WorkerDebugger.console_debugger.js";
 
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
     consoleMessagesReceived = 0;
     function test() {
       function consoleListener() {
-        SpecialPowers.addObserver(this, "console-api-log-event");
+        Services.obs.addObserver(this, "console-api-log-event");
       }
 
       consoleListener.prototype  = {
@@ -32,7 +34,7 @@
                 !consoleMessagesReceived) {
               consoleMessagesReceived++;
               ok(true, "Something has been received");
-              SpecialPowers.removeObserver(this, "console-api-log-event");
+              Services.obs.removeObserver(this, "console-api-log-event");
             }
           }
         }

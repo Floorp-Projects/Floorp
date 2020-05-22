@@ -15,6 +15,8 @@
 
 const JSM = "chrome://mochitests/content/chrome/dom/console/tests/console.jsm";
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 let dumpCalled = 0;
 function dumpFunction(msg) {
   ok(msg.includes("_PREFIX_"), "we have a prefix");
@@ -23,7 +25,7 @@ function dumpFunction(msg) {
 }
 
 function consoleListener() {
-  SpecialPowers.addObserver(this, "console-api-log-event");
+  Services.obs.addObserver(this, "console-api-log-event");
 }
 
 consoleListener.prototype  = {
@@ -59,7 +61,7 @@ consoleListener.prototype  = {
 
       if (this.count == 4) {
         is(dumpCalled, 2, "Dump has been called!");
-        SpecialPowers.removeObserver(this, "console-api-log-event");
+        Services.obs.removeObserver(this, "console-api-log-event");
         SimpleTest.finish();
       }
     }

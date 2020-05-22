@@ -24,9 +24,9 @@ SpecialPowers.wrap(div.shadowRoot).setIsUAWidget();
 
 const sandbox = SpecialPowers.Cu.getUAWidgetScope(SpecialPowers.wrap(div).nodePrincipal);
 
-SpecialPowers.setWrapped(sandbox, "info", SpecialPowers.wrap(info));
-SpecialPowers.setWrapped(sandbox, "is", SpecialPowers.wrap(is));
-SpecialPowers.setWrapped(sandbox, "ok", SpecialPowers.wrap(ok));
+SpecialPowers.setWrapped(sandbox, "info", SpecialPowers.wrapFor(info, sandbox));
+SpecialPowers.setWrapped(sandbox, "is", SpecialPowers.wrapFor(is, sandbox));
+SpecialPowers.setWrapped(sandbox, "ok", SpecialPowers.wrapFor(ok, sandbox));
 
 const sandboxScript = function(shadowRoot) {
   info("UA Widget scope tests");

@@ -70,7 +70,7 @@ function observeStyling(frameCount) {
     return waitForAnimationFrames(frameCount).then(framesWaited => {
       var markers = docShell.popProfileTimelineMarkers();
       docShell.recordProfileTimelineMarkers = false;
-      var stylingMarkers = markers.filter(function(marker, index) {
+      var stylingMarkers = Array.prototype.filter.call(markers, function(marker, index) {
         return marker.name == 'Styles' && marker.isAnimationOnly;
       });
       resolve({

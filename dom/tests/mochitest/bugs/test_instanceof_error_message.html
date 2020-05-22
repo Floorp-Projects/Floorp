@@ -85,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1530413
     sandbox = SpecialPowers.unwrap(Cu.Sandbox(this, { sameZoneAs: this, freshCompartment: true}));
     sandbox.window = window;
     sandbox.crossCompartmentObject = {};
-    sandbox.waiveXrays = Cu.waiveXrays;
+    sandbox.waiveXrays = SpecialPowers.wrapFor(Cu.waiveXrays, sandbox);
 
     window[Symbol.hasInstance] = function(instance) {
       instance.window = this;

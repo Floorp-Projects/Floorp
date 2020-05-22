@@ -72,7 +72,7 @@ function observeAnimSyncStyling(funcToMakeRestyleHappen) {
 
   const markers = docShell.popProfileTimelineMarkers();
   docShell.recordProfileTimelineMarkers = false;
-  return markers.filter((marker, index) => {
+  return Array.prototype.filter.call(markers, (marker, index) => {
     return marker.name == 'Styles' && marker.isAnimationOnly;
   });
 }
