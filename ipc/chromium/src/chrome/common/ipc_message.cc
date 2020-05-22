@@ -184,6 +184,13 @@ uint32_t Message::num_fds() const {
 
 #endif
 
+void Message::AssertAsLargeAsHeader() const {
+  MOZ_DIAGNOSTIC_ASSERT(size() >= MSG_HEADER_SZ);
+  MOZ_DIAGNOSTIC_ASSERT(CurrentSize() >= MSG_HEADER_SZ);
+  // Our buffers should agree with what our header specifies.
+  MOZ_DIAGNOSTIC_ASSERT(size() == CurrentSize());
+}
+
 #ifdef MOZ_TASK_TRACER
 void* MessageTask() { return reinterpret_cast<void*>(&MessageTask); }
 

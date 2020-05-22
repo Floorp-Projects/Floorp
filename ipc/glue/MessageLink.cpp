@@ -158,6 +158,8 @@ void ProcessLink::SendMessage(Message* msg) {
   }
   mChan->mMonitor->AssertCurrentThreadOwns();
 
+  msg->AssertAsLargeAsHeader();
+
   mIOLoop->PostTask(NewNonOwningRunnableMethod<Message*>(
       "IPC::Channel::Send", mTransport.get(), &Transport::Send, msg));
 }
