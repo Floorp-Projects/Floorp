@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function
 
+import codecs
 import fnmatch
 import io
 import json
@@ -155,7 +156,7 @@ class ManifestParser(object):
             filename = os.path.abspath(filename)
             self.source_files.add(filename)
             if self.finder:
-                fp = self.finder.get(filename).open(mode='r')
+                fp = codecs.getreader('utf-8')(self.finder.get(filename).open())
             else:
                 fp = io.open(filename, encoding='utf-8')
             here = os.path.dirname(filename)
