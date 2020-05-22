@@ -266,6 +266,7 @@ const MultiStageAboutWelcome = props => {
       where: "current"
     }
   });
+  const [topSites] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(["resource://activity-stream/data/content/tippytop/images/youtube-com@2x.png", "resource://activity-stream/data/content/tippytop/images/facebook-com@2x.png", "resource://activity-stream/data/content/tippytop/images/amazon@2x.png", "resource://activity-stream/data/content/tippytop/images/reddit-com@2x.png", "resource://activity-stream/data/content/tippytop/images/wikipedia-org@2x.png", "resource://activity-stream/data/content/tippytop/images/twitter-com@2x.png"]);
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `multistageContainer`
   }, props.screens.map(screen => {
@@ -274,7 +275,8 @@ const MultiStageAboutWelcome = props => {
       totalNumberOfScreens: props.screens.length,
       order: screen.order,
       content: screen.content,
-      navigate: handleTransition
+      navigate: handleTransition,
+      topSites: topSites
     }) : null;
   })));
 };
@@ -315,9 +317,15 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   }
 
   renderTiles() {
-    return this.props.content.tiles.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    return this.props.content.tiles && this.props.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "tiles-section"
-    }) : null;
+    }, this.props.topSites.slice(0, 5).map(icon => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "icon",
+      key: icon,
+      style: {
+        backgroundImage: `url(${icon})`
+      }
+    }))) : null;
   }
 
   renderStepsIndicator() {
