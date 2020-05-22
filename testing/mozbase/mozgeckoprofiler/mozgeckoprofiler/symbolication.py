@@ -11,10 +11,12 @@ import subprocess
 import urllib2
 import zipfile
 from distutils import spawn
+from mozlog import get_proxy_logger
 
 from .symFileManager import SymFileManager
-from .symLogging import LogMessage
 from .symbolicationRequest import SymbolicationRequest
+
+LOG = get_proxy_logger("profiler")
 
 """
 Symbolication is broken when using type 'str' in python 2.7, so we use 'basestring'.
@@ -149,7 +151,7 @@ class ProfileSymbolicator:
     def integrate_symbol_zip_from_url(self, symbol_zip_url):
         if self.have_integrated(symbol_zip_url):
             return
-        LogMessage("Retrieving symbol zip from {symbol_zip_url}...".format(
+        LOG.info("Retrieving symbol zip from {symbol_zip_url}...".format(
             symbol_zip_url=symbol_zip_url))
         try:
             io = urllib2.urlopen(symbol_zip_url, None, 30)
@@ -157,7 +159,7 @@ class ProfileSymbolicator:
                 self.integrate_symbol_zip(zf)
             self._create_file_if_not_exists(self._marker_file(symbol_zip_url))
         except IOError:
-            LogMessage("Symbol zip request failed.")
+            LOG.info("Symbol zip request failed.")
 
     def integrate_symbol_zip_from_file(self, filename):
         if self.have_integrated(filename):
