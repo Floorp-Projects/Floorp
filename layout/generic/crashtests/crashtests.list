@@ -752,7 +752,8 @@ load 1586470.html
 load 1588955-very-large-frameset.html
 load 1590569.html
 load 1596310.html
-load 1608851.html
+skip load 1608851-1.html # bug 1639947
+load 1608851-2.html
 load 1613210.html
 load 1614101.html
 load 1618312.html
