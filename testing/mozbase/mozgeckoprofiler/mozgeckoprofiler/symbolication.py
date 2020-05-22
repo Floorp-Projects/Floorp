@@ -34,15 +34,14 @@ class SymbolError(Exception):
 
 
 class OSXSymbolDumper:
-
     def __init__(self):
-        self.dump_syms_bin = os.path.join(
-            os.path.dirname(__file__), 'dump_syms_mac')
+        self.dump_syms_bin = os.path.join(os.path.dirname(__file__), "dump_syms_mac")
         if not os.path.exists(self.dump_syms_bin):
             raise SymbolError("No dump_syms_mac binary in this directory")
 
-    def store_symbols(self, lib_path, expected_breakpad_id,
-                      output_filename_without_extension):
+    def store_symbols(
+        self, lib_path, expected_breakpad_id, output_filename_without_extension
+    ):
         """
         Returns the filename at which the .sym file was created, or None if no
         symbols were dumped.
@@ -53,20 +52,26 @@ class OSXSymbolDumper:
             """
             Find the list of architectures present in a Mach-O file.
             """
-            return subprocess.Popen(["lipo", "-info", filename],
-                                    stdout=subprocess.PIPE)\
-                .communicate()[0].split(':')[2].strip().split()
+            return (
+                subprocess.Popen(["lipo", "-info", filename], stdout=subprocess.PIPE)
+                .communicate()[0]
+                .split(":")[2]
+                .strip()
+                .split()
+            )
 
         def process_file(arch):
-            proc = subprocess.Popen([self.dump_syms_bin, "-a", arch, lib_path],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+            proc = subprocess.Popen(
+                [self.dump_syms_bin, "-a", arch, lib_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             stdout, stderr = proc.communicate()
             if proc.returncode != 0:
                 return None
 
             module = stdout.splitlines()[0]
-            bits = module.split(' ', 4)
+            bits = module.split(" ", 4)
             if len(bits) != 5:
                 return None
             _, platform, cpu_arch, actual_breakpad_id, debug_file = bits
@@ -86,24 +91,23 @@ class OSXSymbolDumper:
 
 
 class LinuxSymbolDumper:
-
     def __init__(self):
         self.nm = spawn.find_executable("nm")
         if not self.nm:
-            raise SymbolError(
-                "Could not find nm, necessary for symbol dumping")
+            raise SymbolError("Could not find nm, necessary for symbol dumping")
 
-    def store_symbols(self, lib_path, breakpad_id,
-                      output_filename_without_extension):
+    def store_symbols(self, lib_path, breakpad_id, output_filename_without_extension):
         """
         Returns the filename at which the .sym file was created, or None if no
         symbols were dumped.
         """
         output_filename = output_filename_without_extension + ".nmsym"
 
-        proc = subprocess.Popen([self.nm, "--demangle", lib_path],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            [self.nm, "--demangle", lib_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         stdout, stderr = proc.communicate()
 
         if proc.returncode != 0:
@@ -115,9 +119,11 @@ class LinuxSymbolDumper:
             # Append nm -D output to the file. On Linux, most system libraries
             # have no "normal" symbols, but they have "dynamic" symbols, which
             # nm -D shows.
-            proc = subprocess.Popen([self.nm, "--demangle", "-D", lib_path],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+            proc = subprocess.Popen(
+                [self.nm, "--demangle", "-D", lib_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             stdout, stderr = proc.communicate()
             if proc.returncode == 0:
                 f.write(stdout)
@@ -151,8 +157,11 @@ class ProfileSymbolicator:
     def integrate_symbol_zip_from_url(self, symbol_zip_url):
         if self.have_integrated(symbol_zip_url):
             return
-        LOG.info("Retrieving symbol zip from {symbol_zip_url}...".format(
-            symbol_zip_url=symbol_zip_url))
+        LOG.info(
+            "Retrieving symbol zip from {symbol_zip_url}...".format(
+                symbol_zip_url=symbol_zip_url
+            )
+        )
         try:
             io = urllib2.urlopen(symbol_zip_url, None, 30)
             with zipfile.ZipFile(cStringIO.StringIO(io.read())) as zf:
@@ -164,7 +173,7 @@ class ProfileSymbolicator:
     def integrate_symbol_zip_from_file(self, filename):
         if self.have_integrated(filename):
             return
-        with open(filename, 'rb') as f:
+        with open(filename, "rb") as f:
             with zipfile.ZipFile(f) as zf:
                 self.integrate_symbol_zip(zf)
         self._create_file_if_not_exists(self._marker_file(filename))
@@ -175,7 +184,7 @@ class ProfileSymbolicator:
         except OSError:
             pass
         try:
-            open(filename, 'a').close()
+            open(filename, "a").close()
         except IOError:
             pass
 
@@ -183,10 +192,8 @@ class ProfileSymbolicator:
         symbol_zip_file.extractall(self.options["symbolPaths"]["FIREFOX"])
 
     def _marker_file(self, symbol_zip_url):
-        marker_dir = os.path.join(
-            self.options["symbolPaths"]["FIREFOX"], ".markers")
-        return os.path.join(marker_dir,
-                            hashlib.sha1(symbol_zip_url).hexdigest())
+        marker_dir = os.path.join(self.options["symbolPaths"]["FIREFOX"], ".markers")
+        return os.path.join(marker_dir, hashlib.sha1(symbol_zip_url).hexdigest())
 
     def have_integrated(self, symbol_zip_url):
         return os.path.isfile(self._marker_file(symbol_zip_url))
@@ -199,8 +206,12 @@ class ProfileSymbolicator:
         for lib in shared_libraries:
             memoryMap.append([lib["debugName"], lib["breakpadId"]])
 
-        rawRequest = {"stacks": [[]], "memoryMap": memoryMap,
-                      "version": 4, "symbolSources": ["FIREFOX", "WINDOWS"]}
+        rawRequest = {
+            "stacks": [[]],
+            "memoryMap": memoryMap,
+            "version": 4,
+            "symbolSources": ["FIREFOX", "WINDOWS"],
+        }
         request = SymbolicationRequest(self.sym_file_manager, rawRequest)
         if not request.isValidRequest:
             return []
@@ -212,8 +223,7 @@ class ProfileSymbolicator:
                 unknown_modules.append(lib)
         return unknown_modules
 
-    def dump_and_integrate_missing_symbols(self, profile_json,
-                                           symbol_zip_path):
+    def dump_and_integrate_missing_symbols(self, profile_json, symbol_zip_path):
         if not self.symbol_dumper:
             return
 
@@ -227,7 +237,7 @@ class ProfileSymbolicator:
 
         # Additionally, we add all dumped symbol files to the missingsymbols
         # zip file.
-        with zipfile.ZipFile(symbol_zip_path, 'a', zipfile.ZIP_DEFLATED) as zf:
+        with zipfile.ZipFile(symbol_zip_path, "a", zipfile.ZIP_DEFLATED) as zf:
             for lib in unknown_modules:
                 self.dump_and_integrate_symbols_for_lib(lib, output_dir, zf)
 
@@ -247,16 +257,18 @@ class ProfileSymbolicator:
             return
 
         output_filename_without_extension = os.path.join(
-            output_dir, expected_name_without_extension)
+            output_dir, expected_name_without_extension
+        )
         store_path = os.path.dirname(output_filename_without_extension)
         if not os.path.exists(store_path):
             os.makedirs(store_path)
 
         # Dump the symbols.
         sym_file = self.symbol_dumper.store_symbols(
-            lib_path, lib["breakpadId"], output_filename_without_extension)
+            lib_path, lib["breakpadId"], output_filename_without_extension
+        )
         if sym_file:
-            rootlen = len(os.path.join(output_dir, '_')) - 1
+            rootlen = len(os.path.join(output_dir, "_")) - 1
             output_filename = sym_file[rootlen:]
             if output_filename not in zip.namelist():
                 zip.write(sym_file, output_filename)
@@ -268,7 +280,8 @@ class ProfileSymbolicator:
         shared_libraries = profile_json["libs"]
         addresses = self._find_addresses(profile_json)
         symbols_to_resolve = self._assign_symbols_to_libraries(
-            addresses, shared_libraries)
+            addresses, shared_libraries
+        )
         symbolication_table = self._resolve_symbols(symbols_to_resolve)
         self._substitute_symbols(profile_json, symbolication_table)
 
@@ -308,13 +321,11 @@ class ProfileSymbolicator:
     def _assign_symbols_to_libraries(self, addresses, shared_libraries):
         libs_with_symbols = {}
         for address in addresses:
-            lib = self._get_containing_library(
-                int(address, 0), shared_libraries)
+            lib = self._get_containing_library(int(address, 0), shared_libraries)
             if not lib:
                 continue
             if lib["start"] not in libs_with_symbols:
-                libs_with_symbols[lib["start"]] = {
-                    "library": lib, "symbols": set()}
+                libs_with_symbols[lib["start"]] = {"library": lib, "symbols": set()}
             libs_with_symbols[lib["start"]]["symbols"].add(address)
         return libs_with_symbols.values()
 
@@ -328,11 +339,14 @@ class ProfileSymbolicator:
             memoryMap.append([lib["debugName"], lib["breakpadId"]])
             all_symbols += symbols
             for symbol in symbols:
-                processedStack.append(
-                    [moduleIndex, int(symbol, 0) - lib["start"]])
+                processedStack.append([moduleIndex, int(symbol, 0) - lib["start"]])
 
-        rawRequest = {"stacks": [processedStack], "memoryMap": memoryMap,
-                      "version": 4, "symbolSources": ["FIREFOX", "WINDOWS"]}
+        rawRequest = {
+            "stacks": [processedStack],
+            "memoryMap": memoryMap,
+            "version": 4,
+            "symbolSources": ["FIREFOX", "WINDOWS"],
+        }
         request = SymbolicationRequest(self.sym_file_manager, rawRequest)
         if not request.isValidRequest:
             return {}
