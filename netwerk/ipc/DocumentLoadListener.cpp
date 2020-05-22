@@ -11,24 +11,22 @@
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
-#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientChannelHelper.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
-#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "nsContentSecurityUtils.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
-#include "nsDocShellLoadTypes.h"
 #include "nsExternalHelperAppService.h"
 #include "nsHttpChannel.h"
 #include "nsIBrowser.h"
@@ -37,10 +35,12 @@
 #include "nsIViewSourceChannel.h"
 #include "nsImportModule.h"
 #include "nsMimeTypes.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsRedirectHistoryEntry.h"
-#include "nsSandboxFlags.h"
 #include "nsURILoader.h"
 #include "nsWebNavigationInfo.h"
+#include "nsDocShellLoadTypes.h"
+#include "nsSandboxFlags.h"
 
 #ifdef ANDROID
 #  include "mozilla/widget/nsWindow.h"
@@ -549,7 +549,6 @@ bool DocumentLoadListener::Open(
   return true;
 }
 
-/* static */
 bool DocumentLoadListener::OpenFromParent(
     dom::CanonicalBrowsingContext* aBrowsingContext,
     nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId,
@@ -821,7 +820,6 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
 
   if (!mRedirectChannelId) {
     if (!aSucceeded) {
-      mChannel->Cancel(NS_BINDING_ABORTED);
       mChannel->Resume();
       return;
     }
@@ -861,7 +859,6 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
     if (redirectChannel) {
       redirectChannel->Delete();
     }
-    mChannel->Cancel(NS_BINDING_ABORTED);
     mChannel->Resume();
     if (auto* ctx = GetBrowsingContext()) {
       ctx->EndDocumentLoad(this);
@@ -1176,7 +1173,6 @@ void DocumentLoadListener::SerializeRedirectData(
 }
 
 bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
-  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_DIAGNOSTIC_ASSERT(!mDoingProcessSwitch,
                         "Already in the middle of switching?");
   MOZ_DIAGNOSTIC_ASSERT(mChannel);
@@ -1197,12 +1193,6 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
   }
   if (browsingContext->GetParent() && !browsingContext->UseRemoteSubframes()) {
     LOG(("Process Switch Abort: remote subframes disabled"));
-    return false;
-  }
-
-  if (browsingContext->GetParentWindowContext() &&
-      browsingContext->GetParentWindowContext()->IsInProcess()) {
-    LOG(("Process Switch Abort: Subframe with in-process parent"));
     return false;
   }
 
@@ -1255,9 +1245,11 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
           browsingContext->GetCurrentWindowGlobal()) {
     currentPrincipal = wgp->DocumentPrincipal();
   }
-  RefPtr<ContentParent> contentParent = browsingContext->GetContentParent();
-  MOZ_ASSERT(!OtherPid() || contentParent,
-             "Only PPDC is allowed to not have an existing ContentParent");
+  RefPtr<ContentParent> currentProcess = browsingContext->GetContentParent();
+  if (!currentProcess) {
+    LOG(("Process Switch Abort: frame currently not remote"));
+    return false;
+  }
 
   // Get the final principal, used to select which process to load into.
   nsCOMPtr<nsIPrincipal> resultPrincipal;
@@ -1265,6 +1257,11 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
       mChannel, getter_AddRefs(resultPrincipal));
   if (NS_FAILED(rv)) {
     LOG(("Process Switch Abort: failed to get channel result principal"));
+    return false;
+  }
+
+  if (resultPrincipal->IsSystemPrincipal()) {
+    LOG(("Process Switch Abort: cannot switch process for system principal"));
     return false;
   }
 
@@ -1279,13 +1276,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
     MOZ_ALWAYS_SUCCEEDS(httpChannel->GetCrossOriginOpenerPolicy(&coop));
   }
 
-  nsAutoString currentRemoteType;
-  if (contentParent) {
-    currentRemoteType = contentParent->GetRemoteType();
-  } else {
-    currentRemoteType = VoidString();
-  }
-  nsAutoString preferredRemoteType = currentRemoteType;
+  nsAutoString preferredRemoteType(currentProcess->GetRemoteType());
   if (coop ==
       nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) {
     // We want documents with SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP COOP
@@ -1301,13 +1292,13 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
     // remote type. Clear it back to the default value.
     preferredRemoteType.Assign(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
   }
-  MOZ_DIAGNOSTIC_ASSERT(!contentParent || !preferredRemoteType.IsEmpty(),
+  MOZ_DIAGNOSTIC_ASSERT(!preferredRemoteType.IsEmpty(),
                         "Unexpected empty remote type!");
 
   LOG(
       ("DocumentLoadListener GetRemoteTypeForPrincipal "
-       "[this=%p, contentParent=%s, preferredRemoteType=%s]",
-       this, NS_ConvertUTF16toUTF8(currentRemoteType).get(),
+       "[this=%p, currentProcess=%s, preferredRemoteType=%s]",
+       this, NS_ConvertUTF16toUTF8(currentProcess->GetRemoteType()).get(),
        NS_ConvertUTF16toUTF8(preferredRemoteType).get()));
 
   nsCOMPtr<nsIE10SUtils> e10sUtils =
@@ -1319,7 +1310,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
 
   nsAutoString remoteType;
   rv = e10sUtils->GetRemoteTypeForPrincipal(
-      resultPrincipal, mChannelCreationURI, browsingContext->UseRemoteTabs(),
+      resultPrincipal, browsingContext->UseRemoteTabs(),
       browsingContext->UseRemoteSubframes(), preferredRemoteType,
       currentPrincipal, browsingContext->GetParent(), remoteType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1327,12 +1318,9 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
     return false;
   }
 
-  LOG(("GetRemoteTypeForPrincipal -> current:%s remoteType:%s",
-       NS_ConvertUTF16toUTF8(currentRemoteType).get(),
-       NS_ConvertUTF16toUTF8(remoteType).get()));
-
   // Check if a process switch is needed.
-  if (currentRemoteType == remoteType && !isCOOPSwitch && !isPreloadSwitch) {
+  if (currentProcess->GetRemoteType() == remoteType && !isCOOPSwitch &&
+      !isPreloadSwitch) {
     LOG(("Process Switch Abort: type (%s) is compatible",
          NS_ConvertUTF16toUTF8(remoteType).get()));
     return false;
@@ -1343,7 +1331,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
   }
 
   LOG(("Process Switch: Changing Remoteness from '%s' to '%s'",
-       NS_ConvertUTF16toUTF8(currentRemoteType).get(),
+       NS_ConvertUTF16toUTF8(currentProcess->GetRemoteType()).get(),
        NS_ConvertUTF16toUTF8(remoteType).get()));
 
   // XXX: This is super hacky, and we should be able to do something better.
@@ -1497,10 +1485,6 @@ DocumentLoadListener::RedirectToRealChannel(
 
 void DocumentLoadListener::TriggerRedirectToRealChannel(
     const Maybe<uint64_t>& aDestinationProcess) {
-  LOG((
-      "DocumentLoadListener::TriggerRedirectToRealChannel [this=%p] "
-      "aDestinationProcess=%" PRId64,
-      this, aDestinationProcess ? int64_t(*aDestinationProcess) : int64_t(-1)));
   // This initiates replacing the current DocumentChannel with a
   // protocol specific 'real' channel, maybe in a different process than
   // the current DocumentChannelChild, if aDestinationProces is set.

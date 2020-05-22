@@ -7,8 +7,6 @@
 
 #include "ParentProcessDocumentChannel.h"
 
-#include "mozilla/StaticPrefs_extensions.h"
-#include "nsDocShell.h"
 #include "nsIObserverService.h"
 
 extern mozilla::LazyLogModule gDocumentChannelLog;
@@ -47,19 +45,6 @@ ParentProcessDocumentChannel::RedirectToRealChannel(
     channel->SetLoadGroup(mLoadGroup);
   }
 
-  if (XRE_IsE10sParentProcess()) {
-    nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_SUCCEEDS(NS_GetFinalChannelURI(channel, getter_AddRefs(uri)));
-    if (!nsDocShell::CanLoadInParentProcess(uri)) {
-      nsAutoCString msg;
-      uri->GetSpec(msg);
-      msg.Insert(
-          "Attempt to load a non-authorised load in the parent process: ", 0);
-      NS_ASSERTION(false, msg.get());
-      return PDocumentChannelParent::RedirectToRealChannelPromise::
-          CreateAndResolve(NS_BINDING_ABORTED, __func__);
-    }
-  }
   mStreamFilterEndpoints = std::move(aStreamFilterEndpoints);
 
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise> p =

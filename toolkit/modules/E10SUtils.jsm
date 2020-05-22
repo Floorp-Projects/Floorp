@@ -567,7 +567,6 @@ var E10SUtils = {
 
   getRemoteTypeForPrincipal(
     aPrincipal,
-    aOriginalURI,
     aMultiProcess,
     aRemoteSubframes,
     aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
@@ -578,31 +577,25 @@ var E10SUtils = {
       return NOT_REMOTE;
     }
 
-    // We want to use the original URI for "about:" and "chrome://" scheme,
-    // so that we can properly determine the remote type.
-    let useOriginalURI =
-      aOriginalURI.scheme == "about" || aOriginalURI.scheme == "chrome";
-
-    if (!useOriginalURI) {
-      // We can't pick a process based on a system principal or expanded
-      // principal.
-      if (aPrincipal.isSystemPrincipal || aPrincipal.isExpandedPrincipal) {
-        throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
-      }
-
-      // Null principals can be loaded in any remote process, but when
-      // using fission we add the option to force them into the default
-      // web process for better test coverage.
-      if (aPrincipal.isNullPrincipal) {
-        if (
-          (aRemoteSubframes && useSeparateDataUriProcess) ||
-          aPreferredRemoteType == NOT_REMOTE
-        ) {
-          return WEB_REMOTE_TYPE;
-        }
-        return aPreferredRemoteType;
-      }
+    // We can't pick a process based on a system principal or expanded
+    // principal. In fact, we should never end up with one here!
+    if (aPrincipal.isSystemPrincipal || aPrincipal.isExpandedPrincipal) {
+      throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
     }
+
+    // Null principals can be loaded in any remote process, but when
+    // using fission we add the option to force them into the default
+    // web process for better test coverage.
+    if (aPrincipal.isNullPrincipal) {
+      if (
+        (aRemoteSubframes && useSeparateDataUriProcess) ||
+        aPreferredRemoteType == NOT_REMOTE
+      ) {
+        return WEB_REMOTE_TYPE;
+      }
+      return aPreferredRemoteType;
+    }
+
     // We might care about the currently loaded URI. Pull it out of our current
     // principal. We never care about the current URI when working with a
     // non-content principal.
@@ -610,9 +603,8 @@ var E10SUtils = {
       aCurrentPrincipal && aCurrentPrincipal.isContentPrincipal
         ? aCurrentPrincipal.URI
         : null;
-
     return E10SUtils.getRemoteTypeForURIObject(
-      useOriginalURI ? aOriginalURI : aPrincipal.URI,
+      aPrincipal.URI,
       aMultiProcess,
       aRemoteSubframes,
       aPreferredRemoteType,
@@ -820,6 +812,7 @@ var E10SUtils = {
     // handled using DocumentChannel, then we can skip switching
     // for now, and let DocumentChannel do it during the response.
     if (
+      currentRemoteType != NOT_REMOTE &&
       requiredRemoteType != NOT_REMOTE &&
       uriObject &&
       (remoteSubframes || documentChannel) &&
@@ -851,6 +844,7 @@ var E10SUtils = {
 
     if (
       (aRemoteSubframes || documentChannel) &&
+      remoteType != NOT_REMOTE &&
       wantRemoteType != NOT_REMOTE &&
       documentChannelPermittedForURI(aURI)
     ) {
@@ -889,6 +883,7 @@ var E10SUtils = {
     // switch later-on using the nsIProcessSwitchRequestor mechanism.
     if (
       (useRemoteSubframes || documentChannel) &&
+      remoteType != NOT_REMOTE &&
       wantRemoteType != NOT_REMOTE &&
       documentChannelPermittedForURI(aURI)
     ) {
