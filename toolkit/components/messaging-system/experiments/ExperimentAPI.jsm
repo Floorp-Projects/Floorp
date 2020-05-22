@@ -55,6 +55,28 @@ const ExperimentAPI = {
   getValue(options) {
     return this.getExperiment(options)?.branch.value;
   },
+
+  /**
+   * Registers an event listener.
+   * The following event names are used:
+   * `update` - an experiment is updated, for example it is no longer active
+   *
+   * @param {string} eventName must follow the pattern `event:slug-name`
+   * @param {function} callback
+   * @returns {void}
+   */
+  on(eventName, callback) {
+    this._store.on(eventName, callback);
+  },
+
+  /**
+   * Deregisters an event listener.
+   * @param {string} eventName
+   * @param {function} callback
+   */
+  off(eventName, callback) {
+    this._store.off(eventName, callback);
+  },
 };
 
 XPCOMUtils.defineLazyGetter(ExperimentAPI, "_store", function() {
