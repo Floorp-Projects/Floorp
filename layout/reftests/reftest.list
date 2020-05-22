@@ -307,8 +307,9 @@ include ../../dom/plugins/test/reftest/reftest.list
 include position-dynamic-changes/reftest.list
 
 # printing
-# SkiaPDF is required for printing tests to control printing to PDF files.
-skip-if(!skiaPdf) include printing/reftest.list
+# Disabled on Linux for frequent failures, bug 1634335
+# Diasbled on Android because pdf.js load fails.
+skip-if(!winWidget&&!cocoaWidget) include printing/reftest.list
 
 # pagination
 include pagination/reftest.list
