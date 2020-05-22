@@ -648,12 +648,6 @@ class nsIWidget : public nsISupports {
   virtual void Show(bool aState) = 0;
 
   /**
-   * Whether or not a widget must be recreated after being hidden to show
-   * again properly.
-   */
-  virtual bool NeedsRecreateToReshow() { return false; }
-
-  /**
    * Make the window modal.
    */
   virtual void SetModal(bool aModal) = 0;
