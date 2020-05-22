@@ -10,6 +10,7 @@ use crate::{
 use lmdb::Error as LmdbError;
 use moz_task::is_main_thread;
 use nsstring::nsString;
+use once_cell::sync::Lazy;
 use rkv::{migrate::Migrator, Rkv, SingleStore, StoreError, StoreOptions, Value};
 use std::{
     collections::BTreeMap,
@@ -34,14 +35,13 @@ impl Database {
     }
 }
 
-lazy_static! {
-    static ref PROFILE_DIR: Mutex<Option<PathBuf>> = {
-        observe_profile_change();
-        Mutex::new(get_profile_dir().ok())
-    };
-    pub(crate) static ref DATA_CACHE: Mutex<Option<XULStoreCache>> =
-        { Mutex::new(cache_data().ok()) };
-}
+static PROFILE_DIR: Lazy<Mutex<Option<PathBuf>>> = Lazy::new(|| {
+    observe_profile_change();
+    Mutex::new(get_profile_dir().ok())
+});
+
+pub(crate) static DATA_CACHE: Lazy<Mutex<Option<XULStoreCache>>> =
+    Lazy::new(|| Mutex::new(cache_data().ok()));
 
 pub(crate) fn get_database() -> XULStoreResult<Database> {
     let xulstore_dir = get_xulstore_dir()?;

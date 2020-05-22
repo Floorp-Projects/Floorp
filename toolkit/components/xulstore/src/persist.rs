@@ -22,29 +22,29 @@ use crossbeam_utils::atomic::AtomicCell;
 use lmdb::Error as LmdbError;
 use moz_task::{dispatch_background_task_with_options, DispatchOptions, Task, TaskRunnable};
 use nserror::nsresult;
+use once_cell::sync::Lazy;
 use rkv::{StoreError as RkvStoreError, Value};
 use std::{collections::HashMap, sync::Mutex, thread::sleep, time::Duration};
 use xpcom::RefPtr;
 
-lazy_static! {
-    /// A map of key/value pairs to persist.  Values are Options so we can
-    /// use the same structure for both puts and deletes, with a `None` value
-    /// identifying a key that should be deleted from the database.
-    ///
-    /// This is a map rather than a sequence in order to merge consecutive
-    /// changes to the same key, i.e. when a consumer sets *foo* to `bar`
-    /// and then sets it again to `baz` before we persist the first change.
-    ///
-    /// In that case, there's no point in setting *foo* to `bar` before we set
-    /// it to `baz`, and the map ensures we only ever persist the latest value
-    /// for any given key.
-    static ref CHANGES: Mutex<Option<HashMap<String, Option<String>>>> = { Mutex::new(None) };
+/// A map of key/value pairs to persist.  Values are Options so we can
+/// use the same structure for both puts and deletes, with a `None` value
+/// identifying a key that should be deleted from the database.
+///
+/// This is a map rather than a sequence in order to merge consecutive
+/// changes to the same key, i.e. when a consumer sets *foo* to `bar`
+/// and then sets it again to `baz` before we persist the first change.
+///
+/// In that case, there's no point in setting *foo* to `bar` before we set
+/// it to `baz`, and the map ensures we only ever persist the latest value
+/// for any given key.
+static CHANGES: Lazy<Mutex<Option<HashMap<String, Option<String>>>>> =
+    Lazy::new(|| Mutex::new(None));
 
-    /// A Mutex that prevents two PersistTasks from running at the same time,
-    /// since each task opens the database, and we need to ensure there is only
-    /// one open database handle for the database at any given time.
-    static ref PERSIST: Mutex<()> = { Mutex::new(()) };
-}
+/// A Mutex that prevents two PersistTasks from running at the same time,
+/// since each task opens the database, and we need to ensure there is only
+/// one open database handle for the database at any given time.
+static PERSIST: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
 /// Synchronously persists changes recorded in memory to disk. Typically
 /// called from a background thread, however this can be called from the main
