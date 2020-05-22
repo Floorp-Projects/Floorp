@@ -1169,7 +1169,6 @@ void BrowserParent::Deactivate(bool aWindowLowering) {
     UnsetTopLevelWebFocus(this);  // Intentionally outside the next "if"
   }
   if (!mIsDestroyed) {
-    BrowserParent::UnsetLastMouseRemoteTarget(this);
     Unused << Manager()->SendDeactivate(this);
   }
 }
@@ -1394,7 +1393,16 @@ void BrowserParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1549355), we probably don't
   // need to check mReason then.
   if (aEvent.mReason == WidgetMouseEvent::eReal) {
-    sLastMouseRemoteTarget = this;
+    if (aEvent.mMessage == eMouseExitFromWidget) {
+      // Since we are leaving this remote target, so don't need to update
+      // sLastMouseRemoteTarget, and if we are sLastMouseRemoteTarget, reset it
+      // to null.
+      BrowserParent::UnsetLastMouseRemoteTarget(this);
+    } else {
+      // Last remote target should not be changed without eMouseExitFromWidget.
+      MOZ_ASSERT_IF(sLastMouseRemoteTarget, sLastMouseRemoteTarget == this);
+      sLastMouseRemoteTarget = this;
+    }
   }
 
   aEvent.mRefPoint = TransformParentToChild(aEvent.mRefPoint);
