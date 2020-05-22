@@ -200,6 +200,11 @@ nsresult nsJARChannel::Init(nsIURI* uri) {
   LOG(("nsJARChannel::Init [this=%p]\n", this));
   nsresult rv;
 
+  mWorker = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   mJarURI = do_QueryInterface(uri, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -365,6 +370,7 @@ nsresult nsJARChannel::OpenLocalFile() {
 
   MOZ_ASSERT(NS_IsMainThread());
 
+  MOZ_ASSERT(mWorker);
   MOZ_ASSERT(mIsPending);
   MOZ_ASSERT(mJarFile);
 
@@ -403,34 +409,31 @@ nsresult nsJARChannel::OpenLocalFile() {
   nsAutoCString innerJarEntry(mInnerJarEntry);
 
   RefPtr<nsJARChannel> self = this;
-  return NS_DispatchBackgroundTask(
-      NS_NewRunnableFunction(
-          "nsJARChannel::OpenLocalFile",
-          [self, jarCache, clonedFile, localJARURI, jarEntry,
-           innerJarEntry]() mutable {
-            RefPtr<nsJARInputThunk> input;
-            nsresult rv = CreateLocalJarInput(jarCache, clonedFile,
-                                              innerJarEntry, localJARURI,
-                                              jarEntry, getter_AddRefs(input));
+  return mWorker->Dispatch(NS_NewRunnableFunction(
+      "nsJARChannel::OpenLocalFile", [self, jarCache, clonedFile, localJARURI,
+                                      jarEntry, innerJarEntry]() mutable {
+        RefPtr<nsJARInputThunk> input;
+        nsresult rv =
+            CreateLocalJarInput(jarCache, clonedFile, innerJarEntry,
+                                localJARURI, jarEntry, getter_AddRefs(input));
 
-            nsCOMPtr<nsIRunnable> target;
-            if (NS_SUCCEEDED(rv)) {
-              target = NewRunnableMethod<RefPtr<nsJARInputThunk>, bool>(
-                  "nsJARChannel::ContinueOpenLocalFile", self,
-                  &nsJARChannel::ContinueOpenLocalFile, input, false);
-            } else {
-              target = NewRunnableMethod<nsresult, bool>(
-                  "nsJARChannel::OnOpenLocalFileComplete", self,
-                  &nsJARChannel::OnOpenLocalFileComplete, rv, false);
-            }
+        nsCOMPtr<nsIRunnable> target;
+        if (NS_SUCCEEDED(rv)) {
+          target = NewRunnableMethod<RefPtr<nsJARInputThunk>, bool>(
+              "nsJARChannel::ContinueOpenLocalFile", self,
+              &nsJARChannel::ContinueOpenLocalFile, input, false);
+        } else {
+          target = NewRunnableMethod<nsresult, bool>(
+              "nsJARChannel::OnOpenLocalFileComplete", self,
+              &nsJARChannel::OnOpenLocalFileComplete, rv, false);
+        }
 
-            // nsJARChannel must be release on main thread, and sometimes
-            // this still hold nsJARChannel after dispatched.
-            self = nullptr;
+        // nsJARChannel must be release on main thread, and sometimes
+        // this still hold nsJARChannel after dispatched.
+        self = nullptr;
 
-            NS_DispatchToMainThread(target.forget());
-          }),
-      NS_DISPATCH_EVENT_MAY_BLOCK);
+        NS_DispatchToMainThread(target.forget());
+      }));
 }
 
 nsresult nsJARChannel::ContinueOpenLocalFile(nsJARInputThunk* aInput,
