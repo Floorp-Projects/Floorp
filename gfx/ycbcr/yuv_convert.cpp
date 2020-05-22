@@ -12,6 +12,7 @@
 // YV12 is a full plane of Y and a half height, half width chroma planes
 // YV16 is a full plane of Y and a full height, half width chroma planes
 // YV24 is a full plane of Y and a full height, full width chroma planes
+// Y8   is a full plane of Y and no chroma planes (i.e., monochrome)
 //
 // ARGB pixel format is output, which on little endian is stored as BGRA.
 // The alpha is set to 255, allowing the application to use RGBA or RGB32.
@@ -34,6 +35,8 @@ const int kFractionBits = 16;
 const int kFractionMax = 1 << kFractionBits;
 const int kFractionMask = ((1 << kFractionBits) - 1);
 
+// clang-format off
+
 YUVType TypeFromSize(int ywidth,
                      int yheight,
                      int cbcrwidth,
@@ -45,21 +48,24 @@ YUVType TypeFromSize(int ywidth,
   else if ((ywidth + 1) / 2 == cbcrwidth && yheight == cbcrheight) {
     return YV16;
   }
-  else {
+  else if ((ywidth + 1) / 2 == cbcrwidth && (yheight + 1) / 2 == cbcrheight) {
     return YV12;
+  }
+  else if (cbcrwidth == 0 && cbcrheight == 0) {
+    return Y8;
+  }
+  else {
+    MOZ_CRASH("Can't determine YUV type from size");
   }
 }
 
-libyuv::FourCC FourCCFromYUVType(YUVType aYUVType)
-{
-  if (aYUVType == YV24) {
-    return libyuv::FOURCC_I444;
-  } else if (aYUVType == YV16) {
-    return libyuv::FOURCC_I422;
-  } else if (aYUVType == YV12) {
-    return libyuv::FOURCC_I420;
-  } else {
-    return libyuv::FOURCC_ANY;
+libyuv::FourCC FourCCFromYUVType(YUVType aYUVType) {
+  switch (aYUVType) {
+    case YV24: return libyuv::FOURCC_I444;
+    case YV16: return libyuv::FOURCC_I422;
+    case YV12: return libyuv::FOURCC_I420;
+    case   Y8: return libyuv::FOURCC_I400;
+    default:   return libyuv::FOURCC_ANY;
   }
 }
 
@@ -136,8 +142,7 @@ void ConvertYCbCrToRGB32(const uint8* y_buf, const uint8* u_buf,
       MOZ_ASSERT(!err);
       break;
     }
-    default: {
-      MOZ_ASSERT(yuv_type == YV12);
+    case YV12: {
       const uint8* src_y = y_buf + y_pitch * pic_y + pic_x;
       const uint8* src_u = u_buf + (uv_pitch * pic_y + pic_x) / 2;
       const uint8* src_v = v_buf + (uv_pitch * pic_y + pic_x) / 2;
@@ -158,6 +163,19 @@ void ConvertYCbCrToRGB32(const uint8* y_buf, const uint8* u_buf,
       MOZ_ASSERT(!err);
       break;
     }
+    case Y8: {
+      const uint8* src_y = y_buf + y_pitch * pic_y + pic_x;
+      MOZ_ASSERT(u_buf == nullptr);
+      MOZ_ASSERT(v_buf == nullptr);
+
+      DebugOnly<int> err =
+          libyuv::I400ToARGB(src_y, y_pitch, rgb_buf, rgb_pitch, pic_width,
+                             pic_height);
+      MOZ_ASSERT(!err);
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported YUV type");
   }
 }
 
