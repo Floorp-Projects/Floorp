@@ -106,6 +106,7 @@ class TargetList {
     // This allows listening for workers in the content toolbox outside of fission contexts
     // For now, this is only toggled by tests.
     this.listenForWorkers = false;
+    this.listenForServiceWorkers = false;
   }
 
   // Called whenever a new Target front is available.
@@ -195,11 +196,12 @@ class TargetList {
       types.push(TargetList.TYPES.SHARED_WORKER);
     }
     if (
-      this.listenForWorkers &&
+      this.listenForServiceWorkers &&
       !types.includes(TargetList.TYPES.SERVICE_WORKER)
     ) {
       types.push(TargetList.TYPES.SERVICE_WORKER);
     }
+
     // If no pref are set to true, nor is listenForWorkers set to true,
     // we won't listen for any additional target. Only the top level target
     // will be managed. We may still do target-switching.
