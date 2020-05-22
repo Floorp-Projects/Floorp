@@ -61,7 +61,9 @@ async function syncAndDownload(filters) {
   await localDB.clear();
 
   for (let filter of filters) {
-    const file = do_get_file("test_cert_storage_direct/test-filter.crlite");
+    const filename =
+      "test-filter." + (filter.type == "diff" ? "stash" : "crlite");
+    const file = do_get_file(`test_cert_storage_direct/${filename}`);
     const fileBytes = readFile(file);
 
     const record = {
@@ -71,13 +73,8 @@ async function syncAndDownload(filters) {
       attachment: {
         hash: getHash(fileBytes),
         size: fileBytes.length,
-        // This test ensures we're downloading the most recent full filter and any subsequent
-        // incremental filters, so the actual contents doesn't matter right now.
-        // Since we currently only make use of full filters, we can use the same file for every
-        // request.
-        filename: "crlite.filter",
-        location:
-          "security-state-workspace/cert-revocations/test_cert_storage_direct/test-filter.crlite",
+        filename,
+        location: `security-state-workspace/cert-revocations/test_cert_storage_direct/${filename}`,
         mimetype: "application/octet-stream",
       },
       incremental: filter.type == "diff",
@@ -402,10 +399,14 @@ add_task(
     let revokedCertIssuer = constructCertFromFile(
       "test_cert_storage_direct/revoked-cert-issuer.pem"
     );
+    let revokedInStashIssuer = constructCertFromFile(
+      "test_cert_storage_direct/revoked-in-stash-issuer.pem"
+    );
 
     let crliteEnrollmentRecords = [
       getCRLiteEnrollmentRecordFor(validCertIssuer),
       getCRLiteEnrollmentRecordFor(revokedCertIssuer),
+      getCRLiteEnrollmentRecordFor(revokedInStashIssuer),
     ];
 
     await IntermediatePreloadsClient.onSync({
@@ -443,6 +444,73 @@ add_task(
     let revokedCert = constructCertFromFile(
       "test_cert_storage_direct/revoked-cert.pem"
     );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedCert,
+      SEC_ERROR_REVOKED_CERTIFICATE,
+      certificateUsageSSLServer,
+      new Date("2019-11-20T00:00:00Z").getTime() / 1000,
+      false,
+      "schunk-group.com",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+
+    // Before any stashes are downloaded, this should verify successfully.
+    let revokedInStashCert = constructCertFromFile(
+      "test_cert_storage_direct/revoked-in-stash-cert.pem"
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedInStashCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2020-11-20T00:00:00Z").getTime() / 1000,
+      false,
+      "gold-g2-valid-cert-demo.swisssign.net",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+
+    result = await syncAndDownload([
+      { timestamp: "2019-11-20T00:00:00Z", type: "full", id: "0000" },
+      {
+        timestamp: "2019-11-20T06:00:00Z",
+        type: "diff",
+        id: "0001",
+        parent: "0000",
+      },
+    ]);
+    let [status, filters] = result.split(";");
+    equal(status, "finished", "CRLite filter download should have run");
+    deepEqual(
+      filters,
+      ["2019-11-20T00:00:00Z-full", "2019-11-20T06:00:00Z-diff"],
+      "Should have downloaded the expected CRLite filters"
+    );
+
+    // After downloading the stash, this should be revoked.
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedInStashCert,
+      SEC_ERROR_REVOKED_CERTIFICATE,
+      certificateUsageSSLServer,
+      new Date("2020-11-20T00:00:00Z").getTime() / 1000,
+      false,
+      "gold-g2-valid-cert-demo.swisssign.net",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+
+    // The other certificates should still get the same results as they did before.
+    await checkCertErrorGenericAtTime(
+      certdb,
+      validCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2019-11-20T00:00:00Z").getTime() / 1000,
+      false,
+      "skynew.jp",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+
     await checkCertErrorGenericAtTime(
       certdb,
       revokedCert,

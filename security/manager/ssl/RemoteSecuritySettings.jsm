@@ -766,6 +766,9 @@ class CRLiteFilters {
       nextFilter = parentIdMap[nextFilter.id];
     }
     let filtersDownloaded = [];
+    const certList = Cc["@mozilla.org/security/certstorage;1"].getService(
+      Ci.nsICertStorage
+    );
     for (let filter of filtersToDownload) {
       try {
         // If we've already downloaded this, the backend should just grab it from its cache.
@@ -777,9 +780,6 @@ class CRLiteFilters {
         if (!filter.incremental) {
           let timestamp = Math.floor(filter.effectiveTimestamp / 1000);
           log.debug(`setting CRLite filter timestamp to ${timestamp}`);
-          const certList = Cc["@mozilla.org/security/certstorage;1"].getService(
-            Ci.nsICertStorage
-          );
           await new Promise(resolve => {
             certList.setFullCRLiteFilter(bytes, timestamp, rv => {
               log.debug(`setFullCRLiteFilter: ${rv}`);
@@ -787,9 +787,13 @@ class CRLiteFilters {
             });
           });
         } else {
-          log.debug(
-            "downloaded incremental filter, but we don't support consuming them yet."
-          );
+          log.debug("adding incremental update");
+          await new Promise(resolve => {
+            certList.addCRLiteStash(bytes, rv => {
+              log.debug(`addCRLiteStash: ${rv}`);
+              resolve();
+            });
+          });
         }
       } catch (e) {
         log.debug(e);

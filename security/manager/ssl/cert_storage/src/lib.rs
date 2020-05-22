@@ -23,7 +23,7 @@ extern crate xpcom;
 extern crate storage_variant;
 extern crate tempfile;
 
-use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{LittleEndian, NetworkEndian, ReadBytesExt, WriteBytesExt};
 use crossbeam_utils::atomic::AtomicCell;
 use memmap::Mmap;
 use moz_task::{create_thread, is_main_thread, Task, TaskRunnable};
@@ -36,11 +36,11 @@ use rkv::backend::{BackendEnvironmentBuilder, SafeMode, SafeModeDatabase, SafeMo
 use rkv::{StoreError, StoreOptions, Value};
 use rust_cascade::Cascade;
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::{CStr, CString};
 use std::fmt::Display;
-use std::fs::{create_dir_all, remove_file, File};
-use std::io::{BufRead, BufReader, Write};
+use std::fs::{create_dir_all, remove_file, File, OpenOptions};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::mem::size_of;
 use std::os::raw::c_char;
 use std::path::{Path, PathBuf};
@@ -123,6 +123,8 @@ struct SecurityState {
     env_and_store: Option<EnvAndStore>,
     int_prefs: HashMap<String, u32>,
     crlite_filter: Option<holding::CRLiteFilter>,
+    /// Maps issuer spki hashes to sets of seiral numbers.
+    crlite_stash: HashMap<Vec<u8>, HashSet<Vec<u8>>>,
 }
 
 impl SecurityState {
@@ -134,6 +136,7 @@ impl SecurityState {
             env_and_store: None,
             int_prefs: HashMap::new(),
             crlite_filter: None,
+            crlite_stash: HashMap::new(),
         })
     }
 
@@ -174,6 +177,7 @@ impl SecurityState {
             None => Ok(()),
         }?;
         self.load_crlite_filter()?;
+        self.load_crlite_stash()?;
         Ok(())
     }
 
@@ -370,9 +374,18 @@ impl SecurityState {
         filter: Vec<u8>,
         timestamp: u64,
     ) -> Result<(), SecurityStateError> {
-        // First drop any existing crlite filter.
+        // First drop any existing crlite filter and clear the accumulated stash.
         {
             let _ = self.crlite_filter.take();
+            self.crlite_stash.clear();
+            let mut path = get_store_path(&self.profile_path)?;
+            path.push("crlite.stash");
+            // Truncate the stash file if it exists.
+            if path.exists() {
+                File::create(path).map_err(|e| {
+                    SecurityStateError::from(format!("couldn't truncate stash file: {}", e))
+                })?;
+            }
         }
         // Write the new full filter.
         let mut path = get_store_path(&self.profile_path)?;
@@ -424,6 +437,82 @@ impl SecurityState {
         let old_crlite_filter_should_be_none = self.crlite_filter.replace(crlite_filter);
         assert!(old_crlite_filter_should_be_none.is_none());
         Ok(())
+    }
+
+    pub fn add_crlite_stash(&mut self, stash: Vec<u8>) -> Result<(), SecurityStateError> {
+        // Append the update to the previously-seen stashes.
+        let mut path = get_store_path(&self.profile_path)?;
+        path.push("crlite.stash");
+        let mut stash_file = OpenOptions::new().append(true).create(true).open(path)?;
+        stash_file.write_all(&stash)?;
+        self.load_crlite_stash()?;
+        Ok(())
+    }
+
+    fn load_crlite_stash(&mut self) -> Result<(), SecurityStateError> {
+        self.crlite_stash.clear();
+        let mut path = get_store_path(&self.profile_path)?;
+        path.push("crlite.stash");
+        // Before we've downloaded any stashes, this file won't exist.
+        if !path.exists() {
+            return Ok(());
+        }
+        let mut stash_file = File::open(path)?;
+        // The basic unit of the stash file is an issuer subject public key info
+        // hash (sha-256) followed by a number of serial numbers corresponding
+        // to revoked certificates issued by that issuer. More specifically,
+        // each unit consists of:
+        //   4 bytes little-endian: the number of serial numbers following the issuer spki hash
+        //   1 byte: the length of the issuer spki hash
+        //   issuer spki hash length bytes: the issuer spki hash
+        //   as many times as the indicated serial numbers:
+        //     1 byte: the length of the serial number
+        //     serial number length bytes: the serial number
+        // The stash file consists of any number of these units concatenated
+        // together.
+        loop {
+            let num_serials = match stash_file.read_u32::<LittleEndian>() {
+                Ok(num_serials) => num_serials,
+                Err(_) => break, // end-of-file, presumably
+            };
+            let issuer_spki_hash_len = stash_file.read_u8().map_err(|e| {
+                SecurityStateError::from(format!("error reading stash issuer_spki_hash_len: {}", e))
+            })?;
+            let mut issuer_spki_hash = vec![0; issuer_spki_hash_len as usize];
+            stash_file.read_exact(&mut issuer_spki_hash).map_err(|e| {
+                SecurityStateError::from(format!("error reading stash issuer_spki_hash: {}", e))
+            })?;
+            let serials = self
+                .crlite_stash
+                .entry(issuer_spki_hash)
+                .or_insert(HashSet::new());
+            for _ in 0..num_serials {
+                let serial_len = stash_file.read_u8().map_err(|e| {
+                    SecurityStateError::from(format!("error reading stash serial_len: {}", e))
+                })?;
+                let mut serial = vec![0; serial_len as usize];
+                stash_file.read_exact(&mut serial).map_err(|e| {
+                    SecurityStateError::from(format!("error reading stash serial: {}", e))
+                })?;
+                let _ = serials.insert(serial);
+            }
+        }
+        Ok(())
+    }
+
+    pub fn is_cert_revoked_by_stash(
+        &self,
+        issuer_spki: &[u8],
+        serial: &[u8],
+    ) -> Result<bool, SecurityStateError> {
+        let mut digest = Sha256::default();
+        digest.input(issuer_spki);
+        let lookup_key = digest.result().as_slice().to_vec();
+        let serials = match self.crlite_stash.get(&lookup_key) {
+            Some(serials) => serials,
+            None => return Ok(false),
+        };
+        Ok(serials.contains(&serial.to_vec()))
     }
 
     pub fn get_crlite_revocation_state(
@@ -1352,6 +1441,46 @@ impl CertStorage {
         let thread = try_ns!(self.thread.lock());
         let runnable = try_ns!(TaskRunnable::new("SetFullCRLiteFilter", task));
         try_ns!(TaskRunnable::dispatch(runnable, &*thread));
+        NS_OK
+    }
+
+    unsafe fn AddCRLiteStash(
+        &self,
+        stash: *const ThinVec<u8>,
+        callback: *const nsICertStorageCallback,
+    ) -> nserror::nsresult {
+        if !is_main_thread() {
+            return NS_ERROR_NOT_SAME_THREAD;
+        }
+        if stash.is_null() || callback.is_null() {
+            return NS_ERROR_NULL_POINTER;
+        }
+        let stash_owned = (*stash).to_vec();
+        let task = Box::new(SecurityStateTask::new(
+            &*callback,
+            &self.security_state,
+            move |ss| ss.add_crlite_stash(stash_owned),
+        ));
+        let thread = try_ns!(self.thread.lock());
+        let runnable = try_ns!(TaskRunnable::new("AddCRLiteStash", task));
+        try_ns!(TaskRunnable::dispatch(runnable, &*thread));
+        NS_OK
+    }
+
+    unsafe fn IsCertRevokedByStash(
+        &self,
+        issuer_spki: *const ThinVec<u8>,
+        serial_number: *const ThinVec<u8>,
+        is_revoked: *mut bool,
+    ) -> nserror::nsresult {
+        if issuer_spki.is_null() || serial_number.is_null() || is_revoked.is_null() {
+            return NS_ERROR_NULL_POINTER;
+        }
+        let ss = get_security_state!(self);
+        *is_revoked = match ss.is_cert_revoked_by_stash(&*issuer_spki, &*serial_number) {
+            Ok(is_revoked) => is_revoked,
+            Err(_) => return NS_ERROR_FAILURE,
+        };
         NS_OK
     }
 
