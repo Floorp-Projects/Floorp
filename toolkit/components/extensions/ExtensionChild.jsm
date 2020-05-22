@@ -56,7 +56,6 @@ const { ExtensionUtils } = ChromeUtils.import(
 const { DefaultMap, LimitedSet, getUniqueId, getWinUtils } = ExtensionUtils;
 
 const {
-  defineLazyGetter,
   EventEmitter,
   EventManager,
   LocalAPIImplementation,
@@ -126,47 +125,31 @@ const ExtensionActivityLogChild = {
  * A finalization witness helper that wraps a sendMessage response and
  * guarantees to either get the promise resolved, or rejected when the
  * wrapped promise goes out of scope.
- *
- * Holding a reference to a returned StrongPromise doesn't prevent the
- * wrapped promise from being garbage collected.
  */
 const StrongPromise = {
-  locations: new Map(),
+  stillAlive: new Map(),
 
-  wrap(promise, channelId, location) {
+  wrap(promise, location) {
+    let id = String(getUniqueId());
+    let witness = finalizationService.make("extensions-onMessage-witness", id);
+
     return new Promise((resolve, reject) => {
-      this.locations.set(channelId, location);
-
-      const witness = finalizationService.make(
-        "extensions-sendMessage-witness",
-        channelId
-      );
-      promise.then(
-        value => {
-          this.locations.delete(channelId);
-          witness.forget();
-          resolve(value);
-        },
-        error => {
-          this.locations.delete(channelId);
-          witness.forget();
-          reject(error);
-        }
-      );
+      this.stillAlive.set(id, { reject, location });
+      promise.then(resolve, reject).finally(() => {
+        this.stillAlive.delete(id);
+        witness.forget();
+      });
     });
   },
-  observe(subject, topic, channelId) {
-    channelId = Number(channelId);
-    let location = this.locations.get(channelId);
-    this.locations.delete(channelId);
 
-    const message = `Promised response from onMessage listener went out of scope`;
-    const error = ChromeUtils.createError(message, location);
-    error.mozWebExtLocation = location;
-    MessageChannel.abortChannel(channelId, error);
+  observe(subject, topic, id) {
+    let message = "Promised response from onMessage listener went out of scope";
+    let { reject, location } = this.stillAlive.get(id);
+    reject({ message, mozWebExtLocation: location });
+    this.stillAlive.delete(id);
   },
 };
-Services.obs.addObserver(StrongPromise, "extensions-sendMessage-witness");
+Services.obs.addObserver(StrongPromise, "extensions-onMessage-witness");
 
 // Simple single-event emitter-like helper, exposes the EventManager api.
 class SimpleEventAPI extends EventManager {
@@ -175,11 +158,48 @@ class SimpleEventAPI extends EventManager {
     this.fires = new Set();
     this.register = fire => {
       this.fires.add(fire);
+      fire.location = context.getCaller();
       return () => this.fires.delete(fire);
     };
   }
   emit(...args) {
     return [...this.fires].map(fire => fire.asyncWithoutClone(...args));
+  }
+}
+
+// runtime.OnMessage event helper, handles custom async/sendResponse logic.
+class MessageEvent extends SimpleEventAPI {
+  emit(holder, sender) {
+    if (!this.fires.size || !this.context.active) {
+      return;
+    }
+
+    sender = Cu.cloneInto(sender, this.context.cloneScope);
+    let message = holder.deserialize(this.context.cloneScope);
+
+    let all = [...this.fires]
+      .map(fire => this.wrapResponse(fire, message, sender))
+      .filter(x => x !== undefined);
+
+    return all.length ? Promise.race(all).then(v => [v]) : [];
+  }
+
+  wrapResponse(fire, message, sender) {
+    let response, sendResponse;
+    let promise = new Promise(resolve => {
+      sendResponse = Cu.exportFunction(value => {
+        resolve(value);
+        response = promise;
+      }, this.context.cloneScope);
+    });
+
+    let result = fire.raw(message, sender, sendResponse);
+    if (result instanceof this.context.cloneScope.Promise) {
+      return StrongPromise.wrap(result, fire.location);
+    } else if (result === true) {
+      return StrongPromise.wrap(promise, fire.location);
+    }
+    return response;
   }
 }
 
@@ -247,25 +267,43 @@ class Port {
   }
 }
 
-// Handles native messaging for a context, similar to the Messenger below.
-class NativeMessenger {
+/**
+ * Each extension context gets its own Messenger object. It handles the
+ * basics of sendMessage, onMessage, connect and onConnect.
+ */
+class Messenger {
   constructor(context, sender) {
     this.context = context;
     this.conduit = context.openConduit(this, {
       url: sender.url,
       frameId: sender.frameId,
       childId: context.childManager.id,
-      query: ["NativeMessage", "PortConnect"],
-      recv: ["PortConnect"],
+      query: ["NativeMessage", "RuntimeMessage", "PortConnect"],
+      recv: ["RuntimeMessage", "PortConnect"],
     });
 
     this.onConnect = new SimpleEventAPI(context, "runtime.onConnect");
     this.onConnectEx = new SimpleEventAPI(context, "runtime.onConnectExternal");
+    this.onMessage = new MessageEvent(context, "runtime.onMessage");
+    this.onMessageEx = new MessageEvent(context, "runtime.onMessageExternal");
   }
 
   sendNativeMessage(nativeApp, json) {
     let holder = holdMessage(json, this);
     return this.conduit.queryNativeMessage({ nativeApp, holder });
+  }
+
+  sendRuntimeMessage({ extensionId, message, callback, ...args }) {
+    let response = this.conduit
+      .queryRuntimeMessage({
+        extensionId: extensionId || this.context.extension.id,
+        holder: holdMessage(message),
+        ...args,
+      })
+      .catch(({ message, mozWebExtLocation }) =>
+        Promise.reject({ message, mozWebExtLocation })
+      );
+    return this.context.wrapPromise(response, callback);
   }
 
   connect({ name, native, ...args }) {
@@ -277,187 +315,19 @@ class NativeMessenger {
     return port.api;
   }
 
-  recvPortConnect({ portId, name, sender }) {
-    let ex = sender.id === this.context.extension.id;
-    let event = ex ? this.onConnect : this.onConnectEx;
+  recvPortConnect({ extensionId, portId, name, sender }) {
+    let event = sender.id === extensionId ? this.onConnect : this.onConnectEx;
     if (this.context.active && event.fires.size) {
       let port = new Port(this.context, portId, name, false, sender);
       return event.emit(port.api).length;
     }
   }
-}
 
-/**
- * Each extension context gets its own Messenger object. It handles the
- * basics of sendMessage, onMessage, connect and onConnect.
- *
- * @param {BaseContext} context The context to which this Messenger is tied.
- * @param {Array<nsIMessageListenerManager>} messageManagers
- *     The message managers used to receive messages (e.g. onMessage/onConnect
- *     requests).
- * @param {object} sender Describes this sender to the recipient. This object
- *     is extended further by BaseContext's sendMessage method and appears as
- *     the `sender` object to `onConnect` and `onMessage`.
- *     Do not set the `extensionId`, `contextId` or `tab` properties. The former
- *     two are added by BaseContext's sendMessage, while `sender.tab` is set by
- *     the ProxyMessenger in the main process.
- * @param {object} filter A recipient filter to apply to incoming messages from
- *     the broker. Messages are only handled by this Messenger if all key-value
- *     pairs match the `recipient` as specified by the sender of the message.
- *     In other words, this filter defines the required fields of `recipient`.
- * @param {object} [optionalFilter] An additional filter to apply to incoming
- *     messages. Unlike `filter`, the keys from `optionalFilter` are allowed to
- *     be omitted from `recipient`. Only keys that are present in both
- *     `optionalFilter` and `recipient` are applied to filter incoming messages.
- */
-class Messenger {
-  constructor(context, messageManagers, sender, filter, optionalFilter) {
-    this.context = context;
-    this.messageManagers = messageManagers;
-    this.sender = sender;
-    this.filter = filter;
-    this.optionalFilter = optionalFilter;
-
-    // Include the context envType in the sender info.
-    this.sender.envType = context.envType;
-
-    // Exclude messages coming from content scripts for the devtools extension contexts
-    // (See Bug 1383310).
-    this.excludeContentScriptSender = this.context.envType === "devtools_child";
-  }
-
-  _sendMessage(messageManager, message, data, recipient) {
-    let options = {
-      recipient,
-      sender: this.sender,
-      responseType: MessageChannel.RESPONSE_FIRST,
-    };
-
-    return this.context.sendMessage(messageManager, message, data, options);
-  }
-
-  sendMessage(messageManager, msg, recipient, responseCallback) {
-    let holder = new StructuredCloneHolder(msg);
-
-    let promise = this._sendMessage(
-      messageManager,
-      "Extension:Message",
-      holder,
-      recipient
-    ).catch(error => {
-      if (error.result == MessageChannel.RESULT_NO_HANDLER) {
-        return Promise.reject({
-          message:
-            "Could not establish connection. Receiving end does not exist.",
-        });
-      } else if (error.result != MessageChannel.RESULT_NO_RESPONSE) {
-        return Promise.reject(error);
-      }
-    });
-    holder = null;
-
-    return this.context.wrapPromise(promise, responseCallback);
-  }
-
-  _onMessage(name, filter) {
-    return new EventManager({
-      context: this.context,
-      name,
-      register: fire => {
-        const caller = this.context.getCaller();
-
-        let listener = {
-          messageFilterPermissive: this.optionalFilter,
-          messageFilterStrict: this.filter,
-
-          filterMessage: (sender, recipient) => {
-            // Exclude messages coming from content scripts for the devtools extension contexts
-            // (See Bug 1383310).
-            if (
-              this.excludeContentScriptSender &&
-              sender.envType === "content_child"
-            ) {
-              return false;
-            }
-
-            // Ignore the message if it was sent by this Messenger.
-            return (
-              sender.contextId !== this.context.contextId &&
-              filter(sender, recipient)
-            );
-          },
-
-          receiveMessage: (
-            { target, data: holder, sender, recipient, channelId },
-            isLastHandler
-          ) => {
-            if (!this.context.active) {
-              return;
-            }
-
-            let sendResponse;
-            let response = undefined;
-            let promise = new Promise(resolve => {
-              sendResponse = value => {
-                resolve(value);
-                response = promise;
-              };
-            });
-
-            let message = holder.deserialize(
-              this.context.cloneScope,
-              !isLastHandler
-            );
-            holder = null;
-
-            sender = Cu.cloneInto(sender, this.context.cloneScope);
-            sendResponse = Cu.exportFunction(
-              sendResponse,
-              this.context.cloneScope
-            );
-
-            // Note: We intentionally do not use runSafe here so that any
-            // errors are propagated to the message sender.
-            let result = fire.raw(message, sender, sendResponse);
-            message = null;
-
-            if (result instanceof this.context.cloneScope.Promise) {
-              return StrongPromise.wrap(result, channelId, caller);
-            } else if (result === true) {
-              return StrongPromise.wrap(promise, channelId, caller);
-            }
-            return response;
-          },
-        };
-
-        MessageChannel.addListener(
-          this.messageManagers,
-          "Extension:Message",
-          listener
-        );
-        return () => {
-          MessageChannel.removeListener(
-            this.messageManagers,
-            "Extension:Message",
-            listener
-          );
-        };
-      },
-    }).api();
-  }
-
-  onMessage(name) {
-    return this._onMessage(name, sender => sender.id === this.sender.id);
-  }
-
-  onMessageExternal(name) {
-    return this._onMessage(name, sender => sender.id !== this.sender.id);
+  recvRuntimeMessage({ extensionId, holder, sender }) {
+    let event = sender.id === extensionId ? this.onMessage : this.onMessageEx;
+    return event.emit(holder, sender);
   }
 }
-
-defineLazyGetter(Messenger.prototype, "nm", function() {
-  return new NativeMessenger(this.context, this.sender);
-});
 
 // For test use only.
 var ExtensionManager = {

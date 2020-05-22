@@ -7,19 +7,35 @@ add_task(async function test_sendMessage_without_listener() {
     await browser.test.assertRejects(
       browser.runtime.sendMessage("msg"),
       "Could not establish connection. Receiving end does not exist.",
-      "sendMessage callback was invoked"
+      "Correct error when there are no receivers from background"
     );
 
-    browser.test.notifyPass("sendMessage callback was invoked");
+    browser.test.sendMessage("sendMessage-error-bg");
   }
   let extensionData = {
     background,
+    files: {
+      "page.html": `<!doctype><meta charset=utf-8><script src="page.js"></script>`,
+      async "page.js"() {
+        await browser.test.assertRejects(
+          browser.runtime.sendMessage("msg"),
+          "Could not establish connection. Receiving end does not exist.",
+          "Correct error when there are no receivers from extension page"
+        );
+
+        browser.test.notifyPass("sendMessage-error-page");
+      },
+    },
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
+  await extension.awaitMessage("sendMessage-error-bg");
 
-  await extension.awaitFinish("sendMessage callback was invoked");
+  let url = `moz-extension://${extension.uuid}/page.html`;
+  let page = await ExtensionTestUtils.loadContentPage(url, { extension });
+  await extension.awaitFinish("sendMessage-error-page");
+  await page.close();
 
   await extension.unload();
 });
