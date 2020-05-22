@@ -1396,7 +1396,6 @@ def split_chunks(config, tasks):
 
             chunked_manifests = chunk_manifests(
                 suite_definition['build_flavor'],
-                suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
                 task['test-platform'],
                 task['chunks'],
                 manifests['active'],
