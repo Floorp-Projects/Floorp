@@ -1179,8 +1179,13 @@ class XPCNativeSet final {
 };
 
 /***********************************************/
-// XPCWrappedNativeProto hold the additional shared wrapper data
-// for XPCWrappedNative whose native objects expose nsIClassInfo.
+// XPCWrappedNativeProtos hold the additional shared wrapper data for
+// XPCWrappedNative whose native objects expose nsIClassInfo.
+// The XPCWrappedNativeProto is owned by its mJSProtoObject, until that object
+// is finalized. After that, it is owned by XPCJSRuntime's
+// mDyingWrappedNativeProtoMap. See
+// XPCWrappedNativeProto::JSProtoObjectFinalized and
+// XPCJSRuntime::FinalizeCallback.
 
 class XPCWrappedNativeProto final {
  public:
