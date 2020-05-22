@@ -230,12 +230,12 @@ bool ShmSegmentsReader::Read(const layers::OffsetRange& aRange,
   size_t initialLength = aInto.Length();
 
   size_t srcCursor = aRange.start();
-  int remainingBytesToCopy = aRange.length();
+  size_t remainingBytesToCopy = aRange.length();
   while (remainingBytesToCopy > 0) {
     const size_t shm_idx = srcCursor / mChunkSize;
     const size_t ptrOffset = srcCursor % mChunkSize;
     const size_t copyRange =
-        std::min<int>(remainingBytesToCopy, mChunkSize - ptrOffset);
+        std::min(remainingBytesToCopy, mChunkSize - ptrOffset);
     uint8_t* srcPtr =
         RefCountedShm::GetBytes(mSmallAllocs[shm_idx]) + ptrOffset;
 
@@ -246,6 +246,50 @@ bool ShmSegmentsReader::Read(const layers::OffsetRange& aRange,
   }
 
   return aInto.Length() - initialLength == aRange.length();
+}
+
+Maybe<Range<uint8_t>> ShmSegmentsReader::GetReadPointerLarge(
+    const layers::OffsetRange& aRange) {
+  // source = zero is for small allocs.
+  MOZ_RELEASE_ASSERT(aRange.source() != 0);
+  if (aRange.source() > mLargeAllocs.Length()) {
+    return Nothing();
+  }
+  size_t id = aRange.source() - 1;
+  const ipc::Shmem& shm = mLargeAllocs[id];
+  if (shm.Size<uint8_t>() < aRange.length()) {
+    return Nothing();
+  }
+
+  uint8_t* srcPtr = shm.get<uint8_t>();
+  return Some(Range<uint8_t>(srcPtr, aRange.length()));
+}
+
+Maybe<Range<uint8_t>> ShmSegmentsReader::GetReadPointer(
+    const layers::OffsetRange& aRange) {
+  if (aRange.length() == 0) {
+    return Some(Range<uint8_t>());
+  }
+
+  if (aRange.source() != 0) {
+    return GetReadPointerLarge(aRange);
+  }
+
+  if (mChunkSize == 0 ||
+      aRange.start() + aRange.length() > mChunkSize * mSmallAllocs.Length()) {
+    return Nothing();
+  }
+
+  size_t srcCursor = aRange.start();
+  size_t remainingBytesToCopy = aRange.length();
+  const size_t shm_idx = srcCursor / mChunkSize;
+  const size_t ptrOffset = srcCursor % mChunkSize;
+  // Return nothing if we can't return a pointer to the full range
+  if (mChunkSize - ptrOffset < remainingBytesToCopy) {
+    return Nothing();
+  }
+  uint8_t* srcPtr = RefCountedShm::GetBytes(mSmallAllocs[shm_idx]) + ptrOffset;
+  return Some(Range<uint8_t>(srcPtr, remainingBytesToCopy));
 }
 
 IpcResourceUpdateQueue::IpcResourceUpdateQueue(

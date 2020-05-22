@@ -71,8 +71,33 @@ class ShmSegmentsReader {
 
   bool Read(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto);
 
+  // Get a read pointer, if possible, directly into the shm. If the range has
+  // been broken up into multiple chunks that can't be represented by a single
+  // range, nothing will be returned to indicate failure.
+  Maybe<Range<uint8_t>> GetReadPointer(const layers::OffsetRange& aRange);
+
+  // Get a read pointer, if possible, directly into the shm. Otherwise, copy
+  // it into the Vec and return a pointer to that contiguous memory instead.
+  // If all fails, return nothing.
+  Maybe<Range<uint8_t>> GetReadPointerOrCopy(const layers::OffsetRange& aRange,
+                                             wr::Vec<uint8_t>& aInto) {
+    if (Maybe<Range<uint8_t>> ptr = GetReadPointer(aRange)) {
+      return ptr;
+    } else {
+      size_t initialLength = aInto.Length();
+      if (Read(aRange, aInto)) {
+        return Some(Range<uint8_t>(aInto.Data() + initialLength,
+                                   aInto.Length() - initialLength));
+      } else {
+        return Nothing();
+      }
+    }
+  }
+
  protected:
   bool ReadLarge(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto);
+
+  Maybe<Range<uint8_t>> GetReadPointerLarge(const layers::OffsetRange& aRange);
 
   const nsTArray<layers::RefCountedShmem>& mSmallAllocs;
   const nsTArray<mozilla::ipc::Shmem>& mLargeAllocs;
@@ -87,9 +112,8 @@ class IpcResourceUpdateQueue {
   // we use here. The RefCountedShmem type used to allocate the chunks keeps a
   // 16 bytes header in the buffer which we account for here as well. So we pick
   // 64k - 2 * 4k - 16 = 57328 bytes as the default alloc size.
-  explicit IpcResourceUpdateQueue(
-      layers::WebRenderBridgeChild* aAllocator,
-      size_t aChunkSize = 57328);
+  explicit IpcResourceUpdateQueue(layers::WebRenderBridgeChild* aAllocator,
+                                  size_t aChunkSize = 57328);
 
   IpcResourceUpdateQueue(IpcResourceUpdateQueue&& aOther) noexcept;
   IpcResourceUpdateQueue& operator=(IpcResourceUpdateQueue&& aOther) noexcept;
