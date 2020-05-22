@@ -206,7 +206,7 @@ The following metrics are added to the ping:
 | installation.campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the campaign that is responsible for this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
 | installation.creative |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The identifier of the creative material that the user interacted with.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
 | installation.network |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the Network that sourced this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
-| installation.timestamp |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |The date and time of the installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
+| installation.timestamp |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |The Glean generated date and time of the installation. This is unique per app install, though the rest of the data in this ping is from Adjust and will remain static across installs.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
 
 ## metrics
 

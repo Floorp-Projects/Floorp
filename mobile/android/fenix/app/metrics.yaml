@@ -2050,7 +2050,9 @@ installation:
       - installation
     type: datetime
     description: |
-      The date and time of the installation.
+      The Glean generated date and time of the installation. This is
+      unique per app install, though the rest of the data in this
+      ping is from Adjust and will remain static across installs.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
