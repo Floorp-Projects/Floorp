@@ -53,6 +53,7 @@ from manifestparser.filters import (
     subsuite,
     tags,
 )
+from mozgeckoprofiler import symbolicate_profile_json, view_gecko_profile
 
 try:
     from marionette_driver.addons import Addons
@@ -955,6 +956,9 @@ class MochitestDesktop(object):
 
         self.start_script = os.path.join(here, 'start_desktop.js')
 
+        # Used to temporarily serve a performance profile
+        self.profiler_tempdir = None
+
     def environment(self, **kwargs):
         kwargs['log'] = self.log
         return test_environment(**kwargs)
@@ -1706,11 +1710,30 @@ toolbar#nav-bar {
             # not enabled. The two are not compatible.
             browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leak_report_file
 
-        if options.profiler or options.profilerNoOpen:
-            # Turn on the gecko profiler by using the startup profiling environmental
-            # variables.
+        # If profiling options are enabled, turn on the gecko profiler by using the
+        # profiler environmental variables.
+        if options.profiler:
+            # The user wants to capture a profile, and automatically view it. The
+            # profile will be saved to a temporary folder, then deleted after
+            # opening in profiler.firefox.com.
+            self.profiler_tempdir = tempfile.mkdtemp()
+            browserEnv["MOZ_PROFILER_SHUTDOWN"] = os.path.join(
+                self.profiler_tempdir, "mochitest-profile.json")
             browserEnv["MOZ_PROFILER_STARTUP"] = "1"
-            browserEnv["MOZ_PROFILER_SHUTDOWN"] = "mochitest-profile.json"
+
+        if options.profilerSaveOnly:
+            # The user wants to capture a profile, but only to save it. This defaults
+            # to the MOZ_UPLOAD_DIR.
+            browserEnv["MOZ_PROFILER_STARTUP"] = "1"
+            if "MOZ_UPLOAD_DIR" in browserEnv:
+                browserEnv["MOZ_PROFILER_SHUTDOWN"] = os.path.join(
+                    browserEnv["MOZ_UPLOAD_DIR"], "mochitest-profile.json")
+            else:
+                self.log.error("--profiler-save-only was specified, but no MOZ_UPLOAD_DIR "
+                               "environment variable was provided. Please set this "
+                               "environment variable to a directory path in order to save "
+                               "a performance profile.")
+                return None
 
         try:
             gmp_path = self.getGMPPluginPath(options)
@@ -2702,17 +2725,18 @@ toolbar#nav-bar {
         # If shutdown profiling was enabled, then the user will want to access the
         # performance profile. The following code with display helpful log messages
         # and automatically open the profile if it is requested.
-        profilerShutdownPath = self.browserEnv["MOZ_PROFILER_SHUTDOWN"]
-        if profilerShutdownPath:
-            from mozbuild.base import MozbuildObject
-            build = MozbuildObject.from_environment()
-            profile_path = os.path.join(build.topobjdir, '_tests/testing/mochitest',
-                                        profilerShutdownPath)
+        if self.browserEnv and "MOZ_PROFILER_SHUTDOWN" in self.browserEnv:
+            profile_path = self.browserEnv["MOZ_PROFILER_SHUTDOWN"]
 
             print("TEST-INFO | Shutdown profiling was enabled")
             print("TEST-INFO | Profile saved locally to: %s" % profile_path)
-
+            print("TEST-INFO | Symbolicating the profile... This could take a couple of minutes.")
+            symbolicate_profile_json(profile_path, options.topobjdir)
             view_gecko_profile_from_mochitest(profile_path, options)
+
+            # Clean up the temporary file if it exists.
+            if self.profiler_tempdir:
+                shutil.rmtree(self.profiler_tempdir)
 
         if not result:
             if self.countfail or \
@@ -3224,7 +3248,7 @@ def view_gecko_profile_from_mochitest(profile_path, options):
     or save the profile.
     """
 
-    if options.profilerNoOpen:
+    if options.profilerSaveOnly:
         # The user did not want this to automatically open, only share the location.
         return
 
@@ -3232,40 +3256,6 @@ def view_gecko_profile_from_mochitest(profile_path, options):
         print("\tNo profile was found at the profile path, cannot launch profiler.firefox.com.")
         return
 
-    # Create the path for the view-gecko-profile tool, it's in the repo's
-    # testing/tools folder.
-    repo_dir = options.topsrcdir
-    if repo_dir is None:
-        print("Unable to find the topsrcdir, cannot launch profiler.firefox.com.")
-        return
-
-    script_path = os.path.join(repo_dir, 'testing', 'tools',
-                               'view_gecko_profile', 'view_gecko_profile.py')
-    if not os.path.exists(script_path):
-        print("Unable to find the view-gecko-profile.py tool, cannot launch profiler.firefox.com.")
-        return
-
-    command = ['python',
-               script_path,
-               '-p', profile_path]
-
     print('TEST-INFO | Loading this profile in profiler.firefox.com')
-    print(command)
 
-    # if the view-gecko-profile tool fails to launch for some reason, we don't
-    # want to crash the mochitest just dump the error and finish up the mochitest
-    # as usual
-    try:
-        view_profile = subprocess.Popen(command)
-        # that will leave it running in own instance and let the mochitest finish up
-    except Exception as e:
-        print("Failed to launch the view-gecko-profile.py tool, exeption: %s" % e)
-        return
-
-    # This sleep was taken from the Talos implementation of this function.
-    time.sleep(5)
-    ret = view_profile.poll()
-    if ret is None:
-        print("view-gecko-profile successfully started as pid %d" % view_profile.pid)
-    else:
-        print('view-gecko-profile process failed to start, poll returned: %s' % ret)
+    view_gecko_profile(profile_path)
