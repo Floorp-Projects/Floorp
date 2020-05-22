@@ -35,14 +35,15 @@ INCLUSIVE_COMPONENTS = sorted(INCLUSIVE_COMPONENTS)
 # Exclusive components are those which are scheduled by default, but for which
 # some files *only* affect that component.  For example, most files affect all
 # platforms, but platform-specific files exclusively affect a single platform.
-# These components are assigned to `SCHEDULES.exclusive` with `=`.
+# These components are assigned to `SCHEDULES.exclusive` with `=`. Each comment
+# denotes a new mutually exclusive set of groups that tasks can belong to.
 EXCLUSIVE_COMPONENTS = [
     # os families
     'android',
     'linux',
     'macosx',
     'windows',
-    # test suite categories
+    # broad test harness categories
     'awsy',
     'condprofile',
     'cppunittest',
@@ -58,15 +59,17 @@ EXCLUSIVE_COMPONENTS = [
     'xpcshell',
     'xpcshell-coverage',
     'web-platform-tests',
-    'web-platform-tests-crashtest',
-    'web-platform-tests-reftest',
-    'web-platform-tests-wdspec',
-    # specific test suites via schedules-component
+    # specific test suites
+    'crashtest',
     'mochitest-a11y',
     'mochitest-browser-chrome',
     'mochitest-chrome',
     'mochitest-plain',
-    'crashtest',
+    'web-platform-tests-crashtest',
+    'web-platform-tests-reftest',
+    'web-platform-tests-wdspec',
+    # webrender enabled
+    'webrender',
 ]
 EXCLUSIVE_COMPONENTS = sorted(EXCLUSIVE_COMPONENTS)
 ALL_COMPONENTS = INCLUSIVE_COMPONENTS + EXCLUSIVE_COMPONENTS
