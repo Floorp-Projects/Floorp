@@ -81,14 +81,24 @@ interface nsILoginManager : nsISupports {
   /**
    * Record that the password of a saved login was used (e.g. submitted or copied).
    *
-   * @param nsILoginInfo aLogin
+   * @param {nsILoginInfo} aLogin
    *        The login record of the password that was used.
+   * @param {boolean} aPrivateContextWithoutExplicitConsent
+   *        If the use was in private browsing AND without the user explicitly choosing to save/update.
+   *        Login use metadata will not be updated in this case but it will stil be counted for telemetry.
+   * @param {AString} aLoginType
+   *        One of "form_login", "form_password", "auth_login", or "prompt_login".
+   *        See saved_login_used in Events.yaml.
+   *        Don't assume that an auth. login is never used in a form and vice-versa. This argument
+   *        indicates the context of how it was used.
+   * @param {boolean} aFilled
+   *        Whether the login was filled, rather than being typed manually.
    *
    * If only the username was used, this method shouldn't be called as we don't
    * want to double-count the use if both the username and password are copied.
    * Copying of the username normally precedes the copying of the password anyways.
    */
-  void recordPasswordUse(in nsILoginInfo aLogin);
+  void recordPasswordUse(in nsILoginInfo aLogin, in boolean aPrivateContextWithoutExplicitConsent, in AString aLoginType, in boolean aFilled);
 
   /**
    * Remove all logins known to login manager.

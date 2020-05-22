@@ -461,6 +461,7 @@ LoginManagerAuthPrompter.prototype = {
       }
     }
 
+    let autofilled = !!aPassword.value;
     var ok = Services.prompt.promptUsernameAndPassword(
       this._chromeWindow,
       aDialogTitle,
@@ -504,7 +505,12 @@ LoginManagerAuthPrompter.prototype = {
       this._updateLogin(selectedLogin, newLogin);
     } else {
       this.log("Login unchanged, no further action needed.");
-      Services.logins.recordPasswordUse(selectedLogin);
+      Services.logins.recordPasswordUse(
+        selectedLogin,
+        this._inPrivateBrowsing,
+        "prompt_login",
+        autofilled
+      );
     }
 
     return ok;
@@ -644,6 +650,7 @@ LoginManagerAuthPrompter.prototype = {
     var canAutologin = false;
     var notifyObj;
     var foundLogins;
+    let autofilled = false;
 
     try {
       this.log("===== promptAuth called =====");
@@ -679,6 +686,7 @@ LoginManagerAuthPrompter.prototype = {
           selectedLogin.username,
           selectedLogin.password
         );
+        autofilled = true;
 
         // Allow automatic proxy login
         if (
@@ -827,7 +835,12 @@ LoginManagerAuthPrompter.prototype = {
         }
       } else {
         this.log("Login unchanged, no further action needed.");
-        Services.logins.recordPasswordUse(selectedLogin);
+        Services.logins.recordPasswordUse(
+          selectedLogin,
+          this._inPrivateBrowsing,
+          "auth_login",
+          autofilled
+        );
       }
     } catch (e) {
       Cu.reportError("LoginManagerAuthPrompter: Fail2 in promptAuth: " + e);
@@ -1115,6 +1128,8 @@ LoginManagerAuthPrompter.prototype = {
     propBag.setProperty("timePasswordChanged", now);
     propBag.setProperty("timeLastUsed", now);
     propBag.setProperty("timesUsedIncrement", 1);
+    // Note that we don't call `recordPasswordUse` so we won't potentially record
+    // both a use and a save/update. See bug 1640096.
     Services.logins.modifyLogin(login, propBag);
   },
 

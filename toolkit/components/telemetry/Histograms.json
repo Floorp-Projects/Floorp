@@ -12342,7 +12342,7 @@
     "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_FORM_AUTOFILL_RESULT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["content"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["seceng-telemetry@mozilla.com","loines@mozilla.com"],
     "bug_numbers": [1340021, 1545172],
@@ -12367,7 +12367,7 @@
     "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_LOGIN_PAGE_SAFETY": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["content"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["seceng-telemetry@mozilla.com","loines@mozilla.com"],
     "bug_numbers": [1340021, 1545172],
@@ -12405,7 +12405,7 @@
     "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_NUM_HTTPAUTH_PASSWORDS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview", "thunderbird"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -12414,7 +12414,7 @@
     "description": "Number of HTTP Auth logins"
   },
   "PWMGR_PASSWORD_INPUT_IN_FORM": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["content"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -12456,7 +12456,7 @@
     "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_USERNAME_PRESENT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview", "thunderbird"],
     "expires_in_version": "never",
     "kind": "boolean",
