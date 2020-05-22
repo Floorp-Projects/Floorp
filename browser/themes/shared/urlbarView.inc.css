@@ -196,6 +196,10 @@
   flex-shrink: 0;
 }
 
+.urlbarView-row[tail-suggestion] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
+  visibility: hidden;
+}
+
 /* Type icon */
 
 .urlbarView-type-icon {
