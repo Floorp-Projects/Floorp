@@ -1611,6 +1611,10 @@ void RecordedEvent::ReadPatternData(S& aStream,
       SurfacePatternStorage* sps =
           reinterpret_cast<SurfacePatternStorage*>(&aPattern.mStorage);
       ReadElement(aStream, *sps);
+      if (!aStream.good()) {
+        return;
+      }
+
       if (sps->mExtend < ExtendMode::CLAMP ||
           sps->mExtend > ExtendMode::REFLECT) {
         gfxDevCrash(LogReason::InvalidConstrainedValueRead)
@@ -1754,6 +1758,10 @@ void RecordedEvent::ReadStrokeOptions(S& aStream,
 template <class S>
 static void ReadDrawOptions(S& aStream, DrawOptions& aDrawOptions) {
   ReadElement(aStream, aDrawOptions);
+  if (!aStream.good()) {
+    return;
+  }
+
   if (aDrawOptions.mAntialiasMode < AntialiasMode::NONE ||
       aDrawOptions.mAntialiasMode > AntialiasMode::DEFAULT) {
     gfxDevCrash(LogReason::InvalidConstrainedValueRead)
@@ -1779,6 +1787,10 @@ template <class S>
 static void ReadDrawSurfaceOptions(S& aStream,
                                    DrawSurfaceOptions& aDrawSurfaceOptions) {
   ReadElement(aStream, aDrawSurfaceOptions);
+  if (!aStream.good()) {
+    return;
+  }
+
   if (aDrawSurfaceOptions.mSamplingFilter < SamplingFilter::GOOD ||
       aDrawSurfaceOptions.mSamplingFilter >= SamplingFilter::SENTINEL) {
     gfxDevCrash(LogReason::InvalidConstrainedValueRead)
