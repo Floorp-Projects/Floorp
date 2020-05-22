@@ -133,7 +133,7 @@ jobs:
             build: build-android-api-16-shippable/opt
         fetches:
             build:
-                - artifact: target.condprof.tests.tar.gz
+                - artifact: en-US/target.condprof.tests.tar.gz
                 - artifact: geckoview_example.apk
                   extract: false
             toolchain:
@@ -234,7 +234,7 @@ jobs:
             build: build-android-api-16-shippable/opt
         fetches:
             build:
-                - artifact: target.condprof.tests.tar.gz
+                - artifact: en-US/target.condprof.tests.tar.gz
             toolchain:
                 - linux64-geckodriver
         run:
@@ -268,7 +268,7 @@ jobs:
             build: build-android-api-16-shippable/opt
         fetches:
             build:
-                - artifact: target.condprof.tests.tar.gz
+                - artifact: en-US/target.condprof.tests.tar.gz
                 - artifact: geckoview_example.apk
                   extract: false
             toolchain:
