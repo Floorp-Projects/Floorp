@@ -3193,6 +3193,33 @@ toolbar#nav-bar {
             return message
 
 
+def view_gecko_profile_from_mochitest(profile_path, options, profiler_logger):
+    """Getting shutdown performance profiles from just the command line arguments is
+    difficult. This function makes the developer ergonomics a bit easier by taking the
+    generated Gecko profile, and automatically serving it to profiler.firefox.com. The
+    Gecko profile during shutdown is dumped to disk at:
+
+    {objdir}/_tests/testing/mochitest/{profilename}
+
+    This function takes that file, and launches a local webserver, and then points
+    a browser to profiler.firefox.com to view it. From there it's easy to publish
+    or save the profile.
+    """
+
+    if options.profilerSaveOnly:
+        # The user did not want this to automatically open, only share the location.
+        return
+
+    if not os.path.exists(profile_path):
+        profiler_logger.error("No profile was found at the profile path, cannot "
+                              "launch profiler.firefox.com.")
+        return
+
+    profiler_logger.info('Loading this profile in the Firefox Profiler')
+
+    view_gecko_profile(profile_path)
+
+
 def run_test_harness(parser, options):
     parser.validate(options)
 
@@ -3233,30 +3260,3 @@ def cli(args=sys.argv[1:]):
 
 if __name__ == "__main__":
     sys.exit(cli())
-
-
-def view_gecko_profile_from_mochitest(profile_path, options, profiler_logger):
-    """Getting shutdown performance profiles from just the command line arguments is
-    difficult. This function makes the developer ergonomics a bit easier by taking the
-    generated Gecko profile, and automatically serving it to profiler.firefox.com. The
-    Gecko profile during shutdown is dumped to disk at:
-
-    {objdir}/_tests/testing/mochitest/{profilename}
-
-    This function takes that file, and launches a local webserver, and then points
-    a browser to profiler.firefox.com to view it. From there it's easy to publish
-    or save the profile.
-    """
-
-    if options.profilerSaveOnly:
-        # The user did not want this to automatically open, only share the location.
-        return
-
-    if not os.path.exists(profile_path):
-        profiler_logger.error("No profile was found at the profile path, cannot "
-                              "launch profiler.firefox.com.")
-        return
-
-    profiler_logger.info('Loading this profile in the Firefox Profiler')
-
-    view_gecko_profile(profile_path)
