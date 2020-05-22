@@ -11,6 +11,7 @@ import os
 import socket
 import sys
 import urllib
+import webbrowser
 
 from mozlog import commandline, get_proxy_logger
 from mozlog.commandline import add_logging_group
@@ -71,7 +72,6 @@ class ViewGeckoProfile(object):
     def open_profile_in_browser(self):
         # Open the file in the user's preferred browser.
         LOG.info("Opening the profile: %s" % self.profiler_url)
-        import webbrowser
         webbrowser.open_new_tab(self.profiler_url)
 
 
