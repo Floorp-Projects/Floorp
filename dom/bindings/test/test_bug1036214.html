@@ -19,8 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
     xoObjects.push(window[0]);
     xoObjects.push(window[0].location);
     xoObjects.push(SpecialPowers.unwrap(SpecialPowers.wrap(window[0]).document));
-    xoObjects.push(SpecialPowers);
-    xoObjects.push(SpecialPowers.wrap);
+    xoObjects.push(SpecialPowers.unwrap(SpecialPowers));
+    xoObjects.push(SpecialPowers.unwrap(SpecialPowers.wrap));
     SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, go);
   }
 

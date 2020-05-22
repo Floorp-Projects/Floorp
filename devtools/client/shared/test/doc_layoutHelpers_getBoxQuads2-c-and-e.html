@@ -6,7 +6,7 @@ window.onmessage = event => {
   const innerNode = window.document.getElementById("inner-node");
   const wrappedNode = SpecialPowers.wrap(innerNode);
   const wrappedQuads = wrappedNode.getBoxQuadsFromWindowOrigin();
-  const [quad] = SpecialPowers.unwrap(wrappedQuads);
+  const quad = SpecialPowers.unwrap(wrappedQuads[0]);
 
   window.parent.postMessage({ quad }, "*");
 };
