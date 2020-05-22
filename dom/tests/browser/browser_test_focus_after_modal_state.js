@@ -12,17 +12,6 @@ function awaitAndClosePrompt() {
     Services.obs.addObserver(onDialogShown, "tabmodal-dialog-loaded");
   });
 }
-/* global messageManager */
-let lastMessageReceived = "";
-function waitForMessage(message) {
-  return new Promise((resolve, reject) => {
-    messageManager.addMessageListener(message, function() {
-      ok(true, "Received message: " + message);
-      lastMessageReceived = message;
-      resolve();
-    });
-  });
-}
 
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
@@ -38,31 +27,37 @@ add_task(async function() {
     );
   });
 
-  await ContentTask.spawn(browser, null, async function() {
-    content.document
-      .getElementById("edit")
-      .contentDocument.addEventListener("focus", function(event) {
-        sendAsyncMessage("Test:FocusReceived");
+  let focusBlurPromise = SpecialPowers.spawn(browser, [], async function() {
+    let focusOccurred = false;
+    let blurOccurred = false;
+
+    return new Promise(resolve => {
+      let doc = content.document.getElementById("edit").contentDocument;
+      doc.addEventListener("focus", function(event) {
+        focusOccurred = true;
+        if (blurOccurred) {
+          resolve(true);
+        }
       });
 
-    content.document
-      .getElementById("edit")
-      .contentDocument.addEventListener("blur", function(event) {
-        sendAsyncMessage("Test:BlurReceived");
+      doc.addEventListener("blur", function(event) {
+        blurOccurred = true;
+        if (focusOccurred) {
+          resolve(false);
+        }
       });
+    });
   });
 
   // Click on div that triggers a prompt, and then check that focus is back on
   // the editable iframe.
   let dialogShown = awaitAndClosePrompt();
-  let waitForBlur = waitForMessage("Test:BlurReceived");
-  let waitForFocus = waitForMessage("Test:FocusReceived");
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let div = content.document.getElementById("clickMeDiv");
     div.click();
   });
   await dialogShown;
-  await Promise.all([waitForBlur, waitForFocus]);
+  let blurCameFirst = await focusBlurPromise;
   await SpecialPowers.spawn(browser, [], async function() {
     is(
       content.document.activeElement,
@@ -70,11 +65,7 @@ add_task(async function() {
       "Focus should be back on iframe element"
     );
   });
-  is(
-    lastMessageReceived,
-    "Test:FocusReceived",
-    "Should receive blur and then focus event"
-  );
+  ok(blurCameFirst, "Should receive blur and then focus event");
 
   BrowserTestUtils.removeTab(tab);
 });
