@@ -1,8 +1,49 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
+
+/**
+ * With optional arguments on both ends, this case is ambiguous:
+ *     runtime.sendMessage("string", {} or nullish)
+ *
+ * Sending a message within the extension is more common than sending
+ * an empty object to another extension, so we prefer that conclusion.
+ *
+ * @param {string?}  [extensionId]
+ * @param {any}      message
+ * @param {object?}  [options]
+ * @param {function} [callback]
+ * @returns {{extensionId: string?, message: any, callback: function?}}
+ */
+function parseBonkersArgs(...args) {
+  let Error = ExtensionUtils.ExtensionError;
+  let callback = typeof args[args.length - 1] === "function" && args.pop();
+
+  // We don't support any options anymore, so only an empty object is valid.
+  function validOptions(v) {
+    return v == null || (typeof v === "object" && !Object.keys(v).length);
+  }
+
+  if (args.length === 1 || (args.length === 2 && validOptions(args[1]))) {
+    // Interpret as passing null for extensionId (message within extension).
+    args.unshift(null);
+  }
+  let [extensionId, message, options] = args;
+
+  if (!args.length) {
+    throw new Error("runtime.sendMessage's message argument is missing");
+  } else if (!validOptions(options)) {
+    throw new Error("runtime.sendMessage's options argument is invalid");
+  } else if (args.length === 4 && args[3] && !callback) {
+    throw new Error("runtime.sendMessage's last argument is not a function");
+  } else if (args[3] != null || args.length > 4) {
+    throw new Error("runtime.sendMessage received too many arguments");
+  } else if (extensionId && typeof extensionId !== "string") {
+    throw new Error("runtime.sendMessage's extensionId argument is invalid");
+  }
+  return { extensionId, message, callback };
+}
 
 this.runtime = class extends ExtensionAPI {
   getAPI(context) {
@@ -10,109 +51,28 @@ this.runtime = class extends ExtensionAPI {
 
     return {
       runtime: {
-        onConnect: context.messenger.nm.onConnect.api(),
+        onConnect: context.messenger.onConnect.api(),
+        onMessage: context.messenger.onMessage.api(),
 
-        onMessage: context.messenger.onMessage("runtime.onMessage"),
-
-        onConnectExternal: context.messenger.nm.onConnectEx.api(),
-
-        onMessageExternal: context.messenger.onMessageExternal(
-          "runtime.onMessageExternal"
-        ),
+        onConnectExternal: context.messenger.onConnectEx.api(),
+        onMessageExternal: context.messenger.onMessageEx.api(),
 
         connect(extensionId, options) {
-          let { name = "" } = options || {};
-          extensionId = extensionId || extension.id;
-          return context.messenger.nm.connect({ name, extensionId });
+          let name = options?.name ?? "";
+          return context.messenger.connect({ name, extensionId });
         },
 
         sendMessage(...args) {
-          let extensionId, message, options, responseCallback;
-
-          if (typeof args[args.length - 1] === "function") {
-            responseCallback = args.pop();
-          }
-
-          function checkOptions(options) {
-            if (typeof options !== "object") {
-              return [
-                false,
-                "runtime.sendMessage's options argument is invalid",
-              ];
-            }
-
-            for (let key of Object.keys(options)) {
-              return [false, `Unexpected property ${key}`];
-            }
-
-            return [true, {}];
-          }
-
-          if (!args.length) {
-            return Promise.reject({
-              message: "runtime.sendMessage's message argument is missing",
-            });
-          } else if (args.length === 1) {
-            message = args[0];
-          } else if (args.length === 2) {
-            // With two optional arguments, this is the ambiguous case,
-            // particularly sendMessage("string", {} or null)
-            // Given that sending a message within the extension is generally
-            // more common than sending the empty object to another extension,
-            // we prefer that conclusion, as long as the second argument looks
-            // like valid options object, or is null/undefined.
-            let [validOpts] = checkOptions(args[1]);
-            if (validOpts || args[1] == null) {
-              [message, options] = args;
-            } else {
-              [extensionId, message] = args;
-            }
-          } else if (
-            args.length === 3 ||
-            (args.length === 4 && args[3] == null)
-          ) {
-            [extensionId, message, options] = args;
-          } else if (args.length === 4 && !responseCallback) {
-            return Promise.reject({
-              message: "runtime.sendMessage's last argument is not a function",
-            });
-          } else {
-            return Promise.reject({
-              message: "runtime.sendMessage received too many arguments",
-            });
-          }
-
-          if (extensionId != null && typeof extensionId !== "string") {
-            return Promise.reject({
-              message: "runtime.sendMessage's extensionId argument is invalid",
-            });
-          }
-
-          extensionId = extensionId || extension.id;
-          let recipient = { extensionId };
-
-          if (options != null) {
-            let [valid, arg] = checkOptions(options);
-            if (!valid) {
-              return Promise.reject({ message: arg });
-            }
-            Object.assign(recipient, arg);
-          }
-
-          return context.messenger.sendMessage(
-            context.messageManager,
-            message,
-            recipient,
-            responseCallback
-          );
+          let arg = parseBonkersArgs(...args);
+          return context.messenger.sendRuntimeMessage(arg);
         },
 
         connectNative(name) {
-          return context.messenger.nm.connect({ name, native: true });
+          return context.messenger.connect({ name, native: true });
         },
 
         sendNativeMessage(nativeApp, message) {
-          return context.messenger.nm.sendNativeMessage(nativeApp, message);
+          return context.messenger.sendNativeMessage(nativeApp, message);
         },
 
         get lastError() {

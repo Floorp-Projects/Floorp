@@ -71,6 +71,8 @@ function contentScript(token, id, otherId) {
 
     browser.runtime.sendMessage(`content-${token}`).then(resp => {
       browser.test.assertEq(`${token}-done`, resp, `${id}: Correct content script response token`);
+    }).catch(e => {
+      browser.test.fail(`content-${token} rejected with ${e.message}`);
     }),
   ]).then(() => {
     browser.test.assertTrue(gotContentMessage, `${id}: Got content script message`);
