@@ -1863,14 +1863,20 @@ void nsHttpChannel::UpdateAntiTrackingInfo() {
 
   AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(this);
 
-  // We only need to set FPD for top-level loads. FPD will automatically be
-  // propagated to non-top level loads via CookieJarSetting.
   if (mLoadInfo->GetExternalContentPolicyType() ==
       nsIContentPolicy::TYPE_DOCUMENT) {
     nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
     Unused << mLoadInfo->GetCookieJarSettings(
         getter_AddRefs(cookieJarSettings));
 
+    // Update the IsOnContentBlockingAllowList flag in the CookieJarSettings
+    // if this is a top level loading. For sub-document loading, this flag
+    // would inherit from the parent.
+    mozilla::net::CookieJarSettings::Cast(cookieJarSettings)
+        ->UpdateIsOnContentBlockingAllowList(this);
+
+    // We only need to set FPD for top-level loads. FPD will automatically be
+    // propagated to non-top level loads via CookieJarSetting.
     mozilla::net::CookieJarSettings::Cast(cookieJarSettings)
         ->SetFirstPartyDomain(mURI);
   }
