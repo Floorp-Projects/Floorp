@@ -140,6 +140,7 @@ sealed class Event {
     object NotificationDownloadTryAgain : Event()
     object NotificationMediaPlay : Event()
     object NotificationMediaPause : Event()
+    object TopSiteOpenDefault : Event()
     object TopSiteOpenInNewTab : Event()
     object TopSiteOpenInPrivateTab : Event()
     object TopSiteRemoved : Event()

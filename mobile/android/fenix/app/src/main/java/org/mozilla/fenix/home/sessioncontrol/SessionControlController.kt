@@ -27,6 +27,7 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.sessionsOfType
@@ -35,7 +36,6 @@ import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.Tab
-import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.settings.SupportUtils
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
@@ -128,7 +128,7 @@ interface SessionControlController {
     /**
      * @see [TopSiteInteractor.onSelectTopSite]
      */
-    fun handleSelectTopSite(url: String)
+    fun handleSelectTopSite(url: String, isDefault: Boolean)
 
     /**
      * @see [TabSessionInteractor.onShareTabs]
@@ -344,9 +344,10 @@ class DefaultSessionControlController(
         activity.openToBrowser(BrowserDirection.FromHome)
     }
 
-    override fun handleSelectTopSite(url: String) {
+    override fun handleSelectTopSite(url: String, isDefault: Boolean) {
         invokePendingDeleteJobs()
         metrics.track(Event.TopSiteOpenInNewTab)
+        if (isDefault) { metrics.track(Event.TopSiteOpenDefault) }
         if (url == SupportUtils.POCKET_TRENDING_URL) { metrics.track(Event.PocketTopSiteClicked) }
         activity.components.useCases.tabsUseCases.addTab.invoke(
             url = url,

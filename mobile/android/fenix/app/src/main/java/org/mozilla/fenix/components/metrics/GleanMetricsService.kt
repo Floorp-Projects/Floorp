@@ -471,6 +471,9 @@ private val Event.wrapper: EventWrapper<*>?
             { Logins.saveLoginsSettingChanged.record(it) },
             { Logins.saveLoginsSettingChangedKeys.valueOf(it) }
         )
+        is Event.TopSiteOpenDefault -> EventWrapper<NoExtraKeys>(
+            { TopSites.openDefault.record(it) }
+        )
         is Event.TopSiteOpenInNewTab -> EventWrapper<NoExtraKeys>(
             { TopSites.openInNewTab.record(it) }
         )

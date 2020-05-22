@@ -325,7 +325,11 @@ metrics:
     type: counter
     lifetime: application
     description: |
-      A counter that indicates how many top sites a user has
+      A counter that indicates how many top sites a user has. This value will
+      only be set if the user has at least *one* top site. If they have 0,
+      this ping will not get sent, resulting in a null value. To disambiguate
+      between a failed `top_sites_count` ping and 0 top sites, please see
+      `has_top_sites`.
     send_in_pings:
       - metrics
     bugs:
@@ -1841,6 +1845,17 @@ voice_search:
     expires: "2020-09-01"
 
 top_sites:
+  open_default:
+    type: event
+    description: |
+      A user opened a default top site
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/8125
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10752
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
   open_in_new_tab:
     type: event
     description: |

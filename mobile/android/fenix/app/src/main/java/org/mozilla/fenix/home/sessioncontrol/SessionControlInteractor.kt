@@ -201,8 +201,9 @@ interface TopSiteInteractor {
      * Selects the given top site. Called when a user clicks on a top site.
      *
      * @param url The URL of the top site.
+     * @param isDefault Whether or not the top site is a default one.
      */
-    fun onSelectTopSite(url: String)
+    fun onSelectTopSite(url: String, isDefault: Boolean)
 }
 
 /**
@@ -278,8 +279,8 @@ class SessionControlInteractor(
         controller.handleSelectTab(tabView, sessionId)
     }
 
-    override fun onSelectTopSite(url: String) {
-        controller.handleSelectTopSite(url)
+    override fun onSelectTopSite(url: String, isDefault: Boolean) {
+        controller.handleSelectTopSite(url, isDefault)
     }
 
     override fun onShareTabs() {

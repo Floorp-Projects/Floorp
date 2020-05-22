@@ -206,10 +206,26 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun handleSelectTopSite() {
+    fun handleSelectDefaultTopSite() {
         val topSiteUrl = "mozilla.org"
 
-        controller.handleSelectTopSite(topSiteUrl)
+        controller.handleSelectTopSite(topSiteUrl, true)
+        verify { invokePendingDeleteJobs() }
+        verify { metrics.track(Event.TopSiteOpenInNewTab) }
+        verify { metrics.track(Event.TopSiteOpenDefault) }
+        verify { tabsUseCases.addTab.invoke(
+            topSiteUrl,
+            selectTab = true,
+            startLoading = true
+        ) }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun handleSelectNonDefaultTopSite() {
+        val topSiteUrl = "mozilla.org"
+
+        controller.handleSelectTopSite(topSiteUrl, false)
         verify { invokePendingDeleteJobs() }
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { tabsUseCases.addTab.invoke(

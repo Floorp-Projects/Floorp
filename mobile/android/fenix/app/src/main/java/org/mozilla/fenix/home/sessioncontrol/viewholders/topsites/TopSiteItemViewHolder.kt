@@ -36,7 +36,7 @@ class TopSiteItemViewHolder(
         }
 
         top_site_item.setOnClickListener {
-            interactor.onSelectTopSite(topSite.url)
+            interactor.onSelectTopSite(topSite.url, topSite.isDefault)
         }
 
         top_site_item.setOnLongClickListener() {
