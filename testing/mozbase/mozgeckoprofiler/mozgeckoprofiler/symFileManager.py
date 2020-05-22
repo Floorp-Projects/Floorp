@@ -9,8 +9,9 @@ import re
 import threading
 import time
 from bisect import bisect
+from mozlog import get_proxy_logger
 
-from .symLogging import LogTrace, LogError, LogMessage
+LOG = get_proxy_logger('profiler')
 
 # Libraries to keep prefetched
 PREFETCHED_LIBS = ["xul.pdb", "firefox.pdb"]
@@ -82,7 +83,7 @@ class SymFileManager:
             self.sCacheLock.release()
 
         if libSymbolMap is None:
-            LogTrace(
+            LOG.debug(
                 "Need to fetch PDB file for " + libName + " " + breakpadId)
 
             # Guess the name of the .sym or .nmsym file on disk
@@ -103,11 +104,11 @@ class SymFileManager:
                     break
 
             if not libSymbolMap:
-                LogTrace("No matching sym files, tried " + str(symbolSources))
+                LOG.debug("No matching sym files, tried " + str(symbolSources))
                 return None
 
-            LogTrace("Storing libSymbolMap under [" + libName + "][" +
-                     breakpadId + "]")
+            LOG.debug("Storing libSymbolMap under [" + libName + "][" +
+                      breakpadId + "]")
             self.sCacheLock.acquire()
             try:
                 self.MaybeEvict(libSymbolMap.GetEntryCount())
@@ -116,8 +117,8 @@ class SymFileManager:
                 self.sCache[libName][breakpadId] = libSymbolMap
                 self.sCacheCount += libSymbolMap.GetEntryCount()
                 self.UpdateMruList(libName, breakpadId)
-                LogTrace(str(self.sCacheCount) +
-                         " symbols in cache after fetching symbol file")
+                LOG.debug(str(self.sCacheCount) +
+                          " symbols in cache after fetching symbol file")
             finally:
                 self.sCacheLock.release()
 
@@ -127,10 +128,10 @@ class SymFileManager:
         try:
             symFile = open(path, "r")
         except Exception as e:
-            LogTrace("Error opening file " + path + ": " + str(e))
+            LOG.debug("Error opening file " + path + ": " + str(e))
             return None
 
-        LogMessage("Parsing SYM file at " + path)
+        LOG.debug("Parsing SYM file at " + path)
 
         try:
             symbolMap = {}
@@ -144,7 +145,7 @@ class SymFileManager:
                         line = line.rstrip()
                         fields = line.split(" ")
                         if len(fields) < 4:
-                            LogTrace("Line " + str(lineNum) + " is messed")
+                            LOG.debug("Line " + str(lineNum) + " is messed")
                             continue
                         if fields[1] == "m":
                             address = int(fields[2], 16)
@@ -157,7 +158,7 @@ class SymFileManager:
                         line = line.rstrip()
                         fields = line.split(" ")
                         if len(fields) < 5:
-                            LogTrace("Line " + str(lineNum) + " is messed")
+                            LOG.debug("Line " + str(lineNum) + " is messed")
                             continue
                         if fields[1] == "m":
                             address = int(fields[2], 16)
@@ -186,14 +187,14 @@ class SymFileManager:
                     symbolMap[address] = symbol
                     publicCount += 1
         except Exception:
-            LogError("Error parsing SYM file " + path)
+            LOG.error("Error parsing SYM file " + path)
             return None
 
         logString = "Found " + \
             str(len(symbolMap.keys())) + " unique entries from "
         logString += str(publicCount) + " PUBLIC lines, " + \
             str(funcCount) + " FUNC lines"
-        LogTrace(logString)
+        LOG.debug(logString)
 
         return SymbolInfo(symbolMap)
 
@@ -201,7 +202,7 @@ class SymFileManager:
         """This method runs in a loop. Use the options "prefetchThreshold" to adjust"""
         global PREFETCHED_LIBS
 
-        LogMessage("Prefetching recent symbol files")
+        LOG.info("Prefetching recent symbol files")
         # Schedule next timer callback
         interval = self.sOptions['prefetchInterval'] * 60 * 60
         self.sCallbackTimer = threading.Timer(
@@ -225,10 +226,10 @@ class SymFileManager:
                         symDirsToInspect[pdbName].append(
                             (mtime, candidatePath))
             except Exception as e:
-                LogError("Error while pre-fetching: " + str(e))
+                LOG.error("Error while pre-fetching: " + str(e))
 
-            LogMessage("Found " + str(len(symDirsToInspect[pdbName])) +
-                       " new " + pdbName + " recent dirs")
+            LOG.info("Found " + str(len(symDirsToInspect[pdbName])) +
+                     " new " + pdbName + " recent dirs")
 
             # Only prefetch the most recent N entries
             symDirsToInspect[pdbName].sort(reverse=True)
@@ -270,8 +271,8 @@ class SymFileManager:
                     fetchedSymbols[(pdbName, pdbId)] = symbolInfo
                     fetchedCount += symbolInfo.GetEntryCount()
                 else:
-                    LogError("Couldn't fetch .sym file symbols for " +
-                             symbolFilePath)
+                    LOG.error("Couldn't fetch .sym file symbols for " +
+                              symbolFilePath)
                     continue
 
         # Insert new symbols into global symbol cache
@@ -297,7 +298,7 @@ class SymFileManager:
         finally:
             self.sCacheLock.release()
 
-        LogMessage("Finished prefetching recent symbol files")
+        LOG.info("Finished prefetching recent symbol files")
 
     def UpdateMruList(self, pdbName, pdbId):
         libId = (pdbName, pdbId)
@@ -307,8 +308,8 @@ class SymFileManager:
 
     def MaybeEvict(self, freeEntriesNeeded):
         maxCacheSize = self.sOptions["maxCacheEntries"]
-        LogTrace("Cache occupancy before MaybeEvict: " +
-                 str(self.sCacheCount) + "/" + str(maxCacheSize))
+        LOG.debug("Cache occupancy before MaybeEvict: " +
+                  str(self.sCacheCount) + "/" + str(maxCacheSize))
 
         if self.sCacheCount == 0 or \
                 self.sCacheCount + freeEntriesNeeded <= maxCacheSize:
@@ -335,5 +336,5 @@ class SymFileManager:
 
             numToEvict -= evicteeCount
 
-        LogTrace("Cache occupancy after MaybeEvict: " +
-                 str(self.sCacheCount) + "/" + str(maxCacheSize))
+        LOG.debug("Cache occupancy after MaybeEvict: " +
+                  str(self.sCacheCount) + "/" + str(maxCacheSize))

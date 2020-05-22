@@ -12,13 +12,14 @@ import socket
 import sys
 import urllib
 
-from mozlog import commandline, get_default_logger
+from mozlog import commandline, get_proxy_logger
 from mozlog.commandline import add_logging_group
 
 import SocketServer
 import SimpleHTTPServer
 
 here = os.path.abspath(os.path.dirname(__file__))
+LOG = get_proxy_logger('profiler')
 
 
 class ProfileServingHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -34,7 +35,6 @@ class ViewGeckoProfile(object):
     """Container class for ViewGeckoProfile"""
 
     def __init__(self, gecko_profile_data_path):
-        self.log = get_default_logger(component='view-gecko-profile')
         self.gecko_profile_data_path = gecko_profile_data_path
         self.gecko_profile_dir = os.path.dirname(gecko_profile_data_path)
         self.profiler_url = "https://profiler.firefox.com/from-url/"
@@ -54,7 +54,6 @@ class ViewGeckoProfile(object):
         os.chdir(self.gecko_profile_dir)
         self.httpd = SocketServer.TCPServer((self.host, self.port),
                                             ProfileServingHTTPRequestHandler)
-        self.log.info("File server started at: %s:%s" % (self.host, self.port))
 
     def handle_single_request(self):
         self.httpd.handle_request()
@@ -63,20 +62,15 @@ class ViewGeckoProfile(object):
 
     def encode_url(self):
         # Encode url i.e.: https://profiler.firefox.com/from-url/http...
-        url = "http://{}:{}/{}".format(self.host, self.port,
-                                       os.basename(self.gecko_profile_data_path))
-        self.log.info("raw url is:")
-        self.log.info(url)
-        encoded_url = urllib.quote(url, safe='')
-        self.log.info('encoded url is:')
-        self.log.info(encoded_url)
-        self.profiler_url = self.profiler_url + encoded_url
-        self.log.info('full url is:')
-        self.log.info(self.profiler_url)
+        file_url = "http://{}:{}/{}".format(self.host, self.port,
+                                            os.path.basename(self.gecko_profile_data_path))
+
+        self.profiler_url = self.profiler_url + urllib.quote(file_url, safe='')
+        LOG.info("Temporarily serving the profile from: %s" % file_url)
 
     def open_profile_in_browser(self):
         # Open the file in the user's preferred browser.
-        self.log.info("Opening the profile data in profiler.firefox.com...")
+        LOG.info("Opening the profile: %s" % self.profiler_url)
         import webbrowser
         webbrowser.open_new_tab(self.profiler_url)
 
