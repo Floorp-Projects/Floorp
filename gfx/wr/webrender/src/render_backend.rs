@@ -1283,9 +1283,8 @@ impl RenderBackend {
                 info!("Recycling stats: {:?}", self.recycler);
                 return RenderBackendStatus::ShutDown(sender);
             }
-            ApiMsg::UpdateDocuments(document_ids, transaction_msgs) => {
+            ApiMsg::UpdateDocuments(transaction_msgs) => {
                 self.prepare_transactions(
-                    document_ids,
                     transaction_msgs,
                     frame_counter,
                     profile_counters,
@@ -1318,34 +1317,19 @@ impl RenderBackend {
 
     fn prepare_transactions(
         &mut self,
-        document_ids: Vec<DocumentId>,
-        mut transaction_msgs: Vec<TransactionMsg>,
+        txns: Vec<Box<TransactionMsg>>,
         frame_counter: &mut u32,
         profile_counters: &mut BackendProfileCounters,
     ) {
-        let mut use_scene_builder = transaction_msgs.iter()
+        let mut use_scene_builder = txns.iter()
             .any(|transaction_msg| transaction_msg.use_scene_builder_thread);
-        let use_high_priority = transaction_msgs.iter()
+        let use_high_priority = txns.iter()
             .any(|transaction_msg| !transaction_msg.low_priority);
 
-        let txns : Vec<Box<Transaction>> = document_ids.iter().zip(transaction_msgs.drain(..))
-            .map(|(&document_id, transaction_msg)| {
-                Box::new(Transaction {
-                    document_id,
-                    resource_updates: transaction_msg.resource_updates,
-                    frame_ops: transaction_msg.frame_ops,
-                    scene_ops: transaction_msg.scene_ops,
-                    rasterized_blobs: Vec::new(),
-                    notifications: transaction_msg.notifications,
-                    render_frame: transaction_msg.generate_frame,
-                    invalidate_rendered_frame: transaction_msg.invalidate_rendered_frame,
-                    blob_requests: transaction_msg.blob_requests,
-                    blob_rasterizer: transaction_msg.blob_rasterizer,
-                })
-            }).collect();
-
         use_scene_builder = use_scene_builder || txns.iter().any(|txn| {
-            !txn.can_skip_scene_builder() || txn.blob_rasterizer.is_some()
+            !txn.scene_ops.is_empty()
+                || !txn.blob_requests.is_empty()
+                || txn.blob_rasterizer.is_some()
         });
 
         if !use_scene_builder {
@@ -1362,7 +1346,7 @@ impl RenderBackend {
                     txn.resource_updates.take(),
                     txn.frame_ops.take(),
                     txn.notifications.take(),
-                    txn.render_frame,
+                    txn.generate_frame,
                     txn.invalidate_rendered_frame,
                     frame_counter,
                     profile_counters,

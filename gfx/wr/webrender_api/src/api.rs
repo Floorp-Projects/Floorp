@@ -396,8 +396,9 @@ impl Transaction {
         self.frame_ops
     }
 
-    fn finalize(self) -> TransactionMsg {
-        TransactionMsg {
+    fn finalize(self, document_id: DocumentId) -> Box<TransactionMsg> {
+        Box::new(TransactionMsg {
+            document_id,
             scene_ops: self.scene_ops,
             frame_ops: self.frame_ops,
             resource_updates: self.resource_updates,
@@ -409,7 +410,7 @@ impl Transaction {
             blob_rasterizer: None,
             blob_requests: Vec::new(),
             rasterized_blobs: Vec::new(),
-        }
+        })
     }
 
     /// See `ResourceUpdate::AddImage`.
@@ -566,6 +567,8 @@ pub struct DocumentTransaction {
 
 /// Represents a transaction in the format sent through the channel.
 pub struct TransactionMsg {
+    ///
+    pub document_id: DocumentId,
     /// Changes that require re-building the scene.
     pub scene_ops: Vec<SceneMsg>,
     /// Changes to animated properties that do not require re-building the scene.
@@ -981,7 +984,7 @@ pub enum ApiMsg {
     /// Adds a new document with given initial size.
     AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
     /// A message targeted at a particular document.
-    UpdateDocuments(Vec<DocumentId>, Vec<TransactionMsg>),
+    UpdateDocuments(Vec<Box<TransactionMsg>>),
     /// Deletes an existing document.
     DeleteDocument(DocumentId),
     /// An opaque handle that must be passed to the render notifier. It is used by Gecko
@@ -1588,8 +1591,9 @@ impl RenderApi {
     }
 
     /// Creates a transaction message from a single frame message.
-    fn frame_message(&self, msg: FrameMsg) -> TransactionMsg {
-        TransactionMsg {
+    fn frame_message(&self, msg: FrameMsg, document_id: DocumentId) -> Box<TransactionMsg> {
+        Box::new(TransactionMsg {
+            document_id,
             scene_ops: Vec::new(),
             frame_ops: vec![msg],
             resource_updates: Vec::new(),
@@ -1601,12 +1605,13 @@ impl RenderApi {
             blob_rasterizer: None,
             blob_requests: Vec::new(),
             rasterized_blobs: Vec::new(),
-        }
+        })
     }
 
     /// Creates a transaction message from a single scene message.
-    fn scene_message(&self, msg: SceneMsg) -> TransactionMsg {
-        TransactionMsg {
+    fn scene_message(&self, msg: SceneMsg, document_id: DocumentId) -> Box<TransactionMsg> {
+        Box::new(TransactionMsg {
+            document_id,
             scene_ops: vec![msg],
             frame_ops: Vec::new(),
             resource_updates: Vec::new(),
@@ -1618,7 +1623,7 @@ impl RenderApi {
             blob_rasterizer: None,
             blob_requests: Vec::new(),
             rasterized_blobs: Vec::new(),
-        }
+        })
     }
 
     /// A helper method to send document messages.
@@ -1627,7 +1632,7 @@ impl RenderApi {
         // `RenderApi` instances for layout and compositor.
         //assert_eq!(document_id.0, self.namespace_id);
         self.api_sender
-            .send(ApiMsg::UpdateDocuments(vec![document_id], vec![self.scene_message(msg)]))
+            .send(ApiMsg::UpdateDocuments(vec![self.scene_message(msg, document_id)]))
             .unwrap()
     }
 
@@ -1637,32 +1642,32 @@ impl RenderApi {
         // `RenderApi` instances for layout and compositor.
         //assert_eq!(document_id.0, self.namespace_id);
         self.api_sender
-            .send(ApiMsg::UpdateDocuments(vec![document_id], vec![self.frame_message(msg)]))
+            .send(ApiMsg::UpdateDocuments(vec![self.frame_message(msg, document_id)]))
             .unwrap()
     }
 
     /// Send a transaction to WebRender.
     pub fn send_transaction(&mut self, document_id: DocumentId, transaction: Transaction) {
-        let mut transaction = transaction.finalize();
+        let mut transaction = transaction.finalize(document_id);
 
         self.resources.update(&mut transaction);
 
-        self.api_sender.send(ApiMsg::UpdateDocuments(vec![document_id], vec![transaction])).unwrap();
+        self.api_sender.send(ApiMsg::UpdateDocuments(vec![transaction])).unwrap();
     }
 
     /// Send multiple transactions.
     pub fn send_transactions(&mut self, document_ids: Vec<DocumentId>, mut transactions: Vec<Transaction>) {
         debug_assert!(document_ids.len() == transactions.len());
-        let msgs = transactions.drain(..)
-            .map(|txn| {
-                let mut txn = txn.finalize();
+        let msgs = transactions.drain(..).zip(document_ids)
+            .map(|(txn, id)| {
+                let mut txn = txn.finalize(id);
                 self.resources.update(&mut txn);
 
                 txn
             })
             .collect();
 
-        self.api_sender.send(ApiMsg::UpdateDocuments(document_ids, msgs)).unwrap();
+        self.api_sender.send(ApiMsg::UpdateDocuments(msgs)).unwrap();
     }
 
     /// Does a hit test on display items in the specified document, at the given

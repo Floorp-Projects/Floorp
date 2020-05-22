@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImageResult};
+use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageResult};
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, SceneMsg, ResourceUpdate, ExternalEvent};
-use api::{NotificationRequest, Checkpoint, IdNamespace, QualitySettings};
+use api::{NotificationRequest, Checkpoint, IdNamespace, QualitySettings, TransactionMsg};
 use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind, SharedFontInstanceMap};
 use api::{DocumentLayer, GlyphDimensionRequest, GlyphIndexRequest};
 use api::units::*;
@@ -51,36 +51,16 @@ pub struct TransactionTimings {
     pub display_list_len: usize,
 }
 
-/// Represents the work associated to a transaction before scene building.
-pub struct Transaction {
-    pub document_id: DocumentId,
-    pub blob_requests: Vec<BlobImageParams>,
-    pub blob_rasterizer: Option<Box<dyn AsyncBlobImageRasterizer>>,
-    pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
-    pub resource_updates: Vec<ResourceUpdate>,
-    pub frame_ops: Vec<FrameMsg>,
-    pub scene_ops: Vec<SceneMsg>,
-    pub notifications: Vec<NotificationRequest>,
-    pub render_frame: bool,
-    pub invalidate_rendered_frame: bool,
-}
+fn rasterize_blobs(txn: &mut TransactionMsg, is_low_priority: bool) {
+    profile_scope!("rasterize_blobs");
 
-impl Transaction {
-    pub fn can_skip_scene_builder(&self) -> bool {
-        self.scene_ops.is_empty() && self.blob_requests.is_empty()
-    }
-
-    fn rasterize_blobs(&mut self, is_low_priority: bool) {
-        profile_scope!("rasterize_blobs");
-
-        if let Some(ref mut rasterizer) = self.blob_rasterizer {
-            let mut rasterized_blobs = rasterizer.rasterize(&self.blob_requests, is_low_priority);
-            // try using the existing allocation if our current list is empty
-            if self.rasterized_blobs.is_empty() {
-                self.rasterized_blobs = rasterized_blobs;
-            } else {
-                self.rasterized_blobs.append(&mut rasterized_blobs);
-            }
+    if let Some(ref mut rasterizer) = txn.blob_rasterizer {
+        let mut rasterized_blobs = rasterizer.rasterize(&txn.blob_requests, is_low_priority);
+        // try using the existing allocation if our current list is empty
+        if txn.rasterized_blobs.is_empty() {
+            txn.rasterized_blobs = rasterized_blobs;
+        } else {
+            txn.rasterized_blobs.append(&mut rasterized_blobs);
         }
     }
 }
@@ -119,7 +99,7 @@ pub struct LoadScene {
 
 // Message from render backend to scene builder.
 pub enum SceneBuilderRequest {
-    Transactions(Vec<Box<Transaction>>),
+    Transactions(Vec<Box<TransactionMsg>>),
     ExternalEvent(ExternalEvent),
     AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
     DeleteDocument(DocumentId),
@@ -604,7 +584,7 @@ impl SceneBuilderThread {
     }
 
     /// Do the bulk of the work of the scene builder thread.
-    fn process_transaction(&mut self, txn: &mut Transaction) -> Box<BuiltTransaction> {
+    fn process_transaction(&mut self, txn: &mut TransactionMsg) -> Box<BuiltTransaction> {
         profile_scope!("process_transaction");
 
         if let Some(ref hooks) = self.hooks {
@@ -733,7 +713,7 @@ impl SceneBuilderThread {
         let scene_build_end_time = precise_time_ns();
 
         let is_low_priority = false;
-        txn.rasterize_blobs(is_low_priority);
+        rasterize_blobs(txn, is_low_priority);
 
         if let Some(timings) = timings.as_mut() {
             timings.blob_rasterization_end_time_ns = precise_time_ns();
@@ -753,7 +733,7 @@ impl SceneBuilderThread {
 
         Box::new(BuiltTransaction {
             document_id: txn.document_id,
-            render_frame: txn.render_frame,
+            render_frame: txn.generate_frame,
             invalidate_rendered_frame: txn.invalidate_rendered_frame,
             built_scene,
             view: doc.view,
@@ -872,7 +852,7 @@ impl LowPrioritySceneBuilderThread {
         loop {
             match self.rx.recv() {
                 Ok(SceneBuilderRequest::Transactions(mut txns)) => {
-                    let txns : Vec<Box<Transaction>> = txns.drain(..)
+                    let txns : Vec<Box<TransactionMsg>> = txns.drain(..)
                         .map(|txn| self.process_transaction(txn))
                         .collect();
                     self.tx.send(SceneBuilderRequest::Transactions(txns)).unwrap();
@@ -900,9 +880,9 @@ impl LowPrioritySceneBuilderThread {
         }
     }
 
-    fn process_transaction(&mut self, mut txn: Box<Transaction>) -> Box<Transaction> {
+    fn process_transaction(&mut self, mut txn: Box<TransactionMsg>) -> Box<TransactionMsg> {
         let is_low_priority = true;
-        txn.rasterize_blobs(is_low_priority);
+        rasterize_blobs(&mut txn, is_low_priority);
         txn.blob_requests = Vec::new();
 
         if self.simulate_slow_ms > 0 {
