@@ -6,15 +6,20 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -25,6 +30,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -70,10 +76,25 @@ class ThreeDotMenuMainRobot {
             Until.findObject(By.desc("Bookmark")),
             waitingTime
         )
-        addBookmarkButton().click()
-        // wait for main menu to disappear
-        mDevice.waitNotNull(
-            Until.gone(By.res("mozac_browser_menu_recyclerView"))
+        addBookmarkButton().perform(
+            click(
+                /* no-op rollback action for when clicks randomly perform a long click, Espresso should attempt to click again
+                https://issuetracker.google.com/issues/37078920#comment9
+                */
+                object : ViewAction {
+                    override fun getDescription(): String {
+                        return "Handle tap->longclick."
+                    }
+
+                    override fun getConstraints(): Matcher<View> {
+                        return isAssignableFrom(View::class.java)
+                    }
+
+                    override fun perform(uiController: UiController?, view: View?) {
+                        // do nothing
+                    }
+                }
+            )
         )
     }
 
