@@ -27,12 +27,14 @@ exclude: true
   ([bug 1622500]({{bugzilla}}1622500))
 - Added [`NavigationDelegate.onSubframeLoadRequest`][78.5] to allow intercepting
   non-top-level navigations.
+- Added [`BeforeUnloadPrompt`][78.6] to respond to prompts from onbeforeunload.
 
 [78.1]: {{javadoc_uri}}/WebExtensionController.html#installBuiltIn-java.lang.String-
 [78.2]: {{javadoc_uri}}/ContentBlocking.CookieBehavior.html#ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
 [78.3]: {{javadoc_uri}}/WebExtension.CreateTabDetails.html
 [78.4]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/contextualIdentities
 [78.5]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onSubframeLoadRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest-
+[78.6]: {{javadoc_uri}}/GeckoSession.PromptDelegate.BeforeUnloadPrompt.html
 
 ## v77
 - Added [`GeckoRuntime.appendAppNotesToCrashReport`][77.1] For adding app notes to the crash report.
@@ -696,4 +698,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: bde8001c948235193636d0d21f684baeb551e739
+[api-version]: f23cb7b15d085f0c3a9be06fe2281b0ffd9adf1e

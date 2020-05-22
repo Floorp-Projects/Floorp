@@ -18,6 +18,8 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.InputType;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -118,6 +120,37 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
     public GeckoResult<PromptResponse> onSharePrompt(final GeckoSession session,
                                                      final SharePrompt prompt) {
         return GeckoResult.fromValue(prompt.dismiss());
+    }
+
+    @Nullable
+    @Override
+    public GeckoResult<PromptResponse> onBeforeUnloadPrompt(final GeckoSession session,
+                                                            final BeforeUnloadPrompt prompt) {
+        final Activity activity = mActivity;
+        if (activity == null) {
+            return GeckoResult.fromValue(prompt.dismiss());
+        }
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity)
+                .setTitle(R.string.before_unload_title)
+                .setMessage(R.string.before_unload_message);
+
+        GeckoResult<PromptResponse> res = new GeckoResult<>();
+
+        final DialogInterface.OnClickListener listener = (dialog, which) -> {
+            if (which == DialogInterface.BUTTON_POSITIVE) {
+                res.complete(prompt.confirm(AllowOrDeny.ALLOW));
+            } else if (which == DialogInterface.BUTTON_NEGATIVE) {
+                res.complete(prompt.confirm(AllowOrDeny.DENY));
+            } else {
+                res.complete(prompt.dismiss());
+            }
+        };
+
+        builder.setPositiveButton(R.string.before_unload_leave_page, listener);
+        builder.setNegativeButton(R.string.before_unload_stay, listener);
+
+        createStandardDialog(builder, prompt, res).show();
+        return res;
     }
 
     private int getViewPadding(final AlertDialog.Builder builder) {

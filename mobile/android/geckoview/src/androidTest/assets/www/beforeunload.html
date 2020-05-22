@@ -1,0 +1,11 @@
+<!DOCTYPE html><html>
+<body onbeforeunload="return beforeUnload()">
+  <a id=navigateAway href="./hello.html">Click Me</a>
+  <a id=navigateAway2 href="./hello2.html">Click Me</a>
+  <script>
+    function beforeUnload() {
+      return "Please don't leave.";
+    }
+  </script>
+</body>
+</html>

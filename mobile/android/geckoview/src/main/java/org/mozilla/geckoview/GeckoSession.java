@@ -2640,6 +2640,12 @@ public class GeckoSession implements Parcelable {
                 res = delegate.onAlertPrompt(session, prompt);
                 break;
             }
+            case "beforeUnload": {
+                final PromptDelegate.BeforeUnloadPrompt prompt =
+                    new PromptDelegate.BeforeUnloadPrompt();
+                res = delegate.onBeforeUnloadPrompt(session, prompt);
+                break;
+            }
             case "button": {
                 final PromptDelegate.ButtonPrompt prompt =
                     new PromptDelegate.ButtonPrompt(title, msg);
@@ -3873,6 +3879,30 @@ public class GeckoSession implements Parcelable {
         }
 
         /**
+         * BeforeUnloadPrompt represents the onbeforeunload prompt.
+         * See https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onbeforeunload
+         */
+        class BeforeUnloadPrompt extends BasePrompt {
+            protected BeforeUnloadPrompt() {
+                super(null);
+            }
+
+            /**
+             * Confirms the prompt.
+             *
+             * @param allowOrDeny whether the navigation should be allowed to continue or not.
+             *
+             * @return A {@link PromptResponse} which can be used to complete
+             *         the {@link GeckoResult} associated with this prompt.
+             */
+            @UiThread
+            public @NonNull PromptResponse confirm(final @Nullable AllowOrDeny allowOrDeny) {
+                ensureResult().putBoolean("allow", allowOrDeny != AllowOrDeny.DENY);
+                return super.confirm();
+            }
+        }
+
+        /**
          * AlertPrompt contains the information necessary to represent a JavaScript
          * alert() call from content; it can only be dismissed, not confirmed.
          */
@@ -4829,6 +4859,14 @@ public class GeckoSession implements Parcelable {
         @UiThread
         default @Nullable GeckoResult<PromptResponse> onAlertPrompt(@NonNull final GeckoSession session,
                                                                     @NonNull final AlertPrompt prompt) {
+            return null;
+        }
+
+        @UiThread
+        default @Nullable GeckoResult<PromptResponse> onBeforeUnloadPrompt(
+                @NonNull final GeckoSession session,
+                @NonNull final BeforeUnloadPrompt prompt
+        ) {
             return null;
         }
 
