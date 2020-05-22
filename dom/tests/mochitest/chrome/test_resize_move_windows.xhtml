@@ -243,11 +243,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
           'width=170,height=170,screenX=25,screenY=25');
 
         SimpleTest.waitForFocus(function() {
-          // This test relies on passing cross-origin windows to a chrome function,
-          // which is generally forbidden if we don't twiddle the knob below.
-          Cu.forcePermissiveCOWs();
           w.wrappedJSObject.ok = SimpleTest.ok;
-          w.wrappedJSObject.checkChangeIsEnabled = window.checkChangeIsEnabled;
+          Cu.exportFunction(window.checkChangeIsEnabled, w, {defineAs: "checkChangeIsEnabled"});
           w.wrappedJSObject.check(function() {
             // The current window can change the size and position of the created one.
             checkChangeIsEnabled(w, function() {
@@ -262,8 +259,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
                 "} <\/script>", '', '');
 
               SimpleTest.waitForFocus(function() {
-                 w.wrappedJSObject.checkChangeIsEnabled = window.checkChangeIsEnabled;
-                 w.wrappedJSObject.check(function() {
+                Cu.exportFunction(window.checkChangeIsEnabled, w, {defineAs: "checkChangeIsEnabled"});
+                w.wrappedJSObject.check(function() {
                   // The current window can change the size and position of the new tab.
                   // Because we are in a chrome context.
                   checkChangeIsEnabled(w, function() {
