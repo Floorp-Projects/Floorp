@@ -51,8 +51,6 @@
     <attr name="addOnPrivateBrowsingInteriorIconBackground" format="reference"/>
 
     <!-- Tab tray -->
-    <attr name="tabTrayItemText" format="reference"/>
-    <attr name="tabTrayItemUrl" format="reference" />
     <attr name="tabTrayItemBackground" format="reference" />
     <attr name="tabTrayItemSelectedBackground" format="reference" />
     <attr name="tabTrayToolbarBackground" format="reference" />

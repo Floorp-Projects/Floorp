@@ -73,8 +73,6 @@
         <item name="addOnPrivateBrowsingExteriorCircleBackground">@color/add_on_private_browsing_exterior_circle_background_normal_theme</item>
         <item name="addOnPrivateBrowsingInteriorIconBackground">@color/add_on_private_browsing_interior_icon_background_normal_theme</item>
 
-        <item name="tabTrayItemText">@color/tab_tray_item_text_normal_theme</item>
-        <item name="tabTrayItemUrl">@color/tab_tray_item_url_normal_theme</item>
         <item name="tabTrayItemBackground">@color/tab_tray_item_background_normal_theme</item>
         <item name="tabTrayItemSelectedBackground">@color/tab_tray_item_selected_background_normal_theme</item>
         <item name="tabTrayToolbarBackground">@color/tab_tray_toolbar_background_normal_theme</item>
@@ -198,9 +196,7 @@
         <item name="addOnPrivateBrowsingInteriorIconBackground">@color/add_on_private_browsing_interior_icon_background_private_theme</item>
 
         <!-- Tab Tray -->
-        <item name="tabTrayItemText">@color/tab_tray_item_text_private_theme</item>
-        <item name="tabTrayItemUrl">@color/tab_tray_item_url_private_theme</item>
-        <item name="tabTrayItemBackground">@color/tab_tray_item_background_private_theme</item>
+        <item name="tabTrayItemBackground">@color/tab_tray_item_background_normal_theme</item>
         <item name="tabTrayItemSelectedBackground">@color/tab_tray_item_selected_background_private_theme</item>
         <item name="tabTrayToolbarBackground">@color/tab_tray_toolbar_background_private_theme</item>
         <item name="tabTrayItemDivider">@color/tab_tray_item_divider_private_theme</item>
