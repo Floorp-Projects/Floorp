@@ -1140,35 +1140,41 @@ def check_for_midl(target, compile_environment):
 midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True,
                   paths=sdk_bin_path)
 
+option(env='MIDL_FLAGS', nargs=1, help='Extra flags to pass to MIDL')
 
-@depends(c_compiler, target, host,
+@depends('MIDL_FLAGS', c_compiler, target, host, midl,
          when=depends(midl, target)(lambda m, t: m and t.kernel == 'WINNT'))
-@imports(_from='mozbuild.shellutil', _import='quote')
-def midl_flags(c_compiler, target, host):
-    if c_compiler and c_compiler.type == 'clang-cl':
+def midl_flags(flags , c_compiler, target, host, midl):
+    if flags:
+        flags = flags[0].split()
+    else:
+        flags = []
+
+    if not midl.endswith('widl'):
         env = {
             'x86': 'win32',
             'x86_64': 'x64',
             'aarch64': 'arm64',
         }[target.cpu]
-        flags = ['-env', env]
+        flags += ['-env', env]
 
         if host.os == 'WINNT':
             return flags + ['-cpp_cmd', c_compiler.compiler]
-        else:
-            # If cross-compiling, for now, we'll assume we can find the
-            # Windows version of clang-cl in the PATH. It is required because
-            # while Wine is able to spawn Linux processes from Windows
-            # programs(!), the calling program doesn't have access to the process
-            # output and can't wait for it to finish. Midl runs clang-cl as
-            # a preprocessor and expects to read its output...
-            clang_cl_exe = find_program('clang-cl.exe')
-            if not clang_cl_exe:
-                die("Cannot find clang-cl.exe")
-            return flags + ['-cpp_cmd', clang_cl_exe]
 
-    # mingw
-    return {
+        # If cross-compiling and using midl instead of widl, for now, we'll
+        # assume we can find the Windows version of clang-cl in the PATH.
+        # It is required because while Wine is able to spawn Linux
+        # processes from Windows programs(!), the calling program doesn't
+        # have access to the process output and can't wait for it to
+        # finish. Midl runs clang-cl as a preprocessor and expects to read
+        # its output...
+        clang_cl_exe = find_program('clang-cl.exe')
+        if not clang_cl_exe:
+            die("Cannot find clang-cl.exe")
+        return flags + ['-cpp_cmd', clang_cl_exe]
+
+    # widl
+    return flags + {
         'x86': ['--win32', '-m32'],
         'x86_64': ['--win64', '-m64'],
     }[target.cpu]
