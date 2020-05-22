@@ -1706,6 +1706,12 @@ toolbar#nav-bar {
             # not enabled. The two are not compatible.
             browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leak_report_file
 
+        if options.profiler or options.profilerNoOpen:
+            # Turn on the gecko profiler by using the startup profiling environmental
+            # variables.
+            browserEnv["MOZ_PROFILER_STARTUP"] = "1"
+            browserEnv["MOZ_PROFILER_SHUTDOWN"] = "mochitest-profile.json"
+
         try:
             gmp_path = self.getGMPPluginPath(options)
             if gmp_path is not None:
@@ -2693,6 +2699,21 @@ toolbar#nav-bar {
             print("4 INFO Mode:    %s" % e10s_mode)
             print("5 INFO SimpleTest FINISHED")
 
+        # If shutdown profiling was enabled, then the user will want to access the
+        # performance profile. The following code with display helpful log messages
+        # and automatically open the profile if it is requested.
+        profilerShutdownPath = self.browserEnv["MOZ_PROFILER_SHUTDOWN"]
+        if profilerShutdownPath:
+            from mozbuild.base import MozbuildObject
+            build = MozbuildObject.from_environment()
+            profile_path = os.path.join(build.topobjdir, '_tests/testing/mochitest',
+                                        profilerShutdownPath)
+
+            print("TEST-INFO | Shutdown profiling was enabled")
+            print("TEST-INFO | Profile saved locally to: %s" % profile_path)
+
+            view_gecko_profile_from_mochitest(profile_path, options)
+
         if not result:
             if self.countfail or \
                not (self.countpass or self.counttodo):
@@ -3188,3 +3209,63 @@ def cli(args=sys.argv[1:]):
 
 if __name__ == "__main__":
     sys.exit(cli())
+
+
+def view_gecko_profile_from_mochitest(profile_path, options):
+    """Getting shutdown performance profiles from just the command line arguments is
+    difficult. This function makes the developer ergonomics a bit easier by taking the
+    generated Gecko profile, and automatically serving it to profiler.firefox.com. The
+    Gecko profile during shutdown is dumped to disk at:
+
+    {objdir}/_tests/testing/mochitest/{profilename}
+
+    This function takes that file, and launches a local webserver, and then points
+    a browser to profiler.firefox.com to view it. From there it's easy to publish
+    or save the profile.
+    """
+
+    if options.profilerNoOpen:
+        # The user did not want this to automatically open, only share the location.
+        return
+
+    if not os.path.exists(profile_path):
+        print("\tNo profile was found at the profile path, cannot launch profiler.firefox.com.")
+        return
+
+    # Create the path for the view-gecko-profile tool, it's in the repo's
+    # testing/tools folder.
+    repo_dir = options.topsrcdir
+    if repo_dir is None:
+        print("Unable to find the topsrcdir, cannot launch profiler.firefox.com.")
+        return
+
+    script_path = os.path.join(repo_dir, 'testing', 'tools',
+                               'view_gecko_profile', 'view_gecko_profile.py')
+    if not os.path.exists(script_path):
+        print("Unable to find the view-gecko-profile.py tool, cannot launch profiler.firefox.com.")
+        return
+
+    command = ['python',
+               script_path,
+               '-p', profile_path]
+
+    print('TEST-INFO | Loading this profile in profiler.firefox.com')
+    print(command)
+
+    # if the view-gecko-profile tool fails to launch for some reason, we don't
+    # want to crash the mochitest just dump the error and finish up the mochitest
+    # as usual
+    try:
+        view_profile = subprocess.Popen(command)
+        # that will leave it running in own instance and let the mochitest finish up
+    except Exception as e:
+        print("Failed to launch the view-gecko-profile.py tool, exeption: %s" % e)
+        return
+
+    # This sleep was taken from the Talos implementation of this function.
+    time.sleep(5)
+    ret = view_profile.poll()
+    if ret is None:
+        print("view-gecko-profile successfully started as pid %d" % view_profile.pid)
+    else:
+        print('view-gecko-profile process failed to start, poll returned: %s' % ret)
