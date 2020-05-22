@@ -164,6 +164,7 @@ The provided helper will:
 
     The ``fallbackToDump`` option activates a fallback to a dump that has been
     packaged with the client, when other ways to load the attachment have failed.
+    See :ref:`_services/packaging-attachments` for more information.
 
 .. note::
 
@@ -182,12 +183,60 @@ The JSON dump will serve as the default dataset for ``.get()``, instead of doing
 
 #. Place the JSON dump of the server records in the ``services/settings/dumps/main/`` folder
 #. Add the filename to the ``FINAL_TARGET_FILES`` list in ``services/settings/dumps/main/moz.build``
+#. Add the filename to the ``[browser]`` section of ``mobile/android/installer/package-manifest.in`` IF the file should be bundled with Android.
 
 Now, when ``RemoteSettings("some-key").get()`` is called from an empty profile, the ``some-key.json`` file is going to be loaded before the results are returned.
 
+JSON dumps in the tree are periodically updated by ``taskcluster/docker/periodic-updates/scripts/periodic_file_updates.sh``.
+
 .. note::
 
-    JSON dumps are not shipped on Android to minimize the installer size.
+   The example above uses "main" because that's the default bucket name.
+   If you have customized the bucket name, use the actual bucket name instead of "main".
+
+.. _services/packaging-attachments:
+
+Packaging attachments
+~~~~~~~~~~~~~~~~~~~~~
+
+Attachments are not included in the JSON dumps by default. You may choose to package the attachment
+with the client, for example if it is important to have the data available at the first startup
+without requiring network activity. Or if most users would download the attachment anyway.
+Only package attachments if needed, since they increase the file size of the Firefox installer.
+
+To package an attachment for consumers of the `download()` method:
+
+#. Select the desired attachment record from the JSON dump of the server records, and place it at
+   ``services/settings/dumps/<bucket name>/<collection name>/<attachment id>.meta.json``.
+   The ``<attachment id>`` defaults to the ``id`` field of the record. If this ``id`` is not fixed,
+   you must choose a custom ID that can be relied upon as a long-term attachment identifier. See
+   the notes below for more details.
+#. Download the attachment associated with the record, and place it at
+   ``services/settings/dumps/<bucket name>/<collection name>/<attachment id>``.
+#. Update ``taskcluster/docker/periodic-updates/scripts/periodic_file_updates.sh`` and add the attachment,
+   by editing the ``compare_remote_settings_files`` function and describing the attachment.
+   Unlike JSON dumps, attachments must explicitly be listed in that update script, because the
+   attachment selection logic needs to be codified in a ``jq`` filter in the script.
+   For an example, see `Bug 1636158 <https://bugzilla.mozilla.org/show_bug.cgi?id=1636158>`_.
+#. Register the location of the ``<attachment id>.meta.json`` and ``<attachment id>`` in the
+   ``moz.build`` file of the collection folder, and possibly ``package-manifest.in``,
+   as described in `the previous section about registering JSON dumps <services/initial-data>`.
+
+.. note::
+
+   ``<attachment id>`` is used to derive the file names of the packaged attachment dump, and as the
+   key for the (optional) cache where attachment updates from the network are saved. If the cache
+   is enabled, the attachment identifier is expected to be fixed across client application updates.
+   If that expectation cannot be met, the ``attachmentId`` option of the ``download`` method of the
+   attachment downloader should be used to override the attachment ID with a custom (stable) value.
+
+.. note::
+
+   The contents of the ``.meta.json`` file is already contained within the records, but separated
+   from the main set of records to ensure the availability of the original record with the data,
+   independently of the packaged or downloaded records.
+   This file may become optional in a future update, see `Bug 1640059 <https://bugzilla.mozilla.org/show_bug.cgi?id=1640059>`_.
+
 
 Targets and A/B testing
 =======================
