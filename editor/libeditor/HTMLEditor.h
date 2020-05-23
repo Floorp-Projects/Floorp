@@ -1029,7 +1029,7 @@ class HTMLEditor final : public TextEditor,
    * GetPreviousHTMLElementOrTextInternal() methods are common implementation
    * of above methods.  Please don't use this method directly.
    */
-  nsIContent* GetPreviousHTMLElementOrTextInternal(nsINode& aNode,
+  nsIContent* GetPreviousHTMLElementOrTextInternal(const nsINode& aNode,
                                                    bool aNoBlockCrossing) const;
   template <typename PT, typename CT>
   nsIContent* GetPreviousHTMLElementOrTextInternal(
@@ -1098,7 +1098,7 @@ class HTMLEditor final : public TextEditor,
    * GetNextHTMLNodeInternal() methods are common implementation
    * of above methods.  Please don't use this method directly.
    */
-  nsIContent* GetNextHTMLElementOrTextInternal(nsINode& aNode,
+  nsIContent* GetNextHTMLElementOrTextInternal(const nsINode& aNode,
                                                bool aNoBlockCrossing) const;
   template <typename PT, typename CT>
   nsIContent* GetNextHTMLElementOrTextInternal(
