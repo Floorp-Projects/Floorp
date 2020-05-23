@@ -611,6 +611,46 @@ ssl3_GatherAppDataRecord(sslSocket *ss, int flags)
     return rv;
 }
 
+static SECStatus
+ssl_HandleZeroRttRecordData(sslSocket *ss, const PRUint8 *data, unsigned int len)
+{
+    PORT_Assert(ss->sec.isServer);
+    if (ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted) {
+        sslBuffer buf = { CONST_CAST(PRUint8, data), len, len, PR_TRUE };
+        return tls13_HandleEarlyApplicationData(ss, &buf);
+    }
+    if (ss->ssl3.hs.zeroRttState == ssl_0rtt_ignored &&
+        ss->ssl3.hs.zeroRttIgnore != ssl_0rtt_ignore_none) {
+        /* We're ignoring 0-RTT so drop this record quietly. */
+        return SECSuccess;
+    }
+    PORT_SetError(SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA);
+    return SECFailure;
+}
+
+/* Ensure that application data in the wrong epoch is blocked. */
+static PRBool
+ssl_IsApplicationDataPermitted(sslSocket *ss, PRUint16 epoch)
+{
+    /* Epoch 0 is never OK. */
+    if (epoch == 0) {
+        return PR_FALSE;
+    }
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        return ss->firstHsDone;
+    }
+    /* TLS 1.3 application data. */
+    if (epoch >= TrafficKeyApplicationData) {
+        return ss->firstHsDone;
+    }
+    /* TLS 1.3 early data is server only. Further checks aren't needed
+     * as those are handled in ssl_HandleZeroRttRecordData. */
+    if (epoch == TrafficKeyEarlyApplicationData) {
+        return ss->sec.isServer;
+    }
+    return PR_FALSE;
+}
+
 SECStatus
 SSLExp_RecordLayerData(PRFileDesc *fd, PRUint16 epoch,
                        SSLContentType contentType,
@@ -637,8 +677,8 @@ SSLExp_RecordLayerData(PRFileDesc *fd, PRUint16 epoch,
         goto early_loser; /* Rely on the existing code. */
     }
 
-    /* Don't allow application data before handshake completion. */
-    if (contentType == ssl_ct_application_data && !ss->firstHsDone) {
+    if (contentType == ssl_ct_application_data &&
+        !ssl_IsApplicationDataPermitted(ss, epoch)) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         goto early_loser;
     }
@@ -649,7 +689,18 @@ SSLExp_RecordLayerData(PRFileDesc *fd, PRUint16 epoch,
     if (epoch < ss->ssl3.crSpec->epoch) {
         epochError = SEC_ERROR_INVALID_ARGS; /* Too c/old. */
     } else if (epoch > ss->ssl3.crSpec->epoch) {
-        epochError = PR_WOULD_BLOCK_ERROR; /* Too warm/new. */
+        /* If a TLS 1.3 server is not expecting EndOfEarlyData,
+         * moving from 1 to 2 is a signal to execute the code
+         * as though that message had been received. Let that pass. */
+        if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+            ss->opt.suppressEndOfEarlyData &&
+            ss->sec.isServer &&
+            ss->ssl3.crSpec->epoch == TrafficKeyEarlyApplicationData &&
+            epoch == TrafficKeyHandshake) {
+            epochError = 0;
+        } else {
+            epochError = PR_WOULD_BLOCK_ERROR; /* Too warm/new. */
+        }
     } else {
         epochError = 0; /* Just right. */
     }
@@ -660,11 +711,18 @@ SSLExp_RecordLayerData(PRFileDesc *fd, PRUint16 epoch,
     }
 
     /* If the handshake is still running, we need to run that. */
-    ssl_Get1stHandshakeLock(ss);
     rv = ssl_Do1stHandshake(ss);
     if (rv != SECSuccess && PORT_GetError() != PR_WOULD_BLOCK_ERROR) {
+        goto early_loser;
+    }
+
+    /* 0-RTT needs its own special handling here. */
+    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+        epoch == TrafficKeyEarlyApplicationData &&
+        contentType == ssl_ct_application_data) {
+        rv = ssl_HandleZeroRttRecordData(ss, data, len);
         ssl_Release1stHandshakeLock(ss);
-        return SECFailure;
+        return rv;
     }
 
     /* Finally, save the data... */

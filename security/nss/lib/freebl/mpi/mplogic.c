@@ -222,10 +222,9 @@ mpl_lsh(const mp_int *a, mp_int *b, mp_digit d)
 /* {{{ mpl_num_set(a, num) */
 
 mp_err
-mpl_num_set(mp_int *a, int *num)
+mpl_num_set(mp_int *a, unsigned int *num)
 {
-    unsigned int ix;
-    int db, nset = 0;
+    unsigned int ix, db, nset = 0;
     mp_digit cur;
     unsigned char reg;
 
@@ -253,10 +252,9 @@ mpl_num_set(mp_int *a, int *num)
 /* {{{ mpl_num_clear(a, num) */
 
 mp_err
-mpl_num_clear(mp_int *a, int *num)
+mpl_num_clear(mp_int *a, unsigned int *num)
 {
-    unsigned int ix;
-    int db, nset = 0;
+    unsigned int ix, db, nset = 0;
     mp_digit cur;
     unsigned char reg;
 

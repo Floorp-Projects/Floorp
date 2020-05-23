@@ -1023,6 +1023,35 @@ TEST_P(TlsConnectTls13, ZeroRttDifferentIncompatibleCipher) {
   SendReceive();
 }
 
+// The client failing to provide EndOfEarlyData results in failure.
+// After 0-RTT working perfectly, things fall apart later.
+// The server is unable to detect the change in keys, so it fails decryption.
+// The client thinks everything has worked until it gets the alert.
+TEST_F(TlsConnectStreamTls13, SuppressEndOfEarlyDataClientOnly) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  client_->SetOption(SSL_SUPPRESS_END_OF_EARLY_DATA, true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(true, true);
+  ExpectAlert(server_, kTlsAlertBadRecordMac);
+  Handshake();
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
+  EXPECT_EQ(TlsAgent::STATE_ERROR, server_->state());
+  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  client_->Handshake();
+  EXPECT_EQ(TlsAgent::STATE_ERROR, client_->state());
+  client_->CheckErrorCode(SSL_ERROR_BAD_MAC_ALERT);
+}
+
+TEST_P(TlsConnectGeneric, SuppressEndOfEarlyDataNoZeroRtt) {
+  EnsureTlsSetup();
+  client_->SetOption(SSL_SUPPRESS_END_OF_EARLY_DATA, true);
+  server_->SetOption(SSL_SUPPRESS_END_OF_EARLY_DATA, true);
+  Connect();
+  SendReceive();
+}
+
 #ifndef NSS_DISABLE_TLS_1_3
 INSTANTIATE_TEST_CASE_P(Tls13ZeroRttReplayTest, TlsZeroRttReplayTest,
                         TlsConnectTestBase::kTlsVariantsAll);

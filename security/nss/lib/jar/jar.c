@@ -18,7 +18,7 @@ static void
 jar_destroy_list(ZZList *list);
 
 static int
-jar_find_first_cert(JAR_Signer *signer, int type, JAR_Item **it);
+jar_find_first_cert(JAR_Signer *signer, jarType type, JAR_Item **it);
 
 /*
  *  J A R _ n e w
@@ -323,7 +323,7 @@ JAR_find_next(JAR_Context *ctx, JAR_Item **it)
 {
     JAR *jar;
     ZZList *list = NULL;
-    int finding;
+    jarType finding;
     JAR_Signer *signer = NULL;
 
     PORT_Assert(ctx != NULL);
@@ -413,6 +413,13 @@ JAR_find_next(JAR_Context *ctx, JAR_Item **it)
                 case jarTypeSign:
                     ctx->next = ZZ_ListHead(signer->certs);
                     break;
+
+                case jarTypeMF:
+                case jarTypeMeta:
+                case jarTypePhy:
+                case jarTypeSect:
+                case jarTypeOwner:
+                    break;
             }
         }
         PORT_Assert(ctx->next != NULL);
@@ -447,7 +454,7 @@ JAR_find_next(JAR_Context *ctx, JAR_Item **it)
 }
 
 static int
-jar_find_first_cert(JAR_Signer *signer, int type, JAR_Item **it)
+jar_find_first_cert(JAR_Signer *signer, jarType type, JAR_Item **it)
 {
     ZZLink *link;
     ZZList *list = signer->certs;

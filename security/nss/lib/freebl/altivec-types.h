@@ -16,8 +16,10 @@ typedef __vector unsigned short vec_u16;
 typedef __vector signed short vec_s16;
 typedef __vector unsigned int vec_u32;
 typedef __vector signed int vec_s32;
+#ifdef __VSX__
 typedef __vector unsigned long long vec_u64;
 typedef __vector signed long long vec_s64;
+#endif
 typedef __vector float vec_f;
 
 #endif

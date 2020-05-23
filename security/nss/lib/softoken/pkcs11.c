@@ -2608,7 +2608,7 @@ SFTKSlot *
 sftk_SlotFromID(CK_SLOT_ID slotID, PRBool all)
 {
     SFTKSlot *slot;
-    int index = sftk_GetModuleIndex(slotID);
+    unsigned int index = sftk_GetModuleIndex(slotID);
 
     if (nscSlotHashTable[index] == NULL)
         return NULL;
@@ -2639,7 +2639,7 @@ sftk_SlotFromSessionHandle(CK_SESSION_HANDLE handle)
 }
 
 static CK_RV
-sftk_RegisterSlot(SFTKSlot *slot, int moduleIndex)
+sftk_RegisterSlot(SFTKSlot *slot, unsigned int moduleIndex)
 {
     PLHashEntry *entry;
     unsigned int index;
@@ -2715,7 +2715,8 @@ sftk_RegisterSlot(SFTKSlot *slot, int moduleIndex)
  */
 CK_RV
 SFTK_SlotReInit(SFTKSlot *slot, char *configdir, char *updatedir,
-                char *updateID, sftk_token_parameters *params, int moduleIndex)
+                char *updateID, sftk_token_parameters *params,
+                unsigned int moduleIndex)
 {
     PRBool needLogin = !params->noKeyDB;
     CK_RV crv;
@@ -2791,7 +2792,7 @@ loser:
  */
 CK_RV
 SFTK_SlotInit(char *configdir, char *updatedir, char *updateID,
-              sftk_token_parameters *params, int moduleIndex)
+              sftk_token_parameters *params, unsigned int moduleIndex)
 {
     unsigned int i;
     CK_SLOT_ID slotID = params->slotID;
@@ -3172,7 +3173,7 @@ loser:
 }
 
 static void
-nscFreeAllSlots(int moduleIndex)
+nscFreeAllSlots(unsigned int moduleIndex)
 {
     /* free all the slots */
     SFTKSlot *slot = NULL;
@@ -3216,7 +3217,7 @@ sftk_closePeer(PRBool isFIPS)
 {
     CK_SLOT_ID slotID = isFIPS ? PRIVATE_KEY_SLOT_ID : FIPS_SLOT_ID;
     SFTKSlot *slot;
-    int moduleIndex = isFIPS ? NSC_NON_FIPS_MODULE : NSC_FIPS_MODULE;
+    unsigned int moduleIndex = isFIPS ? NSC_NON_FIPS_MODULE : NSC_FIPS_MODULE;
     PLHashTable *tmpSlotHashTable = nscSlotHashTable[moduleIndex];
 
     slot = (SFTKSlot *)PL_HashTableLookup(tmpSlotHashTable, (void *)slotID);
@@ -3238,7 +3239,7 @@ nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
     SECStatus rv;
     CK_C_INITIALIZE_ARGS *init_args = (CK_C_INITIALIZE_ARGS *)pReserved;
     int i;
-    int moduleIndex = isFIPS ? NSC_FIPS_MODULE : NSC_NON_FIPS_MODULE;
+    unsigned int moduleIndex = isFIPS ? NSC_FIPS_MODULE : NSC_NON_FIPS_MODULE;
 
     if (isFIPS) {
         loginWaitTime = PR_SecondsToInterval(1);
@@ -3542,7 +3543,8 @@ NSC_GetInfoV2(CK_INFO_PTR pInfo)
 /* NSC_GetSlotList obtains a list of slots in the system. */
 CK_RV
 nsc_CommonGetSlotList(CK_BBOOL tokenPresent,
-                      CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount, int moduleIndex)
+                      CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount,
+                      unsigned int moduleIndex)
 {
     *pulCount = nscSlotCount[moduleIndex];
     if (pSlotList != NULL) {
@@ -4482,7 +4484,7 @@ sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
     PRBool isValidFIPSUserSlot = PR_FALSE;
     PRBool isValidSlot = PR_FALSE;
     PRBool isFIPS = PR_FALSE;
-    unsigned long moduleIndex = NSC_NON_FIPS_MODULE;
+    unsigned int moduleIndex = NSC_NON_FIPS_MODULE;
     SFTKAttribute *attribute;
     sftk_parameters paramStrings;
     char *paramString;

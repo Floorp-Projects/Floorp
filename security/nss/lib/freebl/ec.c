@@ -62,7 +62,7 @@ ec_points_mul(const ECParams *params, const mp_int *k1, const mp_int *k2,
     ECGroup *group = NULL;
     SECStatus rv = SECFailure;
     mp_err err = MP_OKAY;
-    int len;
+    unsigned int len;
 
 #if EC_DEBUG
     int i;
@@ -96,7 +96,7 @@ ec_points_mul(const ECParams *params, const mp_int *k1, const mp_int *k2,
 #endif
 
     /* NOTE: We only support uncompressed points for now */
-    len = (params->fieldID.size + 7) >> 3;
+    len = (((unsigned int)params->fieldID.size) + 7) >> 3;
     if (pointP != NULL) {
         if ((pointP->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
             (pointP->len != (2 * len + 1))) {
@@ -428,7 +428,7 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
     ECGroup *group = NULL;
     SECStatus rv = SECFailure;
     mp_err err = MP_OKAY;
-    int len;
+    unsigned int len;
 
     if (!ecParams || ecParams->name == ECCurve_noName ||
         !publicValue || !publicValue->len) {
@@ -448,7 +448,7 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
     }
 
     /* NOTE: We only support uncompressed points for now */
-    len = (ecParams->fieldID.size + 7) >> 3;
+    len = (((unsigned int)ecParams->fieldID.size) + 7) >> 3;
     if (publicValue->data[0] != EC_POINT_FORM_UNCOMPRESSED) {
         PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
         return SECFailure;

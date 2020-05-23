@@ -282,6 +282,7 @@ typedef struct sslOptionsStr {
     unsigned int enablePostHandshakeAuth : 1;
     unsigned int enableDelegatedCredentials : 1;
     unsigned int enableDtls13VersionCompat : 1;
+    unsigned int suppressEndOfEarlyData : 1;
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
