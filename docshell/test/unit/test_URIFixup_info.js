@@ -411,7 +411,7 @@ var testcases = [
     protocolChange: true,
   },
   {
-    input: "mozilla.nonexistent/",
+    input: "mozilla.nonexistent",
     fixedURI: "http://mozilla.nonexistent/",
     alternateURI: "http://www.mozilla.nonexistent/",
     keywordLookup: true,
@@ -601,6 +601,22 @@ var testcases = [
   },
   {
     input: " moz\ti\tlla.org ",
+    keywordLookup: true,
+  },
+  {
+    input: "mozilla/",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    protocolChange: true,
+  },
+  {
+    input: "mozilla/ test /",
+    fixedURI: "http://mozilla/%20test%20/",
+    alternateURI: "http://www.mozilla.com/%20test%20/",
+    protocolChange: true,
+  },
+  {
+    input: "mozilla /test/",
     keywordLookup: true,
   },
 ];
