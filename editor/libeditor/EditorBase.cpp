@@ -3000,7 +3000,7 @@ nsIContent* EditorBase::FindNode(nsINode* aCurrentNode, bool aGoForward,
                   bNoBlockCrossing);
 }
 
-bool EditorBase::IsRoot(nsINode* inNode) const {
+bool EditorBase::IsRoot(const nsINode* inNode) const {
   if (NS_WARN_IF(!inNode)) {
     return false;
   }
@@ -3008,7 +3008,7 @@ bool EditorBase::IsRoot(nsINode* inNode) const {
   return inNode == rootNode;
 }
 
-bool EditorBase::IsEditorRoot(nsINode* aNode) const {
+bool EditorBase::IsEditorRoot(const nsINode* aNode) const {
   if (NS_WARN_IF(!aNode)) {
     return false;
   }
@@ -3016,7 +3016,7 @@ bool EditorBase::IsEditorRoot(nsINode* aNode) const {
   return aNode == rootNode;
 }
 
-bool EditorBase::IsDescendantOfRoot(nsINode* inNode) const {
+bool EditorBase::IsDescendantOfRoot(const nsINode* inNode) const {
   if (NS_WARN_IF(!inNode)) {
     return false;
   }
@@ -3028,7 +3028,7 @@ bool EditorBase::IsDescendantOfRoot(nsINode* inNode) const {
   return inNode->IsInclusiveDescendantOf(root);
 }
 
-bool EditorBase::IsDescendantOfEditorRoot(nsINode* aNode) const {
+bool EditorBase::IsDescendantOfEditorRoot(const nsINode* aNode) const {
   if (NS_WARN_IF(!aNode)) {
     return false;
   }
