@@ -2793,7 +2793,7 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
   return rv;
 }
 
-nsIContent* EditorBase::GetPreviousNodeInternal(nsINode& aNode,
+nsIContent* EditorBase::GetPreviousNodeInternal(const nsINode& aNode,
                                                 bool aFindEditableNode,
                                                 bool aFindAnyDataNode,
                                                 bool aNoBlockCrossing) const {
@@ -2852,7 +2852,7 @@ nsIContent* EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
                                  aFindAnyDataNode, aNoBlockCrossing);
 }
 
-nsIContent* EditorBase::GetNextNodeInternal(nsINode& aNode,
+nsIContent* EditorBase::GetNextNodeInternal(const nsINode& aNode,
                                             bool aFindEditableNode,
                                             bool aFindAnyDataNode,
                                             bool aNoBlockCrossing) const {
