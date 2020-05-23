@@ -17,6 +17,186 @@ SearchTestUtils.init(Assert, registerCleanupFunction);
 
 requestLongerTimeout(2);
 
+function waitForSuggestions() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    return ContentTaskUtils.waitForCondition(() => {
+      return content.gController.input.getAttribute("aria-expanded") == "true";
+    });
+  });
+}
+
+async function waitForSearch() {
+  await BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "ContentSearchClient",
+    true,
+    event => {
+      if (event.detail.type == "Search") {
+        event.target._eventDetail = event.detail.data;
+        return true;
+      }
+      return false;
+    }
+  );
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    let eventDetail = content._eventDetail;
+    delete content.document._eventDetail;
+    return eventDetail;
+  });
+}
+
+async function waitForSearchSettings() {
+  await BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "ContentSearchClient",
+    true,
+    event => {
+      if (event.detail.type == "ManageEngines") {
+        event.target._eventDetail = event.detail.data;
+        return true;
+      }
+      return false;
+    }
+  );
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    let eventDetail = content._eventDetail;
+    delete content.document._eventDetail;
+    return eventDetail;
+  });
+}
+
+function getCurrentState() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    let controller = content.gController;
+    let state = {
+      selectedIndex: controller.selectedIndex,
+      selectedButtonIndex: controller.selectedButtonIndex,
+      numSuggestions: controller._table.hidden ? 0 : controller.numSuggestions,
+      suggestionAtIndex: [],
+      isFormHistorySuggestionAtIndex: [],
+
+      tableHidden: controller._table.hidden,
+
+      inputValue: controller.input.value,
+      ariaExpanded: controller.input.getAttribute("aria-expanded"),
+    };
+
+    if (state.numSuggestions) {
+      for (let i = 0; i < controller.numSuggestions; i++) {
+        state.suggestionAtIndex.push(controller.suggestionAtIndex(i));
+        state.isFormHistorySuggestionAtIndex.push(
+          controller.isFormHistorySuggestionAtIndex(i)
+        );
+      }
+    }
+
+    return state;
+  });
+}
+
+async function msg(type, data = null) {
+  switch (type) {
+    case "reset":
+      // Reset both the input and suggestions by select all + delete. If there was
+      // no text entered, this won't have any effect, so also escape to ensure the
+      // suggestions table is closed.
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+        content.gController.input.focus();
+        content.synthesizeKey("a", { accelKey: true });
+        content.synthesizeKey("KEY_Delete");
+        content.synthesizeKey("KEY_Escape");
+      });
+      break;
+
+    case "key": {
+      let keyName = typeof data == "string" ? data : data.key;
+      await BrowserTestUtils.synthesizeKey(
+        keyName,
+        data.modifiers || {},
+        gBrowser.selectedBrowser
+      );
+      if (data?.waitForSuggestions) {
+        await waitForSuggestions();
+      }
+      break;
+    }
+    case "startComposition":
+      await BrowserTestUtils.synthesizeComposition(
+        "compositionstart",
+        gBrowser.selectedBrowser
+      );
+      break;
+    case "changeComposition": {
+      await BrowserTestUtils.synthesizeCompositionChange(
+        {
+          composition: {
+            string: data.data,
+            clauses: [
+              {
+                length: data.length,
+                attr: content.COMPOSITION_ATTR_RAW_CLAUSE,
+              },
+            ],
+          },
+          caret: { start: data.length, length: 0 },
+        },
+        gBrowser.selectedBrowser
+      );
+      if (data?.waitForSuggestions) {
+        await waitForSuggestions();
+      }
+      break;
+    }
+    case "commitComposition":
+      await BrowserTestUtils.synthesizeComposition(
+        "compositioncommitasis",
+        gBrowser.selectedBrowser
+      );
+      break;
+    case "mousemove":
+    case "click": {
+      let event;
+      let index;
+      if (type == "mousemove") {
+        event = {
+          type: "mousemove",
+          clickcount: 0,
+        };
+        index = data;
+      } else {
+        event = data.modifiers || null;
+        index = data.eltIdx;
+      }
+
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [type, event, index],
+        (eventType, eventArgs, itemIndex) => {
+          let controller = content.gController;
+          return new Promise(resolve => {
+            let row;
+            if (itemIndex == -1) {
+              row = controller._table.firstChild;
+            } else {
+              let allElts = [
+                ...controller._suggestionsList.children,
+                ...controller._oneOffButtons,
+                content.document.getElementById("contentSearchSettingsButton"),
+              ];
+              row = allElts[itemIndex];
+            }
+            row.addEventListener(eventType, () => resolve(), { once: true });
+            content.synthesizeMouseAtCenter(row, eventArgs);
+          });
+        }
+      );
+      break;
+    }
+  }
+
+  return getCurrentState();
+}
+
 add_task(async function emptyInput() {
   await setUp();
 
@@ -35,7 +215,10 @@ add_task(async function blur() {
   let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = await msg("blur");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.gController.input.blur();
+  });
+  state = await getCurrentState();
   checkState(state, "x", [], -1);
 
   await msg("reset");
@@ -245,7 +428,15 @@ add_task(async function cycleOneOffs() {
   await setUp();
   await msg("key", { key: "x", waitForSuggestions: true });
 
-  await msg("addDuplicateOneOff");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    let btn =
+      content.gController._oneOffButtons[
+        content.gController._oneOffButtons.length - 1
+      ];
+    let newBtn = btn.cloneNode(true);
+    btn.parentNode.appendChild(newBtn);
+    content.gController._oneOffButtons.push(newBtn);
+  });
 
   let state = await msg("key", "VK_DOWN");
   state = await msg("key", "VK_DOWN");
@@ -289,7 +480,9 @@ add_task(async function cycleOneOffs() {
   state = await msg("key", { key: "VK_DOWN", modifiers });
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
 
-  await msg("removeLastOneOff");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.gController._oneOffButtons.pop().remove();
+  });
   await msg("reset");
 });
 
@@ -339,14 +532,19 @@ add_task(async function formHistory() {
   let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
   // Wait for Satchel to say it's been added to form history.
-  let deferred = PromiseUtils.defer();
-  Services.obs.addObserver(function onAdd(subj, topic, data) {
-    if (data == "formhistory-add") {
-      Services.obs.removeObserver(onAdd, "satchel-storage-changed");
-      executeSoon(() => deferred.resolve());
-    }
-  }, "satchel-storage-changed");
-  await Promise.all([msg("addInputValueToFormHistory"), deferred.promise]);
+  let observePromise = new Promise(resolve => {
+    Services.obs.addObserver(function onAdd(subj, topic, data) {
+      if (data == "formhistory-add") {
+        Services.obs.removeObserver(onAdd, "satchel-storage-changed");
+        executeSoon(resolve);
+      }
+    }, "satchel-storage-changed");
+  });
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.gController.addInputValueToFormHistory();
+  });
+  await observePromise;
 
   // Reset the input.
   state = await msg("reset");
@@ -371,18 +569,18 @@ add_task(async function formHistory() {
   );
 
   // Wait for Satchel.
-  deferred = PromiseUtils.defer();
-  Services.obs.addObserver(function onRemove(subj, topic, data) {
-    if (data == "formhistory-remove") {
-      Services.obs.removeObserver(onRemove, "satchel-storage-changed");
-      executeSoon(() => deferred.resolve());
-    }
-  }, "satchel-storage-changed");
-
+  observePromise = new Promise(resolve => {
+    Services.obs.addObserver(function onRemove(subj, topic, data) {
+      if (data == "formhistory-remove") {
+        Services.obs.removeObserver(onRemove, "satchel-storage-changed");
+        executeSoon(resolve);
+      }
+    }, "satchel-storage-changed");
+  });
   state = await msg("key", "VK_DELETE");
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  await deferred.promise;
+  await observePromise;
 
   // Reset the input.
   state = await msg("reset");
@@ -435,7 +633,7 @@ add_task(async function search() {
   );
 
   // Test typing a query and pressing enter.
-  let p = msg("waitForSearch");
+  let p = waitForSearch();
   await msg("key", { key: "x", waitForSuggestions: true });
   await msg("key", { key: "VK_RETURN", modifiers });
   let mesg = await p;
@@ -452,7 +650,7 @@ add_task(async function search() {
   await setUp();
 
   // Test typing a query, then selecting a suggestion and pressing enter.
-  p = msg("waitForSearch");
+  p = waitForSearch();
   await msg("key", { key: "x", waitForSuggestions: true });
   await msg("key", "VK_DOWN");
   await msg("key", "VK_DOWN");
@@ -470,7 +668,7 @@ add_task(async function search() {
   await setUp();
 
   // Test typing a query, then selecting a one-off button and pressing enter.
-  p = msg("waitForSearch");
+  p = waitForSearch();
   await msg("key", { key: "x", waitForSuggestions: true });
   await msg("key", "VK_UP");
   await msg("key", "VK_UP");
@@ -485,7 +683,7 @@ add_task(async function search() {
   await setUp();
 
   // Test typing a query and clicking the search engine header.
-  p = msg("waitForSearch");
+  p = waitForSearch();
   modifiers.button = 0;
   await msg("key", { key: "x", waitForSuggestions: true });
   await msg("mousemove", -1);
@@ -500,7 +698,7 @@ add_task(async function search() {
 
   // Test typing a query and then clicking a suggestion.
   await msg("key", { key: "x", waitForSuggestions: true });
-  p = msg("waitForSearch");
+  p = waitForSearch();
   await msg("mousemove", 1);
   await msg("click", { eltIdx: 1, modifiers });
   mesg = await p;
@@ -516,7 +714,7 @@ add_task(async function search() {
 
   // Test typing a query and then clicking a one-off button.
   await msg("key", { key: "x", waitForSuggestions: true });
-  p = msg("waitForSearch");
+  p = waitForSearch();
   await msg("mousemove", 3);
   await msg("click", { eltIdx: 3, modifiers });
   mesg = await p;
@@ -532,7 +730,7 @@ add_task(async function search() {
   // suggestion, using the keyboard.
   delete modifiers.button;
   await msg("key", { key: "x", waitForSuggestions: true });
-  p = msg("waitForSearch");
+  p = waitForSearch();
   await msg("key", "VK_DOWN");
   await msg("key", "VK_DOWN");
   await msg("key", "VK_TAB");
@@ -567,7 +765,7 @@ add_task(async function search() {
   );
   await msg("commitComposition");
   delete modifiers.button;
-  p = msg("waitForSearch");
+  p = waitForSearch();
   await msg("key", { key: "VK_RETURN", modifiers });
   mesg = await p;
   eventData.searchString = "x";
@@ -623,7 +821,7 @@ add_task(async function search() {
   );
 
   modifiers.button = 0;
-  p = msg("waitForSearch");
+  p = waitForSearch();
   await msg("click", { eltIdx: 1, modifiers });
   mesg = await p;
   eventData.searchString = "xfoo";
@@ -639,17 +837,18 @@ add_task(async function search() {
 
   // Remove form history entries.
   // Wait for Satchel.
-  let deferred = PromiseUtils.defer();
-  let historyCount = 2;
-  Services.obs.addObserver(function onRemove(subj, topic, data) {
-    if (data == "formhistory-remove") {
-      if (--historyCount) {
-        return;
+  let observePromise = new Promise(resolve => {
+    let historyCount = 2;
+    Services.obs.addObserver(function onRemove(subj, topic, data) {
+      if (data == "formhistory-remove") {
+        if (--historyCount) {
+          return;
+        }
+        Services.obs.removeObserver(onRemove, "satchel-storage-changed");
+        executeSoon(resolve);
       }
-      Services.obs.removeObserver(onRemove, "satchel-storage-changed");
-      executeSoon(() => deferred.resolve());
-    }
-  }, "satchel-storage-changed");
+    }, "satchel-storage-changed");
+  });
 
   await msg("key", { key: "x", waitForSuggestions: true });
   await msg("key", "VK_DOWN");
@@ -657,7 +856,7 @@ add_task(async function search() {
   await msg("key", "VK_DELETE");
   await msg("key", "VK_DOWN");
   await msg("key", "VK_DELETE");
-  await deferred.promise;
+  await observePromise;
 
   await msg("reset");
   state = await msg("key", { key: "x", waitForSuggestions: true });
@@ -672,7 +871,7 @@ add_task(async function settings() {
   await setUp();
   await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
   await msg("key", "VK_UP");
-  let p = msg("waitForSearchSettings");
+  let p = waitForSearchSettings();
   await msg("key", "VK_RETURN");
   await p;
 
@@ -698,24 +897,9 @@ async function setUp(aNoEngine) {
     await promiseTab();
     gDidInitialSetUp = true;
   }
-  await msg("focus");
-}
 
-function msg(type, data = null) {
-  return new Promise(resolve => {
-    gMsgMan.addMessageListener(TEST_MSG, function onMsg(msgObj) {
-      if (msgObj.data.type != type) {
-        return;
-      }
-      info(`Received response: ${type}`);
-      gMsgMan.removeMessageListener(TEST_MSG, onMsg);
-      resolve(msgObj.data.data);
-    });
-    info(`Sending message: ${type}`);
-    gMsgMan.sendAsyncMessage(TEST_MSG, {
-      type,
-      data,
-    });
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.gController.input.focus();
   });
 }
 
@@ -768,25 +952,44 @@ function checkState(
 var gMsgMan;
 
 async function promiseTab() {
-  let deferred = PromiseUtils.defer();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
   let pageURL = getRootDirectory(gTestPath) + TEST_PAGE_BASENAME;
-  tab.linkedBrowser.addEventListener(
-    "load",
-    function onLoad(event) {
-      tab.linkedBrowser.removeEventListener("load", onLoad, true);
-      gMsgMan = tab.linkedBrowser.messageManager;
 
-      let jsURL = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
-      gMsgMan.loadFrameScript(jsURL, false);
-      deferred.resolve(msg("init"));
-    },
-    true,
-    true
-  );
+  let loadedPromise = BrowserTestUtils.firstBrowserLoaded(window);
   openTrustedLinkIn(pageURL, "current");
-  return deferred.promise;
+  await loadedPromise;
+
+  const engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
+  await SpecialPowers.spawn(
+    window.gBrowser.selectedBrowser,
+    [engineName],
+    engineNameChild => {
+      Services.search.defaultEngine = Services.search.getEngineByName(
+        engineNameChild
+      );
+      let input = content.document.querySelector("input");
+      content.gController = new content.ContentSearchUIController(
+        input,
+        input.parentNode,
+        "test",
+        "test"
+      );
+      return new Promise(resolve => {
+        content.addEventListener("ContentSearchService", function listener(
+          aEvent
+        ) {
+          if (
+            aEvent.detail.type == "State" &&
+            content.gController.defaultEngine.name == engineNameChild
+          ) {
+            content.removeEventListener("ContentSearchService", listener);
+            resolve();
+          }
+        });
+      });
+    }
+  );
 }
 
 async function setUpEngines() {
