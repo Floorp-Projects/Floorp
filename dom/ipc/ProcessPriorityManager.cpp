@@ -808,8 +808,6 @@ void ParticularProcessPriorityManager::TabActivityChanged(
 void ParticularProcessPriorityManager::ShutDown() {
   MOZ_ASSERT(mContentParent);
 
-  LOGP("shutdown for %p (mContentParent %p)", this, mContentParent);
-
   UnregisterWakeLockObserver(this);
 
   if (mResetPriorityTimer) {
@@ -944,7 +942,6 @@ void ProcessPriorityManager::Init() {
 void ProcessPriorityManager::SetProcessPriority(ContentParent* aContentParent,
                                                 ProcessPriority aPriority) {
   MOZ_ASSERT(aContentParent);
-  MOZ_ASSERT(aContentParent->Pid() != -1);
 
   ProcessPriorityManagerImpl* singleton =
       ProcessPriorityManagerImpl::GetSingleton();
