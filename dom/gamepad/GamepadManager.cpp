@@ -416,9 +416,9 @@ bool GamepadManager::MaybeWindowHasSeenGamepad(nsGlobalWindowInner* aWindow,
     // This window hasn't seen this gamepad before, so
     // send a connection event first.
     SetWindowHasSeenGamepad(aWindow, aIndex);
-    return true;
+    return false;
   }
-  return false;
+  return true;
 }
 
 bool GamepadManager::WindowHasSeenGamepad(nsGlobalWindowInner* aWindow,
@@ -531,7 +531,7 @@ bool GamepadManager::SetGamepadByEvent(const GamepadChangeEvent& aEvent,
   const uint32_t index =
       GetGamepadIndexWithServiceType(aEvent.index(), aEvent.service_type());
   if (aWindow) {
-    firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
+    firstTime = !MaybeWindowHasSeenGamepad(aWindow, index);
   }
 
   RefPtr<Gamepad> gamepad =
