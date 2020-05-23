@@ -14,7 +14,7 @@
 
 // getFixupURIInfo has a complex logic, that likely could be simplified, but
 // the risk of regressions is high, thus that should be done with care.
-/* eslint complexity: ["error", 39] */
+/* eslint complexity: ["error", 40] */
 
 var EXPORTED_SYMBOLS = ["URIFixup", "URIFixupInfo"];
 
@@ -389,6 +389,11 @@ URIFixup.prototype = {
         info.fixupChangedProtocol = true;
         maybeSetAlternateFixedURI(info, fixupFlags);
         info.preferredURI = info.fixedURI;
+        // Check if it's a forced visit. The user can enforce a visit by
+        // appending a slash, but the string must be in a valid uri format.
+        if (uriString.endsWith("/")) {
+          return info;
+        }
       }
     }
 
