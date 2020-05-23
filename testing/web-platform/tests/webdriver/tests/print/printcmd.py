@@ -8,7 +8,7 @@ from tests.support.inline import inline
 
 def do_print(session, options):
     return session.transport.send(
-        "POST", "session/{session_id}/moz/print".format(**vars(session)),
+        "POST", "session/{session_id}/print".format(**vars(session)),
         options)
 
 

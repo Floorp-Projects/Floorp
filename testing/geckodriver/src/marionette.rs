@@ -1,7 +1,7 @@
 use crate::android::AndroidHandler;
 use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
-    GeckoExtensionCommand, GeckoExtensionRoute, PrintParameters, XblLocatorParameters,
+    GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters,
     CHROME_ELEMENT_KEY,
 };
 use marionette_rs::common::{
@@ -40,15 +40,15 @@ use webdriver::command::WebDriverCommand::{
     GetElementProperty, GetElementRect, GetElementTagName, GetElementText, GetNamedCookie,
     GetPageSource, GetTimeouts, GetTitle, GetWindowHandle, GetWindowHandles, GetWindowRect, GoBack,
     GoForward, IsDisplayed, IsEnabled, IsSelected, MaximizeWindow, MinimizeWindow, NewSession,
-    NewWindow, PerformActions, Refresh, ReleaseActions, SendAlertText, SetTimeouts, SetWindowRect,
-    Status, SwitchToFrame, SwitchToParentFrame, SwitchToWindow, TakeElementScreenshot,
+    NewWindow, PerformActions, Print, Refresh, ReleaseActions, SendAlertText, SetTimeouts,
+    SetWindowRect, Status, SwitchToFrame, SwitchToParentFrame, SwitchToWindow, TakeElementScreenshot,
     TakeScreenshot,
 };
 use webdriver::command::{
     ActionsParameters, AddCookieParameters, GetNamedCookieParameters, GetParameters,
     JavascriptCommandParameters, LocatorParameters, NewSessionParameters, NewWindowParameters,
-    SendKeysParameters, SwitchToFrameParameters, SwitchToWindowParameters, TimeoutsParameters,
-    WindowRectParameters,
+    PrintParameters, SendKeysParameters, SwitchToFrameParameters, SwitchToWindowParameters,
+    TimeoutsParameters, WindowRectParameters,
 };
 use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{
@@ -579,6 +579,7 @@ impl MarionetteSession {
             | ExecuteAsyncScript(_)
             | GetAlertText
             | TakeScreenshot
+            | Print(_)
             | TakeElementScreenshot(_) => {
                 WebDriverResponse::Generic(resp.into_value_response(true)?)
             }
@@ -888,7 +889,6 @@ impl MarionetteSession {
                 InstallAddon(_) => WebDriverResponse::Generic(resp.into_value_response(true)?),
                 UninstallAddon(_) => WebDriverResponse::Void,
                 TakeFullScreenshot => WebDriverResponse::Generic(resp.into_value_response(true)?),
-                Print(_) => WebDriverResponse::Generic(resp.into_value_response(true)?),
             },
         })
     }
@@ -1043,6 +1043,7 @@ fn try_convert_to_marionette_message(
         NewWindow(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::NewWindow(
             x.to_marionette()?,
         ))),
+        Print(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::Print)),
         Refresh => Some(Command::WebDriver(MarionetteWebDriverCommand::Refresh)),
         ReleaseActions => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ReleaseActions,
@@ -1163,7 +1164,6 @@ impl MarionetteCommand {
                 Extension(ref extension) => match extension {
                     GetContext => (Some("Marionette:GetContext"), None),
                     InstallAddon(x) => (Some("Addon:Install"), Some(x.to_marionette())),
-                    Print(x) => (Some("WebDriver:Print"), Some(x.to_marionette())),
                     SetContext(x) => (Some("Marionette:SetContext"), Some(x.to_marionette())),
                     UninstallAddon(x) => (Some("Addon:Uninstall"), Some(x.to_marionette())),
                     XblAnonymousByAttribute(e, x) => {
