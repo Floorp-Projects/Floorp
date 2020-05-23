@@ -20,7 +20,6 @@ class AboutWelcome extends React.PureComponent {
     this.state = { metricsFlowUri: null };
     this.fetchFxAFlowUri = this.fetchFxAFlowUri.bind(this);
     this.handleStartBtnClick = this.handleStartBtnClick.bind(this);
-    this.messageId = "ABOUT_WELCOME";
   }
 
   async fetchFxAFlowUri() {
@@ -28,19 +27,14 @@ class AboutWelcome extends React.PureComponent {
   }
 
   componentDidMount() {
-    if (this.props.experiment && this.props.branchId) {
-      this.messageId = `ABOUT_WELCOME_${this.props.experiment}_${this.props.branchId}`.toUpperCase();
-    } else if (this.props.id && this.props.screens) {
-      this.messageId = this.props.id;
-    }
     this.fetchFxAFlowUri();
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
-      message_id: this.messageId,
+      message_id: this.props.messageId,
     });
     // Captures user has seen about:welcome by setting
     // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
-    window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN", this.messageId);
+    window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN", this.props.messageId);
   }
 
   handleStartBtnClick() {
@@ -51,7 +45,7 @@ class AboutWelcome extends React.PureComponent {
         source: this.props.startButton.message_id,
         page: "about:welcome",
       },
-      message_id: this.messageId,
+      message_id: this.props.messageId,
       id: "ABOUT_WELCOME",
     };
     window.AWSendEventTelemetry(ping);
@@ -68,14 +62,11 @@ class AboutWelcome extends React.PureComponent {
         <MultiStageAboutWelcome
           screens={props.screens}
           metricsFlowUri={this.state.metricsFlowUri}
+          message_id={props.messageId}
         />
       );
     }
 
-    let UTMTerm =
-      this.props.experiment && this.props.branchId
-        ? `${this.props.experiment}-${this.props.branchId}`
-        : "default";
     return (
       <div className="outer-wrapper welcomeContainer">
         <div className="welcomeContainerInner">
@@ -85,7 +76,7 @@ class AboutWelcome extends React.PureComponent {
               cards={props.cards}
               metricsFlowUri={this.state.metricsFlowUri}
               sendTelemetry={window.AWSendEventTelemetry}
-              utm_term={UTMTerm}
+              utm_term={props.UTMTerm}
             />
             <Localized text={props.startButton.label}>
               <button
@@ -102,6 +93,24 @@ class AboutWelcome extends React.PureComponent {
 
 AboutWelcome.defaultProps = DEFAULT_WELCOME_CONTENT;
 
+function ComputeMessageId(experimentId, branchId, settings) {
+  let messageId = "ABOUT_WELCOME";
+  let UTMTerm = "default";
+
+  if (settings.id && settings.screens) {
+    messageId = settings.id.toUpperCase();
+  }
+
+  if (experimentId && branchId) {
+    messageId += `_${experimentId}_${branchId}`.toUpperCase();
+    UTMTerm = `${experimentId}-${branchId}`.toLowerCase();
+  }
+  return {
+    messageId,
+    UTMTerm,
+  };
+}
+
 async function mount() {
   const { slug, branch } = await window.AWGetStartupData();
   let settings = branch && branch.value ? branch.value : {};
@@ -111,12 +120,14 @@ async function mount() {
     settings = await window.AWGetMultiStageScreens();
   }
 
+  let { messageId, UTMTerm } = ComputeMessageId(
+    slug,
+    branch && branch.slug,
+    settings
+  );
+
   ReactDOM.render(
-    <AboutWelcome
-      experiment={slug}
-      branchId={branch && branch.slug}
-      {...settings}
-    />,
+    <AboutWelcome messageId={messageId} UTMTerm={UTMTerm} {...settings} />,
     document.getElementById("root")
   );
 }

@@ -6,6 +6,12 @@ export const AboutWelcomeUtils = {
   handleUserAction(action) {
     window.AWSendToParent("SPECIAL_ACTION", action);
   },
+  sendImpressionTelemetry(messageId) {
+    window.AWSendEventTelemetry({
+      event: "IMPRESSION",
+      message_id: messageId,
+    });
+  },
   sendEvent(type, detail) {
     document.dispatchEvent(
       new CustomEvent(`AWPage:${type}`, {
