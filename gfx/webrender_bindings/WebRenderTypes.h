@@ -656,6 +656,8 @@ struct Vec<uint8_t> final {
 
   size_t Length() { return inner.length; }
 
+  size_t Capacity() { return inner.capacity; }
+
   Range<uint8_t> GetRange() { return Range<uint8_t>(Data(), Length()); }
 
   void PushBytes(Range<uint8_t> aBytes) {
