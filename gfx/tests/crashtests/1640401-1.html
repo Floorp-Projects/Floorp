@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- Test that SimSun, a default TTC font on Win10, is correctly handled by WR.
+     It may fail to generate a font descriptor and transmit as raw font data.
+     In some cases, WR did not properly expect to deal with said TTC font and
+     crashed as a result.
+-->
+<html><head>
+<style>
+@font-face {
+    font-family: "CrashMe";
+    src: local("SimSun");
+}
+
+body {
+  font-family: 'CrashMe';
+}
+
+h1 {
+  font-weight: 500;
+}
+
+input {
+  font-family: 'CrashMe';
+}
+
+</style>
+</head>
+<body>
+<h1>1</h1>
+<input placeholder="2">
+</body></html>
