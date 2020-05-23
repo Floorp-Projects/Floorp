@@ -81,6 +81,10 @@
 #include "nsIScriptError.h"
 #include "nsIAsyncOutputStream.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#endif
+
 using JS::SourceText;
 
 using mozilla::Telemetry::LABELS_DOM_SCRIPT_PRELOAD_RESULT;
@@ -2003,6 +2007,8 @@ class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable {
   JS::OffThreadToken* mToken;
 
  public:
+  ScriptLoadRequest* GetScriptLoadRequest() { return mRequest; }
+
   NotifyOffThreadScriptLoadCompletedRunnable(ScriptLoadRequest* aRequest,
                                              ScriptLoader* aLoader)
       : Runnable("dom::NotifyOffThreadScriptLoadCompletedRunnable"),
@@ -2080,6 +2086,49 @@ NotifyOffThreadScriptLoadCompletedRunnable::
   }
 }
 
+static void GetProfilerLabelForRequest(ScriptLoadRequest* aRequest,
+                                       nsACString& aOutString) {
+#ifdef MOZ_GECKO_PROFILER
+  if (!profiler_is_active()) {
+    aOutString.Append("<script> element");
+    return;
+  }
+  aOutString.Append("<script");
+  if (aRequest->IsAsyncScript()) {
+    aOutString.Append(" async");
+  } else if (aRequest->IsDeferredScript()) {
+    aOutString.Append(" defer");
+  }
+  if (aRequest->IsModuleRequest()) {
+    aOutString.Append(" type=\"module\"");
+  }
+
+  nsAutoCString url;
+  if (aRequest->mURI) {
+    aRequest->mURI->GetAsciiSpec(url);
+  } else {
+    url = "<unknown>";
+  }
+
+  if (aRequest->mIsInline) {
+    if (aRequest->GetParserCreated() != NOT_FROM_PARSER) {
+      aOutString.Append("> inline at line ");
+      aOutString.AppendInt(aRequest->mLineNo);
+      aOutString.Append(" of ");
+    } else {
+      aOutString.Append("> inline (dynamically created) in ");
+    }
+    aOutString.Append(url);
+  } else {
+    aOutString.Append(" src=\"");
+    aOutString.Append(url);
+    aOutString.Append("\">");
+  }
+#else
+  aOutString.Append("<script> element");
+#endif
+}
+
 NS_IMETHODIMP
 NotifyOffThreadScriptLoadCompletedRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2087,6 +2136,28 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run() {
   // We want these to be dropped on the main thread, once we return from this
   // function.
   RefPtr<ScriptLoadRequest> request = std::move(mRequest);
+
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_is_active()) {
+    const char* scriptSourceString;
+    if (request->IsTextSource()) {
+      scriptSourceString = "ScriptCompileOffThread";
+    } else if (request->IsBinASTSource()) {
+      scriptSourceString = "BinASTDecodeOffThread";
+    } else {
+      MOZ_ASSERT(request->IsBytecode());
+      scriptSourceString = "BytecodeDecodeOffThread";
+    }
+
+    nsAutoCString profilerLabelString;
+    GetProfilerLabelForRequest(request, profilerLabelString);
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(
+        scriptSourceString, JS, TextMarkerPayload,
+        (profilerLabelString, request->mOffThreadParseStartTime,
+         request->mOffThreadParseStopTime));
+  }
+#endif
+
   RefPtr<ScriptLoader> loader = std::move(mLoader);
 
   request->mOffThreadToken = mToken;
@@ -2099,6 +2170,12 @@ static void OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken,
                                           void* aCallbackData) {
   RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> aRunnable = dont_AddRef(
       static_cast<NotifyOffThreadScriptLoadCompletedRunnable*>(aCallbackData));
+
+#ifdef MOZ_GECKO_PROFILER
+  aRunnable->GetScriptLoadRequest()->mOffThreadParseStopTime =
+      TimeStamp::NowUnfuzzed();
+#endif
+
   aRunnable->SetToken(aToken);
   NotifyOffThreadScriptLoadCompletedRunnable::Dispatch(aRunnable.forget());
 }
@@ -2155,6 +2232,10 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> runnable =
       new NotifyOffThreadScriptLoadCompletedRunnable(aRequest, this);
+
+#ifdef MOZ_GECKO_PROFILER
+  aRequest->mOffThreadParseStartTime = TimeStamp::NowUnfuzzed();
+#endif
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
@@ -2637,49 +2718,6 @@ static nsresult ExecuteCompiledScript(JSContext* aCx,
   return aExec.ExecScript();
 }
 
-static void GetProfilerLabelForRequest(ScriptLoadRequest* aRequest,
-                                       nsACString& aOutString) {
-#ifdef MOZ_GECKO_PROFILER
-  if (!profiler_is_active()) {
-    aOutString.Append("<script> element");
-    return;
-  }
-  aOutString.Append("<script");
-  if (aRequest->IsAsyncScript()) {
-    aOutString.Append(" async");
-  } else if (aRequest->IsDeferredScript()) {
-    aOutString.Append(" defer");
-  }
-  if (aRequest->IsModuleRequest()) {
-    aOutString.Append(" type=\"module\"");
-  }
-
-  nsAutoCString url;
-  if (aRequest->mURI) {
-    aRequest->mURI->GetAsciiSpec(url);
-  } else {
-    url = "<unknown>";
-  }
-
-  if (aRequest->mIsInline) {
-    if (aRequest->GetParserCreated() != NOT_FROM_PARSER) {
-      aOutString.Append("> inline at line ");
-      aOutString.AppendInt(aRequest->mLineNo);
-      aOutString.Append(" of ");
-    } else {
-      aOutString.Append("> inline (dynamically created) in ");
-    }
-    aOutString.Append(url);
-  } else {
-    aOutString.Append(" src=\"");
-    aOutString.Append(url);
-    aOutString.Append("\">");
-  }
-#else
-  aOutString.Append("<script> element");
-#endif
-}
-
 nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
   using namespace mozilla::Telemetry;
   MOZ_ASSERT(aRequest->IsReadyToRun());
@@ -2715,14 +2753,12 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
 #ifdef MOZ_GECKO_PROFILER
+  nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
   nsIDocShell* docShell = window ? window->GetDocShell() : nullptr;
 #endif
   nsAutoCString profilerLabelString;
   GetProfilerLabelForRequest(aRequest, profilerLabelString);
-  AUTO_PROFILER_TEXT_MARKER_DOCSHELL("ScriptEvaluation", profilerLabelString,
-                                     JS, docShell);
 
   // New script entry point required, due to the "Create a script" sub-step of
   // http://www.whatwg.org/specs/web-apps/current-work/#execute-the-script-block
@@ -2740,6 +2776,8 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       // mDataType of the request might remain set to DataType::Unknown.
       MOZ_ASSERT(aRequest->IsTextSource() || aRequest->IsUnknownDataType());
       LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
+      AUTO_PROFILER_TEXT_MARKER_DOCSHELL("ModuleEvaluation",
+                                         profilerLabelString, JS, docShell);
 
       // currentScript is set to null for modules.
       AutoCurrentScriptUpdater scriptUpdater(this, nullptr);
@@ -2812,11 +2850,17 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
           } else {
             LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute",
                  aRequest));
+            AUTO_PROFILER_TEXT_MARKER_DOCSHELL(
+                "BytecodeDecodeMainThread", profilerLabelString, JS, docShell);
+
             rv = exec.Decode(options, aRequest->mScriptBytecode,
                              aRequest->mBytecodeOffset);
           }
 
           if (rv == NS_OK) {
+            AUTO_PROFILER_TEXT_MARKER_DOCSHELL(
+                "ScriptExecution", profilerLabelString, JS, docShell);
+
             rv = ExecuteCompiledScript(cx, aRequest, exec);
           }
 
@@ -2849,6 +2893,10 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
               // Main thread parsing (inline and small scripts)
               LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
               if (aRequest->IsBinASTSource()) {
+                AUTO_PROFILER_TEXT_MARKER_DOCSHELL("BinASTDecodeMainThread",
+                                                   profilerLabelString, JS,
+                                                   docShell);
+
                 rv = exec.DecodeBinAST(options,
                                        aRequest->ScriptBinASTData().begin(),
                                        aRequest->ScriptBinASTData().length());
@@ -2857,6 +2905,10 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
                 MaybeSourceText maybeSource;
                 rv = GetScriptSource(cx, aRequest, &maybeSource);
                 if (NS_SUCCEEDED(rv)) {
+                  AUTO_PROFILER_TEXT_MARKER_DOCSHELL("ScriptCompileMainThread",
+                                                     profilerLabelString, JS,
+                                                     docShell);
+
                   rv = maybeSource.constructed<SourceText<char16_t>>()
                            ? exec.Compile(
                                  options,
@@ -2873,6 +2925,8 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
               if (script && JS::GetScriptPrivate(script).isUndefined()) {
                 classicScript->AssociateWithScript(script);
               }
+              AUTO_PROFILER_TEXT_MARKER_DOCSHELL(
+                  "ScriptExecution", profilerLabelString, JS, docShell);
               rv = ExecuteCompiledScript(cx, aRequest, exec);
             }
           }
