@@ -231,16 +231,19 @@ class Clobber(MachCommandBase):
         if 'python' in what:
             if conditions.is_hg(self):
                 cmd = ['hg', '--config', 'extensions.purge=', 'purge', '--all',
-                       '-I', 'glob:**.py[cdo]', '-I', 'path:python/', '-I',
-                       'path:third_party/python/']
+                       '-I', 'glob:**.py[cdo]', '-I', 'glob:**/__pycache__',
+                       '-I', 'path:python/', '-I', 'path:third_party/python/']
             elif conditions.is_git(self):
-                cmd = ['git', 'clean', '-f', '-x', '*.py[cdo]', 'python/',
-                       'third_party/python/']
+                cmd = ['git', 'clean', '-d', '-f', '-x', '*.py[cdo]', '*/__pycache__',
+                       'python/', 'third_party/python/']
             else:
                 # We don't know what is tracked/untracked if we don't have VCS.
                 # So we can't clean python/ and third_party/python/.
                 cmd = ['find', '.', '-type', 'f', '-name', '*.py[cdo]',
                        '-delete']
+                subprocess.call(cmd, cwd=self.topsrcdir)
+                cmd = ['find', '.', '-type', 'd', '-name', '__pycache__',
+                       '-empty', '-delete']
             ret = subprocess.call(cmd, cwd=self.topsrcdir)
 
         if 'gradle' in what:
