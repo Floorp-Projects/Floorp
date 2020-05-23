@@ -154,6 +154,15 @@ void CacheOpParent::OnOpComplete(ErrorResult&& aRv,
     return;
   }
 
+  if (aStreamInfo.isSome()) {
+    ProcessCrossOriginResourcePolicyHeader(aRv,
+                                           aStreamInfo->mSavedResponseList);
+    if (NS_WARN_IF(aRv.Failed())) {
+      Unused << Send__delete__(this, std::move(aRv), void_t());
+      return;
+    }
+  }
+
   uint32_t entryCount =
       std::max(1lu, aStreamInfo ? static_cast<unsigned long>(std::max(
                                       aStreamInfo->mSavedResponseList.Length(),
@@ -207,6 +216,104 @@ already_AddRefed<nsIInputStream> CacheOpParent::DeserializeCacheStream(
   //           as a PChildToParentStream actor.  Use the standard method for
   //           extracting the resulting stream.
   return DeserializeIPCStream(readStream.stream());
+}
+
+void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
+    ErrorResult& aRv, const nsTArray<SavedResponse>& aResponses) {
+  // Only checking for match/matchAll.
+  RequestMode mode = RequestMode::No_cors;
+  nsILoadInfo::CrossOriginEmbedderPolicy loadingCOEP =
+      nsILoadInfo::EMBEDDER_POLICY_NULL;
+  Maybe<PrincipalInfo> principalInfo;
+  switch (mOpArgs.type()) {
+    case CacheOpArgs::TCacheMatchArgs: {
+      mode = mOpArgs.get_CacheMatchArgs().request().mode();
+      loadingCOEP =
+          mOpArgs.get_CacheMatchArgs().request().loadingEmbedderPolicy();
+      principalInfo = mOpArgs.get_CacheMatchArgs().request().principalInfo();
+      break;
+    }
+    case CacheOpArgs::TCacheMatchAllArgs: {
+      if (mOpArgs.get_CacheMatchAllArgs().maybeRequest().isSome()) {
+        mode = mOpArgs.get_CacheMatchAllArgs().maybeRequest().ref().mode();
+        loadingCOEP = mOpArgs.get_CacheMatchAllArgs()
+                          .maybeRequest()
+                          .ref()
+                          .loadingEmbedderPolicy();
+        principalInfo = mOpArgs.get_CacheMatchAllArgs()
+                            .maybeRequest()
+                            .ref()
+                            .principalInfo();
+      }
+      break;
+    }
+    default: {
+      return;
+    }
+  }
+
+  // skip checking for CORS mode
+  if (mode == RequestMode::Cors) {
+    return;
+  }
+
+  // skip checking if the request has no principal for same-origin/same-site
+  // checking.
+  if (principalInfo.isNothing() ||
+      principalInfo.ref().type() != PrincipalInfo::TContentPrincipalInfo) {
+    return;
+  }
+  const ContentPrincipalInfo& contentPrincipalInfo =
+      principalInfo.ref().get_ContentPrincipalInfo();
+
+  nsAutoCString corp;
+  for (auto it = aResponses.cbegin(); it != aResponses.cend(); ++it) {
+    corp.Assign(EmptyCString());
+    for (auto headerIt = it->mValue.headers().cbegin();
+         headerIt != it->mValue.headers().cend(); ++headerIt) {
+      if (headerIt->name().Equals(
+              NS_LITERAL_CSTRING("Cross-Origin-Resource-Policy"))) {
+        corp = headerIt->value();
+        break;
+      }
+    }
+
+    // According to https://github.com/w3c/ServiceWorker/issues/1490, the cache
+    // response is expected with CORP header, otherwise, throw the type error.
+    // Note that this is different with the CORP checking for fetch metioned in
+    // https://wicg.github.io/cross-origin-embedder-policy/#corp-check.
+    // For fetch, if the response has no CORP header, "same-origin" checking
+    // will be performed.
+    if (corp.IsEmpty() &&
+        loadingCOEP == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
+      aRv.ThrowTypeError("Response is expected with CORP header.");
+      return;
+    }
+
+    // Skip the case if the response has no principal for same-origin/same-site
+    // checking.
+    if (it->mValue.principalInfo().isNothing() ||
+        it->mValue.principalInfo().ref().type() !=
+            PrincipalInfo::TContentPrincipalInfo) {
+      continue;
+    }
+
+    const ContentPrincipalInfo& responseContentPrincipalInfo =
+        it->mValue.principalInfo().ref().get_ContentPrincipalInfo();
+
+    if (corp.EqualsLiteral("same-origin")) {
+      if (responseContentPrincipalInfo == contentPrincipalInfo) {
+        aRv.ThrowTypeError("Response is expected from same origin.");
+        return;
+      }
+    } else if (corp.EqualsLiteral("same-site")) {
+      if (!responseContentPrincipalInfo.baseDomain().Equals(
+              contentPrincipalInfo.baseDomain())) {
+        aRv.ThrowTypeError("Response is expected from same site.");
+        return;
+      }
+    }
+  }
 }
 
 }  // namespace cache

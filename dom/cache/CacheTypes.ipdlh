@@ -20,6 +20,7 @@ using RequestRedirect from "mozilla/dom/FetchIPCTypes.h";
 using ResponseType from "mozilla/dom/FetchIPCTypes.h";
 using mozilla::void_t from "ipc/IPCMessageUtils.h";
 using struct nsID from "nsID.h";
+using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
 
 namespace mozilla {
 namespace dom {
@@ -63,6 +64,8 @@ struct CacheRequest
   RequestCache requestCache;
   RequestRedirect requestRedirect;
   nsString integrity;
+  CrossOriginEmbedderPolicy loadingEmbedderPolicy;
+  PrincipalInfo? principalInfo;
 };
 
 struct CacheResponse
