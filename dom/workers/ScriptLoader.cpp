@@ -75,6 +75,7 @@
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/UniquePtr.h"
@@ -582,6 +583,10 @@ class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
   }
 
   NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
+    if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
+      return NS_OK;
+    }
+
     nsresult rv = ProcessCrossOriginEmbedderPolicyHeader(aRequest);
 
     if (NS_WARN_IF(NS_FAILED(rv))) {

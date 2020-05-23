@@ -144,6 +144,12 @@ void TypeUtils::ToCacheRequest(
   aOut.requestRedirect() = aIn.GetRedirectMode();
 
   aOut.integrity() = aIn.GetIntegrity();
+  aOut.loadingEmbedderPolicy() = aIn.GetEmbedderPolicy();
+  const mozilla::UniquePtr<mozilla::ipc::PrincipalInfo>& principalInfo =
+      aIn.GetPrincipalInfo();
+  if (principalInfo) {
+    aOut.principalInfo() = Some(*(principalInfo.get()));
+  }
 
   if (aBodyAction == IgnoreBody) {
     aOut.body() = Nothing();
