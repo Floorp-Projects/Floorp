@@ -858,7 +858,7 @@ void HTMLEditor::IsPrevCharInNodeWhitespace(nsIContent* aContent,
   }
 }
 
-bool HTMLEditor::IsVisibleBRElement(nsINode* aNode) {
+bool HTMLEditor::IsVisibleBRElement(const nsINode* aNode) {
   MOZ_ASSERT(aNode);
   if (!aNode->IsHTMLElement(nsGkAtoms::br)) {
     return false;
