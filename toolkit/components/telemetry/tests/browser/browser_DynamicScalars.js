@@ -30,9 +30,19 @@ async function waitForProcessesScalars(
 
 add_task(async function test_setup() {
   // Make sure the newly spawned content processes will have extended Telemetry enabled.
+  // Since Telemetry reads the prefs only at process startup, flush all cached
+  // and preallocated processes so they pick up the setting.
   await SpecialPowers.pushPrefEnv({
-    set: [[TelemetryUtils.Preferences.OverridePreRelease, true]],
+    set: [
+      [TelemetryUtils.Preferences.OverridePreRelease, true],
+      ["dom.ipc.processPrelaunch.enabled", false],
+    ],
   });
+  Services.ppmm.releaseCachedProcesses();
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processPrelaunch.enabled", true]],
+  });
+
   // And take care of the already initialized one as well.
   let canRecordExtended = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
@@ -121,9 +131,9 @@ add_task(async function test_recording() {
   );
 
   // Wait for the dynamic scalars to appear non-keyed snapshots.
-  await waitForProcessesScalars(["dynamic"], false, scalars => {
+  await waitForProcessesScalars(["dynamic"], true, scalars => {
     // Wait for the scalars set in the content process to be available.
-    return "telemetry.test.dynamic.pre_content_spawn" in scalars.dynamic;
+    return "telemetry.test.dynamic.post_content_spawn_keyed" in scalars.dynamic;
   });
 
   // Verify the content of the snapshots.
