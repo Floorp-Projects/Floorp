@@ -4965,7 +4965,7 @@ nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode,
 }
 
 nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
-    nsINode& aNode, bool aNoBlockCrossing) const {
+    const nsINode& aNode, bool aNoBlockCrossing) const {
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
@@ -5003,7 +5003,7 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
 }
 
 nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
-    nsINode& aNode, bool aNoBlockCrossing) const {
+    const nsINode& aNode, bool aNoBlockCrossing) const {
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
