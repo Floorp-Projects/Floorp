@@ -2,12 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 
 export const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = useState(0);
+
+  useEffect(() => {
+    // Send impression ping when respective screen first renders
+    props.screens.forEach(screen => {
+      if (index === screen.order) {
+        AboutWelcomeUtils.sendImpressionTelemetry(
+          `${props.message_id}_${screen.id}`
+        );
+      }
+    });
+  }, [index]);
   // Transition to next screen, opening about:home on last screen button CTA
   const handleTransition =
     index < props.screens.length
