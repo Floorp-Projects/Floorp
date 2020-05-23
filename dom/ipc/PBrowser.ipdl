@@ -934,12 +934,6 @@ child:
     async UIResolutionChanged(float dpi, int32_t rounding, double scale);
 
     /**
-     * Tell the child that the system theme has changed, and that a repaint
-     * is necessary.
-     */
-    async ThemeChanged(LookAndFeelInt[] lookAndFeelIntCache);
-
-    /**
      * Tell the child that the safe area of widget has changed.
      *
      */

@@ -539,6 +539,12 @@ child:
 
     async NotifyVisited(VisitedQueryResult[] uri);
 
+    /**
+     * Tell the child that the system theme has changed, and that a repaint
+     * is necessary.
+     */
+    async ThemeChanged(LookAndFeelInt[] lookAndFeelIntCache);
+
     async PreferenceUpdate(Pref pref);
     async VarUpdate(GfxVarUpdate var);
 

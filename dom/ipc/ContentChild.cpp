@@ -2317,6 +2317,13 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyVisited(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvThemeChanged(
+    nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) {
+  LookAndFeel::SetIntCache(aLookAndFeelIntCache);
+  LookAndFeel::NotifyChangedAllWindows();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvLoadProcessScript(
     const nsString& aURL) {
   auto* global = ContentProcessMessageManager::Get();
