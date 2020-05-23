@@ -928,7 +928,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * Small utility routine to test if a break node is visible to user.
    */
-  bool IsVisibleBRElement(nsINode* aNode);
+  bool IsVisibleBRElement(const nsINode* aNode);
 
   /**
    * Helper routines for font size changing.
