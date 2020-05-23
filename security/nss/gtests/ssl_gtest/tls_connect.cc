@@ -756,7 +756,7 @@ void TlsConnectTestBase::ZeroRttSendReceive(
         << "Unexpected error: " << PORT_ErrorToName(PORT_GetError());
   }
 
-  // Do a second read. this should fail.
+  // Do a second read. This should fail.
   rv = PR_Read(server_->ssl_fd(), buf.data(), k0RttDataLen);
   EXPECT_EQ(SECFailure, rv);
   EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());

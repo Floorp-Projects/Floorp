@@ -683,14 +683,18 @@ extern CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS);
 extern CK_RV nsc_CommonFinalize(CK_VOID_PTR pReserved, PRBool isFIPS);
 extern PRBool sftk_ForkReset(CK_VOID_PTR pReserved, CK_RV *crv);
 extern CK_RV nsc_CommonGetSlotList(CK_BBOOL tokPresent,
-                                   CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount, int moduleIndex);
+                                   CK_SLOT_ID_PTR pSlotList,
+                                   CK_ULONG_PTR pulCount,
+                                   unsigned int moduleIndex);
 
 /* slot initialization, reinit, shutdown and destruction */
 extern CK_RV SFTK_SlotInit(char *configdir, char *updatedir, char *updateID,
-                           sftk_token_parameters *params, int moduleIndex);
+                           sftk_token_parameters *params,
+                           unsigned int moduleIndex);
 extern CK_RV SFTK_SlotReInit(SFTKSlot *slot, char *configdir,
                              char *updatedir, char *updateID,
-                             sftk_token_parameters *params, int moduleIndex);
+                             sftk_token_parameters *params,
+                             unsigned int moduleIndex);
 extern CK_RV SFTK_DestroySlotData(SFTKSlot *slot);
 extern CK_RV SFTK_ShutdownSlot(SFTKSlot *slot);
 extern CK_RV sftk_CloseAllSessions(SFTKSlot *slot, PRBool logout);
@@ -824,7 +828,7 @@ extern CK_RV sftk_aes_xcbc_new_keys(CK_SESSION_HANDLE hSession,
                                     CK_OBJECT_HANDLE hKey, CK_OBJECT_HANDLE_PTR phKey,
                                     unsigned char *k2, unsigned char *k3);
 extern CK_RV sftk_xcbc_mac_pad(unsigned char *padBuf, unsigned int bufLen,
-                               int blockSize, const unsigned char *k2,
+                               unsigned int blockSize, const unsigned char *k2,
                                const unsigned char *k3);
 extern SECStatus sftk_fips_IKE_PowerUpSelfTests(void);
 

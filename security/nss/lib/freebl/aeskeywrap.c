@@ -9,6 +9,8 @@
 #include "stubs.h"
 #endif
 
+#include <stddef.h>
+
 #include "prcpucfg.h"
 #if defined(IS_LITTLE_ENDIAN) || defined(SHA_NO_LONG_LONG)
 #define BIG_ENDIAN_WITH_64_BIT_REGISTERS 0
@@ -199,7 +201,7 @@ set_t(unsigned char *pt, unsigned long t)
 static void
 encode_PRUint32_BE(unsigned char *data, PRUint32 val)
 {
-    int i;
+    size_t i;
     for (i = 0; i < sizeof(PRUint32); i++) {
         data[i] = PORT_GET_BYTE_BE(val, i, sizeof(PRUint32));
     }
@@ -209,7 +211,7 @@ static PRUint32
 decode_PRUint32_BE(unsigned char *data)
 {
     PRUint32 val = 0;
-    int i;
+    size_t i;
 
     for (i = 0; i < sizeof(PRUint32); i++) {
         val = (val << PR_BITS_PER_BYTE) | data[i];

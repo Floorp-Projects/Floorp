@@ -67,8 +67,9 @@ tls13_DeriveSecret(sslSocket *ss, PK11SymKey *key,
                    const SSL3Hashes *hashes,
                    PK11SymKey **dest);
 static SECStatus tls13_SendEndOfEarlyData(sslSocket *ss);
-static SECStatus tls13_HandleEndOfEarlyData(sslSocket *ss, PRUint8 *b,
+static SECStatus tls13_HandleEndOfEarlyData(sslSocket *ss, const PRUint8 *b,
                                             PRUint32 length);
+static SECStatus tls13_MaybeHandleSuppressedEndOfEarlyData(sslSocket *ss);
 static SECStatus tls13_SendFinished(sslSocket *ss, PK11SymKey *baseKey);
 static SECStatus tls13_ComputePskBinderHash(sslSocket *ss, unsigned int prefix,
                                             SSL3Hashes *hashes);
@@ -3105,6 +3106,13 @@ tls13_HandleCertificate(sslSocket *ss, PRUint8 *b, PRUint32 length)
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
     if (ss->sec.isServer) {
+        /* Receiving this message might be the first sign we have that
+         * early data is over, so pretend we received EOED. */
+        rv = tls13_MaybeHandleSuppressedEndOfEarlyData(ss);
+        if (rv != SECSuccess) {
+            return SECFailure; /* Code already set. */
+        }
+
         if (ss->ssl3.clientCertRequested) {
             rv = TLS13_CHECK_HS_STATE(ss, SSL_ERROR_RX_UNEXPECTED_CERTIFICATE,
                                       idle_handshake);
@@ -4621,6 +4629,15 @@ tls13_ServerHandleFinished(sslSocket *ss, PRUint8 *b, PRUint32 length)
     SSL_TRC(3, ("%d: TLS13[%d]: server handle finished handshake",
                 SSL_GETPID(), ss->fd));
 
+    if (!tls13_ShouldRequestClientAuth(ss)) {
+        /* Receiving this message might be the first sign we have that
+         * early data is over, so pretend we received EOED. */
+        rv = tls13_MaybeHandleSuppressedEndOfEarlyData(ss);
+        if (rv != SECSuccess) {
+            return SECFailure; /* Code already set. */
+        }
+    }
+
     rv = tls13_CommonHandleFinished(ss,
                                     ss->firstHsDone ? ss->ssl3.hs.clientTrafficSecret : ss->ssl3.hs.clientHsTrafficSecret,
                                     b, length);
@@ -5735,12 +5752,14 @@ tls13_SendEndOfEarlyData(sslSocket *ss)
 {
     SECStatus rv;
 
-    SSL_TRC(3, ("%d: TLS13[%d]: send EndOfEarlyData", SSL_GETPID(), ss->fd));
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
 
-    rv = ssl3_AppendHandshakeHeader(ss, ssl_hs_end_of_early_data, 0);
-    if (rv != SECSuccess) {
-        return rv; /* err set by AppendHandshake. */
+    if (!ss->opt.suppressEndOfEarlyData) {
+        SSL_TRC(3, ("%d: TLS13[%d]: send EndOfEarlyData", SSL_GETPID(), ss->fd));
+        rv = ssl3_AppendHandshakeHeader(ss, ssl_hs_end_of_early_data, 0);
+        if (rv != SECSuccess) {
+            return rv; /* err set by AppendHandshake. */
+        }
     }
 
     ss->ssl3.hs.zeroRttState = ssl_0rtt_done;
@@ -5748,7 +5767,7 @@ tls13_SendEndOfEarlyData(sslSocket *ss)
 }
 
 static SECStatus
-tls13_HandleEndOfEarlyData(sslSocket *ss, PRUint8 *b, PRUint32 length)
+tls13_HandleEndOfEarlyData(sslSocket *ss, const PRUint8 *b, PRUint32 length)
 {
     SECStatus rv;
 
@@ -5789,6 +5808,18 @@ tls13_HandleEndOfEarlyData(sslSocket *ss, PRUint8 *b, PRUint32 length)
         TLS13_SET_HS_STATE(ss, wait_finished);
     }
     return SECSuccess;
+}
+
+static SECStatus
+tls13_MaybeHandleSuppressedEndOfEarlyData(sslSocket *ss)
+{
+    PORT_Assert(ss->sec.isServer);
+    if (!ss->opt.suppressEndOfEarlyData ||
+        ss->ssl3.hs.zeroRttState != ssl_0rtt_accepted) {
+        return SECSuccess;
+    }
+
+    return tls13_HandleEndOfEarlyData(ss, NULL, 0);
 }
 
 SECStatus

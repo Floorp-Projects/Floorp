@@ -39,9 +39,9 @@ mp_err mpl_lsh(const mp_int *a, mp_int *b, mp_digit d); /* left shift     */
 
 /* Bit count and parity              */
 
-mp_err mpl_num_set(mp_int *a, int *num);   /* count set bits    */
-mp_err mpl_num_clear(mp_int *a, int *num); /* count clear bits  */
-mp_err mpl_parity(mp_int *a);              /* determine parity  */
+mp_err mpl_num_set(mp_int *a, unsigned int *num);   /* count set bits    */
+mp_err mpl_num_clear(mp_int *a, unsigned int *num); /* count clear bits  */
+mp_err mpl_parity(mp_int *a);                       /* determine parity  */
 
 /* Get & Set the value of a bit */
 
