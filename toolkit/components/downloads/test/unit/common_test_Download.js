@@ -2456,6 +2456,7 @@ add_task(async function test_launch() {
         );
       }
 
+      Assert.ok(download.launchWhenSucceeded);
       await download.start();
     } else {
       // When testing DownloadLegacySaver, the download is already started when
@@ -2464,10 +2465,9 @@ add_task(async function test_launch() {
         launcherPath,
         launchWhenSucceeded: true,
       });
+      Assert.ok(download.launchWhenSucceeded);
       await promiseDownloadStopped(download);
     }
-
-    Assert.ok(download.launchWhenSucceeded);
 
     let promiseFileLaunched = waitForFileLaunched();
     download.launch();
