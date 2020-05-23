@@ -36,14 +36,17 @@ ACTIVE_DATA_URL = "https://activedata.allizom.org/query"
 EXCEED_LIMIT = [
     # Suites that exceed 10,000 ActiveData result limit will be defined here.
     'web-platform-tests',
+    'web-platform-tests-reftest',
 ]
-MAX_TIMEOUT = 180  # seconds
+MAX_RETRIES = 10
+RETRY_INTERVAL = 10
 
 
 def construct_query(suite, platform):
     if platform in ('windows', 'android'):
         platform_clause = '{"find":{"run.machine.platform": "%s"}}' % platform
     else:
+        # Bundle macosx and linux results together - they are not too different.
         platform_clause = '''
             {
                 "not": {
@@ -55,12 +58,8 @@ def construct_query(suite, platform):
             }
         '''
 
-    # By default, this clause should be not be set.
-    # However, for some web-platform-test suites, results exceed the 10,000 limit.
-    # This permits AD to retrieve the full set of results.
-    output_clause = ''
-    if suite in EXCEED_LIMIT:
-        output_clause = '"destination": "url",\n"format": "list",'
+    # Only use this if the suite being queried exceeeds 10,000 results.
+    output_clause = '"destination": "url",\n"format": "list",' if suite in EXCEED_LIMIT else ''
 
     query = """
 {
@@ -84,7 +83,6 @@ def construct_query(suite, platform):
 
 def query_activedata(suite, platform):
     query = construct_query(suite, platform)
-
     print("Querying ActiveData for '{}' tests on '{}' platforms.. "
             .format(suite, platform), end='')
     sys.stdout.flush()
@@ -95,23 +93,26 @@ def query_activedata(suite, platform):
 
     # Presence of destination clause in the query requires additional processing
     # to produce the dataset that can be used.
-    if "destination" in query:
-        total_timeout = 0
-        sleep = 10
-
-        status_url = response.json()["status"]
-        status_url_response = requests.get(status_url).json()
-        while total_timeout <= MAX_TIMEOUT and status_url_response["status"] != "done":
-            total_timeout += sleep
-            time.sleep(sleep)
-            status_url_response = requests.get(status_url).json()
-
+    if suite in EXCEED_LIMIT:
+        # The output_url is where result of the query will be stored.
         output_url = response.json()["url"]
-        raw_data = requests.get(output_url).json()["data"]
+
+        tried = 0
+        while tried < MAX_RETRIES:
+            # Use the requests.Session object to manage requests, since the output_url
+            # can often return 403 Forbidden.
+            session = requests.Session()
+            response = session.get(output_url)
+            if response.status_code == 200:
+                break
+            # A non-200 status code means we should retry after some wait.
+            time.sleep(RETRY_INTERVAL)
+            tried += 1
 
         # Data returned from destination is in format of:
         # {data: [result: {test: test_name, duration: duration}]}
-        # Normalize it to the format if destination/format was not specified.
+        # Normalize it to the format expected by compute_manifest_runtimes.
+        raw_data = response.json()["data"]
         data = dict([[item['result']['test'], item['result']['duration']] for item in raw_data])
     else:
         data = dict(response.json()["data"])
@@ -120,16 +121,27 @@ def query_activedata(suite, platform):
     return data
 
 
-def write_runtimes(manifest_runtimes, platform, outdir=here):
+def write_runtimes(manifest_runtimes, platform, suite, outdir=here):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
     outfilename = os.path.join(outdir, "manifest-runtimes-{}.json".format(platform))
+    # If file is not present, initialize a file with empty JSON object.
+    if not os.path.exists(outfilename):
+        with open(outfilename, 'w+') as f:
+            json.dump({}, f)
+
+    # Load the entire file.
+    with open(outfilename, 'r') as f:
+        data = json.load(f)
+
+    # Update the specific suite with the new runtime information and write to file.
+    data[suite] = manifest_runtimes
     with open(outfilename, 'w') as f:
-        f.write(json.dumps(manifest_runtimes, indent=2, sort_keys=True))
+        json.dump(data, f, indent=2, sort_keys=True)
 
 
-def compute_manifest_runtimes(suites, platform):
+def compute_manifest_runtimes(suite, platform):
     resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
 
     crashtest_prefixes = {
@@ -138,43 +150,42 @@ def compute_manifest_runtimes(suites, platform):
         'file': '/reftest/tests/',
     }
     manifest_runtimes = defaultdict(float)
-    for suite in suites:
-        data = query_activedata(suite, platform)
+    data = query_activedata(suite, platform)
 
-        if suite == "web-platform-tests":
-            wpt_groups = {t["name"]: t["manifest"]
-                          for t in resolver.resolve_tests(flavor="web-platform-tests")}
+    if "web-platform-tests" in suite:
+        wpt_groups = {t["name"]: t["manifest"]
+                        for t in resolver.resolve_tests(flavor="web-platform-tests")}
 
-        for path, duration in data.items():
-            # Returned data did not contain a test path, so go to next result.
-            if not path:
-                continue
+    for path, duration in data.items():
+        # Returned data did not contain a test path, so go to next result.
+        if not path:
+            continue
 
-            if suite in ('reftest', 'crashtest') and ' ' in path:
-                path = path.split()[0]
+        if suite in ('reftest', 'crashtest') and ' ' in path:
+            path = path.split()[0]
 
-            if suite == 'crashtest' and '://' in path:
-                # Crashtest paths are URLs with various schemes and prefixes.
-                # Normalize it to become relative to mozilla-central.
-                scheme = path[:path.index('://')]
-                if ':' in scheme:
-                    scheme = scheme.split(':')[-1]
-                prefix = crashtest_prefixes[scheme]
-                path = path.split(prefix, 1)[-1]
-            elif suite == 'xpcshell' and ':' in path:
-                path = path.split(':', 1)[-1]
+        if suite == 'crashtest' and '://' in path:
+            # Crashtest paths are URLs with various schemes and prefixes.
+            # Normalize it to become relative to mozilla-central.
+            scheme = path[:path.index('://')]
+            if ':' in scheme:
+                scheme = scheme.split(':')[-1]
+            prefix = crashtest_prefixes[scheme]
+            path = path.split(prefix, 1)[-1]
+        elif suite == 'xpcshell' and ':' in path:
+            path = path.split(':', 1)[-1]
 
-            if suite == "web-platform-tests":
-                if path in wpt_groups:
-                    manifest_runtimes[wpt_groups[path]] += duration
-                continue
+        if "web-platform-tests" in suite:
+            if path in wpt_groups:
+                manifest_runtimes[wpt_groups[path]] += duration
+            continue
 
-            if path not in resolver.tests_by_path:
-                continue
+        if path not in resolver.tests_by_path:
+            continue
 
-            for test in resolver.tests_by_path[path]:
-                manifest = test.get('ancestor_manifest') or test['manifest_relpath']
-                manifest_runtimes[manifest] += duration
+        for test in resolver.tests_by_path[path]:
+            manifest = test.get('ancestor_manifest') or test['manifest_relpath']
+            manifest_runtimes[manifest] += duration
 
     manifest_runtimes = {k: round(v, 2) for k, v in manifest_runtimes.items()}
     return manifest_runtimes
@@ -196,15 +207,19 @@ def cli(args=sys.argv[1:]):
                              "(default: all).")
     args = parser.parse_args(args)
 
+    # If a suite was specified, use that. Otherwise, use the full default set.
     suites = args.suites or default_suites
+    # Same as above, but for the platform clause.
     platforms = args.platforms or default_platforms
-    for platform in platforms:
-        runtimes = compute_manifest_runtimes(suites, platform)
-        if not runtimes:
-            print("Not creating runtimes file for '{}' as no data was found".format(platform))
-            continue
 
-        write_runtimes(runtimes, platform, outdir=args.outdir)
+    for platform in platforms:
+        for suite in suites:
+            runtimes = compute_manifest_runtimes(suite, platform)
+            if not runtimes:
+                print("Not writing runtime data for '{}' for '{}' as no data was found".format(suite, platform))
+                continue
+
+            write_runtimes(runtimes, platform, suite, outdir=args.outdir)
 
 
 if __name__ == "__main__":
