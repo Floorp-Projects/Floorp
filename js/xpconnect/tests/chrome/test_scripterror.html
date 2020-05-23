@@ -67,6 +67,22 @@ add_task(async () => {
     });
     hasExpectedProperties(message, test);
     is(message.isPromiseRejection, true, "is a rejected promise");
+
+    // Uncaught rejection from async function
+    message = await awaitScriptError(async function testName() {
+        throw test;
+    });
+    hasExpectedProperties(message, test);
+    is(message.isPromiseRejection, true, "is a rejected promise");
+
+    // Uncaught rejection from then callback
+    message = await awaitScriptError(async function testName() {
+        Promise.resolve().then(() => {
+          throw test;
+        });
+    });
+    hasExpectedProperties(message, test);
+    is(message.isPromiseRejection, true, "is a rejected promise");
   }
 });
 </script>
