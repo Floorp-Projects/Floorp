@@ -2922,14 +2922,15 @@ nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
                              aFindAnyDataNode, aNoBlockCrossing);
 }
 
-nsIContent* EditorBase::FindNextLeafNode(nsINode* aCurrentNode, bool aGoForward,
+nsIContent* EditorBase::FindNextLeafNode(const nsINode* aCurrentNode,
+                                         bool aGoForward,
                                          bool bNoBlockCrossing) const {
   // called only by GetPriorNode so we don't need to check params.
   MOZ_ASSERT(
       IsDescendantOfEditorRoot(aCurrentNode) && !IsEditorRoot(aCurrentNode),
       "Bogus arguments");
 
-  nsINode* cur = aCurrentNode;
+  const nsINode* cur = aCurrentNode;
   for (;;) {
     // if aCurrentNode has a sibling in the right direction, return
     // that sibling's closest child (or itself if it has no children)
@@ -2972,7 +2973,7 @@ nsIContent* EditorBase::FindNextLeafNode(nsINode* aCurrentNode, bool aGoForward,
   return nullptr;
 }
 
-nsIContent* EditorBase::FindNode(nsINode* aCurrentNode, bool aGoForward,
+nsIContent* EditorBase::FindNode(const nsINode* aCurrentNode, bool aGoForward,
                                  bool aEditableNode, bool aFindAnyDataNode,
                                  bool bNoBlockCrossing) const {
   if (IsEditorRoot(aCurrentNode)) {
