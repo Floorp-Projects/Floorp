@@ -294,14 +294,18 @@ class GlobalHelperThreadState {
   bool canStartCompressionTask(const AutoLockHelperThreadState& lock);
   bool canStartGCParallelTask(const AutoLockHelperThreadState& lock);
 
+  enum class ScheduleCompressionTask { GC, API };
+
   // Used by a major GC to signal processing enqueued compression tasks.
-  void startHandlingCompressionTasks(const AutoLockHelperThreadState&);
+  void startHandlingCompressionTasks(const AutoLockHelperThreadState&,
+                                     ScheduleCompressionTask schedule);
 
   jit::IonCompileTask* highestPriorityPendingIonCompile(
       const AutoLockHelperThreadState& lock);
 
  private:
-  void scheduleCompressionTasks(const AutoLockHelperThreadState&);
+  void scheduleCompressionTasks(const AutoLockHelperThreadState&,
+                                ScheduleCompressionTask schedule);
 
   UniquePtr<ParseTask> finishParseTaskCommon(JSContext* cx, ParseTaskKind kind,
                                              JS::OffThreadToken* token);
