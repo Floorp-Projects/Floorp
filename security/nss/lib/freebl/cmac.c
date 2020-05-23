@@ -24,7 +24,7 @@ struct CMACContextStr {
     union {
         AESContext *aes;
     } cipher;
-    int blockSize;
+    unsigned int blockSize;
 
     /* Internal keys which are conditionally used by the algorithm. Derived
      * from encrypting the NULL block. We leave the storing of (and the
@@ -210,7 +210,7 @@ SECStatus
 CMAC_Update(CMACContext *ctx, const unsigned char *data,
             unsigned int data_len)
 {
-    int data_index = 0;
+    unsigned int data_index = 0;
     if (ctx == NULL) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;

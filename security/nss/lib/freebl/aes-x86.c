@@ -146,7 +146,7 @@ rijndael_native_encryptBlock(AESContext *cx,
                              unsigned char *output,
                              const unsigned char *input)
 {
-    int i;
+    unsigned int i;
     pre_align __m128i m post_align = _mm_loadu_si128((__m128i *)input);
     m = _mm_xor_si128(m, cx->k.keySchedule[0]);
     for (i = 1; i < cx->Nr; ++i) {

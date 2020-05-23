@@ -277,7 +277,8 @@ class StagedRecords {
       // Now there should be staged data.
       EXPECT_FALSE(data_.empty());
       if (g_ssl_gtest_verbose) {
-        std::cerr << role_ << ": forward " << data_ << std::endl;
+        std::cerr << role_ << ": forward epoch " << epoch_ << " " << data_
+                  << std::endl;
       }
       EXPECT_EQ(SECSuccess,
                 SSL_RecordLayerData(peer->ssl_fd(), epoch_, content_type_,
@@ -365,18 +366,74 @@ TEST_P(TlsConnectStream, ReplaceRecordLayer) {
   server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTING);
   // This processes the ClientHello and stages the first server flight.
   client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTING);
+
+  // In TLS 1.3, this is 0-RTT; in <TLS 1.3, this is application data.
+  // Neither is acceptable.
+  RefuseApplicationData(client_, 1);
   RefuseApplicationData(server_, 1);
+
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    // Application data in handshake is never acceptable.
+    RefuseApplicationData(client_, 2);
+    RefuseApplicationData(server_, 2);
+    // Don't accept real data until the handshake is done.
+    RefuseApplicationData(client_, 3);
+    RefuseApplicationData(server_, 3);
     // Process the server flight and the client is done.
     server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTED);
     client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTED);
   } else {
     server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTING);
-    RefuseApplicationData(client_, 1);
     client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTED);
     server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTED);
   }
   CheckKeys();
+
+  // Reading and writing application data should work.
+  SendForwardReceive(client_, client_stage, server_);
+  SendForwardReceive(server_, server_stage, client_);
+}
+
+TEST_F(TlsConnectStreamTls13, ReplaceRecordLayerZeroRtt) {
+  SetupForZeroRtt();
+
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  StartConnect();
+  client_->SetServerKeyBits(server_->server_key_bits());
+
+  BadPrSocket bad_layer_client(client_);
+  BadPrSocket bad_layer_server(server_);
+
+  StagedRecords client_stage(client_);
+  StagedRecords server_stage(server_);
+
+  ExpectResumption(RESUME_TICKET);
+
+  // Send ClientHello
+  server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTING);
+
+  // The client can never accept 0-RTT.
+  RefuseApplicationData(client_, 1);
+
+  // Send some 0-RTT data, which get staged in `client_stage`.
+  const char* kMsg = "EarlyData";
+  const PRInt32 kMsgLen = static_cast<PRInt32>(strlen(kMsg));
+  PRInt32 rv = PR_Write(client_->ssl_fd(), kMsg, kMsgLen);
+  EXPECT_EQ(kMsgLen, rv);
+
+  client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTING);
+
+  // The server should now have 0-RTT to read.
+  std::vector<uint8_t> buf(kMsgLen);
+  rv = PR_Read(server_->ssl_fd(), buf.data(), kMsgLen);
+  EXPECT_EQ(kMsgLen, rv);
+
+  // The handshake should happily finish.
+  server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTED);
+  client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTED);
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
 
   // Reading and writing application data should work.
   SendForwardReceive(client_, client_stage, server_);
@@ -572,6 +629,51 @@ TEST_F(TlsConnectDatagram13, ForwardDataDtls) {
             SSL_RecordLayerData(client_->ssl_fd(), 0, ssl_ct_application_data,
                                 data, sizeof(data)));
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
+}
+
+TEST_F(TlsConnectStreamTls13, SuppressEndOfEarlyData) {
+  SetupForZeroRtt();
+
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  client_->SetOption(SSL_SUPPRESS_END_OF_EARLY_DATA, true);
+  server_->SetOption(SSL_SUPPRESS_END_OF_EARLY_DATA, true);
+  StartConnect();
+  client_->SetServerKeyBits(server_->server_key_bits());
+
+  BadPrSocket bad_layer_client(client_);
+  BadPrSocket bad_layer_server(server_);
+
+  StagedRecords client_stage(client_);
+  StagedRecords server_stage(server_);
+
+  ExpectResumption(RESUME_TICKET);
+
+  // Send ClientHello
+  server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTING);
+
+  // Send some 0-RTT data, which get staged in `client_stage`.
+  const char* kMsg = "ABCDEF";
+  const PRInt32 kMsgLen = static_cast<PRInt32>(strlen(kMsg));
+  PRInt32 rv = PR_Write(client_->ssl_fd(), kMsg, kMsgLen);
+  EXPECT_EQ(kMsgLen, rv);
+
+  client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTING);
+
+  // The server should now have 0-RTT to read.
+  std::vector<uint8_t> buf(kMsgLen);
+  rv = PR_Read(server_->ssl_fd(), buf.data(), kMsgLen);
+  EXPECT_EQ(kMsgLen, rv);
+
+  // The handshake should happily finish, without the end of the early data.
+  server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTED);
+  client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTED);
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+
+  // Reading and writing application data should work.
+  SendForwardReceive(client_, client_stage, server_);
+  SendForwardReceive(server_, server_stage, client_);
 }
 
 }  // namespace nss_test

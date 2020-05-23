@@ -189,10 +189,11 @@ fail:
 
 /* encode the final pad block of aes xcbc, padBuf is modified */
 CK_RV
-sftk_xcbc_mac_pad(unsigned char *padBuf, unsigned int bufLen, int blockSize,
-                  const unsigned char *k2, const unsigned char *k3)
+sftk_xcbc_mac_pad(unsigned char *padBuf, unsigned int bufLen,
+                  unsigned int blockSize, const unsigned char *k2,
+                  const unsigned char *k3)
 {
-    int i;
+    unsigned int i;
     if (bufLen == blockSize) {
         for (i = 0; i < blockSize; i++) {
             padBuf[i] ^= k2[i];

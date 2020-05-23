@@ -17,6 +17,7 @@
 
 #include "basicutil.h"
 #include <stdarg.h>
+#include <stddef.h>
 #include <sys/stat.h>
 #include <errno.h>
 
@@ -632,7 +633,8 @@ void
 SECU_PrintPRandOSError(const char *progName)
 {
     char buffer[513];
-    PRInt32 errLen = PR_GetErrorTextLength();
+    PRInt32 errLenInt = PR_GetErrorTextLength();
+    size_t errLen = errLenInt < 0 ? 0 : (size_t)errLenInt;
     if (errLen > 0 && errLen < sizeof buffer) {
         PR_GetErrorText(buffer);
     }
