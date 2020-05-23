@@ -52,7 +52,6 @@ py2commands="
     taskgraph
     telemetry-tests-client
     test
-    test-info
     tps-build
     visualmetrics
     web-platform-tests
