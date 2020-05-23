@@ -7,19 +7,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=426082
   <title>Test for Bug 426082</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
-  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <style>
-    canvas {
-      display: none;
-    }
-  </style>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=426082">Mozilla Bug 426082</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
 </div>
 <p><input type="button" value="Button" id="button"></p>
 <p><label for="button" id="label">Label</label></p>
@@ -29,136 +22,93 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=426082
 
 /** Test for Bug 426082 **/
 
-var normalButtonCanvas, pressedButtonCanvas, normalFocusedButtonCanvas,
-    pressedFocusedButtonCanvas, currentSnapshot, button, label, outside;
-
 function runTests() {
-  button = $("button");
-  label = $("label");
-  outside = $("outside");
-  SimpleTest.executeSoon(executeTests);
+  SimpleTest.executeSoon(tests);
 }
 
 SimpleTest.waitForFocus(runTests);
 
-function isRectContainedInRectFromRegion(rect, region) {
-  return Array.prototype.some.call(region, function (r) {
-    return rect.left >= r.left &&
-           rect.top >= r.top &&
-           rect.right <= r.right &&
-           rect.bottom <= r.bottom;
-  });
+function oneTick() {
+  return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 }
 
-function paintListener(e) {
-  if (isRectContainedInRectFromRegion(buttonRect(), SpecialPowers.wrap(e).clientRects)) {
-    gNeedsPaint = false;
-    currentSnapshot = takeSnapshot();
-  }
+function sendMouseEvent(t, elem) {
+  let r = elem.getBoundingClientRect();
+  synthesizeMouse(elem, r.width / 2, r.height / 2, {type: t});
 }
 
-var gNeedsPaint = false;
-function executeTests() {
-  var testYielder = tests();
-  function execNext() {
-    if (!gNeedsPaint) {
-      let {done} = testYielder.next();
-      if (done) {
-        return;
-      }
-      button.getBoundingClientRect(); // Flush.
-      gNeedsPaint = true;
-    }
-    SimpleTest.executeSoon(execNext);
-  }
-  execNext();
-}
+async function tests() {
+  let button = document.getElementById("button");
+  let label = document.getElementById("label");
+  let outside = document.getElementById("outside");
 
-function* tests() {
-  window.addEventListener("MozAfterPaint", paintListener);
-  normalButtonCanvas = takeSnapshot();
-  // Press the button.
-  sendMouseEvent("mousemove", button);
-  sendMouseEvent("mousedown", button);
-  yield undefined;
-  pressedFocusedButtonCanvas = takeSnapshot();
-  compareSnapshots_(normalButtonCanvas, pressedFocusedButtonCanvas, false, "Pressed focused buttons should look different from normal buttons.");
-  // Release.
-  sendMouseEvent("mouseup", button);
-  yield undefined;
-  // make sure the button is focused as this doesn't happen on click on Mac
-  button.focus();
-  normalFocusedButtonCanvas = takeSnapshot();
-  compareSnapshots_(normalFocusedButtonCanvas, pressedFocusedButtonCanvas, false, "Pressed focused buttons should look different from normal focused buttons.");
-  // Unfocus the button.
-  sendMouseEvent("mousedown", outside);
-  sendMouseEvent("mouseup", outside);
-  yield undefined;
+  let is = window.opener.is;
+  let ok = window.opener.ok;
 
   // Press the label.
   sendMouseEvent("mousemove", label);
   sendMouseEvent("mousedown", label);
-  yield undefined;
-  compareSnapshots_(normalButtonCanvas, currentSnapshot, false, "Pressing the label should have pressed the button.");
-  pressedButtonCanvas = takeSnapshot();
+
+  await oneTick();
+
+  ok(label.matches(":hover"), "Label is hovered");
+  ok(button.matches(":hover"), "Button should be hovered too");
+
+  ok(label.matches(":active"), "Label is active");
+  ok(button.matches(":active"), "Button should be active too");
+
   // Move the mouse down from the label.
   sendMouseEvent("mousemove", outside);
-  yield undefined;
-  compareSnapshots_(normalButtonCanvas, currentSnapshot, true, "Moving the mouse down from the label should have unpressed the button.");
-  // ... and up again.
+
+  await oneTick();
+
+  ok(!label.matches(":hover"), "Label is no longer hovered");
+  ok(!button.matches(":hover"), "Button should not be hovered too");
+
+  ok(label.matches(":active"), "Label is still active");
+  ok(button.matches(":active"), "Button is still active too");
+
+  // And up again.
   sendMouseEvent("mousemove", label);
-  yield undefined;
-  compareSnapshots_(pressedButtonCanvas, currentSnapshot, true, "Moving the mouse back on top of the label should have pressed the button.");
+
+  await oneTick();
+
+
+  ok(label.matches(":hover"), "Label hovered again");
+  ok(button.matches(":hover"), "Button be hovered again");
+  ok(label.matches(":active"), "Label is still active");
+  ok(button.matches(":active"), "Button is still active too");
+
   // Release.
   sendMouseEvent("mouseup", label);
-  yield undefined;
-  var focusOnMouse = (navigator.platform.indexOf("Mac") != 0);
-  compareSnapshots_(focusOnMouse ? normalFocusedButtonCanvas : normalButtonCanvas,
-                    currentSnapshot, true, "Releasing the mouse over the label should have unpressed" +
-                                            (focusOnMouse ? " (and focused)" : "") + " the button.");
+
+  await oneTick();
+
+  ok(!label.matches(":active"), "Label is no longer active");
+  ok(!button.matches(":active"), "Button is no longer active");
+
+  ok(label.matches(":hover"), "Label is still hovered");
+  ok(button.matches(":hover"), "Button is still hovered");
+
   // Press the label and remove it.
   sendMouseEvent("mousemove", label);
   sendMouseEvent("mousedown", label);
-  yield undefined;
+
+  await oneTick();
+
   label.remove();
-  yield undefined;
-  compareSnapshots_(normalButtonCanvas, currentSnapshot, true, "Removing the label should have unpressed the button.");
+
+  await oneTick();
+
+  ok(!label.matches(":active"), "Removing label should have unpressed it");
+  ok(!label.matches(":focus"), "Removing label should have unpressed it");
+  ok(!label.matches(":hover"), "Removing label should have unhovered it");
+  ok(!button.matches(":active"), "Removing label should have unpressed the button");
+  ok(!button.matches(":focus"), "Removing label should have unpressed the button");
+  ok(!button.matches(":hover"), "Removing label should have unhovered the button");
+
   sendMouseEvent("mouseup", label);
-  window.removeEventListener("MozAfterPaint", paintListener);
   window.opener.finishTests();
- }
-
-function sendMouseEvent(t, elem) {
-  var r = elem.getBoundingClientRect();
-  synthesizeMouse(elem, r.width / 2, r.height / 2, {type: t});
-}
-
-function compareSnapshots_(c1, c2, shouldBeIdentical, msg) {
-  var [correct, c1url, c2url] = compareSnapshots(c1, c2, shouldBeIdentical);
-  if (correct) {
-    if (shouldBeIdentical) {
-      window.opener.ok(true, msg + " - expected " + c1url);
-    } else {
-      window.opener.ok(true, msg + " - got " + c1url + " and " + c2url);
-    }
-  } else {
-    if (shouldBeIdentical) {
-      window.opener.ok(false, msg + " - expected " + c1url + " but got " + c2url);
-    } else {
-      window.opener.ok(false, msg + " - expected something other than " + c1url);
-    }
-  }
-}
-
-function takeSnapshot() {
-  var r = buttonRect();
-  adjustedRect = { left: r.left - 2, top: r.top - 2,
-                   width: r.width + 4, height: r.height + 4 };
-  return SpecialPowers.snapshotRect(window, adjustedRect);
-}
-
-function buttonRect() {
-  return button.getBoundingClientRect();
 }
 </script>
 </pre>
