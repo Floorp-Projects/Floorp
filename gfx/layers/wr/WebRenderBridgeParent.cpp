@@ -456,9 +456,11 @@ static bool ReadRawFont(const OpAddRawFont& aOp, wr::ShmSegmentsReader& aReader,
     return false;
   }
   Range<uint8_t>& source = ptr.ref();
-  // Attempt to sanitize the font before passing it along for updating
+  // Attempt to sanitize the font before passing it along for updating.
+  // Ensure that we're not strict here about font types, since any font that
+  // failed generating a descriptor might end up here as raw font data.
   size_t lengthHint = gfxOTSContext::GuessSanitizedFontSize(
-      source.begin().get(), source.length());
+      source.begin().get(), source.length(), false);
   if (!lengthHint) {
     gfxCriticalNote << "Could not determine font type for sanitizing font "
                     << aOp.key().mHandle;
