@@ -42,15 +42,6 @@
 #  define PT_ARM_EXIDX 0x70000001
 #endif
 
-// Bug 1082817: ICS B2G has a buggy linker that doesn't always ensure
-// that the EXIDX is sorted by address, as the spec requires.  So in
-// that case we build and sort an array of pointers into the index,
-// and binary-search that; otherwise, we search the index in place
-// (avoiding the time and space overhead of the indirection).
-#if defined(ANDROID_VERSION) && ANDROID_VERSION < 16
-#  define HAVE_UNSORTED_EXIDX
-#endif
-
 namespace mozilla {
 
 struct PRel31 {
@@ -90,48 +81,18 @@ class EHState {
 
 enum { R_SP = 13, R_LR = 14, R_PC = 15 };
 
-#ifdef HAVE_UNSORTED_EXIDX
-class EHEntryHandle {
-  const EHEntry* mValue;
-
- public:
-  EHEntryHandle(const EHEntry* aEntry) : mValue(aEntry) {}
-  const EHEntry* value() const { return mValue; }
-};
-
-bool operator<(const EHEntryHandle& lhs, const EHEntryHandle& rhs) {
-  return lhs.value()->startPC.compute() < rhs.value()->startPC.compute();
-}
-#endif
-
 class EHTable {
   uint32_t mStartPC;
   uint32_t mEndPC;
   uint32_t mBaseAddress;
-#ifdef HAVE_UNSORTED_EXIDX
-  // In principle we should be able to binary-search the index section in
-  // place, but the ICS toolchain's linker is noncompliant and produces
-  // indices that aren't entirely sorted (e.g., libc).  So we have this:
-  std::vector<EHEntryHandle> mEntries;
-  typedef std::vector<EHEntryHandle>::const_iterator EntryIterator;
-  EntryIterator entriesBegin() const { return mEntries.begin(); }
-  EntryIterator entriesEnd() const { return mEntries.end(); }
-  static const EHEntry* entryGet(EntryIterator aEntry) {
-    return aEntry->value();
-  }
-#else
-  typedef const EHEntry* EntryIterator;
-  EntryIterator mEntriesBegin, mEntriesEnd;
-  EntryIterator entriesBegin() const { return mEntriesBegin; }
-  EntryIterator entriesEnd() const { return mEntriesEnd; }
-  static const EHEntry* entryGet(EntryIterator aEntry) { return aEntry; }
-#endif
+  const EHEntry* mEntriesBegin;
+  const EHEntry* mEntriesEnd;
   std::string mName;
 
  public:
   EHTable(const void* aELF, size_t aSize, const std::string& aName);
   const EHEntry* lookup(uint32_t aPC) const;
-  bool isValid() const { return entriesEnd() != entriesBegin(); }
+  bool isValid() const { return mEntriesEnd != mEntriesBegin; }
   const std::string& name() const { return mName; }
   uint32_t startPC() const { return mStartPC; }
   uint32_t endPC() const { return mEndPC; }
@@ -494,26 +455,25 @@ const EHEntry* EHTable::lookup(uint32_t aPC) const {
   MOZ_ASSERT(aPC >= mStartPC);
   if (aPC >= mEndPC) return nullptr;
 
-  EntryIterator begin = entriesBegin();
-  EntryIterator end = entriesEnd();
+  const EHEntry* begin = mEntriesBegin;
+  const EHEntry* end = mEntriesEnd;
   MOZ_ASSERT(begin < end);
-  if (aPC < reinterpret_cast<uint32_t>(entryGet(begin)->startPC.compute()))
+  if (aPC < reinterpret_cast<uint32_t>(begin->startPC.compute()))
     return nullptr;
 
   while (end - begin > 1) {
 #ifdef EHABI_UNWIND_MORE_ASSERTS
-    if (entryGet(end - 1)->startPC.compute() <
-        entryGet(begin)->startPC.compute()) {
+    if ((end - 1)->startPC.compute() < begin->startPC.compute()) {
       MOZ_CRASH("unsorted exidx");
     }
 #endif
-    EntryIterator mid = begin + (end - begin) / 2;
-    if (aPC < reinterpret_cast<uint32_t>(entryGet(mid)->startPC.compute()))
+    const EHEntry* mid = begin + (end - begin) / 2;
+    if (aPC < reinterpret_cast<uint32_t>(mid->startPC.compute()))
       end = mid;
     else
       begin = mid;
   }
-  return entryGet(begin);
+  return begin;
 }
 
 #if MOZ_LITTLE_ENDIAN()
@@ -528,10 +488,8 @@ static const unsigned char hostEndian = ELFDATA2MSB;
 EHTable::EHTable(const void* aELF, size_t aSize, const std::string& aName)
     : mStartPC(~0),  // largest uint32_t
       mEndPC(0),
-#ifndef HAVE_UNSORTED_EXIDX
       mEntriesBegin(nullptr),
       mEntriesEnd(nullptr),
-#endif
       mName(aName) {
   const uint32_t fileHeaderAddr = reinterpret_cast<uint32_t>(aELF);
 
@@ -568,20 +526,10 @@ EHTable::EHTable(const void* aELF, size_t aSize, const std::string& aName)
   mBaseAddress = fileHeaderAddr - zeroHdr->p_vaddr;
   mStartPC += mBaseAddress;
   mEndPC += mBaseAddress;
-
-  // Create a sorted index of the index to work around linker bugs.
-  const EHEntry* startTable =
+  mEntriesBegin =
       reinterpret_cast<const EHEntry*>(mBaseAddress + exidxHdr->p_vaddr);
-  const EHEntry* endTable = reinterpret_cast<const EHEntry*>(
+  mEntriesEnd = reinterpret_cast<const EHEntry*>(
       mBaseAddress + exidxHdr->p_vaddr + exidxHdr->p_memsz);
-#ifdef HAVE_UNSORTED_EXIDX
-  mEntries.reserve(endTable - startTable);
-  for (const EHEntry* i = startTable; i < endTable; ++i) mEntries.push_back(i);
-  std::sort(mEntries.begin(), mEntries.end());
-#else
-  mEntriesBegin = startTable;
-  mEntriesEnd = endTable;
-#endif
 }
 
 mozilla::Atomic<const EHAddrSpace*> EHAddrSpace::sCurrent(nullptr);
