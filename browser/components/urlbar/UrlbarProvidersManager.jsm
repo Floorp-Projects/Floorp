@@ -161,9 +161,9 @@ class ProvidersManager {
   /**
    * Starts querying.
    * @param {object} queryContext The query context object
-   * @param {object} controller a UrlbarController instance
+   * @param {object} [controller] a UrlbarController instance
    */
-  async startQuery(queryContext, controller) {
+  async startQuery(queryContext, controller = null) {
     logger.info(`Query start ${queryContext.searchString}`);
 
     // Define the muxer to use.
@@ -487,7 +487,9 @@ class Query {
       }
     }
 
-    this.controller.receiveResults(this.context);
+    if (this.controller) {
+      this.controller.receiveResults(this.context);
+    }
   }
 }
 
