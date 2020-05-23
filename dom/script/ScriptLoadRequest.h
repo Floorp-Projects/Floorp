@@ -88,6 +88,11 @@ class ScriptLoadRequest
 
   ModuleLoadRequest* AsModuleRequest();
 
+#ifdef MOZ_GECKO_PROFILER
+  TimeStamp mOffThreadParseStartTime;
+  TimeStamp mOffThreadParseStopTime;
+#endif
+
   void FireScriptAvailable(nsresult aResult) {
     bool isInlineClassicScript = mIsInline && !IsModuleRequest();
     GetScriptElement()->ScriptAvailable(aResult, GetScriptElement(),
