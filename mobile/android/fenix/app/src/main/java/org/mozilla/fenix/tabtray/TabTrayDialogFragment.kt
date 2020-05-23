@@ -21,6 +21,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     interface Interactor {
         fun onTabSelected(tab: Tab)
         fun onNewTabTapped(private: Boolean)
+        fun onTabClosed(tab: Tab)
     }
 
     private lateinit var tabTrayView: TabTrayView
@@ -60,6 +61,10 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
             insets
         }
+    }
+
+    override fun onTabClosed(tab: Tab) {
+        interactor?.onTabClosed(tab)
     }
 
     override fun onTabSelected(tab: Tab) {

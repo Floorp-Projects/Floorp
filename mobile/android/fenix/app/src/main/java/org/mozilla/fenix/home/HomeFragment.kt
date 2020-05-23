@@ -371,6 +371,33 @@ class HomeFragment : Fragment() {
                     (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.fromBoolean(private)
                     tabTrayDialog.dismiss()
                 }
+
+                override fun onTabClosed(tab: mozilla.components.concept.tabstray.Tab) {
+                    val snapshot = sessionManager
+                        .findSessionById(tab.id)?.let {
+                            sessionManager.createSessionSnapshot(it)
+                        } ?: return
+
+                    val state = snapshot.engineSession?.saveState()
+                    val isSelected = tab.id == requireComponents.core.store.state.selectedTabId ?: false
+
+                    val snackbarMessage = if (snapshot.session.private) {
+                        getString(R.string.snackbar_private_tab_closed)
+                    } else {
+                        getString(R.string.snackbar_tab_closed)
+                    }
+
+                    viewLifecycleOwner.lifecycleScope.allowUndo(
+                        requireView(),
+                        snackbarMessage,
+                        getString(R.string.snackbar_deleted_undo),
+                        {
+                            sessionManager.add(snapshot.session, isSelected, engineSessionState = state)
+                        },
+                        operation = { }//,
+                        //anchorView = view?.tab_tray_controls
+                    )
+                }
             }
         }
 

@@ -22,6 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 
 interface TabTrayInteractor {
+    fun onTabClosed(tab: Tab)
     fun onTabSelected(tab: Tab)
     fun onNewTabTapped(private: Boolean)
     fun onTabTrayDismissed()
@@ -110,7 +111,9 @@ class TabTrayView(
         tabsFeature.filterTabs(filter)
     }
 
-    override fun onTabClosed(tab: Tab) { /*noop*/ }
+    override fun onTabClosed(tab: Tab) {
+        interactor.onTabClosed(tab)
+    }
     override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/ }
     override fun onTabUnselected(tab: TabLayout.Tab?) { /*noop*/ }
 
