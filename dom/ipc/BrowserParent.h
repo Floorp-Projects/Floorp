@@ -508,8 +508,6 @@ class BrowserParent final : public PBrowserParent,
 
   void SizeModeChanged(const nsSizeMode& aSizeMode);
 
-  void ThemeChanged();
-
   void HandleAccessKey(const WidgetKeyboardEvent& aEvent,
                        nsTArray<uint32_t>& aCharCodes);
 
