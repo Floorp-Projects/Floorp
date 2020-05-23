@@ -1119,17 +1119,6 @@ void BrowserParent::SizeModeChanged(const nsSizeMode& aSizeMode) {
   }
 }
 
-void BrowserParent::ThemeChanged() {
-  if (!mIsDestroyed) {
-    // The theme has changed, and any cached values we had sent down
-    // to the child have been invalidated. When this method is called,
-    // LookAndFeel should have the up-to-date values, which we now
-    // send down to the child. We do this for every remote tab for now,
-    // but bug 1156934 has been filed to do it once per content process.
-    Unused << SendThemeChanged(LookAndFeel::GetIntCache());
-  }
-}
-
 #if defined(MOZ_WIDGET_ANDROID)
 void BrowserParent::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
   if (!mIsDestroyed) {

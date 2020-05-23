@@ -519,9 +519,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                                                   const int32_t& aRounding,
                                                   const double& aScale);
 
-  mozilla::ipc::IPCResult RecvThemeChanged(
-      nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache);
-
   mozilla::ipc::IPCResult RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
                                               nsTArray<uint32_t>&& aCharCodes);
 

@@ -19,6 +19,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
+#include "mozilla/dom/ContentParent.h"
 
 #include "base/basictypes.h"
 
@@ -1347,22 +1348,19 @@ void nsPresContext::ThemeChangedInternal() {
     // surfaces. (We could add a vector image only version of DiscardAll, but
     // in bug 940625 we decided theme changes are rare enough not to bother.)
     image::SurfaceCacheUtils::DiscardAll();
+
+    if (XRE_IsParentProcess()) {
+      nsTArray<ContentParent*> cp;
+      ContentParent::GetAll(cp);
+      auto cache = LookAndFeel::GetIntCache();
+      for (ContentParent* c : cp) {
+        Unused << c->SendThemeChanged(cache);
+      }
+    }
   }
 
   RefreshSystemMetrics();
   PreferenceSheet::Refresh();
-
-  // Recursively notify all remote leaf descendants that the
-  // system theme has changed.
-  if (nsPIDOMWindowOuter* window = mDocument->GetWindow()) {
-    if (RefPtr<nsPIWindowRoot> topLevelWin = window->GetTopWindowRoot()) {
-      topLevelWin->EnumerateBrowsers(
-          [](nsIRemoteTab* aBrowserParent, void*) {
-            aBrowserParent->NotifyThemeChanged();
-          },
-          nullptr);
-    }
-  }
 }
 
 void nsPresContext::SysColorChanged() {
