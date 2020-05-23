@@ -67,6 +67,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     SendAlertText(SendKeysParameters),
     TakeScreenshot,
     TakeElementScreenshot(WebElement),
+    Print(PrintParameters),
     Status,
     Extension(T),
 }
@@ -336,7 +337,8 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 );
                 let element = WebElement(element_id.as_str().into());
                 WebDriverCommand::TakeElementScreenshot(element)
-            }
+            },
+            Route::Print => WebDriverCommand::Print(serde_json::from_str(raw_body)?),
             Route::Status => WebDriverCommand::Status,
             Route::Extension(ref extension) => extension.command(params, &body_data)?,
         };
@@ -483,6 +485,110 @@ impl CapabilitiesMatching for NewSessionParameters {
 pub struct NewWindowParameters {
     #[serde(rename = "type")]
     pub type_hint: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct PrintParameters {
+    pub orientation: PrintOrientation,
+    #[serde(deserialize_with = "deserialize_to_print_scale_f64")]
+    pub scale: f64,
+    pub background: bool,
+    pub page: PrintPage,
+    pub margin: PrintMargins,
+    pub page_ranges: Vec<String>,
+    pub shrink_to_fit: bool,
+}
+
+impl Default for PrintParameters {
+    fn default() -> Self {
+        PrintParameters {
+            orientation: PrintOrientation::default(),
+            scale: 1.0,
+            background: false,
+            page: PrintPage::default(),
+            margin: PrintMargins::default(),
+            page_ranges: Vec::new(),
+            shrink_to_fit: true,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PrintOrientation {
+    Landscape,
+    Portrait,
+}
+
+impl Default for PrintOrientation {
+    fn default() -> Self {
+        PrintOrientation::Portrait
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct PrintPage {
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub width: f64,
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub height: f64,
+}
+
+impl Default for PrintPage {
+    fn default() -> Self {
+        PrintPage {
+            width: 21.59,
+            height: 27.94,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct PrintMargins {
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub top: f64,
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub bottom: f64,
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub left: f64,
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub right: f64,
+}
+
+impl Default for PrintMargins {
+    fn default() -> Self {
+        PrintMargins {
+            top: 1.0,
+            bottom: 1.0,
+            left: 1.0,
+            right: 1.0,
+        }
+    }
+}
+
+fn deserialize_to_positive_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let val = f64::deserialize(deserializer)?;
+    if val < 0.0 {
+        return Err(de::Error::custom(format!("{} is negative", val)));
+    };
+    Ok(val)
+}
+
+fn deserialize_to_print_scale_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let val = f64::deserialize(deserializer)?;
+    if val < 0.1 || val > 2.0 {
+        return Err(de::Error::custom(format!("{} is outside range 0.1-2", val)));
+    };
+    Ok(val)
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -1103,6 +1209,38 @@ mod tests {
         };
 
         assert_de(&new_window, json);
+    }
+
+       #[test]
+    fn test_json_print_defaults() {
+        let params = PrintParameters::default();
+        assert_de(&params, json!({}));
+    }
+
+    #[test]
+    fn test_json_print() {
+        let params = PrintParameters {
+            orientation: PrintOrientation::Landscape,
+            page: PrintPage {
+                width: 10.0,
+                ..Default::default()
+            },
+            margin: PrintMargins {
+                top: 10.0,
+                ..Default::default()
+            },
+            scale: 1.5,
+            ..Default::default()
+        };
+        assert_de(
+            &params,
+            json!({"orientation": "landscape", "page": {"width": 10}, "margin": {"top": 10}, "scale": 1.5}),
+        );
+    }
+
+    #[test]
+    fn test_json_scale_invalid() {
+        assert!(serde_json::from_value::<AddonInstallParameters>(json!({"scale": 3})).is_err());
     }
 
     #[test]

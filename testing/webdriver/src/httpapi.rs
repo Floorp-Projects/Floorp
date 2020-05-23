@@ -279,6 +279,11 @@ pub(crate) fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'st
             "/session/{sessionId}/actions",
             Route::ReleaseActions,
         ),
+        (
+            Method::POST,
+            "/session/{sessionId}/print",
+            Route::Print,
+        ),
         (Method::GET, "/status", Route::Status),
     ];
 }
@@ -344,6 +349,7 @@ pub enum Route<U: WebDriverExtensionRoute> {
     SendAlertText,
     TakeScreenshot,
     TakeElementScreenshot,
+    Print,
     Status,
     Extension(U),
 }

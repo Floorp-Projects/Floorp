@@ -179,6 +179,8 @@ pub enum Command {
     MinimizeWindow,
     #[serde(rename = "WebDriver:NewWindow")]
     NewWindow(NewWindow),
+    #[serde(rename = "WebDriver:Print")]
+    Print,
     #[serde(rename = "WebDriver:Refresh")]
     Refresh,
     #[serde(rename = "WebDriver:ReleaseActions")]
