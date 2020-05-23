@@ -2026,9 +2026,9 @@ class EditorBase : public nsIEditor,
   /**
    * Helper for GetPreviousNodeInternal() and GetNextNodeInternal().
    */
-  nsIContent* FindNextLeafNode(nsINode* aCurrentNode, bool aGoForward,
+  nsIContent* FindNextLeafNode(const nsINode* aCurrentNode, bool aGoForward,
                                bool bNoBlockCrossing) const;
-  nsIContent* FindNode(nsINode* aCurrentNode, bool aGoForward,
+  nsIContent* FindNode(const nsINode* aCurrentNode, bool aGoForward,
                        bool aEditableNode, bool aFindAnyDataNode,
                        bool bNoBlockCrossing) const;
 
