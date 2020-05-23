@@ -2045,7 +2045,8 @@ class EditorBase : public nsIEditor,
    *                             aFindEditableNode is true.  If there is no
    *                             previous node, returns nullptr.
    */
-  nsIContent* GetPreviousNodeInternal(nsINode& aNode, bool aFindEditableNode,
+  nsIContent* GetPreviousNodeInternal(const nsINode& aNode,
+                                      bool aFindEditableNode,
                                       bool aFindAnyDataNode,
                                       bool aNoBlockCrossing) const;
 
@@ -2070,9 +2071,9 @@ class EditorBase : public nsIEditor,
    *                             aFindEditableNode is true.  If there is no
    *                             next node, returns nullptr.
    */
-  nsIContent* GetNextNodeInternal(nsINode& aNode, bool aFindEditableNode,
+  nsIContent* GetNextNodeInternal(const nsINode& aNode, bool aFindEditableNode,
                                   bool aFindAnyDataNode,
-                                  bool bNoBlockCrossing) const;
+                                  bool aNoBlockCrossing) const;
 
   /**
    * And another version that takes a point in DOM tree rather than a node.
