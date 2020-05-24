@@ -438,8 +438,6 @@ DIRECT_CALL_OVERRIDES = {
 # set() of (Protocol, side)
 VIRTUAL_CALL_CLASSES = set([
     # Defined as a strange template
-    ("PJavaScript", "child"),
-    ("PJavaScript", "parent"),
     ("PMedia", "parent"),
     ("PTexture", "parent"),
 

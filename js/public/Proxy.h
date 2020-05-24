@@ -58,9 +58,6 @@ class JS_FRIEND_API Wrapper;
  * -   DOM objects with special property behavior, like named getters
  *     (dom/bindings/Codegen.py generates these proxies from WebIDL)
  *
- * -   semi-transparent use of objects that live in other processes
- *     (CPOWs, implemented in js/ipc)
- *
  * ### Proxies and internal methods
  *
  * ES2019 specifies 13 internal methods. The runtime semantics of just about

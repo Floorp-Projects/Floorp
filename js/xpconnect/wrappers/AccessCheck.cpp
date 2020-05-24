@@ -19,7 +19,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsJSUtils.h"
 #include "xpcprivate.h"
 
@@ -97,16 +96,6 @@ bool AccessCheck::checkPassToPrivilegedCode(JSContext* cx, HandleObject wrapper,
 
   // Non-wrappers are fine.
   if (!js::IsWrapper(obj)) {
-    return true;
-  }
-
-  // CPOWs use COWs (in the unprivileged junk scope) for all child->parent
-  // references. Without this test, the child process wouldn't be able to
-  // pass any objects at all to CPOWs.
-  if (mozilla::jsipc::IsWrappedCPOW(obj) &&
-      js::GetObjectCompartment(wrapper) ==
-          js::GetObjectCompartment(xpc::UnprivilegedJunkScope()) &&
-      XRE_IsParentProcess()) {
     return true;
   }
 

@@ -33,7 +33,6 @@ include protocol POfflineCacheUpdate;
 include protocol PSpeechSynthesis;
 #endif
 include protocol PTestShell;
-include protocol PJavaScript;
 include protocol PRemoteSpellcheckEngine;
 include protocol PWebBrowserPersistDocument;
 include protocol PWebrtcGlobal;
@@ -48,7 +47,6 @@ include protocol PScriptCache;
 include protocol PSessionStorageObserver;
 include protocol PBenchmarkStorage;
 include DOMTypes;
-include JavaScriptTypes;
 include IPCBlob;
 include IPCStream;
 include PTabContext;
@@ -392,7 +390,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PSpeechSynthesis;
 #endif
     manages PTestShell;
-    manages PJavaScript;
     manages PRemoteSpellcheckEngine;
     manages PWebBrowserPersistDocument;
     manages PWebrtcGlobal;
@@ -922,8 +919,6 @@ parent:
     // See Bug 1518344 - Investigate using async for PContent::LaunchRDDProcess
     sync LaunchRDDProcess()
         returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
-
-    async PJavaScript();
 
     async PRemoteSpellcheckEngine();
 
