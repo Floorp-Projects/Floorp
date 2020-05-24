@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   Region: "resource://gre/modules/Region.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
@@ -50,6 +51,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
     Services.search.reInit();
   }
 );
+
+XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
+  return console.createInstance({
+    prefix: "SearchService",
+    maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
+  });
+});
 
 // A text encoder to UTF8, used whenever we commit the cache to disk.
 XPCOMUtils.defineLazyGetter(this, "gEncoder", function() {
@@ -598,6 +606,9 @@ SearchService.prototype = {
    */
   _metaData: {},
 
+  // A reference to the handler for the default override allow list.
+  _defaultOverrideAllowlist: null,
+
   // This reflects the combined values of the prefs for enabling the separate
   // private default UI, and for the user choosing a separate private engine.
   // If either one is disabled, then we don't enable the separate private default.
@@ -842,32 +853,6 @@ SearchService.prototype = {
     return false;
   },
 
-  async _getSearchDefaultOverrideAllowlist() {
-    return [];
-  },
-
-  async _canOverrideDefault(extension, appProvidedExtensionId) {
-    const overrideTable = await this._getSearchDefaultOverrideAllowlist();
-
-    let entry = overrideTable.find(e => e.thirdPartyId == extension.id);
-    if (!entry) {
-      return false;
-    }
-
-    if (appProvidedExtensionId != entry.overridesId) {
-      return false;
-    }
-    let searchProvider =
-      extension.manifest.chrome_settings_overrides.search_provider;
-    return entry.urls.some(
-      e =>
-        searchProvider.search_url == e.search_url &&
-        searchProvider.search_form == e.search_form &&
-        searchProvider.search_url_get_params == e.search_url_get_params &&
-        searchProvider.search_url_post_params == e.search_url_post_params
-    );
-  },
-
   async maybeSetAndOverrideDefault(extension) {
     let searchProvider =
       extension.manifest.chrome_settings_overrides.search_provider;
@@ -881,6 +866,10 @@ SearchService.prototype = {
       SearchUtils.DEFAULT_TAG
     );
 
+    if (!this._defaultOverrideAllowlist) {
+      this._defaultOverrideAllowlist = new SearchDefaultOverrideAllowlistHandler();
+    }
+
     if (
       extension.startupReason === "ADDON_INSTALL" ||
       extension.startupReason === "ADDON_ENABLE"
@@ -889,7 +878,16 @@ SearchService.prototype = {
       if (this.defaultEngine.name == searchProvider.name) {
         return false;
       }
-      if (!(await this._canOverrideDefault(extension, engine._extensionID))) {
+      if (
+        !(await this._defaultOverrideAllowlist.canOverride(
+          extension,
+          engine._extensionID
+        ))
+      ) {
+        logConsole.debug(
+          "Allowing default engine to be set to app-provided.",
+          extension.id
+        );
         // We don't allow overriding the engine in this case, but we can allow
         // the extension to change the default engine.
         return true;
@@ -897,15 +895,26 @@ SearchService.prototype = {
       if (extension.startupReason === "ADDON_INSTALL") {
         // We're ok to override.
         engine.overrideWithExtension(params);
+        logConsole.debug(
+          "Allowing default engine to be set to app-provided and overridden.",
+          extension.id
+        );
         return true;
       }
     }
 
     if (
       engine.getAttr("overriddenBy") == extension.id &&
-      (await this._canOverrideDefault(extension, engine._extensionID))
+      (await this._defaultOverrideAllowlist.canOverride(
+        extension,
+        engine._extensionID
+      ))
     ) {
       engine.overrideWithExtension(params);
+      logConsole.debug(
+        "Re-enabling overriding of core extension by",
+        extension.id
+      );
       return true;
     }
 
@@ -3882,5 +3891,82 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/widget/idleservice;1",
   "nsIIdleService"
 );
+
+/**
+ * Handles getting and checking extensions against the allow list.
+ */
+class SearchDefaultOverrideAllowlistHandler {
+  /**
+   * @param {function} listener
+   *   A listener for configuration update changes.
+   */
+  constructor(listener) {
+    this._remoteConfig = RemoteSettings(SearchUtils.SETTINGS_ALLOWLIST_KEY);
+  }
+
+  /**
+   * Determines if a search engine extension can override a default one
+   * according to the allow list.
+   *
+   * @param {object} extension
+   *   The extension object (from add-on manager) that will override the
+   *   app provided search engine.
+   * @param {string} appProvidedExtensionId
+   *   The id of the search engine that will be overriden.
+   * @returns {boolean}
+   *   Returns true if the search engine extension may override the app provided
+   *   instance.
+   */
+  async canOverride(extension, appProvidedExtensionId) {
+    const overrideTable = await this._getAllowlist();
+
+    let entry = overrideTable.find(e => e.thirdPartyId == extension.id);
+    if (!entry) {
+      return false;
+    }
+
+    if (appProvidedExtensionId != entry.overridesId) {
+      return false;
+    }
+
+    let searchProvider =
+      extension.manifest.chrome_settings_overrides.search_provider;
+
+    return entry.urls.some(
+      e =>
+        searchProvider.search_url == e.search_url &&
+        searchProvider.search_form == e.search_form &&
+        searchProvider.search_url_get_params == e.search_url_get_params &&
+        searchProvider.search_url_post_params == e.search_url_post_params
+    );
+  }
+
+  /**
+   * Obtains the configuration from remote settings. This includes
+   * verifying the signature of the record within the database.
+   *
+   * If the signature in the database is invalid, the database will be wiped
+   * and the stored dump will be used, until the settings next update.
+   *
+   * Note that this may cause a network check of the certificate, but that
+   * should generally be quick.
+   *
+   * @returns {array}
+   *   An array of objects in the database, or an empty array if none
+   *   could be obtained.
+   */
+  async _getAllowlist() {
+    let result = [];
+    try {
+      result = await this._remoteConfig.get();
+    } catch (ex) {
+      // Don't throw an error just log it, just continue with no data, and hopefully
+      // a sync will fix things later on.
+      Cu.reportError(ex);
+    }
+    logConsole.debug("Allow list is:", result);
+    return result;
+  }
+}
 
 var EXPORTED_SYMBOLS = ["SearchService"];
