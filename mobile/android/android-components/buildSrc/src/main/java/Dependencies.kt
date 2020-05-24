@@ -18,7 +18,7 @@ object Versions {
     const val android_gradle_plugin = "3.5.3"
     const val android_maven_publish_plugin = "3.6.2"
     const val lint = "26.3.2"
-    const val detekt = "1.7.4"
+    const val detekt = "1.9.1"
 
     const val sentry = "1.7.21"
     const val okhttp = "3.13.1"

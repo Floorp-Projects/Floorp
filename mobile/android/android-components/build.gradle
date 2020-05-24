@@ -43,7 +43,7 @@ buildscript {
 }
 
 plugins {
-    id("io.gitlab.arturbosch.detekt").version("1.7.4")  // Check version number in `Versions.detekt`
+    id("io.gitlab.arturbosch.detekt").version("1.9.1")  // Check version number in `Versions.detekt`
 }
 
 allprojects {
