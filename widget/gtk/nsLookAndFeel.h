@@ -103,6 +103,9 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   bool mPrefersReducedMotion = false;
   bool mHighContrast = false;
   bool mInitialized = false;
+  int32_t mCSDMaximizeButtonPosition = 0;
+  int32_t mCSDMinimizeButtonPosition = 0;
+  int32_t mCSDCloseButtonPosition = 0;
 
   void EnsureInit();
   void ConfigureContentGtkTheme();
