@@ -22,7 +22,6 @@
 #include "js/StructuredClone.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/Preferences.h"
 #include "nsJSEnvironment.h"
@@ -1968,17 +1967,6 @@ nsXPCComponents_Utils::IsRemoteProxy(HandleValue val, bool* out) {
   } else {
     *out = false;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::IsCrossProcessWrapper(HandleValue obj, bool* out) {
-  *out = false;
-  if (obj.isPrimitive()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  *out = jsipc::IsWrappedCPOW(&obj.toObject());
   return NS_OK;
 }
 
