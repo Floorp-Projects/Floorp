@@ -25,11 +25,6 @@ include moz-only/reftest.list
 # svg-integration tests (using svg effects in e.g. HTML)
 include svg-integration/reftest.list
 
-fails-if(Android) needs-focus == autofocus-01a.svg autofocus-01-ref.svg # bug 1640512
-needs-focus == autofocus-01b.svg autofocus-01-ref.svg
-needs-focus == autofocus-02a.svg pass.svg
-needs-focus == autofocus-02b.svg pass.svg
-
 == background-svg-without-height.html background-ref.html
 == background-svg-without-height-width.html background-ref.html
 == background-svg-without-width.html background-ref.html

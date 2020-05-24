@@ -47,13 +47,6 @@ struct MOZ_STACK_CLASS BindContext final {
   // Whether our subtree root is changing as a result of this operation.
   bool SubtreeRootChanges() const { return mSubtreeRootChanges; }
 
-  // Autofocus is allowed only if the is in the same origin as the top level
-  // document.
-  // https://html.spec.whatwg.org/multipage/interaction.html#the-autofocus-attribute:same-origin
-  // In addition, the document should not be already loaded and the
-  // "browser.autofocus" preference should be 'true'.
-  bool AllowsAutoFocus() const;
-
   // This constructor should be used for regular appends to content.
   explicit BindContext(nsINode& aParent)
       : mDoc(*aParent.OwnerDoc()),
@@ -88,10 +81,6 @@ struct MOZ_STACK_CLASS BindContext final {
   static bool IsLikelyUndisplayed(const nsINode& aParent) {
     return aParent.IsAnyOfHTMLElements(nsGkAtoms::style, nsGkAtoms::script);
   }
-
-  // Returns true iff the document is in the same origin as the top level
-  // document.
-  bool IsSameOriginAsTop() const;
 
   Document& mDoc;
 
