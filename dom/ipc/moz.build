@@ -50,7 +50,6 @@ EXPORTS.mozilla.dom += [
     'ContentParent.h',
     'ContentProcess.h',
     'ContentProcessManager.h',
-    'CPOWManagerGetter.h',
     'CSPMessageUtils.h',
     'DocShellMessageUtils.h',
     'EffectsInfo.h',

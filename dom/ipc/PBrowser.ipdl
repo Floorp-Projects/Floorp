@@ -24,7 +24,6 @@ include protocol PBrowserBridge;
 include DOMTypes;
 include IPCBlob;
 include IPCStream;
-include JavaScriptTypes;
 include URIParams;
 include PPrintingTypes;
 include PTabContext;

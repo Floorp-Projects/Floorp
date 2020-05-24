@@ -9,7 +9,6 @@
 #include "xpcprivate.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "js/Symbol.h"
 
 using namespace mozilla::dom;
@@ -370,7 +369,6 @@ static bool ID_Equals(JSContext* aCx, unsigned aArgc, Value* aVp) {
  */
 static nsresult FindObjectForHasInstance(JSContext* cx, HandleObject objArg,
                                          MutableHandleObject target) {
-  using namespace mozilla::jsipc;
   RootedObject obj(cx, objArg), proto(cx);
   while (true) {
     // Try the object, or the wrappee if allowed.  We want CheckedUnwrapDynamic
@@ -378,7 +376,7 @@ static nsresult FindObjectForHasInstance(JSContext* cx, HandleObject objArg,
     // our current global.
     JSObject* o =
         js::IsWrapper(obj) ? js::CheckedUnwrapDynamic(obj, cx, false) : obj;
-    if (o && (IS_WN_REFLECTOR(o) || IsDOMObject(o) || IsCPOW(o))) {
+    if (o && (IS_WN_REFLECTOR(o) || IsDOMObject(o))) {
       target.set(o);
       return NS_OK;
     }
@@ -408,10 +406,6 @@ nsresult HasInstance(JSContext* cx, HandleObject objArg, const nsID* iid,
 
   if (!obj) {
     return NS_OK;
-  }
-
-  if (mozilla::jsipc::IsCPOW(obj)) {
-    return mozilla::jsipc::InstanceOf(obj, iid, bp);
   }
 
   // Need to unwrap Window correctly here, so use ReflectorToISupportsDynamic.

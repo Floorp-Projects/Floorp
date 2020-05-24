@@ -68,7 +68,6 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/XrayExpandoClass.h"
 #include "mozilla/dom/WindowProxyHolder.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "ipc/ErrorIPCUtils.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/dom/DocGroup.h"
@@ -2384,16 +2383,6 @@ bool InterfaceHasInstance(JSContext* cx, unsigned argc, JS::Value* vp) {
   if (domClass &&
       domClass->mInterfaceChain[clasp->mDepth] == clasp->mPrototypeID) {
     args.rval().setBoolean(true);
-    return true;
-  }
-
-  if (jsipc::IsWrappedCPOW(instance)) {
-    bool boolp = false;
-    if (!jsipc::DOMInstanceOf(cx, js::UncheckedUnwrap(instance),
-                              clasp->mPrototypeID, clasp->mDepth, &boolp)) {
-      return false;
-    }
-    args.rval().setBoolean(boolp);
     return true;
   }
 
