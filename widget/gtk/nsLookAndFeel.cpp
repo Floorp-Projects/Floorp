@@ -743,6 +743,15 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = mSystemUsesDarkTheme;
       break;
     }
+    case eLookAndFeel_GTKCSDMaximizeButtonPosition:
+      aResult = mCSDMaximizeButtonPosition;
+      break;
+    case eLookAndFeel_GTKCSDMinimizeButtonPosition:
+      aResult = mCSDMinimizeButtonPosition;
+      break;
+    case eLookAndFeel_GTKCSDCloseButtonPosition:
+      aResult = mCSDCloseButtonPosition;
+      break;
     case eIntID_UseAccessibilityTheme: {
       EnsureInit();
       aResult = mHighContrast;
@@ -1269,23 +1278,44 @@ void nsLookAndFeel::EnsureInit() {
   mCSDCloseButton = false;
   mCSDMinimizeButton = false;
   mCSDMaximizeButton = false;
+  mCSDCloseButtonPosition = 0;
+  mCSDMinimizeButtonPosition = 0;
+  mCSDMaximizeButtonPosition = 0;
 
   // We need to initialize whole CSD config explicitly because it's queried
   // as -moz-gtk* media features.
-  WidgetNodeType buttonLayout[TOOLBAR_BUTTONS];
+  ButtonLayout buttonLayout[TOOLBAR_BUTTONS];
 
   int activeButtons = GetGtkHeaderBarButtonLayout(buttonLayout, TOOLBAR_BUTTONS,
                                                   &mCSDReversedPlacement);
   for (int i = 0; i < activeButtons; i++) {
-    switch (buttonLayout[i]) {
+    // We check if a button is represented on the right side of the tabbar.
+    // Then we assign it a value from 3 to 5, instead of 0 to 2 when it is on
+    // the left side.
+    switch (buttonLayout[i].mType) {
       case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
         mCSDMinimizeButton = true;
+        if (buttonLayout[i].mAtRight) {
+          mCSDMinimizeButtonPosition = i + TOOLBAR_BUTTONS;
+        } else {
+          mCSDMinimizeButtonPosition = i;
+        }
         break;
       case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
         mCSDMaximizeButton = true;
+        if (buttonLayout[i].mAtRight) {
+          mCSDMaximizeButtonPosition = i + TOOLBAR_BUTTONS;
+        } else {
+          mCSDMaximizeButtonPosition = i;
+        }
         break;
       case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
         mCSDCloseButton = true;
+        if (buttonLayout[i].mAtRight) {
+          mCSDCloseButtonPosition = i + TOOLBAR_BUTTONS;
+        } else {
+          mCSDCloseButtonPosition = i;
+        }
         break;
       default:
         break;

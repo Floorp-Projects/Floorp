@@ -349,6 +349,13 @@ typedef enum {
   MOZ_GTK_WIDGET_NODE_COUNT
 } WidgetNodeType;
 
+/* ButtonLayout represents a GTK CSD button and whether its on the left or
+ * right side of the tab bar */
+struct ButtonLayout {
+  WidgetNodeType mType;
+  bool mAtRight;
+};
+
 /*** General library functions ***/
 /**
  * Initializes the drawing library.  You must call this function
@@ -610,8 +617,7 @@ const ToolbarButtonGTKMetrics* GetToolbarButtonMetrics(
  *
  * returns:    Number of returned entries at aButtonLayout.
  */
-int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
-                                int aMaxButtonNums,
+int GetGtkHeaderBarButtonLayout(ButtonLayout* aButtonLayout, int aMaxButtonNums,
                                 bool* aReversedButtonsPlacement);
 
 /**

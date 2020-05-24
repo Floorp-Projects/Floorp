@@ -390,8 +390,7 @@ static void CalculateToolbarButtonSpacing(WidgetNodeType aAppearance,
       aMetrics->buttonMargin.top + aMetrics->buttonMargin.bottom;
 }
 
-int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
-                                int aMaxButtonNums,
+int GetGtkHeaderBarButtonLayout(ButtonLayout* aButtonLayout, int aMaxButtonNums,
                                 bool* aReversedButtonsPlacement) {
 #if DEBUG
   if (aButtonLayout) {
@@ -421,24 +420,39 @@ int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
     reversedButtonsPlacement = closeButton < separator;
   }
 
-  // We support only default button order now:
-  // minimize/maximize/close for right placement
-  // close/minimize/maximize for left placement
+  // We check what position a button string is stored in decorationLayout.
+  //
+  // decorationLayout gets its value from the GNOME preference:
+  // org.gnome.desktop.vm.preferences.button-layout via the
+  // gtk-decoration-layout property.
+  //
+  // Documentation of the gtk-decoration-layout property can be found here:
+  // https://developer.gnome.org/gtk3/stable/GtkSettings.html#GtkSettings--gtk-decoration-layout
+  //
   int activeButtonNums = 0;
+  bool right = false;
   if (aButtonLayout) {
-    if (reversedButtonsPlacement &&
-        strstr(decorationLayout, "close") != nullptr) {
-      aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_CLOSE;
-    }
-    if (strstr(decorationLayout, "minimize") != nullptr) {
-      aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE;
-    }
-    if (strstr(decorationLayout, "maximize") != nullptr) {
-      aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE;
-    }
-    if (!reversedButtonsPlacement &&
-        strstr(decorationLayout, "close") != nullptr) {
-      aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_CLOSE;
+    nsDependentCSubstring layout(decorationLayout, strlen(decorationLayout));
+    // aButtonLayout used to be like this if all three buttons were represented:
+    // [MOZ_GTK_HEADER_BAR_BUTTON_CLOSE, MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE,
+    // MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE].
+    // Now it is a struct with both a WidgetNodeType and a bool, the later
+    // represents if a button is on the right side of the tab bar.
+    //
+    for (const auto& part : layout.Split(':')) {
+      for (const auto& button : part.Split(',')) {
+        if (button.EqualsLiteral("close")) {
+          aButtonLayout[activeButtonNums++] = {MOZ_GTK_HEADER_BAR_BUTTON_CLOSE,
+                                               right};
+        } else if (button.EqualsLiteral("minimize")) {
+          aButtonLayout[activeButtonNums++] = {
+              MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE, right};
+        } else if (button.EqualsLiteral("maximize")) {
+          aButtonLayout[activeButtonNums++] = {
+              MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE, right};
+        }
+      }
+      right = true;
     }
   }
 
@@ -463,12 +477,13 @@ static void EnsureToolbarMetrics(void) {
     }
 
     // Calculate titlebar button visibility and positions.
-    WidgetNodeType aButtonLayout[TOOLBAR_BUTTONS];
+    ButtonLayout aButtonLayout[TOOLBAR_BUTTONS];
     int activeButtonNums =
         GetGtkHeaderBarButtonLayout(aButtonLayout, TOOLBAR_BUTTONS, nullptr);
 
     for (int i = 0; i < activeButtonNums; i++) {
-      int buttonIndex = (aButtonLayout[i] - MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
+      int buttonIndex =
+          (aButtonLayout[i].mType - MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
       ToolbarButtonGTKMetrics* metrics = sToolbarMetrics.button + buttonIndex;
       metrics->visible = true;
       // Mark first button
@@ -480,8 +495,8 @@ static void EnsureToolbarMetrics(void) {
         metrics->lastButton = true;
       }
 
-      CalculateToolbarButtonMetrics(aButtonLayout[i], metrics);
-      CalculateToolbarButtonSpacing(aButtonLayout[i], metrics);
+      CalculateToolbarButtonMetrics(aButtonLayout[i].mType, metrics);
+      CalculateToolbarButtonSpacing(aButtonLayout[i].mType, metrics);
     }
 
     sToolbarMetrics.initialized = true;
