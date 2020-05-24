@@ -24,6 +24,18 @@ var SearchUtils = {
   SETTINGS_KEY: "search-config",
 
   /**
+   * This is the Remote Settings key that we use to get the ignore lists for
+   * engines.
+   */
+  SETTINGS_IGNORELIST_KEY: "hijack-blocklists",
+
+  /**
+   * This is the Remote Settings key that we use to get the allow lists for
+   * overriding the default engines.
+   */
+  SETTINGS_ALLOWLIST_KEY: "search-default-override-allowlist",
+
+  /**
    * Topic used for events involving the service itself.
    */
   TOPIC_SEARCH_SERVICE: "browser-search-service",
@@ -67,12 +79,6 @@ var SearchUtils = {
   // match previous nsInternetSearchService behavior as a URL parameter. Label
   // resolution causes windows-1252 to be actually used.
   DEFAULT_QUERY_CHARSET: "ISO-8859-1",
-
-  /**
-   * This is the Remote Settings key that we use to get the ignore lists for
-   * engines.
-   */
-  SETTINGS_IGNORELIST_KEY: "hijack-blocklists",
 
   // A tag to denote when we are using the "default_locale" of an engine.
   DEFAULT_TAG: "default",
