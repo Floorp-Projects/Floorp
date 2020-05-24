@@ -187,6 +187,7 @@
 
         <activity
                 android:name=".migration.MigrationProgressActivity"
+                android:noHistory="true"
                 android:launchMode="singleInstance"
                 android:exported="false">
         </activity>
