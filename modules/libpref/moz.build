@@ -26,6 +26,7 @@ XPIDL_MODULE = 'pref'
 
 pref_groups = [
     'accessibility',
+    'alerts',
     'apz',
     'beacon',
     'bidi',

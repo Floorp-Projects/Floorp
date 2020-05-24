@@ -4059,18 +4059,6 @@ pref("dom.webnotifications.requireinteraction.count", 3);
 // Show favicons in web notifications.
 pref("alerts.showFavicons", false);
 
-// Whether to use platform-specific backends for showing desktop notifications.
-// If no such backend is available, or if the pref is false, then XUL
-// notifications are used.
-
-// Linux and macOS turn on system level notification as default, but Windows is
-// disabled due to instability (dependencies of bug 1497425).
-#if defined(XP_WIN)
-  pref("alerts.useSystemBackend", false);
-#else
-  pref("alerts.useSystemBackend", true);
-#endif
-
 // DOM full-screen API.
 #ifdef XP_MACOSX
   // Whether to use macOS native full screen for Fullscreen API

@@ -195,6 +195,25 @@
   value: false
   mirror: always
 
+#---------------------------------------------------------------------------
+# Prefs starting with "alerts."
+#---------------------------------------------------------------------------
+
+# Whether to use platform-specific backends for showing desktop notifications.
+# If no such backend is available, or if the pref is false, then XUL
+# notifications are used.
+- name: alerts.useSystemBackend
+  type: bool
+#ifdef XP_WIN
+  # Linux and macOS turn on system level notification as default, but Windows is
+  # disabled due to instability (dependencies of bug 1497425).
+  value: false
+#else
+  value: true
+#endif
+  mirror: always
+
+
 #ifdef ANDROID
   #---------------------------------------------------------------------------
   # Prefs starting with "android."
