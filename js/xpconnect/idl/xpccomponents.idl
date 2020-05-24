@@ -438,11 +438,6 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     bool isRemoteProxy(in jsval val);
 
-    /**
-     * Determines whether this object is a cross-process wrapper.
-     */
-    bool isCrossProcessWrapper(in jsval obj);
-
     /*
      * To be called from JS only. This is for Gecko internal use only, and may
      * disappear at any moment.

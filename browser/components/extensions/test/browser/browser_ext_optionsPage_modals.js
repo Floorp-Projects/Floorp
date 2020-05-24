@@ -50,22 +50,11 @@ add_task(async function test_tab_options_modals() {
     aboutAddonsBrowser.addEventListener(
       "DOMWillOpenModalDialog",
       function onModalDialog(event) {
-        if (Cu.isCrossProcessWrapper(event.target)) {
-          // This event fires in both the content and chrome processes. We
-          // want to ignore the one in the content process.
-          return;
-        }
-
-        aboutAddonsBrowser.removeEventListener(
-          "DOMWillOpenModalDialog",
-          onModalDialog,
-          true
-        );
         // Wait for the next event tick to make sure the remaining part of the
         // testcase runs after the dialog gets opened.
         SimpleTest.executeSoon(resolve);
       },
-      true
+      { once: true, capture: true }
     );
   });
 
