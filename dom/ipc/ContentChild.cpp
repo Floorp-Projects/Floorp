@@ -81,8 +81,6 @@
 #include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/TestShellChild.h"
-// Needed for NewJavaScriptChild and ReleaseJavaScriptChild
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ContentProcessController.h"
@@ -1301,9 +1299,6 @@ void ContentChild::InitXPCOM(
   RecvBidiKeyboardNotify(aXPCOMInit.isLangRTL(),
                          aXPCOMInit.haveBidiKeyboards());
 
-  // Create the CPOW manager as soon as possible.
-  SendPJavaScriptConstructor();
-
   if (aXPCOMInit.domainPolicy().active()) {
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     MOZ_ASSERT(ssm);
@@ -1689,17 +1684,6 @@ static void FirstIdle(void) {
   gFirstIdleTask = nullptr;
 
   ContentChild::GetSingleton()->SendFirstIdle();
-}
-
-mozilla::jsipc::PJavaScriptChild* ContentChild::AllocPJavaScriptChild() {
-  MOZ_ASSERT(ManagedPJavaScriptChild().IsEmpty());
-
-  return jsipc::NewJavaScriptChild();
-}
-
-bool ContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild) {
-  jsipc::ReleaseJavaScriptChild(aChild);
-  return true;
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
@@ -3508,7 +3492,6 @@ mozilla::ipc::IPCResult ContentChild::RecvSessionStorageData(
   }
   return IPC_OK();
 }
-
 
 mozilla::ipc::IPCResult ContentChild::RecvOnAllowAccessFor(
     const MaybeDiscarded<BrowsingContext>& aContext,

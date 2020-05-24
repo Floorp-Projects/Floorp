@@ -135,7 +135,6 @@ intl/l10n/
 # Exclude everything but self-hosted JS
 js/ductwork/
 js/examples/
-js/ipc/
 js/public/
 js/xpconnect/
 js/src/devtools/

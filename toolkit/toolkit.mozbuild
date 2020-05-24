@@ -74,7 +74,6 @@ if CONFIG['MOZ_UPDATER'] and CONFIG['OS_TARGET'] != 'Android':
 
 DIRS += [
     '/ipc',
-    '/js/ipc',
     '/hal',
     '/js/xpconnect',
     '/modules/libjar',

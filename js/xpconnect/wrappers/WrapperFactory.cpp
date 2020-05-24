@@ -16,7 +16,6 @@
 #include "XPCMaps.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/MaybeCrossOriginObject.h"
@@ -543,11 +542,8 @@ JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
   // Special handling for chrome objects being exposed to content.
   else if (originIsChrome && !targetIsChrome) {
     // If this is a chrome function being exposed to content, we need to allow
-    // call (but nothing else). We allow CPOWs that purport to be function's
-    // here, but only in the content process.
-    if ((IdentifyStandardInstance(obj) == JSProto_Function ||
-         (jsipc::IsCPOW(obj) && JS::IsCallable(obj) &&
-          XRE_IsContentProcess()))) {
+    // call (but nothing else).
+    if ((IdentifyStandardInstance(obj) == JSProto_Function)) {
       wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                   OpaqueWithCall>::singleton;
     }

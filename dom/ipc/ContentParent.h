@@ -101,10 +101,6 @@ class ProtocolFuzzerHelper;
 class SharedPreferenceSerializer;
 }  // namespace ipc
 
-namespace jsipc {
-class PJavaScriptParent;
-}  // namespace jsipc
-
 namespace layers {
 struct TextureFactoryIdentifier;
 }  // namespace layers
@@ -460,13 +456,6 @@ class ContentParent final
   }
 
   PHeapSnapshotTempFileHelperParent* AllocPHeapSnapshotTempFileHelperParent();
-
-  PJavaScriptParent* AllocPJavaScriptParent();
-
-  virtual mozilla::ipc::IPCResult RecvPJavaScriptConstructor(
-      PJavaScriptParent* aActor) override {
-    return PContentParent::RecvPJavaScriptConstructor(aActor);
-  }
 
   PRemoteSpellcheckEngineParent* AllocPRemoteSpellcheckEngineParent();
 
@@ -874,8 +863,6 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration);
   mozilla::ipc::IPCResult RecvAddPerformanceMetrics(
       const nsID& aID, nsTArray<PerformanceInfo>&& aMetrics);
-
-  bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*);
 
   bool DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent*);
 
