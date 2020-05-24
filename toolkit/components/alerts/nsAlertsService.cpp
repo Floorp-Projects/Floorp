@@ -6,6 +6,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_alerts.h"
 #include "mozilla/Telemetry.h"
 #include "nsXULAppAPI.h"
 
@@ -171,14 +172,7 @@ bool nsAlertsService::ShouldUseSystemBackend() {
   if (!mBackend) {
     return false;
   }
-  static bool sAlertsUseSystemBackend;
-  static bool sAlertsUseSystemBackendCached = false;
-  if (!sAlertsUseSystemBackendCached) {
-    sAlertsUseSystemBackendCached = true;
-    Preferences::AddBoolVarCache(&sAlertsUseSystemBackend,
-                                 "alerts.useSystemBackend", true);
-  }
-  return sAlertsUseSystemBackend;
+  return StaticPrefs::alerts_useSystemBackend();
 }
 
 NS_IMETHODIMP nsAlertsService::ShowAlertNotification(
