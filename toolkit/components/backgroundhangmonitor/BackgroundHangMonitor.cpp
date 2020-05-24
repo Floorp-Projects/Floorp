@@ -16,6 +16,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
@@ -607,18 +608,6 @@ bool BackgroundHangMonitor::ShouldDisableOnBeta(const nsCString& clientID) {
   return strtol(suffix, NULL, 16) % BHR_BETA_MOD;
 }
 
-bool BackgroundHangMonitor::IsDisabled() {
-  static bool sPrefCached = false;
-  static bool sPrefCacheValue = false;
-  if (!sPrefCached) {
-    sPrefCached = true;
-    Preferences::AddBoolVarCache(
-        &sPrefCacheValue, "toolkit.content-background-hang-monitor.disabled");
-  }
-
-  return sPrefCacheValue;
-}
-
 bool BackgroundHangMonitor::DisableOnBeta() {
   nsAutoCString clientID;
   nsresult rv =
@@ -643,7 +632,8 @@ void BackgroundHangMonitor::Startup() {
 #ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   MOZ_ASSERT(!BackgroundHangManager::sInstance, "Already initialized");
 
-  if (XRE_IsContentProcess() && IsDisabled()) {
+  if (XRE_IsContentProcess() &&
+      StaticPrefs::toolkit_content_background_hang_monitor_disabled()) {
     BackgroundHangManager::sDisabled = true;
     return;
   }
