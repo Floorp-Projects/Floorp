@@ -11,6 +11,16 @@ const { SearchTestUtils } = ChromeUtils.import(
   "resource://testing-common/SearchTestUtils.jsm"
 );
 
+const { SearchUtils } = ChromeUtils.import(
+  "resource://gre/modules/SearchUtils.jsm"
+);
+
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
+
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
 
 AddonTestUtils.init(this);
@@ -118,7 +128,8 @@ add_task(async function test_extension_changing_to_app_provided_default() {
 });
 
 add_task(async function test_extension_overriding_app_provided_default() {
-  Services.search.wrappedJSObject._getSearchDefaultOverrideAllowlist = () => [
+  const settings = await RemoteSettings(SearchUtils.SETTINGS_ALLOWLIST_KEY);
+  sinon.stub(settings, "get").returns([
     {
       thirdPartyId: "test@thirdparty.example.com",
       overridesId: "test2@search.mozilla.org",
@@ -128,7 +139,7 @@ add_task(async function test_extension_overriding_app_provided_default() {
         },
       ],
     },
-  ];
+  ]);
 
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
