@@ -2,7 +2,7 @@
 
 # SafeBrowsingPolicy
 
-`enum class SafeBrowsingPolicy` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L137)
+`enum class SafeBrowsingPolicy` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L146)
 
 Represents a safe browsing policy, which is indicates with type of site should be alerted
 to user as possible harmful.

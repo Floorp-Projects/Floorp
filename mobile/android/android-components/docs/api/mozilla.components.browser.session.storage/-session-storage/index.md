@@ -16,7 +16,7 @@ Session storage for persisting the state of a [SessionManager](../../mozilla.com
 
 | Name | Summary |
 |---|---|
-| [autoSave](auto-save.md) | `fun autoSave(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, interval: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = AutoSave.DEFAULT_INTERVAL_MILLISECONDS, unit: `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)` = TimeUnit.MILLISECONDS): `[`AutoSave`](../-auto-save/index.md)<br>Starts configuring automatic saving of the state. |
+| [autoSave](auto-save.md) | `fun autoSave(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, interval: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = AutoSave.DEFAULT_INTERVAL_MILLISECONDS, unit: `[`TimeUnit`](http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html)` = TimeUnit.MILLISECONDS): `[`AutoSave`](../-auto-save/index.md)<br>Starts configuring automatic saving of the state. |
 | [clear](clear.md) | `fun clear(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears the state saved on disk. |
 | [restore](restore.md) | `fun restore(): `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`?`<br>Reads the saved state from disk. Returns null if no state was found on disk or if reading the file failed. |
 | [save](save.md) | `fun save(snapshot: `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Saves the given state to disk. |

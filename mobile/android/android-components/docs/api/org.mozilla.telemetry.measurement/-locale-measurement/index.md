@@ -15,7 +15,7 @@
 | Name | Summary |
 |---|---|
 | [flush](flush.md) | `open fun flush(): `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html) |
-| [getLanguageTag](get-language-tag.md) | `open fun getLanguageTag(locale: `[`Locale`](https://developer.android.com/reference/java/util/Locale.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Gecko uses locale codes like "es-ES", whereas a Java Locale stringifies as "es_ES". This method approximates the Java 7 method `Locale#toLanguageTag()`. |
+| [getLanguageTag](get-language-tag.md) | `open fun getLanguageTag(locale: `[`Locale`](http://docs.oracle.com/javase/7/docs/api/java/util/Locale.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Gecko uses locale codes like "es-ES", whereas a Java Locale stringifies as "es_ES". This method approximates the Java 7 method `Locale#toLanguageTag()`. |
 
 ### Inherited Functions
 

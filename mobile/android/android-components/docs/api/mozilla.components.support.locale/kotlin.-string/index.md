@@ -4,4 +4,4 @@
 
 | Name | Summary |
 |---|---|
-| [toLocale](to-locale.md) | `fun `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`.toLocale(): `[`Locale`](https://developer.android.com/reference/java/util/Locale.html) |
+| [toLocale](to-locale.md) | `fun `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`.toLocale(): `[`Locale`](http://docs.oracle.com/javase/7/docs/api/java/util/Locale.html) |

@@ -9,7 +9,7 @@
 | Name | Summary |
 |---|---|
 | [guessFileName](guess-file-name.md) | `fun guessFileName(contentDisposition: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, destinationDirectory: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, mimeType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Guess the name of the file that should be downloaded. |
-| [uniqueFileName](unique-file-name.md) | `fun uniqueFileName(directory: `[`File`](https://developer.android.com/reference/java/io/File.html)`, fileName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Checks if the file exists so as not to overwrite one already in the destination directory |
+| [uniqueFileName](unique-file-name.md) | `fun uniqueFileName(directory: `[`File`](http://docs.oracle.com/javase/7/docs/api/java/io/File.html)`, fileName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Checks if the file exists so as not to overwrite one already in the destination directory |
 
 ### Extension Functions
 

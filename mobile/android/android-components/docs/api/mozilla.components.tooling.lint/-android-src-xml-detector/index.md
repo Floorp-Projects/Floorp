@@ -18,7 +18,7 @@ A custom lint check that prohibits not using the app:srcCompat for ImageViews
 |---|---|
 | [appliesTo](applies-to.md) | `fun appliesTo(folderType: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [getApplicableElements](get-applicable-elements.md) | `fun getApplicableElements(): `[`Collection`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>?` |
-| [visitElement](visit-element.md) | `fun visitElement(context: <ERROR CLASS>, element: `[`Element`](https://developer.android.com/reference/org/w3c/dom/Element.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [visitElement](visit-element.md) | `fun visitElement(context: <ERROR CLASS>, element: `[`Element`](https://kotlinlang.org/api/latest/jvm/stdlib/org.w3c.dom/-element/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Companion Object Properties
 

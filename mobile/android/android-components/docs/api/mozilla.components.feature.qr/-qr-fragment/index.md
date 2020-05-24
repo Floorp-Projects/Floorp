@@ -15,7 +15,7 @@ https://github.com/kismkof/camera2basic
 
 | Name | Summary |
 |---|---|
-| [OnScanCompleteListener](-on-scan-complete-listener/index.md) | `interface OnScanCompleteListener : `[`Serializable`](https://developer.android.com/reference/java/io/Serializable.html)<br>Listener invoked when the QR scan completed successfully. |
+| [OnScanCompleteListener](-on-scan-complete-listener/index.md) | `interface OnScanCompleteListener : `[`Serializable`](http://docs.oracle.com/javase/7/docs/api/java/io/Serializable.html)<br>Listener invoked when the QR scan completed successfully. |
 
 ### Constructors
 

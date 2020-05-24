@@ -50,5 +50,5 @@ https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 | Name | Summary |
 |---|---|
 | [GeckoViewFetchClient](../../mozilla.components.browser.engine.gecko.fetch/-gecko-view-fetch-client/index.md) | `class GeckoViewFetchClient : `[`Client`](./index.md)<br>GeckoView ([GeckoWebExecutor](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoWebExecutor.html)) based implementation of [Client](./index.md). |
-| [HttpURLConnectionClient](../../mozilla.components.lib.fetch.httpurlconnection/-http-u-r-l-connection-client/index.md) | `class HttpURLConnectionClient : `[`Client`](./index.md)<br>[HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection.html) implementation of [Client](./index.md). |
+| [HttpURLConnectionClient](../../mozilla.components.lib.fetch.httpurlconnection/-http-u-r-l-connection-client/index.md) | `class HttpURLConnectionClient : `[`Client`](./index.md)<br>[HttpURLConnection](http://docs.oracle.com/javase/7/docs/api/java/net/HttpURLConnection.html) implementation of [Client](./index.md). |
 | [OkHttpClient](../../mozilla.components.lib.fetch.okhttp/-ok-http-client/index.md) | `class OkHttpClient : `[`Client`](./index.md)<br>[Client](./index.md) implementation using OkHttp. |

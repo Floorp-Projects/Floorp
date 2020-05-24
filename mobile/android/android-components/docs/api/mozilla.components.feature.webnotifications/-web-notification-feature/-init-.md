@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`WebNotificationFeature(context: <ERROR CLASS>, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, browserIcons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`, @DrawableRes smallIcon: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, activityClass: `[`Class`](https://developer.android.com/reference/java/lang/Class.html)`<out <ERROR CLASS>>?)`
+`WebNotificationFeature(context: <ERROR CLASS>, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, browserIcons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`, @DrawableRes smallIcon: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, activityClass: `[`Class`](http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html)`<out <ERROR CLASS>>?)`
 
 Feature implementation for configuring and displaying web notifications to the user.
 

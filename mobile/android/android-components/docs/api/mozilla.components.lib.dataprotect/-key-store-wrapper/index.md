@@ -17,10 +17,10 @@ and instrumenting.
 
 | Name | Summary |
 |---|---|
-| [getKeyFor](get-key-for.md) | `open fun getKeyFor(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Key`](https://developer.android.com/reference/java/security/Key.html)`?`<br>Retrieves the SecretKey for the given label. |
-| [getKeyStore](get-key-store.md) | `fun getKeyStore(): `[`KeyStore`](https://developer.android.com/reference/java/security/KeyStore.html)<br>Retrieves the underlying KeyStore, loading it if necessary. |
-| [loadKeyStore](load-key-store.md) | `open fun loadKeyStore(): `[`KeyStore`](https://developer.android.com/reference/java/security/KeyStore.html)<br>Creates and initializes the KeyStore in use. |
-| [makeKeyFor](make-key-for.md) | `open fun makeKeyFor(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SecretKey`](https://developer.android.com/reference/javax/crypto/SecretKey.html)<br>Creates a SecretKey for the given label. |
+| [getKeyFor](get-key-for.md) | `open fun getKeyFor(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Key`](http://docs.oracle.com/javase/7/docs/api/java/security/Key.html)`?`<br>Retrieves the SecretKey for the given label. |
+| [getKeyStore](get-key-store.md) | `fun getKeyStore(): `[`KeyStore`](http://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html)<br>Retrieves the underlying KeyStore, loading it if necessary. |
+| [loadKeyStore](load-key-store.md) | `open fun loadKeyStore(): `[`KeyStore`](http://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html)<br>Creates and initializes the KeyStore in use. |
+| [makeKeyFor](make-key-for.md) | `open fun makeKeyFor(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SecretKey`](http://docs.oracle.com/javase/7/docs/api/javax/crypto/SecretKey.html)<br>Creates a SecretKey for the given label. |
 | [removeKeyFor](remove-key-for.md) | `fun removeKeyFor(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Deletes a key with the given label. |
 
 ### Extension Functions

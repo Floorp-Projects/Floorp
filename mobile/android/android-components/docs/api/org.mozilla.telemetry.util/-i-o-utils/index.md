@@ -14,4 +14,4 @@
 
 | Name | Summary |
 |---|---|
-| [safeClose](safe-close.md) | `open static fun safeClose(stream: `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [safeClose](safe-close.md) | `open static fun safeClose(stream: `[`Closeable`](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

@@ -11,7 +11,7 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `MediaMiddleware(context: <ERROR CLASS>, mediaServiceClass: `[`Class`](https://developer.android.com/reference/java/lang/Class.html)`<*>)`<br>[Middleware](../../mozilla.components.lib.state/-middleware.md) implementation for updating the [MediaState.Aggregate](../../mozilla.components.browser.state.state/-media-state/-aggregate/index.md) and launching an [MediaServiceLauncher](#) |
+| [&lt;init&gt;](-init-.md) | `MediaMiddleware(context: <ERROR CLASS>, mediaServiceClass: `[`Class`](http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html)`<*>)`<br>[Middleware](../../mozilla.components.lib.state/-middleware.md) implementation for updating the [MediaState.Aggregate](../../mozilla.components.browser.state.state/-media-state/-aggregate/index.md) and launching an [MediaServiceLauncher](#) |
 
 ### Functions
 

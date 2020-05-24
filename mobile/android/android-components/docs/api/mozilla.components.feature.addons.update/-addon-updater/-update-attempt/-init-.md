@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`UpdateAttempt(addonId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, date: `[`Date`](https://developer.android.com/reference/java/util/Date.html)`, status: `[`Status`](../-status/index.md)`?)`
+`UpdateAttempt(addonId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, date: `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html)`, status: `[`Status`](../-status/index.md)`?)`
 
 Represents an attempt to update an add-on.
 

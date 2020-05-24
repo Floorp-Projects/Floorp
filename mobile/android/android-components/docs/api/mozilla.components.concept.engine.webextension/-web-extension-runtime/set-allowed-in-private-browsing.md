@@ -15,5 +15,5 @@ Sets whether the provided [WebExtension](../-web-extension/index.md) should be a
 `onSuccess` - (optional) callback invoked with modified [WebExtension](../-web-extension/index.md) instance.
 
 `onError` - (optional) callback invoked if there was an error setting private browsing preference
-the installed extensions. This callback is invoked with an [UnsupportedOperationException](https://developer.android.com/reference/java/lang/UnsupportedOperationException.html)
+the installed extensions. This callback is invoked with an [UnsupportedOperationException](http://docs.oracle.com/javase/7/docs/api/java/lang/UnsupportedOperationException.html)
 in case the engine doesn't have web extension support.

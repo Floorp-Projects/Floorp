@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`FilenameRegexFilter(pattern: `[`Pattern`](https://developer.android.com/reference/java/util/regex/Pattern.html)`)`
+`FilenameRegexFilter(pattern: `[`Pattern`](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)`)`

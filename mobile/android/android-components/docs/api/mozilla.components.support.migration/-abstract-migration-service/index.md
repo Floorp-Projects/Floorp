@@ -19,7 +19,7 @@ An application using this implementation needs to extend this class and provide 
 
 | Name | Summary |
 |---|---|
-| [migrationDecisionActivity](migration-decision-activity.md) | `abstract val migrationDecisionActivity: `[`Class`](https://developer.android.com/reference/java/lang/Class.html)`<out <ERROR CLASS>>` |
+| [migrationDecisionActivity](migration-decision-activity.md) | `abstract val migrationDecisionActivity: `[`Class`](http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html)`<out <ERROR CLASS>>` |
 | [migrator](migrator.md) | `abstract val migrator: `[`FennecMigrator`](../-fennec-migrator/index.md) |
 | [store](store.md) | `abstract val store: `[`MigrationStore`](../../mozilla.components.support.migration.state/-migration-store/index.md) |
 

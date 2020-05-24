@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`Body(stream: `[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`, contentType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`
+`Body(stream: `[`InputStream`](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)`, contentType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`
 
 A [Body](index.md) returned along with the [Request](../../-request/index.md).
 

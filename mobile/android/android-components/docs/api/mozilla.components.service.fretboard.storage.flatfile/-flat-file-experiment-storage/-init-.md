@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`FlatFileExperimentStorage(file: `[`File`](https://developer.android.com/reference/java/io/File.html)`)`
+`FlatFileExperimentStorage(file: `[`File`](http://docs.oracle.com/javase/7/docs/api/java/io/File.html)`)`
 
 Class which uses a flat JSON file as an experiment storage mechanism
 

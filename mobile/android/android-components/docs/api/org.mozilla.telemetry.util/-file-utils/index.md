@@ -8,8 +8,8 @@
 
 | Name | Summary |
 |---|---|
-| [FileLastModifiedComparator](-file-last-modified-comparator/index.md) | `open class FileLastModifiedComparator : `[`Comparator`](https://developer.android.com/reference/java/util/Comparator.html)`<`[`File`](https://developer.android.com/reference/java/io/File.html)`>` |
-| [FilenameRegexFilter](-filename-regex-filter/index.md) | `open class FilenameRegexFilter : `[`FilenameFilter`](https://developer.android.com/reference/java/io/FilenameFilter.html) |
+| [FileLastModifiedComparator](-file-last-modified-comparator/index.md) | `open class FileLastModifiedComparator : `[`Comparator`](http://docs.oracle.com/javase/7/docs/api/java/util/Comparator.html)`<`[`File`](http://docs.oracle.com/javase/7/docs/api/java/io/File.html)`>` |
+| [FilenameRegexFilter](-filename-regex-filter/index.md) | `open class FilenameRegexFilter : `[`FilenameFilter`](http://docs.oracle.com/javase/7/docs/api/java/io/FilenameFilter.html) |
 
 ### Constructors
 
@@ -21,4 +21,4 @@
 
 | Name | Summary |
 |---|---|
-| [assertDirectory](assert-directory.md) | `open static fun assertDirectory(directory: `[`File`](https://developer.android.com/reference/java/io/File.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [assertDirectory](assert-directory.md) | `open static fun assertDirectory(directory: `[`File`](http://docs.oracle.com/javase/7/docs/api/java/io/File.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

@@ -28,7 +28,7 @@ Provides functionality to feature modules that need to interact with a web exten
 
 | Name | Summary |
 |---|---|
-| [installedExtensions](installed-extensions.md) | `val installedExtensions: `[`ConcurrentHashMap`](https://developer.android.com/reference/java/util/concurrent/ConcurrentHashMap.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`>` |
+| [installedExtensions](installed-extensions.md) | `val installedExtensions: `[`ConcurrentHashMap`](http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ConcurrentHashMap.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`>` |
 
 ### Extension Functions
 

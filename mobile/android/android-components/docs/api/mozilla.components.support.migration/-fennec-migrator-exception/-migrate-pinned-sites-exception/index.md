@@ -14,4 +14,4 @@ Unexpected exception while migrating pinned sites.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `MigratePinnedSitesException(cause: `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)`)`<br>Unexpected exception while migrating pinned sites. |
+| [&lt;init&gt;](-init-.md) | `MigratePinnedSitesException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`<br>Unexpected exception while migrating pinned sites. |

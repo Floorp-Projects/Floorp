@@ -2,7 +2,7 @@
 
 # useStream
 
-`fun <R> useStream(block: (`[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`) -> `[`R`](use-stream.md#R)`): `[`R`](use-stream.md#R) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L78)
+`fun <R> useStream(block: (`[`InputStream`](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)`) -> `[`R`](use-stream.md#R)`): `[`R`](use-stream.md#R) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L78)
 
 Creates a usable stream from this body.
 

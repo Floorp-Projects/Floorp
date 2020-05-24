@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`Body(stream: `[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`)`
+`Body(stream: `[`InputStream`](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)`)`
 
 A [Body](index.md) to be send with the [Request](../index.md).
 

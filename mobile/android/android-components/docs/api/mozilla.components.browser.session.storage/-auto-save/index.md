@@ -20,7 +20,7 @@
 
 | Name | Summary |
 |---|---|
-| [periodicallyInForeground](periodically-in-foreground.md) | `fun periodicallyInForeground(interval: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = 300, unit: `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)` = TimeUnit.SECONDS, scheduler: `[`ScheduledExecutorService`](https://developer.android.com/reference/java/util/concurrent/ScheduledExecutorService.html)` = Executors.newSingleThreadScheduledExecutor(), lifecycle: Lifecycle = ProcessLifecycleOwner.get().lifecycle): `[`AutoSave`](./index.md)<br>Saves the state periodically when the app is in the foreground. |
+| [periodicallyInForeground](periodically-in-foreground.md) | `fun periodicallyInForeground(interval: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = 300, unit: `[`TimeUnit`](http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html)` = TimeUnit.SECONDS, scheduler: `[`ScheduledExecutorService`](http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ScheduledExecutorService.html)` = Executors.newSingleThreadScheduledExecutor(), lifecycle: Lifecycle = ProcessLifecycleOwner.get().lifecycle): `[`AutoSave`](./index.md)<br>Saves the state periodically when the app is in the foreground. |
 | [whenGoingToBackground](when-going-to-background.md) | `fun whenGoingToBackground(lifecycle: Lifecycle = ProcessLifecycleOwner.get().lifecycle): `[`AutoSave`](./index.md)<br>Saves the state automatically when the app goes to the background. |
 | [whenSessionsChange](when-sessions-change.md) | `fun whenSessionsChange(): `[`AutoSave`](./index.md)<br>Saves the state automatically when the sessions change, e.g. sessions get added and removed. |
 

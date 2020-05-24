@@ -2,7 +2,7 @@
 
 # uniqueFileName
 
-`fun uniqueFileName(directory: `[`File`](https://developer.android.com/reference/java/io/File.html)`, fileName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/DownloadUtils.kt#L72)
+`fun uniqueFileName(directory: `[`File`](http://docs.oracle.com/javase/7/docs/api/java/io/File.html)`, fileName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/DownloadUtils.kt#L72)
 
 Checks if the file exists so as not to overwrite one already in the destination directory
 

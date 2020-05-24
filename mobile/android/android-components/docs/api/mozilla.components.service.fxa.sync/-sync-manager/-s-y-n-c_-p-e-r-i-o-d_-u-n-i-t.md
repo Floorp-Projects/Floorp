@@ -2,4 +2,4 @@
 
 # SYNC_PERIOD_UNIT
 
-`val SYNC_PERIOD_UNIT: `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L132)
+`val SYNC_PERIOD_UNIT: `[`TimeUnit`](http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L132)

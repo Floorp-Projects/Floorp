@@ -2,18 +2,18 @@
 
 # toDate
 
-`fun `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`.toDate(format: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, locale: `[`Locale`](https://developer.android.com/reference/java/util/Locale.html)` = Locale.ROOT): `[`Date`](https://developer.android.com/reference/java/util/Date.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/kotlin/String.kt#L67)
+`fun `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`.toDate(format: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, locale: `[`Locale`](http://docs.oracle.com/javase/7/docs/api/java/util/Locale.html)` = Locale.ROOT): `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/kotlin/String.kt#L67)
 
-Converts a [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) to a [Date](https://developer.android.com/reference/java/util/Date.html) object.
+Converts a [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) to a [Date](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html) object.
 
 ### Parameters
 
 `format` - date format used for formatting the this given [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) object.
 
-`locale` - the locale to use when converting the String, defaults to [Locale.ROOT](https://developer.android.com/reference/java/util/Locale.html#ROOT).
+`locale` - the locale to use when converting the String, defaults to [Locale.ROOT](http://docs.oracle.com/javase/7/docs/api/java/util/Locale.html#ROOT).
 
 **Return**
-a [Date](https://developer.android.com/reference/java/util/Date.html) object with the values in the provided in this string, if empty string was provided, a current date
+a [Date](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html) object with the values in the provided in this string, if empty string was provided, a current date
 will be returned.
 
 `fun `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`.toDate(vararg possibleFormats: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = arrayOf(
@@ -22,15 +22,15 @@ will be returned.
             "yyyy-'W'ww",
             "yyyy-MM",
             "HH:mm"
-    )): `[`Date`](https://developer.android.com/reference/java/util/Date.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/kotlin/String.kt#L94)
+    )): `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/kotlin/String.kt#L94)
 
-Tries to convert a [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) to a [Date](https://developer.android.com/reference/java/util/Date.html) using a list of [possibleFormats](to-date.md#mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.Array((kotlin.String)))/possibleFormats).
+Tries to convert a [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) to a [Date](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html) using a list of [possibleFormats](to-date.md#mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.Array((kotlin.String)))/possibleFormats).
 
 ### Parameters
 
 `possibleFormats` - one ore more possible format.
 
 **Return**
-a [Date](https://developer.android.com/reference/java/util/Date.html) object with the values in the provided in this string,
+a [Date](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html) object with the values in the provided in this string,
 if the conversion is not possible null will be returned.
 

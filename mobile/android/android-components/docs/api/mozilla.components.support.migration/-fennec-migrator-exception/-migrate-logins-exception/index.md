@@ -14,4 +14,4 @@ Unexpected exception while migrating logins.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `MigrateLoginsException(cause: `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)`)`<br>Unexpected exception while migrating logins. |
+| [&lt;init&gt;](-init-.md) | `MigrateLoginsException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`<br>Unexpected exception while migrating logins. |

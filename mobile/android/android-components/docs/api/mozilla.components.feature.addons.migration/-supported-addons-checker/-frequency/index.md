@@ -10,11 +10,11 @@ Indicates how often checks for newly supported add-ons should happen.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Frequency(repeatInterval: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, repeatIntervalTimeUnit: `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`)`<br>Indicates how often checks for newly supported add-ons should happen. |
+| [&lt;init&gt;](-init-.md) | `Frequency(repeatInterval: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, repeatIntervalTimeUnit: `[`TimeUnit`](http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html)`)`<br>Indicates how often checks for newly supported add-ons should happen. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [repeatInterval](repeat-interval.md) | `val repeatInterval: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>Integer indicating how often the update should happen. |
-| [repeatIntervalTimeUnit](repeat-interval-time-unit.md) | `val repeatIntervalTimeUnit: `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)<br>The time unit of the [repeatInterval](repeat-interval.md). |
+| [repeatIntervalTimeUnit](repeat-interval-time-unit.md) | `val repeatIntervalTimeUnit: `[`TimeUnit`](http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html)<br>The time unit of the [repeatInterval](repeat-interval.md). |

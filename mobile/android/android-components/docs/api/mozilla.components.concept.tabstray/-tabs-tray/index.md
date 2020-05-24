@@ -48,4 +48,4 @@ Generic interface for components that provide "tabs tray" functionality.
 | Name | Summary |
 |---|---|
 | [BrowserTabsTray](../../mozilla.components.browser.tabstray/-browser-tabs-tray/index.md) | `class BrowserTabsTray : RecyclerView, `[`TabsTray`](./index.md)<br>A customizable tabs tray for browsers. |
-| [TabsAdapter](../../mozilla.components.browser.tabstray/-tabs-adapter/index.md) | `class TabsAdapter : Adapter<`[`TabViewHolder`](../../mozilla.components.browser.tabstray/-tab-view-holder/index.md)`>, `[`TabsTray`](./index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>`<br>RecyclerView adapter implementation to display a list/grid of tabs. |
+| [TabsAdapter](../../mozilla.components.browser.tabstray/-tabs-adapter/index.md) | `open class TabsAdapter : Adapter<`[`TabViewHolder`](../../mozilla.components.browser.tabstray/-tab-view-holder/index.md)`>, `[`TabsTray`](./index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>`<br>RecyclerView adapter implementation to display a list/grid of tabs. |

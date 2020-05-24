@@ -2,4 +2,4 @@
 
 # postToMainThreadDelayed
 
-`fun postToMainThreadDelayed(runnable: `[`Runnable`](https://developer.android.com/reference/java/lang/Runnable.html)`, delayMillis: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/ThreadUtils.kt#L45)
+`fun postToMainThreadDelayed(runnable: `[`Runnable`](http://docs.oracle.com/javase/7/docs/api/java/lang/Runnable.html)`, delayMillis: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/ThreadUtils.kt#L45)

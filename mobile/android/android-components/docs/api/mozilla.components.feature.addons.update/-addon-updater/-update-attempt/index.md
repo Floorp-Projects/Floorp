@@ -10,14 +10,14 @@ Represents an attempt to update an add-on.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `UpdateAttempt(addonId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, date: `[`Date`](https://developer.android.com/reference/java/util/Date.html)`, status: `[`Status`](../-status/index.md)`?)`<br>Represents an attempt to update an add-on. |
+| [&lt;init&gt;](-init-.md) | `UpdateAttempt(addonId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, date: `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html)`, status: `[`Status`](../-status/index.md)`?)`<br>Represents an attempt to update an add-on. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [addonId](addon-id.md) | `val addonId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [date](date.md) | `val date: `[`Date`](https://developer.android.com/reference/java/util/Date.html) |
+| [date](date.md) | `val date: `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html) |
 | [status](status.md) | `val status: `[`Status`](../-status/index.md)`?` |
 
 ### Extension Functions

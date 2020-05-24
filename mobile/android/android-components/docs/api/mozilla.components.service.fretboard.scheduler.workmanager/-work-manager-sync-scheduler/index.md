@@ -17,7 +17,7 @@ configuration from the server using WorkManager
 
 | Name | Summary |
 |---|---|
-| [schedule](schedule.md) | `fun schedule(worker: `[`Class`](https://developer.android.com/reference/java/lang/Class.html)`<out `[`SyncWorker`](../-sync-worker/index.md)`>, interval: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`> = Pair(1, TimeUnit.DAYS)): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Schedule sync with the default constraints (once a day and charging) |
+| [schedule](schedule.md) | `fun schedule(worker: `[`Class`](http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html)`<out `[`SyncWorker`](../-sync-worker/index.md)`>, interval: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html)`> = Pair(1, TimeUnit.DAYS)): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Schedule sync with the default constraints (once a day and charging) |
 
 ### Extension Functions
 

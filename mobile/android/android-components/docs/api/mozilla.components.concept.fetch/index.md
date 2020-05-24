@@ -11,7 +11,7 @@
 | [Headers](-headers/index.md) | `interface Headers : `[`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html)`<`[`Header`](-header/index.md)`>`<br>A collection of HTTP [Headers](-headers/index.md) (immutable) of a [Request](-request/index.md) or [Response](-response/index.md). |
 | [MutableHeaders](-mutable-headers/index.md) | `class MutableHeaders : `[`Headers`](-headers/index.md)`, `[`MutableIterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-iterable/index.html)`<`[`Header`](-header/index.md)`>`<br>A collection of HTTP [Headers](-headers/index.md) (mutable) of a [Request](-request/index.md) or [Response](-response/index.md). |
 | [Request](-request/index.md) | `data class Request`<br>The [Request](-request/index.md) data class represents a resource request to be send by a [Client](-client/index.md). |
-| [Response](-response/index.md) | `data class Response : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)<br>The [Response](-response/index.md) data class represents a response to a [Request](-request/index.md) send by a [Client](-client/index.md). |
+| [Response](-response/index.md) | `data class Response : `[`Closeable`](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html)<br>The [Response](-response/index.md) data class represents a response to a [Request](-request/index.md) send by a [Client](-client/index.md). |
 
 ### Extensions for External Classes
 

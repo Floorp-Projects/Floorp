@@ -15,5 +15,5 @@ providing access to the [WebExtension](../-web-extension/index.md) object for bi
 that means that the [WebExtension](../-web-extension/index.md) hasn't been change since the last update.
 
 `onError` - (optional) callback invoked if there was an error updating the extension.
-This callback is invoked with an [UnsupportedOperationException](https://developer.android.com/reference/java/lang/UnsupportedOperationException.html) in case the engine doesn't
+This callback is invoked with an [UnsupportedOperationException](http://docs.oracle.com/javase/7/docs/api/java/lang/UnsupportedOperationException.html) in case the engine doesn't
 have web extension support.

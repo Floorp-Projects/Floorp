@@ -16,5 +16,5 @@ callback will be invoked, but this method has no effect on the extension.
 `onSuccess` - (optional) callback invoked with the enabled [WebExtension](../-web-extension/index.md)
 
 `onError` - (optional) callback invoked if there was an error enabling
-the extensions. This callback is invoked with an [UnsupportedOperationException](https://developer.android.com/reference/java/lang/UnsupportedOperationException.html)
+the extensions. This callback is invoked with an [UnsupportedOperationException](http://docs.oracle.com/javase/7/docs/api/java/lang/UnsupportedOperationException.html)
 in case the engine doesn't have web extension support.

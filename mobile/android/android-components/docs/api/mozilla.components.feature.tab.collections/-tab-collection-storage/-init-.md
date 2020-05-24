@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`TabCollectionStorage(context: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, filesDir: `[`File`](https://developer.android.com/reference/java/io/File.html)` = context.filesDir)`
+`TabCollectionStorage(context: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, filesDir: `[`File`](http://docs.oracle.com/javase/7/docs/api/java/io/File.html)` = context.filesDir)`
 
 A storage implementation that saves snapshots of tabs / sessions in named collections.
 

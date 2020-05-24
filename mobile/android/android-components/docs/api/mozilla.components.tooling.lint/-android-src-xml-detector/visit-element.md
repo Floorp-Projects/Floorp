@@ -2,4 +2,4 @@
 
 # visitElement
 
-`fun visitElement(context: <ERROR CLASS>, element: `[`Element`](https://developer.android.com/reference/org/w3c/dom/Element.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/tooling/lint/src/main/java/mozilla/components/tooling/lint/AndroidSrcXmlDetector.kt#L71)
+`fun visitElement(context: <ERROR CLASS>, element: `[`Element`](https://kotlinlang.org/api/latest/jvm/stdlib/org.w3c.dom/-element/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/tooling/lint/src/main/java/mozilla/components/tooling/lint/AndroidSrcXmlDetector.kt#L71)
