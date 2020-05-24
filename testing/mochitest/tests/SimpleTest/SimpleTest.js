@@ -1006,14 +1006,11 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
   // is whether the property is read-only or not.  The real |Components|
   // property is read-only.
   var c = Object.getOwnPropertyDescriptor(window, "Components");
-  var Cu, Ci;
+  var Ci;
   if (c && c.value && !c.writable) {
-    // eslint-disable-next-line mozilla/use-cc-etc
-    Cu = Components.utils;
     // eslint-disable-next-line mozilla/use-cc-etc
     Ci = Components.interfaces;
   } else {
-    Cu = SpecialPowers.Cu;
     Ci = SpecialPowers.Ci;
   }
 
@@ -1024,13 +1021,6 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
     targetWindow.localName == "browser"
   ) {
     browser = targetWindow;
-  }
-
-  var isWrapper = Cu.isCrossProcessWrapper(targetWindow);
-  if (isWrapper) {
-    throw new Error(
-      "Can't pass CPOW to SimpleTest.focus as the content window."
-    );
   }
 
   if (browser && browser.isRemoteBrowser) {
