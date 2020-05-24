@@ -607,11 +607,10 @@ static void CreateHeaderBarButton(GtkWidget* aParentWidget,
   LoadWidgetIconPixbuf(image);
 }
 
-static bool IsToolbarButtonEnabled(WidgetNodeType* aButtonLayout,
-                                   int aButtonNums,
+static bool IsToolbarButtonEnabled(ButtonLayout* aButtonLayout, int aButtonNums,
                                    WidgetNodeType aAppearance) {
   for (int i = 0; i < aButtonNums; i++) {
-    if (aButtonLayout[i] == aAppearance) {
+    if (aButtonLayout[i].mType == aAppearance) {
       return true;
     }
   }
@@ -634,7 +633,7 @@ static void CreateHeaderBarButtons() {
   gtk_style_context_add_class(gtk_widget_get_style_context(buttonBox),
                               GTK_STYLE_CLASS_LEFT);
 
-  WidgetNodeType buttonLayout[TOOLBAR_BUTTONS];
+  ButtonLayout buttonLayout[TOOLBAR_BUTTONS];
 
   int activeButtons =
       GetGtkHeaderBarButtonLayout(buttonLayout, TOOLBAR_BUTTONS, nullptr);
