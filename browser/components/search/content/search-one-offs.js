@@ -580,10 +580,10 @@ class SearchOneOffs {
     if (tooManyEngines) {
       // Make the top-level menu button.
       let button = document.createXULElement("toolbarbutton");
-      list.appendChild(button);
       button.classList.add("addengine-menu-button", "addengine-item");
       button.setAttribute("badged", "true");
       button.setAttribute("type", "menu");
+      button.setAttribute("wantdropmarker", "true");
       button.setAttribute(
         "label",
         this.bundle.GetStringFromName("cmd_addFoundEngineMenu")
@@ -598,6 +598,7 @@ class SearchOneOffs {
       if (engine.icon) {
         button.setAttribute("image", engine.icon);
       }
+      list.appendChild(button);
 
       // Now make the button's child menupopup.
       list = document.createXULElement("menupopup");
