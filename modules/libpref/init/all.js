@@ -824,8 +824,6 @@ pref("toolkit.telemetry.unified", true);
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
 
-pref("toolkit.content-background-hang-monitor.disabled", false);
-
 // Enable JS dump() function.
 // IMPORTANT: These prefs must be here even though they're also defined in
 // StaticPrefList.yaml. They are required because MOZILLA_OFFICIAL is false in

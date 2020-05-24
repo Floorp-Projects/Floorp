@@ -136,11 +136,6 @@ class BackgroundHangMonitor {
   static void Shutdown();
 
   /**
-   * Returns true if BHR is disabled.
-   */
-  static bool IsDisabled();
-
-  /**
    * Start monitoring hangs for the current thread.
    *
    * @param aName Name to identify the thread with
