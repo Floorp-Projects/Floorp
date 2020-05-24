@@ -13,5 +13,5 @@ Uninstalls the provided extension from this engine.
 `onSuccess` - (optional) callback invoked if the extension was uninstalled successfully.
 
 `onError` - (optional) callback invoked if there was an error uninstalling the extension.
-This callback is invoked with an [UnsupportedOperationException](https://developer.android.com/reference/java/lang/UnsupportedOperationException.html) in case the engine doesn't
+This callback is invoked with an [UnsupportedOperationException](http://docs.oracle.com/javase/7/docs/api/java/lang/UnsupportedOperationException.html) in case the engine doesn't
 have web extension support.

@@ -2,7 +2,7 @@
 
 # EngineSession
 
-`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>, `[`DataCleanable`](../-data-cleanable/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L29)
+`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>, `[`DataCleanable`](../-data-cleanable/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L30)
 
 Class representing a single engine session.
 

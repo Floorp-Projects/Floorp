@@ -30,7 +30,7 @@ WebNotificationFeature(
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebNotificationFeature(context: <ERROR CLASS>, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, browserIcons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`, smallIcon: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, activityClass: `[`Class`](https://developer.android.com/reference/java/lang/Class.html)`<out <ERROR CLASS>>?)`<br>Feature implementation for configuring and displaying web notifications to the user. |
+| [&lt;init&gt;](-init-.md) | `WebNotificationFeature(context: <ERROR CLASS>, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, browserIcons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`, smallIcon: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, activityClass: `[`Class`](http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html)`<out <ERROR CLASS>>?)`<br>Feature implementation for configuring and displaying web notifications to the user. |
 
 ### Functions
 

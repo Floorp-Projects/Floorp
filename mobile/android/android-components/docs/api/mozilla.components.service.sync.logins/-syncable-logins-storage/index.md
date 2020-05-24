@@ -2,7 +2,7 @@
 
 # SyncableLoginsStorage
 
-`class SyncableLoginsStorage : `[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L115)
+`class SyncableLoginsStorage : `[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](http://docs.oracle.com/javase/7/docs/api/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L115)
 
 An implementation of [LoginsStorage](../../mozilla.components.concept.storage/-logins-storage/index.md) backed by application-services' `logins` library.
 Synchronization support is provided both directly (via [sync](sync.md)) when only syncing this storage layer,

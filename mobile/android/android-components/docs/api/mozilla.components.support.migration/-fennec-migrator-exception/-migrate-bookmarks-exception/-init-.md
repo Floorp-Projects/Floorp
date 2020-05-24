@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`MigrateBookmarksException(cause: `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)`)`
+`MigrateBookmarksException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`
 
 Unexpected exception while migrating bookmarks.
 

@@ -2,7 +2,7 @@
 
 # FennecMigratorException
 
-`sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L137)
+`sealed class FennecMigratorException : `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L137)
 
 Exceptions related to Fennec migrations.
 

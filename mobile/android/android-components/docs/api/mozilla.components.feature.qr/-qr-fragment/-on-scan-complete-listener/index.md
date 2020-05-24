@@ -2,7 +2,7 @@
 
 # OnScanCompleteListener
 
-`interface OnScanCompleteListener : `[`Serializable`](https://developer.android.com/reference/java/io/Serializable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFragment.kt#L110)
+`interface OnScanCompleteListener : `[`Serializable`](http://docs.oracle.com/javase/7/docs/api/java/io/Serializable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFragment.kt#L110)
 
 Listener invoked when the QR scan completed successfully.
 

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`TelemetryIdentifierException(cause: `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)`)`
+`TelemetryIdentifierException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`
 
 Unexpected exception while migrating telemetry identifiers.
 

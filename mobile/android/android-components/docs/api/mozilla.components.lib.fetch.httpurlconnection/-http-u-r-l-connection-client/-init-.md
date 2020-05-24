@@ -4,5 +4,5 @@
 
 `HttpURLConnectionClient()`
 
-[HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection.html) implementation of [Client](../../mozilla.components.concept.fetch/-client/index.md).
+[HttpURLConnection](http://docs.oracle.com/javase/7/docs/api/java/net/HttpURLConnection.html) implementation of [Client](../../mozilla.components.concept.fetch/-client/index.md).
 

@@ -2,7 +2,7 @@
 
 # GeckoEngineSession
 
-`class GeckoEngineSession : CoroutineScope, `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L53)
+`class GeckoEngineSession : CoroutineScope, `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L54)
 
 Gecko-based EngineSession implementation.
 

@@ -14,7 +14,7 @@
 
 | Name | Summary |
 |---|---|
-| [KeystoreException](-keystore-exception/index.md) | `class KeystoreException : `[`GeneralSecurityException`](https://developer.android.com/reference/java/security/GeneralSecurityException.html)<br>Exception type thrown by {@link Keystore} when an error is encountered that is not otherwise covered by an existing sub-class to `GeneralSecurityException`. |
+| [KeystoreException](-keystore-exception/index.md) | `class KeystoreException : `[`GeneralSecurityException`](http://docs.oracle.com/javase/7/docs/api/java/security/GeneralSecurityException.html)<br>Exception type thrown by {@link Keystore} when an error is encountered that is not otherwise covered by an existing sub-class to `GeneralSecurityException`. |
 
 ### Functions
 

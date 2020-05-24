@@ -2,7 +2,7 @@
 
 # createDecryptCipher
 
-`open fun createDecryptCipher(iv: `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`): `[`Cipher`](https://developer.android.com/reference/javax/crypto/Cipher.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L299)
+`open fun createDecryptCipher(iv: `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`): `[`Cipher`](http://docs.oracle.com/javase/7/docs/api/javax/crypto/Cipher.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L299)
 
 Create a cipher initialized for decrypting data with the managed key.
 
@@ -22,5 +22,5 @@ ciphertext or decryption will fail.
 `GeneralSecurityException` - If the cipher could not be created and initialized
 
 **Return**
-The [Cipher](https://developer.android.com/reference/javax/crypto/Cipher.html), initialized and ready to decrypt data with.
+The [Cipher](http://docs.oracle.com/javase/7/docs/api/javax/crypto/Cipher.html), initialized and ready to decrypt data with.
 

@@ -34,7 +34,7 @@
 
 | Name | Summary |
 |---|---|
-| [getOrCreateCookieManager](get-or-create-cookie-manager.md) | `fun getOrCreateCookieManager(): `[`CookieManager`](https://developer.android.com/reference/java/net/CookieManager.html) |
+| [getOrCreateCookieManager](get-or-create-cookie-manager.md) | `fun getOrCreateCookieManager(): `[`CookieManager`](http://docs.oracle.com/javase/7/docs/api/java/net/CookieManager.html) |
 
 ### Extension Functions
 

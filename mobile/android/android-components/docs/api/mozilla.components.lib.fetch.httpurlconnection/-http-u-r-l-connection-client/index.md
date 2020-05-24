@@ -4,13 +4,13 @@
 
 `class HttpURLConnectionClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-httpurlconnection/src/main/java/mozilla/components/lib/fetch/httpurlconnection/HttpURLConnectionClient.kt#L26)
 
-[HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection.html) implementation of [Client](../../mozilla.components.concept.fetch/-client/index.md).
+[HttpURLConnection](http://docs.oracle.com/javase/7/docs/api/java/net/HttpURLConnection.html) implementation of [Client](../../mozilla.components.concept.fetch/-client/index.md).
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `HttpURLConnectionClient()`<br>[HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection.html) implementation of [Client](../../mozilla.components.concept.fetch/-client/index.md). |
+| [&lt;init&gt;](-init-.md) | `HttpURLConnectionClient()`<br>[HttpURLConnection](http://docs.oracle.com/javase/7/docs/api/java/net/HttpURLConnection.html) implementation of [Client](../../mozilla.components.concept.fetch/-client/index.md). |
 
 ### Inherited Properties
 
@@ -34,7 +34,7 @@
 
 | Name | Summary |
 |---|---|
-| [getOrCreateCookieManager](get-or-create-cookie-manager.md) | `fun getOrCreateCookieManager(): `[`CookieManager`](https://developer.android.com/reference/java/net/CookieManager.html) |
+| [getOrCreateCookieManager](get-or-create-cookie-manager.md) | `fun getOrCreateCookieManager(): `[`CookieManager`](http://docs.oracle.com/javase/7/docs/api/java/net/CookieManager.html) |
 
 ### Extension Functions
 

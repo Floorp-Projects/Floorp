@@ -12,7 +12,7 @@
 | [DecryptedMessage](-decrypted-message/index.md) | `data class DecryptedMessage`<br>Represents a decrypted push message for notifying observers of the [scope](-decrypted-message/scope.md). |
 | [Protocol](-protocol/index.md) | `enum class Protocol`<br>Supported network protocols. |
 | [PushConfig](-push-config/index.md) | `data class PushConfig`<br>Configuration object for initializing the Push Manager with an AutoPush server. |
-| [PushConnection](-push-connection/index.md) | `interface PushConnection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)<br>An interface that wraps the [PushAPI](#). |
+| [PushConnection](-push-connection/index.md) | `interface PushConnection : `[`Closeable`](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html)<br>An interface that wraps the [PushAPI](#). |
 | [ServiceType](-service-type/index.md) | `enum class ServiceType`<br>Supported push services. These are currently limited to Firebase Cloud Messaging and Amazon Device Messaging. |
 
 ### Type Aliases

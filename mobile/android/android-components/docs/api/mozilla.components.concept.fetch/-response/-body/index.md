@@ -2,7 +2,7 @@
 
 # Body
 
-`class Body : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L57)
+`class Body : `[`Closeable`](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html)`, `[`AutoCloseable`](http://docs.oracle.com/javase/7/docs/api/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L57)
 
 A [Body](./index.md) returned along with the [Request](../../-request/index.md).
 
@@ -21,16 +21,16 @@ charset can't be found, UTF-8 will be used for decoding.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Body(stream: `[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`, contentType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>A [Body](./index.md) returned along with the [Request](../../-request/index.md). |
+| [&lt;init&gt;](-init-.md) | `Body(stream: `[`InputStream`](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)`, contentType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>A [Body](./index.md) returned along with the [Request](../../-request/index.md). |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
 | [close](close.md) | `open fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Closes this [Body](./index.md) and releases any system resources associated with it. |
-| [string](string.md) | `fun string(charset: `[`Charset`](https://developer.android.com/reference/java/nio/charset/Charset.html)`? = null): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Reads this body completely as a String. |
-| [useBufferedReader](use-buffered-reader.md) | `fun <R> useBufferedReader(charset: `[`Charset`](https://developer.android.com/reference/java/nio/charset/Charset.html)`? = null, block: (`[`BufferedReader`](https://developer.android.com/reference/java/io/BufferedReader.html)`) -> `[`R`](use-buffered-reader.md#R)`): `[`R`](use-buffered-reader.md#R)<br>Creates a buffered reader from this body. |
-| [useStream](use-stream.md) | `fun <R> useStream(block: (`[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`) -> `[`R`](use-stream.md#R)`): `[`R`](use-stream.md#R)<br>Creates a usable stream from this body. |
+| [string](string.md) | `fun string(charset: `[`Charset`](http://docs.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html)`? = null): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Reads this body completely as a String. |
+| [useBufferedReader](use-buffered-reader.md) | `fun <R> useBufferedReader(charset: `[`Charset`](http://docs.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html)`? = null, block: (`[`BufferedReader`](http://docs.oracle.com/javase/7/docs/api/java/io/BufferedReader.html)`) -> `[`R`](use-buffered-reader.md#R)`): `[`R`](use-buffered-reader.md#R)<br>Creates a buffered reader from this body. |
+| [useStream](use-stream.md) | `fun <R> useStream(block: (`[`InputStream`](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)`) -> `[`R`](use-stream.md#R)`): `[`R`](use-stream.md#R)<br>Creates a usable stream from this body. |
 
 ### Companion Object Functions
 

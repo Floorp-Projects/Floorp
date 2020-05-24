@@ -2,7 +2,7 @@
 
 # PushConnection
 
-`interface PushConnection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L28)
+`interface PushConnection : `[`Closeable`](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L28)
 
 An interface that wraps the [PushAPI](#).
 

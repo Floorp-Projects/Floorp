@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`GleanCrashReporterService(context: <ERROR CLASS>, file: `[`File`](https://developer.android.com/reference/java/io/File.html)` = File(context.applicationInfo.dataDir, CRASH_FILE_NAME))`
+`GleanCrashReporterService(context: <ERROR CLASS>, file: `[`File`](http://docs.oracle.com/javase/7/docs/api/java/io/File.html)` = File(context.applicationInfo.dataDir, CRASH_FILE_NAME))`
 
 A [CrashReporterService](../-crash-reporter-service/index.md) implementation for recording metrics with Glean.  The purpose of this
 crash reporter is to collect crash count metrics by capturing [Crash.UncaughtExceptionCrash](../../mozilla.components.lib.crash/-crash/-uncaught-exception-crash/index.md),

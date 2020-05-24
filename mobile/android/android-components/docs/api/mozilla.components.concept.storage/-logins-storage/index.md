@@ -2,7 +2,7 @@
 
 # LoginsStorage
 
-`interface LoginsStorage : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L14)
+`interface LoginsStorage : `[`AutoCloseable`](http://docs.oracle.com/javase/7/docs/api/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L14)
 
 An interface describing a storage layer for logins/passwords.
 
@@ -33,4 +33,4 @@ An interface describing a storage layer for logins/passwords.
 
 | Name | Summary |
 |---|---|
-| [SyncableLoginsStorage](../../mozilla.components.service.sync.logins/-syncable-logins-storage/index.md) | `class SyncableLoginsStorage : `[`LoginsStorage`](./index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>An implementation of [LoginsStorage](./index.md) backed by application-services' `logins` library. Synchronization support is provided both directly (via [sync](../../mozilla.components.service.sync.logins/-syncable-logins-storage/sync.md)) when only syncing this storage layer, or via [getHandle](../../mozilla.components.service.sync.logins/-syncable-logins-storage/get-handle.md) when syncing multiple stores. Use the latter in conjunction with [FxaAccountManager](#). |
+| [SyncableLoginsStorage](../../mozilla.components.service.sync.logins/-syncable-logins-storage/index.md) | `class SyncableLoginsStorage : `[`LoginsStorage`](./index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](http://docs.oracle.com/javase/7/docs/api/java/lang/AutoCloseable.html)<br>An implementation of [LoginsStorage](./index.md) backed by application-services' `logins` library. Synchronization support is provided both directly (via [sync](../../mozilla.components.service.sync.logins/-syncable-logins-storage/sync.md)) when only syncing this storage layer, or via [getHandle](../../mozilla.components.service.sync.logins/-syncable-logins-storage/get-handle.md) when syncing multiple stores. Use the latter in conjunction with [FxaAccountManager](#). |

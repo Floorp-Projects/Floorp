@@ -2,7 +2,7 @@
 
 # KeystoreException
 
-`class KeystoreException : `[`GeneralSecurityException`](https://developer.android.com/reference/java/security/GeneralSecurityException.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/KeystoreException.kt#L14)
+`class KeystoreException : `[`GeneralSecurityException`](http://docs.oracle.com/javase/7/docs/api/java/security/GeneralSecurityException.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/KeystoreException.kt#L14)
 
 Exception type thrown by {@link Keystore} when an error is encountered that
 is not otherwise covered by an existing sub-class to `GeneralSecurityException`.

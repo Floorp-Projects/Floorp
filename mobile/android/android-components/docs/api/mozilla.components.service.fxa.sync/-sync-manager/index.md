@@ -26,7 +26,7 @@ A base sync manager implementation.
 
 | Name | Summary |
 |---|---|
-| [SYNC_PERIOD_UNIT](-s-y-n-c_-p-e-r-i-o-d_-u-n-i-t.md) | `val SYNC_PERIOD_UNIT: `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html) |
+| [SYNC_PERIOD_UNIT](-s-y-n-c_-p-e-r-i-o-d_-u-n-i-t.md) | `val SYNC_PERIOD_UNIT: `[`TimeUnit`](http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html) |
 
 ### Extension Functions
 

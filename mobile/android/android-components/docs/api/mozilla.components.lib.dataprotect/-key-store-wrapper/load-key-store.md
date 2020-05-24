@@ -2,7 +2,7 @@
 
 # loadKeyStore
 
-`open fun loadKeyStore(): `[`KeyStore`](https://developer.android.com/reference/java/security/KeyStore.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L121)
+`open fun loadKeyStore(): `[`KeyStore`](http://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L121)
 
 Creates and initializes the KeyStore in use.
 

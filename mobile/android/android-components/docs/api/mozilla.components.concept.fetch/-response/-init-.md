@@ -11,7 +11,7 @@ being returned as the result of calling [Client.fetch](../-client/fetch.md).
 
 A [Response](index.md) may hold references to other resources (e.g. streams). Therefore it's important to always close the
 [Response](index.md) object or its [Body](-body/index.md). This can be done by either consuming the content of the [Body](-body/index.md) with one of the
-available methods or by using Kotlin's extension methods for using [Closeable](https://developer.android.com/reference/java/io/Closeable.html) implementations (like `use()`):
+available methods or by using Kotlin's extension methods for using [Closeable](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html) implementations (like `use()`):
 
 ``` Kotlin
 val response = ...

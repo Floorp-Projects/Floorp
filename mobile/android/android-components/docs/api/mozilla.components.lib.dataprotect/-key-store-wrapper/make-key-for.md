@@ -2,7 +2,7 @@
 
 # makeKeyFor
 
-`open fun makeKeyFor(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SecretKey`](https://developer.android.com/reference/javax/crypto/SecretKey.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L87)
+`open fun makeKeyFor(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SecretKey`](http://docs.oracle.com/javase/7/docs/api/javax/crypto/SecretKey.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L87)
 
 Creates a SecretKey for the given label.
 

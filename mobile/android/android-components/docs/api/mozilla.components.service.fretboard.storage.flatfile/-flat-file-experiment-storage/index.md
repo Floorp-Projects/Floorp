@@ -14,7 +14,7 @@ Class which uses a flat JSON file as an experiment storage mechanism
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FlatFileExperimentStorage(file: `[`File`](https://developer.android.com/reference/java/io/File.html)`)`<br>Class which uses a flat JSON file as an experiment storage mechanism |
+| [&lt;init&gt;](-init-.md) | `FlatFileExperimentStorage(file: `[`File`](http://docs.oracle.com/javase/7/docs/api/java/io/File.html)`)`<br>Class which uses a flat JSON file as an experiment storage mechanism |
 
 ### Functions
 

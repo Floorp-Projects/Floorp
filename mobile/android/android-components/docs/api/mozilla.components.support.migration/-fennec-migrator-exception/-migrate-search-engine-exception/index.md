@@ -14,4 +14,4 @@ Unexpected exception while migrating the default search engine.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `MigrateSearchEngineException(cause: `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)`)`<br>Unexpected exception while migrating the default search engine. |
+| [&lt;init&gt;](-init-.md) | `MigrateSearchEngineException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`<br>Unexpected exception while migrating the default search engine. |

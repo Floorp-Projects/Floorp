@@ -7,7 +7,7 @@
 Loads a SearchEngine from the given path in assets and assigns
 it the given identifier.
 
-`fun load(identifier: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, stream: `[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`): `[`SearchEngine`](../-search-engine/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/SearchEngineParser.kt#L62)
+`fun load(identifier: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, stream: `[`InputStream`](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)`): `[`SearchEngine`](../-search-engine/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/SearchEngineParser.kt#L62)
 
 Loads a SearchEngine from the given stream and assigns it the given
 identifier.

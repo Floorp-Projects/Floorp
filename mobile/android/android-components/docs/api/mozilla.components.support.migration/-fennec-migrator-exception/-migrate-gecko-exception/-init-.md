@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`MigrateGeckoException(cause: `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)`)`
+`MigrateGeckoException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`
 
 Unexpected exception while migrating gecko profile.
 

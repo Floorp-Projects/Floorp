@@ -14,4 +14,4 @@ Unexpected exception while migrating history.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `MigrateHistoryException(cause: `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)`)`<br>Unexpected exception while migrating history. |
+| [&lt;init&gt;](-init-.md) | `MigrateHistoryException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`<br>Unexpected exception while migrating history. |
