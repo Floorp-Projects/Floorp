@@ -132,11 +132,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-icon {
   height: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
 }
 
-.bookmark-item > .toolbarbutton-menu-dropmarker,
-toolbar .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
 toolbar .toolbarbutton-1 > .toolbarbutton-text {
   padding-top: var(--toolbarbutton-vertical-text-padding);
   padding-bottom: 0;

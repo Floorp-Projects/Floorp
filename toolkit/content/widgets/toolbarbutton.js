@@ -49,7 +49,7 @@
         <image class="toolbarbutton-icon"></image>
         <label class="toolbarbutton-text" crop="right" flex="1"></label>
         <label class="toolbarbutton-multiline-text" flex="1"></label>
-        <dropmarker type="menu" class="toolbarbutton-menu-dropmarker"></dropmarker>`),
+        `),
         true
       );
       Object.defineProperty(this, "fragment", { value: frag });
@@ -65,11 +65,21 @@
         </stack>
         <label class="toolbarbutton-text" crop="right" flex="1"/>
         <label class="toolbarbutton-multiline-text" flex="1"/>
-        <dropmarker anonid="dropmarker" type="menu"
-                    class="toolbarbutton-menu-dropmarker"/>`),
+        `),
         true
       );
       Object.defineProperty(this, "badgedFragment", { value: frag });
+      return frag;
+    }
+
+    static get dropmarkerFragment() {
+      let frag = document.importNode(
+        MozXULElement.parseXULToFragment(`
+          <dropmarker type="menu" class="toolbarbutton-menu-dropmarker"></dropmarker>
+        `),
+        true
+      );
+      Object.defineProperty(this, "dropmarkerFragment", { value: frag });
       return frag;
     }
 
@@ -109,6 +119,10 @@
 
         this.appendChild(this.constructor.badgedFragment.cloneNode(true));
 
+        if (this.hasAttribute("wantdropmarker")) {
+          this.appendChild(this.constructor.dropmarkerFragment.cloneNode(true));
+        }
+
         if (moveChildren.length) {
           let { badgeStack, icon } = this;
           for (let child of moveChildren) {
@@ -130,6 +144,10 @@
         }
 
         this.appendChild(this.constructor.fragment.cloneNode(true));
+
+        if (this.hasAttribute("wantdropmarker")) {
+          this.appendChild(this.constructor.dropmarkerFragment.cloneNode(true));
+        }
 
         // XBL toolbarbutton explicitly places any <box> children
         // right before the menu marker.
