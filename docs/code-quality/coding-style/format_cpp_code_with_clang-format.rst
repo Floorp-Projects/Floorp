@@ -35,7 +35,7 @@ Formatting local changes
 
 When run without arguments, it will run on a local diff. This could miss
 some reformatting (for example, when blocks are touched).
-(`dxr <https://dxr.mozilla.org/mozilla-central/source/python/mozbuild/mozbuild/mach_commands.py#2167%20%0A>`__)
+(`searchfox <https://searchfox.org/mozilla-central/rev/501eb4718d73870892d28f31a99b46f4783efaa0/python/mozbuild/mozbuild/code-analysis/mach_commands.py#1620>`__)
 
 
 Formatting specific paths
@@ -49,7 +49,7 @@ Formatting specific paths
 The command also accepts a ``-p`` argument to reformat a specific
 directory or file, and a ``-s`` flag to show the changes instead of
 applying them to the working directory
-(`dxr <https://dxr.mozilla.org/mozilla-central/rev/237e4c0633fda8e227b2ab3ab57e417c980a2811/python/mozbuild/mozbuild/mach_commands.py#2329>`__)
+(`searchfox <https://searchfox.org/mozilla-central/rev/501eb4718d73870892d28f31a99b46f4783efaa0/python/mozbuild/mozbuild/code-analysis/mach_commands.py#1633>`__)
 
 
 Formatting specific commits / revisions
@@ -63,6 +63,7 @@ Formatting specific commits / revisions
 
 The command accepts a ``-c`` argument that takes a revision number or
 commit range, and will format the lines modified by those commits.
+(`searchfox <https://searchfox.org/mozilla-central/rev/501eb4718d73870892d28f31a99b46f4783efaa0/python/mozbuild/mozbuild/code-analysis/mach_commands.py#1635>`__)
 
 
 Scripting Clang-Format
@@ -176,14 +177,14 @@ wrapper).
 Coding style configuration is done within clang-format itself. When we
 change the configuration (incorrect configuration, new feature in clang,
 etc), we use `local
-overrides <https://dxr.mozilla.org/mozilla-central/source/.clang-format>`__.
+overrides <https://searchfox.org/mozilla-central/rev/501eb4718d73870892d28f31a99b46f4783efaa0/.clang-format>`__.
 
 
 Ignored files & directories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We maintain a `list of ignored directories and
-files <https://dxr.mozilla.org/mozilla-central/source/.clang-format-ignore>`__,
+files <https://searchfox.org/mozilla-central/rev/501eb4718d73870892d28f31a99b46f4783efaa0/.clang-format-ignore>`__,
 which is used by ``./mach clang-format``. This is generally only used
 for code broken by clang-format, and third-party code.
 
@@ -202,7 +203,7 @@ reformat:
    // clang-format on
 
 You can find an `example of code not
-formatted <https://dxr.mozilla.org/mozilla-central/source/xpcom/io/nsEscape.cpp?q=xpcom%2Fio%2FnsEscape.cpp&redirect_type=direct#21>`__.
+formatted <https://searchfox.org/mozilla-central/rev/501eb4718d73870892d28f31a99b46f4783efaa0/xpcom/io/nsEscape.cpp#22>`__.
 
 
 Merging formatted and unformatted code
