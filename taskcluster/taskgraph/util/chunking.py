@@ -14,7 +14,7 @@ from collections import defaultdict
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_runtime
 from mozbuild.util import memoize
-from moztest.resolve import TestResolver, TestManifestLoader
+from moztest.resolve import TestResolver, TestManifestLoader, get_suite_definition
 
 from taskgraph import GECKO
 
@@ -54,7 +54,10 @@ def guess_mozinfo_from_task(task):
 
 
 @memoize
-def get_runtimes(platform):
+def get_runtimes(platform, suite_name):
+    if not suite_name:
+        raise TypeError('suite_name should be a value.')
+
     base = os.path.join(GECKO, 'testing', 'runtimes', 'manifest-runtimes-{}.json')
     for key in ('android', 'windows'):
         if key in platform:
@@ -64,7 +67,7 @@ def get_runtimes(platform):
         path = base.format('unix')
 
     with open(path, 'r') as fh:
-        return json.load(fh)
+        return json.load(fh).get(suite_name, {})
 
 
 @memoize
@@ -145,7 +148,7 @@ def get_manifests(flavor, subsuite, mozinfo):
     return {"active": list(active), "skipped": list(skipped)}
 
 
-def chunk_manifests(flavor, platform, chunks, manifests):
+def chunk_manifests(flavor, subsuite, platform, chunks, manifests):
     """Run the chunking algorithm.
 
     Args:
@@ -157,20 +160,23 @@ def chunk_manifests(flavor, platform, chunks, manifests):
         A list of length `chunks` where each item contains a list of manifests
         that run in that chunk.
     """
+    # Obtain the suite definition given the flavor and subsuite which often
+    # do not perfectly map onto the actual suite name in taskgraph.
+    suite_name, _ = get_suite_definition(flavor, subsuite)
 
     if flavor != "web-platform-tests":
         return [
             c[1] for c in chunk_by_runtime(
                 None,
                 chunks,
-                get_runtimes(platform)
+                get_runtimes(platform, suite_name)
             ).get_chunked_manifests(manifests)
         ]
 
     paths = {k: v for k, v in wpt_group_translation.items() if k in manifests}
 
     # Filter out non-web-platform-test runtime information.
-    runtimes = get_runtimes(platform)
+    runtimes = get_runtimes(platform, suite_name)
     runtimes = [(k, v) for k, v in runtimes.items()
                 if k.startswith('/') and not os.path.splitext(k)[-1]
                 if k in manifests]
@@ -180,7 +186,7 @@ def chunk_manifests(flavor, platform, chunks, manifests):
 
     # First, chunk tests that have runtime information available.
     for key, rt in sorted(runtimes, key=lambda x: x[1], reverse=True):
-        # Sort the chunks from fastest to slowest, based on runtimme info
+        # Sort the chunks from fastest to slowest, based on runtime info
         # at x[1], then the number of test paths.
         chunked_manifests.sort(key=lambda x: (x[1], len(x[0])))
         test_paths = paths[key]
