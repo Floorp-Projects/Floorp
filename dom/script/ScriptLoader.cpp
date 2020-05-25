@@ -1497,14 +1497,22 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), handler);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = channel->AsyncOpen(loader);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   auto key = PreloadHashKey::CreateAsScript(
       aRequest->mURI, aRequest->CORSMode(), aRequest->mKind,
       aRequest->ReferrerPolicy());
   aRequest->NotifyOpen(&key, channel, mDocument,
                        aRequest->IsLinkPreloadScript());
+
+  rv = channel->AsyncOpen(loader);
+
+  if (NS_FAILED(rv)) {
+    // Make sure to inform any <link preload> tags about failure to load the
+    // resource.
+    aRequest->NotifyStart(channel);
+    aRequest->NotifyStop(rv);
+  }
+
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRequest->IsModuleRequest()) {
     // We successfully started fetching a module so put its URL in the module
@@ -1966,6 +1974,10 @@ ScriptLoadRequest* ScriptLoader::LookupPreloadRequest(
   // This makes sure the pending preload (if exists) for this resource is
   // properly marked as used and thus not notified in the console as unused.
   request->NotifyUsage();
+  // A used preload must no longer be found in the Document's hash table.  Any
+  // <link preload> tag after the <script> tag will start a new request, that
+  // can be satisfied from a different cache, but not from the preload cache.
+  request->RemoveSelf(mDocument);
 
   return request;
 }
