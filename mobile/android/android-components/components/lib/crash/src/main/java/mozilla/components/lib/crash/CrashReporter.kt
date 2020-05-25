@@ -107,6 +107,10 @@ class CrashReporter(
                 if (reportId != null) {
                     database.crashDao().insertReportSafely(service.toReportEntity(crash, reportId))
                 }
+
+                val reportUrl = reportId?.let { service.createCrashReportUrl(it) }
+
+                logger.info("Submitted crash to ${service.name} (id=$reportId, url=$reportUrl)")
             }
 
             logger.info("Crash report submitted to ${services.size} services")
