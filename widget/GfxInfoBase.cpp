@@ -1639,12 +1639,15 @@ bool GfxInfoBase::InitFeatureObject(JSContext* aCx,
   }
 
   nsCString status;
-  if (aFeatureState.GetValue() == FeatureStatus::Blacklisted) {
+  auto value = aFeatureState.GetValue();
+  if (value == FeatureStatus::Blacklisted ||
+      value == FeatureStatus::Unavailable ||
+      value == FeatureStatus::Blocked) {
     status.AppendPrintf("%s:%s",
-                        FeatureStatusToString(aFeatureState.GetValue()),
+                        FeatureStatusToString(value),
                         aFeatureState.GetFailureId().get());
   } else {
-    status.Append(FeatureStatusToString(aFeatureState.GetValue()));
+    status.Append(FeatureStatusToString(value));
   }
 
   JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, status.get()));
