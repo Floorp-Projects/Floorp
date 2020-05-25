@@ -40,18 +40,16 @@ nsresult FetchPreloader::OpenChannel(PreloadHashKey* aKey, nsIURI* aURI,
   nsCOMPtr<nsIChannel> channel;
 
   auto notify = MakeScopeExit([&]() {
-    if (NS_WARN_IF(NS_FAILED(rv)) && channel) {
-      // Make sure we notify any <link preload> elements when opening because of
-      // various technical or security reasons fails.
+    if (NS_FAILED(rv)) {
+      // Make sure we notify any <link preload> elements when opening fails
+      // because of various technical or security reasons.
       NotifyStart(channel);
-      NotifyStop(channel, rv);
+      // Using the non-channel overload of this method to make it work even
+      // before NotifyOpen has been called on this preload.  We are not
+      // switching between channels, so it's safe to do so.
+      NotifyStop(rv);
     }
   });
-
-  rv = CheckContentPolicy(aURI, aDocument);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   nsCOMPtr<nsILoadGroup> loadGroup = aDocument->GetDocumentLoadGroup();
   nsCOMPtr<nsPIDOMWindowOuter> window = aDocument->GetWindow();
@@ -64,6 +62,14 @@ nsresult FetchPreloader::OpenChannel(PreloadHashKey* aKey, nsIURI* aURI,
   rv = CreateChannel(getter_AddRefs(channel), aURI, aCORSMode, aReferrerPolicy,
                      aDocument, loadGroup, prompter);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Doing this now so that we have the channel and tainting set on it properly
+  // to notify the proper event (load or error) on the associated preload tags
+  // when the CSP check fails.
+  rv = CheckContentPolicy(aURI, aDocument);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   PrioritizeAsPreload(channel);
   AddLoadBackgroundFlag(channel);
