@@ -206,8 +206,7 @@ role HTMLTextFieldAccessible::NativeRole() const {
   if (mType == eHTMLTextPasswordFieldType) {
     return roles::PASSWORD_TEXT;
   }
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None,
-                                            nsGkAtoms::list_)) {
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::list_)) {
     return roles::EDITCOMBOBOX;
   }
   return roles::ENTRY;

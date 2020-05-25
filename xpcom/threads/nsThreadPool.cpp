@@ -37,7 +37,8 @@ static MOZ_THREAD_LOCAL(nsThreadPool*) gCurrentThreadPool;
 #define DEFAULT_IDLE_THREAD_LIMIT 1
 #define DEFAULT_IDLE_THREAD_TIMEOUT PR_SecondsToInterval(60)
 
-NS_IMPL_ISUPPORTS_INHERITED(nsThreadPool, Runnable, nsIThreadPool, nsIEventTarget)
+NS_IMPL_ISUPPORTS_INHERITED(nsThreadPool, Runnable, nsIThreadPool,
+                            nsIEventTarget)
 
 nsThreadPool::nsThreadPool()
     : Runnable("nsThreadPool"),

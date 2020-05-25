@@ -1020,7 +1020,7 @@ struct CharsAndAction {
 };
 
 static constexpr CharsAndAction keywords[] = {
-  // clang-format off
+    // clang-format off
   // AM/PM
   { "am", -1 },
   { "pm", -2 },
@@ -1057,7 +1057,7 @@ static constexpr CharsAndAction keywords[] = {
   { "mdt", 10000 + 6 * 60 },
   { "pst", 10000 + 8 * 60 },
   { "pdt", 10000 + 7 * 60 },
-  // clang-format on
+    // clang-format on
 };
 
 template <size_t N>

@@ -1235,13 +1235,14 @@ bool ParentImpl::CreateBackgroundThread() {
   nsCOMPtr<nsIThread> thread;
   if (NS_FAILED(NS_NewNamedThread(
           "IPDL Background", getter_AddRefs(thread),
-          NS_NewRunnableFunction("Background::ParentImpl::CreateBackgroundThreadRunnable", []() {
-            DebugOnly<PRThread*> oldBackgroundThread =
-                sBackgroundPRThread.exchange(PR_GetCurrentThread());
+          NS_NewRunnableFunction(
+              "Background::ParentImpl::CreateBackgroundThreadRunnable", []() {
+                DebugOnly<PRThread*> oldBackgroundThread =
+                    sBackgroundPRThread.exchange(PR_GetCurrentThread());
 
-            MOZ_ASSERT_IF(oldBackgroundThread,
-                          PR_GetCurrentThread() != oldBackgroundThread);
-          })))) {
+                MOZ_ASSERT_IF(oldBackgroundThread,
+                              PR_GetCurrentThread() != oldBackgroundThread);
+              })))) {
     NS_WARNING("NS_NewNamedThread failed!");
     return false;
   }
@@ -1302,17 +1303,14 @@ void ParentImpl::ShutdownBackgroundThread() {
     }
 
     // Dispatch this runnable to unregister the PR thread from the profiler.
-    MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(
-        NS_NewRunnableFunction(
-            "Background::ParentImpl::ShutdownBackgroundThreadRunnable",
-            []() {
-              // It is possible that another background thread was created while
-              // this thread was shutting down. In that case we can't assert
-              // anything about sBackgroundPRThread and we should not modify it
-              // here.
-              sBackgroundPRThread.compareExchange(PR_GetCurrentThread(),
-                                                  nullptr);
-            })));
+    MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(NS_NewRunnableFunction(
+        "Background::ParentImpl::ShutdownBackgroundThreadRunnable", []() {
+          // It is possible that another background thread was created while
+          // this thread was shutting down. In that case we can't assert
+          // anything about sBackgroundPRThread and we should not modify it
+          // here.
+          sBackgroundPRThread.compareExchange(PR_GetCurrentThread(), nullptr);
+        })));
 
     MOZ_ALWAYS_SUCCEEDS(thread->Shutdown());
   }

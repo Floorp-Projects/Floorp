@@ -733,7 +733,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     if (static_cast<size_t>(bytes_written) != amt_to_write) {
       // If write() fails with EAGAIN then bytes_written will be -1.
       if (bytes_written > 0) {
-        MOZ_DIAGNOSTIC_ASSERT(static_cast<size_t>(bytes_written) < amt_to_write);
+        MOZ_DIAGNOSTIC_ASSERT(static_cast<size_t>(bytes_written) <
+                              amt_to_write);
         partial_write_iter_.ref().AdvanceAcrossSegments(msg->Buffers(),
                                                         bytes_written);
         // We should not hit the end of the buffer.

@@ -1985,7 +1985,8 @@ bool nsXULPopupManager::HandleShortcutNavigation(KeyboardEvent* aKeyEvent,
 
 bool nsXULPopupManager::HandleKeyboardNavigation(uint32_t aKeyCode) {
   if (nsMenuChainItem* nextitem = GetTopVisibleMenu()) {
-    nextitem->Content()->OwnerDoc()->FlushPendingNotifications(FlushType::Frames);
+    nextitem->Content()->OwnerDoc()->FlushPendingNotifications(
+        FlushType::Frames);
   }
 
   // navigate up through the open menus, looking for the topmost one

@@ -126,7 +126,6 @@ enum CheckboxValue {
 }
 
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
-
   [super stateChanged:state isEnabled:enabled];
 
   if (state == states::EXPANDED) {

@@ -6,11 +6,11 @@
 
 #include "mozilla/layers/APZCTreeManagerChild.h"
 
-#include "InputData.h"                               // for InputData
-#include "mozilla/dom/BrowserParent.h"               // for BrowserParent
-#include "mozilla/layers/APZCCallbackHelper.h"       // for APZCCallbackHelper
-#include "mozilla/layers/APZInputBridgeChild.h"      // for APZInputBridgeChild
-#include "mozilla/layers/GeckoContentController.h"   // for GeckoContentController
+#include "InputData.h"                              // for InputData
+#include "mozilla/dom/BrowserParent.h"              // for BrowserParent
+#include "mozilla/layers/APZCCallbackHelper.h"      // for APZCCallbackHelper
+#include "mozilla/layers/APZInputBridgeChild.h"     // for APZInputBridgeChild
+#include "mozilla/layers/GeckoContentController.h"  // for GeckoContentController
 #include "mozilla/layers/RemoteCompositorSession.h"  // for RemoteCompositorSession
 
 namespace mozilla {
