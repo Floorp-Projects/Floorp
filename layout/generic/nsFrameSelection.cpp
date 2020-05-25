@@ -683,10 +683,9 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   }
 
   nsPresContext* context = mPresShell->GetPresContext();
-  if (!context) return NS_ERROR_FAILURE;
-
-  // we must keep this around and revalidate it when its just UP/DOWN
-  nsPoint desiredPos(0, 0);
+  if (!context) {
+    return NS_ERROR_FAILURE;
+  }
 
   const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   const RefPtr<Selection> sel = mDomSelections[index];
@@ -711,8 +710,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     caretStyle = 2;
   }
 
-  bool doCollapse = !sel->IsCollapsed() && !aContinueSelection &&
-                    caretStyle == 2 && aAmount <= eSelectLine;
+  const bool doCollapse = !sel->IsCollapsed() && !aContinueSelection &&
+                          caretStyle == 2 && aAmount <= eSelectLine;
   if (doCollapse) {
     if (aDirection == eDirPrevious) {
       SetChangeReasons(nsISelectionListener::COLLAPSETOSTART_REASON);
@@ -726,6 +725,9 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   }
 
   AutoPrepareFocusRange prep(sel, false);
+
+  // we must keep this around and revalidate it when its just UP/DOWN
+  nsPoint desiredPos(0, 0);
 
   if (aAmount == eSelectLine) {
     nsresult result = mDesiredCaretPos.FetchPos(desiredPos, *mPresShell, *sel);
@@ -754,7 +756,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     return NS_OK;
   }
 
-  bool visualMovement =
+  const bool visualMovement =
       mCaret.IsVisualMovement(aContinueSelection, aMovementStyle);
   nsIFrame* frame;
   int32_t offsetused = 0;
@@ -1344,7 +1346,9 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
                                      uint32_t aContentEndOffset,
                                      CaretAssociateHint aHint,
                                      const FocusMode aFocusMode) {
-  if (!aNewFocus) return NS_ERROR_NULL_POINTER;
+  if (!aNewFocus) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   NS_ENSURE_STATE(mPresShell);
 
