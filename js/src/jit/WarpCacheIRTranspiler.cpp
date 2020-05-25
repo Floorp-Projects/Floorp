@@ -1074,6 +1074,7 @@ bool WarpCacheIRTranspiler::emitIsObjectResult(ValOperandId inputId) {
     pushResult(constant(BooleanValue(true)));
   } else {
     auto* isObject = MIsObject::New(alloc(), value);
+    add(isObject);
     pushResult(isObject);
   }
 
