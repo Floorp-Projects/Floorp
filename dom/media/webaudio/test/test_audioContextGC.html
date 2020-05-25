@@ -14,8 +14,8 @@ let ids;
 
 const observer = (subject, topic, data) => {
   const id = parseInt(data);
-  if (ids.delete(id)) {
-    ok(true, "Collected AudioNode id " + id);
+  if (ids) {
+    ok(ids.delete(id), "Collected AudioNode id " + id);
   }
 }
 SpecialPowers.addObserver(observer, "webaudio-node-demise");
@@ -139,20 +139,15 @@ const start_next_test = async () => {
     SimpleTest.finish();
     return;
   }
+  // Collect all audio nodes from previous tests.
+  if (!ids) {
+    await new Promise(resolve => {
+      SpecialPowers.exactGC(resolve);
+    });
+  }
   ids = new Set();
   await test.setup();
-  // Queue an event to ensure references to promises are dropped before
-  // collection.
-  await new Promise((resolve) => {
-    SimpleTest.executeSoon(() => {
-      SpecialPowers.forceGC();
-      SpecialPowers.forceCC();
-      resolve();
-    });
-  });
-  // Expect that webaudio-node-demise has been queued.
-  // Queue another event to check.
-  SimpleTest.executeSoon(() => {
+  SpecialPowers.exactGC(() => {
     is(ids.size, 0,
        `All expected nodes for "${test.name}" should be collected`);
     start_next_test();

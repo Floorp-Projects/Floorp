@@ -50,15 +50,7 @@ testProcessor.onaudioprocess = function(event) {
     break;
   case 2:
     // There are no references to testProcessor and so GC can begin.
-    SpecialPowers.forceGC();
-    break;
-  case 3:
-    // Another GC should not be required after testProcessor would have
-    // received another audioprocess event.
-    SpecialPowers.forceCC();
-    // Expect that webaudio-demise has been queued.
-    // Queue another event to check.
-    SimpleTest.executeSoon(function() {
+    SpecialPowers.exactGC(function() {
       SpecialPowers.removeObserver(observer, "webaudio-node-demise");
       observer = null;
       event.target.onaudioprocess = null;
