@@ -38,8 +38,27 @@ function getDefaultTargetBrowsers() {
     for (const version in releases) {
       const { status } = releases[version];
 
-      if (TARGET_BROWSER_STATUS.includes(status)) {
-        targets.push({ id, name, version, status });
+      if (!TARGET_BROWSER_STATUS.includes(status)) {
+        continue;
+      }
+
+      // MDN compat data might have browser data that have the same id and status.
+      // e.g. https://github.com/mdn/browser-compat-data/commit/53453400ecb2a85e7750d99e2e0a1611648d1d56#diff-31a16f09157f13354db27821261604aa
+      // In this case, replace to the browser that has newer version to keep uniqueness
+      // by id and status.
+      const target = { id, name, version, status };
+      const index = targets.findIndex(
+        t => target.id === t.id && target.status === t.status
+      );
+
+      if (index < 0) {
+        targets.push(target);
+        continue;
+      }
+
+      const existingTarget = targets[index];
+      if (parseFloat(existingTarget.version) < parseFloat(target.version)) {
+        targets[index] = target;
       }
     }
   }
