@@ -146,6 +146,10 @@ a.hidden,
 .monitor-card.no-logins #monitor-header-content a,
 .monitor-card.no-logins .monitor-scanned-text,
 .monitor-card.no-logins .icon-small,
+.monitor-card.no-logins .monitor-breaches-wrapper,
+.monitor-card.no-logins .monitor-partial-breaches-wrapper,
+.monitor-card .monitor-breaches-wrapper.hidden,
+.monitor-card .monitor-partial-breaches-wrapper.hidden,
 .monitor-card.has-logins #sign-up-for-monitor-link,
 .loading a,
 .loading button,
@@ -662,7 +666,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 #lockwise-scanned-icon {
-  margin-top: 7px;
+  margin-top: 5px;
 }
 
 #manage-passwords-button {
@@ -684,6 +688,121 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   display: block;
 }
 
+.monitor-breaches-wrapper {
+  display: grid;
+  grid-area: 2 / 1 / 2 / 7;
+  grid: 1fr 80px auto / repeat(6, 1fr);
+}
+
+.monitor-partial-breaches-wrapper {
+  display: grid;
+  grid-area: 2 / 1 / 2 / 8;
+  grid-template-columns: repeat(7, 1fr);
+  margin-block: 30px;
+}
+
+.monitor-partial-breaches-header {
+  grid-area: 1 / 1 / 1 / 7;
+  margin-inline-end: 15px;
+  margin-block: 6px;
+}
+
+#monitor-partial-breaches-percentage {
+  font-size: .93em;
+  cursor: default;
+  color: var(--in-content-deemphasized-text);
+  float: inline-end;
+}
+
+.progress-bar {
+  grid-area: 2 / 1 / 2 / 7;
+  margin-inline-start: 15px;
+  border-radius: 4px;
+  height: 25px;
+  box-shadow: 0 0 0 1px #cdcdd4;
+  border: none;
+  background: linear-gradient(-90deg, #ff9100 0%, #f10366 50%, #6173ff 100%);
+  direction: rtl;
+}
+
+.progress-bar:dir(rtl) {
+  direction: ltr;
+  background: linear-gradient(-90deg, #6173ff 0%, #f10366 50%, #ff9100 100%);
+}
+
+.progress-bar::-moz-progress-bar {
+  background: #FFFFFF;
+}
+
+.monitor-partial-breaches-motivation-text {
+  grid-template-columns: repeat(7, 1fr);
+  grid-area: 3 / 1 / 3 / 8;
+  margin-top: 25px;
+  display: grid;
+}
+
+.monitor-partial-breaches-motivation-wrapper {
+  grid-area: 1 / 1 / 1 / 5;
+}
+
+#monitor-partial-breaches-link {
+  margin-top: 3px;
+  grid-area: 1 / 5 / 1 / 7;
+}
+
+#monitor-partial-breaches-motivation-title {
+  display: block;
+  font-weight: 700;
+}
+
+#monitor-partial-breaches-motivation-desc {
+  display: block;
+}
+
+.monitor-breaches-header {
+  margin-top: 30px;
+  grid-area: 1 / 1 / 1 / 7;
+}
+
+#monitor-partial-breaches-icon,
+#monitor-breaches-icon {
+  vertical-align: middle;
+  margin-inline-end: 2px;
+}
+
+#monitor-partial-breaches-title {
+  font-size: 0.93em;
+}
+
+#monitor-breaches-title {
+  font-weight: 700;
+}
+
+#monitor-breaches-title,
+#monitor-partial-breaches-title,
+#monitor-partial-breaches-motivation-title {
+  cursor: default;
+}
+
+#monitor-breaches-description {
+  margin-inline-end: 15px;
+  grid-area: 2 / 1 / 2 / 5;
+}
+
+#monitor-breaches-link {
+  grid-area: 2 / 5 / 2 / 7;
+}
+
+#monitor-partial-breaches-link,
+#monitor-breaches-link {
+  height: 39.5px;
+  margin-inline: 0 15px;
+  text-align: center;
+  font-size: 0.95em;
+  padding-top: 9px;
+  outline: none;
+}
+
 .lockwise-card #lockwise-header-content > a,
 .monitor-card #monitor-header-content > a {
   display: block;
@@ -693,7 +812,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
 .monitor-card.has-logins #monitor-body-content {
   display: grid;
-  grid: 1fr 50px auto / repeat(7, 1fr);
+  grid: 1fr auto / repeat(7, 1fr);
   align-items: center;
 }
 
@@ -727,13 +846,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 .passwords {
   background: linear-gradient(162.33deg, #7542E5 0%, #592ACB 100%);
   grid-column: 3;
-}
-
-.monitor-view-full-report {
-  grid-row: 2;
-  grid-column: span 7;
-  font-size: 0.85em;
-  color: var(--in-content-deemphasized-text);
 }
 
 .monitor-stat {
@@ -779,25 +891,31 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
 #manage-protections,
 #sign-up-for-monitor-link,
-#get-proxy-extension-link {
+#get-proxy-extension-link,
+#monitor-partial-breaches-link,
+#monitor-breaches-link {
   -moz-appearance: button;
-  background-color: var(--blue-60);
+  background-color: var(--in-content-primary-button-background);  
   border: 1px solid transparent;
   border-radius: 2px;
   text-decoration: none;
-  color: #fff;
+  color: var(--in-content-selected-text);
 }
 
 #manage-protections:active,
 #sign-up-for-monitor-link:active,
-#get-proxy-extension-link:active {
-  background-color: var(--blue-80) !important;
+#get-proxy-extension-link:active,
+#monitor-partial-breaches-link:active,
+#monitor-breaches-link:active {
+  background-color: var(--in-content-primary-button-background-active);
 }
 
 #manage-protections:hover,
 #sign-up-for-monitor-link:hover,
-#get-proxy-extension-link:hover {
-  background-color: var(--blue-70);
+#get-proxy-extension-link:hover,
+#monitor-partial-breaches-link:hover,
+#monitor-breaches-link:hover {
+  background-color: var(--in-content-primary-button-background-hover);
 }
 
 #manage-protections:focus,
@@ -851,6 +969,3 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   }
 }
 
-.monitor-card.has-logins .card-body {
-  padding-block-end: 0;
-}
