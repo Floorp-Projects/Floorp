@@ -104,7 +104,7 @@ static nsresult AddCellsToSelection(nsIContent* aTableContent,
 static nsAtom* GetTag(nsINode* aNode);
 // returns the parent
 static nsINode* ParentOffset(nsINode* aNode, int32_t* aChildOffset);
-static nsINode* GetCellParent(nsINode* aDomNode);
+static nsINode* GetClosestInclusiveTableCellAncestor(nsINode* aDomNode);
 MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult CreateAndAddRange(
     nsINode* aContainer, int32_t aOffset, Selection& aNormalSelection);
 static nsresult SelectCellElement(nsIContent* aCellElement,
@@ -656,7 +656,10 @@ nsINode* ParentOffset(nsINode* aNode, int32_t* aChildOffset) {
   return nullptr;
 }
 
-static nsINode* GetCellParent(nsINode* aDomNode) {
+/**
+ * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor.
+ */
+static nsINode* GetClosestInclusiveTableCellAncestor(nsINode* aDomNode) {
   if (!aDomNode) return nullptr;
   nsINode* current = aDomNode;
   // Start with current node and look for a table cell
@@ -1425,7 +1428,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
       if (context) {
         RefPtr<HTMLEditor> htmlEditor = nsContentUtils::GetHTMLEditor(context);
         if (htmlEditor) {
-          nsINode* cellparent = GetCellParent(aNewFocus);
+          nsINode* cellparent = GetClosestInclusiveTableCellAncestor(aNewFocus);
           nsCOMPtr<nsINode> editorHostNode = htmlEditor->GetActiveEditingHost();
           editableCell = cellparent && editorHostNode &&
                          cellparent->IsInclusiveDescendantOf(editorHostNode);
@@ -1442,7 +1445,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
     case FocusMode::kExtendSelection: {
       // Now update the range list:
       int32_t offset;
-      nsINode* cellparent = GetCellParent(aNewFocus);
+      nsINode* cellparent = GetClosestInclusiveTableCellAncestor(aNewFocus);
       if (mTableSelection.mCellParent && cellparent &&
           cellparent !=
               mTableSelection.mCellParent)  // switch to cell selection mode
