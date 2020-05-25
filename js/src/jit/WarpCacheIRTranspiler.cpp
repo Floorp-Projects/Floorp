@@ -989,6 +989,16 @@ bool WarpCacheIRTranspiler::emitMathFloorToInt32Result(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMathCeilToInt32Result(NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MCeil::New(alloc(), input);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathRoundToInt32Result(
     NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
