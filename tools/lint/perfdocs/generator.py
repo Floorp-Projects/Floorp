@@ -95,21 +95,14 @@ class Generator(object):
                     suite_name.capitalize(), suite_info['description'], documentation, type="H4")
                 tests = suite_info.get('tests', {})
                 for test_name in sorted(tests.keys()):
-                    # As we expect browsertime to become its own framework and its test names
-                    # are not standardized, add 'browsertime-tp6(m) temporarily to the test name
-                    if 'Browsertime' in tests[test_name] and 'Desktop' in tests[test_name]:
-                        _append_rst_section(
-                            'Browsertime '+test_name,
-                            tests[test_name],
-                            documentation, type="H5")
-                    elif 'Android' in tests[test_name] and 'Browsertime' in tests[test_name]:
-                        _append_rst_section(
-                            'Browsertime '+test_name,
-                            tests[test_name],
-                            documentation, type="H5")
-                    else:
-                        # Add the tests with an H5 heading
-                        _append_rst_section(test_name, tests[test_name], documentation, type="H5")
+                    documentation.extend(
+                        self._verifier
+                            ._gatherer
+                            .framework_gatherers[yaml_content["name"]]
+                            .build_test_description(
+                                test_name, tests[test_name]
+                            )
+                    )
 
             # Insert documentation into `.rst` file
             framework_rst = re.sub(
