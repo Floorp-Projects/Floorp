@@ -50,8 +50,9 @@ void ensurePath(std::string Path) {
 }
 
 #if defined(_WIN32) || defined(_WIN64)
-AutoLockFile::AutoLockFile(const std::string &Filename) {
-  std::string Hash = hash(Filename);
+AutoLockFile::AutoLockFile(const std::string &SrcFile, const std::string &DstFile) {
+  this->Filename = DstFile;
+  std::string Hash = hash(SrcFile);
   std::string MutexName = std::string("Local\\searchfox-") + Hash;
   std::wstring WideMutexName;
   WideMutexName.assign(MutexName.begin(), MutexName.end());
@@ -63,28 +64,34 @@ AutoLockFile::AutoLockFile(const std::string &Filename) {
   if (WaitForSingleObject(Handle, INFINITE) != WAIT_OBJECT_0) {
     return;
   }
-
-  FileDescriptor = _open(Filename.c_str(), _O_RDWR | _O_CREAT | _O_BINARY, 0666);
 }
 
 AutoLockFile::~AutoLockFile() {
-  _close(FileDescriptor);
-
   ReleaseMutex(Handle);
   CloseHandle(Handle);
 }
 
 bool AutoLockFile::success() {
-  return Handle != NULL && FileDescriptor != -1;
+  return Handle != NULL;
 }
 
-FILE *AutoLockFile::openFile(const char *Mode) {
-  _lseek(FileDescriptor, 0, SEEK_SET);
-  return _fdopen(_dup(FileDescriptor), Mode);
+FILE *AutoLockFile::openFile() {
+  int DstDescriptor = _open(Filename.c_str(), _O_RDONLY | _O_CREAT | _O_BINARY, 0666);
+  return _fdopen(DstDescriptor, "rb");
 }
 
-bool AutoLockFile::truncateFile(size_t Length) {
-  return _chsize(FileDescriptor, Length) == 0;
+FILE *AutoLockFile::openTmp() {
+  int TmpDescriptor = _open((Filename + ".tmp").c_str(), _O_WRONLY | _O_APPEND | _O_CREAT | _O_BINARY, 0666);
+  return _fdopen(TmpDescriptor, "ab");
+}
+
+bool AutoLockFile::moveTmp() {
+  if (_unlink(Filename.c_str()) == -1) {
+    if (errno != ENOENT) {
+      return false;
+    }
+  }
+  return rename((Filename + ".tmp").c_str(), Filename.c_str()) == 0;
 }
 
 std::string getAbsolutePath(const std::string &Filename) {
@@ -95,8 +102,9 @@ std::string getAbsolutePath(const std::string &Filename) {
   return std::string(Full);
 }
 #else
-AutoLockFile::AutoLockFile(const std::string &Filename) {
-  FileDescriptor = open(Filename.c_str(), O_RDWR | O_CREAT, 0666);
+AutoLockFile::AutoLockFile(const std::string &SrcFile, const std::string &DstFile) {
+  this->Filename = DstFile;
+  FileDescriptor = open(SrcFile.c_str(), O_RDONLY);
   if (FileDescriptor == -1) {
     return;
   }
@@ -113,13 +121,23 @@ AutoLockFile::~AutoLockFile() { close(FileDescriptor); }
 
 bool AutoLockFile::success() { return FileDescriptor != -1; }
 
-FILE *AutoLockFile::openFile(const char *Mode) {
-  lseek(FileDescriptor, 0, SEEK_SET);
-  return fdopen(dup(FileDescriptor), Mode);
+FILE *AutoLockFile::openFile() {
+  int DstDescriptor = open(Filename.c_str(), O_RDONLY | O_CREAT, 0666);
+  return fdopen(DstDescriptor, "rb");
 }
 
-bool AutoLockFile::truncateFile(size_t Length) {
-  return ftruncate(FileDescriptor, Length) == 0;
+FILE* AutoLockFile::openTmp() {
+  int TmpDescriptor = open((Filename + ".tmp").c_str(), O_WRONLY | O_APPEND | O_CREAT, 0666);
+  return fdopen(TmpDescriptor, "ab");
+}
+
+bool AutoLockFile::moveTmp() {
+  if (unlink(Filename.c_str()) == -1) {
+    if (errno != ENOENT) {
+      return false;
+    }
+  }
+  return rename((Filename + ".tmp").c_str(), Filename.c_str()) == 0;
 }
 
 std::string getAbsolutePath(const std::string &Filename) {
