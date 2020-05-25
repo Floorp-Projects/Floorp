@@ -180,6 +180,7 @@ const BlocklistTelemetry = {
    *
    * @param {string} blocklistType
    *        The blocklist type that has been updated (one of "addons" or "plugins",
+   *        or "addons_mlbf";
    *        the "gfx" blocklist is not covered by this telemetry).
    * @param {RemoteSettingsClient} remoteSettingsClient
    *        The RemoteSettings client to retrieve the lastModified timestamp from.
@@ -193,20 +194,29 @@ const BlocklistTelemetry = {
     }
 
     let lastModified = await remoteSettingsClient.getLastModified();
+    BlocklistTelemetry.recordTimeScalar(
+      "lastModified_rs_" + blocklistType,
+      lastModified
+    );
+  },
 
-    if (lastModified > 0) {
+  /**
+   * Record a timestamp in telemetry as a UTC string or "Missing Date" if the
+   * input is not a valid timestamp.
+   *
+   * @param {string} telemetryKey
+   *        The part of after "blocklist.", as defined in Scalars.yaml.
+   * @param {number} time
+   *        A timestamp to record. If invalid, "Missing Date" will be recorded.
+   */
+  recordTimeScalar(telemetryKey, time) {
+    if (time > 0) {
       // convert from timestamp in ms into UTC datetime string, so it is going
       // to be record in the same format previously used by blocklist.lastModified_xml.
-      lastModified = new Date(lastModified).toUTCString();
-      Services.telemetry.scalarSet(
-        `blocklist.lastModified_rs_${blocklistType}`,
-        lastModified
-      );
+      let dateString = new Date(time).toUTCString();
+      Services.telemetry.scalarSet("blocklist." + telemetryKey, dateString);
     } else {
-      Services.telemetry.scalarSet(
-        `blocklist.lastModified_rs_${blocklistType}`,
-        "Missing Date"
-      );
+      Services.telemetry.scalarSet("blocklist." + telemetryKey, "Missing Date");
     }
   },
 };
@@ -1444,9 +1454,10 @@ this.ExtensionBlocklistMLBF = {
           })
           // Sort by stash time - newest first.
           .sort((a, b) => b.stash_time - a.stash_time)
-          .map(({ stash }) => ({
+          .map(({ stash, stash_time }) => ({
             blocked: new Set(stash.blocked),
             unblocked: new Set(stash.unblocked),
+            stash_time,
           }));
       } else {
         mlbfRecord = mlbfRecords.find(
@@ -1471,11 +1482,35 @@ this.ExtensionBlocklistMLBF = {
       .then(() => {
         if (!isUpdateReplaced()) {
           this._updatePromise = null;
+          this._recordPostUpdateTelemetry();
         }
         return this._updatePromise;
       });
     this._updatePromise = updatePromise;
     return updatePromise;
+  },
+
+  // Update the telemetry of the blocklist. This is always called, even if
+  // the update request failed (e.g. due to network errors or data corruption).
+  _recordPostUpdateTelemetry() {
+    BlocklistTelemetry.recordRSBlocklistLastModified(
+      "addons_mlbf",
+      this._client
+    );
+    BlocklistTelemetry.recordTimeScalar(
+      "mlbf_generation_time",
+      this._mlbfData?.generationTime
+    );
+    // stashes has conveniently already been sorted by stash_time, newest first.
+    let stashes = this._stashes || [];
+    BlocklistTelemetry.recordTimeScalar(
+      "mlbf_stash_time_oldest",
+      stashes[stashes.length - 1]?.stash_time
+    );
+    BlocklistTelemetry.recordTimeScalar(
+      "mlbf_stash_time_newest",
+      stashes[0]?.stash_time
+    );
   },
 
   ensureInitialized() {
@@ -1497,6 +1532,7 @@ this.ExtensionBlocklistMLBF = {
       PREF_BLOCKLIST_USE_MLBF_STASHES,
       false
     );
+    Services.telemetry.scalarSet("blocklist.mlbf_stashes", this.stashesEnabled);
   },
 
   shutdown() {
@@ -1576,6 +1612,8 @@ this.ExtensionBlocklistMLBF = {
       }
     }
 
+    // signedDate is a Date if the add-on is signed, null if not signed,
+    // undefined if it's an addon update descriptor instead of an addon wrapper.
     let { signedDate } = addon;
     if (!signedDate) {
       // The MLBF does not apply to unsigned add-ons.
@@ -1787,6 +1825,10 @@ let Blocklist = {
               ExtensionBlocklistMLBF._initialized &&
               !ExtensionBlocklistMLBF._didShutdown
             ) {
+              Services.telemetry.scalarSet(
+                "blocklist.mlbf_stashes",
+                ExtensionBlocklistMLBF.stashesEnabled
+              );
               ExtensionBlocklistMLBF._onUpdate();
             }
             break;
@@ -1823,8 +1865,10 @@ let Blocklist = {
   _chooseExtensionBlocklistImplementationFromPref() {
     if (Services.prefs.getBoolPref(PREF_BLOCKLIST_USE_MLBF, false)) {
       this.ExtensionBlocklist = ExtensionBlocklistMLBF;
+      Services.telemetry.scalarSet("blocklist.mlbf_enabled", true);
     } else {
       this.ExtensionBlocklist = ExtensionBlocklistRS;
+      Services.telemetry.scalarSet("blocklist.mlbf_enabled", false);
     }
   },
 
