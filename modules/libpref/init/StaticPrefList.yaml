@@ -6218,6 +6218,13 @@
   mirror: always
   rust: true
 
+# Is support for the ::file-chooser-button pseudo-element enabled?
+- name: layout.css.file-chooser-button.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_OR_DEV_EDITION@
+  mirror: always
+  rust: true
+
 # Whether the computed value of line-height: normal returns the `normal`
 # keyword rather than a pixel value based on the first available font.
 #
