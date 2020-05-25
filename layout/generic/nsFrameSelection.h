@@ -919,7 +919,8 @@ class nsFrameSelection final {
                   int32_t aEndColumnIndex, bool aRemoveOutsideOfCellRange,
                   mozilla::dom::Selection& aNormalSelection);
 
-    nsCOMPtr<nsINode> mCellParent;  // used to snap to table selection
+    nsCOMPtr<nsINode>
+        mClosestInclusiveTableCellAncestor;  // used to snap to table selection
     nsCOMPtr<nsIContent> mStartSelectedCell;
     nsCOMPtr<nsIContent> mEndSelectedCell;
     nsCOMPtr<nsIContent> mAppendStartSelectedCell;
