@@ -7,7 +7,6 @@
 const EXPORTED_SYMBOLS = [
   "GeckoViewAutocomplete",
   "LoginEntry",
-  "SelectLabel",
   "SelectOption",
 ];
 
@@ -21,7 +20,7 @@ const { GeckoViewUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
-  PromptDelegate: "resource://gre/modules/GeckoViewPrompt.jsm",
+  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "LoginInfo", () =>
@@ -33,11 +32,20 @@ XPCOMUtils.defineLazyGetter(this, "LoginInfo", () =>
 );
 
 class LoginEntry {
-  constructor({ origin, formActionOrigin, httpRealm, username, password,
-                guid, timeCreated, timeLastUsed, timePasswordChanged,
-                timesUsed }) {
+  constructor({
+    origin,
+    formActionOrigin,
+    httpRealm,
+    username,
+    password,
+    guid,
+    timeCreated,
+    timeLastUsed,
+    timePasswordChanged,
+    timesUsed,
+  }) {
     this.origin = origin ?? null;
-    this.formActionOrigin = formActionOrigin ??  null;
+    this.formActionOrigin = formActionOrigin ?? null;
     this.httpRealm = httpRealm ?? null;
     this.username = username ?? null;
     this.password = password ?? null;
@@ -98,36 +106,19 @@ class LoginEntry {
   }
 }
 
-class SelectLabel {
-  // Sync with Autocomplete.SelectOption.Label.Type in Autocomplete.java.
-  static Type = {
-    NONE: 0,
-    PRIMARY: 1,
-    SECONDARY: 2
-  };
-
-  constructor({ type, value }) {
-    this.type = Object.values(SelectLabel.Type).includes(type)
-                ? type
-                : SelectLabel.Type.NONE;
-    this.value = value ?? null;
-  }
-}
-
 class SelectOption {
   // Sync with Autocomplete.LoginSelectOption.Hint in Autocomplete.java.
   static Hint = {
     NONE: 0,
-    GENERATED: (1 << 0),
-    INSECURE_FORM: (1 << 1),
+    GENERATED: 1 << 0,
+    INSECURE_FORM: 1 << 1,
+    DUPLICATE_USERNAME: 1 << 2,
+    MATCHING_ORIGIN: 1 << 3,
   };
 
-  constructor({ value, hint, labels }) {
+  constructor({ value, hint }) {
     this.value = value ?? null;
-    this.hint = Object.values(SelectOption.Hint).includes(hint)
-                ? hint
-                : SelectOption.Hint.NONE;
-    this.labels = labels ?? [];
+    this.hint = hint ?? SelectOption.Hint.NONE;
   }
 }
 
@@ -190,31 +181,154 @@ const GeckoViewAutocomplete = {
     });
   },
 
+  _numActiveOnLoginSelect: 0,
+  /**
+   * Delegates login entry selection.
+   * Call this when there are multiple login entry option for a form to delegate
+   * the selection.
+   *
+   * @param aBrowser The browser instance the triggered the selection.
+   * @param aOptions The list of {SelectOption} depicting viable options.
+   */
   onLoginSelect(aBrowser, aOptions) {
     debug`onLoginSelect ${aOptions}`;
 
     return new Promise((resolve, reject) => {
       if (!aBrowser || !aOptions) {
+        debug`onLoginSelect Rejecting - no browser or options provided`;
         reject();
+        return;
       }
 
-      const prompt = new PromptDelegate(aBrowser.ownerGlobal);
+      const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
       prompt.asyncShowPrompt(
         {
           type: "Autocomplete:Select:Login",
           options: aOptions,
         },
         result => {
-          if (!result || result.value === undefined) {
+          if (!result || !result.selection) {
             reject();
             return;
           }
 
-          const loginInfo = LoginEntry.parse(result.value).toLoginInfo();
-          resolve(loginInfo);
+          const option = new SelectOption({
+            value: LoginEntry.parse(result.selection.value),
+            hint: result.selection.hint,
+          });
+          resolve(option);
         }
       );
     });
+  },
+
+  async delegateSelection({
+    browsingContext,
+    options,
+    inputElementIdentifier,
+    formOrigin,
+  }) {
+    debug`delegateSelection ${options}`;
+
+    if (!options.length) {
+      return;
+    }
+
+    let insecureHint = SelectOption.Hint.NONE;
+    let loginStyle = null;
+
+    const selectOptions = [];
+
+    for (const option of options) {
+      switch (option.style) {
+        case "insecureWarning": {
+          // We depend on the insecure warning to be the first option.
+          insecureHint = SelectOption.Hint.INSECURE_FORM;
+          break;
+        }
+        case "generatedPassword": {
+          const comment = JSON.parse(option.comment);
+          selectOptions.push(
+            new SelectOption({
+              value: new LoginEntry({
+                password: comment.generatedPassword,
+              }),
+              hint: SelectOption.Hint.GENERATED | insecureHint,
+            })
+          );
+          break;
+        }
+        case "login":
+        // Fallthrough.
+        case "loginWithOrigin": {
+          loginStyle = option.style;
+          const comment = JSON.parse(option.comment);
+
+          let hint = SelectOption.Hint.NONE | insecureHint;
+          if (comment.isDuplicateUsername) {
+            hint |= SelectOption.Hint.DUPLICATE_USERNAME;
+          }
+          if (comment.isOriginMatched) {
+            hint |= SelectOption.Hint.MATCHING_ORIGIN;
+          }
+
+          selectOptions.push(
+            new SelectOption({
+              value: LoginEntry.parse(comment.login),
+              hint,
+            })
+          );
+          break;
+        }
+      }
+    }
+
+    if (selectOptions.length < 1) {
+      debug`Abort delegateSelection - no valid options provided`;
+      return;
+    }
+
+    if (this._numActiveOnLoginSelect > 0) {
+      debug`Abort delegateSelection - there is already one delegation active`;
+      return;
+    }
+
+    ++this._numActiveOnLoginSelect;
+
+    const browser = browsingContext.top.embedderElement;
+    const selectedOption = await this.onLoginSelect(
+      browser,
+      selectOptions
+    ).catch(_ => {
+      debug`No GV delegate attached`;
+    });
+
+    --this._numActiveOnLoginSelect;
+
+    debug`delegateSelection selected option: ${selectedOption}`;
+    const selectedLogin = selectedOption?.value?.toLoginInfo();
+
+    if (!selectedLogin) {
+      debug`Abort delegateSelection - no login entry selected`;
+      return;
+    }
+
+    debug`delegateSelection - filling form`;
+
+    const actor = browsingContext.currentWindowGlobal.getActor("LoginManager");
+
+    await actor.fillForm({
+      browser,
+      inputElementIdentifier,
+      loginFormOrigin: formOrigin,
+      login: selectedLogin,
+      style:
+        selectedOption.hint & SelectOption.Hint.GENERATED
+          ? "generatedPassword"
+          : loginStyle,
+    });
+
+    debug`delegateSelection - form filled`;
   },
 };
 

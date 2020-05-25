@@ -18,6 +18,18 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/BrowserUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContentDOMReference",
+  "resource://gre/modules/ContentDOMReference.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "formFill",
@@ -211,11 +223,17 @@ class AutoCompleteChild extends JSWindowActorChild {
     let window = element.ownerGlobal;
     let dir = window.getComputedStyle(element).direction;
     let results = this.getResultsFromController(input);
+    let formOrigin = LoginHelper.getLoginOrigin(
+      element.ownerDocument.documentURI
+    );
+    let inputElementIdentifier = ContentDOMReference.get(element);
 
     this.sendAsyncMessage("FormAutoComplete:MaybeOpenPopup", {
       results,
       rect,
       dir,
+      inputElementIdentifier,
+      formOrigin,
     });
 
     this._input = input;
