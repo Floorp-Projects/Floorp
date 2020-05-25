@@ -2761,8 +2761,7 @@ public class GeckoSession implements Parcelable {
                 res = delegate.onSharePrompt(session, prompt);
                 break;
             }
-            case "loginStorage": {
-                final int lsType = message.getInt("lsType");
+            case "Autocomplete:Save:Login": {
                 final int hint = message.getInt("hint");
                 final GeckoBundle[] loginBundles =
                     message.getBundleArray("logins");
@@ -2771,17 +2770,44 @@ public class GeckoSession implements Parcelable {
                     break;
                 }
 
-                final LoginStorage.LoginEntry[] logins =
-                    new LoginStorage.LoginEntry[loginBundles.length];
+                final Autocomplete.LoginSaveOption[] options =
+                    new Autocomplete.LoginSaveOption[loginBundles.length];
 
-                for (int i = 0; i < logins.length; ++i) {
-                    logins[i] = new LoginStorage.LoginEntry(loginBundles[i]);
+                for (int i = 0; i < options.length; ++i) {
+                    options[i] = new Autocomplete.LoginSaveOption(
+                            new Autocomplete.LoginEntry(loginBundles[i]),
+                            hint);
                 }
 
-                final PromptDelegate.LoginStoragePrompt prompt =
-                    new PromptDelegate.LoginStoragePrompt(lsType, hint, logins);
+                final PromptDelegate.AutocompleteRequest
+                    <Autocomplete.LoginSaveOption> request =
+                    new PromptDelegate.AutocompleteRequest<>(options);
 
-                res = delegate.onLoginStoragePrompt(session, prompt);
+                res = delegate.onLoginSave(session, request);
+                break;
+            }
+            case "Autocomplete:Select:Login": {
+                final GeckoBundle[] optionBundles =
+                    message.getBundleArray("options");
+
+                if (optionBundles == null) {
+                    break;
+                }
+
+                final Autocomplete.LoginSelectOption[] options =
+                    new Autocomplete.LoginSelectOption[optionBundles.length];
+
+                for (int i = 0; i < options.length; ++i) {
+                    options[i] = Autocomplete.LoginSelectOption.fromBundle(
+                        optionBundles[i]);
+                }
+
+                final PromptDelegate.AutocompleteRequest
+                    <Autocomplete.LoginSelectOption> request =
+                    new PromptDelegate.AutocompleteRequest<>(options);
+
+                res = delegate.onLoginSelect(session, request);
+
                 break;
             }
             default: {
@@ -4752,93 +4778,36 @@ public class GeckoSession implements Parcelable {
         }
 
         /**
-         * LoginStoragePrompt contains the information necessary to handle a
-         * login storage request.
+         * Request containing information required to resolve Autocomplete
+         * prompt requests.
          */
-        public class LoginStoragePrompt extends BasePrompt {
-            @Retention(RetentionPolicy.SOURCE)
-            @IntDef({ Type.SAVE })
-            /* package */ @interface LoginStorageType {}
-
-            // Sync with LoginStorageDelegate.Type in GeckoViewPrompt.js
+        public class AutocompleteRequest<T extends Autocomplete.Option<?>>
+                extends BasePrompt {
             /**
-             * Possible type of a {@link LoginStoragePrompt}.
+             * The Autocomplete options for this request.
+             * This can contain a single or multiple entries.
              */
-            public static class Type {
-                public static final int SAVE = 1;
+            public final @NonNull T[] options;
 
-                protected Type() {}
-            }
-
-            @Retention(RetentionPolicy.SOURCE)
-            @IntDef(flag = true,
-                    value = { Hint.NONE })
-            /* package */ @interface LoginStorageHint {}
-
-            public static class Hint {
-                public static final int NONE = 0;
-
-                protected Hint() {}
-            }
-
-            /**
-             * The type of the prompt request, one of {@link LoginStoragePrompt.Type}.
-             */
-            public final @LoginStorageType int type;
-
-            /**
-             * The hint may provide some additional information on the nature or
-             * confidence level of the prompt request to support appropriate
-             * prompting styles. A flag combination of {@link LoginStoragePrompt.Hint}.
-             */
-            public final @LoginStorageHint int hint;
-
-            /**
-             * The logins that are subject to the prompt request.
-             * For {@link Type#SAVE}, it holds one
-             * {@link LoginStorage.LoginEntry} depicting the entry to be saved.
-             */
-            public final @NonNull LoginStorage.LoginEntry[] logins;
-
-            protected LoginStoragePrompt(
-                    final @LoginStorageType int type,
-                    final @LoginStorageHint int hint,
-                    final @NonNull LoginStorage.LoginEntry[] logins) {
+            protected AutocompleteRequest(final @NonNull T[] options) {
                 super(null);
-
-                this.type = type;
-                this.hint = hint;
-                this.logins = logins;
+                this.options = options;
             }
 
             /**
-             * Confirm the prompt by responding with a
-             * {@link LoginStorage.LoginEntry}.
-             * For {@link Type#SAVE}, confirm with the entry to be saved. This
-             * can be the original entry as provided by logins[0] or a modified
-             * entry based on that.
-             * Confirming a {@link Type#SAVE} prompt request triggers a
-             * {@link LoginStorage.Delegate#onLoginSave} request in the runtime
-             * delegate with the confirmed login entry.
-             *
-             * @param login A {@link LoginStorage.LoginEntry} specifying the
-             *              login entry saved.
-             *
-             * @return A {@link PromptResponse} which can be used to complete the
-             *         {@link GeckoResult} associated with this prompt.
+             * Confirm the request by responding with a selection.
+             * See the PromptDelegate callbacks for specifics.
              */
             @UiThread
             public @NonNull PromptResponse confirm(
-                    final @NonNull LoginStorage.LoginEntry login) {
-                ensureResult().putBundle("login", login.toBundle());
+                    final @NonNull Autocomplete.Option<?> selection) {
+                ensureResult().putBundle("selection", selection.toBundle());
                 return super.confirm();
             }
 
             /**
-             * Dismisses the prompt.
-             *
-             * @return A {@link PromptResponse} which can be used to complete the
-             *         {@link GeckoResult} associated with this prompt.
+             * Dismiss the request.
+             * See the PromptDelegate callbacks for specifics.
              */
             @UiThread
             public @NonNull PromptResponse dismiss() {
@@ -5009,20 +4978,57 @@ public class GeckoSession implements Parcelable {
         }
 
         /**
-         * Handle a login storage prompt.
+         * Handle a login save prompt request.
          * This is triggered by the user entering new or modified login
          * credentials into a login form.
          *
-         * @param session GeckoSession that triggered the prompt.
-         * @param prompt The {@link LoginStoragePrompt} that describes the prompt.
+         * @param session The {@link GeckoSession} that triggered the request.
+         * @param request The {@link AutocompleteRequest} containing the request
+         *                details.
          *
-         * @return A {@link GeckoResult} resolving to a {@link PromptResponse}
-         *         which includes all necessary information to resolve the prompt.
+         * @return A {@link GeckoResult} resolving to a {@link PromptResponse}.
+         *
+         *         Confirm the request with an {@link Autocomplete.Option}
+         *         to trigger a
+         *         {@link Autocomplete.LoginStorageDelegate#onLoginSave} request
+         *         to save the given selection.
+         *         The confirmed selection may be an entry out of the request's
+         *         options, a modified option, or a freshly created login entry.
+         *
+         *         Dismiss the request to deny the saving request.
          */
         @UiThread
-        default @Nullable GeckoResult<PromptResponse> onLoginStoragePrompt(
+        default @Nullable GeckoResult<PromptResponse> onLoginSave(
                 @NonNull final GeckoSession session,
-                @NonNull final LoginStoragePrompt prompt) {
+                @NonNull final AutocompleteRequest<Autocomplete.LoginSaveOption>
+                    request) {
+            return null;
+        }
+
+        /**
+         * Handle a login selection prompt request.
+         * This is triggered by the user focusing on a login username field.
+         *
+         * @param session The {@link GeckoSession} that triggered the request.
+         * @param request The {@link AutocompleteRequest} containing the request
+         *                details.
+         *
+         * @return A {@link GeckoResult} resolving to a {@link PromptResponse}
+         *
+         *         Confirm the request with an {@link Autocomplete.Option}
+         *         to let GeckoView fill out the login forms with the given
+         *         selection details.
+         *         The confirmed selection may be an entry out of the request's
+         *         options, a modified option, or a freshly created login entry.
+         *
+         *         Dismiss the request to deny autocompletion for the detected
+         *         form.
+         */
+        @UiThread
+        default @Nullable GeckoResult<PromptResponse> onLoginSelect(
+                @NonNull final GeckoSession session,
+                @NonNull final AutocompleteRequest<Autocomplete.LoginSelectOption>
+                    request) {
             return null;
         }
     }
