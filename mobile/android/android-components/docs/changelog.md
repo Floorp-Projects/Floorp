@@ -26,6 +26,9 @@ permalink: /changelog/
     into a new component `support-images`, which provides helpers for handling images. `AndroidIconDecoder` and `IconDecoder`
     are renamed to `AndroidImageDecoder` and `ImageDecoder` in `support-images`.
 
+* **support-utils**
+  * `URLStringUtils.isURLLike()` will now consider URLs containing double dash ("--") as valid.
+
 * **browser-thumbnails**
   * Adds `ThumbnailDiskCache` for storing and restoring thumbnail bitmaps into a disk cache.
 

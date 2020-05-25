@@ -59,9 +59,9 @@ object URLStringUtils {
 
     private val isURLLenient by lazy {
         // Be lenient about what is classified as potentially a URL.
-        // (\w+-)*\w+(://[/]*|:|\.)(\w+-)*\w+([\S&&[^\w-]]\S*)?
+        // (\w+-+)*\w+(://[/]*|:|\.)(\w+-+)*\w+([\S&&[^\w-]]\S*)?
         // -------                 -------
-        // 0 or more pairs of consecutive word letters followed by a dash
+        // 0 or more pairs of consecutive word letters or dashes
         //        ---                     ---
         // followed by at least a single word letter.
         // -----------             ----------
@@ -91,7 +91,7 @@ object URLStringUtils {
         // http://www-.com
         // www.c-c-
         // 3-3
-        Pattern.compile("^\\s*(\\w+-)*\\w+(://[/]*|:|\\.)(\\w+-)*\\w+([\\S&&[^\\w-]]\\S*)?\\s*$", flags)
+        Pattern.compile("^\\s*(\\w+-+)*\\w+(://[/]*|:|\\.)(\\w+-+)*\\w+([\\S&&[^\\w-]]\\S*)?\\s*$", flags)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
