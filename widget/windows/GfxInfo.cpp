@@ -1770,24 +1770,27 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
         V(10, 18, 15, 4256), V(10, 18, 15, 4281),
-        "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_10.18.15.4256_10.18.15."
-        "4281",
+        // clang-format off
+        "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_10.18.15.4256_10.18.15.4281",
+        // clang-format on
         "Intel driver >= 21.20.16.4590");
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(
         OperatingSystem::Windows, DeviceFamily::IntelAll,
         nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
         V(20, 19, 15, 4285), V(20, 19, 15, 4835),
-        "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_20.19.15.4285_20.19.15."
-        "4835",
+        // clang-format off
+        "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_20.19.15.4285_20.19.15.4835",
+        // clang-format on
         "Intel driver >= 21.20.16.4590");
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(
         OperatingSystem::Windows, DeviceFamily::IntelAll,
         nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
         V(21, 20, 16, 4471), V(21, 20, 16, 4565),
-        "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_21.20.16.4471_21.20.16."
-        "4565",
+        // clang-format off
+        "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_21.20.16.4471_21.20.16.4565",
+        // clang-format on
         "Intel driver >= 21.20.16.4590");
 #  endif
 #else
