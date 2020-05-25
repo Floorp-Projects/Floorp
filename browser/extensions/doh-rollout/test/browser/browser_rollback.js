@@ -15,9 +15,9 @@ add_task(async function testRollback() {
   });
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
   is(
-    Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
+    Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
     "dummyTRR",
-    "TRR selection dry run complete."
+    "TRR selection complete."
   );
   await checkTRRSelectionTelemetry();
 
