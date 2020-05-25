@@ -8,8 +8,10 @@
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "nsHttpActivityDistributor.h"
+#include "nsHttpHandler.h"
 #include "nsCOMPtr.h"
 #include "nsIOService.h"
+#include "nsQueryObject.h"
 #include "nsThreadUtils.h"
 #include "NullHttpChannel.h"
 

@@ -109,6 +109,10 @@ class SocketProcessParent final
       PProxyConfigLookupParent* aActor, nsIURI* aURI,
       const uint32_t& aProxyResolveFlags) override;
 
+  mozilla::ipc::IPCResult RecvCachePushCheck(
+      nsIURI* aPushedURL, OriginAttributes&& aOriginAttributes,
+      nsCString&& aRequestString, CachePushCheckResolver&& aResolver);
+
  private:
   SocketProcessHost* mHost;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;

@@ -88,6 +88,10 @@ parent:
                         ByteArray[] aCollectedCANames)
     returns (bool aSucceeded, ByteArray aOutCert, ByteArray aOutKey, ByteArray[] aBuiltChain);
   async PProxyConfigLookup(nsIURI aUri, uint32_t aFlags);
+  async CachePushCheck(nsIURI aPushedURL,
+                       OriginAttributes aOriginAttributes,
+                       nsCString aRequestString)
+    returns (bool aAccepted);
 
 child:
   async PreferenceUpdate(Pref pref);
