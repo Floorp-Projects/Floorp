@@ -1792,6 +1792,15 @@ nsLocalFile::GetNativeTarget(nsACString& aResult) {
 }
 
 NS_IMETHODIMP
+nsLocalFile::GetFollowLinks(bool* aFollowLinks) {
+  *aFollowLinks = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetFollowLinks(bool aFollowLinks) { return NS_OK; }
+
+NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntriesImpl(nsIDirectoryEnumerator** aEntries) {
   RefPtr<nsDirEnumeratorUnix> dir = new nsDirEnumeratorUnix();
 
@@ -1987,6 +1996,8 @@ nsLocalFile::Launch() {
 nsresult NS_NewNativeLocalFile(const nsACString& aPath, bool aFollowSymlinks,
                                nsIFile** aResult) {
   RefPtr<nsLocalFile> file = new nsLocalFile();
+
+  file->SetFollowLinks(aFollowSymlinks);
 
   if (!aPath.IsEmpty()) {
     nsresult rv = file->InitWithNativePath(aPath);
@@ -2550,6 +2561,8 @@ nsresult NS_NewLocalFileWithFSRef(const FSRef* aFSRef, bool aFollowLinks,
                                   nsILocalFileMac** aResult) {
   RefPtr<nsLocalFile> file = new nsLocalFile();
 
+  file->SetFollowLinks(aFollowLinks);
+
   nsresult rv = file->InitWithFSRef(aFSRef);
   if (NS_FAILED(rv)) {
     return rv;
@@ -2561,6 +2574,8 @@ nsresult NS_NewLocalFileWithFSRef(const FSRef* aFSRef, bool aFollowLinks,
 nsresult NS_NewLocalFileWithCFURL(const CFURLRef aURL, bool aFollowLinks,
                                   nsILocalFileMac** aResult) {
   RefPtr<nsLocalFile> file = new nsLocalFile();
+
+  file->SetFollowLinks(aFollowLinks);
 
   nsresult rv = file->InitWithCFURL(aURL);
   if (NS_FAILED(rv)) {

@@ -241,6 +241,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
 
   bool fileExists = false;
   if (fileloc) {
+    // ensure that we DO NOT resolve aliases, very important for file views
+    fileloc->SetFollowLinks(false);
     fileloc->Exists(&fileExists);
   }
 
