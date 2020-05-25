@@ -35,7 +35,6 @@ py2commands="
     mochitest
     mozharness
     pastebin
-    power
     prettier-format
     puppeteer-test
     python

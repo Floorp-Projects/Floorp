@@ -65,7 +65,8 @@ class MachCommands(MachCommandBase):
                                          '--show-process-coalition',
                                          '--show-process-gpu',
                                          '-n', '1',
-                                         '-i', interval])
+                                         '-i', interval],
+                                        universal_newlines=True)
 
         # When run with --show-process-coalition, |powermetrics| groups outputs
         # into process coalitions, each of which has a leader.
