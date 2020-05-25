@@ -66,6 +66,12 @@ inline void CleanupDynamicIA2Data(DynamicIA2Data& aData) {
   if (aData.mIA2Locale.variant) {
     ::SysFreeString(aData.mIA2Locale.variant);
   }
+  if (aData.mRowHeaderCellIds) {
+    ::midl_user_free(aData.mRowHeaderCellIds);
+  }
+  if (aData.mColumnHeaderCellIds) {
+    ::midl_user_free(aData.mColumnHeaderCellIds);
+  }
 }
 
 }  // namespace a11y

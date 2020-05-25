@@ -55,6 +55,10 @@ typedef struct _DynamicIA2Data
   long              mRowExtent;
   long              mColumnExtent;
   boolean           mCellIsSelected;
+  long mNRowHeaderCells;
+  [size_is(mNRowHeaderCells)] long* mRowHeaderCellIds;
+  long mNColumnHeaderCells;
+  [size_is(mNColumnHeaderCells)] long* mColumnHeaderCellIds;
   // From IAccessible2
   long              mUniqueId;
 } DynamicIA2Data;
