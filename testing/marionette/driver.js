@@ -7,9 +7,6 @@
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { clearInterval, setInterval } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -71,6 +68,7 @@ const { MarionettePrefs } = ChromeUtils.import(
   "chrome://marionette/content/prefs.js",
   null
 );
+const { print } = ChromeUtils.import("chrome://marionette/content/print.js");
 const { proxy } = ChromeUtils.import("chrome://marionette/content/proxy.js");
 const { reftest } = ChromeUtils.import(
   "chrome://marionette/content/reftest.js"
@@ -3751,148 +3749,49 @@ GeckoDriver.prototype.teardownReftest = function() {
  *     Base64 encoded PDF representing printed document
  */
 GeckoDriver.prototype.print = async function(cmd) {
-  const printMaxScaleValue = 2.0;
-  const printMinScaleValue = 0.1;
-  const letterPaperSizeCm = {
-    width: 21.59,
-    height: 27.94,
-  };
-
   assert.content(this.context);
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  const {
-    landscape = false,
-    margin = {
-      top: 1,
-      bottom: 1,
-      left: 1,
-      right: 1,
-    },
-    page = letterPaperSizeCm,
-    shrinkToFit = true,
-    printBackground = false,
-    scale = 1.0,
-  } = cmd.parameters;
-
+  const settings = print.addDefaultSettings(cmd.parameters);
   for (let prop of ["top", "bottom", "left", "right"]) {
     assert.positiveNumber(
-      margin[prop],
+      settings.margin[prop],
       pprint`margin.${prop} is not a positive number`
     );
   }
   for (let prop of ["width", "height"]) {
     assert.positiveNumber(
-      page[prop],
+      settings.page[prop],
       pprint`page.${prop} is not a positive number`
     );
   }
-  assert.positiveNumber(scale, `scale ${scale} is not a positive number`);
-  assert.that(
-    s => s >= printMinScaleValue && scale <= printMaxScaleValue,
-    `scale ${scale} is outside the range ${printMinScaleValue}-${printMaxScaleValue}`
-  )(scale);
-  assert.boolean(shrinkToFit);
-  assert.boolean(landscape);
-  assert.boolean(printBackground);
-
-  // Create a unique filename for the temporary PDF file
-  const basePath = OS.Path.join(OS.Constants.Path.tmpDir, "marionette.pdf");
-  const { file, path: filePath } = await OS.File.openUnique(basePath);
-  await file.close();
-
-  const psService = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-    Ci.nsIPrintSettingsService
+  assert.positiveNumber(
+    settings.scale,
+    `scale ${settings.scale} is not a positive number`
   );
+  assert.that(
+    s => s >= print.minScaleValue && settings.scale <= print.maxScaleValue,
+    `scale ${settings.scale} is outside the range ${print.minScaleValue}-${print.maxScaleValue}`
+  )(settings.scale);
+  assert.boolean(settings.shrinkToFit);
+  assert.boolean(settings.landscape);
+  assert.boolean(settings.printBackground);
 
-  let cmToInches = cm => cm / 2.54;
-  const printSettings = psService.newPrintSettings;
-  printSettings.isInitializedFromPrinter = true;
-  printSettings.isInitializedFromPrefs = true;
-  printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
-  printSettings.printerName = "marionette";
-  printSettings.printSilent = true;
-  printSettings.printToFile = true;
-  printSettings.showPrintProgress = false;
-  printSettings.toFileName = filePath;
-
-  // Setting the paperSizeUnit to kPaperSizeMillimeters doesn't work on mac
-  printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;
-  printSettings.paperWidth = cmToInches(page.width);
-  printSettings.paperHeight = cmToInches(page.height);
-
-  printSettings.marginBottom = cmToInches(margin.bottom);
-  printSettings.marginLeft = cmToInches(margin.left);
-  printSettings.marginRight = cmToInches(margin.right);
-  printSettings.marginTop = cmToInches(margin.top);
-
-  printSettings.printBGColors = printBackground;
-  printSettings.printBGImages = printBackground;
-  printSettings.scaling = scale;
-  printSettings.shrinkToFit = shrinkToFit;
-
-  printSettings.headerStrCenter = "";
-  printSettings.headerStrLeft = "";
-  printSettings.headerStrRight = "";
-  printSettings.footerStrCenter = "";
-  printSettings.footerStrLeft = "";
-  printSettings.footerStrRight = "";
-
-  // Override any os-specific unwriteable margins
-  printSettings.unwriteableMarginTop = 0;
-  printSettings.unwriteableMarginLeft = 0;
-  printSettings.unwriteableMarginBottom = 0;
-  printSettings.unwriteableMarginRight = 0;
-
-  if (landscape) {
-    printSettings.orientation = Ci.nsIPrintSettings.kLandscapeOrientation;
-  }
-
-  await new Promise(resolve => {
-    // Bug 1603739 - With e10s enabled the WebProgressListener states
-    // STOP too early, which means the file hasn't been completely written.
-    const waitForFileWritten = () => {
-      const DELAY_CHECK_FILE_COMPLETELY_WRITTEN = 100;
-
-      let lastSize = 0;
-      const timerId = setInterval(async () => {
-        const fileInfo = await OS.File.stat(filePath);
-        if (lastSize > 0 && fileInfo.size == lastSize) {
-          clearInterval(timerId);
-          resolve();
-        }
-        lastSize = fileInfo.size;
-      }, DELAY_CHECK_FILE_COMPLETELY_WRITTEN);
-    };
-
-    const printProgressListener = {
-      onStateChange(webProgress, request, flags, status) {
-        if (
-          flags & Ci.nsIWebProgressListener.STATE_STOP &&
-          flags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
-        ) {
-          waitForFileWritten();
-        }
-      },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
-    };
-    let linkedBrowser = this.curBrowser.tab.linkedBrowser;
-    linkedBrowser.print(
-      linkedBrowser.outerWindowID,
-      printSettings,
-      printProgressListener
-    );
-  });
-
-  const fp = await OS.File.open(filePath);
+  const linkedBrowser = this.curBrowser.tab.linkedBrowser;
+  const filePath = await print.printToFile(
+    linkedBrowser,
+    linkedBrowser.outerWindowID,
+    settings
+  );
 
   // return all data as a base64 encoded string
   let bytes;
+  const file = await OS.File.open(filePath);
   try {
-    bytes = await fp.read();
+    bytes = await file.read();
   } finally {
-    fp.close();
+    file.close();
     await OS.File.remove(filePath);
   }
 
