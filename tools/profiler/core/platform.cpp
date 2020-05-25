@@ -5011,6 +5011,13 @@ void profiler_add_marker_for_thread(int aThreadId,
       static_cast<uint32_t>(aCategoryPair), &aPayload, delta.ToMilliseconds());
 }
 
+void profiler_add_marker_for_mainthread(JS::ProfilingCategoryPair aCategoryPair,
+                                        const char* aMarkerName,
+                                        const ProfilerMarkerPayload& aPayload) {
+  profiler_add_marker_for_thread(CorePS::MainThreadId(), aCategoryPair,
+                                 aMarkerName, aPayload);
+}
+
 void profiler_tracing_marker(const char* aCategoryString,
                              const char* aMarkerName,
                              JS::ProfilingCategoryPair aCategoryPair,
