@@ -1,7 +1,7 @@
 Building Firefox On MacOS
 =========================
 
-This document will help you get set up to build Firefox on your own
+This document will help you get set up to build Firefox on your own
 computer. Getting set up won't be difficult, but it can take a while -
 we need to download a lot of bytes! Even on a fast connection, this can
 take ten to fifteen minutes of work, spread out over an hour or two.
@@ -90,8 +90,8 @@ The ``./mach bootstrap`` step is a catch-all for any dependencies not
 covered in this documentation. If you are working on Firefox frontends
 or building Firefox without any changes, select `artifact
 builds <https://developer.mozilla.org/en-US/docs/Artifact_builds>` in
-the first question in ``./mach bootstrap``.  Artifact builds will
-complete more quickly!  Artifact builds are unsuitable for those working
+the first question in ``./mach bootstrap``.  Artifact builds will
+complete more quickly!  Artifact builds are unsuitable for those working
 on C++ code.
 
 You’re on your way. Don’t be discouraged if this takes a while; it takes
@@ -173,7 +173,7 @@ require you to sign in with an Apple ID:
    and then **before** **running the extracted Xcode.app, move it from
    the download folder to /Applications**. (Running it from another
    location may screw up various build paths, homebrew builds, etc. Fix
-   by running ``sudo xcode-select -switch /Applications/Xcode.app`` )
+   by running ``sudo xcode-select -switch /Applications/Xcode.app`` )
 -  From the Mac App Store - `direct
    link <https://apps.apple.com/us/app/xcode>`.
 
@@ -181,7 +181,7 @@ Open /Applications/Xcode.app and let it do its initial first run and
 setup stuff.
 
 Install the Xcode command line tools by
-running \ ``xcode-select --install`` in your terminal.
+running \ ``xcode-select --install`` in your terminal.
 
 1.2 Get the local macOS SDK
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -240,8 +240,8 @@ when installing it:
 
     brew install autoconf@2.13
 
-If you get errors trying to build, it means you have another version of
-Autoconf installed and used as default. To use Autoconf 2.13, run:
+If you get errors trying to build, it means you have another version of
+Autoconf installed and used as default. To use Autoconf 2.13, run:
 
 .. code-block:: shell
 
@@ -283,10 +283,10 @@ packages and their dependencies -- it takes a while, so go grab a cup of
 coffee.
 
 **Note:** By default, this will install Python 2.7, which in turn will
-pull in all of the X11 libraries, which may take a while to build.  You
+pull in all of the X11 libraries, which may take a while to build. You
 don't need any of those to build Firefox; you may want to consider
 adding +no\_tkinter to the install line to build a python without
-support for the X11 UI packages.  This should result in a much faster
+support for the X11 UI packages. This should result in a much faster
 install.
 
 **Note:** With older versions of Xcode (eg 6.4) you may need to use
@@ -361,9 +361,8 @@ couple hundred megabytes of data over the internet.
     hg clone https://hg.mozilla.org/mozilla-central/
     cd mozilla-central
 
- (If you are building Firefox for Android, you should now return to the
-`Android build
-instructions <https://wiki.mozilla.org/Mobile/Fennec/Android#Mac_OS_X>`.)
+(If you are building Firefox for Android, you should now return to the
+`Android build instructions <https://wiki.mozilla.org/Mobile/Fennec/Android#Mac_OS_X>`.)
 
 4. Configure the build options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -436,7 +435,7 @@ accommodates all of the `software <#Software_Requirements>` required
 to build Firefox. Firefox can take a long time to build, so more CPU,
 more RAM and lots of fast disks are always recommended.
 
--  **Processor:** Intel CPUs are required. Building for PowerPC chips is
+-  **Processor:** Intel CPUs are required. Building for PowerPC chips is
    not supported.
 -  **Memory:** 2GB RAM minimum, 8GB recommended.
 -  **Disk Space:** At least 30GB of free disk space.

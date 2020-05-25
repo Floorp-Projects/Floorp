@@ -1,6 +1,5 @@
-Contributing To Firefox - Quick Reference
-=========================================
-
+Firefox Contributors' Quick Reference
+=====================================
 
 Some parts of this process, including cloning and compiling, can take a long time even on modern hardware.
 If at any point you get stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`__
@@ -262,7 +261,8 @@ information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/How_to_S
 Contributing to GeckoView
 -------------------------
 
-GeckoView information and contribution docs live in `geckoview.dev <https://geckoview.dev>`__.
+Note that the GeckoView setup and contribution processes are different from those of Firefox;
+GeckoView setup and contribution docs live in `geckoview.dev <https://geckoview.dev>`__.
 
 More documentation about contribution
 -------------------------------------

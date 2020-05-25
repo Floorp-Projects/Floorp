@@ -1,5 +1,5 @@
-Artifact builds
-===============
+Understanding Artifact Builds
+=============================
 
 Firefox for Desktop and Android supports a **fast build mode** called
 *artifact mode*. The resulting builds are called *artifact builds*.

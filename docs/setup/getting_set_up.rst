@@ -62,15 +62,4 @@ There are `plenty of
 resources <https://developer.mozilla.org/learn>` available on
 the MDN Web Docs!
 
-How To Get Started: Setting Up To Build Firefox
------------------------------------------------
-
-If you'd like to contribute to Firefox, your first step will be to get
-set up for your platform. This will be straightforward, but may take some
-time; there are some big downloads and long compiles involved, so you may want to move
-on to the next steps while it builds. 
-
-Firefox is big, and there are a lot of moving parts to it; if you're starting from
-scratch, you're going to need about forty gigabytes of free disk space and reliable
-internet connection to pull in everything you need. For more information, click Next!
-
+Read on for information about how to set up your machine to build Firefox.

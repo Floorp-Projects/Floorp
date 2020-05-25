@@ -4,12 +4,12 @@ Firefox Source Tree Documentation
 
 .. toctree::
    :caption: Getting Started
-   :maxdepth: 2
+   :maxdepth: 1
 
    {setup_doc}
 
 .. toctree::
-   :caption: Contributing To Firefox
+   :caption: Working On Firefox
    :maxdepth: 2
 
    {contributing_doc}
