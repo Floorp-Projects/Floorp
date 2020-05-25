@@ -6834,7 +6834,8 @@ const {
 const {
   getGripType,
   isGrip,
-  wrapRender
+  wrapRender,
+  ELLIPSIS
 } = __webpack_require__(2);
 /**
  * Renders a grip object with regular expression.
@@ -6856,7 +6857,15 @@ function RegExp(props) {
 }
 
 function getSource(grip) {
-  return grip.displayString;
+  const {
+    displayString
+  } = grip;
+
+  if ((displayString === null || displayString === void 0 ? void 0 : displayString.type) === "longString") {
+    return `${displayString.initial}${ELLIPSIS}`;
+  }
+
+  return displayString;
 } // Registration
 
 
