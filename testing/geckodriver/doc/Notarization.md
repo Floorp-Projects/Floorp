@@ -13,7 +13,7 @@ progress in [bug 1588081].
 
 There are some mitigating circumstances:
 
-  * Vertification problems only occur when other notarized programs,
+  * Verification problems only occur when other notarized programs,
     such as a web browser, downloads the software from the internet.
 
   * Arbitrary software downloaded through other means, such as
