@@ -400,7 +400,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
     tmp->mDomSelections[i] = nullptr;
   }
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mCellParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(
+      mTableSelection.mClosestInclusiveTableCellAncestor)
   tmp->mTableSelection.mMode = TableSelectionMode::None;
   tmp->mTableSelection.mDragSelectingCells = false;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mStartSelectedCell)
@@ -421,7 +422,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDomSelections[i])
   }
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mCellParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
+      mTableSelection.mClosestInclusiveTableCellAncestor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mEndSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTableSelection.mAppendStartSelectedCell)
@@ -1423,7 +1425,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
 
       NS_ENSURE_STATE(mPresShell);
       bool editableCell = false;
-      mTableSelection.mCellParent = nullptr;
+      mTableSelection.mClosestInclusiveTableCellAncestor = nullptr;
       RefPtr<nsPresContext> context = mPresShell->GetPresContext();
       if (context) {
         RefPtr<HTMLEditor> htmlEditor = nsContentUtils::GetHTMLEditor(context);
@@ -1433,7 +1435,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
           editableCell = cellparent && editorHostNode &&
                          cellparent->IsInclusiveDescendantOf(editorHostNode);
           if (editableCell) {
-            mTableSelection.mCellParent = cellparent;
+            mTableSelection.mClosestInclusiveTableCellAncestor = cellparent;
 #ifdef DEBUG_TABLE_SELECTION
             printf(" * TakeFocus - Collapsing into new cell\n");
 #endif
@@ -1446,9 +1448,11 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
       // Now update the range list:
       int32_t offset;
       nsINode* cellparent = GetClosestInclusiveTableCellAncestor(aNewFocus);
-      if (mTableSelection.mCellParent && cellparent &&
+      if (mTableSelection.mClosestInclusiveTableCellAncestor && cellparent &&
           cellparent !=
-              mTableSelection.mCellParent)  // switch to cell selection mode
+              mTableSelection
+                  .mClosestInclusiveTableCellAncestor)  // switch to cell
+                                                        // selection mode
       {
 #ifdef DEBUG_TABLE_SELECTION
         printf(" * TakeFocus - moving into new cell\n");
@@ -1457,7 +1461,8 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
                                WidgetMouseEvent::eReal);
 
         // Start selecting in the cell we were in before
-        nsINode* parent = ParentOffset(mTableSelection.mCellParent, &offset);
+        nsINode* parent = ParentOffset(
+            mTableSelection.mClosestInclusiveTableCellAncestor, &offset);
         if (parent) {
           const nsresult result = HandleTableSelection(
               parent, offset, TableSelectionMode::Cell, &event);
@@ -1473,7 +1478,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
         //  (we'd need to add event listener -- let's not bother for now)
         event.mModifiers &= ~MODIFIER_SHIFT;  // aContinueSelection;
         if (parent) {
-          mTableSelection.mCellParent = cellparent;
+          mTableSelection.mClosestInclusiveTableCellAncestor = cellparent;
           // Continue selection into next cell
           const nsresult result = HandleTableSelection(
               parent, offset, TableSelectionMode::Cell, &event);
