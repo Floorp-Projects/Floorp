@@ -146,7 +146,7 @@ static const nsAttrValue::EnumTable kDirTable[] = {
 void nsGenericHTMLElement::AddToNameTable(nsAtom* aName) {
   MOZ_ASSERT(HasName(), "Node doesn't have name?");
   Document* doc = GetUncomposedDoc();
-  if (doc && !IsInAnonymousSubtree()) {
+  if (doc && !IsInNativeAnonymousSubtree()) {
     doc->AddToNameTable(this, aName);
   }
 }

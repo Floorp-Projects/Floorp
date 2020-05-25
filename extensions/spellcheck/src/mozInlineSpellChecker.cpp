@@ -1082,7 +1082,7 @@ bool mozInlineSpellChecker::ShouldSpellCheckNode(TextEditor* aTextEditor,
     // Make sure that we can always turn on spell checking for inputs/textareas.
     // Note that because of the previous check, at this point we know that the
     // node is editable.
-    if (content->IsInAnonymousSubtree()) {
+    if (content->IsInNativeAnonymousSubtree()) {
       nsIContent* node = content->GetParent();
       while (node && node->IsInNativeAnonymousSubtree()) {
         node = node->GetParent();

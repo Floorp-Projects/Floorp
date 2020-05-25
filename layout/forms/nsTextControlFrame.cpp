@@ -154,7 +154,7 @@ void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
   if (mClass == kClassID) {
     aPostDestroyData.AddAnonymousContent(mRootNode.forget());
   } else {
-    MOZ_ASSERT(!mRootNode || !mRootNode->IsRootOfAnonymousSubtree());
+    MOZ_ASSERT(!mRootNode || !mRootNode->IsRootOfNativeAnonymousSubtree());
     mRootNode = nullptr;
   }
 

@@ -9273,7 +9273,7 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
     case COMMENT_NODE:
     case DOCUMENT_TYPE_NODE: {
       // Don't allow adopting a node's anonymous subtree out from under it.
-      if (adoptedNode->AsContent()->IsRootOfAnonymousSubtree()) {
+      if (adoptedNode->AsContent()->IsRootOfNativeAnonymousSubtree()) {
         rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
         return nullptr;
       }
@@ -10706,7 +10706,7 @@ nsIContent* Document::GetContentInThisDocument(nsIFrame* aFrame) const {
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     nsIContent* content = f->GetContent();
-    if (!content || content->IsInAnonymousSubtree()) continue;
+    if (!content || content->IsInNativeAnonymousSubtree()) continue;
 
     if (content->OwnerDoc() == this) {
       return content;

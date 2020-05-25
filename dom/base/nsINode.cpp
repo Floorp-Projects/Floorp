@@ -774,7 +774,7 @@ nsINode* nsINode::RemoveChild(nsINode& aOldChild, ErrorResult& aError) {
 
   // Check again, we may not be the child's parent anymore.
   // Can be triggered by dom/base/crashtests/293388-1.html
-  if (aOldChild.AsContent()->IsRootOfAnonymousSubtree() ||
+  if (aOldChild.AsContent()->IsRootOfNativeAnonymousSubtree() ||
       aOldChild.GetParentNode() != this) {
     // aOldChild isn't one of our children.
     aError.ThrowNotFoundError(
@@ -2302,7 +2302,7 @@ void nsINode::EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
                                           nsINode* aRefChild,
                                           ErrorResult& aError) {
   if (aNewChild.IsContent() &&
-      aNewChild.AsContent()->IsRootOfAnonymousSubtree()) {
+      aNewChild.AsContent()->IsRootOfNativeAnonymousSubtree()) {
     // This is anonymous content.  Don't allow its insertion
     // anywhere, since it might have UnbindFromTree calls coming
     // its way.
@@ -2748,7 +2748,7 @@ bool nsINode::Contains(const nsINode* aOther) const {
     // document.contains(aOther) returns true if aOther is in the document,
     // but is not in any anonymous subtree.
     // IsInUncomposedDoc() check is done already before this.
-    return !aOther->IsInAnonymousSubtree();
+    return !aOther->IsInNativeAnonymousSubtree();
   }
 
   if (!IsElement() && !IsDocumentFragment()) {
