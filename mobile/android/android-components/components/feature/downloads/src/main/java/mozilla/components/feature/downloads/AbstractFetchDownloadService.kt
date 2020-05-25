@@ -24,6 +24,7 @@ import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.widget.Toast
+import android.webkit.MimeTypeMap
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
@@ -196,10 +197,14 @@ abstract class AbstractFetchDownloadService : Service() {
                                 filePath = currentDownloadJobState.state.filePath,
                                 contentType = currentDownloadJobState.state.contentType
                             )) {
-                            Toast.makeText(applicationContext,
-                                applicationContext.getString(R.string.mozac_feature_downloads_could_not_open_file),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            val fileExt = MimeTypeMap.getFileExtensionFromUrl(
+                                    currentDownloadJobState.state.filePath.toString()
+                            )
+                            val errorMessage = applicationContext.getString(
+                                    R.string.mozac_feature_downloads_open_not_supported, fileExt
+                            )
+
+                            Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
                         }
 
                         emitNotificationOpenFact()
