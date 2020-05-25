@@ -764,6 +764,8 @@ class SessionTest {
         defaultObserver.onProgress(session, 0)
         defaultObserver.onLoadingStateChanged(session, true)
         defaultObserver.onNavigationStateChanged(session, true, true)
+        defaultObserver.onLoadRequest(session, "https://www.mozilla.org", true, true)
+        defaultObserver.onLaunchIntentRequest(session, "https://www.mozilla.org", null)
         defaultObserver.onSearch(session, "")
         defaultObserver.onSecurityChanged(session, Session.SecurityInfo())
         defaultObserver.onCustomTabConfigChanged(session, null)

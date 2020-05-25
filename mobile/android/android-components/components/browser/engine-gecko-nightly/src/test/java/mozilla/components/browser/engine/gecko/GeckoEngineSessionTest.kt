@@ -2030,6 +2030,55 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `onSubframeLoadRequest will notify onLaunchIntent observers if request was intercepted with app intent`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observedUrl: String? = null
+        var observedIntent: Intent? = null
+
+        engineSession.settings.requestInterceptor = object : RequestInterceptor {
+            override fun interceptsAppInitiatedRequests() = true
+
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
+                return when (uri) {
+                    "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
+                    else -> null
+                }
+            }
+        }
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLaunchIntentRequest(
+                url: String,
+                appIntent: Intent?
+            ) {
+                observedUrl = url
+                observedIntent = appIntent
+            }
+        })
+
+        navigationDelegate.value.onSubframeLoadRequest(
+            mock(), mockLoadRequest("sample:about", triggeredByRedirect = true))
+
+        assertNotNull(observedIntent)
+        assertEquals("result", observedUrl)
+
+        navigationDelegate.value.onSubframeLoadRequest(
+            mock(), mockLoadRequest("sample:about", triggeredByRedirect = false))
+
+        assertNotNull(observedIntent)
+        assertEquals("result", observedUrl)
+    }
+
+    @Test
     fun `onLoadRequest will notify any observers if request was intercepted as url`() {
         val engineSession = GeckoEngineSession(mock(),
             geckoSessionProvider = geckoSessionProvider)
