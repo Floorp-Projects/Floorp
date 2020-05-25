@@ -34,24 +34,67 @@ void TableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
   }
 }
 
-void TableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
-  uint32_t rowIdx = RowIdx(), colIdx = ColIdx();
+Accessible* TableCellAccessible::PrevColHeader() {
   TableAccessible* table = Table();
-  if (!table) return;
+  if (!table) {
+    return nullptr;
+  }
 
-  // Move up to find column header cells
+  TableAccessible::HeaderCache& cache = table->GetHeaderCache();
+  bool inCache = false;
+  Accessible* cachedHeader = cache.GetWeak(this, &inCache);
+  if (inCache) {
+    // Cached but null means we know there is no previous column header.
+    // if defunct, the cell was removed, so behave as if there is no cached
+    // value.
+    if (!cachedHeader || !cachedHeader->IsDefunct()) {
+      return cachedHeader;
+    }
+  }
+
+  uint32_t rowIdx = RowIdx(), colIdx = ColIdx();
   for (uint32_t curRowIdx = rowIdx - 1; curRowIdx < rowIdx; curRowIdx--) {
     Accessible* cell = table->CellAt(curRowIdx, colIdx);
-    if (!cell) continue;
-
+    if (!cell) {
+      continue;
+    }
     // CellAt should always return a TableCellAccessible (XXX Bug 587529)
     TableCellAccessible* tableCell = cell->AsTableCell();
-    NS_ASSERTION(tableCell, "cell should be a table cell!");
-    if (!tableCell) continue;
+    MOZ_ASSERT(tableCell, "cell should be a table cell!");
+    if (!tableCell) {
+      continue;
+    }
+
+    // Check whether the previous table cell has a cached value.
+    cachedHeader = cache.GetWeak(tableCell, &inCache);
+    if (inCache && cell->Role() != roles::COLUMNHEADER) {
+      if (!cachedHeader || !cachedHeader->IsDefunct()) {
+        // Cache it for this cell.
+        cache.Put(this, RefPtr<Accessible>(cachedHeader));
+        return cachedHeader;
+      }
+    }
 
     // Avoid addding cells multiple times, if this cell spans more rows
     // we'll get it later.
-    if (tableCell->RowIdx() == curRowIdx && cell->Role() == roles::COLUMNHEADER)
-      aCells->AppendElement(cell);
+    if (cell->Role() != roles::COLUMNHEADER ||
+        tableCell->RowIdx() != curRowIdx) {
+      continue;
+    }
+
+    // Cache the header we found.
+    cache.Put(this, RefPtr<Accessible>(cell));
+    return cell;
+  }
+
+  // There's no header, so cache that fact.
+  cache.Put(this, RefPtr<Accessible>(nullptr));
+  return nullptr;
+}
+
+void TableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
+  for (Accessible* cell = PrevColHeader(); cell;
+       cell = cell->AsTableCell()->PrevColHeader()) {
+    aCells->AppendElement(cell);
   }
 }

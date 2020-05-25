@@ -184,6 +184,18 @@ class TableAccessible {
    */
   virtual Accessible* AsAccessible() = 0;
 
+  typedef nsRefPtrHashtable<nsPtrHashKey<const TableCellAccessible>, Accessible>
+      HeaderCache;
+
+  /**
+   * Get the header cache, which maps a TableCellAccessible to its previous
+   * header.
+   * Although this data is only used in TableCellAccessible, it is stored on
+   * TableAccessible so the cache can be easily invalidated when the table
+   * is mutated.
+   */
+  HeaderCache& GetHeaderCache() { return mHeaderCache; }
+
  protected:
   /**
    * Return row accessible at the given row index.
@@ -194,6 +206,9 @@ class TableAccessible {
    * Return cell accessible at the given column index in the row.
    */
   Accessible* CellInRowAt(Accessible* aRow, int32_t aColumn);
+
+ private:
+  HeaderCache mHeaderCache;
 };
 
 }  // namespace a11y
