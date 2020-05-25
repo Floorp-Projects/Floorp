@@ -126,7 +126,8 @@ const nsIFrame* ViewportUtils::IsZoomedContentRoot(const nsIFrame* aFrame) {
   if (!aFrame) {
     return nullptr;
   }
-  if (aFrame->Type() == LayoutFrameType::Canvas) {
+  if (aFrame->Type() == LayoutFrameType::Canvas ||
+      aFrame->Type() == LayoutFrameType::PageSequence) {
     nsIScrollableFrame* sf = do_QueryFrame(aFrame->GetParent());
     if (sf && sf->IsRootScrollFrameOfDocument() &&
         aFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
