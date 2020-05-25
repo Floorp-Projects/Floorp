@@ -505,63 +505,97 @@ public:
 
       FileInfo &Info = *It->second;
 
-      std::string Filename = Outdir;
-      Filename += It->second->Realname;
+      std::string Filename = Outdir + Info.Realname;
+      std::string SrcFilename = Info.Generated
+        ? Objdir + Info.Realname.substr(GENERATED.length())
+        : Srcdir + PATHSEP_STRING + Info.Realname;
 
       ensurePath(Filename);
 
       // We lock the output file in case some other clang process is trying to
       // write to it at the same time.
-      AutoLockFile Lock(Filename);
+      AutoLockFile Lock(SrcFilename, Filename);
 
       if (!Lock.success()) {
         fprintf(stderr, "Unable to lock file %s\n", Filename.c_str());
         exit(1);
       }
 
-      std::vector<std::string> Lines;
-
-      // Read all the existing lines in from the output file. Rather than
-      // overwrite them, we want to merge our results with what was already
-      // there. This ensures that header files that are included multiple times
+      // Merge our results with the existing lines from the output file.
+      // This ensures that header files that are included multiple times
       // in different ways are analyzed completely.
-      char Buffer[65536];
-      FILE *Fp = Lock.openFile("rb");
+
+      FILE *Fp = Lock.openFile();
       if (!Fp) {
         fprintf(stderr, "Unable to open input file %s\n", Filename.c_str());
         exit(1);
       }
-      while (fgets(Buffer, sizeof(Buffer), Fp)) {
-        Lines.push_back(std::string(Buffer));
-      }
-      fclose(Fp);
-
-      // Insert the newly generated analysis data into what was read. Sort the
-      // results and then remove duplicates.
-      Lines.insert(Lines.end(), Info.Output.begin(), Info.Output.end());
-      std::sort(Lines.begin(), Lines.end());
-
-      std::vector<std::string> Nodupes;
-      std::unique_copy(Lines.begin(), Lines.end(), std::back_inserter(Nodupes));
-
-      // Overwrite the output file with the merged data. Since we have the lock,
-      // this will happen atomically.
-      Fp = Lock.openFile("wb");
-      if (!Fp) {
-        fprintf(stderr, "Unable to open output file %s\n", Filename.c_str());
+      FILE *OutFp = Lock.openTmp();
+      if (!OutFp) {
+        fprintf(stderr, "Unable to open tmp out file for %s\n", Filename.c_str());
         exit(1);
       }
-      size_t Length = 0;
-      for (std::string &Line : Nodupes) {
-        Length += Line.length();
-        if (fwrite(Line.c_str(), Line.length(), 1, Fp) != 1) {
-          fprintf(stderr, "Unable to write to output file %s\n", Filename.c_str());
+
+      // Sort our new results and get an iterator to them
+      std::sort(Info.Output.begin(), Info.Output.end());
+      std::vector<std::string>::const_iterator NewLinesIter = Info.Output.begin();
+      std::string LastNewWritten;
+
+      // Loop over the existing (sorted) lines in the analysis output file.
+      char Buffer[65536];
+      while (fgets(Buffer, sizeof(Buffer), Fp)) {
+        std::string OldLine(Buffer);
+
+        // Write any results from Info.Output that are lexicographically
+        // smaller than OldLine (read from the existing file), but make sure
+        // to skip duplicates. Keep advacing NewLinesIter until we reach an
+        // entry that is lexicographically greater than OldLine.
+        for (; NewLinesIter != Info.Output.end(); NewLinesIter++) {
+          if (*NewLinesIter > OldLine) {
+            break;
+          }
+          if (*NewLinesIter == OldLine) {
+            continue;
+          }
+          if (*NewLinesIter == LastNewWritten) {
+            // dedupe the new entries being written
+            continue;
+          }
+          if (fwrite(NewLinesIter->c_str(), NewLinesIter->length(), 1, OutFp) != 1) {
+            fprintf(stderr, "Unable to write to tmp output file for %s\n", Filename.c_str());
+            exit(1);
+          }
+          LastNewWritten = *NewLinesIter;
+        }
+
+        // Write the entry read from the existing file.
+        if (fwrite(OldLine.c_str(), OldLine.length(), 1, OutFp) != 1) {
+          fprintf(stderr, "Unable to write to tmp output file for %s\n", Filename.c_str());
+          exit(1);
         }
       }
+
+      // We finished reading from Fp
       fclose(Fp);
 
-      if (!Lock.truncateFile(Length)) {
-        return;
+      // Finish iterating our new results, discarding duplicates
+      for (; NewLinesIter != Info.Output.end(); NewLinesIter++) {
+        if (*NewLinesIter == LastNewWritten) {
+          continue;
+        }
+        if (fwrite(NewLinesIter->c_str(), NewLinesIter->length(), 1, OutFp) != 1) {
+          fprintf(stderr, "Unable to write to tmp output file for %s\n", Filename.c_str());
+          exit(1);
+        }
+        LastNewWritten = *NewLinesIter;
+      }
+
+      // Done writing all the things, close it and replace the old output file
+      // with the new one.
+      fclose(OutFp);
+      if (!Lock.moveTmp()) {
+        fprintf(stderr, "Unable to move tmp output file into place for %s (err %d)\n", Filename.c_str(), errno);
+        exit(1);
       }
     }
   }
