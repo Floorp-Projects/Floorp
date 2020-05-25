@@ -983,6 +983,18 @@ RefPtr<SessionStorageManager> BrowsingContext::GetSessionStorageManager() {
   return manager;
 }
 
+bool BrowsingContext::CrossOriginIsolated() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP() &&
+         Top()->GetOpenerPolicy() ==
+             nsILoadInfo::
+                 OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP &&
+         XRE_IsContentProcess() &&
+         StringBeginsWith(ContentChild::GetSingleton()->GetRemoteType(),
+                          NS_LITERAL_STRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX));
+}
+
 BrowsingContext::~BrowsingContext() {
   MOZ_DIAGNOSTIC_ASSERT(!mParentWindow ||
                         !mParentWindow->mChildren.Contains(this));
