@@ -212,6 +212,7 @@ static already_AddRefed<Element> MakeAnonButton(Document* aDoc,
   // NOTE: SetIsNativeAnonymousRoot() has to be called before setting any
   // attribute.
   button->SetIsNativeAnonymousRoot();
+  button->SetPseudoElementType(PseudoStyleType::fileChooserButton);
 
   // Set the file picking button text depending on the current locale.
   nsAutoString buttonTxt;

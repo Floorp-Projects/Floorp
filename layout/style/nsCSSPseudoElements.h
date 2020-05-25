@@ -118,12 +118,20 @@ class nsCSSPseudoElements {
                                  CSS_PSEUDO_ELEMENT_IS_FLEX_OR_GRID_ITEM);
   }
 
-  static bool IsEnabled(Type aType, EnabledState aEnabledState) {
-    if (!PseudoElementHasAnyFlag(
-            aType, CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)) {
-      if (aType == Type::mozFocusOuter) {
+  static bool EnabledInContent(Type aType) {
+    switch (aType) {
+      case Type::mozFocusOuter:
         return mozilla::StaticPrefs::layout_css_moz_focus_outer_enabled();
-      }
+      case Type::fileChooserButton:
+        return mozilla::StaticPrefs::layout_css_file_chooser_button_enabled();
+      default:
+        return !PseudoElementHasAnyFlag(
+            aType, CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME);
+    }
+  }
+
+  static bool IsEnabled(Type aType, EnabledState aEnabledState) {
+    if (EnabledInContent(aType)) {
       return true;
     }
 
