@@ -24,23 +24,45 @@ void ensurePath(std::string Path);
 
 std::string getAbsolutePath(const std::string &Filename);
 
-// Lock the given filename so that it cannot be opened by anyone else until this
-// object goes out of scope. On Windows, we use a named mutex. On POSIX
-// platforms, we use flock.
+// Used to synchronize access when writing to an analysis file, so that
+// concurrently running clang instances don't clobber each other's data.
+// On Windows, we use a named mutex. On POSIX platforms, we use flock on the
+// source files. flock is advisory locking, and doesn't interfere with clang's
+// own opening of the source files (i.e. to interfere, clang would have to be
+// using flock itself, which it does not).
 struct AutoLockFile {
-  int FileDescriptor = -1;
+  // Absolute path to the analysis file
+  std::string Filename;
 
 #if defined(_WIN32) || defined(_WIN64)
+  // Handle for the named Mutex
   HANDLE Handle = NULL;
+#else
+  // fd for the *source* file that corresponds to the analysis file. We use
+  // the source file because it doesn't change while the analysis file gets
+  // repeatedly replaced by a new version written to a separate tmp file.
+  // This fd is used when using flock to synchronize access.
+  int FileDescriptor = -1;
 #endif
 
-  AutoLockFile(const std::string &Filename);
+  // SrcFile should be the absolute path to the source code file, and DstFile
+  // the absolute path to the corresponding analysis file. This constructor
+  // will block until exclusive access has been obtained.
+  AutoLockFile(const std::string &SrcFile, const std::string &DstFile);
   ~AutoLockFile();
 
+  // Check after constructing to ensure the mutex was properly set up.
   bool success();
 
-  FILE *openFile(const char *Mode);
-  bool truncateFile(size_t Length);
+  // Open the existing analysis file for reading (an empty one is created if
+  // it doesn't already exist). Caller is responsible for fclose'ing it.
+  FILE *openFile();
+  // Open a new tmp file for writing the new analysis data to. Caller is
+  // responsible for fclose'ing it.
+  FILE *openTmp();
+  // Replace the existing analysis file with the new "tmp" one that has the new
+  // data. Returns false on error.
+  bool moveTmp();
 };
 
 #endif
