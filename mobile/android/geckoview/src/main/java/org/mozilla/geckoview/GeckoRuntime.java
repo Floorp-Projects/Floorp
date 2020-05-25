@@ -172,12 +172,12 @@ public final class GeckoRuntime implements Parcelable {
     private final WebExtensionController mWebExtensionController;
     private WebPushController mPushController;
     private final ContentBlockingController mContentBlockingController;
-    private final LoginStorage.Proxy mLoginStorageProxy;
+    private final Autocomplete.LoginStorageProxy mLoginStorageProxy;
 
     private GeckoRuntime() {
         mWebExtensionController = new WebExtensionController(this);
         mContentBlockingController = new ContentBlockingController();
-        mLoginStorageProxy = new LoginStorage.Proxy();
+        mLoginStorageProxy = new Autocomplete.LoginStorageProxy();
 
         if (sRuntime != null) {
             throw new IllegalStateException("Only one GeckoRuntime instance is allowed");
@@ -622,26 +622,26 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     /**
-     * Set the {@link LoginStorage.Delegate} instance on this runtime.
+     * Set the {@link Autocomplete.LoginStorageDelegate} instance on this runtime.
      * This delegate is required for handling login storage requests.
      *
-     * @param delegate The {@link LoginStorage.Delegate} handling login storage
+     * @param delegate The {@link Autocomplete.LoginStorageDelegate} handling login storage
      *                 requests.
      */
     @UiThread
     public void setLoginStorageDelegate(
-            final @Nullable LoginStorage.Delegate delegate) {
+            final @Nullable Autocomplete.LoginStorageDelegate delegate) {
         ThreadUtils.assertOnUiThread();
         mLoginStorageProxy.setDelegate(delegate);
     }
 
     /**
-     * Get the {@link LoginStorage.Delegate} instance set on this runtime.
+     * Get the {@link Autocomplete.LoginStorageDelegate} instance set on this runtime.
      *
-     * @return The {@link LoginStorage.Delegate} set on this runtime.
+     * @return The {@link Autocomplete.LoginStorageDelegate} set on this runtime.
      */
     @UiThread
-    public @Nullable LoginStorage.Delegate getLoginStorageDelegate() {
+    public @Nullable Autocomplete.LoginStorageDelegate getLoginStorageDelegate() {
         ThreadUtils.assertOnUiThread();
         return mLoginStorageProxy.getDelegate();
     }
