@@ -65,6 +65,21 @@ class FrameworkGatherer(object):
         '''
         raise NotImplementedError
 
+    def _build_section_with_header(self, title, content, header_type=None):
+        '''
+        Adds a section to the documentation with the title as the type mentioned
+        and paragraph as content mentioned.
+        :param title: title of the section
+        :param content: content of section paragraph
+        :param documentation: documentation object to add section to
+        :param type: type of the title heading
+        '''
+        heading_map = {
+            'H4': '-',
+            'H5': '^'
+        }
+        return [title, heading_map.get(type, '^') * len(title), content, '']
+
 
 class RaptorGatherer(FrameworkGatherer):
     '''
@@ -146,3 +161,14 @@ class RaptorGatherer(FrameworkGatherer):
                 self._test_list[suite_name].update(subtest_list)
 
         return self._test_list
+
+    def build_test_description(self, test_name, test_description=""):
+        # As we expect browsertime to become its own framework and its test names
+        # are not standardized, add 'browsertime-tp6(m) temporarily to the test name
+        if 'Browsertime' in test_description and \
+                ('Desktop' in test_description or 'Android' in test_description):
+            title = 'Browsertime ' + test_name
+        else:
+            title = test_name
+
+        return self._build_section_with_header(title, test_description, header_type="H5")

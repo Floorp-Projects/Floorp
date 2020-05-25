@@ -35,6 +35,7 @@ class Gatherer(object):
         self.workspace_dir = workspace_dir
         self._perfdocs_tree = []
         self._test_list = []
+        self.framework_gatherers = {}
 
     @property
     def perfdocs_tree(self):
@@ -114,11 +115,11 @@ class Gatherer(object):
         }
 
         # Get and then store the frameworks tests
-        framework_gatherer = frameworks[framework["name"]](
+        self.framework_gatherers[framework["name"]] = frameworks[framework["name"]](
             framework["yml_path"],
             self.workspace_dir
         )
-        framework["test_list"] = framework_gatherer.get_test_list()
+        framework["test_list"] = self.framework_gatherers[framework["name"]].get_test_list()
 
         self._test_list.append(framework)
         return framework
