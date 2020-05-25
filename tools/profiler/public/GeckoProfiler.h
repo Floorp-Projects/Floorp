@@ -180,18 +180,18 @@ class Vector;
     MACRO(12, "jsallocations", JSAllocations,                                  \
           "Have the JavaScript engine track allocations")                      \
                                                                                \
-    MACRO(14, "nostacksampling", NoStackSampling,                              \
+    MACRO(13, "nostacksampling", NoStackSampling,                              \
           "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
           "\"stackwalk\" and labels")                                          \
                                                                                \
-    MACRO(15, "preferencereads", PreferenceReads,                              \
+    MACRO(14, "preferencereads", PreferenceReads,                              \
           "Track when preferences are read")                                   \
                                                                                \
-    MACRO(16, "nativeallocations", NativeAllocations,                          \
+    MACRO(15, "nativeallocations", NativeAllocations,                          \
           "Collect the stacks from a smaller subset of all native "            \
           "allocations, biasing towards collecting larger allocations")        \
                                                                                \
-    MACRO(17, "ipcmessages", IPCMessages,                                      \
+    MACRO(16, "ipcmessages", IPCMessages,                                      \
           "Have the IPC layer track cross-process messages")
 
 struct ProfilerFeature {
