@@ -193,13 +193,7 @@ const observer = {
           );
           loginManagerChild.onFieldAutoComplete(focusedInput, details.guid);
         } else if (style == "generatedPassword") {
-          loginManagerChild._highlightFilledField(focusedInput);
-          loginManagerChild._passwordEditedOrGenerated(focusedInput, {
-            triggeredByFillingGenerated: true,
-          });
-          loginManagerChild._fillConfirmFieldWithGeneratedPassword(
-            focusedInput
-          );
+          loginManagerChild._filledWithGeneratedPassword(focusedInput);
         }
         break;
       }
@@ -518,6 +512,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
           recipes: msg.data.recipes,
           inputElementIdentifier: msg.data.inputElementIdentifier,
           originMatches: msg.data.originMatches,
+          style: msg.data.style,
         });
         break;
       }
@@ -951,6 +946,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     recipes,
     inputElementIdentifier,
     originMatches,
+    style,
   }) {
     if (!inputElementIdentifier) {
       log("fillForm: No input element specified");
@@ -993,6 +989,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       clobberUsername,
       clobberPassword: true,
       userTriggered: true,
+      style,
     });
   }
 
@@ -1735,6 +1732,19 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
+   * The password field has been filled with a generated password, ensure the
+   * field is handled accordingly.
+   * @param {HTMLInputElement} passwordField
+   */
+  _filledWithGeneratedPassword(passwordField) {
+    this._highlightFilledField(passwordField);
+    this._passwordEditedOrGenerated(passwordField, {
+      triggeredByFillingGenerated: true,
+    });
+    this._fillConfirmFieldWithGeneratedPassword(passwordField);
+  }
+
+  /**
    * Notify the parent that a generated password was filled into a field or
    * edited so that it can potentially be saved.
    * @param {HTMLInputElement} passwordField
@@ -1977,6 +1987,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       clobberUsername = false,
       clobberPassword = false,
       userTriggered = false,
+      style = null,
     } = {}
   ) {
     if (ChromeUtils.getClassName(form) === "HTMLFormElement") {
@@ -2288,6 +2299,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       }
 
       this._highlightFilledField(passwordField);
+
+      if (style && style === "generatedPassword") {
+        this._filledWithGeneratedPassword(passwordField);
+      }
 
       log("_fillForm succeeded");
       autofillResult = AUTOFILL_RESULT.FILLED;

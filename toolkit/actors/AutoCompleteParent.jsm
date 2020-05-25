@@ -8,6 +8,21 @@ var EXPORTED_SYMBOLS = ["AutoCompleteParent"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "DELEGATE_AUTOCOMPLETE",
+  "toolkit.autocomplete.delegate",
+  false
+);
+
 // Stores the browser and actor that has the active popup, used by formfill
 let currentBrowserWeakRef = null;
 let currentActor = null;
@@ -358,7 +373,8 @@ class AutoCompleteParent extends JSWindowActorParent {
 
   receiveMessage(message) {
     let browser = this.browsingContext.top.embedderElement;
-    if (!browser || !browser.autoCompletePopup) {
+
+    if (!browser || (!DELEGATE_AUTOCOMPLETE && !browser.autoCompletePopup)) {
       // If there is no browser or popup, just make sure that the popup has been closed.
       if (this.openedPopup) {
         this.openedPopup.closePopup();
@@ -379,14 +395,24 @@ class AutoCompleteParent extends JSWindowActorParent {
       }
 
       case "FormAutoComplete:MaybeOpenPopup": {
-        let { results, rect, dir } = message.data;
-        this.showPopupWithResults({
+        let {
+          results,
           rect,
           dir,
-          results,
-        });
-
-        this.notifyListeners();
+          inputElementIdentifier,
+          formOrigin,
+        } = message.data;
+        if (DELEGATE_AUTOCOMPLETE) {
+          GeckoViewAutocomplete.delegateSelection({
+            browsingContext: this.browsingContext,
+            options: results,
+            inputElementIdentifier,
+            formOrigin,
+          });
+        } else {
+          this.showPopupWithResults({ results, rect, dir });
+          this.notifyListeners();
+        }
         break;
       }
 

@@ -966,7 +966,6 @@ nsresult nsFormFillController::HandleFocus(HTMLInputElement* aInput) {
     return NS_OK;
   }
 
-#ifndef ANDROID
   // If this focus doesn't follow a right click within our specified
   // threshold then show the autocomplete popup for all password fields.
   // This is done to avoid showing both the context menu and the popup
@@ -992,7 +991,6 @@ nsresult nsFormFillController::HandleFocus(HTMLInputElement* aInput) {
     mPasswordPopupAutomaticallyOpened = true;
     ShowPopup();
   }
-#endif
 
   return NS_OK;
 }

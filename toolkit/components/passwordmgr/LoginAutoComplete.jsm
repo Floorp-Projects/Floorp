@@ -168,10 +168,13 @@ class LoginAutocompleteItem extends AutocompleteItem {
     this._login = login.QueryInterface(Ci.nsILoginMetaInfo);
     this._actor = actor;
 
+    this._isDuplicateUsername =
+      login.username && duplicateUsernames.has(login.username);
+
     XPCOMUtils.defineLazyGetter(this, "label", () => {
       let username = login.username;
       // If login is empty or duplicated we want to append a modification date to it.
-      if (!username || duplicateUsernames.has(username)) {
+      if (!username || this._isDuplicateUsername) {
         if (!username) {
           username = getLocalizedString("noUsername");
         }
@@ -190,6 +193,9 @@ class LoginAutocompleteItem extends AutocompleteItem {
     XPCOMUtils.defineLazyGetter(this, "comment", () => {
       return JSON.stringify({
         guid: login.guid,
+        login,
+        isDuplicateUsername: this._isDuplicateUsername,
+        isOriginMatched,
         comment:
           isOriginMatched && login.httpRealm === null
             ? getLocalizedString("displaySameOrigin")

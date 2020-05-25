@@ -43,6 +43,7 @@ EXTRA_JS_MODULES += [
     'LoginRecipes.jsm',
     'NewPasswordModel.jsm',
     'OSCrypto.jsm',
+    'PasswordGenerator.jsm',
     'storage-json.js',
 ]
 
@@ -54,7 +55,6 @@ else:
     EXTRA_JS_MODULES += [
         'LoginImport.jsm',
         'LoginStore.jsm',
-        'PasswordGenerator.jsm',
     ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
