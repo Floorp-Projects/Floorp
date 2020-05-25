@@ -171,6 +171,7 @@
 #include "nsContentDLF.h"
 #include "nsContentPolicyUtils.h"  // NS_CheckContentLoadPolicy(...)
 #include "nsContentSecurityManager.h"
+#include "nsContentSecurityUtils.h"
 #include "nsContentUtils.h"
 #include "nsCURILoader.h"
 #include "nsDocShellCID.h"
@@ -9051,58 +9052,6 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   return nullptr;
 }
 
-// CSPs upgrade-insecure-requests directive applies to same origin top level
-// navigations. Using the SOP would return false for the case when an https
-// page triggers and http page to load, even though that http page would be
-// upgraded to https later. Hence we have to use that custom function instead
-// of simply calling aTriggeringPrincipal->Equals(aResultPrincipal).
-static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
-                                         nsIPrincipal* aResultPrincipal) {
-  MOZ_ASSERT(aTriggeringPrincipal);
-  MOZ_ASSERT(aResultPrincipal);
-
-  // we only have to make sure that the following truth table holds:
-  // aTriggeringPrincipal         | aResultPrincipal             | Result
-  // ----------------------------------------------------------------
-  // http://example.com/foo.html  | http://example.com/bar.html  | true
-  // https://example.com/foo.html | https://example.com/bar.html | true
-  // https://example.com/foo.html | http://example.com/bar.html  | true
-  if (aTriggeringPrincipal->Equals(aResultPrincipal)) {
-    return true;
-  }
-
-  if (!aResultPrincipal->GetIsContentPrincipal()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> resultURI = aResultPrincipal->GetURI();
-
-  // We know this is a content principal, and content principals require valid
-  // URIs, so we shouldn't need to check non-null here.
-  if (!SchemeIsHTTP(resultURI)) {
-    return false;
-  }
-
-  nsresult rv;
-  nsAutoCString tmpResultSpec;
-  rv = resultURI->GetSpec(tmpResultSpec);
-  NS_ENSURE_SUCCESS(rv, false);
-  // replace http with https
-  tmpResultSpec.ReplaceLiteral(0, 4, "https");
-
-  nsCOMPtr<nsIURI> tmpResultURI;
-  rv = NS_NewURI(getter_AddRefs(tmpResultURI), tmpResultSpec);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  mozilla::OriginAttributes tmpOA =
-      BasePrincipal::Cast(aResultPrincipal)->OriginAttributesRef();
-
-  nsCOMPtr<nsIPrincipal> tmpResultPrincipal =
-      BasePrincipal::CreateContentPrincipal(tmpResultURI, tmpOA);
-
-  return aTriggeringPrincipal->Equals(tmpResultPrincipal);
-}
-
 /* static */ nsresult nsDocShell::CreateRealChannelForDocument(
     nsIChannel** aChannel, nsIURI* aURI, nsILoadInfo* aLoadInfo,
     nsIInterfaceRequestor* aCallbacks, nsLoadFlags aLoadFlags,
@@ -9430,7 +9379,9 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
   if (csp) {
     // Navigational requests that are same origin need to be upgraded in case
-    // upgrade-insecure-requests is present.
+    // upgrade-insecure-requests is present. Please note that for document
+    // navigations that bit is re-computed in case we encounter a server
+    // side redirect so the navigation is not same-origin anymore.
     bool upgradeInsecureRequests = false;
     csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
     if (upgradeInsecureRequests) {
@@ -9439,9 +9390,9 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
       aRv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
           channel, getter_AddRefs(resultPrincipal));
       NS_ENSURE_SUCCESS(aRv, false);
-      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
-                                       resultPrincipal)) {
-        aLoadInfo->SetUpgradeInsecureRequests();
+      if (nsContentSecurityUtils::IsConsideredSameOriginForUIR(
+              aLoadState->TriggeringPrincipal(), resultPrincipal)) {
+        aLoadInfo->SetUpgradeInsecureRequests(true);
       }
     }
 

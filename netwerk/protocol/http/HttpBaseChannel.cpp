@@ -33,6 +33,7 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsCRT.h"
 #include "nsContentSecurityManager.h"
+#include "nsContentSecurityUtils.h"
 #include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsGlobalWindowOuter.h"
@@ -2881,11 +2882,11 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
     newLoadInfo->SetPrincipalToInherit(nullPrincipalToInherit);
   }
 
-  // re-compute the origin attributes of the loadInfo if it's top-level load.
   bool isTopLevelDoc = newLoadInfo->GetExternalContentPolicyType() ==
                        nsIContentPolicy::TYPE_DOCUMENT;
 
   if (isTopLevelDoc) {
+    // re-compute the origin attributes of the loadInfo if it's top-level load.
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(this, loadContext);
     OriginAttributes docShellAttrs;
@@ -2909,6 +2910,26 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
     attrs = docShellAttrs;
     attrs.SetFirstPartyDomain(true, aNewURI);
     newLoadInfo->SetOriginAttributes(attrs);
+
+    // re-compute the upgrade insecure requests bit for document navigations
+    // since it should only apply to same-origin navigations (redirects).
+    // we only do this if the CSP of the triggering element (the cspToInherit)
+    // uses 'upgrade-insecure-requests', otherwise UIR does not apply.
+    nsCOMPtr<nsIContentSecurityPolicy> csp = newLoadInfo->GetCspToInherit();
+    if (csp) {
+      bool upgradeInsecureRequests = false;
+      csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
+      if (upgradeInsecureRequests) {
+        nsCOMPtr<nsIPrincipal> resultPrincipal =
+            BasePrincipal::CreateContentPrincipal(
+                aNewURI, newLoadInfo->GetOriginAttributes());
+        bool isConsideredSameOriginforUIR =
+            nsContentSecurityUtils::IsConsideredSameOriginForUIR(
+                newLoadInfo->TriggeringPrincipal(), resultPrincipal);
+        static_cast<mozilla::net::LoadInfo*>(newLoadInfo.get())
+            ->SetUpgradeInsecureRequests(isConsideredSameOriginforUIR);
+      }
+    }
   }
 
   // Leave empty, we want a 'clean ground' when creating the new channel.
