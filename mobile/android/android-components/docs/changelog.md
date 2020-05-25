@@ -34,7 +34,7 @@ permalink: /changelog/
 
 * **browser-state**
   * Adds `history` to `ContentState` to check the back and forward history list.
-  
+
 * **service-glean**
   * BUGFIX: Fix a race condition that leads to a `ConcurrentModificationException`. [Bug 1635865](https://bugzilla.mozilla.org/1635865)
 

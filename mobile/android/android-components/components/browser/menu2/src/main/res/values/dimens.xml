@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <dimen name="mozac_browser_menu2_corner_radius">4dp</dimen>
+    <dimen name="mozac_browser_menu2_elevation">8dp</dimen>
+    <dimen name="mozac_browser_menu2_width">250dp</dimen>
+    <dimen name="mozac_browser_menu2_padding_vertical">0dp</dimen>
+
+    <!--Menu Item -->
+    <dimen name="mozac_browser_menu2_candidate_text_size">16sp</dimen>
+    <dimen name="mozac_browser_menu2_candidate_container_layout_height">48dp</dimen>
+    <dimen name="mozac_browser_menu2_candidate_container_padding_start">16dp</dimen>
+    <dimen name="mozac_browser_menu2_candidate_container_padding_end">16dp</dimen>
+    <!--Menu Item -->
+
+    <!--BrowserMenuDivider -->
+    <dimen name="mozac_browser_menu2_candidate_divider_height">1dp</dimen>
+    <!--BrowserMenuDivider -->
+
+    <!--BrowserMenuHighlightableItem -->
+    <dimen name="mozac_browser_menu2_icon_notification_dot_translate_x">4dp</dimen>
+    <dimen name="mozac_browser_menu2_icon_notification_dot_translate_y">-4dp</dimen>
+    <dimen name="mozac_browser_menu2_icon_notification_dot_size">8dp</dimen>
+    <!--BrowserMenuHighlightableItem -->
+
+    <!--BrowserMenuCheckbox -->
+    <dimen name="mozac_browser_menu2_checkbox_padding">12dp</dimen>
+    <!--BrowserMenuCheckbox -->
+
+    <!--BrowserMenuImageText-->
+
+    <!--Icon-->
+    <dimen name="mozac_browser_menu2_icon_width">24dp</dimen>
+    <dimen name="mozac_browser_menu2_icon_height">24dp</dimen>
+    <dimen name="mozac_browser_menu2_icon_text_size">14sp</dimen>
+    <!--Icon-->
+
+    <!--Label-->
+    <dimen name="mozac_browser_menu2_icon_padding_start">20dp</dimen>
+    <!--Label-->
+
+    <!--BrowserMenuImageText-->
+
+    <!-- BrowserMenuItemToolbar -->
+    <dimen name="mozac_browser_menu2_candidate_row_height">56dp</dimen>
+</resources>

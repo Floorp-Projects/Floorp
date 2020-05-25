@@ -70,7 +70,10 @@ data class TextMenuIcon(
     val textStyle: TextStyle = TextStyle()
 ) : MenuIcon()
 
-internal interface MenuIconWithDrawable {
+/**
+ * Interface shared by all [MenuIcon]s with drawables.
+ */
+interface MenuIconWithDrawable {
     val drawable: Drawable?
     @get:ColorInt val tint: Int?
 }

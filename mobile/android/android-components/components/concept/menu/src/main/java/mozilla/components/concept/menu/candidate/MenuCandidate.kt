@@ -66,7 +66,7 @@ data class CompoundMenuCandidate(
     val textStyle: TextStyle = TextStyle(),
     override val containerStyle: ContainerStyle = ContainerStyle(),
     val effect: MenuCandidateEffect? = null,
-    val onCheckedChange: (Boolean) -> Unit
+    val onCheckedChange: (Boolean) -> Unit = {}
 ) : MenuCandidate() {
 
     /**
