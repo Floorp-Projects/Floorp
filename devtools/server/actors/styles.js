@@ -697,18 +697,79 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     // Now any pseudos.
     if (showElementStyles && !options.skipPseudo) {
       for (const readPseudo of PSEUDO_ELEMENTS) {
-        this._getElementRules(
-          bindingElement,
-          readPseudo,
-          inherited,
-          options
-        ).forEach(oneRule => {
-          rules.push(oneRule);
-        });
+        if (this._pseudoIsRelevant(bindingElement, readPseudo)) {
+          this._getElementRules(
+            bindingElement,
+            readPseudo,
+            inherited,
+            options
+          ).forEach(oneRule => {
+            rules.push(oneRule);
+          });
+        }
       }
     }
 
     return rules;
+  },
+
+  _nodeIsTextfieldLike(node) {
+    if (node.nodeName == "TEXTAREA") {
+      return true;
+    }
+    return (
+      node.mozIsTextField &&
+      (node.mozIsTextField(false) || node.type == "number")
+    );
+  },
+
+  _nodeIsButtonLike(node) {
+    if (node.nodeName == "BUTTON") {
+      return true;
+    }
+    return (
+      node.nodeName == "INPUT" &&
+      ["submit", "color", "button"].includes(node.type)
+    );
+  },
+
+  // eslint-disable-next-line complexity
+  _pseudoIsRelevant(node, pseudo) {
+    switch (pseudo) {
+      case ":after":
+      case ":before":
+      case ":marker":
+        return true;
+      case ":backdrop":
+        return node.matches(":fullscreen");
+      case ":first-letter":
+      case ":first-line":
+      case ":selection":
+        return true;
+      case ":cue":
+        return node.nodeName == "VIDEO";
+      case ":placeholder":
+      case ":-moz-placeholder":
+        return this._nodeIsTextfieldLike(node);
+      case ":-moz-focus-inner":
+        return this._nodeIsButtonLike(node);
+      case ":-moz-math-anonymous":
+        // This one should be internal, really.
+        return false;
+      case ":-moz-meter-bar":
+        return node.nodeName == "METER";
+      case ":-moz-progress-bar":
+        return node.nodeName == "PROGRESS";
+      case ":-moz-color-swatch":
+        return node.nodeName == "INPUT" && node.type == "color";
+      case ":-moz-range-progress":
+      case ":-moz-range-thumb":
+      case ":-moz-range-track":
+      case ":-moz-focus-outer":
+        return node.nodeName == "INPUT" && node.type == "range";
+      default:
+        throw Error("Unhandled pseudo-element " + pseudo);
+    }
   },
 
   /**
