@@ -290,6 +290,7 @@ class RacyFeatures {
 };
 
 bool IsThreadBeingProfiled();
+bool IsThreadRegistered();
 
 }  // namespace detail
 }  // namespace profiler
@@ -534,6 +535,14 @@ inline bool profiler_can_accept_markers() {
 inline bool profiler_thread_is_being_profiled() {
   return profiler_is_active() &&
          mozilla::profiler::detail::IsThreadBeingProfiled();
+}
+
+// During profiling, if the current thread is registered, return true
+// (regardless of whether it is actively being profiled).
+// (Same caveats and recommented usage as profiler_is_active().)
+inline bool profiler_is_active_and_thread_is_registered() {
+  return profiler_is_active() &&
+         mozilla::profiler::detail::IsThreadRegistered();
 }
 
 // Is the profiler active and paused? Returns false if the profiler is inactive.
