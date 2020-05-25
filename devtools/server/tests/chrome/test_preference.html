@@ -82,12 +82,11 @@ function runTests() {
       next = next.then(
         () => ok(false, "getCharPref should've thrown for an undefined preference"),
         (ex) => {
-          const messageRe = new RegExp(
-            "Protocol error \\(Error\\): preference is not of the right type: " +
-            "test.undefined from: server0.conn0.preferenceActor1 " +
-            "\\(resource://devtools/server/actors/preference.js:\\d+:\\d+\\)"
+          is(
+            ex.message,
+            "Protocol error (unknownError): preference is not of the right type: test.undefined from: " + p.actorID,
+            "getCharPref should throw an exception with the preference name"
           );
-          ok(messageRe.test(ex.message), "Error message matches the expected format");
         }
       );
       return next;

@@ -316,10 +316,6 @@ class Front extends Pool {
             message = packet.error;
           }
           message += " from: " + this.actorID;
-          if (packet.fileName) {
-            const { fileName, columnNumber, lineNumber } = packet;
-            message += ` (${fileName}:${lineNumber}:${columnNumber})`;
-          }
           const packetError = new Error(message);
           deferred.reject(packetError);
         } else {
