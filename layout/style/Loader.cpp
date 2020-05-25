@@ -2305,7 +2305,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheetSync(
   LOG(("css::Loader::LoadSheetSync"));
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
-      aURL, IsPreload::No, aParsingMode, aUseSystemPrincipal, nullptr, nullptr,
+      aURL, IsPreload::No, aParsingMode, aUseSystemPrincipal, nullptr,
       referrerInfo, nullptr, CORS_NONE, EmptyString());
 }
 
@@ -2314,28 +2314,25 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
     UseSystemPrincipal aUseSystemPrincipal, nsICSSLoaderObserver* aObserver) {
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
-      aURI, IsPreload::No, aParsingMode, aUseSystemPrincipal, nullptr, nullptr,
+      aURI, IsPreload::No, aParsingMode, aUseSystemPrincipal, nullptr,
       referrerInfo, aObserver, CORS_NONE, EmptyString());
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
-    nsIURI* aURL, IsPreload aIsPreload, nsIPrincipal* aOriginPrincipal,
-    const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
-    nsICSSLoaderObserver* aObserver, CORSMode aCORSMode,
-    const nsAString& aIntegrity) {
+    nsIURI* aURL, IsPreload aIsPreload, const Encoding* aPreloadEncoding,
+    nsIReferrerInfo* aReferrerInfo, nsICSSLoaderObserver* aObserver,
+    CORSMode aCORSMode, const nsAString& aIntegrity) {
   LOG(("css::Loader::LoadSheet(aURL, aObserver) api call"));
-  return InternalLoadNonDocumentSheet(aURL, aIsPreload, eAuthorSheetFeatures,
-                                      UseSystemPrincipal::No, aOriginPrincipal,
-                                      aPreloadEncoding, aReferrerInfo,
-                                      aObserver, aCORSMode, aIntegrity);
+  return InternalLoadNonDocumentSheet(
+      aURL, aIsPreload, eAuthorSheetFeatures, UseSystemPrincipal::No,
+      aPreloadEncoding, aReferrerInfo, aObserver, aCORSMode, aIntegrity);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
     nsIURI* aURL, IsPreload aIsPreload, SheetParsingMode aParsingMode,
-    UseSystemPrincipal aUseSystemPrincipal, nsIPrincipal* aOriginPrincipal,
-    const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
-    nsICSSLoaderObserver* aObserver, CORSMode aCORSMode,
-    const nsAString& aIntegrity) {
+    UseSystemPrincipal aUseSystemPrincipal, const Encoding* aPreloadEncoding,
+    nsIReferrerInfo* aReferrerInfo, nsICSSLoaderObserver* aObserver,
+    CORSMode aCORSMode, const nsAString& aIntegrity) {
   MOZ_ASSERT(aURL, "Must have a URI to load");
   MOZ_ASSERT(aUseSystemPrincipal == UseSystemPrincipal::No || !aObserver,
              "Shouldn't load system-principal sheets async");
@@ -2349,8 +2346,8 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   }
 
   nsCOMPtr<nsIPrincipal> loadingPrincipal =
-      (aOriginPrincipal && mDocument ? mDocument->NodePrincipal() : nullptr);
-  nsresult rv = CheckContentPolicy(loadingPrincipal, aOriginPrincipal, aURL,
+      mDocument ? mDocument->NodePrincipal() : nullptr;
+  nsresult rv = CheckContentPolicy(loadingPrincipal, loadingPrincipal, aURL,
                                    mDocument, EmptyString(), aIsPreload);
   if (NS_FAILED(rv)) {
     return Err(rv);
@@ -2358,7 +2355,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
 
   bool syncLoad = !aObserver;
   auto [sheet, state] =
-      CreateSheet(aURL, nullptr, aOriginPrincipal, aParsingMode, aCORSMode,
+      CreateSheet(aURL, nullptr, loadingPrincipal, aParsingMode, aCORSMode,
                   aReferrerInfo, aIntegrity, syncLoad, aIsPreload);
 
   PrepareSheet(*sheet, EmptyString(), EmptyString(), nullptr, IsAlternate::No,
@@ -2366,7 +2363,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
 
   auto data = MakeRefPtr<SheetLoadData>(
       this, aURL, sheet, syncLoad, aUseSystemPrincipal, aIsPreload,
-      aPreloadEncoding, aObserver, aOriginPrincipal, aReferrerInfo, mDocument);
+      aPreloadEncoding, aObserver, loadingPrincipal, aReferrerInfo, mDocument);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete"));
     if (aObserver || !mObservers.IsEmpty()) {
