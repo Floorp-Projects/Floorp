@@ -12,6 +12,7 @@ import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.mock
@@ -92,6 +93,11 @@ class HistoryDelegateTest {
             }
 
             override suspend fun getVisitsPaginated(offset: Long, count: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
+                fail()
+                return emptyList()
+            }
+
+            override suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo> {
                 fail()
                 return emptyList()
             }

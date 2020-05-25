@@ -12,6 +12,7 @@ import mozilla.appservices.places.BookmarkTreeNode
 import mozilla.appservices.places.SyncAuthInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 
@@ -65,6 +66,13 @@ internal fun mozilla.appservices.places.VisitInfo.into(): VisitInfo {
         title = this.title,
         visitTime = this.visitTime,
         visitType = this.visitType.into()
+    )
+}
+
+internal fun mozilla.appservices.places.TopFrecentSiteInfo.into(): TopFrecentSiteInfo {
+    return TopFrecentSiteInfo(
+        url = this.url,
+        title = this.title
     )
 }
 

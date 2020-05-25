@@ -140,6 +140,48 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
+    fun `store can be used to query top frecent site information`() = runBlocking {
+        val toAdd = listOf(
+            "https://www.example.com/123",
+            "https://www.example.com/123",
+            "https://www.example.com/12345",
+            "https://www.mozilla.com/foo/bar/baz",
+            "https://www.mozilla.com/foo/bar/baz",
+            "https://mozilla.com/a1/b2/c3",
+            "https://news.ycombinator.com/",
+            "https://www.mozilla.com/foo/bar/baz"
+        )
+
+        for (url in toAdd) {
+            history.recordVisit(url, PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
+        }
+
+        var infos = history.getTopFrecentSites(0)
+        assertEquals(0, infos.size)
+
+        infos = history.getTopFrecentSites(3)
+        assertEquals(3, infos.size)
+        assertEquals("https://www.mozilla.com/foo/bar/baz", infos[0].url)
+        assertEquals("https://www.example.com/123", infos[1].url)
+
+        infos = history.getTopFrecentSites(5)
+        assertEquals(5, infos.size)
+        assertEquals("https://www.mozilla.com/foo/bar/baz", infos[0].url)
+        assertEquals("https://www.example.com/123", infos[1].url)
+        assertEquals("https://news.ycombinator.com/", infos[2].url)
+        assertEquals("https://mozilla.com/a1/b2/c3", infos[3].url)
+        assertEquals("https://www.example.com/12345", infos[4].url)
+
+        infos = history.getTopFrecentSites(100)
+        assertEquals(5, infos.size)
+        assertEquals("https://www.mozilla.com/foo/bar/baz", infos[0].url)
+        assertEquals("https://www.example.com/123", infos[1].url)
+        assertEquals("https://news.ycombinator.com/", infos[2].url)
+        assertEquals("https://mozilla.com/a1/b2/c3", infos[3].url)
+        assertEquals("https://www.example.com/12345", infos[4].url)
+    }
+
+    @Test
     fun `store can be used to query detailed visit information`() = runBlocking {
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.RELOAD, RedirectSource.NOT_A_SOURCE))

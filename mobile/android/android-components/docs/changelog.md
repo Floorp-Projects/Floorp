@@ -15,6 +15,10 @@ permalink: /changelog/
 * **browser-icons**
   * Fixed issue [#7142](https://github.com/mozilla-mobile/android-components/issues/7142)
 
+* **browser-storage-sync**
+  * Added `getTopFrecentSites` to `PlacesHistoryStorage`, which returns a list of the top frecent site infos
+    sorted by most to least frecent.
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)
