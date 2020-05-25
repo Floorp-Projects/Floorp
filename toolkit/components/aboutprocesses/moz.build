@@ -8,5 +8,3 @@ with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Performance Monitoring')
 
 JAR_MANIFESTS += ['jar.mn']
-
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
