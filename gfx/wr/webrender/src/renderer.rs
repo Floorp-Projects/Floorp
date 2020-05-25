@@ -2526,6 +2526,10 @@ impl Renderer {
             scene_tx.clone()
         };
 
+        let backend_blob_handler = blob_image_handler
+            .as_ref()
+            .map(|handler| handler.create_similar());
+
         let rb_font_instances = font_instances.clone();
         let enable_multithreading = options.enable_multithreading;
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
@@ -2568,6 +2572,7 @@ impl Renderer {
                 device_pixel_ratio,
                 resource_cache,
                 backend_notifier,
+                backend_blob_handler,
                 config,
                 sampler,
                 make_size_of_ops(),
