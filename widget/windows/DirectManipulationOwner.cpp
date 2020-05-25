@@ -11,18 +11,18 @@
 #if !defined(__MINGW32__) && !defined(__MINGW64__)
 
 // Direct Manipulation is only defined for Win8 and newer.
-#if defined(_WIN32_WINNT)
-#  undef _WIN32_WINNT
-#  define _WIN32_WINNT _WIN32_WINNT_WIN8
-#endif  // defined(_WIN32_WINNT)
-#if defined(NTDDI_VERSION)
-#  undef NTDDI_VERSION
-#  define NTDDI_VERSION NTDDI_WIN8
-#endif  // defined(NTDDI_VERSION)
+#  if defined(_WIN32_WINNT)
+#    undef _WIN32_WINNT
+#    define _WIN32_WINNT _WIN32_WINNT_WIN8
+#  endif  // defined(_WIN32_WINNT)
+#  if defined(NTDDI_VERSION)
+#    undef NTDDI_VERSION
+#    define NTDDI_VERSION NTDDI_WIN8
+#  endif  // defined(NTDDI_VERSION)
 
-#include "directmanipulation.h"
+#  include "directmanipulation.h"
 
-#endif // !defined(__MINGW32__) && !defined(__MINGW64__)
+#endif  // !defined(__MINGW32__) && !defined(__MINGW64__)
 
 namespace mozilla {
 namespace widget {
@@ -337,7 +337,7 @@ void DManipEventHandler::Update() {
   }
 }
 
-#endif // !defined(__MINGW32__) && !defined(__MINGW64__)
+#endif  // !defined(__MINGW32__) && !defined(__MINGW64__)
 
 void DirectManipulationOwner::Update() {
 #if !defined(__MINGW32__) && !defined(__MINGW64__)
@@ -451,7 +451,7 @@ void DManipEventHandler::SendPan(Phase aPhase, float x, float y,
   }
 }
 
-#endif // !defined(__MINGW32__) && !defined(__MINGW64__)
+#endif  // !defined(__MINGW32__) && !defined(__MINGW64__)
 
 void DirectManipulationOwner::Init(const LayoutDeviceIntRect& aBounds) {
 #if !defined(__MINGW32__) && !defined(__MINGW64__)
@@ -568,7 +568,7 @@ void DirectManipulationOwner::Init(const LayoutDeviceIntRect& aBounds) {
     mDmHandler = nullptr;
     return;
   }
-#endif // !defined(__MINGW32__) && !defined(__MINGW64__)
+#endif  // !defined(__MINGW32__) && !defined(__MINGW64__)
 }
 
 void DirectManipulationOwner::ResizeViewport(
@@ -640,7 +640,7 @@ void DirectManipulationOwner::Destroy() {
   mDmViewport = nullptr;
   mDmUpdateManager = nullptr;
   mDmManager = nullptr;
-#endif // !defined(__MINGW32__) && !defined(__MINGW64__)
+#endif  // !defined(__MINGW32__) && !defined(__MINGW64__)
   mWindow = nullptr;
 }
 

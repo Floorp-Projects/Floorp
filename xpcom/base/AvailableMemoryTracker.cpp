@@ -315,7 +315,8 @@ class nsJemallocFreeDirtyPagesRunnable final : public Runnable {
  public:
   NS_DECL_NSIRUNNABLE
 
-  nsJemallocFreeDirtyPagesRunnable() : Runnable("nsJemallocFreeDirtyPagesRunnable") {}
+  nsJemallocFreeDirtyPagesRunnable()
+      : Runnable("nsJemallocFreeDirtyPagesRunnable") {}
 };
 
 NS_IMETHODIMP

@@ -969,8 +969,7 @@ template <>
 void StyleImage::ResolveImage(dom::Document&, const StyleImage*);
 
 template <>
-inline AspectRatio StyleRatio<StyleNonNegativeNumber>::ToLayoutRatio()
-    const {
+inline AspectRatio StyleRatio<StyleNonNegativeNumber>::ToLayoutRatio() const {
   // The Ratio may be 0/1 (zero) or 1/0 (infinity). There is a spec issue
   // related to these special cases:
   // https://github.com/w3c/csswg-drafts/issues/4572.

@@ -25,8 +25,7 @@
 using mozilla::ipc::CloseFileRunnable;
 
 CloseFileRunnable::CloseFileRunnable(const FileDescriptor& aFileDescriptor)
-    : Runnable("CloseFileRunnable"),
-      mFileDescriptor(aFileDescriptor) {
+    : Runnable("CloseFileRunnable"), mFileDescriptor(aFileDescriptor) {
   MOZ_ASSERT(aFileDescriptor.IsValid());
 }
 

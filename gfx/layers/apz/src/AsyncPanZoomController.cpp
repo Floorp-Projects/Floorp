@@ -1088,8 +1088,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
       GetAxisStart(direction, Metrics().GetScrollableRect().TopLeft());
   CSSCoord maxScrollPosition =
       GetAxisStart(direction, Metrics().GetScrollableRect().BottomRight()) -
-      GetAxisLength(direction,
-                    Metrics().CalculateCompositedSizeInCssPixels());
+      GetAxisLength(direction, Metrics().CalculateCompositedSizeInCssPixels());
   CSSCoord scrollPosition =
       minScrollPosition +
       (scrollPercent * (maxScrollPosition - minScrollPosition));

@@ -79,7 +79,8 @@ class nsReceiver final : public Runnable {
     return rv;
   }
 
-  explicit nsReceiver(nsIInputStream* in) : Runnable("nsReceiver"), mIn(in), mCount(0) {}
+  explicit nsReceiver(nsIInputStream* in)
+      : Runnable("nsReceiver"), mIn(in), mCount(0) {}
 
   uint32_t GetBytesRead() { return mCount; }
 
@@ -90,7 +91,6 @@ class nsReceiver final : public Runnable {
   nsCOMPtr<nsIInputStream> mIn;
   uint32_t mCount;
 };
-
 
 static nsresult TestPipe(nsIInputStream* in, nsIOutputStream* out) {
   RefPtr<nsReceiver> receiver = new nsReceiver(in);
@@ -166,7 +166,8 @@ class nsShortReader final : public Runnable {
     return rv;
   }
 
-  explicit nsShortReader(nsIInputStream* in) : Runnable("nsShortReader"), mIn(in), mReceived(0) {
+  explicit nsShortReader(nsIInputStream* in)
+      : Runnable("nsShortReader"), mIn(in), mReceived(0) {
     mMon = new ReentrantMonitor("nsShortReader");
   }
 

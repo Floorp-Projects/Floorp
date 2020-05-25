@@ -12,8 +12,8 @@
 #include "Units.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/GeckoContentControllerTypes.h"  // for APZStateChange
-#include "mozilla/layers/ScrollableLayerGuid.h"     // for ScrollableLayerGuid
-#include "mozilla/layers/TouchCounter.h"            // for TouchCounter
+#include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
+#include "mozilla/layers/TouchCounter.h"         // for TouchCounter
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"        // for NS_INLINE_DECL_REFCOUNTING

@@ -1294,7 +1294,7 @@ struct RoleDescrComparator {
   if (![self isRoot]) {
     mozAccessible* parent = (mozAccessible*)[self parent];
     if (![parent isRoot]) {
-     return ![parent disableChild:self];
+      return ![parent disableChild:self];
     }
   }
 

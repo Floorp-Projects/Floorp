@@ -70,7 +70,8 @@ class nsStressRunner final : public Runnable {
     return NS_OK;
   }
 
-  explicit nsStressRunner(int num) : Runnable("nsStressRunner"), mNum(num), mWasRun(false) {
+  explicit nsStressRunner(int num)
+      : Runnable("nsStressRunner"), mNum(num), mWasRun(false) {
     PR_AtomicIncrement(&gNum);
   }
 
@@ -126,7 +127,6 @@ mozilla::Monitor* gBeginAsyncShutdownMonitor;
 
 class AsyncShutdownPreparer : public Runnable {
  public:
-
   NS_IMETHOD Run() override {
     EXPECT_FALSE(mWasRun);
     mWasRun = true;
@@ -137,7 +137,8 @@ class AsyncShutdownPreparer : public Runnable {
     return NS_OK;
   }
 
-  explicit AsyncShutdownPreparer() : Runnable("AsyncShutdownPreparer"), mWasRun(false) {}
+  explicit AsyncShutdownPreparer()
+      : Runnable("AsyncShutdownPreparer"), mWasRun(false) {}
 
  private:
   virtual ~AsyncShutdownPreparer() { EXPECT_TRUE(mWasRun); }
@@ -171,7 +172,8 @@ class AsyncShutdownWaiter : public Runnable {
     return NS_OK;
   }
 
-  explicit AsyncShutdownWaiter() : Runnable("AsyncShutdownWaiter"), mWasRun(false) {}
+  explicit AsyncShutdownWaiter()
+      : Runnable("AsyncShutdownWaiter"), mWasRun(false) {}
 
  private:
   virtual ~AsyncShutdownWaiter() { EXPECT_TRUE(mWasRun); }
