@@ -232,8 +232,6 @@ pub struct LogOptions {
     pub level: Option<logging::Level>,
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
