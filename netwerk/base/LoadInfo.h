@@ -97,7 +97,7 @@ class LoadInfo final : public nsILoadInfo {
   already_AddRefed<nsILoadInfo> CloneForNewRequest() const;
 
   void SetIsPreflight();
-  void SetUpgradeInsecureRequests();
+  void SetUpgradeInsecureRequests(bool aValue);
   void SetBrowserUpgradeInsecureRequests();
   void SetBrowserWouldUpgradeInsecureRequests();
   void SetIsFromProcessingFrameAttributes();

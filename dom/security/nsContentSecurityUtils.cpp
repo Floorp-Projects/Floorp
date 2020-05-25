@@ -25,6 +25,65 @@
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_dom.h"
 
+// Helper function for IsConsideredSameOriginForUIR which makes
+// Principals of scheme 'http' return Principals of scheme 'https'.
+static already_AddRefed<nsIPrincipal> MakeHTTPPrincipalHTTPS(
+    nsIPrincipal* aPrincipal) {
+  nsCOMPtr<nsIPrincipal> principal = aPrincipal;
+  // if the principal is not http, then it can also not be upgraded
+  // to https.
+  if (!principal->SchemeIs("http")) {
+    return principal.forget();
+  }
+
+  nsAutoCString spec;
+  aPrincipal->GetAsciiSpec(spec);
+  // replace http with https
+  spec.ReplaceLiteral(0, 4, "https");
+
+  nsCOMPtr<nsIURI> newURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(newURI), spec);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  mozilla::OriginAttributes OA =
+      BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+
+  principal = BasePrincipal::CreateContentPrincipal(newURI, OA);
+  return principal.forget();
+}
+
+/* static */
+bool nsContentSecurityUtils::IsConsideredSameOriginForUIR(
+    nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aResultPrincipal) {
+  MOZ_ASSERT(aTriggeringPrincipal);
+  MOZ_ASSERT(aResultPrincipal);
+  // we only have to make sure that the following truth table holds:
+  // aTriggeringPrincipal         | aResultPrincipal             | Result
+  // ----------------------------------------------------------------
+  // http://example.com/foo.html  | http://example.com/bar.html  | true
+  // http://example.com/foo.html  | https://example.com/bar.html | true
+  // https://example.com/foo.html | https://example.com/bar.html | true
+  // https://example.com/foo.html | http://example.com/bar.html  | true
+
+  // fast path if both principals are same-origin
+  if (aTriggeringPrincipal->Equals(aResultPrincipal)) {
+    return true;
+  }
+
+  // in case a principal uses a scheme of 'http' then we just upgrade to
+  // 'https' and use the principal equals comparison operator to check
+  // for same-origin.
+  nsCOMPtr<nsIPrincipal> compareTriggeringPrincipal =
+      MakeHTTPPrincipalHTTPS(aTriggeringPrincipal);
+
+  nsCOMPtr<nsIPrincipal> compareResultPrincipal =
+      MakeHTTPPrincipalHTTPS(aResultPrincipal);
+
+  return compareTriggeringPrincipal->Equals(compareResultPrincipal);
+}
+
 /*
  * Performs a Regular Expression match, optionally returning the results.
  * This function is not safe to use OMT.
