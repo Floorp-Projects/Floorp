@@ -1116,9 +1116,7 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["operation"], String, "operation2");
                 EXPECT_EQ_JSON(payload["source"], String, "source2");
                 EXPECT_EQ_JSON(payload["filename"], String, "filename2");
-                // TODO: Once JSON output of the thread id is implemented, check
-                // that there is a thread id in this payload.
-                EXPECT_FALSE(payload.isMember("threadId"));
+                EXPECT_EQ_JSON(payload["threadId"], Int, 123);
 
               } else if (nameString == "DOMEventMarkerPayload marker") {
                 EXPECT_EQ(state, S_DOMEventMarkerPayload);
