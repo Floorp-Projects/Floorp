@@ -188,6 +188,9 @@ inline CSPKeyword CSP_UTF16KeywordToEnum(const nsAString& aKey) {
   return CSP_LAST_KEYWORD_VALUE;
 }
 
+// Helper function to identify protocols and content types not subject to CSP.
+bool CSP_SubjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType);
+
 nsresult CSP_AppendCSPFromHeader(nsIContentSecurityPolicy* aCsp,
                                  const nsAString& aHeaderValue,
                                  bool aReportOnly);

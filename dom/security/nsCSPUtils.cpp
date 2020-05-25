@@ -460,6 +460,75 @@ bool permitsScheme(const nsAString& aEnforcementScheme, nsIURI* aUri,
        (scheme.EqualsASCII("ws") && aEnforcementScheme.EqualsASCII("wss"))));
 }
 
+bool CSP_SubjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
+  nsContentPolicyType contentType =
+      nsContentUtils::InternalContentPolicyTypeToExternal(aContentType);
+
+  // These content types are not subject to CSP content policy checks:
+  // TYPE_CSP_REPORT -- csp can't block csp reports
+  // TYPE_REFRESH    -- never passed to ShouldLoad (see nsIContentPolicy.idl)
+  // TYPE_DOCUMENT   -- used for frame-ancestors
+  if (contentType == nsIContentPolicy::TYPE_CSP_REPORT ||
+      contentType == nsIContentPolicy::TYPE_REFRESH ||
+      contentType == nsIContentPolicy::TYPE_DOCUMENT) {
+    return false;
+  }
+
+  // The three protocols: data:, blob: and filesystem: share the same
+  // protocol flag (URI_IS_LOCAL_RESOURCE) with other protocols,
+  // but those three protocols get special attention in CSP and
+  // are subject to CSP, hence we have to make sure those
+  // protocols are subject to CSP, see:
+  // http://www.w3.org/TR/CSP2/#source-list-guid-matching
+  if (aURI->SchemeIs("data") || aURI->SchemeIs("blob") ||
+      aURI->SchemeIs("filesystem")) {
+    return true;
+  }
+
+  // Finally we have to whitelist "about:" which does not fall into
+  // the category underneath and also "javascript:" which is not
+  // subject to CSP content loading rules.
+  if (aURI->SchemeIs("about") || aURI->SchemeIs("javascript")) {
+    return false;
+  }
+
+  // Please note that it should be possible for websites to
+  // whitelist their own protocol handlers with respect to CSP,
+  // hence we use protocol flags to accomplish that, but we also
+  // want resource:, chrome: and moz-icon to be subject to CSP
+  // (which also use URI_IS_LOCAL_RESOURCE).
+  // Exception to the rule are images, styles, and localization
+  // DTDs using a scheme of resource: or chrome:
+  bool isImgOrStyleOrDTD = contentType == nsIContentPolicy::TYPE_IMAGE ||
+                           contentType == nsIContentPolicy::TYPE_STYLESHEET ||
+                           contentType == nsIContentPolicy::TYPE_DTD;
+  if (aURI->SchemeIs("resource")) {
+    nsAutoCString uriSpec;
+    aURI->GetSpec(uriSpec);
+    // Exempt pdf.js from being subject to a page's CSP.
+    if (StringBeginsWith(uriSpec, NS_LITERAL_CSTRING("resource://pdf.js/"))) {
+      return false;
+    }
+    if (!isImgOrStyleOrDTD) {
+      return true;
+    }
+  }
+  if (aURI->SchemeIs("chrome") && !isImgOrStyleOrDTD) {
+    return true;
+  }
+  if (aURI->SchemeIs("moz-icon")) {
+    return true;
+  }
+  bool match;
+  nsresult rv = NS_URIChainHasFlags(
+      aURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE, &match);
+  if (NS_SUCCEEDED(rv) && match) {
+    return false;
+  }
+  // all other protocols are subject To CSP.
+  return true;
+}
+
 /*
  * A helper function for appending a CSP header to an existing CSP
  * policy.
