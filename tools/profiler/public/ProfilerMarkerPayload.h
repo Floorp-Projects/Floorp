@@ -216,17 +216,23 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
 
 class FileIOMarkerPayload : public ProfilerMarkerPayload {
  public:
-  FileIOMarkerPayload(const char* aOperation, const char* aSource,
-                      const char* aFilename,
-                      const mozilla::TimeStamp& aStartTime,
-                      const mozilla::TimeStamp& aEndTime,
-                      UniqueProfilerBacktrace aStack)
+  FileIOMarkerPayload(
+      const char* aOperation, const char* aSource, const char* aFilename,
+      const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime,
+      UniqueProfilerBacktrace aStack,
+      const mozilla::Maybe<int>& aIOThreadId = mozilla::Nothing())
       : ProfilerMarkerPayload(aStartTime, aEndTime, mozilla::Nothing(),
                               std::move(aStack)),
         mSource(aSource),
         mOperation(aOperation ? strdup(aOperation) : nullptr),
-        mFilename(aFilename ? strdup(aFilename) : nullptr) {
+        mFilename(aFilename ? strdup(aFilename) : nullptr),
+        mIOThreadId(aIOThreadId) {
     MOZ_ASSERT(aSource);
+  }
+
+  // In some cases, the thread id needs to be set after the payload is created.
+  void SetIOThreadId(int aIOThreadId) {
+    mIOThreadId = mozilla::Some(aIOThreadId);
   }
 
   DECL_STREAM_PAYLOAD
@@ -234,15 +240,18 @@ class FileIOMarkerPayload : public ProfilerMarkerPayload {
  private:
   FileIOMarkerPayload(CommonProps&& aCommonProps, const char* aSource,
                       mozilla::UniqueFreePtr<char>&& aOperation,
-                      mozilla::UniqueFreePtr<char>&& aFilename)
+                      mozilla::UniqueFreePtr<char>&& aFilename,
+                      const mozilla::Maybe<int>& aIOThreadId)
       : ProfilerMarkerPayload(std::move(aCommonProps)),
         mSource(aSource),
         mOperation(std::move(aOperation)),
-        mFilename(std::move(aFilename)) {}
+        mFilename(std::move(aFilename)),
+        mIOThreadId(aIOThreadId) {}
 
   const char* mSource;
   mozilla::UniqueFreePtr<char> mOperation;
   mozilla::UniqueFreePtr<char> mFilename;
+  mozilla::Maybe<int> mIOThreadId;
 };
 
 class DOMEventMarkerPayload : public TracingMarkerPayload {
