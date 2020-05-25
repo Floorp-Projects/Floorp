@@ -1013,6 +1013,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void floorDoubleToInt32(FloatRegister src, Register dest,
                           Label* fail) PER_SHARED_ARCH;
 
+  void ceilFloat32ToInt32(FloatRegister src, Register dest,
+                          Label* fail) PER_SHARED_ARCH;
+  void ceilDoubleToInt32(FloatRegister src, Register dest,
+                         Label* fail) PER_SHARED_ARCH;
+
   void roundFloat32ToInt32(FloatRegister src, Register dest, FloatRegister temp,
                            Label* fail) PER_SHARED_ARCH;
   void roundDoubleToInt32(FloatRegister src, Register dest, FloatRegister temp,
