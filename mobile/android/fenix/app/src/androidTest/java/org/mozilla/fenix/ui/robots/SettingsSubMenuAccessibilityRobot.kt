@@ -77,7 +77,7 @@ class SettingsSubMenuAccessibilityRobot {
 val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
 private fun assertAutomaticFontSizingMenuItems() {
-    onView(withText("Automatic Font Sizing"))
+    onView(withText("Automatic font sizing"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     val strFont = "Font size will match your Android settings. Disable to manage font size here."
     onView(withText(strFont))
@@ -86,7 +86,7 @@ private fun assertAutomaticFontSizingMenuItems() {
 
 private fun toggleFontSizingSwitch() {
     // Toggle font size to off
-    onView(withText("Automatic Font Sizing"))
+    onView(withText("Automatic font sizing"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
         .perform(click())
 }

@@ -797,7 +797,7 @@
     <string name="preference_accessibility_font_size_title">Font Size</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Automatic Font Sizing</string>
+    <string name="preference_accessibility_auto_size_2">Automatic font sizing</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Font size will match your Android settings. Disable to manage font size here.</string>
 
