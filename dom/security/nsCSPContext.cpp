@@ -1627,14 +1627,6 @@ nsCSPContext::Permits(Element* aTriggeringElement,
     return NS_ERROR_FAILURE;
   }
 
-  // CSP_SubjectToCSP allow lists some internal schemes but also some
-  // specific content types. Using TYPE_OTHER as a default which will
-  // still allow list all allow listed schemes.
-  if (!CSP_SubjectToCSP(aURI, nsIContentPolicy::TYPE_OTHER)) {
-    *outPermits = true;
-    return NS_OK;
-  }
-
   *outPermits =
       permitsInternal(aDir, aTriggeringElement, aCSPEventListener, aURI,
                       nullptr,        // no original (pre-redirect) URI
