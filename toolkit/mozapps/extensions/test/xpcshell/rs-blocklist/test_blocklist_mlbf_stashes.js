@@ -8,7 +8,7 @@ Services.prefs.setBoolPref("extensions.blocklist.useMLBF.stashes", true);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
-const ExtensionBlocklistMLBF = Blocklist.ExtensionBlocklist;
+const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
 const MLBF_LOAD_ATTEMPTS = [];
 ExtensionBlocklistMLBF._fetchMLBF = async record => {
   MLBF_LOAD_ATTEMPTS.push(record);
@@ -24,14 +24,6 @@ ExtensionBlocklistMLBF._fetchMLBF = async record => {
     },
   };
 };
-
-async function toggleStashPref(val) {
-  Assert.ok(!ExtensionBlocklistMLBF._updatePromise, "no pending update");
-  Services.prefs.setBoolPref("extensions.blocklist.useMLBF.stashes", val);
-  // A pref observer should trigger an update.
-  Assert.ok(ExtensionBlocklistMLBF._updatePromise, "update pending");
-  await Blocklist.ExtensionBlocklist._updatePromise;
-}
 
 async function checkBlockState(addonId, version, expectBlocked) {
   let addon = {

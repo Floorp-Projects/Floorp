@@ -11,7 +11,7 @@
 Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
 Services.prefs.setBoolPref("extensions.blocklist.useMLBF.stashes", true);
 
-const { ExtensionBlocklist: ExtensionBlocklistMLBF } = Blocklist;
+const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
 
 // A known blocked version from bug 1626602.
 const blockedAddon = {
