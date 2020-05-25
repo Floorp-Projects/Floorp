@@ -114,7 +114,9 @@
   skin/classic/browser/toolbar-drag-indicator.svg              (../shared/toolbar-drag-indicator.svg)
 
   skin/classic/browser/protections/resolved-breach.svg         (../shared/protections/resolved-breach.svg)
+  skin/classic/browser/protections/resolved-breach-gray.svg         (../shared/protections/resolved-breach-gray.svg)
   skin/classic/browser/protections/breached-password.svg       (../shared/protections/breached-password.svg)
+  skin/classic/browser/protections/new-feature.svg             (../shared/protections/new-feature.svg)
 
   skin/classic/browser/preferences/bookmark.svg                (../shared/preferences/bookmark.svg)
   skin/classic/browser/preferences/critters-postcard.jpg       (../shared/preferences/critters-postcard.jpg)

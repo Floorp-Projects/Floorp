@@ -195,8 +195,28 @@
                     </a>
                   </div>
                 </div>
-                <div id="full-report-link" class="monitor-view-full-report" data-l10n-id="full-report-link">
-                  <a target="_blank" id="monitor-inline-link" data-l10n-name="monitor-inline-link" href=""></a>
+                <div class="monitor-breaches-wrapper">
+                  <div class="monitor-breaches-header">
+                    <img id="monitor-breaches-icon"/>
+                    <span id="monitor-breaches-title"/>
+                  </div>
+                  <span id="monitor-breaches-description" class="content"></span>
+                  <a id="monitor-breaches-link" target="_blank"></a>
+                </div>
+                <div class="monitor-partial-breaches-wrapper">
+                  <div class="monitor-partial-breaches-header">
+                    <img id="monitor-partial-breaches-icon" src="chrome://browser/skin/protections/resolved-breach-gray.svg"/>
+                    <span id="monitor-partial-breaches-title"></span>
+                    <span id="monitor-partial-breaches-percentage"></span>
+                  </div>
+                  <progress class="progress-bar" max="100"></progress>
+                  <div class="monitor-partial-breaches-motivation-text">
+                    <div class="monitor-partial-breaches-motivation-wrapper">
+                      <span id="monitor-partial-breaches-motivation-title"></span>
+                      <span id="monitor-partial-breaches-motivation-desc" class="content" data-l10n-id="monitor-partial-breaches-motivation-desc"></span>
+                    </div>
+                    <a id="monitor-partial-breaches-link" target="_blank" data-l10n-id="monitor-resolve-breaches-link"></a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -220,7 +240,7 @@
             </div>
             <button id="save-passwords-button" class="primary" data-l10n-id="protection-report-save-passwords-button"></button>
             <div class="lockwise-scanned-wrapper">
-                <img class="icon-small" id="lockwise-scanned-icon" />
+                <img id="lockwise-scanned-icon" />
                 <span id="lockwise-scanned-text" class="content">
                   <!-- Display message for stored logins here. -->
                 </span>

@@ -37,7 +37,9 @@ let idToTextMap = new Map([
   [Ci.nsITrackingDBService.SOCIAL_ID, "social"],
 ]);
 
-const MONITOR_API_ENDPOINT = "https://monitor.firefox.com/user/breach-stats";
+const MONITOR_API_ENDPOINT = Services.urlFormatter.formatURLPref(
+  "browser.contentblocking.report.endpoint_url"
+);
 
 const SECURE_PROXY_ADDON_ID = "secure-proxy@mozilla.com";
 
@@ -54,7 +56,13 @@ const UNEXPECTED_RESPONSE = "Unexpected response";
 const UNKNOWN_ERROR = "Unknown error";
 
 // Valid response info for successful Monitor data
-const MONITOR_RESPONSE_PROPS = ["monitoredEmails", "numBreaches", "passwords"];
+const MONITOR_RESPONSE_PROPS = [
+  "monitoredEmails",
+  "numBreaches",
+  "passwords",
+  "numBreachesResolved",
+  "passwordsResolved",
+];
 
 let gTestOverride = null;
 

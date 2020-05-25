@@ -1629,6 +1629,7 @@ pref("browser.contentblocking.report.monitor.sign_in_url", "https://monitor.fire
 pref("browser.contentblocking.report.monitor.preferences_url", "https://monitor.firefox.com/user/preferences");
 pref("browser.contentblocking.report.monitor.home_page_url", "https://monitor.firefox.com/user/dashboard");
 pref("browser.contentblocking.report.manage_devices.url", "https://accounts.firefox.com/settings/clients");
+pref("browser.contentblocking.report.endpoint_url", "https://monitor.firefox.com/user/breach-stats?includeResolved=true");
 pref("browser.contentblocking.report.proxy_extension.url", "https://fpn.firefox.com/browser?utm_source=firefox-desktop&utm_medium=referral&utm_campaign=about-protections&utm_content=about-protections");
 pref("browser.contentblocking.report.lockwise.mobile-ios.url", "https://apps.apple.com/app/id1314000270");
 pref("browser.contentblocking.report.lockwise.mobile-android.url", "https://play.google.com/store/apps/details?id=mozilla.lockbox&referrer=utm_source%3Dprotection_report%26utm_content%3Dmobile_promotion");
