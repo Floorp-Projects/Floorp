@@ -748,8 +748,6 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         return true;
       case ":cue":
         return node.nodeName == "VIDEO";
-      case ":file-chooser-button":
-        return node.nodeName == "INPUT" && node.type == "file";
       case ":placeholder":
       case ":-moz-placeholder":
         return this._nodeIsTextfieldLike(node);
