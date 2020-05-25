@@ -5,6 +5,8 @@
 
 const NS_ERROR_STORAGE_BUSY = SpecialPowers.Cr.NS_ERROR_STORAGE_BUSY;
 
+loadScript("dom/quota/test/common/global.js");
+
 function clearAllDatabases(callback) {
   let qms = SpecialPowers.Services.qms;
   let principal = SpecialPowers.wrap(document).nodePrincipal;

@@ -13,81 +13,31 @@ async function testSteps() {
   const principal = getPrincipal("http://example.com");
 
   async function testFunctionality(testFunction) {
-    const originDirectory = getRelativeFile(
-      "storage/default/http+++example.com"
-    );
+    info("Clearing");
 
-    const unknownFiles = [
-      {
-        path: "storage/default/foo.bar",
-        dir: false,
-      },
+    let request = clear();
+    await requestFinished(request);
 
-      {
-        path: "storage/default/http+++foobar.com/foo.bar",
-        dir: false,
-      },
+    info("Installing package");
 
-      {
-        path: "storage/default/http+++foobar.com/foo",
-        dir: true,
-      },
+    // The profile contains unknown files and unknown directories placed across
+    // the repositories, origin directories and client directories. The file
+    // make_unknownFiles.js was run locally, specifically it was temporarily
+    // enabled in xpcshell.ini and then executed:
+    // mach test --interactive dom/quota/test/xpcshell/make_unknownFiles.js
+    installPackage("unknownFiles_profile");
 
-      // TODO: Fix IndexedDB to ignore unknown files as well
-      /*
-      {
-        path: "storage/default/http+++foobar.com/idb/foo.bar",
-        dir: false,
-      },
-      */
+    info("Initializing storage");
 
-      {
-        path: "storage/default/http+++foobar.com/cache/foo.bar",
-        dir: false,
-      },
+    request = init();
+    await requestFinished(request);
 
-      {
-        path: "storage/default/http+++foobar.com/sdb/foo.bar",
-        dir: false,
-      },
+    await testFunction();
 
-      {
-        path: "storage/default/http+++foobar.com/ls/foo.bar",
-        dir: false,
-      },
-    ];
+    info("Clearing");
 
-    for (const createOriginDirectory of [false, true]) {
-      info("Initializing storage");
-
-      let request = init();
-      await requestFinished(request);
-
-      if (createOriginDirectory) {
-        info("Creating origin directory");
-
-        originDirectory.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
-      }
-
-      info("Creating unknown files");
-
-      for (const unknownFile of unknownFiles) {
-        const file = getRelativeFile(unknownFile.path);
-
-        if (unknownFile.dir) {
-          file.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
-        } else {
-          file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0644", 8));
-        }
-      }
-
-      await testFunction(createOriginDirectory);
-
-      info("Clearing");
-
-      request = clear();
-      await requestFinished(request);
-    }
+    request = clear();
+    await requestFinished(request);
   }
 
   info("Testing initTemporaryStorage functionality");
@@ -101,17 +51,13 @@ async function testSteps() {
 
   info("Testing initStorageAndOrigin functionality");
 
-  await testFunctionality(async function(createdOriginDirectory) {
+  await testFunctionality(async function() {
     info("Initializing origin");
 
     request = initStorageAndOrigin(principal, "default");
     await requestFinished(request);
 
-    if (createdOriginDirectory) {
-      ok(request.result === false, "The origin directory was not created");
-    } else {
-      ok(request.result === true, "The origin directory was created");
-    }
+    ok(request.result === false, "The origin directory was not created");
   });
 
   info("Testing getUsageForPrincipal functionality");
@@ -126,8 +72,10 @@ async function testSteps() {
       request.result instanceof Ci.nsIQuotaOriginUsageResult,
       "The result is nsIQuotaOriginUsageResult instance"
     );
-    ok(request.result.usage === 0, "The usage is 0");
-    ok(request.result.fileUsage === 0, "The fileUsage is 0");
+    // TODO: Fix SimpleDB to ignore unknown files during usage calculation
+    //is(request.result.usage, 115025, "Correct total usage");
+    is(request.result.usage, 115030, "Correct total usage");
+    is(request.result.fileUsage, 231, "Correct file usage");
   });
 
   info("Testing clearStoragesForPrincipal functionality");
