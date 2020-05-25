@@ -167,11 +167,14 @@ void PreloaderBase::NotifyRestart(dom::Document* aDocument,
 }
 
 void PreloaderBase::NotifyStart(nsIRequest* aRequest) {
-  if (!SameCOMIdentity(aRequest, mChannel)) {
+  // If there is no channel assigned on this preloader, we are not between
+  // channel switching, so we can freely update the mShouldFireLoadEvent using
+  // the given channel.
+  if (mChannel && !SameCOMIdentity(aRequest, mChannel)) {
     return;
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
   if (!httpChannel) {
     return;
   }
