@@ -152,46 +152,54 @@ class Vector;
     /* The DevTools profiler doesn't want the native addresses. */             \
     MACRO(2, "leaf", Leaf, "Include the C++ leaf node if not stackwalking")    \
                                                                                \
-    MACRO(3, "mainthreadio", MainThreadIO,                                     \
-          "Add main thread I/O to the profile")                                \
+    MACRO(3, "mainthreadio", MainThreadIO, "Add main thread file I/O")         \
                                                                                \
-    MACRO(4, "privacy", Privacy,                                               \
+    MACRO(4, "fileio", FileIO,                                                 \
+          "Add file I/O from all profiled threads, implies mainthreadio")      \
+                                                                               \
+    MACRO(5, "fileioall", FileIOAll,                                           \
+          "Add file I/O from all threads, implies fileio")                     \
+                                                                               \
+    MACRO(6, "noiostacks", NoIOStacks,                                         \
+          "File I/O markers do not capture stacks, to reduce overhead")        \
+                                                                               \
+    MACRO(7, "privacy", Privacy,                                               \
           "Do not include user-identifiable information")                      \
                                                                                \
-    MACRO(5, "screenshots", Screenshots,                                       \
+    MACRO(8, "screenshots", Screenshots,                                       \
           "Take a snapshot of the window on every composition")                \
                                                                                \
-    MACRO(6, "seqstyle", SequentialStyle,                                      \
+    MACRO(9, "seqstyle", SequentialStyle,                                      \
           "Disable parallel traversal in styling")                             \
                                                                                \
-    MACRO(7, "stackwalk", StackWalk,                                           \
+    MACRO(10, "stackwalk", StackWalk,                                          \
           "Walk the C++ stack, not available on all platforms")                \
                                                                                \
-    MACRO(8, "tasktracer", TaskTracer,                                         \
+    MACRO(11, "tasktracer", TaskTracer,                                        \
           "Start profiling with feature TaskTracer")                           \
                                                                                \
-    MACRO(9, "threads", Threads, "Profile the registered secondary threads")   \
+    MACRO(12, "threads", Threads, "Profile the registered secondary threads")  \
                                                                                \
-    MACRO(10, "trackopts", TrackOptimizations,                                 \
+    MACRO(13, "trackopts", TrackOptimizations,                                 \
           "Have the JavaScript engine track JIT optimizations")                \
                                                                                \
-    MACRO(11, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
+    MACRO(14, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
                                                                                \
-    MACRO(12, "jsallocations", JSAllocations,                                  \
+    MACRO(15, "jsallocations", JSAllocations,                                  \
           "Have the JavaScript engine track allocations")                      \
                                                                                \
-    MACRO(13, "nostacksampling", NoStackSampling,                              \
+    MACRO(16, "nostacksampling", NoStackSampling,                              \
           "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
           "\"stackwalk\" and labels")                                          \
                                                                                \
-    MACRO(14, "preferencereads", PreferenceReads,                              \
+    MACRO(17, "preferencereads", PreferenceReads,                              \
           "Track when preferences are read")                                   \
                                                                                \
-    MACRO(15, "nativeallocations", NativeAllocations,                          \
+    MACRO(18, "nativeallocations", NativeAllocations,                          \
           "Collect the stacks from a smaller subset of all native "            \
           "allocations, biasing towards collecting larger allocations")        \
                                                                                \
-    MACRO(16, "ipcmessages", IPCMessages,                                      \
+    MACRO(19, "ipcmessages", IPCMessages,                                      \
           "Have the IPC layer track cross-process messages")
 
 struct ProfilerFeature {

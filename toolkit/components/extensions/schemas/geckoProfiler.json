@@ -40,7 +40,10 @@
           "nostacksampling",
           "nativeallocations",
           "preferencereads",
-          "ipcmessages"
+          "ipcmessages",
+          "fileio",
+          "fileioall",
+          "noiostacks"
         ]
       },
       {
