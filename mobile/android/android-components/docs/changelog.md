@@ -38,6 +38,12 @@ permalink: /changelog/
 * **service-glean**
   * BUGFIX: Fix a race condition that leads to a `ConcurrentModificationException`. [Bug 1635865](https://bugzilla.mozilla.org/1635865)
 
+* **browser-menu**
+  * Added `AbstractParentBrowserMenuItem` and `ParentBrowserMenuItem` for handling nested sub menu items on view click.
+  * ⚠️ **This is a breaking change**: `WebExtensionBrowserMenuBuilder` now returns as a sub menu entry for add-ons. The sub 
+    menu also contains an access entry for Add-ons Manager, for which `onAddonsManagerTapped` needs to be passed in the
+    constructor.
+
 # 42.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v41.0.0...42.0.0)

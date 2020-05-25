@@ -53,6 +53,41 @@ class BrowserMenuTest {
     }
 
     @Test
+    fun `show assigns currAnchor and isShown`() {
+        val items = listOf(
+            SimpleBrowserMenuItem("Hello") {},
+            SimpleBrowserMenuItem("World") {})
+
+        val adapter = BrowserMenuAdapter(testContext, items)
+
+        val menu = BrowserMenu(adapter)
+
+        val anchor = Button(testContext)
+        val popup = menu.show(anchor)
+
+        assertNotNull(popup)
+        assertEquals(anchor, menu.currAnchor)
+        assertTrue(menu.isShown)
+    }
+
+    @Test
+    fun `dismiss sets isShown to false`() {
+        val items = listOf(
+            SimpleBrowserMenuItem("Hello") {},
+            SimpleBrowserMenuItem("World") {})
+
+        val adapter = BrowserMenuAdapter(testContext, items)
+
+        val menu = BrowserMenu(adapter)
+
+        val anchor = Button(testContext)
+        val popup = menu.show(anchor)
+        popup.dismiss()
+
+        assertFalse(menu.isShown)
+    }
+
+    @Test
     fun `recyclerview adapter will have items for every menu item`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
