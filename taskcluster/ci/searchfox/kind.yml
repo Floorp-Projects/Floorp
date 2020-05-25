@@ -6,8 +6,10 @@ loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - toolchain
+    - fetch
 
 transforms:
+    - taskgraph.transforms.build:transforms
     - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.build_lints:transforms
     - taskgraph.transforms.job:transforms
@@ -100,12 +102,12 @@ jobs:
     win64-searchfox/debug:
         description: "Win64 Searchfox Debug (clang-cl)"
         index:
-            product: firefox
             job-name: win64-searchfox-debug
         treeherder:
             platform: windows2012-64/debug
-        worker-type: b-win2012
+        worker-type: b-linux
         worker:
+            docker-image: {in-tree: debian9-amd64-build}
             max-run-time: 36000
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
@@ -114,24 +116,37 @@ jobs:
                 MOZSEARCH_PLATFORM: "windows"
         run:
             using: mozharness
-            actions: [build]
             options: [append-env-variables-from-configs]
+            actions: [get-secrets, build]
             script: mozharness/scripts/fx_desktop_build.py
+            secrets: true
             config:
                 - builds/releng_base_firefox.py
-                - builds/taskcluster_base_windows.py
-                - builds/taskcluster_base_win64.py
+                - builds/releng_base_linux_64_builds.py
                 - builds/taskcluster_sub_win64/searchfox_debug.py
             tooltool-downloads: internal
+            extra-config:
+                mozconfig_platform: win64
+                env:
+                    LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
+                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
         fetches:
             toolchain:
-                - win64-clang-cl
-                - win64-node
-                - win64-rust
-                - win64-cbindgen
-                - win64-nasm
-                - win64-dump-syms
-                - win64-winchecksec
+                - linux64-binutils
+                - linux64-clang-win-cross
+                - linux64-rust-cross
+                - linux64-rust-size
+                - linux64-nasm
+                - linux64-node
+                - linux64-cbindgen
+                - linux64-sccache
+                - linux64-dump-syms
+                - linux64-wine
+                - linux64-liblowercase
+                - linux64-winchecksec
+            fetch:
+                - nsis-3.01-win
+                - upx-3.95-win
 
     android-armv7-searchfox/debug:
         description: "Android ARMv7 Debug Searchfox"
