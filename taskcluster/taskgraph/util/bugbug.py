@@ -24,6 +24,19 @@ CT_LOW = 0.5
 CT_MEDIUM = 0.7
 CT_HIGH = 0.9
 
+GROUP_TRANSLATIONS = {
+    "testing/web-platform/tests": "",
+    "testing/web-platform/mozilla/tests": "/_mozilla",
+}
+
+
+def translate_group(group):
+    for prefix, value in GROUP_TRANSLATIONS.items():
+        if group.startswith(prefix):
+            return group.replace(prefix, value)
+
+    return group
+
 
 class BugbugTimeoutException(Exception):
     pass
@@ -59,5 +72,8 @@ def push_schedules(branch, rev):
 
     if r.status_code == 202:
         raise BugbugTimeoutException("Timed out waiting for result from '{}'".format(url))
+
+    if "groups" in data:
+        data["groups"] = {translate_group(k): v for k, v in data["groups"].items()}
 
     return data
