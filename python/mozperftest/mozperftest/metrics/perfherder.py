@@ -45,7 +45,7 @@ class Perfherder(Layer):
                 "refbrow",
             ],
             "help": "Shorthand name of application that is "
-                    "being tested (used in perfherder data).",
+            "being tested (used in perfherder data).",
         },
         "metrics": {
             "nargs": "*",
