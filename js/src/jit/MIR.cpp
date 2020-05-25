@@ -772,6 +772,28 @@ MDefinition* MDefinition::maybeSingleDefUse() const {
   return useDef;
 }
 
+MDefinition* MDefinition::maybeMostRecentDefUse() const {
+  MUseDefIterator use(this);
+  if (!use) {
+    // No def-uses.
+    return nullptr;
+  }
+
+  MDefinition* mostRecentUse = use.def();
+
+  // This function relies on addUse adding new uses to the front of the list.
+  // Check this invariant by asserting the next few uses are 'older'.
+#ifdef DEBUG
+  static constexpr size_t NumUsesToCheck = 3;
+  use++;
+  for (size_t i = 0; use && i < NumUsesToCheck; i++, use++) {
+    MOZ_ASSERT(use.def()->id() <= mostRecentUse->id());
+  }
+#endif
+
+  return mostRecentUse;
+}
+
 void MDefinition::replaceAllUsesWith(MDefinition* dom) {
   for (size_t i = 0, e = numOperands(); i < e; ++i) {
     getOperand(i)->setUseRemovedUnchecked();
