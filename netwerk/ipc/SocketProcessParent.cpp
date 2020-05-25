@@ -7,6 +7,7 @@
 #include "SocketProcessLogging.h"
 
 #include "AltServiceParent.h"
+#include "CachePushChecker.h"
 #include "HttpTransactionParent.h"
 #include "SocketProcessHost.h"
 #include "mozilla/dom/MemoryReportRequest.h"
@@ -341,6 +342,17 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvPProxyConfigLookupConstructor(
     PProxyConfigLookupParent* aActor, nsIURI* aURI,
     const uint32_t& aProxyResolveFlags) {
   static_cast<ProxyConfigLookupParent*>(aActor)->DoProxyLookup();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvCachePushCheck(
+    nsIURI* aPushedURL, OriginAttributes&& aOriginAttributes,
+    nsCString&& aRequestString, CachePushCheckResolver&& aResolver) {
+  RefPtr<CachePushChecker> checker = new CachePushChecker(
+      aPushedURL, aOriginAttributes, aRequestString, aResolver);
+  if (NS_FAILED(checker->DoCheck())) {
+    aResolver(false);
+  }
   return IPC_OK();
 }
 

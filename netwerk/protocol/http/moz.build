@@ -87,6 +87,7 @@ UNIFIED_SOURCES += [
     'BackgroundDataBridgeChild.cpp',
     'BackgroundDataBridgeParent.cpp',
     'CacheControlParser.cpp',
+    'CachePushChecker.cpp',
     'ClassifierDummyChannel.cpp',
     'ClassifierDummyChannelChild.cpp',
     'ClassifierDummyChannelParent.cpp',

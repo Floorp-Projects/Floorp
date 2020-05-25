@@ -13,6 +13,7 @@
 #include "nsHttpConnectionInfo.h"
 #include "nsISpeculativeConnect.h"
 #include "nsIOService.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace net {
