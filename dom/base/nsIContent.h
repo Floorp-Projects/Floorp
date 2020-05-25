@@ -188,16 +188,6 @@ class nsIContent : public nsINode {
   nsIContent* FindFirstNonChromeOnlyAccessContent() const;
 
   /**
-   * Returns true if and only if this node has a parent, but is not in
-   * its parent's child list.
-   *
-   * FIXME(emilio): Remove along nsINode::IsInAnonymousSubtree.
-   */
-  bool IsRootOfAnonymousSubtree() const {
-    return IsRootOfNativeAnonymousSubtree();
-  }
-
-  /**
    * Return true iff this node is in an HTML document (in the HTML5 sense of
    * the term, i.e. not in an XHTML/XML document).
    */

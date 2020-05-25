@@ -90,7 +90,7 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
 #ifdef DEBUG
   {
     for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
-      NS_ASSERTION(!cur->IsRootOfAnonymousSubtree(),
+      NS_ASSERTION(!cur->IsRootOfNativeAnonymousSubtree(),
                    "anonymous nodes should not be in child lists");
     }
   }
@@ -265,7 +265,7 @@ void RestyleManager::CharacterDataChanged(
     return;
   }
 
-  if (MOZ_UNLIKELY(aContent->IsRootOfAnonymousSubtree())) {
+  if (MOZ_UNLIKELY(aContent->IsRootOfNativeAnonymousSubtree())) {
     // This is an anonymous node and thus isn't in child lists, so isn't taken
     // into account for selector matching the relevant selectors here.
     return;
@@ -333,7 +333,7 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
   }
   Element* container = parentNode->AsElement();
 
-  NS_ASSERTION(!aChild->IsRootOfAnonymousSubtree(),
+  NS_ASSERTION(!aChild->IsRootOfNativeAnonymousSubtree(),
                "anonymous nodes should not be in child lists");
   uint32_t selectorFlags = container->GetFlags() & NODE_ALL_SELECTOR_FLAGS;
   if (selectorFlags == 0) return;
@@ -383,7 +383,7 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
   }
   Element* container = aOldChild->GetParentNode()->AsElement();
 
-  if (aOldChild->IsRootOfAnonymousSubtree()) {
+  if (aOldChild->IsRootOfNativeAnonymousSubtree()) {
     // This should be an assert, but this is called incorrectly in
     // HTMLEditor::DeleteRefToAnonymousNode and the assertions were clogging
     // up the logs.  Make it an assert again when that's fixed.

@@ -43,7 +43,7 @@ static already_AddRefed<dom::Element> ElementFromPoint(
       RelativeTo{rootFrame, ViewportType::Visual}, CSSPoint::ToAppUnits(aPoint),
       {FrameForPointOption::IgnorePaintSuppression});
   while (frame && (!frame->GetContent() ||
-                   frame->GetContent()->IsInAnonymousSubtree())) {
+                   frame->GetContent()->IsInNativeAnonymousSubtree())) {
     frame = nsLayoutUtils::GetParentOrPlaceholderFor(frame);
   }
   if (!frame) {

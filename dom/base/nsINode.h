@@ -1296,16 +1296,6 @@ class nsINode : public mozilla::dom::EventTarget {
   }
 
   /**
-   * Returns true if there is NOT a path through child lists
-   * from the top of this node's parent chain back to this node or
-   * if the node is in native anonymous subtree without a parent.
-   *
-   * TODO(emilio):: Remove this function, and use just
-   * IsInNativeAnonymousSubtree, or something?
-   */
-  bool IsInAnonymousSubtree() const { return IsInNativeAnonymousSubtree(); }
-
-  /**
    * If |this| or any ancestor is native anonymous, return the root of the
    * native anonymous subtree. Note that in case of nested native anonymous
    * content, this returns the innermost root, not the outermost.

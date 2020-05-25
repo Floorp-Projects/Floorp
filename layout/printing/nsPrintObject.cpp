@@ -70,7 +70,7 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
   MOZ_ASSERT(aOrigNode);
 
   // Selections in anonymous subtrees aren't supported.
-  if (aOrigNode->IsInAnonymousSubtree() || aOrigNode->IsInShadowTree()) {
+  if (aOrigNode->IsInNativeAnonymousSubtree() || aOrigNode->IsInShadowTree()) {
     return nullptr;
   }
 
