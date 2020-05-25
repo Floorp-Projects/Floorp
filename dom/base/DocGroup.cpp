@@ -105,16 +105,13 @@ already_AddRefed<DocGroup> DocGroup::Create(
 }
 
 /* static */
-nsresult DocGroup::GetKey(nsIPrincipal* aPrincipal, nsACString& aKey) {
+nsresult DocGroup::GetKey(nsIPrincipal* aPrincipal, bool aCrossOriginIsolated,
+                          nsACString& aKey) {
   // Use GetBaseDomain() to handle things like file URIs, IP address URIs,
   // etc. correctly.
-  nsresult rv = aPrincipal->GetBaseDomain(aKey);
+  nsresult rv = aCrossOriginIsolated ? aPrincipal->GetOrigin(aKey)
+                                     : aPrincipal->GetSiteOrigin(aKey);
   if (NS_FAILED(rv)) {
-    // We don't really know what to do here.  But we should be conservative,
-    // otherwise it would be possible to reorder two events incorrectly in the
-    // future if we interrupt at the DocGroup level, so to be safe, use an
-    // empty string to classify all such documents as belonging to the same
-    // DocGroup.
     aKey.Truncate();
   }
 
