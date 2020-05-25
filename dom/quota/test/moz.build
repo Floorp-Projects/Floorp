@@ -20,6 +20,7 @@ TEST_HARNESS_FILES.testing.mochitest.browser.dom.quota.test.common += [
     'common/browser.js',
     'common/content.js',
     'common/file.js',
+    'common/global.js',
     'common/nestedtest.js',
     'common/system.js',
 ]
@@ -27,6 +28,7 @@ TEST_HARNESS_FILES.testing.mochitest.browser.dom.quota.test.common += [
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.common += [
     'common/content.js',
     'common/file.js',
+    'common/global.js',
     'common/mochitest.js',
     'common/test_simpledb.js',
     'common/test_storage_manager_persist_allow.js',
@@ -36,6 +38,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.common += [
 
 TEST_HARNESS_FILES.xpcshell.dom.quota.test.common += [
     'common/file.js',
+    'common/global.js',
     'common/system.js',
     'common/test_simpledb.js',
     'common/xpcshell.js',

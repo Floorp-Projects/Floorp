@@ -35,3 +35,11 @@ function compareBuffers(buffer1, buffer2) {
   }
   return true;
 }
+
+function getBlob(type, object) {
+  return new Blob([object], { type });
+}
+
+function getNullBlob(size) {
+  return getBlob("binary/null", getBuffer(size));
+}
