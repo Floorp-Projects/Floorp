@@ -564,22 +564,6 @@ class Http2Session final : public ASpdySession,
 
   uint32_t mCntActivated;
 
-  class CachePushCheckCallback final : public nsICacheEntryOpenCallback {
-   public:
-    CachePushCheckCallback(Http2Session* session, uint32_t promisedID,
-                           const nsACString& requestString);
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSICACHEENTRYOPENCALLBACK
-
-   private:
-    ~CachePushCheckCallback() = default;
-
-    RefPtr<Http2Session> mSession;
-    uint32_t mPromisedID;
-    nsHttpRequestHead mRequestHead;
-  };
-
   // A h2 session will be created before all socket events are trigered,
   // e.g. NS_NET_STATUS_TLS_HANDSHAKE_ENDED and for TFO many others.
   // We should propagate this events to the first nsHttpTransaction.
