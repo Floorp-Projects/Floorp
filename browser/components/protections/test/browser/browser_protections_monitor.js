@@ -26,6 +26,11 @@ add_task(async function() {
   AboutProtectionsParent.setTestOverride(mockGetMonitorData());
   await reloadTab(tab);
 
+  Assert.ok(
+    true,
+    "Error was not thrown for trying to reach the Monitor endpoint, the cache has worked."
+  );
+
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const hasLogins = content.document.querySelector(
