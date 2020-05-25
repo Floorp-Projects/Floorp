@@ -194,8 +194,8 @@ ManualNACPtr HTMLEditor::CreateAnonymousElement(nsAtom* aTag,
     styleSet->StyleNewSubtree(newNativeAnonymousContent);
   }
 
-  ElementDeletionObserver* observer = new ElementDeletionObserver(
-      newNativeAnonymousContent, aParentContent.AsElement());
+  auto* observer = new ElementDeletionObserver(newNativeAnonymousContent,
+                                               aParentContent.AsElement());
   NS_ADDREF(observer);  // NodeWillBeDestroyed releases.
   aParentContent.AddMutationObserver(observer);
   newNativeAnonymousContent->AddMutationObserver(observer);

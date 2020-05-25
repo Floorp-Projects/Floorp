@@ -78,8 +78,7 @@ FRAME_STATE_BIT(Generic, 1, NS_FRAME_FIRST_REFLOW)
 // continuation, e.g. a bidi continuation.
 FRAME_STATE_BIT(Generic, 2, NS_FRAME_IS_FLUID_CONTINUATION)
 
-// For nsIAnonymousContentCreator content that's created using ContentInfo.
-FRAME_STATE_BIT(Generic, 3, NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT)
+// Free bit here.
 
 // If this bit is set, then a reference to the frame is being held
 // elsewhere.  The frame may want to send a notification when it is
