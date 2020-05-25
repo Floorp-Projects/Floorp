@@ -614,6 +614,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // context.
   ChildSHistory* GetChildSessionHistory();
 
+  bool CrossOriginIsolated();
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
