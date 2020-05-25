@@ -42,6 +42,7 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
 
   const lastEntryTimes = {
     addons: now - 5000,
+    addons_mlbf: now - 4000,
     plugins: now - 3000,
   };
 
@@ -54,6 +55,7 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
   const {
     BlocklistTelemetry,
     ExtensionBlocklistRS,
+    ExtensionBlocklistMLBF,
     PluginBlocklistRS,
   } = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
 
@@ -87,6 +89,7 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
 
   assertTelemetryScalars({
     "blocklist.lastModified_rs_addons": undefined,
+    "blocklist.lastModified_rs_addons_mlbf": undefined,
     "blocklist.lastModified_rs_plugins": lastEntryTimesUTC.plugins,
   });
 
@@ -100,6 +103,22 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
 
   assertTelemetryScalars({
     "blocklist.lastModified_rs_addons": lastEntryTimesUTC.addons,
+    "blocklist.lastModified_rs_addons_mlbf": undefined,
+    "blocklist.lastModified_rs_plugins": lastEntryTimesUTC.plugins,
+  });
+
+  await ExtensionBlocklistMLBF.ensureInitialized();
+  await Promise.all([
+    promiseScalarRecorded(),
+    fakeRemoteSettingsSync(
+      ExtensionBlocklistMLBF._client,
+      lastEntryTimes.addons_mlbf
+    ),
+  ]);
+
+  assertTelemetryScalars({
+    "blocklist.lastModified_rs_addons": lastEntryTimesUTC.addons,
+    "blocklist.lastModified_rs_addons_mlbf": lastEntryTimesUTC.addons_mlbf,
     "blocklist.lastModified_rs_plugins": lastEntryTimesUTC.plugins,
   });
 });
