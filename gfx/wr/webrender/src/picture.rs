@@ -5932,6 +5932,7 @@ impl PicturePrimitive {
         if let Some(composite_mode) = actual_composite_mode {
             // Retrieve the positioning node information for the parent surface.
             let parent_raster_node_index = state.current_surface().raster_spatial_node_index;
+            let parent_device_pixel_scale = state.current_surface().device_pixel_scale;
             let surface_spatial_node_index = self.spatial_node_index;
 
             // Filters must be applied before transforms, to do this, we can mark this picture as establishing a raster root.
@@ -5957,10 +5958,10 @@ impl PicturePrimitive {
                 // Currently, we ensure that the scaling factor is >= 1.0 as a smaller scale factor can result in blurry output.
                 let scaling_factor = scale_factors.0.max(scale_factors.1).max(1.0);
 
-                let device_pixel_scale = frame_context.global_device_pixel_scale * Scale::new(scaling_factor);
+                let device_pixel_scale = parent_device_pixel_scale * Scale::new(scaling_factor);
                 (surface_spatial_node_index, device_pixel_scale)
             } else {
-                (parent_raster_node_index, frame_context.global_device_pixel_scale)
+                (parent_raster_node_index, parent_device_pixel_scale)
             };
 
             let scale_factors = frame_context
