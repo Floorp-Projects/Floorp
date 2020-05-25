@@ -44,8 +44,7 @@ linux64-android-gradle-dependencies:
             - taskcluster/scripts/toolchain/android-gradle-dependencies.sh
             - taskcluster/scripts/toolchain/android-gradle-dependencies/**
             - buildSrc/src/main/java/Dependencies.kt
-            # We don't follow 'buildSrc/src/main/java/AndroidComponents.kt' because we only cache
-            # dependencies outside of the ones hosted on maven.mozilla.org.
+            - buildSrc/src/main/java/AndroidComponents.kt
         toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
         toolchain-alias: android-gradle-dependencies
     treeherder:
