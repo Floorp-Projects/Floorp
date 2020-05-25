@@ -58,6 +58,79 @@ pub struct Keys {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct PrintParameters {
+    pub orientation: PrintOrientation,
+    pub scale: f64,
+    pub background: bool,
+    pub page: PrintPage,
+    pub margin: PrintMargins,
+    pub page_ranges: Vec<String>,
+    pub shrink_to_fit: bool,
+}
+
+impl Default for PrintParameters {
+    fn default() -> Self {
+        PrintParameters {
+            orientation: PrintOrientation::default(),
+            scale: 1.0,
+            background: false,
+            page: PrintPage::default(),
+            margin: PrintMargins::default(),
+            page_ranges: Vec::new(),
+            shrink_to_fit: true,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PrintOrientation {
+    Landscape,
+    Portrait,
+}
+
+impl Default for PrintOrientation {
+    fn default() -> Self {
+        PrintOrientation::Portrait
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PrintPage {
+    pub width: f64,
+    pub height: f64,
+}
+
+impl Default for PrintPage {
+    fn default() -> Self {
+        PrintPage {
+            width: 21.59,
+            height: 27.94,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PrintMargins {
+    pub top: f64,
+    pub bottom: f64,
+    pub left: f64,
+    pub right: f64,
+}
+
+impl Default for PrintMargins {
+    fn default() -> Self {
+        PrintMargins {
+            top: 1.0,
+            bottom: 1.0,
+            left: 1.0,
+            right: 1.0,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ScreenshotOptions {
     pub id: Option<String>,
     pub highlights: Vec<Option<String>>,
@@ -180,7 +253,7 @@ pub enum Command {
     #[serde(rename = "WebDriver:NewWindow")]
     NewWindow(NewWindow),
     #[serde(rename = "WebDriver:Print")]
-    Print,
+    Print(PrintParameters),
     #[serde(rename = "WebDriver:Refresh")]
     Refresh,
     #[serde(rename = "WebDriver:ReleaseActions")]

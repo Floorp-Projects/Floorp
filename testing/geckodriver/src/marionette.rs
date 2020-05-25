@@ -11,9 +11,11 @@ use marionette_rs::marionette::AppStatus;
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Keys as MarionetteKeys, LegacyWebElement,
-    Locator as MarionetteLocator, NewWindow as MarionetteNewWindow, ScreenshotOptions,
-    Script as MarionetteScript, Selector as MarionetteSelector, Url as MarionetteUrl,
-    WindowRect as MarionetteWindowRect,
+    Locator as MarionetteLocator, NewWindow as MarionetteNewWindow,
+    PrintMargins as MarionettePrintMargins, PrintOrientation as MarionettePrintOrientation,
+    PrintPage as MarionettePrintPage, PrintParameters as MarionettePrintParameters,
+    ScreenshotOptions, Script as MarionetteScript, Selector as MarionetteSelector,
+    Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
 };
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -46,8 +48,8 @@ use webdriver::command::WebDriverCommand::{
 use webdriver::command::{
     ActionsParameters, AddCookieParameters, GetNamedCookieParameters, GetParameters,
     JavascriptCommandParameters, LocatorParameters, NewSessionParameters, NewWindowParameters,
-    PrintParameters, SendKeysParameters, SwitchToFrameParameters, SwitchToWindowParameters,
-    TimeoutsParameters, WindowRectParameters,
+    PrintMargins, PrintOrientation, PrintPage, PrintParameters, SendKeysParameters,
+    SwitchToFrameParameters, SwitchToWindowParameters, TimeoutsParameters, WindowRectParameters,
 };
 use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{
@@ -1042,7 +1044,9 @@ fn try_convert_to_marionette_message(
         NewWindow(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::NewWindow(
             x.to_marionette()?,
         ))),
-        Print(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::Print)),
+        Print(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::Print(
+            x.to_marionette()?,
+        ))),
         Refresh => Some(Command::WebDriver(MarionetteWebDriverCommand::Refresh)),
         ReleaseActions => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ReleaseActions,
@@ -1538,14 +1542,46 @@ impl ToMarionette<Map<String, Value>> for GeckoContextParameters {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for PrintParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        Ok(try_opt!(
-            serde_json::to_value(self)?.as_object(),
-            ErrorStatus::UnknownError,
-            "Expected an object"
-        )
-        .clone())
+impl ToMarionette<MarionettePrintParameters> for PrintParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionettePrintParameters> {
+        Ok(MarionettePrintParameters {
+            orientation: self.orientation.to_marionette()?,
+            scale: self.scale,
+            background: self.background,
+            page: self.page.to_marionette()?,
+            margin: self.margin.to_marionette()?,
+            page_ranges: self.page_ranges.clone(),
+            shrink_to_fit: self.shrink_to_fit,
+        })
+    }
+}
+
+impl ToMarionette<MarionettePrintOrientation> for PrintOrientation {
+    fn to_marionette(&self) -> WebDriverResult<MarionettePrintOrientation> {
+        Ok(match self {
+            PrintOrientation::Landscape => MarionettePrintOrientation::Landscape,
+            PrintOrientation::Portrait => MarionettePrintOrientation::Portrait,
+        })
+    }
+}
+
+impl ToMarionette<MarionettePrintPage> for PrintPage {
+    fn to_marionette(&self) -> WebDriverResult<MarionettePrintPage> {
+        Ok(MarionettePrintPage {
+            width: self.width,
+            height: self.height,
+        })
+    }
+}
+
+impl ToMarionette<MarionettePrintMargins> for PrintMargins {
+    fn to_marionette(&self) -> WebDriverResult<MarionettePrintMargins> {
+        Ok(MarionettePrintMargins {
+            top: self.top,
+            bottom: self.bottom,
+            left: self.left,
+            right: self.right,
+        })
     }
 }
 
