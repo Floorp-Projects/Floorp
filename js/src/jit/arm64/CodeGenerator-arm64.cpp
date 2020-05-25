@@ -1145,24 +1145,6 @@ void CodeGenerator::visitMathF(LMathF* math) {
   }
 }
 
-void CodeGenerator::visitCeil(LCeil* lir) {
-  FloatRegister input = ToFloatRegister(lir->input());
-  Register output = ToRegister(lir->output());
-
-  Label bailout;
-  masm.ceil(input, output, &bailout);
-  bailoutFrom(&bailout, lir->snapshot());
-}
-
-void CodeGenerator::visitCeilF(LCeilF* lir) {
-  FloatRegister input = ToFloatRegister(lir->input());
-  Register output = ToRegister(lir->output());
-
-  Label bailout;
-  masm.ceilf(input, output, &bailout);
-  bailoutFrom(&bailout, lir->snapshot());
-}
-
 void CodeGenerator::visitTrunc(LTrunc* lir) {
   const FloatRegister input = ToFloatRegister(lir->input());
   const ARMFPRegister input64(input, 64);

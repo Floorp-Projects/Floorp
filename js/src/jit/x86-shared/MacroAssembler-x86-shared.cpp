@@ -1647,6 +1647,96 @@ void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
   }
 }
 
+void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
+                                        Label* fail) {
+  ScratchFloat32Scope scratch(*this);
+
+  Label lessThanOrEqualMinusOne;
+
+  // If x is in ]-1,0], ceil(x) is -0, which cannot be represented as an int32.
+  // Fail if x > -1 and the sign bit is set.
+  loadConstantFloat32(-1.f, scratch);
+  branchFloat(Assembler::DoubleLessThanOrEqualOrUnordered, src, scratch,
+              &lessThanOrEqualMinusOne);
+  vmovmskps(src, dest);
+  branchTest32(Assembler::NonZero, dest, Imm32(1), fail);
+
+  if (HasSSE41()) {
+    // x <= -1 or x > -0
+    bind(&lessThanOrEqualMinusOne);
+    // Round toward +Infinity.
+    vroundss(X86Encoding::RoundUp, src, scratch, scratch);
+    truncateFloat32ToInt32(scratch, dest, fail);
+    return;
+  }
+
+  // No SSE4.1
+  Label end;
+
+  // x >= 0 and x is not -0.0. We can truncate integer values, and truncate and
+  // add 1 to non-integer values. This will also work for values >= INT_MAX + 1,
+  // as the truncate operation will return INT_MIN and we'll fail.
+  truncateFloat32ToInt32(src, dest, fail);
+  convertInt32ToFloat32(dest, scratch);
+  branchFloat(Assembler::DoubleEqualOrUnordered, src, scratch, &end);
+
+  // Input is not integer-valued, add 1 to obtain the ceiling value.
+  // If input > INT_MAX, output == INT_MAX so adding 1 will overflow.
+  branchAdd32(Assembler::Overflow, Imm32(1), dest, fail);
+  jump(&end);
+
+  // x <= -1, truncation is the way to go.
+  bind(&lessThanOrEqualMinusOne);
+  truncateFloat32ToInt32(src, dest, fail);
+
+  bind(&end);
+}
+
+void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
+                                       Label* fail) {
+  ScratchDoubleScope scratch(*this);
+
+  Label lessThanOrEqualMinusOne;
+
+  // If x is in ]-1,0], ceil(x) is -0, which cannot be represented as an int32.
+  // Fail if x > -1 and the sign bit is set.
+  loadConstantDouble(-1.0, scratch);
+  branchDouble(Assembler::DoubleLessThanOrEqualOrUnordered, src, scratch,
+               &lessThanOrEqualMinusOne);
+  vmovmskpd(src, dest);
+  branchTest32(Assembler::NonZero, dest, Imm32(1), fail);
+
+  if (HasSSE41()) {
+    // x <= -1 or x > -0
+    bind(&lessThanOrEqualMinusOne);
+    // Round toward +Infinity.
+    vroundsd(X86Encoding::RoundUp, src, scratch, scratch);
+    truncateDoubleToInt32(scratch, dest, fail);
+    return;
+  }
+
+  // No SSE4.1
+  Label end;
+
+  // x >= 0 and x is not -0.0. We can truncate integer values, and truncate and
+  // add 1 to non-integer values. This will also work for values >= INT_MAX + 1,
+  // as the truncate operation will return INT_MIN and we'll fail.
+  truncateDoubleToInt32(src, dest, fail);
+  convertInt32ToDouble(dest, scratch);
+  branchDouble(Assembler::DoubleEqualOrUnordered, src, scratch, &end);
+
+  // Input is not integer-valued, add 1 to obtain the ceiling value.
+  // If input > INT_MAX, output == INT_MAX so adding 1 will overflow.
+  branchAdd32(Assembler::Overflow, Imm32(1), dest, fail);
+  jump(&end);
+
+  // x <= -1, truncation is the way to go.
+  bind(&lessThanOrEqualMinusOne);
+  truncateDoubleToInt32(src, dest, fail);
+
+  bind(&end);
+}
+
 void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
                                          FloatRegister temp, Label* fail) {
   ScratchFloat32Scope scratch(*this);
