@@ -30,20 +30,35 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIInterfaceRequestor"
 );
 
+const PREF_FORCE_ENABLE = "engine.extension-storage.force";
+
 // A helper to indicate whether extension-storage is enabled - it's based on
 // the "addons" pref. The same logic is shared between both engine impls.
-function isEngineEnabled() {
+function getEngineEnabled() {
   // By default, we sync extension storage if we sync addons. This
   // lets us simplify the UX since users probably don't consider
   // "extension preferences" a separate category of syncing.
   // However, we also respect engine.extension-storage.force, which
   // can be set to true or false, if a power user wants to customize
   // the behavior despite the lack of UI.
-  const forced = Svc.Prefs.get("engine.extension-storage.force", undefined);
+  const forced = Svc.Prefs.get(PREF_FORCE_ENABLE, undefined);
   if (forced !== undefined) {
     return forced;
   }
   return Svc.Prefs.get("engine.addons", false);
+}
+
+function setEngineEnabled(enabled) {
+  // This will be called by the engine manager when declined on another device.
+  // Things will go a bit pear-shaped if the engine manager tries to end up
+  // with 'addons' and 'extension-storage' in different states - however, this
+  // *can* happen given we support the `engine.extension-storage.force`
+  // preference. So if that pref exists, we set it to this value. If that pref
+  // doesn't exist, we just ignore it and hope that the 'addons' engine is also
+  // going to be set to the same state.
+  if (Svc.Prefs.has(PREF_FORCE_ENABLE)) {
+    Svc.Prefs.set(PREF_FORCE_ENABLE, enabled);
+  }
 }
 
 // A "bridged engine" to our webext-storage component.
@@ -59,7 +74,10 @@ ExtensionStorageEngineBridge.prototype = {
   _skipPercentageChance: 100,
 
   get enabled() {
-    return isEngineEnabled();
+    return getEngineEnabled();
+  },
+  set enabled(enabled) {
+    setEngineEnabled(enabled);
   },
 };
 
@@ -103,7 +121,13 @@ ExtensionStorageEngineKinto.prototype = {
   },
 
   get enabled() {
-    return isEngineEnabled();
+    return getEngineEnabled();
+  },
+  // We only need the enabled setter for the edge-case where info/collections
+  // has `extension-storage` - which could happen if the pref to flip the new
+  // engine on was once set but no longer is.
+  set enabled(enabled) {
+    setEngineEnabled(enabled);
   },
 
   _wipeClient() {
