@@ -15,6 +15,7 @@
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/ManualNAC.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/GeneratedImageContent.h"
@@ -2853,7 +2854,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
     newAnonymousItems.RemoveElementAt(0);
     nsIFrame* customFrame = comboboxFrame->CreateFrameForDisplayNode();
     MOZ_ASSERT(customFrame);
-    customFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
     childList.AppendFrame(nullptr, customFrame);
 
     // The other piece of NAC can take the normal path.
@@ -3802,17 +3802,12 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
                    ((bits & FCDATA_IS_LINE_PARTICIPANT) != 0),
                "Incorrectly set FCDATA_IS_LINE_PARTICIPANT bits");
 
-  if (aItem.mIsAnonymousContentCreatorContent) {
-    primaryFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
-  }
-
   // Even if mCreatingExtraFrames is set, we may need to SetPrimaryFrame for
   // generated content that doesn't have one yet.  Note that we have to examine
   // the frame bit, because by this point mIsGeneratedContent has been cleared
   // on aItem.
   if ((!aState.mCreatingExtraFrames ||
-       (primaryFrame->HasAnyStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT |
-                                      NS_FRAME_GENERATED_CONTENT) &&
+       (aItem.mContent->IsRootOfNativeAnonymousSubtree() &&
         !aItem.mContent->GetPrimaryFrame())) &&
       !(bits & FCDATA_SKIP_FRAMESET)) {
     aItem.mContent->SetPrimaryFrame(primaryFrame);
@@ -5446,8 +5441,6 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
   }
   item->mIsText = !aContent->IsElement();
   item->mIsGeneratedContent = isGeneratedContent;
-  item->mIsAnonymousContentCreatorContent =
-      aFlags.contains(ItemFlag::IsAnonymousContentCreatorContent);
   if (isGeneratedContent) {
     // We need to keep this alive until the frame takes ownership.
     // This corresponds to the Release in ConstructFramesFromItem.
@@ -8493,12 +8486,22 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
     return;
   }
 
-  // Is the frame ib-split? If so, we need to reframe the containing
-  // block *here*, rather than trying to remove and re-insert the
-  // content (which would otherwise result in *two* nested reframe
-  // containing block from ContentRemoved() and ContentInserted(),
-  // below!).  We'd really like to optimize away one of those
-  // containing block reframes, hence the code here.
+  // We don't know how to re-insert an anonymous subtree root, so recreate the
+  // closest non-generated ancestor instead... Except for editor NAC, which
+  // would enter an infinite loop, and we sorta get away with it because it's
+  // all abspos.
+  //
+  // TODO(emilio): We technically can find the right insertion point nowadays
+  // using StyleChildrenIterator rather than FlattenedTreeIterator. But we'd
+  // need to tweak the setup to insert into replaced elements to filter which
+  // anonymous roots can be allowed, and which can't.
+  if (aContent->IsRootOfNativeAnonymousSubtree() &&
+      !ManualNACPtr::IsManualNAC(aContent)) {
+    do {
+      aContent = aContent->GetParent();
+    } while (aContent->IsRootOfNativeAnonymousSubtree());
+    return RecreateFramesForContent(aContent, InsertionKind::Async);
+  }
 
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (frame && frame->IsFrameOfType(nsIFrame::eMathML)) {
@@ -8509,36 +8512,6 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
   }
 
   if (frame) {
-    nsIFrame* nonGeneratedAncestor =
-        nsLayoutUtils::GetNonGeneratedAncestor(frame);
-    if (nonGeneratedAncestor->GetContent() != aContent) {
-      return RecreateFramesForContent(nonGeneratedAncestor->GetContent(),
-                                      InsertionKind::Async);
-    }
-
-    if (frame->GetStateBits() & NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT) {
-      // Recreate the frames for the entire nsIAnonymousContentCreator tree
-      // since |frame| or one of its descendants may need an ComputedStyle
-      // that associates it to a CSS pseudo-element, and only the
-      // nsIAnonymousContentCreator that created this content knows how to make
-      // that happen.
-      //
-      // FIXME(emilio, bug 1465511): This is no longer true, but need to figure
-      // out what editor is doing.
-      nsIAnonymousContentCreator* acc = nullptr;
-      nsIFrame* ancestor = nsLayoutUtils::GetParentOrPlaceholderFor(frame);
-      while (!(acc = do_QueryFrame(ancestor))) {
-        ancestor = nsLayoutUtils::GetParentOrPlaceholderFor(ancestor);
-      }
-      NS_ASSERTION(acc,
-                   "Where is the nsIAnonymousContentCreator? We may fail "
-                   "to recreate its content correctly");
-      NS_ASSERTION(aContent->IsInNativeAnonymousSubtree(),
-                   "Why is NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT set?");
-      return RecreateFramesForContent(ancestor->GetContent(),
-                                      InsertionKind::Async);
-    }
-
     nsIFrame* parent = frame->GetParent();
     nsIContent* parentContent = parent ? parent->GetContent() : nullptr;
     // If the parent frame is a leaf then the subsequent insert will fail to
@@ -9466,7 +9439,6 @@ void nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
 
     ItemFlags flags = aExtraFlags;
     flags += ItemFlag::AllowPageBreak;
-    flags += ItemFlag::IsAnonymousContentCreatorContent;
 
     AddFrameConstructionItemsInternal(aState, content, aFrame, true,
                                       computedStyle, flags, aItemsToConstruct);

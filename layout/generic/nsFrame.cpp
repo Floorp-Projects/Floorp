@@ -640,8 +640,7 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
     // clang-format off
     AddStateBits(aPrevInFlow->GetStateBits() &
-                 (NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT |
-                  NS_FRAME_GENERATED_CONTENT |
+                 (NS_FRAME_GENERATED_CONTENT |
                   NS_FRAME_OUT_OF_FLOW |
                   NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN |
                   NS_FRAME_INDEPENDENT_SELECTION |

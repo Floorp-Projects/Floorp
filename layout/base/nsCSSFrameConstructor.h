@@ -1076,7 +1076,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
           mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
           mIsText(false),
           mIsGeneratedContent(false),
-          mIsAnonymousContentCreatorContent(false),
           mIsRootPopupgroup(false),
           mIsAllInline(false),
           mIsBlock(false),
@@ -1137,8 +1136,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     // Whether this is a generated content container.
     // If it is, mContent is a strong pointer.
     bool mIsGeneratedContent : 1;
-    // Whether this is an item for nsIAnonymousContentCreator content.
-    bool mIsAnonymousContentCreatorContent : 1;
     // Whether this is an item for the root popupgroup.
     bool mIsRootPopupgroup : 1;
     // Whether construction from this item will create only frames that are
