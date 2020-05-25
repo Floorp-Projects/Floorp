@@ -44,6 +44,8 @@ class BrowserToolbarBottomBehavior(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var shouldSnapAfterScroll: Boolean = false
 
+    private var lastSnapStartedWasUp = false
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var snapAnimator: ValueAnimator = ValueAnimator().apply {
         interpolator = DecelerateInterpolator()
@@ -147,6 +149,7 @@ class BrowserToolbarBottomBehavior(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun animateSnap(child: View, direction: SnapDirection) = with(snapAnimator) {
+        lastSnapStartedWasUp = direction == SnapDirection.UP
         addUpdateListener { child.translationY = it.animatedValue as Float }
         setFloatValues(child.translationY, if (direction == SnapDirection.UP) 0f else child.height.toFloat())
         start()
@@ -188,6 +191,15 @@ class BrowserToolbarBottomBehavior(
         if (shouldScroll) {
             browserToolbar.translationY =
                 max(0f, min(browserToolbar.height.toFloat(), browserToolbar.translationY + distance))
+        } else {
+            // Force expand the toolbar if the user scrolled up, it is not already expanded and
+            // an animation to expand it is not already in progress,
+            // otherwise the user could get stuck in a state where they cannot show the toolbar
+            val isAnimatingUp = snapAnimator.isStarted && lastSnapStartedWasUp
+            if (distance < 0 && browserToolbar.translationY != 0f && !isAnimatingUp) {
+                snapAnimator.cancel()
+                forceExpand(browserToolbar)
+            }
         }
     }
 
