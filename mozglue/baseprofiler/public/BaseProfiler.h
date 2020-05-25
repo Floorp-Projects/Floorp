@@ -549,25 +549,62 @@ MFBT_API Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // #  define PROFILER_RUNTIME_STATS
 
 #  ifdef PROFILER_RUNTIME_STATS
-struct StaticBaseProfilerStats {
+// This class gathers durations and displays some basic stats when destroyed.
+// It is intended to be used as a static variable (see `AUTO_PROFILER_STATS`
+// below), to display stats at the end of the program.
+class StaticBaseProfilerStats {
+ public:
   explicit StaticBaseProfilerStats(const char* aName) : mName(aName) {}
+
   ~StaticBaseProfilerStats() {
-    long long n = static_cast<long long>(mNumberDurations);
+    // Using unsigned long long for computations and printfs.
+    using ULL = unsigned long long;
+    ULL n = static_cast<ULL>(mNumberDurations);
     if (n != 0) {
-      long long sumNs = static_cast<long long>(mSumDurationsNs);
-      printf("Profiler stats `%s`: %lld ns / %lld = %lld ns\n", mName, sumNs, n,
-             sumNs / n);
+      ULL sumNs = static_cast<ULL>(mSumDurationsNs);
+      printf(
+          "[%d] Profiler stats `%s`: %llu ns / %llu = %llu ns, max %llu ns\n",
+          profiler_current_process_id(), mName, sumNs, n, sumNs / n,
+          static_cast<ULL>(mLongestDurationNs));
     } else {
-      printf("Profiler stats `%s`: (nothing)\n", mName);
+      printf("[%d] Profiler stats `%s`: (nothing)\n",
+             profiler_current_process_id(), mName);
     }
   }
-  Atomic<long long> mSumDurationsNs{0};
-  Atomic<long long> mNumberDurations{0};
+
+  void AddDurationFrom(TimeStamp aStart) {
+    DurationNs duration = static_cast<DurationNs>(
+        (TimeStamp::NowUnfuzzed() - aStart).ToMicroseconds() * 1000 + 0.5);
+    mSumDurationsNs += duration;
+    ++mNumberDurations;
+    // Update mLongestDurationNs if this one is longer.
+    for (;;) {
+      DurationNs longest = mLongestDurationNs;
+      if (MOZ_LIKELY(longest >= duration)) {
+        // This duration is not the longest, nothing to do.
+        break;
+      }
+      if (MOZ_LIKELY(mLongestDurationNs.compareExchange(longest, duration))) {
+        // Successfully updated `mLongestDurationNs` with the new value.
+        break;
+      }
+      // Otherwise someone else just updated `mLongestDurationNs`, we need to
+      // try again by looping.
+    }
+  }
 
  private:
+  using DurationNs = uint64_t;
+  using Count = uint32_t;
+
+  Atomic<DurationNs> mSumDurationsNs{0};
+  Atomic<DurationNs> mLongestDurationNs{0};
+  Atomic<Count> mNumberDurations{0};
   const char* mName;
 };
 
+// RAII object that measure its scoped lifetime duration and reports it to a
+// `StaticBaseProfilerStats`.
 class MOZ_RAII AutoProfilerStats {
  public:
   explicit AutoProfilerStats(
@@ -576,11 +613,7 @@ class MOZ_RAII AutoProfilerStats {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
-  ~AutoProfilerStats() {
-    mStats.mSumDurationsNs += int64_t(
-        (TimeStamp::NowUnfuzzed() - mStart).ToMicroseconds() * 1000 + 0.5);
-    ++mStats.mNumberDurations;
-  }
+  ~AutoProfilerStats() { mStats.AddDurationFrom(mStart); }
 
  private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -589,6 +622,12 @@ class MOZ_RAII AutoProfilerStats {
   TimeStamp mStart;
 };
 
+// Macro that should be used to collect basic statistics from measurements of
+// block durations, from where this macro is, until the end of its enclosing
+// scope. The name is used in the static variable name and when displaying stats
+// at the end of the program; Another location could use the same name but their
+// stats will not be combined, so use different name if these locations should
+// be distinguished.
 #    define AUTO_PROFILER_STATS(name)                                      \
       static ::mozilla::baseprofiler::StaticBaseProfilerStats sStat##name( \
           #name);                                                          \
