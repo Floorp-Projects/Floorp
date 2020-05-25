@@ -29,39 +29,34 @@ const aside = {
 };
 
 const release = {
-  title: "What’s New in DevTools (Firefox 76)",
+  title: "What’s New in DevTools (Firefox 77)",
   linkText: "Read more",
-  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/76?${utmParams}`,
+  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/77?${utmParams}`,
   features: [
     {
-      header: `Ignore entire folders in Debugger`,
-      description: `Filter out the noise of extraneous groups of sources with a new “Blackbox” context menu in Debugger’s sources list. Ignoring can be limited to files inside or outside of the selected folder. Combine with “Set directory root” for a laser-focused debugging experience.`,
-      href: `https://wiki.developer.mozilla.org/en-US/docs/Tools/Debugger/UI_Tour?${utmParams}#Source_list_pane`,
+      header: `Faster, leaner debugging`,
+      description: `Performance improvements that not only speed up pausing and stepping in the Debugger but also cut down on memory usage over time.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger?${utmParams}`,
     },
     {
-      header: `Console collapses multi-line code snippets`,
-      description: `Console’s multi-line editor mode just got better to iterate on long snippets with less clutter. Multiple lines are neatly collapsed and can be expanded on demand.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console/The_command_line_interpreter?${utmParams}#Multi-line_mode`,
+      header: `Source Maps that just work`,
+      description: `Firefox 77 has the most fixes yet to make source maps faster and more dependable so that your original CSS and JavaScript/TypeScript/etc code is always at hand. Especially improved: build outputs which previously failed to load source maps.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_a_source_map?${utmParams}`,
     },
     {
-      header: `Formatted Action Cable WebSocket messages`,
-      description: `The JSON embedded in Action Cable messages are now broken out to be more readable, adding to a growing set of supported WebSocket protocol formats.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/Inspecting_web_sockets?${utmParams}`,
+      header: `Step JavaScript in the selected stack frame`,
+      description: `Stepping in the currently selected stack makes the debugging code execution flow more intuitive and makes it less likely for you to miss an important line.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Step_through_code?${utmParams}`,
     },
     {
-      header: `Cleaner WebSocket output`,
-      description: `WebSocket control frames are now hidden by default to let you focus on the content actual send and received messages.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/Inspecting_web_sockets?${utmParams}`,
+      header: `Overflow settings for Network and Debugger`,
+      description: `Making for a leaner toolbar, Network and Debugger follow Console’s example in combining existing and new checkboxes into a new settings menu. This puts powerful options like “Disable JavaScript” right at your fingertips.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor?${utmParams}`,
     },
     {
-      header: `Resize Network table columns to fit to content`,
-      description: `Expanding longer content in the Network panel no longer requires countless dragging and resizing. Like modern data tables, just double-tap the table’s resize handles to fit the column size to its content.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}`,
-    },
-    {
-      header: `Improve Network response details`,
-      description: `Response data is now much easier to navigate and copy out of the Network details. More work is coming in this area to make various kinds of Network analysis easier.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_details?${utmParams}`,
+      header: `Pause on property read & write`,
+      description: `Understanding state changes is core to debugging. Pausing when a script references a property is now easier with a new Watchpoints option that combines get/set.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_watchpoints?${utmParams}`,
     },
   ],
 };
@@ -72,9 +67,9 @@ const dev = {
   linkText: "Get DevEdition",
   features: [
     {
-      header: `Full Asynchronous Stacks in Debugger`,
-      description: `Step through event, timeout and promise-based function calls over time with the full-featured async stacks in Debugger.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/UI_Tour?${utmParams}`,
+      header: `Cross-browser CSS compatibility audit`,
+      description: `Analyze your CSS for cross-browser compatibility with a new sidepanel in the Inspector. Let us know how well it worked for your projects via the Feedback option!`,
+      href: `https://discourse.mozilla.org/t/new-in-devedition-77-css-compatibility-in-inspector/60669`,
     },
   ],
 };
