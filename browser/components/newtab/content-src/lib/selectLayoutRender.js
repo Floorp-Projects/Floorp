@@ -74,7 +74,9 @@ export const selectLayoutRender = ({
     filterArray.push("Navigation");
   }
 
-  if (!prefs["feeds.section.topstories"]) {
+  const pocketEnabled =
+    prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
+  if (!pocketEnabled) {
     filterArray.push(...DS_COMPONENTS);
   }
 
