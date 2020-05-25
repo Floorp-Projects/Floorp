@@ -836,13 +836,13 @@ static bool AttrEquals(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
   return DoMatch(aElement, aNS, aName, match);
 }
 
-#define WITH_COMPARATOR(ignore_case_, c_, expr_) \
-  if (ignore_case_) {                            \
-    const nsCaseInsensitiveStringComparator c_;  \
-    return expr_;                                \
-  } else {                                       \
-    const nsDefaultStringComparator c_;          \
-    return expr_;                                \
+#define WITH_COMPARATOR(ignore_case_, c_, expr_)     \
+  if (ignore_case_) {                                \
+    const nsASCIICaseInsensitiveStringComparator c_; \
+    return expr_;                                    \
+  } else {                                           \
+    const nsDefaultStringComparator c_;              \
+    return expr_;                                    \
   }
 
 template <typename Implementor>
