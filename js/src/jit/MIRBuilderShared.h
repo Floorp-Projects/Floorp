@@ -293,15 +293,21 @@ class MOZ_STACK_CLASS CallInfo {
 
   void setCallee(MDefinition* callee) { callee_ = callee; }
 
-  void setImplicitlyUsedUnchecked() {
-    callee_->setImplicitlyUsedUnchecked();
-    thisArg_->setImplicitlyUsedUnchecked();
+  template <typename Fun>
+  void forEachCallOperand(Fun& f) {
+    f(callee_);
+    f(thisArg_);
     if (newTargetArg_) {
-      newTargetArg_->setImplicitlyUsedUnchecked();
+      f(newTargetArg_);
     }
     for (uint32_t i = 0; i < argc(); i++) {
-      getArg(i)->setImplicitlyUsedUnchecked();
+      f(getArg(i));
     }
+  }
+
+  void setImplicitlyUsedUnchecked() {
+    auto setFlag = [](MDefinition* def) { def->setImplicitlyUsedUnchecked(); };
+    forEachCallOperand(setFlag);
   }
 };
 
