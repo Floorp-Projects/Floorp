@@ -525,8 +525,12 @@
   opacity: var(--table-icon-opacity, 1);
 }
 
-.request-list-item.blocked {
-  color: var(--timing-blocked-color);
+/*
+ * Showing blocked requests in red should always have priority
+ * except when the request is selected.
+ */
+.request-list-item:not(.selected).blocked {
+  color: var(--timing-blocked-color) !important;
 }
 
 /*
