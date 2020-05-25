@@ -1,14 +1,14 @@
-Contributing to Firefox
-=======================
+Working on Firefox
+==================
 
-This section has the details about how we make changes to Firefox, and how you can
-do the same. 
+Welcome to the Firefox codebase. This is the home of the Firefox
+development process and source code documentation.
 
 .. toctree::
    :caption: Making Changes To Firefox
    :maxdepth: 1
 
-   how_to_contribute_firefox
+   contribution_quickref
    editor
    reviews
 

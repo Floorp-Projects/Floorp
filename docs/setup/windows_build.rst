@@ -30,39 +30,49 @@ date with Windows Update and then we’ll get moving.
 Visual Studio 2019
 ~~~~~~~~~~~~~~~~~~
 
-As of `bug
-1483835 <https://bugzilla.mozilla.org/show_bug.cgi?id=1483835>`, local
-Windows builds `use clang-cl by
-default <https://groups.google.com/d/topic/mozilla.dev.platform/MdbLAcvHC0Y/discussion>`
-as compiler. Visual Studio is still necessary for build tools, headers,
-and SDK.
 
-Automation builds still use Visual Studio 2017, so there may be some
-divergence until we upgrade. `Bug
-1581930 <https://bugzilla.mozilla.org/show_bug.cgi?id=1581930>` tracks
-various issues building with 2019. Please file your issue there and
-downgrade in the interim if you encounter build failures.
+.. note:: 
+
+   As of `bug
+   1483835 <https://bugzilla.mozilla.org/show_bug.cgi?id=1483835>`, local
+   Windows builds `use clang-cl by
+   default <https://groups.google.com/d/topic/mozilla.dev.platform/MdbLAcvHC0Y/discussion>`
+   as compiler. Visual Studio is still necessary for build tools, headers,
+   and SDK.
+
+.. note::
+
+   Automation builds still use Visual Studio 2017, so there may be some
+   divergence until we upgrade. `Bug
+   1581930 <https://bugzilla.mozilla.org/show_bug.cgi?id=1581930>` tracks
+   various issues building with 2019. Please file your issue there and
+   downgrade in the interim if you encounter build failures.
 
 `Download and install the Community
 edition <https://visualstudio.microsoft.com/downloads/>` of Visual
 Studio 2019. Professional and Enterprise are also supported if you have
 either of those editions.
 
-When installing, the following workloads must be checked:
+.. note::
 
--  "Desktop development with C++" (under the Windows group)
--  "Game development with C++" (under the Mobile & Gaming group)
+   When installing, the following workloads must be checked:
 
-In addition, go to the Individual Components tab and make sure the
-following components are selected under the "SDKs, libraries, and
-frameworks" group:
+   -  "Desktop development with C++" (under the Windows group)
+   -  "Game development with C++" (under the Mobile & Gaming group)
 
--  "Windows 10 SDK" (at least version **10.0.17134.0**)
--  "C++ ATL for v142 build tools (x86 and x64)" (also select ARM64 if
-   you'll be building for ARM64)
+   In addition, go to the Individual Components tab and make sure the
+   following components are selected under the "SDKs, libraries, and
+   frameworks" group:
+
+   -  "Windows 10 SDK" (at least version **10.0.17134.0**)
+   -  "C++ ATL for v142 build tools (x86 and x64)" (also select ARM64
+      if you'll be building for ARM64)
 
 Make sure you run Visual Studio once after installing, so it finishes
 any first-run tasks and associates the installation with your account.
+
+If you already have Visual Studio 2019 installed, you can get to the
+installer via its menu "Tools" → "Get Tools and Features".
 
 Other Required Tools
 ~~~~~~~~~~~~~~~~~~~~
@@ -136,8 +146,8 @@ the Mercuial repo of the source**, not with source tar balls, nor the
 github mirror. If you are working on Firefox or Firefox for Android
 frontends or building Firefox without any changes, select `artifact
 builds <https://developer.mozilla.org/en-US/docs/Artifact_builds>` in
-the first question in ``./mach bootstrap``.  Artifact builds will
-complete more quickly!  Artifact builds are unsuitable for those working
+the first question in ``./mach bootstrap``.  Artifact builds will
+complete more quickly!  Artifact builds are unsuitable for those working
 on C++ code.
 
 You’re on your way. Don’t be discouraged if this takes a while; it takes
@@ -221,7 +231,7 @@ Overview
 ~~~~~~~~
 
 The Mozilla build process requires many tools that are not pre-installed
-on most Windows systems. In addition to Visual Studio, install
+on most Windows systems. In addition to Visual Studio, install
 MozillaBuild - a software bundle that includes the required versions of
 bash, GNU make, autoconf, Mercurial, and much more.
 
@@ -242,7 +252,7 @@ Installing the build prerequisites
 Complete each of these steps otherwise, you may not be able to build
 successfully. There are notes on these software requirements below.
 
-#. Make sure your system is up-to-date through Windows Update.
+#. Make sure your system is up-to-date through Windows Update.
 #. Install `Visual Studio Community
    2019 <https://www.visualstudio.com/downloads/>` (free).
    Alternatively, you can also use a paid version of Visual Studio. Some
@@ -298,19 +308,19 @@ cause issues**
 
 .. note::
 
-**Note:** **Mozilla will not build** if the path to the installation
-tool folders contains **spaces** or other breaking characters such as
-pluses, quotation marks, or metacharacters.  The Visual Studio tools and
-SDKs are an exception - they may be installed in a directory which
-contains spaces. It is strongly recommended that you accept the default
-settings for all installation locations.
+   **Note:** **Mozilla will not build** if the path to the installation
+   tool folders contains **spaces** or other breaking characters such as
+   pluses, quotation marks, or metacharacters.  The Visual Studio tools and
+   SDKs are an exception - they may be installed in a directory which
+   contains spaces. It is strongly recommended that you accept the default
+   settings for all installation locations.
 
 MozillaBuild
 ~~~~~~~~~~~~
 
 The MozillaBuild package contains other software prerequisites necessary
 for building Mozilla, including the MSYS build environment,
-`Mercurial <https://www.mercurial-scm.org/>`, autoconf-2.13, CVS,
+`Mercurial <https://www.mercurial-scm.org/>`, autoconf-2.13, CVS,
 Python, YASM, NSIS, and UPX, as well as optional but useful tools such
 as wget and emacs.
 
@@ -321,29 +331,31 @@ By default, the package installs to ``c:\mozilla-build`` and it is
 recommended to use the default path. Don't use a path that contains
 spaces. The installer does not modify the Windows registry. Note that
 some binaries may require `Visual C++ Redistributable
-package <https://www.microsoft.com/downloads/en/details.aspx?FamilyID=a5c84275-3b97-4ab7-a40d-3802b2af5fc2&displaylang=en>` to
+package <https://www.microsoft.com/downloads/en/details.aspx?FamilyID=a5c84275-3b97-4ab7-a40d-3802b2af5fc2&displaylang=en>` to
 run.
 
-**MozillaBuild command prompt expectation setting:** Note that the
-"UNIX-like" environment provided by MozillaBuild is only really useful
-for building and committing to the Mozilla source. Most command line
-tools you would expect in a modern Linux distribution are not present,
-and those tools that are provided can be as much as a decade or so old
-(especially those provided by MSYS). It's the old tools in particular
-that can cause problems since they often don't behave as expected, are
-buggy, or don't support command line arguments that have been taken for
-granted for years. For example, copying a source tree using
-``cp -rf src1 src2`` does not work correctly because of an old version
-of cp (it gives "cp: will not create hard link" errors for some files).
-In short, MozillaBuild supports essential developer interactions with
-the Mozilla code, but beyond that don't be surprised if it trips you up
-in all sorts of exciting and unexpected ways.
+.. note::
+
+   **MozillaBuild command prompt expectation setting:** Note that the
+   "UNIX-like" environment provided by MozillaBuild is only really useful
+   for building and committing to the Mozilla source. Most command line
+   tools you would expect in a modern Linux distribution are not present,
+   and those tools that are provided can be as much as a decade or so old
+   (especially those provided by MSYS). It's the old tools in particular
+   that can cause problems since they often don't behave as expected, are
+   buggy, or don't support command line arguments that have been taken for
+   granted for years. For example, copying a source tree using
+   ``cp -rf src1 src2`` does not work correctly because of an old version
+   of cp (it gives "cp: will not create hard link" errors for some files).
+   In short, MozillaBuild supports essential developer interactions with
+   the Mozilla code, but beyond that don't be surprised if it trips you up
+   in all sorts of exciting and unexpected ways.
 
 Opening a MozillaBuild command prompt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 After the prerequisites are installed, launch
-the \ **``start-shell.bat``** batch file using the Windows command
+the \ **``start-shell.bat``** batch file using the Windows command
 prompt in the directory to which you installed MozillaBuild
 (``c:\mozilla-build`` by default). This will launch an MSYS/BASH command
 prompt properly configured to build Firefox. All further commands should
@@ -352,8 +364,8 @@ same as what you get with the Windows CMD.EXE shell.)
 
 .. note::
 
-Note: This is not the same as what you get with the Windows CMD.EXE
-shell.
+  Note: This is not the same as what you get with the Windows CMD.EXE
+  shell.
 
 Create a directory for the source
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -389,11 +401,11 @@ Command prompt tips and caveats
    the window to paste your selection.
 -  If you have Cygwin installed, make sure that the MozillaBuild
    directories come before any Cygwin directories in the search path
-   enhanced by \ ``start-shell-msvc2015.bat`` (use ``echo $PATH`` to see
+   enhanced by \ ``start-shell-msvc2015.bat`` (use ``echo $PATH`` to see
    your search path).
 -  In the MSYS / BASH shell started by ``start-shell-msvc2015.bat``,
    UNIX-style forward slashes (/) are used as path separators instead of
-   the Windows-style backward slashes (\\).  So if you want to change to
+   the Windows-style backward slashes (\\).  So if you want to change to
    the directory ``c:\mydir``, in the MSYS shell to improve clarity, you
    would use ``cd /c/mydir ``\ though both ``c:\mydir`` and ``c:/mydir``
    are supported.
@@ -437,7 +449,7 @@ Common problems, hints, and restrictions
    come before any Cygwin directories in your PATH environment variable.
    If this does not help, remove the Cygwin directories from PATH, or
    try building on a clean PC with no Cygwin.
--  Building with versions of NSIS other than the version that comes with
+-  Building with versions of NSIS other than the version that comes with
    the latest supported version of MozillaBuild is not supported and
    will likely fail.
 -  If you intend to distribute your build to others, set
@@ -460,7 +472,7 @@ Common problems, hints, and restrictions
 -  If you encounter a build failure like "ERROR: Cannot find
    makecab.exe", try applying the patch from `bug
    1383578 <https://bugzilla.mozilla.org/show_bug.cgi?id=1383578>`,
-   i.e. change: ``SET PATH="%PATH%;!LLVMDIR!\bin"``  to
+   i.e. change: ``SET PATH="%PATH%;!LLVMDIR!\bin"``  to
    ``SET "PATH=%PATH%;!LLVMDIR!\bin"``.
 -  If you encounter a build failure with
    ``LINK: fatal error LNK1181: cannot open input file ..\..\..\..\..\security\nss3.lib``,
@@ -470,8 +482,8 @@ Common problems, hints, and restrictions
    ``C:\mozilla-source\mozilla-central`` which should work.
 -  If you encounter a build failure with
    ``ERROR: GetShortPathName returned a long path name.``.You need
-   create a 8dot3name short name for the path which has space.For
+   create a 8dot3name short name for the path which has space.For
    example : fsutil file setshortname "C:\\Program Files (x86)"
-   PROGRA~2.  If you got "access denied", try to restart your computer
+   PROGRA~2.  If you got "access denied", try to restart your computer
    to safe mode and try again.
 
