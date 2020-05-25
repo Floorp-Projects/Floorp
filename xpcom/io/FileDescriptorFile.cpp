@@ -125,11 +125,6 @@ FileDescriptorFile::GetParent(nsIFile** aParent) {
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetFollowLinks(bool* aFollowLinks) {
-  return mFile->GetFollowLinks(aFollowLinks);
-}
-
-NS_IMETHODIMP
 FileDescriptorFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor) {
   return mFile->GetPersistentDescriptor(aPersistentDescriptor);
 }
@@ -175,11 +170,6 @@ FileDescriptorFile::InitWithNativePath(const nsACString& aPath) {
 
 NS_IMETHODIMP
 FileDescriptorFile::InitWithFile(nsIFile* aFile) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileDescriptorFile::SetFollowLinks(bool aFollowLinks) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
