@@ -166,8 +166,13 @@ bool RenderCompositorANGLE::Initialize() {
     if (compositorHwnd) {
       mDCLayerTree =
           DCLayerTree::Create(gl, mEGLConfig, mDevice, compositorHwnd);
+      if (!mDCLayerTree) {
+        gfxCriticalNote << "Failed to create DCLayerTree";
+        return false;
+      }
     } else {
       gfxCriticalNote << "Compositor window was not created";
+      return false;
     }
   }
 
@@ -236,6 +241,11 @@ bool RenderCompositorANGLE::CreateSwapChain() {
   }
 
   CreateSwapChainForDCompIfPossible(dxgiFactory2);
+  if (gfx::gfxVars::UseWebRenderDCompWin() && !mSwapChain) {
+    MOZ_ASSERT(GetCompositorHwnd());
+    gfxCriticalNote << "Failed to create SwapChain for DComp";
+    return false;
+  }
 
   if (!mSwapChain && dxgiFactory2 && IsWin8OrLater()) {
     RefPtr<IDXGISwapChain1> swapChain1;
@@ -272,6 +282,10 @@ bool RenderCompositorANGLE::CreateSwapChain() {
       mSwapChain = swapChain1;
       mSwapChain1 = swapChain1;
       mUseTripleBuffering = useTripleBuffering;
+    } else if (gfx::gfxVars::UseWebRenderFlipSequentialWin()) {
+      MOZ_ASSERT(GetCompositorHwnd());
+      gfxCriticalNote << "Failed to create flip mode SwapChain";
+      return false;
     }
   }
 

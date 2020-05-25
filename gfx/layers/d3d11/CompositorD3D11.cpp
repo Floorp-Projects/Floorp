@@ -240,6 +240,10 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
         swapChain->SetBackgroundColor(&color);
 
         mSwapChain = swapChain;
+      } else if (mWidget->AsWindows()->GetCompositorHwnd()) {
+        // Destroy compositor window.
+        mWidget->AsWindows()->DestroyCompositorWindow();
+        mHwnd = mWidget->AsWindows()->GetHwnd();
       }
     }
 
