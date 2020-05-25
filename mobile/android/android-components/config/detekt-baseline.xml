@@ -4,35 +4,79 @@
   <Whitelist>
     <ID>AbsentOrWrongFileLicense:AutoFitTextureView.kt$mozilla.components.feature.qr.views.AutoFitTextureView.kt</ID>
     <ID>AbsentOrWrongFileLicense:QrFragment.kt$mozilla.components.feature.qr.QrFragment.kt</ID>
-    <ID>LargeClass:BrowserToolbar.kt$BrowserToolbar : ViewGroupToolbar</ID>
+    <ID>ComplexMethod:AppLinksInterceptor.kt$AppLinksInterceptor$onLoadRequest</ID>
+    <ID>ComplexMethod:Browsers.kt$Browsers$findKnownBrowsers</ID>
+    <ID>ComplexMethod:Evaluator.kt$Evaluator$filterStatic</ID>
+    <ID>ComplexMethod:ExperimentEvaluator.kt$ExperimentEvaluator$matches</ID>
+    <ID>ComplexMethod:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$addAutocompleteText</ID>
+    <ID>ComplexMethod:InlineAutocompleteEditText.kt$InlineAutocompleteEditText.TextChangeListener$afterTextChanged</ID>
+    <ID>ComplexMethod:LegacySessionManager.kt$LegacySessionManager$findNearbySession</ID>
+    <ID>ComplexMethod:MozillaSocorroService.kt$MozillaSocorroService$sendCrashData</ID>
+    <ID>ComplexMethod:OkHttpClient.kt$rebuildFor</ID>
+    <ID>ComplexMethod:SearchEngineParser.kt$SearchEngineParser$readSearchPlugin</ID>
+    <ID>ComplexMethod:Utils.kt$findBestSize</ID>
     <ID>LargeClass:ContextMenuCandidate.kt$ContextMenuCandidate$Companion</ID>
-    <ID>LargeClass:CustomTabsToolbarFeature.kt$CustomTabsToolbarFeature : LifecycleAwareFeatureBackHandler</ID>
-    <ID>LargeClass:EventsStorageEngine.kt$EventsStorageEngine : StorageEngine</ID>
-    <ID>LargeClass:ExperimentEvaluator.kt$ExperimentEvaluator</ID>
-    <ID>LargeClass:Experiments.kt$ExperimentsInternalAPI</ID>
-    <ID>LargeClass:GeckoPromptDelegate.kt$GeckoPromptDelegate : PromptDelegate</ID>
-    <ID>LargeClass:MainActivity.kt$MainActivity : AppCompatActivityOnLoginCompleteListenerCoroutineScope</ID>
-    <ID>LargeClass:PromptFeature.kt$PromptFeature : LifecycleAwareFeaturePermissionsFeature</ID>
-    <ID>LargeClass:Session.kt$Session : Observable</ID>
-    <ID>LargeClass:SystemEngineSession.kt$SystemEngineSession : EngineSession</ID>
-    <ID>LargeClass:SystemEngineView.kt$SystemEngineView : FrameLayoutEngineViewOnLongClickListener</ID>
-    <ID>LargeClass:SystemEngineView.kt$SystemEngineView$&lt;no name provided&gt; : WebChromeClient</ID>
+    <ID>LargeClass:GeckoPromptDelegate.kt$GeckoPromptDelegate$GeckoPromptDelegate</ID>
     <ID>LargeClass:SystemEngineView.kt$SystemEngineView$&lt;no name provided&gt; : WebViewClient</ID>
-    <ID>LongMethod:ByteArray.kt$ @Suppress("ComplexMethod", "NestedBlockDepth") internal fun ByteArray.binarySearch(labels: List&lt;ByteArray&gt;, labelIndex: Int): String?</ID>
-    <ID>LongMethod:DisplayToolbar.kt$DisplayToolbar$// We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations @Suppress("ComplexMethod") override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int)</ID>
-    <ID>LongMethod:FxaAccountManager.kt$FxaAccountManager$ @Suppress("ComplexMethod", "ReturnCount", "ThrowsCount") private suspend fun stateActions(forState: AccountState, via: Event): Event?</ID>
-    <ID>LongMethod:PromptFeature.kt$PromptFeature$@Suppress("ComplexMethod") @VisibleForTesting(otherwise = PRIVATE) internal fun handleDialogsRequest( promptRequest: PromptRequest, session: Session )</ID>
-    <ID>LongMethod:SystemEngineSession.kt$SystemEngineSession$private fun initSettings(webView: WebView, s: WebSettings)</ID>
-    <ID>LongMethod:TabListReducer.kt$TabListReducer$ fun reduce(state: BrowserState, action: TabListAction): BrowserState</ID>
-    <ID>UndocumentedPublicClass:AccountStorage.kt$AccountStorage</ID>
-    <ID>UndocumentedPublicClass:AccountStorage.kt$SharedPrefAccountStorage : AccountStorage</ID>
+    <ID>LongMethod:TabListReducer.kt$TabListReducer$reduce</ID>
+    <ID>LongParameterList:AppLinksFeature.kt$AppLinksFeature$( private val context: Context, private val sessionManager: SessionManager, private val sessionId: String? = null, private val fragmentManager: FragmentManager? = null, private var dialog: RedirectDialogFragment? = null, private val launchInApp: () -&gt; Boolean = { false }, private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp), private val failedToLaunchAction: () -&gt; Unit = {} )</ID>
+    <ID>LongParameterList:AppLinksInterceptor.kt$AppLinksInterceptor$( private val context: Context, private val interceptLinkClicks: Boolean = false, private val engineSupportedSchemes: Set&lt;String&gt; = ENGINE_SUPPORTED_SCHEMES, private val alwaysDeniedSchemes: Set&lt;String&gt; = ALWAYS_DENY_SCHEMES, private val launchInApp: () -&gt; Boolean = { false }, private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp, alwaysDeniedSchemes), private val launchFromInterceptor: Boolean = false )</ID>
+    <ID>LongParameterList:AutoPushFeature.kt$AutoPushFeature$( private val context: Context, private val service: PushService, config: PushConfig, coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher(), private val connection: PushConnection = RustPushConnection( senderId = config.senderId, serverHost = config.serverHost, socketProtocol = config.protocol, serviceType = config.serviceType, databasePath = File(context.filesDir, DB_NAME).canonicalPath ), private val crashReporter: CrashReporting? = null )</ID>
+    <ID>LongParameterList:AwesomeBarFeature.kt$AwesomeBarFeature$( private val awesomeBar: AwesomeBar, private val toolbar: Toolbar, private val engineView: EngineView? = null, private val icons: BrowserIcons? = null, onEditStart: (() -&gt; Unit)? = null, onEditComplete: (() -&gt; Unit)? = null )</ID>
+    <ID>LongParameterList:BrowserGestureDetector.kt$BrowserGestureDetector.GesturesListener$( /** * Responds to scroll events for a gesture in progress. * The distance in x and y is also supplied for convenience. */ val onScroll: ((distanceX: Float, distanceY: Float) -&gt; Unit)? = { _, _ -&gt; run {} }, /** * Responds to an in progress scroll occuring more on the vertical axis. * The scroll distance is also supplied for convenience. */ val onVerticalScroll: ((distance: Float) -&gt; Unit)? = {}, /** * Responds to an in progress scroll occurring more on the horizontal axis. * The scroll distance is also supplied for convenience. */ val onHorizontalScroll: ((distance: Float) -&gt; Unit)? = {}, /** * Responds to the the beginning of a new scale gesture. * Reported by new pointers going down. */ val onScaleBegin: ((scaleFactor: Float) -&gt; Unit)? = {}, /** * Responds to scaling events for a gesture in progress. * The scaling factor is also supplied for convenience. * This value is represents the difference from the previous scale event to the current event. */ val onScale: ((scaleFactor: Float) -&gt; Unit)? = {}, /** * Responds to the end of a scale gesture. * Reported by existing pointers going up. */ val onScaleEnd: ((scaleFactor: Float) -&gt; Unit)? = {} )</ID>
+    <ID>LongParameterList:BrowserIcons.kt$BrowserIcons$( private val context: Context, private val httpClient: Client, private val generator: IconGenerator = DefaultIconGenerator(), private val preparers: List&lt;IconPreprarer&gt; = listOf( TippyTopIconPreparer(context.assets), MemoryIconPreparer(sharedMemoryCache), DiskIconPreparer(sharedDiskCache) ), private val loaders: List&lt;IconLoader&gt; = listOf( MemoryIconLoader(sharedMemoryCache), DiskIconLoader(sharedDiskCache), HttpIconLoader(httpClient), DataUriIconLoader() ), private val decoders: List&lt;ImageDecoder&gt; = listOf( AndroidImageDecoder(), ICOIconDecoder() ), private val processors: List&lt;IconProcessor&gt; = listOf( MemoryIconProcessor(sharedMemoryCache), DiskIconProcessor(sharedDiskCache) ), jobDispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(THREADS).asCoroutineDispatcher() )</ID>
+    <ID>LongParameterList:BrowserMenuHighlightableItem.kt$BrowserMenuHighlightableItem$( label: String, @DrawableRes imageResource: Int, @ColorRes iconTintColorResource: Int = NO_ID, @ColorRes textColorResource: Int = NO_ID, highlight: Highlight? = null, listener: () -&gt; Unit = {} )</ID>
+    <ID>LongParameterList:BrowserMenuHighlightableItem.kt$BrowserMenuHighlightableItem$( private val label: String, @DrawableRes private val startImageResource: Int, @ColorRes private val iconTintColorResource: Int = NO_ID, @ColorRes private val textColorResource: Int = NO_ID, override val highlight: BrowserMenuHighlight, override val isHighlighted: () -&gt; Boolean = { true }, private val listener: () -&gt; Unit = {} )</ID>
+    <ID>LongParameterList:BrowserMenuHighlightableSwitch.kt$BrowserMenuHighlightableSwitch$( label: String, @DrawableRes private val startImageResource: Int, @ColorRes private val iconTintColorResource: Int = NO_ID, @ColorRes private val textColorResource: Int = NO_ID, override val highlight: BrowserMenuHighlight.LowPriority, override val isHighlighted: () -&gt; Boolean = { true }, initialState: () -&gt; Boolean = { false }, listener: (Boolean) -&gt; Unit )</ID>
+    <ID>LongParameterList:BrowserMenuItemToolbar.kt$BrowserMenuItemToolbar.TwoStateButton$( @DrawableRes val primaryImageResource: Int, val primaryContentDescription: String, @ColorRes val primaryImageTintResource: Int = NO_ID, @DrawableRes val secondaryImageResource: Int = primaryImageResource, val secondaryContentDescription: String = primaryContentDescription, @ColorRes val secondaryImageTintResource: Int = primaryImageTintResource, val isInPrimaryState: () -&gt; Boolean = { true }, val disableInSecondaryState: Boolean = false, listener: () -&gt; Unit )</ID>
+    <ID>LongParameterList:BrowserTabsTray.kt$BrowserTabsTray$( context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0, val tabsAdapter: TabsAdapter = TabsAdapter(), layout: LayoutManager = GridLayoutManager(context, 2), itemDecoration: DividerItemDecoration? = null )</ID>
+    <ID>LongParameterList:BrowserToolbar.kt$BrowserToolbar.Button$( imageDrawable: Drawable, contentDescription: String, visible: () -&gt; Boolean = { true }, @DrawableRes background: Int = 0, val padding: Padding = DEFAULT_PADDING, listener: () -&gt; Unit )</ID>
+    <ID>LongParameterList:BrowserToolbar.kt$BrowserToolbar.ToggleButton$( image: Drawable, imageSelected: Drawable, contentDescription: String, contentDescriptionSelected: String, visible: () -&gt; Boolean = { true }, selected: Boolean = false, @DrawableRes background: Int = 0, val padding: Padding = DEFAULT_PADDING, listener: (Boolean) -&gt; Unit )</ID>
+    <ID>LongParameterList:BrowserToolbar.kt$BrowserToolbar.TwoStateButton$( private val enabledImage: Drawable, private val enabledContentDescription: String, private val disabledImage: Drawable, private val disabledContentDescription: String, private val isEnabled: () -&gt; Boolean = { true }, background: Int = 0, listener: () -&gt; Unit )</ID>
+    <ID>LongParameterList:ClipboardSuggestionProvider.kt$ClipboardSuggestionProvider$( private val context: Context, private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase, private val icon: Bitmap? = null, private val title: String? = null, private val requireEmptyText: Boolean = true, internal val engine: Engine? = null )</ID>
+    <ID>LongParameterList:ContextMenuFeature.kt$ContextMenuFeature$( private val fragmentManager: FragmentManager, private val store: BrowserStore, private val candidates: List&lt;ContextMenuCandidate&gt;, private val engineView: EngineView, private val useCases: ContextMenuUseCases, private val tabId: String? = null )</ID>
+    <ID>LongParameterList:CrashReporter.kt$CrashReporter$( context: Context, private val services: List&lt;CrashReporterService&gt; = emptyList(), private val telemetryServices: List&lt;CrashTelemetryService&gt; = emptyList(), private val shouldPrompt: Prompt = Prompt.NEVER, var enabled: Boolean = true, internal val promptConfiguration: PromptConfiguration = PromptConfiguration(), private val nonFatalCrashIntent: PendingIntent? = null, private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO) )</ID>
+    <ID>LongParameterList:CustomTabsToolbarFeature.kt$CustomTabsToolbarFeature$( private val sessionManager: SessionManager, private val toolbar: BrowserToolbar, private val sessionId: String? = null, private val menuBuilder: BrowserMenuBuilder? = null, private val menuItemIndex: Int = menuBuilder?.items?.size ?: 0, private val window: Window? = null, private val shareListener: (() -&gt; Unit)? = null, private val closeListener: () -&gt; Unit )</ID>
+    <ID>LongParameterList:CustomViewHolder.kt$CustomViewHolder.AddonViewHolder$( view: View, val iconContainer: CardView, val iconView: ImageView, val titleView: TextView, val summaryView: TextView, val ratingView: RatingBar, val ratingAccessibleView: TextView, val userCountView: TextView, val addButton: ImageView, val allowedInPrivateBrowsingLabel: ImageView )</ID>
+    <ID>LongParameterList:DisplayToolbar.kt$DisplayToolbarViews$( val browserActions: ActionContainer, val pageActions: ActionContainer, val navigationActions: ActionContainer, val background: ImageView, val separator: ImageView, val emptyIndicator: ImageView, val menu: MenuButton, val securityIndicator: SiteSecurityIconView, val trackingProtectionIndicator: TrackingProtectionIconView, val origin: OriginView, val progress: ProgressBar )</ID>
+    <ID>LongParameterList:DownloadsFeature.kt$DownloadsFeature$( private val applicationContext: Context, private val store: BrowserStore, private val useCases: DownloadsUseCases, override var onNeedToRequestPermissions: OnNeedToRequestPermissions = { }, onDownloadStopped: onDownloadStopped = noop, private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext), private val tabId: String? = null, private val fragmentManager: FragmentManager? = null, private val promptsStyling: PromptsStyling? = null, @VisibleForTesting(otherwise = PRIVATE) internal var dialog: DownloadDialogFragment = SimpleDownloadDialogFragment.newInstance( promptsStyling = promptsStyling ) )</ID>
+    <ID>LongParameterList:FennecMigrator.kt$FennecMigrator$( private val context: Context, private val crashReporter: CrashReporting, private val migrations: List&lt;VersionedMigration&gt;, private val historyStorage: Lazy&lt;PlacesHistoryStorage&gt;?, private val bookmarksStorage: Lazy&lt;PlacesBookmarksStorage&gt;?, private val loginsStorage: Lazy&lt;SyncableLoginsStorage&gt;?, private val sessionManager: SessionManager?, private val searchEngineManager: SearchEngineManager?, private val accountManager: Lazy&lt;FxaAccountManager&gt;?, private val engine: Engine?, private val addonCollectionProvider: AddonCollectionProvider?, private val addonUpdater: AddonUpdater?, private val profile: FennecProfile?, private val fxaState: File?, private val browserDbPath: String?, private val signonsDbName: String, private val key4DbName: String, private val coroutineContext: CoroutineContext, private val topSiteStorage: TopSiteStorage? )</ID>
+    <ID>LongParameterList:FxaAccountManager.kt$FxaAccountManager$( private val context: Context, private val serverConfig: ServerConfig, private val deviceConfig: DeviceConfig, @Volatile private var syncConfig: SyncConfig?, private val applicationScopes: Set&lt;String&gt; = emptySet(), private val crashReporter: CrashReporting? = null, // We want a single-threaded execution model for our account-related "actions" (state machine side-effects). // That is, we want to ensure a sequential execution flow, but on a background thread. private val coroutineContext: CoroutineContext = Executors .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob() )</ID>
+    <ID>LongParameterList:FxaWebChannelFeature.kt$FxaWebChannelFeature$( private val context: Context, private val customTabSessionId: String?, private val runtime: WebExtensionRuntime, private val store: BrowserStore, private val accountManager: FxaAccountManager, private val serverConfig: ServerConfig, private val fxaCapabilities: Set&lt;FxaCapability&gt; = emptySet() )</ID>
+    <ID>LongParameterList:GeckoEngineSession.kt$GeckoEngineSession$( private val runtime: GeckoRuntime, private val privateMode: Boolean = false, private val defaultSettings: Settings? = null, contextId: String? = null, private val geckoSessionProvider: () -&gt; GeckoSession = { val settings = GeckoSessionSettings.Builder() .usePrivateMode(privateMode) .contextId(contextId) .build() GeckoSession(settings) }, private val context: CoroutineContext = Dispatchers.IO, openGeckoSession: Boolean = true )</ID>
+    <ID>LongParameterList:GeckoWebExtension.kt$GeckoWebExtension$( id: String, url: String, val runtime: GeckoRuntime, allowContentMessaging: Boolean = true, supportActions: Boolean = false, @Suppress("Deprecation") // https://github.com/mozilla-mobile/android-components/issues/6356 val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension( url, id, createWebExtensionFlags(allowContentMessaging), runtime.webExtensionController ), private val connectedPorts: MutableMap&lt;PortId, Port&gt; = mutableMapOf() )</ID>
+    <ID>LongParameterList:GeckoWebExtension.kt$GeckoWebExtension$( id: String, url: String, val runtime: GeckoRuntime, allowContentMessaging: Boolean = true, supportActions: Boolean = false, val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension( url, id, createWebExtensionFlags(allowContentMessaging), runtime.webExtensionController ), private val connectedPorts: MutableMap&lt;PortId, Port&gt; = mutableMapOf() )</ID>
+    <ID>LongParameterList:ManifestUpdateFeature.kt$ManifestUpdateFeature$( private val applicationContext: Context, private val sessionManager: SessionManager, private val shortcutManager: WebAppShortcutManager, private val storage: ManifestStorage, private val sessionId: String, private var initialManifest: WebAppManifest )</ID>
+    <ID>LongParameterList:MozillaSocorroService.kt$MozillaSocorroService$( private val applicationContext: Context, private val appName: String, private val appId: String = MOZILLA_PRODUCT_ID, private val version: String = BuildConfig.MOZILLA_VERSION, private val buildId: String = BuildConfig.MOZ_APP_BUILDID, private val vendor: String = BuildConfig.MOZ_APP_VENDOR, private var serverUrl: String? = null, private var versionName: String = DEFAULT_VERSION_NAME, private val releaseChannel: String = BuildConfig.MOZ_UPDATE_CHANNEL )</ID>
+    <ID>LongParameterList:P2PFeature.kt$P2PFeature$( private val view: P2PView, private val store: BrowserStore, private val engine: Engine, private val connectionProvider: () -&gt; NearbyConnection, private val tabsUseCases: TabsUseCases, private val sessionUseCases: SessionUseCases, private val sessionManager: SessionManager, override val onNeedToRequestPermissions: OnNeedToRequestPermissions, private val onClose: (() -&gt; Unit) )</ID>
+    <ID>LongParameterList:P2PIntegration.kt$P2PIntegration$( store: BrowserStore, engine: Engine, private val view: P2PView, thunk: () -&gt; NearbyConnection, tabsUseCases: TabsUseCases, sessionManager: SessionManager, sessionUseCases: SessionUseCases, onNeedToRequestPermissions: OnNeedToRequestPermissions )</ID>
+    <ID>LongParameterList:P2PInteractor.kt$P2PInteractor$( private val store: BrowserStore, private val view: P2PView, private val tabsUseCases: TabsUseCases, private val sessionUseCases: SessionUseCases, private val sender: P2PFeature.P2PFeatureSender, private val onClose: (() -&gt; Unit), private val connectionProvider: () -&gt; NearbyConnection, private val outgoingMessages: ConcurrentMap&lt;Long, Char&gt; // shared with P2PPresenter )</ID>
+    <ID>LongParameterList:PromptFeature.kt$PromptFeature$( activity: Activity, store: BrowserStore, customTabId: String? = null, fragmentManager: FragmentManager, shareDelegate: ShareDelegate = DefaultShareDelegate(), loginValidationDelegate: LoginValidationDelegate? = null, isSaveLoginEnabled: () -&gt; Boolean = { false }, onNeedToRequestPermissions: OnNeedToRequestPermissions )</ID>
+    <ID>LongParameterList:PromptFeature.kt$PromptFeature$( activity: Activity? = null, fragment: Fragment? = null, store: BrowserStore, customTabId: String? = null, fragmentManager: FragmentManager, onNeedToRequestPermissions: OnNeedToRequestPermissions )</ID>
+    <ID>LongParameterList:PromptFeature.kt$PromptFeature$( fragment: Fragment, store: BrowserStore, customTabId: String? = null, fragmentManager: FragmentManager, shareDelegate: ShareDelegate = DefaultShareDelegate(), loginValidationDelegate: LoginValidationDelegate? = null, isSaveLoginEnabled: () -&gt; Boolean = { false }, onNeedToRequestPermissions: OnNeedToRequestPermissions )</ID>
+    <ID>LongParameterList:PromptFeature.kt$PromptFeature$( private val container: PromptContainer, private val store: BrowserStore, private var customTabId: String?, private val fragmentManager: FragmentManager, private val shareDelegate: ShareDelegate, override val loginValidationDelegate: LoginValidationDelegate? = null, private val isSaveLoginEnabled: () -&gt; Boolean = { false }, onNeedToRequestPermissions: OnNeedToRequestPermissions )</ID>
+    <ID>LongParameterList:PromptRequest.kt$PromptRequest.TimeSelection$( val title: String, val initialDate: java.util.Date, val minimumDate: java.util.Date?, val maximumDate: java.util.Date?, val type: Type = Type.DATE, val onConfirm: (java.util.Date) -&gt; Unit, val onClear: () -&gt; Unit )</ID>
+    <ID>LongParameterList:ReaderViewIntegration.kt$ReaderViewIntegration$( context: Context, engine: Engine, store: BrowserStore, toolbar: BrowserToolbar, view: ReaderViewControlsView, readerViewAppearanceButton: FloatingActionButton )</ID>
+    <ID>LongParameterList:SearchSuggestionProvider.kt$SearchSuggestionProvider$( client: SearchSuggestionClient, searchUseCase: SearchUseCases.SearchUseCase, limit: Int = 15, mode: Mode = Mode.SINGLE_SUGGESTION, engine: Engine? = null, icon: Bitmap? = null, showDescription: Boolean = true )</ID>
+    <ID>LongParameterList:SearchSuggestionProvider.kt$SearchSuggestionProvider$( context: Context, searchEngineManager: SearchEngineManager, searchUseCase: SearchUseCases.SearchUseCase, fetchClient: Client, limit: Int = 15, mode: Mode = Mode.SINGLE_SUGGESTION, engine: Engine? = null, icon: Bitmap? = null, showDescription: Boolean = true )</ID>
+    <ID>LongParameterList:SearchSuggestionProvider.kt$SearchSuggestionProvider$( searchEngine: SearchEngine, searchUseCase: SearchUseCases.SearchUseCase, fetchClient: Client, limit: Int = 15, mode: Mode = Mode.SINGLE_SUGGESTION, engine: Engine? = null, icon: Bitmap? = null, showDescription: Boolean = true )</ID>
+    <ID>LongParameterList:SentryService.kt$SentryService$( context: Context, dsn: String, tags: Map&lt;String, String&gt; = emptyMap(), environment: String? = null, private val sendEventForNativeCrashes: Boolean = false, private val sentryProjectUrl: String? = null, clientFactory: SentryClientFactory? = null )</ID>
+    <ID>LongParameterList:Session.kt$Session$( initialUrl: String, val private: Boolean = false, val source: Source = Source.NONE, val id: String = UUID.randomUUID().toString(), val contextId: String? = null, delegate: Observable&lt;Observer&gt; = ObserverRegistry() )</ID>
+    <ID>LongParameterList:SimpleBrowserMenuHighlightableItem.kt$SimpleBrowserMenuHighlightableItem$( private val label: String, @ColorRes private val textColorResource: Int = NO_ID, private val textSize: Float = NO_ID.toFloat(), @ColorInt val backgroundTint: Int, val itemType: Any? = null, var isHighlighted: () -&gt; Boolean = { true }, private val listener: () -&gt; Unit = {} )</ID>
+    <ID>LongParameterList:SitePermissionsFeature.kt$SitePermissionsFeature$( private val context: Context, private val sessionManager: SessionManager, private var sessionId: String? = null, private val storage: SitePermissionsStorage = SitePermissionsStorage(context), var sitePermissionsRules: SitePermissionsRules? = null, private val fragmentManager: FragmentManager, var promptsStyling: PromptsStyling? = null, private val dialogConfig: DialogConfig? = null, override val onNeedToRequestPermissions: OnNeedToRequestPermissions, val onShouldShowRequestPermissionRationale: (permission: String) -&gt; Boolean )</ID>
+    <ID>LongParameterList:SyncedTabsFeature.kt$SyncedTabsFeature$( storage: SyncedTabsStorage, accountManager: FxaAccountManager, view: SyncedTabsView, lifecycleOwner: LifecycleOwner, coroutineContext: CoroutineContext = Dispatchers.IO, onTabClicked: (Tab) -&gt; Unit, controller: SyncedTabsController = DefaultController( storage, accountManager, view, coroutineContext ), private val presenter: SyncedTabsPresenter = DefaultPresenter( controller, accountManager, view, lifecycleOwner ), private val interactor: SyncedTabsInteractor = DefaultInteractor( accountManager, view, coroutineContext, onTabClicked ) )</ID>
+    <ID>LongParameterList:SystemWindowRequest.kt$SystemWindowRequest$( private val webView: WebView, private val newEngineSession: EngineSession? = null, private val newWebView: WebView? = null, val openAsDialog: Boolean = false, val triggeredByUser: Boolean = false, private val resultMsg: Message? = null, override val type: WindowRequest.Type = WindowRequest.Type.OPEN )</ID>
+    <ID>LongParameterList:Toolbar.kt$Toolbar.ActionButton$( val imageDrawable: Drawable? = null, val contentDescription: String, override val visible: () -&gt; Boolean = { true }, private val background: Int = 0, private val padding: Padding? = null, private val listener: () -&gt; Unit )</ID>
+    <ID>LongParameterList:Toolbar.kt$Toolbar.ActionToggleButton$( internal val imageDrawable: Drawable, internal val imageSelectedDrawable: Drawable, private val contentDescription: String, private val contentDescriptionSelected: String, override val visible: () -&gt; Boolean = { true }, private var selected: Boolean = false, @DrawableRes private val background: Int = 0, private val padding: Padding? = null, private val listener: (Boolean) -&gt; Unit )</ID>
+    <ID>LongParameterList:ToolbarFeature.kt$ToolbarFeature$( private val toolbar: Toolbar, store: BrowserStore, loadUrlUseCase: SessionUseCases.LoadUrlUseCase, searchUseCase: SearchUseCase? = null, customTabId: String? = null, urlRenderConfiguration: UrlRenderConfiguration? = null )</ID>
+    <ID>LongParameterList:TrustedWebActivityIntentProcessor.kt$TrustedWebActivityIntentProcessor$( private val sessionManager: SessionManager, private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase, httpClient: Client, packageManager: PackageManager, apiKey: String?, private val store: CustomTabsServiceStore )</ID>
+    <ID>LongParameterList:WebAppSiteControlsFeature.kt$WebAppSiteControlsFeature$( applicationContext: Context, sessionManager: SessionManager, reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase, sessionId: String, manifest: WebAppManifest? = null, controlsBuilder: SiteControlsBuilder = SiteControlsBuilder.CopyAndRefresh(reloadUrlUseCase) )</ID>
     <ID>UndocumentedPublicClass:AllSessionsObserver.kt$AllSessionsObserver$Observer : Observer</ID>
     <ID>UndocumentedPublicClass:AutoSave.kt$AutoSave</ID>
     <ID>UndocumentedPublicClass:AutoSave.kt$AutoSave$Storage</ID>
     <ID>UndocumentedPublicClass:Base64.kt$Base64</ID>
     <ID>UndocumentedPublicClass:BrowserMenu.kt$BrowserMenu$Orientation</ID>
     <ID>UndocumentedPublicClass:BrowserMenuAdapter.kt$BrowserMenuItemViewHolder : ViewHolder</ID>
-    <ID>UndocumentedPublicClass:BrowserMenuHighlightableItem.kt$BrowserMenuHighlightableItem$Highlight</ID>
     <ID>UndocumentedPublicClass:Choice.kt$Choice$CREATOR : Creator</ID>
     <ID>UndocumentedPublicClass:ColorUtils.kt$ColorUtils</ID>
     <ID>UndocumentedPublicClass:Config.kt$Config</ID>
@@ -56,7 +100,6 @@
     <ID>UndocumentedPublicClass:DiskIconLoader.kt$DiskIconLoader$LoaderDiskCache</ID>
     <ID>UndocumentedPublicClass:DiskIconPreparer.kt$DiskIconPreparer$PreparerDiskCache</ID>
     <ID>UndocumentedPublicClass:DiskIconProcessor.kt$DiskIconProcessor$ProcessorDiskCache</ID>
-    <ID>UndocumentedPublicClass:Dispatchers.kt$Dispatchers$WaitableCoroutineScope</ID>
     <ID>UndocumentedPublicClass:DomainAutoCompleteProvider.kt$DomainAutoCompleteProvider$AutocompleteSource</ID>
     <ID>UndocumentedPublicClass:DomainMatcher.kt$DomainMatch</ID>
     <ID>UndocumentedPublicClass:DownloadManager.kt$DownloadManager</ID>
@@ -66,22 +109,15 @@
     <ID>UndocumentedPublicClass:DrawableUtils.kt$DrawableUtils</ID>
     <ID>UndocumentedPublicClass:EngineSession.kt$EngineSession.TrackingProtectionPolicy$TrackingCategory</ID>
     <ID>UndocumentedPublicClass:ErrorPages.kt$ErrorPages</ID>
-    <ID>UndocumentedPublicClass:ErrorRecording.kt$ErrorRecording</ID>
-    <ID>UndocumentedPublicClass:EventsStorageEngine.kt$RecordedEventData</ID>
     <ID>UndocumentedPublicClass:Experiment.kt$Experiment$Bucket</ID>
     <ID>UndocumentedPublicClass:Experiment.kt$Experiment$Matcher</ID>
     <ID>UndocumentedPublicClass:ExperimentsMapMeasurement.kt$ExperimentsMapMeasurement : TelemetryMeasurement</ID>
-    <ID>UndocumentedPublicClass:ExperimentsStorageEngine.kt$RecordedExperimentData</ID>
-    <ID>UndocumentedPublicClass:FindInPageIntegration.kt$FindInPageIntegration : LifecycleAwareFeatureBackHandler</ID>
     <ID>UndocumentedPublicClass:FindInPageView.kt$FindInPageView$Listener</ID>
-    <ID>UndocumentedPublicClass:FxaAccountManager.kt$AuthErrorObserver</ID>
     <ID>UndocumentedPublicClass:GVVersionVerifierPlugin.kt$GVVersionVerifierPlugin : Plugin</ID>
     <ID>UndocumentedPublicClass:Gecko.kt$Gecko</ID>
     <ID>UndocumentedPublicClass:GeckoEngineSessionState.kt$GeckoEngineSessionState : EngineSessionState</ID>
     <ID>UndocumentedPublicClass:GitHubClient.kt$GitHubClient</ID>
     <ID>UndocumentedPublicClass:GitHubPlugin.kt$GitHubPlugin : Plugin</ID>
-    <ID>UndocumentedPublicClass:Glean.kt$Glean : GleanInternalAPI</ID>
-    <ID>UndocumentedPublicClass:Glean.kt$GleanInternalAPI</ID>
     <ID>UndocumentedPublicClass:GleanApplication.kt$GleanApplication : Application</ID>
     <ID>UndocumentedPublicClass:Grammar.kt$GrammarElement</ID>
     <ID>UndocumentedPublicClass:HistoryStorage.kt$PageObservation</ID>
@@ -94,8 +130,8 @@
     <ID>UndocumentedPublicClass:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$AutocompleteResult</ID>
     <ID>UndocumentedPublicClass:IntentReceiverActivity.kt$IntentReceiverActivity : Activity</ID>
     <ID>UndocumentedPublicClass:Jexl.kt$Jexl</ID>
-    <ID>UndocumentedPublicClass:LoadRequestMetadata.kt$LoadRequestMetadata</ID>
     <ID>UndocumentedPublicClass:LaunchIntentMetadata.kt$LaunchIntentMetadata</ID>
+    <ID>UndocumentedPublicClass:LoadRequestMetadata.kt$LoadRequestMetadata</ID>
     <ID>UndocumentedPublicClass:LogSink.kt$LogSink</ID>
     <ID>UndocumentedPublicClass:LoginFragment.kt$LoginFragment : Fragment</ID>
     <ID>UndocumentedPublicClass:LoginFragment.kt$LoginFragment$OnLoginCompleteListener</ID>
@@ -103,7 +139,6 @@
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : AppCompatActivityOnLoginCompleteListenerCoroutineScope</ID>
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : AppCompatActivityOnLoginCompleteListenerCoroutineScopeSyncStatusObserver</ID>
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : AppCompatActivityOnLoginCompleteListenerOnDeviceListInteractionListenerCoroutineScope</ID>
-    <ID>UndocumentedPublicClass:ManifestStorage.kt$ManifestStorage</ID>
     <ID>UndocumentedPublicClass:Media.kt$Media$PlaybackState</ID>
     <ID>UndocumentedPublicClass:MemoryIconLoader.kt$MemoryIconLoader$LoaderMemoryCache</ID>
     <ID>UndocumentedPublicClass:MemoryIconPreparer.kt$MemoryIconPreparer$PreparerMemoryCache</ID>
@@ -119,24 +154,6 @@
     <ID>UndocumentedPublicClass:OAuthAccount.kt$Profile</ID>
     <ID>UndocumentedPublicClass:OriginVerifierFeature.kt$OriginVerifierFeature</ID>
     <ID>UndocumentedPublicClass:Parser.kt$ParserException : Exception</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$AppAudio : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$AppCamera : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$AppLocationCoarse : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$AppLocationFine : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentAudioCapture : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentAudioMicrophone : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentAudioOther : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentGeoLocation : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentNotification : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentProtectedMediaId : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentVideoApplication : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentVideoBrowser : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentVideoCamera : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentVideoCapture : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentVideoOther : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentVideoScreen : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$ContentVideoWindow : Permission</ID>
-    <ID>UndocumentedPublicClass:PermissionRequest.kt$Permission$Generic : Permission</ID>
     <ID>UndocumentedPublicClass:PreferredColorScheme.kt$PreferredColorScheme$Dark : PreferredColorScheme</ID>
     <ID>UndocumentedPublicClass:PreferredColorScheme.kt$PreferredColorScheme$Light : PreferredColorScheme</ID>
     <ID>UndocumentedPublicClass:PreferredColorScheme.kt$PreferredColorScheme$System : PreferredColorScheme</ID>
@@ -156,22 +173,20 @@
     <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$MalformedMessage : PushError</ID>
     <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$Network : PushError</ID>
     <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$Registration : PushError</ID>
-    <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$Rust : PushError</ID>
     <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$ServiceUnavailable : PushError</ID>
     <ID>UndocumentedPublicClass:ReaderViewControlsView.kt$ReaderViewControlsView$Listener</ID>
     <ID>UndocumentedPublicClass:ReaderViewFeature.kt$ReaderViewFeature$ColorScheme</ID>
     <ID>UndocumentedPublicClass:ReaderViewFeature.kt$ReaderViewFeature$Config</ID>
     <ID>UndocumentedPublicClass:ReaderViewFeature.kt$ReaderViewFeature$FontType</ID>
-    <ID>UndocumentedPublicClass:ReaderViewIntegration.kt$ReaderViewIntegration : LifecycleAwareFeatureBackHandler</ID>
     <ID>UndocumentedPublicClass:RecordingDevicesNotificationFeature.kt$RecordingState$Camera : RecordingState</ID>
     <ID>UndocumentedPublicClass:RecordingDevicesNotificationFeature.kt$RecordingState$CameraAndMicrophone : RecordingState</ID>
     <ID>UndocumentedPublicClass:RecordingDevicesNotificationFeature.kt$RecordingState$Microphone : RecordingState</ID>
     <ID>UndocumentedPublicClass:RecordingDevicesNotificationFeature.kt$RecordingState$None : RecordingState</ID>
     <ID>UndocumentedPublicClass:Request.kt$Request$CookiePolicy</ID>
     <ID>UndocumentedPublicClass:Request.kt$Request$Redirect</ID>
+    <ID>UndocumentedPublicClass:RequestInterceptor.kt$RequestInterceptor.InterceptionResponse$AppIntent : InterceptionResponse</ID>
     <ID>UndocumentedPublicClass:RequestInterceptor.kt$RequestInterceptor.InterceptionResponse$Content : InterceptionResponse</ID>
     <ID>UndocumentedPublicClass:RequestInterceptor.kt$RequestInterceptor.InterceptionResponse$Url : InterceptionResponse</ID>
-    <ID>UndocumentedPublicClass:RequestInterceptor.kt$RequestInterceptor.InterceptionResponse$AppIntent : InterceptionResponse</ID>
     <ID>UndocumentedPublicClass:RustLog.kt$RustLog</ID>
     <ID>UndocumentedPublicClass:SampleApplication.kt$SampleApplication : Application</ID>
     <ID>UndocumentedPublicClass:SampleRequestInterceptor.kt$SampleRequestInterceptor : RequestInterceptor</ID>
@@ -201,7 +216,6 @@
     <ID>UndocumentedPublicClass:SessionUseCases.kt$SessionUseCases$StopLoadingUseCase</ID>
     <ID>UndocumentedPublicClass:SettingUpdater.kt$SettingUpdater&lt;T&gt;</ID>
     <ID>UndocumentedPublicClass:Settings.kt$UnsupportedSetting&lt;T&gt;</ID>
-    <ID>UndocumentedPublicClass:SitePermissions.kt$SitePermissions$CREATOR : Creator</ID>
     <ID>UndocumentedPublicClass:SitePermissions.kt$SitePermissions$Status</ID>
     <ID>UndocumentedPublicClass:SitePermissionsFeature.kt$SitePermissionsFeature$PromptsStyling</ID>
     <ID>UndocumentedPublicClass:SitePermissionsRules.kt$SitePermissionsRules$Action</ID>
@@ -223,7 +237,6 @@
     <ID>UndocumentedPublicClass:StatusBarUtils.kt$StatusBarUtils</ID>
     <ID>UndocumentedPublicClass:StorageUtils.kt$StorageUtils</ID>
     <ID>UndocumentedPublicClass:Store.kt$Store.Subscription$Binding</ID>
-    <ID>UndocumentedPublicClass:Sync.kt$StoreSyncStatus</ID>
     <ID>UndocumentedPublicClass:SyncWorker.kt$SyncWorker : Worker</ID>
     <ID>UndocumentedPublicClass:SystemEngineSession.kt$SystemEngineSession$WebSetting&lt;T&gt;</ID>
     <ID>UndocumentedPublicClass:SystemEngineSessionState.kt$SystemEngineSessionState : EngineSessionState</ID>
@@ -243,57 +256,28 @@
     <ID>UndocumentedPublicClass:ToolbarFeature.kt$ToolbarFeature.RenderStyle$ColoredUrl : RenderStyle</ID>
     <ID>UndocumentedPublicClass:ToolbarFeature.kt$ToolbarFeature.RenderStyle$RegistrableDomain : RenderStyle</ID>
     <ID>UndocumentedPublicClass:ToolbarFeature.kt$ToolbarFeature.RenderStyle$UncoloredUrl : RenderStyle</ID>
-    <ID>UndocumentedPublicClass:TrackingProtectionUseCases.kt$TrackingProtectionUseCases$FetchTrackingLogUserCase</ID>
     <ID>UndocumentedPublicClass:URLStringUtils.kt$URLStringUtils</ID>
     <ID>UndocumentedPublicClass:WebAppManifest.kt$WebAppManifest.Icon$Purpose</ID>
-    <ID>UndocumentedPublicClass:WebAppShortcutManager.kt$WebAppShortcutManager</ID>
     <ID>UndocumentedPublicClass:WorkManagerSyncManager.kt$WorkManagerSyncDispatcher : SyncDispatcherObservableCloseable</ID>
     <ID>UndocumentedPublicClass:WorkManagerSyncManager.kt$WorkManagerSyncWorker : CoroutineWorker</ID>
-    <ID>UndocumentedPublicFunction:AccountStorage.kt$AccountStorage$@Throws(Exception::class) fun read(): OAuthAccount?</ID>
-    <ID>UndocumentedPublicFunction:AccountStorage.kt$AccountStorage$fun clear()</ID>
-    <ID>UndocumentedPublicFunction:AccountStorage.kt$AccountStorage$fun write(accountState: String)</ID>
     <ID>UndocumentedPublicFunction:AllSessionsObserver.kt$AllSessionsObserver$fun start()</ID>
     <ID>UndocumentedPublicFunction:AllSessionsObserver.kt$AllSessionsObserver$fun stop()</ID>
     <ID>UndocumentedPublicFunction:AllSessionsObserver.kt$AllSessionsObserver.Observer$fun onRegisteredToSession(session: Session)</ID>
     <ID>UndocumentedPublicFunction:AllSessionsObserver.kt$AllSessionsObserver.Observer$fun onUnregisteredFromSession(session: Session)</ID>
-    <ID>UndocumentedPublicFunction:AppLinkRedirect.kt$AppLinkRedirect$fun hasExternalApp()</ID>
-    <ID>UndocumentedPublicFunction:AppLinkRedirect.kt$AppLinkRedirect$fun hasFallback()</ID>
-    <ID>UndocumentedPublicFunction:AppLinkRedirect.kt$AppLinkRedirect$fun isRedirect()</ID>
     <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.GetAppLinkRedirect$operator fun invoke(url: String): AppLinkRedirect</ID>
-    <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.OpenAppLinkRedirect$operator fun invoke( appIntent: Intent?, launchInNewTask: Boolean = true, failedToLaunchAction: () -> Unit = {} )</ID>
-    <ID>UndocumentedPublicFunction:Arguments.kt$Arguments$fun assertIsNotBlank(input: String, exceptionIdentifier: String)</ID>
-    <ID>UndocumentedPublicFunction:Arguments.kt$Arguments$fun assertIsValidUserAgent(userAgent: String)</ID>
-    <ID>UndocumentedPublicFunction:AutoPushFeature.kt$DeliveryManager$fun serviceForChannelId(channelId: String): PushType</ID>
-    <ID>UndocumentedPublicFunction:AutoPushFeature.kt$PushSubscriptionObserver$fun onSubscriptionAvailable(subscription: AutoPushSubscription)</ID>
+    <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.OpenAppLinkRedirect$operator fun invoke( appIntent: Intent?, launchInNewTask: Boolean = true, failedToLaunchAction: () -&gt; Unit = {} )</ID>
     <ID>UndocumentedPublicFunction:AutoSave.kt$AutoSave.Storage$fun save(snapshot: SessionManager.Snapshot): Boolean</ID>
-    <ID>UndocumentedPublicFunction:AwesomeBarFeature.kt$AwesomeBarFeature$fun addClipboardProvider( context: Context, loadUrlUseCase: SessionUseCases.LoadUrlUseCase ): AwesomeBarFeature</ID>
-    <ID>UndocumentedPublicFunction:Base64.kt$Base64$fun encodeToUriString(data: String)</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment.Companion$fun create(sessionId: String? = null)</ID>
-    <ID>UndocumentedPublicFunction:BrowserIcons.kt$BrowserIcons$fun onLowMemory()</ID>
     <ID>UndocumentedPublicFunction:BrowserMenu.kt$BrowserMenu$fun dismiss()</ID>
     <ID>UndocumentedPublicFunction:BrowserMenu.kt$BrowserMenu$fun invalidate()</ID>
-    <ID>UndocumentedPublicFunction:BrowserMenuBuilder.kt$BrowserMenuBuilder$fun build(context: Context): BrowserMenu</ID>
-    <ID>UndocumentedPublicFunction:BrowserStateReducer.kt$BrowserStateReducer$fun reduce(state: BrowserState, action: BrowserAction): BrowserState</ID>
-    <ID>UndocumentedPublicFunction:Bus.kt$Bus.Observer$fun onEvent(type: T, message: M)</ID>
     <ID>UndocumentedPublicFunction:ByteArray.kt$@Suppress("MagicNumber") fun ByteArray.toHexString(hexLength: Int): String</ID>
     <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toBitmap( offset: Int, length: Int, opts: BitmapFactory.Options? = null ): Bitmap?</ID>
     <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toBitmap(opts: BitmapFactory.Options? = null): Bitmap?</ID>
     <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toHexString(): String</ID>
     <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toSha256Digest(): ByteArray</ID>
-    <ID>UndocumentedPublicFunction:CommonMetricData.kt$CommonMetricData$fun shouldRecord(logger: Logger): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Connection.kt$PushConnection$fun decrypt( channelId: String, body: String, encoding: String = "", salt: String = "", cryptoKey: String = "" ): ByteArray</ID>
-    <ID>UndocumentedPublicFunction:Connection.kt$PushConnection$fun isInitialized(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Connection.kt$PushConnection$suspend fun subscribe(channelId: String, scope: String = ""): SubscriptionResponse</ID>
-    <ID>UndocumentedPublicFunction:Connection.kt$PushConnection$suspend fun unsubscribe(channelId: String): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Connection.kt$PushConnection$suspend fun unsubscribeAll(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Connection.kt$PushConnection$suspend fun updateToken(token: String): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Connection.kt$PushConnection$suspend fun verifyConnection(): Boolean</ID>
     <ID>UndocumentedPublicFunction:Context.kt$fun Context.isPermissionGranted(vararg permission: String): Boolean</ID>
     <ID>UndocumentedPublicFunction:Crash.kt$Crash.Companion$fun fromIntent(intent: Intent): Crash</ID>
     <ID>UndocumentedPublicFunction:Crash.kt$Crash.Companion$fun isCrashIntent(intent: Intent)</ID>
-    <ID>UndocumentedPublicFunction:CustomTabSessionState.kt$fun createCustomTab( url: String, id: String = UUID.randomUUID().toString(), config: CustomTabConfig = CustomTabConfig() ): CustomTabSessionState</ID>
-    <ID>UndocumentedPublicFunction:CustomTabsServiceStateReducer.kt$CustomTabsServiceStateReducer$fun reduce(state: CustomTabsServiceState, action: CustomTabsAction): CustomTabsServiceState</ID>
-    <ID>UndocumentedPublicFunction:DeviceEvents.kt$DeviceEventsObserver$fun onEvents(events: List&lt;DeviceEvent&gt;)</ID>
     <ID>UndocumentedPublicFunction:DeviceFragment.kt$DeviceFragment$fun updateDevices(devices: List&lt;Device&gt;)</ID>
     <ID>UndocumentedPublicFunction:DeviceFragment.kt$DeviceFragment.OnDeviceListInteractionListener$fun onDeviceInteraction(item: Device)</ID>
     <ID>UndocumentedPublicFunction:Devices.kt$DeviceConstellationObserver$fun onDevicesUpdate(constellation: ConstellationState)</ID>
@@ -318,21 +302,19 @@
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$@Suppress("LongParameterList") fun onExternalResource( url: String, fileName: String? = null, contentLength: Long? = null, contentType: String? = null, cookie: String? = null, userAgent: String? = null )</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onAppPermissionRequest(permissionRequest: PermissionRequest)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest)</ID>
-    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onCloseWindowRequest(windowRequest: WindowRequest)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onContentPermissionRequest(permissionRequest: PermissionRequest)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onCrash()</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onDesktopModeChange(enabled: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFind(text: String)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFullScreenChange(enabled: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onMetaViewportFitChanged(layoutInDisplayCutoutMode: Int)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLoadingStateChange(loading: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLocationChange(url: String)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLongPress(hitResult: HitResult)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onMediaAdded(media: Media)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onMediaRemoved(media: Media)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onNavigateBack()</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null)</ID>
-    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onOpenWindowRequest(windowRequest: WindowRequest)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onProcessKilled()</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onProgress(progress: Int)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onPromptRequest(promptRequest: PromptRequest)</ID>
@@ -343,7 +325,6 @@
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlocked(tracker: Tracker)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlockingEnabledChange(enabled: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerLoaded(tracker: Tracker)</ID>
-    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onNavigateBack()</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onWebAppManifestLoaded(manifest: WebAppManifest)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.TrackingProtectionPolicy$fun contains(category: TrackingCategory)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.TrackingProtectionPolicy.Companion$fun none()</ID>
@@ -359,7 +340,6 @@
     <ID>UndocumentedPublicFunction:Extensions.kt$fun String.toLocale(): Locale</ID>
     <ID>UndocumentedPublicFunction:Extentions.kt$fun Project.property(names: String, defaultValue: String): String</ID>
     <ID>UndocumentedPublicFunction:ExternalAppBrowserFragment.kt$ExternalAppBrowserFragment.Companion$fun create( sessionId: String, manifest: WebAppManifest? )</ID>
-    <ID>UndocumentedPublicFunction:Facts.kt$Facts$@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) fun clearProcessors()</ID>
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onClearMatches()</ID>
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onClose()</ID>
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onFindAll(query: String)</ID>
@@ -367,10 +347,7 @@
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onPreviousResult()</ID>
     <ID>UndocumentedPublicFunction:FirefoxAccountsAuthFeature.kt$FirefoxAccountsAuthFeature$fun beginAuthentication(context: Context)</ID>
     <ID>UndocumentedPublicFunction:FirefoxAccountsAuthFeature.kt$FirefoxAccountsAuthFeature$fun beginPairingAuthentication(context: Context, pairingUrl: String)</ID>
-    <ID>UndocumentedPublicFunction:FxaAccountManager.kt$AuthErrorObserver$fun onAuthErrorAsync(e: AuthException): Deferred&lt;Unit&gt;</ID>
     <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$@VisibleForTesting open fun createAccount(config: ServerConfig): OAuthAccount</ID>
-    <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$@VisibleForTesting open fun createSyncManager(config: SyncConfig): SyncManager</ID>
-    <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$@VisibleForTesting open fun getAccountStorage(): AccountStorage</ID>
     <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun accountProfile(): Profile?</ID>
     <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun beginAuthenticationAsync(pairingUrl: String? = null): Deferred&lt;String?&gt;</ID>
     <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun logoutAsync(): Deferred&lt;Unit&gt;</ID>
@@ -416,50 +393,25 @@
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun plus(other: JexlValue): JexlValue</ID>
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun times(other: JexlValue): JexlValue</ID>
     <ID>UndocumentedPublicFunction:LegacySessionManager.kt$LegacySessionManager$fun createSessionSnapshot(session: Session): SessionManager.Snapshot.Item</ID>
-    <ID>UndocumentedPublicFunction:LegacySessionManager.kt$LegacySessionManager$fun link(session: Session, engineSession: EngineSession)</ID>
     <ID>UndocumentedPublicFunction:LifecycleAwareFeature.kt$LifecycleAwareFeature$@OnLifecycleEvent(Lifecycle.Event.ON_START) fun start()</ID>
     <ID>UndocumentedPublicFunction:LifecycleAwareFeature.kt$LifecycleAwareFeature$@OnLifecycleEvent(Lifecycle.Event.ON_STOP) fun stop()</ID>
     <ID>UndocumentedPublicFunction:LoadRequestMetadata.kt$LoadRequestMetadata$fun isSet(option: LoadRequestOption)</ID>
-    <ID>UndocumentedPublicFunction:LocaleManager.kt$LocaleManager.Storage$@Synchronized fun save(context: Context, localeCode: String)</ID>
-    <ID>UndocumentedPublicFunction:LocaleManager.kt$LocaleManager.Storage$fun clear(context: Context)</ID>
-    <ID>UndocumentedPublicFunction:LocaleManager.kt$LocaleManager.Storage$fun getLocale(context: Context): String?</ID>
-    <ID>UndocumentedPublicFunction:Log.kt$Log$// Only for testing @VisibleForTesting fun reset()</ID>
     <ID>UndocumentedPublicFunction:LogSink.kt$LogSink$fun log( priority: Log.Priority = Log.Priority.DEBUG, tag: String? = null, throwable: Throwable? = null, message: String? = null )</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.Companion$fun create(authUrl: String, redirectUrl: String): LoginFragment</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.OnLoginCompleteListener$fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment)</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.OnLoginCompleteListener$fun onLoginComplete(code: String, state: String, fragment: LoginFragment)</ID>
-    <ID>UndocumentedPublicFunction:Media.kt$Media.Observer$fun onMetadataChanged(media: Media, metadata: Metadata)</ID>
-    <ID>UndocumentedPublicFunction:Media.kt$Media.Observer$fun onPlaybackStateChanged(media: Media, playbackState: PlaybackState)</ID>
-    <ID>UndocumentedPublicFunction:Media.kt$Media.Observer$fun onStateChanged(media: Media, state: State)</ID>
     <ID>UndocumentedPublicFunction:MemoryIconLoader.kt$MemoryIconLoader.LoaderMemoryCache$fun getBitmap(request: IconRequest, resource: IconRequest.Resource): Bitmap?</ID>
     <ID>UndocumentedPublicFunction:MemoryIconPreparer.kt$MemoryIconPreparer.PreparerMemoryCache$fun getResources(request: IconRequest): List&lt;IconRequest.Resource&gt;</ID>
     <ID>UndocumentedPublicFunction:MemoryIconProcessor.kt$MemoryIconProcessor.ProcessorMemoryCache$fun put(request: IconRequest, resource: IconRequest.Resource, icon: Icon)</ID>
     <ID>UndocumentedPublicFunction:MonthAndYearPicker.kt$MonthAndYearPicker.OnDateSetListener$fun onDateSet(picker: MonthAndYearPicker, month: Int, year: Int)</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun beginOAuthFlowAsync(scopes: Set&lt;String&gt;): Deferred&lt;AuthFlowUrl?&gt;</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun beginPairingFlowAsync(pairingUrl: String, scopes: Set&lt;String&gt;): Deferred&lt;AuthFlowUrl?&gt;</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun checkAuthorizationStatusAsync(singleScope: String): Deferred&lt;Boolean?&gt;</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun completeOAuthFlowAsync(code: String, state: String): Deferred&lt;Boolean&gt;</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun deviceConstellation(): DeviceConstellation</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun disconnectAsync(): Deferred&lt;Boolean&gt;</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun getAccessTokenAsync(singleScope: String): Deferred&lt;AccessTokenInfo?&gt;</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun getCurrentDeviceId(): String?</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun getProfileAsync(): Deferred&lt;Profile?&gt;</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun getProfileAsync(ignoreCache: Boolean): Deferred&lt;Profile?&gt;</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun getSessionToken(): String?</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun getTokenServerEndpointURL(): String</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred&lt;Boolean&gt;</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun registerPersistenceCallback(callback: StatePersistenceCallback)</ID>
-    <ID>UndocumentedPublicFunction:OAuthAccount.kt$OAuthAccount$fun toJSONString(): String</ID>
     <ID>UndocumentedPublicFunction:OkHttpClient.kt$OkHttpClient.Companion$fun getOrCreateCookieManager(): CookieManager</ID>
     <ID>UndocumentedPublicFunction:OriginVerifierFeature.kt$OriginVerifierFeature$suspend fun verify( state: CustomTabState, token: CustomTabsSessionToken, @Relation relation: Int, origin: Uri ): Boolean</ID>
     <ID>UndocumentedPublicFunction:PermissionRequest.kt$PermissionRequest$fun containsVideoAndAudioSources()</ID>
     <ID>UndocumentedPublicFunction:PictureInPictureFeature.kt$PictureInPictureFeature$fun enterPipModeCompat()</ID>
     <ID>UndocumentedPublicFunction:PictureInPictureFeature.kt$PictureInPictureFeature$fun onHomePressed(): Boolean</ID>
     <ID>UndocumentedPublicFunction:PictureInPictureFeature.kt$PictureInPictureFeature$fun onPictureInPictureModeChanged(enabled: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:ProtectedDataAdapter.kt$ProtectedDataAdapter$fun toggleUnlock(): Boolean</ID>
     <ID>UndocumentedPublicFunction:Providers.kt$BaseDomainAutocompleteProvider$fun initialize(context: Context)</ID>
     <ID>UndocumentedPublicFunction:Providers.kt$DomainAutocompleteProvider$fun getAutocompleteSuggestion(query: String): DomainAutocompleteResult?</ID>
-    <ID>UndocumentedPublicFunction:PublicSuffixListLoader.kt$PublicSuffixListLoader$fun load(context: Context): PublicSuffixListData</ID>
     <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onColorSchemeChanged(scheme: ColorScheme)</ID>
     <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onFontChanged(font: FontType)</ID>
     <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onFontSizeDecreased(): Int</ID>
@@ -487,28 +439,18 @@
     <ID>UndocumentedPublicFunction:SendCrashReportService.kt$SendCrashReportService.Companion$fun createReportIntent( context: Context, crash: Crash, notificationTag: String? = null, notificationId: Int = 0 ): Intent</ID>
     <ID>UndocumentedPublicFunction:SendCrashTelemetryService.kt$SendCrashTelemetryService.Companion$fun createReportIntent(context: Context, crash: Crash): Intent</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onCloseWindowRequested(session: Session, windowRequest: WindowRequest): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onCrashStateChanged(session: Session, crashed: Boolean)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onDesktopModeChanged(session: Session, enabled: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onDownload(session: Session, download: Download): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onFindResult(session: Session, result: FindResult)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onFullScreenChanged(session: Session, enabled: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onMetaViewportFitChanged(session: Session, layoutInDisplayCutoutMode: Int)</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onIconChanged(session: Session, icon: Bitmap?)</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLoadRequest( session: Session, url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean )</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLaunchIntentRequest(session: Session, url: String, appIntent: Intent?)</ID>
+    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLoadRequest( session: Session, url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean )</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLoadingStateChanged(session: Session, loading: Boolean)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLongPress(session: Session, hitResult: HitResult): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onMediaAdded(session: Session, media: List&lt;Media&gt;, added: Media)</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onMediaRemoved(session: Session, media: List&lt;Media&gt;, removed: Media)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onOpenWindowRequested(session: Session, windowRequest: WindowRequest): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onProgress(session: Session, progress: Int)</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onPromptRequested(session: Session, promptRequest: PromptRequest): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onReaderModeChanged(session: Session, enabled: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onReaderableStateUpdated(session: Session, readerable: Boolean)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onRecordingDevicesChanged(session: Session, devices: List&lt;RecordingDevice&gt;)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onSearch(session: Session, searchTerms: String)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onSecurityChanged(session: Session, securityInfo: SecurityInfo)</ID>
@@ -519,7 +461,6 @@
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onTrackerLoaded(session: Session, tracker: Tracker, all: List&lt;Tracker&gt;)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onUrlChanged(session: Session, url: String)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?)</ID>
-    <ID>UndocumentedPublicFunction:SessionManager.kt$SessionManager.EngineSessionLinker$fun link(session: Session, engineSession: EngineSession)</ID>
     <ID>UndocumentedPublicFunction:SessionManager.kt$SessionManager.EngineSessionLinker$fun unlink(session: Session)</ID>
     <ID>UndocumentedPublicFunction:SessionManager.kt$SessionManager.Snapshot$fun isEmpty()</ID>
     <ID>UndocumentedPublicFunction:SessionManager.kt$SessionManager.Snapshot.Companion$fun empty()</ID>
@@ -534,44 +475,24 @@
     <ID>UndocumentedPublicFunction:SnapshotSerializer.kt$SnapshotSerializer$fun itemFromJSON(engine: Engine, json: JSONObject): SessionManager.Snapshot.Item</ID>
     <ID>UndocumentedPublicFunction:SnapshotSerializer.kt$SnapshotSerializer$fun itemToJSON(item: SessionManager.Snapshot.Item): JSONObject</ID>
     <ID>UndocumentedPublicFunction:SnapshotSerializer.kt$SnapshotSerializer$fun toJSON(snapshot: SessionManager.Snapshot): String</ID>
-    <ID>UndocumentedPublicFunction:StorageUtils.kt$StorageUtils$// Borrowed from https://gist.github.com/ademar111190/34d3de41308389a0d0d8 fun levenshteinDistance(a: String, b: String): Int</ID>
     <ID>UndocumentedPublicFunction:Store.kt$Store.Subscription.Binding$fun unbind()</ID>
     <ID>UndocumentedPublicFunction:String.kt$fun String.isEmail()</ID>
     <ID>UndocumentedPublicFunction:String.kt$fun String.isGeoLocation()</ID>
     <ID>UndocumentedPublicFunction:String.kt$fun String.isPhone()</ID>
     <ID>UndocumentedPublicFunction:String.kt$fun String.toNormalizedUrl()</ID>
-    <ID>UndocumentedPublicFunction:SyncAuthInfoCache.kt$SyncAuthInfoCache$fun clear()</ID>
     <ID>UndocumentedPublicFunction:SyncAuthInfoCache.kt$SyncAuthInfoCache$fun expired(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:SyncAuthInfoCache.kt$SyncAuthInfoCache$fun getCached(): SyncAuthInfo?</ID>
-    <ID>UndocumentedPublicFunction:SyncAuthInfoCache.kt$SyncAuthInfoCache$fun setToCache(authInfo: SyncAuthInfo)</ID>
-    <ID>UndocumentedPublicFunction:SyncManager.kt$GlobalSyncableStoreProvider$fun configureStore(storePair: Pair&lt;SyncEngine, SyncableStore&gt;)</ID>
-    <ID>UndocumentedPublicFunction:SyncManager.kt$SyncDispatcher$fun isSyncActive(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:SyncManager.kt$SyncDispatcher$fun startPeriodicSync(unit: TimeUnit, period: Long)</ID>
-    <ID>UndocumentedPublicFunction:SyncManager.kt$SyncDispatcher$fun stopPeriodicSync()</ID>
-    <ID>UndocumentedPublicFunction:SyncManager.kt$SyncDispatcher$fun syncNow(startup: Boolean = false, debounce: Boolean = false)</ID>
-    <ID>UndocumentedPublicFunction:SyncManager.kt$SyncDispatcher$fun workersStateChanged(isRunning: Boolean)</ID>
     <ID>UndocumentedPublicFunction:SystemEngineSession.kt$SystemEngineSession.WebSetting$operator fun getValue(thisRef: Any?, property: KProperty&lt;*&gt;): T</ID>
     <ID>UndocumentedPublicFunction:SystemEngineSession.kt$SystemEngineSession.WebSetting$operator fun setValue(thisRef: Any?, property: KProperty&lt;*&gt;, value: T)</ID>
     <ID>UndocumentedPublicFunction:SystemEngineSessionState.kt$SystemEngineSessionState.Companion$fun fromJSON(json: JSONObject): SystemEngineSessionState</ID>
     <ID>UndocumentedPublicFunction:TabCounter.kt$TabCounter$fun getText(): CharSequence</ID>
     <ID>UndocumentedPublicFunction:TabCounter.kt$TabCounter$fun setCount(count: Int)</ID>
     <ID>UndocumentedPublicFunction:TabCounter.kt$TabCounter$fun setCountWithAnimation(count: Int)</ID>
-    <ID>UndocumentedPublicFunction:TabSessionState.kt$fun createTab( url: String, private: Boolean = false, id: String = UUID.randomUUID().toString(), parent: TabSessionState? = null ): TabSessionState</ID>
-    <ID>UndocumentedPublicFunction:TabsAdapter.kt$TabsAdapter$fun unsubscribeHolders()</ID>
-    <ID>UndocumentedPublicFunction:TabsFeature.kt$TabsFeature$fun filterTabs(tabsFilter: (Session) -&gt; Boolean)</ID>
     <ID>UndocumentedPublicFunction:TabsTrayInteractor.kt$TabsTrayInteractor$fun start()</ID>
     <ID>UndocumentedPublicFunction:TabsTrayInteractor.kt$TabsTrayInteractor$fun stop()</ID>
     <ID>UndocumentedPublicFunction:TabsTrayPresenter.kt$TabsTrayPresenter$fun start()</ID>
     <ID>UndocumentedPublicFunction:TabsTrayPresenter.kt$TabsTrayPresenter$fun stop()</ID>
     <ID>UndocumentedPublicFunction:TabsUseCases.kt$TabsUseCases.RemoveAllTabsUseCase$operator fun invoke()</ID>
-    <ID>UndocumentedPublicFunction:TabsUseCases.kt$TabsUseCases.SelectTabUseCase$operator fun invoke(session: Session)</ID>
     <ID>UndocumentedPublicFunction:TelemetryClient.kt$TelemetryClient$fun uploadPing(configuration: TelemetryConfiguration, path: String, serializedPing: String): Boolean</ID>
-    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun assertOnUiThread()</ID>
-    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun postToBackgroundThread(runnable: () -&gt; Unit)</ID>
-    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun postToBackgroundThread(runnable: Runnable)</ID>
-    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun postToMainThread(runnable: Runnable)</ID>
-    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun postToMainThreadDelayed(runnable: Runnable, delayMillis: Long)</ID>
-    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun setHandlerForTest(handler: Handler)</ID>
     <ID>UndocumentedPublicFunction:Toolbar.kt$Toolbar.Action$fun bind(view: View)</ID>
     <ID>UndocumentedPublicFunction:Toolbar.kt$Toolbar.Action$fun createView(parent: ViewGroup): View</ID>
     <ID>UndocumentedPublicFunction:ToolbarAutocompleteFeature.kt$ToolbarAutocompleteFeature$fun addDomainProvider(provider: DomainAutocompleteProvider)</ID>
@@ -581,7 +502,6 @@
     <ID>UndocumentedPublicFunction:Types.kt$fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Device.Capability.into(): DeviceCapability</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Device.PushSubscription.into(): mozilla.components.concept.sync.DevicePushSubscription</ID>
-    <ID>UndocumentedPublicFunction:Types.kt$fun Device.Type.into(): mozilla.components.concept.sync.DeviceType</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Device.into(): mozilla.components.concept.sync.Device</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun DeviceCapability.into(): Device.Capability</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun DeviceType.into(): Device.Type</ID>
@@ -591,22 +511,15 @@
     <ID>UndocumentedPublicFunction:Types.kt$fun ScopedKey.into(): OAuthScopedKey</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun TabHistoryEntry.into(): mozilla.components.concept.sync.TabData</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.Device.into(): Device</ID>
-    <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.DeviceEvent.TabReceived.into(): AccountEvent.TabReceived</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.DevicePushSubscription.into(): Device.PushSubscription</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry</ID>
-    <ID>UndocumentedPublicFunction:URLStringUtils.kt$URLStringUtils$fun isSearchTerm(string: String)</ID>
-    <ID>UndocumentedPublicFunction:URLStringUtils.kt$URLStringUtils$fun isURLLike(string: String, safe: Boolean = false)</ID>
     <ID>UndocumentedPublicFunction:WebAppActivityFeature.kt$WebAppActivityFeature$@OnLifecycleEvent(Lifecycle.Event.ON_DESTROY) fun onDestroy()</ID>
     <ID>UndocumentedPublicFunction:WebAppActivityFeature.kt$WebAppActivityFeature$@OnLifecycleEvent(Lifecycle.Event.ON_RESUME) fun onResume()</ID>
     <ID>UndocumentedPublicFunction:WebAppManifestParser.kt$WebAppManifestParser$fun serialize(manifest: WebAppManifest)</ID>
     <ID>UndocumentedPublicFunction:WebAppSiteControlsFeature.kt$WebAppSiteControlsFeature$@OnLifecycleEvent(Lifecycle.Event.ON_PAUSE) fun onPause()</ID>
     <ID>UndocumentedPublicFunction:WebAppSiteControlsFeature.kt$WebAppSiteControlsFeature$@OnLifecycleEvent(Lifecycle.Event.ON_RESUME) fun onResume()</ID>
-    <ID>UndocumentedPublicFunction:WebCompatFeature.kt$WebCompatFeature$fun install(engine: Engine)</ID>
     <ID>UndocumentedPublicFunction:WebserverRule.kt$WebserverRule$fun url(path: String = ""): String</ID>
-    <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$WorkersLiveDataObserver$@UiThread fun init()</ID>
-    <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$WorkersLiveDataObserver$fun setDispatcher(dispatcher: SyncDispatcher)</ID>
     <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$fun getLastSynced(context: Context): Long</ID>
-    <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$fun setLastSynced(context: Context, ts: Long)</ID>
     <ID>UndocumentedPublicFunction:nodes.kt$AstNode$open fun toString(level: Int, isTopLevel: Boolean = true): String</ID>
   </Whitelist>
 </SmellBaseline>

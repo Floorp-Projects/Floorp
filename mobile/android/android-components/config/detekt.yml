@@ -1,22 +1,3 @@
-failFast: false
-
-test-pattern: # Configure exclusions for test sources
-  active: true
-  patterns: # Test file regexes
-    - '.*/test/.*'
-    - '.*Test.kt'
-  exclude-rule-sets:
-    - 'comments'
-  exclude-rules:
-    - 'NamingRules'
-    - 'WildcardImport'
-    - 'MagicNumber'
-    - 'MaxLineLength'
-    - 'LateinitUsage'
-    - 'StringLiteralDuplication'
-    - 'SpreadOperator'
-    - 'TooManyFunctions'
-
 build:
   maxIssues: 0
   weights:
@@ -42,13 +23,6 @@ console-reports:
   #  - 'NotificationReport'
   #  - 'FindingsReport'
   #  - 'BuildFailureReport'
-
-output-reports:
-  active: true
-  exclude:
-  #  - 'HtmlOutputReport'
-    - 'PlainOutputReport'
-    - 'XmlOutputReport'
 
 comments:
   active: true
@@ -85,10 +59,12 @@ complexity:
     active: false
   LargeClass:
     active: true
-    threshold: 150
+    # Had to increase the threshold as RC13 started counting lines of code
+    threshold: 200
   LongMethod:
     active: true
-    threshold: 60
+    # Had to increase the threshold as RC13 started counting lines of code
+    threshold: 75
   LongParameterList:
     active: true
     threshold: 6
@@ -215,7 +191,7 @@ naming:
     active: true
   MemberNameEqualsClassName:
     active: false
-    ignoreOverriddenFunction: true
+    ignoreOverridden: true
   ObjectPropertyNaming:
     active: true
     propertyPattern: '[A-Za-z][_A-Za-z0-9]*'
@@ -326,9 +302,6 @@ style:
     active: true
   ModifierOrder:
     active: true
-  MultiLineIfElse:
-    active: true
-    autoCorrect: true
   NestedClassesVisibility:
     active: false
   NewLineAtEndOfFile:
