@@ -36,10 +36,15 @@ def test_browser(*mocked):
             b(metadata)
     finally:
         shutil.rmtree(mach_cmd._mach_context.state_dir)
-
     assert mach_cmd.run_process.call_count == 1
+
     # XXX more checks
     assert mach_cmd.run_process.call_args[0][-1][-1] == EXAMPLE_TEST
+
+    # Make sure all arguments are of type str
+    for option in mach_cmd.run_process.call_args[0][0]:
+        assert isinstance(option, str)
+
     cmd = " ".join(mach_cmd.run_process.call_args[0][0])
     assert "--firefox.geckodriverPath GECKODRIVER" in cmd
 

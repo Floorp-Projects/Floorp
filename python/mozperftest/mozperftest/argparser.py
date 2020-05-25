@@ -46,7 +46,7 @@ class Options:
         },
         "--hooks": {
             "type": str,
-            "default": "",
+            "default": None,
             "help": "Script containing hooks. Can be a path or a URL.",
         },
         "--verbose": {"action": "store_true", "default": False, "help": "Verbose mode"},
