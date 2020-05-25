@@ -287,7 +287,7 @@
 # 2 = STICKY (Allow lock to be broken, with hysteresis)
 - name: apz.axis_lock.mode
   type: RelaxedAtomicInt32
-  value: 0
+  value: 2
   mirror: always
 
 - name: apz.content_response_timeout
