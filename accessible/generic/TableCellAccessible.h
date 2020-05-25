@@ -60,6 +60,9 @@ class TableCellAccessible {
    * Returns true if this cell is selected.
    */
   virtual bool Selected() = 0;
+
+ private:
+  Accessible* PrevColHeader();
 };
 
 }  // namespace a11y
