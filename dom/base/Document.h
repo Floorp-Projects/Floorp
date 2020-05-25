@@ -3046,6 +3046,8 @@ class Document : public nsINode,
 
   void SetAutoFocusElement(Element* aAutoFocusElement);
   void TriggerAutoFocus();
+  void SetAutoFocusFired();
+  bool IsAutoFocusFired();
 
   void SetScrollToRef(nsIURI* aDocumentURI);
   MOZ_CAN_RUN_SCRIPT void ScrollToRef();

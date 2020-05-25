@@ -49,6 +49,7 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
 
  protected:
   virtual ~HTMLDialogElement();
+  void FocusDialog();
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
 
