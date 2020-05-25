@@ -39,6 +39,10 @@ class EagerEvaluation extends Component {
     };
   }
 
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
   componentDidUpdate(prevProps) {
     const {
       highlightDomElement,
@@ -52,6 +56,17 @@ class EagerEvaluation extends Component {
 
     if (canHighlightObject(terminalEagerResult)) {
       highlightDomElement(terminalEagerResult.getGrip());
+    }
+
+    if (this.state?.hasError) {
+      // If the render function threw at some point, clear the error after 1s so the
+      // component has a chance to render again.
+      // This way, we don't block instant evaluation for the whole session, in case the
+      // input changed in the meantime. If the input didn't change, we'll hit
+      // getDerivatedStateFromError again (and this won't render anything), so it's safe.
+      setTimeout(() => {
+        this.setState({ hasError: false });
+      }, 1000);
     }
   }
 
@@ -79,7 +94,8 @@ class EagerEvaluation extends Component {
   }
 
   render() {
-    const hasResult = this.props.terminalEagerResult !== null;
+    const hasResult =
+      this.props.terminalEagerResult !== null && !this.state?.hasError;
 
     return dom.div(
       { className: "eager-evaluation-result", key: "eager-evaluation-result" },
