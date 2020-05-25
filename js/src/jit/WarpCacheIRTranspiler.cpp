@@ -1053,6 +1053,19 @@ bool WarpCacheIRTranspiler::emitArrayPush(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitIsObjectResult(ValOperandId inputId) {
+  MDefinition* value = getOperand(inputId);
+
+  if (value->type() == MIRType::Object) {
+    pushResult(constant(BooleanValue(true)));
+  } else {
+    auto* isObject = MIsObject::New(alloc(), value);
+    pushResult(isObject);
+  }
+
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
                                                       uint8_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.

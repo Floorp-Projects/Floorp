@@ -656,6 +656,12 @@
   args:
     obj: ObjId
 
+- name: IsObjectResult
+  shared: true
+  transpile: true
+  args:
+    input: ValId
+
 - name: MathAbsInt32Result
   shared: true
   transpile: true

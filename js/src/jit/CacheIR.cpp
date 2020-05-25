@@ -5120,6 +5120,31 @@ AttachDecision CallIRGenerator::tryAttachToInteger(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachIsObject(HandleFunction callee) {
+  // Need a single argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'IsObject' intrinsic native function.
+  emitNativeCalleeGuard(callee);
+
+  // Type check the argument and return result.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  writer.isObjectResult(argId);
+
+  // This stub does not need to be monitored, because it always
+  // returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("IsObject");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
                                                     StringChar kind) {
   // Need one argument.
@@ -5168,6 +5193,15 @@ AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
   }
 
   return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachStringCharCodeAt(
+    HandleFunction callee) {
+  return tryAttachStringChar(callee, StringChar::CodeAt);
+}
+
+AttachDecision CallIRGenerator::tryAttachStringCharAt(HandleFunction callee) {
+  return tryAttachStringChar(callee, StringChar::At);
 }
 
 AttachDecision CallIRGenerator::tryAttachMathAbs(HandleFunction callee) {
@@ -5369,15 +5403,6 @@ AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachStringCharCodeAt(
-    HandleFunction callee) {
-  return tryAttachStringChar(callee, StringChar::CodeAt);
-}
-
-AttachDecision CallIRGenerator::tryAttachStringCharAt(HandleFunction callee) {
-  return tryAttachStringChar(callee, StringChar::At);
-}
-
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNative());
   if (calleeFunc->native() != fun_call) {
@@ -5540,6 +5565,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachToObject(callee);
     case InlinableNative::IntrinsicToInteger:
       return tryAttachToInteger(callee);
+    case InlinableNative::IntrinsicIsObject:
+      return tryAttachIsObject(callee);
 
     // String natives.
     case InlinableNative::StringCharCodeAt:

@@ -3707,6 +3707,20 @@ bool CacheIRCompiler::emitArrayJoinResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitIsObjectResult(ValOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  ValueOperand val = allocator.useValueRegister(masm, inputId);
+
+  masm.testObjectSet(Assembler::Equal, val, scratch);
+
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_BOOLEAN, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitMathAbsInt32Result(Int32OperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
