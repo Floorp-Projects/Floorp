@@ -1427,7 +1427,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
     }
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to create channel"));
-      streamLoader->ChannelOpenFailed();
+      streamLoader->ChannelOpenFailed(rv);
       SheetComplete(aLoadData, rv);
       return rv;
     }
@@ -1450,7 +1450,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
 
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to open URI synchronously"));
-      streamLoader->ChannelOpenFailed();
+      streamLoader->ChannelOpenFailed(rv);
       SheetComplete(aLoadData, rv);
       return rv;
     }
@@ -1659,10 +1659,16 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
                         nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, mDocument);
   }
 
+  auto preloadKey = PreloadHashKey::CreateAsStyle(aLoadData);
+  streamLoader->NotifyOpen(&preloadKey, channel, mDocument,
+                           aLoadData.mIsPreload == IsPreload::FromLink);
+
   rv = channel->AsyncOpen(streamLoader);
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to create stream loader"));
-    streamLoader->ChannelOpenFailed();
+    // ChannelOpenFailed makes sure that <link preload> nodes will get the
+    // proper notification about not being able to load this resource.
+    streamLoader->ChannelOpenFailed(rv);
     SheetComplete(aLoadData, rv);
     return rv;
   }
@@ -1675,10 +1681,6 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
 
   mSheets->mLoadingDatas.Put(&key, &aLoadData);
   aLoadData.mIsLoading = true;
-
-  auto preloadKey = PreloadHashKey::CreateAsStyle(aLoadData);
-  streamLoader->NotifyOpen(&preloadKey, channel, mDocument,
-                           aLoadData.mIsPreload == IsPreload::FromLink);
 
   return NS_OK;
 }

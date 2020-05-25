@@ -30,10 +30,12 @@ class StreamLoader : public PreloaderBase, public nsIStreamListener {
 
   explicit StreamLoader(SheetLoadData&);
 
-  void ChannelOpenFailed() {
+  void ChannelOpenFailed(nsresult rv) {
 #ifdef NIGHTLY_BUILD
     mChannelOpenFailed = true;
 #endif
+    NotifyStart(Channel());
+    NotifyStop(Channel(), rv);
   }
 
  private:
