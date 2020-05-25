@@ -51,6 +51,57 @@ add_task(async function test_switching_between_kinto_and_bridged() {
   await Service.engineManager.switchAlternatives();
 });
 
+add_task(async function test_enable() {
+  const PREF = "services.sync.engine.extension-storage.force";
+
+  let addonsEngine = Service.engineManager.get("addons");
+  let extensionStorageEngine = Service.engineManager.get("extension-storage");
+
+  try {
+    Assert.ok(
+      addonsEngine.enabled,
+      "Add-ons engine should be enabled by default"
+    );
+    Assert.ok(
+      extensionStorageEngine.enabled,
+      "Extension storage engine should be enabled by default"
+    );
+
+    addonsEngine.enabled = false;
+    Assert.ok(
+      !extensionStorageEngine.enabled,
+      "Disabling add-ons should disable extension storage"
+    );
+
+    extensionStorageEngine.enabled = true;
+    Assert.ok(
+      !extensionStorageEngine.enabled,
+      "Enabling extension storage without override pref shouldn't work"
+    );
+
+    Services.prefs.setBoolPref(PREF, true);
+    Assert.ok(
+      extensionStorageEngine.enabled,
+      "Setting override pref should enable extension storage"
+    );
+
+    extensionStorageEngine.enabled = false;
+    Assert.ok(
+      !extensionStorageEngine.enabled,
+      "Disabling extension storage engine with override pref should work"
+    );
+
+    extensionStorageEngine.enabled = true;
+    Assert.ok(
+      extensionStorageEngine.enabled,
+      "Enabling extension storage with override pref should work"
+    );
+  } finally {
+    addonsEngine.enabled = true;
+    Services.prefs.clearUserPref(PREF);
+  }
+});
+
 // It's difficult to know what to test - there's already tests for the bridged
 // engine etc - so we just try and check that this engine conforms to the
 // mozIBridgedSyncEngine interface guarantees.
