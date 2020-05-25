@@ -197,6 +197,25 @@ class GeckoJavaSampler
 };
 #endif
 
+constexpr static bool ValidateFeatures() {
+  int expectedFeatureNumber = 0;
+
+  // Feature numbers should start at 0 and increase by 1 each.
+#define CHECK_FEATURE(n_, str_, Name_, desc_) \
+  if ((n_) != expectedFeatureNumber) {        \
+    return false;                             \
+  }                                           \
+  ++expectedFeatureNumber;
+
+  PROFILER_FOR_EACH_FEATURE(CHECK_FEATURE)
+
+#undef CHECK_FEATURE
+
+  return true;
+}
+
+static_assert(ValidateFeatures(), "Feature list is invalid");
+
 // Return all features that are available on this platform.
 static uint32_t AvailableFeatures() {
   uint32_t features = 0;
