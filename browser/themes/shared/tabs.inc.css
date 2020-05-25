@@ -556,10 +556,15 @@
   background-color: rgba(255,255,255,.1);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .tab-line:not([selected=true]):not([multiselected]) {
+    transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
+  }
+}
+
 .tab-line:not([selected=true]):not([multiselected]) {
   opacity: 0;
   transform: scaleX(0);
-  transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
 }
 
 .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]):not([multiselected]) {
