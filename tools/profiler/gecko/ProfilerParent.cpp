@@ -318,7 +318,11 @@ void ProfilerParentTracker::EnsureInstance() {
   }
 
   sInstance = MakeUnique<ProfilerParentTracker>();
-  ClearOnShutdown(&sInstance);
+
+  // The tracker should get destroyed before threads are shutdown, because its
+  // destruction closes extant channels, which could trigger promise rejections
+  // that need to be dispatched to other threads.
+  ClearOnShutdown(&sInstance, ShutdownPhase::ShutdownThreads);
 }
 
 /* static */
