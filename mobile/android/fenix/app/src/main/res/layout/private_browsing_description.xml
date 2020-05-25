@@ -25,7 +25,7 @@
         android:textSize="14sp"
         tools:text="@string/private_browsing_placeholder_description_2" />
 
-    <TextView
+    <org.mozilla.fenix.utils.LinkTextView
         android:id="@+id/private_session_common_myths"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
