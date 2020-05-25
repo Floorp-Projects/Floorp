@@ -908,6 +908,20 @@ bool WarpCacheIRTranspiler::emitInt32RightShiftResult(Int32OperandId lhsId,
   return emitInt32BinaryArithResult<MRsh>(lhsId, rhsId);
 }
 
+bool WarpCacheIRTranspiler::emitInt32URightShiftResult(Int32OperandId lhsId,
+                                                       Int32OperandId rhsId,
+                                                       bool allowDouble) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  MIRType specialization = allowDouble ? MIRType::Double : MIRType::Int32;
+  auto* ins = MUrsh::New(alloc(), lhs, rhs, specialization);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitCallStringConcatResult(StringOperandId lhsId,
                                                        StringOperandId rhsId) {
   MDefinition* lhs = getOperand(lhsId);
