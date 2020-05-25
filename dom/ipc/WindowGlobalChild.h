@@ -130,7 +130,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   mozilla::ipc::IPCResult RecvMakeFrameRemote(
       const MaybeDiscarded<dom::BrowsingContext>& aFrameContext,
       ManagedEndpoint<PBrowserBridgeChild>&& aEndpoint, const TabId& aTabId,
-      MakeFrameRemoteResolver&& aResolve);
+      const LayersId& aLayersId, MakeFrameRemoteResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvDrawSnapshot(const Maybe<IntRect>& aRect,
                                            const float& aScale,
