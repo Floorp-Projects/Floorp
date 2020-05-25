@@ -783,8 +783,13 @@ nsresult nsAtomicFileOutputStream::DoOpen() {
   //    filesystems).
   nsCOMPtr<nsIFile> tempResult;
   rv = file->Clone(getter_AddRefs(tempResult));
-  if (NS_SUCCEEDED(rv) && mTargetFileExists) {
-    tempResult->Normalize();
+  if (NS_SUCCEEDED(rv)) {
+    tempResult->SetFollowLinks(true);
+
+    // XP_UNIX ignores SetFollowLinks(), so we have to normalize.
+    if (mTargetFileExists) {
+      tempResult->Normalize();
+    }
   }
 
   if (NS_SUCCEEDED(rv) && mTargetFileExists) {
