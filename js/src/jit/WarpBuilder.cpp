@@ -453,6 +453,81 @@ bool WarpBuilder::buildPrologue() {
   return true;
 }
 
+#ifdef DEBUG
+// In debug builds, after compiling a bytecode op, this class is used to check
+// that all values popped by this opcode either:
+//
+//   (1) Have the ImplicitlyUsed flag set on them.
+//   (2) Have more uses than before compiling this op (the value is
+//       used as operand of a new MIR instruction).
+//
+// This is used to catch problems where WarpBuilder pops a value without
+// adding any SSA uses and doesn't call setImplicitlyUsedUnchecked on it.
+class MOZ_RAII WarpPoppedValueUseChecker {
+  Vector<MDefinition*, 4, SystemAllocPolicy> popped_;
+  Vector<size_t, 4, SystemAllocPolicy> poppedUses_;
+  MBasicBlock* current_;
+  BytecodeLocation loc_;
+
+ public:
+  WarpPoppedValueUseChecker(MBasicBlock* current, BytecodeLocation loc)
+      : current_(current), loc_(loc) {}
+
+  MOZ_MUST_USE bool init() {
+    // Don't require SSA uses for values popped by these ops.
+    switch (loc_.getOp()) {
+      case JSOp::Pop:
+      case JSOp::PopN:
+      case JSOp::DupAt:
+      case JSOp::Dup:
+      case JSOp::Dup2:
+      case JSOp::Pick:
+      case JSOp::Unpick:
+      case JSOp::Swap:
+      case JSOp::SetArg:
+      case JSOp::SetLocal:
+      case JSOp::InitLexical:
+      case JSOp::SetRval:
+      case JSOp::Void:
+        // Basic stack/local/argument management opcodes.
+        return true;
+
+      case JSOp::Case:
+      case JSOp::Default:
+        // These ops have to pop the switch value when branching but don't
+        // actually use it.
+        return true;
+
+      default:
+        break;
+    }
+
+    unsigned nuses = loc_.useCount();
+
+    for (unsigned i = 0; i < nuses; i++) {
+      MDefinition* def = current_->peek(-int32_t(i + 1));
+      if (!popped_.append(def) || !poppedUses_.append(def->defUseCount())) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  void checkAfterOp() {
+    for (size_t i = 0; i < popped_.length(); i++) {
+      // First value popped by JSOp::EndIter is not used at all, it's similar
+      // to JSOp::Pop above.
+      if (loc_.is(JSOp::EndIter) && i == 0) {
+        continue;
+      }
+      MOZ_ASSERT(popped_[i]->isImplicitlyUsed() ||
+                 popped_[i]->defUseCount() > poppedUses_[i]);
+    }
+  }
+};
+#endif
+
 bool WarpBuilder::buildBody() {
   for (BytecodeLocation loc : AllBytecodesIterable(script_)) {
     if (mirGen().shouldCancel("WarpBuilder (opcode loop)")) {
@@ -488,7 +563,12 @@ bool WarpBuilder::buildBody() {
       return false;
     }
 
-    // TODO: port PoppedValueUseChecker from IonBuilder
+#ifdef DEBUG
+    WarpPoppedValueUseChecker useChecker(current, loc);
+    if (!useChecker.init()) {
+      return false;
+    }
+#endif
 
     JSOp op = loc.getOp();
 
@@ -500,6 +580,10 @@ bool WarpBuilder::buildBody() {
     break;
     switch (op) { FOR_EACH_OPCODE(BUILD_OP) }
 #undef BUILD_OP
+
+#ifdef DEBUG
+    useChecker.checkAfterOp();
+#endif
   }
 
   return true;
@@ -1616,6 +1700,7 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
     MDefinition* newTarget = callInfo.getNewTarget();
     MCreateThis* createThis = MCreateThis::New(alloc(), callee, newTarget);
     current->add(createThis);
+    callInfo.thisArg()->setImplicitlyUsedUnchecked();
     callInfo.setThis(createThis);
     needsThisCheck = true;
   }
