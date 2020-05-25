@@ -5,6 +5,8 @@
 
 const NS_ERROR_STORAGE_BUSY = Cr.NS_ERROR_STORAGE_BUSY;
 
+loadScript("dom/quota/test/common/global.js");
+
 function getProfileDir() {
   return Services.dirsvc.get("ProfD", Ci.nsIFile);
 }
