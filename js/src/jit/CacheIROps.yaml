@@ -680,6 +680,12 @@
   args:
     input: NumberId
 
+- name: MathCeilToInt32Result
+  shared: true
+  transpile: false
+  args:
+    input: NumberId
+
 - name: MathRoundToInt32Result
   shared: true
   transpile: true
