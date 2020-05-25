@@ -212,7 +212,8 @@ ProfileBufferEntryWriter::Length FileIOMarkerPayload::TagAndSerializationBytes()
     const {
   return CommonPropsTagAndSerializationBytes() +
          ProfileBufferEntryWriter::SumBytes(
-             WrapProfileBufferRawPointer(mSource), mOperation, mFilename);
+             WrapProfileBufferRawPointer(mSource), mOperation, mFilename,
+             mIOThreadId);
 }
 
 void FileIOMarkerPayload::SerializeTagAndPayload(
@@ -222,6 +223,7 @@ void FileIOMarkerPayload::SerializeTagAndPayload(
   aEntryWriter.WriteObject(WrapProfileBufferRawPointer(mSource));
   aEntryWriter.WriteObject(mOperation);
   aEntryWriter.WriteObject(mFilename);
+  aEntryWriter.WriteObject(mIOThreadId);
 }
 
 // static
@@ -232,8 +234,10 @@ UniquePtr<ProfilerMarkerPayload> FileIOMarkerPayload::Deserialize(
   auto source = aEntryReader.ReadObject<const char*>();
   auto operation = aEntryReader.ReadObject<UniqueFreePtr<char>>();
   auto filename = aEntryReader.ReadObject<UniqueFreePtr<char>>();
-  return UniquePtr<ProfilerMarkerPayload>(new FileIOMarkerPayload(
-      std::move(props), source, std::move(operation), std::move(filename)));
+  auto ioThreadId = aEntryReader.ReadObject<Maybe<int>>();
+  return UniquePtr<ProfilerMarkerPayload>(
+      new FileIOMarkerPayload(std::move(props), source, std::move(operation),
+                              std::move(filename), ioThreadId));
 }
 
 void FileIOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
@@ -244,6 +248,9 @@ void FileIOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("source", mSource);
   if (mFilename) {
     aWriter.StringProperty("filename", mFilename.get());
+  }
+  if (mIOThreadId.isSome()) {
+    // TODO: Output the thread id.
   }
 }
 
