@@ -1376,7 +1376,7 @@ class JSTerm extends Component {
           className: "editor-onboarding-dismiss-button",
           onClick: () => this.props.editorOnboardingDismiss(),
         },
-        l10n.getStr("webconsole.input.editor.onboarding.dissmis.label")
+        l10n.getStr("webconsole.input.editor.onboarding.dismiss.label")
       )
     );
   }
