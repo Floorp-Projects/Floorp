@@ -94,7 +94,7 @@ FRAME_CLASSES = [
     Frame("nsScrollbarButtonFrame", "Box", NOT_LEAF),
     Frame("nsScrollbarFrame", "Scrollbar", NOT_LEAF),
     Frame("nsSelectsAreaFrame", "Block", NOT_LEAF),
-    Frame("nsPageSequenceFrame", "Sequence", NOT_LEAF),
+    Frame("nsPageSequenceFrame", "PageSequence", NOT_LEAF),
     Frame("nsSliderFrame", "Slider", NOT_LEAF),
     Frame("nsSplitterFrame", "Box", NOT_LEAF),
     Frame("nsStackFrame", "Box", NOT_LEAF),
