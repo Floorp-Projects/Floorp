@@ -2053,6 +2053,16 @@ void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
   floor(src, dest, fail);
 }
 
+void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
+                                        Label* fail) {
+  ceilf(src, dest, fail);
+}
+
+void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
+                                       Label* fail) {
+  ceil(src, dest, fail);
+}
+
 void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
                                          FloatRegister temp, Label* fail) {
   const ARMFPRegister src32(src, 32);
