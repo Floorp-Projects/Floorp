@@ -1618,7 +1618,9 @@ void LoadInfo::SetIsPreflight() {
   mIsPreflight = true;
 }
 
-void LoadInfo::SetUpgradeInsecureRequests() { mUpgradeInsecureRequests = true; }
+void LoadInfo::SetUpgradeInsecureRequests(bool aValue) {
+  mUpgradeInsecureRequests = aValue;
+}
 
 void LoadInfo::SetBrowserUpgradeInsecureRequests() {
   mBrowserUpgradeInsecureRequests = true;
