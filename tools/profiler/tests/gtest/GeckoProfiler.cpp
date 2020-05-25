@@ -677,6 +677,10 @@ TEST(GeckoProfiler, Markers)
       "FileIOMarkerPayload marker", OTHER, FileIOMarkerPayload,
       ("operation", "source", "filename", ts1, ts2, nullptr));
 
+  PROFILER_ADD_MARKER_WITH_PAYLOAD(
+      "FileIOMarkerPayload marker off-MT", OTHER, FileIOMarkerPayload,
+      ("operation2", "source2", "filename2", ts1, ts2, nullptr, Some(123)));
+
   // Other markers in alphabetical order of payload class names.
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
@@ -824,6 +828,7 @@ TEST(GeckoProfiler, Markers)
     S_M5_gtest8,
     S_M5_gtest9,
     S_FileIOMarkerPayload,
+    S_FileIOMarkerPayloadOffMT,
     S_DOMEventMarkerPayload,
     S_GCMajorMarkerPayload,
     S_GCMinorMarkerPayload,
@@ -1097,6 +1102,23 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["operation"], String, "operation");
                 EXPECT_EQ_JSON(payload["source"], String, "source");
                 EXPECT_EQ_JSON(payload["filename"], String, "filename");
+                EXPECT_FALSE(payload.isMember("threadId"));
+
+              } else if (nameString == "FileIOMarkerPayload marker off-MT") {
+                EXPECT_EQ(state, S_FileIOMarkerPayloadOffMT);
+                state = State(S_FileIOMarkerPayloadOffMT + 1);
+                EXPECT_EQ(typeString, "FileIO");
+                EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
+                EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
+                // Start timestamp is also stored in marker outside of payload.
+                EXPECT_EQ_JSON(marker[1], Double, ts1Double);
+                EXPECT_TRUE(payload["stack"].isNull());
+                EXPECT_EQ_JSON(payload["operation"], String, "operation2");
+                EXPECT_EQ_JSON(payload["source"], String, "source2");
+                EXPECT_EQ_JSON(payload["filename"], String, "filename2");
+                // TODO: Once JSON output of the thread id is implemented, check
+                // that there is a thread id in this payload.
+                EXPECT_FALSE(payload.isMember("threadId"));
 
               } else if (nameString == "DOMEventMarkerPayload marker") {
                 EXPECT_EQ(state, S_DOMEventMarkerPayload);
