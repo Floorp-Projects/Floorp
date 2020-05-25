@@ -1229,6 +1229,7 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
       if (textureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_WR) {
         retry = true;
         DestroyCompositor();
+        // gfxVars::UseDoubleBufferingWithCompositor() is also disabled.
         gfx::GPUProcessManager::Get()->DisableWebRender(
             wr::WebRenderError::INITIALIZE);
       }
