@@ -382,7 +382,8 @@ using JsFrameBuffer = JS::ProfilingFrameIterator::Frame[MAX_JS_FRAMES];
 class CorePS {
  private:
   CorePS()
-      : mProcessStartTime(TimeStamp::ProcessCreation()),
+      : mMainThreadId(profiler_current_thread_id()),
+        mProcessStartTime(TimeStamp::ProcessCreation()),
         // This needs its own mutex, because it is used concurrently from
         // functions guarded by gPSMutex as well as others without safety (e.g.,
         // profiler_add_marker). It is *not* used inside the critical section of
@@ -393,6 +394,8 @@ class CorePS {
         mLul(nullptr)
 #endif
   {
+    MOZ_ASSERT(NS_IsMainThread(),
+               "CorePS must be created from the main thread");
   }
 
   ~CorePS() {}
@@ -442,6 +445,9 @@ class CorePS {
     }
 #endif
   }
+
+  // No PSLockRef is needed for this field because it's immutable.
+  PS_GET_LOCKLESS(int, MainThreadId)
 
   // No PSLockRef is needed for this field because it's immutable.
   PS_GET_LOCKLESS(TimeStamp, ProcessStartTime)
@@ -552,6 +558,9 @@ class CorePS {
  private:
   // The singleton instance
   static CorePS* sInstance;
+
+  // ID of the main thread (assuming CorePS was started on the main thread).
+  const int mMainThreadId;
 
   // The time that the process started.
   const TimeStamp mProcessStartTime;
