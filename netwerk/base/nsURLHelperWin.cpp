@@ -59,6 +59,8 @@ nsresult net_GetFileFromURLSpec(const nsACString& aURL, nsIFile** result) {
     return rv;
   }
 
+  localFile->SetFollowLinks(true);
+
   const nsACString* specPtr;
 
   nsAutoCString buf;
