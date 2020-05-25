@@ -47,7 +47,8 @@ class DocGroup final {
   // service isn't available. Returns NS_OK on success, but may still set
   // |aString| may still be set to an empty string.
   static MOZ_MUST_USE nsresult GetKey(nsIPrincipal* aPrincipal,
-                                      nsACString& aString);
+                                      bool aCrossOriginIsolated,
+                                      nsACString& aKey);
 
   bool MatchesKey(const nsACString& aKey) { return aKey == mKey; }
 
