@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <title>Table mutation</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+
+    async function doTest() {
+      let headers = [
+        {
+          cell: "t1r1c1",
+          columnHeaderCells: [],
+          rowHeaderCells: [],
+        },
+        // t1r2 is hidden
+        {
+          cell: "t1r3c1",
+          columnHeaderCells: ["t1r1c1"],
+          rowHeaderCells: [],
+        },
+      ];
+      testHeaderCells(headers);
+
+      info("Remove row");
+      let reordered = waitForEvent(EVENT_REORDER, "t1");
+      getNode("t1r1").hidden = true;
+      await reordered;
+      headers = [
+        // t1r1 and t1r2 are hidden
+        {
+          cell: "t1r3c1",
+          columnHeaderCells: [],
+          rowHeaderCells: [],
+        },
+      ];
+      testHeaderCells(headers);
+
+      info("Add rows");
+      reordered = waitForEvent(EVENT_REORDER, "t1");
+      getNode("t1r1").hidden = false;
+      getNode("t1r2").hidden = false;
+      await reordered;
+      headers = [
+        {
+          cell: "t1r1c1",
+          columnHeaderCells: [],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t1r2c1",
+          columnHeaderCells: ["t1r1c1"],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t1r3c1",
+          columnHeaderCells: ["t1r2c1", "t1r1c1"],
+          rowHeaderCells: [],
+        },
+      ];
+      testHeaderCells(headers);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <table id="t1">
+    <tr id="t1r1">
+      <th id="t1r1c1"></th>
+    </tr>
+    <tr id="t1r2" hidden>
+      <th id="t1r2c1"></th>
+    </tr>
+    <tr id="t1r3">
+      <td id="t1r3c1"></td>
+    </tr>
+  </table>
+</body>
+</html>
