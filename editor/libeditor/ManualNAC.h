@@ -64,6 +64,15 @@ class ManualNACPtr final {
     RemoveContentFromNACArray(ptr);
   }
 
+  static bool IsManualNAC(nsIContent* aAnonContent) {
+    MOZ_ASSERT(aAnonContent->IsRootOfNativeAnonymousSubtree());
+    MOZ_ASSERT(aAnonContent->IsInComposedDoc());
+
+    auto* nac = static_cast<ManualNACArray*>(
+        aAnonContent->GetParent()->GetProperty(nsGkAtoms::manualNACProperty));
+    return nac && nac->Contains(aAnonContent);
+  }
+
   static void RemoveContentFromNACArray(nsIContent* aAnonymousContent) {
     nsIContent* parentContent = aAnonymousContent->GetParent();
     if (!parentContent) {
