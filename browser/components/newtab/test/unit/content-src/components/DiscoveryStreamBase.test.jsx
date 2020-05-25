@@ -107,6 +107,7 @@ describe("<DiscoveryStreamBase>", () => {
         Prefs={{
           values: {
             "feeds.section.topstories": true,
+            "feeds.system.topstories": true,
             "feeds.topsites": true,
           },
         }}
