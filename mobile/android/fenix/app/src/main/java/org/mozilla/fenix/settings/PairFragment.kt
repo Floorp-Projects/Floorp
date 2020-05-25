@@ -12,11 +12,9 @@ import android.os.Vibrator
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
-import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.navigation.fragment.findNavController
-import kotlinx.android.synthetic.main.fragment_pair.*
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -30,11 +28,6 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        pairInstructions.text = HtmlCompat.fromHtml(
-            getString(R.string.pair_instructions),
-            HtmlCompat.FROM_HTML_MODE_LEGACY
-        )
 
         qrFeature.set(
             QrFeature(
@@ -64,7 +57,8 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                         R.id.turnOnSyncFragment,
                         false
                     )
-                }),
+                },
+            scanMessage = R.string.pair_instructions_2),
             owner = this,
             view = view
         )
