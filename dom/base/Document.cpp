@@ -11516,7 +11516,7 @@ void Document::PreloadStyle(nsIURI* uri, const Encoding* aEncoding,
 
   // Charset names are always ASCII.
   Unused << CSSLoader()->LoadSheet(
-      uri, preloadType, NodePrincipal(), aEncoding, referrerInfo, obs,
+      uri, preloadType, aEncoding, referrerInfo, obs,
       Element::StringToCORSMode(aCrossOriginAttr), aIntegrity);
 }
 
