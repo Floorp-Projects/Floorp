@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
 import org.mozilla.geckoview.AllowOrDeny;
+import org.mozilla.geckoview.Autocomplete;
 import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
@@ -71,7 +72,6 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
-import org.mozilla.geckoview.LoginStorage;
 import org.mozilla.geckoview.MediaElement;
 import org.mozilla.geckoview.OverscrollEdgeEffect;
 import org.mozilla.geckoview.PanZoomController;
@@ -102,6 +102,80 @@ package org.mozilla.geckoview {
     method public static AllowOrDeny[] values();
     enum_constant public static final AllowOrDeny ALLOW;
     enum_constant public static final AllowOrDeny DENY;
+  }
+
+  public class Autocomplete {
+    ctor protected Autocomplete();
+  }
+
+  public static class Autocomplete.LoginEntry {
+    ctor @AnyThread protected LoginEntry();
+    field @Nullable public final String formActionOrigin;
+    field @Nullable public final String guid;
+    field @Nullable public final String httpRealm;
+    field @NonNull public final String origin;
+    field @NonNull public final String password;
+    field @NonNull public final String username;
+  }
+
+  public static class Autocomplete.LoginEntry.Builder {
+    ctor @AnyThread public Builder();
+    method @AnyThread @NonNull public Autocomplete.LoginEntry build();
+    method @AnyThread @NonNull public Autocomplete.LoginEntry.Builder formActionOrigin(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.LoginEntry.Builder guid(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.LoginEntry.Builder httpRealm(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.LoginEntry.Builder origin(@NonNull String);
+    method @AnyThread @NonNull public Autocomplete.LoginEntry.Builder password(@NonNull String);
+    method @AnyThread @NonNull public Autocomplete.LoginEntry.Builder username(@NonNull String);
+  }
+
+  public static class Autocomplete.LoginSaveOption extends Autocomplete.SaveOption {
+    ctor public LoginSaveOption(@NonNull Autocomplete.LoginEntry);
+  }
+
+  public static class Autocomplete.LoginSaveOption.Hint {
+    ctor protected Hint();
+    field public static final int GENERATED = 1;
+    field public static final int LOW_CONFIDENCE = 2;
+    field public static final int NONE = 0;
+  }
+
+  public static class Autocomplete.LoginSelectOption extends Autocomplete.SelectOption {
+    ctor public LoginSelectOption(@NonNull Autocomplete.LoginEntry);
+  }
+
+  public static class Autocomplete.LoginSelectOption.Hint {
+    ctor public Hint();
+    field public static final int DUPLICATE_USERNAME = 4;
+    field public static final int GENERATED = 1;
+    field public static final int INSECURE_FORM = 2;
+    field public static final int MATCHING_ORIGIN = 8;
+    field public static final int NONE = 0;
+  }
+
+  public static interface Autocomplete.LoginStorageDelegate {
+    method @UiThread @Nullable default public GeckoResult<Autocomplete.LoginEntry[]> onLoginFetch(@NonNull String);
+    method @UiThread default public void onLoginSave(@NonNull Autocomplete.LoginEntry);
+    method @UiThread default public void onLoginUsed(@NonNull Autocomplete.LoginEntry, int);
+  }
+
+  public abstract static class Autocomplete.Option<T> {
+    ctor public Option(@NonNull T, int);
+    field public final int hint;
+    field @NonNull public final T value;
+  }
+
+  public abstract static class Autocomplete.SaveOption<T> extends Autocomplete.Option {
+    ctor public SaveOption(@NonNull T, int);
+  }
+
+  public abstract static class Autocomplete.SelectOption<T> extends Autocomplete.Option {
+    ctor public SelectOption(@NonNull T, int);
+  }
+
+  public static class Autocomplete.UsedField {
+    ctor protected UsedField();
+    field public static final int PASSWORD = 1;
   }
 
   public class Autofill {
@@ -438,7 +512,7 @@ package org.mozilla.geckoview {
     method @UiThread @NonNull public ContentBlockingController getContentBlockingController();
     method @UiThread @NonNull public static synchronized GeckoRuntime getDefault(@NonNull Context);
     method @UiThread @Nullable public GeckoRuntime.Delegate getDelegate();
-    method @UiThread @Nullable public LoginStorage.Delegate getLoginStorageDelegate();
+    method @UiThread @Nullable public Autocomplete.LoginStorageDelegate getLoginStorageDelegate();
     method @UiThread @Nullable public File getProfileDir();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
     method @UiThread @NonNull public StorageController getStorageController();
@@ -451,7 +525,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void readFromParcel(@NonNull Parcel);
     method @Deprecated @UiThread @NonNull public GeckoResult<Void> registerWebExtension(@NonNull WebExtension);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
-    method @UiThread public void setLoginStorageDelegate(@Nullable LoginStorage.Delegate);
+    method @UiThread public void setLoginStorageDelegate(@Nullable Autocomplete.LoginStorageDelegate);
     method @UiThread public void setServiceWorkerDelegate(@Nullable GeckoRuntime.ServiceWorkerDelegate);
     method @UiThread public void setWebNotificationDelegate(@Nullable WebNotificationDelegate);
     method @AnyThread public void shutdown();
@@ -836,7 +910,8 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onColorPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ColorPrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onDateTimePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.DateTimePrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onFilePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.FilePrompt);
-    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onLoginStoragePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.LoginStoragePrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onLoginSave(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onLoginSelect(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSelectOption>);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onPopupPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.PopupPrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSharePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.SharePrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onTextPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.TextPrompt);
@@ -878,6 +953,12 @@ package org.mozilla.geckoview {
     field public static final int NONE = 0;
     field public static final int PW_ENCRYPTED = 1;
     field public static final int SECURE = 2;
+  }
+
+  public static class GeckoSession.PromptDelegate.AutocompleteRequest<T extends Autocomplete.Option<?>> extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected AutocompleteRequest(@NonNull T[]);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull Autocomplete.Option<?>);
+    field @NonNull public final T[] options;
   }
 
   public static class GeckoSession.PromptDelegate.BasePrompt {
@@ -978,24 +1059,6 @@ package org.mozilla.geckoview {
     ctor protected Type();
     field public static final int MULTIPLE = 2;
     field public static final int SINGLE = 1;
-  }
-
-  public static class GeckoSession.PromptDelegate.LoginStoragePrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected LoginStoragePrompt(int, int, @NonNull LoginStorage.LoginEntry[]);
-    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull LoginStorage.LoginEntry);
-    field public final int hint;
-    field @NonNull public final LoginStorage.LoginEntry[] logins;
-    field public final int type;
-  }
-
-  public static class GeckoSession.PromptDelegate.LoginStoragePrompt.Hint {
-    ctor protected Hint();
-    field public static final int NONE = 0;
-  }
-
-  public static class GeckoSession.PromptDelegate.LoginStoragePrompt.Type {
-    ctor protected Type();
-    field public static final int SAVE = 1;
   }
 
   public static class GeckoSession.PromptDelegate.PopupPrompt extends GeckoSession.PromptDelegate.BasePrompt {
@@ -1193,42 +1256,6 @@ package org.mozilla.geckoview {
     field public static final int FETCH_FLAGS_NONE = 0;
     field public static final int FETCH_FLAGS_NO_REDIRECTS = 2;
     field public static final int FETCH_FLAGS_STREAM_FAILURE_TEST = 1024;
-  }
-
-  public class LoginStorage {
-    ctor public LoginStorage();
-  }
-
-  public static interface LoginStorage.Delegate {
-    method @UiThread @Nullable default public GeckoResult<LoginStorage.LoginEntry[]> onLoginFetch(@NonNull String);
-    method @UiThread default public void onLoginSave(@NonNull LoginStorage.LoginEntry);
-    method @UiThread default public void onLoginUsed(@NonNull LoginStorage.LoginEntry, int);
-  }
-
-  public static class LoginStorage.LoginEntry {
-    ctor @AnyThread protected LoginEntry();
-    field @Nullable public final String formActionOrigin;
-    field @Nullable public final String guid;
-    field @Nullable public final String httpRealm;
-    field @NonNull public final String origin;
-    field @NonNull public final String password;
-    field @NonNull public final String username;
-  }
-
-  public static class LoginStorage.LoginEntry.Builder {
-    ctor @AnyThread public Builder();
-    method @AnyThread @NonNull public LoginStorage.LoginEntry build();
-    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder formActionOrigin(@Nullable String);
-    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder guid(@Nullable String);
-    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder httpRealm(@Nullable String);
-    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder origin(@NonNull String);
-    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder password(@NonNull String);
-    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder username(@NonNull String);
-  }
-
-  public static class LoginStorage.UsedField {
-    ctor public UsedField();
-    field public static final int PASSWORD = 1;
   }
 
   @AnyThread public class MediaElement {
