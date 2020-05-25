@@ -22,9 +22,9 @@ add_task(async function testDirtyEnable() {
     "Breadcrumb not saved."
   );
   is(
-    Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
+    Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
     undefined,
-    "TRR selection dry run not performed."
+    "TRR selection not performed."
   );
   ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(2);
