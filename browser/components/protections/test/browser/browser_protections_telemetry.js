@@ -301,11 +301,11 @@ add_task(async function checkTelemetryClickEvents() {
   is(events.length, 1, `recorded telemetry for lw_sync_link, android`);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const lockwiseReportLink = await ContentTaskUtils.waitForCondition(() => {
+    const lockwiseAboutLink = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("lockwise-how-it-works");
     }, "lockwiseReportLink exists");
 
-    lockwiseReportLink.click();
+    lockwiseAboutLink.click();
   });
 
   events = await waitForTelemetryEventCount(12);
@@ -319,24 +319,6 @@ add_task(async function checkTelemetryClickEvents() {
   is(events.length, 1, `recorded telemetry for lw_about_link`);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    let monitorReportLink = await ContentTaskUtils.waitForCondition(() => {
-      return content.document.getElementById("monitor-inline-link");
-    }, "monitorReportLink exists");
-
-    monitorReportLink.click();
-  });
-
-  events = await waitForTelemetryEventCount(13);
-
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "mtr_report_link"
-  );
-  is(events.length, 1, `recorded telemetry for mtr_report_link`);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let monitorAboutLink = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("monitor-link");
     }, "monitorAboutLink exists");
@@ -344,7 +326,7 @@ add_task(async function checkTelemetryClickEvents() {
     monitorAboutLink.click();
   });
 
-  events = await waitForTelemetryEventCount(14);
+  events = await waitForTelemetryEventCount(13);
 
   events = events.filter(
     e =>
@@ -362,7 +344,7 @@ add_task(async function checkTelemetryClickEvents() {
     signUpForMonitorLink.click();
   });
 
-  events = await waitForTelemetryEventCount(15);
+  events = await waitForTelemetryEventCount(14);
 
   events = events.filter(
     e =>
@@ -380,7 +362,7 @@ add_task(async function checkTelemetryClickEvents() {
     socialLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(16);
+  events = await waitForTelemetryEventCount(15);
 
   events = events.filter(
     e =>
@@ -399,7 +381,7 @@ add_task(async function checkTelemetryClickEvents() {
     cookieLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(17);
+  events = await waitForTelemetryEventCount(16);
 
   events = events.filter(
     e =>
@@ -418,7 +400,7 @@ add_task(async function checkTelemetryClickEvents() {
     trackerLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(18);
+  events = await waitForTelemetryEventCount(17);
 
   events = events.filter(
     e =>
@@ -444,7 +426,7 @@ add_task(async function checkTelemetryClickEvents() {
     fingerprinterLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(19);
+  events = await waitForTelemetryEventCount(18);
 
   events = events.filter(
     e =>
@@ -470,7 +452,7 @@ add_task(async function checkTelemetryClickEvents() {
     cryptominerLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(20);
+  events = await waitForTelemetryEventCount(19);
 
   events = events.filter(
     e =>
@@ -493,7 +475,7 @@ add_task(async function checkTelemetryClickEvents() {
     lockwiseIOSAppLink.click();
   });
 
-  events = await waitForTelemetryEventCount(21);
+  events = await waitForTelemetryEventCount(20);
 
   events = events.filter(
     e =>
@@ -512,7 +494,7 @@ add_task(async function checkTelemetryClickEvents() {
     mobileAppLink.click();
   });
 
-  events = await waitForTelemetryEventCount(22);
+  events = await waitForTelemetryEventCount(21);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -529,7 +511,7 @@ add_task(async function checkTelemetryClickEvents() {
     protectionSettings.click();
   });
 
-  events = await waitForTelemetryEventCount(23);
+  events = await waitForTelemetryEventCount(22);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -553,7 +535,7 @@ add_task(async function checkTelemetryClickEvents() {
     customProtectionSettings.click();
   });
 
-  events = await waitForTelemetryEventCount(24);
+  events = await waitForTelemetryEventCount(23);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
