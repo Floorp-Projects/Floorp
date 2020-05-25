@@ -337,7 +337,7 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 );
                 let element = WebElement(element_id.as_str().into());
                 WebDriverCommand::TakeElementScreenshot(element)
-            },
+            }
             Route::Print => WebDriverCommand::Print(serde_json::from_str(raw_body)?),
             Route::Status => WebDriverCommand::Status,
             Route::Extension(ref extension) => extension.command(params, &body_data)?,
@@ -1211,7 +1211,7 @@ mod tests {
         assert_de(&new_window, json);
     }
 
-       #[test]
+    #[test]
     fn test_json_print_defaults() {
         let params = PrintParameters::default();
         assert_de(&params, json!({}));

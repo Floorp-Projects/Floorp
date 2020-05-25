@@ -280,7 +280,6 @@ impl WrVecU8 {
         vec.extend_from_slice(bytes);
         *self = Self::from_vec(vec);
     }
-
 }
 
 #[no_mangle]

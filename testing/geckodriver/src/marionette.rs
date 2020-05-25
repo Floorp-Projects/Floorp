@@ -1,8 +1,7 @@
 use crate::android::AndroidHandler;
 use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
-    GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters,
-    CHROME_ELEMENT_KEY,
+    GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters, CHROME_ELEMENT_KEY,
 };
 use marionette_rs::common::{
     Cookie as MarionetteCookie, Date as MarionetteDate, Frame as MarionetteFrame,
@@ -41,8 +40,8 @@ use webdriver::command::WebDriverCommand::{
     GetPageSource, GetTimeouts, GetTitle, GetWindowHandle, GetWindowHandles, GetWindowRect, GoBack,
     GoForward, IsDisplayed, IsEnabled, IsSelected, MaximizeWindow, MinimizeWindow, NewSession,
     NewWindow, PerformActions, Print, Refresh, ReleaseActions, SendAlertText, SetTimeouts,
-    SetWindowRect, Status, SwitchToFrame, SwitchToParentFrame, SwitchToWindow, TakeElementScreenshot,
-    TakeScreenshot,
+    SetWindowRect, Status, SwitchToFrame, SwitchToParentFrame, SwitchToWindow,
+    TakeElementScreenshot, TakeScreenshot,
 };
 use webdriver::command::{
     ActionsParameters, AddCookieParameters, GetNamedCookieParameters, GetParameters,
