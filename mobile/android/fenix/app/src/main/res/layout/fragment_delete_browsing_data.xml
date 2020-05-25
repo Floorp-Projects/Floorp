@@ -36,7 +36,7 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
-                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_tabs_title"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_tabs_title_2"
                 app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_tabs_subtitle" />
             <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
                 android:id="@+id/browsing_data_item"

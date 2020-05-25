@@ -120,7 +120,7 @@ private fun assertCancelButtonInDialogBox() =
 
 private fun assertAllTheCheckBoxesText() {
 
-    onView(withText(R.string.preferences_delete_browsing_data_tabs_title))
+    onView(withText(R.string.preferences_delete_browsing_data_tabs_title_2))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     onView(withText("0 tabs"))
@@ -149,7 +149,7 @@ private fun assertAllTheCheckBoxesText() {
 }
 
 private fun assertAllTheCheckBoxesChecked() {
-    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Open Tabs")))).assertIsChecked(true)
+    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Open tabs")))).assertIsChecked(true)
 
     onView(allOf(withId(R.id.checkbox), hasSibling(withText("Browsing history and site data")))).assertIsChecked(true)
 

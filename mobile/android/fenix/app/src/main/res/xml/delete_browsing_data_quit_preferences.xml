@@ -19,7 +19,7 @@
         <CheckBoxPreference
             android:key="@string/pref_key_delete_open_tabs_on_quit"
             android:layout="@layout/delete_browsing_category_checkbox"
-            android:title="@string/preferences_delete_browsing_data_tabs_title" />
+            android:title="@string/preferences_delete_browsing_data_tabs_title_2" />
         <CheckBoxPreference
             android:key="@string/pref_key_delete_browsing_history_on_quit"
             android:layout="@layout/delete_browsing_category_checkbox"
