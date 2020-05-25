@@ -3779,6 +3779,27 @@ bool CacheIRCompiler::emitMathFloorToInt32Result(NumberOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathCeilToInt32Result(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  AutoAvailableFloatRegister scratchFloat(*this, FloatReg0);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  allocator.ensureDoubleRegister(masm, inputId, scratchFloat);
+
+  masm.ceilDoubleToInt32(scratchFloat, scratch, failure->label());
+
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitMathRoundToInt32Result(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
