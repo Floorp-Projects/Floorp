@@ -351,6 +351,9 @@ class CorePS {
   }
 
   // No PSLockRef is needed for this field because it's immutable.
+  PS_GET_LOCKLESS(int, MainThreadId)
+
+  // No PSLockRef is needed for this field because it's immutable.
   PS_GET_LOCKLESS(TimeStamp, ProcessStartTime)
 
   // No PSLockRef is needed for this field because it's thread-safe.
