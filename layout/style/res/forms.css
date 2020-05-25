@@ -138,8 +138,8 @@ textarea > scrollbar {
   cursor: default;
 }
 
-::-moz-text-control-editing-root,
 ::placeholder,
+::-moz-text-control-editing-root,
 ::-moz-text-control-preview {
   overflow: auto;
   border: 0;
@@ -711,8 +711,8 @@ select:is(:disabled, :disabled:active) > button {
   *  the <optgroup> gets displayed. The <option>s don't use anonymous boxes,
   *  so they need no special rules.
   */
-::-moz-text-control-editing-root,
 ::placeholder,
+::-moz-text-control-editing-root,
 *|*::-moz-button-content,
 *|*::-moz-display-comboboxcontrol-frame,
 optgroup:before {
