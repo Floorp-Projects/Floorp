@@ -7686,10 +7686,10 @@
   value: false
   mirror: always
 
-# Enables <link rel="preload"> tag and `Link:` respose header handling.
+# Enables `<link rel="preload">` tag and `Link: rel=preload` respose header handling.
 - name: network.preload
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Whether to use the network process or not
