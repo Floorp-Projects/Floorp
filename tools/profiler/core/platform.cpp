@@ -268,9 +268,10 @@ static uint32_t DefaultFeatures() {
 // Extra default features when MOZ_PROFILER_STARTUP is set (even if not
 // available).
 static uint32_t StartupExtraDefaultFeatures() {
-  // Enable mainthreadio by default for startup profiles as startup is heavy on
-  // I/O operations, and main thread I/O is really important to see there.
-  return ProfilerFeature::MainThreadIO;
+  // Enable file I/Os by default for startup profiles as startup is heavy on
+  // I/O operations.
+  return ProfilerFeature::MainThreadIO | ProfilerFeature::FileIO |
+         ProfilerFeature::FileIOAll;
 }
 
 // The class is a thin shell around mozglue PlatformMutex. It does not preserve
@@ -712,6 +713,13 @@ class ActivePS {
       aFeatures |= ProfilerFeature::Threads;
     }
 
+    // Some features imply others.
+    if (aFeatures & ProfilerFeature::FileIOAll) {
+      aFeatures |= ProfilerFeature::MainThreadIO | ProfilerFeature::FileIO;
+    } else if (aFeatures & ProfilerFeature::FileIO) {
+      aFeatures |= ProfilerFeature::MainThreadIO;
+    }
+
     return aFeatures;
   }
 
@@ -735,7 +743,9 @@ class ActivePS {
         // main loop within Run() is blocked until this function's caller
         // unlocks gPSMutex.
         mSamplerThread(NewSamplerThread(aLock, mGeneration, aInterval)),
-        mInterposeObserver(ProfilerFeature::HasMainThreadIO(aFeatures)
+        mInterposeObserver((ProfilerFeature::HasMainThreadIO(aFeatures) ||
+                            ProfilerFeature::HasFileIO(aFeatures) ||
+                            ProfilerFeature::HasFileIOAll(aFeatures))
                                ? new ProfilerIOInterposeObserver()
                                : nullptr),
         mIsPaused(false)
@@ -2709,7 +2719,7 @@ static void PrintUsageThenExit(int aExitCode) {
       PROFILER_MAX_INTERVAL);
 
 #define PRINT_FEATURE(n_, str_, Name_, desc_)                                  \
-  printf("    %c %6u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
+  printf("    %c %7u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
          ProfilerFeature::Name_, str_, desc_);
 
   PROFILER_FOR_EACH_FEATURE(PRINT_FEATURE)

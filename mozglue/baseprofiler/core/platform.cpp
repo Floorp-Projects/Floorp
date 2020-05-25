@@ -605,6 +605,13 @@ class ActivePS {
       aFeatures |= ProfilerFeature::Threads;
     }
 
+    // Some features imply others.
+    if (aFeatures & ProfilerFeature::FileIOAll) {
+      aFeatures |= ProfilerFeature::MainThreadIO | ProfilerFeature::FileIO;
+    } else if (aFeatures & ProfilerFeature::FileIO) {
+      aFeatures |= ProfilerFeature::MainThreadIO;
+    }
+
     return aFeatures;
   }
 
@@ -1978,7 +1985,7 @@ static void PrintUsageThenExit(int aExitCode) {
                scBytesPerEntry));
 
 #define PRINT_FEATURE(n_, str_, Name_, desc_)             \
-  PrintToConsole("    %c %5u: \"%s\" (%s)\n",             \
+  PrintToConsole("    %c %7u: \"%s\" (%s)\n",             \
                  FeatureCategory(ProfilerFeature::Name_), \
                  ProfilerFeature::Name_, str_, desc_);
 

@@ -9,23 +9,98 @@
 
 using namespace mozilla;
 
+static auto GetFilename(IOInterposeObserver::Observation& aObservation) {
+  AUTO_PROFILER_STATS(IO_filename);
+  constexpr size_t scExpectedMaxFilename = 512;
+  nsAutoStringN<scExpectedMaxFilename> filename16;
+  aObservation.Filename(filename16);
+  nsAutoCStringN<scExpectedMaxFilename> filename8;
+  if (!filename16.IsEmpty()) {
+    CopyUTF16toUTF8(filename16, filename8);
+  }
+  return filename8;
+}
+
+static UniqueProfilerBacktrace GetBacktraceUnless(bool aPrevent) {
+  if (aPrevent) {
+    return nullptr;
+  }
+  AUTO_PROFILER_STATS(IO_backtrace);
+  return profiler_get_backtrace();
+}
+
 void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
-  // 1. Only the main thread observes I/Os.
-  // 2. Don't observe if the main thread is not currently being profiled.
-  // 3. Don't observe I/Os originating from the profiler itself (when
-  //    internally locked) to avoid deadlocks when calling profiler functions.
-  if (!IsMainThread() || !profiler_thread_is_being_profiled() ||
-      profiler_is_locked_on_current_thread()) {
+  if (profiler_is_locked_on_current_thread()) {
+    // Don't observe I/Os originating from the profiler itself (when internally
+    // locked) to avoid deadlocks when calling profiler functions.
+    AUTO_PROFILER_STATS(IO_profiler_locked);
     return;
   }
 
-  UniqueProfilerBacktrace stack = profiler_get_backtrace();
+  Maybe<uint32_t> maybeFeatures = profiler_features_if_active_and_unpaused();
+  if (maybeFeatures.isNothing()) {
+    return;
+  }
+  uint32_t features = *maybeFeatures;
 
-  nsString filename;
-  aObservation.Filename(filename);
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "FileIO", OTHER, FileIOMarkerPayload,
-      (aObservation.ObservedOperationString(), aObservation.Reference(),
-       NS_ConvertUTF16toUTF8(filename).get(), aObservation.Start(),
-       aObservation.End(), std::move(stack)));
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
+
+  if (IsMainThread()) {
+    // This is the main thread.
+    // Capture a marker if any "IO" feature is on.
+    // If it's not being profiled, we have nowhere to store FileIO markers.
+    if (!profiler_thread_is_being_profiled() ||
+        !(features & ProfilerFeature::MainThreadIO)) {
+      return;
+    }
+    AUTO_PROFILER_STATS(IO_MT);
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(
+        "FileIO", OTHER, FileIOMarkerPayload,
+        (aObservation.ObservedOperationString(), aObservation.Reference(),
+         GetFilename(aObservation).get(), aObservation.Start(),
+         aObservation.End(),
+         GetBacktraceUnless(features & ProfilerFeature::NoIOStacks)));
+
+  } else if (profiler_thread_is_being_profiled()) {
+    // This is a non-main thread that is being profiled.
+    if (!(features & ProfilerFeature::FileIO)) {
+      return;
+    }
+    AUTO_PROFILER_STATS(IO_off_MT);
+    FileIOMarkerPayload payload{
+        aObservation.ObservedOperationString(),
+        aObservation.Reference(),
+        GetFilename(aObservation).get(),
+        aObservation.Start(),
+        aObservation.End(),
+        GetBacktraceUnless(features & ProfilerFeature::NoIOStacks)};
+    // Store the marker in the both:
+    // - The current thread.
+    profiler_add_marker("FileIO", JS::ProfilingCategoryPair::OTHER, payload);
+    // - The main thread (with a distinct marker name and the thread id).
+    payload.SetIOThreadId(profiler_current_thread_id());
+    profiler_add_marker_for_mainthread(JS::ProfilingCategoryPair::OTHER,
+                                       "FileIO (non-main thread)", payload);
+
+  } else {
+    // This is a thread that is not being profiled. We still want to capture
+    // file I/Os (to the main thread) if the "FileIOAll" feature is on.
+    if (!(features & ProfilerFeature::FileIOAll)) {
+      return;
+    }
+    AUTO_PROFILER_STATS(IO_other);
+    profiler_add_marker_for_mainthread(
+        JS::ProfilingCategoryPair::OTHER,
+        profiler_is_active_and_thread_is_registered()
+            ? "FileIO (non-profiled thread)"
+            : "FileIO (unregistered thread)",
+        FileIOMarkerPayload(
+            aObservation.ObservedOperationString(), aObservation.Reference(),
+            GetFilename(aObservation).get(), aObservation.Start(),
+            aObservation.End(),
+            GetBacktraceUnless(features & ProfilerFeature::NoIOStacks),
+            Some(profiler_current_thread_id())));
+  }
 }
