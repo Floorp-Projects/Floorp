@@ -31,6 +31,7 @@ marionette.jar:
   content/navigate.js (navigate.js)
   content/packets.js (packets.js)
   content/prefs.js (prefs.js)
+  content/print.js (print.js)
   content/proxy.js (proxy.js)
   content/reftest.js (reftest.js)
   content/reftest.xhtml (reftest.xhtml)
