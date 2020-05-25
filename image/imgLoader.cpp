@@ -1795,6 +1795,13 @@ bool imgLoader::ValidateRequestWithNewChannel(
   rv = newChannel->AsyncOpen(listener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     req->CancelAndForgetObserver(rv);
+    // This will notify any current or future <link preload> tags.  Pass the
+    // non-open channel so that we can read loadinfo and referrer info of that
+    // channel.
+    req->NotifyStart(newChannel);
+    // Use the non-channel overload of this method to force the notification to
+    // happen.  The preload request has not been assigned a channel.
+    req->NotifyStop(rv);
     return false;
   }
 
@@ -2201,14 +2208,20 @@ nsresult imgLoader::LoadImage(
               ("[this=%p] imgLoader::LoadImage -- preloaded [proxy=%p]"
                " [document=%p]\n",
                this, proxy.get(), aLoadingDocument));
-      proxy->NotifyUsage();
-      // XXXedgar: we link the preloaded image to all subsequent "real" load,
-      // where Blink seems only link the preloaded image to the next "real"
-      // load.
+
+      // Removing the preload for this image to be in parity with Chromium.  Any
+      // following regular image request will be reloaded using the regular
+      // path: image cache, http cache, network.  Any following `<link
+      // rel=preload as=image>` will start a new image preload that can be
+      // satisfied from http cache or network.
+      //
       // There is a spec discussion for "preload cache", see
       // https://github.com/w3c/preload/issues/97. And it is also not clear how
       // preload image interacts with list of available images, see
       // https://github.com/whatwg/html/issues/4474.
+      proxy->RemoveSelf(aLoadingDocument);
+      proxy->NotifyUsage();
+
       imgRequest* request = proxy->GetOwner();
       nsresult rv =
           CreateNewProxyForRequest(request, aURI, aLoadGroup, aLoadingDocument,
