@@ -254,6 +254,8 @@
     <string name="preferences_show_search_shortcuts">Visa sökgenvägar</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Visa sökförslag</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Visa röstsökning</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Visa i privata sessioner</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -438,6 +440,8 @@
     <string name="tabs_header_private_tabs_title">Privata flikar</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Lägg till flik</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Ta bort flik från samlingen</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Stäng flik</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -1393,4 +1397,8 @@
     <string name="edit">Redigera</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Lösenord krävs</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Röstsökning</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Prata nu</string>
 </resources>

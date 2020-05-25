@@ -257,6 +257,8 @@
     <string name="preferences_show_search_shortcuts">Ссылки на поисковые системы</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Поисковые предложения</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Показывать голосовой поиск</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Показывать в приватных окнах</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -439,6 +441,8 @@
     <string name="tabs_header_private_tabs_title">Приватные вкладки</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Открыть вкладку</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Удалить вкладку из коллекции</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Закрыть вкладку</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -1409,4 +1413,8 @@
     <string name="edit">Редактирование</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Требуется пароль</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Голосовой поиск</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Говорите</string>
 </resources>

@@ -259,6 +259,8 @@
     <string name="preferences_show_search_shortcuts">검색 바로 가기 표시</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">검색 제안 표시</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">음성 검색 표시</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">사생활 보호 세션에서 보기</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -443,6 +445,8 @@
     <string name="tabs_header_private_tabs_title">사생활 보호 탭</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">탭 추가</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">모음집에서 탭 삭제</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">탭 닫기</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -677,7 +681,7 @@
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">중요한 것을 수집하세요. 시작하려면 열린 탭을 새 모음에 저장하세요.</string>
+    <string name="collections_description">중요한 것을 수집하세요. 시작하려면 열린 탭을 새 모음집에 저장하세요.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">모음집</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -1425,4 +1429,8 @@
     <string name="edit">편집</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">비밀번호 필요</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">음성 검색</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">지금 말하세요</string>
 </resources>

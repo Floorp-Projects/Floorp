@@ -417,8 +417,6 @@
     <string name="library_reading_list">Seznam ke čtení</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Hledat</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Knihovna</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Nastavení</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -970,7 +968,7 @@
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Naskenovat kód</string>
     <!-- Instructions on how to access pairing -->
-    <string name="sign_in_instructions"><![CDATA[Otevřte Firefoxu na svém počítači a navštivte stránku <b>https://firefox.com/pair</b>]]></string>
+    <string name="sign_in_instructions"><![CDATA[Otevřete Firefox na svém počítači a navštivte stránku <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Připraveno na skenování</string>
     <!-- Text shown for settings option for sign with pairing -->
@@ -1329,4 +1327,4 @@
     <string name="login_deletion_confirmation">Opravdu chcete tyto přihlašovací údaje odstranit?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Odstranit</string>
-</resources>
+    </resources>

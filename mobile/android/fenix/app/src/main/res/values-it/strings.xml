@@ -672,7 +672,7 @@
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Raggruppa i contenuti che ritieni importanti. Per iniziare, salva le schede aperte in una nuova collezione.</string>
+    <string name="collections_description">Raggruppa i contenuti che ritieni importanti. Per iniziare, salva le schede aperte in una nuova raccolta.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Raccolte</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -1413,4 +1413,4 @@
     <string name="edit">Modifica</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Password obbligatoria</string>
-</resources>
+    </resources>

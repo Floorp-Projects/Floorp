@@ -253,6 +253,8 @@
     <string name="preferences_show_search_shortcuts">Vis søkesnarveier</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Vis søkeforslag</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Vis stemmesøk</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Vis i private økter</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -436,6 +438,8 @@
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Legg til fane</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Fjern fane fra samlingen</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Lukk fane</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -1399,4 +1403,8 @@
     <string name="edit">Rediger</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Passord kreves</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Stemmesøk</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Snakk nå</string>
 </resources>

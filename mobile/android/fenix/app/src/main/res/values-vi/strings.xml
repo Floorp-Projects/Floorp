@@ -250,6 +250,8 @@
     <string name="preferences_show_search_shortcuts">Hiển thị các lối tắt tìm kiếm</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Hiển thị gợi ý tìm kiếm</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Hiển thị tìm kiếm bằng giọng nói</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Hiển thị trong phiên riêng tư</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -429,6 +431,8 @@
     <string name="tabs_header_private_tabs_title">Các thẻ riêng tư</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Thêm thẻ</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Xóa thẻ khỏi bộ sưu tập</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Đóng thẻ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -1369,4 +1373,8 @@
     <string name="edit">Chỉnh sửa</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Yêu cầu mật khẩu</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Tìm kiếm bằng giọng nói</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Nói bây giờ</string>
 </resources>
