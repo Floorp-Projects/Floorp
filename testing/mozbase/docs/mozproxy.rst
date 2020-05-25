@@ -45,5 +45,5 @@ Supported environment variables:
 - **MOZPROXY_DIR**: directory used by mozproxy for all data files, set by mozproxy
 - **MOZ_UPLOAD_DIR**: upload directory path
 - **GECKO_HEAD_REPOSITORY**: used to find the certutils binary path from the CI
-- **GECKO_HEAD_REV**: used to find the certutils binary path frmo the CI
+- **GECKO_HEAD_REV**: used to find the certutils binary path from the CI
 - **HOSTUTILS_MANIFEST_PATH**: used to find the certutils binary path from the CI

@@ -44,7 +44,7 @@ class Gatherer(object):
 
         :return dict: The perfdocs tree containing all
             framework perfdoc entries. See `fetch_perfdocs_tree`
-            for information on the data strcture.
+            for information on the data structure.
         '''
         if self._perfdocs_tree:
             return self._perfdocs_tree
