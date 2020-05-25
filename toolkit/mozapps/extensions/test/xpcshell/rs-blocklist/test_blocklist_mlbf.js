@@ -5,10 +5,7 @@
 
 Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
 
-const { ExtensionBlocklistMLBF } = ChromeUtils.import(
-  "resource://gre/modules/Blocklist.jsm",
-  null
-);
+const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 AddonTestUtils.useRealCertChecks = true;

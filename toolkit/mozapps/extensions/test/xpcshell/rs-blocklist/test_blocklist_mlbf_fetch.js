@@ -13,10 +13,7 @@ const { Downloader } = ChromeUtils.import(
   "resource://services-settings/Attachments.jsm"
 );
 
-const { ExtensionBlocklistMLBF } = ChromeUtils.import(
-  "resource://gre/modules/Blocklist.jsm",
-  null
-);
+const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
 
 // This test needs to interact with the RemoteSettings client.
 ExtensionBlocklistMLBF.ensureInitialized();
@@ -49,15 +46,9 @@ add_task(async function fetch_invalid_mlbf_record() {
 
 // Other tests can mock _testMLBF, so let's verify that it works as expected.
 add_task(async function fetch_valid_mlbf() {
-  const url = Services.io.newFileURI(
-    do_get_file("../data/mlbf-blocked1-unblocked2.bin")
-  ).spec;
-  Cu.importGlobalProperties(["fetch"]);
-  const blob = await (await fetch(url)).blob();
-
   await ExtensionBlocklistMLBF._client.db.saveAttachment(
     ExtensionBlocklistMLBF.RS_ATTACHMENT_ID,
-    { record: JSON.parse(JSON.stringify(MLBF_RECORD)), blob }
+    { record: MLBF_RECORD, blob: await load_mlbf_record_as_blob() }
   );
 
   const result = await ExtensionBlocklistMLBF._fetchMLBF(MLBF_RECORD);

@@ -7,10 +7,8 @@
  * @fileOverview Checks that the MLBF updating logic works reasonably.
  */
 
-const { ExtensionBlocklistMLBF } = ChromeUtils.import(
-  "resource://gre/modules/Blocklist.jsm",
-  null
-);
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
+const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
 
 // This test needs to interact with the RemoteSettings client.
 ExtensionBlocklistMLBF.ensureInitialized();
