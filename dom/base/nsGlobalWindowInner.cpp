@@ -2431,25 +2431,9 @@ bool nsGlobalWindowInner::IsSharedMemoryAllowed() const {
 bool nsGlobalWindowInner::CrossOriginIsolated() const {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP()) {
-    return false;
-  }
-
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   MOZ_DIAGNOSTIC_ASSERT(bc);
-  if (bc->Top()->GetOpenerPolicy() !=
-      nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) {
-    return false;
-  }
-
-  ContentChild* cc = ContentChild::GetSingleton();
-  if (!cc ||
-      !StringBeginsWith(cc->GetRemoteType(),
-                        NS_LITERAL_STRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX))) {
-    return false;
-  }
-
-  return true;
+  return bc->CrossOriginIsolated();
 }
 
 void nsPIDOMWindowInner::AddPeerConnection() {
