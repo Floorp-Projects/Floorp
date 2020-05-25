@@ -47,6 +47,7 @@ from taskgraph.util.schema import (
 from taskgraph.util.chunking import (
     chunk_manifests,
     get_manifests,
+    get_runtimes,
     guess_mozinfo_from_task,
 )
 from taskgraph.util.taskcluster import (
@@ -249,6 +250,10 @@ CHUNK_SUITES_BLACKLIST = (
 """These suites will be chunked at test runtime rather than here in the taskgraph."""
 
 
+DYNAMIC_CHUNK_DURATION = 20 * 60  # seconds
+"""The approximate time each test chunk should take to run."""
+
+
 logger = logging.getLogger(__name__)
 
 transforms = TransformSequence()
@@ -336,7 +341,7 @@ test_description_schema = Schema({
     # test platform is not found, the key 'default' will be tried.
     Required('chunks'): optionally_keyed_by(
         'test-platform',
-        int),
+        Any(int, 'dynamic')),
 
     # the time (with unit) after which this task is deleted; default depends on
     # the branch (see below)
@@ -1362,7 +1367,23 @@ def set_test_manifests(config, tasks):
     """Determine the set of test manifests that should run in this task."""
 
     for task in tasks:
-        if taskgraph.fast or task['suite'] in CHUNK_SUITES_BLACKLIST or 'test-manifests' in task:
+        if task['suite'] in CHUNK_SUITES_BLACKLIST:
+            yield task
+            continue
+
+        if taskgraph.fast:
+            # We want to avoid evaluating manifests when taskgraph.fast is set. But
+            # manifests are required for dynamic chunking. Just set the number of
+            # chunks to one in this case.
+            if task['chunks'] == 'dynamic':
+                task['chunks'] = 1
+            yield task
+            continue
+
+        manifests = task.get('test-manifests')
+        if manifests:
+            if isinstance(manifests, list):
+                task['test-manifests'] = {'active': manifests, 'skipped': []}
             yield task
             continue
 
@@ -1374,6 +1395,36 @@ def set_test_manifests(config, tasks):
             frozenset(mozinfo.items()),
         )
 
+        yield task
+
+
+@transforms.add
+def resolve_dynamic_chunks(config, tasks):
+    """Determine how many chunks are needed to handle the given set of manifests."""
+
+    for task in tasks:
+        if task['chunks'] != "dynamic":
+            yield task
+            continue
+
+        if not task.get('test-manifests'):
+            raise Exception(
+                "{} must define 'test-manifests' to use dynamic chunking!".format(
+                    task['test-name']))
+
+        runtimes = {m: r for m, r in get_runtimes(task['test-platform']).items()
+                    if m in task['test-manifests']['active']}
+
+        times = list(runtimes.values())
+        avg = round(sum(times) / len(times), 2) if times else 0
+        total = sum(times)
+
+        # If there are manifests missing from the runtimes data, fill them in
+        # with the average of all present manifests.
+        missing = [m for m in task['test-manifests']['active'] if m not in runtimes]
+        total += avg * len(missing)
+
+        task['chunks'] = int(round(total / DYNAMIC_CHUNK_DURATION)) or 1
         yield task
 
 
@@ -1391,9 +1442,6 @@ def split_chunks(config, tasks):
         if 'test-manifests' in task:
             suite_definition = TEST_SUITES[task['suite']]
             manifests = task['test-manifests']
-            if isinstance(manifests, list):
-                manifests = {'active': manifests, 'skipped': []}
-
             chunked_manifests = chunk_manifests(
                 suite_definition['build_flavor'],
                 suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
