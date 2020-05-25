@@ -34,6 +34,12 @@
 #  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
 
+#define UNKNOWN_FILE_WARNING(_leafName)                                       \
+  NS_WARNING(                                                                 \
+      nsPrintfCString("Something (%s) in the directory that doesn't belong!", \
+                      NS_ConvertUTF16toUTF8(_leafName).get())                 \
+          .get())
+
 namespace mozilla {
 namespace dom {
 
@@ -47,6 +53,8 @@ namespace {
  ******************************************************************************/
 
 const uint32_t kCopyBufferSize = 32768;
+
+constexpr auto kSDBSuffix = NS_LITERAL_STRING(".sdb");
 
 /*******************************************************************************
  * Actor class declarations
@@ -1205,7 +1213,7 @@ nsresult OpenOp::DatabaseWork() {
     return rv;
   }
 
-  rv = dbFile->Append(mParams.name());
+  rv = dbFile->Append(mParams.name() + kSDBSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1684,15 +1692,27 @@ nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
     nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
     MOZ_ASSERT(file);
 
-    int64_t fileSize;
-    rv = file->GetFileSize(&fileSize);
+    nsAutoString leafName;
+    rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    MOZ_ASSERT(fileSize >= 0);
+    if (StringEndsWith(leafName, kSDBSuffix)) {
+      int64_t fileSize;
+      rv = file->GetFileSize(&fileSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-    aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
+      MOZ_ASSERT(fileSize >= 0);
+
+      aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
+
+      continue;
+    }
+
+    UNKNOWN_FILE_WARNING(leafName);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

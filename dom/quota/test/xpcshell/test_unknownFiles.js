@@ -72,9 +72,7 @@ async function testSteps() {
       request.result instanceof Ci.nsIQuotaOriginUsageResult,
       "The result is nsIQuotaOriginUsageResult instance"
     );
-    // TODO: Fix SimpleDB to ignore unknown files during usage calculation
-    //is(request.result.usage, 115025, "Correct total usage");
-    is(request.result.usage, 115030, "Correct total usage");
+    is(request.result.usage, 115025, "Correct total usage");
     is(request.result.fileUsage, 231, "Correct file usage");
   });
 
