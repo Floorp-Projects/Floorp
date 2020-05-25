@@ -199,6 +199,11 @@ void nsSubDocumentFrame::ShowViewer() {
       if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
         frameloader->UpdatePositionAndSize(this);
       }
+
+      if (!weakThis.IsAlive()) {
+        return;
+      }
+      InvalidateFrame();
     }
   }
 }
