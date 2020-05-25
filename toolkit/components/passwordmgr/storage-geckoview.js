@@ -17,9 +17,9 @@ const { LoginManagerStorage_json } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  GeckoViewLoginStorage: "resource://gre/modules/GeckoViewLoginStorage.jsm",
+  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  LoginEntry: "resource://gre/modules/GeckoViewLoginStorage.jsm",
+  LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.jsm",
 });
 
 class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
@@ -73,7 +73,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   }
 
   recordPasswordUse(login) {
-    GeckoViewLoginStorage.onLoginPasswordUsed(LoginEntry.fromLoginInfo(login));
+    GeckoViewAutocomplete.onLoginPasswordUsed(LoginEntry.fromLoginInfo(login));
   }
 
   getAllLogins() {
@@ -117,7 +117,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
     // so that we can handle the logic for scheme upgrades, subdomains, etc.
     // Convert from the new shape to one which supports the legacy getters used
     // by _searchLogins.
-    let candidateLogins = await GeckoViewLoginStorage.fetchLogins(
+    let candidateLogins = await GeckoViewAutocomplete.fetchLogins(
       baseHostname
     ).catch(_ => {
       // No GV delegate is attached.

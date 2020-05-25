@@ -13,9 +13,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  GeckoViewLoginStorage: "resource://gre/modules/GeckoViewLoginStorage.jsm",
-  LoginEntry: "resource://gre/modules/GeckoViewLoginStorage.jsm",
+  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+  LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -1168,10 +1169,12 @@ ShareDelegate.prototype = {
   },
 };
 
-// Sync with  LoginStoragePrompt.Type in GeckoSession.java.
-const LoginStorageType = { SAVE: 1 };
-// Sync with  LoginStoragePrompt.Hint in GeckoSession.java.
-const LoginStorageHint = { NONE: 0 };
+// Sync with  LoginSaveOption.Hint in Autocomplete.java.
+const LoginStorageHint = {
+  NONE: 0,
+  GENERATED: 1 << 0,
+  LOW_CONFIDENCE: 1 << 1,
+};
 
 class LoginStorageDelegate {
   get classID() {
@@ -1182,12 +1185,18 @@ class LoginStorageDelegate {
     return ChromeUtils.generateQI([Ci.nsILoginManagerPrompter]);
   }
 
-  _createMessage(aType, aHint, aLogins) {
+  _createMessage({ dismissed, autoSavedLoginGuid }, aLogins) {
+    let hint = LoginStorageHint.NONE;
+    if (dismissed) {
+      hint |= LoginStorageHint.LOW_CONFIDENCE;
+    }
+    if (autoSavedLoginGuid) {
+      hint |= LoginStorageHint.GENERATED;
+    }
     return {
       // Sync with GeckoSession.handlePromptEvent.
-      type: "loginStorage",
-      lsType: aType,
-      hint: aHint,
+      type: "Autocomplete:Save:Login",
+      hint,
       logins: aLogins,
     };
   }
@@ -1200,18 +1209,18 @@ class LoginStorageDelegate {
   ) {
     const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
     prompt.asyncShowPrompt(
-      this._createMessage(LoginStorageType.SAVE, LoginStorageHint.NONE, [
-        LoginEntry.fromLoginInfo(aLogin),
-      ]),
+      this._createMessage({ dismissed }, [LoginEntry.fromLoginInfo(aLogin)]),
       result => {
-        if (!result || result.login === undefined) {
+        const selectedLogin = result?.selection?.value;
+
+        if (!selectedLogin) {
           return;
         }
 
-        const loginInfo = LoginEntry.fromBundle(result.login).toLoginInfo();
+        const loginInfo = LoginEntry.parse(selectedLogin).toLoginInfo();
         Services.obs.notifyObservers(loginInfo, "passwordmgr-prompt-save");
 
-        GeckoViewLoginStorage.onLoginSave(result.login);
+        GeckoViewAutocomplete.onLoginSave(selectedLogin);
       }
     );
   }
@@ -1233,17 +1242,17 @@ class LoginStorageDelegate {
 
     const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
     prompt.asyncShowPrompt(
-      this._createMessage(LoginStorageType.SAVE, LoginStorageHint.NONE, [
-        newLogin,
-      ]),
+      this._createMessage({ dismissed, autoSavedLoginGuid }, [newLogin]),
       result => {
-        if (!result || result.login === undefined) {
+        const selectedLogin = result?.selection?.value;
+
+        if (!selectedLogin) {
           return;
         }
 
-        GeckoViewLoginStorage.onLoginSave(result.login);
+        GeckoViewAutocomplete.onLoginSave(selectedLogin);
 
-        const loginInfo = LoginEntry.fromBundle(result.login).toLoginInfo();
+        const loginInfo = LoginEntry.parse(selectedLogin).toLoginInfo();
         Services.obs.notifyObservers(
           loginInfo,
           "passwordmgr-prompt-change",
