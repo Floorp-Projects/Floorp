@@ -2700,7 +2700,7 @@ void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
   uint32_t partID = aDocument ? aDocument->GetPartID() : 0;
 
   // Don't capture state for anonymous content
-  if (aContent->IsInAnonymousSubtree()) {
+  if (aContent->IsInNativeAnonymousSubtree()) {
     return;
   }
 

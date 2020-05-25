@@ -2862,7 +2862,7 @@ nsIRadioGroupContainer* HTMLInputElement::GetRadioGroupContainer() const {
     return mForm;
   }
 
-  if (IsInAnonymousSubtree()) {
+  if (IsInNativeAnonymousSubtree()) {
     return nullptr;
   }
 
@@ -6059,8 +6059,8 @@ bool HTMLInputElement::AllowDrop() {
 void HTMLInputElement::AddedToRadioGroup() {
   // If the element is neither in a form nor a document, there is no group so we
   // should just stop here.
-  if (!mForm &&
-      (!GetUncomposedDocOrConnectedShadowRoot() || IsInAnonymousSubtree())) {
+  if (!mForm && (!GetUncomposedDocOrConnectedShadowRoot() ||
+                 IsInNativeAnonymousSubtree())) {
     return;
   }
 

@@ -68,7 +68,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMMutationRecord, mTarget,
 
 bool nsMutationReceiverBase::IsObservable(nsIContent* aContent) {
   return !aContent->ChromeOnlyAccess() &&
-         (Observer()->IsChrome() || !aContent->IsInAnonymousSubtree());
+         (Observer()->IsChrome() || !aContent->IsInNativeAnonymousSubtree());
 }
 
 NS_IMPL_ADDREF(nsMutationReceiver)

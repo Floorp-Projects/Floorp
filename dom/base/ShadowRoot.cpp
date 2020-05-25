@@ -663,7 +663,7 @@ void ShadowRoot::MaybeUnslotHostChild(nsIContent& aChild) {
     return;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(!aChild.IsRootOfAnonymousSubtree(),
+  MOZ_DIAGNOSTIC_ASSERT(!aChild.IsRootOfNativeAnonymousSubtree(),
                         "How did aChild end up assigned to a slot?");
   // If the slot is going to start showing fallback content, we need to tell
   // layout about it.
@@ -679,7 +679,7 @@ void ShadowRoot::MaybeSlotHostChild(nsIContent& aChild) {
   MOZ_ASSERT(aChild.GetParent() == GetHost());
   // Check to ensure that the child not an anonymous subtree root because even
   // though its parent could be the host it may not be in the host's child list.
-  if (aChild.IsRootOfAnonymousSubtree()) {
+  if (aChild.IsRootOfNativeAnonymousSubtree()) {
     return;
   }
 

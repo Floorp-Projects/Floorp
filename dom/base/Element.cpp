@@ -922,7 +922,7 @@ void Element::AddToIdTable(nsAtom* aId) {
     containingShadow->AddToIdTable(this, aId);
   } else {
     Document* doc = GetUncomposedDoc();
-    if (doc && !IsInAnonymousSubtree()) {
+    if (doc && !IsInNativeAnonymousSubtree()) {
       doc->AddToIdTable(this, aId);
     }
   }
@@ -943,7 +943,7 @@ void Element::RemoveFromIdTable() {
     }
   } else {
     Document* doc = GetUncomposedDoc();
-    if (doc && !IsInAnonymousSubtree()) {
+    if (doc && !IsInNativeAnonymousSubtree()) {
       doc->RemoveFromIdTable(this, id);
     }
   }
@@ -1707,7 +1707,7 @@ void Element::UnbindFromTree(bool aNullParent) {
 
   if (HasServoData()) {
     MOZ_ASSERT(document);
-    MOZ_ASSERT(IsInAnonymousSubtree());
+    MOZ_ASSERT(IsInNativeAnonymousSubtree());
   }
 
   if (document) {

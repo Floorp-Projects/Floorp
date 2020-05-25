@@ -94,7 +94,7 @@ static inline nsINode* GetFlattenedTreeParentNode(const nsINode* aNode) {
     return docLevel ? content->OwnerDocAsNode() : parent;
   }
 
-  if (content->IsRootOfAnonymousSubtree()) {
+  if (content->IsRootOfNativeAnonymousSubtree()) {
     return parent;
   }
 
@@ -171,7 +171,7 @@ inline void nsIContent::HandleInsertionToOrRemovalFromSlot() {
   using mozilla::dom::HTMLSlotElement;
 
   MOZ_ASSERT(GetParentElement());
-  if (!IsInShadowTree() || IsRootOfAnonymousSubtree()) {
+  if (!IsInShadowTree() || IsRootOfNativeAnonymousSubtree()) {
     return;
   }
   HTMLSlotElement* slot = HTMLSlotElement::FromNode(mParent);

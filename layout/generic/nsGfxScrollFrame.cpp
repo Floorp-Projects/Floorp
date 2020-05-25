@@ -1379,7 +1379,7 @@ static bool IsFocused(nsIContent* aContent) {
   // for a text input field, are inside anonymous subtrees, but the focus
   // manager always reports a non-anonymous element as the focused one, so
   // walk up the tree until we reach a non-anonymous element.
-  while (aContent && aContent->IsInAnonymousSubtree()) {
+  while (aContent && aContent->IsInNativeAnonymousSubtree()) {
     aContent = aContent->GetParent();
   }
 

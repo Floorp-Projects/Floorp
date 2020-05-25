@@ -892,7 +892,7 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
   bool clearTargets = false;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->mOriginalTarget);
-  bool isInAnon = content && content->IsInAnonymousSubtree();
+  bool isInAnon = content && content->IsInNativeAnonymousSubtree();
 
   aEvent->mFlags.mIsBeingDispatched = true;
 

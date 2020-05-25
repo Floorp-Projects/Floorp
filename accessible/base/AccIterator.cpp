@@ -246,7 +246,7 @@ dom::Element* IDRefsIterator::GetElem(nsIContent* aContent,
                                       const nsAString& aID) {
   // Get elements in DOM tree by ID attribute if this is an explicit content.
   // In case of bound element check its anonymous subtree.
-  if (!aContent->IsInAnonymousSubtree()) {
+  if (!aContent->IsInNativeAnonymousSubtree()) {
     dom::DocumentOrShadowRoot* docOrShadowRoot =
         aContent->GetUncomposedDocOrConnectedShadowRoot();
     if (docOrShadowRoot) {

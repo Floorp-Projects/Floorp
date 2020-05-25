@@ -102,7 +102,7 @@ void Event::InitPresContextData(nsPresContext* aPresContext) {
   {
     nsCOMPtr<nsIContent> content = GetTargetFromFrame();
     mExplicitOriginalTarget = content;
-    if (content && content->IsInAnonymousSubtree()) {
+    if (content && content->IsInNativeAnonymousSubtree()) {
       mExplicitOriginalTarget = nullptr;
     }
   }
