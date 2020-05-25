@@ -24,7 +24,7 @@
 }
 
 .network-monitor .headers-panel-container .devtools-button {
-  padding: 0;
+  padding: 2px;
 }
 .network-monitor .headers-panel-container .devtools-dropdown-button {
   padding: 0;
@@ -125,28 +125,6 @@
 .network-monitor .headers-summary .status-text {
   width: auto !important;
   margin-inline-start: 4px;
-}
-
-.network-monitor .accordion .properties-view tr.treeRow {
-  padding: 3px 0 0 0;
-}
-.network-monitor .accordion .properties-view tr.treeRow .treeLabelCell {
-  float: left;
-  margin-right: -33px;
-  margin-left: 5px;
-  padding: 0;
-  
-}
-.network-monitor .accordion .properties-view tr.treeRow .treeValueCell {
-  display: inline;
-  word-break: break-all;
-  box-decoration-break: clone;
-  padding-left: 39px;
-  padding-right: 20px;
-}
-
-.network-monitor .accordion .properties-view tr.treeRow .treeValueCell div {
-  display: inline;
 }
 
 /* Summary tabpanel */
