@@ -39,13 +39,8 @@ var FileUtils = {
    *          if it does not exist, however all required directories along
    *          the way are if pathArray has more than one item.
    */
-  getFile: function FileUtils_getFile(key, pathArray, followLinks) {
-    var file = this.getDir(
-      key,
-      pathArray.slice(0, -1),
-      pathArray.length > 1,
-      followLinks
-    );
+  getFile: function FileUtils_getFile(key, pathArray) {
+    var file = this.getDir(key, pathArray.slice(0, -1), pathArray.length > 1);
     file.append(pathArray[pathArray.length - 1]);
     return file;
   },
@@ -61,11 +56,9 @@ var FileUtils = {
    * @param   shouldCreate
    *          true if the directory hierarchy specified in |pathArray|
    *          should be created if it does not exist, false otherwise.
-   * @param   followLinks (optional)
-   *          true if links should be followed, false otherwise.
    * @return  nsIFile object for the location specified.
    */
-  getDir: function FileUtils_getDir(key, pathArray, shouldCreate, followLinks) {
+  getDir: function FileUtils_getDir(key, pathArray, shouldCreate) {
     var dir = gDirService.get(key, Ci.nsIFile);
     for (var i = 0; i < pathArray.length; ++i) {
       dir.append(pathArray[i]);
@@ -82,9 +75,6 @@ var FileUtils = {
       }
     }
 
-    if (!followLinks) {
-      dir.followLinks = false;
-    }
     return dir;
   },
 
