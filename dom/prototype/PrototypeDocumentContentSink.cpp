@@ -359,7 +359,6 @@ nsresult PrototypeDocumentContentSink::CreateAndInsertPI(
 nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
     const nsXULPrototypePI* aProtoPI, nsINode* aParent, nsINode* aBeforeThis,
     XMLStylesheetProcessingInstruction* aPINode) {
-
   nsresult rv;
 
   // We want to be notified when the style sheet finishes loading, so

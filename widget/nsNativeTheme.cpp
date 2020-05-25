@@ -65,8 +65,7 @@ EventStates nsNativeTheme::GetContentState(nsIFrame* aFrame,
   if (isXULCheckboxRadio && aAppearance == StyleAppearance::Radio &&
       IsFocused(aFrame)) {
     flags |= NS_EVENT_STATE_FOCUS;
-    nsPIDOMWindowOuter* window =
-        aFrame->GetContent()->OwnerDoc()->GetWindow();
+    nsPIDOMWindowOuter* window = aFrame->GetContent()->OwnerDoc()->GetWindow();
     if (window && window->ShouldShowFocusRing()) {
       flags |= NS_EVENT_STATE_FOCUSRING;
     }

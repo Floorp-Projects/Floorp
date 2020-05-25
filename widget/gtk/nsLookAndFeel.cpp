@@ -1027,8 +1027,7 @@ void nsLookAndFeel::EnsureInit() {
                     GetGtkTheme().Find(NS_LITERAL_CSTRING("HighContrast")) >= 0;
 
     gboolean enableAnimations = false;
-    g_object_get(settings, "gtk-enable-animations", &enableAnimations,
-                 nullptr);
+    g_object_get(settings, "gtk-enable-animations", &enableAnimations, nullptr);
     mPrefersReducedMotion = !enableAnimations;
   }
 

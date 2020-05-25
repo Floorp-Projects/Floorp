@@ -25,9 +25,7 @@ class RenderRootStateManager {
   void AddRef();
   void Release();
 
-  RenderRootStateManager()
-      : mLayerManager(nullptr),
-        mDestroyed(false) {}
+  RenderRootStateManager() : mLayerManager(nullptr), mDestroyed(false) {}
 
   void Destroy();
   bool IsDestroyed() { return mDestroyed; }

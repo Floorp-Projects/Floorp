@@ -307,7 +307,8 @@
 
   if ([attribute isEqualToString:@"AXMenuItemMarkChar"]) {
     AccessibleWrap* accWrap = [self getGeckoAccessible];
-    if (accWrap && accWrap->IsContent() && accWrap->GetContent()->IsXULElement(nsGkAtoms::menuitem)) {
+    if (accWrap && accWrap->IsContent() &&
+        accWrap->GetContent()->IsXULElement(nsGkAtoms::menuitem)) {
       // We need to provide a marker character. This is the visible "√" you see
       // on dropdown menus. In our a11y tree this is a single child text node
       // of the menu item.

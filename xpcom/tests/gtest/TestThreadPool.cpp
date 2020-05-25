@@ -22,7 +22,7 @@ using namespace mozilla;
 class Task final : public Runnable {
  public:
   Task(int i, Atomic<int>& aCounter)
-    : Runnable("TestThreadPool::Task"), mIndex(i), mCounter(aCounter) {}
+      : Runnable("TestThreadPool::Task"), mIndex(i), mCounter(aCounter) {}
 
   NS_IMETHOD Run() override {
     printf("###(%d) running from thread: %p\n", mIndex,
