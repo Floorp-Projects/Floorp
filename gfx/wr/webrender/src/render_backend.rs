@@ -8,7 +8,7 @@
 //! See the comment at the top of the `renderer` module for a description of
 //! how these two pieces interact.
 
-use api::{ApiMsg, ClearCache, DebugCommand, DebugFlags};
+use api::{ApiMsg, ClearCache, DebugCommand, DebugFlags, BlobImageHandler};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, ScrollClamping};
 use api::{ScrollLocation, TransactionMsg, ResourceUpdate};
@@ -773,6 +773,11 @@ pub struct RenderBackend {
     debug_flags: DebugFlags,
     namespace_alloc_by_client: bool,
 
+    // We keep one around to be able to call clear_namespace
+    // after the api object is deleted. For most purposes the
+    // api object's blob handler should be used instead.
+    blob_image_handler: Option<Box<dyn BlobImageHandler>>,
+
     recycler: Recycler,
     #[cfg(feature = "capture")]
     capture_config: Option<CaptureConfig>,
@@ -791,6 +796,7 @@ impl RenderBackend {
         default_device_pixel_ratio: f32,
         resource_cache: ResourceCache,
         notifier: Box<dyn RenderNotifier>,
+        blob_image_handler: Option<Box<dyn BlobImageHandler>>,
         frame_config: FrameBuilderConfig,
         sampler: Option<Box<dyn AsyncPropertySampler + Send>>,
         size_of_ops: Option<MallocSizeOfOps>,
@@ -817,6 +823,7 @@ impl RenderBackend {
             debug_flags,
             namespace_alloc_by_client,
             recycler: Recycler::new(),
+            blob_image_handler,
             #[cfg(feature = "capture")]
             capture_config: None,
             #[cfg(feature = "replay")]
@@ -903,6 +910,9 @@ impl RenderBackend {
                     SceneBuilderResult::ClearNamespace(id) => {
                         self.resource_cache.clear_namespace(id);
                         self.documents.retain(|doc_id, _doc| doc_id.namespace_id != id);
+                        if let Some(handler) = &mut self.blob_image_handler {
+                            handler.clear_namespace(id);
+                        }
                     }
                     SceneBuilderResult::Stopped => {
                         panic!("We haven't sent a Stop yet, how did we get a Stopped back?");
