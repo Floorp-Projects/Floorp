@@ -733,19 +733,25 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     );
   },
 
+  _nodeIsListItem(node) {
+    const display = CssLogic.getComputedStyle(node).getPropertyValue("display");
+    // This is written this way to handle `inline list-item` and such.
+    return display.split(" ").includes("list-item");
+  },
+
   // eslint-disable-next-line complexity
   _pseudoIsRelevant(node, pseudo) {
     switch (pseudo) {
       case ":after":
       case ":before":
-      case ":marker":
-        return true;
-      case ":backdrop":
-        return node.matches(":fullscreen");
       case ":first-letter":
       case ":first-line":
       case ":selection":
         return true;
+      case ":marker":
+        return this._nodeIsListItem(node);
+      case ":backdrop":
+        return node.matches(":fullscreen");
       case ":cue":
         return node.nodeName == "VIDEO";
       case ":placeholder":
