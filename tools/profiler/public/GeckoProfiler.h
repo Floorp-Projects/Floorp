@@ -237,6 +237,22 @@ class RacyFeatures {
 
   static void SetUnpaused() { sActiveAndFeatures &= ~Paused; }
 
+  static mozilla::Maybe<uint32_t> FeaturesIfActive() {
+    if (uint32_t af = sActiveAndFeatures; af & Active) {
+      // Active, remove the Active&Paused bits to get all features.
+      return Some(af & ~(Active | Paused));
+    }
+    return Nothing();
+  }
+
+  static mozilla::Maybe<uint32_t> FeaturesIfActiveAndUnpaused() {
+    if (uint32_t af = sActiveAndFeatures; (af & (Active | Paused)) == Active) {
+      // Active but not paused, remove the Active bit to get all features.
+      return Some(af & ~Active);
+    }
+    return Nothing();
+  }
+
   static bool IsActive() { return uint32_t(sActiveAndFeatures) & Active; }
 
   static bool IsActiveWithFeature(uint32_t aFeature) {
@@ -530,6 +546,20 @@ bool profiler_thread_is_sleeping();
 // profiler_start(). The result is the same whether the profiler is active or
 // not.
 uint32_t profiler_get_available_features();
+
+// Returns the full feature set if the profiler is active.
+// Note: the return value can become immediately out-of-date, much like the
+// return value of profiler_is_active().
+inline mozilla::Maybe<uint32_t> profiler_features_if_active() {
+  return mozilla::profiler::detail::RacyFeatures::FeaturesIfActive();
+}
+
+// Returns the full feature set if the profiler is active and unpaused.
+// Note: the return value can become immediately out-of-date, much like the
+// return value of profiler_is_active().
+inline mozilla::Maybe<uint32_t> profiler_features_if_active_and_unpaused() {
+  return mozilla::profiler::detail::RacyFeatures::FeaturesIfActiveAndUnpaused();
+}
 
 // Check if a profiler feature (specified via the ProfilerFeature type) is
 // active. Returns false if the profiler is inactive. Note: the return value
