@@ -65,12 +65,11 @@ const MONITOR_RESPONSE_PROPS = [
 ];
 
 let gTestOverride = null;
+let monitorResponse = null;
 
 class AboutProtectionsParent extends JSWindowActorParent {
   constructor() {
     super();
-
-    this.monitorResponse = null;
   }
 
   // Some tests wish to override certain functions with ones that mostly do nothing.
@@ -85,13 +84,13 @@ class AboutProtectionsParent extends JSWindowActorParent {
    * @return valid data from endpoint.
    */
   async fetchUserBreachStats(token) {
-    if (this.monitorResponse && this.monitorResponse.timestamp) {
-      var timeDiff = Date.now() - this.monitorResponse.timestamp;
+    if (monitorResponse && monitorResponse.timestamp) {
+      var timeDiff = Date.now() - monitorResponse.timestamp;
       let oneDayInMS = 24 * 60 * 60 * 1000;
       if (timeDiff >= oneDayInMS) {
-        this.monitorResponse = null;
+        monitorResponse = null;
       } else {
-        return this.monitorResponse;
+        return monitorResponse;
       }
     }
 
@@ -115,33 +114,33 @@ class AboutProtectionsParent extends JSWindowActorParent {
         }
       }
 
-      this.monitorResponse = isValid ? json : new Error(UNEXPECTED_RESPONSE);
+      monitorResponse = isValid ? json : new Error(UNEXPECTED_RESPONSE);
       if (isValid) {
-        this.monitorResponse.timestamp = Date.now();
+        monitorResponse.timestamp = Date.now();
       }
     } else {
       // Check the reason for the error
       switch (response.status) {
         case 400:
         case 401:
-          this.monitorResponse = new Error(INVALID_OAUTH_TOKEN);
+          monitorResponse = new Error(INVALID_OAUTH_TOKEN);
           break;
         case 404:
-          this.monitorResponse = new Error(USER_UNSUBSCRIBED_TO_MONITOR);
+          monitorResponse = new Error(USER_UNSUBSCRIBED_TO_MONITOR);
           break;
         case 503:
-          this.monitorResponse = new Error(SERVICE_UNAVAILABLE);
+          monitorResponse = new Error(SERVICE_UNAVAILABLE);
           break;
         default:
-          this.monitorResponse = new Error(UNKNOWN_ERROR);
+          monitorResponse = new Error(UNKNOWN_ERROR);
           break;
       }
     }
 
-    if (this.monitorResponse instanceof Error) {
-      throw this.monitorResponse;
+    if (monitorResponse instanceof Error) {
+      throw monitorResponse;
     }
-    return this.monitorResponse;
+    return monitorResponse;
   }
 
   /**
@@ -193,7 +192,11 @@ class AboutProtectionsParent extends JSWindowActorParent {
    */
   async getMonitorData() {
     if (gTestOverride && "getMonitorData" in gTestOverride) {
-      return gTestOverride.getMonitorData();
+      monitorResponse = gTestOverride.getMonitorData();
+      monitorResponse.timestamp = Date.now();
+      // In a test, expect this to not fetch from the monitor endpoint due to the timestamp guaranteeing we use the cache.
+      monitorResponse = await this.fetchUserBreachStats();
+      return monitorResponse;
     }
 
     let monitorData = {};
@@ -369,7 +372,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
         return { ...loginsData, potentiallyBreachedLogins };
 
       case "ClearMonitorCache":
-        this.monitorResponse = null;
+        monitorResponse = null;
         break;
 
       case "GetShowProxyCard":
