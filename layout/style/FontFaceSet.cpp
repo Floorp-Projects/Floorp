@@ -592,7 +592,7 @@ nsresult FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
 
     // We don't want this to hang around regardless of the result, there will be
     // no coalescing of later found <link preload> tags for fonts.
-    mDocument->Preloads().DeregisterPreload(&preloadKey);
+    preload->RemoveSelf(mDocument);
   } else {
     // No preload found, open a channel.
     rv = NS_ERROR_FAILURE;
