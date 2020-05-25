@@ -268,6 +268,10 @@ bool MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget) {
       mSwapChain1->SetBackgroundColor(&color);
       mSwapChain = mSwapChain1;
       mIsDoubleBuffered = true;
+    } else if (aWidget->AsWindows()->GetCompositorHwnd()) {
+      // Destroy compositor window.
+      aWidget->AsWindows()->DestroyCompositorWindow();
+      hwnd = aWidget->AsWindows()->GetHwnd();
     }
   }
 
