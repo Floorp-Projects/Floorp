@@ -30,8 +30,8 @@ namespace mozilla {
 namespace dom {
 
 BrowserBridgeChild::BrowserBridgeChild(BrowsingContext* aBrowsingContext,
-                                       TabId aId)
-    : mId{aId}, mLayersId{0}, mBrowsingContext(aBrowsingContext) {}
+                                       TabId aId, const LayersId& aLayersId)
+    : mId{aId}, mLayersId{aLayersId}, mBrowsingContext(aBrowsingContext) {}
 
 BrowserBridgeChild::~BrowserBridgeChild() {
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
@@ -102,22 +102,6 @@ BrowserBridgeChild* BrowserBridgeChild::GetFrom(nsIContent* aContent) {
   }
   RefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
   return GetFrom(frameLoader);
-}
-
-IPCResult BrowserBridgeChild::RecvSetLayersId(
-    const mozilla::layers::LayersId& aLayersId) {
-  MOZ_ASSERT(!mLayersId.IsValid() && aLayersId.IsValid());
-  mLayersId = aLayersId;
-
-  // Invalidate the nsSubdocumentFrame now that we have a layers ID for the
-  // child browser
-  if (RefPtr<Element> owner = mFrameLoader->GetOwnerContent()) {
-    if (nsIFrame* frame = owner->GetPrimaryFrame()) {
-      frame->InvalidateFrame();
-    }
-  }
-
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
