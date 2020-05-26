@@ -37,6 +37,13 @@
             }
           }
         ]
+      },
+      {
+        "name": "cancel",
+        "type": "function",
+        "description": "Cancel showing the notification.",
+        "async": true,
+        "parameters": []
       }
     ],
     "events": [

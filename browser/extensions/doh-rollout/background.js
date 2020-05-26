@@ -654,6 +654,8 @@ const setup = {
       } catch (e) {
         // Captive Portal Service is disabled.
       }
+
+      await browser.experiments.doorhanger.cancel();
     }
   });
 
