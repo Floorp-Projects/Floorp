@@ -6,11 +6,13 @@ add_task(async function testDoorhanger() {
   Preferences.reset(prefs.PROFILE_CREATION_THRESHOLD_PREF);
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
+  let prefPromise = TestUtils.waitForPrefChange(prefs.DOH_SELF_ENABLED_PREF);
+  let doorhangerPrefPromise = TestUtils.waitForPrefChange(
+    prefs.DOH_DOORHANGER_SHOWN_PREF
+  );
   Preferences.set(prefs.DOH_ENABLED_PREF, true);
 
-  await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.DOH_SELF_ENABLED_PREF);
-  });
+  await prefPromise;
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
   is(
     Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
@@ -19,9 +21,7 @@ add_task(async function testDoorhanger() {
   );
   await checkTRRSelectionTelemetry();
 
-  await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF);
-  });
+  await doorhangerPrefPromise;
   is(
     Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
     true,

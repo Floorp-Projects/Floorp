@@ -8,11 +8,10 @@ add_task(async function testRollback() {
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
   let promise = waitForDoorhanger();
+  let prefPromise = TestUtils.waitForPrefChange(prefs.DOH_SELF_ENABLED_PREF);
   Preferences.set(prefs.DOH_ENABLED_PREF, true);
 
-  await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.DOH_SELF_ENABLED_PREF);
-  });
+  await prefPromise;
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
   is(
     Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
@@ -29,6 +28,8 @@ add_task(async function testRollback() {
     "Doorhanger shown pref undefined before user interaction."
   );
 
+  prefPromise = TestUtils.waitForPrefChange(prefs.DOH_DOORHANGER_SHOWN_PREF);
+
   // Click the doorhanger's "accept" button.
   let button = panel.querySelector(".popup-notification-primary-button");
   promise = BrowserTestUtils.waitForEvent(panel, "popuphidden");
@@ -38,9 +39,7 @@ add_task(async function testRollback() {
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
-  await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF);
-  });
+  await prefPromise;
   is(
     Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
     true,
