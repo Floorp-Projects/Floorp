@@ -7852,6 +7852,52 @@ end:
 !macroend
 
 /**
+ * Try to locate the default profile of this install from AppUserModelID
+ * using installs.ini.
+ * FIXME This could instead use the Install<AUMID> entries in profiles.ini?
+ *
+ * - `SetShellVarContext current` must be called before this macro so
+ *   $APPDATA gets the current user's data.
+ * - InitHashAppModelId must have been called before this macro to set
+ *   $AppUserModelID
+ *
+ * @result: Path of the profile directory (not checked for existence),
+ *          or "" if not found, left on top of the stack.
+ */
+!macro FindInstallSpecificProfileMaybeUn _MOZFUNC_UN
+  Push $R0
+  Push $0
+  Push $1
+  Push $2
+
+  StrCpy $R0 ""
+  ; Look for an install-specific profile, which might be listed as
+  ; either a relative or an absolute path (installs.ini doesn't say which).
+  ${If} ${FileExists} "$APPDATA\Mozilla\Firefox\installs.ini"
+    ClearErrors
+    ReadINIStr $1 "$APPDATA\Mozilla\Firefox\installs.ini" "$AppUserModelID" "Default"
+    ${IfNot} ${Errors}
+      ${${_MOZFUNC_UN}GetLongPath} "$APPDATA\Mozilla\Firefox\$1" $2
+      ${If} ${FileExists} $2
+        StrCpy $R0 $2
+      ${Else}
+        ${${_MOZFUNC_UN}GetLongPath} "$1" $2
+        ${If} ${FileExists} $2
+          StrCpy $R0 $2
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+
+  Pop $2
+  Pop $1
+  Pop $0
+  Exch $R0
+!macroend
+!define FindInstallSpecificProfile "!insertmacro FindInstallSpecificProfileMaybeUn ''"
+!define un.FindInstallSpecificProfile "!insertmacro FindInstallSpecificProfileMaybeUn un."
+
+/**
  * Copy the post-signing data, which was left alongside the installer
  * by the self-extractor stub, into the global location for this data.
  *
@@ -7861,10 +7907,10 @@ end:
  * if any) is pushed on the stack.
  */
 !macro CopyPostSigningData
-  !ifndef ${_MOZFUNC_UN}CopyPostSigningData
+  !ifndef CopyPostSigningData
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
-    !define ${_MOZFUNC_UN}CopyPostSigningData "Call ${_MOZFUNC_UN}CopyPostSigningData"
+    !define CopyPostSigningData "Call CopyPostSigningData"
 
     Function CopyPostSigningData
       Push $0   ; Stack: old $0
