@@ -45,6 +45,34 @@ UNCOMMON_TRY_TASK_LABELS = [
 ]
 
 
+# These are live site performance tests we run three times a week
+LIVE_SITES = [
+    "amazon-search",
+    "bbc",
+    "booking-sf",
+    "cnn-ampstories",
+    "discord",
+    "espn",
+    "expedia",
+    "facebook-cristiano",
+    "fashionbeans",
+    "google",
+    "google-accounts",
+    "imdb-firefox",
+    "jianshu",
+    "medium-article",
+    "microsoft-support",
+    "nytimes",
+    "people-article",
+    "reddit-thread",
+    "rumble-fox",
+    "stackoverflow-question",
+    "urbandictionary-define",
+    "wikia-marvel",
+    "youtube-watch"
+]
+
+
 def _target_task(name):
     def wrap(func):
         _target_task_methods[name] = func
@@ -494,6 +522,40 @@ def target_tasks_fennec_v68(full_task_graph, parameters, graph_config):
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
 
 
+@_target_task("live_site_perf_testing")
+def target_tasks_live_site_perf_testing(full_task_graph, parameters, graph_config):
+    """
+    Select browsertime live site tasks that should only run once a week.
+    """
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        attributes = task.attributes
+        vismet = attributes.get('kind') == 'visual-metrics-dep'
+        if attributes.get('unittest_suite') != 'raptor' and not vismet:
+            return False
+        try_name = attributes.get('raptor_try_name')
+        if vismet:
+            platform = task.task.get('extra').get('treeherder-platform')
+            try_name = task.label
+
+        if 'android' not in platform:
+            return False
+        if 'fenix' not in try_name:
+            return False
+        if ('browsertime' not in try_name or
+            'shippable' not in platform or
+            'live' not in try_name):
+            return False
+        for test in LIVE_SITES:
+            if try_name.endswith(test) or try_name.endswith(test + "-e10s"):
+                # These tests run 3 times a week, ignore them
+                return False
+
+        return True
+
+    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+
+
 @_target_task('general_perf_testing')
 def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config):
     """
@@ -544,7 +606,11 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             if 'speedometer' in try_name:
                 return True
             if '-live' in try_name:
-                return True
+                # We only want to select those which should run 3 times
+                # a week here, other live site tests should be removed
+                for test in LIVE_SITES:
+                    if try_name.endswith(test) or try_name.endswith(test + "-e10s"):
+                        return True
             return False
 
         # Run the following tests on android geckoview

@@ -199,28 +199,46 @@ browsertime-tp6m-live:
     description: "Raptor (browsertime) tp6 live site page-load tests on android"
     raptor-test: tp6m
     raptor-subtests:
+        - allrecipes
+        - amazon
         - amazon-search
         - bbc
+        - bing
+        - bing-search-restaurants
+        - booking
         - booking-sf
+        - cnn
         - cnn-ampstories
         - discord
+        - ebay-kleinanzeigen
+        - ebay-kleinanzeigen-search
         - espn
         - expedia
+        - facebook
         - facebook-cristiano
         - fashionbeans
         - google
         - google-accounts
+        - google-maps
+        - google-search-restaurants
+        - instagram
+        - imdb
         - imdb-firefox
         - jianshu
         - medium-article
         - microsoft-support
         - nytimes
         - people-article
+        - reddit
         - reddit-thread
         - rumble-fox
+        - stackoverflow
         - stackoverflow-question
         - urbandictionary-define
+        - web-de
         - wikia-marvel
+        - wikipedia
+        - youtube
         - youtube-watch
     apps: ["fenix", "chrome-m"]
     run-on-projects: []
