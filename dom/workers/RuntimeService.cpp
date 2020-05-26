@@ -2232,8 +2232,6 @@ WorkerThreadPrimaryRunnable::Run() {
   mWorkerPrivate->EnsurePerformanceCounter();
 
   if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread())) {
-    WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(
-        mWorkerPrivate);
     return NS_ERROR_FAILURE;
   }
 
@@ -2249,8 +2247,6 @@ WorkerThreadPrimaryRunnable::Run() {
     JSContext* cx = context->Context();
 
     if (!InitJSContextForWorker(mWorkerPrivate, cx)) {
-      WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(
-          mWorkerPrivate);
       return NS_ERROR_FAILURE;
     }
 
