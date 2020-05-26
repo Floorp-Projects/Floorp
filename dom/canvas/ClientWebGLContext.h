@@ -396,7 +396,6 @@ class WebGLQueryJS final : public nsWrapperCache, public webgl::ObjectJS {
   friend class ClientWebGLContext;
 
   GLenum mTarget = 0;  // !IsQuery until Bind
-  bool mIsFullyDeleted = false;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQueryJS)
@@ -409,7 +408,6 @@ class WebGLQueryJS final : public nsWrapperCache, public webgl::ObjectJS {
   ~WebGLQueryJS() = default;
 
  public:
-  bool IsDeleted() const override { return mIsFullyDeleted; }
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
 };
 
