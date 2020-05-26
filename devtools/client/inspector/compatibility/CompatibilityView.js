@@ -100,8 +100,12 @@ class CompatibilityView {
 
   _onChangeAdded({ selector }) {
     if (!this._isAvailable()) {
+      // In order to update this panel if a change is added while hiding this panel.
+      this._isChangeAddedWhileHidden = true;
       return;
     }
+
+    this._isChangeAddedWhileHidden = false;
 
     // We need to debounce updating nodes since "add-change" event on changes actor is
     // fired for every typed character until fixing bug 1503036.
@@ -119,8 +123,28 @@ class CompatibilityView {
   }
 
   _onPanelSelected() {
-    this._onSelectedNodeChanged();
-    this._onTopLevelTargetChanged();
+    const {
+      selectedNode,
+      topLevelTarget,
+    } = this.inspector.store.getState().compatibility;
+
+    // Update if the selected node is changed or new change is added while the panel was hidden.
+    if (
+      this.inspector.selection.nodeFront !== selectedNode ||
+      this._isChangeAddedWhileHidden
+    ) {
+      this._onSelectedNodeChanged();
+    }
+
+    // Update if the top target has changed or new change is added while the panel was hidden.
+    if (
+      this.inspector.toolbox.target !== topLevelTarget ||
+      this._isChangeAddedWhileHidden
+    ) {
+      this._onTopLevelTargetChanged();
+    }
+
+    this._isChangeAddedWhileHidden = false;
   }
 
   _onSelectedNodeChanged() {
