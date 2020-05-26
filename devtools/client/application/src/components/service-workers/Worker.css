@@ -33,7 +33,12 @@
 }
 
 .worker__data > * {
-  margin: calc(var(--base-unit) * 2) 0 0 0;
+  margin: 0;
+}
+
+/* skip the first <dt> + <dd> pair elements */
+.worker__data > *:nth-child(n + 3) {
+  margin-block-start: calc(var(--base-unit) * 2);
 }
 
 .worker__link-start,

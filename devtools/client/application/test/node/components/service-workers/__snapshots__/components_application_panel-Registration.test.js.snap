@@ -10,23 +10,25 @@ exports[`Registration Renders the expected snapshot for a registration with a wo
     <header
       className="registration__header"
     >
-      <span
+      <h2
         className="registration__scope js-sw-scope"
         title="SCOPE 123"
       >
         SCOPE 123
-      </span>
-      <aside>
-        <Localized
-          id="serviceworker-worker-unregister"
-        >
-          <UIButton
-            className="js-unregister-button"
-            onClick={[Function]}
-          />
-        </Localized>
-      </aside>
+      </h2>
     </header>
+    <aside
+      className="registration__controls"
+    >
+      <Localized
+        id="serviceworker-worker-unregister"
+      >
+        <UIButton
+          className="js-unregister-button"
+          onClick={[Function]}
+        />
+      </Localized>
+    </aside>
     <ul
       className="registration__workers"
     >
@@ -62,23 +64,25 @@ exports[`Registration Renders the expected snapshot for a registration with mult
     <header
       className="registration__header"
     >
-      <span
+      <h2
         className="registration__scope js-sw-scope"
         title="SCOPE 123"
       >
         SCOPE 123
-      </span>
-      <aside>
-        <Localized
-          id="serviceworker-worker-unregister"
-        >
-          <UIButton
-            className="js-unregister-button"
-            onClick={[Function]}
-          />
-        </Localized>
-      </aside>
+      </h2>
     </header>
+    <aside
+      className="registration__controls"
+    >
+      <Localized
+        id="serviceworker-worker-unregister"
+      >
+        <UIButton
+          className="js-unregister-button"
+          onClick={[Function]}
+        />
+      </Localized>
+    </aside>
     <ul
       className="registration__workers"
     >
@@ -131,23 +135,25 @@ exports[`Registration Renders the expected snapshot when sw debugging is disable
     <header
       className="registration__header"
     >
-      <span
+      <h2
         className="registration__scope js-sw-scope"
         title="SCOPE 123"
       >
         SCOPE 123
-      </span>
-      <aside>
-        <Localized
-          id="serviceworker-worker-unregister"
-        >
-          <UIButton
-            className="js-unregister-button"
-            onClick={[Function]}
-          />
-        </Localized>
-      </aside>
+      </h2>
     </header>
+    <aside
+      className="registration__controls"
+    >
+      <Localized
+        id="serviceworker-worker-unregister"
+      >
+        <UIButton
+          className="js-unregister-button"
+          onClick={[Function]}
+        />
+      </Localized>
+    </aside>
     <ul
       className="registration__workers"
     >

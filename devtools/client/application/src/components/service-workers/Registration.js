@@ -16,10 +16,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   article,
   aside,
+  h2,
   header,
   li,
   p,
-  span,
   time,
   ul,
 } = require("devtools/client/shared/vendor/react-dom-factories");
@@ -102,11 +102,11 @@ class Registration extends PureComponent {
             $date: registration.lastUpdateTime / 1000,
             time: time({ className: "js-sw-updated" }),
           },
-          span({ className: "registration__updated-time" })
+          p({ className: "registration__updated-time" })
         )
       : null;
 
-    const scope = span(
+    const scope = h2(
       {
         title: registration.scope,
         className: "registration__scope js-sw-scope",
@@ -118,12 +118,8 @@ class Registration extends PureComponent {
       { className: className ? className : "" },
       article(
         { className: "registration js-sw-container" },
-        header(
-          { className: "registration__header" },
-          scope,
-          aside({}, unregisterButton)
-        ),
-        lastUpdated ? p({}, lastUpdated) : null,
+        header({ className: "registration__header" }, scope, lastUpdated),
+        aside({ className: "registration__controls" }, unregisterButton),
         // render list of workers
         ul(
           { className: "registration__workers" },
