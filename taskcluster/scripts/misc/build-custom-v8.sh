@@ -26,7 +26,7 @@ git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 export PATH=$PATH:$GECKO_PATH/depot_tools
 
 # Get v8 source code and dependencies
-fetch v8
+fetch --force v8
 cd v8
 
 # Build v8
