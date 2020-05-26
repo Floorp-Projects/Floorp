@@ -381,6 +381,18 @@ void FunctionBox::finish() {
       script->setFieldInitializers(*fieldInitializers);
     }
   }
+
+  // Inferred and Guessed names are computed by BytecodeEmitter and so may need
+  // to be applied to existing JSFunctions during delazification.
+  if (function()->displayAtom() == nullptr) {
+    if (hasInferredName()) {
+      function()->setInferredName(atom_);
+    }
+
+    if (hasGuessedAtom()) {
+      function()->setGuessedAtom(atom_);
+    }
+  }
 }
 
 /* static */
