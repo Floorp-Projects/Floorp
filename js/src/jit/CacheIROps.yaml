@@ -809,7 +809,7 @@
 
 - name: CallScriptedFunction
   shared: false
-  transpile: false
+  transpile: true
   args:
     callee: ObjId
     argc: Int32Id

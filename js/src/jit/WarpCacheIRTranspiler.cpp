@@ -1184,30 +1184,51 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
   // the resulting MCall instruction depends on these guards.
   callInfo_->setCallee(callee);
 
-  // CacheIR emits the following for specialized native calls:
+  // CacheIR emits the following for specialized calls:
   //     GuardSpecificFunction <callee> <func> ..
-  //     CallNativeFunction <callee> ..
+  //     Call(Native|Scripted)Function <callee> ..
   // We can use the <func> JSFunction object to specialize this call.
   WrappedFunction* wrappedTarget = nullptr;
   if (callee->isGuardSpecificFunction()) {
     auto* guard = callee->toGuardSpecificFunction();
     JSFunction* target =
         &guard->expected()->toConstant()->toObject().as<JSFunction>();
-    MOZ_ASSERT(target->isNative());
 
     wrappedTarget =
         new (alloc()) WrappedFunction(target, guard->nargs(), guard->flags());
+
+    MOZ_ASSERT_IF(kind == CallKind::Native, wrappedTarget->isNative());
+    MOZ_ASSERT_IF(kind == CallKind::Scripted,
+                  wrappedTarget->isInterpreted() ||
+                      wrappedTarget->isNativeWithJitEntry());
   }
 
-  // We know we are constructing a native function even if we don't know the
-  // actual target.
   bool needsThisCheck = false;
   if (callInfo_->constructing()) {
     MOZ_ASSERT(flags.isConstructing());
 
     callInfo_->thisArg()->setImplicitlyUsedUnchecked();
-    // Magic value passed to natives to indicate construction.
-    callInfo_->setThis(constant(MagicValue(JS_IS_CONSTRUCTING)));
+
+    if (kind == CallKind::Native) {
+      // We know we are constructing a native function even if we don't know the
+      // actual target.
+
+      // Magic value passed to natives to indicate construction.
+      callInfo_->setThis(constant(MagicValue(JS_IS_CONSTRUCTING)));
+
+      needsThisCheck = false;
+    } else {
+      MOZ_ASSERT(kind == CallKind::Scripted);
+
+      // TODO: Optimize |this| creation based on CacheIR.
+      MDefinition* newTarget = callInfo_->getNewTarget();
+      auto* createThis = MCreateThis::New(alloc(), callee, newTarget);
+      add(createThis);
+      callInfo_->setThis(createThis);
+
+      wrappedTarget = nullptr;
+      needsThisCheck = true;
+    }
   }
 
   MCall* call = makeCall(*callInfo_, needsThisCheck, wrappedTarget);
@@ -1241,6 +1262,12 @@ bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
   return emitCallFunction(calleeId, argcId, flags, CallKind::Native);
 }
 #endif
+
+bool WarpCacheIRTranspiler::emitCallScriptedFunction(ObjOperandId calleeId,
+                                                     Int32OperandId argcId,
+                                                     CallFlags flags) {
+  return emitCallFunction(calleeId, argcId, flags, CallKind::Scripted);
+}
 
 bool WarpCacheIRTranspiler::emitMetaTwoByte(MetaTwoByteKind kind,
                                             uint32_t functionObjectOffset,
