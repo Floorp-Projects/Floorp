@@ -101,7 +101,10 @@ static void RemoveAllRegistryEntries() {
 //   token argument is required and should be the same one that was passed in
 //   when the task was registered.
 // unregister-task [unique-token]
-//   Removes the previously created task along with any registry entries that
+//   Removes the previously created task. The unique token argument is required
+//   and should be the same one that was passed in when the task was registered.
+// uninstall [unique-token]
+//   Removes the previously created task, and also removes all registry entries
 //   running the task may have created. The unique token argument is required
 //   and should be the same one that was passed in when the task was registered.
 // do-task
@@ -121,13 +124,16 @@ int wmain(int argc, wchar_t** argv) {
     ~ComUninitializer() { CoUninitialize(); }
   } kCUi;
 
-  // The remove-task command is allowed even if the policy disabling the task
-  // is set, mainly so that the uninstaller will work.
-  if (!wcscmp(argv[1], L"unregister-task")) {
+  // The uninstall and unregister commands are allowed even if the policy
+  // disabling the task is set, so that uninstalls and updates always work.
+  if (!wcscmp(argv[1], L"uninstall") || !wcscmp(argv[1], L"unregister-task")) {
     if (argc < 3 || !argv[2]) {
       return E_INVALIDARG;
     }
-    RemoveAllRegistryEntries();
+
+    if (!wcscmp(argv[1], L"uninstall")) {
+      RemoveAllRegistryEntries();
+    }
     return RemoveTask(argv[2]);
   }
 
