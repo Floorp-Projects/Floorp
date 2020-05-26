@@ -372,9 +372,9 @@ add_task(async function test_user_change_with_disabling() {
     "Default engine is Twitter"
   );
 
-  let enabledPromise = awaitEvent("ready", EXTENSION1_ID);
+  let processedPromise = awaitEvent("searchEngineProcessed", EXTENSION1_ID);
   await addon.enable();
-  await enabledPromise;
+  await processedPromise;
 
   is(
     (await Services.search.getDefault()).name,
