@@ -98,6 +98,11 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   JS::RootedVector<JSFunction*> functions;
   JS::RootedVector<ScriptStencil> funcData;
 
+  // Stencil for top-level script. This includes standalone functions and
+  // functions being delazified.
+  JS::Rooted<ScriptStencil> topLevel;
+  SourceExtent topLevelExtent = {};
+
   // A rooted list of scopes created during this parse.
   //
   // To ensure that ScopeCreationData's destructors fire, and thus our HeapPtr
@@ -140,6 +145,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
         bigIntData(cx),
         functions(cx),
         funcData(cx),
+        topLevel(cx),
         scopeCreationData(cx),
         sourceObject(cx) {}
 
@@ -156,7 +162,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   }
 
   MOZ_MUST_USE bool publishDeferredFunctions();
-  void finishFunctions();
+  MOZ_MUST_USE bool instantiateStencils();
 
   void trace(JSTracer* trc) final;
 

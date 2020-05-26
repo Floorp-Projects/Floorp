@@ -699,34 +699,17 @@ bool FunctionScriptEmitter::emitEndBody() {
   return true;
 }
 
-bool FunctionScriptEmitter::initScript() {
+bool FunctionScriptEmitter::intoStencil(TopLevelFunction isTopLevel) {
   MOZ_ASSERT(state_ == State::EndBody);
-  MOZ_ASSERT(!bce_->outputScript);
 
-  JSContext* cx = bce_->cx;
+  // If this function is the top-level of the compile, store directly into the
+  // CompilationInfo like all other top-level scripts.
+  ScriptStencil* stencilPtr = isTopLevel == TopLevelFunction::Yes
+                                  ? bce_->compilationInfo.topLevel.address()
+                                  : funbox_->functionStencil().address();
 
-  ScriptStencil stencil(cx);
-  if (!bce_->intoScriptStencil(&stencil)) {
+  if (!bce_->intoScriptStencil(stencilPtr)) {
     return false;
-  }
-
-  if (bce_->emitterMode == BytecodeEmitter::LazyFunction) {
-    RootedScript script(cx, JSScript::CastFromLazy(bce_->compilationInfo.lazy));
-    if (!JSScript::fullyInitFromStencil(cx, bce_->compilationInfo, script,
-                                        stencil)) {
-      return false;
-    }
-
-    bce_->outputScript = script;
-  } else {
-    SourceExtent extent = funbox_->getScriptExtent();
-    RootedScript script(
-        cx, JSScript::fromStencil(cx, bce_->compilationInfo, stencil, extent));
-    if (!script) {
-      return false;
-    }
-
-    bce_->outputScript = script;
   }
 
 #ifdef DEBUG

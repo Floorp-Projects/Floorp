@@ -498,9 +498,10 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       return nullptr;
     }
 
-    compilationInfo.finishFunctions();
+    if (!compilationInfo.instantiateStencils()) {
+      return nullptr;
+    }
 
-    compilationInfo.script = emitter->getResultScript();
     MOZ_ASSERT(compilationInfo.script);
   }
 
@@ -558,9 +559,10 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
-  compilationInfo.finishFunctions();
+  if (!compilationInfo.instantiateStencils()) {
+    return nullptr;
+  }
 
-  compilationInfo.script = emitter->getResultScript();
   MOZ_ASSERT(compilationInfo.script);
 
   if (!builder.initModule(module)) {
@@ -639,13 +641,13 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     // we want the SourceExtent used in the final standalone script to
     // start from the beginning of the buffer, and use the provided
     // line and column.
-    SourceExtent extent{/* sourceStart = */ 0,
-                        sourceBuffer_.length(),
-                        funbox->extent.toStringStart,
-                        funbox->extent.toStringEnd,
-                        compilationInfo.options.lineno,
-                        compilationInfo.options.column};
-    funbox->scriptExtent.emplace(extent);
+    compilationInfo.topLevelExtent =
+        SourceExtent{/* sourceStart = */ 0,
+                     sourceBuffer_.length(),
+                     funbox->extent.toStringStart,
+                     funbox->extent.toStringEnd,
+                     compilationInfo.options.lineno,
+                     compilationInfo.options.column};
 
     if (!compilationInfo.publishDeferredFunctions()) {
       return false;
@@ -656,16 +658,16 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
       return false;
     }
 
-    if (!emitter->emitFunctionScript(parsedFunction,
-                                     BytecodeEmitter::TopLevelFunction::Yes)) {
+    if (!emitter->emitFunctionScript(parsedFunction, TopLevelFunction::Yes)) {
       return false;
     }
 
     funbox->synchronizeArgCount();
 
-    compilationInfo.finishFunctions();
+    if (!compilationInfo.instantiateStencils()) {
+      return false;
+    }
 
-    compilationInfo.script = emitter->getResultScript();
     MOZ_ASSERT(compilationInfo.script);
   } else {
     fun.set(funbox->function());
@@ -762,20 +764,19 @@ static JSScript* CompileGlobalBinASTScriptImpl(
     return nullptr;
   }
 
-  compilationInfo.finishFunctions();
-
-  RootedScript resultScript(cx, bce.getResultScript());
-  MOZ_ASSERT(resultScript);
+  if (!compilationInfo.instantiateStencils()) {
+    return nullptr;
+  }
 
   if (sourceObjectOut) {
     *sourceObjectOut = compilationInfo.sourceObject;
   }
 
   tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
-                                  resultScript);
+                                  compilationInfo.script);
 
   assertException.reset();
-  return resultScript;
+  return compilationInfo.script;
 }
 
 JSScript* frontend::CompileGlobalBinASTScript(
@@ -954,16 +955,18 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
     return false;
   }
 
-  if (!bce.emitFunctionScript(pn, BytecodeEmitter::TopLevelFunction::Yes)) {
+  if (!bce.emitFunctionScript(pn, TopLevelFunction::Yes)) {
     return false;
   }
 
-  compilationInfo.finishFunctions();
+  if (!compilationInfo.instantiateStencils()) {
+    return false;
+  }
 
-  MOZ_ASSERT(lazyFlags == bce.getResultScript()->immutableFlags());
-  MOZ_ASSERT(bce.getResultScript()->outermostScope()->hasOnChain(
+  MOZ_ASSERT(lazyFlags == compilationInfo.script->immutableFlags());
+  MOZ_ASSERT(compilationInfo.script->outermostScope()->hasOnChain(
                  ScopeKind::NonSyntactic) ==
-             bce.getResultScript()->immutableFlags().hasFlag(
+             compilationInfo.script->immutableFlags().hasFlag(
                  JSScript::ImmutableFlags::HasNonSyntacticScope));
 
   assertException.reset();
@@ -1030,18 +1033,20 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
     return false;
   }
 
-  if (!bce.emitFunctionScript(pn, BytecodeEmitter::TopLevelFunction::Yes)) {
+  if (!bce.emitFunctionScript(pn, TopLevelFunction::Yes)) {
     return false;
   }
 
-  compilationInfo.finishFunctions();
+  if (!compilationInfo.instantiateStencils()) {
+    return false;
+  }
 
   // This value *must* not change after the lazy function is first created.
   MOZ_ASSERT(lazyIsLikelyConstructorWrapper ==
-             bce.getResultScript()->isLikelyConstructorWrapper());
+             compilationInfo.script->isLikelyConstructorWrapper());
 
   assertException.reset();
-  return bce.getResultScript();
+  return true;
 }
 
 bool frontend::CompileLazyBinASTFunction(JSContext* cx,

@@ -14,7 +14,7 @@
 #include "frontend/DefaultEmitter.h"      // DefaultEmitter
 #include "frontend/EmitterScope.h"        // EmitterScope
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
-#include "frontend/SharedContext.h"       // FunctionBox
+#include "frontend/SharedContext.h"       // FunctionBox, TopLevelFunction
 #include "frontend/TDZCheckCache.h"       // TDZCheckCache
 #include "frontend/TryEmitter.h"          // TryEmitter
 #include "gc/Rooting.h"                   // JS::Rooted, JS::Handle
@@ -162,7 +162,7 @@ class MOZ_STACK_CLASS FunctionEmitter {
 //
 //     // Do NameFunctions operation here if needed.
 //
-//     fse.initScript();
+//     fse.intoStencil();
 //
 class MOZ_STACK_CLASS FunctionScriptEmitter {
  private:
@@ -205,7 +205,7 @@ class MOZ_STACK_CLASS FunctionScriptEmitter {
   //                                                       |
   //     +-------------------------------------------------+
   //     |
-  //     | initScript  +-----+
+  //     | intoStencil +-----+
   //     +------------>| End |
   //                   +-----+
   enum class State {
@@ -221,7 +221,7 @@ class MOZ_STACK_CLASS FunctionScriptEmitter {
     // After calling emitEndBody.
     EndBody,
 
-    // After calling initScript.
+    // After calling intoStencil.
     End
   };
   State state_ = State::Start;
@@ -248,12 +248,8 @@ class MOZ_STACK_CLASS FunctionScriptEmitter {
   MOZ_MUST_USE bool prepareForBody();
   MOZ_MUST_USE bool emitEndBody();
 
-  // Initialize & Allocate JSScript for this function.
-  // WARNING: There shouldn't be any fallible operation for the function
-  //          compilation after `initScript` call.
-  //          See the comment inside JSScript::fullyInitFromEmitter for
-  //          more details.
-  MOZ_MUST_USE bool initScript();
+  // Generate the ScriptStencil using the bytecode emitter data.
+  MOZ_MUST_USE bool intoStencil(TopLevelFunction isTopLevel);
 
  private:
   MOZ_MUST_USE bool emitExtraBodyVarScope();

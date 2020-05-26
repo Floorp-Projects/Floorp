@@ -104,7 +104,6 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
     : sc(sc),
       cx(sc->cx_),
       parent(parent),
-      outputScript(cx),
       bytecodeSection_(cx, sc->extent.lineno),
       perScriptData_(cx, compilationInfo),
       compilationInfo(compilationInfo),
@@ -2427,14 +2426,8 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   }
 
   // Create a Stencil and convert it into a JSScript.
-  SourceExtent extent = sc->getScriptExtent();
-  ScriptStencil stencil(cx);
-  if (!intoScriptStencil(&stencil)) {
-    return false;
-  }
-  outputScript = JSScript::fromStencil(cx, compilationInfo, stencil, extent);
-
-  return !!outputScript;
+  compilationInfo.topLevelExtent = sc->extent;
+  return intoScriptStencil(compilationInfo.topLevel.address());
 }
 
 js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
@@ -2513,7 +2506,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
     }
   }
 
-  return fse.initScript();
+  return fse.intoStencil(isTopLevel);
 }
 
 bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
