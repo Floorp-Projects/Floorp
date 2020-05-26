@@ -4262,8 +4262,7 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
 
   // Link JSFunction to this JSScript.
   if (stencil.functionIndex) {
-    JSFunction* fun =
-        compilationInfo.funcData[*stencil.functionIndex].as<JSFunction*>();
+    JSFunction* fun = compilationInfo.functions[*stencil.functionIndex];
     if (fun->isIncomplete()) {
       fun->initScript(script);
     } else {
@@ -4300,8 +4299,7 @@ JSScript* JSScript::fromStencil(JSContext* cx,
 
   RootedObject functionOrGlobal(cx, cx->global());
   if (stencil.functionIndex) {
-    functionOrGlobal =
-        compilationInfo.funcData[*stencil.functionIndex].as<JSFunction*>();
+    functionOrGlobal = compilationInfo.functions[*stencil.functionIndex];
   }
 
   RootedScript script(

@@ -289,8 +289,10 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   }
 
   size_t index = this->getCompilationInfo().funcData.length();
-  if (!this->getCompilationInfo().funcData.emplaceBack(
-          mozilla::AsVariant(fun.get()))) {
+  if (!this->getCompilationInfo().functions.emplaceBack(fun)) {
+    return nullptr;
+  }
+  if (!this->getCompilationInfo().funcData.emplaceBack(cx_)) {
     return nullptr;
   }
 

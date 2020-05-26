@@ -25,8 +25,6 @@
 namespace js {
 namespace frontend {
 
-using FunctionType = mozilla::Variant<JSFunction*, ScriptStencil>;
-
 // ScopeContext hold information derivied from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.
 struct ScopeContext {
@@ -97,7 +95,8 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
 
   // A Rooted vector to handle tracing of JSFunction*
   // and Atoms within.
-  JS::RootedVector<FunctionType> funcData;
+  JS::RootedVector<JSFunction*> functions;
+  JS::RootedVector<ScriptStencil> funcData;
 
   // A rooted list of scopes created during this parse.
   //
@@ -129,6 +128,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
         allocScope(alloc),
         regExpData(cx),
         bigIntData(cx),
+        functions(cx),
         funcData(cx),
         scopeCreationData(cx),
         sourceObject(cx) {}
