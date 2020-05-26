@@ -90,7 +90,10 @@ class StaticAnalysisMonitor(object):
         self._current = None
         self._srcdir = srcdir
 
-        self._clang_tidy_config = clang_tidy_config['clang_checkers']
+        import copy
+
+        self._clang_tidy_config = copy.deepcopy(clang_tidy_config['clang_checkers'])
+
         # Transform the configuration to support Regex
         for item in self._clang_tidy_config:
             if item['name'] == '-*':
