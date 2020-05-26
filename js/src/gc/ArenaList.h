@@ -244,15 +244,6 @@ class FreeLists {
 };
 
 class ArenaLists {
-  JS::Zone* zone_;
-
-  ZoneData<FreeLists> freeLists_;
-
-  ArenaListData<AllAllocKindArray<ArenaList>> arenaLists_;
-
-  ArenaList& arenaList(AllocKind i) { return arenaLists_.ref()[i]; }
-  const ArenaList& arenaList(AllocKind i) const { return arenaLists_.ref()[i]; }
-
   enum class ConcurrentUse : uint32_t {
     None,
     BackgroundFinalize,
@@ -262,20 +253,17 @@ class ArenaLists {
   using ConcurrentUseState =
       mozilla::Atomic<ConcurrentUse, mozilla::SequentiallyConsistent>;
 
+  JS::Zone* zone_;
+
   // Whether this structure can be accessed by other threads.
   UnprotectedData<AllAllocKindArray<ConcurrentUseState>> concurrentUseState_;
 
-  ConcurrentUseState& concurrentUse(AllocKind i) {
-    return concurrentUseState_.ref()[i];
-  }
-  ConcurrentUse concurrentUse(AllocKind i) const {
-    return concurrentUseState_.ref()[i];
-  }
+  ZoneData<FreeLists> freeLists_;
+
+  ArenaListData<AllAllocKindArray<ArenaList>> arenaLists_;
 
   /* For each arena kind, a list of arenas remaining to be swept. */
   MainThreadOrGCTaskData<AllAllocKindArray<Arena*>> arenasToSweep_;
-  Arena*& arenasToSweep(AllocKind i) { return arenasToSweep_.ref()[i]; }
-  Arena* arenasToSweep(AllocKind i) const { return arenasToSweep_.ref()[i]; }
 
   /* During incremental sweeping, a list of the arenas already swept. */
   ZoneOrGCTaskData<AllocKind> incrementalSweptArenaKind;
@@ -351,6 +339,19 @@ class ArenaLists {
   void checkNoArenasToUpdateForKind(AllocKind kind);
 
  private:
+  ArenaList& arenaList(AllocKind i) { return arenaLists_.ref()[i]; }
+  const ArenaList& arenaList(AllocKind i) const { return arenaLists_.ref()[i]; }
+
+  ConcurrentUseState& concurrentUse(AllocKind i) {
+    return concurrentUseState_.ref()[i];
+  }
+  ConcurrentUse concurrentUse(AllocKind i) const {
+    return concurrentUseState_.ref()[i];
+  }
+
+  Arena*& arenasToSweep(AllocKind i) { return arenasToSweep_.ref()[i]; }
+  Arena* arenasToSweep(AllocKind i) const { return arenasToSweep_.ref()[i]; }
+
   inline JSRuntime* runtime();
   inline JSRuntime* runtimeFromAnyThread();
 
