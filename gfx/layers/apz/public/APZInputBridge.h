@@ -57,7 +57,8 @@ struct APZEventResult {
    */
   ScrollableLayerGuid mTargetGuid;
   /**
-   * Whether or not mTargetGuid refers to the root content APZC
+   * Whether or not mTargetGuid refers to the root content APZC. This gets set
+   * to false in cases where APZ is unsure due to imprecision in hit-testing.
    */
   bool mTargetIsRoot;
   /**
