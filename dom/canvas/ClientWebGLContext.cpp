@@ -1338,24 +1338,22 @@ void ClientWebGLContext::DeleteQuery(WebGLQueryJS* const obj) {
   const FuncScope funcScope(*this, "deleteQuery");
   if (IsContextLost()) return;
   if (!ValidateOrSkipForDelete(*this, obj)) return;
+  const auto& state = State();
 
   // Unbind if current
 
+  if (obj->mTarget) {
+    const auto slotTarget = QuerySlotTarget(obj->mTarget);
+    const auto& curForTarget =
+        *MaybeFind(state.mCurrentQueryByTarget, slotTarget);
+
+    if (curForTarget == obj) {
+      EndQuery(obj->mTarget);
+    }
+  }
+
   obj->mDeleteRequested = true;
   Run<RPROC(DeleteQuery)>(obj->mId);
-
-  if (!obj->mTarget) return;
-  const auto& state = State();
-  const auto slotTarget = QuerySlotTarget(obj->mTarget);
-  const auto& curForTarget =
-      *MaybeFind(state.mCurrentQueryByTarget, slotTarget);
-
-  if (curForTarget == obj) {
-    EndQuery(obj->mTarget);
-  } else {
-    // Not currently active, so fully-delete immediately.
-    obj->mIsFullyDeleted = true;
-  }
 }
 
 void ClientWebGLContext::DeleteRenderbuffer(WebGLRenderbufferJS* const obj) {
@@ -4243,9 +4241,6 @@ void ClientWebGLContext::EndQuery(const GLenum specificTarget) {
     EnqueueError(LOCAL_GL_INVALID_OPERATION, "No Query is active for %s.",
                  EnumString(specificTarget).c_str());
     return;
-  }
-  if (slot->mDeleteRequested) {
-    slot->mIsFullyDeleted = true;
   }
 
   slot = nullptr;
