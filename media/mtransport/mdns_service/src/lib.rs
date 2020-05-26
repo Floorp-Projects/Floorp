@@ -619,28 +619,6 @@ pub unsafe extern "C" fn mdns_service_unregister_hostname(
     (*serv).unregister_hostname(&hostname);
 }
 
-#[no_mangle]
-pub extern "C" fn mdns_service_generate_uuid() -> *const c_char {
-    let uuid = match panic::catch_unwind(|| Uuid::new_v4()) {
-        Ok(uuid) => uuid,
-        Err(_) => Uuid::nil(),
-    };
-
-    match CString::new(uuid.to_hyphenated().to_string()) {
-        Ok(uuid) => uuid.into_raw(),
-        Err(_) => unreachable!(), // UUID should not contain 0 byte
-    }
-}
-
-/// # Safety
-///
-/// This function should only be called once, with a valid uuid.
-#[no_mangle]
-pub unsafe extern "C" fn mdns_service_free_uuid(uuid: *mut c_char) {
-    assert!(!uuid.is_null());
-    CString::from_raw(uuid);
-}
-
 #[cfg(test)]
 mod tests {
     use crate::create_query;

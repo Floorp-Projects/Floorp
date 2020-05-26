@@ -25,8 +25,4 @@ void mdns_service_query_hostname(
 
 void mdns_service_unregister_hostname(MDNSService* serv, const char* hostname);
 
-const char* mdns_service_generate_uuid();
-
-void mdns_service_free_uuid(const char* uuid);
-
 }  // extern "C"
