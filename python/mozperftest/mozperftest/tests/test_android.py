@@ -66,5 +66,23 @@ def test_android_apk_alias(device):
     assert device.mock_calls[1][1][0].endswith("target.apk")
 
 
+@mock.patch("mozperftest.utils.requests.get", new=requests_content())
+@mock.patch("mozperftest.system.android.ADBDevice")
+def test_android_timeout(device):
+    args = {
+        "android-install-apk": ["gve_nightly_api16"],
+        "android": True,
+        "android-timeout": 60,
+        "android-app-name": "org.mozilla.geckoview_example",
+    }
+
+    mach_cmd, metadata, env = get_running_env(**args)
+    system = env.layers[SYSTEM]
+    with system as android, silence(system):
+        android(metadata)
+    options = device.mock_calls[0][-1]
+    assert options["timeout"] == 60
+
+
 if __name__ == "__main__":
     mozunit.main()
