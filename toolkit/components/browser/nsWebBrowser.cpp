@@ -160,17 +160,6 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
 
   NS_ENSURE_SUCCESS(docShellAsWin->Create(), nullptr);
 
-  // Hook into the OnSecurityChange() notification for lock/unlock icon
-  // updates
-  // this works because the implementation of nsISecureBrowserUI
-  // (nsSecureBrowserUIImpl) calls docShell->SetSecurityUI(this);
-  nsCOMPtr<nsISecureBrowserUI> securityUI =
-      do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID);
-  if (NS_WARN_IF(!securityUI)) {
-    return nullptr;
-  }
-  securityUI->Init(docShell);
-
   docShellTreeOwner->AddToWatcher();  // evil twin of Remove in SetDocShell(0)
   docShellTreeOwner->AddChromeListeners();
 

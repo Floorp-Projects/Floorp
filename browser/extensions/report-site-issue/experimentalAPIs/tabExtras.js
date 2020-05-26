@@ -31,6 +31,14 @@ this.tabExtras = class extends ExtensionAPI {
           const promises = actors.map(actor => actor.sendQuery("GetLog"));
           const logs = await Promise.all(promises);
           const info = await actors[0].sendQuery("GetBlockingStatus");
+          info.hasMixedActiveContentBlocked = !!(
+            browsingContext.secureBrowserUI.state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT
+          );
+          info.hasMixedDisplayContentBlocked = !!(
+            browsingContext.secureBrowserUI.state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT
+          );
           info.log = logs
             .flat()
             .sort((a, b) => a.timeStamp - b.timeStamp)

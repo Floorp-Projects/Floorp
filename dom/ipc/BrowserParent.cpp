@@ -116,6 +116,7 @@
 #include "MMPrinter.h"
 #include "SessionStoreFunctions.h"
 #include "mozilla/dom/CrashReport.h"
+#include "nsISecureBrowserUI.h"
 
 #ifdef XP_WIN
 #  include "mozilla/plugins/PluginWidgetParent.h"
@@ -2703,6 +2704,13 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
   Unused << managerAsListener->OnLocationChange(webProgress, request, aLocation,
                                                 aFlags);
 
+  // Since we've now changed Documents, notify the BrowsingContext that we've
+  // changed. Ideally we'd just let the BrowsingContext do this when it changes
+  // the current window global, but that happens before this and we have a lot
+  // of tests that depend on the specific ordering of messages.
+  if (!(aFlags & nsIWebProgressListener::LOCATION_CHANGE_SAME_DOCUMENT)) {
+    GetBrowsingContext()->UpdateSecurityStateForLocationOrMixedContentChange();
+  }
   return IPC_OK();
 }
 
@@ -2730,36 +2738,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStatusChange(
 
   Unused << managerAsListener->OnStatusChange(webProgress, request, aStatus,
                                               aMessage.get());
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserParent::RecvOnSecurityChange(
-    const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, const uint32_t aState,
-    const Maybe<WebProgressSecurityChangeData>& aSecurityChangeData) {
-  nsCOMPtr<nsIBrowser> browser;
-  nsCOMPtr<nsIWebProgress> manager;
-  nsCOMPtr<nsIWebProgressListener> managerAsListener;
-  if (!GetWebProgressListener(getter_AddRefs(browser), getter_AddRefs(manager),
-                              getter_AddRefs(managerAsListener))) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
-
-  if (aWebProgressData && aWebProgressData->isTopLevel() &&
-      aSecurityChangeData.isSome()) {
-    Unused << browser->UpdateSecurityUIForSecurityChange(
-        aSecurityChangeData->securityInfo(), aState,
-        aSecurityChangeData->isSecureContext());
-  }
-
-  Unused << managerAsListener->OnSecurityChange(webProgress, request, aState);
 
   return IPC_OK();
 }
