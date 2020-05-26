@@ -3189,8 +3189,8 @@ class nsIFrame : public nsQueryFrame {
    * true.  Note that returning true here does not mean that the frame _can't_
    * have kids.  It could still have kids created via
    * nsIAnonymousContentCreator.  Returning true indicates that "normal"
-   * (non-anonymous, XBL-bound, CSS generated content, etc) children should not
-   * be constructed.
+   * (non-anonymous, CSS generated content, etc) children should not be
+   * constructed.
    */
   bool IsLeaf() const {
     MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sFrameClassBits));

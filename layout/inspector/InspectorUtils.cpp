@@ -70,16 +70,14 @@ void InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
       }
     }
 
-    AutoTArray<StyleSheet*, 32> xblSheetArray;
-    styleSet->AppendAllNonDocumentAuthorSheets(xblSheetArray);
+    AutoTArray<StyleSheet*, 32> nonDocumentSheets;
+    styleSet->AppendAllNonDocumentAuthorSheets(nonDocumentSheets);
 
-    // The XBL stylesheet array will quite often be full of duplicates. Cope:
-    //
-    // FIXME(emilio, bug 1454467): I think this is not true since bug 1452525.
+    // The non-document stylesheet array can't have duplicates right now, but it
+    // could once we include adopted stylesheets.
     nsTHashtable<nsPtrHashKey<StyleSheet>> sheetSet;
-    for (StyleSheet* sheet : xblSheetArray) {
-      if (!sheetSet.Contains(sheet)) {
-        sheetSet.PutEntry(sheet);
+    for (StyleSheet* sheet : nonDocumentSheets) {
+      if (sheetSet.EnsureInserted(sheet)) {
         aResult.AppendElement(sheet);
       }
     }
@@ -91,7 +89,8 @@ void InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
   }
 
   // FIXME(emilio, bug 1617948): This doesn't deal with adopted stylesheets, and
-  // it should. It should also handle duplicates correctly when it does.
+  // it should. It should also handle duplicates correctly when it does, see
+  // above.
 }
 
 bool InspectorUtils::IsIgnorableWhitespace(CharacterData& aDataNode) {

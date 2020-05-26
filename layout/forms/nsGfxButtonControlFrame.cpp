@@ -96,8 +96,8 @@ nsresult nsGfxButtonControlFrame::GetDefaultLabel(nsAString& aString) const {
 nsresult nsGfxButtonControlFrame::GetLabel(nsString& aLabel) {
   // Get the text from the "value" property on our content if there is
   // one; otherwise set it to a default value (localized).
-  dom::HTMLInputElement* elt = dom::HTMLInputElement::FromNode(mContent);
-  if (elt && elt->HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
+  auto* elt = dom::HTMLInputElement::FromNode(mContent);
+  if (elt && elt->HasAttr(nsGkAtoms::value)) {
     elt->GetValue(aLabel, dom::CallerType::System);
   } else {
     // Generate localized label.
@@ -127,8 +127,8 @@ nsresult nsGfxButtonControlFrame::GetLabel(nsString& aLabel) {
     // this, even if the whitespace is significant, single leading and trailing
     // _spaces_ (and not other whitespace) are removed.  The proper solution,
     // of course, is to not have the focus rect painting taking up 6px of
-    // horizontal space. We should do that instead (via XBL form controls or
-    // changing the renderer) and remove this.
+    // horizontal space. We should do that instead (changing the renderer) and
+    // remove this.
     aLabel.Cut(0, 1);
     aLabel.Truncate(aLabel.Length() - 1);
   }

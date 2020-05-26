@@ -173,8 +173,8 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
 
     mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_default,
                              NS_LITERAL_STRING("true"), false);
-    // Set the page attribute so the XBL binding will find the text for the
-    // tooltip from the currently hovered element.
+    // Set the page attribute so XULTooltipElement::PostHandleEvent will find
+    // the text for the tooltip from the currently hovered element.
     mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::page,
                              NS_LITERAL_STRING("true"), false);
 

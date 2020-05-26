@@ -403,8 +403,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                    ItemFlags = {});
 
   // Construct the frames for the document element.  This can return null if the
-  // document element is display:none, or if the document element has a
-  // not-yet-loaded XBL binding, or if it's an SVG element that's not <svg>.
+  // document element is display:none, or if it's an SVG element that's not
+  // <svg>, etc.
   nsIFrame* ConstructDocElementFrame(Element* aDocElement);
 
   // Set up our mDocElementContainingBlock correctly for the given root
@@ -815,12 +815,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     void SetLineBoundaryAtEnd(bool aBoundary) {
       mLineBoundaryAtEnd = aBoundary;
     }
-    void SetParentHasNoXBLChildren(bool aHasNoXBLChildren) {
-      mParentHasNoXBLChildren = aHasNoXBLChildren;
+    void SetParentHasNoShadowDOM(bool aValue) {
+      mParentHasNoShadowDOM = aValue;
     }
     bool HasLineBoundaryAtStart() { return mLineBoundaryAtStart; }
     bool HasLineBoundaryAtEnd() { return mLineBoundaryAtEnd; }
-    bool ParentHasNoXBLChildren() { return mParentHasNoXBLChildren; }
+    bool ParentHasNoShadowDOM() { return mParentHasNoShadowDOM; }
     bool IsEmpty() const { return mItems.isEmpty(); }
     bool AnyItemsNeedBlockParent() const { return mLineParticipantCount != 0; }
     bool AreAllItemsInline() const { return mInlineCount == mItemCount; }
@@ -982,7 +982,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
           mItemCount(0),
           mLineBoundaryAtStart(false),
           mLineBoundaryAtEnd(false),
-          mParentHasNoXBLChildren(false) {
+          mParentHasNoShadowDOM(false) {
       MOZ_COUNT_CTOR(FrameConstructionItemList);
       memset(mDesiredParentCounts, 0, sizeof(mDesiredParentCounts));
     }
@@ -1037,8 +1037,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     // True if there is guaranteed to be a line boundary after the
     // frames created by these items
     bool mLineBoundaryAtEnd;
-    // True if the parent is guaranteed to have no XBL anonymous children
-    bool mParentHasNoXBLChildren;
+    // True if the parent is guaranteed to have no shadow tree.
+    bool mParentHasNoShadowDOM;
   };
 
   /* A struct representing a list of FrameConstructionItems on the stack. */
@@ -1432,9 +1432,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   // Function to find FrameConstructionData for an element.  Will return
   // null if the element is not XUL.
-  //
-  // NOTE(emilio): This gets the overloaded tag and namespace id since they can
-  // be overriden by extends="" in XBL.
   static const FrameConstructionData* FindXULTagData(const Element&,
                                                      ComputedStyle&);
   // XUL data-finding helper functions and structures
@@ -1546,8 +1543,11 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   /**
    * Construct the frames for the children of aContent.  "children" is defined
    * as "whatever FlattenedChildIterator returns for aContent".  This means
-   * we're basically operating on children in the "flattened tree" per
-   * sXBL/XBL2. This method will also handle constructing ::before, ::after,
+   * we're basically operating on children in the "flattened tree":
+   *
+   *   https://drafts.csswg.org/css-scoping/#flat-tree
+   *
+   * This method will also handle constructing ::before, ::after,
    * ::first-letter, and ::first-line frames, as needed and if allowed.
    *
    * If the parent is a float containing block, this method will handle pushing
@@ -2026,8 +2026,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // The skip parameters are used to ignore a range of children when looking
   // for a sibling. All nodes starting from aStartSkipChild and up to but not
   // including aEndSkipChild will be skipped over when looking for sibling
-  // frames. Skipping a range can deal with XBL but not when there are multiple
-  // insertion points.
+  // frames. Skipping a range can deal with shadow DOM, but not when there are
+  // multiple insertion points.
   nsIFrame* GetInsertionPrevSibling(InsertionPoint* aInsertion,  // inout
                                     nsIContent* aChild, bool* aIsAppend,
                                     bool* aIsRangeInsertSafe,
