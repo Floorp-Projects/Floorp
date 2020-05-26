@@ -257,8 +257,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
   MOZ_ASSERT(fun);
 
   size_t index = this->getCompilationInfo().funcData.length();
-  if (!this->getCompilationInfo().funcData.emplaceBack(
-          mozilla::AsVariant(fun))) {
+  if (!this->getCompilationInfo().functions.emplaceBack(fun)) {
+    return nullptr;
+  }
+  if (!this->getCompilationInfo().funcData.emplaceBack(cx_)) {
     return nullptr;
   }
 
@@ -299,8 +301,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
   CompilationInfo& compilationInfo = this->getCompilationInfo();
 
   size_t index = compilationInfo.funcData.length();
-  if (!compilationInfo.funcData.emplaceBack(
-          mozilla::AsVariant(ScriptStencil(cx_)))) {
+  if (!compilationInfo.functions.emplaceBack(nullptr)) {
+    return nullptr;
+  }
+  if (!compilationInfo.funcData.emplaceBack(cx_)) {
     return nullptr;
   }
 
@@ -1852,7 +1856,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
 static bool MaybePublishFunction(JSContext* cx,
                                  CompilationInfo& compilationInfo,
                                  FunctionBox* funbox) {
-  if (!funbox->hasFunctionStencil()) {
+  if (funbox->hasFunction()) {
     return true;
   }
 
@@ -1863,22 +1867,18 @@ static bool MaybePublishFunction(JSContext* cx,
     return true;
   }
 
-  // Pull the stencil out of the function box before we clobber the funcData
-  // array entry with the JSFunction pointer.
-  Rooted<ScriptStencil> stencil(cx, std::move(funbox->functionStencil().get()));
-
   RootedFunction fun(cx, funbox->createFunction(cx));
   if (!fun) {
     return false;
   }
-
   funbox->initializeFunction(fun);
 
   if (!funbox->emitLazy) {
     return true;
   }
 
-  return CreateLazyScript(cx, compilationInfo, stencil, fun, funbox);
+  return CreateLazyScript(cx, compilationInfo, funbox->functionStencil(), fun,
+                          funbox);
 }
 
 bool CompilationInfo::publishDeferredFunctions() {
