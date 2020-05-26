@@ -361,6 +361,8 @@
 
       this._unselectedTabHoverMessageListenerCount = 0;
 
+      this._securityUI = null;
+
       this.urlbarChangeTracker = {
         _startedLoadSinceLastUserTyping: false,
 
@@ -892,7 +894,36 @@
     }
 
     get securityUI() {
-      return this.browsingContext.secureBrowserUI;
+      if (this.isRemoteBrowser) {
+        if (!this._securityUI) {
+          // Don't attempt to create the remote web progress if the
+          // messageManager has already gone away
+          if (!this.messageManager) {
+            return null;
+          }
+
+          let jsm = "resource://gre/modules/RemoteSecurityUI.jsm";
+          let RemoteSecurityUI = ChromeUtils.import(jsm, {}).RemoteSecurityUI;
+          this._securityUI = new RemoteSecurityUI();
+        }
+
+        // We want to double-wrap the JS implemented interface, so that QI and instanceof works.
+        var ptr = Cc[
+          "@mozilla.org/supports-interface-pointer;1"
+        ].createInstance(Ci.nsISupportsInterfacePointer);
+        ptr.data = this._securityUI;
+        return ptr.data.QueryInterface(Ci.nsISecureBrowserUI);
+      }
+
+      if (!this.docShell.securityUI) {
+        const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
+        var securityUI = Cc[SECUREBROWSERUI_CONTRACTID].createInstance(
+          Ci.nsISecureBrowserUI
+        );
+        securityUI.init(this.docShell);
+      }
+
+      return this.docShell.securityUI;
     }
 
     set userTypedValue(val) {
@@ -1315,6 +1346,16 @@
           default:
             break;
         }
+      }
+    }
+
+    updateSecurityUIForSecurityChange(aSecurityInfo, aState, aIsSecureContext) {
+      if (this.isRemoteBrowser && this.messageManager) {
+        // Invoking this getter triggers the generation of the underlying object,
+        // which we need to access with ._securityUI, because .securityUI returns
+        // a wrapper that makes _update inaccessible.
+        void this.securityUI;
+        this._securityUI._update(aSecurityInfo, aState, aIsSecureContext);
       }
     }
 

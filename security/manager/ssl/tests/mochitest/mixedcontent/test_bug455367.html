@@ -13,18 +13,18 @@
   <script class="testbody" type="text/javascript">
   "use strict";
 
-  async function runTest()
+  function runTest()
   {
     SpecialPowers.pushPrefEnv(
       {"set": [["security.mixed_content.upgrade_display_content", false]]},
       null);
-    await isSecurityState("broken", "broken");
+    isSecurityState("broken", "broken");
     finish();
   }
 
-  async function afterNavigationTest()
+  function afterNavigationTest()
   {
-    await isSecurityState("broken", "broken after navigation");
+    isSecurityState("broken", "broken after navigation");
     finish();
   }
 

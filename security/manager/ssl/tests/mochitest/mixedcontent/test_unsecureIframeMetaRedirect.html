@@ -9,20 +9,20 @@
   <script class="testbody" type="text/javascript">
   "use strict";
 
-  async function runTest()
+  function runTest()
   {
-    window.setTimeout(async () =>
+    window.setTimeout(function()
     {
-      await isSecurityState("broken", "insecure meta-tag <iframe> load breaks security");
+      isSecurityState("broken", "insecure meta-tag <iframe> load breaks security");
       finish();
     }, 500);
   }
 
-  async function afterNavigationTest()
+  function afterNavigationTest()
   {
-    window.setTimeout(async () =>
+    window.setTimeout(function()
     {
-      await isSecurityState("broken", "security still broken after navigation");
+      isSecurityState("broken", "security still broken after navigation");
       finish();
     }, 500);
   }

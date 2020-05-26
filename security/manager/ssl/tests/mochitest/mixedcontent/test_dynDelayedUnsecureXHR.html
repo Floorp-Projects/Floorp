@@ -15,17 +15,17 @@
 
   hasMixedActiveContent = true;
 
-  async function runTest()
+  function runTest()
   {
-    await isSecurityState("secure");
-    window.setTimeout(async () => {
+    isSecurityState("secure");
+    window.setTimeout(() => {
       try {
         let req = new XMLHttpRequest();
         req.open("GET", "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/alloworigin.sjs", false);
         req.send(null);
 
         // Change should be immediate, the request was sent synchronously
-        await isSecurityState("broken", "security broken after insecure XHR");
+        isSecurityState("broken", "security broken after insecure XHR");
       } catch (ex) {
         ok(false, ex);
       }
@@ -34,9 +34,9 @@
     }, 0);
   }
 
-  async function afterNavigationTest()
+  function afterNavigationTest()
   {
-    await isSecurityState("secure", "security full after navigation");
+    isSecurityState("secure", "security full after navigation");
     finish();
   }
 
