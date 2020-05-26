@@ -208,6 +208,7 @@ describe("ASRouter", () => {
       },
       ExperimentAPI: {
         getExperiment: sandbox.stub().returns({ branch: { value: [] } }),
+        getAllBranches: sandbox.stub().returns([{ branch: { value: [] } }]),
         ready: sandbox.stub().resolves(),
       },
       SpecialMessageActions: {
@@ -2349,6 +2350,48 @@ describe("ASRouter", () => {
           100
         );
       });
+      it("should record the Reach event if found any", async () => {
+        let messages = [
+          {
+            id: "foo1",
+            forReachEvent: true,
+            experimentSlug: "exp01",
+            branchSlug: "branch01",
+            group: "cfr",
+            template: "simple_template",
+            trigger: { id: "foo" },
+            content: { title: "Foo1", body: "Foo123-1" },
+          },
+          {
+            id: "foo2",
+            group: "cfr",
+            template: "simple_template",
+            trigger: { id: "bar" },
+            content: { title: "Foo2", body: "Foo123-2" },
+            provider: "onboarding",
+          },
+          {
+            id: "foo3",
+            forReachEvent: true,
+            experimentSlug: "exp02",
+            branchSlug: "branch02",
+            group: "cfr",
+            template: "simple_template",
+            trigger: { id: "foo" },
+            content: { title: "Foo1", body: "Foo123-1" },
+          },
+        ];
+        sandbox.stub(Router, "handleMessageRequest").resolves(messages);
+        sandbox.spy(Services.telemetry, "recordEvent");
+
+        const msg = fakeAsyncMessage({
+          type: "TRIGGER",
+          data: { trigger: { id: "foo" } },
+        });
+
+        await Router.onMessage(msg);
+        assert.calledTwice(Services.telemetry.recordEvent);
+      });
     });
 
     describe(".includeBundle", () => {
@@ -4002,12 +4045,15 @@ describe("ASRouter", () => {
       };
 
       global.ExperimentAPI.getExperiment.returns({
-        branch: { value: ["foo", "bar"] },
+        branch: {
+          slug: "branch01",
+          value: { id: "id01", trigger: { id: "openURL" } },
+        },
       });
 
       const result = await MessageLoaderUtils.loadMessagesForProvider(args);
 
-      assert.lengthOf(result.messages, 2);
+      assert.lengthOf(result.messages, 1);
     });
     it("should fetch messages from the ExperimentAPI", async () => {
       global.ExperimentAPI.ready.throws();
@@ -4021,6 +4067,44 @@ describe("ASRouter", () => {
 
       assert.notCalled(global.ExperimentAPI.getExperiment);
       assert.calledOnce(stub);
+    });
+    it("should fetch branches with trigger", async () => {
+      const args = {
+        type: "remote-experiments",
+        messageGroups: ["cfr"],
+      };
+      global.ExperimentAPI.getExperiment.returns({
+        slug: "exp01",
+        branch: {
+          slug: "branch01",
+          value: { id: "id01", trigger: { id: "openURL" } },
+        },
+      });
+      global.ExperimentAPI.getAllBranches.returns([
+        {
+          slug: "branch01",
+          value: { id: "id01", trigger: { id: "openURL" } },
+        },
+        {
+          slug: "branch02",
+          value: { id: "id02", trigger: { id: "openURL" } },
+        },
+        {
+          // This branch should not be loaded as it doesn't have the trigger
+          slug: "branch03",
+          value: { id: "id03" },
+        },
+      ]);
+
+      const result = await MessageLoaderUtils.loadMessagesForProvider(args);
+
+      assert.equal(result.messages.length, 2);
+      assert.equal(result.messages[0].id, "id01");
+      assert.equal(result.messages[1].id, "id02");
+      assert.equal(result.messages[1].group, "cfr");
+      assert.equal(result.messages[1].experimentSlug, "exp01");
+      assert.equal(result.messages[1].branchSlug, "branch02");
+      assert.ok(result.messages[1].forReachEvent);
     });
     it("should fetch json from url", async () => {
       let result = await MessageLoaderUtils.loadMessagesForProvider({
