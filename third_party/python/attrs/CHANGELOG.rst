@@ -1,10 +1,104 @@
 Changelog
 =========
 
-Versions follow `CalVer <http://calver.org>`_ with a strict backwards compatibility policy.
+Versions follow `CalVer <https://calver.org>`_ with a strict backwards compatibility policy.
 The third digit is only for regressions.
 
 .. towncrier release notes start
+
+19.1.0 (2019-03-03)
+-------------------
+
+Backward-incompatible Changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fixed a bug where deserialized objects with ``cache_hash=True`` could have incorrect hash code values.
+  This change breaks classes with ``cache_hash=True`` when a custom ``__setstate__`` is present.
+  An exception will be thrown when applying the ``attrs`` annotation to such a class.
+  This limitation is tracked in issue `#494 <https://github.com/python-attrs/attrs/issues/494>`_.
+  `#482 <https://github.com/python-attrs/attrs/issues/482>`_
+
+
+Changes
+^^^^^^^
+
+- Add ``is_callable``, ``deep_iterable``, and ``deep_mapping`` validators.
+
+  * ``is_callable``: validates that a value is callable
+  * ``deep_iterable``: Allows recursion down into an iterable,
+    applying another validator to every member in the iterable
+    as well as applying an optional validator to the iterable itself.
+  * ``deep_mapping``: Allows recursion down into the items in a mapping object,
+    applying a key validator and a value validator to the key and value in every item.
+    Also applies an optional validator to the mapping object itself.
+
+  You can find them in the ``attr.validators`` package.
+  `#425 <https://github.com/python-attrs/attrs/issues/425>`_
+- Fixed stub files to prevent errors raised by mypy's ``disallow_any_generics = True`` option.
+  `#443 <https://github.com/python-attrs/attrs/issues/443>`_
+- Attributes with ``init=False`` now can follow after ``kw_only=True`` attributes.
+  `#450 <https://github.com/python-attrs/attrs/issues/450>`_
+- ``attrs`` now has first class support for defining exception classes.
+
+  If you define a class using ``@attr.s(auto_exc=True)`` and subclass an exception, the class will behave like a well-behaved exception class including an appropriate ``__str__`` method, and all attributes additionally available in an ``args`` attribute.
+  `#500 <https://github.com/python-attrs/attrs/issues/500>`_
+- Clarified documentation for hashing to warn that hashable objects should be deeply immutable (in their usage, even if this is not enforced).
+  `#503 <https://github.com/python-attrs/attrs/issues/503>`_
+
+
+----
+
+
+18.2.0 (2018-09-01)
+-------------------
+
+Deprecations
+^^^^^^^^^^^^
+
+- Comparing subclasses using ``<``, ``>``, ``<=``, and ``>=`` is now deprecated.
+  The docs always claimed that instances are only compared if the types are identical, so this is a first step to conform to the docs.
+
+  Equality operators (``==`` and ``!=``) were always strict in this regard.
+  `#394 <https://github.com/python-attrs/attrs/issues/394>`_
+
+
+Changes
+^^^^^^^
+
+- ``attrs`` now ships its own `PEP 484 <https://www.python.org/dev/peps/pep-0484/>`_ type hints.
+  Together with `mypy <http://mypy-lang.org>`_'s ``attrs`` plugin, you've got all you need for writing statically typed code in both Python 2 and 3!
+
+  At that occasion, we've also added `narrative docs <https://www.attrs.org/en/stable/types.html>`_ about type annotations in ``attrs``.
+  `#238 <https://github.com/python-attrs/attrs/issues/238>`_
+- Added *kw_only* arguments to ``attr.ib`` and ``attr.s``, and a corresponding *kw_only* attribute to ``attr.Attribute``.
+  This change makes it possible to have a generated ``__init__`` with keyword-only arguments on Python 3, relaxing the required ordering of default and non-default valued attributes.
+  `#281 <https://github.com/python-attrs/attrs/issues/281>`_,
+  `#411 <https://github.com/python-attrs/attrs/issues/411>`_
+- The test suite now runs with ``hypothesis.HealthCheck.too_slow`` disabled to prevent CI breakage on slower computers.
+  `#364 <https://github.com/python-attrs/attrs/issues/364>`_,
+  `#396 <https://github.com/python-attrs/attrs/issues/396>`_
+- ``attr.validators.in_()`` now raises a ``ValueError`` with a useful message even if the options are a string and the value is not a string.
+  `#383 <https://github.com/python-attrs/attrs/issues/383>`_
+- ``attr.asdict()`` now properly handles deeply nested lists and dictionaries.
+  `#395 <https://github.com/python-attrs/attrs/issues/395>`_
+- Added ``attr.converters.default_if_none()`` that allows to replace ``None`` values in attributes.
+  For example ``attr.ib(converter=default_if_none(""))`` replaces ``None`` by empty strings.
+  `#400 <https://github.com/python-attrs/attrs/issues/400>`_,
+  `#414 <https://github.com/python-attrs/attrs/issues/414>`_
+- Fixed a reference leak where the original class would remain live after being replaced when ``slots=True`` is set.
+  `#407 <https://github.com/python-attrs/attrs/issues/407>`_
+- Slotted classes can now be made weakly referenceable by passing ``@attr.s(weakref_slot=True)``.
+  `#420 <https://github.com/python-attrs/attrs/issues/420>`_
+- Added *cache_hash* option to ``@attr.s`` which causes the hash code to be computed once and stored on the object.
+  `#425 <https://github.com/python-attrs/attrs/issues/425>`_
+- Attributes can be named ``property`` and ``itemgetter`` now.
+  `#430 <https://github.com/python-attrs/attrs/issues/430>`_
+- It is now possible to override a base class' class variable using only class annotations.
+  `#431 <https://github.com/python-attrs/attrs/issues/431>`_
+
+
+----
+
 
 18.1.0 (2018-05-03)
 -------------------
@@ -23,7 +117,7 @@ Changes
 
   `#290 <https://github.com/python-attrs/attrs/issues/290>`_,
   `#349 <https://github.com/python-attrs/attrs/issues/349>`_
-- The order of attributes that are passed into ``attr.make_class()`` or the ``these`` argument of ``@attr.s()`` is now retained if the dictionary is ordered (i.e. ``dict`` on Python 3.6 and later, ``collections.OrderedDict`` otherwise).
+- The order of attributes that are passed into ``attr.make_class()`` or the *these* argument of ``@attr.s()`` is now retained if the dictionary is ordered (i.e. ``dict`` on Python 3.6 and later, ``collections.OrderedDict`` otherwise).
 
   Before, the order was always determined by the order in which the attributes have been defined which may not be desirable when creating classes programatically.
 
@@ -41,7 +135,7 @@ Changes
 
   `#321 <https://github.com/python-attrs/attrs/issues/321>`_,
   `#334 <https://github.com/python-attrs/attrs/issues/334>`_
-- If ``attr.s`` is passed a *these* argument, it will not attempt to remove attributes with the same name from the class body anymore.
+- If ``attr.s`` is passed a *these* argument, it will no longer attempt to remove attributes with the same name from the class body.
 
   `#322 <https://github.com/python-attrs/attrs/issues/322>`_,
   `#323 <https://github.com/python-attrs/attrs/issues/323>`_
@@ -55,9 +149,9 @@ Changes
 
   `#363 <https://github.com/python-attrs/attrs/issues/363>`_
 - We have restructured the documentation a bit to account for ``attrs``' growth in scope.
-  Instead of putting everything into the `examples <http://www.attrs.org/en/stable/examples.html>`_ page, we have started to extract narrative chapters.
+  Instead of putting everything into the `examples <https://www.attrs.org/en/stable/examples.html>`_ page, we have started to extract narrative chapters.
 
-  So far, we've added chapters on `initialization <http://www.attrs.org/en/stable/init.html>`_ and `hashing <http://www.attrs.org/en/stable/hashing.html>`_.
+  So far, we've added chapters on `initialization <https://www.attrs.org/en/stable/init.html>`_ and `hashing <https://www.attrs.org/en/stable/hashing.html>`_.
 
   Expect more to come!
 
@@ -78,25 +172,18 @@ Backward-incompatible Changes
   If you defined a class ``C`` that subclasses ``A`` and ``B`` like ``C(A, B)``, ``attrs`` would have collected the attributes from ``B`` *before* those of ``A``.
 
   This is now fixed and means that in classes that employ multiple inheritance, the output of ``__repr__`` and the order of positional arguments in ``__init__`` changes.
-  Due to the nature of this bug, a proper deprecation cycle was unfortunately impossible.
+  Because of the nature of this bug, a proper deprecation cycle was unfortunately impossible.
 
   Generally speaking, it's advisable to prefer ``kwargs``-based initialization anyways – *especially* if you employ multiple inheritance and diamond-shaped hierarchies.
 
   `#298 <https://github.com/python-attrs/attrs/issues/298>`_,
   `#299 <https://github.com/python-attrs/attrs/issues/299>`_,
   `#304 <https://github.com/python-attrs/attrs/issues/304>`_
-- The ``__repr__`` set by ``attrs``
-  no longer produces an ``AttributeError``
-  when the instance is missing some of the specified attributes
-  (either through deleting
-  or after using ``init=False`` on some attributes).
+- The ``__repr__`` set by ``attrs`` no longer produces an ``AttributeError`` when the instance is missing some of the specified attributes (either through deleting or after using ``init=False`` on some attributes).
 
-  This can break code
-  that relied on ``repr(attr_cls_instance)`` raising ``AttributeError``
-  to check if any attr-specified members were unset.
+  This can break code that relied on ``repr(attr_cls_instance)`` raising ``AttributeError`` to check if any ``attrs``-specified members were unset.
 
-  If you were using this,
-  you can implement a custom method for checking this::
+  If you were using this, you can implement a custom method for checking this::
 
       def has_unset_members(self):
           for field in attr.fields(type(self)):
@@ -132,7 +219,7 @@ Changes
   `#261 <https://github.com/python-attrs/attrs/issues/261>`_,
   `#295 <https://github.com/python-attrs/attrs/issues/295>`_,
   `#296 <https://github.com/python-attrs/attrs/issues/296>`_
-- ``attr.ib``\ ’s ``metadata`` argument now defaults to a unique empty ``dict`` instance instead of sharing a common empty ``dict`` for all.
+- ``attr.ib``\ ’s *metadata* argument now defaults to a unique empty ``dict`` instance instead of sharing a common empty ``dict`` for all.
   The singleton empty ``dict`` is still enforced.
 
   `#280 <https://github.com/python-attrs/attrs/issues/280>`_
@@ -167,9 +254,9 @@ Changes
 Backward-incompatible Changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Attributes are not defined on the class body anymore.
+- Attributes are no longer defined on the class body.
 
-  This means that if you define a class ``C`` with an attribute ``x``, the class will *not* have an attribute ``x`` for introspection anymore.
+  This means that if you define a class ``C`` with an attribute ``x``, the class will *not* have an attribute ``x`` for introspection.
   Instead of ``C.x``, use ``attr.fields(C).x`` or look at ``C.__attrs_attrs__``.
   The old behavior has been deprecated since version 16.1.
   (`#253 <https://github.com/python-attrs/attrs/issues/253>`_)
@@ -180,20 +267,21 @@ Changes
 
 - ``super()`` and ``__class__`` now work with slotted classes on Python 3.
   (`#102 <https://github.com/python-attrs/attrs/issues/102>`_, `#226 <https://github.com/python-attrs/attrs/issues/226>`_, `#269 <https://github.com/python-attrs/attrs/issues/269>`_, `#270 <https://github.com/python-attrs/attrs/issues/270>`_, `#272 <https://github.com/python-attrs/attrs/issues/272>`_)
-- Added ``type`` argument to ``attr.ib()`` and corresponding ``type`` attribute to ``attr.Attribute``.
+- Added *type* argument to ``attr.ib()`` and corresponding ``type`` attribute to ``attr.Attribute``.
 
   This change paves the way for automatic type checking and serialization (though as of this release ``attrs`` does not make use of it).
   In Python 3.6 or higher, the value of ``attr.Attribute.type`` can alternately be set using variable type annotations
-  (see `PEP 526 <https://www.python.org/dev/peps/pep-0526/>`_). (`#151 <https://github.com/python-attrs/attrs/issues/151>`_, `#214 <https://github.com/python-attrs/attrs/issues/214>`_, `#215 <https://github.com/python-attrs/attrs/issues/215>`_, `#239 <https://github.com/python-attrs/attrs/issues/239>`_)
+  (see `PEP 526 <https://www.python.org/dev/peps/pep-0526/>`_).
+  (`#151 <https://github.com/python-attrs/attrs/issues/151>`_, `#214 <https://github.com/python-attrs/attrs/issues/214>`_, `#215 <https://github.com/python-attrs/attrs/issues/215>`_, `#239 <https://github.com/python-attrs/attrs/issues/239>`_)
 - The combination of ``str=True`` and ``slots=True`` now works on Python 2.
   (`#198 <https://github.com/python-attrs/attrs/issues/198>`_)
-- ``attr.Factory`` is hashable again. (`#204
-  <https://github.com/python-attrs/attrs/issues/204>`_)
-- Subclasses now can overwrite attribute definitions of their superclass.
+- ``attr.Factory`` is hashable again.
+  (`#204 <https://github.com/python-attrs/attrs/issues/204>`_)
+- Subclasses now can overwrite attribute definitions of their base classes.
 
   That means that you can -- for example -- change the default value for an attribute by redefining it.
   (`#221 <https://github.com/python-attrs/attrs/issues/221>`_, `#229 <https://github.com/python-attrs/attrs/issues/229>`_)
-- Added new option ``auto_attribs`` to ``@attr.s`` that allows to collect annotated fields without setting them to ``attr.ib()``.
+- Added new option *auto_attribs* to ``@attr.s`` that allows to collect annotated fields without setting them to ``attr.ib()``.
 
   Setting a field to an ``attr.ib()`` is still possible to supply options like validators.
   Setting it to any other value is treated like it was passed as ``attr.ib(default=value)`` -- passing an instance of ``attr.Factory`` also works as expected.
@@ -227,7 +315,7 @@ To encourage more participation, the project has also been moved into a `dedicat
 
 ``attrs`` also has a logo now!
 
-.. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
+.. image:: https://www.attrs.org/en/latest/_static/attrs_logo.png
    :alt: attrs logo
 
 
@@ -245,7 +333,7 @@ Backward-incompatible Changes:
     Please *do not* upgrade blindly and *do* test your software!
     *Especially* if you use instances as dict keys or put them into sets!
 
-- Correspondingly, ``attr.ib``'s ``hash`` argument is ``None`` by default too and mirrors the ``cmp`` argument as it should.
+- Correspondingly, ``attr.ib``'s *hash* argument is ``None`` by default too and mirrors the *cmp* argument as it should.
 
 
 Deprecations:
@@ -278,14 +366,14 @@ Changes:
   `#181 <https://github.com/python-attrs/attrs/pull/181>`_
 - Added ``attr.validators.and_()`` that composes multiple validators into one.
   `#161 <https://github.com/python-attrs/attrs/issues/161>`_
-- For convenience, the ``validator`` argument of ``@attr.s`` now can take a ``list`` of validators that are wrapped using ``and_()``.
+- For convenience, the *validator* argument of ``@attr.s`` now can take a list of validators that are wrapped using ``and_()``.
   `#138 <https://github.com/python-attrs/attrs/issues/138>`_
-- Accordingly, ``attr.validators.optional()`` now can take a ``list`` of validators too.
+- Accordingly, ``attr.validators.optional()`` now can take a list of validators too.
   `#161 <https://github.com/python-attrs/attrs/issues/161>`_
 - Validators can now be defined conveniently inline by using the attribute as a decorator.
-  Check out the `examples <http://www.attrs.org/en/stable/examples.html#validators>`_ to see it in action!
+  Check out the `validator examples <http://www.attrs.org/en/stable/init.html#decorator>`_ to see it in action!
   `#143 <https://github.com/python-attrs/attrs/issues/143>`_
-- ``attr.Factory()`` now has a ``takes_self`` argument that makes the initializer to pass the partially initialized instance into the factory.
+- ``attr.Factory()`` now has a *takes_self* argument that makes the initializer to pass the partially initialized instance into the factory.
   In other words you can define attribute defaults based on other attributes.
   `#165`_
   `#189 <https://github.com/python-attrs/attrs/issues/189>`_
@@ -322,7 +410,7 @@ Changes:
   Default Python class behavior is to use ``__repr__()`` as ``__str__()`` anyways.
 
   If you tried using ``attrs`` with ``Exception``\ s and were puzzled by the tracebacks: this option is for you.
-- ``__name__`` is not overwritten with ``__qualname__`` for ``attr.s(slots=True)`` classes anymore.
+- ``__name__`` is no longer overwritten with ``__qualname__`` for ``attr.s(slots=True)`` classes.
   `#99 <https://github.com/python-attrs/attrs/issues/99>`_
 
 
@@ -337,7 +425,7 @@ Changes:
 
 - Added ``attr.astuple()`` that -- similarly to ``attr.asdict()`` -- returns the instance as a tuple.
   `#77 <https://github.com/python-attrs/attrs/issues/77>`_
-- Converts now work with frozen classes.
+- Converters now work with frozen classes.
   `#76 <https://github.com/python-attrs/attrs/issues/76>`_
 - Instantiation of ``attrs`` classes with converters is now significantly faster.
   `#80 <https://github.com/python-attrs/attrs/pull/80>`_
@@ -388,7 +476,7 @@ Changes:
   `#48 <https://github.com/python-attrs/attrs/issues/48>`_
   `#51 <https://github.com/python-attrs/attrs/issues/51>`_
 - Add ``attr.attrs`` and ``attr.attrib`` as a more consistent aliases for ``attr.s`` and ``attr.ib``.
-- Add ``frozen`` option to ``attr.s`` that will make instances best-effort immutable.
+- Add *frozen* option to ``attr.s`` that will make instances best-effort immutable.
   `#60 <https://github.com/python-attrs/attrs/issues/60>`_
 - ``attr.asdict()`` now takes ``retain_collection_types`` as an argument.
   If ``True``, it does not convert attributes of type ``tuple`` or ``set`` to ``list``.
@@ -404,10 +492,10 @@ Changes:
 Backward-incompatible Changes:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Python 3.3 and 2.6 aren't supported anymore.
+- Python 3.3 and 2.6 are no longer supported.
   They may work by chance but any effort to keep them working has ceased.
 
-  The last Python 2.6 release was on October 29, 2013 and isn't supported by the CPython core team anymore.
+  The last Python 2.6 release was on October 29, 2013 and is no longer supported by the CPython core team.
   Major Python packages like Django and Twisted dropped Python 2.6 a while ago already.
 
   Python 3.3 never had a significant user base and wasn't part of any distribution's LTS release.

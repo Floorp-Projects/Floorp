@@ -23,6 +23,8 @@ Workflow
 - No contribution is too small!
   Please submit as many fixes for typos and grammar bloopers as you can!
 - Try to limit each pull request to *one* change only.
+- Since we squash on merge, it's up to you how you handle updates to the master branch.
+  Whether you prefer to rebase on master or merge master into your branch, do whatever is more comfortable for you.
 - *Always* add tests and docs for your code.
   This is a hard rule; patches with missing tests or documentation can't be merged.
 - Make sure your changes pass our CI_.
@@ -48,7 +50,9 @@ Code
          :rtype: str
          """
 - If you add or change public APIs, tag the docstring using ``..  versionadded:: 16.0.0 WHAT`` or ``..  versionchanged:: 16.2.0 WHAT``.
-- Prefer double quotes (``"``) over single quotes (``'``) unless the string contains double quotes itself.
+- We use isort_ to sort our imports, and we follow the Black_ code style with a line length of 79 characters.
+  As long as you run our full tox suite before committing, or install our pre-commit_ hooks (ideally you'll do both -- see below "Local Development Environment"), you won't have to spend any time on formatting your code at all.
+  If you don't, CI will catch it for you -- but that seems like a waste of your time!
 
 
 Tests
@@ -68,6 +72,7 @@ Tests
   If you lack some Python versions, you can can always limit the environments like ``tox -e py27,py35`` (in that case you may want to look into pyenv_, which makes it very easy to install many different Python versions in parallel).
 - Write `good test docstrings`_.
 - To ensure new features work well with the rest of the system, they should be also added to our `Hypothesis`_ testing strategy, which is found in ``tests/strategies.py``.
+- If you've changed or added public APIs, please update our type stubs (files ending in ``.pyi``).
 
 
 Documentation
@@ -112,14 +117,15 @@ You don't need to install ``towncrier`` yourself, you just have to abide by a fe
 - For each pull request, add a new file into ``changelog.d`` with a filename adhering to the ``pr#.(change|deprecation|breaking).rst`` schema:
   For example, ``changelog.d/42.change.rst`` for a non-breaking change that is proposed in pull request #42.
 - As with other docs, please use `semantic newlines`_ within news fragments.
-- Wrap symbols like modules, functions, or classes into double backticks so they are rendered in a monospace font.
+- Wrap symbols like modules, functions, or classes into double backticks so they are rendered in a ``monospace font``.
+- Wrap arguments into asterisks like in docstrings: *these* or *attributes*.
 - If you mention functions or other callables, add parentheses at the end of their names: ``attr.func()`` or ``attr.Class.method()``.
   This makes the changelog a lot more readable.
 - Prefer simple past tense or constructions with "now".
   For example:
 
   + Added ``attr.validators.func()``.
-  + ``attr.func()`` now doesn't crash the Large Hadron Collider anymore.
+  + ``attr.func()`` now doesn't crash the Large Hadron Collider anymore when passed the *foobar* argument.
 - If you want to reference multiple issues, copy the news fragment to another filename.
   ``towncrier`` will merge all news fragments with identical contents into one entry with multiple links to the respective pull requests.
 
@@ -134,7 +140,7 @@ or:
 
   .. code-block:: rst
 
-     ``attr.func()`` now doesn't crash the Large Hadron Collider anymore.
+     ``attr.func()`` now doesn't crash the Large Hadron Collider anymore when passed the *foobar* argument.
      The bug really *was* nasty.
 
 ----
@@ -150,20 +156,26 @@ However, you’ll probably want a more traditional environment as well.
 We highly recommend to develop using the latest Python 3 release because ``attrs`` tries to take advantage of modern features whenever possible.
 
 First create a `virtual environment <https://virtualenv.pypa.io/>`_.
-It’s out of scope for this document to list all the ways to manage virtual environments in Python, but if you don’t already have a pet way, take some time to look at tools like `pew <https://github.com/berdario/pew>`_, `virtualfish <http://virtualfish.readthedocs.io/>`_, and `virtualenvwrapper <http://virtualenvwrapper.readthedocs.io/>`_.
+It’s out of scope for this document to list all the ways to manage virtual environments in Python, but if you don’t already have a pet way, take some time to look at tools like `pew <https://github.com/berdario/pew>`_, `virtualfish <https://virtualfish.readthedocs.io/>`_, and `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/>`_.
 
 Next, get an up to date checkout of the ``attrs`` repository:
 
 .. code-block:: bash
 
-    $ git checkout git@github.com:python-attrs/attrs.git
+    $ git clone git@github.com:python-attrs/attrs.git
+
+or if you want to use git via ``https``:
+
+.. code-block:: bash
+
+    $ git clone https://github.com/python-attrs/attrs.git
 
 Change into the newly created directory and **after activating your virtual environment** install an editable version of ``attrs`` along with its tests and docs requirements:
 
 .. code-block:: bash
 
     $ cd attrs
-    $ pip install -e .[dev]
+    $ pip install -e '.[dev]'
 
 At this point,
 
@@ -179,6 +191,21 @@ should work and pass, as should:
    $ make html
 
 The built documentation can then be found in ``docs/_build/html/``.
+
+To avoid committing code that violates our style guide, we strongly advise you to install pre-commit_ [#f1]_ hooks:
+
+.. code-block:: bash
+
+   $ pre-commit install
+
+You can also run them anytime (as our tox does) using:
+
+.. code-block:: bash
+
+   $ pre-commit run --all-files
+
+
+.. [#f1] pre-commit should have been installed into your virtualenv automatically when you ran ``pip install -e '.[dev]'`` above. If pre-commit is missing, it may be that you need to re-run ``pip install -e '.[dev]'``.
 
 
 Governance
@@ -207,14 +234,17 @@ Thank you for considering contributing to ``attrs``!
 .. _`good test docstrings`: https://jml.io/pages/test-docstrings.html
 .. _`Code of Conduct`: https://github.com/python-attrs/attrs/blob/master/.github/CODE_OF_CONDUCT.rst
 .. _changelog: https://github.com/python-attrs/attrs/blob/master/CHANGELOG.rst
-.. _`backward compatibility`: http://www.attrs.org/en/latest/backward-compatibility.html
+.. _`backward compatibility`: https://www.attrs.org/en/latest/backward-compatibility.html
 .. _tox: https://tox.readthedocs.io/
 .. _pyenv: https://github.com/pyenv/pyenv
-.. _reStructuredText: http://www.sphinx-doc.org/en/stable/rest.html
-.. _semantic newlines: http://rhodesmill.org/brandon/2012/one-sentence-per-line/
+.. _reStructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
+.. _semantic newlines: https://rhodesmill.org/brandon/2012/one-sentence-per-line/
 .. _examples page: https://github.com/python-attrs/attrs/blob/master/docs/examples.rst
 .. _Hypothesis: https://hypothesis.readthedocs.io/
 .. _CI: https://travis-ci.org/python-attrs/attrs/
 .. _`team of volunteers`: https://github.com/python-attrs
 .. _BDFL: https://en.wikipedia.org/wiki/Benevolent_dictator_for_life
 .. _towncrier: https://pypi.org/project/towncrier
+.. _black: https://github.com/ambv/black
+.. _pre-commit: https://pre-commit.com/
+.. _isort: https://github.com/timothycrosley/isort

@@ -6,6 +6,8 @@ from __future__ import absolute_import, division, print_function
 
 import pickle
 
+from copy import deepcopy
+
 import pytest
 import six
 
@@ -47,7 +49,7 @@ class C2Slots(object):
 
 
 @attr.s
-class Super(object):
+class Base(object):
     x = attr.ib()
 
     def meth(self):
@@ -55,7 +57,7 @@ class Super(object):
 
 
 @attr.s(slots=True)
-class SuperSlots(object):
+class BaseSlots(object):
     x = attr.ib()
 
     def meth(self):
@@ -63,12 +65,12 @@ class SuperSlots(object):
 
 
 @attr.s
-class Sub(Super):
+class Sub(Base):
     y = attr.ib()
 
 
 @attr.s(slots=True)
-class SubSlots(SuperSlots):
+class SubSlots(BaseSlots):
     y = attr.ib()
 
 
@@ -110,16 +112,31 @@ class TestDarkMagic(object):
     """
     Integration tests.
     """
+
     @pytest.mark.parametrize("cls", [C2, C2Slots])
     def test_fields(self, cls):
         """
         `attr.fields` works.
         """
         assert (
-            Attribute(name="x", default=foo, validator=None,
-                      repr=True, cmp=True, hash=None, init=True),
-            Attribute(name="y", default=attr.Factory(list), validator=None,
-                      repr=True, cmp=True, hash=None, init=True),
+            Attribute(
+                name="x",
+                default=foo,
+                validator=None,
+                repr=True,
+                cmp=True,
+                hash=None,
+                init=True,
+            ),
+            Attribute(
+                name="y",
+                default=attr.Factory(list),
+                validator=None,
+                repr=True,
+                cmp=True,
+                hash=None,
+                init=True,
+            ),
         ) == attr.fields(cls)
 
     @pytest.mark.parametrize("cls", [C1, C1Slots])
@@ -127,10 +144,7 @@ class TestDarkMagic(object):
         """
         `attr.asdict` works.
         """
-        assert {
-            "x": 1,
-            "y": 2,
-        } == attr.asdict(cls(x=1, y=2))
+        assert {"x": 1, "y": 2} == attr.asdict(cls(x=1, y=2))
 
     @pytest.mark.parametrize("cls", [C1, C1Slots])
     def test_validator(self, cls):
@@ -144,7 +158,9 @@ class TestDarkMagic(object):
         assert (
             "'x' must be <{type} 'int'> (got '1' that is a <{type} "
             "'str'>).".format(type=TYPE),
-            attr.fields(C1).x, int, "1",
+            attr.fields(C1).x,
+            int,
+            "1",
         ) == e.value.args
 
     @given(booleans())
@@ -152,6 +168,7 @@ class TestDarkMagic(object):
         """
         Private members are renamed but only in `__init__`.
         """
+
         @attr.s(slots=slots)
         class C3(object):
             _x = attr.ib()
@@ -165,16 +182,30 @@ class TestDarkMagic(object):
         """
         PC = attr.make_class("PC", ["a", "b"], slots=slots, frozen=frozen)
         assert (
-            Attribute(name="a", default=NOTHING, validator=None,
-                      repr=True, cmp=True, hash=None, init=True),
-            Attribute(name="b", default=NOTHING, validator=None,
-                      repr=True, cmp=True, hash=None, init=True),
+            Attribute(
+                name="a",
+                default=NOTHING,
+                validator=None,
+                repr=True,
+                cmp=True,
+                hash=None,
+                init=True,
+            ),
+            Attribute(
+                name="b",
+                default=NOTHING,
+                validator=None,
+                repr=True,
+                cmp=True,
+                hash=None,
+                init=True,
+            ),
         ) == attr.fields(PC)
 
     @pytest.mark.parametrize("cls", [Sub, SubSlots])
     def test_subclassing_with_extra_attrs(self, cls):
         """
-        Sub-classing (where the subclass has extra attrs) does what you'd hope
+        Subclassing (where the subclass has extra attrs) does what you'd hope
         for.
         """
         obj = object()
@@ -186,12 +217,13 @@ class TestDarkMagic(object):
         else:
             assert "SubSlots(x={obj}, y=2)".format(obj=obj) == repr(i)
 
-    @pytest.mark.parametrize("base", [Super, SuperSlots])
+    @pytest.mark.parametrize("base", [Base, BaseSlots])
     def test_subclass_without_extra_attrs(self, base):
         """
-        Sub-classing (where the subclass does not have extra attrs) still
+        Subclassing (where the subclass does not have extra attrs) still
         behaves the same as a subclass with extra attrs.
         """
+
         class Sub2(base):
             pass
 
@@ -200,10 +232,13 @@ class TestDarkMagic(object):
         assert i.x is i.meth() is obj
         assert "Sub2(x={obj})".format(obj=obj) == repr(i)
 
-    @pytest.mark.parametrize("frozen_class", [
-        Frozen,  # has slots=True
-        attr.make_class("FrozenToo", ["x"], slots=False, frozen=True),
-    ])
+    @pytest.mark.parametrize(
+        "frozen_class",
+        [
+            Frozen,  # has slots=True
+            attr.make_class("FrozenToo", ["x"], slots=False, frozen=True),
+        ],
+    )
     def test_frozen_instance(self, frozen_class):
         """
         Frozen instances can't be modified (easily).
@@ -219,12 +254,23 @@ class TestDarkMagic(object):
         assert e.value.args[0] == "can't set attribute"
         assert 1 == frozen.x
 
-    @pytest.mark.parametrize("cls",
-                             [C1, C1Slots, C2, C2Slots, Super, SuperSlots,
-                              Sub, SubSlots, Frozen, FrozenNoSlots,
-                              FromMakeClass])
-    @pytest.mark.parametrize("protocol",
-                             range(2, pickle.HIGHEST_PROTOCOL + 1))
+    @pytest.mark.parametrize(
+        "cls",
+        [
+            C1,
+            C1Slots,
+            C2,
+            C2Slots,
+            Base,
+            BaseSlots,
+            Sub,
+            SubSlots,
+            Frozen,
+            FrozenNoSlots,
+            FromMakeClass,
+        ],
+    )
+    @pytest.mark.parametrize("protocol", range(2, pickle.HIGHEST_PROTOCOL + 1))
     def test_pickle_attributes(self, cls, protocol):
         """
         Pickling/un-pickling of Attribute instances works.
@@ -232,12 +278,23 @@ class TestDarkMagic(object):
         for attribute in attr.fields(cls):
             assert attribute == pickle.loads(pickle.dumps(attribute, protocol))
 
-    @pytest.mark.parametrize("cls",
-                             [C1, C1Slots, C2, C2Slots, Super, SuperSlots,
-                              Sub, SubSlots, Frozen, FrozenNoSlots,
-                              FromMakeClass])
-    @pytest.mark.parametrize("protocol",
-                             range(2, pickle.HIGHEST_PROTOCOL + 1))
+    @pytest.mark.parametrize(
+        "cls",
+        [
+            C1,
+            C1Slots,
+            C2,
+            C2Slots,
+            Base,
+            BaseSlots,
+            Sub,
+            SubSlots,
+            Frozen,
+            FrozenNoSlots,
+            FromMakeClass,
+        ],
+    )
+    @pytest.mark.parametrize("protocol", range(2, pickle.HIGHEST_PROTOCOL + 1))
     def test_pickle_object(self, cls, protocol):
         """
         Pickle object serialization works on all kinds of attrs classes.
@@ -270,6 +327,7 @@ class TestDarkMagic(object):
         Default decorator sets the default and the respective method gets
         called.
         """
+
         @attr.s
         class C(object):
             x = attr.ib(default=1)
@@ -283,12 +341,14 @@ class TestDarkMagic(object):
 
     @pytest.mark.parametrize("slots", [True, False])
     @pytest.mark.parametrize("frozen", [True, False])
-    def test_attrib_overwrite(self, slots, frozen):
+    @pytest.mark.parametrize("weakref_slot", [True, False])
+    def test_attrib_overwrite(self, slots, frozen, weakref_slot):
         """
-        Subclasses can overwrite attributes of their superclass.
+        Subclasses can overwrite attributes of their base class.
         """
-        @attr.s(slots=slots, frozen=frozen)
-        class SubOverwrite(Super):
+
+        @attr.s(slots=slots, frozen=frozen, weakref_slot=weakref_slot)
+        class SubOverwrite(Base):
             x = attr.ib(default=attr.Factory(list))
 
         assert SubOverwrite([]) == SubOverwrite()
@@ -297,6 +357,7 @@ class TestDarkMagic(object):
         """
         dict-classes are never replaced.
         """
+
         class C(object):
             x = attr.ib()
 
@@ -310,12 +371,13 @@ class TestDarkMagic(object):
         Python 3.  This is incorrect behavior but we have to retain it for
         backward compatibility.
         """
+
         @attr.s(hash=False)
         class HashByIDBackwardCompat(object):
             x = attr.ib()
 
-        assert (
-            hash(HashByIDBackwardCompat(1)) != hash(HashByIDBackwardCompat(1))
+        assert hash(HashByIDBackwardCompat(1)) != hash(
+            HashByIDBackwardCompat(1)
         )
 
         @attr.s(hash=False, cmp=False)
@@ -334,6 +396,7 @@ class TestDarkMagic(object):
         """
         Unhashable defaults + subclassing values work.
         """
+
         @attr.s
         class Unhashable(object):
             pass
@@ -351,17 +414,19 @@ class TestDarkMagic(object):
         """
         hash=False and cmp=False make a class hashable by ID.
         """
+
         @attr.s(hash=False, cmp=False, slots=slots)
         class C(object):
             pass
 
         assert hash(C()) != hash(C())
 
-    def test_overwrite_super(self):
+    def test_overwrite_base(self):
         """
-        Super classes can overwrite each other and the attributes are added
+        Base classes can overwrite each other and the attributes are added
         in the order they are defined.
         """
+
         @attr.s
         class C(object):
             c = attr.ib(default=100)
@@ -385,20 +450,37 @@ class TestDarkMagic(object):
     @pytest.mark.parametrize("sub_slots", [True, False])
     @pytest.mark.parametrize("base_frozen", [True, False])
     @pytest.mark.parametrize("sub_frozen", [True, False])
+    @pytest.mark.parametrize("base_weakref_slot", [True, False])
+    @pytest.mark.parametrize("sub_weakref_slot", [True, False])
     @pytest.mark.parametrize("base_converter", [True, False])
     @pytest.mark.parametrize("sub_converter", [True, False])
-    def test_frozen_slots_combo(self, base_slots, sub_slots, base_frozen,
-                                sub_frozen, base_converter, sub_converter):
+    def test_frozen_slots_combo(
+        self,
+        base_slots,
+        sub_slots,
+        base_frozen,
+        sub_frozen,
+        base_weakref_slot,
+        sub_weakref_slot,
+        base_converter,
+        sub_converter,
+    ):
         """
         A class with a single attribute, inheriting from another class
         with a single attribute.
         """
 
-        @attr.s(frozen=base_frozen, slots=base_slots)
+        @attr.s(
+            frozen=base_frozen,
+            slots=base_slots,
+            weakref_slot=base_weakref_slot,
+        )
         class Base(object):
             a = attr.ib(converter=int if base_converter else None)
 
-        @attr.s(frozen=sub_frozen, slots=sub_slots)
+        @attr.s(
+            frozen=sub_frozen, slots=sub_slots, weakref_slot=sub_weakref_slot
+        )
         class Sub(Base):
             b = attr.ib(converter=int if sub_converter else None)
 
@@ -413,3 +495,83 @@ class TestDarkMagic(object):
 
             with pytest.raises(FrozenInstanceError):
                 i.b = "3"
+
+    def test_tuple_class_aliasing(self):
+        """
+        itemgetter and property are legal attribute names.
+        """
+
+        @attr.s
+        class C(object):
+            property = attr.ib()
+            itemgetter = attr.ib()
+            x = attr.ib()
+
+        assert "property" == attr.fields(C).property.name
+        assert "itemgetter" == attr.fields(C).itemgetter.name
+        assert "x" == attr.fields(C).x.name
+
+    @pytest.mark.parametrize("slots", [True, False])
+    @pytest.mark.parametrize("frozen", [True, False])
+    def test_auto_exc(self, slots, frozen):
+        """
+        Classes with auto_exc=True have a Exception-style __str__, are neither
+        comparable nor hashable, and store the fields additionally in
+        self.args.
+        """
+
+        @attr.s(auto_exc=True, slots=slots, frozen=frozen)
+        class FooError(Exception):
+            x = attr.ib()
+            y = attr.ib(init=False, default=42)
+            z = attr.ib(init=False)
+            a = attr.ib()
+
+        FooErrorMade = attr.make_class(
+            "FooErrorMade",
+            bases=(Exception,),
+            attrs={
+                "x": attr.ib(),
+                "y": attr.ib(init=False, default=42),
+                "z": attr.ib(init=False),
+                "a": attr.ib(),
+            },
+            auto_exc=True,
+            slots=slots,
+            frozen=frozen,
+        )
+
+        assert FooError(1, "foo") != FooError(1, "foo")
+        assert FooErrorMade(1, "foo") != FooErrorMade(1, "foo")
+
+        for cls in (FooError, FooErrorMade):
+            with pytest.raises(cls) as ei:
+                raise cls(1, "foo")
+
+            e = ei.value
+
+            assert e is e
+            assert e == e
+            assert "(1, 'foo')" == str(e)
+            assert (1, "foo") == e.args
+
+            with pytest.raises(TypeError):
+                hash(e)
+
+            if not frozen:
+                deepcopy(e)
+
+    @pytest.mark.parametrize("slots", [True, False])
+    @pytest.mark.parametrize("frozen", [True, False])
+    def test_auto_exc_one_attrib(self, slots, frozen):
+        """
+        Having one attribute works with auto_exc=True.
+
+        Easy to get wrong with tuple literals.
+        """
+
+        @attr.s(auto_exc=True, slots=slots, frozen=frozen)
+        class FooError(Exception):
+            x = attr.ib()
+
+        FooError(1)

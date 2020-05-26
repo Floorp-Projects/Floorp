@@ -2,6 +2,8 @@
 Unit tests for slot-related functionality.
 """
 
+import weakref
+
 import pytest
 
 import attr
@@ -12,6 +14,7 @@ from attr._compat import PY2, PYPY, just_warn, make_set_closure_cell
 # Pympler doesn't work on PyPy.
 try:
     from pympler.asizeof import asizeof
+
     has_pympler = True
 except BaseException:  # Won't be an import error.
     has_pympler = False
@@ -34,6 +37,7 @@ class C1(object):
         return "staticmethod"
 
     if not PY2:
+
         def my_class(self):
             return __class__  # NOQA: F821
 
@@ -59,6 +63,7 @@ class C1Slots(object):
         return "staticmethod"
 
     if not PY2:
+
         def my_class(self):
             return __class__  # NOQA: F821
 
@@ -80,7 +85,7 @@ def test_slots_being_used():
     assert "__dict__" in dir(non_slot_instance)
     assert "__slots__" not in dir(non_slot_instance)
 
-    assert set(["x", "y"]) == set(slot_instance.__slots__)
+    assert set(["__weakref__", "x", "y"]) == set(slot_instance.__slots__)
 
     if has_pympler:
         assert asizeof(slot_instance) < asizeof(non_slot_instance)
@@ -122,9 +127,10 @@ def test_inheritance_from_nonslots():
     """
     Inheritance from a non-slot class works.
 
-    Note that a slots class inheriting from an ordinary class loses most of the
-    benefits of slots classes, but it should still work.
+    Note that a slotted class inheriting from an ordinary class loses most of
+    the benefits of slotted classes, but it should still work.
     """
+
     @attr.s(slots=True, hash=True)
     class C2Slots(C1):
         z = attr.ib()
@@ -162,10 +168,11 @@ def test_inheritance_from_nonslots():
 
 def test_nonslots_these():
     """
-    Enhancing a non-slots class using 'these' works.
+    Enhancing a dict class using 'these' works.
 
     This will actually *replace* the class with another one, using slots.
     """
+
     class SimpleOrdinaryClass(object):
         def __init__(self, x, y, z):
             self.x = x
@@ -183,8 +190,12 @@ def test_nonslots_these():
         def staticmethod():
             return "staticmethod"
 
-    C2Slots = attr.s(these={"x": attr.ib(), "y": attr.ib(), "z": attr.ib()},
-                     init=False, slots=True, hash=True)(SimpleOrdinaryClass)
+    C2Slots = attr.s(
+        these={"x": attr.ib(), "y": attr.ib(), "z": attr.ib()},
+        init=False,
+        slots=True,
+        hash=True,
+    )(SimpleOrdinaryClass)
 
     c2 = C2Slots(x=1, y=2, z="test")
     assert 1 == c2.x
@@ -197,7 +208,7 @@ def test_nonslots_these():
     assert "clsmethod" == c2.classmethod()
     assert "staticmethod" == c2.staticmethod()
 
-    assert set(["x", "y", "z"]) == set(C2Slots.__slots__)
+    assert set(["__weakref__", "x", "y", "z"]) == set(C2Slots.__slots__)
 
     c3 = C2Slots(x=1, y=3, z="test")
     assert c3 > c2
@@ -215,6 +226,7 @@ def test_inheritance_from_slots():
     """
     Inheriting from an attr slot class works.
     """
+
     @attr.s(slots=True, hash=True)
     class C2Slots(C1Slots):
         z = attr.ib()
@@ -257,6 +269,7 @@ def test_bare_inheritance_from_slots():
     """
     Inheriting from a bare attr slot class works.
     """
+
     @attr.s(init=False, cmp=False, hash=False, repr=False, slots=True)
     class C1BareSlots(object):
         x = attr.ib(validator=attr.validators.instance_of(int))
@@ -349,6 +362,7 @@ class TestClosureCellRewriting(object):
 
         This affects features like `__class__` and the no-arg super().
         """
+
         @attr.s
         class C2(C1):
             def my_subclass(self):
@@ -397,10 +411,7 @@ class TestClosureCellRewriting(object):
 
         assert D.statmethod() is D
 
-    @pytest.mark.skipif(
-        PYPY,
-        reason="ctypes are used only on CPython"
-    )
+    @pytest.mark.skipif(PYPY, reason="ctypes are used only on CPython")
     def test_missing_ctypes(self, monkeypatch):
         """
         Keeps working if ctypes is missing.
@@ -417,7 +428,104 @@ class TestClosureCellRewriting(object):
         assert __file__ == w.filename
         assert (
             "Missing ctypes.  Some features like bare super() or accessing "
-            "__class__ will not work with slots classes.",
+            "__class__ will not work with slotted classes.",
         ) == w.message.args
 
         assert just_warn is func
+
+
+@pytest.mark.skipif(PYPY, reason="__slots__ only block weakref on CPython")
+def test_not_weakrefable():
+    """
+    Instance is not weak-referenceable when `weakref_slot=False` in CPython.
+    """
+
+    @attr.s(slots=True, weakref_slot=False)
+    class C(object):
+        pass
+
+    c = C()
+
+    with pytest.raises(TypeError):
+        weakref.ref(c)
+
+
+@pytest.mark.skipif(
+    not PYPY, reason="slots without weakref_slot should only work on PyPy"
+)
+def test_implicitly_weakrefable():
+    """
+    Instance is weak-referenceable even when `weakref_slot=False` in PyPy.
+    """
+
+    @attr.s(slots=True, weakref_slot=False)
+    class C(object):
+        pass
+
+    c = C()
+    w = weakref.ref(c)
+
+    assert c is w()
+
+
+def test_weakrefable():
+    """
+    Instance is weak-referenceable when `weakref_slot=True`.
+    """
+
+    @attr.s(slots=True, weakref_slot=True)
+    class C(object):
+        pass
+
+    c = C()
+    w = weakref.ref(c)
+
+    assert c is w()
+
+
+def test_weakref_does_not_add_a_field():
+    """
+    `weakref_slot=True` does not add a field to the class.
+    """
+
+    @attr.s(slots=True, weakref_slot=True)
+    class C(object):
+        field = attr.ib()
+
+    assert [f.name for f in attr.fields(C)] == ["field"]
+
+
+def tests_weakref_does_not_add_when_inheriting_with_weakref():
+    """
+    `weakref_slot=True` does not add a new __weakref__ slot when inheriting
+    one.
+    """
+
+    @attr.s(slots=True, weakref_slot=True)
+    class C(object):
+        pass
+
+    @attr.s(slots=True, weakref_slot=True)
+    class D(C):
+        pass
+
+    d = D()
+    w = weakref.ref(d)
+
+    assert d is w()
+
+
+def tests_weakref_does_not_add_with_weakref_attribute():
+    """
+    `weakref_slot=True` does not add a new __weakref__ slot when an attribute
+    of that name exists.
+    """
+
+    @attr.s(slots=True, weakref_slot=True)
+    class C(object):
+        __weakref__ = attr.ib(init=False, hash=False, repr=False, cmp=False)
+
+    c = C()
+    w = weakref.ref(c)
+
+    assert c is w()

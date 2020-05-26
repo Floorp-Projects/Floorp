@@ -13,8 +13,9 @@ import attr
 def test_init_subclass_vanilla(slots):
     """
     `super().__init_subclass__` can be used if the subclass is not an attrs
-    class both with dict and slots classes.
+    class both with dict and slotted classes.
     """
+
     @attr.s(slots=slots)
     class Base:
         def __init_subclass__(cls, param, **kw):
@@ -31,6 +32,7 @@ def test_init_subclass_attrs():
     """
     `__init_subclass__` works with attrs classes as long as slots=False.
     """
+
     @attr.s(slots=False)
     class Base:
         def __init_subclass__(cls, param, **kw):

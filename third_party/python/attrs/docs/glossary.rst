@@ -43,21 +43,12 @@ Glossary
         Those methods are created for frozen slotted classes because they won't pickle otherwise.
         `Think twice <https://www.youtube.com/watch?v=7KnfGDajDQw>`_ before using :mod:`pickle` though.
 
-      - As always with slotted classes, you must specify a ``__weakref__`` slot if you wish for the class to be weak-referenceable.
-        Here's how it looks using ``attrs``:
+      - Slotted classes are weak-referenceable by default.
+        This can be disabled in CPython by passing ``weakref_slot=False`` to ``@attr.s`` [#pypyweakref]_.
 
-        .. doctest::
-
-          >>> import weakref
-          >>> @attr.s(slots=True)
-          ... class C(object):
-          ...     __weakref__ = attr.ib(init=False, hash=False, repr=False, cmp=False)
-          ...     x = attr.ib()
-          >>> c = C(1)
-          >>> weakref.ref(c)
-          <weakref at 0x...; to 'C' at 0x...>
       - Since it's currently impossible to make a class slotted after it's created, ``attrs`` has to replace your class with a new one.
         While it tries to do that as graciously as possible, certain metaclass features like ``__init_subclass__`` do not work with slotted classes.
 
 
 .. [#pypy] On PyPy, there is no memory advantage in using slotted classes.
+.. [#pypyweakref] On PyPy, slotted classes are naturally weak-referenceable so ``weakref_slot=False`` has no effect.

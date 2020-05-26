@@ -1,6 +1,9 @@
 Hashing
 =======
 
+Hash Method Generation
+----------------------
+
 .. warning::
 
    The overarching theme is to never set the ``@attr.s(hash=X)`` parameter yourself.
@@ -17,8 +20,8 @@ For example if you want to put them into a :class:`set` or if you want to use th
 The *hash* of an object is an integer that represents the contents of an object.
 It can be obtained by calling :func:`hash` on an object and is implemented by writing a ``__hash__`` method for your class.
 
-``attrs`` will happily write a ``__hash__`` method you [#fn1]_, however it will *not* do so by default.
-Because according to the definition_ from the official Python docs, the returned hash has to fullfil certain constraints:
+``attrs`` will happily write a ``__hash__`` method for you [#fn1]_, however it will *not* do so by default.
+Because according to the definition_ from the official Python docs, the returned hash has to fulfill certain constraints:
 
 #. Two objects that are equal, **must** have the same hash.
    This means that if ``x == y``, it *must* follow that ``hash(x) == hash(y)``.
@@ -33,6 +36,16 @@ Because according to the definition_ from the official Python docs, the returned
 
    The *correct way* to achieve hashing by id is to set ``@attr.s(cmp=False)``.
    Setting ``@attr.s(hash=False)`` (that implies ``cmp=True``) is almost certainly a *bug*.
+
+   .. warning::
+
+      Be careful when subclassing!
+      Setting ``cmp=False`` on class whose base class has a non-default ``__hash__`` method, will *not* make ``attrs`` remove that ``__hash__`` for you.
+
+      It is part of ``attrs``'s philosophy to only *add* to classes so you have the freedom to customize your classes as you wish.
+      So if you want to *get rid* of methods, you'll have to do it by hand.
+
+      The easiest way to reset ``__hash__`` on a class is adding ``__hash__ = object.__hash__`` in the class body.
 
 #. If two object are not equal, their hash **should** be different.
 
@@ -49,6 +62,22 @@ Because according to the definition_ from the official Python docs, the returned
 
 For a more thorough explanation of this topic, please refer to this blog post: `Python Hashes and Equality`_.
 
+
+Hashing and Mutability
+----------------------
+Changing any field involved in hash code computation after the first call to `__hash__` (typically this would be after its insertion into a hash-based collection) can result in silent bugs.
+Therefore, it is strongly recommended that hashable classes be ``frozen.``
+Beware, however, that this is not a complete guarantee of safety:
+if a field points to an object and that object is mutated, the hash code may change, but ``frozen`` will not protect you.
+
+
+Hash Code Caching
+-----------------
+
+Some objects have hash codes which are expensive to compute.
+If such objects are to be stored in hash-based collections, it can be useful to compute the hash codes only once and then store the result on the object to make future hash code requests fast.
+To enable caching of hash codes, pass ``cache_hash=True`` to ``@attrs``.
+This may only be done if ``attrs`` is already generating a hash function for the object.
 
 .. [#fn1] The hash is computed by hashing a tuple that consists of an unique id for the class plus all attribute values.
 
