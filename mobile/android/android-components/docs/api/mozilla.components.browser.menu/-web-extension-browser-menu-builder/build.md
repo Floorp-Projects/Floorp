@@ -2,7 +2,7 @@
 
 # build
 
-`fun build(context: <ERROR CLASS>): `[`BrowserMenu`](../-browser-menu/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenuBuilder.kt#L30)
+`fun build(context: <ERROR CLASS>): `[`BrowserMenu`](../-browser-menu/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenuBuilder.kt#L42)
 
 Overrides [BrowserMenuBuilder.build](../-browser-menu-builder/build.md)
 

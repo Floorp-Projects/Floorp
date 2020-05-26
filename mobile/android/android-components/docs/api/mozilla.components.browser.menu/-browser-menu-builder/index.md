@@ -45,4 +45,4 @@ the top of the menu is always visible.
 
 | Name | Summary |
 |---|---|
-| [WebExtensionBrowserMenuBuilder](../-web-extension-browser-menu-builder/index.md) | `class WebExtensionBrowserMenuBuilder : `[`BrowserMenuBuilder`](./index.md)<br>Browser menu builder with web extension support. It allows [WebExtensionBrowserMenu](../-web-extension-browser-menu/index.md) to add web extension browser actions. |
+| [WebExtensionBrowserMenuBuilder](../-web-extension-browser-menu-builder/index.md) | `class WebExtensionBrowserMenuBuilder : `[`BrowserMenuBuilder`](./index.md)<br>Browser menu builder with web extension support. It allows [WebExtensionBrowserMenu](../-web-extension-browser-menu/index.md) to add web extension browser actions in a nested menu item. If there are no web extensions installed, the web extension menu item would return an add-on manager menu item instead. |

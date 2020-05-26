@@ -32,6 +32,7 @@ Interface to be implemented by menu items to be shown in the browser menu.
 
 | Name | Summary |
 |---|---|
+| [AbstractParentBrowserMenuItem](../../mozilla.components.browser.menu.item/-abstract-parent-browser-menu-item/index.md) | `abstract class AbstractParentBrowserMenuItem : `[`BrowserMenuItem`](./index.md)<br>An abstract menu item for handling nested sub menu items on view click. |
 | [BrowserMenuCategory](../../mozilla.components.browser.menu.item/-browser-menu-category/index.md) | `class BrowserMenuCategory : `[`BrowserMenuItem`](./index.md)<br>A browser menu item displaying styleable text, usable for menu categories |
 | [BrowserMenuCompoundButton](../../mozilla.components.browser.menu.item/-browser-menu-compound-button/index.md) | `abstract class BrowserMenuCompoundButton : `[`BrowserMenuItem`](./index.md)<br>A browser menu compound button. A basic sub-class would only have to provide a layout resource to satisfy [BrowserMenuItem.getLayoutResource](get-layout-resource.md) which contains a [View](#) that inherits from [CompoundButton](#). |
 | [BrowserMenuDivider](../../mozilla.components.browser.menu.item/-browser-menu-divider/index.md) | `class BrowserMenuDivider : `[`BrowserMenuItem`](./index.md)<br>A browser menu item to display a horizontal divider. |
