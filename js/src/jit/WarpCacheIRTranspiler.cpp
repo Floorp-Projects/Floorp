@@ -115,6 +115,12 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitLoadArgumentSlot(ValOperandId resultId,
                                          uint32_t slotIndex);
 
+  enum class CallKind { Native, Scripted };
+
+  MOZ_MUST_USE bool emitCallFunction(ObjOperandId calleeId,
+                                     Int32OperandId argcId, CallFlags flags,
+                                     CallKind kind);
+
   CACHE_IR_TRANSPILER_GENERATED
 
  public:
@@ -1160,17 +1166,15 @@ bool WarpCacheIRTranspiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
   return emitLoadArgumentSlot(resultId, callInfo_->argc() + slotIndex);
 }
 
-#ifndef JS_SIMULATOR
-bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
-                                                   Int32OperandId argcId,
-                                                   CallFlags flags,
-                                                   bool ignoresReturnValue) {
+bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
+                                             Int32OperandId argcId,
+                                             CallFlags flags, CallKind kind) {
   MDefinition* callee = getOperand(calleeId);
-#  ifdef DEBUG
+#ifdef DEBUG
   MDefinition* argc = getOperand(argcId);
   MOZ_ASSERT(argc->toConstant()->toInt32() ==
              static_cast<int32_t>(callInfo_->argc()));
-#  endif
+#endif
 
   // TODO: For non-normal calls the arguments need to be changed.
   MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard);
@@ -1219,6 +1223,22 @@ bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
   pushResult(call);
 
   return resumeAfter(call);
+}
+
+#ifndef JS_SIMULATOR
+bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
+                                                   Int32OperandId argcId,
+                                                   CallFlags flags,
+                                                   bool ignoresReturnValue) {
+  // Instead of ignoresReturnValue we use CallInfo::ignoresReturnValue.
+  return emitCallFunction(calleeId, argcId, flags, CallKind::Native);
+}
+#else
+bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
+                                                   Int32OperandId argcId,
+                                                   CallFlags flags,
+                                                   uint32_t targetOffset) {
+  return emitCallFunction(calleeId, argcId, flags, CallKind::Native);
 }
 #endif
 
