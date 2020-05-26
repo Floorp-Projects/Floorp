@@ -467,10 +467,7 @@ Tools.application = {
   label: l10n("application.label"),
   panelLabel: l10n("application.panellabel"),
   tooltip: l10n("application.tooltip"),
-  inMenu: AppConstants.NIGHTLY_BUILD || AppConstants.MOZ_DEV_EDITION,
-  hiddenInOptions: !(
-    AppConstants.NIGHTLY_BUILD || AppConstants.MOZ_DEV_EDITION
-  ),
+  inMenu: true,
 
   isTargetSupported: function(target) {
     return target.hasActor("manifest");
