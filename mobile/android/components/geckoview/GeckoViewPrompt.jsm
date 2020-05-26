@@ -1,6 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+var EXPORTED_SYMBOLS = [
+  "ColorPickerDelegate",
+  "FilePickerDelegate",
+  "LoginStorageDelegate",
+  "PromptFactory",
+  "ShareDelegate",
+];
 
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
@@ -11,7 +20,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  EventDispatcher: "resource://gre/modules/Messaging.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
@@ -19,13 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "UUIDGen",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
-);
 
 const domBundle = Services.strings.createBundle(
   "chrome://global/locale/dom/dom.properties"
@@ -1266,11 +1267,3 @@ class LoginStorageDelegate {
     this.promptToChangePassword(aBrowser, null /* oldLogin */, aNewLogin);
   }
 }
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-  ColorPickerDelegate,
-  FilePickerDelegate,
-  PromptFactory,
-  ShareDelegate,
-  LoginStorageDelegate,
-]);
