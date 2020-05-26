@@ -4633,6 +4633,13 @@ void CodeGenerator::visitGuardObjectIdentity(LGuardObjectIdentity* guard) {
   bailoutCmpPtr(cond, input, expected, guard->snapshot());
 }
 
+void CodeGenerator::visitGuardSpecificFunction(LGuardSpecificFunction* guard) {
+  Register input = ToRegister(guard->input());
+  Register expected = ToRegister(guard->expected());
+
+  bailoutCmpPtr(Assembler::NotEqual, input, expected, guard->snapshot());
+}
+
 void CodeGenerator::visitGuardSpecificAtom(LGuardSpecificAtom* guard) {
   Register str = ToRegister(guard->str());
 

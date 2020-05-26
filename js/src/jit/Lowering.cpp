@@ -3991,6 +3991,14 @@ void LIRGenerator::visitGuardObjectIdentity(MGuardObjectIdentity* ins) {
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitGuardSpecificFunction(MGuardSpecificFunction* ins) {
+  auto* guard = new (alloc()) LGuardSpecificFunction(
+      useRegister(ins->function()), useRegister(ins->expected()));
+  assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard);
+  add(guard, ins);
+  redefine(ins, ins->function());
+}
+
 void LIRGenerator::visitGuardSpecificAtom(MGuardSpecificAtom* ins) {
   auto* guard = new (alloc()) LGuardSpecificAtom(useRegister(ins->str()));
   assignSnapshot(guard, Bailout_SpecificAtomGuard);

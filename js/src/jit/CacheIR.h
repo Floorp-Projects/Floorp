@@ -762,7 +762,15 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void guardSpecificFunction(ObjOperandId obj, JSFunction* expected) {
     // Guard object is a specific function. This implies immutable fields on
     // the JSFunction struct itself are unchanged.
-    guardSpecificObject(obj, expected);
+    // Bake in the nargs and FunctionFlags so Warp can use them off-main thread,
+    // instead of directly using the JSFunction fields.
+    static_assert(JSFunction::NArgsBits == 16);
+    static_assert(sizeof(decltype(expected->flags().toRaw())) ==
+                  sizeof(uint16_t));
+
+    uint32_t nargsAndFlags =
+        (uint32_t(expected->nargs()) << 16) | expected->flags().toRaw();
+    guardSpecificFunction_(obj, expected, nargsAndFlags);
   }
 
   ValOperandId loadArgumentFixedSlot(
