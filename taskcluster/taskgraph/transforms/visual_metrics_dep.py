@@ -44,6 +44,7 @@ def run_visual_metrics(config, jobs):
             # alongside the job it was triggered by to make it easier for
             # people to find it back.
             job['treeherder']['platform'] = platform
+            job['treeherder']['tier'] = treeherder_info['tier']
 
             # run-on-projects needs to be set based on the dependent task
             job['run-on-projects'] = attributes['run_on_projects']
