@@ -88,14 +88,6 @@ void CompositorAnimationStorage::SetAnimatedValue(
   }
 }
 
-void CompositorAnimationStorage::SetAnimatedValue(
-    uint64_t aId, gfx::Matrix4x4&& aTransformInDevSpace) {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  const TransformData dontCare = {};
-  SetAnimatedValue(aId, std::move(aTransformInDevSpace), gfx::Matrix4x4(),
-                   dontCare);
-}
-
 void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                                   nscolor aColor) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
