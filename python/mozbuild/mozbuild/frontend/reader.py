@@ -1091,11 +1091,11 @@ class BuildReader(object):
     def _read_mozbuild(self, path, config, descend, metadata):
         path = mozpath.normpath(path)
         log(self._log, logging.DEBUG, 'read_mozbuild', {'path': path},
-            'Reading file: {path}')
+            'Reading file: {path}'.format(path=path))
 
         if path in self._read_files:
             log(self._log, logging.WARNING, 'read_already', {'path': path},
-                'File already read. Skipping: {path}')
+                'File already read. Skipping: {path}'.format(path=path))
             return
 
         self._read_files.add(path)
