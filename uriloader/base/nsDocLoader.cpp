@@ -143,6 +143,9 @@ nsresult nsDocLoader::Init() {
 nsresult nsDocLoader::InitWithBrowsingContext(
     BrowsingContext* aBrowsingContext) {
   RefPtr<net::nsLoadGroup> loadGroup = new net::nsLoadGroup();
+  if (!aBrowsingContext->GetRequestContextId()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   nsresult rv = loadGroup->InitWithRequestContextId(
       aBrowsingContext->GetRequestContextId());
   if (NS_FAILED(rv)) return rv;
