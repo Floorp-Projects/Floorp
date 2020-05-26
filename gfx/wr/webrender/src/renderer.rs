@@ -2766,10 +2766,7 @@ impl Renderer {
                                 self.render_impl(device_size).ok();
                             }
 
-                            mem::replace(
-                                &mut self.active_documents[pos].1,
-                                doc,
-                            );
+                            self.active_documents[pos].1 = doc;
                         }
                         None => self.active_documents.push((document_id, doc)),
                     }
