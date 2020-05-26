@@ -362,6 +362,10 @@ button > hbox > label {
   min-height: 0;
 }
 
+#rememberedList > richlistitem {
+  min-height: 30px !important;
+}
+
 .typeIcon {
   margin-inline: 10px 9px !important;
 }

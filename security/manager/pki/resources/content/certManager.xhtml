@@ -12,7 +12,7 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="certmgr-title"
         onload="LoadCerts();"
-        style="min-height: 32em;"
+        style="min-width: 45em; min-height: 32em;"
         persist="screenX screenY width height">
 <dialog id="certmanager"
         buttons="accept">
@@ -28,6 +28,7 @@
     <tabbox id="certmanagertabs" flex="1" style="margin:5px" persist="selectedIndex">
       <tabs id="certMgrTabbox">
         <tab id="mine_tab" data-l10n-id="certmgr-tab-mine"/>
+        <tab id="remembered_tab" data-l10n-id="certmgr-tab-remembered"/>
         <tab id="others_tab" data-l10n-id="certmgr-tab-people"/>
         <tab id="websites_tab" data-l10n-id="certmgr-tab-servers"/>
         <tab id="ca_tab" data-l10n-id="certmgr-tab-ca" selected="true"/>
@@ -84,6 +85,34 @@
              <button id="mine_deleteButton" class="normal"
                      data-l10n-id="certmgr-delete"
                      disabled="true" oncommand="deleteCerts();"/>
+          </hbox>
+        </vbox>
+        <vbox id="rememberedCerts" flex="1">
+          <description data-l10n-id="certmgr-remembered"></description>
+          <separator class="thin"/>
+
+           <listheader equalsize="always">
+             <treecol id="hostcol" data-l10n-id="certmgr-cert-host" primary="true"
+                           persist="hidden width ordinal" flex="1"/>
+             <treecol id="certcol" data-l10n-id="certmgr-cert-name" primary="true"
+                           persist="hidden width ordinal" flex="1"/>
+             <treecol id="serialnumcol" data-l10n-id="certmgr-serial"
+                           persist="hidden width ordinal" flex="1"/>
+           </listheader>
+           <richlistbox id="rememberedList" flex="1" selected="false"/>
+
+          <separator class="thin"/>
+
+          <hbox>
+             <button id="remembered_deleteButton" class="normal"
+                     data-l10n-id="certmgr-delete"
+
+                     oncommand="rememberedDecisionsRichList.deleteSelectedRichListItem()"/>
+
+             <button id="remembered_viewButton" class="normal"
+                     data-l10n-id="certmgr-view"
+
+                     oncommand="rememberedDecisionsRichList.viewSelectedRichListItem()"/>
           </hbox>
         </vbox>
         <vbox id="othersCerts" flex="1">
