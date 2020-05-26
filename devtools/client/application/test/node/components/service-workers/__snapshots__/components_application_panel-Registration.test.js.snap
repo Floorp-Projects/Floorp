@@ -11,7 +11,7 @@ exports[`Registration Renders the expected snapshot for a registration with a wo
       className="registration__header"
     >
       <h2
-        className="registration__scope js-sw-scope"
+        className="registration__scope js-sw-scope devtools-ellipsis-text"
         title="SCOPE 123"
       >
         SCOPE 123
@@ -65,7 +65,7 @@ exports[`Registration Renders the expected snapshot for a registration with mult
       className="registration__header"
     >
       <h2
-        className="registration__scope js-sw-scope"
+        className="registration__scope js-sw-scope devtools-ellipsis-text"
         title="SCOPE 123"
       >
         SCOPE 123
@@ -136,7 +136,7 @@ exports[`Registration Renders the expected snapshot when sw debugging is disable
       className="registration__header"
     >
       <h2
-        className="registration__scope js-sw-scope"
+        className="registration__scope js-sw-scope devtools-ellipsis-text"
         title="SCOPE 123"
       >
         SCOPE 123

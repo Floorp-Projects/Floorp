@@ -109,7 +109,7 @@ class Registration extends PureComponent {
     const scope = h2(
       {
         title: registration.scope,
-        className: "registration__scope js-sw-scope",
+        className: "registration__scope js-sw-scope devtools-ellipsis-text",
       },
       this.formatScope(registration.scope)
     );

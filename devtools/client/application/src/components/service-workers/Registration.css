@@ -69,9 +69,6 @@
 .registration__scope {
   font-size: var(--title-10-font-size);
   font-weight: var(--title-10-font-weight);
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
   user-select: text;
   margin: 0;
 
