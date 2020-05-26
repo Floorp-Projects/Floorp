@@ -130,12 +130,9 @@ class SharedContext {
   ImmutableScriptFlags immutableFlags_ = {};
 
  public:
-  // See: BaseScript::extent_
+  // The location of this script in the source. Note that the value here differs
+  // from the final BaseScript for the case of standalone functions.
   SourceExtent extent = {};
-
-  // If defined, this is used to allocate a JSScript instead of the parser
-  // determined extent (above). This is used for certain top level contexts.
-  mozilla::Maybe<SourceExtent> scriptExtent = {};
 
  protected:
   // See: ThisBinding
@@ -242,8 +239,6 @@ class SharedContext {
     localStrict = strict;
     return retVal;
   }
-
-  SourceExtent getScriptExtent() { return scriptExtent.refOr(extent); }
 };
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
@@ -291,7 +286,8 @@ inline EvalSharedContext* SharedContext::asEvalContext() {
   return static_cast<EvalSharedContext*>(this);
 }
 
-enum class HasHeritage : bool { No, Yes };
+enum class HasHeritage { No, Yes };
+enum class TopLevelFunction { No, Yes };
 
 class FunctionBox : public SharedContext {
   friend struct GCThingList;
