@@ -105,3 +105,55 @@ add_task(async function test_manualDoNotDisturb() {
     ALERT_SERVICE.manualDoNotDisturb = false;
   });
 });
+
+/**
+ * Test that the suppressForScreenSharing attribute can prevent
+ * notifications from appearing.
+ */
+add_task(async function test_suppressForScreenSharing() {
+  try {
+    // Only run the test if the do-not-disturb
+    // interface has been implemented.
+    ALERT_SERVICE.suppressForScreenSharing;
+    ok(true, "Alert service implements do-not-disturb interface");
+  } catch (e) {
+    ok(
+      true,
+      "Alert service doesn't implement do-not-disturb interface, exiting test"
+    );
+    return;
+  }
+
+  // In the event that something goes wrong during this test, make sure
+  // we put the attribute back to the default setting when this test file
+  // exits.
+  registerCleanupFunction(() => {
+    ALERT_SERVICE.suppressForScreenSharing = false;
+  });
+
+  // Make sure that do-not-disturb is not enabled before we start.
+  ok(
+    !ALERT_SERVICE.suppressForScreenSharing,
+    "Alert service should not be suppressing for screen sharing when test " +
+      "starts"
+  );
+
+  await BrowserTestUtils.withNewTab(PAGE, async browser => {
+    await openNotification(browser, "showNotification2");
+
+    info("Notification alert showing");
+    await closeNotification(browser);
+    ALERT_SERVICE.suppressForScreenSharing = true;
+
+    // The notification should not appear, but there is no way from the
+    // client-side to know that it was blocked, except for waiting some time
+    // and realizing that the "onshow" event never fired.
+    await Assert.rejects(
+      openNotification(browser, "showNotification2", NOTIFICATION_TIMEOUT_SECS),
+      /timed out/,
+      "The notification should never display."
+    );
+  });
+
+  ALERT_SERVICE.suppressForScreenSharing = false;
+});
