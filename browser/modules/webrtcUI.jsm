@@ -660,6 +660,10 @@ var webrtcUI = {
   },
 
   shouldShowSharedTabWarning(tab) {
+    if (!tab || !tab.linkedBrowser) {
+      return false;
+    }
+
     let browser = tab.linkedBrowser;
     // We want the user to be able to switch to one tab after starting
     // to share their window or screen. The presumption here is that
