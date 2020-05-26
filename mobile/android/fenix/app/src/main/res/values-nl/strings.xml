@@ -256,6 +256,8 @@
     <string name="preferences_show_search_shortcuts">Zoeksnelkoppelingen tonen</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Zoeksuggesties tonen</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Gesproken zoekopdracht tonen</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Tonen in privésessies</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -437,6 +439,8 @@
     <string name="tabs_header_private_tabs_title">Privétabbladen</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Tabblad toevoegen</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Tabblad uit collectie verwijderen</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Tabblad sluiten</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -1386,4 +1390,8 @@
     <string name="edit">Bewerken</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Wachtwoord vereist</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Gesproken zoekopdracht</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Nu spreken</string>
 </resources>

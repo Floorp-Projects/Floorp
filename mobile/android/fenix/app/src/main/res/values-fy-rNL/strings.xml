@@ -251,6 +251,8 @@
     <string name="preferences_show_search_shortcuts">Sykfluchkeppelingen toane</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Syksuggesjes toane</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Sprutsen sykopdracht toane</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Toane yn priveesesjes</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -430,6 +432,8 @@
     <string name="tabs_header_private_tabs_title">Priveeljepblêden</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Ljepblêd tafoegje</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Ljepblêd út kolleksje fuortsmite</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Ljepblêd slute</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -1375,4 +1379,8 @@
     <string name="edit">Bewurkje</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Wachtwurd fereaske</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Sprutsen sykopdracht</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">No sprekke</string>
 </resources>
