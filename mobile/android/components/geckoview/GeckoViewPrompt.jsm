@@ -912,13 +912,7 @@ PromptDelegate.prototype = {
   },
 };
 
-function FilePickerDelegate() {}
-
-FilePickerDelegate.prototype = {
-  classID: Components.ID("{e4565e36-f101-4bf5-950b-4be0887785a9}"),
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFilePicker]),
-
+class FilePickerDelegate {
   /* ----------  nsIFilePicker  ---------- */
   init(aParent, aTitle, aMode) {
     if (
@@ -936,19 +930,19 @@ FilePickerDelegate.prototype = {
     this._mode = aMode;
     this._mimeTypes = [];
     this._capture = 0;
-  },
+  }
 
   get mode() {
     return this._mode;
-  },
+  }
 
   appendRawFilter(aFilter) {
     this._mimeTypes.push(aFilter);
-  },
+  }
 
   show() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  },
+  }
 
   open(aFilePickerShownCallback) {
     this._msg.mimeTypes = this._mimeTypes;
@@ -962,7 +956,7 @@ FilePickerDelegate.prototype = {
         this._resolveFiles(result.files, aFilePickerShownCallback);
       }
     });
-  },
+  }
 
   async _resolveFiles(aFiles, aCallback) {
     const fileData = [];
@@ -983,7 +977,7 @@ FilePickerDelegate.prototype = {
 
     this._fileData = fileData;
     aCallback.done(Ci.nsIFilePicker.returnOK);
-  },
+  }
 
   get file() {
     if (!this._fileData) {
@@ -994,11 +988,11 @@ FilePickerDelegate.prototype = {
       return null;
     }
     return new FileUtils.File(fileData.file);
-  },
+  }
 
   get fileURL() {
     return Services.io.newFileURI(this.file);
-  },
+  }
 
   *_getEnumerator(aDOMFile) {
     if (!this._fileData) {
@@ -1011,88 +1005,89 @@ FilePickerDelegate.prototype = {
       }
       yield new FileUtils.File(fileData.file);
     }
-  },
+  }
 
   get files() {
     return this._getEnumerator(/* aDOMFile */ false);
-  },
+  }
 
   _getDOMFile(aPath) {
     if (this._prompt.domWin) {
       return this._prompt.domWin.File.createFromFileName(aPath);
     }
     return File.createFromFileName(aPath);
-  },
+  }
 
   get domFileOrDirectory() {
     if (!this._fileData) {
       throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
     return this._fileData[0] ? this._fileData[0].domFile : null;
-  },
+  }
 
   get domFileOrDirectoryEnumerator() {
     return this._getEnumerator(/* aDOMFile */ true);
-  },
+  }
 
   get defaultString() {
     return "";
-  },
+  }
 
-  set defaultString(aValue) {},
+  set defaultString(aValue) {}
 
   get defaultExtension() {
     return "";
-  },
+  }
 
-  set defaultExtension(aValue) {},
+  set defaultExtension(aValue) {}
 
   get filterIndex() {
     return 0;
-  },
+  }
 
-  set filterIndex(aValue) {},
+  set filterIndex(aValue) {}
 
   get displayDirectory() {
     return null;
-  },
+  }
 
-  set displayDirectory(aValue) {},
+  set displayDirectory(aValue) {}
 
   get displaySpecialDirectory() {
     return "";
-  },
+  }
 
-  set displaySpecialDirectory(aValue) {},
+  set displaySpecialDirectory(aValue) {}
 
   get addToRecentDocs() {
     return false;
-  },
+  }
 
-  set addToRecentDocs(aValue) {},
+  set addToRecentDocs(aValue) {}
 
   get okButtonLabel() {
     return "";
-  },
+  }
 
-  set okButtonLabel(aValue) {},
+  set okButtonLabel(aValue) {}
 
   get capture() {
     return this._capture;
-  },
+  }
 
   set capture(aValue) {
     this._capture = aValue;
-  },
-};
+  }
+}
 
-function ColorPickerDelegate() {}
+FilePickerDelegate.prototype.classID = Components.ID(
+  "{e4565e36-f101-4bf5-950b-4be0887785a9}"
+);
+FilePickerDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIFilePicker,
+]);
 
-ColorPickerDelegate.prototype = {
-  classID: Components.ID("{aa0dd6fc-73dd-4621-8385-c0b377e02cee}"),
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIColorPicker]),
-
+class ColorPickerDelegate {
   init(aParent, aTitle, aInitialColor) {
     this._prompt = new GeckoViewPrompter(aParent);
     this._msg = {
@@ -1100,7 +1095,7 @@ ColorPickerDelegate.prototype = {
       title: aTitle,
       value: aInitialColor,
     };
-  },
+  }
 
   open(aColorPickerShownCallback) {
     this._prompt.asyncShowPrompt(this._msg, result => {
@@ -1108,23 +1103,24 @@ ColorPickerDelegate.prototype = {
       // Cancel: !result
       aColorPickerShownCallback.done((result && result.color) || "");
     });
-  },
-};
+  }
+}
 
-function ShareDelegate() {}
+ColorPickerDelegate.prototype.classID = Components.ID(
+  "{aa0dd6fc-73dd-4621-8385-c0b377e02cee}"
+);
+ColorPickerDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIColorPicker,
+]);
 
-ShareDelegate.prototype = {
-  classID: Components.ID("{1201d357-8417-4926-a694-e6408fbedcf8}"),
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISharePicker]),
-
+class ShareDelegate {
   init(aParent) {
     this._openerWindow = aParent;
-  },
+  }
 
   get openerWindow() {
     return this._openerWindow;
-  },
+  }
 
   async share(aTitle, aText, aUri) {
     const ABORT = 2;
@@ -1167,8 +1163,15 @@ ShareDelegate.prototype = {
       default:
         throw new DOMException("Unknown error.", "UnknownError");
     }
-  },
-};
+  }
+}
+
+ShareDelegate.prototype.classID = Components.ID(
+  "{1201d357-8417-4926-a694-e6408fbedcf8}"
+);
+ShareDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsISharePicker,
+]);
 
 // Sync with  LoginSaveOption.Hint in Autocomplete.java.
 const LoginStorageHint = {
@@ -1178,14 +1181,6 @@ const LoginStorageHint = {
 };
 
 class LoginStorageDelegate {
-  get classID() {
-    return Components.ID("{3d765750-1c3d-11ea-aaef-0800200c9a66}");
-  }
-
-  get QueryInterface() {
-    return ChromeUtils.generateQI([Ci.nsILoginManagerPrompter]);
-  }
-
   _createMessage({ dismissed, autoSavedLoginGuid }, aLogins) {
     let hint = LoginStorageHint.NONE;
     if (dismissed) {
@@ -1267,3 +1262,10 @@ class LoginStorageDelegate {
     this.promptToChangePassword(aBrowser, null /* oldLogin */, aNewLogin);
   }
 }
+
+LoginStorageDelegate.prototype.classID = Components.ID(
+  "{3d765750-1c3d-11ea-aaef-0800200c9a66}"
+);
+LoginStorageDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsILoginManagerPrompter,
+]);
