@@ -48,6 +48,11 @@ class AndroidDevice(Layer):
             "default": "org.mozilla.firefox",
             "help": "Android app name",
         },
+        "timeout": {
+            "type": int,
+            "default": 30,
+            "help": "timeout in seconds for adb operations",
+        },
         "intent": {"type": str, "default": None, "help": "Intent to use"},
         "activity": {"type": str, "default": None, "help": "Activity to use"},
         "install-apk": {
@@ -76,7 +81,7 @@ class AndroidDevice(Layer):
         self.android_activity = self.get_arg("android-activity")
         self.metadata = metadata
         try:
-            self.device = ADBDevice(verbose=True, timeout=30)
+            self.device = ADBDevice(verbose=True, timeout=self.get_arg("timeout"))
         except (ADBError, AttributeError) as e:
             self.error("Could not connect to the phone. Is it connected?")
             raise DeviceError(str(e))
