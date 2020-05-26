@@ -175,6 +175,8 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
         "WindowGlobalParent");
   }
 
+  SendUpdateHttpsOnlyStatus(aDocument->HttpsOnlyStatus());
+
   // Update window context fields for the newly loaded Document.
   WindowContext::Transaction txn;
   txn.SetCookieBehavior(

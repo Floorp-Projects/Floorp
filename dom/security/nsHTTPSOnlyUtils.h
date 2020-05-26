@@ -35,6 +35,14 @@ class nsHTTPSOnlyUtils {
                                      uint32_t aHttpsOnlyStatus);
 
   /**
+   * Checks if the error code is on a block-list of codes that are probably not
+   * related to a HTTPS-Only Mode upgrade.
+   * @param  aError Error Code from Request
+   * @return        false if error is not related to upgrade
+   */
+  static bool CouldBeHttpsOnlyError(nsresult aError);
+
+  /**
    * Logs localized message to either content console or browser console
    * @param aName              Localization key
    * @param aParams            Localization parameters

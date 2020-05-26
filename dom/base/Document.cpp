@@ -1346,6 +1346,7 @@ Document::Document(const char* aContentType)
       mHasUserInteractionTimerScheduled(false),
       mStackRefCnt(0),
       mUpdateNestLevel(0),
+      mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mViewportType(Unknown),
       mViewportFit(ViewportFitType::Auto),
       mSubDocuments(nullptr),
@@ -3165,6 +3166,11 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   mUpgradeInsecurePreloads = mUpgradeInsecureRequests;
   mBlockAllMixedContent = loadInfo->GetBlockAllMixedContent();
   mBlockAllMixedContentPreloads = mBlockAllMixedContent;
+
+  // The HTTPS_ONLY_EXEMPT flag of the HTTPS-Only state gets propagated to all
+  // sub-resources and sub-documents.
+  mHttpsOnlyStatus =
+      loadInfo->GetHttpsOnlyStatus() & nsILoadInfo::HTTPS_ONLY_EXEMPT;
 
   nsresult rv = InitReferrerInfo(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);

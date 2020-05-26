@@ -344,6 +344,12 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentTitle(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateHttpsOnlyStatus(
+    uint32_t aHttpsOnlyStatus) {
+  mHttpsOnlyStatus = aHttpsOnlyStatus;
+  return IPC_OK();
+}
+
 IPCResult WindowGlobalParent::RecvUpdateDocumentHasLoaded(
     bool aDocumentHasLoaded) {
   mDocumentHasLoaded = aDocumentHasLoaded;
