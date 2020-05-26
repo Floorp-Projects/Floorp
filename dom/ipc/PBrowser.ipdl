@@ -22,6 +22,7 @@ include protocol PWindowGlobal;
 include protocol PBrowserBridge;
 
 include DOMTypes;
+include WindowGlobalTypes;
 include IPCBlob;
 include IPCStream;
 include URIParams;

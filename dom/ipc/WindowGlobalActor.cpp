@@ -13,6 +13,7 @@
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/JSWindowActorParent.h"
 #include "mozilla/dom/JSWindowActorChild.h"
+#include "mozilla/net/CookieJarSettings.h"
 
 namespace mozilla {
 namespace dom {
@@ -84,6 +85,54 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
   init.contentBlockingAllowListPrincipal() =
       aWindow->GetDocumentContentBlockingAllowListPrincipal();
   init.documentURI() = aWindow->GetDocumentURI();
+
+  Document* doc = aWindow->GetDocument();
+
+  init.blockAllMixedContent() = doc->GetBlockAllMixedContent(false);
+  init.upgradeInsecureRequests() = doc->GetUpgradeInsecureRequests(false);
+  init.sandboxFlags() = doc->GetSandboxFlags();
+  net::CookieJarSettings::Cast(doc->CookieJarSettings())
+      ->Serialize(init.cookieJarSettings());
+
+  mozilla::Get<WindowContext::IDX_CookieBehavior>(init.context().mFields) =
+      Some(doc->CookieJarSettings()->GetCookieBehavior());
+  mozilla::Get<WindowContext::IDX_IsOnContentBlockingAllowList>(
+      init.context().mFields) =
+      doc->CookieJarSettings()->GetIsOnContentBlockingAllowList();
+  mozilla::Get<WindowContext::IDX_IsThirdPartyWindow>(init.context().mFields) =
+      nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr, nullptr);
+  mozilla::Get<WindowContext::IDX_IsThirdPartyTrackingResourceWindow>(
+      init.context().mFields) =
+      nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow);
+  mozilla::Get<WindowContext::IDX_IsSecureContext>(init.context().mFields) =
+      aWindow->IsSecureContext();
+
+  auto policy = doc->GetEmbedderPolicyFromHTTP();
+  if (policy.isSome()) {
+    mozilla::Get<WindowContext::IDX_EmbedderPolicy>(init.context().mFields) =
+        policy.ref();
+  }
+
+  // Init Mixed Content Fields
+  nsCOMPtr<nsIURI> innerDocURI = NS_GetInnermostURI(doc->GetDocumentURI());
+  if (innerDocURI) {
+    mozilla::Get<WindowContext::IDX_IsSecure>(init.context().mFields) =
+        innerDocURI->SchemeIs("https");
+  }
+  nsCOMPtr<nsIChannel> mixedChannel;
+  aWindow->GetDocShell()->GetMixedContentChannel(getter_AddRefs(mixedChannel));
+  // A non null mixedContent channel on the docshell indicates,
+  // that the user has overriden mixed content to allow mixed
+  // content loads to happen.
+  if (mixedChannel && (mixedChannel == doc->GetChannel())) {
+    mozilla::Get<WindowContext::IDX_AllowMixedContent>(init.context().mFields) =
+        true;
+  }
+
+  // Most data here is specific to the Document, which can change without
+  // creating a new WindowGlobal. Anything new added here which fits that
+  // description should also be synchronized in
+  // WindowGlobalChild::OnNewDocument.
 
   return init;
 }

@@ -16,6 +16,7 @@ namespace dom {
 
 class WindowGlobalParent;
 class WindowGlobalInit;
+class BrowsingContextGroup;
 
 #define MOZ_EACH_WC_FIELD(FIELD)                                       \
   FIELD(CookieBehavior, Maybe<uint32_t>)                               \

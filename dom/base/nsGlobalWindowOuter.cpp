@@ -2401,10 +2401,13 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
-  if (!aState) {
+  if (!aState && reUseInnerWindow) {
     // Notify our WindowGlobalChild that it has a new document. If `aState` was
     // passed, we're restoring the window from the BFCache, so the document
     // hasn't changed.
+    // If we didn't have a window global child before, then initializing
+    // it will have set all the required state, so we don't need to do
+    // it again.
     mInnerWindow->GetWindowGlobalChild()->OnNewDocument(aDocument);
   }
 
