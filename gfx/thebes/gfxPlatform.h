@@ -507,6 +507,11 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static eCMSMode GetCMSMode();
 
   /**
+   * Used only for testing. Override the pref setting.
+   */
+  static void SetCMSModeOverride(eCMSMode aMode);
+
+  /**
    * Determines the rendering intent for color management.
    *
    * If the value in the pref gfx.color_management.rendering_intent is a
