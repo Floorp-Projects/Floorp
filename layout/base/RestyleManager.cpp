@@ -2575,7 +2575,6 @@ static ServoPostTraversalFlags SendA11yNotifications(
 }
 
 bool RestyleManager::ProcessPostTraversal(Element* aElement,
-                                          ComputedStyle* aParentContext,
                                           ServoRestyleState& aRestyleState,
                                           ServoPostTraversalFlags aFlags) {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
@@ -2800,7 +2799,7 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
         recreatedAnyContext |= ProcessPostTraversal(
-            n->AsElement(), upToDateStyle, childrenRestyleState, childrenFlags);
+            n->AsElement(), childrenRestyleState, childrenFlags);
       } else if (traverseTextChildren && n->IsText()) {
         recreatedAnyContext |= ProcessPostTraversalForText(
             n, textState, childrenRestyleState, childrenFlags);
@@ -3005,7 +3004,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
         ServoRestyleState state(*styleSet, currentChanges, wrappersToRestyle,
                                 anchorsToSuppress);
         ServoPostTraversalFlags flags = ServoPostTraversalFlags::Empty;
-        anyStyleChanged |= ProcessPostTraversal(root, nullptr, state, flags);
+        anyStyleChanged |= ProcessPostTraversal(root, state, flags);
       }
 
       // We want to suppress adjustments the current (before-change) scroll
