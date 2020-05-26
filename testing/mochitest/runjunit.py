@@ -58,6 +58,7 @@ class JUnitTestRunner(MochitestDesktop):
         self.log.debug("options=%s" % vars(options))
         update_mozinfo()
         self.remote_profile = posixpath.join(self.device.test_root, 'junit-profile')
+        self.remote_filter_list = posixpath.join(self.device.test_root, 'junit-filters.list')
 
         if self.options.coverage and not self.options.coverage_output_dir:
             raise Exception("--coverage-output-dir is required when using --enable-coverage")
@@ -138,11 +139,12 @@ class JUnitTestRunner(MochitestDesktop):
             self.device.rm(self.remote_profile, force=True, recursive=True, root=True)
             if hasattr(self, 'profile'):
                 del self.profile
+            self.device.rm(self.remote_filter_list, force=True, root=True)
         except Exception:
             traceback.print_exc()
             self.log.info("Caught and ignored an exception during cleanup")
 
-    def build_command_line(self, test_filters):
+    def build_command_line(self, test_filters_file, test_filters):
         """
            Construct and return the 'am instrument' command line.
         """
@@ -158,10 +160,37 @@ class JUnitTestRunner(MochitestDesktop):
         if shards is not None and shard is not None:
             shard -= 1  # shard index is 0 based
             cmd = cmd + " -e numShards %d -e shardIndex %d" % (shards, shard)
+
         # test filters: limit run to specific test(s)
-        for f in test_filters:
-            # filter can be class-name or 'class-name#method-name' (single test)
-            cmd = cmd + " -e class %s" % f
+        # filter can be class-name or 'class-name#method-name' (single test)
+        # Multiple filters must be specified as a line-separated text file
+        # and then pushed to the device.
+        filter_list_name = None
+
+        if test_filters_file:
+            # We specified a pre-existing file, so use that
+            filter_list_name = test_filters_file
+        elif test_filters:
+            if len(test_filters) > 1:
+                # Generate the list file from test_filters
+                with tempfile.NamedTemporaryFile(delete=False) as filter_list:
+                    for f in test_filters:
+                        print(f, file=filter_list)
+                    filter_list_name = filter_list.name
+            else:
+                # A single filter may be directly appended to the command line
+                cmd = cmd + " -e class %s" % test_filters[0]
+
+        if filter_list_name:
+            self.device.push(filter_list_name, self.remote_filter_list)
+
+            if test_filters:
+                # We only remove the filter list if we generated it as a
+                # temporary file.
+                os.remove(filter_list_name)
+
+            cmd = cmd + " -e testFile %s" % self.remote_filter_list
+
         # enable code coverage reports
         if self.options.coverage:
             cmd = cmd + " -e coverage true"
@@ -201,7 +230,7 @@ class JUnitTestRunner(MochitestDesktop):
             return True
         return False
 
-    def run_tests(self, test_filters=None):
+    def run_tests(self, test_filters_file=None, test_filters=None):
         """
            Run the tests.
         """
@@ -211,6 +240,9 @@ class JUnitTestRunner(MochitestDesktop):
         if self.device.process_exist(self.options.app):
             raise Exception("%s already running before starting tests" %
                             self.options.app)
+        # test_filters_file and test_filters must be mutually-exclusive
+        if test_filters_file and test_filters:
+            raise Exception("Test filters may not be specified when test-filters-file is provided")
 
         self.test_started = False
         self.pass_count = 0
@@ -286,7 +318,8 @@ class JUnitTestRunner(MochitestDesktop):
         self.log.suite_start(["geckoview-junit"])
         try:
             self.device.grant_runtime_permissions(self.options.app)
-            cmd = self.build_command_line(test_filters)
+            cmd = self.build_command_line(test_filters_file=test_filters_file,
+                                          test_filters=test_filters)
             while self.need_more_runs():
                 self.class_name = ""
                 self.exception_message = ""
@@ -466,6 +499,12 @@ class JunitArgumentParser(argparse.ArgumentParser):
                           dest="sslPort",
                           default=DEFAULT_PORTS['https'],
                           help="ssl port of the remote web server.")
+        self.add_argument("--test-filters-file",
+                          action="store",
+                          type=str,
+                          dest="test_filters_file",
+                          default=None,
+                          help="Line-delimited file containing test filter(s)")
         # Remaining arguments are test filters.
         self.add_argument("test_filters",
                           nargs="*",
@@ -484,7 +523,8 @@ def run_test_harness(parser, options):
     result = -1
     try:
         device_exception = False
-        result = runner.run_tests(options.test_filters)
+        result = runner.run_tests(test_filters_file=options.test_filters_file,
+                                  test_filters=options.test_filters)
     except KeyboardInterrupt:
         log.info("runjunit.py | Received keyboard interrupt")
         result = -1
