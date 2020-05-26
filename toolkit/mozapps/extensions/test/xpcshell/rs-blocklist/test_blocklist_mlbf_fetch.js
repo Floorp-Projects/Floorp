@@ -173,7 +173,9 @@ add_task(async function handle_database_corruption() {
   // attachment is used as a fallback when the record is invalid. Here we also
   // check that there is a fallback when there is no record at all.
 
-  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [] });
+  // Include a dummy record in the list, to prevent RemoteSettings from
+  // importing a JSON dump with unexpected records.
+  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [{}] });
   // When the collection is empty, the last known MLBF should be used anyway.
   await checkBlocklistWorks();
 
