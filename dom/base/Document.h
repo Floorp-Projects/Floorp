@@ -870,6 +870,11 @@ class Document : public nsINode,
   }
 
   /**
+   * Returns true if exempt from HTTPS-Only Mode upgrade.
+   */
+  uint32_t HttpsOnlyStatus() const { return mHttpsOnlyStatus; }
+
+  /**
    * Get the list of ancestor outerWindowIDs for a document that correspond to
    * the ancestor principals (see above for more details).
    */
@@ -4921,6 +4926,10 @@ class Document : public nsINode,
 
   // Our update nesting level
   uint32_t mUpdateNestLevel;
+
+  // HTTPS-Only Mode Status
+  // Constants are defined at nsILoadInfo::HTTPS_ONLY_*
+  uint32_t mHttpsOnlyStatus;
 
   enum ViewportType : uint8_t {
     DisplayWidthHeight,

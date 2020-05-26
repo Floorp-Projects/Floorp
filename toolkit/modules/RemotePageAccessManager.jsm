@@ -65,6 +65,9 @@ let RemotePageAccessManager = {
       RPMIsWindowPrivate: ["*"],
       RPMAddToHistogram: ["*"],
     },
+    "about:httpsonlyerror": {
+      RPMSendAsyncMessage: ["goBack", "openInsecure"],
+    },
     "about:neterror": {
       RPMSendAsyncMessage: [
         "Browser:EnableOnlineMode",

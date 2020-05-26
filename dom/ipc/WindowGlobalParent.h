@@ -188,6 +188,8 @@ class WindowGlobalParent final : public WindowContext,
 
   void DidBecomeCurrentWindowGlobal(bool aCurrent);
 
+  uint32_t HttpsOnlyStatus() { return mHttpsOnlyStatus; }
+
  protected:
   const nsAString& GetRemoteType() override;
   JSActor::Type GetSide() override { return JSActor::Type::Parent; }
@@ -209,6 +211,7 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvUpdateDocumentCspSettings(
       bool aBlockAllMixedContent, bool aUpgradeInsecureRequests);
   mozilla::ipc::IPCResult RecvUpdateDocumentTitle(const nsString& aTitle);
+  mozilla::ipc::IPCResult RecvUpdateHttpsOnlyStatus(uint32_t aHttpsOnlyStatus);
   mozilla::ipc::IPCResult RecvSetIsInitialDocument(bool aIsInitialDocument) {
     mIsInitialDocument = aIsInitialDocument;
     return IPC_OK();
@@ -285,6 +288,9 @@ class WindowGlobalParent final : public WindowContext,
   bool mDocumentHasUserInteracted;
   bool mBlockAllMixedContent;
   bool mUpgradeInsecureRequests;
+
+  // HTTPS-Only Mode flags
+  uint32_t mHttpsOnlyStatus;
 };
 
 }  // namespace dom

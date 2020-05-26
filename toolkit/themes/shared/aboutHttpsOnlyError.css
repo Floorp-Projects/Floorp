@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  border: 1em solid #ffe900;
+}
+
+button {
+  padding-block: 0.5em;
+}
+
+.title {
+  background-image: url("chrome://global/content/httpsonlyerror/cert-error.svg");
+}
+
+em {
+  font-style: normal;
+  font-weight: 600;
+}
+
+.button-container {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: end;
+}
+
+@media only screen and (max-width: 480px) {
+  .button-container button {
+    width: 100%;
+    margin: 0.66em 0 0;
+  }
+}
