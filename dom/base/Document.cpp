@@ -1846,40 +1846,6 @@ Document::~Document() {
 
     // don't report for about: pages
     if (!IsAboutPage()) {
-      // Record the page load
-      uint32_t pageLoaded = 1;
-      Accumulate(Telemetry::MIXED_CONTENT_UNBLOCK_COUNTER, pageLoaded);
-      // Record the mixed content status of the docshell in Telemetry
-      enum {
-        NO_MIXED_CONTENT = 0,  // There is no Mixed Content on the page
-        MIXED_DISPLAY_CONTENT =
-            1,  // The page attempted to load Mixed Display Content
-        MIXED_ACTIVE_CONTENT =
-            2,  // The page attempted to load Mixed Active Content
-        MIXED_DISPLAY_AND_ACTIVE_CONTENT =
-            3  // The page attempted to load Mixed Display & Mixed Active
-               // Content
-      };
-
-      bool mixedActiveLoaded = GetHasMixedActiveContentLoaded();
-      bool mixedActiveBlocked = GetHasMixedActiveContentBlocked();
-
-      bool mixedDisplayLoaded = GetHasMixedDisplayContentLoaded();
-      bool mixedDisplayBlocked = GetHasMixedDisplayContentBlocked();
-
-      bool hasMixedDisplay = (mixedDisplayBlocked || mixedDisplayLoaded);
-      bool hasMixedActive = (mixedActiveBlocked || mixedActiveLoaded);
-
-      uint32_t mixedContentLevel = NO_MIXED_CONTENT;
-      if (hasMixedDisplay && hasMixedActive) {
-        mixedContentLevel = MIXED_DISPLAY_AND_ACTIVE_CONTENT;
-      } else if (hasMixedActive) {
-        mixedContentLevel = MIXED_ACTIVE_CONTENT;
-      } else if (hasMixedDisplay) {
-        mixedContentLevel = MIXED_DISPLAY_CONTENT;
-      }
-      Accumulate(Telemetry::MIXED_CONTENT_PAGE_LOAD, mixedContentLevel);
-
       // record CSP telemetry on this document
       if (mHasCSP) {
         Accumulate(Telemetry::CSP_DOCUMENTS_COUNT, 1);

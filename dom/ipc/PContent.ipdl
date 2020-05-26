@@ -988,6 +988,8 @@ parent:
 
     async OpenNotificationSettings(Principal principal);
 
+    async AddMixedContentSecurityState(MaybeDiscardedWindowContext aContext, uint32_t aStateFlags);
+
     // Request that the ServiceWorkerManager in the parent process create a
     // notification "click" or "close" event and dispatch it on the relevant
     // ServiceWorker. This needs to happen because when a notification is

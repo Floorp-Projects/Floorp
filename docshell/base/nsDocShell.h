@@ -1146,9 +1146,6 @@ class nsDocShell final : public nsDocLoader,
   // Editor data, if this document is designMode or contentEditable.
   mozilla::UniquePtr<nsDocShellEditorData> mEditorData;
 
-  // Secure browser UI object
-  nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
-
   // The URI we're currently loading. This is only relevant during the
   // firing of a pagehide/unload. The caller of FirePageHideNotification()
   // is responsible for setting it and unsetting it. It may be null if the

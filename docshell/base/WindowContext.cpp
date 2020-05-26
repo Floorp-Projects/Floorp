@@ -218,6 +218,24 @@ void WindowContext::Discard() {
   Group()->Unregister(this);
 }
 
+void WindowContext::AddMixedContentSecurityState(uint32_t aStateFlags) {
+  MOZ_ASSERT(TopWindowContext() == this);
+  MOZ_ASSERT((aStateFlags &
+              (nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT |
+               nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT |
+               nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT |
+               nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT)) ==
+                 aStateFlags,
+             "Invalid flags specified!");
+
+  if (XRE_IsParentProcess()) {
+    Canonical()->AddMixedContentSecurityState(aStateFlags);
+  } else {
+    ContentChild* child = ContentChild::GetSingleton();
+    child->SendAddMixedContentSecurityState(this, aStateFlags);
+  }
+}
+
 WindowContext::IPCInitializer WindowContext::GetIPCInitializer() {
   IPCInitializer init;
   init.mInnerWindowId = mInnerWindowId;
