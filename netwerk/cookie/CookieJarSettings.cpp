@@ -425,25 +425,22 @@ void CookieJarSettings::UpdateIsOnContentBlockingAllowList(
   MOZ_ASSERT(aChannel);
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-#ifdef DEBUG
-  RefPtr<dom::BrowsingContext> bc;
-  MOZ_ALWAYS_SUCCEEDS(loadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
-  MOZ_ASSERT(bc->IsTop());
-#endif
-
-  nsCOMPtr<nsIURI> uriBeingLoaded =
-      AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(aChannel);
-  nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   // We need to recompute the ContentBlockingAllowListPrincipal here for the
   // top level channel because we might navigate from the the initial
   // about:blank page or the existing page which may have a different origin
   // than the URI we are going to load here. Thus, we need to recompute the
   // prinicpal in order to get the correct ContentBlockingAllowListPrincipal.
+  nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
   OriginAttributes attrs;
   loadInfo->GetOriginAttributes(&attrs);
   ContentBlockingAllowList::RecomputePrincipal(
-      uriBeingLoaded, attrs, getter_AddRefs(contentBlockingAllowListPrincipal));
+      uri, attrs, getter_AddRefs(contentBlockingAllowListPrincipal));
 
   if (!contentBlockingAllowListPrincipal ||
       !contentBlockingAllowListPrincipal->GetIsContentPrincipal()) {
