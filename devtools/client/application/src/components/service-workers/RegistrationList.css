@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: row;
   column-gap: calc(var(--base-unit) * 2);
-  align-items: center;
+  align-items: baseline;
   font-size: var(--body-10-font-size);
   font-weight: var(--body-10-font-weight);
 }
@@ -20,7 +20,13 @@
   width: calc(var(--base-unit) * 4);
   height: calc(var(--base-unit) * 4);
   content: "";
-  background-image: url(chrome://browser/skin/developer.svg)
+  background-image: url(chrome://browser/skin/developer.svg);
+  /* the icon size is taller than the line-height of the text. Since the
+     text can occupy multiple lines, and we want to keep the icon aligned
+     with respect to the first line, instead of align-items: center in
+     .aboutdebugging-plug, we use baseline, and fine tune the position here. */
+  position: relative;
+  top: 3px;
 }
 
 .registrations-container {

@@ -11,6 +11,5 @@ DevToolsModules(
     'RegistrationListEmpty.js',
     'Worker.css',
     'Worker.js',
-    'WorkersPage.css',
     'WorkersPage.js',
 )
