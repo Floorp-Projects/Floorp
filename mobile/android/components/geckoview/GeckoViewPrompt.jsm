@@ -20,17 +20,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompt"); // eslint-disable-line no-unused-vars
 
-function PromptFactory() {
-  this.wrappedJSObject = this;
-}
-
-PromptFactory.prototype = {
-  classID: Components.ID("{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"),
-
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPromptFactory,
-    Ci.nsIPromptService,
-  ]),
+class PromptFactory {
+  constructor() {
+    this.wrappedJSObject = this;
+  }
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
@@ -44,7 +37,7 @@ PromptFactory.prototype = {
         this._handlePopupBlocked(aEvent);
         break;
     }
-  },
+  }
 
   _handleClick(aEvent) {
     const target = aEvent.composedTarget;
@@ -76,7 +69,7 @@ PromptFactory.prototype = {
         aEvent.preventDefault();
       }
     }
-  },
+  }
 
   _handleSelect(aElement) {
     const win = aElement.ownerGlobal;
@@ -164,7 +157,7 @@ PromptFactory.prototype = {
         }
       }
     );
-  },
+  }
 
   _handleDateTime(aElement, aType) {
     const prompt = new GeckoViewPrompter(aElement.ownerGlobal);
@@ -190,7 +183,7 @@ PromptFactory.prototype = {
         this._dispatchEvents(aElement);
       }
     );
-  },
+  }
 
   _dispatchEvents(aElement) {
     // Fire both "input" and "change" events for <select> and <input> for
@@ -201,7 +194,7 @@ PromptFactory.prototype = {
     aElement.dispatchEvent(
       new aElement.ownerGlobal.Event("change", { bubbles: true })
     );
-  },
+  }
 
   _handleContextMenu(aEvent) {
     const target = aEvent.composedTarget;
@@ -322,7 +315,7 @@ PromptFactory.prototype = {
     );
 
     aEvent.preventDefault();
-  },
+  }
 
   _handlePopupBlocked(aEvent) {
     const dwi = aEvent.requestingWindow;
@@ -346,7 +339,7 @@ PromptFactory.prototype = {
         }
       }
     );
-  },
+  }
 
   /* ----------  nsIPromptFactory  ---------- */
   getPrompt(aDOMWin, aIID) {
@@ -365,7 +358,7 @@ PromptFactory.prototype = {
     const p = new PromptDelegate(aDOMWin);
     p.QueryInterface(aIID);
     return p;
-  },
+  }
 
   /* ----------  private memebers  ---------- */
 
@@ -380,89 +373,94 @@ PromptFactory.prototype = {
       [, /*domWindow*/ ...promptArgs] = aArguments;
     }
     return prompt[aMethod].apply(prompt, promptArgs);
-  },
+  }
 
   /* ----------  nsIPromptService  ---------- */
 
   alert() {
     return this.callProxy("alert", arguments);
-  },
+  }
   alertBC() {
     return this.callProxy("alert", arguments);
-  },
+  }
   alertCheck() {
     return this.callProxy("alertCheck", arguments);
-  },
+  }
   alertCheckBC() {
     return this.callProxy("alertCheck", arguments);
-  },
+  }
   confirm() {
     return this.callProxy("confirm", arguments);
-  },
+  }
   confirmBC() {
     return this.callProxy("confirm", arguments);
-  },
+  }
   confirmCheck() {
     return this.callProxy("confirmCheck", arguments);
-  },
+  }
   confirmCheckBC() {
     return this.callProxy("confirmCheck", arguments);
-  },
+  }
   confirmEx() {
     return this.callProxy("confirmEx", arguments);
-  },
+  }
   confirmExBC() {
     return this.callProxy("confirmEx", arguments);
-  },
+  }
   prompt() {
     return this.callProxy("prompt", arguments);
-  },
+  }
   promptBC() {
     return this.callProxy("prompt", arguments);
-  },
+  }
   promptUsernameAndPassword() {
     return this.callProxy("promptUsernameAndPassword", arguments);
-  },
+  }
   promptUsernameAndPasswordBC() {
     return this.callProxy("promptUsernameAndPassword", arguments);
-  },
+  }
   promptPassword() {
     return this.callProxy("promptPassword", arguments);
-  },
+  }
   promptPasswordBC() {
     return this.callProxy("promptPassword", arguments);
-  },
+  }
   select() {
     return this.callProxy("select", arguments);
-  },
+  }
   selectBC() {
     return this.callProxy("select", arguments);
-  },
-
+  }
   promptAuth() {
     return this.callProxy("promptAuth", arguments);
-  },
+  }
   promptAuthBC() {
     return this.callProxy("promptAuth", arguments);
-  },
+  }
   asyncPromptAuth() {
     return this.callProxy("asyncPromptAuth", arguments);
-  },
+  }
   asyncPromptAuthBC() {
     return this.callProxy("asyncPromptAuth", arguments);
-  },
-};
-
-function PromptDelegate(aParent) {
-  this._prompter = new GeckoViewPrompter(aParent);
+  }
 }
 
-PromptDelegate.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
+PromptFactory.prototype.classID = Components.ID(
+  "{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"
+);
+PromptFactory.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIPromptFactory,
+  Ci.nsIPromptService,
+]);
 
-  BUTTON_TYPE_POSITIVE: 0,
-  BUTTON_TYPE_NEUTRAL: 1,
-  BUTTON_TYPE_NEGATIVE: 2,
+class PromptDelegate {
+  constructor(aParent) {
+    this._prompter = new GeckoViewPrompter(aParent);
+  }
+
+  BUTTON_TYPE_POSITIVE = 0;
+  BUTTON_TYPE_NEUTRAL = 1;
+  BUTTON_TYPE_NEGATIVE = 2;
 
   /* ---------- internal methods ---------- */
 
@@ -471,7 +469,7 @@ PromptDelegate.prototype = {
       title: aTitle,
       msg: aText,
     });
-  },
+  }
 
   _addCheck(aCheckMsg, aCheckState, aMsg) {
     return Object.assign(aMsg, {
@@ -479,13 +477,13 @@ PromptDelegate.prototype = {
       checkMsg: aCheckMsg,
       checkValue: aCheckState && aCheckState.value,
     });
-  },
+  }
 
   /* ----------  nsIPrompt  ---------- */
 
   alert(aTitle, aText) {
     this.alertCheck(aTitle, aText);
-  },
+  }
 
   alertCheck(aTitle, aText, aCheckMsg, aCheckState) {
     const result = this._prompter.showPrompt(
@@ -500,12 +498,12 @@ PromptDelegate.prototype = {
     if (result && aCheckState) {
       aCheckState.value = !!result.checkValue;
     }
-  },
+  }
 
   confirm(aTitle, aText) {
     // Button 0 is OK.
     return this.confirmCheck(aTitle, aText);
-  },
+  }
 
   confirmCheck(aTitle, aText, aCheckMsg, aCheckState) {
     // Button 0 is OK.
@@ -521,7 +519,7 @@ PromptDelegate.prototype = {
         aCheckState
       ) == 0
     );
-  },
+  }
 
   confirmEx(
     aTitle,
@@ -593,7 +591,7 @@ PromptDelegate.prototype = {
       aCheckState.value = !!result.checkValue;
     }
     return result && result.button in btnMap ? btnMap[result.button] : -1;
-  },
+  }
 
   prompt(aTitle, aText, aValue, aCheckMsg, aCheckState) {
     const result = this._prompter.showPrompt(
@@ -617,7 +615,7 @@ PromptDelegate.prototype = {
     }
     aValue.value = result.text || "";
     return true;
-  },
+  }
 
   promptPassword(aTitle, aText, aPassword, aCheckMsg, aCheckState) {
     return this._promptUsernameAndPassword(
@@ -628,7 +626,7 @@ PromptDelegate.prototype = {
       aCheckMsg,
       aCheckState
     );
-  },
+  }
 
   promptUsernameAndPassword(
     aTitle,
@@ -664,7 +662,7 @@ PromptDelegate.prototype = {
     }
     aPassword.value = result.password || "";
     return true;
-  },
+  }
 
   select(aTitle, aText, aSelectList, aOutSelection) {
     const choices = Array.prototype.map.call(aSelectList, (item, index) => ({
@@ -687,7 +685,7 @@ PromptDelegate.prototype = {
     }
     aOutSelection.value = Number(result.choices[0]);
     return true;
-  },
+  }
 
   _getAuthMsg(aChannel, aLevel, aAuthInfo) {
     let username;
@@ -717,7 +715,7 @@ PromptDelegate.prototype = {
         },
       }
     );
-  },
+  }
 
   _fillAuthInfo(aAuthInfo, aCheckState, aResult) {
     if (aResult && aCheckState) {
@@ -744,7 +742,7 @@ PromptDelegate.prototype = {
     }
     aAuthInfo.username = username;
     return true;
-  },
+  }
 
   promptAuth(aChannel, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
     const result = this._prompter.showPrompt(
@@ -758,7 +756,7 @@ PromptDelegate.prototype = {
     // Cancel: result && result.password === undefined
     // Error: !result
     return this._fillAuthInfo(aAuthInfo, aCheckState, result);
-  },
+  }
 
   asyncPromptAuth(
     aChannel,
@@ -802,7 +800,7 @@ PromptDelegate.prototype = {
         aCallback.onAuthCancelled(aContext, /* userCancel */ false);
       },
     };
-  },
+  }
 
   _getAuthText(aChannel, aAuthInfo) {
     const isProxy = aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY;
@@ -855,7 +853,7 @@ PromptDelegate.prototype = {
     }
 
     return text;
-  },
+  }
 
   _getAuthTarget(aChannel, aAuthInfo) {
     // If our proxy is demanding authentication, don't use the
@@ -895,5 +893,9 @@ PromptDelegate.prototype = {
       realm = displayHost;
     }
     return { displayHost, realm };
-  },
-};
+  }
+}
+
+PromptDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIPrompt,
+]);
