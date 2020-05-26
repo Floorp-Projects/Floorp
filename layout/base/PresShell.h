@@ -748,12 +748,13 @@ class PresShell final : public nsStubDocumentObserver,
   bool IsPaintingFrameCounts();
 #endif  // #ifdef MOZ_REFLOW_PERF
 
-#ifdef DEBUG
   // Debugging hooks
+#ifdef DEBUG
   void ListComputedStyles(FILE* out, int32_t aIndent = 0);
-
+#endif
+#if defined(DEBUG) || defined(MOZ_LAYOUT_DEBUGGER)
   void ListStyleSheets(FILE* out, int32_t aIndent = 0);
-#endif  // #ifdef DEBUG
+#endif
 
   /**
    * Stop all active elements (plugins and the caret) in this presentation and

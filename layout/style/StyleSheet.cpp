@@ -1004,34 +1004,75 @@ size_t StyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return n;
 }
 
-#ifdef DEBUG
-void StyleSheet::List(FILE* out, int32_t aIndent) const {
-  int32_t index;
-
-  // Indent
-  nsAutoCString str;
-  for (index = aIndent; --index >= 0;) {
-    str.AppendLiteral("  ");
+#if defined(DEBUG) || defined(MOZ_LAYOUT_DEBUGGER)
+void StyleSheet::List(FILE* aOut, int32_t aIndent) {
+  for (StyleSheet* child : ChildSheets()) {
+    child->List(aOut, aIndent);
   }
 
-  str.AppendLiteral("CSS Style Sheet: ");
-  nsAutoCString urlSpec;
-  nsresult rv = GetSheetURI()->GetSpec(urlSpec);
-  if (NS_SUCCEEDED(rv) && !urlSpec.IsEmpty()) {
-    str.Append(urlSpec);
+  nsCString line;
+  for (int i = 0; i < aIndent; ++i) {
+    line.AppendLiteral("  ");
+  }
+
+  line.AppendLiteral("/* ");
+
+  nsCString url;
+  GetSheetURI()->GetSpec(url);
+  if (url.IsEmpty()) {
+    line.AppendLiteral("(no URL)");
+  } else {
+    line.Append(url);
+  }
+
+  line.AppendLiteral(" (");
+
+  switch (GetOrigin()) {
+    case StyleOrigin::UserAgent:
+      line.AppendLiteral("User Agent");
+      break;
+    case StyleOrigin::User:
+      line.AppendLiteral("User");
+      break;
+    case StyleOrigin::Author:
+      line.AppendLiteral("Author");
+      break;
   }
 
   if (mMedia) {
-    str.AppendLiteral(" media: ");
-    nsAutoString buffer;
+    nsString buffer;
     mMedia->GetText(buffer);
-    AppendUTF16toUTF8(buffer, str);
-  }
-  str.Append('\n');
-  fprintf_stderr(out, "%s", str.get());
 
-  for (const StyleSheet* child : ChildSheets()) {
-    child->List(out, aIndent + 1);
+    if (!buffer.IsEmpty()) {
+      line.AppendLiteral(", ");
+      AppendUTF16toUTF8(buffer, line);
+    }
+  }
+
+  line.AppendLiteral(") */");
+
+  fprintf_stderr(aOut, "%s\n\n", line.get());
+
+  nsCString newlineIndent;
+  newlineIndent.Append('\n');
+  for (int i = 0; i < aIndent; ++i) {
+    newlineIndent.AppendLiteral("  ");
+  }
+
+  ServoCSSRuleList* ruleList = GetCssRulesInternal();
+  for (uint32_t i = 0, len = ruleList->Length(); i < len; ++i) {
+    nsString cssText;
+    css::Rule* rule = ruleList->GetRule(i);
+    rule->GetCssText(cssText);
+
+    NS_ConvertUTF16toUTF8 s(cssText);
+    s.ReplaceSubstring(NS_LITERAL_CSTRING("\n"), newlineIndent);
+
+    fprintf_stderr(aOut, "%s\n", s.get());
+  }
+
+  if (ruleList->Length() != 0) {
+    fprintf_stderr(aOut, "\n");
   }
 }
 #endif
