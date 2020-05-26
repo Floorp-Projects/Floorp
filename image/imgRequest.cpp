@@ -62,15 +62,15 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
       mCORSMode(imgIRequest::CORS_NONE),
       mImageErrorCode(NS_OK),
       mImageAvailable(false),
+      mIsDeniedCrossSiteCORSRequest(false),
+      mIsCrossSiteNoCORSRequest(false),
       mMutex("imgRequest"),
       mProgressTracker(new ProgressTracker()),
       mIsMultiPartChannel(false),
       mIsInCache(false),
       mDecodeRequested(false),
       mNewPartPending(false),
-      mHadInsecureRedirect(false),
-      mIsDeniedCrossSiteCORSRequest(false),
-      mIsCrossSiteNoCORSRequest(false) {
+      mHadInsecureRedirect(false) {
   LOG_FUNC(gImgLog, "imgRequest::imgRequest()");
 }
 
