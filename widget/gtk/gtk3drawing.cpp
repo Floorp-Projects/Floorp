@@ -2649,13 +2649,14 @@ gint moz_gtk_get_menu_separator_height(gint* size) {
   return MOZ_GTK_SUCCESS;
 }
 
-void moz_gtk_get_entry_min_height(gint* height) {
+void moz_gtk_get_entry_min_height(gint* min_content_height,
+                                  gint* border_padding_height) {
   GtkStyleContext* style = GetStyleContext(MOZ_GTK_ENTRY);
   if (!gtk_check_version(3, 20, 0)) {
     gtk_style_context_get(style, gtk_style_context_get_state(style),
-                          "min-height", height, nullptr);
+                          "min-height", min_content_height, nullptr);
   } else {
-    *height = 0;
+    *min_content_height = 0;
   }
 
   GtkBorder border;
@@ -2665,7 +2666,8 @@ void moz_gtk_get_entry_min_height(gint* height) {
   gtk_style_context_get_padding(style, gtk_style_context_get_state(style),
                                 &padding);
 
-  *height += (border.top + border.bottom + padding.top + padding.bottom);
+  *border_padding_height =
+      (border.top + border.bottom + padding.top + padding.bottom);
 }
 
 void moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
