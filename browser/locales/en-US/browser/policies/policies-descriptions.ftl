@@ -109,8 +109,6 @@ policy-FirefoxHome = Configure Firefox Home.
 
 policy-FlashPlugin = Allow or deny usage of the Flash plugin.
 
-policy-Handlers = Configure default application handlers.
-
 policy-HardwareAcceleration = If false, turn off hardware acceleration.
 
 # “lock” means that the user won’t be able to change this setting
