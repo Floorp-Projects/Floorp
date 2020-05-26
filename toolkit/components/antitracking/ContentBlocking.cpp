@@ -1107,6 +1107,18 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     blockedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
   }
 
+  RefPtr<BrowsingContext> targetBC;
+  rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(targetBC));
+  if (!targetBC || NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Failed to get the channel's target browsing context"));
+  }
+
+  if (targetBC && thirdParty &&
+      Document::StorageAccessSandboxed(targetBC->GetSandboxFlags())) {
+    LOG(("Our document is sandboxed"));
+    return false;
+  }
+
   // Let's see if we have to grant the access for this particular channel.
 
   nsCOMPtr<nsIURI> trackingURI;
@@ -1128,18 +1140,12 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   bool isDocument = false;
   aChannel->GetIsDocument(&isDocument);
 
-  if (isDocument) {
-    RefPtr<BrowsingContext> bc;
-    rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(bc));
-    if (!bc || NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(("Failed to get the channel's target browsing context"));
-    } else {
-      nsCOMPtr<nsPIDOMWindowInner> inner =
-          AntiTrackingUtils::GetInnerWindow(bc);
-      if (inner && inner->HasStorageAccessGranted()) {
-        LOG(("Permission stored in the window. All good."));
-        return true;
-      }
+  if (isDocument && targetBC) {
+    nsCOMPtr<nsPIDOMWindowInner> inner =
+        AntiTrackingUtils::GetInnerWindow(targetBC);
+    if (inner && inner->HasStorageAccessGranted()) {
+      LOG(("Permission stored in the window. All good."));
+      return true;
     }
   }
 
