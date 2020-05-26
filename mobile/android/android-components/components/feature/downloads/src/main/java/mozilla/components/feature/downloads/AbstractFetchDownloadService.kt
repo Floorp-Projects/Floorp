@@ -40,7 +40,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_RANGE
 import mozilla.components.concept.fetch.Headers.Names.RANGE
@@ -53,7 +55,6 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Downloa
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.PAUSED
 import mozilla.components.feature.downloads.DownloadNotification.NOTIFICATION_DOWNLOAD_GROUP_ID
 import mozilla.components.feature.downloads.ext.addCompletedDownload
-import mozilla.components.feature.downloads.ext.getDownloadExtra
 import mozilla.components.feature.downloads.ext.withResponse
 import mozilla.components.feature.downloads.facts.emitNotificationResumeFact
 import mozilla.components.feature.downloads.facts.emitNotificationPauseFact
@@ -77,6 +78,7 @@ import kotlin.random.Random
  */
 @Suppress("TooManyFunctions", "LargeClass")
 abstract class AbstractFetchDownloadService : Service() {
+    protected abstract val store: BrowserStore
 
     private val notificationUpdateScope = MainScope()
 
@@ -90,6 +92,8 @@ abstract class AbstractFetchDownloadService : Service() {
 
     internal var downloadJobs = mutableMapOf<Long, DownloadJobState>()
 
+    // TODO Move this to browser store and make immutable:
+    // https://github.com/mozilla-mobile/android-components/issues/7050
     internal data class DownloadJobState(
         var job: Job? = null,
         @Volatile var state: DownloadState,
@@ -230,7 +234,9 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val download = intent?.getDownloadExtra() ?: return START_REDELIVER_INTENT
+        val download = intent?.getLongExtra(EXTRA_DOWNLOAD_ID, -1)?.let {
+            store.state.queuedDownloads[it]
+        } ?: return START_REDELIVER_INTENT
 
         // If the job already exists, then don't create a new ID. This can happen when calling tryAgain
         val foregroundServiceId = downloadJobs[download.id]?.foregroundServiceId ?: Random.nextInt()
@@ -376,6 +382,7 @@ abstract class AbstractFetchDownloadService : Service() {
     @VisibleForTesting
     internal fun removeDownloadJob(downloadJobState: DownloadJobState) {
         downloadJobs.remove(downloadJobState.state.id)
+        store.dispatch(DownloadAction.RemoveQueuedDownloadAction(downloadJobState.state.id))
         if (downloadJobs.isEmpty()) {
             stopSelf()
         } else {
@@ -570,7 +577,6 @@ abstract class AbstractFetchDownloadService : Service() {
 
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, getDownloadJobStatus(downloadState))
-        intent.putExtra(EXTRA_DOWNLOAD, downloadState.state)
         intent.putExtra(EXTRA_DOWNLOAD_ID, downloadState.state.id)
 
         broadcastManager.sendBroadcast(intent)
@@ -725,7 +731,6 @@ abstract class AbstractFetchDownloadService : Service() {
          */
         internal const val PROGRESS_UPDATE_INTERVAL = 750L
 
-        const val EXTRA_DOWNLOAD = "mozilla.components.feature.downloads.extras.DOWNLOAD"
         const val EXTRA_DOWNLOAD_STATUS = "mozilla.components.feature.downloads.extras.DOWNLOAD_STATUS"
         const val ACTION_OPEN = "mozilla.components.feature.downloads.OPEN"
         const val ACTION_PAUSE = "mozilla.components.feature.downloads.PAUSE"

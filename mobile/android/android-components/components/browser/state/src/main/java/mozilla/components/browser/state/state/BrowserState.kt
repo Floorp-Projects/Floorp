@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.state
 
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.lib.state.State
 
 /**
@@ -16,11 +17,13 @@ import mozilla.components.lib.state.State
  * The extensions here represent the default values for all [BrowserState.extensions] and can
  * be overridden per [SessionState].
  * @property media The state of all media elements and playback states for all tabs.
+ * @property queuedDownloads queued downloads ([DownloadState]s) mapped to their IDs.
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
     val selectedTabId: String? = null,
     val customTabs: List<CustomTabSessionState> = emptyList(),
     val extensions: Map<String, WebExtensionState> = emptyMap(),
-    val media: MediaState = MediaState()
+    val media: MediaState = MediaState(),
+    val queuedDownloads: Map<Long, DownloadState> = emptyMap()
 ) : State

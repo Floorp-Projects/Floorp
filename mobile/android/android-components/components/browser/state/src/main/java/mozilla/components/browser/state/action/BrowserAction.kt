@@ -558,3 +558,23 @@ sealed class MediaAction : BrowserAction() {
         val aggregate: MediaState.Aggregate
     ) : MediaAction()
 }
+
+/**
+ * [BrowserAction] implementations related to updating the global download state.
+ */
+sealed class DownloadAction : BrowserAction() {
+    /**
+     * Updates the [BrowserState] to track the provided [download] as queued.
+     */
+    data class QueueDownloadAction(val download: DownloadState) : DownloadAction()
+
+    /**
+     * Updates the [BrowserState] to remove the queued download with the provided [downloadId].
+     */
+    data class RemoveQueuedDownloadAction(val downloadId: Long) : DownloadAction()
+
+    /**
+     * Updates the [BrowserState] to remove all queued downloads.
+     */
+    object RemoveAllQueuedDownloadsAction : DownloadAction()
+}

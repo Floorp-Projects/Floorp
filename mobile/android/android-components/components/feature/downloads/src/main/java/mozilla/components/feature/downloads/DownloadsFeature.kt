@@ -52,14 +52,14 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  * @property dialog a reference to a [DownloadDialogFragment]. If not provided, an
  * instance of [SimpleDownloadDialogFragment] will be used.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class DownloadsFeature(
     private val applicationContext: Context,
     private val store: BrowserStore,
     private val useCases: DownloadsUseCases,
     override var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
     onDownloadStopped: onDownloadStopped = noop,
-    private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext),
+    private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext, store),
     private val tabId: String? = null,
     private val fragmentManager: FragmentManager? = null,
     private val promptsStyling: PromptsStyling? = null,
