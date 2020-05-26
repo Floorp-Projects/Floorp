@@ -227,7 +227,7 @@ body.dark blockquote {
 
 .toolbar-container {
   position: sticky;
-  z-index: 1;
+  z-index: 2;
   top: 32px;
   height: 0; /* take up no space, so body is at the top. */
 
@@ -412,10 +412,6 @@ button:disabled {
   border: 1px solid var(--popup-border);
   box-shadow: 0 4px 6px 0 var(--popup-shadow);
   border-bottom-width: 0;
-}
-
-.keep-open .dropdown-popup {
-  z-index: initial;
 }
 
 .dropdown-popup > hr {
