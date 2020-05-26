@@ -279,6 +279,12 @@ for (const test of tests) {
       "Should have correctly overridden or not."
     );
 
+    Assert.equal(
+      engine.telemetryId,
+      "simple" + (test.expected.overridesEngine ? "-addon" : ""),
+      "Should set the correct telemetry Id"
+    );
+
     if (test.expected.overridesEngine) {
       let submission = engine.getSubmission("{searchTerms}");
       Assert.equal(
@@ -307,6 +313,27 @@ for (const test of tests) {
           "Should have overridden the postData"
         );
       }
+
+      // As we're not testing the WebExtension manager as well,
+      // set this engine as default so we can check the telemetry data.
+      let oldDefaultEngine = Services.search.defaultEngine;
+      Services.search.defaultEngine = engine;
+
+      let engineInfo = await Services.search.getDefaultEngineInfo();
+      Assert.deepEqual(
+        engineInfo,
+        {
+          defaultSearchEngine: "simple-addon",
+          defaultSearchEngineData: {
+            loadPath: "[other]addEngineWithDetails:simple@search.mozilla.org",
+            name: "Simple Engine",
+            origin: "default",
+            submissionURL: test.expected.searchUrl.replace("{searchTerms}", ""),
+          },
+        },
+        "Should return the extended identifier and alternate submission url to telemetry"
+      );
+      Services.search.defaultEngine = oldDefaultEngine;
 
       engine.wrappedJSObject.removeExtensionOverride();
     }
