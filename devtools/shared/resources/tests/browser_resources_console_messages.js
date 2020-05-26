@@ -63,7 +63,12 @@ add_task(async function() {
     () => availableResources.length === expectedRuntimeConsoleCalls.length
   );
   for (let i = 0; i < expectedRuntimeConsoleCalls.length; i++) {
-    const { message } = availableResources[i];
+    const { message, targetFront } = availableResources[i];
+    is(
+      targetFront,
+      targetList.targetFront,
+      "The targetFront property is the expected one"
+    );
     const expected = expectedRuntimeConsoleCalls[i];
     checkConsoleAPICall(message, expected);
   }
