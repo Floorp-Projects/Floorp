@@ -182,6 +182,11 @@ async function captureProfile(pageContext) {
     // The profiler is not active, ignore this shortcut.
     return;
   }
+  if (Services.profiler.IsPaused()) {
+    // The profiler is already paused for capture, ignore this shortcut.
+    return;
+  }
+
   // Pause profiler before we collect the profile, so that we don't capture
   // more samples while the parent process waits for subprocess profiles.
   Services.profiler.PauseSampling();
@@ -250,6 +255,11 @@ function stopProfiler() {
  * @return {void}
  */
 function toggleProfiler(pageContext) {
+  if (Services.profiler.IsPaused()) {
+    // The profiler is currently paused, which means that the user is already
+    // attempting to capture a profile. Ignore this request.
+    return;
+  }
   if (Services.profiler.IsActive()) {
     stopProfiler();
   } else {
