@@ -33,10 +33,6 @@
                     .contentDocument.body.innerHTML.includes("<p>Subframe</p>"));
     }));
 
-    below_viewport_iframe.promise.catch(
-      t.unreached_func("The iframe request should not load relative to the " +
-                       "current (incorrect) base URL.")
-    );
   }, "When a loading=lazy iframe is loaded, it loads relative to the " +
      "document's base URL computed at parse-time.");
 </script>
@@ -49,6 +45,5 @@
     window.history.pushState(1, document.title, 'resources/')
   </script>
   <iframe id="below-viewport" src="subframe.html" loading="lazy" width="200px"
-          height="100px" onload="below_viewport_iframe.resolve()"
-          onerror="below_viewport_iframe.reject()"></iframe>
+          height="100px" onload="below_viewport_iframe.resolve()"</iframe>
 </body>
