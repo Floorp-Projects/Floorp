@@ -36,7 +36,6 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
-import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.accounts.FxaCapability
 import mozilla.components.feature.accounts.FxaWebChannelFeature
 import mozilla.components.feature.app.links.AppLinksFeature
