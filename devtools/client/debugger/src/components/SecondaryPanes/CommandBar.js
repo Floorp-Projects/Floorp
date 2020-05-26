@@ -297,6 +297,7 @@ class CommandBar extends Component<Props> {
         {this.renderStepButtons()}
         <div className="filler" />
         {this.renderSkipPausingButton()}
+        <div className="devtools-separator" />
         {this.renderSettingsButton()}
       </div>
     );
