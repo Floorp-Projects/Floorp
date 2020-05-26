@@ -102,11 +102,6 @@ class CompositorAnimationStorage final {
                         const TransformData& aData);
 
   /**
-   * Set the animation transform in device pixel based on the unique id
-   */
-  void SetAnimatedValue(uint64_t aId, gfx::Matrix4x4&& aTransformInDevSpace);
-
-  /**
    * Set the animation opacity based on the unique id
    */
   void SetAnimatedValue(uint64_t aId, const float& aOpacity);
