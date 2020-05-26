@@ -989,9 +989,9 @@ class SourceFile(object):
 
         if drop_cached and "__cached_properties__" in self.__dict__:
             cached_properties = self.__dict__["__cached_properties__"]
-            for key in cached_properties:
-                if str(key) in self.__dict__:
-                    del self.__dict__[str(key)]
+            for prop in cached_properties:
+                if prop in self.__dict__:
+                    del self.__dict__[prop]
             del self.__dict__["__cached_properties__"]
 
         return rv
