@@ -1,10 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PushService"];
-
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
@@ -52,24 +54,34 @@ function scopeWithAttrs(scope, attrs) {
   return scope + ChromeUtils.originAttributesToSuffix(attrs);
 }
 
-class PushService {
-  constructor() {
-    this.wrappedJSObject = this;
-  }
+function PushService() {
+  this.wrappedJSObject = this;
+}
 
-  pushTopic = OBSERVER_TOPIC_PUSH;
-  subscriptionChangeTopic = OBSERVER_TOPIC_SUBSCRIPTION_CHANGE;
-  subscriptionModifiedTopic = OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED;
+PushService.prototype = {
+  classID: Components.ID("{a54d84d7-98a4-4fec-b664-e42e512ae9cc}"),
+  contractID: "@mozilla.org/push/Service;1",
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+    Ci.nsIPushService,
+    Ci.nsIPushQuotaManager,
+    Ci.nsIPushErrorReporter,
+  ]),
+
+  pushTopic: OBSERVER_TOPIC_PUSH,
+  subscriptionChangeTopic: OBSERVER_TOPIC_SUBSCRIPTION_CHANGE,
+  subscriptionModifiedTopic: OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED,
 
   // nsIObserver methods
 
-  observe(subject, topic, data) {}
+  observe(subject, topic, data) {},
 
   // nsIPushService methods
 
   subscribe(scope, principal, callback) {
     this.subscribeWithKey(scope, principal, null, callback);
-  }
+  },
 
   async subscribeWithKey(scope, principal, appServerKey, callback) {
     try {
@@ -97,7 +109,7 @@ class PushService {
     } catch (e) {
       callback.onPushSubscription(Cr.NS_ERROR_FAILURE, null);
     }
-  }
+  },
 
   async unsubscribe(scope, principal, callback) {
     try {
@@ -110,7 +122,7 @@ class PushService {
     } catch (e) {
       callback.onUnsubscribe(Cr.NS_ERROR_FAILURE, false);
     }
-  }
+  },
 
   async getSubscription(scope, principal, callback) {
     try {
@@ -132,55 +144,45 @@ class PushService {
     } catch (e) {
       callback.onPushSubscription(Cr.NS_ERROR_FAILURE, null);
     }
-  }
+  },
 
   clearForDomain(domain, callback) {
     callback.onClear(Cr.NS_OK);
-  }
+  },
 
   // nsIPushQuotaManager methods
 
-  notificationForOriginShown(origin) {}
+  notificationForOriginShown(origin) {},
 
-  notificationForOriginClosed(origin) {}
+  notificationForOriginClosed(origin) {},
 
   // nsIPushErrorReporter methods
 
-  reportDeliveryError(messageId, reason) {}
-}
-
-PushService.prototype.classID = Components.ID(
-  "{a54d84d7-98a4-4fec-b664-e42e512ae9cc}"
-);
-PushService.prototype.contractID = "@mozilla.org/push/Service;1";
-PushService.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIObserver,
-  Ci.nsISupportsWeakReference,
-  Ci.nsIPushService,
-  Ci.nsIPushQuotaManager,
-  Ci.nsIPushErrorReporter,
-]);
+  reportDeliveryError(messageId, reason) {},
+};
 
 /** `PushSubscription` instances are passed to all subscription callbacks. */
-class PushSubscription {
-  constructor(props) {
-    this._props = props;
-  }
+function PushSubscription(props) {
+  this._props = props;
+}
+
+PushSubscription.prototype = {
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPushSubscription]),
 
   /** The URL for sending messages to this subscription. */
   get endpoint() {
     return this._props.endpoint;
-  }
+  },
 
   /** The last time a message was sent to this subscription. */
   get lastPush() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
+  },
 
   /** The total number of messages sent to this subscription. */
   get pushCount() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
+  },
 
   /**
    * The app will take care of throttling, so we don't
@@ -188,7 +190,7 @@ class PushSubscription {
    */
   get quota() {
     return -1;
-  }
+  },
 
   /**
    * Indicates whether this subscription was created with the system principal.
@@ -197,12 +199,12 @@ class PushSubscription {
    */
   get isSystemSubscription() {
     return false;
-  }
+  },
 
   /** The private key used to decrypt incoming push messages, in JWK format */
   get p256dhPrivateKey() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
+  },
 
   /**
    * Indicates whether this subscription is subject to the background message
@@ -210,7 +212,7 @@ class PushSubscription {
    */
   quotaApplies() {
     return false;
-  }
+  },
 
   /**
    * Indicates whether this subscription exceeded the background message quota,
@@ -219,7 +221,7 @@ class PushSubscription {
    */
   isExpired() {
     return false;
-  }
+  },
 
   /**
    * Returns a key for encrypting messages sent to this subscription. JS
@@ -238,16 +240,14 @@ class PushSubscription {
         return this._getRawKey(this._props.appServerKey);
     }
     return [];
-  }
+  },
 
   _getRawKey(key) {
     if (!key) {
       return [];
     }
     return new Uint8Array(key);
-  }
-}
+  },
+};
 
-PushSubscription.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIPushSubscription,
-]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PushService]);
