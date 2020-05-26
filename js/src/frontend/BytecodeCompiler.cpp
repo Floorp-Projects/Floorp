@@ -127,7 +127,8 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
 
   void handleParseFailure(CompilationInfo& compilationInfo,
                           const Directives& newDirectives,
-                          TokenStreamPosition& startPosition);
+                          TokenStreamPosition& startPosition,
+                          CompilationInfo::RewindToken& startObj);
 };
 
 template <typename Unit>
@@ -433,11 +434,13 @@ bool frontend::SourceAwareCompiler<Unit>::canHandleParseFailure(
 template <typename Unit>
 void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
     CompilationInfo& compilationInfo, const Directives& newDirectives,
-    TokenStreamPosition& startPosition) {
+    TokenStreamPosition& startPosition,
+    CompilationInfo::RewindToken& startObj) {
   MOZ_ASSERT(canHandleParseFailure(compilationInfo, newDirectives));
 
   // Rewind to starting position to retry.
   parser->tokenStream.rewind(startPosition);
+  compilationInfo.rewind(startObj);
 
   // Assignment must be monotonic to prevent reparsing iloops
   MOZ_ASSERT_IF(compilationInfo.directives.strict(), newDirectives.strict());
@@ -595,6 +598,7 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
 
   TokenStreamPosition startPosition(compilationInfo.keepAtoms,
                                     parser->tokenStream);
+  CompilationInfo::RewindToken startObj = compilationInfo.getRewindToken();
 
   // Speculatively parse using the default directives implied by the context.
   // If a directive is encountered (e.g., "use strict") that changes how the
@@ -616,7 +620,7 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
       return nullptr;
     }
 
-    handleParseFailure(compilationInfo, newDirectives, startPosition);
+    handleParseFailure(compilationInfo, newDirectives, startPosition, startObj);
   }
 
   return fn;

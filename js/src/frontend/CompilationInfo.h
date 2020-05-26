@@ -111,6 +111,16 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
 
   JS::Rooted<ScriptSourceObject*> sourceObject;
 
+  // Track the state of key allocations and roll them back as parts of parsing
+  // get retried. This ensures iteration during stencil instantiation does not
+  // encounter discarded frontend state.
+  struct RewindToken {
+    FunctionBox* funbox = nullptr;
+  };
+
+  RewindToken getRewindToken();
+  void rewind(const RewindToken& pos);
+
   // Construct a CompilationInfo
   CompilationInfo(JSContext* cx, LifoAllocScope& alloc,
                   const JS::ReadOnlyCompileOptions& options,

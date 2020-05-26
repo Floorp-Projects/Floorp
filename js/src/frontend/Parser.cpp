@@ -2792,6 +2792,8 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   Directives newDirectives = directives;
 
   Position start(this->compilationInfo_.keepAtoms, tokenStream);
+  CompilationInfo::RewindToken startObj =
+      this->compilationInfo_.getRewindToken();
 
   // Parse the inner function. The following is a loop as we may attempt to
   // reparse a function due to failed syntax parsing and encountering new
@@ -2817,6 +2819,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
 
     // Rewind to retry parsing with new directives applied.
     tokenStream.rewind(start);
+    this->compilationInfo_.rewind(startObj);
 
     // functionFormalParametersAndBody may have already set body before
     // failing.
@@ -2868,6 +2871,8 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     }
 
     UsedNameTracker::RewindToken token = usedNames_.getRewindToken();
+    CompilationInfo::RewindToken startObj =
+        this->compilationInfo_.getRewindToken();
 
     // Move the syntax parser to the current position in the stream.  In the
     // common case this seeks forward, but it'll also seek backward *at least*
@@ -2905,6 +2910,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
         // correctness.
         syntaxParser->clearAbortedSyntaxParse();
         usedNames_.rewind(token);
+        this->compilationInfo_.rewind(startObj);
         MOZ_ASSERT_IF(!syntaxParser->cx_->isHelperThreadContext(),
                       !syntaxParser->cx_->isExceptionPending());
         break;
@@ -8675,6 +8681,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
   if (isArrow) {
     // Rewind to reparse as an arrow function.
+    //
+    // Note: We do not call CompilationInfo::rewind here because parsing during
+    // delazification will see the same rewind and need the same sequence of
+    // inner functions to skip over.
     tokenStream.rewind(start);
 
     TokenKind next;
@@ -11012,5 +11022,13 @@ template class Parser<FullParseHandler, Utf8Unit>;
 template class Parser<SyntaxParseHandler, Utf8Unit>;
 template class Parser<FullParseHandler, char16_t>;
 template class Parser<SyntaxParseHandler, char16_t>;
+
+CompilationInfo::RewindToken CompilationInfo::getRewindToken() {
+  return RewindToken{traceListHead};
+}
+
+void CompilationInfo::rewind(const CompilationInfo::RewindToken& pos) {
+  traceListHead = pos.funbox;
+}
 
 }  // namespace js::frontend
