@@ -9,6 +9,9 @@ const { RemoteSettings } = ChromeUtils.import(
 const { UptakeTelemetry } = ChromeUtils.import(
   "resource://services-common/uptake-telemetry.js"
 );
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 const PREF_SETTINGS_SERVER = "services.settings.server";
 const PREF_SIGNATURE_ROOT = "security.content.signature.root_hash";
@@ -590,6 +593,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   // the local DB contains same id as RECORD2 and a fake record.
   // the final server collection contains RECORD2 and RECORD3
   await client.db.clear();
+  await client.db.saveMetadata({ signature: { x5u, signature: "abc" } });
   await client.db.create(
     { ...RECORD2, last_modified: 1234567890, serialNumber: "abc" },
     { synced: true, useRecordId: true }
@@ -602,11 +606,34 @@ add_task(async function test_check_synchronization_with_signatures() {
     syncData = data;
   });
 
-  await client.maybeSync(5000);
+  // Clear events snapshot.
+  TelemetryTestUtils.assertEvents([], {}, { process: "dummy" });
 
-  // Local data was replaced. But we use records IDs to determine
-  // what was created and deleted. So fake local data will appear
-  // in the sync event.
+  await withFakeChannel("nightly", async () => {
+    // Events telemetry is sampled on released, use fake channel.
+    await client.maybeSync(5000);
+
+    // We should report a corruption_error.
+    TelemetryTestUtils.assertEvents([
+      [
+        "uptake.remotecontent.result",
+        "uptake",
+        "remotesettings",
+        UptakeTelemetry.STATUS.CORRUPTION_ERROR,
+        {
+          source: client.identifier,
+          duration: v => v > 0,
+          trigger: "manual",
+        },
+      ],
+    ]);
+  });
+
+  // The local data was corrupted, and the Telemetry status reflects it.
+  // But the sync overwrote the bad data and was eventually a success.
+  // Since local data was replaced, we use records IDs to determine
+  // what was created and deleted. And bad local data will appear
+  // in the sync event as deleted.
   equal(syncData.current.length, 2);
   equal(syncData.created.length, 1);
   equal(syncData.created[0].id, RECORD3.id);
@@ -636,7 +663,7 @@ add_task(async function test_check_synchronization_with_signatures() {
       metadata: {
         signature: {
           x5u,
-          signature: "wrong-sig-here-too",
+          signature: "aaaaaaaaaaaaaaaaaaaaaaaa", // sig verifier wants proper length or will crash.
         },
       },
       changes: [
@@ -671,13 +698,13 @@ add_task(async function test_check_synchronization_with_signatures() {
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
 
   // When signature fails after retry, the local data present before sync
-  // should be maintained.
+  // should be maintained (if its signature is valid).
   ok(
     arrayEqual(
       (await client.get()).map(r => r.id),
       [RECORD3.id, RECORD2.id]
     ),
-    "Remote changes were not changed"
+    "Local records were not changed"
   );
   // And local data should still be valid.
   await client.get({ verifySignature: true }); // Not raising.
@@ -703,54 +730,4 @@ add_task(async function test_check_synchronization_with_signatures() {
   }
   // Since local data was tampered, it was cleared.
   equal((await client.get()).length, 0, "Local database is now empty.");
-
-  //
-  // 11.
-  // - collection: [] -> []
-  // - timestamp: 4000 -> 6000
-  //
-  // Check that we don't apply changes when signature is missing in remote.
-
-  const RESPONSE_NO_SIG = {
-    sampleHeaders: [
-      "Content-Type: application/json; charset=UTF-8",
-      `ETag: \"123456\"`,
-    ],
-    status: { status: 200, statusText: "OK" },
-    responseBody: JSON.stringify({
-      metadata: {
-        last_modified: 123456,
-      },
-      changes: [],
-      timestamp: 123456,
-    }),
-  };
-
-  const missingSigResponses = {
-    // In this test, we deliberately serve metadata without the signature attribute.
-    // As if the collection was not signed.
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000": [
-      RESPONSE_NO_SIG,
-    ],
-  };
-
-  // Local data was empty after last test.
-  equal((await client.get()).length, 0);
-
-  startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
-  registerHandlers(missingSigResponses);
-  try {
-    await client.maybeSync(6000);
-    do_throw("Sync should fail (the signature is missing)");
-  } catch (e) {
-    equal((await client.get()).length, 0, "Local remains empty");
-  }
-
-  // Ensure that the failure is reflected in the accumulated telemetry:
-  endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
-  expectedIncrements = {
-    [UptakeTelemetry.STATUS.SIGNATURE_ERROR]: 1,
-    [UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 0, // Not retried since missing.
-  };
-  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
 });

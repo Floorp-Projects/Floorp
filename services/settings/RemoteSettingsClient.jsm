@@ -133,10 +133,19 @@ class InvalidSignatureError extends Error {
   }
 }
 
-class MissingSignatureError extends Error {
+class MissingSignatureError extends InvalidSignatureError {
   constructor(cid) {
-    super(`Missing signature (${cid})`);
+    super(cid);
+    this.message = `Missing signature (${cid})`;
     this.name = "MissingSignatureError";
+  }
+}
+
+class CorruptedDataError extends InvalidSignatureError {
+  constructor(cid) {
+    super(cid);
+    this.message = `Corrupted local data (${cid})`;
+    this.name = "CorruptedDataError";
   }
 }
 
@@ -217,6 +226,9 @@ class RemoteSettingsClient extends EventEmitter {
   }
   static get MissingSignatureError() {
     return MissingSignatureError;
+  }
+  static get CorruptedDataError() {
+    return CorruptedDataError;
   }
   static get UnknownCollectionError() {
     return UnknownCollectionError;
@@ -371,7 +383,7 @@ class RemoteSettingsClient extends EventEmitter {
       if (syncIfEmpty && ObjectUtils.isEmpty(metadata)) {
         // No sync occured yet, may have records from dump but no metadata.
         console.debug(
-          `Required metadata for ${this.identifier}, fetching from server.`
+          `${this.identifier} Required metadata, fetching from server.`
         );
         metadata = await this.httpClient().getData();
         await this.db.saveMetadata(metadata);
@@ -565,9 +577,12 @@ class RemoteSettingsClient extends EventEmitter {
           );
         }
       } catch (e) {
-        if (e instanceof RemoteSettingsClient.InvalidSignatureError) {
+        if (e instanceof InvalidSignatureError) {
           // Signature verification failed during synchronization.
-          reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
+          reportStatus =
+            e instanceof CorruptedDataError
+              ? UptakeTelemetry.STATUS.CORRUPTION_ERROR
+              : UptakeTelemetry.STATUS.SIGNATURE_ERROR;
           // If sync fails with a signature error, it's likely that our
           // local data has been modified in some way.
           // We will attempt to fix this by retrieving the whole
@@ -679,9 +694,6 @@ class RemoteSettingsClient extends EventEmitter {
 
     if (e instanceof RemoteSettingsClient.NetworkOfflineError) {
       reportStatus = UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR;
-    } else if (e instanceof RemoteSettingsClient.MissingSignatureError) {
-      // Collection metadata has no signature info, no need to retry.
-      reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
     } else if (e instanceof IDBHelpers.ShutdownError) {
       reportStatus = UptakeTelemetry.STATUS.SHUTDOWN_ERROR;
     } else if (/unparseable/.test(e.message)) {
@@ -739,8 +751,8 @@ class RemoteSettingsClient extends EventEmitter {
   async _validateCollectionSignature(records, timestamp, metadata) {
     const start = Cu.now() * 1000;
 
-    if (!metadata || !metadata.signature) {
-      throw new RemoteSettingsClient.MissingSignatureError(this.identifier);
+    if (!metadata?.signature) {
+      throw new MissingSignatureError(this.identifier);
     }
 
     if (!this._verifier) {
@@ -767,7 +779,7 @@ class RemoteSettingsClient extends EventEmitter {
         this.signerName
       ))
     ) {
-      throw new RemoteSettingsClient.InvalidSignatureError(this.identifier);
+      throw new InvalidSignatureError(this.identifier);
     }
     if (gTimingEnabled) {
       const end = Cu.now() * 1000;
@@ -867,33 +879,60 @@ class RemoteSettingsClient extends EventEmitter {
           metadata
         );
       } catch (e) {
-        // Signature failed, clear local data.
+        console.error(
+          `${this.identifier} Signature failed ${retry ? "again" : ""} ${e}`
+        );
+        if (!(e instanceof InvalidSignatureError)) {
+          // If it failed for any other kind of error (eg. shutdown)
+          // then give up quickly.
+          throw e;
+        }
+
+        // In order to distinguish signature errors that happen
+        // during sync, from hijacks of local DBs, we will verify
+        // the signature on the data that we had before syncing.
+        let localTrustworthy = false;
+        try {
+          await this._validateCollectionSignature(
+            localRecords,
+            localTimestamp,
+            localMetadata
+          );
+          localTrustworthy = true;
+        } catch (sigerr) {
+          if (!(sigerr instanceof InvalidSignatureError)) {
+            // If it fails for other reason, keep original error and give up.
+            throw sigerr;
+          }
+        }
+
+        // Signature failed, clear local DB because it contains
+        // bad data (local + remote changes).
         console.debug(`${this.identifier} clear local data`);
         await this.db.clear();
 
-        // If signature failed again after retry, then
-        // we restore the local data that we had before sync.
-        if (retry) {
-          try {
-            // Make sure the local data before sync was not tampered.
-            await this._validateCollectionSignature(
-              localRecords,
-              localTimestamp,
-              localMetadata
-            );
-            // Signature of data before sync is good. Restore it.
-            await this.db.importBulk(localRecords);
-            await this.db.saveLastModified(localTimestamp);
-            await this.db.saveMetadata(localMetadata);
-          } catch (_) {
-            // Local data before sync was tampered. Restore dump if available.
-            if (
-              await Utils.hasLocalDump(this.bucketName, this.collectionName)
-            ) {
-              await this._importJSONDump();
-            }
-          }
+        if (!localTrustworthy && !retry) {
+          // Local data was tampered, throw and it will retry from empty DB.
+          console.error(`${this.identifier} local data was corrupted`);
+          throw new CorruptedDataError(this.identifier);
+        } else if (localTrustworthy) {
+          // Signature of data before importing changes was good.
+          // If we retry, we will pull and import changes again on top of them.
+          // If we retried already, we will restore the local data before
+          // throwing.
+          await this.db.importBulk(localRecords);
+          await this.db.saveLastModified(localTimestamp);
+          await this.db.saveMetadata(localMetadata);
+        } else if (
+          // The local data was tampered.
+          // We retried and signature failed again.
+          // So restore the dump if available.
+          await Utils.hasLocalDump(this.bucketName, this.collectionName)
+        ) {
+          console.info(`${this.identifier} restore dump`);
+          await this._importJSONDump();
         }
+
         throw e;
       }
     } else {
