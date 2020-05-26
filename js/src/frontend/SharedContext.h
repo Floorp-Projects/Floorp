@@ -343,21 +343,14 @@ class FunctionBox : public SharedContext {
   uint16_t length = 0;        // See: ImmutableScriptData::funLength
   uint16_t nargs_ = 0;        // JSFunction::nargs_
 
-  // Track if bytecode should be generated and if we have done so.
+  // True if bytecode will be emitted for this function in the current
+  // compilation.
   bool emitBytecode : 1;
-  bool emitLazy : 1;
-  bool wasEmitted : 1;
 
-  // True if the enclosing script is generating a JSOp::Lambda/LambdaArrow op
-  // referring to this function. This function will potentially be exposed to
-  // script as a result. We may or may not be a lazy function.
-  //
-  // In particular, this criteria excludes functions inside lazy functions. We
-  // require our parent to generate bytecode in order for this function to have
-  // complete information such as its enclosing scope.
-  //
-  // See: FunctionBox::finish()
-  bool exposeScript : 1;
+  // This is set by the BytecodeEmitter of the enclosing script when a reference
+  // to this function is generated. This is also used to determine a hoisted
+  // function already is referenced by the bytecode.
+  bool wasEmitted : 1;
 
   // Need to emit a synthesized Annex B assignment
   bool isAnnexB : 1;
