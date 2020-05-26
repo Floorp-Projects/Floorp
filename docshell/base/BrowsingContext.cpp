@@ -2383,6 +2383,7 @@ void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
   WriteIPDLParam(aMessage, aActor, aInit.mUseRemoteTabs);
   WriteIPDLParam(aMessage, aActor, aInit.mUseRemoteSubframes);
   WriteIPDLParam(aMessage, aActor, aInit.mOriginAttributes);
+  WriteIPDLParam(aMessage, aActor, aInit.mRequestContextId);
   WriteIPDLParam(aMessage, aActor, aInit.mFields);
 }
 
@@ -2397,6 +2398,7 @@ bool IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Read(
       !ReadIPDLParam(aMessage, aIterator, aActor,
                      &aInit->mUseRemoteSubframes) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mOriginAttributes) ||
+      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mRequestContextId) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mFields)) {
     return false;
   }
