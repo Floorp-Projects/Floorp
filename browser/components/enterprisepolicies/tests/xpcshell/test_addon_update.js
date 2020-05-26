@@ -144,6 +144,4 @@ add_task(async function test_newurl_addon_update() {
 
   addon = await AddonManager.getAddonByID(id);
   equal(addon.version, "2.0", "Addon 2.0 installed");
-
-  await AddonTestUtils.promiseShutdownManager();
 });
