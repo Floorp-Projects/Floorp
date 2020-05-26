@@ -372,11 +372,13 @@ void FunctionBox::finish() {
     MOZ_ASSERT(!enclosingScope_);
   } else {
     // Apply updates from FunctionEmitter::emitLazy().
-    function()->setEnclosingScope(enclosingScope_.getExistingScope());
-    function()->baseScript()->initTreatAsRunOnce(treatAsRunOnce());
+    BaseScript* script = function()->baseScript();
+
+    script->setEnclosingScope(enclosingScope_.getExistingScope());
+    script->initTreatAsRunOnce(treatAsRunOnce());
 
     if (fieldInitializers) {
-      function()->baseScript()->setFieldInitializers(*fieldInitializers);
+      script->setFieldInitializers(*fieldInitializers);
     }
   }
 }

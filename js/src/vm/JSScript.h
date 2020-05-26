@@ -1951,7 +1951,6 @@ class BaseScript : public gc::TenuredCell {
   void initTreatAsRunOnce(bool flag) {
     MOZ_ASSERT(!hasBytecode(),
                "TreatAsRunOnce can only be updated on lazy scripts");
-    MOZ_ASSERT(!hasFlag(ImmutableFlags::TreatAsRunOnce));
     setFlag(ImmutableFlags::TreatAsRunOnce, flag);
   }
 

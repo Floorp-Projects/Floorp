@@ -461,10 +461,6 @@ class JSFunction : public js::NativeObject {
 
   js::Scope* enclosingScope() const { return baseScript()->enclosingScope(); }
 
-  void setEnclosingScope(js::Scope* enclosingScope) {
-    baseScript()->setEnclosingScope(enclosingScope);
-  }
-
   void setEnclosingLazyScript(js::BaseScript* enclosingScript) {
     baseScript()->setEnclosingScript(enclosingScript);
   }
