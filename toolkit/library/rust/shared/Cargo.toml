@@ -57,7 +57,6 @@ unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
 fluent-langneg = { version = "0.12.1", features = ["cldr"] }
 fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
 
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "77a7f5eb12a8d93f2bd71bd4d844405e06743365" }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we
@@ -70,6 +69,7 @@ fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 firefox-accounts-bridge = { path = "../../../../services/fxaccounts/rust-bridge/firefox-accounts-bridge" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "77a7f5eb12a8d93f2bd71bd4d844405e06743365"}
 
 [build-dependencies]
 rustc_version = "0.2"

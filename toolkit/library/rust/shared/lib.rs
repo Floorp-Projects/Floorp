@@ -77,6 +77,7 @@ extern crate fluent_ffi;
 
 extern crate rusqlite;
 
+#[cfg(not(target_os = "android"))]
 extern crate viaduct;
 
 #[cfg(feature = "remote")]
