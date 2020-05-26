@@ -615,13 +615,15 @@ mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
     nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
     nsTArray<SystemFontListEntry>&& aFontList,
     const Maybe<SharedMemoryHandle>& aSharedUASheetHandle,
-    const uintptr_t& aSharedUASheetAddress) {
+    const uintptr_t& aSharedUASheetAddress,
+    nsTArray<SharedMemoryHandle>&& aSharedFontListBlocks) {
   if (!sShutdownCanary) {
     return IPC_OK();
   }
 
   mLookAndFeelCache = std::move(aLookAndFeelIntCache);
   mFontList = std::move(aFontList);
+  mSharedFontListBlocks = std::move(aSharedFontListBlocks);
   gfx::gfxVars::SetValuesForInitialize(aXPCOMInit.gfxNonDefaultVarUpdates());
   InitSharedUASheets(aSharedUASheetHandle, aSharedUASheetAddress);
   InitXPCOM(std::move(aXPCOMInit), aInitialData);
