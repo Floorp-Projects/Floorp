@@ -82,12 +82,11 @@ const HEADERS_FILTER_TEXT = L10N.getStr("headersFilterText");
 const REQUEST_HEADERS = L10N.getStr("requestHeaders");
 const REQUEST_HEADERS_FROM_UPLOAD = L10N.getStr("requestHeadersFromUpload");
 const RESPONSE_HEADERS = L10N.getStr("responseHeaders");
-const HEADERS_ADDRESS = L10N.getStr("netmonitor.headers.address");
 const HEADERS_STATUS = L10N.getStr("netmonitor.headers.status");
 const HEADERS_VERSION = L10N.getStr("netmonitor.headers.version");
 const HEADERS_TRANSFERRED = L10N.getStr("netmonitor.toolbar.transferred");
 const SUMMARY_STATUS_LEARN_MORE = L10N.getStr("netmonitor.summary.learnMore");
-const HEADERS_REFERRER = L10N.getStr("netmonitor.headers.referrer");
+const HEADERS_REFERRER = L10N.getStr("netmonitor.headers.referrerPolicy");
 const HEADERS_CONTENT_BLOCKING = L10N.getStr(
   "netmonitor.headers.contentBlocking"
 );
@@ -634,13 +633,6 @@ class HeadersPanel extends Component {
       });
     }
 
-    const summaryAddress = remoteAddress
-      ? this.renderSummary(
-          HEADERS_ADDRESS,
-          getFormattedIPAndPort(remoteAddress, remotePort)
-        )
-      : null;
-
     const sizeText = L10N.getFormatStrWithNumbers(
       "netmonitor.headers.sizeDetails",
       getFormattedSize(transferredSize),
@@ -712,7 +704,6 @@ class HeadersPanel extends Component {
 
     const summaryItems = [
       summaryStatus,
-      summaryAddress,
       summaryVersion,
       summarySize,
       summaryReferrerPolicy,
@@ -755,7 +746,13 @@ class HeadersPanel extends Component {
         { className: "panel-container" },
         div(
           { className: "headers-overview" },
-          UrlPreview({ url: urlDetails.url, method }),
+          UrlPreview({
+            url: urlDetails.url,
+            method,
+            address: remoteAddress
+              ? getFormattedIPAndPort(remoteAddress, remotePort)
+              : null,
+          }),
           div({ className: "summary" }, summaryItems)
         ),
         Accordion({ items })

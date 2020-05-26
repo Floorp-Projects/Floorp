@@ -64,9 +64,10 @@
 
 .headers-overview .summary .status .status-code {
   display: inline;
-  margin-right: 5px;
   background-color: transparent;
   color: inherit;
+  padding: 0 2px 0 0;
+  font-weight: bold;
 }
 
 .headers-overview .summary .status[data-code^="1"] {
