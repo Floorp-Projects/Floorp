@@ -87,7 +87,7 @@ add_task(async function() {
   ok(!entries[0].children, "no children collected");
 
   // Navigate the subframe.
-  browser.messageManager.sendAsyncMessage("ss-test:click", { id: "lnk" });
+  await BrowserTestUtils.synthesizeMouseAtCenter("#lnk", {}, browser);
   await promiseBrowserLoaded(browser, false /* don't ignore subframes */);
 
   await TabStateFlusher.flush(browser);

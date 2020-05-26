@@ -14,11 +14,14 @@ add_task(async function test_load_start() {
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
+  const PAGE = "http://example.com/";
+
   // Load a new URI.
-  await BrowserTestUtils.loadURI(browser, "about:mozilla");
+  let historyReplacePromise = promiseOnHistoryReplaceEntryInChild(browser);
+  await BrowserTestUtils.loadURI(browser, PAGE);
 
   // Remove the tab before it has finished loading.
-  await promiseContentMessage(browser, "ss-test:OnHistoryReplaceEntry");
+  await historyReplacePromise;
   await promiseRemoveTabAndSessionState(tab);
 
   // Undo close the tab.
@@ -27,7 +30,7 @@ add_task(async function test_load_start() {
   await promiseTabRestored(tab);
 
   // Check that the correct URL was restored.
-  is(browser.currentURI.spec, "about:mozilla", "url is correct");
+  is(browser.currentURI.spec, PAGE, "url is correct");
 
   // Cleanup.
   gBrowser.removeTab(tab);
@@ -53,8 +56,13 @@ add_task(async function test_hashchange() {
   is(entries.length, 1, "there is one shistory entry");
 
   // Click the link and wait for a hashchange event.
-  browser.messageManager.sendAsyncMessage("ss-test:click", { id: "a" });
-  await promiseContentMessage(browser, "ss-test:hashchange");
+  let eventPromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "hashchange",
+    true
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter("#a", {}, browser);
+  await eventPromise;
 
   // Check that we now have two shistory entries.
   await TabStateFlusher.flush(browser);
@@ -122,7 +130,7 @@ add_task(async function test_subframes() {
   is(entries[0].children.length, 1, "the entry has one child");
 
   // Navigate the subframe.
-  browser.messageManager.sendAsyncMessage("ss-test:click", { id: "a1" });
+  await BrowserTestUtils.synthesizeMouseAtCenter("#a1", {}, browser);
   await promiseBrowserLoaded(browser, false /* don't ignore subframes */);
 
   // Check shistory.
@@ -136,8 +144,13 @@ add_task(async function test_subframes() {
   await promiseBrowserLoaded(browser, false /* don't ignore subframes */);
 
   // Navigate the subframe again.
-  browser.messageManager.sendAsyncMessage("ss-test:click", { id: "a2" });
-  await promiseContentMessage(browser, "ss-test:hashchange");
+  let eventPromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "hashchange",
+    true
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter("#a2", {}, browser);
+  await eventPromise;
 
   // Check shistory.
   await TabStateFlusher.flush(browser);

@@ -15,7 +15,7 @@ const HTTPROOT = ROOT.replace(
   "chrome://mochitests/content/",
   "http://example.com/"
 );
-const FRAME_SCRIPTS = [ROOT + "content.js", ROOT + "content-forms.js"];
+const FRAME_SCRIPTS = [ROOT + "content-forms.js"];
 
 for (let script of FRAME_SCRIPTS) {
   Services.mm.loadFrameScript(script, true);
@@ -662,6 +662,26 @@ function popPrefs() {
   return SpecialPowers.popPrefEnv();
 }
 
+function setScrollPosition(bc, x, y) {
+  return SpecialPowers.spawn(bc, [x, y], (childX, childY) => {
+    return new Promise(resolve => {
+      content.addEventListener(
+        "mozvisualscroll",
+        function onScroll(event) {
+          if (content.document.ownerGlobal.visualViewport == event.target) {
+            content.removeEventListener("mozvisualscroll", onScroll, {
+              mozSystemGroup: true,
+            });
+            resolve();
+          }
+        },
+        { mozSystemGroup: true }
+      );
+      content.scrollTo(childX, childY);
+    });
+  });
+}
+
 async function checkScroll(tab, expected, msg) {
   let browser = tab.linkedBrowser;
   await TabStateFlusher.flush(browser);
@@ -675,4 +695,35 @@ function whenDomWindowClosedHandled(aCallback) {
     Services.obs.removeObserver(observer, aTopic);
     aCallback();
   }, "sessionstore-debug-domwindowclosed-handled");
+}
+
+function promiseOnHistoryReplaceEntryInChild(browser) {
+  return SpecialPowers.spawn(browser, [], () => {
+    return new Promise(resolve => {
+      var historyListener = {
+        OnHistoryNewEntry() {},
+        OnHistoryGotoIndex() {},
+        OnHistoryPurge() {},
+        OnHistoryReload() {
+          return true;
+        },
+
+        OnHistoryReplaceEntry() {
+          resolve();
+        },
+
+        QueryInterface: ChromeUtils.generateQI([
+          Ci.nsISHistoryListener,
+          Ci.nsISupportsWeakReference,
+        ]),
+      };
+
+      var { sessionHistory } = this.docShell.QueryInterface(
+        Ci.nsIWebNavigation
+      );
+      if (sessionHistory) {
+        sessionHistory.legacySHistory.addSHistoryListener(historyListener);
+      }
+    });
+  });
 }

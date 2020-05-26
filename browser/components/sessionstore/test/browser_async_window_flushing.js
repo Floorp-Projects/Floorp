@@ -42,7 +42,7 @@ add_task(async function test_add_interesting_window() {
     let tab = newWin.gBrowser.selectedTab;
     await promiseOnHistoryReplaceEntry(tab);
   } else {
-    await promiseContentMessage(browser, "ss-test:OnHistoryReplaceEntry");
+    await promiseOnHistoryReplaceEntryInChild(browser);
   }
   // Clear out the userTypedValue so that the new window looks like
   // it's really not worth restoring.
