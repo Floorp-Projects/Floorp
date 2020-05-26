@@ -16,19 +16,13 @@ add_task(async function() {
   await promiseTabLoadEvent(tab, "data:text/html," + escape(testPage));
   await SimpleTest.promiseFocus(browser);
 
-  const modifier = navigator.platform.includes("Mac")
-    ? Ci.nsIDOMWindowUtils.MODIFIER_META
-    : Ci.nsIDOMWindowUtils.MODIFIER_CONTROL;
-
-  function sendKey(message) {
-    BrowserTestUtils.synthesizeKey(
-      message.data.key,
-      { code: message.data.code, accelKey: true },
+  function sendKey(key, code) {
+    return BrowserTestUtils.synthesizeKey(
+      key,
+      { code, accelKey: true },
       browser
     );
   }
-
-  browser.messageManager.addMessageListener("Test:SendKey", sendKey);
 
   // On windows, HTML clipboard includes extra data.
   // The values are from widget/windows/nsDataObj.cpp.
@@ -39,49 +33,45 @@ add_task(async function() {
     ? "<!--EndFragment-->\n</body>\n</html>"
     : "";
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(browser, [], () => {
+    var doc = content.document;
+    var main = doc.getElementById("main");
+    main.focus();
+
+    // Select an area of the text.
+    let selection = doc.getSelection();
+    selection.modify("move", "left", "line");
+    selection.modify("move", "right", "character");
+    selection.modify("move", "right", "character");
+    selection.modify("move", "right", "character");
+    selection.modify("extend", "right", "word");
+    selection.modify("extend", "right", "word");
+  });
+
+  // The data is empty as the selection was copied during the event default phase.
+  let copyEventPromise = BrowserTestUtils.waitForContentEvent(
     browser,
-    { modifier, htmlPrefix, htmlPostfix },
-    async function(arg) {
-      var doc = content.document;
-      var main = doc.getElementById("main");
-      main.focus();
+    "copy",
+    false,
+    event => {
+      return event.clipboardData.mozItemCount == 0;
+    }
+  );
+  await SpecialPowers.spawn(browser, [], () => {});
+  await sendKey("c");
+  await copyEventPromise;
 
-      // Select an area of the text.
-      let selection = doc.getSelection();
-      selection.modify("move", "left", "line");
-      selection.modify("move", "right", "character");
-      selection.modify("move", "right", "character");
-      selection.modify("move", "right", "character");
-      selection.modify("extend", "right", "word");
-      selection.modify("extend", "right", "word");
-
-      await new Promise((resolve, reject) => {
-        addEventListener(
-          "copy",
-          function copyEvent(event) {
-            removeEventListener("copy", copyEvent, true);
-            // The data is empty as the selection is copied during the event default phase.
-            Assert.equal(
-              event.clipboardData.mozItemCount,
-              0,
-              "Zero items on clipboard"
-            );
-            resolve();
-          },
-          true
-        );
-
-        sendAsyncMessage("Test:SendKey", { key: "c" });
-      });
-
+  let pastePromise = SpecialPowers.spawn(
+    browser,
+    [htmlPrefix, htmlPostfix],
+    (htmlPrefixChild, htmlPostfixChild) => {
+      let selection = content.document.getSelection();
       selection.modify("move", "right", "line");
 
-      await new Promise((resolve, reject) => {
-        addEventListener(
+      return new Promise((resolve, reject) => {
+        content.addEventListener(
           "paste",
-          function copyEvent(event) {
-            removeEventListener("paste", copyEvent, true);
+          event => {
             let clipboardData = event.clipboardData;
             Assert.equal(
               clipboardData.mozItemCount,
@@ -105,7 +95,7 @@ add_task(async function() {
             );
             Assert.equal(
               clipboardData.getData("text/html"),
-              arg.htmlPrefix + "t <b>Bold</b>" + arg.htmlPostfix,
+              htmlPrefixChild + "t <b>Bold</b>" + htmlPostfixChild,
               "text/html value"
             );
             Assert.equal(
@@ -115,46 +105,62 @@ add_task(async function() {
             );
             resolve();
           },
-          true
+          { capture: true, once: true }
         );
-
-        sendAsyncMessage("Test:SendKey", { key: "v" });
       });
+    }
+  );
 
-      Assert.equal(
-        main.innerHTML,
-        "Test <b>Bold</b> After Textt <b>Bold</b>",
-        "Copy and paste html"
+  await SpecialPowers.spawn(browser, [], () => {});
+
+  await sendKey("v");
+  await pastePromise;
+
+  let copyPromise = SpecialPowers.spawn(browser, [], () => {
+    var main = content.document.getElementById("main");
+
+    Assert.equal(
+      main.innerHTML,
+      "Test <b>Bold</b> After Textt <b>Bold</b>",
+      "Copy and paste html"
+    );
+
+    let selection = content.document.getSelection();
+    selection.modify("extend", "left", "word");
+    selection.modify("extend", "left", "word");
+    selection.modify("extend", "left", "character");
+
+    return new Promise((resolve, reject) => {
+      content.addEventListener(
+        "cut",
+        event => {
+          event.clipboardData.setData("text/plain", "Some text");
+          event.clipboardData.setData("text/html", "<i>Italic</i> ");
+          selection.deleteFromDocument();
+          event.preventDefault();
+          resolve();
+        },
+        { capture: true, once: true }
       );
+    });
+  });
 
-      selection.modify("extend", "left", "word");
-      selection.modify("extend", "left", "word");
-      selection.modify("extend", "left", "character");
+  await SpecialPowers.spawn(browser, [], () => {});
 
-      await new Promise((resolve, reject) => {
-        addEventListener(
-          "cut",
-          function copyEvent(event) {
-            removeEventListener("cut", copyEvent, true);
-            event.clipboardData.setData("text/plain", "Some text");
-            event.clipboardData.setData("text/html", "<i>Italic</i> ");
-            selection.deleteFromDocument();
-            event.preventDefault();
-            resolve();
-          },
-          true
-        );
+  await sendKey("x");
+  await copyPromise;
 
-        sendAsyncMessage("Test:SendKey", { key: "x" });
-      });
-
+  pastePromise = SpecialPowers.spawn(
+    browser,
+    [htmlPrefix, htmlPostfix],
+    (htmlPrefixChild, htmlPostfixChild) => {
+      let selection = content.document.getSelection();
       selection.modify("move", "left", "line");
 
-      await new Promise((resolve, reject) => {
-        addEventListener(
+      return new Promise((resolve, reject) => {
+        content.addEventListener(
           "paste",
-          function copyEvent(event) {
-            removeEventListener("paste", copyEvent, true);
+          event => {
             let clipboardData = event.clipboardData;
             Assert.equal(
               clipboardData.mozItemCount,
@@ -178,7 +184,7 @@ add_task(async function() {
             );
             Assert.equal(
               clipboardData.getData("text/html"),
-              arg.htmlPrefix + "<i>Italic</i> " + arg.htmlPostfix,
+              htmlPrefixChild + "<i>Italic</i> " + htmlPostfixChild,
               "text/html value 2"
             );
             Assert.equal(
@@ -188,19 +194,25 @@ add_task(async function() {
             );
             resolve();
           },
-          true
+          { capture: true, once: true }
         );
-
-        sendAsyncMessage("Test:SendKey", { key: "v" });
       });
-
-      Assert.equal(
-        main.innerHTML,
-        "<i>Italic</i> Test <b>Bold</b> After<b></b>",
-        "Copy and paste html 2"
-      );
     }
   );
+
+  await SpecialPowers.spawn(browser, [], () => {});
+
+  await sendKey("v");
+  await pastePromise;
+
+  await SpecialPowers.spawn(browser, [], () => {
+    var main = content.document.getElementById("main");
+    Assert.equal(
+      main.innerHTML,
+      "<i>Italic</i> Test <b>Bold</b> After<b></b>",
+      "Copy and paste html 2"
+    );
+  });
 
   // Next, check that the Copy Image command works.
 
@@ -223,28 +235,27 @@ add_task(async function() {
   // Focus the content again
   await SimpleTest.promiseFocus(browser);
 
-  await ContentTask.spawn(
+  pastePromise = SpecialPowers.spawn(
     browser,
-    { modifier, htmlPrefix, htmlPostfix },
-    async function(arg) {
+    [htmlPrefix, htmlPostfix],
+    (htmlPrefixChild, htmlPostfixChild) => {
       var doc = content.document;
       var main = doc.getElementById("main");
       main.focus();
 
-      await new Promise((resolve, reject) => {
-        addEventListener(
+      return new Promise((resolve, reject) => {
+        content.addEventListener(
           "paste",
-          function copyEvent(event) {
-            removeEventListener("paste", copyEvent, true);
+          event => {
             let clipboardData = event.clipboardData;
 
             // DataTransfer doesn't support the image types yet, so only text/html
             // will be present.
             if (
               clipboardData.getData("text/html") !==
-              arg.htmlPrefix +
+              htmlPrefixChild +
                 '<img id="img" tabindex="1" src="http://example.org/browser/browser/base/content/test/general/moz.png">' +
-                arg.htmlPostfix
+                htmlPostfixChild
             ) {
               reject(
                 "Clipboard Data did not contain an image, was " +
@@ -253,24 +264,27 @@ add_task(async function() {
             }
             resolve();
           },
-          true
+          { capture: true, once: true }
         );
-
-        sendAsyncMessage("Test:SendKey", { key: "v" });
       });
-
-      // The new content should now include an image.
-      Assert.equal(
-        main.innerHTML,
-        '<i>Italic</i> <img id="img" tabindex="1" ' +
-          'src="http://example.org/browser/browser/base/content/test/general/moz.png">' +
-          "Test <b>Bold</b> After<b></b>",
-        "Paste after copy image"
-      );
     }
   );
 
-  browser.messageManager.removeMessageListener("Test:SendKey", sendKey);
+  await SpecialPowers.spawn(browser, [], () => {});
+  await sendKey("v");
+  await pastePromise;
+
+  // The new content should now include an image.
+  await SpecialPowers.spawn(browser, [], () => {
+    var main = content.document.getElementById("main");
+    Assert.equal(
+      main.innerHTML,
+      '<i>Italic</i> <img id="img" tabindex="1" ' +
+        'src="http://example.org/browser/browser/base/content/test/general/moz.png">' +
+        "Test <b>Bold</b> After<b></b>",
+      "Paste after copy image"
+    );
+  });
 
   gBrowser.removeCurrentTab();
 });
