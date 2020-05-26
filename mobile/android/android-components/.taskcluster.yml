@@ -257,6 +257,7 @@ tasks:
                                       in:
                                           $if: 'tasks_for == "action"'
                                           then: >
+                                              PIP_IGNORE_INSTALLED=0 pip install --user /builds/worker/checkouts/taskgraph &&
                                               cd /builds/worker/checkouts/src &&
                                               ln -s /builds/worker/artifacts artifacts &&
                                               taskgraph action-callback
