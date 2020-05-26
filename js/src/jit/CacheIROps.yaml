@@ -817,11 +817,8 @@
 
 - name: CallNativeFunction
   shared: false
-#ifdef JS_SIMULATOR
   transpile: false
-#else
   transpile: true
-#endif
   custom_writer: true
   args:
     callee: ObjId
