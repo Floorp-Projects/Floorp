@@ -263,7 +263,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_privacy_link) -> {
                 val intent = SupportUtils.createCustomTabIntent(
                     requireContext(),
-                    SupportUtils.getPrivacyNoticeUrl()
+                    SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE)
                 )
                 startActivity(intent)
                 null

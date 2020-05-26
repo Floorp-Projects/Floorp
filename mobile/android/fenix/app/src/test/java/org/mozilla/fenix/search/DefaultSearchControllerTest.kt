@@ -7,7 +7,6 @@ package org.mozilla.fenix.search
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -32,7 +31,9 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.DefaultSearchController.Companion.KEYBOARD_ANIMATION_DELAY
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.whatsnew.clear
 
@@ -40,7 +41,7 @@ import org.mozilla.fenix.whatsnew.clear
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultSearchControllerTest {
 
-    private val context: HomeActivity = mockk(relaxed = true)
+    private val activity: HomeActivity = mockk(relaxed = true)
     private val store: SearchFragmentStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val defaultSearchEngine: SearchEngine? = mockk(relaxed = true)
@@ -56,14 +57,14 @@ class DefaultSearchControllerTest {
 
     @Before
     fun setUp() {
-        every { context.searchEngineManager.defaultSearchEngine } returns defaultSearchEngine
+        every { activity.searchEngineManager.defaultSearchEngine } returns defaultSearchEngine
         every { store.state.session } returns session
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
-        every { context.metrics } returns metrics
-        every { context.components.core.sessionManager } returns sessionManager
+        every { activity.metrics } returns metrics
+        every { activity.components.core.sessionManager } returns sessionManager
 
         controller = DefaultSearchController(
-            context = context,
+            activity = activity,
             store = store,
             navController = navController,
             viewLifecycleScope = lifecycleScope,
@@ -80,8 +81,34 @@ class DefaultSearchControllerTest {
         controller.handleUrlCommitted(url)
 
         verify {
-            context.openToBrowserAndLoad(
+            activity.openToBrowserAndLoad(
                 searchTermOrURL = url,
+                newTab = session == null,
+                from = BrowserDirection.FromSearch,
+                engine = searchEngine
+            )
+        }
+        verify { metrics.track(Event.EnteredUrl(false)) }
+    }
+
+    @Test
+    fun handleCrashesUrlCommitted() {
+        val url = "about:crashes"
+
+        controller.handleUrlCommitted(url)
+
+        verify { activity.startActivity(any()) }
+    }
+
+    @Test
+    fun handleMozillaUrlCommitted() {
+        val url = "moz://a"
+
+        controller.handleUrlCommitted(url)
+
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO),
                 newTab = session == null,
                 from = BrowserDirection.FromSearch,
                 engine = searchEngine
@@ -93,7 +120,7 @@ class DefaultSearchControllerTest {
     @Test
     fun handleEditingCancelled() = runBlockingTest {
         controller = DefaultSearchController(
-            context = context,
+            activity = activity,
             store = store,
             navController = navController,
             viewLifecycleScope = this,
@@ -197,7 +224,7 @@ class DefaultSearchControllerTest {
         controller.handleUrlTapped(url)
 
         verify {
-            context.openToBrowserAndLoad(
+            activity.openToBrowserAndLoad(
                 searchTermOrURL = url,
                 newTab = session == null,
                 from = BrowserDirection.FromSearch
@@ -213,7 +240,7 @@ class DefaultSearchControllerTest {
         controller.handleSearchTermsTapped(searchTerms)
 
         verify {
-            context.openToBrowserAndLoad(
+            activity.openToBrowserAndLoad(
                 searchTermOrURL = searchTerms,
                 newTab = session == null,
                 from = BrowserDirection.FromSearch,
@@ -268,6 +295,6 @@ class DefaultSearchControllerTest {
         controller.handleExistingSessionSelected(session)
 
         verify { sessionManager.select(session) }
-        verify { context.openToBrowser(from = BrowserDirection.FromSearch) }
+        verify { activity.openToBrowser(from = BrowserDirection.FromSearch) }
     }
 }

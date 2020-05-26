@@ -43,6 +43,11 @@ object SupportUtils {
         SYNC_SETUP("how-set-firefox-sync-firefox-preview")
     }
 
+    enum class MozillaPage(internal val path: String) {
+        PRIVATE_NOTICE("privacy/firefox/"),
+        MANIFESTO("about/manifesto/")
+    }
+
     /**
      * Gets a support page URL for the corresponding topic.
      */
@@ -69,8 +74,11 @@ object SupportUtils {
         return "https://support.mozilla.org/$langTag/kb/$escapedTopic"
     }
 
-    fun getPrivacyNoticeUrl(locale: Locale = Locale.getDefault()) =
-        "https://www.mozilla.org/${getLanguageTag(locale)}/privacy/firefox/"
+    fun getMozillaPageUrl(page: MozillaPage, locale: Locale = Locale.getDefault()): String {
+        val path = page.path
+        val langTag = getLanguageTag(locale)
+        return "https://www.mozilla.org/$langTag/$path"
+    }
 
     fun getWhatsNewUrl(context: Context) = if (Config.channel.isFennec) {
         getGenericSumoURLForTopic(SumoTopic.UPGRADE_FAQ)

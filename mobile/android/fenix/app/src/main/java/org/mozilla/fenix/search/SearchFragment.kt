@@ -81,11 +81,10 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val args = arguments?.let { navArgs<SearchFragmentArgs>().value }
-        val session = args?.sessionId
+        val activity = activity as HomeActivity
+        val args by navArgs<SearchFragmentArgs>()
+        val session = args.sessionId
             ?.let(requireComponents.core.sessionManager::findSessionById)
-        val pastedText = args?.pastedText
-        val searchAccessPoint = args?.searchAccessPoint
 
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = session?.url.orEmpty()
@@ -93,7 +92,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             requireComponents.search.provider.getDefaultEngine(requireContext())
         )
 
-        val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
+        val isPrivate = activity.browsingModeManager.mode.isPrivate
 
         requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
 
@@ -110,14 +109,14 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                     showHistorySuggestions = requireContext().settings().shouldShowHistorySuggestions,
                     showBookmarkSuggestions = requireContext().settings().shouldShowBookmarkSuggestions,
                     session = session,
-                    pastedText = pastedText,
-                    searchAccessPoint = searchAccessPoint
+                    pastedText = args.pastedText,
+                    searchAccessPoint = args.searchAccessPoint
                 )
             )
         }
 
         val searchController = DefaultSearchController(
-            context = activity as HomeActivity,
+            activity = activity,
             store = searchStore,
             navController = findNavController(),
             viewLifecycleScope = viewLifecycleOwner.lifecycleScope,

@@ -98,6 +98,8 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.SupportUtils.MozillaPage.PRIVATE_NOTICE
+import org.mozilla.fenix.settings.SupportUtils.SumoTopic.HELP
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.ThemeManager
@@ -230,7 +232,7 @@ class HomeFragment : Fragment() {
                 openSettingsScreen = ::openSettingsScreen,
                 openSearchScreen = ::navigateToSearch,
                 openWhatsNewLink = { openCustomTab(SupportUtils.getWhatsNewUrl(activity)) },
-                openPrivacyNotice = { openCustomTab(SupportUtils.getPrivacyNoticeUrl()) }
+                openPrivacyNotice = { openCustomTab(SupportUtils.getMozillaPageUrl(PRIVATE_NOTICE)) }
             )
         )
         updateLayout(view)
@@ -696,10 +698,7 @@ class HomeFragment : Fragment() {
                     invokePendingDeleteJobs()
                     hideOnboardingIfNeeded()
                     (activity as HomeActivity).openToBrowserAndLoad(
-                        searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                            context,
-                            SupportUtils.SumoTopic.HELP
-                        ),
+                        searchTermOrURL = SupportUtils.getSumoURLForTopic(context, HELP),
                         newTab = true,
                         from = BrowserDirection.FromHome
                     )

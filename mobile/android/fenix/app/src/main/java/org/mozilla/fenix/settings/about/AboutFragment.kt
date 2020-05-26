@@ -160,7 +160,7 @@ class AboutFragment : Fragment(), AboutPageListener {
             AboutPageItem.Item(
                 AboutItem.ExternalLink(
                     PRIVACY_NOTICE,
-                    SupportUtils.getPrivacyNoticeUrl()
+                    SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE)
                 ), getString(R.string.about_privacy_notice)
             ),
             AboutPageItem.Item(

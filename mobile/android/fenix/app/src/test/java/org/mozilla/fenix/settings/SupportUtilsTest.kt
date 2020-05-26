@@ -44,14 +44,14 @@ class SupportUtilsTest {
     }
 
     @Test
-    fun getPrivacyNoticeUrl() {
+    fun getMozillaPageUrl() {
         assertEquals(
-            "https://www.mozilla.org/en-CA/privacy/firefox/",
-            SupportUtils.getPrivacyNoticeUrl(Locale("en", "CA"))
+            "https://www.mozilla.org/en-US/about/manifesto/",
+            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO, Locale("en", "US"))
         )
         assertEquals(
             "https://www.mozilla.org/zh/privacy/firefox/",
-            SupportUtils.getPrivacyNoticeUrl(Locale("zh"))
+            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE, Locale("zh"))
         )
     }
 

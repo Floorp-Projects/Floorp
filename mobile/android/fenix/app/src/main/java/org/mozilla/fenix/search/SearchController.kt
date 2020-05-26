@@ -5,7 +5,6 @@
 
 package org.mozilla.fenix.search
 
-import android.content.Context
 import android.content.Intent
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +27,8 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.SupportUtils.MozillaPage.MANIFESTO
 
 /**
  * An interface that handles the view manipulation of the Search, triggered by the Interactor
@@ -45,8 +46,9 @@ interface SearchController {
     fun handleSearchShortcutsButtonClicked()
 }
 
+@Suppress("TooManyFunctions")
 class DefaultSearchController(
-    private val context: Context,
+    private val activity: HomeActivity,
     private val store: SearchFragmentStore,
     private val navController: NavController,
     private val viewLifecycleScope: CoroutineScope,
@@ -54,41 +56,46 @@ class DefaultSearchController(
 ) : SearchController {
 
     override fun handleUrlCommitted(url: String) {
-        if (url == "about:crashes") {
-            // The list of past crashes can be accessed via "settings > about", but desktop and
-            // fennec users may be used to navigating to "about:crashes". So we intercept this here
-            // and open the crash list activity instead.
-            context.startActivity(Intent(context, CrashListActivity::class.java))
-            return
+        when (url) {
+            "about:crashes" -> {
+                // The list of past crashes can be accessed via "settings > about", but desktop and
+                // fennec users may be used to navigating to "about:crashes". So we intercept this here
+                // and open the crash list activity instead.
+                activity.startActivity(Intent(activity, CrashListActivity::class.java))
+            }
+            "moz://a" -> openSearchOrUrl(SupportUtils.getMozillaPageUrl(MANIFESTO))
+            else -> if (url.isNotBlank()) {
+                openSearchOrUrl(url)
+            }
         }
+    }
 
-        if (url.isNotBlank()) {
-            (context as HomeActivity).openToBrowserAndLoad(
-                searchTermOrURL = url,
-                newTab = store.state.session == null,
-                from = BrowserDirection.FromSearch,
-                engine = store.state.searchEngineSource.searchEngine
-            )
+    private fun openSearchOrUrl(url: String) {
+        activity.openToBrowserAndLoad(
+            searchTermOrURL = url,
+            newTab = store.state.session == null,
+            from = BrowserDirection.FromSearch,
+            engine = store.state.searchEngineSource.searchEngine
+        )
 
-            val event = if (url.isUrl()) {
-                Event.EnteredUrl(false)
-            } else {
-                val searchAccessPoint = when (store.state.searchAccessPoint) {
-                    NONE -> ACTION
-                    else -> store.state.searchAccessPoint
-                }
-
-                searchAccessPoint?.let { sap ->
-                    MetricsUtils.createSearchEvent(
-                        store.state.searchEngineSource.searchEngine,
-                        context,
-                        sap
-                    )
-                }
+        val event = if (url.isUrl()) {
+            Event.EnteredUrl(false)
+        } else {
+            val searchAccessPoint = when (store.state.searchAccessPoint) {
+                NONE -> ACTION
+                else -> store.state.searchAccessPoint
             }
 
-            event?.let { context.metrics.track(it) }
+            searchAccessPoint?.let { sap ->
+                MetricsUtils.createSearchEvent(
+                    store.state.searchEngineSource.searchEngine,
+                    activity,
+                    sap
+                )
+            }
         }
+
+        event?.let { activity.metrics.track(it) }
     }
 
     override fun handleEditingCancelled() {
@@ -102,6 +109,7 @@ class DefaultSearchController(
     }
 
     override fun handleTextChanged(text: String) {
+        val settings = activity.settings()
         // Display the search shortcuts on each entry of the search fragment (see #5308)
         val textMatchesCurrentUrl = store.state.session?.url ?: "" == text
         val textMatchesCurrentSearch = store.state.session?.searchTerms ?: "" == text
@@ -110,31 +118,31 @@ class DefaultSearchController(
         store.dispatch(
             SearchFragmentAction.ShowSearchShortcutEnginePicker(
                 (textMatchesCurrentUrl || textMatchesCurrentSearch || text.isEmpty()) &&
-                    context.settings().shouldShowSearchShortcuts
+                        settings.shouldShowSearchShortcuts
             )
         )
         store.dispatch(
             SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
                 text.isNotEmpty() &&
-                (context as HomeActivity).browsingModeManager.mode.isPrivate &&
-                !context.settings().shouldShowSearchSuggestionsInPrivate &&
-                !context.settings().showSearchSuggestionsInPrivateOnboardingFinished
+                activity.browsingModeManager.mode.isPrivate &&
+                !settings.shouldShowSearchSuggestionsInPrivate &&
+                !settings.showSearchSuggestionsInPrivateOnboardingFinished
             )
         )
     }
 
     override fun handleUrlTapped(url: String) {
-        (context as HomeActivity).openToBrowserAndLoad(
+        activity.openToBrowserAndLoad(
             searchTermOrURL = url,
             newTab = store.state.session == null,
             from = BrowserDirection.FromSearch
         )
 
-        context.metrics.track(Event.EnteredUrl(false))
+        activity.metrics.track(Event.EnteredUrl(false))
     }
 
     override fun handleSearchTermsTapped(searchTerms: String) {
-        (context as HomeActivity).openToBrowserAndLoad(
+        activity.openToBrowserAndLoad(
             searchTermOrURL = searchTerms,
             newTab = store.state.session == null,
             from = BrowserDirection.FromSearch,
@@ -150,18 +158,18 @@ class DefaultSearchController(
         val event = searchAccessPoint?.let { sap ->
             MetricsUtils.createSearchEvent(
                 store.state.searchEngineSource.searchEngine,
-                context,
+                activity,
                 sap
             )
         }
-        event?.let { context.metrics.track(it) }
+        event?.let { activity.metrics.track(it) }
     }
 
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {
         store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine))
         val isCustom =
-            CustomSearchEngineStore.isCustomSearchEngine(context, searchEngine.identifier)
-        context.metrics.track(Event.SearchShortcutSelected(searchEngine, isCustom))
+            CustomSearchEngineStore.isCustomSearchEngine(activity, searchEngine.identifier)
+        activity.metrics.track(Event.SearchShortcutSelected(searchEngine, isCustom))
     }
 
     override fun handleSearchShortcutsButtonClicked() {
@@ -175,14 +183,14 @@ class DefaultSearchController(
     }
 
     override fun handleExistingSessionSelected(session: Session) {
-        context.components.core.sessionManager.select(session)
-        (context as HomeActivity).openToBrowser(
+        activity.components.core.sessionManager.select(session)
+        activity.openToBrowser(
             from = BrowserDirection.FromSearch
         )
     }
 
     override fun handleExistingSessionSelected(tabId: String) {
-        val session = context.components.core.sessionManager.findSessionById(tabId)
+        val session = activity.components.core.sessionManager.findSessionById(tabId)
         if (session != null) {
             handleExistingSessionSelected(session)
         }
