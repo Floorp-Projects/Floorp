@@ -217,9 +217,7 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       funcDataIndex_(index),
       flags_(flags),
       emitBytecode(false),
-      emitLazy(false),
       wasEmitted(false),
-      exposeScript(false),
       isAnnexB(false),
       useAsm(false),
       isAsmJSModule_(false),
@@ -368,7 +366,10 @@ void FunctionBox::setAsmJSModule(JSFunction* function) {
 }
 
 void FunctionBox::finish() {
-  if (!emitBytecode) {
+  if (emitBytecode || isAsmJSModule()) {
+    // Non-lazy inner functions don't use the enclosingScope_ field.
+    MOZ_ASSERT(!enclosingScope_);
+  } else {
     // Apply updates from FunctionEmitter::emitLazy().
     function()->setEnclosingScope(enclosingScope_.getExistingScope());
     function()->baseScript()->initTreatAsRunOnce(treatAsRunOnce());
@@ -376,9 +377,6 @@ void FunctionBox::finish() {
     if (fieldInitializers) {
       function()->baseScript()->setFieldInitializers(*fieldInitializers);
     }
-  } else {
-    // Non-lazy inner functions don't use the enclosingScope_ field.
-    MOZ_ASSERT(!enclosingScope_);
   }
 }
 
