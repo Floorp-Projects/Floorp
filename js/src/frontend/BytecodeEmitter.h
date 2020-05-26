@@ -35,7 +35,7 @@
 #include "frontend/NameCollections.h"      // AtomIndexMap
 #include "frontend/ParseNode.h"            // ParseNode and subclasses
 #include "frontend/Parser.h"               // Parser, PropListType
-#include "frontend/SharedContext.h"        // SharedContext
+#include "frontend/SharedContext.h"        // SharedContext, TopLevelFunction
 #include "frontend/SourceNotes.h"          // SrcNoteType
 #include "frontend/TokenStream.h"          // TokenPos
 #include "frontend/ValueUsage.h"           // ValueUsage
@@ -79,17 +79,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Enclosing function or global context.
   BytecodeEmitter* const parent = nullptr;
 
-  // The JSScript after we've filled it in.
-  JS::Rooted<JSScript*> outputScript;
-
- public:
-  // Returns the finished script produced by this bce.
-  JSScript* getResultScript() {
-    MOZ_ASSERT(outputScript);
-    return outputScript;
-  }
-
- private:
   BytecodeSection bytecodeSection_;
 
  public:
@@ -374,7 +363,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool getNslots(uint32_t* nslots);
 
   // Emit function code for the tree rooted at body.
-  enum class TopLevelFunction { No, Yes };
   MOZ_MUST_USE bool emitFunctionScript(FunctionNode* funNode,
                                        TopLevelFunction isTopLevel);
 
