@@ -3585,12 +3585,14 @@ static void ReadAheadSystemDll(const wchar_t* dllName) {
   }
 }
 
+#  ifdef NIGHTLY_BUILD
 static void ReadAheadPackagedDll(const wchar_t* dllName,
                                  const wchar_t* aGREDir) {
   wchar_t dllPath[MAX_PATH];
   swprintf(dllPath, MAX_PATH, L"%s\\%s", aGREDir, dllName);
   ReadAheadLib(dllPath);
 }
+#  endif
 
 static void PR_CALLBACK ReadAheadDlls_ThreadStart(void* arg) {
   UniquePtr<wchar_t[]> greDir(static_cast<wchar_t*>(arg));
