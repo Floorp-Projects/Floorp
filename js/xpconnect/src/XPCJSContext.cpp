@@ -758,6 +758,7 @@ static mozilla::Atomic<bool> sStreamsEnabled(false);
 
 static mozilla::Atomic<bool> sPropertyErrorMessageFixEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsEnabled(false);
+static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
 
 void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
@@ -769,7 +770,8 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setWritableStreamsEnabled(
           StaticPrefs::javascript_options_writable_streams())
       .setPropertyErrorMessageFixEnabled(sPropertyErrorMessageFixEnabled)
-      .setWeakRefsEnabled(sWeakRefsEnabled);
+      .setWeakRefsEnabled(sWeakRefsEnabled)
+      .setIteratorHelpersEnabled(sIteratorHelpersEnabled);
 }
 
 static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
@@ -947,6 +949,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #ifdef NIGHTLY_BUILD
   sWeakRefsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.weakrefs");
+  sIteratorHelpersEnabled =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
 #endif
 
 #ifdef JS_GC_ZEAL
