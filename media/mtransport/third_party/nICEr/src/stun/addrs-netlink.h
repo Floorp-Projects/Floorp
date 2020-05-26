@@ -30,28 +30,16 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef WEBRTC_BASE_IFADDRS_ANDROID_H_
-#define WEBRTC_BASE_IFADDRS_ANDROID_H_
+#ifndef WEBRTC_BASE_IFADDRS_NETLINK_H_
+#define WEBRTC_BASE_IFADDRS_NETLINK_H_
 
 #include <stdio.h>
 #include <sys/socket.h>
+#include "local_addr.h"
 
-/* Implementation of getifaddrs for Android.
- * Fills out a list of ifaddr structs (see below) which contain information
- * about every network interface available on the host.
- * See 'man getifaddrs' on Linux or OS X (nb: it is not a POSIX function). */
-struct ifaddrs {
-  struct ifaddrs* ifa_next;
-  char* ifa_name;
-  unsigned int ifa_flags;
-  struct sockaddr* ifa_addr;
-  struct sockaddr* ifa_netmask;
-  /* Real ifaddrs has broadcast, point to point and data members.
-   * We don't need them (yet?). */
-};
-
-int android_getifaddrs(struct ifaddrs** result);
-void android_freeifaddrs(struct ifaddrs* addrs);
-
-#endif  /* WEBRTC_BASE_IFADDRS_ANDROID_H_ */
+/* for platforms with netlink (android and linux) */
+/* Filters out things like deprecated addresses, and stuff that doesn't pass
+ * IPv6 duplicate address detection */
+int stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count);
+#endif  /* WEBRTC_BASE_IFADDRS_NETLINK_H_ */
 
