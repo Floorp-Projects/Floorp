@@ -1,10 +1,14 @@
 /** This tests that the service worker can be used if we have storage access
  *  permission. We manually write the storage access permission into the
  *  permission manager to simulate the storage access has been granted. We would
- *  test the service worker twice. The fist time is to check the service
+ *  test the service worker three times. The fist time is to check the service
  *  work is allowed. The second time is to load again and check it won't hit
  *  assertion, this assertion would only be hit if we have registered a service
- *  worker, see Bug 1631234. */
+ *  worker, see Bug 1631234.
+ *
+ *  The third time is to load again but in a sandbox iframe to check it won't
+ *  hit the assertion. See Bug 1637226 for details.
+ *  */
 
 /* import-globals-from antitracking_head.js */
 
@@ -76,6 +80,36 @@ add_task(async _ => {
     expectedBlockingNotifications: 0,
     runInPrivateWindow: false,
     iframeSandbox: null,
+    accessRemoval: null,
+    callbackAfterRemoval: null,
+  });
+
+  AntiTracking._createTask({
+    name:
+      "Test again to check if we cannot use service worker in a sandbox iframe without hit the assertion.",
+    cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+    allowList: false,
+    callback: async _ => {
+      await navigator.serviceWorker
+        .register("empty.js")
+        .then(
+          _ => {
+            ok(false, "ServiceWorker cannot be used in sandbox iframe!");
+          },
+          _ => {
+            ok(true, "ServiceWorker cannot be used in sandbox iframe!");
+          }
+        )
+        .catch(e => ok(false, "Promise rejected: " + e));
+    },
+    extraPrefs: [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ],
+    expectedBlockingNotifications: 0,
+    runInPrivateWindow: false,
+    iframeSandbox: "allow-scripts allow-same-origin",
     accessRemoval: null,
     callbackAfterRemoval: null,
   });
