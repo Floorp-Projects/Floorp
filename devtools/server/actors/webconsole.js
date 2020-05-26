@@ -1117,12 +1117,14 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     const evalOptions = {
       frameActor: request.frameActor,
       url: request.url,
+      innerWindowID: request.innerWindowID,
       selectedNodeActor: request.selectedNodeActor,
       selectedObjectActor: request.selectedObjectActor,
       eager: request.eager,
       bindings: request.bindings,
       lineNumber: request.lineNumber,
     };
+
     const { mapped } = request;
 
     // Set a flag on the thread actor which indicates an evaluation is being

@@ -6,6 +6,7 @@
 
 const Debugger = require("Debugger");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,
@@ -101,6 +102,9 @@ function isObject(value) {
  *        in the Inspector (or null, if there is no selection). This is used
  *        for helper functions that make reference to the currently selected
  *        node, like $0.
+ *        - innerWindowID: An optional window id to use instead of webConsole.evalWindow.
+ *        This is used by function that need to evaluate in a different window for which
+ *        we don't have a dedicated target (for example a non-remote iframe).
  *        - eager: Set to true if you want the evaluation to bail if it may have side effects.
  *        - url: the url to evaluate the script as. Defaults to "debugger eval code",
  *        or "debugger eager eval code" if eager is true.
@@ -497,7 +501,19 @@ function getFrameDbg(options, webConsole) {
 }
 
 function getDbgWindow(options, dbg, webConsole) {
-  const dbgWindow = dbg.makeGlobalObjectReference(webConsole.evalWindow);
+  let evalWindow = webConsole.evalWindow;
+
+  if (options.innerWindowID) {
+    const window = Services.wm.getCurrentInnerWindowWithId(
+      options.innerWindowID
+    );
+
+    if (window) {
+      evalWindow = window;
+    }
+  }
+
+  const dbgWindow = dbg.makeGlobalObjectReference(evalWindow);
 
   // If we have an object to bind to |_self|, create a Debugger.Object
   // referring to that object, belonging to dbg.
