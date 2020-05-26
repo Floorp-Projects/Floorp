@@ -297,7 +297,7 @@ class DefaultBrowserToolbarController(
                 val appLinksUseCases =
                     activity.components.useCases.appLinksUseCases
                 val getRedirect = appLinksUseCases.appLinkRedirect
-                sessionManager.selectedSession?.let {
+                currentSession?.let {
                     val redirect = getRedirect.invoke(it.url)
                     redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     appLinksUseCases.openAppLink.invoke(redirect.appIntent)

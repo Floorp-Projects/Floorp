@@ -7,9 +7,12 @@ package org.mozilla.fenix.customtabs
 import android.content.Context
 import android.graphics.Typeface
 import androidx.annotation.ColorRes
+import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.item.BrowserMenuCategory
 import mozilla.components.browser.menu.item.BrowserMenuDivider
+import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
@@ -18,7 +21,9 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getStringWithArgSafe
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 
 /**
@@ -97,12 +102,18 @@ class CustomTabToolbarMenu(
         BrowserMenuItemToolbar(listOf(back, forward, refresh))
     }
 
+    private fun shouldShowOpenInApp(): Boolean = session?.let { session ->
+        val appLink = context.components.useCases.appLinksUseCases.appLinkRedirect
+        appLink(session.url).hasExternalApp()
+    } ?: false
+
     private val menuItems by lazy {
         val menuItems = listOf(
             poweredBy,
             BrowserMenuDivider(),
             desktopMode,
             findInPage,
+            openInApp.apply { visible = ::shouldShowOpenInApp },
             openInFenix,
             BrowserMenuDivider(),
             menuToolbar
@@ -124,6 +135,19 @@ class CustomTabToolbarMenu(
         iconTintColorResource = primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
+    }
+
+    private val openInApp = BrowserMenuHighlightableItem(
+        label = context.getString(R.string.browser_menu_open_app_link),
+        startImageResource = R.drawable.ic_app_links,
+        iconTintColorResource = primaryTextColor(),
+        highlight = BrowserMenuHighlight.LowPriority(
+            label = context.getString(R.string.browser_menu_open_app_link),
+            notificationTint = getColor(context, R.color.whats_new_notification_color)
+        ),
+        isHighlighted = { !context.settings().openInAppOpened }
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
     }
 
     private val openInFenix = SimpleBrowserMenuItem(
