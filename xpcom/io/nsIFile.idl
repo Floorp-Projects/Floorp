@@ -383,16 +383,6 @@ interface nsIFile : nsISupports
     void initWithFile(in nsIFile aFile);
 
     /**
-     *  followLinks
-     *
-     *  This attribute will determine if the nsLocalFile will auto
-     *  resolve symbolic links.  By default, this value will be false
-     *  on all non unix systems.  On unix, this attribute is effectively
-     *  a noop.
-     */
-    attribute boolean followLinks;
-
-    /**
      * Flag for openNSPRFileDesc(), to hint to the OS that the file will be
      * read sequentially with agressive readahead.
      */
