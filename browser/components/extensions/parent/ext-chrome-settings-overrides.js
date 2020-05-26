@@ -267,7 +267,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
   static async onUninstall(id) {
     let searchStartupPromise = pendingSearchSetupTasks.get(id);
     if (searchStartupPromise) {
-      await searchStartupPromise;
+      await searchStartupPromise.catch(Cu.reportError);
     }
     // Note: We do not have to deal with homepage here as it is managed by
     // the ExtensionPreferencesManager.
@@ -423,7 +423,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       } else {
         // Needs to be called every time to handle reenabling, but
         // only sets default for install or enable.
-        this.setDefault(engineName);
+        await this.setDefault(engineName);
       }
     }
   }
