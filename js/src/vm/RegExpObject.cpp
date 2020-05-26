@@ -1173,6 +1173,7 @@ bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
                                   JSPROP_ENUMERATE)) {
       return false;
     }
+    AddTypePropertyId(cx, templateObject, id, UndefinedValue());
   }
 
   // Allocate the capture index array.
