@@ -688,7 +688,7 @@ class SourceFile(object):
         (`script_metadata()`).
         """
         if self.script_metadata:
-            if any(m == (b"quic", b"true") for m in self.script_metadata):
+            if any(m == ("quic", "true") for m in self.script_metadata):
                 return True
 
         if self.root is None:
