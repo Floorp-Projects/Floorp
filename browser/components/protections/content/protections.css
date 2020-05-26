@@ -263,7 +263,7 @@ a.hidden,
   fill: var(--gear-icon-fill);
   background: url("chrome://global/skin/icons/settings.svg") no-repeat 0px;
   font-size: 0.75em;
-  cursor: default;
+  cursor: pointer;
   width: max-content;
   color: var(--in-content-deemphasized-text);
   margin-block: 6px 0px;
