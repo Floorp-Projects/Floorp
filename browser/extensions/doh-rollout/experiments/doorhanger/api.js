@@ -159,6 +159,9 @@ this.doorhanger = class doorhanger extends ExtensionAPI {
             );
             return true;
           },
+          async cancel() {
+            EveryWindow.unregisterCallback("doh-rollout");
+          },
           onDoorhangerAccept: new EventManager({
             context,
             name: "doorhanger.onDoorhangerAccept",
@@ -188,5 +191,8 @@ this.doorhanger = class doorhanger extends ExtensionAPI {
         },
       },
     };
+  }
+  onShutdown() {
+    EveryWindow.unregisterCallback("doh-rollout");
   }
 };
