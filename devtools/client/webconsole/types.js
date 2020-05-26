@@ -32,6 +32,7 @@ exports.ConsoleMessage = function(props) {
     {
       id: null,
       innerWindowID: null,
+      targetFront: null,
       allowRepeating: true,
       source: null,
       timeStamp: null,
@@ -67,6 +68,7 @@ exports.NetworkEventMessage = function(props) {
     {
       id: null,
       actor: null,
+      targetFront: null,
       level: MESSAGE_LEVEL.LOG,
       isXHR: false,
       request: null,

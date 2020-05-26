@@ -83,11 +83,6 @@ async function generateCssMessageStubs() {
   for (const code of getCommands()) {
     const received = new Promise(resolve => {
       handleErrorMessage = function(packet) {
-        info(
-          "Received css message: pageError " +
-            JSON.stringify(packet, null, "\t")
-        );
-
         const key = packet.pageError.errorMessage;
         stubs.set(key, getCleanedPacket(key, packet));
         resolve();

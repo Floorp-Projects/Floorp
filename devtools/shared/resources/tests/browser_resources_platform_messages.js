@@ -42,6 +42,12 @@ add_task(async function() {
       return;
     }
 
+    is(
+      resource.targetFront,
+      targetList.targetFront,
+      "The targetFront property is the expected one"
+    );
+
     receivedMessages.push(resource.message);
     is(
       resource.message,

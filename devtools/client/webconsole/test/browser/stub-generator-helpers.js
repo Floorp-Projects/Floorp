@@ -26,6 +26,9 @@ function getCleanedPacket(key, packet) {
     .replace(/\\\'/g, `\'`);
 
   cleanTimeStamp(packet);
+  // Remove the targetFront property that has a cyclical reference and that we don't need
+  // in our node tests.
+  delete packet.targetFront;
 
   if (!stubPackets.has(safeKey)) {
     return packet;

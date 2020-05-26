@@ -50,6 +50,12 @@ add_task(async function() {
   const onAvailable = ({ resourceType, targetFront, resource }) => {
     const { pageError } = resource;
 
+    is(
+      resource.targetFront,
+      targetList.targetFront,
+      "The targetFront property is the expected one"
+    );
+
     if (!pageError.sourceName.includes("test_page_errors")) {
       info(`Ignore error from unknown source: "${pageError.sourceName}"`);
       return;
