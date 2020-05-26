@@ -2432,7 +2432,7 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds) {
 static constexpr AllocKinds UpdatePhaseOne{
     AllocKind::SCRIPT,         AllocKind::BASE_SHAPE,   AllocKind::SHAPE,
     AllocKind::ACCESSOR_SHAPE, AllocKind::OBJECT_GROUP, AllocKind::STRING,
-    AllocKind::JITCODE};
+    AllocKind::JITCODE,        AllocKind::REGEXP_SHARED};
 
 // UpdatePhaseTwo is typed object descriptor objects.
 
