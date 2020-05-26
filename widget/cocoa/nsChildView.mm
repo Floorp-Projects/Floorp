@@ -3589,7 +3589,14 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   WidgetMouseEvent geckoEvent(true, eContextMenu, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.mButton = MouseButton::eRight;
+  if (StaticPrefs::dom_event_treat_ctrl_click_as_right_click_disabled() &&
+      [theEvent type] == NSLeftMouseDown) {
+    geckoEvent.mContextMenuTrigger = WidgetMouseEvent::eControlClick;
+    geckoEvent.mButton = MouseButton::eLeft;
+  } else {
+    geckoEvent.mButton = MouseButton::eRight;
+  }
+
   mGeckoChild->DispatchInputEvent(&geckoEvent);
   if (!mGeckoChild) return nil;
 
