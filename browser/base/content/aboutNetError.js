@@ -172,6 +172,11 @@ async function setErrorPageStrings(err) {
     title = err + "-sts-title";
   }
 
+  let cspXfoError = err === "cspBlocked" || err === "xfoBlocked";
+  if (cspXfoError) {
+    title = "csp-xfo-error-title";
+  }
+
   let [errorCodeTitle] = await document.l10n.formatValues([
     {
       id: title,
@@ -290,6 +295,23 @@ function initPage() {
     // Remove the "Try again" button for XFO and CSP violations,
     // since it's almost certainly useless. (Bug 553180)
     document.getElementById("netErrorButtonContainer").style.display = "none";
+
+    // Adding a button for opening websites blocked for CSP and XFO violations
+    // in a new window. (Bug 1461195)
+    document.getElementById("errorShortDesc").style.display = "none";
+
+    let hostString = document.location.hostname;
+    let longDescription = document.getElementById("errorLongDesc");
+    document.l10n.setAttributes(longDescription, "csp-xfo-blocked-long-desc", {
+      hostname: hostString,
+    });
+
+    document.getElementById("openInNewWindowContainer").style.display = "block";
+
+    let openInNewWindowButton = document.getElementById(
+      "openInNewWindowButton"
+    );
+    openInNewWindowButton.href = document.location.href;
   }
 
   setNetErrorMessageFromCode();

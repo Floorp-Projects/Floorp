@@ -80,6 +80,12 @@ cert-error-details-key-pinning-label = HTTP Public Key Pinning: { $hasHPKP }
 
 cert-error-details-cert-chain-label = Certificate chain:
 
+open-in-new-window-for-csp-or-xfo-error = Open Site in New Window
+
+# Variables:
+# $hostname (String) - Hostname of the website blocked by csp or xfo error.
+csp-xfo-blocked-long-desc = To protect your security, { $hostname } will not allow { -brand-short-name } to display the page if another site has embedded it. To see this page, you need to open it in a new window.
+
 ## Messages used for certificate error titles
 
 connectionFailure-title = Unable to connect
@@ -107,8 +113,7 @@ proxyResolveFailure-title = Unable to find the proxy server
 redirectLoop-title = The page isn’t redirecting properly
 unknownSocketType-title = Unexpected response from server
 nssFailure2-title = Secure Connection Failed
-cspBlocked-title = Blocked by Content Security Policy
-xfoBlocked-title = Blocked by X-Frame-Options Policy
+csp-xfo-error-title = { -brand-short-name } Can’t Open This Page
 corruptedContentError-title = Corrupted Content Error
 remoteXUL-title = Remote XUL
 sslv3Used-title = Unable to Connect Securely

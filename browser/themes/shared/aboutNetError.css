@@ -59,6 +59,10 @@ button:disabled {
   display: none;
 }
 
+#openInNewWindowContainer {
+  display: none;
+}
+
 #certErrorAndCaptivePortalButtonContainer {
   display: none;
 }
