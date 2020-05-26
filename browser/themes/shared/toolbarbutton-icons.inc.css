@@ -260,10 +260,6 @@ toolbar[brighttext] {
   list-style-image: url("chrome://devtools/skin/images/profiler-stopwatch.svg");
 }
 
-#PanelUI-profilerIframe {
-  width: 450px;
-}
-
 #preferences-button {
   list-style-image: url("chrome://global/skin/icons/settings.svg");
 }
