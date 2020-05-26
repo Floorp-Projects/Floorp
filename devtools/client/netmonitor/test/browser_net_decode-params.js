@@ -41,7 +41,7 @@ add_task(async function() {
 
   is(
     keyValue.innerText,
-    `file\t"foo # bar"`,
+    `file\n"foo # bar"`,
     "'+' in params in correctly decoded."
   );
 
