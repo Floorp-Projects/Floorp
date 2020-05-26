@@ -622,8 +622,13 @@ this.TelemetryFeed = class TelemetryFeed {
       case "snippets_user_event":
         event = await this.applySnippetsPolicy(event);
         break;
-      // Bug 1594125 added a new onboarding-like provider called `whats-new-panel`.
+      case "badge_user_event":
       case "whats-new-panel_user_event":
+        event = await this.applyWhatsNewPolicy(event);
+        break;
+      case "moments_user_event":
+        event = await this.applyMomentsPolicy(event);
+        break;
       case "onboarding_user_event":
         event = await this.applyOnboardingPolicy(event, session);
         break;
@@ -655,6 +660,38 @@ this.TelemetryFeed = class TelemetryFeed {
     }
     delete ping.action;
     return { ping, pingType: "cfr" };
+  }
+
+  /**
+   * Per Bug 1482134, all the metrics for What's New panel use client_id in
+   * all the release channels
+   */
+  async applyWhatsNewPolicy(ping) {
+    ping.client_id = await this.telemetryClientId;
+    ping.browser_session_id = browserSessionId;
+    // Attach page info to `event_context` if there is a session associated with this ping
+    delete ping.action;
+    return { ping, pingType: "whats-new-panel" };
+  }
+
+  /**
+   * Per Bug 1484035, Moments metrics comply with following policies:
+   * 1). In release, it collects impression_id, and treats bucket_id as message_id
+   * 2). In prerelease, it collects client_id and message_id
+   * 3). In shield experiments conducted in release, it collects client_id and message_id
+   */
+  async applyMomentsPolicy(ping) {
+    if (
+      UpdateUtils.getUpdateChannel(true) === "release" &&
+      !this.isInCFRCohort
+    ) {
+      ping.message_id = "n/a";
+      ping.impression_id = this._impressionId;
+    } else {
+      ping.client_id = await this.telemetryClientId;
+    }
+    delete ping.action;
+    return { ping, pingType: "moments" };
   }
 
   /**
