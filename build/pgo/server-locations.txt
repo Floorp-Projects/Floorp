@@ -94,6 +94,7 @@ http://sub2.test1.example.com:80     privileged
 http://sub2.test2.example.com:80     privileged
 http://noxul.example.com:80          privileged,noxul
 http://example.net:80                privileged
+http://supports-insecure.expired.example.com:80 privileged
 # Used to test that clearing Service Workers for domain example.com, does not clear prefixexample.com
 http://prefixexample.com:80
 
@@ -119,6 +120,7 @@ https://mismatch.expired.example.com:443	privileged,cert=expired
 https://mismatch.untrusted.example.com:443	privileged,cert=untrusted
 https://untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
 https://mismatch.untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
+https://supports-insecure.expired.example.com:443   privileged,cert=expired
 https://no-subject-alt-name.example.com:443   cert=noSubjectAltName
 
 # Used for secure contexts on ip addresses, see bug 1616675. Note that
