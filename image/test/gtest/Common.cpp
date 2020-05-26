@@ -52,6 +52,9 @@ AutoInitializeImageLib::AutoInitializeImageLib() {
   // Ensure gfxPlatform is initialized.
   gfxPlatform::GetPlatform();
 
+  // Ensure we always color manage images with gtests.
+  gfxPlatform::SetCMSModeOverride(eCMSMode_All);
+
   // Depending on initialization order, it is possible that our pref changes
   // have not taken effect yet because there are pending gfx-related events on
   // the main thread.

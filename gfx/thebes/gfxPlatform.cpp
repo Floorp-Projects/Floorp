@@ -2087,6 +2087,11 @@ eCMSMode gfxPlatform::GetCMSMode() {
   return gCMSMode;
 }
 
+void gfxPlatform::SetCMSModeOverride(eCMSMode aMode) {
+  MOZ_ASSERT(gCMSInitialized);
+  gCMSMode = aMode;
+}
+
 int gfxPlatform::GetRenderingIntent() {
   // StaticPrefList.yaml is using 0 as the default for the rendering
   // intent preference, based on that being the value for
