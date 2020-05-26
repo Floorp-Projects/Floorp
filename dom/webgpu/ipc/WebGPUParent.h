@@ -31,22 +31,24 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvAdapterDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceCreateBuffer(RawId aSelfId,
-                                        const dom::GPUBufferDescriptor& aDesc,
-                                        RawId aNewId);
+                                        const ffi::WGPUBufferDescriptor& aDesc,
+                                        const nsCString& aLabel, RawId aNewId);
   ipc::IPCResult RecvDeviceUnmapBuffer(RawId aSelfId, RawId aBufferId,
                                        Shmem&& aShmem, bool aFlush);
   ipc::IPCResult RecvBufferMapRead(RawId aSelfId, Shmem&& aShmem,
                                    BufferMapReadResolver&& aResolver);
   ipc::IPCResult RecvBufferDestroy(RawId aSelfId);
-  ipc::IPCResult RecvDeviceCreateTexture(RawId aSelfId,
-                                         const SerialTextureDescriptor& aDesc,
-                                         RawId aNewId);
+  ipc::IPCResult RecvDeviceCreateTexture(
+      RawId aSelfId, const ffi::WGPUTextureDescriptor& aDesc,
+      const nsCString& aLabel, RawId aNewId);
   ipc::IPCResult RecvTextureCreateView(
-      RawId aSelfId, const ffi::WGPUTextureViewDescriptor& aDesc, RawId aNewId);
+      RawId aSelfId, const ffi::WGPUTextureViewDescriptor& aDesc,
+      const nsCString& aLabel, RawId aNewId);
   ipc::IPCResult RecvTextureDestroy(RawId aSelfId);
   ipc::IPCResult RecvTextureViewDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceCreateSampler(
-      RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc, RawId aNewId);
+      RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc,
+      const nsCString& aLabel, RawId aNewId);
   ipc::IPCResult RecvSamplerDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceCreateCommandEncoder(
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc,
