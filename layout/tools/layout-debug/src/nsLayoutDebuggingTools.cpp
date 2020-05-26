@@ -298,7 +298,7 @@ nsLayoutDebuggingTools::DumpViews() {
 NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpStyleSheets() {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
-#ifdef DEBUG
+#if defined(DEBUG) || defined(MOZ_LAYOUT_DEBUGGER)
   FILE* out = stdout;
   if (PresShell* presShell = GetPresShell(mDocShell)) {
     presShell->ListStyleSheets(out);

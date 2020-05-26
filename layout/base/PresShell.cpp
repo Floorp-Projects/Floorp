@@ -10201,13 +10201,20 @@ void PresShell::ListComputedStyles(FILE* out, int32_t aIndent) {
     }
   }
 }
+#endif
 
+#if defined(DEBUG) || defined(MOZ_LAYOUT_DEBUGGER)
 void PresShell::ListStyleSheets(FILE* out, int32_t aIndent) {
-  int32_t sheetCount = StyleSet()->SheetCount(StyleOrigin::Author);
-  for (int32_t i = 0; i < sheetCount; ++i) {
-    StyleSet()->SheetAt(StyleOrigin::Author, i)->List(out, aIndent);
-    fputs("\n", out);
-  }
+  auto ListStyleSheetsAtOrigin = [this, out, aIndent](StyleOrigin origin) {
+    int32_t sheetCount = StyleSet()->SheetCount(origin);
+    for (int32_t i = 0; i < sheetCount; ++i) {
+      StyleSet()->SheetAt(origin, i)->List(out, aIndent);
+    }
+  };
+
+  ListStyleSheetsAtOrigin(StyleOrigin::UserAgent);
+  ListStyleSheetsAtOrigin(StyleOrigin::User);
+  ListStyleSheetsAtOrigin(StyleOrigin::Author);
 }
 #endif
 
