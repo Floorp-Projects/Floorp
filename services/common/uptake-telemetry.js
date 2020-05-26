@@ -122,6 +122,7 @@ class UptakeTelemetry {
    * Only supported in Events Telemetry:
    *
    * - `SHUTDOWN_ERROR`: Error occuring during shutdown.
+   * - `CORRUPTION_ERROR`: Error related to corrupted local data.
    *
    * @type {Object}
    */
@@ -130,6 +131,7 @@ class UptakeTelemetry {
       ...UptakeTelemetry.HISTOGRAM_LABELS,
       // Events only.
       SHUTDOWN_ERROR: "shutdown_error",
+      CORRUPTION_ERROR: "corruption_error",
     };
   }
 
