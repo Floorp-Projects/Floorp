@@ -1896,6 +1896,30 @@ bool CompilationInfo::publishDeferredFunctions() {
   return true;
 }
 
+// JSFunctions have a default ObjectGroup when they are created. Once their
+// enclosing script is compiled, we have more precise heuristic information and
+// now compute their final group. These functions have not been exposed to
+// script before this point.
+static bool SetTypeForExposedFunctions(JSContext* cx, FunctionBox* listHead) {
+  for (FunctionBox* funbox = listHead; funbox; funbox = funbox->traceLink()) {
+    if (!funbox->isInterpreted()) {
+      continue;
+    }
+
+    // If the function was not referenced by enclosing script's bytecode, we do
+    // not generate a BaseScript for it. For example, `(function(){});`.
+    if (!funbox->wasEmitted) {
+      continue;
+    }
+
+    if (!funbox->setTypeForScriptedFunction(cx)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Instantiate js::BaseScripts from ScriptStencils for inner functions of the
 // compilation. Note that standalone functions and functions being delazified
 // are handled below with other top-levels.
@@ -1944,6 +1968,10 @@ static bool InstantiateTopLevel(JSContext* cx,
 }
 
 bool CompilationInfo::instantiateStencils() {
+  if (!SetTypeForExposedFunctions(cx, traceListHead)) {
+    return false;
+  }
+
   if (!InstantiateScriptStencils(cx, *this, traceListHead)) {
     return false;
   }

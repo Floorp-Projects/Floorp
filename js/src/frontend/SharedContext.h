@@ -348,6 +348,10 @@ class FunctionBox : public SharedContext {
   // function already is referenced by the bytecode.
   bool wasEmitted : 1;
 
+  // This function should be marked as a singleton. It is expected to be defined
+  // at most once. This is a heuristic only and does not affect correctness.
+  bool isSingleton : 1;
+
   // Need to emit a synthesized Annex B assignment
   bool isAnnexB : 1;
 
@@ -614,9 +618,9 @@ class FunctionBox : public SharedContext {
     }
   }
 
-  bool setTypeForScriptedFunction(JSContext* cx, bool singleton) {
+  bool setTypeForScriptedFunction(JSContext* cx) {
     RootedFunction fun(cx, function());
-    return JSFunction::setTypeForScriptedFunction(cx, fun, singleton);
+    return JSFunction::setTypeForScriptedFunction(cx, fun, isSingleton);
   }
 
   size_t index() { return funcDataIndex_; }
