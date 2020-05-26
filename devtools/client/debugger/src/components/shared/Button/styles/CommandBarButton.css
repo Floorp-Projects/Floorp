@@ -46,6 +46,7 @@
 .devtools-button.debugger-settings-menu-button {
   border-radius: 0;
   margin: 0;
+  padding: 0;
 }
 
 .devtools-button.debugger-settings-menu-button::before {
