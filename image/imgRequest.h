@@ -284,6 +284,8 @@ class imgRequest final : public nsIStreamListener,
 
   // If we've called OnImageAvailable.
   bool mImageAvailable;
+  bool mIsDeniedCrossSiteCORSRequest;
+  bool mIsCrossSiteNoCORSRequest;
 
   mutable mozilla::Mutex mMutex;
 
@@ -297,8 +299,6 @@ class imgRequest final : public nsIStreamListener,
   bool mDecodeRequested : 1;
   bool mNewPartPending : 1;
   bool mHadInsecureRedirect : 1;
-  bool mIsDeniedCrossSiteCORSRequest : 1;
-  bool mIsCrossSiteNoCORSRequest : 1;
 };
 
 #endif  // mozilla_image_imgRequest_h
