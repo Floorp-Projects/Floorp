@@ -41,6 +41,7 @@ using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 using refcounted class nsIVariant from "mozilla/dom/PropertyBagUtils.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::WindowContextInitializer from "mozilla/dom/WindowContext.h";
 
 namespace mozilla {
 namespace dom {
@@ -226,6 +227,17 @@ struct PerformanceInfo
   PerformanceMemoryInfo memory;
   // Counters per category. For workers, a single entry
   CategoryDispatch[] items;
+};
+
+struct WindowGlobalInit
+{
+  // Fields which are synchronized to other processes are found here.
+  WindowContextInitializer context;
+
+  // Private fields only shared with the parent process.
+  nsIPrincipal principal;
+  nsIPrincipal contentBlockingAllowListPrincipal;
+  nsIURI documentURI;
 };
 
 struct DocShellLoadStateInit

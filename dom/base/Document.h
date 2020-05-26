@@ -1051,6 +1051,96 @@ class Document : public nsINode,
   void SetBidiOptions(uint32_t aBidiOptions) { mBidiOptions = aBidiOptions; }
 
   /**
+   * Get the has mixed active content loaded flag for this document.
+   */
+  bool GetHasMixedActiveContentLoaded() {
+    return mMixedContentFlags &
+           nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
+  }
+
+  /**
+   * Set the has mixed active content loaded flag for this document.
+   */
+  void SetHasMixedActiveContentLoaded(bool aHasMixedActiveContentLoaded) {
+    if (aHasMixedActiveContentLoaded) {
+      mMixedContentFlags |=
+          nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
+    } else {
+      mMixedContentFlags &=
+          ~nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
+    }
+  }
+
+  /**
+   * Get mixed active content blocked flag for this document.
+   */
+  bool GetHasMixedActiveContentBlocked() {
+    return mMixedContentFlags &
+           nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+  }
+
+  /**
+   * Set the mixed active content blocked flag for this document.
+   */
+  void SetHasMixedActiveContentBlocked(bool aHasMixedActiveContentBlocked) {
+    if (aHasMixedActiveContentBlocked) {
+      mMixedContentFlags |=
+          nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+    } else {
+      mMixedContentFlags &=
+          ~nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+    }
+  }
+
+  /**
+   * Get the has mixed display content loaded flag for this document.
+   */
+  bool GetHasMixedDisplayContentLoaded() {
+    return mMixedContentFlags &
+           nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
+  }
+
+  /**
+   * Set the has mixed display content loaded flag for this document.
+   */
+  void SetHasMixedDisplayContentLoaded(bool aHasMixedDisplayContentLoaded) {
+    if (aHasMixedDisplayContentLoaded) {
+      mMixedContentFlags |=
+          nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
+    } else {
+      mMixedContentFlags &=
+          ~nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
+    }
+  }
+
+  /**
+   * Get mixed display content blocked flag for this document.
+   */
+  bool GetHasMixedDisplayContentBlocked() {
+    return mMixedContentFlags &
+           nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
+  }
+
+  /**
+   * Set the mixed display content blocked flag for this document.
+   */
+  void SetHasMixedDisplayContentBlocked(bool aHasMixedDisplayContentBlocked) {
+    if (aHasMixedDisplayContentBlocked) {
+      mMixedContentFlags |=
+          nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
+    } else {
+      mMixedContentFlags &=
+          ~nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
+    }
+  }
+
+  uint32_t GetMixedContentFlags() const { return mMixedContentFlags; }
+
+  void AddMixedContentFlags(uint32_t aMixedContentFlags) {
+    mMixedContentFlags |= aMixedContentFlags;
+  }
+
+  /**
    * Set CSP flag for this document.
    */
   void SetHasCSP(bool aHasCSP) { mHasCSP = aHasCSP; }
@@ -4299,6 +4389,8 @@ class Document : public nsINode,
   // Permission Delegate Handler, lazily-initialized in
   // GetPermissionDelegateHandler
   RefPtr<PermissionDelegateHandler> mPermissionDelegateHandler;
+
+  uint32_t mMixedContentFlags = 0;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;

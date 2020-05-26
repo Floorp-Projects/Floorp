@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 interface nsIDocShell;
-interface nsISecureBrowserUI;
 
 interface mixin LoadContextMixin {
   readonly attribute WindowProxy? associatedWindow;
@@ -125,8 +124,6 @@ interface CanonicalBrowsingContext : BrowsingContext {
 
   void notifyStartDelayedAutoplayMedia();
   void notifyMediaMutedChanged(boolean muted);
-
-  readonly attribute nsISecureBrowserUI? secureBrowserUI;
 
   static unsigned long countSiteOrigins(sequence<BrowsingContext> roots);
 

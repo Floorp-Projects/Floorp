@@ -15,15 +15,15 @@
 
   loadAsInsecure = true;
 
-  async function runTest()
+  function runTest()
   {
-    await isSecurityState("insecure", "left insecure");
+    isSecurityState("insecure", "left insecure");
     finish();
   }
 
-  async function afterNavigationTest()
+  function afterNavigationTest()
   {
-    await isSecurityState("insecure", "left insecure after renavigation");
+    isSecurityState("insecure", "left insecure after renavigation");
     finish();
   }
 

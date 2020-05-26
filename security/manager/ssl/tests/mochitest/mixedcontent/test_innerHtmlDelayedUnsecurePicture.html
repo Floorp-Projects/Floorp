@@ -13,25 +13,25 @@
   <script class="testbody" type="text/javascript">
   "use strict";
 
-  async function runTest()
+  function runTest()
   {
-    await isSecurityState("secure");
+    isSecurityState("secure");
 
     window.setTimeout(function () {
       document.getElementById("buddy").innerHTML =
         "<img id='image1' src='http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg' />";
     }, 1);
 
-    waitForSecurityState("broken", async () => {
-      await isSecurityState("broken", "innerHTML loading insecure changed to broken");
+    waitForSecurityState("broken", function () {
+      isSecurityState("broken", "innerHTML loading insecure changed to broken");
       finish();
     });
   }
 
-  async function afterNavigationTest()
+  function afterNavigationTest()
   {
     is(document.getElementById("buddy").innerHTML, "\n", "innerHTML back to previous");
-    await isSecurityState("secure");
+    isSecurityState("secure");
     finish();
   }
 

@@ -15,15 +15,15 @@
 
   // This test, as is, equals to https://kuix.de/misc/test17/358438.php
 
-  async function runTest()
+  function runTest()
   {
-    await isSecurityState("broken", "security broken");
+    isSecurityState("broken", "security broken");
     finish();
   }
 
-  async function afterNavigationTest()
+  function afterNavigationTest()
   {
-    await isSecurityState("broken", "security after navigation");
+    isSecurityState("broken", "security after navigation");
     finish();
   }
 

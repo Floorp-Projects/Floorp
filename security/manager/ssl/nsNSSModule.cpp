@@ -31,7 +31,7 @@
 #include "nsPK11TokenDB.h"
 #include "nsPKCS11Slot.h"
 #include "nsRandomGenerator.h"
-#include "nsSecureBrowserUI.h"
+#include "nsSecureBrowserUIImpl.h"
 #include "nsSiteSecurityService.h"
 #include "nsXULAppAPI.h"
 

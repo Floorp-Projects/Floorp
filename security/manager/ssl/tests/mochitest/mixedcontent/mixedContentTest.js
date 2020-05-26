@@ -31,17 +31,17 @@ var hasMixedActiveContent = false;
 // Internal variables
 var _windowCount = 0;
 
-window.onload = async function onLoad() {
+window.onload = function onLoad() {
   if (location.search == "?runtest") {
     try {
       if (history.length == 1) {
         // Each test that includes this helper file is supposed to define
         // runTest(). See the top level comment.
-        await runTest(); // eslint-disable-line no-undef
+        runTest(); // eslint-disable-line no-undef
       } else {
         // Each test that includes this helper file is supposed to define
         // afterNavigationTest(). See the top level comment.
-        await afterNavigationTest(); // eslint-disable-line no-undef
+        afterNavigationTest(); // eslint-disable-line no-undef
       }
     } catch (ex) {
       ok(false, "Exception thrown during test: " + ex);
@@ -137,19 +137,21 @@ function is(a, b, message) {
   }
 }
 
-async function isSecurityState(expectedState, message, test) {
+function isSecurityState(expectedState, message, test) {
   if (!test) {
     test = ok;
   }
 
-  let state = await SpecialPowers.getSecurityState(window);
+  let ui = SpecialPowers.wrap(window).docShell.securityUI;
 
   let isInsecure =
-    state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IS_INSECURE;
+    !ui || ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IS_INSECURE;
   let isBroken =
-    state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IS_BROKEN;
+    ui && ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IS_BROKEN;
   let isEV =
-    state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
+    ui &&
+    ui.state &
+      SpecialPowers.Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
 
   let gotState = "secure";
   if (isInsecure) {
@@ -174,19 +176,19 @@ async function isSecurityState(expectedState, message, test) {
       break;
     case "broken":
       test(
-        !isInsecure && isBroken && !isEV,
+        ui && !isInsecure && isBroken && !isEV,
         "for 'broken' expected  flags [0,1,0], " + (message || "")
       );
       break;
     case "secure":
       test(
-        !isInsecure && !isBroken && !isEV,
+        ui && !isInsecure && !isBroken && !isEV,
         "for 'secure' expected flags [0,0,0], " + (message || "")
       );
       break;
     case "EV":
       test(
-        !isInsecure && !isBroken && isEV,
+        ui && !isInsecure && !isBroken && isEV,
         "for 'EV' expected flags [0,0,1], " + (message || "")
       );
       break;
@@ -197,8 +199,8 @@ async function isSecurityState(expectedState, message, test) {
 
 function waitForSecurityState(expectedState, callback) {
   let roundsLeft = 200; // Wait for 20 seconds (=200*100ms)
-  let interval = window.setInterval(async () => {
-    await isSecurityState(expectedState, "", isok => {
+  let interval = window.setInterval(() => {
+    isSecurityState(expectedState, "", isok => {
       if (isok) {
         roundsLeft = 0;
       }

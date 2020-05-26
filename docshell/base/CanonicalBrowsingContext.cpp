@@ -26,7 +26,6 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsNetUtil.h"
 #include "nsSHistory.h"
-#include "nsSecureBrowserUI.h"
 
 using namespace mozilla::ipc;
 
@@ -113,23 +112,6 @@ void CanonicalBrowsingContext::SetOwnerProcessId(uint64_t aProcessId) {
            Id(), mProcessId, aProcessId));
 
   mProcessId = aProcessId;
-}
-
-nsISecureBrowserUI* CanonicalBrowsingContext::GetSecureBrowserUI() {
-  if (!IsTop()) {
-    return nullptr;
-  }
-  if (!mSecureBrowserUI) {
-    mSecureBrowserUI = new nsSecureBrowserUI(this);
-  }
-  return mSecureBrowserUI;
-}
-
-void CanonicalBrowsingContext::
-    UpdateSecurityStateForLocationOrMixedContentChange() {
-  if (mSecureBrowserUI) {
-    mSecureBrowserUI->UpdateForLocationOrMixedContentChange();
-  }
 }
 
 void CanonicalBrowsingContext::SetInFlightProcessId(uint64_t aProcessId) {

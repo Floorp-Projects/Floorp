@@ -25,15 +25,15 @@
     img1.src = "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg";
   };
 
-  async function runTest()
+  function runTest()
   {
-    await isSecurityState("secure", "secure");
+    isSecurityState("secure", "secure");
     finish();
   }
 
-  async function afterNavigationTest()
+  function afterNavigationTest()
   {
-    await isSecurityState("secure", "secure after navigation");
+    isSecurityState("secure", "secure after navigation");
     finish();
   }
 

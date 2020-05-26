@@ -16,7 +16,6 @@ namespace dom {
 
 class WindowGlobalParent;
 class WindowGlobalInit;
-class BrowsingContextGroup;
 
 #define MOZ_EACH_WC_FIELD(FIELD)                                       \
   FIELD(CookieBehavior, Maybe<uint32_t>)                               \
@@ -91,12 +90,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   IPCInitializer GetIPCInitializer();
 
   static void CreateFromIPC(IPCInitializer&& aInit);
-
-  // Add new mixed content security state flags.
-  // These should be some of the four nsIWebProgressListener
-  // 'MIXED' state flags, and should only be called on the
-  // top window context.
-  void AddMixedContentSecurityState(uint32_t aStateFlags);
 
  protected:
   WindowContext(BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
