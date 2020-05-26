@@ -48,7 +48,7 @@ By default, all features are added, so you immediately have a fully functional d
 
 As shown, the generated ``__init__`` method allows for both positional and keyword arguments.
 
-If playful naming turns you off, ``attrs`` comes with serious business aliases:
+If playful naming turns you off, ``attrs`` comes with serious-business aliases:
 
 .. doctest::
 
@@ -144,6 +144,73 @@ Therefore ``@attr.s`` comes with the ``repr_ns`` option to set it manually:
 ``repr_ns`` works on both Python 2 and 3.
 On Python 3 it overrides the implicit detection.
 
+
+Keyword-only Attributes
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When using ``attrs`` on Python 3, you can also add `keyword-only <https://docs.python.org/3/glossary.html#keyword-only-parameter>`_ attributes:
+
+.. doctest::
+
+    >>> @attr.s
+    ... class A:
+    ...     a = attr.ib(kw_only=True)
+    >>> A()
+    Traceback (most recent call last):
+      ...
+    TypeError: A() missing 1 required keyword-only argument: 'a'
+    >>> A(a=1)
+    A(a=1)
+
+``kw_only`` may also be specified at via ``attr.s``, and will apply to all attributes:
+
+.. doctest::
+
+    >>> @attr.s(kw_only=True)
+    ... class A:
+    ...     a = attr.ib()
+    ...     b = attr.ib()
+    >>> A(1, 2)
+    Traceback (most recent call last):
+      ...
+    TypeError: __init__() takes 1 positional argument but 3 were given
+    >>> A(a=1, b=2)
+    A(a=1, b=2)
+
+
+
+If you create an attribute with ``init=False``, the ``kw_only`` argument is ignored.
+
+Keyword-only attributes allow subclasses to add attributes without default values, even if the base class defines attributes with default values:
+
+.. doctest::
+
+    >>> @attr.s
+    ... class A:
+    ...     a = attr.ib(default=0)
+    >>> @attr.s
+    ... class B(A):
+    ...     b = attr.ib(kw_only=True)
+    >>> B(b=1)
+    B(a=0, b=1)
+    >>> B()
+    Traceback (most recent call last):
+      ...
+    TypeError: B() missing 1 required keyword-only argument: 'b'
+
+If you don't set ``kw_only=True``, then there's is no valid attribute ordering and you'll get an error:
+
+.. doctest::
+
+    >>> @attr.s
+    ... class A:
+    ...     a = attr.ib(default=0)
+    >>> @attr.s
+    ... class B(A):
+    ...     b = attr.ib()
+    Traceback (most recent call last):
+      ...
+    ValueError: No mandatory attributes allowed after an attribute with a default value or factory.  Attribute in question: Attribute(name='b', default=NOTHING, validator=None, repr=True, cmp=True, hash=None, init=True, convert=None, metadata=mappingproxy({}), type=None, kw_only=False)
 
 .. _asdict:
 
@@ -262,7 +329,7 @@ And sometimes you even want mutable objects as default values (ever used acciden
    >>> cp
    ConnectionPool(db_string='postgres://localhost', pool=deque([Connection(socket=42)]), debug=False)
 
-More information on why class methods for constructing objects are awesome can be found in this insightful `blog post <http://as.ynchrono.us/2014/12/asynchronous-object-initialization.html>`_.
+More information on why class methods for constructing objects are awesome can be found in this insightful `blog post <https://as.ynchrono.us/2014/12/asynchronous-object-initialization.html>`_.
 
 Default factories can also be set using a decorator.
 The method receives the partially initialized instance which enables you to base a default value on other attributes:
@@ -297,7 +364,7 @@ Validators
 
 Although your initializers should do as little as possible (ideally: just initialize your instance according to the arguments!), it can come in handy to do some kind of validation on the arguments.
 
-``attrs`` offers two ways to define validators for each attribute and it's up to you to choose which one suites better your style and project.
+``attrs`` offers two ways to define validators for each attribute and it's up to you to choose which one suits your style and project better.
 
 You can use a decorator:
 
@@ -317,7 +384,7 @@ You can use a decorator:
       ...
    ValueError: x must be smaller or equal to 42
 
- ...or a callable...
+...or a callable...
 
 .. doctest::
 
@@ -352,7 +419,7 @@ You can use a decorator:
    >>> C("128")
    Traceback (most recent call last):
       ...
-   TypeError: ("'x' must be <class 'int'> (got '128' that is a <class 'str'>).", Attribute(name='x', default=NOTHING, validator=[<instance_of validator for type <class 'int'>>, <function fits_byte at 0x10fd7a0d0>], repr=True, cmp=True, hash=True, init=True, metadata=mappingproxy({}), type=None, converter=one), <class 'int'>, '128')
+   TypeError: ("'x' must be <class 'int'> (got '128' that is a <class 'str'>).", Attribute(name='x', default=NOTHING, validator=[<instance_of validator for type <class 'int'>>, <function fits_byte at 0x10fd7a0d0>], repr=True, cmp=True, hash=True, init=True, metadata=mappingproxy({}), type=None, converter=one, kw_only=False), <class 'int'>, '128')
    >>> C(256)
    Traceback (most recent call last):
       ...
@@ -371,7 +438,7 @@ You can use a decorator:
    >>> C("42")
    Traceback (most recent call last):
       ...
-   TypeError: ("'x' must be <type 'int'> (got '42' that is a <type 'str'>).", Attribute(name='x', default=NOTHING, factory=NOTHING, validator=<instance_of validator for type <type 'int'>>, type=None), <type 'int'>, '42')
+   TypeError: ("'x' must be <type 'int'> (got '42' that is a <type 'str'>).", Attribute(name='x', default=NOTHING, factory=NOTHING, validator=<instance_of validator for type <type 'int'>>, type=None, kw_only=False), <type 'int'>, '42')
 
 Check out :ref:`validators` for more details.
 

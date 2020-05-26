@@ -1,14 +1,17 @@
 Metadata-Version: 2.1
 Name: attrs
-Version: 18.1.0
+Version: 19.1.0
 Summary: Classes Without Boilerplate
-Home-page: http://www.attrs.org/
+Home-page: https://www.attrs.org/
 Author: Hynek Schlawack
 Author-email: hs@ox.cx
 Maintainer: Hynek Schlawack
 Maintainer-email: hs@ox.cx
 License: MIT
-Description: .. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
+Project-URL: Documentation, https://www.attrs.org/
+Project-URL: Bug Tracker, https://github.com/python-attrs/attrs/issues
+Project-URL: Source Code, https://github.com/python-attrs/attrs
+Description: .. image:: https://www.attrs.org/en/latest/_static/attrs_logo.png
            :alt: attrs Logo
         
         ======================================
@@ -16,7 +19,7 @@ Description: .. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
         ======================================
         
         .. image:: https://readthedocs.org/projects/attrs/badge/?version=stable
-           :target: http://www.attrs.org/en/stable/?badge=stable
+           :target: https://www.attrs.org/en/stable/?badge=stable
            :alt: Documentation Status
         
         .. image:: https://travis-ci.org/python-attrs/attrs.svg?branch=master
@@ -26,6 +29,10 @@ Description: .. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
         .. image:: https://codecov.io/github/python-attrs/attrs/branch/master/graph/badge.svg
            :target: https://codecov.io/github/python-attrs/attrs
            :alt: Test Coverage
+        
+        .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+           :target: https://github.com/ambv/black
+           :alt: Code style: black
         
         .. teaser-begin
         
@@ -46,7 +53,7 @@ Description: .. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
            >>> @attr.s
            ... class SomeClass(object):
            ...     a_number = attr.ib(default=42)
-           ...     list_of_numbers = attr.ib(default=attr.Factory(list))
+           ...     list_of_numbers = attr.ib(factory=list)
            ...
            ...     def hard_math(self, another_number):
            ...         return self.a_number + sum(self.list_of_numbers) * another_number
@@ -84,7 +91,9 @@ Description: .. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
         
         *without* writing dull boilerplate code again and again and *without* runtime performance penalties.
         
-        This gives you the power to use actual classes with actual types in your code instead of confusing ``tuple``\ s or `confusingly behaving <http://www.attrs.org/en/stable/why.html#namedtuples>`_ ``namedtuple``\ s.
+        On Python 3.6 and later, you can often even drop the calls to ``attr.ib()`` by using `type annotations <https://www.attrs.org/en/latest/types.html>`_.
+        
+        This gives you the power to use actual classes with actual types in your code instead of confusing ``tuple``\ s or `confusingly behaving <https://www.attrs.org/en/stable/why.html#namedtuples>`_ ``namedtuple``\ s.
         Which in turn encourages you to write *small classes* that do `one thing well <https://www.destroyallsoftware.com/talks/boundaries>`_.
         Never again violate the `single responsibility principle <https://en.wikipedia.org/wiki/Single_responsibility_principle>`_ just because implementing ``__init__`` et al is a painful drag.
         
@@ -99,13 +108,13 @@ Description: .. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
           Writing a fully-functional class using attrs takes me less time than writing this testimonial.
         
         
-        **Glyph Lefkowitz**, creator of `Twisted <https://twistedmatrix.com/>`_, `Automat <https://pypi.python.org/pypi/Automat>`_, and other open source software, in `The One Python Library Everyone Needs <https://glyph.twistedmatrix.com/2016/08/attrs.html>`_:
+        **Glyph Lefkowitz**, creator of `Twisted <https://twistedmatrix.com/>`_, `Automat <https://pypi.org/project/Automat/>`_, and other open source software, in `The One Python Library Everyone Needs <https://glyph.twistedmatrix.com/2016/08/attrs.html>`_:
         
           I’m looking forward to is being able to program in Python-with-attrs everywhere.
           It exerts a subtle, but positive, design influence in all the codebases I’ve see it used in.
         
         
-        **Kenneth Reitz**, author of `requests <http://www.python-requests.org/>`_, Python Overlord at Heroku, `on paper no less <https://twitter.com/hynek/status/866817877650751488>`_:
+        **Kenneth Reitz**, author of `Requests <http://www.python-requests.org/>`_ and Developer Advocate at DigitalOcean, (`on paper no less <https://twitter.com/hynek/status/866817877650751488>`_!):
         
           attrs—classes for humans.  I like it.
         
@@ -131,7 +140,7 @@ Description: .. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
         ===================
         
         ``attrs`` is released under the `MIT <https://choosealicense.com/licenses/mit/>`_ license,
-        its documentation lives at `Read the Docs <http://www.attrs.org/>`_,
+        its documentation lives at `Read the Docs <https://www.attrs.org/>`_,
         the code on `GitHub <https://github.com/python-attrs/attrs>`_,
         and the latest release on `PyPI <https://pypi.org/project/attrs/>`_.
         It’s rigorously tested on Python 2.7, 3.4+, and PyPy.
@@ -139,71 +148,52 @@ Description: .. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
         We collect information on **third-party extensions** in our `wiki <https://github.com/python-attrs/attrs/wiki/Extensions-to-attrs>`_.
         Feel free to browse and add your own!
         
-        If you'd like to contribute to ``attrs`` you're most welcome and we've written `a little guide <http://www.attrs.org/en/latest/contributing.html>`_ to get you started!
+        If you'd like to contribute to ``attrs`` you're most welcome and we've written `a little guide <https://www.attrs.org/en/latest/contributing.html>`_ to get you started!
         
         
         Release Information
         ===================
         
-        18.1.0 (2018-05-03)
+        19.1.0 (2019-03-03)
         -------------------
+        
+        Backward-incompatible Changes
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        
+        - Fixed a bug where deserialized objects with ``cache_hash=True`` could have incorrect hash code values.
+          This change breaks classes with ``cache_hash=True`` when a custom ``__setstate__`` is present.
+          An exception will be thrown when applying the ``attrs`` annotation to such a class.
+          This limitation is tracked in issue `#494 <https://github.com/python-attrs/attrs/issues/494>`_.
+          `#482 <https://github.com/python-attrs/attrs/issues/482>`_
+        
         
         Changes
         ^^^^^^^
         
-        - ``x=X(); x.cycle = x; repr(x)`` will no longer raise a ``RecursionError``, and will instead show as ``X(x=...)``.
+        - Add ``is_callable``, ``deep_iterable``, and ``deep_mapping`` validators.
         
-          `#95 <https://github.com/python-attrs/attrs/issues/95>`_
-        - ``attr.ib(factory=f)`` is now syntactic sugar for the common case of ``attr.ib(default=attr.Factory(f))``.
+          * ``is_callable``: validates that a value is callable
+          * ``deep_iterable``: Allows recursion down into an iterable,
+            applying another validator to every member in the iterable
+            as well as applying an optional validator to the iterable itself.
+          * ``deep_mapping``: Allows recursion down into the items in a mapping object,
+            applying a key validator and a value validator to the key and value in every item.
+            Also applies an optional validator to the mapping object itself.
         
-          `#178 <https://github.com/python-attrs/attrs/issues/178>`_,
-          `#356 <https://github.com/python-attrs/attrs/issues/356>`_
-        - Added ``attr.field_dict()`` to return an ordered dictionary of ``attrs`` attributes for a class, whose keys are the attribute names.
+          You can find them in the ``attr.validators`` package.
+          `#425 <https://github.com/python-attrs/attrs/issues/425>`_
+        - Fixed stub files to prevent errors raised by mypy's ``disallow_any_generics = True`` option.
+          `#443 <https://github.com/python-attrs/attrs/issues/443>`_
+        - Attributes with ``init=False`` now can follow after ``kw_only=True`` attributes.
+          `#450 <https://github.com/python-attrs/attrs/issues/450>`_
+        - ``attrs`` now has first class support for defining exception classes.
         
-          `#290 <https://github.com/python-attrs/attrs/issues/290>`_,
-          `#349 <https://github.com/python-attrs/attrs/issues/349>`_
-        - The order of attributes that are passed into ``attr.make_class()`` or the ``these`` argument of ``@attr.s()`` is now retained if the dictionary is ordered (i.e. ``dict`` on Python 3.6 and later, ``collections.OrderedDict`` otherwise).
+          If you define a class using ``@attr.s(auto_exc=True)`` and subclass an exception, the class will behave like a well-behaved exception class including an appropriate ``__str__`` method, and all attributes additionally available in an ``args`` attribute.
+          `#500 <https://github.com/python-attrs/attrs/issues/500>`_
+        - Clarified documentation for hashing to warn that hashable objects should be deeply immutable (in their usage, even if this is not enforced).
+          `#503 <https://github.com/python-attrs/attrs/issues/503>`_
         
-          Before, the order was always determined by the order in which the attributes have been defined which may not be desirable when creating classes programatically.
-        
-          `#300 <https://github.com/python-attrs/attrs/issues/300>`_,
-          `#339 <https://github.com/python-attrs/attrs/issues/339>`_,
-          `#343 <https://github.com/python-attrs/attrs/issues/343>`_
-        - In slotted classes, ``__getstate__`` and ``__setstate__`` now ignore the ``__weakref__`` attribute.
-        
-          `#311 <https://github.com/python-attrs/attrs/issues/311>`_,
-          `#326 <https://github.com/python-attrs/attrs/issues/326>`_
-        - Setting the cell type is now completely best effort.
-          This fixes ``attrs`` on Jython.
-        
-          We cannot make any guarantees regarding Jython though, because our test suite cannot run due to dependency incompatabilities.
-        
-          `#321 <https://github.com/python-attrs/attrs/issues/321>`_,
-          `#334 <https://github.com/python-attrs/attrs/issues/334>`_
-        - If ``attr.s`` is passed a *these* argument, it will not attempt to remove attributes with the same name from the class body anymore.
-        
-          `#322 <https://github.com/python-attrs/attrs/issues/322>`_,
-          `#323 <https://github.com/python-attrs/attrs/issues/323>`_
-        - The hash of ``attr.NOTHING`` is now vegan and faster on 32bit Python builds.
-        
-          `#331 <https://github.com/python-attrs/attrs/issues/331>`_,
-          `#332 <https://github.com/python-attrs/attrs/issues/332>`_
-        - The overhead of instantiating frozen dict classes is virtually eliminated.
-          `#336 <https://github.com/python-attrs/attrs/issues/336>`_
-        - Generated ``__init__`` methods now have an ``__annotations__`` attribute derived from the types of the fields.
-        
-          `#363 <https://github.com/python-attrs/attrs/issues/363>`_
-        - We have restructured the documentation a bit to account for ``attrs``' growth in scope.
-          Instead of putting everything into the `examples <http://www.attrs.org/en/stable/examples.html>`_ page, we have started to extract narrative chapters.
-        
-          So far, we've added chapters on `initialization <http://www.attrs.org/en/stable/init.html>`_ and `hashing <http://www.attrs.org/en/stable/hashing.html>`_.
-        
-          Expect more to come!
-        
-          `#369 <https://github.com/python-attrs/attrs/issues/369>`_,
-          `#370 <https://github.com/python-attrs/attrs/issues/370>`_
-        
-        `Full changelog <http://www.attrs.org/en/stable/changelog.html>`_.
+        `Full changelog <https://www.attrs.org/en/stable/changelog.html>`_.
         
         Credits
         =======
@@ -215,7 +205,7 @@ Description: .. image:: http://www.attrs.org/en/latest/_static/attrs_logo.png
         A full list of contributors can be found in `GitHub's overview <https://github.com/python-attrs/attrs/graphs/contributors>`_.
         
         It’s the spiritual successor of `characteristic <https://characteristic.readthedocs.io/>`_ and aspires to fix some of it clunkiness and unfortunate decisions.
-        Both were inspired by Twisted’s `FancyEqMixin <https://twistedmatrix.com/documents/current/api/twisted.python.util.FancyEqMixin.html>`_ but both are implemented using class decorators because `sub-classing is bad for you <https://www.youtube.com/watch?v=3MNVP9-hglc>`_, m’kay?
+        Both were inspired by Twisted’s `FancyEqMixin <https://twistedmatrix.com/documents/current/api/twisted.python.util.FancyEqMixin.html>`_ but both are implemented using class decorators because `subclassing is bad for you <https://www.youtube.com/watch?v=3MNVP9-hglc>`_, m’kay?
         
 Keywords: class,attribute,boilerplate
 Platform: UNKNOWN
@@ -235,6 +225,7 @@ Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: Implementation :: CPython
 Classifier: Programming Language :: Python :: Implementation :: PyPy
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*
 Provides-Extra: tests
-Provides-Extra: docs
 Provides-Extra: dev
+Provides-Extra: docs

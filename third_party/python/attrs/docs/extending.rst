@@ -13,11 +13,12 @@ So it is fairly simple to build your own decorators on top of ``attrs``:
    >>> import attr
    >>> def print_attrs(cls):
    ...     print(cls.__attrs_attrs__)
+   ...     return cls
    >>> @print_attrs
    ... @attr.s
    ... class C(object):
    ...     a = attr.ib()
-   (Attribute(name='a', default=NOTHING, validator=None, repr=True, cmp=True, hash=None, init=True, metadata=mappingproxy({}), type=None, converter=None),)
+   (Attribute(name='a', default=NOTHING, validator=None, repr=True, cmp=True, hash=None, init=True, metadata=mappingproxy({}), type=None, converter=None, kw_only=False),)
 
 
 .. warning::

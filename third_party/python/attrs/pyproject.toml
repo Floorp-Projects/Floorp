@@ -1,3 +1,12 @@
+[build-system]
+requires = ["setuptools>=40.6.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.black]
+line-length = 79
+
+
 [tool.towncrier]
     package = "attr"
     package_dir = "src"

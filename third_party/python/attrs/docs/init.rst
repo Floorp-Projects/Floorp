@@ -97,6 +97,7 @@ This is when default values come into play:
    C(a=42, b=[], c=[], d={})
 
 It's important that the decorated method -- or any other method or property! -- doesn't have the same name as the attribute, otherwise it would overwrite the attribute definition.
+You also cannot use type annotations to elide the :func:`attr.ib` call for ``d`` as explained in :doc:`types`.
 
 
 Please note that as with function and method signatures, ``default=[]`` will *not* do what you may think it might do:
@@ -161,7 +162,7 @@ If the value does not pass the validator's standards, it just raises an appropri
       ...
    ValueError: x must be smaller or equal to 42
 
-Again, it's important that the decorated method doesn't have the same name as the attribute.
+Again, it's important that the decorated method doesn't have the same name as the attribute and that you can't elide the call to :func:`attr.ib`.
 
 
 Callables
@@ -347,6 +348,24 @@ If you need to set attributes on a frozen class, you'll have to resort to the :r
    ...         object.__setattr__(self, "y", self.x + 1)
    >>> Frozen(1)
    Frozen(x=1, y=2)
+
+Note that you *must not* access the hash code of the object in ``__attrs_post__init__`` if ``cache_hash=True``.
+
+
+Order of Execution
+------------------
+
+If present, the hooks are executed in the following order:
+
+1. For each attribute, in the order it was declared:
+
+   a. default factory
+   b. converter
+
+2. *all* validators
+3. ``__attrs_post_init__``
+
+Notably this means, that you can access all attributes from within your validators, but your converters have to deal with invalid values and have to return a valid value.
 
 
 .. _`Wiki page`: https://github.com/python-attrs/attrs/wiki/Extensions-to-attrs
