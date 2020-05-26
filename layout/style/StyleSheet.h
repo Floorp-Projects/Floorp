@@ -333,8 +333,8 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
-#ifdef DEBUG
-  void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
+#if defined(DEBUG) || defined(MOZ_LAYOUT_DEBUGGER)
+  void List(FILE* aOut = stdout, int32_t aIndex = 0);
 #endif
 
   // WebIDL StyleSheet API
