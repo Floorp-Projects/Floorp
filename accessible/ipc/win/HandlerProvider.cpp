@@ -353,6 +353,54 @@ void HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data) {
     if (FAILED(hr)) {
       return;
     }
+
+    // Because the same headers can apply to many cells, include the ids of
+    // header cells, rather than the actual objects. Otherwise, we might
+    // end up marshaling the same objects (and their payloads) many times.
+    IUnknown** headers = nullptr;
+    hr = cell->get_rowHeaderCells(&headers, &aOutIA2Data->mNRowHeaderCells);
+    if (FAILED(hr)) {
+      return;
+    }
+    if (aOutIA2Data->mNRowHeaderCells > 0) {
+      // We use midl_user_allocate rather than CoTaskMemAlloc because this
+      // struct is being marshaled by RPC, not COM.
+      aOutIA2Data->mRowHeaderCellIds = static_cast<long*>(
+          ::midl_user_allocate(sizeof(long) * aOutIA2Data->mNRowHeaderCells));
+      for (long i = 0; i < aOutIA2Data->mNRowHeaderCells; ++i) {
+        RefPtr<IAccessible2> headerAcc;
+        hr = headers[i]->QueryInterface(IID_IAccessible2,
+                                        getter_AddRefs(headerAcc));
+        MOZ_ASSERT(SUCCEEDED(hr));
+        headers[i]->Release();
+        hr = headerAcc->get_uniqueID(&aOutIA2Data->mRowHeaderCellIds[i]);
+        MOZ_ASSERT(SUCCEEDED(hr));
+      }
+    }
+    ::CoTaskMemFree(headers);
+
+    hr = cell->get_columnHeaderCells(&headers,
+                                     &aOutIA2Data->mNColumnHeaderCells);
+    if (FAILED(hr)) {
+      return;
+    }
+    if (aOutIA2Data->mNColumnHeaderCells > 0) {
+      // We use midl_user_allocate rather than CoTaskMemAlloc because this
+      // struct is being marshaled by RPC, not COM.
+      aOutIA2Data->mColumnHeaderCellIds =
+          static_cast<long*>(::midl_user_allocate(
+              sizeof(long) * aOutIA2Data->mNColumnHeaderCells));
+      for (long i = 0; i < aOutIA2Data->mNColumnHeaderCells; ++i) {
+        RefPtr<IAccessible2> headerAcc;
+        hr = headers[i]->QueryInterface(IID_IAccessible2,
+                                        getter_AddRefs(headerAcc));
+        MOZ_ASSERT(SUCCEEDED(hr));
+        headers[i]->Release();
+        hr = headerAcc->get_uniqueID(&aOutIA2Data->mColumnHeaderCellIds[i]);
+        MOZ_ASSERT(SUCCEEDED(hr));
+      }
+    }
+    ::CoTaskMemFree(headers);
   }
 
   // NB: get_uniqueID should be the final property retrieved in this method,
