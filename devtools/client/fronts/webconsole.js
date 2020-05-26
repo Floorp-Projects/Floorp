@@ -191,6 +191,11 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
    *        This is used by context menu entries to get a reference to an object, in order
    *        to perform some operation on it (copy it, store it as a global variable, …).
    *
+   *        - {Integer} innerWindowID: An optional window id to be used for the evaluation,
+   *        instead of the regular webConsoleActor.evalWindow.
+   *        This is used by functions that may want to evaluate in a different window (for
+   *        example a non-remote iframe), like getting the elements of a given document.
+   *
    * @return {Promise}: A promise that resolves with the response.
    */
   async evaluateJSAsync(string, opts = {}) {
@@ -200,6 +205,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
       url: opts.url,
       selectedNodeActor: opts.selectedNodeActor,
       selectedObjectActor: opts.selectedObjectActor,
+      innerWindowID: opts.innerWindowID,
       mapped: opts.mapped,
       eager: opts.eager,
     };

@@ -154,6 +154,7 @@ const webconsoleSpecPrototype = {
         url: Option(0, "string"),
         selectedNodeActor: Option(0, "string"),
         selectedObjectActor: Option(0, "string"),
+        innerWindowID: Option(0, "number"),
         mapped: Option(0, "nullable:json"),
         eager: Option(0, "nullable:boolean"),
       },
