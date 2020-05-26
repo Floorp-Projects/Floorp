@@ -297,7 +297,7 @@ var SiteDataManager = {
           let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             item.origin
           );
-          if (principal.URI.asciiHost == asciiHost) {
+          if (principal.asciiHost == asciiHost) {
             resolve(true);
             return;
           }
