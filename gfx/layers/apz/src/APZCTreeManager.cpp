@@ -1543,7 +1543,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
         // Update the out-parameters so they are what the caller expects.
         hit.mTargetApzc->GetGuid(&result.mTargetGuid);
-        result.mTargetIsRoot = hit.mTargetApzc->IsRootContent();
+        result.mTargetIsRoot = hit.TargetIsConfirmedRoot();
 
         if (!hitScrollbar) {
           // The input was not targeted at a scrollbar, so we untransform it
@@ -1628,7 +1628,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
         // Update the out-parameters so they are what the caller expects.
         hit.mTargetApzc->GetGuid(&result.mTargetGuid);
-        result.mTargetIsRoot = hit.mTargetApzc->IsRootContent();
+        result.mTargetIsRoot = hit.TargetIsConfirmedRoot();
         wheelInput.mOrigin = *untransformedOrigin;
       }
       break;
@@ -1687,7 +1687,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
         // Update the out-parameters so they are what the caller expects.
         hit.mTargetApzc->GetGuid(&result.mTargetGuid);
-        result.mTargetIsRoot = hit.mTargetApzc->IsRootContent();
+        result.mTargetIsRoot = hit.TargetIsConfirmedRoot();
         panInput.mPanStartPoint = *untransformedStartPoint;
         panInput.mPanDisplacement = *untransformedDisplacement;
 
@@ -1730,7 +1730,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
         // Update the out-parameters so they are what the caller expects.
         hit.mTargetApzc->GetGuid(&result.mTargetGuid);
-        result.mTargetIsRoot = hit.mTargetApzc->IsRootContent();
+        result.mTargetIsRoot = hit.TargetIsConfirmedRoot();
         pinchInput.mFocusPoint = *untransformedFocusPoint;
       }
       break;
@@ -1760,7 +1760,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
         // Update the out-parameters so they are what the caller expects.
         hit.mTargetApzc->GetGuid(&result.mTargetGuid);
-        result.mTargetIsRoot = hit.mTargetApzc->IsRootContent();
+        result.mTargetIsRoot = hit.TargetIsConfirmedRoot();
         tapInput.mPoint = *untransformedPoint;
       }
       break;
@@ -2045,7 +2045,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
                  CompositorHitTestInvisibleToHit);
 
       mTouchBlockHitResult.mTargetApzc->GetGuid(&result.mTargetGuid);
-      result.mTargetIsRoot = mTouchBlockHitResult.mTargetApzc->IsRootContent();
+      result.mTargetIsRoot = mTouchBlockHitResult.TargetIsConfirmedRoot();
       result.mStatus = mInputQueue->ReceiveInputEvent(
           mTouchBlockHitResult.mTargetApzc,
           TargetConfirmationFlags{mTouchBlockHitResult.mHitResult}, aInput,
@@ -2154,7 +2154,7 @@ APZEventResult APZCTreeManager::ProcessTouchInputForScrollbarDrag(
   }
 
   mTouchBlockHitResult.mTargetApzc->GetGuid(&result.mTargetGuid);
-  result.mTargetIsRoot = mTouchBlockHitResult.mTargetApzc->IsRootContent();
+  result.mTargetIsRoot = mTouchBlockHitResult.TargetIsConfirmedRoot();
 
   // Since the input was targeted at a scrollbar:
   //    - The original touch event (which will be sent on to content) will
@@ -3920,6 +3920,14 @@ APZCTreeManager::StickyPositionInfo::StickyPositionInfo(
   mLayersId = aNode->GetLayersId();
   mStickyScrollRangeInner = aNode->GetStickyScrollRangeInner();
   mStickyScrollRangeOuter = aNode->GetStickyScrollRangeOuter();
+}
+
+bool APZCTreeManager::HitTestResult::TargetIsConfirmedRoot() const {
+  CompositorHitTestInfo impreciseHitAreaFlags(
+      CompositorHitTestFlags::eIrregularArea,
+      CompositorHitTestFlags::eInactiveScrollframe);
+  return (mHitResult & impreciseHitAreaFlags).isEmpty() &&
+         mTargetApzc->IsRootContent();
 }
 
 }  // namespace layers
