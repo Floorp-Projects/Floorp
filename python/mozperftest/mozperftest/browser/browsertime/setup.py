@@ -19,6 +19,9 @@ from mozperftest.utils import host_platform
 
 
 AUTOMATION = "MOZ_AUTOMATION" in os.environ
+GECKO_RELEASES = (
+    "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android"
+)
 
 
 # Map from `host_platform()` to a `fetch`-like syntax.
@@ -26,7 +29,7 @@ host_fetches = {
     "darwin": {
         "ffmpeg": {
             "type": "static-url",
-            "url": "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-macos64-static.zip",  # noqa
+            "url": GECKO_RELEASES + "/ffmpeg-4.1.1-macos64-static.zip",  # noqa
             # An extension to `fetch` syntax.
             "path": "ffmpeg-4.1.1-macos64-static",
         }
@@ -34,7 +37,7 @@ host_fetches = {
     "linux64": {
         "ffmpeg": {
             "type": "static-url",
-            "url": "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.4-i686-static.tar.xz",  # noqa
+            "url": GECKO_RELEASES + "/ffmpeg-4.1.4-i686-static.tar.xz",  # noqa
             # An extension to `fetch` syntax.
             "path": "ffmpeg-4.1.4-i686-static",
         },
@@ -46,7 +49,7 @@ host_fetches = {
     "win64": {
         "ffmpeg": {
             "type": "static-url",
-            "url": "https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-win64-static.zip",  # noqa
+            "url": GECKO_RELEASES + "/ffmpeg-4.1.1-win64-static.zip",  # noqa
             # An extension to `fetch` syntax.
             "path": "ffmpeg-4.1.1-win64-static",
         },
@@ -72,14 +75,13 @@ def system_prerequisites(state_path, artifact_cache_path, log, info):
         for im_program in im_programs:
             prog = which(im_program)
             if not prog:
-                print(
+                raise Exception(
                     "Error: On Linux, ImageMagick must be on the PATH. "
                     "Install ImageMagick manually and try again (or update PATH). "
                     "On Ubuntu and Debian, try `sudo apt-get install imagemagick`. "
                     "On Fedora, try `sudo dnf install imagemagick`. "
                     "On CentOS, try `sudo yum install imagemagick`."
                 )
-                return 1
 
     # Download the visualmetrics.py requirements.
     artifact_cache = ArtifactCache(artifact_cache_path, log=log, skip_cache=False)
