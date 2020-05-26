@@ -373,7 +373,7 @@ class HomeFragment : Fragment() {
                 }
 
                 override fun onTabClosed(tab: mozilla.components.concept.tabstray.Tab) {
-                    TODO("Not yet implemented")
+                    /* noop */
                 }
             }
         }

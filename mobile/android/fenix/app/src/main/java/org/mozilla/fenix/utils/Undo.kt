@@ -36,7 +36,8 @@ fun CoroutineScope.allowUndo(
     undoActionTitle: String,
     onCancel: suspend () -> Unit = {},
     operation: suspend () -> Unit,
-    anchorView: View? = null
+    anchorView: View? = null,
+    elevation: Float? = null
 ) {
     // By using an AtomicBoolean, we achieve memory effects of reading and
     // writing a volatile variable.
@@ -57,6 +58,10 @@ fun CoroutineScope.allowUndo(
                     onCancel.invoke()
                 }
             }
+
+        elevation?.also {
+            snackbar.view.elevation = it
+        }
 
         snackbar.show()
 

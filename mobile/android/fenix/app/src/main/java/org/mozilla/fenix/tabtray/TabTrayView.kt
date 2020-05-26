@@ -52,7 +52,7 @@ class TabTrayView(
 
         behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                if (slideOffset > SLIDE_OFFSET) {
+                if (slideOffset >= SLIDE_OFFSET) {
                     fabView.new_tab_button.show()
                 } else {
                     fabView.new_tab_button.hide()
@@ -120,7 +120,7 @@ class TabTrayView(
     companion object {
         private const val DEFAULT_TAB_ID = 0
         private const val PRIVATE_TAB_ID = 1
-        private const val SLIDE_OFFSET = 0.4
-        private const val ELEVATION = 41f
+        private const val SLIDE_OFFSET = 0
+        private const val ELEVATION = 90f
     }
 }

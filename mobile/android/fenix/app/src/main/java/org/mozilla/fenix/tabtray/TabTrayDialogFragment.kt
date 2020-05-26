@@ -68,7 +68,6 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     }
 
     override fun onTabClosed(tab: Tab) {
-        // interactor?.onTabClosed(tab)
         val sessionManager = view?.context?.components?.core?.sessionManager
         val snapshot = sessionManager
             ?.findSessionById(tab.id)?.let {
@@ -84,16 +83,18 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             getString(R.string.snackbar_tab_closed)
         }
 
-        viewLifecycleOwner.lifecycleScope.allowUndo(
-            requireView(),
-            snackbarMessage,
-            getString(R.string.snackbar_deleted_undo),
-            {
-                sessionManager.add(snapshot.session, isSelected, engineSessionState = state)
-            },
-            operation = { },
-            anchorView = view?.handle
-        )
+        view?.tabLayout?.let {
+            viewLifecycleOwner.lifecycleScope.allowUndo(
+                it,
+                snackbarMessage,
+                getString(R.string.snackbar_deleted_undo),
+                {
+                    sessionManager.add(snapshot.session, isSelected, engineSessionState = state)
+                },
+                operation = { },
+                elevation = ELEVATION
+            )
+        }
     }
 
     override fun onTabSelected(tab: Tab) {
@@ -106,5 +107,9 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
     override fun onTabTrayDismissed() {
         dismissAllowingStateLoss()
+    }
+
+    companion object {
+        private const val ELEVATION = 80f
     }
 }
