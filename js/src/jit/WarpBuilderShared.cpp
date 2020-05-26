@@ -48,13 +48,18 @@ MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
                                    WrappedFunction* target) {
   MOZ_ASSERT_IF(needsThisCheck, !target);
 
-  // TODO: specialize for known target. Pad missing arguments. Set MCall flags
-  // based on this known target.
-  uint32_t targetArgs = callInfo.argc();
+  // TODO: Investigate DOM calls.
   bool isDOMCall = false;
   DOMObjectKind objKind = DOMObjectKind::Unknown;
 
-  MOZ_ASSERT_IF(target, target->isNative());
+  uint32_t targetArgs = callInfo.argc();
+
+  // Collect number of missing arguments provided that the target is
+  // scripted. Native functions are passed an explicit 'argc' parameter.
+  if (target && !target->isBuiltinNative()) {
+    targetArgs = std::max<uint32_t>(target->nargs(), callInfo.argc());
+  }
+
   MCall* call =
       MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),
                  callInfo.argc(), callInfo.constructing(),
@@ -68,7 +73,21 @@ MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
     if (needsThisCheck) {
       call->setNeedsThisCheck();
     }
+
+    // Pass |new.target|
     call->addArg(targetArgs + 1, callInfo.getNewTarget());
+  }
+
+  // Explicitly pad any missing arguments with |undefined|.
+  // This permits skipping the argumentsRectifier.
+  MOZ_ASSERT_IF(target && targetArgs > callInfo.argc(),
+                !target->isBuiltinNative());
+  for (uint32_t i = targetArgs; i > callInfo.argc(); i--) {
+    MConstant* undef = constant(UndefinedValue());
+    if (!alloc().ensureBallast()) {
+      return nullptr;
+    }
+    call->addArg(i, undef);
   }
 
   // Add explicit arguments.
@@ -80,6 +99,11 @@ MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
   // Pass |this| and callee.
   call->addArg(0, callInfo.thisArg());
   call->initCallee(callInfo.callee());
+
+  if (target) {
+    // The callee must be a JSFunction so we don't need a Class check.
+    call->disableClassCheck();
+  }
 
   return call;
 }
