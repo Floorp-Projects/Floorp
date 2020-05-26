@@ -406,8 +406,11 @@ std::vector<SdpExtmapAttributeList::Extmap> JsepSessionImpl::GetRtpExtensions(
         // TODO: Would it be worth checking that the direction is sane?
         AddVideoRtpExtension(webrtc::RtpExtension::kRtpStreamIdUri,
                              SdpDirectionAttribute::kSendonly);
-        AddVideoRtpExtension(webrtc::RtpExtension::kRepairedRtpStreamIdUri,
-                             SdpDirectionAttribute::kSendonly);
+
+        if (Preferences::GetBool("media.peerconnection.video.use_rtx", false)) {
+          AddVideoRtpExtension(webrtc::RtpExtension::kRepairedRtpStreamIdUri,
+                               SdpDirectionAttribute::kSendonly);
+        }
       }
       break;
     default:;
