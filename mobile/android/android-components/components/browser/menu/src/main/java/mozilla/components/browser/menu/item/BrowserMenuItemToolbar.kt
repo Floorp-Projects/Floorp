@@ -7,6 +7,7 @@ package mozilla.components.browser.menu.item
 import android.content.Context
 import android.os.Build
 import android.view.View
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.annotation.ColorRes
@@ -41,7 +42,6 @@ class BrowserMenuItemToolbar(
 
         val selectableBackground =
             layout.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
-        val iconHeight = view.resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_item_image_text_icon_height)
 
         for (item in items) {
             val button = AppCompatImageButton(layout.context)
@@ -54,7 +54,7 @@ class BrowserMenuItemToolbar(
                 menu.dismiss()
             }
 
-            layout.addView(button, LinearLayout.LayoutParams(0, iconHeight, 1f))
+            layout.addView(button, LinearLayout.LayoutParams(0, MATCH_PARENT, 1f))
         }
     }
 
