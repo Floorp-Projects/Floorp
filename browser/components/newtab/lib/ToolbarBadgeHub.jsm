@@ -270,7 +270,7 @@ class _ToolbarBadgeHub {
   _sendTelemetry(ping) {
     this._dispatch({
       type: "TOOLBAR_BADGE_TELEMETRY",
-      data: { action: "cfr_user_event", source: "CFR", ...ping },
+      data: { action: "badge_user_event", ...ping },
     });
   }
 

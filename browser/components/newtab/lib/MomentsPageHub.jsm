@@ -51,7 +51,7 @@ class _MomentsPageHub {
   _sendTelemetry(ping) {
     this._dispatch({
       type: "MOMENTS_PAGE_TELEMETRY",
-      data: { action: "cfr_user_event", source: "CFR", ...ping },
+      data: { action: "moments_user_event", ...ping },
     });
   }
 

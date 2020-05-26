@@ -224,11 +224,10 @@ describe("MomentsPageHub", () => {
       assert.calledWithExactly(dispatchStub, {
         type: "MOMENTS_PAGE_TELEMETRY",
         data: {
-          action: "cfr_user_event",
+          action: "moments_user_event",
           bucket_id: "WNP_THANK_YOU",
           event: "MOMENTS_PAGE_SET",
           message_id: "WNP_THANK_YOU",
-          source: "CFR",
         },
       });
     });
