@@ -75,39 +75,52 @@ OMTAValue CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const {
 }
 
 void CompositorAnimationStorage::SetAnimatedValue(
-    uint64_t aId, gfx::Matrix4x4&& aTransformInDevSpace,
-    gfx::Matrix4x4&& aFrameTransform, const TransformData& aData) {
+    uint64_t aId, AnimatedValue* aPreviousValue,
+    gfx::Matrix4x4&& aTransformInDevSpace, gfx::Matrix4x4&& aFrameTransform,
+    const TransformData& aData) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  auto count = mAnimatedValues.Count();
-  AnimatedValue* value = mAnimatedValues.LookupOrAdd(
-      aId, std::move(aTransformInDevSpace), std::move(aFrameTransform), aData);
-  if (count == mAnimatedValues.Count()) {
-    MOZ_ASSERT(value->Is<AnimationTransform>());
-    *value = AnimatedValue(std::move(aTransformInDevSpace),
-                           std::move(aFrameTransform), aData);
+  if (!aPreviousValue) {
+    MOZ_ASSERT(!mAnimatedValues.Contains(aId));
+    mAnimatedValues.Put(
+        aId, MakeUnique<AnimatedValue>(std::move(aTransformInDevSpace),
+                                       std::move(aFrameTransform), aData));
+    return;
   }
+  MOZ_ASSERT(aPreviousValue->Is<AnimationTransform>());
+  MOZ_ASSERT(aPreviousValue == GetAnimatedValue(aId));
+
+  aPreviousValue->SetTransform(std::move(aTransformInDevSpace),
+                               std::move(aFrameTransform), aData);
 }
 
 void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
+                                                  AnimatedValue* aPreviousValue,
                                                   nscolor aColor) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  auto count = mAnimatedValues.Count();
-  AnimatedValue* value = mAnimatedValues.LookupOrAdd(aId, aColor);
-  if (count == mAnimatedValues.Count()) {
-    MOZ_ASSERT(value->Is<nscolor>());
-    *value = AnimatedValue(aColor);
+  if (!aPreviousValue) {
+    MOZ_ASSERT(!mAnimatedValues.Contains(aId));
+    mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(aColor));
+    return;
   }
+
+  MOZ_ASSERT(aPreviousValue->Is<nscolor>());
+  MOZ_ASSERT(aPreviousValue == GetAnimatedValue(aId));
+  aPreviousValue->SetColor(aColor);
 }
 
 void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
-                                                  const float& aOpacity) {
+                                                  AnimatedValue* aPreviousValue,
+                                                  float aOpacity) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  auto count = mAnimatedValues.Count();
-  AnimatedValue* value = mAnimatedValues.LookupOrAdd(aId, aOpacity);
-  if (count == mAnimatedValues.Count()) {
-    MOZ_ASSERT(value->Is<float>());
-    *value = AnimatedValue(aOpacity);
+  if (!aPreviousValue) {
+    MOZ_ASSERT(!mAnimatedValues.Contains(aId));
+    mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(aOpacity));
+    return;
   }
+
+  MOZ_ASSERT(aPreviousValue->Is<float>());
+  MOZ_ASSERT(aPreviousValue == GetAnimatedValue(aId));
+  aPreviousValue->SetOpacity(aOpacity);
 }
 
 void CompositorAnimationStorage::SetAnimations(uint64_t aId,
@@ -599,14 +612,16 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
     switch (lastPropertyAnimationGroup.mProperty) {
       case eCSSProperty_background_color: {
         aStorage->SetAnimatedValue(
-            iter.Key(), Servo_AnimationValue_GetColor(animationValues[0],
-                                                      NS_RGBA(0, 0, 0, 0)));
+            iter.Key(), previousValue,
+            Servo_AnimationValue_GetColor(animationValues[0],
+                                          NS_RGBA(0, 0, 0, 0)));
         break;
       }
       case eCSSProperty_opacity: {
         MOZ_ASSERT(animationValues.Length() == 1);
         aStorage->SetAnimatedValue(
-            iter.Key(), Servo_AnimationValue_GetOpacity(animationValues[0]));
+            iter.Key(), previousValue,
+            Servo_AnimationValue_GetOpacity(animationValues[0]));
         break;
       }
       case eCSSProperty_rotate:
@@ -631,7 +646,8 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
         transform.PostScale(transformData.inheritedXScale(),
                             transformData.inheritedYScale(), 1);
 
-        aStorage->SetAnimatedValue(iter.Key(), std::move(transform),
+        aStorage->SetAnimatedValue(iter.Key(), previousValue,
+                                   std::move(transform),
                                    std::move(frameTransform), transformData);
         break;
       }
