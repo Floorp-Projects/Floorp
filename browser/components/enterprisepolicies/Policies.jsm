@@ -14,6 +14,15 @@ const { AppConstants } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   gCertDB: ["@mozilla.org/security/x509certdb;1", "nsIX509CertDB"],
+  gExternalProtocolService: [
+    "@mozilla.org/uriloader/external-protocol-service;1",
+    "nsIExternalProtocolService",
+  ],
+  gHandlerService: [
+    "@mozilla.org/uriloader/handler-service;1",
+    "nsIHandlerService",
+  ],
+  gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
   gXulStore: ["@mozilla.org/xul/xulstore;1", "nsIXULStore"],
 });
 
@@ -1014,6 +1023,41 @@ var Policies = {
         setAndLockPref("plugin.state.flash", flashPrefVal);
       } else if (param.Default !== undefined) {
         setDefaultPref("plugin.state.flash", flashPrefVal);
+      }
+    },
+  },
+
+  Handlers: {
+    onBeforeAddons(manager, param) {
+      if ("mimeTypes" in param) {
+        for (let mimeType in param.mimeTypes) {
+          let mimeInfo = param.mimeTypes[mimeType];
+          let realMIMEInfo = gMIMEService.getFromTypeAndExtension(mimeType, "");
+          processMIMEInfo(mimeInfo, realMIMEInfo);
+        }
+      }
+      if ("extensions" in param) {
+        for (let extension in param.extensions) {
+          let mimeInfo = param.extensions[extension];
+          try {
+            let realMIMEInfo = gMIMEService.getFromTypeAndExtension(
+              "",
+              extension
+            );
+            processMIMEInfo(mimeInfo, realMIMEInfo);
+          } catch (e) {
+            log.error(`Invalid file extension (${extension})`);
+          }
+        }
+      }
+      if ("schemes" in param) {
+        for (let scheme in param.schemes) {
+          let handlerInfo = param.schemes[scheme];
+          let realHandlerInfo = gExternalProtocolService.getProtocolHandlerInfo(
+            scheme
+          );
+          processMIMEInfo(handlerInfo, realHandlerInfo);
+        }
       }
     },
   },
@@ -2097,4 +2141,72 @@ function pemToBase64(pem) {
     .replace(/-----BEGIN CERTIFICATE-----/, "")
     .replace(/-----END CERTIFICATE-----/, "")
     .replace(/[\r\n]/g, "");
+}
+
+function processMIMEInfo(mimeInfo, realMIMEInfo) {
+  if ("handlers" in mimeInfo) {
+    let firstHandler = true;
+    for (let handler of mimeInfo.handlers) {
+      // handler can be null which means they don't
+      // want a preferred handler.
+      if (handler) {
+        let handlerApp;
+        if ("path" in handler) {
+          try {
+            let file = new FileUtils.File(handler.path);
+            handlerApp = Cc[
+              "@mozilla.org/uriloader/local-handler-app;1"
+            ].createInstance(Ci.nsILocalHandlerApp);
+            handlerApp.executable = file;
+          } catch (ex) {
+            log.error(`Unable to create handler executable (${handler.path})`);
+            continue;
+          }
+        } else if ("uriTemplate" in handler) {
+          let templateURL = new URL(handler.uriTemplate);
+          if (templateURL.protocol != "https:") {
+            log.error(`Web handler must be https (${handler.uriTemplate})`);
+            continue;
+          }
+          if (
+            !templateURL.pathname.includes("%s") &&
+            !templateURL.search.includes("%s")
+          ) {
+            log.error(`Web handler must contain %s (${handler.uriTemplate})`);
+            continue;
+          }
+          handlerApp = Cc[
+            "@mozilla.org/uriloader/web-handler-app;1"
+          ].createInstance(Ci.nsIWebHandlerApp);
+          handlerApp.uriTemplate = handler.uriTemplate;
+        } else {
+          log.error("Invalid handler");
+          continue;
+        }
+        if ("name" in handler) {
+          handlerApp.name = handler.name;
+        }
+        realMIMEInfo.possibleApplicationHandlers.appendElement(handlerApp);
+        if (firstHandler) {
+          realMIMEInfo.preferredApplicationHandler = handlerApp;
+        }
+      }
+      firstHandler = false;
+    }
+  }
+  if ("action" in mimeInfo) {
+    let action = realMIMEInfo[mimeInfo.action];
+    if (
+      action == realMIMEInfo.useHelperApp &&
+      !realMIMEInfo.possibleApplicationHandlers.length
+    ) {
+      log.error("useHelperApp requires a handler");
+      return;
+    }
+    realMIMEInfo.preferredAction = action;
+  }
+  if ("ask" in mimeInfo) {
+    realMIMEInfo.alwaysAskBeforeHandling = mimeInfo.ask;
+  }
+  gHandlerService.store(realMIMEInfo);
 }
