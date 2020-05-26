@@ -8,10 +8,10 @@
  */
 
 .app-page {
-  min-height: 100vh;
   padding: calc(var(--base-unit) * 3) calc(var(--base-unit) * 8);
   display: grid;
   user-select: none;
+  overflow-y: auto;
 }
 
 .app-page--empty {
