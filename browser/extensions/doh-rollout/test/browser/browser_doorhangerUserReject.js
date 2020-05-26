@@ -6,11 +6,10 @@ add_task(async function testDoorhangerUserReject() {
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
   let promise = waitForDoorhanger();
+  let prefPromise = TestUtils.waitForPrefChange(prefs.DOH_SELF_ENABLED_PREF);
   Preferences.set(prefs.DOH_ENABLED_PREF, true);
 
-  await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.DOH_SELF_ENABLED_PREF);
-  });
+  await prefPromise;
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
   is(
     Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
@@ -30,15 +29,15 @@ add_task(async function testDoorhangerUserReject() {
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
+  prefPromise = TestUtils.waitForPrefChange(prefs.DOH_DOORHANGER_SHOWN_PREF);
+
   // Click the doorhanger's "reject" button.
   let button = panel.querySelector(".popup-notification-secondary-button");
   promise = BrowserTestUtils.waitForEvent(panel, "popuphidden");
   EventUtils.synthesizeMouseAtCenter(button, {});
   await promise;
 
-  await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF);
-  });
+  await prefPromise;
 
   is(
     Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
