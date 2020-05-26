@@ -245,11 +245,11 @@ interface nsIPrincipal : nsISerializable
      */
     readonly attribute ACString hostPort;
 
-        /**
+    /**
      * Returns the "host:port" portion of the 
      * Principals URI, if any.
      */
-    [noscript] readonly attribute ACString asciiHost;
+    readonly attribute ACString asciiHost;
 
     /**
      * Returns the "host" portion of the 
