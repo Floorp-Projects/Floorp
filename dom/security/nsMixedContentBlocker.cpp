@@ -34,6 +34,7 @@
 #include "mozilla/LoadInfo.h"
 #include "nsISiteSecurityService.h"
 #include "prnetdb.h"
+#include "nsQueryObject.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Logging.h"
@@ -44,6 +45,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/net/DocumentLoadListener.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -135,7 +137,9 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(
   // on redirects in the parent.  Let the child check for mixed content.
   nsCOMPtr<nsIParentChannel> is_ipc_channel;
   NS_QueryNotificationCallbacks(aNewChannel, is_ipc_channel);
-  if (is_ipc_channel) {
+  RefPtr<net::DocumentLoadListener> docListener =
+      do_QueryObject(is_ipc_channel);
+  if (is_ipc_channel && !docListener) {
     return NS_OK;
   }
 
