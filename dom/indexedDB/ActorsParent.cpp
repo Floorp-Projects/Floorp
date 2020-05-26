@@ -142,6 +142,12 @@
 #  define IDB_MOBILE
 #endif
 
+#define UNKNOWN_FILE_WARNING(_leafName)                                       \
+  NS_WARNING(                                                                 \
+      nsPrintfCString("Something (%s) in the directory that doesn't belong!", \
+                      NS_ConvertUTF16toUTF8(_leafName).get())                 \
+          .get())
+
 namespace mozilla {
 
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc,
@@ -16684,13 +16690,32 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
       return rv;
     }
 
-    bool hasElements;
-    rv = entries->HasMoreElements(&hasElements);
+    bool hasJournals = false;
+
+    nsCOMPtr<nsIFile> file;
+    while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
+           file) {
+      nsString leafName;
+      rv = file->GetLeafName(leafName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      leafName.ToInteger64(&rv);
+      if (NS_SUCCEEDED(rv)) {
+        hasJournals = true;
+
+        continue;
+      }
+
+      UNKNOWN_FILE_WARNING(leafName);
+    }
+
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    if (hasElements) {
+    if (hasJournals) {
       auto connectionOrErr = CreateStorageConnection(
           aDatabaseFile, aDirectory, VoidString(), aOrigin,
           /* aDirectoryLockId */ -1, aTelemetryId);
@@ -16737,6 +16762,11 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
         rv = stmt->GetString(0, name);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
+        }
+
+        name.ToInteger64(&rv);
+        if (NS_FAILED(rv)) {
+          continue;
         }
 
         int32_t flag = stmt->AsInt32(1);
@@ -16830,13 +16860,20 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage) {
       continue;
     }
 
-    int64_t fileSize;
-    rv = file->GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    leafName.ToInteger64(&rv);
+    if (NS_SUCCEEDED(rv)) {
+      int64_t fileSize;
+      rv = file->GetFileSize(&fileSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      UsageInfo::IncrementUsage(usage, Some(uint64_t(fileSize)));
+
+      continue;
     }
 
-    UsageInfo::IncrementUsage(usage, Some(uint64_t(fileSize)));
+    UNKNOWN_FILE_WARNING(leafName);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -17783,6 +17820,14 @@ nsresult QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
       }
 
       continue;
+    }
+
+    if (!aDatabaseFiles) {
+      leafName.ToInteger64(&rv);
+      if (NS_FAILED(rv)) {
+        UNKNOWN_FILE_WARNING(leafName);
+        continue;
+      }
     }
 
     int64_t fileSize;
