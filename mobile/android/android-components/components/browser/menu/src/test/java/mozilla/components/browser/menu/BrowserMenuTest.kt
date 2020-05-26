@@ -357,6 +357,23 @@ class BrowserMenuTest {
         verify(popupWindow).showAtLocation(anchor, Gravity.START or Gravity.TOP, 0, 0)
     }
 
+    @Test
+    fun `popup is dismissed when anchor is detached`() {
+        val items = listOf(
+            SimpleBrowserMenuItem("Mock") {},
+            SimpleBrowserMenuItem("Menu") {})
+        val adapter = BrowserMenuAdapter(testContext, items)
+        val menu = BrowserMenu(adapter)
+        val anchor = Button(testContext)
+        val popupWindow = menu.show(anchor)
+
+        assertTrue(popupWindow.isShowing)
+
+        menu.onViewDetachedFromWindow(anchor)
+
+        assertFalse(popupWindow.isShowing)
+    }
+
     private fun createMockViewWith(y: Int): View {
         val view = spy(View(testContext))
         doAnswer { invocation ->
