@@ -512,6 +512,7 @@ bool shell::enableReadableStreamPipeTo = false;
 bool shell::enableWeakRefs = false;
 bool shell::enableToSource = false;
 bool shell::enablePropertyErrorMessageFix = false;
+bool shell::enableIteratorHelpers = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
 uint32_t shell::gZealFrequency = 0;
@@ -3891,7 +3892,8 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setReadableStreamPipeToEnabled(enableReadableStreamPipeTo)
       .setWeakRefsEnabled(enableWeakRefs)
       .setToSourceEnabled(enableToSource)
-      .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix);
+      .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix)
+      .setIteratorHelpersEnabled(enableIteratorHelpers);
 }
 
 static MOZ_MUST_USE bool CheckRealmOptions(JSContext* cx,
@@ -10258,6 +10260,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableToSource = !op.getBoolOption("disable-tosource");
   enablePropertyErrorMessageFix =
       !op.getBoolOption("disable-property-error-message-fix");
+  enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
 
   JS::ContextOptionsRef(cx)
       .setAsmJS(enableAsmJS)
@@ -11129,6 +11132,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "disable-property-error-message-fix",
                         "Disable fix for the error message when accessing "
                         "property of null or undefined") ||
+      !op.addBoolOption('\0', "enable-iterator-helpers",
+                        "Enable iterator helpers") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT

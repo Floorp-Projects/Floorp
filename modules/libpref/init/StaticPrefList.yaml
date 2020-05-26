@@ -4715,6 +4715,12 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+
+  # Experimental support for Iterator Helpers in JavaScript.
+- name: javascript.options.experimental.iterator_helpers
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
 #endif
 
 # The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
