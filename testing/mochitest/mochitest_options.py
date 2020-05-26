@@ -546,12 +546,6 @@ class MochitestArguments(ArgumentContainer):
           "help": "Filter out tests that don't have the given tag. Can be used multiple "
                   "times in which case the test must contain at least one of the given tags.",
           }],
-        [["--enable-cpow-warnings"],
-         {"action": "store_true",
-          "dest": "enableCPOWWarnings",
-          "help": "Enable logging of unsafe CPOW usage, which is disabled by default for tests",
-          "suppress": True,
-          }],
         [["--marionette"],
          {"default": None,
           "help": "host:port to use when connecting to Marionette",
