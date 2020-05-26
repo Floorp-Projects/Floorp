@@ -140,6 +140,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
     InProcessBrowserChildMessageManager, DOMEventTargetHelper)
+  if (XRE_IsParentProcess()) {
+    JSActorService::UnregisterChromeEventTarget(tmp);
+  }
+
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   tmp->nsMessageManagerScriptExecutor::Unlink();
