@@ -151,7 +151,6 @@ class ServoElementSnapshot {
   nsAttrValue mClass;
   ServoStateType mState;
   Flags mContains;
-  bool mIsHTMLElementInHTMLDocument : 1;
   bool mIsInChromeDocument : 1;
   bool mSupportsLangAttr : 1;
   bool mIsTableBorderNonzero : 1;
