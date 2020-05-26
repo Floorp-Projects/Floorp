@@ -68,6 +68,26 @@ struct AnimatedValue final {
 
   explicit AnimatedValue(nscolor aValue) : mValue(AsVariant(aValue)) {}
 
+  void SetTransform(gfx::Matrix4x4&& aTransformInDevSpace,
+                    gfx::Matrix4x4&& aFrameTransform,
+                    const TransformData& aData) {
+    MOZ_ASSERT(mValue.is<AnimationTransform>());
+    AnimationTransform& previous = mValue.as<AnimationTransform>();
+    previous.mTransformInDevSpace = std::move(aTransformInDevSpace);
+    previous.mFrameTransform = std::move(aFrameTransform);
+    if (previous.mData != aData) {
+      previous.mData = aData;
+    }
+  }
+  void SetOpacity(float aOpacity) {
+    MOZ_ASSERT(mValue.is<float>());
+    mValue.as<float>() = aOpacity;
+  }
+  void SetColor(nscolor aColor) {
+    MOZ_ASSERT(mValue.is<nscolor>());
+    mValue.as<nscolor>() = aColor;
+  }
+
  private:
   AnimatedValueType mValue;
 };
@@ -95,21 +115,27 @@ class CompositorAnimationStorage final {
  public:
   /**
    * Set the animation transform based on the unique id and also
-   * set up |aFrameTransform| and |aData| for OMTA testing
+   * set up |aFrameTransform| and |aData| for OMTA testing.
+   * If |aPreviousValue| is not null, the animation transform replaces the value
+   * in the |aPreviousValue|.
+   * NOTE: |aPreviousValue| should be the value for the |aId|.
    */
-  void SetAnimatedValue(uint64_t aId, gfx::Matrix4x4&& aTransformInDevSpace,
+  void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
+                        gfx::Matrix4x4&& aTransformInDevSpace,
                         gfx::Matrix4x4&& aFrameTransform,
                         const TransformData& aData);
 
   /**
-   * Set the animation opacity based on the unique id
+   * Similar to above but for opacity.
    */
-  void SetAnimatedValue(uint64_t aId, const float& aOpacity);
+  void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
+                        float aOpacity);
 
   /**
-   * Set the animation color based on the unique id
+   * Similar to above but for color.
    */
-  void SetAnimatedValue(uint64_t aId, nscolor aColor);
+  void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
+                        nscolor aColor);
 
   /**
    * Return the animated value if a given id can map to its animated value
