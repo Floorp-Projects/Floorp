@@ -2,7 +2,7 @@
 
 # DrawableMenuIcon
 
-`data class DrawableMenuIcon : `[`MenuIcon`](../-menu-icon.md)`, MenuIconWithDrawable` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/menu/src/main/java/mozilla/components/concept/menu/candidate/MenuIcon.kt#L25)
+`data class DrawableMenuIcon : `[`MenuIcon`](../-menu-icon.md)`, `[`MenuIconWithDrawable`](../-menu-icon-with-drawable/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/menu/src/main/java/mozilla/components/concept/menu/candidate/MenuIcon.kt#L25)
 
 Menu icon that displays a drawable.
 

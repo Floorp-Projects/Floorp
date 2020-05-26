@@ -16,6 +16,6 @@ Menu option data classes to be shown alongside menu options
 
 | Name | Summary |
 |---|---|
-| [DrawableButtonMenuIcon](-drawable-button-menu-icon/index.md) | `data class DrawableButtonMenuIcon : `[`MenuIcon`](./-menu-icon.md)`, MenuIconWithDrawable`<br>Menu icon that displays an image button. |
-| [DrawableMenuIcon](-drawable-menu-icon/index.md) | `data class DrawableMenuIcon : `[`MenuIcon`](./-menu-icon.md)`, MenuIconWithDrawable`<br>Menu icon that displays a drawable. |
+| [DrawableButtonMenuIcon](-drawable-button-menu-icon/index.md) | `data class DrawableButtonMenuIcon : `[`MenuIcon`](./-menu-icon.md)`, `[`MenuIconWithDrawable`](-menu-icon-with-drawable/index.md)<br>Menu icon that displays an image button. |
+| [DrawableMenuIcon](-drawable-menu-icon/index.md) | `data class DrawableMenuIcon : `[`MenuIcon`](./-menu-icon.md)`, `[`MenuIconWithDrawable`](-menu-icon-with-drawable/index.md)<br>Menu icon that displays a drawable. |
 | [TextMenuIcon](-text-menu-icon/index.md) | `data class TextMenuIcon : `[`MenuIcon`](./-menu-icon.md)<br>Menu icon to display additional text at the end of a menu option. |

@@ -2,14 +2,20 @@
 
 # WebExtensionBrowserMenuBuilder
 
-`class WebExtensionBrowserMenuBuilder : `[`BrowserMenuBuilder`](../-browser-menu-builder/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenuBuilder.kt#L19)
+`class WebExtensionBrowserMenuBuilder : `[`BrowserMenuBuilder`](../-browser-menu-builder/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenuBuilder.kt#L29)
 
 Browser menu builder with web extension support. It allows [WebExtensionBrowserMenu](../-web-extension-browser-menu/index.md) to add
-web extension browser actions.
+web extension browser actions in a nested menu item. If there are no web extensions installed,
+the web extension menu item would return an add-on manager menu item instead.
 
 ### Parameters
 
 `store` - [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md) required to render web extension browser actions
+
+`webExtIconTintColorResource` - Optional ID of color resource to tint the icons of back and
+add-ons manager menu items.
+
+`onAddonsManagerTapped` - Callback to be invoked when add-ons manager menu item is selected.
 
 `appendExtensionActionAtStart` - true if web extensions appear at the top (start) of the menu,
 false if web extensions appear at the bottom of the menu. Default to false (bottom).
@@ -18,7 +24,7 @@ false if web extensions appear at the bottom of the menu. Default to false (bott
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebExtensionBrowserMenuBuilder(items: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`BrowserMenuItem`](../-browser-menu-item/index.md)`>, extras: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`> = emptyMap(), endOfMenuAlwaysVisible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, appendExtensionActionAtStart: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>Browser menu builder with web extension support. It allows [WebExtensionBrowserMenu](../-web-extension-browser-menu/index.md) to add web extension browser actions. |
+| [&lt;init&gt;](-init-.md) | `WebExtensionBrowserMenuBuilder(items: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`BrowserMenuItem`](../-browser-menu-item/index.md)`>, extras: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`> = emptyMap(), endOfMenuAlwaysVisible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, webExtIconTintColorResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = NO_ID, onAddonsManagerTapped: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}, appendExtensionActionAtStart: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>Browser menu builder with web extension support. It allows [WebExtensionBrowserMenu](../-web-extension-browser-menu/index.md) to add web extension browser actions in a nested menu item. If there are no web extensions installed, the web extension menu item would return an add-on manager menu item instead. |
 
 ### Inherited Properties
 
