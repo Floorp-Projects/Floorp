@@ -1,4 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<title>CSS Float Test Reference: Test the clear position after the floating elements breaking across multi-columns</title>
+<link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+<link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+<link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+
 <style type="text/css">
 .multicol {
   margin: 1em;
@@ -6,23 +11,15 @@
   width: 300px;
   column-width: 100px;
   column-gap: 0;
+  column-fill: auto;
   height: 100px;
 }
 
-.float {
-  float: right;
-  width: 15px;
-  background: aqua;
+.container {
+  border: 15px aqua;
+  border-style: none solid;
   height: 250px;
 }
-.L {
-  float: left;
-}
-
-.container {
-  width: 100%;
-}
-
 .clear {
   border-bottom: solid orange;
   background: red;
@@ -34,9 +31,6 @@
 
 <div class="multicol">
   <div class="container">
-    <div class="float L"></div>
-    <div class="float R"></div>
-    <br clear="all">
   </div>
   <div class="clear">
   </div>
