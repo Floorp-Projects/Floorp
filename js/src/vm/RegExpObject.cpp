@@ -1150,7 +1150,7 @@ bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
 
   // Create a plain template object.
   RootedPlainObject templateObject(
-      cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+      cx, NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr));
   if (!templateObject) {
     return false;
   }
