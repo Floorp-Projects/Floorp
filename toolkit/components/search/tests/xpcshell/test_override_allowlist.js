@@ -47,8 +47,42 @@ const tests = [
     },
   },
   {
+    title: "test_changing_default_engine",
+    startupReason: "ADDON_ENABLE",
+    search_provider: {
+      is_default: true,
+      name: kOverriddenEngineName,
+      keyword: "MozSearch",
+      search_url: kSearchEngineURL,
+    },
+    expected: {
+      switchToDefaultAllowed: true,
+      overridesEngine: false,
+    },
+  },
+  {
     title: "test_overriding_default_engine",
     startupReason: "ADDON_INSTALL",
+    search_provider: {
+      is_default: true,
+      name: kOverriddenEngineName,
+      keyword: "MozSearch",
+      search_url: kSearchEngineURL,
+    },
+    whitelistUrls: [
+      {
+        search_url: kSearchEngineURL,
+      },
+    ],
+    expected: {
+      switchToDefaultAllowed: true,
+      overridesEngine: true,
+      searchUrl: kSearchEngineURL,
+    },
+  },
+  {
+    title: "test_overriding_default_engine_enable",
+    startupReason: "ADDON_ENABLE",
     search_provider: {
       is_default: true,
       name: kOverriddenEngineName,
