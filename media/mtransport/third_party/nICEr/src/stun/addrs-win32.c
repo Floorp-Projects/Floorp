@@ -84,6 +84,18 @@ abort:
     return(_status);
 }
 
+static int stun_win32_address_disallowed(IP_ADAPTER_UNICAST_ADDRESS *addr)
+{
+  return (addr->DadState != NldsPreferred) &&
+          (addr->DadState != IpDadStatePreferred);
+}
+
+static int stun_win32_address_temp_v6(IP_ADAPTER_UNICAST_ADDRESS *addr)
+{
+  return (addr->Address.lpSockaddr->sa_family == AF_INET6) &&
+      (addr->SuffixOrigin == IpSuffixOriginRandom);
+}
+
 int
 stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count)
 {
@@ -146,14 +158,18 @@ stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count)
         for (u = tmpAddress->FirstUnicastAddress; u != 0; u = u->Next) {
           SOCKET_ADDRESS *sa_addr = &u->Address;
 
-          if ((sa_addr->lpSockaddr->sa_family == AF_INET) ||
-              (sa_addr->lpSockaddr->sa_family == AF_INET6)) {
-            if ((r=nr_sockaddr_to_transport_addr((struct sockaddr*)sa_addr->lpSockaddr, IPPROTO_UDP, 0, &(addrs[n].addr))))
-                ABORT(r);
-          }
-          else {
+          if ((sa_addr->lpSockaddr->sa_family != AF_INET) &&
+              (sa_addr->lpSockaddr->sa_family != AF_INET6)) {
             r_log(NR_LOG_STUN, LOG_DEBUG, "Unrecognized sa_family for address on adapter %lu", tmpAddress->IfIndex);
             continue;
+          }
+
+          if (stun_win32_address_disallowed(u)) {
+            continue;
+          }
+
+          if ((r=nr_sockaddr_to_transport_addr((struct sockaddr*)sa_addr->lpSockaddr, IPPROTO_UDP, 0, &(addrs[n].addr)))) {
+            ABORT(r);
           }
 
           strlcpy(addrs[n].addr.ifname, hex_hashed_ifname, sizeof(addrs[n].addr.ifname));
@@ -171,6 +187,10 @@ stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count)
 #else
           addrs[n].interface.estimated_speed = 0;
 #endif
+          if (stun_win32_address_temp_v6(u)) {
+            addrs[n].flags |= NR_ADDR_FLAG_TEMPORARY;
+          }
+
           if (++n >= maxaddrs)
             goto done;
         }

@@ -117,6 +117,11 @@ static int set_sockaddr(nr_local_addr *addr, struct ifaddrmsg* msg, struct rtatt
 }
 
 static int
+stun_ifaddr_is_disallowed_v6(int flags) {
+  return flags & (IFA_F_TENTATIVE | IFA_F_OPTIMISTIC | IFA_F_DADFAILED | IFA_F_DEPRECATED);
+}
+
+static int
 stun_convert_netlink(nr_local_addr *addr, struct ifaddrmsg *address_msg, struct rtattr* rta)
 {
   int r = set_sockaddr(addr, address_msg, rta);
@@ -126,6 +131,10 @@ stun_convert_netlink(nr_local_addr *addr, struct ifaddrmsg *address_msg, struct 
   }
 
   set_ifname(addr, address_msg);
+
+  if (address_msg->ifa_flags & IFA_F_TEMPORARY) {
+    addr->flags |= NR_ADDR_FLAG_TEMPORARY;
+  }
 
   int flags = get_siocgifflags(addr);
   if (flags & IFF_POINTOPOINT)
@@ -229,7 +238,8 @@ stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count)
             while (RTA_OK(rta, payload_len)) {
               if (rta->rta_type == IFA_ADDRESS) {
                 int family = address_msg->ifa_family;
-                if (family == AF_INET || family == AF_INET6) {
+                if ((family == AF_INET || family == AF_INET6) &&
+                    !stun_ifaddr_is_disallowed_v6(address_msg->ifa_flags)) {
                   if (stun_convert_netlink(&addrs[*count], address_msg, rta)) {
                     assert(0);
                   } else {

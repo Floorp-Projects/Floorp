@@ -19,9 +19,44 @@
 #include <errno.h>
 #include <netinet/in.h>
 
+static int
+stun_ifaddr_get_v6_flags(struct ifaddrs *ifaddr)
+{
+  if (ifaddr->ifa_addr->sa_family != AF_INET6) {
+    return 0;
+  }
+
+  int flags = 0;
+  int s = socket(AF_INET6, SOCK_DGRAM, 0);
+  if (!s) {
+    r_log(NR_LOG_STUN, LOG_ERR, "socket(AF_INET6, SOCK_DGRAM, 0) failed, errno=%d", errno);
+    assert(0);
+    return 0;
+  }
+  struct in6_ifreq ifr6;
+  memset(&ifr6, 0, sizeof(ifr6));
+  strncpy(ifr6.ifr_name, ifaddr->ifa_name, sizeof(ifr6.ifr_name));
+  /* ifr_addr is a sockaddr_in6, ifa_addr is a sockaddr* */
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6*)ifaddr->ifa_addr;
+  ifr6.ifr_addr = *sin6;
+  if (ioctl(s, SIOCGIFAFLAG_IN6, &ifr6) != -1) {
+    flags = ifr6.ifr_flags;
+  } else {
+    r_log(NR_LOG_STUN, LOG_ERR, "ioctl(SIOCGIFAFLAG_IN6) failed, errno=%d", errno);
+    assert(0);
+  }
+  close(s);
+  return flags;
+}
+
+static int
+stun_ifaddr_is_disallowed_v6(int flags) {
+  return flags & (IN6_IFF_ANYCAST | IN6_IFF_TENTATIVE | IN6_IFF_DUPLICATED | IN6_IFF_DETACHED | IN6_IFF_DEPRECATED);
+}
+
 int stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count)
 {
-  int r,_status;
+  int r,_status,flags;
   struct ifaddrs* if_addrs_head=NULL;
   struct ifaddrs* if_addr;
 
@@ -43,11 +78,17 @@ int stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count)
       switch (if_addr->ifa_addr->sa_family) {
         case AF_INET:
         case AF_INET6:
-          if (r=nr_sockaddr_to_transport_addr(if_addr->ifa_addr, IPPROTO_UDP, 0, &(addrs[*count].addr))) {
-            r_log(NR_LOG_STUN, LOG_ERR, "nr_sockaddr_to_transport_addr error r = %d", r);
-          } else {
-            (void)strlcpy(addrs[*count].addr.ifname, if_addr->ifa_name, sizeof(addrs[*count].addr.ifname));
-            ++(*count);
+          flags = stun_ifaddr_get_v6_flags(if_addr);
+          if (!stun_ifaddr_is_disallowed_v6(flags)) {
+            if (r=nr_sockaddr_to_transport_addr(if_addr->ifa_addr, IPPROTO_UDP, 0, &(addrs[*count].addr))) {
+              r_log(NR_LOG_STUN, LOG_ERR, "nr_sockaddr_to_transport_addr error r = %d", r);
+            } else {
+              if (flags & IN6_IFF_TEMPORARY) {
+                addrs[*count].flags |= NR_ADDR_FLAG_TEMPORARY;
+              }
+              (void)strlcpy(addrs[*count].addr.ifname, if_addr->ifa_name, sizeof(addrs[*count].addr.ifname));
+              ++(*count);
+            }
           }
           break;
         default:
