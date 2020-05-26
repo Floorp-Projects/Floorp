@@ -13,15 +13,15 @@
   <script class="testbody" type="text/javascript">
   "use strict";
 
-  function runTest()
+  async function runTest()
   {
-    isSecurityState("secure", "javascript: <img> should not break security");
+    await isSecurityState("secure", "javascript: <img> should not break security");
     finish();
   }
 
-  function afterNavigationTest()
+  async function afterNavigationTest()
   {
-    isSecurityState("secure", "Still secure after renavigation");
+    await isSecurityState("secure", "Still secure after renavigation");
     finish();
   }
 

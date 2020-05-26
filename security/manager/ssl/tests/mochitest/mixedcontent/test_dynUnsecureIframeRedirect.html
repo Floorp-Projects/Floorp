@@ -15,13 +15,13 @@
 
   hasMixedActiveContent = true;
 
-  function runTest()
+  async function runTest()
   {
-    isSecurityState("secure");
+    await isSecurityState("secure");
     let self = window;
     let iframe = document.getElementById("iframe1");
-    iframe.onload = function() {
-      self.isSecurityState("broken", "src='redirect to unsecure' changed to broken");
+    iframe.onload = async () => {
+      await self.isSecurityState("broken", "src='redirect to unsecure' changed to broken");
       self.finish();
     };
 
@@ -29,9 +29,9 @@
       "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/iframeunsecredirect.sjs";
   }
 
-  function afterNavigationTest()
+  async function afterNavigationTest()
   {
-    isSecurityState("broken", "security still broken after navigation");
+    await isSecurityState("broken", "security still broken after navigation");
     finish();
   }
 
