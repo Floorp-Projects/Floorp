@@ -499,6 +499,25 @@ FontList::FontList(uint32_t aGeneration) {
       MOZ_CRASH("parent: failed to initialize FontList");
     }
   } else {
+    // Initialize using the list of shmem blocks passed by the parent via
+    // SetXPCOMProcessAttributes.
+    auto& blocks = dom::ContentChild::GetSingleton()->SharedFontListBlocks();
+    for (auto handle : blocks) {
+      auto newShm = MakeUnique<base::SharedMemory>();
+      if (!newShm->IsHandleValid(handle)) {
+        // Bail out and let UpdateShmBlocks try to do its thing below.
+        break;
+      }
+      if (!newShm->SetHandle(handle, true)) {
+        MOZ_CRASH("failed to set shm handle");
+      }
+      if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {
+        MOZ_CRASH("failed to map shared memory");
+      }
+      mBlocks.AppendElement(new ShmBlock(std::move(newShm)));
+    }
+    blocks.Clear();
+    // Update in case of any changes since the initial message was sent.
     for (unsigned retryCount = 0; retryCount < 3; ++retryCount) {
       if (UpdateShmBlocks()) {
         return;
@@ -587,6 +606,18 @@ bool FontList::UpdateShmBlocks() {
     mBlocks.AppendElement(newBlock);
   }
   return true;
+}
+
+void FontList::ShareBlocksToProcess(nsTArray<base::SharedMemoryHandle>* aBlocks,
+                                    base::ProcessId aPid) {
+  MOZ_RELEASE_ASSERT(mReadOnlyShmems.Length() == mBlocks.Length());
+  for (auto& shmem : mReadOnlyShmems) {
+    base::SharedMemoryHandle* handle =
+        aBlocks->AppendElement(base::SharedMemory::NULLHandle());
+    if (!shmem->ShareToProcess(aPid, handle)) {
+      MOZ_CRASH("failed to share block");
+    }
+  }
 }
 
 // The block size MUST be sufficient to allocate the largest possible

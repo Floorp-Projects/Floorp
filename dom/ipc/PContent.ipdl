@@ -648,7 +648,8 @@ child:
                                     /* used on MacOSX/Linux/Android only: */
                                     SystemFontListEntry[] systemFontList,
                                     SharedMemoryHandle? sharedUASheetHandle,
-                                    uintptr_t sharedUASheetAddress);
+                                    uintptr_t sharedUASheetAddress,
+                                    SharedMemoryHandle[] sharedFontListBlocks);
 
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();

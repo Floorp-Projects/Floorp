@@ -2347,6 +2347,14 @@ void gfxPlatformFontList::ShareFontListShmBlockToProcess(
   }
 }
 
+void gfxPlatformFontList::ShareFontListToProcess(
+    nsTArray<base::SharedMemoryHandle>* aBlocks, base::ProcessId aPid) {
+  auto list = SharedFontList();
+  if (list) {
+    list->ShareBlocksToProcess(aBlocks, aPid);
+  }
+}
+
 void gfxPlatformFontList::InitializeFamily(uint32_t aGeneration,
                                            uint32_t aFamilyIndex) {
   auto list = SharedFontList();
