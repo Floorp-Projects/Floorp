@@ -72,7 +72,7 @@ internal class DefaultPresenter(
             return
         }
 
-        controller.syncTabs()
+        controller.syncAccount()
     }
 
     override fun stop() {
@@ -89,7 +89,7 @@ internal class DefaultPresenter(
         }
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-            controller.syncTabs()
+            controller.refreshSyncedTabs()
         }
 
         override fun onAuthenticationProblems() {
@@ -103,7 +103,7 @@ internal class DefaultPresenter(
     ) : SyncStatusObserver {
 
         override fun onIdle() {
-            controller.syncTabs()
+            controller.refreshSyncedTabs()
         }
 
         override fun onError(error: Exception?) {

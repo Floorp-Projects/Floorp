@@ -4,19 +4,13 @@
 
 package mozilla.components.feature.syncedtabs.interactor
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.Tab
+import mozilla.components.feature.syncedtabs.controller.SyncedTabsController
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
-import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.manager.ext.withConstellation
-import mozilla.components.service.fxa.sync.SyncReason
-import kotlin.coroutines.CoroutineContext
 
 internal class DefaultInteractor(
-    override val accountManager: FxaAccountManager,
+    override val controller: SyncedTabsController,
     override val view: SyncedTabsView,
-    private val coroutineContext: CoroutineContext,
     override val tabClicked: (Tab) -> Unit
 ) : SyncedTabsInteractor {
 
@@ -33,11 +27,6 @@ internal class DefaultInteractor(
     }
 
     override fun onRefresh() {
-        CoroutineScope(coroutineContext).launch {
-            accountManager.withConstellation {
-                refreshDevicesAsync()
-            }
-            accountManager.syncNowAsync(SyncReason.User, true)
-        }
+        controller.syncAccount()
     }
 }

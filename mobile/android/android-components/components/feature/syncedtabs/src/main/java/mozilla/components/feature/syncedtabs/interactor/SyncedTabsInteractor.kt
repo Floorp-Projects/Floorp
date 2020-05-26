@@ -5,15 +5,15 @@
 package mozilla.components.feature.syncedtabs.interactor
 
 import mozilla.components.browser.storage.sync.Tab
+import mozilla.components.feature.syncedtabs.controller.SyncedTabsController
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
-import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
  * An interactor that handles events from [SyncedTabsView.Listener].
  */
 interface SyncedTabsInteractor : SyncedTabsView.Listener, LifecycleAwareFeature {
-    val accountManager: FxaAccountManager
+    val controller: SyncedTabsController
     val view: SyncedTabsView
     val tabClicked: (Tab) -> Unit
 }
