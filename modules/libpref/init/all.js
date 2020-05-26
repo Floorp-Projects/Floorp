@@ -3978,6 +3978,7 @@ pref("network.psl.onUpdate_notify", false);
 #ifdef MOZ_WAYLAND
   pref("widget.wayland_vsync.enabled", false);
   pref("widget.wayland.use-opaque-region", true);
+  pref("widget.use-xdg-desktop-portal", false);
 #endif
 
 // All the Geolocation preferences are here.
