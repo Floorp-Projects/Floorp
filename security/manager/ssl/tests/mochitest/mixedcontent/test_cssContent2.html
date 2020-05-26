@@ -17,23 +17,23 @@
     SimpleTest.expectAssertions(0, 1);
   }
 
-  function runTest()
+  async function runTest()
   {
-    isSecurityState("secure");
+    await isSecurityState("secure");
     document.getElementById("para").style.content =
       "url('http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg')";
 
-    waitForSecurityState("broken", function()
+    waitForSecurityState("broken", async () =>
     {
-      isSecurityState("broken", "insecure content added by styling breaks security");
+      await isSecurityState("broken", "insecure content added by styling breaks security");
       finish();
     });
   }
 
-  function afterNavigationTest()
+  async function afterNavigationTest()
   {
     is(document.getElementById("para").style.content, "");
-    isSecurityState("secure", "security full after navigation");
+    await isSecurityState("secure", "security full after navigation");
     finish();
   }
 

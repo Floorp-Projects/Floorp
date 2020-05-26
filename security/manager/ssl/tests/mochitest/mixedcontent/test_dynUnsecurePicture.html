@@ -15,24 +15,24 @@
 
   // This test, as is, equals to https://kuix.de/misc/test17/358438.php
 
-  function runTest()
+  async function runTest()
   {
-    isSecurityState("secure");
+    await isSecurityState("secure");
     document.getElementById("image1").src =
       "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg";
 
-    window.setTimeout(function() {
-      isSecurityState("broken", "src='http://...' changed to broken");
+    window.setTimeout(async () => {
+      await isSecurityState("broken", "src='http://...' changed to broken");
       finish();
     }, 500);
   }
 
-  function afterNavigationTest()
+  async function afterNavigationTest()
   {
     is(document.getElementById("image1").src,
       "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg",
       "img.src secure again");
-    isSecurityState("secure", "security full after navigation");
+    await isSecurityState("secure", "security full after navigation");
     finish();
   }
 

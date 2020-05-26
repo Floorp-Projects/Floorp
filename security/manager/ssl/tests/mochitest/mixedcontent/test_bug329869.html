@@ -11,9 +11,9 @@
 
   hasMixedActiveContent = true;
 
-  function runTest()
+  async function runTest()
   {
-    isSecurityState("secure");
+    await isSecurityState("secure");
     window.setTimeout(function () {
       let newElement = document.createElement("script");
       newElement.src = "http://example.org/tests/security/manager/ssl/tests/" +
@@ -22,9 +22,9 @@
     }, 0);
   }
 
-  function afterNavigationTest()
+  async function afterNavigationTest()
   {
-    isSecurityState("secure", "when we navigate back, we're loading our secure page again and not loading an insecure script, so our security state is secure");
+    await isSecurityState("secure", "when we navigate back, we're loading our secure page again and not loading an insecure script, so our security state is secure");
     finish();
   }
 
