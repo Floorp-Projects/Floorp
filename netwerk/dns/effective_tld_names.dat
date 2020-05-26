@@ -10666,6 +10666,9 @@ cc.ua
 inf.ua
 ltd.ua
 
+// 611coin : https://611project.org/
+611.to
+
 // Adobe : https://www.adobe.com/
 // Submitted by Ian Boston <boston@adobe.com>
 adobeaemcloud.com
@@ -10684,6 +10687,10 @@ barsy.ca
 // Submitted by Mark J. Titorenko <mark.titorenko@alces-software.com>
 *.compute.estate
 *.alces.network
+
+// all-inkl.com : https://all-inkl.com
+// Submitted by Werner Kaltofen <wk@all-inkl.com>
+kasserver.com
 
 // Altervista: https://www.altervista.org
 // Submitted by Carlo Cannas <tech_staff@altervista.it>
@@ -10849,8 +10856,11 @@ backplaneapp.io
 balena-devices.com
 
 // Banzai Cloud
-// Submitted by Gabor Kozma <info@banzaicloud.com>
+// Submitted by Janos Matyas <info@banzaicloud.com>
+*.banzai.cloud
 app.banzaicloud.io
+*.backyards.banzaicloud.io
+
 
 // BetaInABox
 // Submitted by Adrian <adrian@betainabox.com>
@@ -11192,6 +11202,9 @@ drud.us
 // DuckDNS : http://www.duckdns.org/
 // Submitted by Richard Harper <richard@duckdns.org>
 duckdns.org
+
+// bitbridge.net : Submitted by Craig Welch, abeliidev@gmail.com
+bitbridge.net
 
 // dy.fi : http://dy.fi/
 // Submitted by Heikki Hannikainen <hessu@hes.iki.fi>
@@ -11772,6 +11785,12 @@ filegear-sg.me
 // Submitted by Chris Raynor <chris@firebase.com>
 firebaseapp.com
 
+// fly.io: https://fly.io
+// Submitted by Kurt Mackey <kurt@fly.io>
+fly.dev
+edgeapp.net
+shw.io
+
 // Flynn : https://flynn.io
 // Submitted by Jonathan Rudenberg <jonathan@flynn.io>
 flynnhosting.net
@@ -11816,6 +11835,7 @@ usercontent.jp
 // Gentlent, Inc. : https://www.gentlent.com
 // Submitted by Tom Klein <tom@gentlent.com>
 gentapps.com
+gentlentapis.com
 lab.ms
 
 // GitHub, Inc.
@@ -12174,7 +12194,8 @@ linkyard-cloud.ch
 // Linode : https://linode.com
 // Submitted by <security@linode.com>
 members.linode.com
-nodebalancer.linode.com
+*.nodebalancer.linode.com
+*.linodeobjects.com
 
 // LiquidNet Ltd : http://www.liquidnetlimited.com/
 // Submitted by Victor Velchev <admin@liquidnetlimited.com>
@@ -12313,9 +12334,7 @@ nctu.me
 
 // Netlify : https://www.netlify.com
 // Submitted by Jessica Parsons <jessica@netlify.com>
-bitballoon.com
 netlify.app
-netlify.com
 
 // Neustar Inc.
 // Submitted by Trung Tran <Trung.Tran@neustar.biz>
@@ -12562,6 +12581,10 @@ outsystemscloud.com
 ownprovider.com
 own.pm
 
+// OwO : https://whats-th.is/
+// Submitted by Dean Sheather <dean@deansheather.com>
+*.owo.codes
+
 // OX : http://www.ox.rs
 // Submitted by Adam Grand <webmaster@mail.ox.rs>
 ox.rs
@@ -12613,6 +12636,11 @@ on-web.fr
 platter-app.com
 platter-app.dev
 platterp.us
+
+// Plesk : https://www.plesk.com/
+// Submitted by Anton Akhtyamov <program-managers@plesk.com>
+pdns.page
+plesk.page
 
 // Port53 : https://port53.io/
 // Submitted by Maximilian Schieder <maxi@zeug.co>
@@ -12772,6 +12800,10 @@ firewall-gateway.net
 my-firewall.org
 myfirewall.org
 spdns.org
+
+// Seidat : https://www.seidat.com
+// Submitted by Artem Kondratev <accounts@seidat.com>
+seidat.net
 
 // Senseering GmbH : https://www.senseering.de
 // Submitted by Felix Mönckemeyer <f.moenckemeyer@senseering.de>
@@ -13022,6 +13054,12 @@ lib.de.us
 // Submitted by Danko Aleksejevs <danko@very.lv>
 2038.io
 
+// Vercel, Inc : https://vercel.com/
+// Submitted by Connor Davis <security@vercel.com>
+vercel.app
+vercel.dev
+now.sh
+
 // Viprinet Europe GmbH : http://www.viprinet.com
 // Submitted by Simon Kissel <hostmaster@viprinet.com>
 router.management
@@ -13033,6 +13071,49 @@ v-info.info
 // Voorloper.com: https://voorloper.com
 // Submitted by Nathan van Bakel <info@voorloper.com>
 voorloper.cloud
+
+// Voxel.sh DNS : https://voxel.sh/dns/
+// Submitted by Mia Rehlinger <dns@voxel.sh>
+neko.am
+nyaa.am
+be.ax
+cat.ax
+es.ax
+eu.ax
+gg.ax
+mc.ax
+us.ax
+xy.ax
+nl.ci
+xx.gl
+app.gp
+blog.gt
+de.gt
+to.gt
+be.gy
+cc.hn
+blog.kg
+io.kg
+jp.kg
+tv.kg
+uk.kg
+us.kg
+de.ls
+at.md
+de.md
+jp.md
+to.md
+uwu.nu
+indie.porn
+vxl.sh
+ch.tc
+me.tc
+we.tc
+nyan.to
+at.vg
+blog.vu
+dev.vu
+me.vu
 
 // V.UA Domain Administrator : https://domain.v.ua/
 // Submitted by Serhii Rostilo <sergey@rostilo.kiev.ua>
@@ -13124,10 +13205,6 @@ noho.st
 // Submitted by registry <hostmaster@nic.za.net>
 za.net
 za.org
-
-// Zeit, Inc. : https://zeit.domains/
-// Submitted by Olli Vanhoja <olli@zeit.co>
-now.sh
 
 // Zine EOOD : https://zine.bg/
 // Submitted by Martin Angelov <martin@zine.bg>
