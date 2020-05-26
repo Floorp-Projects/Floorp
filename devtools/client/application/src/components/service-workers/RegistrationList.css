@@ -16,11 +16,11 @@
 }
 
 .aboutdebugging-plug::before {
-    display: inline-block;
-    width: calc(var(--base-unit) * 4);
-    height: calc(var(--base-unit) * 4);
-    content: "";
-    background-image: url(chrome://browser/skin/developer.svg)
+  flex: 0 0 auto;
+  width: calc(var(--base-unit) * 4);
+  height: calc(var(--base-unit) * 4);
+  content: "";
+  background-image: url(chrome://browser/skin/developer.svg)
 }
 
 .registrations-container {
