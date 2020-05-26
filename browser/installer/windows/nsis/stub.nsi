@@ -1494,24 +1494,8 @@ Function ShouldPromptForProfileCleanup
   ; We'll set this back to all at the end of the function.
   SetShellVarContext current
 
-  StrCpy $R0 ""
-  ; First look for an install-specific profile, which might be listed as
-  ; either a relative or an absolute path (installs.ini doesn't say which).
-  ${If} ${FileExists} "$APPDATA\Mozilla\Firefox\installs.ini"
-    ClearErrors
-    ReadINIStr $1 "$APPDATA\Mozilla\Firefox\installs.ini" "$AppUserModelID" "Default"
-    ${IfNot} ${Errors}
-      ${GetLongPath} "$APPDATA\Mozilla\Firefox\$1" $2
-      ${If} ${FileExists} $2
-        StrCpy $R0 $2
-      ${Else}
-        ${GetLongPath} "$1" $2
-        ${If} ${FileExists} $2
-          StrCpy $R0 $2
-        ${EndIf}
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
+  ${FindInstallSpecificProfile}
+  Pop $R0
 
   ${If} $R0 == ""
     ; We don't have an install-specific profile, so look for an old-style
