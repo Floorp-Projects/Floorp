@@ -14,6 +14,18 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/SitePermissions.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "MacOSWebRTCStatusbarIndicator",
+  "resource:///modules/webrtcUI.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gScreenManager",
@@ -35,6 +47,7 @@ function updateIndicatorState() {
 const WebRTCIndicator = {
   init(event) {
     addEventListener("load", this);
+    addEventListener("unload", this);
 
     // If the user customizes the position of the indicator, we will
     // not try to re-center it on the primary display after indicator
@@ -43,6 +56,10 @@ const WebRTCIndicator = {
 
     this.updatingIndicatorState = false;
     this.loaded = false;
+
+    if (AppConstants.platform == "macosx") {
+      this.macOSIndicator = new MacOSWebRTCStatusbarIndicator();
+    }
   },
 
   /**
@@ -50,6 +67,9 @@ const WebRTCIndicator = {
    * update itself when sharing states have changed.
    */
   updateIndicatorState(initialLayout = false) {
+    if (this.macOSIndicator) {
+      this.macOSIndicator.updateIndicatorState();
+    }
     // It's possible that we were called externally before the indicator
     // finished loading. If so, then bail out - we're going to call
     // updateIndicatorState ourselves automatically once the load
@@ -167,7 +187,11 @@ const WebRTCIndicator = {
   handleEvent(event) {
     switch (event.type) {
       case "load": {
-        this.onLoad(event);
+        this.onLoad();
+        break;
+      }
+      case "unload": {
+        this.onUnload();
         break;
       }
       case "click": {
@@ -202,7 +226,14 @@ const WebRTCIndicator = {
       cancelable: true,
     });
     document.documentElement.dispatchEvent(ev);
+
     this.loaded = true;
+  },
+
+  onUnload() {
+    if (this.macOSIndicator) {
+      this.macOSIndicator.close();
+    }
   },
 
   onClick(event) {
