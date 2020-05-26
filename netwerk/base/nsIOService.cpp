@@ -456,6 +456,11 @@ nsresult nsIOService::LaunchSocketProcess() {
     return NS_OK;
   }
 
+  if (PR_GetEnv("MOZ_DISABLE_SOCKET_PROCESS")) {
+    LOG(("nsIOService skipping LaunchSocketProcess because of the env"));
+    return NS_OK;
+  }
+
   if (!Preferences::GetBool("network.process.enabled", true)) {
     LOG(("nsIOService skipping LaunchSocketProcess because of the pref"));
     return NS_OK;
@@ -508,6 +513,11 @@ bool nsIOService::UseSocketProcess(bool aCheckAgain) {
 
   sUseSocketProcessChecked = true;
   sUseSocketProcess = false;
+
+  if (PR_GetEnv("MOZ_DISABLE_SOCKET_PROCESS")) {
+    return sUseSocketProcess;
+  }
+
   if (StaticPrefs::network_process_enabled()) {
     sUseSocketProcess =
         StaticPrefs::network_http_network_access_on_socket_process_enabled();
