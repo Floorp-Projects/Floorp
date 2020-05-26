@@ -118,12 +118,11 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const FunctionIndex& index) {
-      MutableHandle<FunctionType> data = compilationInfo.funcData[index];
       // We should have already converted this data to a JSFunction as part
       // of publishDeferredFunctions, which currently happens before BCE begins.
       // Once we can do LazyScriptCreationData::create without referencing the
       // functionbox, then we should be able to do JSFunction allocation here.
-      output[i] = JS::GCCellPtr(data.as<JSFunction*>());
+      output[i] = JS::GCCellPtr(compilationInfo.functions[index]);
       return true;
     }
 

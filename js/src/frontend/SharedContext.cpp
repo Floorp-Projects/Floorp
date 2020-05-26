@@ -251,12 +251,8 @@ JSFunction* FunctionBox::createFunction(JSContext* cx) {
                               allocKind, TenuredObject);
 }
 
-bool FunctionBox::hasFunctionStencil() const {
-  return compilationInfo_.funcData[funcDataIndex_].get().is<ScriptStencil>();
-}
-
 bool FunctionBox::hasFunction() const {
-  return compilationInfo_.funcData[funcDataIndex_].get().is<JSFunction*>();
+  return compilationInfo_.functions[funcDataIndex_] != nullptr;
 }
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
@@ -403,11 +399,11 @@ void FunctionBox::trace(JSTracer* trc) {
 }
 
 JSFunction* FunctionBox::function() const {
-  return compilationInfo_.funcData[funcDataIndex_].as<JSFunction*>();
+  return compilationInfo_.functions[funcDataIndex_];
 }
 
 void FunctionBox::clobberFunction(JSFunction* function) {
-  compilationInfo_.funcData[funcDataIndex_].set(mozilla::AsVariant(function));
+  compilationInfo_.functions[funcDataIndex_].set(function);
   // After clobbering, these flags need to be updated
   setIsInterpreted(function->isInterpreted());
 }
@@ -428,7 +424,7 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
 }
 
 MutableHandle<ScriptStencil> FunctionBox::functionStencil() const {
-  return compilationInfo_.funcData[funcDataIndex_].as<ScriptStencil>();
+  return compilationInfo_.funcData[funcDataIndex_];
 }
 
 }  // namespace frontend
