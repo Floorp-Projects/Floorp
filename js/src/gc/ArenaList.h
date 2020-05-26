@@ -250,10 +250,8 @@ class ArenaLists {
 
   ArenaListData<AllAllocKindArray<ArenaList>> arenaLists_;
 
-  ArenaList& arenaLists(AllocKind i) { return arenaLists_.ref()[i]; }
-  const ArenaList& arenaLists(AllocKind i) const {
-    return arenaLists_.ref()[i];
-  }
+  ArenaList& arenaList(AllocKind i) { return arenaLists_.ref()[i]; }
+  const ArenaList& arenaList(AllocKind i) const { return arenaLists_.ref()[i]; }
 
   enum class ConcurrentUse : uint32_t {
     None,
@@ -275,11 +273,9 @@ class ArenaLists {
   }
 
   /* For each arena kind, a list of arenas remaining to be swept. */
-  MainThreadOrGCTaskData<AllAllocKindArray<Arena*>> arenaListsToSweep_;
-  Arena*& arenaListsToSweep(AllocKind i) { return arenaListsToSweep_.ref()[i]; }
-  Arena* arenaListsToSweep(AllocKind i) const {
-    return arenaListsToSweep_.ref()[i];
-  }
+  MainThreadOrGCTaskData<AllAllocKindArray<Arena*>> arenasToSweep_;
+  Arena*& arenasToSweep(AllocKind i) { return arenasToSweep_.ref()[i]; }
+  Arena* arenasToSweep(AllocKind i) const { return arenasToSweep_.ref()[i]; }
 
   /* During incremental sweeping, a list of the arenas already swept. */
   ZoneOrGCTaskData<AllocKind> incrementalSweptArenaKind;
