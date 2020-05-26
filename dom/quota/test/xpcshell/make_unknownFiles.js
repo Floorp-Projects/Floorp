@@ -84,6 +84,12 @@ async function testSteps() {
 
     // TODO: Fix IndexedDB to ignore unknown files as well
     // createUnknownFileIn(`${originRelativePath}/idb`);
+    createUnknownFileIn(
+      `${originRelativePath}/idb/2320029346mByDIdnedxe.files`
+    );
+    createUnknownFileIn(
+      `${originRelativePath}/idb/2320029346mByDIdnedxe.files/journals`
+    );
   }
 
   // Unknown file in cache client directory
