@@ -45,6 +45,7 @@ int nr_local_addr_copy(nr_local_addr *to, nr_local_addr *from)
       ABORT(r);
     }
     to->interface = from->interface;
+    to->flags = from->flags;
 
     _status=0;
   abort:
@@ -61,8 +62,9 @@ int nr_local_addr_fmt_info_string(nr_local_addr *addr, char *buf, int len)
                        (addr_type & NR_INTERFACE_TYPE_MOBILE) ? "mobile" :
                        "unknown";
 
-    snprintf(buf, len, "%s%s, estimated speed: %d kbps",
-             vpn, type, addr->interface.estimated_speed);
+    snprintf(buf, len, "%s%s, estimated speed: %d kbps %s",
+             vpn, type, addr->interface.estimated_speed,
+             (addr->flags & NR_ADDR_FLAG_TEMPORARY ? "temporary" : ""));
     buf[len - 1] = '\0';
     return (0);
   }

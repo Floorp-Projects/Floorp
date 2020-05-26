@@ -369,8 +369,11 @@ nr_stun_filter_addrs(nr_local_addr addrs[], int remove_loopback, int remove_link
     nr_local_addr *tmp = 0;
     int i;
     int n;
+    /* We prefer temp ipv6 for their privacy properties. If we cannot get
+     * that, we prefer ipv6 that are not based on mac address. */
     int filter_mac_ipv6 = 0;
     int filter_teredo_ipv6 = 0;
+    int filter_non_temp_ipv6 = 0;
 
     tmp = RMALLOC(*count * sizeof(*tmp));
     if (!tmp)
@@ -389,6 +392,10 @@ nr_stun_filter_addrs(nr_local_addr addrs[], int remove_loopback, int remove_link
 
         if (!nr_transport_addr_is_mac_based(&addrs[i].addr)) {
           filter_mac_ipv6 = 1;
+        }
+
+        if (addrs[i].flags & NR_ADDR_FLAG_TEMPORARY) {
+          filter_non_temp_ipv6 = 1;
         }
       }
     }
@@ -412,6 +419,11 @@ nr_stun_filter_addrs(nr_local_addr addrs[], int remove_loopback, int remove_link
         else if (filter_teredo_ipv6 &&
                  nr_transport_addr_is_teredo(&addrs[i].addr)) {
             /* skip addrs[i], it's a Teredo address */
+        }
+        else if (filter_non_temp_ipv6 &&
+                 (addrs[i].addr.ip_version == NR_IPV6) &&
+                 !(addrs[i].flags & NR_ADDR_FLAG_TEMPORARY)) {
+            /* skip addrs[i], it's a non-temporary ipv6, and we have a temporary */
         }
         else {
             /* otherwise, copy it to the temporary array */
