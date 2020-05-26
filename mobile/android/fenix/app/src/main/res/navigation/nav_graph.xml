@@ -36,6 +36,7 @@
     <action android:id="@+id/action_global_deleteBrowsingDataFragment" app:destination="@id/deleteBrowsingDataFragment" />
     <action android:id="@+id/action_global_webExtensionActionPopupFragment" app:destination="@id/webExtensionActionPopupFragment" />
     <action android:id="@+id/action_global_settingsFragment" app:destination="@id/settingsFragment" />
+    <action android:id="@+id/action_global_syncedTabsFragment" app:destination="@+id/syncedTabsFragment" />
     <action android:id="@+id/action_global_privateBrowsingFragment" app:destination="@id/privateBrowsingFragment"/>
     <action android:id="@+id/action_global_bookmarkFragment" app:destination="@id/bookmarkFragment"/>
     <action android:id="@+id/action_global_historyFragment" app:destination="@id/historyFragment"/>
@@ -149,6 +150,9 @@
             android:name="shouldAnimate"
             app:argType="boolean"
             android:defaultValue="false" />
+        <action
+            android:id="@+id/action_browserFragment_to_syncedTabsFragment"
+            app:destination="@id/syncedTabsFragment" />
         <action
             android:id="@+id/action_browserFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
@@ -293,6 +297,13 @@
             app:destination="@id/browserFragment"
             app:popUpTo="@id/settingsFragment"
             app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/syncedTabsFragment"
+        android:name="org.mozilla.fenix.sync.SyncedTabsFragment"
+        android:label="@string/synced_tabs"
+        tools:layout="@layout/fragment_synced_tabs">
     </fragment>
 
     <fragment

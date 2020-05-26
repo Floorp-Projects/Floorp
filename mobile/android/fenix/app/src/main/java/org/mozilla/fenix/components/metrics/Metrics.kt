@@ -419,7 +419,7 @@ sealed class Event {
             NEW_PRIVATE_TAB, SHARE, REPORT_SITE_ISSUE, BACK, FORWARD, RELOAD, STOP, OPEN_IN_FENIX,
             SAVE_TO_COLLECTION, ADD_TO_TOP_SITES, ADD_TO_HOMESCREEN, QUIT, READER_MODE_ON,
             READER_MODE_OFF, OPEN_IN_APP, BOOKMARK, READER_MODE_APPEARANCE, ADDONS_MANAGER,
-            BOOKMARKS, HISTORY
+            BOOKMARKS, HISTORY, SYNC_TABS
         }
 
         override val extras: Map<Events.browserMenuActionKeys, String>?

@@ -95,6 +95,8 @@
     <string name="browser_menu_add_to_homescreen">Add to Home screen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Install</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Synced Tabs</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Find in page</string>
     <!-- Browser menu button that creates a private tab -->
@@ -286,6 +288,8 @@
     <string name="preferences_sync_bookmarks">Bookmarks</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Logins</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Tabs</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Sign out</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -416,6 +420,8 @@
     <string name="library_desktop_bookmarks_unfiled">Other Bookmarks</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">History</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Synced Tabs</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Reading List</string>
     <!-- Menu Item Label for Search in Library -->
@@ -1378,4 +1384,15 @@
     <string name="voice_search_content_description">Voice search</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Speak now</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Connect with a Firefox Account.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Connect another device.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Please re-authenticate.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Please enable tab syncing.</string>
+
 </resources>

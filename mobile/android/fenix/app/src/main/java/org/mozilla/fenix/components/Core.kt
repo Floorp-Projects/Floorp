@@ -22,6 +22,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.browser.storage.sync.RemoteTabsStorage
 import mozilla.components.browser.thumbnails.ThumbnailsMiddleware
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.engine.DefaultSettings
@@ -211,6 +212,11 @@ class Core(private val context: Context) {
     val lazyHistoryStorage = lazy { PlacesHistoryStorage(context) }
     val lazyBookmarksStorage = lazy { PlacesBookmarksStorage(context) }
     val lazyPasswordsStorage = lazy { SyncableLoginsStorage(context, passwordsEncryptionKey) }
+
+    /**
+     * The storage component to sync and persist tabs in a Firefox Sync account.
+     */
+    val lazyRemoteTabsStorage = lazy { RemoteTabsStorage() }
 
     // For most other application code (non-startup), these wrappers are perfectly fine and more ergonomic.
     val historyStorage by lazy { lazyHistoryStorage.value }

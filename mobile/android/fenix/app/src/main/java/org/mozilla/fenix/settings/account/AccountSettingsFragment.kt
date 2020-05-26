@@ -35,6 +35,7 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.getLastSynced
 import mozilla.components.support.ktx.android.util.dpToPx
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
@@ -206,6 +207,16 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        val tabsNameKey = getPreferenceKey(R.string.pref_key_sync_tabs)
+        findPreference<CheckBoxPreference>(tabsNameKey)?.apply {
+            setOnPreferenceChangeListener { _, newValue ->
+                SyncEnginesStorage(context).setStatus(SyncEngine.Tabs, newValue as Boolean)
+                @Suppress("DeferredResultUnused")
+                context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
+                true
+            }
+        }
+
         deviceConstellation?.registerDeviceObserver(
             deviceConstellationObserver,
             owner = this,
@@ -262,6 +273,12 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         findPreference<CheckBoxPreference>(loginsNameKey)?.apply {
             isEnabled = syncEnginesStatus.containsKey(SyncEngine.Passwords)
             isChecked = syncEnginesStatus.getOrElse(SyncEngine.Passwords) { true }
+        }
+        val tabsNameKey = getPreferenceKey(R.string.pref_key_sync_tabs)
+        findPreference<CheckBoxPreference>(tabsNameKey)?.apply {
+            isVisible = FeatureFlags.syncedTabs
+            isEnabled = syncEnginesStatus.containsKey(SyncEngine.Tabs)
+            isChecked = syncEnginesStatus.getOrElse(SyncEngine.Tabs) { FeatureFlags.syncedTabs }
         }
     }
 

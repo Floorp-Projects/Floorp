@@ -31,6 +31,7 @@
     <dimen name="phone_feature_label_recommended_text_size">14sp</dimen>
     <dimen name="site_permissions_exceptions_item_text_size">18sp</dimen>
     <dimen name="site_permissions_exceptions_item_height">56dp</dimen>
+    <dimen name="synced_tab_item_min_height">56dp</dimen>
     <dimen name="component_collection_creation_list_margin">16dp</dimen>
     <dimen name="exceptions_description_margin">12dp</dimen>
     <dimen name="preference_seek_bar_padding">24dp</dimen>

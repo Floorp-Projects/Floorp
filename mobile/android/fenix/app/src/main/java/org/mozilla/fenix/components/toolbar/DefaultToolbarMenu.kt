@@ -25,9 +25,10 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import org.mozilla.fenix.Config
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.asActivity
@@ -190,6 +191,7 @@ class DefaultToolbarMenu(
         val menuItems = listOfNotNull(
             historyItem,
             bookmarksItem,
+            if (FeatureFlags.syncedTabs) syncedTabs else null,
             settings,
             if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
             BrowserMenuDivider(),
@@ -257,6 +259,14 @@ class DefaultToolbarMenu(
         iconTintColorResource = primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
+    }
+
+    private val syncedTabs = BrowserMenuImageText(
+        label = context.getString(R.string.synced_tabs),
+        imageResource = R.drawable.ic_tab_collection,
+        iconTintColorResource = primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
     }
 
     private val installToHomescreen = BrowserMenuHighlightableItem(

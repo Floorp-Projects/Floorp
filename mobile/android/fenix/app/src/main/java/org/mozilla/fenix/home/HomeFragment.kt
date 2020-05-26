@@ -675,6 +675,14 @@ class HomeFragment : Fragment() {
                         HomeFragmentDirections.actionGlobalSettingsFragment()
                     )
                 }
+                HomeMenu.Item.SyncedTabs -> {
+                    invokePendingDeleteJobs()
+                    hideOnboardingIfNeeded()
+                    nav(
+                        R.id.homeFragment,
+                        HomeFragmentDirections.actionGlobalSyncedTabsFragment()
+                    )
+                }
                 HomeMenu.Item.Bookmarks -> {
                     invokePendingDeleteJobs()
                     hideOnboardingIfNeeded()

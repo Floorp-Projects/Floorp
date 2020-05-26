@@ -21,6 +21,7 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -39,6 +40,7 @@ class HomeMenu(
         object WhatsNew : Item()
         object Help : Item()
         object Settings : Item()
+        object SyncedTabs : Item()
         object History : Item()
         object Bookmarks : Item()
         object Quit : Item()
@@ -118,6 +120,14 @@ class HomeMenu(
             onItemTapped.invoke(Item.Settings)
         }
 
+        val syncedTabsItem = BrowserMenuImageText(
+            context.getString(R.string.library_synced_tabs),
+            R.drawable.ic_tab_collection,
+            primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.SyncedTabs)
+        }
+
         val helpItem = BrowserMenuImageText(
             context.getString(R.string.browser_menu_help),
             R.drawable.ic_help,
@@ -141,6 +151,7 @@ class HomeMenu(
                 BrowserMenuDivider(),
                 bookmarksItem,
                 historyItem,
+                if (FeatureFlags.syncedTabs) syncedTabsItem else null,
                 BrowserMenuDivider(),
                 settingsItem,
                 helpItem,
@@ -157,6 +168,7 @@ class HomeMenu(
                 BrowserMenuDivider(),
                 bookmarksItem,
                 historyItem,
+                if (FeatureFlags.syncedTabs) syncedTabsItem else null,
                 BrowserMenuDivider(),
                 whatsNewItem
             ).also { items ->

@@ -42,5 +42,13 @@
             android:key="@string/pref_key_sync_logins"
             android:layout="@layout/checkbox_left_preference"
             android:title="@string/preferences_sync_logins" />
+
+        <androidx.preference.CheckBoxPreference
+            android:defaultValue="false"
+            app:isPreferenceVisible="false"
+            android:key="@string/pref_key_sync_tabs"
+            android:layout="@layout/checkbox_left_preference"
+            android:title="@string/preferences_sync_tabs"/>
+
     </androidx.preference.PreferenceCategory>
 </PreferenceScreen>

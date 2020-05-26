@@ -18,6 +18,7 @@ enum class BrowserDirection(@IdRes val fragmentId: Int) {
     FromHome(R.id.homeFragment),
     FromSearch(R.id.searchFragment),
     FromSettings(R.id.settingsFragment),
+    FromSyncedTabs(R.id.syncedTabsFragment),
     FromBookmarks(R.id.bookmarkFragment),
     FromHistory(R.id.historyFragment),
     FromExceptions(R.id.exceptionsFragment),

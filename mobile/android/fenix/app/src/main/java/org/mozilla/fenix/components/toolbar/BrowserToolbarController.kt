@@ -158,6 +158,10 @@ class DefaultBrowserToolbarController(
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
                 navController.nav(R.id.browserFragment, directions)
             }
+            ToolbarMenu.Item.SyncedTabs -> {
+                navController.nav(
+                    R.id.browserFragment, BrowserFragmentDirections.actionBrowserFragmentToSyncedTabsFragment())
+            }
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(
                 item.isChecked,
                 currentSession
@@ -372,6 +376,7 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.SaveToCollection -> Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION
             ToolbarMenu.Item.AddToTopSites -> Event.BrowserMenuItemTapped.Item.ADD_TO_TOP_SITES
             ToolbarMenu.Item.AddToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
+            ToolbarMenu.Item.SyncedTabs -> Event.BrowserMenuItemTapped.Item.SYNC_TABS
             ToolbarMenu.Item.InstallToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
             ToolbarMenu.Item.Quit -> Event.BrowserMenuItemTapped.Item.QUIT
             is ToolbarMenu.Item.ReaderMode ->

@@ -32,7 +32,9 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.WebExtensionState
+import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.contextmenu.ext.DefaultSelectionActionDelegate
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -51,37 +53,36 @@ import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
-import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.checkAndUpdateScreenshotPermission
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
 import org.mozilla.fenix.home.intent.OpenBrowserIntentProcessor
-import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
+import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.DefaultBrowserSettingsFragmentDirections
-import org.mozilla.fenix.settings.logins.SavedLoginsAuthFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.settings.about.AboutFragmentDirections
+import org.mozilla.fenix.settings.logins.SavedLoginsAuthFragmentDirections
 import org.mozilla.fenix.settings.search.AddSearchEngineFragmentDirections
 import org.mozilla.fenix.settings.search.EditCustomSearchEngineFragmentDirections
 import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
+import org.mozilla.fenix.sync.SyncedTabsFragmentDirections
+import org.mozilla.fenix.tabtray.FenixTabsAdapter
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.RunWhenReadyQueue
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.browser.tabstray.BrowserTabsTray
-import org.mozilla.fenix.tabtray.FenixTabsAdapter
 
 /**
  * The main activity of the application. The application is primarily a single Activity (this one)
@@ -367,6 +368,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             SearchFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSettings ->
             SettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromSyncedTabs ->
+            SyncedTabsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromBookmarks ->
             BookmarkFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromHistory ->

@@ -488,6 +488,7 @@ dependencies {
     implementation Deps.mozilla_feature_qr
     implementation Deps.mozilla_feature_search
     implementation Deps.mozilla_feature_session
+    implementation Deps.mozilla_feature_syncedtabs
     implementation Deps.mozilla_feature_toolbar
     implementation Deps.mozilla_feature_tabs
     implementation Deps.mozilla_feature_findinpage

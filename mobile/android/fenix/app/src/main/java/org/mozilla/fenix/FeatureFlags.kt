@@ -45,6 +45,11 @@ object FeatureFlags {
     val loginsEdit = Config.channel.isNightlyOrDebug
 
     /**
+     * Enable tab sync feature
+     */
+    val syncedTabs = Config.channel.isNightlyOrDebug
+
+    /**
      * Enables new tab tray pref
      */
     val tabTray = Config.channel.isNightlyOrDebug

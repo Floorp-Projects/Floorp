@@ -23,6 +23,7 @@ interface ToolbarMenu {
         object AddToTopSites : Item()
         object InstallToHomeScreen : Item()
         object AddToHomeScreen : Item()
+        object SyncedTabs : Item()
         object AddonsManager : Item()
         object Quit : Item()
         data class ReaderMode(val isChecked: Boolean) : Item()

@@ -97,6 +97,7 @@ object Deps {
     const val mozilla_feature_qr = "org.mozilla.components:feature-qr:${Versions.mozilla_android_components}"
     const val mozilla_feature_search = "org.mozilla.components:feature-search:${Versions.mozilla_android_components}"
     const val mozilla_feature_session = "org.mozilla.components:feature-session:${Versions.mozilla_android_components}"
+    const val mozilla_feature_syncedtabs = "org.mozilla.components:feature-syncedtabs:${Versions.mozilla_android_components}"
     const val mozilla_feature_tabs = "org.mozilla.components:feature-tabs:${Versions.mozilla_android_components}"
     const val mozilla_feature_downloads = "org.mozilla.components:feature-downloads:${Versions.mozilla_android_components}"
     const val mozilla_feature_storage = "org.mozilla.components:feature-storage:${Versions.mozilla_android_components}"

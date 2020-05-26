@@ -10,6 +10,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.browser.storage.sync.RemoteTabsStorage
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceCapability
@@ -17,6 +18,7 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.accounts.push.FxaPushSupportFeature
 import mozilla.components.feature.accounts.push.SendTabFeature
+import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
@@ -35,6 +37,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.sync.SyncedTabsIntegration
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.RunWhenReadyQueue
 
@@ -49,7 +52,8 @@ class BackgroundServices(
     crashReporter: CrashReporter,
     historyStorage: Lazy<PlacesHistoryStorage>,
     bookmarkStorage: Lazy<PlacesBookmarksStorage>,
-    passwordsStorage: Lazy<SyncableLoginsStorage>
+    passwordsStorage: Lazy<SyncableLoginsStorage>,
+    remoteTabsStorage: Lazy<RemoteTabsStorage>
 ) {
     // Allows executing tasks which depend on the account manager, but do not need to eagerly initialize it.
     val accountManagerAvailableQueue = RunWhenReadyQueue()
@@ -83,16 +87,28 @@ class BackgroundServices(
     val syncConfig = if (FeatureFlags.asFeatureSyncDisabled) {
         null
     } else {
+
+        val supportedEngines = if (FeatureFlags.syncedTabs) {
+            setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords, SyncEngine.Tabs)
+        } else {
+            setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords)
+        }
+
         SyncConfig(
-            setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords),
+            supportedEngines,
             syncPeriodInMinutes = 240L) // four hours
     }
 
     init {
-        // Make the "history", "bookmark", and "passwords" stores accessible to workers spawned by the sync manager.
+        /* Make the "history", "bookmark", "passwords", and "tabs" stores accessible to workers
+           spawned by the sync manager. */
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarkStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
+
+        if (FeatureFlags.syncedTabs) {
+            GlobalSyncableStoreProvider.configureStore(SyncEngine.Tabs to remoteTabsStorage)
+        }
     }
 
     private val telemetryAccountObserver = TelemetryAccountObserver(
@@ -103,6 +119,10 @@ class BackgroundServices(
     val accountAbnormalities = AccountAbnormalities(context, crashReporter)
 
     val accountManager by lazy { makeAccountManager(context, serverConfig, deviceConfig, syncConfig) }
+
+    val syncedTabsStorage by lazy {
+        SyncedTabsStorage(accountManager, context.components.core.store, remoteTabsStorage.value)
+    }
 
     @VisibleForTesting(otherwise = PRIVATE)
     fun makeAccountManager(
@@ -147,6 +167,8 @@ class BackgroundServices(
         SendTabFeature(accountManager) { device, tabs ->
             notificationManager.showReceivedTabs(context, device, tabs)
         }
+
+        SyncedTabsIntegration(context, accountManager).launch()
 
         accountAbnormalities.accountManagerInitializedAsync(
             accountManager,

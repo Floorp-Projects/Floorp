@@ -25,7 +25,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 class BackgroundServicesTest {
     class TestableBackgroundServices(
         val context: Context
-    ) : BackgroundServices(context, mockk(), mockk(), mockk(), mockk(), mockk()) {
+    ) : BackgroundServices(context, mockk(), mockk(), mockk(), mockk(), mockk(), mockk()) {
         override fun makeAccountManager(
             context: Context,
             serverConfig: ServerConfig,
