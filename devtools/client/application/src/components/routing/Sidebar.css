@@ -7,11 +7,22 @@
  * Sidebar list container
  */
 .sidebar {
-  height: 100vh;
-	border-right: 1px solid var(--separator-color);
-	position: sticky;
-	top: 0;
 	background-color: var(--bg-color);
+}
+
+/* vertical layout -> the sidebar is the first row */
+@media(max-width: 700px) {
+	.sidebar {
+		border-block-end: 1px solid var(--separator-color);
+	}
+}
+
+/* wide layout -> the sidebar occupies a whole column on the side */
+@media(min-width: 701px) {
+	.sidebar {
+		min-height: 100vh;
+		border-inline-end: 1px solid var(--separator-color);
+	}
 }
 
 .sidebar__list {
