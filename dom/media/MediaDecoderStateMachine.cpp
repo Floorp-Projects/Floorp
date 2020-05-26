@@ -46,7 +46,7 @@
     PROFILER_ADD_MARKER_WITH_PAYLOAD(                 \
         tag, MEDIA_PLAYBACK, MediaSampleMarkerPayload, (startTime, endTime))
 #else
-#  define MDSM_ERROR_MARKER(tag, error)
+#  define MDSM_ERROR_MARKER(tag, error, markerTime)
 #  define MDSM_SAMPLE_MARKER(tag, startTime, endTime)
 #endif
 
