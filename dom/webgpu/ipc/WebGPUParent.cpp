@@ -179,6 +179,7 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
   desc.limits.max_bind_groups = aDesc.mLimits.WasPassed()
                                     ? aDesc.mLimits.Value().mMaxBindGroups
                                     : WGPUDEFAULT_BIND_GROUPS;
+  Unused << aDesc;  // no useful fields
   // TODO: fill up the descriptor
   ffi::wgpu_server_adapter_request_device(mContext, aSelfId, &desc, aNewId);
   return IPC_OK();
@@ -195,12 +196,10 @@ ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aSelfId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateBuffer(
-    RawId aSelfId, const ffi::WGPUBufferDescriptor& aDesc,
-    const nsCString& aLabel, RawId aNewId) {
-  ffi::WGPUBufferDescriptor desc = aDesc;
-  if (!aLabel.IsEmpty()) {
-    desc.label = aLabel.Data();
-  }
+    RawId aSelfId, const dom::GPUBufferDescriptor& aDesc, RawId aNewId) {
+  ffi::WGPUBufferDescriptor desc = {};
+  desc.usage = aDesc.mUsage;
+  desc.size = aDesc.mSize;
   ffi::wgpu_server_device_create_buffer(mContext, aSelfId, &desc, aNewId);
   return IPC_OK();
 }
@@ -253,23 +252,20 @@ ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aSelfId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateTexture(
-    RawId aSelfId, const ffi::WGPUTextureDescriptor& aDesc,
-    const nsCString& aLabel, RawId aNewId) {
-  ffi::WGPUTextureDescriptor desc = aDesc;
-  if (!aLabel.IsEmpty()) {
-    desc.label = aLabel.Data();
-  }
+    RawId aSelfId, const SerialTextureDescriptor& aDesc, RawId aNewId) {
+  ffi::WGPUTextureDescriptor desc = {};
+  desc.size = aDesc.mSize;
+  desc.mip_level_count = aDesc.mMipLevelCount;
+  desc.sample_count = aDesc.mSampleCount;
+  desc.dimension = aDesc.mDimension;
+  desc.format = aDesc.mFormat;
+  desc.usage = aDesc.mUsage;
   ffi::wgpu_server_device_create_texture(mContext, aSelfId, &desc, aNewId);
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvTextureCreateView(
-    RawId aSelfId, const ffi::WGPUTextureViewDescriptor& aDesc,
-    const nsCString& aLabel, RawId aNewId) {
-  ffi::WGPUTextureViewDescriptor desc = aDesc;
-  if (!aLabel.IsEmpty()) {
-    desc.label = aLabel.Data();
-  }
+    RawId aSelfId, const ffi::WGPUTextureViewDescriptor& aDesc, RawId aNewId) {
   ffi::wgpu_server_texture_create_view(mContext, aSelfId, &aDesc, aNewId);
   return IPC_OK();
 }
@@ -285,12 +281,7 @@ ipc::IPCResult WebGPUParent::RecvTextureViewDestroy(RawId aSelfId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateSampler(
-    RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc,
-    const nsCString& aLabel, RawId aNewId) {
-  ffi::WGPUSamplerDescriptor desc = aDesc;
-  if (!aLabel.IsEmpty()) {
-    desc.label = aLabel.Data();
-  }
+    RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc, RawId aNewId) {
   ffi::wgpu_server_device_create_sampler(mContext, aSelfId, &aDesc, aNewId);
   return IPC_OK();
 }

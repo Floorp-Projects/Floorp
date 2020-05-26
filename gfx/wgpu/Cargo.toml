@@ -1,6 +1,5 @@
 [workspace]
 members = [
-	"player",
 	"wgpu-core",
     "wgpu-types",
 ]
