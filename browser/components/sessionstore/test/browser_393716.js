@@ -73,10 +73,12 @@ add_task(async function test_set_tabstate_and_duplicate() {
   );
 
   // add text data
-  await setInputValue(tab.linkedBrowser, {
-    id: "about-config-search",
-    value: value3,
-  });
+  await setPropertyOfFormField(
+    tab.linkedBrowser,
+    "#about-config-search",
+    "value",
+    value3
+  );
 
   // duplicate the tab
   let tab2 = ss.duplicateTab(window, tab);
@@ -88,9 +90,11 @@ add_task(async function test_set_tabstate_and_duplicate() {
       tab2.linkedBrowser.currentURI.spec == URL,
     "correctly duplicated the tab's state"
   );
-  let textbox = await getInputValue(tab2.linkedBrowser, {
-    id: "about-config-search",
-  });
+  let textbox = await getPropertyOfFormField(
+    tab2.linkedBrowser,
+    "#about-config-search",
+    "value"
+  );
   is(textbox, value3, "also duplicated text data");
 
   // clean up

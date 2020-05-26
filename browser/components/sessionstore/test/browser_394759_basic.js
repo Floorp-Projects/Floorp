@@ -36,7 +36,8 @@ function test() {
     txt.value = uniqueText;
 
     let browser = newWin.gBrowser.selectedBrowser;
-    setInputChecked(browser, { id: "chk", checked: true }).then(() => {
+
+    setPropertyOfFormField(browser, "#chk", "checked", true).then(() => {
       BrowserTestUtils.closeWindow(newWin).then(() => {
         is(
           ss.getClosedWindowCount(),
@@ -124,8 +125,4 @@ function test() {
       });
     });
   }, TEST_URL);
-}
-
-function setInputChecked(browser, data) {
-  return sendMessage(browser, "ss-test:setInputChecked", data);
 }

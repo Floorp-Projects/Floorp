@@ -25,7 +25,15 @@ add_task(async function test_restore_nonstandard_input_values() {
 
   // Fill in form values.
   let expectedValue = Math.random();
-  await setFormElementValues(browser, { value: expectedValue });
+
+  await SpecialPowers.spawn(browser, [expectedValue], valueChild => {
+    for (let elem of content.document.forms[0].elements) {
+      elem.value = valueChild;
+      let event = elem.ownerDocument.createEvent("UIEvents");
+      event.initUIEvent("input", true, true, elem.ownerGlobal, 0);
+      elem.dispatchEvent(event);
+    }
+  });
 
   // Remove tab and check collected form data.
   await promiseRemoveTabAndSessionState(tab);
@@ -53,7 +61,3 @@ add_task(async function test_restore_nonstandard_input_values() {
     "Check number of fields saved by xpath"
   );
 });
-
-function setFormElementValues(browser, data) {
-  return sendMessage(browser, "ss-test:setFormElementValues", data);
-}
