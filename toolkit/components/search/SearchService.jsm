@@ -892,15 +892,13 @@ SearchService.prototype = {
         // the extension to change the default engine.
         return true;
       }
-      if (extension.startupReason === "ADDON_INSTALL") {
-        // We're ok to override.
-        engine.overrideWithExtension(params);
-        logConsole.debug(
-          "Allowing default engine to be set to app-provided and overridden.",
-          extension.id
-        );
-        return true;
-      }
+      // We're ok to override.
+      engine.overrideWithExtension(params);
+      logConsole.debug(
+        "Allowing default engine to be set to app-provided and overridden.",
+        extension.id
+      );
+      return true;
     }
 
     if (
