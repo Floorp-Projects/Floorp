@@ -44,8 +44,10 @@ class Perfherder(Layer):
                 "fenix",
                 "refbrow",
             ],
-            "help": "Shorthand name of application that is "
-            "being tested (used in perfherder data).",
+            "help": (
+                "Shorthand name of application that is "
+                "being tested (used in perfherder data)."
+            ),
         },
         "metrics": {
             "nargs": "*",
