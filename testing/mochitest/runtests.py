@@ -501,6 +501,9 @@ class MochitestServer(object):
         # care about races in xpcshell. So disable TSan for the server.
         env["TSAN_OPTIONS"] = "report_bugs=0"
 
+        # Don't use socket process for the xpcshell server.
+        env["MOZ_DISABLE_SOCKET_PROCESS"] = "1"
+
         if mozinfo.isWin:
             env["PATH"] = env["PATH"] + ";" + str(self._xrePath)
 
