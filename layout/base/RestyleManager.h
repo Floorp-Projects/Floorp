@@ -463,7 +463,7 @@ class RestyleManager {
    * attribute changes that happens not to have any effect on the style of that
    * element or any descendant or sibling.
    */
-  bool ProcessPostTraversal(Element* aElement, ComputedStyle* aParentContext,
+  bool ProcessPostTraversal(Element* aElement,
                             ServoRestyleState& aRestyleState,
                             ServoPostTraversalFlags aFlags);
 
