@@ -218,7 +218,7 @@ nsresult inDeepTreeWalker::SetCurrentNode(nsINode* aCurrentNode,
     if (index < 0) {
       // If someone tries to set current node to some value that is not
       // reachable otherwise, let's throw. (For example mShowAnonymousContent is
-      // false and some XBL anon content was passed in)
+      // false and some NAC was passed in)
 
       // Restore state first.
       mCurrentNode = tmpCurrent;

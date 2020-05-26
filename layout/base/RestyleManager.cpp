@@ -2969,8 +2969,10 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   presContext->RefreshDriver()->MostRecentRefresh();
 
   // Perform the Servo traversal, and the post-traversal if required. We do this
-  // in a loop because certain rare paths in the frame constructor (like
-  // uninstalling XBL bindings) can trigger additional style validations.
+  // in a loop because certain rare paths in the frame constructor can trigger
+  // additional style invalidations.
+  //
+  // FIXME(emilio): Confirm whether that's still true now that XBL is gone.
   mInStyleRefresh = true;
   if (mHaveNonAnimationRestyles) {
     ++mAnimationGeneration;
