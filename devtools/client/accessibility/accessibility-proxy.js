@@ -58,10 +58,7 @@ class AccessibilityProxy {
    * Indicates whether the accessibility service is enabled.
    */
   get canBeEnabled() {
-    // TODO: Just use parentAccessibilityFront after Firefox 75.
-    const { canBeEnabled } =
-      this.parentAccessibilityFront || this.accessibilityFront;
-    return canBeEnabled;
+    return this.parentAccessibilityFront.canBeEnabled;
   }
 
   get currentTarget() {
@@ -131,14 +128,9 @@ class AccessibilityProxy {
     // That, in turn, shuts down accessibility service in all content processes.
     // We need to wait until that happens to be sure platform  accessibility is
     // fully disabled.
-    // TODO: Remove this after Firefox 75 and use parentAccessibilityFront.
-    if (this.parentAccessibilityFront) {
-      const disabled = this.accessibilityFront.once("shutdown");
-      await this.parentAccessibilityFront.disable();
-      await disabled;
-    } else {
-      await this.accessibilityFront.disable();
-    }
+    const disabled = this.accessibilityFront.once("shutdown");
+    await this.parentAccessibilityFront.disable();
+    await disabled;
   }
 
   async enableAccessibility() {
@@ -146,14 +138,9 @@ class AccessibilityProxy {
     // front. That, in turn, initializes accessibility service in all content
     // processes. We need to wait until that happens to be sure platform
     // accessibility is fully enabled.
-    // TODO: Remove this after Firefox 75 and use parentAccessibilityFront.
-    if (this.parentAccessibilityFront) {
-      const enabled = this.accessibilityFront.once("init");
-      await this.parentAccessibilityFront.enable();
-      await enabled;
-    } else {
-      await this.accessibilityFront.enable();
-    }
+    const enabled = this.accessibilityFront.once("init");
+    await this.parentAccessibilityFront.enable();
+    await enabled;
   }
 
   /**
@@ -202,24 +189,18 @@ class AccessibilityProxy {
 
   startListeningForLifecycleEvents(eventMap) {
     for (const [type, listeners] of Object.entries(eventMap)) {
-      const accessibilityFront =
-        // TODO: Remove parentAccessibilityFront check after Firefox 75.
-        this.parentAccessibilityFront &&
-        PARENT_ACCESSIBILITY_EVENTS.includes(type)
-          ? this.parentAccessibilityFront
-          : this.accessibilityFront;
+      const accessibilityFront = PARENT_ACCESSIBILITY_EVENTS.includes(type)
+        ? this.parentAccessibilityFront
+        : this.accessibilityFront;
       this._on(accessibilityFront, type, listeners);
     }
   }
 
   stopListeningForLifecycleEvents(eventMap) {
     for (const [type, listeners] of Object.entries(eventMap)) {
-      // TODO: Remove parentAccessibilityFront check after Firefox 75.
-      const accessibilityFront =
-        this.parentAccessibilityFront &&
-        PARENT_ACCESSIBILITY_EVENTS.includes(type)
-          ? this.parentAccessibilityFront
-          : this.accessibilityFront;
+      const accessibilityFront = PARENT_ACCESSIBILITY_EVENTS.includes(type)
+        ? this.parentAccessibilityFront
+        : this.accessibilityFront;
       this._off(accessibilityFront, type, listeners);
     }
   }
@@ -272,12 +253,9 @@ class AccessibilityProxy {
   async initializeProxyForPanel(targetFront) {
     await this._updateTarget(targetFront);
 
-    const { mainRoot } = this._currentTarget.client;
-    if (await mainRoot.hasActor("parentAccessibility")) {
-      this.parentAccessibilityFront = await mainRoot.getFront(
-        "parentaccessibility"
-      );
-    }
+    this.parentAccessibilityFront = await this._currentTarget.client.mainRoot.getFront(
+      "parentaccessibility"
+    );
 
     this.accessibleWalkerFront = this.accessibilityFront.accessibleWalkerFront;
     this.simulatorFront = this.accessibilityFront.simulatorFront;
@@ -287,12 +265,9 @@ class AccessibilityProxy {
 
     // Move front listeners to new front.
     for (const [type, listeners] of this.accessibilityEventsMap.entries()) {
-      const accessibilityFront =
-        // TODO: Remove parentAccessibilityFront check after Firefox 75.
-        this.parentAccessibilityFront &&
-        PARENT_ACCESSIBILITY_EVENTS.includes(type)
-          ? this.parentAccessibilityFront
-          : this.accessibilityFront;
+      const accessibilityFront = PARENT_ACCESSIBILITY_EVENTS.includes(type)
+        ? this.parentAccessibilityFront
+        : this.accessibilityFront;
       for (const listener of listeners) {
         accessibilityFront.on(type, listener);
       }
