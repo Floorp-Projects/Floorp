@@ -2637,6 +2637,11 @@ class WrappedFunction : public TempObject {
 
  public:
   explicit WrappedFunction(JSFunction* fun);
+  WrappedFunction(JSFunction* fun, uint16_t nargs, FunctionFlags flags);
+
+  // Note: When adding new accessors be sure to add consistency asserts
+  // to the constructor.
+
   size_t nargs() const { return nargs_; }
 
   bool isNative() const { return flags_.isNative(); }
@@ -2706,8 +2711,8 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
 
  public:
   INSTRUCTION_HEADER(Call)
-  static MCall* New(TempAllocator& alloc, JSFunction* target, size_t maxArgc,
-                    size_t numActualArgs, bool construct,
+  static MCall* New(TempAllocator& alloc, WrappedFunction* target,
+                    size_t maxArgc, size_t numActualArgs, bool construct,
                     bool ignoresReturnValue, bool isDOMCall,
                     DOMObjectKind objectKind);
 
@@ -2808,7 +2813,7 @@ class MCallDOMNative : public MCall {
     }
   }
 
-  friend MCall* MCall::New(TempAllocator& alloc, JSFunction* target,
+  friend MCall* MCall::New(TempAllocator& alloc, WrappedFunction* target,
                            size_t maxArgc, size_t numActualArgs, bool construct,
                            bool ignoresReturnValue, bool isDOMCall,
                            DOMObjectKind objectKind);
@@ -9165,9 +9170,49 @@ class MGuardObjectIdentity : public MBinaryInstruction,
     }
     return congruentIfOperandsEqual(ins);
   }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
+// Guard on a specific JSFunction. Used instead of MGuardObjectIdentity,
+// so we can store some metadata related to the expected function.
+class MGuardSpecificFunction : public MBinaryInstruction,
+                               public SingleObjectPolicy::Data {
+  uint16_t nargs_;
+  FunctionFlags flags_;
+
+  MGuardSpecificFunction(MDefinition* obj, MDefinition* expected,
+                         uint16_t nargs, FunctionFlags flags)
+      : MBinaryInstruction(classOpcode, obj, expected),
+        nargs_(nargs),
+        flags_(flags) {
+    MOZ_ASSERT(expected->isConstant());
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
   }
+
+ public:
+  INSTRUCTION_HEADER(GuardSpecificFunction)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, function), (1, expected))
+
+  uint16_t nargs() const { return nargs_; }
+  FunctionFlags flags() const { return flags_; }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardSpecificFunction()) {
+      return false;
+    }
+
+    auto* other = ins->toGuardSpecificFunction();
+    if (nargs() != other->nargs() ||
+        flags().toRaw() != other->flags().toRaw()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(other);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MGuardSpecificAtom : public MUnaryInstruction,

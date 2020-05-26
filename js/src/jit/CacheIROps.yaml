@@ -241,6 +241,15 @@
     obj: ObjId
     expected: ObjectField
 
+- name: GuardSpecificFunction
+  shared: false
+  transpile: true
+  custom_writer: true
+  args:
+    obj: ObjId
+    expected: ObjectField
+    nargsAndFlags: RawWordField
+
 - name: GuardSpecificAtom
   shared: false
   transpile: true

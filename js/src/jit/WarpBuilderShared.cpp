@@ -45,7 +45,7 @@ void WarpBuilderShared::pushConstant(const Value& v) {
 }
 
 MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
-                                   JSFunction* target) {
+                                   WrappedFunction* target) {
   MOZ_ASSERT_IF(needsThisCheck, !target);
 
   // TODO: specialize for known target. Pad missing arguments. Set MCall flags
@@ -54,8 +54,6 @@ MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
   bool isDOMCall = false;
   DOMObjectKind objKind = DOMObjectKind::Unknown;
 
-  // TODO: MCall::New initializes WrappedFunction with various flags from
-  // the target. This not thread-safe for non-native JSFunctions.
   MOZ_ASSERT_IF(target, target->isNative());
   MCall* call =
       MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),

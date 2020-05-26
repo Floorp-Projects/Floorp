@@ -6203,10 +6203,13 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
     targetArgs = std::max<uint32_t>(target->nargs(), callInfo.argc());
   }
 
-  MCall* call =
-      MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),
-                 callInfo.argc(), callInfo.constructing(),
-                 callInfo.ignoresReturnValue(), isDOMCall, objKind);
+  WrappedFunction* wrappedTarget =
+      target ? new (alloc()) WrappedFunction(target) : nullptr;
+
+  MCall* call = MCall::New(alloc(), wrappedTarget,
+                           targetArgs + 1 + callInfo.constructing(),
+                           callInfo.argc(), callInfo.constructing(),
+                           callInfo.ignoresReturnValue(), isDOMCall, objKind);
   if (!call) {
     return abort(AbortReason::Alloc);
   }
