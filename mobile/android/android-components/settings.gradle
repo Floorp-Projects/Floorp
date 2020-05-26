@@ -14,6 +14,13 @@ buildscript {
     }
 }
 
+buildCache {
+    local {
+        directory = new File(rootDir, '.build-cache')
+        removeUnusedEntriesAfterDays = 30
+    }
+}
+
 def setupProject(name, path, description) {
     settings.include(":$name")
 

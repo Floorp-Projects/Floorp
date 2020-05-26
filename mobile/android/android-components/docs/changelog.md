@@ -25,6 +25,9 @@ permalink: /changelog/
   * Added `getTopFrecentSites` to `PlacesHistoryStorage`, which returns a list of the top frecent site infos
     sorted by most to least frecent.
 
+* **local development**
+  * Enable local Gradle Build Cache to speed-up local builds. Build cache is located in `.build-cache/`, clear it if you run into strange problems and please file an issue.
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)
