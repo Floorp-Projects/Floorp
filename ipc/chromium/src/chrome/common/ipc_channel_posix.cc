@@ -620,7 +620,14 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 
     if (partial_write_iter_.isNothing()) {
       Pickle::BufferList::IterImpl iter(msg->Buffers());
+      MOZ_DIAGNOSTIC_ASSERT(!iter.Done(), "empty message");
       partial_write_iter_.emplace(iter);
+    }
+
+    if (partial_write_iter_.ref().Done()) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "partial_write_iter_ should not be null");
+      // report a send error to our caller, which will close the channel.
+      return false;
     }
 
     if (partial_write_iter_.value().Data() == msg->Buffers().Start() &&
@@ -630,6 +637,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       const unsigned num_fds = msg->file_descriptor_set()->size();
 
       if (num_fds > FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
+        MOZ_DIAGNOSTIC_ASSERT(false, "Too many file descriptors!");
         CHROMIUM_LOG(FATAL) << "Too many file descriptors!";
         // This should not be reached.
         return false;
@@ -844,6 +852,7 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id) {
 #endif
 
 void Channel::ChannelImpl::OutputQueuePush(Message* msg) {
+  MOZ_DIAGNOSTIC_ASSERT(!closed_);
   output_queue_.push(msg);
   output_queue_length_++;
 }
@@ -851,6 +860,7 @@ void Channel::ChannelImpl::OutputQueuePush(Message* msg) {
 void Channel::ChannelImpl::OutputQueuePop() {
   output_queue_.pop();
   output_queue_length_--;
+  partial_write_iter_.reset();
 }
 
 // Called by libevent when we can write to the pipe without blocking.
