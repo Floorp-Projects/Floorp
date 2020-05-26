@@ -883,8 +883,7 @@ void WindowGlobalParent::AddMixedContentSecurityState(uint32_t aStateFlags) {
                  aStateFlags,
              "Invalid flags specified!");
 
-  if ((mMixedContentSecurityState & aStateFlags) ==
-      mMixedContentSecurityState) {
+  if ((mMixedContentSecurityState & aStateFlags) == aStateFlags) {
     return;
   }
 
