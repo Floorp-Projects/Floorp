@@ -102,7 +102,7 @@ body.sans-serif .remove-button {
 }
 
 body.serif,
-body.serif .remove-button  {
+body.serif .remove-button {
   font-family: Georgia, "Times New Roman", serif;
 }
 
@@ -223,6 +223,10 @@ body.dark blockquote {
   margin: 0 0 15px 0;
 }
 
+.reader-estimated-time {
+  text-align: match-parent;
+}
+
 /*======= Controls toolbar =======*/
 
 .toolbar-container {
@@ -235,16 +239,9 @@ body.dark blockquote {
    * the edge of the viewport using margins, and take the width of
    * the body padding into account for calculating our width.
    */
-  margin-left: calc(-1 * var(--body-padding));
+  margin-inline-start: calc(-1 * var(--body-padding));
   width: max(var(--body-padding), calc((100% - var(--content-width)) / 2 + var(--body-padding)));
   font-size: var(--font-size); /* Needed to ensure `em` units match, is reset for .reader-controls */
-}
-
-/* Have to do this manually (instead of using margin-inline-start),
- * because dir=rtl is not set on its parent. */
-.toolbar-container[dir=rtl] {
-  margin-left: auto;
-  margin-right: calc(-1 * var(--body-padding));
 }
 
 .toolbar {
@@ -662,6 +659,12 @@ button:disabled {
 .line-height-plus-button {
   background-size: 34px 24px;
   background-image: url("chrome://global/skin/reader/RM-Line-Height-Plus-38x24.svg");
+}
+
+/* Mirror the line height buttons if the article is RTL. */
+.reader-controls[articledir="rtl"] .line-height-minus-button,
+.reader-controls[articledir="rtl"] .line-height-plus-button {
+  transform: scaleX(-1);
 }
 
 @media print {
