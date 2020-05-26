@@ -30,10 +30,7 @@ add_task(async function test_scroll_background_about_reader_tabs() {
   ]);
 
   // Scroll down a little.
-  await sendMessage(browser, "ss-test:setScrollPosition", {
-    x: 0,
-    y: SCROLL_READER_MODE_Y,
-  });
+  await setScrollPosition(browser, 0, SCROLL_READER_MODE_Y);
   await checkScroll(tab, { scroll: SCROLL_READER_MODE_STR }, "scroll is fine");
 
   // Close the window
