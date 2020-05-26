@@ -216,7 +216,6 @@
 
 #ifdef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/GeckoView.manifest
-@BINPATH@/components/GeckoViewPrompt.js
 @BINPATH@/components/GeckoViewPush.js
 @BINPATH@/components/GeckoViewPermission.js
 @BINPATH@/components/GeckoViewStartup.js
