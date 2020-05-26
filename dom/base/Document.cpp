@@ -1310,7 +1310,6 @@ Document::Document(const char* aContentType)
       mHasBeenEditable(false),
       mHasWarnedAboutZoom(false),
       mIsRunningExecCommand(false),
-      mSetCompleteAfterDOMContentLoaded(false),
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
@@ -7275,11 +7274,6 @@ void Document::DispatchContentLoadedEvents() {
     }
   }
 
-  if (mSetCompleteAfterDOMContentLoaded) {
-    SetReadyStateInternal(ReadyState::READYSTATE_COMPLETE);
-    mSetCompleteAfterDOMContentLoaded = false;
-  }
-
   UnblockOnload(true);
 }
 
@@ -11254,22 +11248,6 @@ void Document::SuppressEventHandling(uint32_t aIncrease) {
   };
 
   EnumerateSubDocuments(suppressInSubDoc);
-}
-
-void Document::NotifyAbortedLoad() {
-  // If we still have outstanding work blocking DOMContentLoaded,
-  // then don't try to change the readystate now, but wait until
-  // they finish and then do so.
-  if (mBlockDOMContentLoaded > 0 && !mDidFireDOMContentLoaded) {
-    mSetCompleteAfterDOMContentLoaded = true;
-    return;
-  }
-
-  // Otherwise we're fully done at this point, so set the
-  // readystate to complete.
-  if (GetReadyStateEnum() == Document::READYSTATE_INTERACTIVE) {
-    SetReadyStateInternal(Document::READYSTATE_COMPLETE);
-  }
 }
 
 static void FireOrClearDelayedEvents(nsTArray<nsCOMPtr<Document>>& aDocuments,
