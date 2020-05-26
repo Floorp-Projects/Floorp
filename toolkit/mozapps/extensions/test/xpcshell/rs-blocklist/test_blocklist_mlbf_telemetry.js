@@ -66,7 +66,10 @@ add_task(async function test_initialization() {
 
 // Test what happens if there is no blocklist data at all.
 add_task(async function test_without_mlbf() {
-  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [] });
+  // Add one (invalid) value to the blocklist, to prevent the RemoteSettings
+  // client from importing the JSON dump (which could potentially cause the
+  // test to fail due to the unexpected imported records).
+  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [{}] });
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
     "blocklist.mlbf_stashes": true,
