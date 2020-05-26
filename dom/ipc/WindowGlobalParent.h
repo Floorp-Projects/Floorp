@@ -15,7 +15,6 @@
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
-#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/WindowContext.h"
 #include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -38,6 +37,7 @@ class CrossProcessPaint;
 
 namespace dom {
 
+class BrowserParent;
 class WindowGlobalChild;
 class JSWindowActorParent;
 class JSActorMessageMeta;
@@ -190,6 +190,13 @@ class WindowGlobalParent final : public WindowContext,
 
   uint32_t HttpsOnlyStatus() { return mHttpsOnlyStatus; }
 
+  // 'MIXED' state flags, and should only be called on the
+  // top window context.
+  void AddMixedContentSecurityState(uint32_t aStateFlags);
+  uint32_t GetMixedContentSecurityFlags() { return mMixedContentSecurityState; }
+
+  nsITransportSecurityInfo* GetSecurityInfo() { return mSecurityInfo; }
+
  protected:
   const nsAString& GetRemoteType() override;
   JSActor::Type GetSide() override { return JSActor::Type::Parent; }
@@ -216,6 +223,8 @@ class WindowGlobalParent final : public WindowContext,
     mIsInitialDocument = aIsInitialDocument;
     return IPC_OK();
   }
+  mozilla::ipc::IPCResult RecvUpdateDocumentSecurityInfo(
+      nsITransportSecurityInfo* aSecurityInfo);
   mozilla::ipc::IPCResult RecvSetHasBeforeUnload(bool aHasBeforeUnload);
   mozilla::ipc::IPCResult RecvSetClientInfo(
       const IPCClientInfo& aIPCClientInfo);
@@ -266,9 +275,13 @@ class WindowGlobalParent final : public WindowContext,
   // includes the activity log for all of the nested subdocuments as well.
   ContentBlockingLog mContentBlockingLog;
 
+  uint32_t mMixedContentSecurityState = 0;
+
   Maybe<ClientInfo> mClientInfo;
   // Fields being mirrored from the corresponding document
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
+  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
+
   uint32_t mSandboxFlags;
 
   struct OriginCounter {

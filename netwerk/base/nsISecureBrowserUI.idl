@@ -6,14 +6,11 @@
 
 #include "nsISupports.idl"
 
-interface nsIDocShell;
 interface nsITransportSecurityInfo;
 
-[scriptable, uuid(718c662a-f810-4a80-a6c9-0b1810ecade2)]
+[scriptable, builtinclass, uuid(718c662a-f810-4a80-a6c9-0b1810ecade2)]
 interface nsISecureBrowserUI : nsISupports
 {
-    void init(in nsIDocShell docShell);
-
     readonly attribute unsigned long state;
     readonly attribute bool isSecureContext;
     readonly attribute nsITransportSecurityInfo secInfo;

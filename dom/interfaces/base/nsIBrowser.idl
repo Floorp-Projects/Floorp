@@ -161,20 +161,6 @@ interface nsIBrowser : nsISupports
                                in AString aContentType);
 
   /**
-   * Called by Gecko when a security chang event needs to update the event
-   * state stored in the security UI object stored in the parent process.
-   *
-   * @param aSecurityInfo the transport security information from the content
-   *                      process
-   * @param aState the flags from the OnSecurityChange event that triggered
-   *               this method, as outlined in nsIWebProgressListener
-   * @param aIsSecureContext whether or not the context is secure
-   */
-  void updateSecurityUIForSecurityChange(in nsITransportSecurityInfo aSecurityInfo,
-                                         in uint32_t aState,
-                                         in boolean aIsSecureContext);
-
-  /**
    * Called by Gecko when it wants to change the process which is currently
    * being used to render content in this tab.
    *

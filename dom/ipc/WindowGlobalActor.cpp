@@ -129,11 +129,18 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
         true;
   }
 
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+  if (nsCOMPtr<nsIChannel> channel = doc->GetChannel()) {
+    nsCOMPtr<nsISupports> securityInfoSupports;
+    channel->GetSecurityInfo(getter_AddRefs(securityInfoSupports));
+    securityInfo = do_QueryInterface(securityInfoSupports);
+  }
+  init.securityInfo() = securityInfo;
+
   // Most data here is specific to the Document, which can change without
   // creating a new WindowGlobal. Anything new added here which fits that
   // description should also be synchronized in
   // WindowGlobalChild::OnNewDocument.
-
   return init;
 }
 

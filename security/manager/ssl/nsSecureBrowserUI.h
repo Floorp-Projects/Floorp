@@ -18,7 +18,9 @@ class nsIChannel;
 namespace mozilla {
 namespace dom {
 class Document;
-}
+class WindowGlobalParent;
+class CanonicalBrowsingContext;
+}  // namespace dom
 }  // namespace mozilla
 
 #define NS_SECURE_BROWSER_UI_CID                     \
@@ -28,32 +30,24 @@ class Document;
     }                                                \
   }
 
-class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
-                              public nsIWebProgressListener,
-                              public nsSupportsWeakReference {
+class nsSecureBrowserUI : public nsISecureBrowserUI,
+                          public nsSupportsWeakReference {
  public:
-  nsSecureBrowserUIImpl();
+  explicit nsSecureBrowserUI(
+      mozilla::dom::CanonicalBrowsingContext* aBrowsingContext);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSISECUREBROWSERUI
 
- protected:
-  virtual ~nsSecureBrowserUIImpl() = default;
+  void UpdateForLocationOrMixedContentChange();
 
-  already_AddRefed<mozilla::dom::Document> PrepareForContentChecks();
-  // Do mixed content checks. May update mState.
-  void CheckForMixedContent();
-  // Given some information about a request from an OnLocationChange event,
-  // update mState and mTopLevelSecurityInfo.
-  nsresult UpdateStateAndSecurityInfo(nsIChannel* channel, nsIURI* uri);
+ protected:
+  virtual ~nsSecureBrowserUI() = default;
+
+  mozilla::dom::WindowGlobalParent* GetCurrentWindow();
 
   uint32_t mState;
-  uint32_t mEvent;
-  bool mIsSecureContext;
-  nsWeakPtr mDocShell;
-  nsWeakPtr mWebProgress;
-  nsCOMPtr<nsITransportSecurityInfo> mTopLevelSecurityInfo;
+  uint64_t mBrowsingContextId;
 };
 
 #endif  // nsSecureBrowserUIImpl_h
