@@ -40,6 +40,7 @@ const zoomOnCtrl =
   Services.prefs.getIntPref("mousewheel.with_control.action", 3) == 3;
 const zoomOnMeta =
   Services.prefs.getIntPref("mousewheel.with_meta.action", 1) == 3;
+const isAppLocaleRTL = Services.locale.isAppLocaleRTL;
 
 var AboutReader = function(actor, articlePromise) {
   let win = actor.contentWindow;
@@ -56,6 +57,9 @@ var AboutReader = function(actor, articlePromise) {
   }
 
   let doc = win.document;
+  if (isAppLocaleRTL) {
+    doc.dir = "rtl";
+  }
 
   this._actor = actor;
 
@@ -204,11 +208,6 @@ var AboutReader = function(actor, articlePromise) {
     ".dark-button": "colorschemedark",
     ".sepia-button": "colorschemesepia",
   };
-
-  let tbc = this._toolbarContainerElement;
-  if (Services.locale.isAppLocaleRTL) {
-    tbc.dir = "rtl";
-  }
 
   for (let [selector, stringID] of Object.entries(elemL10nMap)) {
     dropdown
@@ -820,17 +819,17 @@ AboutReader.prototype = {
   },
 
   _maybeSetTextDirection: function Read_maybeSetTextDirection(article) {
-    if (article.dir) {
-      // Set "dir" attribute on content
-      this._contentElement.setAttribute("dir", article.dir);
-      this._headerElement.setAttribute("dir", article.dir);
+    // Set the article's "dir" on the contents.
+    // If no direction is specified, the contents should automatically be LTR
+    // regardless of the UI direction to avoid inheriting the parent's direction
+    // if the UI is RTL.
+    this._containerElement.dir = article.dir || "ltr";
 
-      // The native locale could be set differently than the article's text direction.
-      var localeDirection = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
-      this._readTimeElement.setAttribute("dir", localeDirection);
-      this._readTimeElement.style.textAlign =
-        article.dir == "rtl" ? "right" : "left";
-    }
+    // The native locale could be set differently than the article's text direction.
+    this._readTimeElement.dir = isAppLocaleRTL ? "rtl" : "ltr";
+
+    // This is used to mirror the line height buttons in the toolbar, when relevant.
+    this._toolbarElement.setAttribute("articledir", article.dir || "ltr");
   },
 
   _formatReadTime(slowEstimate, fastEstimate) {
@@ -1197,7 +1196,7 @@ AboutReader.prototype = {
         this._containerElement
       );
       let overlaps = false;
-      if (Services.locale.isAppLocaleRTL) {
+      if (isAppLocaleRTL) {
         overlaps = textBounds.right > toolbarBounds.left;
       } else {
         overlaps = textBounds.left < toolbarBounds.right;
