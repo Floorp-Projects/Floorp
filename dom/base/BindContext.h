@@ -10,7 +10,6 @@
 #define mozilla_dom_BindContext_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/AutoRestore.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -19,9 +18,6 @@ namespace mozilla {
 namespace dom {
 
 struct MOZ_STACK_CLASS BindContext final {
-  struct NestingLevel;
-  friend struct NestingLevel;
-
   // The document that owns the tree we're getting bound to.
   //
   // This is mostly an optimization to avoid silly pointer-chases to get the
@@ -78,10 +74,6 @@ struct MOZ_STACK_CLASS BindContext final {
   }
 
  private:
-  static bool IsLikelyUndisplayed(const nsINode& aParent) {
-    return aParent.IsAnyOfHTMLElements(nsGkAtoms::style, nsGkAtoms::script);
-  }
-
   Document& mDoc;
 
   const bool mInComposedDoc;
