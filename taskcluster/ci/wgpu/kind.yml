@@ -46,7 +46,7 @@ jobs:
                 export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin &&
                 cd $GECKO_PATH/gfx/wgpu &&
                 mv $MOZ_FETCHES_DIR/wgpu-deps/{vendor,.cargo} ./ &&
-                cargo test --verbose --frozen
+                cargo test --verbose
         treeherder:
             platform: linux64-qr/debug
             symbol: Wgpu(test)

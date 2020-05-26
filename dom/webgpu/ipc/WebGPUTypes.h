@@ -18,7 +18,6 @@ typedef uint64_t RawId;
 typedef uint64_t BufferAddress;
 
 struct SerialBindGroupLayoutDescriptor {
-  nsCString mLabel;
   nsTArray<ffi::WGPUBindGroupLayoutEntry> mEntries;
 };
 
@@ -42,7 +41,6 @@ struct SerialBindGroupEntry {
 };
 
 struct SerialBindGroupDescriptor {
-  nsCString mLabel;
   RawId mLayout;
   nsTArray<SerialBindGroupEntry> mEntries;
 };
@@ -80,6 +78,17 @@ struct SerialRenderPipelineDescriptor {
   uint32_t mSampleCount;
   uint32_t mSampleMask;
   bool mAlphaToCoverageEnabled;
+};
+
+struct SerialTextureDescriptor {
+  nsString mLabel;
+  struct ffi::WGPUExtent3d mSize;
+  uint32_t mArrayLayerCount;
+  uint32_t mMipLevelCount;
+  uint32_t mSampleCount;
+  enum ffi::WGPUTextureDimension mDimension;
+  enum ffi::WGPUTextureFormat mFormat;
+  ffi::WGPUTextureUsage mUsage;
 };
 
 }  // namespace webgpu
