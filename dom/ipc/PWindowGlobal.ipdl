@@ -111,6 +111,9 @@ parent:
   // Update the title of the document in this WindowGlobal.
   async UpdateDocumentTitle(nsString aTitle);
 
+  // Update the document's HTTPS-Only Mode flags in this WindowGlobal.
+  async UpdateHttpsOnlyStatus(uint32_t aHttpsOnlyStatus);
+
   /// Send down initial document bit to the parent.
   async SetIsInitialDocument(bool aIsInitialDocument);
 

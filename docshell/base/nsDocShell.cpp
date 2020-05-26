@@ -73,6 +73,7 @@
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/ChildSHistory.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/JSWindowActorChild.h"
 #include "mozilla/ipc/ProtocolUtils.h"
@@ -3690,6 +3691,18 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
 
       default:
         break;
+    }
+  }
+
+  // If the HTTPS-Only Mode upgraded this request and the upgrade might have
+  // caused this error, we replace the error-page with about:httpsonlyerror
+  if (aFailedChannel && nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(aError)) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aFailedChannel->LoadInfo();
+    uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
+    if ((httpsOnlyStatus &
+         nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED) &&
+        !(httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT)) {
+      errorPage.AssignLiteral("httpsonlyerror");
     }
   }
 
@@ -9157,6 +9170,16 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   // Propagate the IsFormSubmission flag to the loadInfo.
   if (aLoadState->IsFormSubmission()) {
     aLoadInfo->SetIsFormSubmission(true);
+  }
+
+  // If the HTTPS-Only mode is enabled, every insecure request gets upgraded to
+  // HTTPS by default. This behavior can be disabled through the loadinfo flag
+  // HTTPS_ONLY_EXEMPT.
+  if (aLoadState->IsHttpsOnlyModeUpgradeExempt() &&
+      mozilla::StaticPrefs::dom_security_https_only_mode()) {
+    uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
+    httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
+    aLoadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
   }
 
   nsCOMPtr<nsIChannel> channel;

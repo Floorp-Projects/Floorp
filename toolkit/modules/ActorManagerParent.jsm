@@ -42,6 +42,19 @@ let JSPROCESSACTORS = {};
  * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jswindowactor
  */
 let JSWINDOWACTORS = {
+  AboutHttpsOnlyError: {
+    parent: {
+      moduleURI: "resource://gre/actors/AboutHttpsOnlyErrorParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/AboutHttpsOnlyErrorChild.jsm",
+      events: {
+        DOMWindowCreated: {},
+      },
+    },
+    matches: ["about:httpsonlyerror?*"],
+    allFrames: true,
+  },
   AudioPlayback: {
     parent: {
       moduleURI: "resource://gre/actors/AudioPlaybackParent.jsm",

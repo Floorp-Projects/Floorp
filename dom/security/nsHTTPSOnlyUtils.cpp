@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTTPSOnlyUtils.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/net/DNS.h"
 #include "nsContentUtils.h"
+#include "nsHTTPSOnlyUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "prnetdb.h"
@@ -106,6 +106,20 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
       aInnerWindowId, aFromPrivateWindow, aURI);
 
   return true;
+}
+
+/* static */
+bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsresult aError) {
+  // This list of error codes is largely drawn from
+  // nsDocShell::DisplayLoadError()
+  return !(NS_ERROR_UNKNOWN_PROTOCOL == aError ||
+           NS_ERROR_FILE_NOT_FOUND == aError ||
+           NS_ERROR_FILE_ACCESS_DENIED == aError ||
+           NS_ERROR_UNKNOWN_HOST == aError || NS_ERROR_PHISHING_URI == aError ||
+           NS_ERROR_MALWARE_URI == aError || NS_ERROR_UNWANTED_URI == aError ||
+           NS_ERROR_HARMFUL_URI == aError ||
+           NS_ERROR_CONTENT_CRASHED == aError ||
+           NS_ERROR_FRAME_CRASHED == aError);
 }
 
 /* ------ Logging ------ */
