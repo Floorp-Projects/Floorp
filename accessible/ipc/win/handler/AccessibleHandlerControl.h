@@ -11,6 +11,7 @@
 #ifndef mozilla_a11y_AccessibleHandlerControl_h
 #  define mozilla_a11y_AccessibleHandlerControl_h
 
+#  include <unordered_map>
 #  include "Factory.h"
 #  include "HandlerData.h"
 #  include "IUnknownImpl.h"
@@ -48,6 +49,8 @@ class TextChange final {
 
 }  // namespace detail
 
+class AccessibleHandler;
+
 class AccessibleHandlerControl final : public IHandlerControl {
  public:
   static HRESULT Create(AccessibleHandlerControl** aOutObject);
@@ -69,6 +72,9 @@ class AccessibleHandlerControl final : public IHandlerControl {
 
   HRESULT Register(NotNull<IGeckoBackChannel*> aGecko);
 
+  void CacheAccessible(long aUniqueId, AccessibleHandler* aAccessible);
+  HRESULT GetCachedAccessible(long aUniqueId, AccessibleHandler** aAccessible);
+
  private:
   AccessibleHandlerControl();
   ~AccessibleHandlerControl() = default;
@@ -78,6 +84,8 @@ class AccessibleHandlerControl final : public IHandlerControl {
   detail::TextChange mTextChange;
   UniquePtr<mscom::RegisteredProxy> mIA2Proxy;
   UniquePtr<mscom::RegisteredProxy> mHandlerProxy;
+  // We can't use Gecko APIs in this dll, hence the use of std::unordered_map.
+  std::unordered_map<long, RefPtr<AccessibleHandler>> mAccessibleCache;
 };
 
 extern mscom::SingletonFactory<AccessibleHandlerControl> gControlFactory;

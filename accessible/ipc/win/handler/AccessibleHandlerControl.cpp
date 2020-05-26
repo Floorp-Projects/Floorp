@@ -118,6 +118,7 @@ IMPL_IUNKNOWN1(AccessibleHandlerControl, IHandlerControl)
 HRESULT
 AccessibleHandlerControl::Invalidate() {
   ++mCacheGen;
+  mAccessibleCache.clear();
   return S_OK;
 }
 
@@ -169,6 +170,24 @@ AccessibleHandlerControl::Register(NotNull<IGeckoBackChannel*> aGecko) {
   mIsRegistered = SUCCEEDED(hr);
   MOZ_ASSERT(mIsRegistered);
   return hr;
+}
+
+void AccessibleHandlerControl::CacheAccessible(long aUniqueId,
+                                               AccessibleHandler* aAccessible) {
+  MOZ_ASSERT(aUniqueId && aAccessible);
+  mAccessibleCache[aUniqueId] = aAccessible;
+}
+
+HRESULT AccessibleHandlerControl::GetCachedAccessible(
+    long aUniqueId, AccessibleHandler** aAccessible) {
+  MOZ_ASSERT(aUniqueId && aAccessible);
+  auto it = mAccessibleCache.find(aUniqueId);
+  if (it == mAccessibleCache.end()) {
+    return E_INVALIDARG;
+  }
+  RefPtr<AccessibleHandler> ref = it->second;
+  ref.forget(aAccessible);
+  return S_OK;
 }
 
 }  // namespace a11y
