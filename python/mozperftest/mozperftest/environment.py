@@ -85,8 +85,20 @@ class MachEnvironment:
         self._saved_mach_args = None
 
     def run(self, metadata):
+        has_exc_handler = self.has_hook("on_exception")
         for layer in self.layers:
-            metadata = layer(metadata)
+            try:
+                metadata = layer(metadata)
+            except Exception as e:
+                if has_exc_handler:
+                    # if the hook returns True, we abort and return
+                    # without error. If it returns False, we continue
+                    # the loop. The hook can also raise an exception or
+                    # re-raise this exception.
+                    if not self.run_hook("on_exception", layer, e):
+                        return metadata
+                else:
+                    raise
         return metadata
 
     def __enter__(self):
@@ -124,9 +136,12 @@ class MachEnvironment:
         else:
             raise IOError(str(hooks))
 
-    def run_hook(self, name, **kw):
+    def has_hook(self, name):
+        return hasattr(self._hooks, name)
+
+    def run_hook(self, name, *args, **kw):
         if self._hooks is None:
             return
         if not hasattr(self._hooks, name):
             return
-        return getattr(self._hooks, name)(self, **kw)
+        return getattr(self._hooks, name)(self, *args, **kw)

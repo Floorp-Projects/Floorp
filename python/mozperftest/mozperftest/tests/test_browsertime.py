@@ -65,6 +65,7 @@ def test_browser(*mocked):
     assert set(list(results[0].keys())) - set(["name", "results"]) == set()
     assert results[0]["name"] == "Example"
 
+
 @mock.patch("mozperftest.browser.browsertime.runner.install_package")
 @mock.patch(
     "mozperftest.browser.noderunner.NodeRunner.verify_node_install", new=lambda x: True
