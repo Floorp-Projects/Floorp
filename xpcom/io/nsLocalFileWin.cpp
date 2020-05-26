@@ -86,7 +86,6 @@ nsresult NewLocalFile(const nsAString& aPath, bool aFollowLinks,
                       bool aUseDOSDevicePathSyntax, nsIFile** aResult) {
   RefPtr<nsLocalFile> file = new nsLocalFile();
 
-  file->SetFollowLinks(aFollowLinks);
   file->SetUseDOSDevicePathSyntax(aUseDOSDevicePathSyntax);
 
   if (!aPath.IsEmpty()) {
@@ -2950,18 +2949,6 @@ nsLocalFile::GetTarget(nsAString& aResult) {
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetFollowLinks(bool* aFollowLinks) {
-  *aFollowLinks = mFollowSymlinks;
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsLocalFile::SetFollowLinks(bool aFollowLinks) {
-  MakeDirty();
-  mFollowSymlinks = aFollowLinks;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntriesImpl(nsIDirectoryEnumerator** aEntries) {
   nsresult rv;
 
@@ -3206,8 +3193,6 @@ nsLocalFile::Launch() {
 nsresult NS_NewLocalFile(const nsAString& aPath, bool aFollowLinks,
                          nsIFile** aResult) {
   RefPtr<nsLocalFile> file = new nsLocalFile();
-
-  file->SetFollowLinks(aFollowLinks);
 
   if (!aPath.IsEmpty()) {
     nsresult rv = file->InitWithPath(aPath);

@@ -11,7 +11,7 @@ const special_type = "application/x-our-special-type";
   test_read_dir_1,
   test_read_dir_2,
   test_upload_file,
-  test_load_replace,
+  test_load_shelllink,
   do_test_finished,
 ].forEach(f => add_test(f));
 
@@ -245,7 +245,7 @@ function test_upload_file() {
     oldstream.close();
     newstream.close();
 
-    /* cleanup... also ensures that the destination file is not in 
+    /* cleanup... also ensures that the destination file is not in
        use when OnStopRequest is called. */
     try {
       dest.remove(false);
@@ -261,24 +261,20 @@ function test_upload_file() {
   chan.asyncOpen(new FileStreamListener(on_upload_complete));
 }
 
-function test_load_replace() {
-  // lnk files should resolve to their targets
-  if (mozinfo.os == "win") {
-    dump("*** test_load_replace\n");
-    let file = do_get_file("data/system_root.lnk", false);
-    var chan = new_file_channel(file);
+function test_load_shelllink() {
+  // lnk files should not resolve to their targets
+  dump("*** test_load_shelllink\n");
+  let file = do_get_file("data/system_root.lnk", false);
+  var chan = new_file_channel(file);
 
-    // The original URI path should differ from the URI path
-    Assert.notEqual(chan.URI.pathQueryRef, chan.originalURI.pathQueryRef);
+  // The original URI path should be the same as the URI path
+  Assert.equal(chan.URI.pathQueryRef, chan.originalURI.pathQueryRef);
 
-    // The original URI path should be the same as the lnk file path
-    var ios = Cc["@mozilla.org/network/io-service;1"].getService(
-      Ci.nsIIOService
-    );
-    Assert.equal(
-      chan.originalURI.pathQueryRef,
-      ios.newFileURI(file).pathQueryRef
-    );
-  }
+  // The original URI path should be the same as the lnk file path
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  Assert.equal(
+    chan.originalURI.pathQueryRef,
+    ios.newFileURI(file).pathQueryRef
+  );
   run_next_test();
 }
