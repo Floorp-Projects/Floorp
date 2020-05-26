@@ -100,7 +100,8 @@ RUN     chmod +x /bin/taskcluster-interactive-shell
 # "Operation not permitted". Luckily it doesn't actually require the capability.
 RUN     setcap -r /usr/bin/gnome-keyring-daemon
 
-COPY custom.conf /etc/gdm3/custom.conf
+# Bug 1638183 - increase xserver maximum client count
+COPY     dot-files/config/xorg/99-serverflags.conf     /usr/share/X11/xorg.conf.d/
 
 # Ubuntu 18.04 (or any other GNOME3 based systems) needs dbus to have various
 # test function as expected. Use entrypoint to initialize dbus as root.
