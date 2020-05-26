@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<iframe></iframe>
+<script>
+  function doIt() {
+    var doc = document.querySelector("iframe").contentDocument;
+    doc.open();
+    doc.write('<script>import("data:text/javascript,")</' + 'script>');
+    doc.close();
+  }
+  doIt();
+  setTimeout(() => {
+      doIt();
+      document.documentElement.removeAttribute("class");
+  }, 100);
+</script>
+</html>

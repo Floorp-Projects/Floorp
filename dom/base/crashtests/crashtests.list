@@ -239,6 +239,9 @@ load 1505875.html
 load 1508845.html
 load 1516289.html
 load 1516560.html
+pref(javascript.options.dynamicImport,true) load 1529203-1.html
+skip-if(Android) pref(javascript.options.dynamicImport,true) pref(dom.disable_open_during_load,false) pref(browser.link.open_newwindow,2) load 1529203-2.html
+skip-if(Android) pref(dom.disable_open_during_load,false) pref(browser.link.open_newwindow,2) load 1529203-3.html
 load 1528675.html
 load 1566310.html
 skip-if(Android) pref(dom.disable_open_during_load,false) pref(browser.link.open_newwindow,2) load 1588259.html
