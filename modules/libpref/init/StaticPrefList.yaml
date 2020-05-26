@@ -1985,21 +1985,6 @@
 #endif
   mirror: always
 
-- name: dom.ipc.cpows.forbid-unsafe-from-browser
-  type: bool
-  value: false
-  mirror: always
-
-- name: dom.ipc.cpows.log.enabled
-  type: bool
-  value: false
-  mirror: always
-
-- name: dom.ipc.cpows.log.stack
-  type: bool
-  value: false
-  mirror: always
-
 # Whether a native event loop should be used in the content process.
 - name: dom.ipc.useNativeEventProcessing.content
   type: RelaxedAtomicBool
