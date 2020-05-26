@@ -438,7 +438,7 @@ else:
         except OSError as err:
             # Catch the errors we might expect from os.kill/os.waitpid,
             # and re-raise any others
-            if err.errno == errno.ESRCH or err.errno == errno.ECHILD:
+            if err.errno in (errno.ESRCH, errno.ECHILD, errno.EPERM):
                 return False
             raise
 # TODO: ^ upstream isPidAlive to mozprocess
