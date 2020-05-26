@@ -76,53 +76,56 @@ const {
   NetworkEventMessage,
 } = require("devtools/client/webconsole/types");
 
-function prepareMessage(packet, idGenerator) {
-  if (!packet.source) {
-    packet = transformPacket(packet);
+function prepareMessage(resource, idGenerator) {
+  if (!resource.source) {
+    resource = transformResource(resource);
   }
 
-  if (packet.allowRepeating) {
-    packet.repeatId = getRepeatId(packet);
+  if (resource.allowRepeating) {
+    resource.repeatId = getRepeatId(resource);
   }
-  packet.id = idGenerator.getNextId(packet);
-  return packet;
+  resource.id = idGenerator.getNextId(resource);
+  return resource;
 }
 
 /**
- * Transforms a packet from Firefox RDP structure to Chrome RDP structure.
+ * Transforms a resource given its type.
+ *
+ * @param {Object} resource: This can be either a simple RDP packet or an object emitted
+ *                           by the Resource API.
  */
-function transformPacket(packet) {
-  switch (packet.type) {
+function transformResource(resource) {
+  switch (resource.type) {
     case "consoleAPICall": {
-      return transformConsoleAPICallPacket(packet);
+      return transformConsoleAPICallResource(resource);
     }
 
     case "will-navigate": {
-      return transformNavigationMessagePacket(packet);
+      return transformNavigationMessagePacket(resource);
     }
 
     case "logMessage": {
-      return transformLogMessagePacket(packet);
+      return transformPlatformMessageResource(resource);
     }
 
     case "pageError": {
-      return transformPageErrorPacket(packet);
+      return transformPageErrorResource(resource);
     }
 
     case "networkEvent": {
-      return transformNetworkEventPacket(packet);
+      return transformNetworkEventResource(resource);
     }
 
     case "evaluationResult":
     default: {
-      return transformEvaluationResultPacket(packet);
+      return transformEvaluationResultPacket(resource);
     }
   }
 }
 
 // eslint-disable-next-line complexity
-function transformConsoleAPICallPacket(packet) {
-  const { message } = packet;
+function transformConsoleAPICallResource(consoleMessageResource) {
+  const { message, targetFront } = consoleMessageResource;
 
   let parameters = message.arguments;
   let type = message.level;
@@ -255,6 +258,7 @@ function transformConsoleAPICallPacket(packet) {
   }
 
   return new ConsoleMessage({
+    targetFront,
     source: MESSAGE_SOURCE.CONSOLE_API,
     type,
     level,
@@ -283,10 +287,11 @@ function transformNavigationMessagePacket(packet) {
   });
 }
 
-function transformLogMessagePacket(packet) {
-  const { message, timeStamp } = packet;
+function transformPlatformMessageResource(platformMessageResource) {
+  const { message, timeStamp, targetFront } = platformMessageResource;
 
   return new ConsoleMessage({
+    targetFront,
     source: MESSAGE_SOURCE.CONSOLE_API,
     type: MESSAGE_TYPE.LOG,
     level: MESSAGE_LEVEL.LOG,
@@ -297,8 +302,8 @@ function transformLogMessagePacket(packet) {
   });
 }
 
-function transformPageErrorPacket(packet) {
-  const { pageError } = packet;
+function transformPageErrorResource(pageErrorResource) {
+  const { pageError, targetFront } = pageErrorResource;
   let level = MESSAGE_LEVEL.ERROR;
   if (pageError.warning) {
     level = MESSAGE_LEVEL.WARN;
@@ -320,6 +325,7 @@ function transformPageErrorPacket(packet) {
     ? MESSAGE_SOURCE.CSS
     : MESSAGE_SOURCE.JAVASCRIPT;
   return new ConsoleMessage({
+    targetFront,
     innerWindowID: pageError.innerWindowID,
     source: messageSource,
     type: MESSAGE_TYPE.LOG,
@@ -341,22 +347,23 @@ function transformPageErrorPacket(packet) {
   });
 }
 
-function transformNetworkEventPacket(networkEvent) {
+function transformNetworkEventResource(networkEventResource) {
   return new NetworkEventMessage({
-    actor: networkEvent.actor,
-    isXHR: networkEvent.isXHR,
-    request: networkEvent.request,
-    response: networkEvent.response,
-    timeStamp: networkEvent.timeStamp,
-    totalTime: networkEvent.totalTime,
-    url: networkEvent.request.url,
-    urlDetails: getUrlDetails(networkEvent.request.url),
-    method: networkEvent.request.method,
-    updates: networkEvent.updates,
-    cause: networkEvent.cause,
-    private: networkEvent.private,
-    securityState: networkEvent.securityState,
-    chromeContext: networkEvent.chromeContext,
+    targetFront: networkEventResource.targetFront,
+    actor: networkEventResource.actor,
+    isXHR: networkEventResource.isXHR,
+    request: networkEventResource.request,
+    response: networkEventResource.response,
+    timeStamp: networkEventResource.timeStamp,
+    totalTime: networkEventResource.totalTime,
+    url: networkEventResource.request.url,
+    urlDetails: getUrlDetails(networkEventResource.request.url),
+    method: networkEventResource.request.method,
+    updates: networkEventResource.updates,
+    cause: networkEventResource.cause,
+    private: networkEventResource.private,
+    securityState: networkEventResource.securityState,
+    chromeContext: networkEventResource.chromeContext,
   });
 }
 

@@ -208,6 +208,11 @@ class ResourceWatcher {
    *        which describes the resource.
    */
   _onResourceAvailable(targetFront, resourceType, resource) {
+    // Put the targetFront on the resource for easy retrieval.
+    if (!resource.targetFront) {
+      resource.targetFront = targetFront;
+    }
+
     this._availableListeners.emit(resourceType, {
       resourceType,
       targetFront,
