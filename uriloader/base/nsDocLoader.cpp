@@ -253,8 +253,8 @@ nsDocLoader::Stop(void) {
   // Stop call.
   mIsFlushingLayout = false;
 
-  // Clear out mChildrenInOnload.  We're not going to fire our onload
-  // anyway at this point, and there's no issue with mChildrenInOnload
+  // Clear out mChildrenInOnload.  We want to make sure to fire our
+  // onload at this point, and there's no issue with mChildrenInOnload
   // after this, since mDocumentRequest will be null after the
   // DocLoaderIsEmpty() call.
   mChildrenInOnload.Clear();
@@ -271,12 +271,7 @@ nsDocLoader::Stop(void) {
   // we wouldn't need the call here....
 
   NS_ASSERTION(!IsBusy(), "Shouldn't be busy here");
-
-  // If Cancelling the load group only had pending subresource requests, then
-  // the group status will still be success, and we would fire the load event.
-  // We want to avoid that when we're aborting the load, so override the status
-  // with an explicit NS_BINDING_ABORTED value.
-  DocLoaderIsEmpty(false, Some(NS_BINDING_ABORTED));
+  DocLoaderIsEmpty(false);
 
   return rv;
 }
@@ -662,8 +657,7 @@ NS_IMETHODIMP nsDocLoader::GetDocumentChannel(nsIChannel** aChannel) {
   return CallQueryInterface(mDocumentRequest, aChannel);
 }
 
-void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout,
-                                   const Maybe<nsresult>& aOverrideStatus) {
+void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout) {
   if (IsBlockingLoadEvent()) {
     /* In the unimagineably rude circumstance that onload event handlers
        triggered by this function actually kill the window ... ok, it's
@@ -727,11 +721,7 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout,
       mProgressStateFlags = nsIWebProgressListener::STATE_STOP;
 
       nsresult loadGroupStatus = NS_OK;
-      if (aOverrideStatus) {
-        loadGroupStatus = *aOverrideStatus;
-      } else {
-        mLoadGroup->GetStatus(&loadGroupStatus);
-      }
+      mLoadGroup->GetStatus(&loadGroupStatus);
 
       //
       // New code to break the circular reference between
