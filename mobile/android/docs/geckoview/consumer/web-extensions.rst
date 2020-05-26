@@ -109,7 +109,7 @@ Let’s set up an activity that registers a WebExtension located in the
 that will be used to communicate with Web Content.
 
 You can find the full example here:
-`MessagingExample <https://searchfox.org/mozilla-central/source/mobile/android/examples/extensions/messaging_example/>`_.
+`MessagingExample <https://searchfox.org/mozilla-central/source/mobile/android/examples/messaging_example>`_.
 
 Activity.java
 ^^^^^^^^^^^^^
@@ -251,7 +251,7 @@ object that can be used to receive and send messages to the
 WebExtension.
 
 The following example can be found
-`here <https://searchfox.org/mozilla-central/source/mobile/android/examples/extensions/port_messaging_example/>`_.
+`here <https://searchfox.org/mozilla-central/source/mobile/android/examples/port_messaging_example>`_.
 
 For this example, the WebExtension side will do the following: 
 
