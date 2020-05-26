@@ -246,18 +246,6 @@ class ContentPage {
     chromeDoc.documentElement.appendChild(browser);
 
     await awaitFrameLoader;
-
-    // Wait until we've laid out the `<browser>` element so that we get a pres
-    // shell, see bug 1274775.
-    //
-    // rAF runs before layout, so waiting for two rAF callbacks guarantees that
-    // layout has run once.
-    await new Promise(resolve => {
-      chromeDoc.defaultView.requestAnimationFrame(() => {
-        chromeDoc.defaultView.requestAnimationFrame(resolve);
-      });
-    });
-
     this.browser = browser;
 
     this.loadFrameScript(frameScript);
