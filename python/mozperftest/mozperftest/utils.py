@@ -41,7 +41,7 @@ def silence(layer=None):
     try:
         sys.stdout, sys.stderr = StringIO(), StringIO()
         sys.stdout.fileno = sys.stderr.fileno = lambda: -1
-        yield
+        yield sys.stdout, sys.stderr
     finally:
         sys.stdout, sys.stderr = oldout, olderr
         for obj, meths in patched.items():
