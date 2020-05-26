@@ -4,9 +4,10 @@
  */
 
 /**
- * This test is mainly to verify that initStorageAndOrigin, getUsageForPrincipal
- * and clearStoragesForPrincipal are able to ignore unknown files and
- * directories in the storage/default directory and its subdirectories.
+ * This test is mainly to verify that initTemporaryStorage,
+ * initStorageAndOrigin, getUsageForPrincipal and clearStoragesForPrincipal are
+ * able to ignore unknown files and directories in the storage/default
+ * directory and its subdirectories.
  */
 async function testSteps() {
   const principal = getPrincipal("http://example.com");
@@ -65,6 +66,15 @@ async function testSteps() {
       await requestFinished(request);
     }
   }
+
+  info("Testing initTemporaryStorage functionality");
+
+  await testFunctionality(async function() {
+    info("Initializing temporary storage");
+
+    request = initTemporaryStorage();
+    await requestFinished(request);
+  });
 
   info("Testing initStorageAndOrigin functionality");
 
