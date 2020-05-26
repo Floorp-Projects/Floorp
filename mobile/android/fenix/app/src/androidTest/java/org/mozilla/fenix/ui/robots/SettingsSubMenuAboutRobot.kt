@@ -92,7 +92,11 @@ private fun assertProductCompany() {
 
 private fun assertCurrentTimestamp() {
     onView(withId(R.id.build_date))
-        .check(BuildDateAssertion.isDisplayedDateAccurate())
+        // Currently UI tests run against debug builds, which display a hard-coded string 'debug build'
+        // instead of the date. See https://github.com/mozilla-mobile/fenix/pull/10812#issuecomment-633746833
+        .check(matches(withText(containsString("debug build"))))
+        // This assertion should be valid for non-debug build types.
+        // .check(BuildDateAssertion.isDisplayedDateAccurate())
 }
 
 private fun assertWhatIsNewInFirefoxPreview() {
