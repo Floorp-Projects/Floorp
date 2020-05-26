@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["webrtcUI"];
+var EXPORTED_SYMBOLS = ["webrtcUI", "MacOSWebRTCStatusbarIndicator"];
 
 const { EventEmitter } = ChromeUtils.import(
   "resource:///modules/syncedtabs/EventEmitter.jsm"
@@ -743,134 +743,199 @@ function getGlobalIndicator() {
     );
   }
 
-  let indicator = {
-    _camera: null,
-    _microphone: null,
-    _screen: null,
+  return new MacOSWebRTCStatusbarIndicator();
+}
 
-    _hiddenDoc: Services.appShell.hiddenDOMWindow.document,
-    _statusBar: Cc["@mozilla.org/widget/macsystemstatusbar;1"].getService(
+/**
+ * Controls the visibility of screen, camera and microphone sharing indicators
+ * in the macOS global menu bar. This class should only ever be instantiated
+ * on macOS.
+ *
+ * The public methods on this class intentionally match the interface for the
+ * WebRTC global sharing indicator, because the MacOSWebRTCStatusbarIndicator
+ * acts as the indicator when in the legacy indicator configuration.
+ */
+class MacOSWebRTCStatusbarIndicator {
+  constructor() {
+    this._camera = null;
+    this._microphone = null;
+    this._screen = null;
+
+    this._hiddenDoc = Services.appShell.hiddenDOMWindow.document;
+    this._statusBar = Cc["@mozilla.org/widget/macsystemstatusbar;1"].getService(
       Ci.nsISystemStatusBar
-    ),
+    );
 
-    _command(aEvent) {
-      webrtcUI.showSharingDoorhanger(aEvent.target.stream);
-    },
+    this.updateIndicatorState();
+  }
 
-    _popupShowing(aEvent) {
-      let type = this.getAttribute("type");
-      let activeStreams;
-      if (type == "Camera") {
-        activeStreams = webrtcUI.getActiveStreams(true, false, false);
-      } else if (type == "Microphone") {
-        activeStreams = webrtcUI.getActiveStreams(false, true, false);
-      } else if (type == "Screen") {
-        activeStreams = webrtcUI.getActiveStreams(false, false, true);
-        type = webrtcUI.showScreenSharingIndicator;
+  /**
+   * Public method that will determine the most appropriate
+   * set of indicators to show, and then show them or hide
+   * them as necessary.
+   */
+  updateIndicatorState() {
+    this._setIndicatorState("Camera", webrtcUI.showCameraIndicator);
+    this._setIndicatorState("Microphone", webrtcUI.showMicrophoneIndicator);
+    this._setIndicatorState("Screen", webrtcUI.showScreenSharingIndicator);
+  }
+
+  /**
+   * Public method that will hide all indicators.
+   */
+  close() {
+    this._setIndicatorState("Camera", false);
+    this._setIndicatorState("Microphone", false);
+    this._setIndicatorState("Screen", false);
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "popupshowing": {
+        this._popupShowing(event);
+        break;
       }
+      case "popuphiding": {
+        this._popupHiding(event);
+        break;
+      }
+      case "command": {
+        this._command(event);
+        break;
+      }
+    }
+  }
 
-      let bundle = Services.strings.createBundle(
-        "chrome://browser/locale/webrtcIndicator.properties"
+  /**
+   * Handler for command events fired by the <menuitem> elements
+   * inside any of the indicator <menu>'s.
+   *
+   * @param {Event} aEvent - The command event for the <menuitem>.
+   */
+  _command(aEvent) {
+    webrtcUI.showSharingDoorhanger(aEvent.target.stream);
+  }
+
+  /**
+   * Handler for the popupshowing event for one of the status
+   * bar indicator menus.
+   *
+   * @param {Event} aEvent - The popupshowing event for the <menu>.
+   */
+  _popupShowing(aEvent) {
+    let menu = aEvent.target;
+    let type = menu.getAttribute("type");
+    let activeStreams;
+    if (type == "Camera") {
+      activeStreams = webrtcUI.getActiveStreams(true, false, false);
+    } else if (type == "Microphone") {
+      activeStreams = webrtcUI.getActiveStreams(false, true, false);
+    } else if (type == "Screen") {
+      activeStreams = webrtcUI.getActiveStreams(false, false, true);
+      type = webrtcUI.showScreenSharingIndicator;
+    }
+
+    let bundle = Services.strings.createBundle(
+      "chrome://browser/locale/webrtcIndicator.properties"
+    );
+
+    if (activeStreams.length == 1) {
+      let stream = activeStreams[0];
+
+      let menuitem = menu.ownerDocument.createXULElement("menuitem");
+      let labelId = "webrtcIndicator.sharing" + type + "With.menuitem";
+      let label = stream.browser.contentTitle || stream.uri;
+      menuitem.setAttribute(
+        "label",
+        bundle.formatStringFromName(labelId, [label])
       );
-
-      if (activeStreams.length == 1) {
-        let stream = activeStreams[0];
-
-        let menuitem = this.ownerDocument.createXULElement("menuitem");
-        let labelId = "webrtcIndicator.sharing" + type + "With.menuitem";
-        let label = stream.browser.contentTitle || stream.uri;
-        menuitem.setAttribute(
-          "label",
-          bundle.formatStringFromName(labelId, [label])
-        );
-        menuitem.setAttribute("disabled", "true");
-        this.appendChild(menuitem);
-
-        menuitem = this.ownerDocument.createXULElement("menuitem");
-        menuitem.setAttribute(
-          "label",
-          bundle.GetStringFromName("webrtcIndicator.controlSharing.menuitem")
-        );
-        menuitem.stream = stream;
-        menuitem.addEventListener("command", indicator._command);
-
-        this.appendChild(menuitem);
-        return true;
-      }
-
-      // We show a different menu when there are several active streams.
-      let menuitem = this.ownerDocument.createXULElement("menuitem");
-      let labelId = "webrtcIndicator.sharing" + type + "WithNTabs.menuitem";
-      let count = activeStreams.length;
-      let label = PluralForm.get(
-        count,
-        bundle.GetStringFromName(labelId)
-      ).replace("#1", count);
-      menuitem.setAttribute("label", label);
       menuitem.setAttribute("disabled", "true");
-      this.appendChild(menuitem);
+      menu.appendChild(menuitem);
 
-      for (let stream of activeStreams) {
-        let item = this.ownerDocument.createXULElement("menuitem");
-        labelId = "webrtcIndicator.controlSharingOn.menuitem";
-        label = stream.browser.contentTitle || stream.uri;
-        item.setAttribute(
-          "label",
-          bundle.formatStringFromName(labelId, [label])
-        );
-        item.stream = stream;
-        item.addEventListener("command", indicator._command);
-        this.appendChild(item);
-      }
+      menuitem = menu.ownerDocument.createXULElement("menuitem");
+      menuitem.setAttribute(
+        "label",
+        bundle.GetStringFromName("webrtcIndicator.controlSharing.menuitem")
+      );
+      menuitem.stream = stream;
+      menuitem.addEventListener("command", this);
 
+      menu.appendChild(menuitem);
       return true;
-    },
+    }
 
-    _popupHiding(aEvent) {
-      while (this.firstChild) {
-        this.firstChild.remove();
-      }
-    },
+    // We show a different menu when there are several active streams.
+    let menuitem = menu.ownerDocument.createXULElement("menuitem");
+    let labelId = "webrtcIndicator.sharing" + type + "WithNTabs.menuitem";
+    let count = activeStreams.length;
+    let label = PluralForm.get(
+      count,
+      bundle.GetStringFromName(labelId)
+    ).replace("#1", count);
+    menuitem.setAttribute("label", label);
+    menuitem.setAttribute("disabled", "true");
+    menu.appendChild(menuitem);
 
-    _setIndicatorState(aName, aState) {
-      let field = "_" + aName.toLowerCase();
-      if (aState && !this[field]) {
-        let menu = this._hiddenDoc.createXULElement("menu");
-        menu.setAttribute("id", "webRTC-sharing" + aName + "-menu");
+    for (let stream of activeStreams) {
+      let item = menu.ownerDocument.createXULElement("menuitem");
+      labelId = "webrtcIndicator.controlSharingOn.menuitem";
+      label = stream.browser.contentTitle || stream.uri;
+      item.setAttribute("label", bundle.formatStringFromName(labelId, [label]));
+      item.stream = stream;
+      item.addEventListener("command", this);
+      menu.appendChild(item);
+    }
 
-        // The CSS will only be applied if the menu is actually inserted in the DOM.
-        this._hiddenDoc.documentElement.appendChild(menu);
+    return true;
+  }
 
-        this._statusBar.addItem(menu);
+  /**
+   * Handler for the popuphiding event for one of the status
+   * bar indicator menus.
+   *
+   * @param {Event} aEvent - The popuphiding event for the <menu>.
+   */
+  _popupHiding(aEvent) {
+    let menu = aEvent.target;
+    while (menu.firstChild) {
+      menu.firstChild.remove();
+    }
+  }
 
-        let menupopup = this._hiddenDoc.createXULElement("menupopup");
-        menupopup.setAttribute("type", aName);
-        menupopup.addEventListener("popupshowing", this._popupShowing);
-        menupopup.addEventListener("popuphiding", this._popupHiding);
-        menupopup.addEventListener("command", this._command);
-        menu.appendChild(menupopup);
+  /**
+   * Updates the status bar to show or hide a screen, camera or
+   * microphone indicator.
+   *
+   * @param {String} aName - One of the following: "screen", "camera",
+   *   "microphone"
+   * @param {boolean} aState - True to show the indicator for the aName
+   *   type of stream, false ot hide it.
+   */
+  _setIndicatorState(aName, aState) {
+    let field = "_" + aName.toLowerCase();
+    if (aState && !this[field]) {
+      let menu = this._hiddenDoc.createXULElement("menu");
+      menu.setAttribute("id", "webRTC-sharing" + aName + "-menu");
 
-        this[field] = menu;
-      } else if (this[field] && !aState) {
-        this._statusBar.removeItem(this[field]);
-        this[field].remove();
-        this[field] = null;
-      }
-    },
-    updateIndicatorState() {
-      this._setIndicatorState("Camera", webrtcUI.showCameraIndicator);
-      this._setIndicatorState("Microphone", webrtcUI.showMicrophoneIndicator);
-      this._setIndicatorState("Screen", webrtcUI.showScreenSharingIndicator);
-    },
-    close() {
-      this._setIndicatorState("Camera", false);
-      this._setIndicatorState("Microphone", false);
-      this._setIndicatorState("Screen", false);
-    },
-  };
+      // The CSS will only be applied if the menu is actually inserted in the DOM.
+      this._hiddenDoc.documentElement.appendChild(menu);
 
-  indicator.updateIndicatorState();
-  return indicator;
+      this._statusBar.addItem(menu);
+
+      let menupopup = this._hiddenDoc.createXULElement("menupopup");
+      menupopup.setAttribute("type", aName);
+      menupopup.addEventListener("popupshowing", this);
+      menupopup.addEventListener("popuphiding", this);
+      menupopup.addEventListener("command", this);
+      menu.appendChild(menupopup);
+
+      this[field] = menu;
+    } else if (this[field] && !aState) {
+      this._statusBar.removeItem(this[field]);
+      this[field].remove();
+      this[field] = null;
+    }
+  }
 }
 
 function onTabSharingMenuPopupShowing(e) {
