@@ -846,6 +846,79 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "message_id", "cfr_message_01");
     });
   });
+  describe("#applyWhatsNewPolicy", () => {
+    it("should set client_id and set pingType", async () => {
+      const { ping, pingType } = await instance.applyWhatsNewPolicy({});
+
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      assert.equal(pingType, "whats-new-panel");
+    });
+  });
+  describe("#applyMomentsPolicy", () => {
+    it("should use client_id and message_id in prerelease", async () => {
+      globals.set("UpdateUtils", {
+        getUpdateChannel() {
+          return "nightly";
+        },
+      });
+      const data = {
+        action: "moments_user_event",
+        event: "IMPRESSION",
+        message_id: "moments_message_01",
+        bucket_id: "moments_bucket_01",
+      };
+      const { ping, pingType } = await instance.applyMomentsPolicy(data);
+
+      assert.equal(pingType, "moments");
+      assert.isUndefined(ping.impression_id);
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      assert.propertyVal(ping, "bucket_id", "moments_bucket_01");
+      assert.propertyVal(ping, "message_id", "moments_message_01");
+    });
+    it("should use impression_id and bucket_id in release", async () => {
+      globals.set("UpdateUtils", {
+        getUpdateChannel() {
+          return "release";
+        },
+      });
+      const data = {
+        action: "moments_user_event",
+        event: "IMPRESSION",
+        message_id: "moments_message_01",
+        bucket_id: "moments_bucket_01",
+      };
+      const { ping, pingType } = await instance.applyMomentsPolicy(data);
+
+      assert.equal(pingType, "moments");
+      assert.isUndefined(ping.client_id);
+      assert.propertyVal(ping, "impression_id", FAKE_UUID);
+      assert.propertyVal(ping, "message_id", "n/a");
+      assert.propertyVal(ping, "bucket_id", "moments_bucket_01");
+    });
+    it("should use client_id and message_id in the experiment cohort in release", async () => {
+      globals.set("UpdateUtils", {
+        getUpdateChannel() {
+          return "release";
+        },
+      });
+      sandbox.stub(ExperimentAPI, "getExperiment").returns({
+        slug: "SOME-CFR-EXP",
+      });
+      const data = {
+        action: "moments_user_event",
+        event: "IMPRESSION",
+        message_id: "moments_message_01",
+        bucket_id: "moments_bucket_01",
+      };
+      const { ping, pingType } = await instance.applyMomentsPolicy(data);
+
+      assert.equal(pingType, "moments");
+      assert.isUndefined(ping.impression_id);
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      assert.propertyVal(ping, "bucket_id", "moments_bucket_01");
+      assert.propertyVal(ping, "message_id", "moments_message_01");
+    });
+  });
   describe("#applySnippetsPolicy", () => {
     it("should include client_id", async () => {
       const data = {
@@ -1028,17 +1101,29 @@ describe("TelemetryFeed", () => {
 
       assert.calledOnce(instance.applyOnboardingPolicy);
     });
-    it("should call applyOnboardingPolicy if action equals to whats-new-panel_user_event", async () => {
+    it("should call applyWhatsNewPolicy if action equals to whats-new-panel_user_event", async () => {
       const data = {
         action: "whats-new-panel_user_event",
         event: "CLICK_BUTTON",
         message_id: "whats-new-panel_message_01",
       };
-      sandbox.stub(instance, "applyOnboardingPolicy");
+      sandbox.stub(instance, "applyWhatsNewPolicy");
       const action = ac.ASRouterUserEvent(data);
       await instance.createASRouterEvent(action);
 
-      assert.calledOnce(instance.applyOnboardingPolicy);
+      assert.calledOnce(instance.applyWhatsNewPolicy);
+    });
+    it("should call applyMomentsPolicy if action equals to moments_user_event", async () => {
+      const data = {
+        action: "moments_user_event",
+        event: "CLICK_BUTTON",
+        message_id: "moments_message_01",
+      };
+      sandbox.stub(instance, "applyMomentsPolicy");
+      const action = ac.ASRouterUserEvent(data);
+      await instance.createASRouterEvent(action);
+
+      assert.calledOnce(instance.applyMomentsPolicy);
     });
     it("should call applyUndesiredEventPolicy if action equals to asrouter_undesired_event", async () => {
       const data = {

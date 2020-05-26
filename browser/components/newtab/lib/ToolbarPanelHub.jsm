@@ -509,7 +509,7 @@ class _ToolbarPanelHub {
   _sendTelemetry(ping) {
     this._dispatch({
       type: "TOOLBAR_PANEL_TELEMETRY",
-      data: { action: "cfr_user_event", source: "CFR", ...ping },
+      data: { action: "whats-new-panel_user_event", ...ping },
     });
   }
 
