@@ -912,12 +912,6 @@ this.tabs = class extends ExtensionAPI {
           nativeTab.linkedBrowser.reloadWithFlags(flags);
         },
 
-        async warmup(tabId) {
-          let nativeTab = tabTracker.getTab(tabId);
-          let tabbrowser = nativeTab.ownerGlobal.gBrowser;
-          tabbrowser.warmupTab(nativeTab);
-        },
-
         async get(tabId) {
           return tabManager.get(tabId).convert();
         },
