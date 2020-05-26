@@ -221,16 +221,18 @@ function runGenericSensorTests(sensorName,
   sensor_test(async (t, sensorProvider) => {
     assert_true(sensorName in self);
     const sensor1 = new sensorType();
-    const sensorWatcher = new EventWatcher(t, sensor1, ["reading", "error"]);
+    const sensorWatcher1 = new EventWatcher(t, sensor1, ["reading", "error"]);
     sensor1.start();
 
     const sensor2 = new sensorType();
+    const sensorWatcher2 = new EventWatcher(t, sensor2, ["reading", "error"]);
     sensor2.start();
 
     const mockSensor = await sensorProvider.getCreatedSensor(sensorName);
     await mockSensor.setSensorReading(readings);
 
-    await sensorWatcher.wait_for("reading");
+    await Promise.all([sensorWatcher1.wait_for("reading"),
+                       sensorWatcher2.wait_for("reading")]);
     const expected = new RingBuffer(expectedReadings).next().value;
     // Reading values are correct for both sensors.
     assert_true(verificationFunction(expected, sensor1));
@@ -466,7 +468,8 @@ function runGenericSensorTests(sensorName,
     assert_true(sensorName in self);
     const sensor1 = new sensorType({frequency: 60});
     const sensor2 = new sensorType({frequency: 60, referenceFrame: "screen"});
-    const sensorWatcher = new EventWatcher(t, sensor1, ["reading", "error"]);
+    const sensorWatcher1 = new EventWatcher(t, sensor1, ["reading", "error"]);
+    const sensorWatcher2 = new EventWatcher(t, sensor1, ["reading", "error"]);
 
     sensor1.start();
     sensor2.start();
@@ -474,7 +477,8 @@ function runGenericSensorTests(sensorName,
     const mockSensor = await sensorProvider.getCreatedSensor(sensorName);
     await mockSensor.setSensorReading(readings);
 
-    await sensorWatcher.wait_for("reading");
+    await Promise.all([sensorWatcher1.wait_for("reading"),
+                       sensorWatcher2.wait_for("reading")]);
 
     const expected = new RingBuffer(expectedReadings).next().value;
     const expectedRemapped =
