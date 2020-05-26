@@ -108,6 +108,66 @@ add_task(async function test_getValue() {
 });
 
 /**
+ * #getRecipe
+ */
+add_task(async function test_getRecipe() {
+  const sandbox = sinon.createSandbox();
+  const RECIPE = {
+    arguments: ExperimentFakes.recipe("foo"),
+  };
+  sandbox.stub(ExperimentAPI._remoteSettingsClient, "get").resolves([RECIPE]);
+
+  const recipe = await ExperimentAPI.getRecipe("foo");
+  Assert.deepEqual(
+    recipe,
+    RECIPE,
+    "should return an experiment recipe if found"
+  );
+
+  sandbox.restore();
+});
+
+add_task(async function test_getRecipe_Failure() {
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(ExperimentAPI._remoteSettingsClient, "get").throws();
+
+  const recipe = await ExperimentAPI.getRecipe("foo");
+  Assert.equal(recipe, undefined, "should return undefined if RS throws");
+
+  sandbox.restore();
+});
+
+/**
+ * #getAllBranches
+ */
+add_task(async function test_getAllBranches() {
+  const sandbox = sinon.createSandbox();
+  const RECIPE = {
+    arguments: ExperimentFakes.recipe("foo"),
+  };
+  sandbox.stub(ExperimentAPI._remoteSettingsClient, "get").resolves([RECIPE]);
+
+  const branches = await ExperimentAPI.getAllBranches("foo");
+  Assert.deepEqual(
+    branches,
+    RECIPE.arguments.branches,
+    "should return all branches if found a recipe"
+  );
+
+  sandbox.restore();
+});
+
+add_task(async function test_getAllBranches_Failure() {
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(ExperimentAPI._remoteSettingsClient, "get").throws();
+
+  const branches = await ExperimentAPI.getAllBranches("foo");
+  Assert.equal(branches, undefined, "should return undefined if RS throws");
+
+  sandbox.restore();
+});
+
+/**
  * #on
  * #off
  */
