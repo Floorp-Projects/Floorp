@@ -133,10 +133,10 @@ nr_stun_filter_local_addresses(nr_local_addr addrs[], int *count)
         }
     }
 
-    if ((r=nr_stun_remove_duplicate_addrs(addrs,
-                                          !allow_loopback,
-                                          !allow_link_local,
-                                          count))) {
+    if ((r=nr_stun_filter_addrs(addrs,
+                                !allow_loopback,
+                                !allow_link_local,
+                                count))) {
         ABORT(r);
     }
 
