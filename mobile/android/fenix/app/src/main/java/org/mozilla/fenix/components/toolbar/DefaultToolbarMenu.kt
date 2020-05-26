@@ -68,6 +68,10 @@ class DefaultToolbarMenu(
             menuItems,
             endOfMenuAlwaysVisible = !shouldReverseItems,
             store = store,
+            webExtIconTintColorResource = primaryTextColor(),
+            onAddonsManagerTapped = {
+                onItemTapped.invoke(ToolbarMenu.Item.AddonsManager)
+            },
             appendExtensionActionAtStart = !shouldReverseItems
         )
     }
@@ -186,7 +190,6 @@ class DefaultToolbarMenu(
         val menuItems = listOfNotNull(
             historyItem,
             bookmarksItem,
-            addons,
             settings,
             if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
             BrowserMenuDivider(),
@@ -209,14 +212,6 @@ class DefaultToolbarMenu(
         } else {
             menuItems
         }
-    }
-
-    private val addons = BrowserMenuImageText(
-        label = context.getString(R.string.browser_menu_add_ons),
-        imageResource = R.drawable.mozac_ic_extensions,
-        iconTintColorResource = primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.AddonsManager)
     }
 
     private val settings = BrowserMenuHighlightableItem(
