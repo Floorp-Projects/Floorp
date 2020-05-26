@@ -3712,6 +3712,15 @@ bool WorkerPrivate::AddWorkerRef(WorkerRef* aWorkerRef,
     if (mStatus >= aFailStatus) {
       return false;
     }
+
+    // We shouldn't create strong references to workers before their main loop
+    // begins running. Strong references must be disposed of on the worker
+    // thread, so strong references from other threads use a control runnable
+    // for that purpose. If the worker fails to reach the main loop stage then
+    // no control runnables get run and it would be impossible to get rid of the
+    // reference properly.
+    MOZ_DIAGNOSTIC_ASSERT_IF(aWorkerRef->IsPreventingShutdown(),
+                             mStatus >= WorkerStatus::Running);
   }
 
   MOZ_ASSERT(!data->mWorkerRefs.Contains(aWorkerRef),
