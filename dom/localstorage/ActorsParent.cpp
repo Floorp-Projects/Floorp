@@ -8948,8 +8948,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       }
     }
 
-    LS_WARNING("Something (%s) in the directory that doesn't belong!",
-               NS_ConvertUTF16toUTF8(leafName).get());
+    UNKNOWN_FILE_WARNING(leafName);
   }
 #endif
 
