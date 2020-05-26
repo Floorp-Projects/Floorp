@@ -656,10 +656,12 @@ imgRequest::OnStartRequest(nsIRequest* aRequest) {
 
   // Figure out if we're multipart.
   nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
-  MOZ_ASSERT(multiPartChannel || !mIsMultiPartChannel,
-             "Stopped being multipart?");
   {
     MutexAutoLock lock(mMutex);
+
+    MOZ_ASSERT(multiPartChannel || !mIsMultiPartChannel,
+               "Stopped being multipart?");
+
     mNewPartPending = true;
     image = mImage;
     mIsMultiPartChannel = bool(multiPartChannel);
