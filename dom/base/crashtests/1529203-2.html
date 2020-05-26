@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<script>
+  var win = null;
+  function doIt() {
+    if (win === null) {
+      win = window.open();
+    }
+    var doc = win.document;
+    doc.open();
+    doc.write('<script>import("data:text/javascript,")</' + 'script>');
+    doc.close();
+  }
+  doIt();
+  setTimeout(() => {
+      doIt();
+      win.close();
+      document.documentElement.removeAttribute("class");
+  }, 100);
+</script>
+</html>

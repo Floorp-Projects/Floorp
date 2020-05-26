@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<script>
+  var win;
+  function doIt() {
+    if (!win) {
+      win = window.open();
+    }
+    var doc = win.document;
+    doc.open();
+    doc.write('<script type="module" src="./module-with-syntax-error.js"></' + 'script>');
+    doc.close();
+  }
+  doIt()
+  setTimeout(() => {
+      doIt();
+      win.close();
+      document.documentElement.removeAttribute("class");
+  }, 100);
+</script>
+</html>
