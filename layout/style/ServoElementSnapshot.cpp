@@ -22,8 +22,6 @@ ServoElementSnapshot::ServoElementSnapshot(const Element& aElement)
       mOtherAttributeChanged(false) {
   MOZ_COUNT_CTOR(ServoElementSnapshot);
   MOZ_ASSERT(NS_IsMainThread());
-  mIsHTMLElementInHTMLDocument =
-      aElement.IsHTMLElement() && aElement.IsInHTMLDocument();
   mIsInChromeDocument = nsContentUtils::IsChromeDoc(aElement.OwnerDoc());
   mSupportsLangAttr = aElement.SupportsLangAttr();
 }
