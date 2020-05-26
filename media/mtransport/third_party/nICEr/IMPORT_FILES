@@ -37,8 +37,12 @@
                 # STUN
                 ./src/stun/addrs.c
                 ./src/stun/addrs.h
-                ./src/stun/ifaddrs-android.c
-                ./src/stun/ifaddrs-android.h
+                ./src/stun/addrs-bsd.c
+                ./src/stun/addrs-bsd.h
+                ./src/stun/addrs-netlink.c
+                ./src/stun/addrs-netlink.h
+                ./src/stun/addrs-win32.c
+                ./src/stun/addrs-win32.h
                 ./src/stun/nr_socket_turn.c
                 ./src/stun/nr_socket_turn.h
                 ./src/stun/stun.h
