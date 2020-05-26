@@ -39,7 +39,7 @@
 }
 
 .network-monitor .headers-overview .summary {
-  padding: 10px 20px;
+  padding: 6px 16px 2px;
 }
 
 .network-monitor .headers-summary,
@@ -153,7 +153,6 @@
 
 .network-monitor .tabpanel-summary-container {
   flex-wrap: wrap;
-  padding: 1px;
   padding-inline-start: 4px;
   margin-bottom: 5px;
 }
@@ -167,13 +166,14 @@
 .network-monitor .tabpanel-summary-label {
   display: inline-block;
   padding-inline-end: 3px;
-  min-width: 70px;
+  min-width: 90px;
   color: var(--theme-icon-dimmed-color);
 }
 
 .network-monitor .tabpanel-summary-value {
   color: inherit;
   padding-inline-start: 3px;
+  unicode-bidi: plaintext;
 }
 
 .network-monitor .tabpanel-summary-value  strong {

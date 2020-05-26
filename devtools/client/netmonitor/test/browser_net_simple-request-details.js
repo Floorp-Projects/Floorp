@@ -107,12 +107,6 @@ add_task(async function() {
       "GET",
       "The method summary value is incorrect."
     );
-    // Remote address
-    is(
-      tabpanel.querySelectorAll(".tabpanel-summary-value")[1].innerText,
-      "127.0.0.1:8888",
-      "The remote address summary value is incorrect."
-    );
     // Status code
     is(
       tabpanel.querySelector(".requests-list-status-code").innerText,
@@ -126,7 +120,7 @@ add_task(async function() {
     );
     // Version
     is(
-      tabpanel.querySelectorAll(".tabpanel-summary-value")[2].innerText,
+      tabpanel.querySelectorAll(".tabpanel-summary-value")[1].innerText,
       "HTTP/1.1",
       "The HTTP version is incorrect."
     );
