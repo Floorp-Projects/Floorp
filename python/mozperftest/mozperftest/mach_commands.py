@@ -6,7 +6,7 @@ import sys
 from functools import partial
 import subprocess
 
-from mach.decorators import CommandProvider, Command
+from mach.decorators import CommandProvider, Command, CommandArgument
 from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
 
 
@@ -101,12 +101,24 @@ class PerftestTests(MachCommandBase):
     @Command(
         "perftest-test", category="testing", description="Run perftest tests",
     )
+    @CommandArgument(
+        "tests", default=None, nargs="*", help="Tests to run. By default will run all"
+    )
+    @CommandArgument(
+        "-s",
+        "--skip-linters",
+        action="store_true",
+        default=False,
+        help="Skip flake8 and black",
+    )
     def run_tests(self, **kwargs):
         MachCommandBase._activate_virtualenv(self)
 
         from pathlib import Path
         from mozperftest.runner import _setup_path
         from mozperftest.utils import install_package, temporary_env
+
+        skip_linters = kwargs.get("skip_linters", False)
 
         # include in sys.path all deps
         _setup_path()
@@ -115,10 +127,13 @@ class PerftestTests(MachCommandBase):
         except ImportError:
             pydeps = Path(self.topsrcdir, "third_party", "python")
             vendors = ["coverage"]
-            pypis = ["flake8"]
+            if skip_linters:
+                pypis = []
+            else:
+                pypis = ["flake8"]
 
             # if we're not on try we want to install black
-            if not ON_TRY:
+            if not ON_TRY and not skip_linters:
                 pypis.append("black")
 
             # these are the deps we are getting from pypi
@@ -130,12 +145,12 @@ class PerftestTests(MachCommandBase):
                 install_package(self.virtualenv_manager, str(Path(pydeps, dep)))
 
         here = Path(__file__).parent.resolve()
-        if not ON_TRY:
+        if not ON_TRY and not skip_linters:
             # formatting the code with black
             assert self._run_python_script("black", str(here))
 
         # checking flake8 correctness
-        if not (ON_TRY and sys.platform == "darwin"):
+        if not (ON_TRY and sys.platform == "darwin") and not skip_linters:
             assert self._run_python_script("flake8", str(here))
 
         # running pytest with coverage
@@ -143,19 +158,36 @@ class PerftestTests(MachCommandBase):
         # 1/ coverage erase => erase any previous coverage data
         # 2/ coverage run pytest ... => run the tests and collect info
         # 3/ coverage report => generate the report
-        tests = here / "tests"
+        tests_dir = Path(here, "tests").resolve()
+        tests = kwargs.get("tests", [])
+        if tests == []:
+            tests = str(tests_dir)
+            run_coverage_check = not skip_linters
+        else:
+            run_coverage_check = False
+
+            def _get_test(test):
+                if Path(test).exists():
+                    return str(test)
+                return str(tests_dir / test)
+
+            tests = " ".join([_get_test(test) for test in tests])
+
         import pytest
 
         with temporary_env(COVERAGE_RCFILE=str(here / ".coveragerc")):
-            assert self._run_python_script(
-                "coverage", "erase", label="remove old coverage data"
-            )
+            if run_coverage_check:
+                assert self._run_python_script(
+                    "coverage", "erase", label="remove old coverage data"
+                )
             args = [
                 "run",
                 pytest.__file__,
                 "-xs",
-                str(tests.resolve()),
+                tests,
             ]
             assert self._run_python_script("coverage", *args, label="running tests")
-            if not self._run_python_script("coverage", "report", display=True):
+            if run_coverage_check and not self._run_python_script(
+                "coverage", "report", display=True
+            ):
                 raise ValueError("Coverage is too low!")
