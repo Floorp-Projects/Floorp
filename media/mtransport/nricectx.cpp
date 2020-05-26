@@ -63,6 +63,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "runnable_utils.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIUUIDGenerator.h"
 
 // nICEr includes
 extern "C" {
@@ -1058,11 +1059,31 @@ void NrIceCtx::GenerateObfuscatedAddress(nr_ice_candidate* candidate,
     if (iter != obfuscated_host_addresses_.end()) {
       *mdns_address = iter->second;
     } else {
-      const char* uuid = mdns_service_generate_uuid();
+      nsresult rv;
+      nsCOMPtr<nsIUUIDGenerator> uuidgen =
+          do_GetService("@mozilla.org/uuid-generator;1", &rv);
+      // If this fails, we'll return a zero UUID rather than something
+      // unexpected.
+      nsID id = {};
+      id.Clear();
+      if (NS_SUCCEEDED(rv)) {
+        rv = uuidgen->GenerateUUIDInPlace(&id);
+        if (NS_FAILED(rv)) {
+          id.Clear();
+        }
+      }
+
+      char chars[NSID_LENGTH];
+      id.ToProvidedString(chars);
+      // The string will look like {64888863-a253-424a-9b30-1ed285d20142},
+      // we want to trim off the braces.
+      const char* ptr_to_id = chars;
+      ++ptr_to_id;
+      chars[NSID_LENGTH - 2] = 0;
+
       std::ostringstream o;
-      o << uuid << ".local";
+      o << ptr_to_id << ".local";
       *mdns_address = o.str();
-      mdns_service_free_uuid(uuid);
 
       obfuscated_host_addresses_[*actual_address] = *mdns_address;
     }
