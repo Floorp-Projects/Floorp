@@ -37,7 +37,7 @@ function getPendingMinidump(id) {
 }
 
 var ContentCrashHandler = {
-  // The event listener for this is hooked up in GeckoViewStartup.jsm
+  // The event listener for this is hooked up in GeckoViewStartup.js
   observe(aSubject, aTopic, aData) {
     aSubject.QueryInterface(Ci.nsIPropertyBag2);
 
