@@ -743,7 +743,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_7___default.a.PureCompo
     const prefs = props.Prefs.values;
     const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     let filteredSections = props.Sections;
-    const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
+    const pocketEnabled = prefs["feeds.section.topstories"];
     const noSectionsEnabled = !prefs["feeds.topsites"] && filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search"].filter(v => v).join(" ");
@@ -10709,9 +10709,7 @@ const selectLayoutRender = ({
     filterArray.push("Navigation");
   }
 
-  const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
-
-  if (!pocketEnabled) {
+  if (!prefs["feeds.section.topstories"]) {
     filterArray.push(...DS_COMPONENTS);
   }
 
