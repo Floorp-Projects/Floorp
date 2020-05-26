@@ -144,10 +144,12 @@ bool nsAlertsService::ShouldShowAlert() {
   bool result = true;
 
 #ifdef XP_WIN
-  QUERY_USER_NOTIFICATION_STATE qstate;
-  if (SUCCEEDED(SHQueryUserNotificationState(&qstate))) {
-    if (qstate != QUNS_ACCEPTS_NOTIFICATIONS) {
-      result = false;
+  if (!xpc::IsInAutomation()) {
+    QUERY_USER_NOTIFICATION_STATE qstate;
+    if (SUCCEEDED(SHQueryUserNotificationState(&qstate))) {
+      if (qstate != QUNS_ACCEPTS_NOTIFICATIONS) {
+        result = false;
+      }
     }
   }
 #endif
