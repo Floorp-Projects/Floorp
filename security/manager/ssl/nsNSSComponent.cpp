@@ -2024,8 +2024,8 @@ nsresult nsNSSComponent::InitializeNSS() {
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIClientAuthRemember> cars =
-      do_GetService(NS_CLIENTAUTHREMEMBER_CONTRACTID);
+  nsCOMPtr<nsIClientAuthRememberService> cars =
+      do_GetService(NS_CLIENTAUTHREMEMBERSERVICE_CONTRACTID);
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NSS Initialization done\n"));
 
@@ -2260,8 +2260,8 @@ nsresult nsNSSComponent::LogoutAuthenticatedPK11() {
         NS_LITERAL_CSTRING("all:temporary-certificates"), 0);
   }
 
-  nsCOMPtr<nsIClientAuthRemember> svc =
-      do_GetService(NS_CLIENTAUTHREMEMBER_CONTRACTID);
+  nsCOMPtr<nsIClientAuthRememberService> svc =
+      do_GetService(NS_CLIENTAUTHREMEMBERSERVICE_CONTRACTID);
 
   if (svc) {
     nsresult rv = svc->ClearRememberedDecisions();
