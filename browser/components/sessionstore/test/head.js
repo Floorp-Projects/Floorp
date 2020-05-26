@@ -15,17 +15,6 @@ const HTTPROOT = ROOT.replace(
   "chrome://mochitests/content/",
   "http://example.com/"
 );
-const FRAME_SCRIPTS = [ROOT + "content-forms.js"];
-
-for (let script of FRAME_SCRIPTS) {
-  Services.mm.loadFrameScript(script, true);
-}
-
-registerCleanupFunction(() => {
-  for (let script of FRAME_SCRIPTS) {
-    Services.mm.removeDelayedFrameScript(script, true);
-  }
-});
 
 const { SessionSaver } = ChromeUtils.import(
   "resource:///modules/sessionstore/SessionSaver.jsm"
@@ -242,27 +231,6 @@ async function setWindowState(win, state, overwrite = false) {
     overwrite
   );
   await promiseWindowRestored(win);
-}
-
-/**
- * Wait for a content -> chrome message.
- */
-function promiseContentMessage(browser, name) {
-  let mm = browser.messageManager;
-
-  return new Promise(resolve => {
-    function removeListener() {
-      mm.removeMessageListener(name, listener);
-    }
-
-    function listener(msg) {
-      removeListener();
-      resolve(msg.data);
-    }
-
-    mm.addMessageListener(name, listener);
-    registerCleanupFunction(removeListener);
-  });
 }
 
 function waitForTopic(aTopic, aTimeout, aCallback) {
@@ -568,37 +536,6 @@ function promiseTabRestoring(tab) {
   return BrowserTestUtils.waitForEvent(tab, "SSTabRestoring");
 }
 
-function sendMessage(browser, name, data = {}) {
-  browser.messageManager.sendAsyncMessage(name, data);
-  return promiseContentMessage(browser, name);
-}
-
-// This creates list of functions that we will map to their corresponding
-// ss-test:* messages names. Those will be sent to the frame script and
-// be used to read and modify form data.
-/* global getTextContent, getInputValue, setInputValue, getInputChecked
-          setInputChecked, getSelectedIndex, setSelectedIndex,
-          getMultipleSelected, setMultipleSelected, getFileNameArray,
-          setFileNameArray */
-const FORM_HELPERS = [
-  "getTextContent",
-  "getInputValue",
-  "setInputValue",
-  "getInputChecked",
-  "setInputChecked",
-  "getSelectedIndex",
-  "setSelectedIndex",
-  "getMultipleSelected",
-  "setMultipleSelected",
-  "getFileNameArray",
-  "setFileNameArray",
-];
-
-for (let name of FORM_HELPERS) {
-  let msg = "ss-test:" + name;
-  this[name] = (browser, data) => sendMessage(browser, msg, data);
-}
-
 // Removes the given tab immediately and returns a promise that resolves when
 // all pending status updates (messages) of the closing tab have been received.
 function promiseRemoveTabAndSessionState(tab) {
@@ -695,6 +632,31 @@ function whenDomWindowClosedHandled(aCallback) {
     Services.obs.removeObserver(observer, aTopic);
     aCallback();
   }, "sessionstore-debug-domwindowclosed-handled");
+}
+
+function getPropertyOfFormField(browserContext, selector, propName) {
+  return SpecialPowers.spawn(
+    browserContext,
+    [selector, propName],
+    (selectorChild, propNameChild) => {
+      return content.document.querySelector(selectorChild)[propNameChild];
+    }
+  );
+}
+
+function setPropertyOfFormField(browserContext, selector, propName, newValue) {
+  return SpecialPowers.spawn(
+    browserContext,
+    [selector, propName, newValue],
+    (selectorChild, propNameChild, newValueChild) => {
+      let node = content.document.querySelector(selectorChild);
+      node[propNameChild] = newValueChild;
+
+      let event = node.ownerDocument.createEvent("UIEvents");
+      event.initUIEvent("input", true, true, node.ownerGlobal, 0);
+      node.dispatchEvent(event);
+    }
+  );
 }
 
 function promiseOnHistoryReplaceEntryInChild(browser) {

@@ -19,13 +19,13 @@ add_task(async function test_check_urls_before_restoring() {
   // Restore form data with a valid URL.
   await promiseTabState(tab, getState(URL));
 
-  let value = await getInputValue(browser, { id: "text" });
+  let value = await getPropertyOfFormField(browser, "#text", "value");
   is(value, "foobar", "value was restored");
 
   // Restore form data with an invalid URL.
   await promiseTabState(tab, getState("http://example.com/"));
 
-  value = await getInputValue(browser, { id: "text" });
+  value = await getPropertyOfFormField(browser, "#text", "value");
   is(value, "", "value was not restored");
 
   // Cleanup.
