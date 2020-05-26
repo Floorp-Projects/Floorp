@@ -484,11 +484,6 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    // Publish deferred items
-    if (!compilationInfo.publishDeferredFunctions()) {
-      return nullptr;
-    }
-
     Maybe<BytecodeEmitter> emitter;
     if (!emplaceEmitter(compilationInfo, emitter, sc)) {
       return nullptr;
@@ -543,10 +538,6 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
-    return nullptr;
-  }
-
-  if (!compilationInfo.publishDeferredFunctions()) {
     return nullptr;
   }
 
@@ -648,10 +639,6 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
                      funbox->extent.toStringEnd,
                      compilationInfo.options.lineno,
                      compilationInfo.options.column};
-
-    if (!compilationInfo.publishDeferredFunctions()) {
-      return false;
-    }
 
     Maybe<BytecodeEmitter> emitter;
     if (!emplaceEmitter(compilationInfo, emitter, funbox)) {
@@ -940,9 +927,6 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
       parser.standaloneLazyFunction(fun, lazy->toStringStart(), lazy->strict(),
                                     lazy->generatorKind(), lazy->asyncKind());
   if (!pn) {
-    return false;
-  }
-  if (!compilationInfo.publishDeferredFunctions()) {
     return false;
   }
 

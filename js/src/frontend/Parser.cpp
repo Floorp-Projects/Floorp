@@ -1873,7 +1873,9 @@ static bool MaybePublishFunction(JSContext* cx,
                           funbox);
 }
 
-bool CompilationInfo::publishDeferredFunctions() {
+static bool PublishDeferredFunctions(JSContext* cx,
+                                     CompilationInfo& compilationInfo,
+                                     FunctionBox* listHead) {
   // Use the trace list to visit funboxes. We must visit inner functions before
   // their parents. The trace list inserts functions to the head of list as they
   // are encountered. These leaves each list in a reverse-pre-order which is
@@ -1881,14 +1883,13 @@ bool CompilationInfo::publishDeferredFunctions() {
 
   mozilla::DebugOnly<size_t> prevIndex = size_t(-1);
 
-  for (FunctionBox* funbox = traceListHead; funbox;
-       funbox = funbox->traceLink()) {
+  for (FunctionBox* funbox = listHead; funbox; funbox = funbox->traceLink()) {
     // During parse we check that child indices are greater than their parent.
     // Now confirm we visit FunctionBox in descending index order.
     MOZ_ASSERT(prevIndex > funbox->index());
     prevIndex = funbox->index();
 
-    if (!MaybePublishFunction(cx, *this, funbox)) {
+    if (!MaybePublishFunction(cx, compilationInfo, funbox)) {
       return false;
     }
   }
@@ -1968,6 +1969,10 @@ static bool InstantiateTopLevel(JSContext* cx,
 }
 
 bool CompilationInfo::instantiateStencils() {
+  if (!PublishDeferredFunctions(cx, *this, traceListHead)) {
+    return false;
+  }
+
   if (!SetTypeForExposedFunctions(cx, traceListHead)) {
     return false;
   }
