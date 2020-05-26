@@ -221,8 +221,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                             tabTrayDialog.dismiss()
                         }
 
-                        override fun onTabClosed(tab: Tab) { /* noop */ }
-
                         override fun onNewTabTapped(private: Boolean) {
                             (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.fromBoolean(private)
                             tabTrayDialog.dismiss()

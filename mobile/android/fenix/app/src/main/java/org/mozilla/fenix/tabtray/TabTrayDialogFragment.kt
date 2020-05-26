@@ -25,7 +25,6 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     interface Interactor {
         fun onTabSelected(tab: Tab)
         fun onNewTabTapped(private: Boolean)
-        fun onTabClosed(tab: Tab)
     }
 
     private lateinit var tabTrayView: TabTrayView
