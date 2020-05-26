@@ -174,7 +174,6 @@ IPDL_SOURCES += [
     'PURLClassifierLocal.ipdl',
     'PWindowGlobal.ipdl',
     'ServiceWorkerConfiguration.ipdlh',
-    'WindowGlobalTypes.ipdlh',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -15,24 +15,24 @@
 
   // This test, as is, equals to https://kuix.de/misc/test17/358438.php
 
-  async function runTest()
+  function runTest()
   {
-    await isSecurityState("secure");
+    isSecurityState("secure");
     document.body.background =
       "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg";
 
-    waitForSecurityState("broken", async () => {
-      await isSecurityState("broken", "document.body.background='http://...' changed to broken");
+    waitForSecurityState("broken", function () {
+      isSecurityState("broken", "document.body.background='http://...' changed to broken");
       finish();
     });
   }
 
-  async function afterNavigationTest()
+  function afterNavigationTest()
   {
     is(document.body.background,
       "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg",
       "document backround secure again");
-    await isSecurityState("secure", "secure after re-navigation");
+    isSecurityState("secure", "secure after re-navigation");
     finish();
   }
 

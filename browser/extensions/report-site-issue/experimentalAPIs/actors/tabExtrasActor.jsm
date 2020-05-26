@@ -148,6 +148,8 @@ class ReportSiteIssueHelperChild extends JSWindowActorChild {
       case "GetBlockingStatus":
         const { docShell } = this;
         return {
+          hasMixedActiveContentBlocked: docShell.hasMixedActiveContentBlocked,
+          hasMixedDisplayContentBlocked: docShell.hasMixedDisplayContentBlocked,
           hasTrackingContentBlocked: docShell.hasTrackingContentBlocked,
         };
     }

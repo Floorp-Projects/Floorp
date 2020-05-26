@@ -19,15 +19,15 @@
   <script class="testbody" type="text/javascript">
   "use strict";
 
-  async function runTest()
+  function runTest()
   {
-    await isSecurityState("broken", "insecure content added by :before styling breaks security");
+    isSecurityState("broken", "insecure content added by :before styling breaks security");
     finish();
   }
 
-  async function afterNavigationTest()
+  function afterNavigationTest()
   {
-    await isSecurityState("broken", "security still broken after navigation");
+    isSecurityState("broken", "security still broken after navigation");
     finish();
   }
 
