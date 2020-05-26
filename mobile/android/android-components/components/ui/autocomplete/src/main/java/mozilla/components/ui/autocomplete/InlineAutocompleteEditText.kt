@@ -388,8 +388,6 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
         endSettingAutocomplete()
 
-        // Filter on the new text
-        filterListener?.invoke(text.toString())
         return true
     }
 
