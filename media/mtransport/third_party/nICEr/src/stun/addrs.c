@@ -363,26 +363,34 @@ nr_stun_is_duplicate_addr(nr_local_addr addrs[], int count, nr_local_addr *addr)
 }
 
 int
-nr_stun_remove_duplicate_addrs(nr_local_addr addrs[], int remove_loopback, int remove_link_local, int *count)
+nr_stun_filter_addrs(nr_local_addr addrs[], int remove_loopback, int remove_link_local, int *count)
 {
     int r, _status;
     nr_local_addr *tmp = 0;
     int i;
     int n;
-    int contains_regular_ipv6 = 0;
+    int filter_mac_ipv6 = 0;
+    int filter_teredo_ipv6 = 0;
 
     tmp = RMALLOC(*count * sizeof(*tmp));
     if (!tmp)
         ABORT(R_NO_MEMORY);
 
     for (i = 0; i < *count; ++i) {
+      if (addrs[i].addr.ip_version == NR_IPV6) {
         if (nr_transport_addr_is_teredo(&addrs[i].addr)) {
             addrs[i].interface.type |= NR_INTERFACE_TYPE_TEREDO;
+            /* Prefer teredo over mac-based address. Probably will never see
+             * both. */
+            filter_mac_ipv6 = 1;
+        } else {
+          filter_teredo_ipv6 = 1;
         }
-        else if (addrs[i].addr.ip_version == NR_IPV6 &&
-                 !nr_transport_addr_is_mac_based(&addrs[i].addr)) {
-            contains_regular_ipv6 = 1;
+
+        if (!nr_transport_addr_is_mac_based(&addrs[i].addr)) {
+          filter_mac_ipv6 = 1;
         }
+      }
     }
 
     n = 0;
@@ -397,11 +405,11 @@ nr_stun_remove_duplicate_addrs(nr_local_addr addrs[], int remove_loopback, int r
                  nr_transport_addr_is_link_local(&addrs[i].addr)) {
             /* skip addrs[i], it's a link-local address */
         }
-        else if (contains_regular_ipv6 &&
+        else if (filter_mac_ipv6 &&
                  nr_transport_addr_is_mac_based(&addrs[i].addr)) {
             /* skip addrs[i], it's MAC based */
         }
-        else if (contains_regular_ipv6 &&
+        else if (filter_teredo_ipv6 &&
                  nr_transport_addr_is_teredo(&addrs[i].addr)) {
             /* skip addrs[i], it's a Teredo address */
         }
