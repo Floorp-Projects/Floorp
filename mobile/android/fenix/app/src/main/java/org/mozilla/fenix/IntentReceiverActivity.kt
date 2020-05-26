@@ -50,7 +50,13 @@ class IntentReceiverActivity : Activity() {
 
     private fun launch(intent: Intent, intentProcessorType: IntentProcessorType) {
         intent.setClassName(applicationContext, intentProcessorType.activityClassName)
-        intent.putExtra(HomeActivity.OPEN_TO_BROWSER, intentProcessorType.shouldOpenToBrowser(intent))
+
+        if (!intent.hasExtra(HomeActivity.OPEN_TO_BROWSER)) {
+            intent.putExtra(
+                HomeActivity.OPEN_TO_BROWSER,
+                intentProcessorType.shouldOpenToBrowser(intent)
+            )
+        }
 
         startActivity(intent)
         finish() // must finish() after starting the other activity

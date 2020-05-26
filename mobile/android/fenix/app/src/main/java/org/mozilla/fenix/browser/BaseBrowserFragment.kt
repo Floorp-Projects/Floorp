@@ -205,6 +205,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
                 openInFenixIntent = Intent(context, IntentReceiverActivity::class.java).apply {
                     action = Intent.ACTION_VIEW
+                    putExtra(HomeActivity.OPEN_TO_BROWSER, true)
                 },
                 bookmarkTapped = { viewLifecycleOwner.lifecycleScope.launch { bookmarkTapped(it) } },
                 scope = viewLifecycleOwner.lifecycleScope,
