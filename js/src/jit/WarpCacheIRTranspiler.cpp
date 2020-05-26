@@ -109,6 +109,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
 
+  MOZ_MUST_USE bool emitLoadArgumentSlot(ValOperandId resultId,
+                                         uint32_t slotIndex);
+
   CACHE_IR_TRANSPILER_GENERATED
 
  public:
@@ -1081,14 +1084,14 @@ bool WarpCacheIRTranspiler::emitIsObjectResult(ValOperandId inputId) {
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
-                                                      uint8_t slotIndex) {
+bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
+                                                 uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
   MOZ_ASSERT(!loc_.isSpreadOp());
 
   // Layout:
-  // <NewTarget> | Args.. | ThisValue | Callee
-  // 0           | 0 (+1) | argc (+1) | argc + 1 (+ 1)
+  // NewTarget | Args.. (reversed)      | ThisValue | Callee
+  // 0         | ArgC .. Arg1 Arg0 (+1) | argc (+1) | argc + 1 (+ 1)
   // ^ (if constructing)
 
   // NewTarget (optional)
@@ -1102,7 +1105,8 @@ bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
 
   // Args..
   if (slotIndex < callInfo_->argc()) {
-    return defineOperand(resultId, callInfo_->getArg(slotIndex));
+    uint32_t arg = callInfo_->argc() - 1 - slotIndex;
+    return defineOperand(resultId, callInfo_->getArg(arg));
   }
 
   // ThisValue
@@ -1115,6 +1119,11 @@ bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
   return defineOperand(resultId, callInfo_->callee());
 }
 
+bool WarpCacheIRTranspiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
+                                                      uint8_t slotIndex) {
+  return emitLoadArgumentSlot(resultId, slotIndex);
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
                                                         Int32OperandId argcId,
                                                         uint8_t slotIndex) {
@@ -1124,8 +1133,7 @@ bool WarpCacheIRTranspiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
              static_cast<int32_t>(callInfo_->argc()));
 #endif
 
-  slotIndex += callInfo_->argc();
-  return emitLoadArgumentFixedSlot(resultId, slotIndex);
+  return emitLoadArgumentSlot(resultId, callInfo_->argc() + slotIndex);
 }
 
 #ifndef JS_SIMULATOR
