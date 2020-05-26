@@ -44,23 +44,13 @@ add_task(async function check_js_redirect() {
     ],
   };
 
-  let loadPromise = new Promise(resolve => {
-    function listener(msg) {
-      if (msg.data.url.endsWith("restore_redirect_target.html")) {
-        window.messageManager.removeMessageListener(
-          "ss-test:loadEvent",
-          listener
-        );
-        resolve();
-      }
-    }
-
-    window.messageManager.addMessageListener("ss-test:loadEvent", listener);
-  });
-
   // Open a new tab to restore into.
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
+  let loadPromise = BrowserTestUtils.browserLoaded(browser, true, url =>
+    url.endsWith("restore_redirect_target.html")
+  );
+
   await promiseTabState(tab, state);
 
   info("Restored tab");

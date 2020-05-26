@@ -19,6 +19,15 @@ const SCROLL2_STR = SCROLL2_X + "," + SCROLL2_Y;
 
 requestLongerTimeout(2);
 
+function getScrollPosition(bc) {
+  return SpecialPowers.spawn(bc, [], () => {
+    let x = {},
+      y = {};
+    content.windowUtils.getVisualViewportOffset(x, y);
+    return { x: x.value, y: y.value };
+  });
+}
+
 /**
  * This test ensures that we properly serialize and restore scroll positions
  * for an average page without any frames.
@@ -29,10 +38,7 @@ add_task(async function test_scroll() {
   await promiseBrowserLoaded(browser);
 
   // Scroll down a little.
-  await sendMessage(browser, "ss-test:setScrollPosition", {
-    x: SCROLL_X,
-    y: SCROLL_Y,
-  });
+  await setScrollPosition(browser, SCROLL_X, SCROLL_Y);
   await checkScroll(tab, { scroll: SCROLL_STR }, "scroll is fine");
 
   // Duplicate and check that the scroll position is restored.
@@ -40,7 +46,7 @@ add_task(async function test_scroll() {
   let browser2 = tab2.linkedBrowser;
   await promiseTabRestored(tab2);
 
-  let scroll = await sendMessage(browser2, "ss-test:getScrollPosition");
+  let scroll = await getScrollPosition(browser2);
   is(
     JSON.stringify(scroll),
     JSON.stringify({ x: SCROLL_X, y: SCROLL_Y }),
@@ -64,7 +70,7 @@ add_task(async function test_scroll() {
   // Scroll back to the top and check that the position has been reset. We
   // expect the scroll position to be "null" here because there is no data to
   // be stored if the frame is in its default scroll position.
-  await sendMessage(browser, "ss-test:setScrollPosition", { x: 0, y: 0 });
+  await setScrollPosition(browser, 0, 0);
   await checkScroll(tab, null, "no scroll stored");
 
   // Cleanup.
@@ -82,11 +88,11 @@ add_task(async function test_scroll_nested() {
   await promiseBrowserLoaded(browser);
 
   // Scroll the first child frame down a little.
-  await sendMessage(browser, "ss-test:setScrollPosition", {
-    x: SCROLL_X,
-    y: SCROLL_Y,
-    frame: 0,
-  });
+  await setScrollPosition(
+    browser.browsingContext.children[0],
+    SCROLL_X,
+    SCROLL_Y
+  );
   await checkScroll(
     tab,
     { children: [{ scroll: SCROLL_STR }] },
@@ -94,11 +100,11 @@ add_task(async function test_scroll_nested() {
   );
 
   // Scroll the second child frame down a little.
-  await sendMessage(browser, "ss-test:setScrollPosition", {
-    x: SCROLL2_X,
-    y: SCROLL2_Y,
-    frame: 1,
-  });
+  await setScrollPosition(
+    browser.browsingContext.children[1],
+    SCROLL2_X,
+    SCROLL2_Y
+  );
   await checkScroll(
     tab,
     { children: [{ scroll: SCROLL_STR }, { scroll: SCROLL2_STR }] },
@@ -110,18 +116,14 @@ add_task(async function test_scroll_nested() {
   let browser2 = tab2.linkedBrowser;
   await promiseTabRestored(tab2);
 
-  let scroll = await sendMessage(browser2, "ss-test:getScrollPosition", {
-    frame: 0,
-  });
+  let scroll = await getScrollPosition(browser2.browsingContext.children[0]);
   is(
     JSON.stringify(scroll),
     JSON.stringify({ x: SCROLL_X, y: SCROLL_Y }),
     "scroll position #1 has been duplicated correctly"
   );
 
-  scroll = await sendMessage(browser2, "ss-test:getScrollPosition", {
-    frame: 1,
-  });
+  scroll = await getScrollPosition(browser2.browsingContext.children[1]);
   is(
     JSON.stringify(scroll),
     JSON.stringify({ x: SCROLL2_X, y: SCROLL2_Y }),
@@ -130,11 +132,7 @@ add_task(async function test_scroll_nested() {
 
   // Check that resetting one frame's scroll position removes it from the
   // serialized value.
-  await sendMessage(browser, "ss-test:setScrollPosition", {
-    x: 0,
-    y: 0,
-    frame: 0,
-  });
+  await setScrollPosition(browser.browsingContext.children[0], 0, 0);
   await checkScroll(
     tab,
     { children: [null, { scroll: SCROLL2_STR }] },
@@ -142,11 +140,7 @@ add_task(async function test_scroll_nested() {
   );
 
   // Check the resetting all frames' scroll positions nulls the stored value.
-  await sendMessage(browser, "ss-test:setScrollPosition", {
-    x: 0,
-    y: 0,
-    frame: 1,
-  });
+  await setScrollPosition(browser.browsingContext.children[1], 0, 0);
   await checkScroll(tab, null, "no scroll stored");
 
   // Cleanup.
@@ -169,10 +163,7 @@ add_task(async function test_scroll_background_tabs() {
   await BrowserTestUtils.browserLoaded(browser);
 
   // Scroll down a little.
-  await sendMessage(browser, "ss-test:setScrollPosition", {
-    x: SCROLL_X,
-    y: SCROLL_Y,
-  });
+  await setScrollPosition(browser, SCROLL_X, SCROLL_Y);
   await checkScroll(
     tab,
     { scroll: SCROLL_STR },
@@ -184,10 +175,7 @@ add_task(async function test_scroll_background_tabs() {
   await BrowserTestUtils.browserLoaded(browser);
 
   // Scroll down a little.
-  await sendMessage(browser, "ss-test:setScrollPosition", {
-    x: SCROLL2_X,
-    y: SCROLL2_Y,
-  });
+  await setScrollPosition(browser, SCROLL2_X, SCROLL2_Y);
   await checkScroll(
     tab,
     { scroll: SCROLL2_STR },
