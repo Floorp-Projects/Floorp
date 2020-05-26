@@ -9,6 +9,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
+import mozilla.components.concept.storage.Login
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -159,5 +160,20 @@ class PromptRequestTest {
         confirmRequest.onConfirmPositiveButton(true)
         confirmRequest.onConfirmNegativeButton(true)
         confirmRequest.onConfirmNeutralButton(true)
+
+        val onConfirmLogin: () -> Unit = {}
+        val onDismissLogin: (Login) -> Unit = {}
+
+        val login = Login(null, "origin", username = "username", password = "password")
+        val loginSaveRequest = PromptRequest.SaveLoginPrompt(0, listOf(login), onConfirmLogin, onDismissLogin)
+        assertEquals(loginSaveRequest.logins, listOf(login))
+        assertEquals(loginSaveRequest.hint, 0)
+        loginSaveRequest.onConfirm(login)
+        loginSaveRequest.onDismiss()
+
+        val loginSelectRequest = PromptRequest.SelectLoginPrompt(listOf(login), onConfirmLogin, onDismissLogin)
+        assertEquals(loginSelectRequest.logins, listOf(login))
+        loginSelectRequest.onConfirm(login)
+        loginSelectRequest.onDismiss()
     }
 }

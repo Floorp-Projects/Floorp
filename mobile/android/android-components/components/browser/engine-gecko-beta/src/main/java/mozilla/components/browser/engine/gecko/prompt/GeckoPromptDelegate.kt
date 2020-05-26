@@ -88,7 +88,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
-                PromptRequest.LoginPrompt(
+                PromptRequest.SaveLoginPrompt(
                     hint = prompt.hint,
                     logins = prompt.logins.map { it.toLogin() },
                     onConfirm = onConfirmSave,
