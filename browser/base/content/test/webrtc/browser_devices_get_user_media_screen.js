@@ -341,9 +341,11 @@ var gTests = [
         menulist.getItemAtIndex(scaryWindowIndex).doCommand();
       }
 
+      let sharingNonScaryWindow = typeof nonScaryWindowIndex == "number";
+
       // If we have a non-scary window, select it and verify the warning isn't displayed.
       // A non-scary window may not always exist on test slaves.
-      if (typeof nonScaryWindowIndex == "number") {
+      if (sharingNonScaryWindow) {
         menulist.getItemAtIndex(nonScaryWindowIndex).doCommand();
         ok(
           document.getElementById("webRTC-all-windows-shared").hidden,
@@ -384,7 +386,12 @@ var gTests = [
       );
 
       await indicator;
-      await checkSharingUI({ screen: "Window" });
+      if (sharingNonScaryWindow) {
+        await checkSharingUI({ screen: "Window" });
+      } else {
+        await checkSharingUI({ screen: "Window", browserwindow: true });
+      }
+
       await closeStream();
     },
   },
@@ -623,6 +630,13 @@ var gTests = [
   {
     desc: "test showControlCenter from screen icon",
     run: async function checkShowControlCenter() {
+      if (!USING_LEGACY_INDICATOR) {
+        info(
+          "Skipping since this test doesn't apply to the new global sharing " +
+            "indicator."
+        );
+        return;
+      }
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true, null, "screen");
@@ -654,7 +668,7 @@ var gTests = [
         gIdentityHandler._identityPopup.hidden,
         "control center should be hidden"
       );
-      if ("nsISystemStatusBar" in Ci) {
+      if (IS_MAC) {
         let activeStreams = webrtcUI.getActiveStreams(false, false, true);
         webrtcUI.showSharingDoorhanger(activeStreams[0]);
       } else {
@@ -681,6 +695,13 @@ var gTests = [
   {
     desc: "Only persistent block is possible for screen sharing",
     run: async function checkPersistentPermissions() {
+      // This test doesn't apply when the notification silencing
+      // feature is enabled, since the "Remember this decision"
+      // checkbox doesn't exist.
+      if (ALLOW_SILENCING_NOTIFICATIONS) {
+        return;
+      }
+
       let browser = gBrowser.selectedBrowser;
       let devicePerms = SitePermissions.getForPrincipal(
         browser.contentPrincipal,
@@ -815,7 +836,16 @@ var gTests = [
       menulist.getItemAtIndex(2).doCommand();
       checkbox.click();
       ok(checkbox.checked, "checkbox now checked");
-      ok(notification.button.disabled, "Allow button is disabled");
+
+      if (ALLOW_SILENCING_NOTIFICATIONS) {
+        // When the notification silencing feature is enabled, the checkbox
+        // controls that feature, and its state should not disable the
+        // "Allow" button.
+        ok(!notification.button.disabled, "Allow button is not disabled");
+      } else {
+        ok(notification.button.disabled, "Allow button is disabled");
+      }
+
       ok(
         !notification.hasAttribute("warninghidden"),
         "warning message is shown"
@@ -823,7 +853,15 @@ var gTests = [
 
       menulist.getItemAtIndex(3).doCommand();
       ok(checkbox.checked, "checkbox still checked");
-      ok(notification.button.disabled, "Allow button remains disabled");
+      if (ALLOW_SILENCING_NOTIFICATIONS) {
+        // When the notification silencing feature is enabled, the checkbox
+        // controls that feature, and its state should not disable the
+        // "Allow" button.
+        ok(!notification.button.disabled, "Allow button remains not disabled");
+      } else {
+        ok(notification.button.disabled, "Allow button remains disabled");
+      }
+
       ok(
         !notification.hasAttribute("warninghidden"),
         "warning message is still shown"

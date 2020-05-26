@@ -21,6 +21,22 @@ const PREF_FOCUS_SOURCE = "media.getusermedia.window.focus_source.enabled";
 const STATE_CAPTURE_ENABLED = Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED;
 const STATE_CAPTURE_DISABLED = Ci.nsIMediaManagerService.STATE_CAPTURE_DISABLED;
 
+const USING_LEGACY_INDICATOR = Services.prefs.getBoolPref(
+  "privacy.webrtc.legacyGlobalIndicator",
+  false
+);
+
+const ALLOW_SILENCING_NOTIFICATIONS = Services.prefs.getBoolPref(
+  "privacy.webrtc.allowSilencingNotifications",
+  false
+);
+
+const INDICATOR_PATH = USING_LEGACY_INDICATOR
+  ? "chrome://browser/content/webrtcLegacyIndicator.xhtml"
+  : "chrome://browser/content/webrtcIndicator.xhtml";
+
+const IS_MAC = AppConstants.platform == "macosx";
+
 let observerTopics = [
   "getUserMedia:response:allow",
   "getUserMedia:revoke",
@@ -41,8 +57,8 @@ function whenDelayedStartupFinished(aWindow) {
 }
 
 function promiseIndicatorWindow() {
-  // We don't show the indicator window on Mac.
-  if ("nsISystemStatusBar" in Ci) {
+  // We don't show the legacy indicator window on Mac.
+  if (USING_LEGACY_INDICATOR && IS_MAC) {
     return Promise.resolve();
   }
 
@@ -51,10 +67,7 @@ function promiseIndicatorWindow() {
       win.addEventListener(
         "load",
         function() {
-          if (
-            win.location.href !==
-            "chrome://browser/content/webrtcLegacyIndicator.xhtml"
-          ) {
+          if (win.location.href !== INDICATOR_PATH) {
             info("ignoring a window with this url: " + win.location.href);
             return;
           }
@@ -119,59 +132,85 @@ async function assertWebRTCIndicatorStatus(expected) {
     );
   }
 
-  if (!("nsISystemStatusBar" in Ci)) {
-    if (!expected) {
-      let win = Services.wm.getMostRecentWindow(
-        "Browser:WebRTCGlobalIndicator"
-      );
-      if (win) {
-        await new Promise((resolve, reject) => {
-          win.addEventListener("unload", function listener(e) {
-            if (e.target == win.document) {
-              win.removeEventListener("unload", listener);
-              executeSoon(resolve);
-            }
-          });
+  if (USING_LEGACY_INDICATOR && IS_MAC) {
+    return;
+  }
+
+  if (!expected) {
+    let win = Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
+    if (win) {
+      await new Promise((resolve, reject) => {
+        win.addEventListener("unload", function listener(e) {
+          if (e.target == win.document) {
+            win.removeEventListener("unload", listener);
+            executeSoon(resolve);
+          }
         });
-      }
+      });
     }
-    let indicator = Services.wm.getEnumerator("Browser:WebRTCGlobalIndicator");
-    let hasWindow = indicator.hasMoreElements();
-    is(hasWindow, !!expected, "popup " + msg);
-    if (hasWindow) {
-      let document = indicator.getNext().document;
-      let docElt = document.documentElement;
+  }
 
-      if (document.readyState != "complete") {
-        info("Waiting for the sharing indicator's document to load");
-        await new Promise(resolve => {
-          document.addEventListener(
-            "readystatechange",
-            function onReadyStateChange() {
-              if (document.readyState != "complete") {
-                return;
-              }
-              document.removeEventListener(
-                "readystatechange",
-                onReadyStateChange
-              );
-              executeSoon(resolve);
+  let indicator = Services.wm.getEnumerator("Browser:WebRTCGlobalIndicator");
+  let hasWindow = indicator.hasMoreElements();
+  is(hasWindow, !!expected, "popup " + msg);
+  if (hasWindow) {
+    let document = indicator.getNext().document;
+    let docElt = document.documentElement;
+
+    if (document.readyState != "complete") {
+      info("Waiting for the sharing indicator's document to load");
+      await new Promise(resolve => {
+        document.addEventListener(
+          "readystatechange",
+          function onReadyStateChange() {
+            if (document.readyState != "complete") {
+              return;
             }
-          );
-        });
-      }
-
-      for (let item of ["video", "audio", "screen"]) {
-        let expectedValue = expected && expected[item] ? "true" : "";
-        is(
-          docElt.getAttribute("sharing" + item),
-          expectedValue,
-          item + " global indicator attribute as expected"
+            document.removeEventListener(
+              "readystatechange",
+              onReadyStateChange
+            );
+            executeSoon(resolve);
+          }
         );
+      });
+    }
+
+    if (
+      !USING_LEGACY_INDICATOR &&
+      expected.screen &&
+      expected.screen.startsWith("Window")
+    ) {
+      // These tests were originally written to express window sharing by
+      // having expected.screen start with "Window". This meant that the
+      // legacy indicator is expected to have the "sharingscreen" attribute
+      // set to true when sharing a window.
+      //
+      // The new indicator, however, differentiates between screen, window
+      // and browser window sharing. If we're using the new indicator, we
+      // update the expectations accordingly. This can be removed once we
+      // are able to remove the tests for the legacy indicator.
+      expected.screen = null;
+      expected.window = true;
+    }
+
+    for (let item of ["video", "audio", "screen", "window", "browserwindow"]) {
+      let expectedValue;
+
+      if (USING_LEGACY_INDICATOR) {
+        expectedValue = expected && expected[item] ? "true" : "";
+      } else {
+        expectedValue = expected && expected[item] ? "true" : null;
       }
 
-      ok(!indicator.hasMoreElements(), "only one global indicator window");
+      is(
+        docElt.getAttribute("sharing" + item),
+        expectedValue,
+        item + " global indicator attribute as expected"
+      );
     }
+
+    ok(!indicator.hasMoreElements(), "only one global indicator window");
   }
 }
 
