@@ -2042,17 +2042,6 @@
   value: false
   mirror: always
 
-# Whether the disabled attribute in HTMLLinkElement disables the sheet loading
-# altogether, or forwards to the inner stylesheet method without attribute
-# reflection.
-#
-# Historical behavior is the second, the first is being discussed at:
-# https://github.com/whatwg/html/issues/3840
-- name: dom.link.disabled_attribute.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether "W3C Web Manifest" processing is enabled
 - name: dom.manifest.enabled
   type: bool

@@ -89,20 +89,11 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLLinkElement,
 NS_IMPL_ELEMENT_CLONE(HTMLLinkElement)
 
 bool HTMLLinkElement::Disabled() const {
-  if (StaticPrefs::dom_link_disabled_attribute_enabled()) {
-    return GetBoolAttr(nsGkAtoms::disabled);
-  }
-  StyleSheet* ss = GetSheet();
-  return ss && ss->Disabled();
+  return GetBoolAttr(nsGkAtoms::disabled);
 }
 
 void HTMLLinkElement::SetDisabled(bool aDisabled, ErrorResult& aRv) {
-  if (StaticPrefs::dom_link_disabled_attribute_enabled()) {
-    return SetHTMLBoolAttr(nsGkAtoms::disabled, aDisabled, aRv);
-  }
-  if (StyleSheet* ss = GetSheet()) {
-    ss->SetDisabled(aDisabled);
-  }
+  return SetHTMLBoolAttr(nsGkAtoms::disabled, aDisabled, aRv);
 }
 
 void HTMLLinkElement::OnDNSPrefetchRequested() {
@@ -316,9 +307,7 @@ nsresult HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         (aName == nsGkAtoms::href || aName == nsGkAtoms::rel ||
          aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
          aName == nsGkAtoms::type || aName == nsGkAtoms::as ||
-         aName == nsGkAtoms::crossorigin ||
-         (aName == nsGkAtoms::disabled &&
-          StaticPrefs::dom_link_disabled_attribute_enabled()))) {
+         aName == nsGkAtoms::crossorigin || aName == nsGkAtoms::disabled)) {
       bool dropSheet = false;
       if (aName == nsGkAtoms::rel) {
         nsAutoString value;
@@ -349,17 +338,14 @@ nsresult HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   } else {
     if (aNameSpaceID == kNameSpaceID_None) {
-      if (aName == nsGkAtoms::disabled &&
-          StaticPrefs::dom_link_disabled_attribute_enabled()) {
+      if (aName == nsGkAtoms::disabled) {
         mExplicitlyEnabled = true;
       }
       // Since removing href or rel makes us no longer link to a stylesheet,
       // force updates for those too.
       if (aName == nsGkAtoms::href || aName == nsGkAtoms::rel ||
           aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
-          aName == nsGkAtoms::type ||
-          (aName == nsGkAtoms::disabled &&
-           StaticPrefs::dom_link_disabled_attribute_enabled())) {
+          aName == nsGkAtoms::type || aName == nsGkAtoms::disabled) {
         Unused << UpdateStyleSheetInternal(nullptr, nullptr, ForceUpdate::Yes);
       }
       if ((aName == nsGkAtoms::as || aName == nsGkAtoms::type ||
@@ -440,7 +426,7 @@ Maybe<LinkStyle::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
     return Nothing();
   }
 
-  if (StaticPrefs::dom_link_disabled_attribute_enabled() && Disabled()) {
+  if (Disabled()) {
     return Nothing();
   }
 
