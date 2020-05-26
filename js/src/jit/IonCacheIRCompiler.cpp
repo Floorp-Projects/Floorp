@@ -763,6 +763,11 @@ bool IonCacheIRCompiler::emitGuardSpecificObject(ObjOperandId objId,
   return true;
 }
 
+bool IonCacheIRCompiler::emitGuardSpecificFunction(
+    ObjOperandId objId, uint32_t expectedOffset, uint32_t nargsAndFlagsOffset) {
+  return emitGuardSpecificObject(objId, expectedOffset);
+}
+
 bool IonCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
                                                uint32_t expectedOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

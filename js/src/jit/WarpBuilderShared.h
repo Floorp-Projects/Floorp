@@ -35,7 +35,7 @@ class WarpBuilderShared {
   void pushConstant(const Value& v);
 
   MCall* makeCall(CallInfo& callInfo, bool needsThisCheck,
-                  JSFunction* target = nullptr);
+                  WrappedFunction* target = nullptr);
 };
 
 }  // namespace jit

@@ -6003,6 +6003,20 @@ class LGuardObjectIdentity : public LInstructionHelper<0, 2, 0> {
   }
 };
 
+// Guard against an function's identity.
+class LGuardSpecificFunction : public LInstructionHelper<0, 2, 0> {
+ public:
+  LIR_HEADER(GuardSpecificFunction)
+
+  LGuardSpecificFunction(const LAllocation& in, const LAllocation& expected)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, in);
+    setOperand(1, expected);
+  }
+  const LAllocation* input() { return getOperand(0); }
+  const LAllocation* expected() { return getOperand(1); }
+};
+
 class LGuardSpecificAtom : public LInstructionHelper<0, 1, 0> {
  public:
   LIR_HEADER(GuardSpecificAtom)

@@ -93,6 +93,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   int32_t int32StubField(uint32_t offset) {
     return static_cast<int32_t>(readStubWord(offset));
   }
+  uint32_t uint32StubField(uint32_t offset) {
+    return static_cast<uint32_t>(readStubWord(offset));
+  }
 
   MOZ_MUST_USE bool emitGuardTo(ValOperandId inputId, MIRType type);
 
@@ -211,6 +214,27 @@ bool WarpCacheIRTranspiler::emitGuardSpecificObject(ObjOperandId objId,
 
   auto* ins = MGuardObjectIdentity::New(alloc(), obj, constObj,
                                         /* bailOnEquality = */ false);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardSpecificFunction(
+    ObjOperandId objId, uint32_t expectedOffset, uint32_t nargsAndFlagsOffset) {
+  MDefinition* obj = getOperand(objId);
+  JSObject* expected = objectStubField(expectedOffset);
+  uint32_t nargsAndFlags = uint32StubField(nargsAndFlagsOffset);
+
+  MOZ_ASSERT(expected->is<JSFunction>());
+
+  auto* constObj = MConstant::NewConstraintlessObject(alloc(), expected);
+  add(constObj);
+
+  uint16_t nargs = nargsAndFlags >> 16;
+  FunctionFlags flags = FunctionFlags(uint16_t(nargsAndFlags));
+
+  auto* ins = MGuardSpecificFunction::New(alloc(), obj, constObj, nargs, flags);
   add(ins);
 
   setOperand(objId, ins);
@@ -1151,16 +1175,24 @@ bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
   // TODO: For non-normal calls the arguments need to be changed.
   MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard);
 
+  // The transpilation will add various guards to the callee.
+  // We replace the callee referenced by the CallInfo, so that
+  // the resulting MCall instruction depends on these guards.
+  callInfo_->setCallee(callee);
+
   // CacheIR emits the following for specialized native calls:
-  //     GuardSpecificObject <callee> <func>
+  //     GuardSpecificFunction <callee> <func> ..
   //     CallNativeFunction <callee> ..
   // We can use the <func> JSFunction object to specialize this call.
-  // GuardSpecificObject is transpiled to MGuardObjectIdentity above.
-  JSFunction* target = nullptr;
-  if (callee->isGuardObjectIdentity()) {
-    auto* guard = callee->toGuardObjectIdentity();
-    target = &guard->expected()->toConstant()->toObject().as<JSFunction>();
+  WrappedFunction* wrappedTarget = nullptr;
+  if (callee->isGuardSpecificFunction()) {
+    auto* guard = callee->toGuardSpecificFunction();
+    JSFunction* target =
+        &guard->expected()->toConstant()->toObject().as<JSFunction>();
     MOZ_ASSERT(target->isNative());
+
+    wrappedTarget =
+        new (alloc()) WrappedFunction(target, guard->nargs(), guard->flags());
   }
 
   // We know we are constructing a native function even if we don't know the
@@ -1174,7 +1206,7 @@ bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
     callInfo_->setThis(constant(MagicValue(JS_IS_CONSTRUCTING)));
   }
 
-  MCall* call = makeCall(*callInfo_, needsThisCheck, target);
+  MCall* call = makeCall(*callInfo_, needsThisCheck, wrappedTarget);
   if (!call) {
     return false;
   }
