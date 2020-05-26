@@ -556,6 +556,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
     // Make it move-only.
     HitTestResult(HitTestResult&&) = default;
     HitTestResult& operator=(HitTestResult&&) = default;
+    bool TargetIsConfirmedRoot() const;
   };
 
   /* Some helper functions to find an APZC given some identifying input. These
