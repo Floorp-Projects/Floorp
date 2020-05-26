@@ -48,5 +48,53 @@ def test_context():
         env.run(metadata)
 
 
+class FailureException(Exception):
+    pass
+
+
+class Failure:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kw):
+        pass
+
+    def __call__(self, *args, **kw):
+        raise FailureException()
+
+
+def test_exception_return():
+    # the last layer is not called, the error is swallowed
+    hooks = str(Path(HERE, "data", "hook.py"))
+    mach, metadata, env = get_running_env(hooks=hooks)
+    last_layer = mock.MagicMock()
+    env.layers = [mock.MagicMock(), Failure(), last_layer]
+    with env:
+        env.run(metadata)
+    last_layer.assert_not_called()
+
+
+def test_exception_resume():
+    # the last layer is called, the error is swallowed
+    hooks = str(Path(HERE, "data", "hook_resume.py"))
+    mach, metadata, env = get_running_env(hooks=hooks)
+    last_layer = mock.MagicMock()
+    env.layers = [mock.MagicMock(), Failure(), last_layer]
+    with env:
+        env.run(metadata)
+    last_layer.assert_called()
+
+
+def test_exception_raised():
+    # the error is raised
+    hooks = str(Path(HERE, "data", "hook_raises.py"))
+    mach, metadata, env = get_running_env(hooks=hooks)
+    last_layer = mock.MagicMock()
+    env.layers = [mock.MagicMock(), Failure(), last_layer]
+    with env, pytest.raises(FailureException):
+        env.run(metadata)
+    last_layer.assert_not_called()
+
+
 if __name__ == "__main__":
     mozunit.main()
