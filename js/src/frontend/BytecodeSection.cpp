@@ -21,27 +21,13 @@ using namespace js;
 using namespace js::frontend;
 
 bool GCThingList::append(FunctionBox* funbox, uint32_t* index) {
-  // Append the function to the vector and return the index in *index. Also add
-  // the FunctionBox to the |lastbox| linked list for finishInnerFunctions
-  // below.
-
-  MOZ_ASSERT(!funbox->emitLink_);
-  funbox->emitLink_ = lastbox;
-  lastbox = funbox;
-
+  // Append the function to the vector and return the index in *index.
   *index = vector.length();
+
   // To avoid circular include issues, funbox can't return a FunctionIndex, so
   // instead it returns a size_t, which we wrap in FunctionIndex here to
   // disambiguate the variant.
   return vector.append(mozilla::AsVariant(FunctionIndex(funbox->index())));
-}
-
-void GCThingList::finishInnerFunctions() {
-  FunctionBox* funbox = lastbox;
-  while (funbox) {
-    funbox->finish();
-    funbox = funbox->emitLink_;
-  }
 }
 
 AbstractScopePtr GCThingList::getScope(size_t index) const {

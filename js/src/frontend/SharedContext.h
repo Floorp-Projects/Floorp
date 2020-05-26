@@ -295,7 +295,6 @@ class FunctionBox : public SharedContext {
   // The parser handles tracing the fields below via the FunctionBox linked
   // list represented by |traceLink_|.
   FunctionBox* traceLink_ = nullptr;
-  FunctionBox* emitLink_ = nullptr;
 
   // This field is used for two purposes:
   //   * If this FunctionBox refers to the function being compiled, this field
