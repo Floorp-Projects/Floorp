@@ -19,6 +19,7 @@ const STRICT_PREF = "browser.contentblocking.features.strict";
 const PRIVACY_PAGE = "about:preferences#privacy";
 const ISOLATE_UI_PREF =
   "browser.contentblocking.reject-and-isolate-cookies.preferences.ui.enabled";
+const FPI_PREF = "privacy.firstparty.isolate";
 
 const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
   "resource://testing-common/EnterprisePolicyTesting.jsm",
@@ -243,6 +244,28 @@ add_task(async function testContentBlockingMainCategory() {
     "Trackers plus isolate option is hidden from the dropdown if the ui pref is not set."
   );
 
+  gBrowser.removeCurrentTab();
+
+  // Ensure the block-trackers-plus-isolate option only shows in the dropdown if FPI is disabled.
+  SpecialPowers.setIntPref(
+    NCB_PREF,
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+  );
+  SpecialPowers.setBoolPref(FPI_PREF, true);
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  doc = gBrowser.contentDocument;
+  cookieMenuTrackers = doc.querySelector(
+    "#blockCookiesMenu menupopup > menuitem[value=trackers]"
+  );
+  cookieMenuTrackersPlusIsolate = doc.querySelector(
+    "#blockCookiesMenu menupopup > menuitem[value=trackers-plus-isolate]"
+  );
+  ok(cookieMenuTrackers.selected, "The trackers item should be selected");
+  ok(
+    cookieMenuTrackersPlusIsolate.hidden,
+    "Trackers plus isolate option is hidden from the dropdown if the FPI pref is set."
+  );
   gBrowser.removeCurrentTab();
 
   for (let pref of prefs) {
