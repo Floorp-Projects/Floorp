@@ -29,7 +29,6 @@ py2commands="
     hazards
     jsapi-tests
     jsshell-bench
-    marionette-test
     mochitest
     mozharness
     pastebin
