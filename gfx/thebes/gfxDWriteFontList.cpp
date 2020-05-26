@@ -636,8 +636,11 @@ gfxFont* gfxDWriteFontEntry::CreateFontInstance(
     if (NS_FAILED(rv)) {
       return nullptr;
     }
+    // Only pass in the underlying IDWriteFont if the unscaled font doesn't
+    // reflect a data font. This signals whether or not we can safely query
+    // a descriptor to represent the font for various transport use-cases.
     unscaledFont =
-        new UnscaledFontDWrite(fontFace, mIsSystemFont ? mFont : nullptr);
+        new UnscaledFontDWrite(fontFace, !mIsDataUserFont ? mFont : nullptr);
     unscaledFontPtr = unscaledFont;
   }
   RefPtr<IDWriteFontFace> fontFace;
