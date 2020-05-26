@@ -115,22 +115,22 @@ add_task(async function() {
   await assertAll(allElementsPane, TEST_DATA_ALL.fullRule);
 
   info("Check the issue after unchecking class rule");
-  await _togglePropRule(inspector, 1, 0);
+  await _togglePropStatus(inspector, 1, 0);
   await assertAll(selectedElementPane, TEST_DATA_SELECTED.elementRule);
   await assertAll(allElementsPane, TEST_DATA_ALL.elementRule);
 
   info("Check the issue after unchecking div rule");
-  await _togglePropRule(inspector, 2, 0);
+  await _togglePropStatus(inspector, 2, 0);
   await assertIssueList(selectedElementPane, []);
   await assertIssueList(allElementsPane, []);
 
   info("Check the issue after reverting class rule");
-  await _togglePropRule(inspector, 1, 0);
+  await _togglePropStatus(inspector, 1, 0);
   await assertAll(selectedElementPane, TEST_DATA_SELECTED.classRule);
   await assertAll(allElementsPane, TEST_DATA_ALL.classRule);
 
   info("Check the issue after reverting div rule");
-  await _togglePropRule(inspector, 2, 0);
+  await _togglePropStatus(inspector, 2, 0);
   await assertAll(selectedElementPane, TEST_DATA_SELECTED.fullRule);
   await assertAll(allElementsPane, TEST_DATA_ALL.fullRule);
 });
@@ -140,14 +140,11 @@ async function assertAll(pane, { expectedProperties, expectedNodes }) {
   await assertNodeList(pane, expectedNodes);
 }
 
-async function _togglePropRule(inspector, ruleIndex, propIndex) {
-  const ruleView = inspector.getPanel("ruleview").view;
+async function _togglePropStatus(inspector, ruleIndex, propIndex) {
   const onNodesUpdated = waitForDispatch(
     inspector.store,
     COMPATIBILITY_UPDATE_NODES_COMPLETE
   );
-  const rule = getRuleViewRuleEditor(ruleView, ruleIndex).rule;
-  const textProp = rule.textProps[propIndex];
-  textProp.editor.enable.click();
+  await togglePropStatusOnRuleView(inspector, ruleIndex, propIndex);
   await onNodesUpdated;
 }

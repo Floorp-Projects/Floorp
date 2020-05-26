@@ -123,6 +123,22 @@ function getIssueItem(property, element) {
 }
 
 /**
+ * Toggle enable/disable checkbox of a specific property on rule view.
+ *
+ * @param {Inspector} inspector
+ * @param {Number} ruleIndex
+ * @param {Number} propIndex
+ */
+async function togglePropStatusOnRuleView(inspector, ruleIndex, propIndex) {
+  const ruleView = inspector.getPanel("ruleview").view;
+  const rule = getRuleViewRuleEditor(ruleView, ruleIndex).rule;
+  const textProp = rule.textProps[propIndex];
+  const onRuleviewChanged = ruleView.once("ruleview-changed");
+  textProp.editor.enable.click();
+  await onRuleviewChanged;
+}
+
+/**
  * Return a promise which waits for COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE action.
  *
  * @param {Object} store
