@@ -229,21 +229,46 @@ function initialize(toggleProfilerKeyShortcuts) {
         return;
       }
 
-      function updateButtonColor() {
-        // Use photon blue-60 when active.
-        buttonElement.style.fill = Services.profiler.IsActive()
-          ? "#0060df"
-          : "";
+      function setButtonActive() {
+        buttonElement.setAttribute(
+          "tooltiptext",
+          "The profiler is recording a profile"
+        );
+        buttonElement.classList.toggle("profiler-active", true);
+        buttonElement.classList.toggle("profiler-paused", false);
+      }
+      function setButtonPaused() {
+        buttonElement.setAttribute(
+          "tooltiptext",
+          "The profiler is capturing a profile"
+        );
+        buttonElement.classList.toggle("profiler-active", false);
+        buttonElement.classList.toggle("profiler-paused", true);
+      }
+      function setButtonInactive() {
+        buttonElement.setAttribute(
+          "tooltiptext",
+          "Record a performance profile"
+        );
+        buttonElement.classList.toggle("profiler-active", false);
+        buttonElement.classList.toggle("profiler-paused", false);
       }
 
-      updateButtonColor();
+      if (Services.profiler.IsPaused()) {
+        setButtonPaused();
+      }
+      if (Services.profiler.IsActive()) {
+        setButtonActive();
+      }
 
-      Services.obs.addObserver(updateButtonColor, "profiler-started");
-      Services.obs.addObserver(updateButtonColor, "profiler-stopped");
+      Services.obs.addObserver(setButtonActive, "profiler-started");
+      Services.obs.addObserver(setButtonInactive, "profiler-stopped");
+      Services.obs.addObserver(setButtonPaused, "profiler-paused");
 
       window.addEventListener("unload", () => {
-        Services.obs.removeObserver(updateButtonColor, "profiler-started");
-        Services.obs.removeObserver(updateButtonColor, "profiler-stopped");
+        Services.obs.removeObserver(setButtonActive, "profiler-started");
+        Services.obs.removeObserver(setButtonInactive, "profiler-stopped");
+        Services.obs.removeObserver(setButtonPaused, "profiler-paused");
       });
     },
   };
