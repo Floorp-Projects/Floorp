@@ -1712,9 +1712,6 @@ pref("browser.tabs.crashReporting.email", "");
 // nightly and developer edition.
 pref("extensions.experiments.enabled", false);
 
-// Causes access on unsafe CPOWs from browser code to throw by default.
-pref("dom.ipc.cpows.forbid-unsafe-from-browser", true);
-
 #if defined(XP_WIN)
   // Allows us to deprioritize the processes of background tabs at an OS level
   pref("dom.ipc.processPriorityManager.enabled", true);
