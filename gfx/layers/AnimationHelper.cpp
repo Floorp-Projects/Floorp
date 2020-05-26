@@ -361,7 +361,7 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
   SampleResult rv =
       aAnimationValues.IsEmpty() ? SampleResult::None : SampleResult::Sampled;
   if (rv == SampleResult::Sampled) {
-    aAnimationValues.AppendElements(nonAnimatingValues);
+    aAnimationValues.AppendElements(std::move(nonAnimatingValues));
   }
   return rv;
 }
