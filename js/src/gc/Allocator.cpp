@@ -555,7 +555,7 @@ TenuredCell* ArenaLists::refillFreeListAndAllocate(
     maybeLock.emplace(rt);
   }
 
-  ArenaList& al = arenaLists(thingKind);
+  ArenaList& al = arenaList(thingKind);
   Arena* arena = al.takeNextArena();
   if (arena) {
     // Empty arenas should be immediately freed.
