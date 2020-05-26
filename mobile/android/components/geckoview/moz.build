@@ -22,16 +22,16 @@ XPCOM_MANIFESTS += [
 
 EXTRA_COMPONENTS += [
     'GeckoView.manifest',
-    'GeckoViewPermission.js',
-    'GeckoViewPush.js',
-    'GeckoViewStartup.js',
 ]
 
 EXTRA_JS_MODULES += [
     'ColorPickerDelegate.jsm',
     'FilePickerDelegate.jsm',
+    'GeckoViewPermission.jsm',
     'GeckoViewPrompt.jsm',
     'GeckoViewPrompter.jsm',
+    'GeckoViewPush.jsm',
+    'GeckoViewStartup.jsm',
     'LoginStorageDelegate.jsm',
     'PromptCollection.jsm',
     'ShareDelegate.jsm',
