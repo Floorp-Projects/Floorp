@@ -4,9 +4,9 @@
     "description": "API for running TRR performance measurement",
     "functions": [
       {
-        "name": "dryRun",
+        "name": "run",
         "type": "function",
-        "description": "Runs TRR performance measurement and stores fastest TRR in a pref",
+        "description": "Runs TRR performance measurement if necessary and commits best TRR for the client",
         "parameters": [],
         "async": true
       }
