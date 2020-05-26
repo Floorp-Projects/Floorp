@@ -28,9 +28,13 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'ColorPickerDelegate.jsm',
+    'FilePickerDelegate.jsm',
     'GeckoViewPrompt.jsm',
     'GeckoViewPrompter.jsm',
+    'LoginStorageDelegate.jsm',
     'PromptCollection.jsm',
+    'ShareDelegate.jsm',
 ]
 
 FINAL_LIBRARY = 'xul'
