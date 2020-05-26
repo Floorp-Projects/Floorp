@@ -255,6 +255,7 @@ class SettingsPrivacyTest {
     }
 
     @Test
+    @Ignore("See: https://github.com/mozilla-mobile/fenix/issues/10915")
     fun openExternalLinksInPrivateTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -278,6 +279,7 @@ class SettingsPrivacyTest {
     }
 
     @Test
+    @Ignore("See: https://github.com/mozilla-mobile/fenix/issues/10915")
     fun launchPageShortcutInPrivateModeTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
