@@ -257,7 +257,26 @@ toolbar[brighttext] {
 }
 
 #profiler-button {
-  list-style-image: url("chrome://devtools/skin/images/profiler-stopwatch.svg");
+  list-style-image: url("chrome://devtools/skin/images/tool-profiler.svg");
+  transform: scaleX(-1);
+}
+
+#profiler-button.profiler-active {
+  transform: scaleX(1);
+  fill: #0060df;
+  fill-opacity: 1;
+}
+
+#profiler-button.profiler-active image {
+  background-color: #0060df33;
+}
+
+#profiler-button.profiler-active:hover image {
+  background-color: #0060df22;
+}
+
+#profiler-button.profiler-paused image {
+  opacity: 0.4;
 }
 
 #preferences-button {
