@@ -57,7 +57,7 @@ class GeckoViewMedia extends GeckoViewModule {
 }
 
 const GeckoViewRecordingMedia = {
-  // The event listener for this is hooked up in GeckoViewStartup.jsm
+  // The event listener for this is hooked up in GeckoViewStartup.js
   observe(aSubject, aTopic, aData) {
     debug`observe: aTopic=${aTopic}`;
     switch (aTopic) {

@@ -1,4 +1,35 @@
 # GeckoViewStartup.js
+component {8e993c34-fdd6-432c-967e-f995d888777f} GeckoViewStartup.js
+contract @mozilla.org/geckoview/startup;1 {8e993c34-fdd6-432c-967e-f995d888777f}
 category app-startup GeckoViewStartup service,@mozilla.org/geckoview/startup;1
 category profile-after-change GeckoViewStartup @mozilla.org/geckoview/startup;1 process=main
 category browser-idle-startup-tasks-finished GeckoViewStartup @mozilla.org/geckoview/startup;1 process=main
+
+# GeckoViewPermission.js
+component {42f3c238-e8e8-4015-9ca2-148723a8afcf} GeckoViewPermission.js
+contract @mozilla.org/content-permission/prompt;1 {42f3c238-e8e8-4015-9ca2-148723a8afcf}
+
+# GeckoViewPrompt.js PromptFactory
+component {076ac188-23c1-4390-aa08-7ef1f78ca5d9} GeckoViewPrompt.js
+contract @mozilla.org/embedcomp/prompt-service;1 {076ac188-23c1-4390-aa08-7ef1f78ca5d9}
+contract @mozilla.org/prompter;1 {076ac188-23c1-4390-aa08-7ef1f78ca5d9}
+
+# GeckoViewPrompt.js ColorPickerDelegate
+component {aa0dd6fc-73dd-4621-8385-c0b377e02cee} GeckoViewPrompt.js process=main
+contract @mozilla.org/colorpicker;1 {aa0dd6fc-73dd-4621-8385-c0b377e02cee} process=main
+
+# GeckoViewPrompt.js FilePickerDelegate
+component {e4565e36-f101-4bf5-950b-4be0887785a9} GeckoViewPrompt.js process=main
+contract @mozilla.org/filepicker;1 {e4565e36-f101-4bf5-950b-4be0887785a9} process=main
+
+# GeckoViewPrompt.js ShareDelegate
+component {1201d357-8417-4926-a694-e6408fbedcf8} GeckoViewPrompt.js process=main
+contract @mozilla.org/sharepicker;1 {1201d357-8417-4926-a694-e6408fbedcf8} process=main
+
+# GeckoViewPrompt.js LoginStorageDelegate
+component {3d765750-1c3d-11ea-aaef-0800200c9a66} GeckoViewPrompt.js process=main
+contract @mozilla.org/login-manager/prompter;1 {3d765750-1c3d-11ea-aaef-0800200c9a66} process=main
+
+# GeckoViewPush.js
+component {a54d84d7-98a4-4fec-b664-e42e512ae9cc} GeckoViewPush.js
+contract @mozilla.org/push/Service;1 {a54d84d7-98a4-4fec-b664-e42e512ae9cc}

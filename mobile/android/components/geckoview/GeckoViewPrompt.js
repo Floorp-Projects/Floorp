@@ -1,9 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PromptFactory"];
 
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
@@ -14,16 +11,39 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+  LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
+const domBundle = Services.strings.createBundle(
+  "chrome://global/locale/dom/dom.properties"
+);
+
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompt"); // eslint-disable-line no-unused-vars
 
-class PromptFactory {
-  constructor() {
-    this.wrappedJSObject = this;
-  }
+function PromptFactory() {
+  this.wrappedJSObject = this;
+}
+
+PromptFactory.prototype = {
+  classID: Components.ID("{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"),
+
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPromptFactory,
+    Ci.nsIPromptService,
+  ]),
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
@@ -37,7 +57,7 @@ class PromptFactory {
         this._handlePopupBlocked(aEvent);
         break;
     }
-  }
+  },
 
   _handleClick(aEvent) {
     const target = aEvent.composedTarget;
@@ -69,7 +89,7 @@ class PromptFactory {
         aEvent.preventDefault();
       }
     }
-  }
+  },
 
   _handleSelect(aElement) {
     const win = aElement.ownerGlobal;
@@ -157,7 +177,7 @@ class PromptFactory {
         }
       }
     );
-  }
+  },
 
   _handleDateTime(aElement, aType) {
     const prompt = new GeckoViewPrompter(aElement.ownerGlobal);
@@ -183,7 +203,7 @@ class PromptFactory {
         this._dispatchEvents(aElement);
       }
     );
-  }
+  },
 
   _dispatchEvents(aElement) {
     // Fire both "input" and "change" events for <select> and <input> for
@@ -194,7 +214,7 @@ class PromptFactory {
     aElement.dispatchEvent(
       new aElement.ownerGlobal.Event("change", { bubbles: true })
     );
-  }
+  },
 
   _handleContextMenu(aEvent) {
     const target = aEvent.composedTarget;
@@ -315,7 +335,7 @@ class PromptFactory {
     );
 
     aEvent.preventDefault();
-  }
+  },
 
   _handlePopupBlocked(aEvent) {
     const dwi = aEvent.requestingWindow;
@@ -339,7 +359,7 @@ class PromptFactory {
         }
       }
     );
-  }
+  },
 
   /* ----------  nsIPromptFactory  ---------- */
   getPrompt(aDOMWin, aIID) {
@@ -358,7 +378,7 @@ class PromptFactory {
     const p = new PromptDelegate(aDOMWin);
     p.QueryInterface(aIID);
     return p;
-  }
+  },
 
   /* ----------  private memebers  ---------- */
 
@@ -373,94 +393,89 @@ class PromptFactory {
       [, /*domWindow*/ ...promptArgs] = aArguments;
     }
     return prompt[aMethod].apply(prompt, promptArgs);
-  }
+  },
 
   /* ----------  nsIPromptService  ---------- */
 
   alert() {
     return this.callProxy("alert", arguments);
-  }
+  },
   alertBC() {
     return this.callProxy("alert", arguments);
-  }
+  },
   alertCheck() {
     return this.callProxy("alertCheck", arguments);
-  }
+  },
   alertCheckBC() {
     return this.callProxy("alertCheck", arguments);
-  }
+  },
   confirm() {
     return this.callProxy("confirm", arguments);
-  }
+  },
   confirmBC() {
     return this.callProxy("confirm", arguments);
-  }
+  },
   confirmCheck() {
     return this.callProxy("confirmCheck", arguments);
-  }
+  },
   confirmCheckBC() {
     return this.callProxy("confirmCheck", arguments);
-  }
+  },
   confirmEx() {
     return this.callProxy("confirmEx", arguments);
-  }
+  },
   confirmExBC() {
     return this.callProxy("confirmEx", arguments);
-  }
+  },
   prompt() {
     return this.callProxy("prompt", arguments);
-  }
+  },
   promptBC() {
     return this.callProxy("prompt", arguments);
-  }
+  },
   promptUsernameAndPassword() {
     return this.callProxy("promptUsernameAndPassword", arguments);
-  }
+  },
   promptUsernameAndPasswordBC() {
     return this.callProxy("promptUsernameAndPassword", arguments);
-  }
+  },
   promptPassword() {
     return this.callProxy("promptPassword", arguments);
-  }
+  },
   promptPasswordBC() {
     return this.callProxy("promptPassword", arguments);
-  }
+  },
   select() {
     return this.callProxy("select", arguments);
-  }
+  },
   selectBC() {
     return this.callProxy("select", arguments);
-  }
+  },
+
   promptAuth() {
     return this.callProxy("promptAuth", arguments);
-  }
+  },
   promptAuthBC() {
     return this.callProxy("promptAuth", arguments);
-  }
+  },
   asyncPromptAuth() {
     return this.callProxy("asyncPromptAuth", arguments);
-  }
+  },
   asyncPromptAuthBC() {
     return this.callProxy("asyncPromptAuth", arguments);
-  }
+  },
+};
+
+function PromptDelegate(aParent) {
+  this._prompter = new GeckoViewPrompter(aParent);
 }
 
-PromptFactory.prototype.classID = Components.ID(
-  "{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"
-);
-PromptFactory.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIPromptFactory,
-  Ci.nsIPromptService,
-]);
+PromptDelegate.prototype = {
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
 
-class PromptDelegate {
-  constructor(aParent) {
-    this._prompter = new GeckoViewPrompter(aParent);
-  }
-
-  BUTTON_TYPE_POSITIVE = 0;
-  BUTTON_TYPE_NEUTRAL = 1;
-  BUTTON_TYPE_NEGATIVE = 2;
+  BUTTON_TYPE_POSITIVE: 0,
+  BUTTON_TYPE_NEUTRAL: 1,
+  BUTTON_TYPE_NEGATIVE: 2,
 
   /* ---------- internal methods ---------- */
 
@@ -469,7 +484,7 @@ class PromptDelegate {
       title: aTitle,
       msg: aText,
     });
-  }
+  },
 
   _addCheck(aCheckMsg, aCheckState, aMsg) {
     return Object.assign(aMsg, {
@@ -477,13 +492,13 @@ class PromptDelegate {
       checkMsg: aCheckMsg,
       checkValue: aCheckState && aCheckState.value,
     });
-  }
+  },
 
   /* ----------  nsIPrompt  ---------- */
 
   alert(aTitle, aText) {
     this.alertCheck(aTitle, aText);
-  }
+  },
 
   alertCheck(aTitle, aText, aCheckMsg, aCheckState) {
     const result = this._prompter.showPrompt(
@@ -498,12 +513,12 @@ class PromptDelegate {
     if (result && aCheckState) {
       aCheckState.value = !!result.checkValue;
     }
-  }
+  },
 
   confirm(aTitle, aText) {
     // Button 0 is OK.
     return this.confirmCheck(aTitle, aText);
-  }
+  },
 
   confirmCheck(aTitle, aText, aCheckMsg, aCheckState) {
     // Button 0 is OK.
@@ -519,7 +534,7 @@ class PromptDelegate {
         aCheckState
       ) == 0
     );
-  }
+  },
 
   confirmEx(
     aTitle,
@@ -591,7 +606,7 @@ class PromptDelegate {
       aCheckState.value = !!result.checkValue;
     }
     return result && result.button in btnMap ? btnMap[result.button] : -1;
-  }
+  },
 
   prompt(aTitle, aText, aValue, aCheckMsg, aCheckState) {
     const result = this._prompter.showPrompt(
@@ -615,7 +630,7 @@ class PromptDelegate {
     }
     aValue.value = result.text || "";
     return true;
-  }
+  },
 
   promptPassword(aTitle, aText, aPassword, aCheckMsg, aCheckState) {
     return this._promptUsernameAndPassword(
@@ -626,7 +641,7 @@ class PromptDelegate {
       aCheckMsg,
       aCheckState
     );
-  }
+  },
 
   promptUsernameAndPassword(
     aTitle,
@@ -662,7 +677,7 @@ class PromptDelegate {
     }
     aPassword.value = result.password || "";
     return true;
-  }
+  },
 
   select(aTitle, aText, aSelectList, aOutSelection) {
     const choices = Array.prototype.map.call(aSelectList, (item, index) => ({
@@ -685,7 +700,7 @@ class PromptDelegate {
     }
     aOutSelection.value = Number(result.choices[0]);
     return true;
-  }
+  },
 
   _getAuthMsg(aChannel, aLevel, aAuthInfo) {
     let username;
@@ -715,7 +730,7 @@ class PromptDelegate {
         },
       }
     );
-  }
+  },
 
   _fillAuthInfo(aAuthInfo, aCheckState, aResult) {
     if (aResult && aCheckState) {
@@ -742,7 +757,7 @@ class PromptDelegate {
     }
     aAuthInfo.username = username;
     return true;
-  }
+  },
 
   promptAuth(aChannel, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
     const result = this._prompter.showPrompt(
@@ -756,7 +771,7 @@ class PromptDelegate {
     // Cancel: result && result.password === undefined
     // Error: !result
     return this._fillAuthInfo(aAuthInfo, aCheckState, result);
-  }
+  },
 
   asyncPromptAuth(
     aChannel,
@@ -800,7 +815,7 @@ class PromptDelegate {
         aCallback.onAuthCancelled(aContext, /* userCancel */ false);
       },
     };
-  }
+  },
 
   _getAuthText(aChannel, aAuthInfo) {
     const isProxy = aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY;
@@ -853,7 +868,7 @@ class PromptDelegate {
     }
 
     return text;
-  }
+  },
 
   _getAuthTarget(aChannel, aAuthInfo) {
     // If our proxy is demanding authentication, don't use the
@@ -893,9 +908,369 @@ class PromptDelegate {
       realm = displayHost;
     }
     return { displayHost, realm };
+  },
+};
+
+function FilePickerDelegate() {}
+
+FilePickerDelegate.prototype = {
+  classID: Components.ID("{e4565e36-f101-4bf5-950b-4be0887785a9}"),
+
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFilePicker]),
+
+  /* ----------  nsIFilePicker  ---------- */
+  init(aParent, aTitle, aMode) {
+    if (
+      aMode === Ci.nsIFilePicker.modeGetFolder ||
+      aMode === Ci.nsIFilePicker.modeSave
+    ) {
+      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+    }
+    this._prompt = new GeckoViewPrompter(aParent);
+    this._msg = {
+      type: "file",
+      title: aTitle,
+      mode: aMode === Ci.nsIFilePicker.modeOpenMultiple ? "multiple" : "single",
+    };
+    this._mode = aMode;
+    this._mimeTypes = [];
+    this._capture = 0;
+  },
+
+  get mode() {
+    return this._mode;
+  },
+
+  appendRawFilter(aFilter) {
+    this._mimeTypes.push(aFilter);
+  },
+
+  show() {
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  },
+
+  open(aFilePickerShownCallback) {
+    this._msg.mimeTypes = this._mimeTypes;
+    this._msg.capture = this._capture;
+    this._prompt.asyncShowPrompt(this._msg, result => {
+      // OK: result
+      // Cancel: !result
+      if (!result || !result.files || !result.files.length) {
+        aFilePickerShownCallback.done(Ci.nsIFilePicker.returnCancel);
+      } else {
+        this._resolveFiles(result.files, aFilePickerShownCallback);
+      }
+    });
+  },
+
+  async _resolveFiles(aFiles, aCallback) {
+    const fileData = [];
+
+    try {
+      for (const file of aFiles) {
+        const domFile = await this._getDOMFile(file);
+        fileData.push({
+          file,
+          domFile,
+        });
+      }
+    } catch (ex) {
+      warn`Error resolving files from file picker: ${ex}`;
+      aCallback.done(Ci.nsIFilePicker.returnCancel);
+      return;
+    }
+
+    this._fileData = fileData;
+    aCallback.done(Ci.nsIFilePicker.returnOK);
+  },
+
+  get file() {
+    if (!this._fileData) {
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
+    }
+    const fileData = this._fileData[0];
+    if (!fileData) {
+      return null;
+    }
+    return new FileUtils.File(fileData.file);
+  },
+
+  get fileURL() {
+    return Services.io.newFileURI(this.file);
+  },
+
+  *_getEnumerator(aDOMFile) {
+    if (!this._fileData) {
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
+    }
+
+    for (const fileData of this._fileData) {
+      if (aDOMFile) {
+        yield fileData.domFile;
+      }
+      yield new FileUtils.File(fileData.file);
+    }
+  },
+
+  get files() {
+    return this._getEnumerator(/* aDOMFile */ false);
+  },
+
+  _getDOMFile(aPath) {
+    if (this._prompt.domWin) {
+      return this._prompt.domWin.File.createFromFileName(aPath);
+    }
+    return File.createFromFileName(aPath);
+  },
+
+  get domFileOrDirectory() {
+    if (!this._fileData) {
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
+    }
+    return this._fileData[0] ? this._fileData[0].domFile : null;
+  },
+
+  get domFileOrDirectoryEnumerator() {
+    return this._getEnumerator(/* aDOMFile */ true);
+  },
+
+  get defaultString() {
+    return "";
+  },
+
+  set defaultString(aValue) {},
+
+  get defaultExtension() {
+    return "";
+  },
+
+  set defaultExtension(aValue) {},
+
+  get filterIndex() {
+    return 0;
+  },
+
+  set filterIndex(aValue) {},
+
+  get displayDirectory() {
+    return null;
+  },
+
+  set displayDirectory(aValue) {},
+
+  get displaySpecialDirectory() {
+    return "";
+  },
+
+  set displaySpecialDirectory(aValue) {},
+
+  get addToRecentDocs() {
+    return false;
+  },
+
+  set addToRecentDocs(aValue) {},
+
+  get okButtonLabel() {
+    return "";
+  },
+
+  set okButtonLabel(aValue) {},
+
+  get capture() {
+    return this._capture;
+  },
+
+  set capture(aValue) {
+    this._capture = aValue;
+  },
+};
+
+function ColorPickerDelegate() {}
+
+ColorPickerDelegate.prototype = {
+  classID: Components.ID("{aa0dd6fc-73dd-4621-8385-c0b377e02cee}"),
+
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIColorPicker]),
+
+  init(aParent, aTitle, aInitialColor) {
+    this._prompt = new GeckoViewPrompter(aParent);
+    this._msg = {
+      type: "color",
+      title: aTitle,
+      value: aInitialColor,
+    };
+  },
+
+  open(aColorPickerShownCallback) {
+    this._prompt.asyncShowPrompt(this._msg, result => {
+      // OK: result
+      // Cancel: !result
+      aColorPickerShownCallback.done((result && result.color) || "");
+    });
+  },
+};
+
+function ShareDelegate() {}
+
+ShareDelegate.prototype = {
+  classID: Components.ID("{1201d357-8417-4926-a694-e6408fbedcf8}"),
+
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISharePicker]),
+
+  init(aParent) {
+    this._openerWindow = aParent;
+  },
+
+  get openerWindow() {
+    return this._openerWindow;
+  },
+
+  async share(aTitle, aText, aUri) {
+    const ABORT = 2;
+    const FAILURE = 1;
+    const SUCCESS = 0;
+
+    const msg = {
+      type: "share",
+      title: aTitle,
+      text: aText,
+      uri: aUri ? aUri.displaySpec : null,
+    };
+    const prompt = new GeckoViewPrompter(this._openerWindow);
+    const result = await new Promise(resolve => {
+      prompt.asyncShowPrompt(msg, resolve);
+    });
+
+    if (!result) {
+      // A null result is treated as a dismissal in GeckoViewPrompter.
+      throw new DOMException(
+        domBundle.GetStringFromName("WebShareAPI_Aborted"),
+        "AbortError"
+      );
+    }
+
+    const res = result && result.response;
+    switch (res) {
+      case FAILURE:
+        throw new DOMException(
+          domBundle.GetStringFromName("WebShareAPI_Failed"),
+          "DataError"
+        );
+      case ABORT: // Handle aborted attempt and invalid responses the same.
+        throw new DOMException(
+          domBundle.GetStringFromName("WebShareAPI_Aborted"),
+          "AbortError"
+        );
+      case SUCCESS:
+        return;
+      default:
+        throw new DOMException("Unknown error.", "UnknownError");
+    }
+  },
+};
+
+// Sync with  LoginSaveOption.Hint in Autocomplete.java.
+const LoginStorageHint = {
+  NONE: 0,
+  GENERATED: 1 << 0,
+  LOW_CONFIDENCE: 1 << 1,
+};
+
+class LoginStorageDelegate {
+  get classID() {
+    return Components.ID("{3d765750-1c3d-11ea-aaef-0800200c9a66}");
+  }
+
+  get QueryInterface() {
+    return ChromeUtils.generateQI([Ci.nsILoginManagerPrompter]);
+  }
+
+  _createMessage({ dismissed, autoSavedLoginGuid }, aLogins) {
+    let hint = LoginStorageHint.NONE;
+    if (dismissed) {
+      hint |= LoginStorageHint.LOW_CONFIDENCE;
+    }
+    if (autoSavedLoginGuid) {
+      hint |= LoginStorageHint.GENERATED;
+    }
+    return {
+      // Sync with GeckoSession.handlePromptEvent.
+      type: "Autocomplete:Save:Login",
+      hint,
+      logins: aLogins,
+    };
+  }
+
+  promptToSavePassword(
+    aBrowser,
+    aLogin,
+    dismissed = false,
+    notifySaved = false
+  ) {
+    const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
+    prompt.asyncShowPrompt(
+      this._createMessage({ dismissed }, [LoginEntry.fromLoginInfo(aLogin)]),
+      result => {
+        const selectedLogin = result?.selection?.value;
+
+        if (!selectedLogin) {
+          return;
+        }
+
+        const loginInfo = LoginEntry.parse(selectedLogin).toLoginInfo();
+        Services.obs.notifyObservers(loginInfo, "passwordmgr-prompt-save");
+
+        GeckoViewAutocomplete.onLoginSave(selectedLogin);
+      }
+    );
+  }
+
+  promptToChangePassword(
+    aBrowser,
+    aOldLogin,
+    aNewLogin,
+    dismissed = false,
+    notifySaved = false,
+    autoSavedLoginGuid = ""
+  ) {
+    const newLogin = LoginEntry.fromLoginInfo(aOldLogin || aNewLogin);
+    const oldGuid = (aOldLogin && newLogin.guid) || null;
+    newLogin.origin = aNewLogin.origin;
+    newLogin.formActionOrigin = aNewLogin.formActionOrigin;
+    newLogin.password = aNewLogin.password;
+    newLogin.username = aNewLogin.username;
+
+    const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
+    prompt.asyncShowPrompt(
+      this._createMessage({ dismissed, autoSavedLoginGuid }, [newLogin]),
+      result => {
+        const selectedLogin = result?.selection?.value;
+
+        if (!selectedLogin) {
+          return;
+        }
+
+        GeckoViewAutocomplete.onLoginSave(selectedLogin);
+
+        const loginInfo = LoginEntry.parse(selectedLogin).toLoginInfo();
+        Services.obs.notifyObservers(
+          loginInfo,
+          "passwordmgr-prompt-change",
+          oldGuid
+        );
+      }
+    );
+  }
+
+  promptToChangePasswordWithUsernames(aBrowser, aLogins, aNewLogin) {
+    this.promptToChangePassword(aBrowser, null /* oldLogin */, aNewLogin);
   }
 }
 
-PromptDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIPrompt,
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
+  ColorPickerDelegate,
+  FilePickerDelegate,
+  PromptFactory,
+  ShareDelegate,
+  LoginStorageDelegate,
 ]);
