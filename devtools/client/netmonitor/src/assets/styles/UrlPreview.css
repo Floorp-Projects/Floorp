@@ -6,13 +6,14 @@
 
 .url-preview {
   border-bottom: 1px solid var(--theme-splitter-color);
-  padding: 6px 4px;
+  padding: 6px 3px;
 }
 
 .url-preview .properties-view,
 .url-preview .tree-container,
 .url-preview .treeTable {
   overflow: hidden;
+  outline: none;
 }
 
 .url-preview .properties-view {
@@ -30,12 +31,20 @@
 
 .url-preview .horizontal-splitter {
   border-bottom: 1px solid var(--theme-splitter-color);
-  margin: 6px 7px 6px 20px;
+  margin: 6px 0 6px 16px;
 }
 
 .url-preview .treeValueCell .url {
   display: inline;
   white-space: normal;
+}
+
+.url-preview .treeTable .treeRow .treeIcon {
+  margin-inline: 0 1px;
+}
+
+.url-preview .tree-container .treeTable tr {
+  margin-bottom: 3px;
 }
 
 .url-preview .treeTable .treeRow:not(.selected):hover {
