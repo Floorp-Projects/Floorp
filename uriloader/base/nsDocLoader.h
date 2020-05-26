@@ -248,11 +248,7 @@ class nsDocLoader : public nsIDocumentLoader,
   // fact empty.  This method _does_ make sure that layout is flushed if our
   // loadgroup has no active requests before checking for "real" emptiness if
   // aFlushLayout is true.
-  // @param aOverrideStatus An optional status to use when notifying listeners
-  // of the completed load, instead of using the load group's status.
-  void DocLoaderIsEmpty(
-      bool aFlushLayout,
-      const Maybe<nsresult>& aOverrideStatus = mozilla::Nothing());
+  void DocLoaderIsEmpty(bool aFlushLayout);
 
  protected:
   struct nsStatusInfo : public mozilla::LinkedListElement<nsStatusInfo> {
