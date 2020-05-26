@@ -2636,7 +2636,7 @@ TrackTime SourceMediaTrack::AppendData(MediaSegment* aSegment,
   mUpdateTrack->mData->AppendFrom(aSegment);  // note: aSegment is now dead
   {
     MonitorAutoLock lock(graph->GetMonitor());
-    if (graph->CurrentDriver()) {  // graph shutdown not forced
+    if (graph->CurrentDriver()) {  // graph has not completed forced shutdown
       graph->EnsureNextIteration();
     }
   }
@@ -2753,7 +2753,9 @@ void SourceMediaTrack::End() {
   mUpdateTrack->mEnded = true;
   if (auto graph = GraphImpl()) {
     MonitorAutoLock lock(graph->GetMonitor());
-    graph->EnsureNextIteration();
+    if (graph->CurrentDriver()) {  // graph has not completed forced shutdown
+      graph->EnsureNextIteration();
+    }
   }
 }
 
