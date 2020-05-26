@@ -44,6 +44,92 @@ var emailTreeView;
  */
 var userTreeView;
 
+var clientAuthRememberService;
+
+var richlist;
+
+var rememberedDecisionsRichList = {
+  buildRichList() {
+    let rememberedDecisions = clientAuthRememberService.getDecisions();
+
+    let oldItems = richlist.querySelectorAll("richlistitem");
+    for (let item of oldItems) {
+      item.remove();
+    }
+
+    let frag = document.createDocumentFragment();
+    for (let decision of rememberedDecisions) {
+      let richlistitem = this._richBoxAddItem(decision);
+      frag.appendChild(richlistitem);
+    }
+    richlist.appendChild(frag);
+  },
+
+  _createItem(item) {
+    let innerHbox = document.createXULElement("hbox");
+    innerHbox.setAttribute("align", "center");
+    innerHbox.setAttribute("flex", "1");
+
+    let row = document.createXULElement("label");
+    row.setAttribute("flex", "1");
+    row.setAttribute("crop", "right");
+    row.setAttribute("style", "margin-inline-start: 15px;");
+    row.setAttribute("value", item);
+    row.setAttribute("ordinal", "1");
+    innerHbox.appendChild(row);
+
+    return innerHbox;
+  },
+
+  _richBoxAddItem(item) {
+    let richlistitem = document.createXULElement("richlistitem");
+
+    richlistitem.setAttribute("entryKey", item.entryKey);
+    richlistitem.setAttribute("dbKey", item.dbKey);
+
+    let hbox = document.createXULElement("hbox");
+    hbox.setAttribute("flex", "1");
+    hbox.setAttribute("equalsize", "always");
+
+    let tmpCert = certdb.findCertByDBKey(item.dbKey);
+
+    hbox.appendChild(this._createItem(item.asciiHost));
+
+    hbox.appendChild(this._createItem(tmpCert.commonName));
+
+    hbox.appendChild(this._createItem(tmpCert.serialNumber));
+
+    richlistitem.appendChild(hbox);
+
+    return richlistitem;
+  },
+
+  deleteSelectedRichListItem() {
+    let selectedItem = richlist.selectedItem;
+    let index = richlist.selectedIndex;
+    if (index < 0) {
+      return;
+    }
+
+    clientAuthRememberService.forgetRememberedDecision(
+      selectedItem.attributes.entryKey.value
+    );
+
+    this.buildRichList();
+  },
+
+  viewSelectedRichListItem() {
+    let selectedItem = richlist.selectedItem;
+    let index = richlist.selectedIndex;
+    if (index < 0) {
+      return;
+    }
+
+    let cert = certdb.findCertByDBKey(selectedItem.attributes.dbKey.value);
+    viewCertHelper(window, cert);
+  },
+};
+
 function LoadCerts() {
   certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
@@ -73,6 +159,14 @@ function LoadCerts() {
   );
   userTreeView.loadCertsFromCache(certcache, Ci.nsIX509Cert.USER_CERT);
   document.getElementById("user-tree").view = userTreeView;
+
+  clientAuthRememberService = Cc[
+    "@mozilla.org/security/clientAuthRememberService;1"
+  ].getService(Ci.nsIClientAuthRememberService);
+
+  richlist = document.getElementById("rememberedList");
+
+  rememberedDecisionsRichList.buildRichList();
 
   enableBackupAllButton();
 }
