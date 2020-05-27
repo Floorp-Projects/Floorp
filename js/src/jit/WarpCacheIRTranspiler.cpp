@@ -1100,6 +1100,16 @@ bool WarpCacheIRTranspiler::emitArrayPush(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitIsArrayResult(ValOperandId inputId) {
+  MDefinition* value = getOperand(inputId);
+
+  auto* isArray = MIsArray::New(alloc(), value);
+  addEffectful(isArray);
+  pushResult(isArray);
+
+  return resumeAfter(isArray);
+}
+
 bool WarpCacheIRTranspiler::emitIsObjectResult(ValOperandId inputId) {
   MDefinition* value = getOperand(inputId);
 
