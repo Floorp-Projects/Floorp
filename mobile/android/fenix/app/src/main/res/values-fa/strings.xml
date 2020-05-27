@@ -246,6 +246,8 @@
     <string name="preferences_show_search_shortcuts">جستجوی میانبرها</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">نمایش پیشنهادهای جست‌وجو</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">نمایش جستجوی صوتی</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">نمایش در جلسات خصوصی</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -363,7 +365,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[برای به دست آوردن کد QR خود از <b> firefox.com/pair </b> از  Firefox رایانه خود دیدن کنید.]]></string>
+    <string name="pair_instructions_2"><![CDATA[کد QR نمایش داده شده در <b>firefox.com/pair</b> را اسکن کنید]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">بازکردن دوربین</string>
     <!-- Button to cancel pairing -->
@@ -424,6 +426,8 @@
     <string name="tabs_header_private_tabs_title">برگه خصوصی</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">افزودن زبانه</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">حذف زبانه از مجموعه</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">بستن زبانه</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -801,14 +805,14 @@
     <string name="preference_accessibility_font_size_title">اندازه قلم</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">اندازه قلم خودکار</string>
+    <string name="preference_accessibility_auto_size_2">اندازه قلم خودکار</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">اندازه قلم با تنظیمات Android شما مطابقت دارد. مدیریت اندازه قلم را در اینجا غیرفعال کنید.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">داده مرور را حذف کنید</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">زبانه‌های باز</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">زبانه‌های باز</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">زبانه‌های %d</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1372,4 +1376,8 @@
     <string name="edit">ویرایش</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">گذرواژه مورد نیاز است</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">جستجوی صوتی</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">صحبت کنید</string>
 </resources>

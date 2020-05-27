@@ -251,6 +251,8 @@
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Prikaži predloge iskanja</string>
 
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Prikaži glasovno iskanje</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Prikaži v zasebnih sejah</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -1397,4 +1399,6 @@
     <string name="saved_login_password_required">Zahtevano je geslo</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Glasovno iskanje</string>
-    </resources>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Govorite</string>
+</resources>

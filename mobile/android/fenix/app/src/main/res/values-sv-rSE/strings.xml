@@ -376,9 +376,6 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Ta bort konto</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Besök <b>firefox.com/pair</b> i Firefox på din dator för att få din QR-kod.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Öppen kamera</string>
     <!-- Button to cancel pairing -->
@@ -819,15 +816,13 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Teckenstorlek</string>
 
-    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Automatisk fontstorlek</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Teckensnittstorlek matchar dina Android-inställningar. Inaktivera att hantera teckenstorlek här.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Ta bort surfdata</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Öppna flikar</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Öppna flikar</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d flikar</string>
     <!-- Title for the data and history items in Delete browsing data -->

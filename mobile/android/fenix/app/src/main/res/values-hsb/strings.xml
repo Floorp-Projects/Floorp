@@ -372,8 +372,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Wopytajće <b>firefox.com/pair</b> w Firefox na swokim ličaku, zo byšće swój QR-kod dóstał.]]></string>
-
+    <string name="pair_instructions_2"><![CDATA[Skenujće QR-kod, kotryž so na <b>firefox.com/pair</b> pokazuje]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Kameru wočinić</string>
     <!-- Button to cancel pairing -->
@@ -810,15 +809,14 @@
     <string name="preference_accessibility_font_size_title">Pismowa wulkosć</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Awtomatiske přiměrjenje wulkosće pisma</string>
-
+    <string name="preference_accessibility_auto_size_2">Awtomatiske přiměrjenje wulkosće pisma</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Wulkosć pisma budźe wašim nastajenjam Android wotpowědować. Znjemóžńće tu rjadowanje wulkosće pisma.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Přehladowanske daty zhašeć</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Wočinjene rajtarki</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Wočinjene rajtarki</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Rajtarki: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->

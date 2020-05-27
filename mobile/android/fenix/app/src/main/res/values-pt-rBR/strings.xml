@@ -371,7 +371,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Visite <b>firefox.com/pair</b> no Firefox no seu computador para obter seu código QR.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Digitalize o código QR exibido em <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Abrir câmera</string>
     <!-- Button to cancel pairing -->
@@ -809,14 +809,14 @@
     <string name="preference_accessibility_font_size_title">Tamanho das fontes</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Dimensionamento automático de fontes</string>
+    <string name="preference_accessibility_auto_size_2">Dimensionamento automático de fontes</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Usar a configuração do Android de tamanho de fontes de caracteres. Desative para definir aqui o tamanho.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Excluir dados de navegação</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Abas abertas</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Abas abertas</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d abas</string>
     <!-- Title for the data and history items in Delete browsing data -->

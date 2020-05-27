@@ -254,6 +254,8 @@
     <string name="preferences_show_search_shortcuts">Erakutsi bilaketarako lasterbideak</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Erakutsi bilaketa-iradokizunak</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Erakutsi ahots bidezko bilaketa</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Erakutsi saio pribatuetan</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -439,6 +441,8 @@
     <string name="tabs_header_private_tabs_title">Fitxa pribatuak</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Gehitu fitxa</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Kendu fitxa bildumatik</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Itxi fitxa</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -1131,6 +1135,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Laguntza</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Hutsegiteak</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Pribatutasun-oharra</string>
     <!-- About page link text to open know your rights link -->
@@ -1366,8 +1372,30 @@
     <string name="certificate_info_verified_by">Egiaztatzailea: %1$s </string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Ezabatu</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Editatu</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Ziur zaude saio-hasiera hau ezabatu nahi duzula?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Ezabatu</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Saio-hasieren aukerak</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Saio-hasieraren web helbiderako testu-eremu editagarria.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Saio-hasieraren erabiltzaile-izenerako testu-eremu editagarria.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Saio-hasieraren pasahitzerako testu-eremu editagarria.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Gorde saio-hasieraren aldaketak.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Baztertu aldaketak</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Editatu</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Pasahitza behar da</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Ahots bidezko bilaketa</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Hitz egin orain</string>
 </resources>

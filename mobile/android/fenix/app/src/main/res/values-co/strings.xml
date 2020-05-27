@@ -976,7 +976,7 @@
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Sceglite u vostru tema</string>
+    <string name="onboarding_theme_picker_header">Sciglite u vostru tema</string>
 
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description1">Ecunumizate a vostra batteria è i vostri ochji grazia à u modu scuru.</string>
@@ -1054,7 +1054,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Persunalizatu</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Sceglite i perseguitatori è i scritti à bluccà</string>
+    <string name="preference_enhanced_tracking_protection_custom_description">Sciglite i perseguitatori è i scritti à bluccà</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Ciò chì hè bluccatu da a prutezzione persunalizata contr’à u spiunagiu</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1376,4 +1376,4 @@
     <string name="edit">Mudificà</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Parolla d’entrata richiesta</string>
-</resources>
+    </resources>
