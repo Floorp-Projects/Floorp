@@ -78,15 +78,10 @@ add_task(async () => {
   // to send the cookie with both requests.
   var postRedirectURI = ioService.newURI(postRedirectURL);
 
-  const contentPage = await CookieXPCShellUtils.loadContentPage(
-    postRedirectURI.spec
+  await CookieXPCShellUtils.setCookieToDocument(
+    postRedirectURI.spec,
+    sentCookieVal
   );
-  await contentPage.spawn(
-    sentCookieVal,
-    // eslint-disable-next-line no-undef
-    cookie => (content.document.cookie = cookie)
-  );
-  await contentPage.close();
 
   // Load the pre-redirect URI.
   await new Promise(resolve => {

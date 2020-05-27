@@ -3,7 +3,7 @@
 const GOOD_COOKIE = "GoodCookie=OMNOMNOM";
 const SPACEY_COOKIE = "Spacey Cookie=Major Tom";
 
-function run_test() {
+add_task(async () => {
   Services.prefs.setBoolPref(
     "network.cookieJarSettings.unblocked_for_testing",
     true
@@ -30,11 +30,10 @@ function run_test() {
   cookieService.setCookieStringFromHttp(cookieURI, GOOD_COOKIE, channel);
   cookieService.setCookieStringFromHttp(cookieURI, SPACEY_COOKIE, channel);
 
-  const principal = Services.scriptSecurityManager.createContentPrincipal(
-    cookieURI,
-    {}
-  );
-  var storedCookie = cookieService.getCookieStringForPrincipal(principal);
+  CookieXPCShellUtils.createServer({ hosts: ["mozilla.org"] });
 
+  const storedCookie = await CookieXPCShellUtils.getCookieStringFromDocument(
+    cookieURI.spec
+  );
   Assert.equal(storedCookie, GOOD_COOKIE + "; " + SPACEY_COOKIE);
-}
+});

@@ -148,12 +148,11 @@ add_task(async () => {
 
   Assert.equal(uri.asciiHost, "baz.com");
 
-  const contentPage = await CookieXPCShellUtils.loadContentPage(uri.spec);
-  // eslint-disable-next-line no-undef
-  await contentPage.spawn(null, () => (content.document.cookie = "foo=bar"));
-  await contentPage.close();
-
-  Assert.equal(cs.getCookieStringForPrincipal(principal), "foo=bar");
+  await CookieXPCShellUtils.setCookieToDocument(uri.spec, "foo=bar");
+  const docCookies = await CookieXPCShellUtils.getCookieStringFromDocument(
+    uri.spec
+  );
+  Assert.equal(docCookies, "foo=bar");
 
   Assert.equal(cm.countCookiesFromHost(""), 0);
   do_check_throws(function() {
@@ -253,26 +252,20 @@ async function testDomainCookie(uriString, domain) {
 
   cm.removeAll();
 
-  var contentPage = await CookieXPCShellUtils.loadContentPage(uriString);
-  await contentPage.spawn(
-    "foo=bar; domain=" + domain,
-    // eslint-disable-next-line no-undef
-    cookie => (content.document.cookie = cookie)
+  await CookieXPCShellUtils.setCookieToDocument(
+    uriString,
+    "foo=bar; domain=" + domain
   );
-  await contentPage.close();
 
   var cookies = cm.getCookiesFromHost(domain, {});
   Assert.ok(cookies.length);
   Assert.equal(cookies[0].host, domain);
   cm.removeAll();
 
-  contentPage = await CookieXPCShellUtils.loadContentPage(uriString);
-  await contentPage.spawn(
-    "foo=bar; domain=." + domain,
-    // eslint-disable-next-line no-undef
-    cookie => (content.document.cookie = cookie)
+  await CookieXPCShellUtils.setCookieToDocument(
+    uriString,
+    "foo=bar; domain=." + domain
   );
-  await contentPage.close();
 
   cookies = cm.getCookiesFromHost(domain, {});
   Assert.ok(cookies.length);
@@ -286,13 +279,10 @@ async function testTrailingDotCookie(uriString, domain) {
 
   cm.removeAll();
 
-  var contentPage = await CookieXPCShellUtils.loadContentPage(uriString);
-  await contentPage.spawn(
-    "foo=bar; domain=" + domain + "/",
-    // eslint-disable-next-line no-undef
-    cookie => (content.document.cookie = cookie)
+  await CookieXPCShellUtils.setCookieToDocument(
+    uriString,
+    "foo=bar; domain=" + domain + "/"
   );
-  await contentPage.close();
 
   Assert.equal(cm.countCookiesFromHost(domain), 0);
   Assert.equal(cm.countCookiesFromHost(domain + "."), 0);

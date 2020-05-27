@@ -3,7 +3,9 @@
 
 "use strict";
 
-function run_test() {
+add_task(async () => {
+  Services.prefs.setBoolPref("network.cookie.sameSite.schemeful", false);
+
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var expiry = (Date.now() + 1000) * 1000;
@@ -11,7 +13,7 @@ function run_test() {
   // Test our handling of host names with a single character at the beginning
   // followed by a dot.
   cm.add(
-    "e.mail.com",
+    "e.com",
     "/",
     "foo",
     "bar",
@@ -22,13 +24,11 @@ function run_test() {
     {},
     Ci.nsICookie.SAMESITE_NONE
   );
-  Assert.equal(cm.countCookiesFromHost("e.mail.com"), 1);
+  Assert.equal(cm.countCookiesFromHost("e.com"), 1);
 
-  const uri = NetUtil.newURI("http://e.mail.com");
-  const principal = Services.scriptSecurityManager.createContentPrincipal(
-    uri,
-    {}
+  CookieXPCShellUtils.createServer({ hosts: ["e.com"] });
+  const cookies = await CookieXPCShellUtils.getCookieStringFromDocument(
+    "http://e.com/"
   );
-
-  Assert.equal(cs.getCookieStringForPrincipal(principal), "foo=bar");
-}
+  Assert.equal(cookies, "foo=bar");
+});
