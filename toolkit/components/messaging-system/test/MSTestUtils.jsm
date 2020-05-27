@@ -52,6 +52,7 @@ const ExperimentFakes = {
       enrollmentId: NormandyUtils.generateUuid(),
       branch: { slug: "treatment", value: { title: "hello" } },
       source: "test",
+      isEnrollmentPaused: true,
       ...props,
     };
   },

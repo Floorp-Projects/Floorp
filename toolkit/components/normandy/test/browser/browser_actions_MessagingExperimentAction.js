@@ -32,6 +32,7 @@ decorate_task(
       id: 1,
       arguments: {
         slug: "foo",
+        isEnrollmentPaused: false,
         branches: [
           {
             slug: "control",
