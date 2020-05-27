@@ -97,6 +97,15 @@ if (!Services.prefs.getBoolPref("layout.css.scrollbar-width.enabled")) {
   });
 }
 
+if (!Services.prefs.getBoolPref("layout.css.file-chooser-button.enabled")) {
+  // Reserved to UA sheets, behind a pref for content.
+  whitelist.push({
+    sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+    errorMessage: /Unknown pseudo-.*file-chooser-button/i,
+    isFromDevTools: false,
+  });
+}
+
 if (!Services.prefs.getBoolPref("layout.css.scroll-anchoring.enabled")) {
   whitelist.push({
     sourceName: /webconsole\.css$/i,
