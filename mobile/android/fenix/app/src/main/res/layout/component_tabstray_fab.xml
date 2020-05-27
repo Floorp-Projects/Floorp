@@ -11,7 +11,7 @@
     android:layout_height="wrap_content"
     android:layout_gravity="bottom|end"
     android:layout_margin="16dp"
-    android:backgroundTint="?accent"
-    android:contentDescription="TODO: Changeme"
+    android:contentDescription="@string/add_tab"
+    app:backgroundTint="?accent"
     app:srcCompat="@drawable/ic_new"
     app:tint="@color/photonWhite" />
