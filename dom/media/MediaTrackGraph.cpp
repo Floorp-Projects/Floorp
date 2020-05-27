@@ -287,31 +287,38 @@ bool MediaTrackGraphImpl::AudioTrackPresent() {
   return audioTrackPresent;
 }
 
-void MediaTrackGraphImpl::UpdateTrackOrder() {
+void MediaTrackGraphImpl::CheckDriver() {
   MOZ_ASSERT(OnGraphThread());
+  // An offline graph has only one driver.
+  // Otherwise, if a switch is already pending, let that happen.
+  if (!mRealtime || Switching()) {
+    return;
+  }
+
+  AudioCallbackDriver* audioCallbackDriver =
+      CurrentDriver()->AsAudioCallbackDriver();
   bool audioTrackPresent = AudioTrackPresent();
-  uint32_t graphOutputChannelCount = AudioOutputChannelCount();
 
   // Note that this looks for any audio tracks, input or output, and switches
-  // to a SystemClockDriver if there are none.  However, if another is already
-  // pending, let that switch happen.
-
-  if (!audioTrackPresent && mRealtime &&
-      CurrentDriver()->AsAudioCallbackDriver()) {
-    if (CurrentDriver()->AsAudioCallbackDriver()->IsStarted() && !Switching()) {
+  // to a SystemClockDriver if there are none.
+  if (!audioTrackPresent) {
+    if (audioCallbackDriver && audioCallbackDriver->IsStarted()) {
       SwitchAtNextIteration(
           new SystemClockDriver(this, CurrentDriver(), mSampleRate));
     }
+    return;
   }
 
-  if (audioTrackPresent && mRealtime &&
-      !CurrentDriver()->AsAudioCallbackDriver() && !Switching() &&
-      graphOutputChannelCount > 0) {
-    AudioCallbackDriver* driver = new AudioCallbackDriver(
-        this, CurrentDriver(), mSampleRate, graphOutputChannelCount,
-        AudioInputChannelCount(), mOutputDeviceID, mInputDeviceID,
-        AudioInputDevicePreference());
-    SwitchAtNextIteration(driver);
+  uint32_t graphOutputChannelCount = AudioOutputChannelCount();
+  if (!audioCallbackDriver) {
+    if (graphOutputChannelCount > 0) {
+      AudioCallbackDriver* driver = new AudioCallbackDriver(
+          this, CurrentDriver(), mSampleRate, graphOutputChannelCount,
+          AudioInputChannelCount(), mOutputDeviceID, mInputDeviceID,
+          AudioInputDevicePreference());
+      SwitchAtNextIteration(driver);
+    }
+    return;
   }
 
   // Check if this graph should switch to a different number of output channels.
@@ -320,17 +327,16 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
   // directly playing back via another HTMLMediaElement, the number of channels
   // of the media determines how many channels to output, and it can change
   // dynamically.
-  if (CurrentDriver()->AsAudioCallbackDriver() && !Switching()) {
-    if (graphOutputChannelCount !=
-        CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount()) {
-      AudioCallbackDriver* driver = new AudioCallbackDriver(
-          this, CurrentDriver(), mSampleRate, graphOutputChannelCount,
-          AudioInputChannelCount(), mOutputDeviceID, mInputDeviceID,
-          AudioInputDevicePreference());
-      SwitchAtNextIteration(driver);
-    }
+  if (graphOutputChannelCount != audioCallbackDriver->OutputChannelCount()) {
+    AudioCallbackDriver* driver = new AudioCallbackDriver(
+        this, CurrentDriver(), mSampleRate, graphOutputChannelCount,
+        AudioInputChannelCount(), mOutputDeviceID, mInputDeviceID,
+        AudioInputDevicePreference());
+    SwitchAtNextIteration(driver);
   }
+}
 
+void MediaTrackGraphImpl::UpdateTrackOrder() {
   if (!mTrackOrderDirty) {
     return;
   }
@@ -1151,6 +1157,7 @@ void MediaTrackGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
   // been woken up right after having been to sleep.
   MOZ_ASSERT(aEndBlockingDecisions >= mStateComputedTime);
 
+  CheckDriver();
   UpdateTrackOrder();
 
   bool ensureNextIteration = false;

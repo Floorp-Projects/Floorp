@@ -342,9 +342,13 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   bool AudioTrackPresent();
 
   /**
+   * Schedules a replacement GraphDriver in mNextDriver, if necessary.
+   */
+  void CheckDriver();
+
+  /**
    * Sort mTracks so that every track not in a cycle is after any tracks
    * it depends on, and every track in a cycle is marked as being in a cycle.
-   * Also sets mIsConsumed on every track.
    */
   void UpdateTrackOrder();
 
