@@ -12,9 +12,9 @@
  *   http://www.faqs.org/rfcs/rfc2396.html
  */
 
-// getFixupURIInfo has a complex logic, that likely could be simplified, but
-// the risk of regressions is high, thus that should be done with care.
-/* eslint complexity: ["error", 40] */
+// TODO (Bug 1641220) getFixupURIInfo has a complex logic, that likely could be
+// simplified, but the risk of regressing its behavior is high.
+/* eslint complexity: ["error", 43] */
 
 var EXPORTED_SYMBOLS = ["URIFixup", "URIFixupInfo"];
 
@@ -58,11 +58,20 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "keyword.enabled",
   true
 );
-
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "alternateEnabled",
   "browser.fixup.alternate.enabled",
+  true
+);
+// This is a feature preference that inverts the keyword fixup behavior to
+// search by default, unless the string has URI characteristics.
+// When set to false, we'll consider most strings URIs, unless they have search
+// characteristics.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "defaultToSearch",
+  "browser.fixup.defaultToSearch",
   true
 );
 
@@ -87,6 +96,13 @@ XPCOMUtils.defineLazyGetter(
 
 // Regex used to look for ascii alphabetical characters.
 XPCOMUtils.defineLazyGetter(this, "asciiAlphaRegex", () => /[a-z]/i);
+
+// Regex used to identify specific URI characteristics to disallow searching.
+XPCOMUtils.defineLazyGetter(
+  this,
+  "uriLikeRegex",
+  () => /(:\d{1,5}([?#/]|$)|\/.*[?#])/
+);
 
 // Regex used to identify numbers.
 XPCOMUtils.defineLazyGetter(this, "numberRegex", () => /^[0-9]+(\.[0-9]+)?$/);
@@ -397,11 +413,24 @@ URIFixup.prototype = {
       }
     }
 
+    // Memoize the public suffix check, since it may be expensive and should
+    // only run once when necessary.
+    let suffixInfo;
+    function checkSuffix(info) {
+      if (!suffixInfo) {
+        suffixInfo = checkAndFixPublicSuffix(info);
+      }
+      return suffixInfo;
+    }
+
     // See if it is a keyword and whether a keyword must be fixed up.
     if (
       keywordEnabled &&
       fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP &&
       !inputHadDuffProtocol &&
+      // When defaultToSearch is false, we are conservative about always going
+      // through keywordURIFixup.
+      (!defaultToSearch || !checkSuffix(info).suffix) &&
       keywordURIFixup(uriString, info, isPrivateContext, postData)
     ) {
       return info;
@@ -409,13 +438,13 @@ URIFixup.prototype = {
 
     if (
       info.fixedURI &&
-      (!info.fixupChangedProtocol || checkAndFixPublicSuffix(info))
+      (!info.fixupChangedProtocol || !checkSuffix(info).hasUnknownSuffix)
     ) {
       return info;
     }
 
     // If we still haven't been able to construct a valid URI, try to force a
-    // keyword match.  This catches search strings with '.' or ':' in them.
+    // keyword match.
     if (keywordEnabled && fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
       tryKeywordFixupForURIInfo(
         info.originalInput,
@@ -640,38 +669,49 @@ function isDomainWhitelisted(asciiHost) {
  * If the suffix is unknown due to a typo this will try to fix it up.
  * @param {URIFixupInfo} info about the uri to check.
  * @note this may modify the public suffix of info.fixedURI.
- * @returns {boolean} false if the public suffix is unknown, true in any other
- *          case, included if it's not present.
+ * @returns {object} result The lookup result.
+ * @returns {string} result.suffix The public suffix if one can be identified.
+ * @returns {boolean} result.hasUnknownSuffix True when the suffix is not in the
+ *     Public Suffix List and it's not whitelisted. False in the other cases.
  */
 function checkAndFixPublicSuffix(info) {
   let uri = info.fixedURI;
-  let asciiHost = uri.asciiHost;
+  let asciiHost = uri?.asciiHost;
   if (
     !asciiHost ||
-    // Quick bailouts for most common cases, according to Alexa Top 1 million.
-    asciiHost.endsWith(".com") ||
-    asciiHost.endsWith(".net") ||
-    asciiHost.endsWith(".org") ||
-    asciiHost.endsWith(".ru") ||
-    asciiHost.endsWith(".de") ||
     !asciiHost.includes(".") ||
     asciiHost.endsWith(".") ||
     isDomainWhitelisted(asciiHost)
   ) {
-    return true;
+    return { suffix: "", hasUnknownSuffix: false };
+  }
+
+  // Quick bailouts for most common cases, according to Alexa Top 1 million.
+  if (
+    asciiHost.endsWith(".com") ||
+    asciiHost.endsWith(".net") ||
+    asciiHost.endsWith(".org") ||
+    asciiHost.endsWith(".ru") ||
+    asciiHost.endsWith(".de")
+  ) {
+    return {
+      suffix: asciiHost.substring(asciiHost.lastIndexOf(".") + 1),
+      hasUnknownSuffix: false,
+    };
   }
   try {
-    if (Services.eTLD.getKnownPublicSuffix(uri)) {
-      return true;
+    let suffix = Services.eTLD.getKnownPublicSuffix(uri);
+    if (suffix) {
+      return { suffix, hasUnknownSuffix: false };
     }
   } catch (ex) {
-    return true;
+    return { suffix: "", hasUnknownSuffix: false };
   }
   // Suffix is unknown, try to fix most common 3 chars TLDs typos.
   // .com is the most commonly mistyped tld, so it has more cases.
   let suffix = Services.eTLD.getPublicSuffix(uri);
   if (!suffix || numberRegex.test(suffix)) {
-    return true;
+    return { suffix: "", hasUnknownSuffix: false };
   }
   for (let [typo, fixed] of [
     ["ocm", "com"],
@@ -700,10 +740,10 @@ function checkAndFixPublicSuffix(info) {
       if (updatePreferredURI) {
         info.preferredURI = info.fixedURI;
       }
-      return true;
+      return { suffix: fixed, hasUnknownSuffix: false };
     }
   }
-  return false;
+  return { suffix: "", hasUnknownSuffix: true };
 }
 
 function tryKeywordFixupForURIInfo(
@@ -864,6 +904,91 @@ function fixupURIProtocol(uriString) {
  * @returns {boolean} Whether the keyword fixup was succesful.
  */
 function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
+  if (!defaultToSearch) {
+    return keywordURIFixupLegacy(
+      uriString,
+      fixupInfo,
+      isPrivateContext,
+      postData
+    );
+  }
+  // Here is a few examples of strings that should be searched:
+  // "what is mozilla"
+  // "what is mozilla?"
+  // "docshell site:mozilla.org" - has a space in the origin part
+  // "?site:mozilla.org - anything that begins with a question mark
+  // "mozilla'.org" - Things that have a quote before the first dot/colon
+  // "mozilla/test" - non whiteliste host
+  // ".mozilla", "mozilla." - starts or ends with a dot ()
+
+  // These other strings should not be searched, because they could be URIs:
+  // "www.blah.com" - Domain with a known or whitelisted suffix
+  // "whitelisted" - Whitelisted domain
+  // "nonQualifiedHost:8888?something" - has a port
+  // "user@nonQualifiedHost"
+  // "blah.com."
+
+  // We do keyword lookups if the input starts with a question mark.
+  if (uriString.startsWith("?")) {
+    return tryKeywordFixupForURIInfo(
+      fixupInfo.originalInput,
+      fixupInfo,
+      isPrivateContext,
+      postData
+    );
+  }
+
+  // Check for IPs.
+  if (IPv4LikeRegex.test(uriString) || IPv6LikeRegex.test(uriString)) {
+    return false;
+  }
+
+  // Avoid lookup if we can identify a host and it's whitelisted, or ends with
+  // a dot and has some path.
+  // Note that if dnsFirstForSingleWords is true isDomainWhitelisted will always
+  // return true, so we can avoid checking dnsFirstForSingleWords after this.
+  let asciiHost = fixupInfo.fixedURI?.asciiHost;
+  if (
+    asciiHost &&
+    (isDomainWhitelisted(asciiHost) ||
+      (asciiHost.endsWith(".") &&
+        asciiHost.indexOf(".") != asciiHost.length - 1))
+  ) {
+    return false;
+  }
+
+  // Even if the host is invalid, avoid lookup if the string has uri-like
+  // characteristics.
+  // Also avoid lookup if there's a valid userPass. We only check for spaces,
+  // the URI parser has encoded any disallowed chars at this point, but if the
+  // user typed spaces before the first @, it's unlikely a valid userPass, plus
+  // some urlbar features use the @ char and we don't want to break them.
+  let userPass = fixupInfo.fixedURI?.userPass;
+  if (
+    !uriLikeRegex.test(uriString) &&
+    !(userPass && /^[^\s@]+@/.test(uriString))
+  ) {
+    return tryKeywordFixupForURIInfo(
+      fixupInfo.originalInput,
+      fixupInfo,
+      isPrivateContext,
+      postData
+    );
+  }
+
+  return false;
+}
+
+/**
+ * This is the old version of keywordURIFixup, used when
+ * browser.fixup.defaultToSearch is false
+ */
+function keywordURIFixupLegacy(
+  uriString,
+  fixupInfo,
+  isPrivateContext,
+  postData
+) {
   // These are keyword formatted strings
   // "what is mozilla"
   // "what is mozilla?"
@@ -902,7 +1027,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
     );
   }
 
-  // Avoid lookup if we can identify an host and it's whitelisted.
+  // Avoid lookup if we can identify a host and it's whitelisted.
   // Note that if dnsFirstForSingleWords is true isDomainWhitelisted will always
   // return true, so we can avoid checking dnsFirstForSingleWords after this.
   let asciiHost = fixupInfo.fixedURI?.asciiHost;
@@ -949,7 +1074,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
   }
 
   // Keyword lookup if there is no dot and the string doesn't include a slash,
-  // or any alphabetical character or an host.
+  // or any alphabetical character or a host.
   if (
     firstDotIndex == -1 &&
     (!uriString.includes("/") || !hasAsciiAlpha || !asciiHost)

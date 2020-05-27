@@ -44,5 +44,7 @@ add_task(async function test() {
   await testVal(" test", true);
   await testVal("test.test", true);
   await testVal("test test", false);
-  await testVal("test/test", false); // This may change in bug 1398567.
+  // This is not a single word host, though it contains one. At a certain point
+  // we may evaluate to increase coverage of the feature to also ask for this.
+  await testVal("test/test", false);
 });

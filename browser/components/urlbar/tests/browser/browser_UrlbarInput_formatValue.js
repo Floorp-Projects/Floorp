@@ -115,8 +115,8 @@ function test() {
   testVal("<foo.bar@:ba:z@>mozilla.org");
   testVal("<foo.:bar:@baz@>mozilla.org");
   testVal(
-    "foopy:\\blah@somewhere.com//whatever",
-    "foopy</blah@somewhere.com//whatever>"
+    "foopy:\\blah@somewhere.com//whatever/",
+    "foopy</blah@somewhere.com//whatever/>"
   );
 
   testVal("<https://sub.>mozilla.org<:666/file.ext>");
@@ -151,10 +151,10 @@ function test() {
     testVal(IP + "</file.ext>");
     testVal(IP + "<:666/file.ext>");
     testVal("<https://>" + IP);
-    testVal("<https://>" + IP + "</file.ext>");
-    testVal("<https://user:pass@>" + IP + "<:666/file.ext>");
-    testVal("<user:pass@>" + IP + "<:666/file.ext>");
-    testVal("user:\\pass@" + IP, "user</pass@" + IP + ">");
+    testVal(`<https://>${IP}</file.ext>`);
+    testVal(`<https://user:pass@>${IP}<:666/file.ext>`);
+    testVal(`<user:pass@>${IP}<:666/file.ext>`);
+    testVal(`user:\\pass@${IP}/`, `user</pass@${IP}/>`);
   });
 
   testVal("mailto:admin@mozilla.org");

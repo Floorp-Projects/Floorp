@@ -182,14 +182,24 @@ add_task(async function() {
     matches: [makeSearchMatch("firefox", { heuristic: true })],
   });
 
-  info("url with non-whitelisted host");
-  await check_autocomplete({
-    search: "firefox/get",
-    searchParam: "enable-actions",
-    matches: [
-      makeVisitMatch("firefox/get", "http://firefox/get", { heuristic: true }),
-    ],
-  });
+  info("string with non-whitelisted host");
+  if (Services.prefs.getBoolPref("browser.fixup.defaultToSearch", true)) {
+    await check_autocomplete({
+      search: "firefox/get",
+      searchParam: "enable-actions",
+      matches: [makeSearchMatch("firefox/get", { heuristic: true })],
+    });
+  } else {
+    await check_autocomplete({
+      search: "firefox/get",
+      searchParam: "enable-actions",
+      matches: [
+        makeVisitMatch("firefox/get", "http://firefox/get", {
+          heuristic: true,
+        }),
+      ],
+    });
+  }
 
   Services.prefs.setBoolPref("browser.fixup.domainwhitelist.firefox", true);
   registerCleanupFunction(() => {
