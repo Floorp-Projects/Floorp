@@ -19,6 +19,7 @@
 #include "DocAccessibleChild.h"
 #include "EventTree.h"
 #include "GeckoProfiler.h"
+#include "Pivot.h"
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"
@@ -1682,8 +1683,39 @@ Relation Accessible::RelationByType(RelationType aType) const {
       return Relation(
           new RelatedAccIterator(Document(), mContent, nsGkAtoms::aria_flowto));
 
-    case RelationType::MEMBER_OF:
+    case RelationType::MEMBER_OF: {
+      if (Role() == roles::RADIOBUTTON) {
+        /* If we see a radio button role here, we're dealing with an aria
+         * radio button (because input=radio buttons are
+         * HTMLRadioButtonAccessibles) */
+        Relation rel = Relation();
+        Accessible* currParent = Parent();
+        while (currParent && currParent->Role() != roles::RADIO_GROUP) {
+          currParent = currParent->Parent();
+        }
+
+        if (currParent && currParent->Role() == roles::RADIO_GROUP) {
+          /* If we found a radiogroup parent, search for all
+           * roles::RADIOBUTTON children and add them to our relation.
+           * This search will include the radio button this method
+           * was called from, which is expected. */
+          Pivot p = Pivot(currParent);
+          PivotRoleRule rule(roles::RADIOBUTTON);
+          Accessible* match = currParent;
+          while ((match = p.Next(match, rule))) {
+            rel.AppendTarget(match);
+          }
+        }
+
+        /* By webkit's standard, aria radio buttons do not get grouped
+         * if they lack a group parent, so we return an empty
+         * relation here if the above check fails. */
+
+        return rel;
+      }
+
       return Relation(mDoc, GetAtomicRegion());
+    }
 
     case RelationType::SUBWINDOW_OF:
     case RelationType::EMBEDS:
