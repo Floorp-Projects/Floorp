@@ -20,6 +20,7 @@ function branchedAddonStudyRecipeFactory(overrides = {}) {
     slug: "fake-slug",
     userFacingName: "Fake name",
     userFacingDescription: "fake description",
+    isEnrollmentPaused: false,
     branches: [
       {
         slug: "a",
@@ -47,6 +48,7 @@ function recipeFromStudy(study, overrides = {}) {
   let args = {
     slug: study.slug,
     userFacingName: study.userFacingName,
+    isEnrollmentPaused: false,
     branches: [
       {
         slug: "a",

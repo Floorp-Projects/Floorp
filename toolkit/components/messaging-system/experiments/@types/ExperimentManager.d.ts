@@ -7,7 +7,7 @@ export interface Branch {
 
 export interface RecipeArgs {
   slug: string;
-  isEnrollmentPaused?: boolean;
+  isEnrollmentPaused: boolean;
   experimentType?: string;
   branches: Branch[];
 }
