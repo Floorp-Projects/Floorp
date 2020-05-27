@@ -7,6 +7,18 @@
 "use strict";
 
 add_task(async function test() {
+  await runTest();
+  // Setting suggest.topsites to false disables the view's autoOpen behavior,
+  // which changes this test's outcomes.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.topsites", false]],
+  });
+  info("Running the test with autoOpen disabled.");
+  await runTest();
+  await SpecialPowers.popPrefEnv();
+});
+
+async function runTest() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits([
@@ -43,10 +55,9 @@ add_task(async function test() {
   }
 
   await deleteInput();
-  if (!gURLBar.openViewOnFocus) {
-    gURLBar.view.close();
-  }
-});
+  // autoOpen opened the panel, so we need to close it.
+  gURLBar.view.close();
+}
 
 async function checkResults() {
   Assert.equal(await UrlbarTestUtils.getResultCount(window), 2);
@@ -59,7 +70,7 @@ async function checkResults() {
 }
 
 async function deleteInput() {
-  if (gURLBar.openViewOnFocus) {
+  if (UrlbarPrefs.get("suggest.topsites")) {
     // The popup should remain open and show top sites.
     while (gURLBar.value.length) {
       EventUtils.synthesizeKey("KEY_Backspace");

@@ -200,8 +200,7 @@ Event Value
   - ``dropped``: The text was drag and dropped into the urlbar.
   - ``pasted``: The text was pasted into the urlbar.
   - ``topsites``: The user opened the urlbar view without typing, dropping,
-    or pasting. Most likely they clicked the dropdown arrow or pressed the down
-    arrow key while the view was closed, or openViewOnFocus was active.
+    or pasting.
     In these cases, if the urlbar input is showing the URL of the loaded page
     and the user has not modified the input’s content, the urlbar views shows
     the user’s top sites. Otherwise, if the user had modified the input’s

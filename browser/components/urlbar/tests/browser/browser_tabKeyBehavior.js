@@ -9,10 +9,6 @@
 "use strict";
 
 add_task(async function init() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.openViewOnFocus", true]],
-  });
-
   for (let i = 0; i < UrlbarPrefs.get("maxRichResults"); i++) {
     await PlacesTestUtils.addVisits("http://example.com/" + i);
   }

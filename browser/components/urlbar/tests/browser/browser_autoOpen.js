@@ -4,8 +4,7 @@
 "use strict";
 
 async function checkOpensOnFocus(win = window) {
-  // Even with openViewOnFocus = true, the view should not open when the input
-  // is focused programmatically.
+  // The view should not open when the input is focused programmatically.
   win.gURLBar.blur();
   win.gURLBar.focus();
   Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
@@ -29,9 +28,6 @@ async function checkOpensOnFocus(win = window) {
 }
 
 add_task(async function setUp() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.openViewOnFocus", true]],
-  });
   // Add some history for the empty panel.
   await PlacesTestUtils.addVisits([
     {

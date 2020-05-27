@@ -212,9 +212,8 @@ var tests = [
         gURLBar.select();
         EventUtils.sendString("*");
         EventUtils.synthesizeKey("KEY_Backspace");
-        if (gURLBar.openViewOnFocus) {
-          gURLBar.view.close();
-        }
+        // autoOpen behavior will show the panel, so it must be closed.
+        gURLBar.view.close();
 
         // Trying to show a notification should display nothing.
         let notShowing = TestUtils.topicObserved(
