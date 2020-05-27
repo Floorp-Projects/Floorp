@@ -29,10 +29,10 @@ add_task(async function basic_multilocale_test() {
   let initPromise = new Promise(resolve => (resolver = resolve));
   useCustomGeoServer("FR", initPromise);
 
-  await Services.search.init(false);
+  await Services.search.init();
   await Services.search.getDefaultEngines();
   resolver();
-  await SearchTestUtils.promiseSearchNotification("ensure-known-region-done");
+  await SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
   let engines = await Services.search.getDefaultEngines();
 
