@@ -42,14 +42,15 @@
             android:layout_height="match_parent"
             android:layout_width="0dp"
             android:icon="@drawable/ic_tabs"
-            android:text="Default" />
+            android:contentDescription="@string/tab_header_label" />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/private_tab_item"
             android:layout_height="match_parent"
             android:layout_width="0dp"
             android:icon="@drawable/ic_private_browsing"
-            android:text="Private" />
+            android:contentDescription="@string/tabs_header_private_tabs_title" />
+
     </com.google.android.material.tabs.TabLayout>
     <ImageButton
         android:id="@+id/tab_tray_overflow"
