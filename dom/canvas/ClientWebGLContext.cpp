@@ -3012,22 +3012,29 @@ Maybe<webgl::ErrorInfo> CheckFramebufferAttach(const GLenum bindImageTarget,
                                                const uint32_t zLayerBase,
                                                const uint32_t zLayerCount,
                                                const webgl::Limits& limits) {
+  if (!curTexTarget) {
+    return Some(
+        webgl::ErrorInfo{LOCAL_GL_INVALID_OPERATION,
+                         "`tex` not yet bound. Call bindTexture first."});
+  }
+
   auto texTarget = curTexTarget;
   if (bindImageTarget) {
     // FramebufferTexture2D
     const auto bindTexTarget = ImageToTexTarget(bindImageTarget);
+    if (curTexTarget != bindTexTarget) {
+      return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_OPERATION,
+                                   "`tex` cannot be rebound to a new target."});
+    }
+
     switch (bindTexTarget) {
       case LOCAL_GL_TEXTURE_2D:
       case LOCAL_GL_TEXTURE_CUBE_MAP:
         break;
       default:
-        return Some(webgl::ErrorInfo{
-            LOCAL_GL_INVALID_ENUM,
-            "`tex` must have been bound to target TEXTURE_2D_ARRAY."});
-    }
-    if (curTexTarget && curTexTarget != bindTexTarget) {
-      return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_OPERATION,
-                                   "`tex` cannot be rebound to a new target."});
+        return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_ENUM,
+                                     "`tex` must have been bound to target "
+                                     "TEXTURE_2D or TEXTURE_CUBE_MAP."});
     }
     texTarget = bindTexTarget;
   } else {
