@@ -116,35 +116,10 @@ const MULTI_LOCALE_ENGINES = [
   "multilocale",
 ];
 
-// A method that tries to determine if this user is in a US geography.
-function isUSTimezone() {
-  // Timezone assumptions! We assume that if the system clock's timezone is
-  // between Newfoundland and Hawaii, that the user is in North America.
-
-  // This includes all of South America as well, but we have relatively few
-  // en-US users there, so that's OK.
-
-  // 150 minutes = 2.5 hours (UTC-2.5), which is
-  // Newfoundland Daylight Time (http://www.timeanddate.com/time/zones/ndt)
-
-  // 600 minutes = 10 hours (UTC-10), which is
-  // Hawaii-Aleutian Standard Time (http://www.timeanddate.com/time/zones/hast)
-
-  let UTCOffset = new Date().getTimezoneOffset();
-  return UTCOffset >= 150 && UTCOffset <= 600;
-}
-
 // A method that tries to determine our region via an XHR geoip lookup.
-var ensureKnownRegion = async function(ss, awaitRegionCheck) {
-  // If we have a region already stored in our prefs we trust it.
-  let region = Services.prefs.getCharPref("browser.search.region", "");
+var ensureKnownRegion = async function(ss) {
   try {
-    if (gGeoSpecificDefaultsEnabled && !region) {
-      // We don't have it cached, so fetch it. fetchRegion() will call
-      // storeRegion if it gets a result (even if that happens after the
-      // promise resolves) and fetchRegionDefault.
-      await fetchRegion(ss, awaitRegionCheck);
-    } else if (gGeoSpecificDefaultsEnabled && !gModernConfig) {
+    if (gGeoSpecificDefaultsEnabled && !gModernConfig) {
       // The territory default we have already fetched may have expired.
       let expired = (ss.getGlobalAttr("searchDefaultExpir") || 0) <= Date.now();
       // If we have a default engine or a list of visible default engines
@@ -171,7 +146,7 @@ var ensureKnownRegion = async function(ss, awaitRegionCheck) {
             clearTimeout(timerId);
             resolve();
           };
-          fetchRegionDefault(ss, awaitRegionCheck)
+          fetchRegionDefault(ss)
             .then(callback)
             .catch(err => {
               Cu.reportError(err);
@@ -193,117 +168,6 @@ var ensureKnownRegion = async function(ss, awaitRegionCheck) {
     );
   }
 };
-
-// Store the result of the geoip request as well as any other values and
-// telemetry which depend on it.
-async function storeRegion(region) {
-  let isTimezoneUS = isUSTimezone();
-  // If it's a US region, but not a US timezone, we don't store the value.
-  // This works because no region defaults to ZZ (unknown) in nsURLFormatter
-  if (region != "US" || isTimezoneUS) {
-    Services.prefs.setCharPref("browser.search.region", region);
-  }
-
-  // and telemetry...
-  if (region == "US" && !isTimezoneUS) {
-    SearchUtils.log("storeRegion mismatch - US Region, non-US timezone");
-    Services.telemetry
-      .getHistogramById("SEARCH_SERVICE_US_COUNTRY_MISMATCHED_TIMEZONE")
-      .add(1);
-  }
-  if (region != "US" && isTimezoneUS) {
-    SearchUtils.log("storeRegion mismatch - non-US Region, US timezone");
-    Services.telemetry
-      .getHistogramById("SEARCH_SERVICE_US_TIMEZONE_MISMATCHED_COUNTRY")
-      .add(1);
-  }
-  // telemetry to compare our geoip response with platform-specific country data.
-  // On Mac and Windows, we can get a country code via sysinfo
-  let platformCC = await Services.sysinfo.countryCode;
-  if (platformCC) {
-    let probeUSMismatched, probeNonUSMismatched;
-    switch (AppConstants.platform) {
-      case "macosx":
-        probeUSMismatched = "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_PLATFORM_OSX";
-        probeNonUSMismatched =
-          "SEARCH_SERVICE_NONUS_COUNTRY_MISMATCHED_PLATFORM_OSX";
-        break;
-      case "win":
-        probeUSMismatched = "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_PLATFORM_WIN";
-        probeNonUSMismatched =
-          "SEARCH_SERVICE_NONUS_COUNTRY_MISMATCHED_PLATFORM_WIN";
-        break;
-      default:
-        Cu.reportError(
-          "Platform " +
-            Services.appinfo.OS +
-            " has system country code but no search service telemetry probes"
-        );
-        break;
-    }
-    if (probeUSMismatched && probeNonUSMismatched) {
-      if (region == "US" || platformCC == "US") {
-        // one of the 2 said US, so record if they are the same.
-        Services.telemetry
-          .getHistogramById(probeUSMismatched)
-          .add(region != platformCC);
-      } else {
-        // non-US - record if they are the same
-        Services.telemetry
-          .getHistogramById(probeNonUSMismatched)
-          .add(region != platformCC);
-      }
-    }
-  }
-}
-
-// Get the region we are in via a XHR geoip request.
-async function fetchRegion(ss, awaitRegionCheck) {
-  // values for the SEARCH_SERVICE_COUNTRY_FETCH_RESULT 'enum' telemetry probe.
-  const TELEMETRY_RESULT_ENUM = {
-    success: 0,
-    "region-fetch-no-result": 1,
-    "region-fetch-timeout": 2,
-    error: 3,
-  };
-  let startTime = Date.now();
-  let result;
-  let telemetryResult = TELEMETRY_RESULT_ENUM.success;
-  try {
-    result = await Region.getHomeRegion();
-  } catch (err) {
-    telemetryResult =
-      TELEMETRY_RESULT_ENUM[err.message] || TELEMETRY_RESULT_ENUM.error;
-    Cu.reportError(err);
-  }
-  let took = Date.now() - startTime;
-
-  if (result?.country_code) {
-    await storeRegion(result.country_code).catch(Cu.reportError);
-  }
-  SearchUtils.log(
-    "_fetchRegion got success response in " + took + "ms: " + result
-  );
-  Services.telemetry
-    .getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS")
-    .add(took);
-
-  // Now that we know the current region, it's possible to fetch defaults,
-  // which we couldn't do before in `ensureKnownRegion`.
-  try {
-    if (result && gModernConfig) {
-      await ss._maybeReloadEngines(awaitRegionCheck);
-    } else if (result && !gModernConfig) {
-      await fetchRegionDefault(ss, awaitRegionCheck);
-    }
-  } catch (ex) {
-    Cu.reportError(ex);
-  }
-
-  Services.telemetry
-    .getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_RESULT")
-    .add(telemetryResult);
-}
 
 // This converts our legacy google engines to the
 // new codes. We have to manually change them here
@@ -335,7 +199,7 @@ function convertGoogleEngines(engineNames) {
 // responsibility to ensure with a timer that we are not going to
 // block the async init for too long.
 // @deprecated Unused in the modern config.
-var fetchRegionDefault = (ss, awaitRegionCheck) =>
+var fetchRegionDefault = ss =>
   new Promise(resolve => {
     let urlTemplate = Services.prefs
       .getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF)
@@ -412,7 +276,7 @@ var fetchRegionDefault = (ss, awaitRegionCheck) =>
       );
       // If we're doing this somewhere during the app's lifetime, reload the list
       // of engines in order to pick up any geo-specific changes.
-      ss._maybeReloadEngines(awaitRegionCheck).finally(resolve);
+      ss._maybeReloadEngines().finally(resolve);
     };
     request.ontimeout = function(event) {
       SearchUtils.log("fetchRegionDefault: XHR finally timed-out");
@@ -663,15 +527,10 @@ SearchService.prototype = {
   /**
    * Asynchronous implementation of the initializer.
    *
-   * @param {boolean} [awaitRegionCheck]
-   *   Indicates whether we should explicitly await the the region check process to
-   *   complete, which may be fetched remotely. Pass in `true` if the caller needs
-   *   to be absolutely certain of the correct default engine and/ or ordering of
-   *   visible engines.
    * @returns {number}
    *   A Components.results success code on success, otherwise a failure code.
    */
-  async _init(awaitRegionCheck) {
+  async _init() {
     SearchUtils.log("_init start");
 
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -690,6 +549,11 @@ SearchService.prototype = {
       this._onSeparateDefaultPrefChanged.bind(this)
     );
 
+    // We need to catch the region being updated
+    // during initialisation so we start listening
+    // straight away.
+    Services.obs.addObserver(this, Region.REGION_TOPIC);
+
     try {
       if (gModernConfig) {
         // Create the search engine selector.
@@ -704,14 +568,11 @@ SearchService.prototype = {
       // The init flow is not going to block on a fetch from an external service,
       // but we're kicking it off as soon as possible to prevent UI flickering as
       // much as possible.
-      this._ensureKnownRegionPromise = ensureKnownRegion(this, awaitRegionCheck)
+      this._ensureKnownRegionPromise = ensureKnownRegion(this)
         .catch(ex =>
           SearchUtils.log("_init: failure determining region: " + ex)
         )
         .finally(() => (this._ensureKnownRegionPromise = null));
-      if (awaitRegionCheck) {
-        await this._ensureKnownRegionPromise;
-      }
 
       this._setupRemoteSettings().catch(Cu.reportError);
 
@@ -1458,17 +1319,10 @@ SearchService.prototype = {
   },
 
   /**
-   * Reloads engines asynchronously, but only when the service has already been
-   * initialized.
-   * @param {boolean} awaitRegionCheck
-   *   Whether the caller is waiting for the region check.
+   * Reloads engines asynchronously, but only when
+   * the service has already been initialized.
    */
-  async _maybeReloadEngines(awaitRegionCheck) {
-    // The caller is already awaiting on the region check
-    // completing, so we dont need to queue a reload.
-    if (awaitRegionCheck) {
-      return;
-    }
+  async _maybeReloadEngines() {
     if (!gInitialized) {
       if (this._maybeReloadDebounce) {
         SearchUtils.log(
@@ -1554,8 +1408,8 @@ SearchService.prototype = {
     );
   },
 
-  _reInit(origin, awaitRegionCheck = false) {
-    SearchUtils.log("_reInit: " + awaitRegionCheck);
+  _reInit(origin) {
+    SearchUtils.log("_reInit");
     // Re-entrance guard, because we're using an async lambda below.
     if (gReinitializing) {
       SearchUtils.log("_reInit: already re-initializing, bailing out.");
@@ -1612,18 +1466,11 @@ SearchService.prototype = {
         // The init flow is not going to block on a fetch from an external service,
         // but we're kicking it off as soon as possible to prevent UI flickering as
         // much as possible.
-        this._ensureKnownRegionPromise = ensureKnownRegion(
-          this,
-          awaitRegionCheck
-        )
+        this._ensureKnownRegionPromise = ensureKnownRegion(this)
           .catch(ex =>
             SearchUtils.log("_reInit: failure determining region: " + ex)
           )
           .finally(() => (this._ensureKnownRegionPromise = null));
-
-        if (awaitRegionCheck) {
-          await this._ensureKnownRegionPromise;
-        }
 
         await this._loadEngines(cache);
 
@@ -1918,7 +1765,7 @@ SearchService.prototype = {
     SearchUtils.log("_findEngineSelectorEngines: init");
 
     let locale = Services.locale.appLocaleAsBCP47;
-    let region = Services.prefs.getCharPref("browser.search.region", "default");
+    let region = Region.home || "default";
 
     let channel = AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
       ? "esr"
@@ -2004,7 +1851,7 @@ SearchService.prototype = {
    * @returns {Array<string>}
    *   Returns an array of engine names.
    */
-  _parseListJSON(list) {
+  async _parseListJSON(list) {
     let json;
     try {
       json = JSON.parse(list);
@@ -2014,10 +1861,7 @@ SearchService.prototype = {
       return [];
     }
 
-    let searchRegion = Services.prefs.getCharPref(
-      "browser.search.region",
-      null
-    );
+    let searchRegion = Region.home;
 
     let searchSettings;
     let locale = Services.locale.appLocaleAsBCP47;
@@ -2405,12 +2249,9 @@ SearchService.prototype = {
   },
 
   // nsISearchService
-  async init(awaitRegionCheck = false) {
-    SearchUtils.log("SearchService.init: " + awaitRegionCheck);
+  async init() {
+    SearchUtils.log("SearchService.init");
     if (this._initStarted) {
-      if (awaitRegionCheck) {
-        await this._ensureKnownRegionPromise;
-      }
       return this._initObservers.promise;
     }
 
@@ -2418,7 +2259,7 @@ SearchService.prototype = {
     this._initStarted = true;
     try {
       // Complete initialization by calling asynchronous initializer.
-      await this._init(awaitRegionCheck);
+      await this._init();
       TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
     } catch (ex) {
       if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
@@ -2445,8 +2286,8 @@ SearchService.prototype = {
   },
 
   // reInit is currently only exposed for testing purposes
-  async reInit(awaitRegionCheck) {
-    return this._reInit("test", awaitRegionCheck);
+  async reInit() {
+    return this._reInit("test");
   },
 
   async getEngines() {
@@ -3672,6 +3513,14 @@ SearchService.prototype = {
           }
         });
         break;
+      case Region.REGION_TOPIC:
+        if (verb == Region.REGION_UPDATED) {
+          SearchUtils.log("Region updated: " + Region.home);
+          ensureKnownRegion(this)
+            .then(this._maybeReloadEngines.bind(this))
+            .catch(Cu.reportError);
+        }
+        break;
     }
   },
 
@@ -3804,6 +3653,7 @@ SearchService.prototype = {
     Services.obs.removeObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
     Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
+    Services.obs.removeObserver(this, Region.REGION_TOPIC);
   },
 
   QueryInterface: ChromeUtils.generateQI([
