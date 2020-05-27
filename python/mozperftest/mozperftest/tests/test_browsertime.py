@@ -11,7 +11,11 @@ import pytest
 from mozperftest.tests.support import get_running_env, EXAMPLE_TEST
 from mozperftest.environment import BROWSER
 from mozperftest.browser.browsertime import add_options
-from mozperftest.browser.browsertime.runner import matches, extract_browser_name
+from mozperftest.browser.browsertime.runner import (
+    NodeException,
+    matches,
+    extract_browser_name,
+)
 from mozperftest.utils import silence, temporary_env
 
 
@@ -64,6 +68,32 @@ def test_browser(*mocked):
     assert len(results) == 1
     assert set(list(results[0].keys())) - set(["name", "results"]) == set()
     assert results[0]["name"] == "Example"
+
+
+@mock.patch("mozperftest.browser.browsertime.runner.install_package")
+@mock.patch(
+    "mozperftest.browser.noderunner.NodeRunner.verify_node_install", new=lambda x: True
+)
+@mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
+@mock.patch(
+    "mozperftest.browser.browsertime.runner.BrowsertimeRunner._setup_node_packages",
+    new=lambda x, y: None,
+)
+def test_browser_failed(*mocked):
+    mach_cmd, metadata, env = get_running_env(
+        android=True,
+        android_app_name="something",
+        browsertime_geckodriver="GECKODRIVER",
+        browsertime_iterations=1,
+        browsertime_extra_options="one=1,two=2",
+    )
+    # set the return value to 1 to simulate a node failure
+    mach_cmd.run_process.return_value = 1
+    browser = env.layers[BROWSER]
+    env.set_arg("tests", [EXAMPLE_TEST])
+
+    with browser as b, silence(), pytest.raises(NodeException):
+        b(metadata)
 
 
 @mock.patch("mozperftest.browser.browsertime.runner.install_package")
