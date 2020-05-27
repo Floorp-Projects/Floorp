@@ -11372,7 +11372,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
-    "description": "SSL Authentication Algorithm (null=0, rsa=1, dsa=2, ecdsa=4) in full handshake"
+    "description": "SSL Authentication Algorithm (null=0, rsa(KEA)=1, ecdsa=4, rsa(sign)=7) in full handshake"
   },
   "SSL_AUTH_RSA_KEY_SIZE_FULL": {
     "record_in_processes": ["main", "content"],
