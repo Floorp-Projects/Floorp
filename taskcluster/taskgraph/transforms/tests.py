@@ -1635,7 +1635,7 @@ def set_worker_type(config, tasks):
 @transforms.add
 def set_schedules_components(config, tasks):
     for task in tasks:
-        if 'optimization' in task:
+        if 'optimization' in task or 'when' in task:
             yield task
             continue
 
