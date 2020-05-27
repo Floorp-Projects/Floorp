@@ -2273,3 +2273,9 @@ add_task(function test_storage_sync() {
 });
 
 add_task(test_storage_sync_requires_real_id);
+
+add_task(function test_storage_sync_with_bytes_in_use() {
+  return runWithPrefs([[STORAGE_SYNC_PREF, true]], () =>
+    test_background_storage_area_with_bytes_in_use("sync", false)
+  );
+});

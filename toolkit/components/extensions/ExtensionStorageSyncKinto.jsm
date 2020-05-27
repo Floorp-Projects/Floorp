@@ -1334,6 +1334,17 @@ class ExtensionStorageSync {
     return records;
   }
 
+  async getBytesInUse(extension, keys, context) {
+    // This is defined by the chrome spec as being the length of the key and
+    // the length of the json repr of the value.
+    let size = 0;
+    let data = await this.get(extension, keys, context);
+    for (const [key, value] of Object.entries(data)) {
+      size += key.length + JSON.stringify(value).length;
+    }
+    return size;
+  }
+
   addOnChangedListener(extension, listener, context) {
     let listeners = this.listeners.get(extension) || new Set();
     listeners.add(listener);

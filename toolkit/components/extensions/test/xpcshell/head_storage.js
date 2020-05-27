@@ -683,6 +683,215 @@ function test_storage_sync_requires_real_id() {
   return runWithPrefs([[STORAGE_SYNC_PREF, true]], testFn);
 }
 
+// Test for storage areas which don't support getBytesInUse() nor QUOTA
+// constants.
+async function check_storage_area_no_bytes_in_use(area) {
+  let impl = browser.storage[area];
+
+  browser.test.assertEq(
+    typeof impl.getBytesInUse,
+    "undefined",
+    "getBytesInUse API method should not be available"
+  );
+  browser.test.sendMessage("test-complete");
+}
+
+async function test_background_storage_area_no_bytes_in_use(area) {
+  const EXT_ID = "test-gbiu@mozilla.org";
+
+  const extensionDef = {
+    manifest: {
+      permissions: ["storage"],
+      applications: { gecko: { id: EXT_ID } },
+    },
+    background: `(${check_storage_area_no_bytes_in_use})("${area}")`,
+  };
+
+  const extension = ExtensionTestUtils.loadExtension(extensionDef);
+
+  await extension.startup();
+  await extension.awaitMessage("test-complete");
+  await extension.unload();
+}
+
+async function test_contentscript_storage_area_no_bytes_in_use(area) {
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html"
+  );
+
+  function contentScript(checkImpl) {
+    browser.test.onMessage.addListener(msg => {
+      if (msg === "test-local") {
+        checkImpl("local");
+      } else if (msg === "test-sync") {
+        checkImpl("sync");
+      } else {
+        browser.test.fail(`Unexpected test message received: ${msg}`);
+        browser.test.sendMessage("test-complete");
+      }
+    });
+    browser.test.sendMessage("ready");
+  }
+
+  let extensionData = {
+    manifest: {
+      content_scripts: [
+        {
+          matches: ["http://example.com/data/file_sample.html"],
+          js: ["content_script.js"],
+          run_at: "document_idle",
+        },
+      ],
+
+      permissions: ["storage"],
+    },
+
+    files: {
+      "content_script.js": `(${contentScript})(${check_storage_area_no_bytes_in_use})`,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  extension.sendMessage(`test-${area}`);
+  await extension.awaitMessage("test-complete");
+
+  await extension.unload();
+  await contentPage.close();
+}
+
+// Test for storage areas which do support getBytesInUse() (but which may or may
+// not support enforcement of the quota)
+async function check_storage_area_with_bytes_in_use(area, expectQuota) {
+  let impl = browser.storage[area];
+
+  // QUOTA_* constants aren't currently exposed - see bug 1396810.
+  // However, the quotas are still enforced, so test them here.
+  // (Note that an implication of this is that we can't test area other than
+  // 'sync', because its limits are different - so for completeness...)
+  browser.test.assertEq(
+    area,
+    "sync",
+    "Running test on storage.sync API as expected"
+  );
+  const QUOTA_BYTES_PER_ITEM = 8192;
+  const MAX_ITEMS = 512;
+
+  // bytes is counted as "length of key as a string, length of value as
+  // JSON" - ie, quotes not counted in the key, but are in the value.
+  let value = "x".repeat(QUOTA_BYTES_PER_ITEM - 3);
+
+  await impl.set({ x: value }); // Shouldn't reject on either kinto or rust-based storage.sync.
+  browser.test.assertEq(await impl.getBytesInUse(null), QUOTA_BYTES_PER_ITEM);
+  // kinto does implement getBytesInUse() but doesn't enforce a quota.
+  if (expectQuota) {
+    await browser.test.assertRejects(
+      impl.set({ x: value + "x" }),
+      /QuotaExceededError/,
+      "Got a rejection with the expected error message"
+    );
+    // MAX_ITEMS
+    await impl.clear();
+    let ob = {};
+    for (let i = 0; i < MAX_ITEMS; i++) {
+      ob[`key-${i}`] = "x";
+    }
+    await impl.set(ob); // should work.
+    await browser.test.assertRejects(
+      impl.set({ straw: "camel's back" }), // exceeds MAX_ITEMS
+      /QuotaExceededError/,
+      "Got a rejection with the expected error message"
+    );
+    // QUOTA_BYTES is being already tested for the underlying StorageSyncService
+    // so we don't duplicate those tests here.
+  } else {
+    // Exceeding quota should work on the previous kinto-based storage.sync implementation
+    await impl.set({ x: value + "x" }); // exceeds quota but should work.
+    browser.test.assertEq(
+      await impl.getBytesInUse(null),
+      QUOTA_BYTES_PER_ITEM + 1,
+      "Got the expected result from getBytesInUse"
+    );
+  }
+  browser.test.sendMessage("test-complete");
+}
+
+async function test_background_storage_area_with_bytes_in_use(
+  area,
+  expectQuota
+) {
+  const EXT_ID = "test-gbiu@mozilla.org";
+
+  const extensionDef = {
+    manifest: {
+      permissions: ["storage"],
+      applications: { gecko: { id: EXT_ID } },
+    },
+    background: `(${check_storage_area_with_bytes_in_use})("${area}", ${expectQuota})`,
+  };
+
+  const extension = ExtensionTestUtils.loadExtension(extensionDef);
+
+  await extension.startup();
+  await extension.awaitMessage("test-complete");
+  await extension.unload();
+}
+
+async function test_contentscript_storage_area_with_bytes_in_use(
+  area,
+  expectQuota
+) {
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html"
+  );
+
+  function contentScript(checkImpl) {
+    browser.test.onMessage.addListener(([area, expectQuota]) => {
+      if (
+        !["local", "sync"].includes(area) ||
+        typeof expectQuota !== "boolean"
+      ) {
+        browser.test.fail(`Unexpected test message: [${area}, ${expectQuota}]`);
+        // Let the test to fail immediately instead of wait for a timeout failure.
+        browser.test.sendMessage("test-complete");
+        return;
+      }
+      checkImpl(area, expectQuota);
+    });
+    browser.test.sendMessage("ready");
+  }
+
+  let extensionData = {
+    manifest: {
+      content_scripts: [
+        {
+          matches: ["http://example.com/data/file_sample.html"],
+          js: ["content_script.js"],
+          run_at: "document_idle",
+        },
+      ],
+
+      permissions: ["storage"],
+    },
+
+    files: {
+      "content_script.js": `(${contentScript})(${check_storage_area_with_bytes_in_use})`,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  extension.sendMessage([area, expectQuota]);
+  await extension.awaitMessage("test-complete");
+
+  await extension.unload();
+  await contentPage.close();
+}
+
 // A couple of common tests for checking content scripts.
 async function testStorageContentScript(checkGet) {
   let globalChanges, gResolve;
