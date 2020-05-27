@@ -503,6 +503,49 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
   MOZ_ASSERT(rhs->type() == MIRType::Int32);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
+  if (rhs->isConstant()) {
+    LDefinition temp = LDefinition::BogusTemp();
+    int32_t shiftCount = rhs->toConstant()->toInt32();
+    switch (ins->simdOp()) {
+      case wasm::SimdOp::I8x16Shl:
+      case wasm::SimdOp::I8x16ShrU:
+        shiftCount &= 7;
+        break;
+      case wasm::SimdOp::I8x16ShrS:
+        shiftCount &= 7;
+        temp = tempSimd128();
+        break;
+      case wasm::SimdOp::I16x8Shl:
+      case wasm::SimdOp::I16x8ShrU:
+      case wasm::SimdOp::I16x8ShrS:
+        shiftCount &= 15;
+        break;
+      case wasm::SimdOp::I32x4Shl:
+      case wasm::SimdOp::I32x4ShrU:
+      case wasm::SimdOp::I32x4ShrS:
+        shiftCount &= 31;
+        break;
+      case wasm::SimdOp::I64x2Shl:
+      case wasm::SimdOp::I64x2ShrU:
+      case wasm::SimdOp::I64x2ShrS:
+        shiftCount &= 63;
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift operation");
+    }
+#  ifdef DEBUG
+    js::wasm::ReportSimdAnalysis("shift -> constant shift");
+#  endif
+    auto* lir = new (alloc())
+        LWasmConstantShiftSimd128(useRegisterAtStart(lhs), temp, shiftCount);
+    defineReuseInput(lir, ins, LWasmConstantShiftSimd128::Src);
+    return;
+  }
+
+#  ifdef DEBUG
+  js::wasm::ReportSimdAnalysis("shift -> variable shift");
+#  endif
+
   LDefinition tempReg0 = LDefinition::BogusTemp();
   LDefinition tempReg1 = LDefinition::BogusTemp();
   switch (ins->simdOp()) {

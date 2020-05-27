@@ -5,7 +5,8 @@
 //
 // In DEBUG builds, the testing function wasmSimdAnalysis() returns a string
 // describing the last decision made by the SIMD lowering code: to perform an
-// optimized lowering or the default byte shuffle+blend.
+// optimized lowering or the default byte shuffle+blend for v8x16.shuffle; to
+// shift by a constant or a variable for the various shifts; and so on.
 //
 // We test that the expected transformation applies, and that the machine code
 // generates the expected result.
@@ -691,6 +692,19 @@ for ( let byte of [3, 11, 8, 2] ) {
     set(mem, 16, iota(16));
     ins.exports.run();
     assertSame(get(mem, 0, 16), rev64x2_pattern);
+}
+
+// In the case of shifts, we have separate tests that constant shifts work
+// correctly, so no such testing is done here.
+
+for ( let lanes of ['i8x16', 'i16x8', 'i32x4', 'i64x2'] ) {
+    for ( let shift of ['shl', 'shr_s', 'shr_u'] ) {
+        for ( let [count, result] of [['(i32.const 5)', 'shift -> constant shift'],
+                                      ['(local.get 1)', 'shift -> variable shift']] ) {
+            wasmCompile(`(module (func (param v128) (param i32) (result v128) (${lanes}.${shift} (local.get 0) ${count})))`);
+            assertEq(wasmSimdAnalysis(), result);
+        }
+    }
 }
 
 // Library

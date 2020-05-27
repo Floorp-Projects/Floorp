@@ -1629,6 +1629,29 @@ void MacroAssemblerX86Shared::packedLeftShiftByScalarInt8x16(
                              &MacroAssemblerX86Shared::vpmovzxbw);
 }
 
+void MacroAssemblerX86Shared::packedLeftShiftByScalarInt8x16(
+    Imm32 count, FloatRegister src, FloatRegister dest) {
+  MOZ_ASSERT(count.value <= 7);
+  if (src != dest) {
+    asMasm().moveSimd128(src, dest);
+  }
+  // Use the doubling trick for low shift counts, otherwise mask off the bits
+  // that are shifted out of the low byte of each word and use word shifts.  The
+  // optimal cutoff remains to be explored.
+  if (count.value <= 3) {
+    for (int32_t shift = count.value; shift > 0; --shift) {
+      asMasm().addInt8x16(dest, dest);
+    }
+  } else {
+    ScratchSimd128Scope scratch(asMasm());
+    // Whether SplatX8 or SplatX16 is best depends on the constant probably?
+    asMasm().loadConstantSimd128Int(SimdConstant::SplatX16(0xFF >> count.value),
+                                    scratch);
+    vpand(Operand(scratch), dest, dest);
+    vpsllw(count, dest, dest);
+  }
+}
+
 void MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(
     FloatRegister in, Register count, Register temp, FloatRegister xtmp,
     FloatRegister dest) {
@@ -1637,12 +1660,41 @@ void MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(
                              &MacroAssemblerX86Shared::vpmovsxbw);
 }
 
+void MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(
+    Imm32 count, FloatRegister src, FloatRegister temp, FloatRegister dest) {
+  MOZ_ASSERT(count.value <= 7);
+  ScratchSimd128Scope scratch(asMasm());
+
+  asMasm().moveSimd128(src, scratch);
+  vpslldq(Imm32(1), scratch, scratch);               // Low bytes -> high bytes
+  vpsraw(Imm32(count.value + 8), scratch, scratch);  // Shift low bytes
+  vpsraw(count, dest, dest);                         // Shift high bytes
+  asMasm().loadConstantSimd128Int(SimdConstant::SplatX8(0xFF00), temp);
+  bitwiseAndSimdInt(dest, Operand(temp), dest);        // Keep high bytes
+  bitwiseAndNotSimdInt(temp, Operand(scratch), temp);  // Keep low bytes
+  bitwiseOrSimdInt(dest, Operand(temp), dest);         // Combine
+}
+
 void MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt8x16(
     FloatRegister in, Register count, Register temp, FloatRegister xtmp,
     FloatRegister dest) {
   packedShiftByScalarInt8x16(in, count, temp, xtmp, dest,
                              &MacroAssemblerX86Shared::vpsrlw,
                              &MacroAssemblerX86Shared::vpmovzxbw);
+}
+
+void MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt8x16(
+    Imm32 count, FloatRegister src, FloatRegister dest) {
+  MOZ_ASSERT(count.value <= 7);
+  if (src != dest) {
+    asMasm().moveSimd128(src, dest);
+  }
+  ScratchSimd128Scope scratch(asMasm());
+  // Whether SplatX8 or SplatX16 is best depends on the constant probably?
+  asMasm().loadConstantSimd128Int(
+      SimdConstant::SplatX16((0xFF << count.value) & 0xFF), scratch);
+  vpand(Operand(scratch), dest, dest);
+  vpsrlw(count, dest, dest);
 }
 
 void MacroAssemblerX86Shared::packedLeftShiftByScalarInt16x8(

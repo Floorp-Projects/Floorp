@@ -932,6 +932,7 @@ static bool WasmSimdAnalysis(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
   args.rval().setString(result);
+  *lastAnalysisResult = (char)0;
   return true;
 }
 #  endif
