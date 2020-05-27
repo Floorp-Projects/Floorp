@@ -55,6 +55,10 @@ var data = [
 
 var len = data.length;
 
+add_task(async function setup() {
+  await Services.search.init();
+});
+
 // Make sure we fix what needs fixing when there is no pref set.
 add_task(function test_unset_pref_fixes_typos() {
   Services.prefs.clearUserPref(pref);

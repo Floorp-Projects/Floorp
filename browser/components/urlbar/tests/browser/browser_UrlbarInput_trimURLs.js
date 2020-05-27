@@ -67,7 +67,12 @@ add_task(async function() {
   testVal("http:// invalid url");
 
   testVal("http://someotherhostwithnodots");
-  testVal("http://localhost/ foo bar baz");
+  if (Services.prefs.getBoolPref("browser.fixup.defaultToSearch", true)) {
+    // This host is whitelisted, it can be trimmed.
+    testVal("http://localhost/ foo bar baz", "localhost/ foo bar baz");
+  } else {
+    testVal("http://localhost/ foo bar baz");
+  }
   // This is not trimmed because it's not in the domain whitelist.
   testVal(
     "http://localhost.localdomain/ foo bar baz",
