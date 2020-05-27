@@ -129,18 +129,19 @@ browsertime-tp6m:
                         by-pageload:
                             cold:
                                 by-test-platform:
-                                    android-hw-.*/opt: []
+                                    android-hw-.*(?<!-shippable)/opt: []
                                     android-hw-p2-.*api-16/pgo: []
+                                    android-hw-p2-.*api-16-shippable/opt: []
                                     default: ['trunk', 'mozilla-beta']
                             warm:
                                 by-test-platform:
                                     android-hw-p2-.*-api-16/(?!opt).*: []
-                                    android-hw-p2-.*(?!-api-16)/opt.*: []
-                                    android-hw(?!-p2).*(?!-api-16)/opt.*: []
+                                    android-hw-p2-.*-api-16-shippable/opt: []
+                                    android-hw-p2-.*?(?<!-aarch64-shippable)/opt.*: []
+                                    android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
                                     default: ['mozilla-central']
                     default:
                         by-test-platform:
-                            android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
                             android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
                             default: []
             youtube:
@@ -151,14 +152,16 @@ browsertime-tp6m:
                         by-pageload:
                             cold:
                                 by-test-platform:
-                                    android-hw-.*/opt: []
+                                    android-hw-.*(?<!-shippable)/opt: []
                                     android-hw-p2-.*api-16/pgo: []
+                                    android-hw-p2-.*api-16-shippable/opt: []
                                     default: ['trunk', 'mozilla-beta']
                             warm:
                                 by-test-platform:
                                     android-hw-p2-.*-api-16/(?!opt).*: []
-                                    android-hw-p2-.*(?!-api-16)/opt.*: []
-                                    android-hw(?!-p2).*(?!-api-16)/opt.*: []
+                                    android-hw-p2-.*-api-16-shippable/opt: []
+                                    android-hw-p2-.*?(?<!-aarch64-shippable)/opt.*: []
+                                    android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
                                     default: ['mozilla-central']
                     default:
                         by-test-platform:
@@ -171,8 +174,9 @@ browsertime-tp6m:
                         by-app:
                             geckoview:
                                 by-test-platform:
-                                    android-hw-.*/opt: []
+                                    android-hw-.*(?<!-shippable)/opt: []
                                     android-hw-p2-.*api-16/pgo: []
+                                    android-hw-p2-.*api-16-shippable/opt: []
                                     default: ['trunk', 'mozilla-beta']
                             default: []
                     warm:
@@ -180,8 +184,9 @@ browsertime-tp6m:
                             geckoview:
                                 by-test-platform:
                                     android-hw-p2-.*-api-16/(?!opt).*: []
-                                    android-hw-p2-.*(?!-api-16)/opt.*: []
-                                    android-hw(?!-p2).*(?!-api-16)/opt.*: []
+                                    android-hw-p2-.*-api-16-shippable/opt: []
+                                    android-hw-p2-.*?(?<!-aarch64-shippable)/opt.*: []
+                                    android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
                                     default: ['mozilla-central']
                             default: []
     pageload:
