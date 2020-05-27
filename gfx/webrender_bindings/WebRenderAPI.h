@@ -599,7 +599,7 @@ class DisplayListBuilder final {
    * Cancels grouping of the display items and discards all the display items
    * pushed between the |StartGroup()| and |CancelGroup()| calls.
    */
-  void CancelGroup();
+  void CancelGroup(const bool aDiscard = false);
 
   /**
    * Finishes the display item group. The group is stored in WebRender backend,

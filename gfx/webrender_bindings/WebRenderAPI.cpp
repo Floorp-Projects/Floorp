@@ -1449,12 +1449,12 @@ void DisplayListBuilder::StartGroup(nsPaintedDisplayItem* aItem) {
   }
 }
 
-void DisplayListBuilder::CancelGroup() {
+void DisplayListBuilder::CancelGroup(const bool aDiscard) {
   if (!mDisplayItemCache || !mCurrentCacheSlot) {
     return;
   }
 
-  wr_dp_cancel_item_group(mWrState);
+  wr_dp_cancel_item_group(mWrState, aDiscard);
   mCurrentCacheSlot = Nothing();
 }
 
