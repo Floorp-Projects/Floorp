@@ -139,26 +139,23 @@ class SpliceableJSONWriter;
                                                                                \
     MACRO(11, "threads", Threads, "Profile the registered secondary threads")  \
                                                                                \
-    MACRO(12, "trackopts", TrackOptimizations,                                 \
-          "Have the JavaScript engine track JIT optimizations")                \
+    MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
                                                                                \
-    MACRO(13, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
-                                                                               \
-    MACRO(14, "jsallocations", JSAllocations,                                  \
+    MACRO(13, "jsallocations", JSAllocations,                                  \
           "Have the JavaScript engine track allocations")                      \
                                                                                \
-    MACRO(15, "nostacksampling", NoStackSampling,                              \
+    MACRO(14, "nostacksampling", NoStackSampling,                              \
           "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
           "\"stackwalk\" and labels")                                          \
                                                                                \
-    MACRO(16, "preferencereads", PreferenceReads,                              \
+    MACRO(15, "preferencereads", PreferenceReads,                              \
           "Track when preferences are read")                                   \
                                                                                \
-    MACRO(17, "nativeallocations", NativeAllocations,                          \
+    MACRO(16, "nativeallocations", NativeAllocations,                          \
           "Collect the stacks from a smaller subset of all native "            \
           "allocations, biasing towards collecting larger allocations")        \
                                                                                \
-    MACRO(18, "ipcmessages", IPCMessages,                                      \
+    MACRO(17, "ipcmessages", IPCMessages,                                      \
           "Have the IPC layer track cross-process messages")
 
 struct ProfilerFeature {

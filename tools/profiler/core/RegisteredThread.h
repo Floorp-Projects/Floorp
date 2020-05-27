@@ -324,10 +324,6 @@ class RegisteredThread final {
 
   uint32_t mJSFlags;
 
-  bool TrackOptimizationsEnabled() {
-    return mJSFlags & uint32_t(JSInstrumentationFlags::TrackOptimizations);
-  }
-
   bool JSTracerEnabled() {
     return mJSFlags & uint32_t(JSInstrumentationFlags::TraceLogging);
   }
