@@ -207,6 +207,7 @@ export type Target = {
   isParentProcess: boolean,
   isServiceWorker: boolean,
   targetForm: Object,
+  reconfigure: Object,
 
   // Property installed by the debugger itself.
   debuggerServiceWorkerStatus: string,

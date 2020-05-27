@@ -133,3 +133,13 @@ export function ensureHasThread(thread: ActorId) {
     }
   };
 }
+
+export function toggleJavaScriptEnabled(enabled: Boolean) {
+  return async ({ panel, dispatch, client }: ThunkArgs) => {
+    await client.toggleJavaScriptEnabled(enabled);
+    dispatch({
+      type: "TOGGLE_JAVASCRIPT_ENABLED",
+      value: enabled,
+    });
+  };
+}
