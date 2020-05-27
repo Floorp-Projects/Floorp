@@ -426,18 +426,16 @@ def get_raptor_test_list(args, oskey):
             LOG.info("setting page-timeout to %d as specified on cmd line" % args.page_timeout)
             next_test['page_timeout'] = args.page_timeout
 
-        # for browsertime jobs, cold page-load mode is determined by command line argument; for
-        # raptor-webext jobs cold page-load is determined by the 'cold' key in test manifest INI
         _running_cold = False
-        if args.browsertime is True:
-            if args.cold is True:
-                _running_cold = True
-            else:
-                # running warm page-load so ignore browser-cycles if it was provided (set to 1)
-                next_test['browser_cycles'] = 1
+
+        # check command line to see if we set cold page load from command line
+        if args.cold or next_test.get("cold") == "true":
+            # for raptor-webext jobs cold page-load is determined by the 'cold' key
+            # in test manifest INI
+            _running_cold = True
         else:
-            if next_test.get("cold", "false") == "true":
-                _running_cold = True
+            # if it's a warm load test ignore browser_cycles if set
+            next_test['browser_cycles'] = 1
 
         if _running_cold:
             # when running in cold mode, set browser-cycles to the page-cycles value; as we want
