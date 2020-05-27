@@ -32,6 +32,7 @@ wasm_library_sandboxing = ["gkrust-shared/wasm_library_sandboxing"]
 webgpu = ["gkrust-shared/webgpu"]
 remote_agent = ["gkrust-shared/remote"]
 glean = ["gkrust-shared/glean"]
+rust_fxa_client = ["gkrust-shared/rust_fxa_client"]
 
 [dependencies]
 bench-collections-gtest = { path = "../../../../xpcom/rust/gtest/bench-collections" }

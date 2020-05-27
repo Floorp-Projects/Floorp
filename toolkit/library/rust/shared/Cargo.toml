@@ -65,9 +65,9 @@ rusqlite = { version = "0.23.1", features = ["modern_sqlite", "in_gecko"] }
 
 fluent = { version = "0.11" , features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
+firefox-accounts-bridge = { path = "../../../../services/fxaccounts/rust-bridge/firefox-accounts-bridge", optional=true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-firefox-accounts-bridge = { path = "../../../../services/fxaccounts/rust-bridge/firefox-accounts-bridge" }
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "77a7f5eb12a8d93f2bd71bd4d844405e06743365"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
@@ -102,6 +102,7 @@ wasm_library_sandboxing = ["rlbox_lucet_sandbox"]
 webgpu = ["wgpu_bindings"]
 remote_agent = ["remote"]
 glean = ["fog"]
+rust_fxa_client = ["firefox-accounts-bridge"]
 
 [lib]
 path = "lib.rs"
