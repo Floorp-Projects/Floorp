@@ -125,7 +125,8 @@ nsresult BackgroundFileSaver::Init() {
   mControlEventTarget = GetCurrentThreadEventTarget();
   NS_ENSURE_TRUE(mControlEventTarget, NS_ERROR_NOT_INITIALIZED);
 
-  rv = NS_CreateBackgroundTaskQueue("BgFileSaver", getter_AddRefs(mBackgroundET));
+  rv = NS_CreateBackgroundTaskQueue("BgFileSaver",
+                                    getter_AddRefs(mBackgroundET));
   NS_ENSURE_SUCCESS(rv, rv);
 
   sThreadCount++;
