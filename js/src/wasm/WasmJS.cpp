@@ -548,7 +548,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
           obj->val(&val);
         } else {
           if (IsNumberType(global.type())) {
-            if (global.type() == ValType::I64 && v.isNumber()) {
+            if (global.type() == ValType::I64 && !v.isBigInt()) {
               return ThrowBadImportType(cx, import.field.get(), "BigInt");
             }
             if (global.type() != ValType::I64 && !v.isNumber()) {
