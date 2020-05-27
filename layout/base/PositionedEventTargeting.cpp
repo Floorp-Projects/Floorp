@@ -275,11 +275,10 @@ static nscoord AppUnitsFromMM(RelativeTo aFrame, uint32_t aMM) {
  * Clip aRect with the bounds of aFrame in the coordinate system of
  * aRootFrame. aRootFrame is an ancestor of aFrame.
  */
-static nsRect ClipToFrame(const nsIFrame* aRootFrame, const nsIFrame* aFrame,
+static nsRect ClipToFrame(RelativeTo aRootFrame, const nsIFrame* aFrame,
                           nsRect& aRect) {
   nsRect bound = nsLayoutUtils::TransformFrameRectToAncestor(
-      aFrame, nsRect(nsPoint(0, 0), aFrame->GetSize()),
-      RelativeTo{aRootFrame, ViewportType::Visual});
+      aFrame, nsRect(nsPoint(0, 0), aFrame->GetSize()), aRootFrame);
   nsRect result = bound.Intersect(aRect);
   return result;
 }
@@ -298,7 +297,7 @@ static nsRect GetTargetRect(RelativeTo aRootFrame,
     // Don't clip this rect to the root scroll frame if the flag to ignore the
     // root scroll frame is set. Note that the GetClosest code will still
     // enforce that the target found is a descendant of aRestrictToDescendants.
-    r = ClipToFrame(aRootFrame.mFrame, aRestrictToDescendants, r);
+    r = ClipToFrame(aRootFrame, aRestrictToDescendants, r);
   }
   return r;
 }
@@ -342,7 +341,7 @@ static void SubtractFromExposedRegion(nsRegion* aExposedRegion,
   }
 }
 
-static nsIFrame* GetClosest(const nsIFrame* aRoot,
+static nsIFrame* GetClosest(RelativeTo aRoot,
                             const nsPoint& aPointRelativeToRootFrame,
                             const nsRect& aTargetRect,
                             const EventRadiusPrefs* aPrefs,
@@ -358,8 +357,7 @@ static nsIFrame* GetClosest(const nsIFrame* aRoot,
 
     bool preservesAxisAlignedRectangles = false;
     nsRect borderBox = nsLayoutUtils::TransformFrameRectToAncestor(
-        f, nsRect(nsPoint(0, 0), f->GetSize()),
-        RelativeTo{aRoot, ViewportType::Visual},
+        f, nsRect(nsPoint(0, 0), f->GetSize()), aRoot,
         &preservesAxisAlignedRectangles);
     PET_LOG("Checking candidate %p with border box %s\n", f,
             mozilla::layers::Stringify(borderBox).c_str());
@@ -391,13 +389,13 @@ static nsIFrame* GetClosest(const nsIFrame* aRoot,
     }
     // If our current closest frame is a descendant of 'f', skip 'f' (prefer
     // the nested frame).
-    if (bestTarget &&
-        nsLayoutUtils::IsProperAncestorFrameCrossDoc(f, bestTarget, aRoot)) {
+    if (bestTarget && nsLayoutUtils::IsProperAncestorFrameCrossDoc(
+                          f, bestTarget, aRoot.mFrame)) {
       PET_LOG("  candidate %p was ancestor for bestTarget %p\n", f, bestTarget);
       continue;
     }
     if (!aClickableAncestor && !nsLayoutUtils::IsAncestorFrameCrossDoc(
-                                   aRestrictToDescendants, f, aRoot)) {
+                                   aRestrictToDescendants, f, aRoot.mFrame)) {
       PET_LOG("  candidate %p was not descendant of restrictroot %p\n", f,
               aRestrictToDescendants);
       continue;
@@ -485,8 +483,8 @@ nsIFrame* FindFrameTargetedByInputEvent(
   }
 
   nsIFrame* closestClickable =
-      GetClosest(aRootFrame.mFrame, aPointRelativeToRootFrame, targetRect,
-                 prefs, restrictToDescendants, clickableAncestor, candidates);
+      GetClosest(aRootFrame, aPointRelativeToRootFrame, targetRect, prefs,
+                 restrictToDescendants, clickableAncestor, candidates);
   if (closestClickable) {
     target = closestClickable;
   }
