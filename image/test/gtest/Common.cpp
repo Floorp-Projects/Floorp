@@ -53,6 +53,7 @@ AutoInitializeImageLib::AutoInitializeImageLib() {
   gfxPlatform::GetPlatform();
 
   // Ensure we always color manage images with gtests.
+  gfxPlatform::GetCMSMode();
   gfxPlatform::SetCMSModeOverride(eCMSMode_All);
 
   // Depending on initialization order, it is possible that our pref changes

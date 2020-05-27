@@ -144,6 +144,14 @@ LexerResult nsWebPDecoder::UpdateBuffer(SourceBufferIterator& aIterator,
       mLength += aIterator.Length();
       return ReadData();
     case SourceBufferIterator::COMPLETE:
+      if (!mData) {
+        // We must have hit an error, such as an OOM, when buffering the
+        // first set of encoded data.
+        MOZ_LOG(
+            sWebPLog, LogLevel::Error,
+            ("[this=%p] nsWebPDecoder::DoDecode -- complete no data\n", this));
+        return LexerResult(TerminalState::FAILURE);
+      }
       return ReadData();
     default:
       MOZ_LOG(sWebPLog, LogLevel::Error,
