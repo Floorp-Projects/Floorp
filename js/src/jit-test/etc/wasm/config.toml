@@ -24,8 +24,6 @@ excluded_tests = [
   "utf8-custom-section-id.wast",
   # invalid table maximum length for web embeddings
   "table.wast",
-  # fac-ssa returns incorrect value (fac.wast:107)
-  "fac.wast",
 ]
 
 [[repos]]
