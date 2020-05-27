@@ -13,7 +13,7 @@
 #include "mozilla/CondVar.h"
 
 class nsIFile;
-class nsIThread;
+class nsISerialEventTarget;
 class nsITimer;
 
 class nsDeleteDir {
@@ -71,7 +71,7 @@ class nsDeleteDir {
   mozilla::CondVar mCondVar;
   bool mNotified;
   nsCOMArray<nsITimer> mTimers;
-  nsCOMPtr<nsIThread> mThread;
+  nsCOMPtr<nsISerialEventTarget> mBackgroundET;
   bool mShutdownPending;
   bool mStopDeleting;
 };
