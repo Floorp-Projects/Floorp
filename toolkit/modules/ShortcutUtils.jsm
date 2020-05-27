@@ -35,13 +35,12 @@ var ShortcutUtils = {
   DUPLICATE_MODIFIER: "duplicate_modifier",
   MODIFIER_REQUIRED: "modifier_required",
 
+  MOVE_TAB_FORWARD: "MOVE_TAB_FORWARD",
+  MOVE_TAB_BACKWARD: "MOVE_TAB_BACKWARD",
   CLOSE_TAB: "CLOSE_TAB",
   CYCLE_TABS: "CYCLE_TABS",
-  TOGGLE_CARET_BROWSING: "TOGGLE_CARET_BROWSING",
-  MOVE_TAB_BACKWARD: "MOVE_TAB_BACKWARD",
-  MOVE_TAB_FORWARD: "MOVE_TAB_FORWARD",
-  NEXT_TAB: "NEXT_TAB",
   PREVIOUS_TAB: "PREVIOUS_TAB",
+  NEXT_TAB: "NEXT_TAB",
 
   /**
    * Prettifies the modifier keys for an element.
@@ -313,18 +312,11 @@ var ShortcutUtils = {
    * @param {KeyboardEvent} event The event to check for a related system action.
    * @returns {string} A string identifying the action, or null if no action is found.
    */
-  // eslint-disable-next-line complexity
   getSystemActionForEvent(event, { rtl } = {}) {
     switch (event.keyCode) {
       case event.DOM_VK_TAB:
         if (event.ctrlKey && !event.altKey && !event.metaKey) {
           return ShortcutUtils.CYCLE_TABS;
-        }
-        break;
-      case event.DOM_VK_F7:
-        // shift + F7 is the default DevTools shortcut for the Style Editor.
-        if (event.shiftKey) {
-          return ShortcutUtils.TOGGLE_CARET_BROWSING;
         }
         break;
       case event.DOM_VK_PAGE_UP:
