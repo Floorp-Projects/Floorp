@@ -270,6 +270,7 @@ UNIFIED_SOURCES += [
     'Attr.cpp',
     'AttrArray.cpp',
     'BarProps.cpp',
+    'BindContext.cpp',
     'BodyConsumer.cpp',
     'BodyStream.cpp',
     'BodyUtil.cpp',
