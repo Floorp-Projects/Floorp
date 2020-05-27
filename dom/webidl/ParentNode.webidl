@@ -28,6 +28,4 @@ interface mixin ParentNode {
   void prepend((Node or DOMString)... nodes);
   [CEReactions, Throws, Unscopable]
   void append((Node or DOMString)... nodes);
-  [CEReactions, Throws, Unscopable]
-  void replaceChildren((Node or DOMString)... nodes);
 };
