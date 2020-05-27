@@ -41,15 +41,38 @@ void CodeGenerator::visitBox(LBox* box) {
 void CodeGenerator::visitUnbox(LUnbox* unbox) {
   MUnbox* mir = unbox->mir();
 
+  Register result = ToRegister(unbox->output());
+
   if (mir->fallible()) {
     const ValueOperand value = ToValue(unbox, LUnbox::Input);
-    masm.splitTag(value, SecondScratchReg);
-    bailoutCmp32(Assembler::NotEqual, SecondScratchReg,
-                 Imm32(MIRTypeToTag(mir->type())), unbox->snapshot());
+    Label bail;
+    switch (mir->type()) {
+      case MIRType::Int32:
+        masm.fallibleUnboxInt32(value, result, &bail);
+        break;
+      case MIRType::Boolean:
+        masm.fallibleUnboxBoolean(value, result, &bail);
+        break;
+      case MIRType::Object:
+        masm.fallibleUnboxObject(value, result, &bail);
+        break;
+      case MIRType::String:
+        masm.fallibleUnboxString(value, result, &bail);
+        break;
+      case MIRType::Symbol:
+        masm.fallibleUnboxSymbol(value, result, &bail);
+        break;
+      case MIRType::BigInt:
+        masm.fallibleUnboxBigInt(value, result, &bail);
+        break;
+      default:
+        MOZ_CRASH("Given MIRType cannot be unboxed.");
+    }
+    bailoutFrom(&bail, unbox->snapshot());
+    return;
   }
 
   LAllocation* input = unbox->getOperand(LUnbox::Input);
-  Register result = ToRegister(unbox->output());
   if (input->isRegister()) {
     Register inputReg = ToRegister(input);
     switch (mir->type()) {

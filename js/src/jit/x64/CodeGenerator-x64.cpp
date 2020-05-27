@@ -66,46 +66,51 @@ void CodeGenerator::visitBox(LBox* box) {
 void CodeGenerator::visitUnbox(LUnbox* unbox) {
   MUnbox* mir = unbox->mir();
 
+  Register result = ToRegister(unbox->output());
+
   if (mir->fallible()) {
     const ValueOperand value = ToValue(unbox, LUnbox::Input);
-    Assembler::Condition cond;
+    Label bail;
     switch (mir->type()) {
       case MIRType::Int32:
-        cond = masm.testInt32(Assembler::NotEqual, value);
+        masm.fallibleUnboxInt32(value, result, &bail);
         break;
       case MIRType::Boolean:
-        cond = masm.testBoolean(Assembler::NotEqual, value);
+        masm.fallibleUnboxBoolean(value, result, &bail);
         break;
       case MIRType::Object:
-        cond = masm.testObject(Assembler::NotEqual, value);
+        masm.fallibleUnboxObject(value, result, &bail);
         break;
       case MIRType::String:
-        cond = masm.testString(Assembler::NotEqual, value);
+        masm.fallibleUnboxString(value, result, &bail);
         break;
       case MIRType::Symbol:
-        cond = masm.testSymbol(Assembler::NotEqual, value);
+        masm.fallibleUnboxSymbol(value, result, &bail);
         break;
       case MIRType::BigInt:
-        cond = masm.testBigInt(Assembler::NotEqual, value);
+        masm.fallibleUnboxBigInt(value, result, &bail);
         break;
       default:
         MOZ_CRASH("Given MIRType cannot be unboxed.");
     }
-    bailoutIf(cond, unbox->snapshot());
-  } else {
-#ifdef DEBUG
-    Operand input = ToOperand(unbox->getOperand(LUnbox::Input));
-    JSValueTag tag = MIRTypeToTag(mir->type());
-    Label ok;
-    masm.splitTag(input, ScratchReg);
-    masm.branch32(Assembler::Equal, ScratchReg, Imm32(tag), &ok);
-    masm.assumeUnreachable("Infallible unbox type mismatch");
-    masm.bind(&ok);
-#endif
+    bailoutFrom(&bail, unbox->snapshot());
+    return;
   }
 
+  // Infallible unbox.
+
   Operand input = ToOperand(unbox->getOperand(LUnbox::Input));
-  Register result = ToRegister(unbox->output());
+
+#ifdef DEBUG
+  // Assert the types match.
+  JSValueTag tag = MIRTypeToTag(mir->type());
+  Label ok;
+  masm.splitTag(input, ScratchReg);
+  masm.branch32(Assembler::Equal, ScratchReg, Imm32(tag), &ok);
+  masm.assumeUnreachable("Infallible unbox type mismatch");
+  masm.bind(&ok);
+#endif
+
   switch (mir->type()) {
     case MIRType::Int32:
       masm.unboxInt32(input, result);
