@@ -19,6 +19,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
 import org.mozilla.geckoview.GeckoResult;
 
 import android.os.Bundle;
+import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
@@ -109,6 +110,12 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
     }
 
+    private static final class IncompleteChildConnectionException extends RuntimeException {
+        public IncompleteChildConnectionException(@NonNull final String msg) {
+            super(msg);
+        }
+    }
+
     /**
      * Maintains state pertaining to an individual child process. Inheriting from
      * ServiceAllocator.InstanceInfo enables this class to work with ServiceAllocator.
@@ -128,7 +135,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         public int getPid() {
             XPCOMEventTarget.assertOnLauncherThread();
             if (mChild == null) {
-                throw new IllegalStateException("Calling ChildConnection.getPid() on an unbound connection");
+                throw new IncompleteChildConnectionException("Calling ChildConnection.getPid() on an incomplete connection");
             }
 
             return mPid;
@@ -198,7 +205,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             final IChildProcess child = IChildProcess.Stub.asInterface(service);
             try {
                 mPid = child.getPid();
-            } catch (final Throwable e) {
+            } catch (final DeadObjectException e) {
                 unbindService();
 
                 // mPendingBind might be null if a bind was initiated by the system (eg Service Restart)
@@ -208,6 +215,8 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                 }
 
                 return;
+            } catch (final RemoteException e) {
+                throw new RuntimeException(e);
             }
 
             mChild = child;
@@ -428,7 +437,16 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                 throw new RuntimeException("Attempt to remove non-registered connection");
             }
 
-            final int pid = conn.getPid();
+            final int pid;
+
+            try {
+                pid = conn.getPid();
+            } catch (final IncompleteChildConnectionException e) {
+                // conn lost its binding before it was able to retrieve its pid. It follows that
+                // mContentPids does not have an entry for this connection, so we can just return.
+                return;
+            }
+
             if (pid == INVALID_PID) {
                 return;
             }
