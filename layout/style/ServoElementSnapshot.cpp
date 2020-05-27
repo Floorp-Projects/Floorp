@@ -18,8 +18,7 @@ ServoElementSnapshot::ServoElementSnapshot(const Element& aElement)
       mIsTableBorderNonzero(false),
       mIsMozBrowserFrame(false),
       mClassAttributeChanged(false),
-      mIdAttributeChanged(false),
-      mOtherAttributeChanged(false) {
+      mIdAttributeChanged(false) {
   MOZ_COUNT_CTOR(ServoElementSnapshot);
   MOZ_ASSERT(NS_IsMainThread());
   mIsInChromeDocument = nsContentUtils::IsChromeDoc(aElement.OwnerDoc());
