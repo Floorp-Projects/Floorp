@@ -381,10 +381,6 @@ def test_task_regexes():
             'test-linux64/opt-web-platform-tests-wdspec-e10s-1',
             'test-linux64/opt-web-platform-tests-1',
         ],
-        'web-platform-tests-testharness': [
-            'test-linux64/opt-web-platform-tests-e10s-1',
-            'test-linux64/opt-web-platform-tests-1',
-        ],
         'web-platform-tests-reftest': [
             'test-linux64/opt-web-platform-tests-reftest-e10s-1',
         ],
