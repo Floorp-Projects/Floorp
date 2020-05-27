@@ -221,7 +221,7 @@ class nsTStringRepr {
   }
   template <typename Q = T, typename EnableIfChar16 = Char16OnlyT<Q>>
   bool NS_FASTCALL Equals(char16ptr_t aData,
-                          comparator_type) const {
+                          comparator_type aComp) const {
     return Equals(static_cast<const char16_t*>(aData), aComp);
   }
 #endif
