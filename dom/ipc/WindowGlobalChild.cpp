@@ -59,6 +59,20 @@ WindowGlobalChild::WindowGlobalChild(dom::WindowContext* aWindowContext,
   if (!mDocumentURI) {
     NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
   }
+
+#ifdef MOZ_GECKO_PROFILER
+  // Registers a DOM Window with the profiler. It re-registers the same Inner
+  // Window ID with different URIs because when a Browsing context is first
+  // loaded, the first url loaded in it will be about:blank. This call keeps the
+  // first non-about:blank registration of window and discards the previous one.
+  uint64_t embedderInnerWindowID = 0;
+  if (BrowsingContext()->GetParent()) {
+    embedderInnerWindowID = BrowsingContext()->GetEmbedderInnerWindowId();
+  }
+  profiler_register_page(BrowsingContext()->Id(), InnerWindowId(),
+                         aDocumentURI->GetSpecOrDefault(),
+                         embedderInnerWindowID);
+#endif
 }
 
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
@@ -165,6 +179,15 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   // FIXME: Perhaps these should be combined into a smaller number of messages?
   SetDocumentURI(aDocument->GetDocumentURI());
   SetDocumentPrincipal(aDocument->NodePrincipal());
+
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+  if (nsCOMPtr<nsIChannel> channel = aDocument->GetChannel()) {
+    nsCOMPtr<nsISupports> securityInfoSupports;
+    channel->GetSecurityInfo(getter_AddRefs(securityInfoSupports));
+    securityInfo = do_QueryInterface(securityInfoSupports);
+  }
+  SendUpdateDocumentSecurityInfo(securityInfo);
+
   SendUpdateDocumentCspSettings(aDocument->GetBlockAllMixedContent(false),
                                 aDocument->GetUpgradeInsecureRequests(false));
   SendUpdateSandboxFlags(aDocument->GetSandboxFlags());

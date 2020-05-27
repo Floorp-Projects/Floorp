@@ -18,7 +18,9 @@
 #include "nsHashKeys.h"
 
 class nsISHistory;
+#include "nsISecureBrowserUI.h"
 
+class nsSecureBrowserUI;
 namespace mozilla {
 namespace net {
 class DocumentLoadListener;
@@ -141,6 +143,15 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   bool AttemptLoadURIInParent(nsDocShellLoadState* aLoadState,
                               uint32_t* aLoadIdentifier);
 
+  // Get or create a secure browser UI for this BrowsingContext
+  nsISecureBrowserUI* GetSecureBrowserUI();
+
+  // Called when the current URI changes (from an
+  // nsIWebProgressListener::OnLocationChange event, so that we
+  // can update our security UI for the new location, or when the
+  // mixed content state for our current window is changed.
+  void UpdateSecurityStateForLocationOrMixedContentChange();
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -216,6 +227,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   nsTArray<SessionHistoryEntryAndId> mLoadingEntries;
   RefPtr<SessionHistoryEntry> mActiveEntry;
+
+  RefPtr<nsSecureBrowserUI> mSecureBrowserUI;
 };
 
 }  // namespace dom

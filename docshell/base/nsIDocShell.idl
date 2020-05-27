@@ -354,12 +354,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute nsILayoutHistoryState layoutHistoryState;
 
   /**
-   * The SecureBrowserUI object for this docshell.  This is set by XUL
-   * <browser> or nsWebBrowser for their root docshell.
-   */
-  attribute nsISecureBrowserUI securityUI;
-
-  /**
    * Object used to delegate URI loading to an upper context.
    * Currently only set for GeckoView to allow handling of load requests
    * at the application level.
@@ -465,45 +459,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    * transition. This is set just before the pagehide/unload events fire.
    */
   readonly attribute boolean isInUnload;
-
-  /**
-   * This attribute determines whether Mixed Active Content is loaded on the
-   * document. When it is true, mixed active content was not blocked and has
-   * loaded (or is about to load) on the page. When it is false, mixed active content
-   * has not loaded on the page, either because there was no mixed active content
-   * requests on the page or such requests were blocked by nsMixedContentBlocker.
-   * This boolean is set to true in nsMixedContentBlocker if Mixed Active Content
-   * is allowed (either explicitly on the page by the user or when the about:config
-   * setting security.mixed_content.block_active_content is set to false).
-   */
-  [infallible] readonly attribute boolean hasMixedActiveContentLoaded;
-
-   /**
-   * This attribute determines whether a document has Mixed Active Content
-   * that has been blocked from loading. When it is true, there is definitely
-   * mixed active content on a page that has been blocked by
-   * nsMixedContentBlocker.  When it is false, there may or may not be mixed
-   * active content on a page, but if there is, it will load. Note that if the
-   * about:config setting security.mixed_content.block_active_content is set
-   * false, this boolean will be false, since blocking active content has been
-   * disabled.
-   */
-  [infallible] readonly attribute boolean hasMixedActiveContentBlocked;
-
-  /**
-   * This attribute determines whether Mixed Display Content is loaded on the
-   * document. When it is true, mixed display content was not blocked and has
-   * loaded (or is about to load) on the page. Similar behavior to
-   * hasMixedActiveContentLoaded.
-   */
-  [infallible] readonly attribute boolean hasMixedDisplayContentLoaded;
-
-   /**
-   * This attribute determines whether a document has Mixed Display Content
-   * that has been blocked from loading. Similar behavior to
-   * hasMixedActiveContentBlocked.
-   */
-  [infallible] readonly attribute boolean hasMixedDisplayContentBlocked;
 
   /**
    * Disconnects this docshell's editor from its window, and stores the

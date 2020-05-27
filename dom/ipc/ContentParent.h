@@ -1063,6 +1063,9 @@ class ContentParent final
       const MaybeDiscarded<WindowContext>& aContext,
       WindowContext::BaseTransaction&& aTransaction, uint64_t aEpoch);
 
+  mozilla::ipc::IPCResult RecvAddMixedContentSecurityState(
+      const MaybeDiscarded<WindowContext>& aContext, uint32_t aStateFlags);
+
   mozilla::ipc::IPCResult RecvFirstIdle();
 
   mozilla::ipc::IPCResult RecvDeviceReset();
