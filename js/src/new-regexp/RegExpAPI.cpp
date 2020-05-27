@@ -480,16 +480,16 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
         return true;
       }
     }
-    // Add one to account for the whole-match capture
-    uint32_t pairCount = data.capture_count + 1;
-    re->useRegExpMatch(pairCount);
-
     if (!data.capture_name_map.is_null()) {
       RootedNativeObject namedCaptures(cx, data.capture_name_map->inner());
       if (!RegExpShared::initializeNamedCaptures(cx, re, namedCaptures)) {
         return false;
       }
     }
+    // All fallible initialization has succeeded, so we can change state.
+    // Add one to capture_count to account for the whole-match capture.
+    uint32_t pairCount = data.capture_count + 1;
+    re->useRegExpMatch(pairCount);
   }
 
   MOZ_ASSERT(re->kind() == RegExpShared::Kind::RegExp);
