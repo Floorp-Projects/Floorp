@@ -41,7 +41,8 @@ add_task(async function() {
   );
 
   info(
-    "Log some errors *before* calling ResourceWatcher.watch in order to assert the behavior of already existing messages."
+    "Log some errors *before* calling ResourceWatcher.watchResources in order to assert" +
+      " the behavior of already existing messages."
   );
   await triggerErrors(tab);
 
@@ -73,12 +74,13 @@ add_task(async function() {
     }
   };
 
-  await resourceWatcher.watch([ResourceWatcher.TYPES.ERROR_MESSAGES], {
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.ERROR_MESSAGES], {
     onAvailable,
   });
 
   info(
-    "Now log errors *after* the call to ResourceWatcher.watch and after having received all existing messages"
+    "Now log errors *after* the call to ResourceWatcher.watchResources and after having" +
+      " received all existing messages"
   );
   await BrowserTestUtils.waitForCondition(
     () => receivedMessages.length === expectedPageErrors.size
@@ -115,7 +117,7 @@ add_task(async function() {
   await triggerErrors(tab);
 
   const availableResources = [];
-  await resourceWatcher.watch([ResourceWatcher.TYPES.ERROR_MESSAGES], {
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.ERROR_MESSAGES], {
     onAvailable: ({ resource }) => availableResources.push(resource),
     ignoreExistingResources: true,
   });

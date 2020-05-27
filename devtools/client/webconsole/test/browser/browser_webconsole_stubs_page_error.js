@@ -77,7 +77,7 @@ async function generatePageErrorStubs() {
   const onErrorMessageAvailable = ({ resource }) => {
     handleErrorMessage(resource);
   };
-  await resourceWatcher.watch([resourceWatcher.TYPES.ERROR_MESSAGES], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGES], {
     onAvailable: onErrorMessageAvailable,
   });
 

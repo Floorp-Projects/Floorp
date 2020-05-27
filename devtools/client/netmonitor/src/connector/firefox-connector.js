@@ -73,7 +73,7 @@ class FirefoxConnector {
       this.onTargetAvailable
     );
 
-    await this.toolbox.resourceWatcher.watch(
+    await this.toolbox.resourceWatcher.watchResources(
       [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENTS],
       { onAvailable: this.onResourceAvailable }
     );
@@ -92,7 +92,7 @@ class FirefoxConnector {
       this.onTargetAvailable
     );
 
-    this.toolbox.resourceWatcher.unwatch(
+    this.toolbox.resourceWatcher.unwatchResources(
       [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENTS],
       { onAvailable: this.onResourceAvailable }
     );

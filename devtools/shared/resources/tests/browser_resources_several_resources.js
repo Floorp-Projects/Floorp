@@ -31,7 +31,7 @@ add_task(async function() {
   const { CONSOLE_MESSAGES, ROOT_NODE } = ResourceWatcher.TYPES;
 
   // We are only interested in console messages as a resource, the ROOT_NODE one
-  // is here to test the ResourceWatcher::unwatch API with several resources.
+  // is here to test the ResourceWatcher::unwatchResources API with several resources.
   let receivedMessages = 0;
   const onAvailable = ({ resourceType }) => {
     if (resourceType === CONSOLE_MESSAGES) {
@@ -39,8 +39,10 @@ add_task(async function() {
     }
   };
 
-  info("Call watch([CONSOLE_MESSAGES, ROOT_NODE], ...)");
-  await resourceWatcher.watch([CONSOLE_MESSAGES, ROOT_NODE], { onAvailable });
+  info("Call watchResources([CONSOLE_MESSAGES, ROOT_NODE], ...)");
+  await resourceWatcher.watchResources([CONSOLE_MESSAGES, ROOT_NODE], {
+    onAvailable,
+  });
 
   info("Use console.log in the content page");
   logInTab(tab, "test");
@@ -58,7 +60,7 @@ add_task(async function() {
   await waitUntil(() => receivedMessages === 2);
 
   info("Stop watching ROOT_NODE resources");
-  await resourceWatcher.unwatch([ROOT_NODE], { onAvailable });
+  await resourceWatcher.unwatchResources([ROOT_NODE], { onAvailable });
 
   // Check that messages from new targets are still captured after calling
   // unwatch for another resource.
@@ -72,7 +74,7 @@ add_task(async function() {
   await waitUntil(() => receivedMessages === 3);
 
   info("Stop watching CONSOLE_MESSAGES resources");
-  await resourceWatcher.unwatch([CONSOLE_MESSAGES], { onAvailable });
+  await resourceWatcher.unwatchResources([CONSOLE_MESSAGES], { onAvailable });
   await logInTab(tab, "test-again");
 
   // We don't have a specific event to wait for here, so allow some time for
