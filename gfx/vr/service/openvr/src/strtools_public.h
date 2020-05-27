@@ -14,12 +14,25 @@ bool StringHasPrefixCaseSensitive( const std::string & sString, const std::strin
 bool StringHasSuffix( const std::string &sString, const std::string &sSuffix );
 bool StringHasSuffixCaseSensitive( const std::string &sString, const std::string &sSuffix );
 
+// Mozilla: see README.mozilla for more details
+#if defined( _WIN32 )
 /** converts a UTF-16 string to a UTF-8 string */
-std::string UTF16to8(const wchar_t * in);
+std::string UTF16to8( const wchar_t * in );
+std::string UTF16to8( const std::wstring & in );
 
 /** converts a UTF-8 string to a UTF-16 string */
 std::wstring UTF8to16(const char * in);
+std::wstring UTF8to16( const std::string & in );
 #define Utf16FromUtf8 UTF8to16
+#endif
+
+#if defined( _WIN32 )
+std::string DefaultACPtoUTF8( const char *pszStr );
+#endif
+
+/** Repairs a should-be-UTF-8 string to a for-sure-is-UTF-8 string, plus return boolean if we subbed in '?' somewhere */
+bool RepairUTF8( const char *begin, const char *end, std::string & sOutputUtf8 );
+bool RepairUTF8( const std::string & sInputUtf8, std::string & sOutputUtf8 );
 
 /** safely copy a string into a buffer */
 void strcpy_safe( char *pchBuffer, size_t unBufferSizeBytes, const char *pchSource );
@@ -98,6 +111,7 @@ inline uint64_t strtoull(const char *str, char **endptr, int base) { return _str
 uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t unBufferLen );
 
 /** Returns a std::string from a uint64_t */
+// Mozilla: see README.mozilla for more details
 //std::string Uint64ToString( uint64_t ulValue );
 
 /** returns a uint64_t from a string */
@@ -112,6 +126,13 @@ uint64_t StringToUint64( const std::string & sValue );
 //-----------------------------------------------------------------------------
 void V_URLEncode( char *pchDest, int nDestLen, const char *pchSource, int nSourceLen );
 
+/** Same as V_URLEncode, but without plus for space. */
+void V_URLEncodeNoPlusForSpace( char *pchDest, int nDestLen, const char *pchSource, int nSourceLen );
+
+/** Same as V_URLEncodeNoPlusForSpace, but without escaping / and : */
+void V_URLEncodeFullPath( char *pchDest, int nDestLen, const char *pchSource, int nSourceLen );
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Decodes a string (or binary data) from URL encoding format, see rfc1738 section 2.2.  
 //          This version of the call isn't a strict RFC implementation, but uses + for space as is
@@ -121,6 +142,9 @@ void V_URLEncode( char *pchDest, int nDestLen, const char *pchSource, int nSourc
 //			Dest buffer being the same as the source buffer (decode in-place) is explicitly allowed.
 //-----------------------------------------------------------------------------
 size_t V_URLDecode( char *pchDecodeDest, int nDecodeDestLen, const char *pchEncodedSource, int nEncodedSourceLen );
+
+/** Same as V_URLDecode, but without plus for space. */
+size_t V_URLDecodeNoPlusForSpace( char *pchDecodeDest, int nDecodeDestLen, const char *pchEncodedSource, int nEncodedSourceLen );
 
 //-----------------------------------------------------------------------------
 // Purpose: strip extension from a path

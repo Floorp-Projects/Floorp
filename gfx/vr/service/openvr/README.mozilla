@@ -1,4 +1,4 @@
-This directory contains files from the OpenVR SDK, version 1.0.17.
+This directory contains files from the OpenVR SDK, version 1.11.11.
 
 This SDK contains the OpenVR API interface headers and functions to load the
 OpenVR runtime libraries which actually implement the functionality. The
@@ -52,6 +52,26 @@ Steps to update the library:
   Unlike the usual OpenVR API builds, we are not building a separate dll.
 
 - Add explicit in CVRSettingHelper constructor.
+
+- In strtools_public.cpp/.h, ensure that UTF16to8 and UTF8to16 are only
+  compiled under
+      #if defined( _WIN32 )
+  and redefine those functions to use ::WideCharToMultiByte and
+  MultiByteToWideChar, respectively. These are modified because the original
+  implementations contain unsupported try-catch.
+
+- In strtools_public.cpp, remove the definition of convert_type.
+
+- In strtools_public.cpp, remove the include of <codecvt>, as this causes
+  problems in compiling on Linux.
+
+- In pathtools_public.cpp/.h, comment out Path_UrlToFilePath and
+  Path_FilePathToUrl to avoid a compile error because 'alloca' isn't defined.
+
+- In vrpathregistry_public.cpp, CVRPathRegistry_Public::BLoadFromFile contains
+  a try-catch, which is not permitted. This code is simply commented out, but
+      Bug 1640068 - OpenVR code can fail JSON parsing and raise exceptions
+  is filed to address a safe fallback in the error condition.
 
 - Update this README.mozilla file with the new OpenVR SDK version and any
   additional steps needed for newer versions.
