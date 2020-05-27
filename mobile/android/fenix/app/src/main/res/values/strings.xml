@@ -45,7 +45,7 @@
     <string name="cfr_neg_button_text">No thanks</string>
 
     <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. Placeholder text replaced with app name. -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
     <string name="search_widget_cfr_message">Get to Firefox faster. Add a widget to your Home screen.</string>
     <!-- Text for the positive button -->
     <string name="search_widget_cfr_pos_button_text">Add widget</string>

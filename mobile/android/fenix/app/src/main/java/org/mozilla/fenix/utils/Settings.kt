@@ -55,6 +55,7 @@ class Settings private constructor(
         const val trackingProtectionOnboardingMaximumCount = 1
         const val FENIX_PREFERENCES = "fenix_preferences"
 
+        private const val showSearchWidgetCFRMaxCount = 3
         private const val BLOCKED_INT = 0
         private const val ASK_TO_ALLOW_INT = 1
         private const val ALLOWED_INT = 2
@@ -166,7 +167,7 @@ class Settings private constructor(
 
     fun shouldDisplaySearchWidgetCFR(): Boolean =
         isActiveSearcher &&
-        searchWidgetCFRDismissCount < 3 &&
+        searchWidgetCFRDismissCount < showSearchWidgetCFRMaxCount &&
         !searchWidgetInstalled &&
         !searchWidgetCFRManuallyDismissed
 

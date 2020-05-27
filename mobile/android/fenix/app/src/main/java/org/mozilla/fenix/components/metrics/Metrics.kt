@@ -168,6 +168,10 @@ sealed class Event {
     object AddonsOpenInSettings : Event()
     object AddonsOpenInToolbarMenu : Event()
     object VoiceSearchTapped : Event()
+    object SearchWidgetCFRDisplayed : Event()
+    object SearchWidgetCFRCanceled : Event()
+    object SearchWidgetCFRNotNowPressed : Event()
+    object SearchWidgetCFRAddWidgetPressed : Event()
 
     // Interaction events with extras
 

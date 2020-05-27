@@ -17,8 +17,11 @@ import androidx.core.view.marginTop
 import kotlinx.android.synthetic.main.search_widget_cfr.view.*
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.drop_down_triangle
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.pop_up_triangle
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.SearchWidgetCreator
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 
@@ -30,9 +33,8 @@ class SearchWidgetCFR(
     private val getToolbar: () -> View
 ) {
 
-    // TODO: Based on pref && is in the bucket...?
     fun displayIfNecessary() {
-        if (!context.settings().shouldDisplaySearchWidgetCFR()) { return }
+        if (!context.settings().shouldDisplaySearchWidgetCFR() || !FeatureFlags.searchWidgetCFR) { return }
         showSearchWidgetCFR()
     }
 
@@ -57,15 +59,16 @@ class SearchWidgetCFR(
         }
 
         layout.cfr_neg_button.setOnClickListener {
+            context.components.analytics.metrics.track(Event.SearchWidgetCFRNotNowPressed)
             searchWidgetCFRDialog.dismiss()
             context.settings().manuallyDismissSearchWidgetCFR()
         }
 
         layout.cfr_pos_button.setOnClickListener {
-            //context.components.analytics.metrics.track(Event.)
+            context.components.analytics.metrics.track(Event.SearchWidgetCFRAddWidgetPressed)
             SearchWidgetCreator.createSearchWidget(context)
             searchWidgetCFRDialog.dismiss()
-            //context.settings().manuallyDismissSearchWidgetCFR()
+            context.settings().manuallyDismissSearchWidgetCFR()
         }
 
         searchWidgetCFRDialog.apply {
@@ -81,10 +84,15 @@ class SearchWidgetCFR(
             it.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
 
+        searchWidgetCFRDialog.setOnCancelListener {
+            context.components.analytics.metrics.track(Event.SearchWidgetCFRCanceled)
+        }
+
         searchWidgetCFRDialog.setOnDismissListener {
             context.settings().incrementSearchWidgetCFRDismissed()
         }
 
         searchWidgetCFRDialog.show()
+        context.components.analytics.metrics.track(Event.SearchWidgetCFRDisplayed)
     }
 }

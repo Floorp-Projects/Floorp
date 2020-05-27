@@ -36,6 +36,7 @@ import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchSuggestions
 import org.mozilla.fenix.GleanMetrics.SearchWidget
+import org.mozilla.fenix.GleanMetrics.SearchWidgetCfr
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
@@ -529,6 +530,19 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.VoiceSearchTapped -> EventWrapper<NoExtraKeys>(
             { VoiceSearch.tapped.record(it) }
         )
+        is Event.SearchWidgetCFRDisplayed -> EventWrapper<NoExtraKeys>(
+            { SearchWidgetCfr.displayed.record(it) }
+        )
+        is Event.SearchWidgetCFRCanceled -> EventWrapper<NoExtraKeys>(
+            { SearchWidgetCfr.canceled.record(it) }
+        )
+        is Event.SearchWidgetCFRNotNowPressed -> EventWrapper<NoExtraKeys>(
+            { SearchWidgetCfr.notNowPressed.record(it) }
+        )
+        is Event.SearchWidgetCFRAddWidgetPressed -> EventWrapper<NoExtraKeys>(
+            { SearchWidgetCfr.addWidgetPressed.record(it) }
+        )
+
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
         is Event.OpenedBookmark -> null
@@ -584,6 +598,9 @@ class GleanMetricsService(private val context: Context) : MetricsService {
             adjustAdGroup.set(context.settings().adjustAdGroup)
             adjustCreative.set(context.settings().adjustCreative)
             adjustNetwork.set(context.settings().adjustNetwork)
+
+            searchWidgetInstalled.set(context.settings().searchWidgetInstalled)
+
             val topSitesSize = context.settings().topSitesSize
             hasTopSites.set(topSitesSize > 0)
             if (topSitesSize > 0) {

@@ -12,7 +12,7 @@ import android.os.Build
 import org.mozilla.gecko.search.SearchWidgetProvider
 
 /**
- * Handles the creation of search widget.
+ * Handles the creation of the pinning search widget dialog.
  */
 object SearchWidgetCreator {
 

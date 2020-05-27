@@ -480,7 +480,6 @@ metrics:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
-
   toolbar_position:
     type: string
     lifetime: application
@@ -495,7 +494,20 @@ metrics:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
-
+  search_widget_installed:
+    type: boolean
+    lifetime: application
+    description: |
+      Whether or not the search widget is installed
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9488
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10958
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
 
 search.default_engine:
   code:
@@ -1352,6 +1364,53 @@ search_widget:
       - https://github.com/mozilla-mobile/fenix/issues/4457
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4714
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+
+search_widget_cfr:
+  displayed:
+    type: event
+    description: |
+      The search widget cfr was displayed.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9488
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10958
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  add_widget_pressed:
+    type: event
+    description: |
+      The user pressed the "add widget" button.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9488
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10958
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  not_now_pressed:
+    type: event
+    description: |
+      The user pressed the "not now" button.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9488
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10958
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  canceled:
+    type: event
+    description: |
+      The user dismissed the search widget cfr by
+      tapping outside of the prompt
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9488
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10958
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
