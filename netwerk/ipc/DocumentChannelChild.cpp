@@ -46,8 +46,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIStreamListener> listener = aListener;
-  rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ENSURE_TRUE(gNeckoChild, NS_ERROR_FAILURE);
   NS_ENSURE_ARG_POINTER(listener);
