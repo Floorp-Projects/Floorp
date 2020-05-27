@@ -15,7 +15,7 @@ SearchTestUtils.initXPCShellAddonManager(this);
 async function restart() {
   Services.search.reset();
   await promiseRestartManager();
-  await Services.search.init(false);
+  await Services.search.init();
 }
 
 async function getEngineNames() {
@@ -61,7 +61,7 @@ add_task(async function basic_install_test() {
 
 add_task(async function basic_multilocale_test() {
   await forceExpiration();
-  Services.prefs.setCharPref("browser.search.region", "an");
+  Region._setRegion("an", false);
 
   await withGeoServer(
     async function cont(requests) {
@@ -78,7 +78,7 @@ add_task(async function basic_multilocale_test() {
 
 add_task(async function complex_multilocale_test() {
   await forceExpiration();
-  Services.prefs.setCharPref("browser.search.region", "af");
+  Region._setRegion("af", false);
 
   await withGeoServer(
     async function cont(requests) {
@@ -95,7 +95,7 @@ add_task(async function complex_multilocale_test() {
 });
 add_task(async function test_manifest_selection() {
   await forceExpiration();
-  Services.prefs.setCharPref("browser.search.region", "an");
+  Region._setRegion("an", false);
   Services.locale.availableLocales = ["af"];
   Services.locale.requestedLocales = ["af"];
 
