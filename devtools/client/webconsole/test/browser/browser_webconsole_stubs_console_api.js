@@ -76,9 +76,12 @@ async function generateConsoleApiStubs() {
   const onConsoleMessage = ({ resource }) => {
     handleConsoleMessage(resource);
   };
-  await resourceWatcher.watch([resourceWatcher.TYPES.CONSOLE_MESSAGES], {
-    onAvailable: onConsoleMessage,
-  });
+  await resourceWatcher.watchResources(
+    [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+    {
+      onAvailable: onConsoleMessage,
+    }
+  );
 
   for (const { keys, code } of getCommands()) {
     const received = new Promise(resolve => {
@@ -109,7 +112,7 @@ async function generateConsoleApiStubs() {
     await received;
   }
 
-  resourceWatcher.unwatch([resourceWatcher.TYPES.CONSOLE_MESSAGES], {
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.CONSOLE_MESSAGES], {
     onAvailable: onConsoleMessage,
   });
 

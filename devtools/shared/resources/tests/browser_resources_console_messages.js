@@ -45,10 +45,13 @@ add_task(async function() {
   await logExistingMessages(tab.linkedBrowser);
 
   const availableResources = [];
-  await resourceWatcher.watch([ResourceWatcher.TYPES.CONSOLE_MESSAGES], {
-    onAvailable: ({ resource }) => availableResources.push(resource),
-    ignoreExistingResources: true,
-  });
+  await resourceWatcher.watchResources(
+    [ResourceWatcher.TYPES.CONSOLE_MESSAGES],
+    {
+      onAvailable: ({ resource }) => availableResources.push(resource),
+      ignoreExistingResources: true,
+    }
+  );
   is(
     availableResources.length,
     0,
@@ -79,7 +82,8 @@ add_task(async function() {
 
 async function testMessages(browser, resourceWatcher) {
   info(
-    "Log some messages *before* calling ResourceWatcher.watch in order to assert the behavior of already existing messages."
+    "Log some messages *before* calling ResourceWatcher.watchResources in order to " +
+      "assert the behavior of already existing messages."
   );
   await logExistingMessages(browser);
 
@@ -104,9 +108,12 @@ async function testMessages(browser, resourceWatcher) {
     }
   };
 
-  await resourceWatcher.watch([ResourceWatcher.TYPES.CONSOLE_MESSAGES], {
-    onAvailable,
-  });
+  await resourceWatcher.watchResources(
+    [ResourceWatcher.TYPES.CONSOLE_MESSAGES],
+    {
+      onAvailable,
+    }
+  );
   is(
     expectedExistingCalls.length,
     0,
@@ -114,7 +121,7 @@ async function testMessages(browser, resourceWatcher) {
   );
 
   info(
-    "Now log messages *after* the call to ResourceWatcher.watch and after having received all existing messages"
+    "Now log messages *after* the call to ResourceWatcher.watchResources and after having received all existing messages"
   );
   await logRuntimeMessages(browser);
 

@@ -30,7 +30,7 @@ add_task(async function() {
   const receivedMessages = [];
 
   info(
-    "Log some messages *before* calling ResourceWatcher.watch in order to assert the behavior of already existing messages."
+    "Log some messages *before* calling ResourceWatcher.watchResources in order to assert the behavior of already existing messages."
   );
   Services.console.logStringMessage(expectedMessages[0]);
   Services.console.logStringMessage(expectedMessages[1]);
@@ -65,12 +65,15 @@ add_task(async function() {
     }
   };
 
-  await resourceWatcher.watch([ResourceWatcher.TYPES.PLATFORM_MESSAGES], {
-    onAvailable,
-  });
+  await resourceWatcher.watchResources(
+    [ResourceWatcher.TYPES.PLATFORM_MESSAGES],
+    {
+      onAvailable,
+    }
+  );
 
   info(
-    "Now log messages *after* the call to ResourceWatcher.watch and after having received all existing messages"
+    "Now log messages *after* the call to ResourceWatcher.watchResources and after having received all existing messages"
   );
   Services.console.logStringMessage(expectedMessages[2]);
   Services.console.logStringMessage(expectedMessages[3]);
@@ -105,16 +108,19 @@ add_task(async function() {
   Services.console.logStringMessage(expectedMessages[1]);
 
   const availableResources = [];
-  await resourceWatcher.watch([ResourceWatcher.TYPES.PLATFORM_MESSAGES], {
-    onAvailable: ({ resource }) => {
-      if (!expectedMessages.includes(resource.message)) {
-        return;
-      }
+  await resourceWatcher.watchResources(
+    [ResourceWatcher.TYPES.PLATFORM_MESSAGES],
+    {
+      onAvailable: ({ resource }) => {
+        if (!expectedMessages.includes(resource.message)) {
+          return;
+        }
 
-      availableResources.push(resource);
-    },
-    ignoreExistingResources: true,
-  });
+        availableResources.push(resource);
+      },
+      ignoreExistingResources: true,
+    }
+  );
   is(
     availableResources.length,
     0,
