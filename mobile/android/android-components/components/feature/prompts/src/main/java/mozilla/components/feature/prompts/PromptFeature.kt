@@ -24,6 +24,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.prompt.PromptRequest.BeforeUnload
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
 import mozilla.components.concept.engine.prompt.PromptRequest.Color
@@ -300,6 +301,7 @@ class PromptFeature private constructor(
     override fun onCancel(sessionId: String) {
         store.consumePromptFrom(sessionId, activePrompt) {
             when (it) {
+                is BeforeUnload -> it.onStay()
                 is Dismissible -> it.onDismiss()
                 is Popup -> it.onDeny()
             }
@@ -327,6 +329,7 @@ class PromptFeature private constructor(
                     }
                     is SingleChoice -> it.onConfirm(value as Choice)
                     is MenuChoice -> it.onConfirm(value as Choice)
+                    is BeforeUnload -> it.onLeave()
                     is Popup -> it.onAllow()
                     is MultipleChoice -> it.onConfirm(value as Array<Choice>)
 
@@ -529,6 +532,21 @@ class PromptFeature private constructor(
                     negativeButtonText = negativeLabel
                 )
             }
+            is BeforeUnload -> {
+
+                val title = container.getString(R.string.mozac_feature_prompt_before_unload_dialog_title)
+                val body = container.getString(R.string.mozac_feature_prompt_before_unload_dialog_body)
+                val leaveLabel = container.getString(R.string.mozac_feature_prompts_before_unload_leave)
+                val stayLabel = container.getString(R.string.mozac_feature_prompts_before_unload_stay)
+
+                ConfirmDialogFragment.newInstance(
+                    sessionId = session.id,
+                    title = title,
+                    message = body,
+                    positiveButtonText = leaveLabel,
+                    negativeButtonText = stayLabel
+                )
+            }
 
             is Confirm -> {
                 with(promptRequest) {
@@ -580,6 +598,7 @@ class PromptFeature private constructor(
             is File,
             is Color,
             is Authentication,
+            is BeforeUnload,
             is Popup,
             is SaveLoginPrompt,
             is SelectLoginPrompt,

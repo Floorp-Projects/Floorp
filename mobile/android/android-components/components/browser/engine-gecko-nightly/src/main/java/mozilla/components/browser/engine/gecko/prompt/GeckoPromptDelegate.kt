@@ -23,6 +23,7 @@ import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BeforeUnloadPrompt
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATETIME_LOCAL
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.MONTH
@@ -368,6 +369,22 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 PromptRequest.Popup(prompt.targetUri ?: "", onAllow, onDeny)
             )
         }
+        return geckoResult
+    }
+
+    override fun onBeforeUnloadPrompt(
+        session: GeckoSession,
+        geckoPrompt: BeforeUnloadPrompt
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val title = geckoPrompt.title ?: ""
+        val onAllow: () -> Unit = { geckoResult.complete(geckoPrompt.confirm(AllowOrDeny.ALLOW)) }
+        val onDeny: () -> Unit = { geckoResult.complete(geckoPrompt.confirm(AllowOrDeny.DENY)) }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(PromptRequest.BeforeUnload(title, onAllow, onDeny))
+        }
+
         return geckoResult
     }
 
