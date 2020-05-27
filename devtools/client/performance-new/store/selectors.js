@@ -141,7 +141,7 @@ const getPageContext = state => getInitializedValues(state).pageContext;
 const getSymbolTableGetter = state =>
   getInitializedValues(state).getSymbolTableGetter;
 
-/** @type {Selector<string[] | null>} */
+/** @type {Selector<string[]>} */
 const getSupportedFeatures = state =>
   getInitializedValues(state).supportedFeatures;
 
