@@ -1343,6 +1343,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     move32(src.valueReg(), dest);
   }
   void unboxInt32(const Address& src, Register dest) { load32(src, dest); }
+  void unboxInt32(const BaseIndex& src, Register dest) { load32(src, dest); }
 
   template <typename T>
   void unboxDouble(const T& src, FloatRegister dest) {
@@ -1363,6 +1364,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     move32(src.valueReg(), dest);
   }
   void unboxBoolean(const Address& src, Register dest) { load32(src, dest); }
+  void unboxBoolean(const BaseIndex& src, Register dest) { load32(src, dest); }
 
   void unboxMagic(const ValueOperand& src, Register dest) {
     move32(src.valueReg(), dest);
