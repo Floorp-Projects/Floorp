@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
@@ -215,11 +214,14 @@ class SearchConfigTest {
    *   The two-letter locale code.
    */
   async _reinit(region, locale) {
-    Region._setRegion(region?.toUpperCase(), true);
     if (region) {
-      await SearchTestUtils.promiseSearchNotification("engines-reloaded");
+      Services.prefs.setStringPref(
+        "browser.search.region",
+        region.toUpperCase()
+      );
+    } else {
+      Services.prefs.clearUserPref("browser.search.region");
     }
-
     const reinitCompletePromise = SearchTestUtils.promiseSearchNotification(
       "reinit-complete"
     );
