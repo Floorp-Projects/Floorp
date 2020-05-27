@@ -2428,7 +2428,7 @@ class ContainerLayer : public Layer {
   // be part of mTransform.
   float mInheritedXScale;
   float mInheritedYScale;
-  // For layers corresponding to an nsDisplayResolution, the resolution of the
+  // For layers corresponding to an nsDisplayAsyncZoom, the resolution of the
   // associated pres shell; for other layers, 1.0.
   float mPresShellResolution;
   bool mUseIntermediateSurface;
