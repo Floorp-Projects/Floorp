@@ -2770,9 +2770,6 @@ class PresShell final : public nsStubDocumentObserver,
   // that we last did an approximate frame visibility update.
   VisibleFrames mApproximatelyVisibleFrames;
 
-  nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution,
-                             nsAtom* aOrigin);
-
 #ifdef DEBUG
   MOZ_CAN_RUN_SCRIPT_BOUNDARY bool VerifyIncrementalReflow();
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoVerifyReflow();
