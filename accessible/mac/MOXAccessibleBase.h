@@ -92,6 +92,9 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
 // override
 - (void)moxPostNotification:(NSString*)notification;
 
+// override
+- (BOOL)moxBlockSelector:(SEL)selector;
+
 #pragma mark -
 
 - (BOOL)isExpired;
