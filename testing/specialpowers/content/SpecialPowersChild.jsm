@@ -1723,6 +1723,14 @@ class SpecialPowersChild extends JSWindowActorChild {
     });
   }
 
+  getSecurityState(target) {
+    let browsingContext = this._browsingContextForTarget(target);
+
+    return this.sendQuery("SecurityState", {
+      browsingContext,
+    });
+  }
+
   _spawnTask(task, args, caller, taskId, imports) {
     let sb = new SpecialPowersSandbox(
       null,

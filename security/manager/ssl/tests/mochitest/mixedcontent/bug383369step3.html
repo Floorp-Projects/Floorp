@@ -9,15 +9,15 @@
   <script class="testbody" type="text/javascript">
   "use strict";
 
-  function runTest()
+  async function runTest()
   {
-    isSecurityState("secure", "secure page after insecure download and insecure subcontent still secure");
+    await isSecurityState("secure", "secure page after insecure download and insecure subcontent still secure");
     finish();
   }
 
-  function afterNavigationTest()
+  async function afterNavigationTest()
   {
-    isSecurityState("secure", "still secure after back/forward");
+    await isSecurityState("secure", "still secure after back/forward");
     finish();
   }
 

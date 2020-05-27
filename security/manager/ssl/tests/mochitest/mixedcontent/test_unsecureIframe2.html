@@ -15,15 +15,15 @@
 
   hasMixedActiveContent = true;
 
-  function runTest()
+  async function runTest()
   {
-    isSecurityState("broken", "insecure <iframe> load breaks security");
+    await isSecurityState("broken", "insecure <iframe> load breaks security");
     finish();
   }
 
-  function afterNavigationTest()
+  async function afterNavigationTest()
   {
-    isSecurityState("broken", "security still broken after navigation");
+    await isSecurityState("broken", "security still broken after navigation");
     finish();
   }
 
