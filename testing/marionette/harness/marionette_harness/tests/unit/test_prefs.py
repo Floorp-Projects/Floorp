@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import
 
+import six
+
 from marionette_driver import geckoinstance
 from marionette_driver.errors import JavascriptException
 
@@ -29,14 +31,14 @@ class TestPreferences(MarionetteTestCase):
     def test_gecko_instance_preferences(self):
         required_prefs = geckoinstance.GeckoInstance.required_prefs
 
-        for key, value in required_prefs.iteritems():
+        for key, value in six.iteritems(required_prefs):
             self.assertEqual(self.marionette.get_pref(key), value,
                              "Preference {} hasn't been set to {}".format(key, repr(value)))
 
     def test_desktop_instance_preferences(self):
         required_prefs = geckoinstance.DesktopInstance.desktop_prefs
 
-        for key, value in required_prefs.iteritems():
+        for key, value in six.iteritems(required_prefs):
             if key in ["browser.tabs.remote.autostart"]:
                 return
 
@@ -74,7 +76,7 @@ class TestPreferences(MarionetteTestCase):
         self.marionette.set_pref(self.prefs["string"], "abc")
         value = self.marionette.get_pref(self.prefs["string"])
         self.assertEqual(value, "abc")
-        self.assertTrue(isinstance(value, basestring))
+        self.assertTrue(isinstance(value, six.string_types))
 
         # Test reset value
         self.marionette.set_pref(self.prefs["string"], None)

@@ -6,6 +6,8 @@ from __future__ import absolute_import
 
 import types
 
+import six
+
 from marionette_driver import errors
 
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
@@ -28,16 +30,16 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
     def assert_window_handles(self):
         try:
-            self.assertIsInstance(self.marionette.current_chrome_window_handle, types.StringTypes)
-            self.assertIsInstance(self.marionette.current_window_handle, types.StringTypes)
+            self.assertIsInstance(self.marionette.current_chrome_window_handle,  six.string_types)
+            self.assertIsInstance(self.marionette.current_window_handle,  six.string_types)
         except errors.NoSuchWindowException:
             pass
 
         for handle in self.marionette.chrome_window_handles:
-            self.assertIsInstance(handle, types.StringTypes)
+            self.assertIsInstance(handle,  six.string_types)
 
         for handle in self.marionette.window_handles:
-            self.assertIsInstance(handle, types.StringTypes)
+            self.assertIsInstance(handle,  six.string_types)
 
     def test_chrome_window_handles_with_scopes(self):
         new_browser = self.open_window()

@@ -5,18 +5,20 @@
 from __future__ import absolute_import
 
 import contextlib
-import urllib
 
 from tempfile import NamedTemporaryFile as tempfile
+
+import six
+from six.moves.urllib.parse import quote
 
 from marionette_driver import By, errors, expected
 from marionette_driver.wait import Wait
 from marionette_harness import MarionetteTestCase, skip
 
 
-single = "data:text/html,{}".format(urllib.quote("<input type=file>"))
-multiple = "data:text/html,{}".format(urllib.quote("<input type=file multiple>"))
-upload = lambda url: "data:text/html,{}".format(urllib.quote("""
+single = "data:text/html,{}".format(quote("<input type=file>"))
+multiple = "data:text/html,{}".format(quote("<input type=file multiple>"))
+upload = lambda url: "data:text/html,{}".format(quote("""
     <form action='{}' method=post enctype='multipart/form-data'>
      <input type=file>
      <input type=submit>
@@ -42,7 +44,7 @@ class TestFileUpload(MarionetteTestCase):
         input = self.input
 
         exp = None
-        with contextlib.nested(tempfile(), tempfile()) as (a, b):
+        with tempfile() as a, tempfile() as b:
             input.send_keys(a.name)
             input.send_keys(b.name)
             exp = [a.name, b.name]
@@ -80,7 +82,7 @@ class TestFileUpload(MarionetteTestCase):
         self.marionette.navigate(multiple)
         input = self.input
 
-        with contextlib.nested(tempfile(), tempfile()) as (a, b):
+        with tempfile() as a, tempfile() as b:
             input.send_keys(a.name)
             input.send_keys(b.name)
 
@@ -99,7 +101,7 @@ class TestFileUpload(MarionetteTestCase):
         url = self.marionette.get_url()
 
         with tempfile() as f:
-            f.write("camembert")
+            f.write(six.ensure_binary("camembert"))
             f.flush()
             self.input.send_keys(f.name)
             self.submit.click()

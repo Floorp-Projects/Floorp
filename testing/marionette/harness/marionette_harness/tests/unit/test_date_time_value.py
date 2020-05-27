@@ -4,9 +4,9 @@
 
 from __future__ import absolute_import
 
-import urllib
-
 from datetime import datetime
+
+from six.moves.urllib.parse import quote
 
 from marionette_driver.by import By
 from marionette_driver.date_time_value import DateTimeValue
@@ -14,7 +14,7 @@ from marionette_harness import MarionetteTestCase
 
 
 def inline(doc):
-    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
+    return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
 
 class TestDateTime(MarionetteTestCase):

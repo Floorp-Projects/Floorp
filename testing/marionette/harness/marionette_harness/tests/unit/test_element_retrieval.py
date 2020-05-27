@@ -5,7 +5,8 @@
 from __future__ import absolute_import
 
 import re
-import urllib
+
+from six.moves.urllib.parse import quote
 
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException, InvalidSelectorException
@@ -16,9 +17,9 @@ from marionette_harness import MarionetteTestCase, skip
 
 def inline(doc, doctype="html"):
     if doctype == "html":
-        return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
+        return "data:text/html;charset=utf-8,{}".format(quote(doc))
     elif doctype == "xhtml":
-        return "data:application/xhtml+xml,{}".format(urllib.quote(
+        return "data:application/xhtml+xml,{}".format(quote(
 r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">

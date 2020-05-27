@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import
 
+import six
+
 from marionette_harness.marionette_test import (
     parameterized,
     with_parameters,
@@ -11,8 +13,9 @@ from marionette_harness.marionette_test import (
     MarionetteTestCase
 )
 
+@six.add_metaclass(MetaParameterized)
 class Parameterizable(object):
-    __metaclass__ = MetaParameterized
+    pass
 
 class TestDataDriven(MarionetteTestCase):
     def test_parameterized(self):
@@ -66,4 +69,4 @@ class TestDataDriven(MarionetteTestCase):
                     pass
 
     def test_marionette_test_case_is_parameterizable(self):
-        self.assertTrue(issubclass(MarionetteTestCase.__metaclass__, MetaParameterized))
+        self.assertTrue(isinstance(MarionetteTestCase, MetaParameterized))

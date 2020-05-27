@@ -9,12 +9,13 @@ import os
 import re
 import sys
 import time
-import types
 import unittest
 import warnings
 import weakref
 
 from unittest.case import SkipTest
+
+import six
 
 from marionette_driver.errors import (
     TimeoutException,
@@ -78,7 +79,7 @@ class MetaParameterized(type):
     RE_ESCAPE_BAD_CHARS = re.compile(r'[\.\(\) -/]')
 
     def __new__(cls, name, bases, attrs):
-        for k, v in attrs.items():
+        for k, v in list(attrs.items()):
             if callable(v) and hasattr(v, 'metaparameters'):
                 for func_suffix, args, kwargs in v.metaparameters:
                     func_suffix = cls.RE_ESCAPE_BAD_CHARS.sub('_', func_suffix)
@@ -92,9 +93,9 @@ class MetaParameterized(type):
         return type.__new__(cls, name, bases, attrs)
 
 
+@six.add_metaclass(MetaParameterized)
 class CommonTestCase(unittest.TestCase):
 
-    __metaclass__ = MetaParameterized
     match_re = None
     failureException = AssertionError
     pydebugger = None
@@ -350,7 +351,7 @@ class MarionetteTestCase(CommonTestCase):
 
         for name in dir(test_mod):
             obj = getattr(test_mod, name)
-            if (isinstance(obj, (type, types.ClassType)) and
+            if (isinstance(obj, six.class_types) and
                     issubclass(obj, unittest.TestCase)):
                 testnames = testloader.getTestCaseNames(obj)
                 for testname in testnames:

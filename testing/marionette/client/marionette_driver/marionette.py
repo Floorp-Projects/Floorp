@@ -15,6 +15,7 @@ import traceback
 
 from contextlib import contextmanager
 
+import six
 from six import reraise
 
 from . import errors
@@ -824,7 +825,7 @@ class Marionette(object):
                                              "on Gecko instances launched by Marionette")
         pref_exists = True
         with self.using_context(self.CONTEXT_CHROME):
-            for pref, value in prefs.iteritems():
+            for pref, value in six.iteritems(prefs):
                 if type(value) is not str:
                     value = json.dumps(value)
                 pref_exists = self.execute_script("""
@@ -1494,7 +1495,7 @@ class Marionette(object):
         elif type(args) == HTMLElement:
             wrapped = {WEB_ELEMENT_KEY: args.id,
                        CHROME_ELEMENT_KEY: args.id}
-        elif (isinstance(args, bool) or isinstance(args, basestring) or
+        elif (isinstance(args, bool) or isinstance(args, six.string_types) or
               isinstance(args, int) or isinstance(args, float) or args is None):
             wrapped = args
         return wrapped
