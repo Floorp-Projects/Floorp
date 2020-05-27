@@ -458,30 +458,6 @@ class Assembler : public AssemblerX86Shared {
     masm.vsubpd_rr(src1.encoding(), src0.encoding(), dest.encoding());
   }
 
-  void vpunpckldq(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
-    MOZ_ASSERT(HasSSE2());
-    MOZ_ASSERT(src0.size() == 16);
-    MOZ_ASSERT(src1.size() == 16);
-    MOZ_ASSERT(dest.size() == 16);
-    masm.vpunpckldq_rr(src1.encoding(), src0.encoding(), dest.encoding());
-  }
-  void vpunpckldq(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    MOZ_ASSERT(HasSSE2());
-    MOZ_ASSERT(src0.size() == 16);
-    MOZ_ASSERT(dest.size() == 16);
-    switch (src1.kind()) {
-      case Operand::MEM_REG_DISP:
-        masm.vpunpckldq_mr(src1.disp(), src1.base(), src0.encoding(),
-                           dest.encoding());
-        break;
-      case Operand::MEM_ADDRESS32:
-        masm.vpunpckldq_mr(src1.address(), src0.encoding(), dest.encoding());
-        break;
-      default:
-        MOZ_CRASH("unexpected operand kind");
-    }
-  }
-
   void fild(const Operand& src) {
     switch (src.kind()) {
       case Operand::MEM_REG_DISP:

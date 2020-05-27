@@ -470,6 +470,10 @@ class SimdConstant {
   }
   bool operator!=(const SimdConstant& rhs) const { return !operator==(rhs); }
 
+  bool isIntegerZero() const {
+    return type_ <= Int64x2 && u.i64x2[0] == 0 && u.i64x2[1] == 0;
+  }
+
   // SimdConstant is a HashPolicy
   using Lookup = SimdConstant;
   static HashNumber hash(const SimdConstant& val) {

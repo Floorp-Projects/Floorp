@@ -112,6 +112,11 @@ bool ThreadsAvailable(JSContext* cx);
 // SIMD data and operations.
 bool SimdAvailable(JSContext* cx);
 
+#if defined(ENABLE_WASM_SIMD)
+// Report the result of a Simd simplification to the testing infrastructure.
+void ReportSimdAnalysis(const char* data);
+#endif
+
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 

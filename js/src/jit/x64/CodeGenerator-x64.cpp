@@ -1104,9 +1104,199 @@ void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
   FloatRegister lhsDest = ToFloatRegister(ins->lhsDest());
   FloatRegister rhs = ToFloatRegister(ins->rhs());
   SimdConstant control = ins->control();
-  FloatRegister temp = ToFloatRegister(ins->temp());
-  masm.shuffleInt8x16(reinterpret_cast<const uint8_t*>(control.asInt8x16()),
-                      rhs, lhsDest, temp);
+  switch (ins->op()) {
+    case LWasmShuffleSimd128::BLEND_8x16: {
+      masm.blendInt8x16(reinterpret_cast<const uint8_t*>(control.asInt8x16()),
+                        rhs, lhsDest, ToFloatRegister(ins->temp()));
+      break;
+    }
+    case LWasmShuffleSimd128::BLEND_16x8: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      masm.blendInt16x8(reinterpret_cast<const uint16_t*>(control.asInt16x8()),
+                        rhs, lhsDest);
+      break;
+    }
+    case LWasmShuffleSimd128::CONCAT_RIGHT_SHIFT_8x16: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      int8_t count = 16 - control.asInt8x16()[0];
+      MOZ_ASSERT(count > 0, "Should have been a MOVE operation");
+      masm.concatAndRightShiftInt8x16(rhs, lhsDest, count);
+      break;
+    }
+    case LWasmShuffleSimd128::INTERLEAVE_HIGH_8x16: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      masm.interleaveHighInt8x16(rhs, lhsDest);
+      break;
+    }
+    case LWasmShuffleSimd128::INTERLEAVE_HIGH_16x8: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      masm.interleaveHighInt16x8(rhs, lhsDest);
+      break;
+    }
+    case LWasmShuffleSimd128::INTERLEAVE_HIGH_32x4: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      masm.interleaveHighInt32x4(rhs, lhsDest);
+      break;
+    }
+    case LWasmShuffleSimd128::INTERLEAVE_LOW_8x16: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      masm.interleaveLowInt8x16(rhs, lhsDest);
+      break;
+    }
+    case LWasmShuffleSimd128::INTERLEAVE_LOW_16x8: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      masm.interleaveLowInt16x8(rhs, lhsDest);
+      break;
+    }
+    case LWasmShuffleSimd128::INTERLEAVE_LOW_32x4: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      masm.interleaveLowInt32x4(rhs, lhsDest);
+      break;
+    }
+    case LWasmShuffleSimd128::SHUFFLE_BLEND_8x16: {
+      masm.shuffleInt8x16(reinterpret_cast<const uint8_t*>(control.asInt8x16()),
+                          rhs, lhsDest, ToFloatRegister(ins->temp()));
+      break;
+    }
+    default: {
+      MOZ_CRASH("Unsupported SIMD shuffle operation");
+    }
+  }
+#else
+  MOZ_CRASH("No SIMD");
+#endif
+}
+
+void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
+#ifdef ENABLE_WASM_SIMD
+  FloatRegister src = ToFloatRegister(ins->src());
+  FloatRegister dest = ToFloatRegister(ins->output());
+  SimdConstant control = ins->control();
+  switch (ins->op()) {
+    // For broadcast, would MOVDDUP be better than PSHUFD for the last step?
+    case LWasmPermuteSimd128::BROADCAST_8x16: {
+      const SimdConstant::I8x16& mask = control.asInt8x16();
+      int8_t source = mask[0];
+      if (src != dest) {
+        masm.moveSimd128(src, dest);
+      }
+      if (source < 8) {
+        masm.interleaveLowInt8x16(dest, dest);
+      } else {
+        masm.interleaveHighInt8x16(dest, dest);
+        source -= 8;
+      }
+      uint16_t v = uint16_t(source & 3);
+      uint16_t wordMask[4] = {v, v, v, v};
+      if (source < 4) {
+        masm.permuteLowInt16x8(wordMask, dest, dest);
+        uint32_t dwordMask[4] = {0, 0, 0, 0};
+        masm.permuteInt32x4(dwordMask, dest, dest);
+      } else {
+        masm.permuteHighInt16x8(wordMask, dest, dest);
+        uint32_t dwordMask[4] = {2, 2, 2, 2};
+        masm.permuteInt32x4(dwordMask, dest, dest);
+      }
+      break;
+    }
+    case LWasmPermuteSimd128::BROADCAST_16x8: {
+      const SimdConstant::I16x8& mask = control.asInt16x8();
+      int16_t source = mask[0];
+      uint16_t v = uint16_t(source & 3);
+      uint16_t wordMask[4] = {v, v, v, v};
+      if (source < 4) {
+        masm.permuteLowInt16x8(wordMask, src, dest);
+        uint32_t dwordMask[4] = {0, 0, 0, 0};
+        masm.permuteInt32x4(dwordMask, dest, dest);
+      } else {
+        masm.permuteHighInt16x8(wordMask, src, dest);
+        uint32_t dwordMask[4] = {2, 2, 2, 2};
+        masm.permuteInt32x4(dwordMask, dest, dest);
+      }
+      break;
+    }
+    case LWasmPermuteSimd128::MOVE: {
+      if (src != dest) {
+        masm.moveSimd128(src, dest);
+      }
+      break;
+    }
+    case LWasmPermuteSimd128::PERMUTE_8x16: {
+      const SimdConstant::I8x16& mask = control.asInt8x16();
+#  ifdef DEBUG
+      DebugOnly<int> i;
+      for (i = 0; i < 16 && mask[i] == i; i++) {
+      }
+      MOZ_ASSERT(i < 16, "Should have been a MOVE operation");
+#  endif
+      masm.permuteInt8x16(reinterpret_cast<const uint8_t*>(mask), src, dest);
+      break;
+    }
+    case LWasmPermuteSimd128::PERMUTE_16x8: {
+      const SimdConstant::I16x8& mask = control.asInt16x8();
+#  ifdef DEBUG
+      DebugOnly<int> i;
+      for (i = 0; i < 8 && mask[i] == i; i++) {
+      }
+      MOZ_ASSERT(i < 8, "Should have been a MOVE operation");
+#  endif
+      uint16_t op = mask[0] >> 8;
+      MOZ_ASSERT(op != 0);
+      if (op & LWasmPermuteSimd128::SWAP_QWORDS) {
+        uint32_t dwordMask[4] = {2, 3, 0, 1};
+        masm.permuteInt32x4(dwordMask, src, dest);
+        src = dest;
+      }
+      if (op & LWasmPermuteSimd128::PERM_LOW) {
+        uint16_t control[4];
+        memcpy(control, mask, sizeof(control));
+        control[0] &= 15;
+        masm.permuteLowInt16x8(control, src, dest);
+        src = dest;
+      }
+      if (op & LWasmPermuteSimd128::PERM_HIGH) {
+        masm.permuteHighInt16x8(reinterpret_cast<const uint16_t*>(mask) + 4,
+                                src, dest);
+        src = dest;
+      }
+      break;
+    }
+    case LWasmPermuteSimd128::PERMUTE_32x4: {
+      const SimdConstant::I32x4& mask = control.asInt32x4();
+#  ifdef DEBUG
+      DebugOnly<int> i;
+      for (i = 0; i < 4 && mask[i] == i; i++) {
+      }
+      MOZ_ASSERT(i < 4, "Should have been a MOVE operation");
+#  endif
+      masm.permuteInt32x4(reinterpret_cast<const uint32_t*>(mask), src, dest);
+      break;
+    }
+    case LWasmPermuteSimd128::ROTATE_RIGHT_8x16: {
+      if (src != dest) {
+        masm.moveSimd128(src, dest);
+      }
+      int8_t count = control.asInt8x16()[0];
+      MOZ_ASSERT(count > 0, "Should have been a MOVE operation");
+      masm.concatAndRightShiftInt8x16(dest, dest, count);
+      break;
+    }
+    case LWasmPermuteSimd128::SHIFT_LEFT_8x16: {
+      int8_t count = control.asInt8x16()[0];
+      MOZ_ASSERT(count > 0, "Should have been a MOVE operation");
+      masm.leftShiftSimd128(Imm32(count), src, dest);
+      break;
+    }
+    case LWasmPermuteSimd128::SHIFT_RIGHT_8x16: {
+      int8_t count = control.asInt8x16()[0];
+      MOZ_ASSERT(count > 0, "Should have been a MOVE operation");
+      masm.rightShiftSimd128(Imm32(count), src, dest);
+      break;
+    }
+    default: {
+      MOZ_CRASH("Unsupported SIMD permutation operation");
+    }
+  }
 #else
   MOZ_CRASH("No SIMD");
 #endif

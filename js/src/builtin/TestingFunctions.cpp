@@ -906,6 +906,37 @@ static bool WasmIonDisabledByFeatures(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+#ifdef ENABLE_WASM_SIMD
+#  ifdef DEBUG
+static char lastAnalysisResult[1024];
+
+namespace js {
+namespace wasm {
+void ReportSimdAnalysis(const char* v) {
+  strncpy(lastAnalysisResult, v, sizeof(lastAnalysisResult));
+  lastAnalysisResult[sizeof(lastAnalysisResult) - 1] = 0;
+}
+}  // namespace wasm
+}  // namespace js
+
+// Unstable API for white-box testing of SIMD optimizations.
+//
+// Current API: takes no arguments, returns a string describing the last Simd
+// simplification applied.
+
+static bool WasmSimdAnalysis(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  JSString* result =
+      JS_NewStringCopyZ(cx, *lastAnalysisResult ? lastAnalysisResult : "none");
+  if (!result) {
+    return false;
+  }
+  args.rval().setString(result);
+  return true;
+}
+#  endif
+#endif
+
 static bool ConvertToTier(JSContext* cx, HandleValue value,
                           const wasm::Code& code, wasm::Tier* tier) {
   RootedString option(cx, JS::ToString(cx, value));
@@ -6682,6 +6713,12 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmMultiValueEnabled", WasmMultiValueEnabled, 1, 0,
 "wasmMultiValueEnabled()",
 "  Returns a boolean indicating whether the WebAssembly multi-value proposal is enabled."),
+
+#if defined(ENABLE_WASM_SIMD) && defined(DEBUG)
+    JS_FN_HELP("wasmSimdAnalysis", WasmSimdAnalysis, 1, 0,
+"wasmSimdAnalysis(...)",
+"  Unstable API for white-box testing.\n"),
+#endif
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",
