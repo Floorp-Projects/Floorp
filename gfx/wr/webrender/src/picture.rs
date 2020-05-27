@@ -3174,6 +3174,7 @@ impl TileCacheInstance {
         composite_state: &mut CompositeState,
     ) -> Option<PrimitiveVisibilityFlags> {
         // This primitive exists on the last element on the current surface stack.
+        profile_scope!("update_prim_dependencies");
         let prim_surface_index = *surface_stack.last().unwrap();
 
         // If the primitive is completely clipped out by the clip chain, there
@@ -4746,6 +4747,7 @@ impl PicturePrimitive {
             return None;
         }
 
+        profile_scope!("take_context");
         let task_id = frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port;
         frame_state.render_tasks[task_id].children.reserve(self.num_render_tasks);
 

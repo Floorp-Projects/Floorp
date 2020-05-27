@@ -338,9 +338,11 @@ impl RenderTarget for ColorRenderTarget {
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
     ) {
+        profile_scope!("build");
         let mut merged_batches = AlphaBatchContainer::new(None);
 
         for task_id in &self.alpha_tasks {
+            profile_scope!("alpha_task");
             let task = &render_tasks[*task_id];
 
             match task.clear_mode {
@@ -439,6 +441,7 @@ impl RenderTarget for ColorRenderTarget {
         _: &mut TransformPalette,
         deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
+        profile_scope!("add_task");
         let task = &render_tasks[task_id];
 
         match task.kind {
@@ -614,6 +617,7 @@ impl RenderTarget for AlphaRenderTarget {
         transforms: &mut TransformPalette,
         deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
+        profile_scope!("add_task");
         let task = &render_tasks[task_id];
         let (target_rect, _) = task.get_target_rect();
 
@@ -758,6 +762,7 @@ impl TextureCacheRenderTarget {
         task_id: RenderTaskId,
         render_tasks: &mut RenderTaskGraph,
     ) {
+        profile_scope!("add_task");
         let task_address = render_tasks.get_task_address(task_id);
         let src_task_address = render_tasks[task_id].children.get(0).map(|src_task_id| {
             render_tasks.get_task_address(*src_task_id)

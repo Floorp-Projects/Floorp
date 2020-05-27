@@ -715,6 +715,7 @@ impl<'a> SceneBuilder<'a> {
         origin: LayoutPoint,
         reference_frame: &ReferenceFrame,
     ) {
+        profile_scope!("build_reference_frame");
         let current_offset = self.current_offset(parent_spatial_node);
         self.push_reference_frame(
             reference_frame.id,
@@ -747,6 +748,7 @@ impl<'a> SceneBuilder<'a> {
         filter_primitives: ItemRange<FilterPrimitive>,
         prim_flags: PrimitiveFlags,
     ) {
+        profile_scope!("build_stacking_context");
         // Avoid doing unnecessary work for empty stacking contexts.
         if traversal.current_stacking_context_empty() {
             traversal.skip_current_stacking_context();

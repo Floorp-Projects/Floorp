@@ -769,6 +769,7 @@ impl GpuCache {
     pub fn begin_frame(&mut self, stamp: FrameStamp) {
         debug_assert!(self.texture.pending_blocks.is_empty());
         assert!(self.prepared_for_frames);
+        profile_scope!("begin_frame");
         self.now = stamp;
         self.texture.evict_old_blocks(self.now);
         self.saved_block_count = 0;
@@ -849,6 +850,7 @@ impl GpuCache {
         &mut self,
         profile_counters: &mut GpuCacheProfileCounters,
     ) -> FrameStamp {
+        profile_scope!("end_frame");
         profile_counters
             .allocated_rows
             .set(self.texture.rows.len());
