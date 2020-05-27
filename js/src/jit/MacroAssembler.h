@@ -1701,6 +1701,31 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(arm, arm64, x86_shared);
 
  public:
+  // The fallibleUnbox* methods below combine a Value type check with an unbox.
+  // Especially on 64-bit platforms this can be implemented more efficiently
+  // than a separate branch + unbox.
+  //
+  // |src| and |dest| can be the same register, but |dest| may hold garbage on
+  // failure.
+  inline void fallibleUnboxPtr(const ValueOperand& src, Register dest,
+                               JSValueType type, Label* fail) PER_ARCH;
+  inline void fallibleUnboxPtr(const Address& src, Register dest,
+                               JSValueType type, Label* fail) PER_ARCH;
+  inline void fallibleUnboxPtr(const BaseIndex& src, Register dest,
+                               JSValueType type, Label* fail) PER_ARCH;
+  template <typename T>
+  inline void fallibleUnboxInt32(const T& src, Register dest, Label* fail);
+  template <typename T>
+  inline void fallibleUnboxBoolean(const T& src, Register dest, Label* fail);
+  template <typename T>
+  inline void fallibleUnboxObject(const T& src, Register dest, Label* fail);
+  template <typename T>
+  inline void fallibleUnboxString(const T& src, Register dest, Label* fail);
+  template <typename T>
+  inline void fallibleUnboxSymbol(const T& src, Register dest, Label* fail);
+  template <typename T>
+  inline void fallibleUnboxBigInt(const T& src, Register dest, Label* fail);
+
   inline void cmp32Move32(Condition cond, Register lhs, Register rhs,
                           Register src, Register dest)
       DEFINED_ON(arm, arm64, mips_shared, x86_shared);
