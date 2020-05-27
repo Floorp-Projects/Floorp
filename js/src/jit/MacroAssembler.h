@@ -1921,11 +1921,71 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                    FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
 
-  // Shuffle - permute with immediate indices
+  // Shuffle - blend and permute with immediate indices, and its many
+  // specializations.  Lane values other than those mentioned are illegal.
 
+  // lane values 0..31
   inline void shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
                              FloatRegister lhsDest, FloatRegister temp)
       DEFINED_ON(x86_shared);
+
+  // lane values 0 (select from lhs) or FF (select from rhs).
+  inline void blendInt8x16(const uint8_t lanes[16], FloatRegister rhs,
+                           FloatRegister lhsDest, FloatRegister temp)
+      DEFINED_ON(x86_shared);
+
+  // lane values 0 (select from lhs) or FFFF (select from rhs).
+  inline void blendInt16x8(const uint16_t lanes[8], FloatRegister rhs,
+                           FloatRegister lhsDest) DEFINED_ON(x86_shared);
+
+  inline void interleaveHighInt8x16(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void interleaveHighInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void interleaveHighInt32x4(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void interleaveLowInt8x16(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void interleaveLowInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void interleaveLowInt32x4(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  // Permute - permute with immediate indices.
+
+  // lane values 0..15
+  inline void permuteInt8x16(const uint8_t lanes[16], FloatRegister src,
+                             FloatRegister dest) DEFINED_ON(x86_shared);
+
+  // lane values 0..3 [sic].
+  inline void permuteHighInt16x8(const uint16_t lanes[4], FloatRegister src,
+                                 FloatRegister dest) DEFINED_ON(x86_shared);
+
+  // lane values 0..3.
+  inline void permuteLowInt16x8(const uint16_t lanes[4], FloatRegister src,
+                                FloatRegister dest) DEFINED_ON(x86_shared);
+
+  // lane values 0..3
+  inline void permuteInt32x4(const uint32_t lanes[4], FloatRegister src,
+                             FloatRegister dest) DEFINED_ON(x86_shared);
+
+  // low_16_bytes_of((lhsDest ++ rhs) >> shift*8), shift must be < 32
+  inline void concatAndRightShiftInt8x16(FloatRegister rhs,
+                                         FloatRegister lhsDest, uint32_t shift)
+      DEFINED_ON(x86_shared);
+
+  // Shift bytes with immediate count, shifting in zeroes.  Shift count 0..15.
+
+  inline void leftShiftSimd128(Imm32 count, FloatRegister src,
+                               FloatRegister dest) DEFINED_ON(x86_shared);
+
+  inline void rightShiftSimd128(Imm32 count, FloatRegister src,
+                                FloatRegister dest) DEFINED_ON(x86_shared);
 
   // Swizzle - permute with variable indices.  `rhs` holds the lanes parameter.
 

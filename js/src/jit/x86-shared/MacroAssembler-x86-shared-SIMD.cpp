@@ -537,6 +537,48 @@ void MacroAssemblerX86Shared::swizzleFloat32x4(FloatRegister input,
   shuffleFloat32(mask, input, output);
 }
 
+void MacroAssemblerX86Shared::blendInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister output,
+                                           FloatRegister temp,
+                                           const uint8_t lanes[16]) {
+  MOZ_ASSERT(AssemblerX86Shared::HasSSSE3());
+  MOZ_ASSERT(lhs == output);
+  MOZ_ASSERT(lhs == rhs || !temp.isInvalid());
+
+  // TODO: For sse4.1, consider whether PBLENDVB would not be better, even if it
+  // is variable and requires xmm0 to be free and the loading of a mask.
+
+  // Set scratch = lanes to select from lhs.
+  int8_t mask[16];
+  for (unsigned i = 0; i < 16; i++) {
+    mask[i] = ~lanes[i];
+  }
+  ScratchSimd128Scope scratch(asMasm());
+  asMasm().loadConstantSimd128Int(SimdConstant::CreateX16(mask), scratch);
+  if (lhs == rhs) {
+    asMasm().moveSimd128Int(rhs, temp);
+    rhs = temp;
+  }
+  vpand(Operand(scratch), lhs, lhs);
+  vpandn(Operand(rhs), scratch, scratch);
+  vpor(scratch, lhs, lhs);
+}
+
+void MacroAssemblerX86Shared::blendInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister output,
+                                           const uint16_t lanes[8]) {
+  MOZ_ASSERT(AssemblerX86Shared::HasSSE41());
+  MOZ_ASSERT(lhs == output);
+
+  uint32_t mask = 0;
+  for (unsigned i = 0; i < 8; i++) {
+    if (lanes[i]) {
+      mask |= (1 << i);
+    }
+  }
+  vpblendw(mask, rhs, lhs, lhs);
+}
+
 void MacroAssemblerX86Shared::shuffleInt8x16(
     FloatRegister lhs, FloatRegister rhs, FloatRegister output,
     const Maybe<FloatRegister>& maybeFloatTemp,
@@ -563,6 +605,11 @@ void MacroAssemblerX86Shared::shuffleInt8x16(
     vpshufb(*maybeFloatTemp, lhsCopy, scratch);
 
     // Set output = lanes from rhs.
+    // TODO: The alternative to loading this constant is to complement
+    // the one that is already in *maybeFloatTemp, takes two instructions
+    // and a temp register: PCMPEQD tmp, tmp; PXOR *maybeFloatTemp, tmp.
+    // But scratch is available here so that's OK.  But it's not given
+    // that avoiding the load is a win.
     for (unsigned i = 0; i < 16; i++) {
       idx[i] = lanes[i] >= 16 ? lanes[i] - 16 : -1;
     }
