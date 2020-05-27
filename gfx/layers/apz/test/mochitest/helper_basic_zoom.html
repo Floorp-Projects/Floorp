@@ -10,7 +10,7 @@
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   let visResEvt = new EventCounter(window.visualViewport, "resize");
   let visScrEvt = new EventCounter(window.visualViewport, "scroll");
   // Our internal visual viewport events aren't restricted to the visual view-
@@ -27,10 +27,10 @@ function* test(testDriver) {
   ok(initial_resolution > 0,
       "The initial_resolution is " + initial_resolution + ", which is some sane value");
 
-  yield* pinchZoomInWithTouch(testDriver, 150, 300);
+  await pinchZoomInWithTouch(150, 300);
 
   // Flush state and get the resolution we're at now
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
   let final_resolution = getResolution();
   ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
 
@@ -58,7 +58,7 @@ function* test(testDriver) {
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone);
 
   </script>

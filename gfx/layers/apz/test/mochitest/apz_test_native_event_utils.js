@@ -719,17 +719,43 @@ function* pinchZoomInTouchSequence(focusX, focusY) {
   yield* synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
 }
 
+// Returns a promise that is resolved when the observer service dispatches a
+// message with the given topic.
+function promiseTopic(aTopic) {
+  return new Promise((resolve, reject) => {
+    SpecialPowers.Services.obs.addObserver(function observer(
+      subject,
+      topic,
+      data
+    ) {
+      try {
+        SpecialPowers.Services.obs.removeObserver(observer, topic);
+        resolve([subject, data]);
+      } catch (ex) {
+        SpecialPowers.Services.obs.removeObserver(observer, topic);
+        reject(ex);
+      }
+    },
+    aTopic);
+  });
+}
+
 // This generates a touch-based pinch zoom-in gesture that is expected
 // to succeed. It returns after APZ has completed the zoom and reaches the end
 // of the transform.
-function* pinchZoomInWithTouch(testDriver, focusX, focusY) {
-  // This listener will trigger the test to continue once APZ is done with
-  // processing the scroll.
-  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
-  yield* pinchZoomInTouchSequence(focusX, focusY);
-  // Wait for the APZ:TransformEnd to be fired after touch events are processed.
-  yield true;
-  // We get here once the APZ:TransformEnd has fired, so we don't need that
-  // observer any more.
-  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
+async function pinchZoomInWithTouch(focusX, focusY) {
+  // Register the listener for the TransformEnd observer topic
+  let transformEndPromise = promiseTopic("APZ:TransformEnd");
+
+  // Dispatch all the touch events
+  let generator = pinchZoomInTouchSequence(focusX, focusY);
+  while (true) {
+    let yieldResult = generator.next();
+    if (yieldResult.done) {
+      break;
+    }
+  }
+
+  // Wait for TransformEnd to fire.
+  await transformEndPromise;
 }
