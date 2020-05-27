@@ -8,7 +8,10 @@
 "use strict";
 
 add_task(async function setup() {
-  Region._setRegion("an", false);
+  Services.prefs.setCharPref("browser.search.region", "an");
+
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
+
   await AddonTestUtils.promiseStartupManager();
   await useTestEngines("test-extensions");
 });
@@ -48,7 +51,7 @@ add_task(async function test_changeRegion() {
   let reInitPromise = SearchTestUtils.promiseSearchNotification(
     "reinit-complete"
   );
-  Region._setRegion("tr", false);
+  Services.prefs.setCharPref("browser.search.region", "tr");
   Services.search.reInit();
   await reInitPromise;
 
