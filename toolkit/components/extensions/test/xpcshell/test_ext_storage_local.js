@@ -65,3 +65,9 @@ add_task(function test_storage_local_idb_backend() {
     test_background_page_storage("local")
   );
 });
+
+add_task(function test_storage_local_idb_bytes_in_use() {
+  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]], () =>
+    test_background_storage_area_no_bytes_in_use("local")
+  );
+});

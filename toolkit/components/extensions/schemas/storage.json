@@ -155,6 +155,135 @@
             ]
           }
         ]
+      },
+      {
+        "id": "StorageAreaSync",
+        "type": "object",
+        "functions": [
+          {
+            "name": "get",
+            "type": "function",
+            "description": "Gets one or more items from storage.",
+            "async": "callback",
+            "parameters": [
+              {
+                "name": "keys",
+                "choices": [
+                  { "type": "string" },
+                  { "type": "array", "items": { "type": "string" } },
+                  {
+                    "type": "object",
+                    "description": "Storage items to return in the callback, where the values are replaced with those from storage if they exist.",
+                    "additionalProperties": { "type": "any" }
+                  }
+                ],
+                "description": "A single key to get, list of keys to get, or a dictionary specifying default values (see description of the object).  An empty list or object will return an empty result object.  Pass in <code>null</code> to get the entire contents of storage.",
+                "optional": true
+              },
+              {
+                "name": "callback",
+                "type": "function",
+                "description": "Callback with storage items, or on failure (in which case $(ref:runtime.lastError) will be set).",
+                "parameters": [
+                  {
+                    "name": "items",
+                    "type": "object",
+                    "additionalProperties": { "type": "any" },
+                    "description": "Object with items in their key-value mappings."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "getBytesInUse",
+            "type": "function",
+            "description": "Gets the amount of space (in bytes) being used by one or more items.",
+            "async": "callback",
+            "parameters": [
+              {
+                "name": "keys",
+                "choices": [
+                  { "type": "string" },
+                  { "type": "array", "items": { "type": "string" } }
+                ],
+                "description": "A single key or list of keys to get the total usage for. An empty list will return 0. Pass in <code>null</code> to get the total usage of all of storage.",
+                "optional": true
+              },
+              {
+                "name": "callback",
+                "type": "function",
+                "description": "Callback with the amount of space being used by storage, or on failure (in which case $(ref:runtime.lastError) will be set).",
+                "parameters": [
+                  {
+                    "name": "bytesInUse",
+                    "type": "integer",
+                    "description": "Amount of space being used in storage, in bytes."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "set",
+            "type": "function",
+            "description": "Sets multiple items.",
+            "async": "callback",
+            "parameters": [
+              {
+                "name": "items",
+                "type": "object",
+                "additionalProperties": { "type": "any" },
+                "description": "<p>An object which gives each key/value pair to update storage with. Any other key/value pairs in storage will not be affected.</p><p>Primitive values such as numbers will serialize as expected. Values with a <code>typeof</code> <code>\"object\"</code> and <code>\"function\"</code> will typically serialize to <code>{}</code>, with the exception of <code>Array</code> (serializes as expected), <code>Date</code>, and <code>Regex</code> (serialize using their <code>String</code> representation).</p>"
+              },
+              {
+                "name": "callback",
+                "type": "function",
+                "description": "Callback on success, or on failure (in which case $(ref:runtime.lastError) will be set).",
+                "parameters": [],
+                "optional": true
+              }
+            ]
+          },
+          {
+            "name": "remove",
+            "type": "function",
+            "description": "Removes one or more items from storage.",
+            "async": "callback",
+            "parameters": [
+              {
+                "name": "keys",
+                "choices": [
+                  {"type": "string"},
+                  {"type": "array", "items": {"type": "string"}}
+                ],
+                "description": "A single key or a list of keys for items to remove."
+              },
+              {
+                "name": "callback",
+                "type": "function",
+                "description": "Callback on success, or on failure (in which case $(ref:runtime.lastError) will be set).",
+                "parameters": [],
+                "optional": true
+              }
+            ]
+          },
+          {
+            "name": "clear",
+            "type": "function",
+            "description": "Removes all items from storage.",
+            "async": "callback",
+            "parameters": [
+              {
+                "name": "callback",
+                "type": "function",
+                "description": "Callback on success, or on failure (in which case $(ref:runtime.lastError) will be set).",
+                "parameters": [],
+                "optional": true
+              }
+            ]
+          }
+        ]
       }
     ],
     "events": [
@@ -179,7 +308,7 @@
     ],
     "properties": {
       "sync": {
-        "$ref": "StorageArea",
+        "$ref": "StorageAreaSync",
         "description": "Items in the <code>sync</code> storage area are synced by the browser.",
         "properties": {
           "QUOTA_BYTES": {

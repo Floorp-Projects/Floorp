@@ -21,3 +21,9 @@ add_task(async function test_contentscript_storage_sync() {
     test_contentscript_storage("sync")
   );
 });
+
+add_task(async function test_contentscript_storage_no_bytes_in_use() {
+  return runWithPrefs([[STORAGE_SYNC_PREF, true]], () =>
+    test_contentscript_storage_area_with_bytes_in_use("sync", false)
+  );
+});
