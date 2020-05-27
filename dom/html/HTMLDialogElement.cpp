@@ -83,8 +83,13 @@ void HTMLDialogElement::UnbindFromTree(bool aNullParent) {
 }
 
 void HTMLDialogElement::ShowModal(ErrorResult& aError) {
-  if (!IsInComposedDoc() || Open()) {
-    aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (!IsInComposedDoc()) {
+    aError.ThrowInvalidStateError("Dialog element is not connected");
+    return;
+  }
+
+  if (Open()) {
+    aError.ThrowInvalidStateError("Dialog element already has an 'open' attribute");
     return;
   }
 
