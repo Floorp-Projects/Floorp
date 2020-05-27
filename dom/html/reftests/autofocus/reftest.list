@@ -7,8 +7,8 @@ needs-focus == button-load.html button-ref.html
 needs-focus == button-create.html button-ref.html
 needs-focus == textarea-load.html textarea-ref.html
 needs-focus == textarea-create.html textarea-ref.html
-fuzzy-if(Android,0-9,0-3) needs-focus == select-load.html select-ref.html
-fuzzy-if(!nativeThemePref,0-1,0-3) needs-focus == select-create.html select-ref.html
+fuzzy-if(Android,0-9,0-4) needs-focus == select-load.html select-ref.html
+fuzzy-if(!nativeThemePref,0-1,0-3) fuzzy-if(Android,0-1,0-4) needs-focus == select-create.html select-ref.html
 fuzzy-if(!nativeThemePref,0-1,0-1) needs-focus == autofocus-after-load.html autofocus-after-load-ref.html
 needs-focus == autofocus-leaves-iframe.html autofocus-leaves-iframe-ref.html
 needs-focus == autofocus-after-body-focus.html autofocus-after-body-focus-ref.html
