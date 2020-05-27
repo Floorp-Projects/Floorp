@@ -29,7 +29,33 @@ void TestMoveConstructor() {
   MOZ_RELEASE_ASSERT(!map.count());
 }
 
+enum SimpleEnum { SIMPLE_1, SIMPLE_2 };
+
+enum class ClassEnum : int {
+  CLASS_ENUM_1,
+  CLASS_ENUM_2,
+};
+
+void TestEnumHash() {
+  using namespace mozilla;
+
+  HashMap<SimpleEnum, int> map;
+  MOZ_RELEASE_ASSERT(map.put(SIMPLE_1, 1));
+  MOZ_RELEASE_ASSERT(map.put(SIMPLE_2, 2));
+
+  MOZ_RELEASE_ASSERT(map.lookup(SIMPLE_1)->value() == 1);
+  MOZ_RELEASE_ASSERT(map.lookup(SIMPLE_1)->value() == 2);
+
+  HashMap<ClassEnum, int> map2;
+  MOZ_RELEASE_ASSERT(map2.put(ClassEnum::CLASS_ENUM_1, 1));
+  MOZ_RELEASE_ASSERT(map2.put(ClassEnum::CLASS_ENUM_2, 2));
+
+  MOZ_RELEASE_ASSERT(map2.lookup(ClassEnum::CLASS_ENUM_1)->value() == 1);
+  MOZ_RELEASE_ASSERT(map2.lookup(ClassEnum::CLASS_ENUM_2)->value() == 2);
+}
+
 int main() {
   TestMoveConstructor();
+  TestEnumHash();
   return 0;
 }
