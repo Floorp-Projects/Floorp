@@ -33,7 +33,6 @@
           "stackwalk",
           "tasktracer",
           "threads",
-          "trackopts",
           "jstracer",
           "jsallocations",
           "nostacksampling",
