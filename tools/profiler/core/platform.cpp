@@ -2061,8 +2061,7 @@ static inline void DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
 
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
-  ProfileBufferCollector collector(aBuffer, ActivePS::Features(aLock),
-                                   aSamplePos);
+  ProfileBufferCollector collector(aBuffer, aSamplePos);
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (ActivePS::FeatureStackWalk(aLock)) {
@@ -4850,7 +4849,7 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
 
   PSAutoLock lock(gPSMutex);
 
-  if (!ActivePS::Exists(lock) || ActivePS::FeaturePrivacy(lock)) {
+  if (!ActivePS::Exists(lock)) {
     return nullptr;
   }
 

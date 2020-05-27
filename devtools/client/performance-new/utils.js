@@ -345,12 +345,6 @@ const featureDescriptions = [
     title: "Record main thread I/O markers.",
   },
   {
-    name: "Privacy",
-    value: "privacy",
-    title: "Remove some potentially user-identifiable information.",
-    experimental: true,
-  },
-  {
     name: "Sequential Styling",
     value: "seqstyle",
     title: "Disable parallel traversal in styling.",

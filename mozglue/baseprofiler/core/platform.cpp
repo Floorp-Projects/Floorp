@@ -1086,15 +1086,9 @@ bool RacyFeatures::IsActiveWithFeature(uint32_t aFeature) {
 }
 
 /* static */
-bool RacyFeatures::IsActiveWithoutPrivacy() {
+bool RacyFeatures::IsActiveAndUnpaused() {
   uint32_t af = sActiveAndFeatures;  // copy it first
-  return (af & Active) && !(af & ProfilerFeature::Privacy);
-}
-
-/* static */
-bool RacyFeatures::IsActiveAndUnpausedWithoutPrivacy() {
-  uint32_t af = sActiveAndFeatures;  // copy it first
-  return (af & Active) && !(af & (Paused | ProfilerFeature::Privacy));
+  return (af & Active) && !(af & Paused);
 }
 
 // Each live thread has a RegisteredThread, and we store a reference to it in
@@ -1611,8 +1605,7 @@ static inline void DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
 
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
-  ProfileBufferCollector collector(aBuffer, ActivePS::Features(aLock),
-                                   aSamplePos);
+  ProfileBufferCollector collector(aBuffer, aSamplePos);
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (ActivePS::FeatureStackWalk(aLock)) {
@@ -3366,7 +3359,7 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
 
   PSAutoLock lock;
 
-  if (!ActivePS::Exists(lock) || ActivePS::FeaturePrivacy(lock)) {
+  if (!ActivePS::Exists(lock)) {
     return nullptr;
   }
 

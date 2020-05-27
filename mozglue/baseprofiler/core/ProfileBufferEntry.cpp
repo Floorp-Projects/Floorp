@@ -526,15 +526,6 @@ class EntryGetter {
 //     LineNumber(945)
 //     CategoryPair(ProfilingCategoryPair::JS)
 //
-// - A profiling stack frame with a dynamic string, but with privacy enabled:
-//
-//     Label("nsObserverService::NotifyObservers")
-//     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_LABEL_FRAME))
-//     DynamicStringFragment("(private")
-//     DynamicStringFragment(")")
-//     LineNumber(291)
-//     CategoryPair(ProfilingCategoryPair::OTHER)
-//
 // - A profiling stack frame with an overly long dynamic string:
 //
 //     Label("")
