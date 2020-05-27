@@ -40,7 +40,6 @@ import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.Tab
 
@@ -67,10 +66,6 @@ class CollectionCreationView(
     init {
         transition.duration = TRANSITION_DURATION
         transition.excludeTarget(back_button, true)
-
-        view.bottom_bar_icon_button.apply {
-            increaseTapArea(increaseButtonByDps)
-        }
 
         view.name_collection_edittext.filters += InputFilter.LengthFilter(COLLECTION_NAME_MAX_LENGTH)
         view.name_collection_edittext.setOnEditorActionListener { view, actionId, _ ->
@@ -319,7 +314,6 @@ class CollectionCreationView(
 
     companion object {
         private const val TRANSITION_DURATION = 200L
-        private const val increaseButtonByDps = 16
         private const val COLLECTION_NAME_MAX_LENGTH = 128
     }
 }
