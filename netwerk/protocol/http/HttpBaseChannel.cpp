@@ -4769,6 +4769,14 @@ HttpBaseChannel::GetCrossOriginOpenerPolicy(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::HasCrossOriginOpenerPolicyMismatch(bool* aIsMismatch) {
+  // This should only be called in parent process.
+  MOZ_ASSERT(XRE_IsParentProcess());
+  *aIsMismatch = mHasCrossOriginOpenerPolicyMismatch;
+  return NS_OK;
+}
+
 void HttpBaseChannel::MaybeFlushConsoleReports() {
   // If this channel is part of a loadGroup, we can flush the console reports
   // immediately.
