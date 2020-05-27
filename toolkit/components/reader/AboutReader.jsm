@@ -1137,8 +1137,8 @@ AboutReader.prototype = {
       dropdown.classList.remove("open");
     }
 
-    this._toolbarContainerElement.classList.remove("dropdown-open");
     if (haveOpenDropdowns) {
+      this._toolbarContainerElement.classList.remove("dropdown-open");
       this._toggleToolbarFixedPosition(false);
     }
 
