@@ -156,12 +156,13 @@ add_task(async function setup() {
 });
 
 add_task(async function test_regular_init() {
+  let reloadObserved = listenFor(SEARCH_SERVICE_TOPIC, "engines-reloaded");
   let geoUrl = `data:application/json,{"country_code": "FR"}`;
   Services.prefs.setCharPref("browser.region.network.url", geoUrl);
 
   await Promise.all([
-    Services.search.init(),
-    SearchTestUtils.promiseSearchNotification("engines-reloaded"),
+    Services.search.init(true),
+    SearchTestUtils.promiseSearchNotification("ensure-known-region-done"),
     promiseAfterCache(),
   ]);
 
@@ -169,6 +170,11 @@ add_task(async function test_regular_init() {
     Services.search.defaultEngine.name,
     FR_DEFAULT,
     "Geo defined default should be set"
+  );
+
+  Assert.ok(
+    !reloadObserved(),
+    "Engines don't reload with immediate region fetch"
   );
 });
 
@@ -178,6 +184,7 @@ add_task(async function test_init_with_slow_region_lookup() {
 
   // Ensure the region lookup completes after init so the
   // engines are reloaded
+  Services.prefs.setCharPref("browser.search.region", "");
   let srv = useHttpServer();
   srv.registerPathHandler("/fetch_region", async (req, res) => {
     res.processAsync();
@@ -192,14 +199,12 @@ add_task(async function test_init_with_slow_region_lookup() {
     `http://localhost:${srv.identity.primaryPort}/fetch_region`
   );
 
-  Region._setRegion("", false);
-  Region.init();
-
   // Kick off a re-init.
   initPromise = asyncReInit();
   await initPromise;
 
   let otherPromises = [
+    SearchTestUtils.promiseSearchNotification("ensure-known-region-done"),
     promiseAfterCache(),
     SearchTestUtils.promiseSearchNotification(
       "engine-default",
