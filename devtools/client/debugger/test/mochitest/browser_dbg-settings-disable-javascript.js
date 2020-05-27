@@ -11,7 +11,6 @@ async function toggleJavaScript(dbg, shouldBeCheckedAtStart) {
   menuButton.click();
   await waitForTime(200);
 
-  // Wait for the menu to show before trying to click the item
   const { parent } = dbg.panel.panelWin;
   const { document } = parent;
 
@@ -34,10 +33,8 @@ add_task(async function() {
 
   info("Clicking the disable javascript button in the settings menu");
   await toggleJavaScript(dbg, false);
-  is(Services.prefs.getBoolPref("javascript.enabled"), false, "JavaScript is disabled");
 
-  info("Reloading page to ensure there are no sources");
-  await reload(dbg);
+  info("Waiting for reload triggered by disabling javascript");
   await waitForSourceCount(dbg, 0);
 
   info("Clicking the disable javascript button in the settings menu to reenable JavaScript");

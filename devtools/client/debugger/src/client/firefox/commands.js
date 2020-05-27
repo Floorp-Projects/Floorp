@@ -189,6 +189,14 @@ function removeXHRBreakpoint(path: string, method: string) {
   return currentThreadFront().removeXHRBreakpoint(path, method);
 }
 
+export function toggleJavaScriptEnabled(enabled: Boolean) {
+  return currentTarget().reconfigure({
+    options: {
+      javascriptEnabled: enabled,
+    },
+  });
+}
+
 function addWatchpoint(
   object: Grip,
   property: string,
@@ -579,6 +587,7 @@ const clientCommands = {
   lookupTarget,
   getFrontByID,
   fetchAncestorFramePositions,
+  toggleJavaScriptEnabled,
 };
 
 export { setupCommands, clientCommands };
