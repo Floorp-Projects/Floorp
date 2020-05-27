@@ -112,7 +112,7 @@ class ProcessExecutionMixin(LoggingMixin):
         if python_unbuffered:
             use_env['PYTHONUNBUFFERED'] = '1'
 
-        self.log(logging.DEBUG, 'process', {'env': use_env}, 'Environment: {env}')
+        self.log(logging.DEBUG, 'process', {'env': str(use_env)}, 'Environment: {env}')
 
         use_env = ensure_subprocess_env(use_env)
         if pass_thru:
