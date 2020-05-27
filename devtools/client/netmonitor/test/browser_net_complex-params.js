@@ -23,7 +23,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 12);
 
-  let wait = waitForDOM(document, "#request-panel .accordion-item", 3);
+  let wait = waitForDOM(document, "#request-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
@@ -33,48 +33,48 @@ add_task(async function() {
     document.querySelector("#request-tab")
   );
   await wait;
-  testParamsTab1("a", "", '{ "foo": "bar" }', "");
+  testParamsTab1('{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#request-panel .accordion-item", 3);
+  wait = waitForDOM(document, "#request-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]
   );
   await wait;
-  testParamsTab1("a", "b", '{ "foo": "bar" }', "");
+  testParamsTab1('{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#request-panel .accordion-item", 3);
+  wait = waitForDOM(document, "#request-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]
   );
   await wait;
-  testParamsTab1("a", "b", "?foo", "bar");
+  testParamsTab1("?foo", "bar");
 
   let waitRows, waitSourceEditor;
-  waitRows = waitForDOM(document, "#request-panel tr.treeRow", 2);
+  waitRows = waitForDOM(document, "#request-panel tr.treeRow", 1);
   waitSourceEditor = waitForDOM(document, "#request-panel .CodeMirror-code");
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[3]
   );
   await Promise.all([waitRows, waitSourceEditor]);
-  testParamsTab2("a", "", '{ "foo": "bar" }', "js");
+  testParamsTab2('{ "foo": "bar" }', "js");
 
-  waitRows = waitForDOM(document, "#request-panel tr.treeRow", 2);
+  waitRows = waitForDOM(document, "#request-panel tr.treeRow", 1);
   waitSourceEditor = waitForDOM(document, "#request-panel .CodeMirror-code");
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[4]
   );
   await Promise.all([waitRows, waitSourceEditor]);
-  testParamsTab2("a", "b", '{ "foo": "bar" }', "js");
+  testParamsTab2('{ "foo": "bar" }', "js");
 
   // Wait for all accordion items and editor updated by react
   const waitAccordionItems = waitForDOM(
     document,
     "#request-panel .accordion-item",
-    2
+    1
   );
   waitSourceEditor = waitForDOM(document, "#request-panel .CodeMirror-code");
   EventUtils.sendMouseEvent(
@@ -82,7 +82,7 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[5]
   );
   await Promise.all([waitAccordionItems, waitSourceEditor]);
-  testParamsTab2("a", "b", "?foo=bar", "text");
+  testParamsTab2("?foo=bar", "text");
 
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
@@ -90,70 +90,35 @@ add_task(async function() {
   );
   testParamsTab3();
 
-  wait = waitForDOM(document, "#request-panel .accordion-item", 3);
+  wait = waitForDOM(document, "#request-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[7]
   );
   await wait;
-  testParamsTab1("a", "b", '{ "foo": "bar" }', "");
+  testParamsTab1('{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#request-panel .accordion-item", 3);
+  wait = waitForDOM(document, "#request-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[8]
   );
   await wait;
-  testParamsTab1("a", "b", '{ "foo": "bar" }', "");
-
-  wait = waitForDOM(document, "#request-panel .accordion-item", 1);
-  EventUtils.sendMouseEvent(
-    { type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[9]
-  );
-  await wait;
-  testParamsTabGetWithArgs(new Map([["species", "in=(52,60)"]]));
-
-  // Only the tree content will change
-  wait = waitForDOM(document, "#request-panel tr.treeTable", 0);
-  EventUtils.sendMouseEvent(
-    { type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[10]
-  );
-  await wait;
-  testParamsTabGetWithArgs(new Map([["a", ["", "b"]]]));
-
-  wait = waitForDOM(document, "#request-panel tr.treeTable", 0);
-  EventUtils.sendMouseEvent(
-    { type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[11]
-  );
-  await wait;
-  testParamsTabGetWithArgs(
-    new Map([
-      ["a", ["b", "c"]],
-      ["d", "1"],
-    ])
-  );
+  testParamsTab1('{ "foo": "bar" }', "");
 
   await teardown(monitor);
 
-  function testParamsTab1(
-    queryStringParamName,
-    queryStringParamValue,
-    formDataParamName,
-    formDataParamValue
-  ) {
+  function testParamsTab1(formDataParamName, formDataParamValue) {
     const tabpanel = document.querySelector("#request-panel");
 
     is(
       tabpanel.querySelectorAll(".accordion-item").length,
-      3,
+      2,
       "The number of param accordion items displayed in this tabpanel is incorrect."
     );
     is(
       tabpanel.querySelectorAll("tr.treeRow").length,
-      2,
+      1,
       "The number of param rows displayed in this tabpanel is incorrect."
     );
     is(
@@ -177,55 +142,34 @@ add_task(async function() {
 
     is(
       accordionItems[0].querySelector(".accordion-header-label").textContent,
-      L10N.getStr("paramsQueryString"),
-      "The request query section doesn't have the correct title."
-    );
-    is(
-      accordionItems[1].querySelector(".accordion-header-label").textContent,
       L10N.getStr("paramsFormData"),
       "The form data section doesn't have the correct title."
     );
 
     is(
       labels[0].textContent,
-      queryStringParamName,
-      "The first query string param name was incorrect."
-    );
-    is(
-      values[0].textContent,
-      `"${queryStringParamValue}"`,
-      "The first query string param value was incorrect."
-    );
-
-    is(
-      labels[1].textContent,
       formDataParamName,
       "The first form data param name was incorrect."
     );
     is(
-      values[1].textContent,
+      values[0].textContent,
       `"${formDataParamValue}"`,
       "The first form data param value was incorrect."
     );
   }
 
-  function testParamsTab2(
-    queryStringParamName,
-    queryStringParamValue,
-    requestPayload,
-    editorMode
-  ) {
+  function testParamsTab2(requestPayload, editorMode) {
     const isJSON = editorMode === "js";
     const tabpanel = document.querySelector("#request-panel");
 
     is(
       tabpanel.querySelectorAll(".accordion-item").length,
-      isJSON ? 3 : 2,
+      isJSON ? 2 : 1,
       "The number of param accordion items displayed in this tabpanel is incorrect."
     );
     is(
       tabpanel.querySelectorAll("tr.treeRow").length,
-      isJSON ? 2 : 1,
+      isJSON ? 1 : 0,
       "The number of param rows displayed in this tabpanel is incorrect."
     );
     is(
@@ -235,10 +179,6 @@ add_task(async function() {
     );
 
     ok(
-      tabpanel.querySelector(".treeTable"),
-      "The request params box should be displayed."
-    );
-    ok(
       tabpanel.querySelector(".CodeMirror-code"),
       "The request post data editor should be displayed."
     );
@@ -247,28 +187,12 @@ add_task(async function() {
 
     is(
       accordionItems[0].querySelector(".accordion-header-label").textContent,
-      L10N.getStr("paramsQueryString"),
-      "The query section doesn't have the correct title."
-    );
-    is(
-      accordionItems[1].querySelector(".accordion-header-label").textContent,
       isJSON ? L10N.getStr("jsonScopeName") : L10N.getStr("paramsPostPayload"),
       "The post section doesn't have the correct title."
     );
 
     const labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
     const values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
-
-    is(
-      labels[0].textContent,
-      queryStringParamName,
-      "The first query string param name was incorrect."
-    );
-    is(
-      values[0].textContent,
-      `"${queryStringParamValue}"`,
-      "The first query string param value was incorrect."
-    );
 
     ok(
       getCodeMirrorValue(monitor).includes(requestPayload),
@@ -277,7 +201,7 @@ add_task(async function() {
 
     if (isJSON) {
       is(
-        accordionItems[2].querySelector(".accordion-header-label").textContent,
+        accordionItems[1].querySelector(".accordion-header-label").textContent,
         L10N.getStr("paramsPostPayload"),
         "The post section doesn't have the correct title."
       );
@@ -330,93 +254,5 @@ add_task(async function() {
       !tabpanel.querySelector(".CodeMirror-code"),
       "The request post data editor should be hidden."
     );
-  }
-
-  /**
-   * @param {Map} expectedParams A map of expected parameter keys, and values
-   * as Strings or an array of Strings if the parameter key has multiple
-   * values
-   */
-  function testParamsTabGetWithArgs(expectedParams) {
-    const tabpanel = document.querySelector("#request-panel");
-
-    let numParamRows = 0;
-    expectedParams.forEach((v, k, m) => {
-      numParamRows += typeof v === "object" ? v.length + 1 : 1;
-    });
-
-    is(
-      tabpanel.querySelectorAll(".accordion-item").length,
-      1,
-      "Check the number of param accordion items displayed in this tabpanel."
-    );
-    is(
-      tabpanel.querySelectorAll("tr.treeRow").length,
-      numParamRows,
-      "Check the number of param rows displayed in this tabpanel."
-    );
-    ok(
-      !tabpanel.querySelector(".empty-notice"),
-      "The empty notice should not be displayed in this tabpanel."
-    );
-
-    ok(
-      tabpanel.querySelector(".treeTable"),
-      "The request params box should be shown."
-    );
-    ok(
-      !tabpanel.querySelector(".CodeMirror-code"),
-      "The request post data editor should be hidden."
-    );
-
-    const accordionItems = tabpanel.querySelectorAll(".accordion-item");
-    const labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
-    const values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
-
-    is(
-      accordionItems[0].querySelector(".accordion-header-label").textContent,
-      L10N.getStr("paramsQueryString"),
-      "Check the displayed request query section title."
-    );
-
-    const labelsIter = labels.values();
-    const valuesIter = values.values();
-    for (const [expKey, expValue] of expectedParams) {
-      let label = labelsIter.next().value;
-      let value = valuesIter.next().value;
-
-      if (typeof expValue === "object") {
-        // multiple values for one parameter
-        is(label.textContent, expKey, "Check that parameter name matches.");
-        is(
-          value.textContent,
-          "[\u2026]", // horizontal ellipsis
-          "Check that parameter value indicates multiple."
-        );
-
-        for (let i = 0; i < expValue.length; i++) {
-          label = labelsIter.next().value;
-          value = valuesIter.next().value;
-          is(
-            label.textContent,
-            i + "",
-            "Check that multi-value parameter index matches."
-          );
-          is(
-            value.textContent,
-            `"${expValue[i]}"`,
-            "Check that multi-value parameter value matches."
-          );
-          is(label.dataset.level, 1, "Check that parameter is nested.");
-        }
-      } else {
-        is(label.textContent, expKey, "Check that parameter name matches.");
-        is(
-          value.textContent,
-          `"${expValue}"`,
-          "Check that parameter value matches."
-        );
-      }
-    }
   }
 });

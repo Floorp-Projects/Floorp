@@ -105,7 +105,6 @@ add_task(async function() {
   info("Performing tests");
   await verifyRequests();
   await testTab(0, testHeaders);
-  await testTab(2, testParams);
 
   return teardown(monitor);
 
@@ -207,70 +206,6 @@ add_task(async function() {
       statusCode.getAttribute("title"),
       status + " " + statusText,
       "The status summary value is incorrect."
-    );
-  }
-
-  /**
-   * A function that tests "Params" panel contains correct information.
-   */
-  function testParams(data, index) {
-    EventUtils.sendMouseEvent(
-      { type: "mousedown" },
-      document.querySelectorAll(".request-list-item")[index]
-    );
-    EventUtils.sendMouseEvent(
-      { type: "click" },
-      document.querySelector("#request-tab")
-    );
-
-    const panel = document.querySelector("#request-panel");
-    // Bug 1414981 - Request URL should not show #hash
-    const statusParamValue = data.uri
-      .split("=")
-      .pop()
-      .split("#")[0];
-    const accordionItems = panel.querySelectorAll(".accordion-item");
-
-    is(
-      accordionItems.length,
-      1,
-      "There should be 1 param section displayed in this panel."
-    );
-    is(
-      panel.querySelectorAll("tr.treeRow").length,
-      1,
-      "There should be 1 param row displayed in this panel."
-    );
-    is(
-      panel.querySelectorAll(".empty-notice").length,
-      0,
-      "The empty notice should not be displayed in this panel."
-    );
-
-    const labels = panel.querySelectorAll("tr .treeLabelCell .treeLabel");
-    const values = panel.querySelectorAll("tr .treeValueCell .objectBox");
-
-    is(
-      accordionItems[0].querySelector(".accordion-header-label").textContent,
-      L10N.getStr("paramsQueryString"),
-      "The request query section doesn't have the correct title."
-    );
-
-    is(labels[0].textContent, "sts", "The param name was incorrect.");
-    is(
-      values[0].textContent,
-      `"${statusParamValue}"`,
-      "The param value was incorrect."
-    );
-
-    ok(
-      panel.querySelector(".treeTable"),
-      "The request params tree view should be displayed."
-    );
-    is(
-      panel.querySelector(".editor-mount") === null,
-      true,
-      "The request post data editor should be hidden."
     );
   }
 });
