@@ -39,15 +39,15 @@ async function testBrowserFrames(mainRoot) {
   const targetList = new TargetList(mainRoot, target);
   await targetList.startListening();
 
-  // Very naive sanity check against getAllTargets(frame)
-  const frames = await targetList.getAllTargets(TargetList.TYPES.FRAME);
+  // Very naive sanity check against getAllTargets([frame])
+  const frames = await targetList.getAllTargets([TargetList.TYPES.FRAME]);
   const hasBrowserDocument = frames.find(
     frameTarget => frameTarget.url == window.location.href
   );
   ok(hasBrowserDocument, "retrieve the target for the browser document");
 
-  // Check that calling getAllTargets(frame) return the same target instances
-  const frames2 = await targetList.getAllTargets(TargetList.TYPES.FRAME);
+  // Check that calling getAllTargets([frame]) return the same target instances
+  const frames2 = await targetList.getAllTargets([TargetList.TYPES.FRAME]);
   is(frames2.length, frames.length, "retrieved the same number of frames");
 
   function sortFronts(f1, f2) {
@@ -99,7 +99,7 @@ async function testBrowserFrames(mainRoot) {
   is(targets.length, frames.length + 1, "Opening a tab reported a new frame");
   is(targets[targets.length - 1].url, TEST_URL, "This frame target is about the new tab");
 
-  const frames3 = await targetList.getAllTargets(TargetList.TYPES.FRAME);
+  const frames3 = await targetList.getAllTargets([TargetList.TYPES.FRAME]);
   const hasTabDocument = frames3.find(target => target.url == TEST_URL);
   ok(hasTabDocument, "retrieve the target for tab via getAllTargets");
   */
@@ -119,8 +119,8 @@ async function testTabFrames(mainRoot) {
 
   await targetList.startListening();
 
-  // Check that calling getAllTargets(frame) return the same target instances
-  const frames = await targetList.getAllTargets(TargetList.TYPES.FRAME);
+  // Check that calling getAllTargets([frame]) return the same target instances
+  const frames = await targetList.getAllTargets([TargetList.TYPES.FRAME]);
   is(frames.length, 1, "retrieved only the top level document");
 
   // Assert that watchTargets will call the create callback for all existing frames

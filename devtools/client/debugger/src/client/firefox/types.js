@@ -255,7 +255,7 @@ type ProcessDescriptor = Object;
 export type TargetList = {
   watchTargets: (Array<string>, Function, Function) => void,
   unwatchTargets: (Array<string>, Function, Function) => void,
-  getAllTargets: string => Array<Target>,
+  getAllTargets: (Array<string>) => Array<Target>,
   targetFront: Target,
   TYPES: {
     FRAME: string,

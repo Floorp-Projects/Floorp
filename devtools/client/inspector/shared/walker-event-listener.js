@@ -38,9 +38,9 @@ class WalkerEventListener {
       this._onTargetDestroyed
     );
 
-    const targets = this._inspector.toolbox.targetList.getAllTargets(
-      this._inspector.toolbox.targetList.TYPES.FRAME
-    );
+    const targets = this._inspector.toolbox.targetList.getAllTargets([
+      this._inspector.toolbox.targetList.TYPES.FRAME,
+    ]);
     for (const targetFront of targets) {
       this._onTargetDestroyed({
         targetFront,

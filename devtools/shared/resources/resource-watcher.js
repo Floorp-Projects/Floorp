@@ -284,11 +284,9 @@ class ResourceWatcher {
     // we should go through all the existing targets as onTargetAvailable
     // has already been called for these existing targets.
     const promises = [];
-    for (const targetType of this.targetList.ALL_TYPES) {
-      // XXX: May be expose a getReallyAllTarget() on TargetList?
-      for (const target of this.targetList.getAllTargets(targetType)) {
-        promises.push(this._watchResourcesForTarget(target, resourceType));
-      }
+    const targets = this.targetList.getAllTargets(this.targetList.ALL_TYPES);
+    for (const target of targets) {
+      promises.push(this._watchResourcesForTarget(target, resourceType));
     }
     await Promise.all(promises);
   }
@@ -330,18 +328,16 @@ class ResourceWatcher {
 
     // If this was the last listener, we should stop watching these events from the actors
     // and the actors should stop watching things from the platform
-    for (const targetType of this.targetList.ALL_TYPES) {
-      // XXX: May be expose a getReallyAllTarget() on TargetList?
-      for (const target of this.targetList.getAllTargets(targetType)) {
-        this._unwatchResourcesForTarget(targetType, target, resourceType);
-      }
+    const targets = this.targetList.getAllTargets(this.targetList.ALL_TYPES);
+    for (const target of targets) {
+      this._unwatchResourcesForTarget(target, resourceType);
     }
   }
 
   /**
    * Backward compatibility code, reverse of _watchResourcesForTarget.
    */
-  _unwatchResourcesForTarget(targetType, targetFront, resourceType) {
+  _unwatchResourcesForTarget(targetFront, resourceType) {
     // Is there really a point in:
     // - unregistering `onAvailable` RDP event callbacks from target-scoped actors?
     // - calling `stopListeners()` as we are most likely closing the toolbox and destroying everything?
