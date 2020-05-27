@@ -152,7 +152,7 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
         var calendar = GetOption(options, "calendar", "string", undefined, undefined);
 
         if (calendar !== undefined) {
-            calendar = intl_ValidateAndCanonicalizeUnicodeExtensionType(calendar, "calendar");
+            calendar = intl_ValidateAndCanonicalizeUnicodeExtensionType(calendar, "calendar", "ca");
         }
 
         opt.ca = calendar;
