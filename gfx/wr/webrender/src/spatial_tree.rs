@@ -475,6 +475,7 @@ impl SpatialTree {
             return;
         }
 
+        profile_scope!("update_tree");
         self.coord_systems.clear();
         self.coord_systems.push(CoordinateSystem::root());
 
@@ -513,6 +514,7 @@ impl SpatialTree {
     }
 
     pub fn build_transform_palette(&self) -> TransformPalette {
+        profile_scope!("build_transform_palette");
         let mut palette = TransformPalette::new(self.spatial_nodes.len());
         //Note: getting the world transform of a node is O(1) operation
         for i in 0 .. self.spatial_nodes.len() {

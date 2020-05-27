@@ -1123,6 +1123,7 @@ impl ResourceCache {
     }
 
     pub fn begin_frame(&mut self, stamp: FrameStamp) {
+        profile_scope!("begin_frame");
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.texture_cache.begin_frame(stamp);
@@ -1165,6 +1166,7 @@ impl ResourceCache {
     }
 
     fn update_texture_cache(&mut self, gpu_cache: &mut GpuCache) {
+        profile_scope!("update_texture_cache");
         for request in self.pending_image_requests.drain() {
             let image_template = self.resources.image_templates.get_mut(request.key).unwrap();
             debug_assert!(image_template.data.uses_texture_cache());
@@ -1345,6 +1347,7 @@ impl ResourceCache {
 
     pub fn end_frame(&mut self, texture_cache_profile: &mut TextureCacheProfileCounters) {
         debug_assert_eq!(self.state, State::QueryResources);
+        profile_scope!("end_frame");
         self.state = State::Idle;
         self.texture_cache.end_frame(texture_cache_profile);
     }

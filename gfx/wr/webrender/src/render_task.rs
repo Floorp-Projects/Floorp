@@ -1403,6 +1403,7 @@ impl RenderTask {
         &mut self,
         gpu_cache: &mut GpuCache,
     ) {
+        profile_scope!("write_gpu_blocks");
         let (target_rect, target_index) = self.get_target_rect();
 
         let (cache_handle, uv_rect_kind) = match self.kind {

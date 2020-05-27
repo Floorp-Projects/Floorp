@@ -3453,7 +3453,10 @@ impl Renderer {
                     "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
                     frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
 
-                self.device.gl().flush();  // early start on gpu cache updates
+                {
+                    profile_scope!("gl.flush");
+                    self.device.gl().flush();  // early start on gpu cache updates
+                }
 
                 self.draw_frame(
                     frame,
@@ -3665,6 +3668,7 @@ impl Renderer {
         // compositing is enabled. This must be called after any debug / profiling compositor
         // surfaces have been drawn and added to the visual tree.
         if let CompositorKind::Native { .. } = self.current_compositor_kind {
+            profile_scope!("compositor.end_frame");
             let compositor = self.compositor_config.compositor().unwrap();
             compositor.end_frame();
         }
@@ -6114,7 +6118,10 @@ impl Renderer {
                     );
                 }
             }
-            self.device.gl().flush();
+            {
+                profile_scope!("gl.flush");
+                self.device.gl().flush();
+            }
         }
 
         if let Some(device_size) = device_size {

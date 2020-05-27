@@ -276,7 +276,7 @@ impl FrameBuilder {
         composite_state: &mut CompositeState,
         tile_cache_logger: &mut TileCacheLogger,
     ) -> Option<RenderTaskId> {
-        profile_scope!("cull");
+        profile_scope!("build_layer_screen_rects_and_cull_layers");
 
         if scene.prim_store.pictures.is_empty() {
             return None
@@ -471,7 +471,6 @@ impl FrameBuilder {
 
         {
             profile_marker!("PreparePrims");
-            profile_scope!("PreparePrims");
 
             scene.prim_store.prepare_primitives(
                 &mut prim_list,
@@ -705,11 +704,13 @@ pub fn build_render_pass(
     z_generator: &mut ZBufferIdGenerator,
     composite_state: &mut CompositeState,
 ) {
-    profile_scope!("RenderPass::build");
+    profile_scope!("build_render_pass");
 
     match pass.kind {
         RenderPassKind::MainFramebuffer { ref mut main_target, .. } => {
+            profile_scope!("MainFrameBuffer");
             for &task_id in &pass.tasks {
+                profile_scope!("task");
                 assert_eq!(render_tasks[task_id].target_kind(), RenderTargetKind::Color);
                 main_target.add_task(
                     task_id,
@@ -738,6 +739,7 @@ pub fn build_render_pass(
             ref mut texture_cache,
             ref mut picture_cache,
         } => {
+            profile_scope!("OffScreen");
             let saved_color = if pass.tasks.iter().any(|&task_id| {
                 let t = &render_tasks[task_id];
                 t.target_kind() == RenderTargetKind::Color && t.saved_index.is_some()
@@ -862,6 +864,7 @@ pub fn build_render_pass(
             // a batcher per task, and then build batches for each of the tasks
             // at the same time.
             for (pic_index, task_ids) in picture_cache_tasks {
+                profile_scope!("picture_cache_task");
                 let pic = &ctx.prim_store.pictures[pic_index.0];
                 let tile_cache = pic.tile_cache.as_ref().expect("bug");
 
@@ -921,6 +924,8 @@ pub fn build_render_pass(
                 // Run the batch creation code for this picture, adding items to
                 // all relevant per-task batchers.
                 let mut batch_builder = BatchBuilder::new(batchers);
+                {
+                profile_scope!("add_pic_to_batch");
                 batch_builder.add_pic_to_batch(
                     pic,
                     ctx,
@@ -934,11 +939,13 @@ pub fn build_render_pass(
                     z_generator,
                     composite_state,
                 );
+                }
 
                 // Create picture cache targets, one per render task, and assign
                 // the correct batcher to them.
                 let batchers = batch_builder.finalize();
                 for (task_id, batcher) in task_ids.into_iter().zip(batchers.into_iter()) {
+                    profile_scope!("task");
                     let task = &render_tasks[task_id];
                     let (target_rect, _) = task.get_target_rect();
 
