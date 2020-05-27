@@ -7,15 +7,45 @@
 #include "nsImageModule.h"
 
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/StaticPrefs_image.h"
 
 #include "DecodePool.h"
 #include "ImageFactory.h"
+#include "nsICategoryManager.h"
 #include "ShutdownTracker.h"
 #include "SurfaceCache.h"
-
 #include "imgLoader.h"
 
 using namespace mozilla::image;
+
+struct ImageEnablementCookie {
+  bool (*mIsEnabled)();
+  const nsLiteralCString mMimeType;
+};
+
+static void UpdateContentViewerRegistration(const char* aPref, void* aData) {
+  auto* cookie = static_cast<ImageEnablementCookie*>(aData);
+
+  nsCOMPtr<nsICategoryManager> catMan =
+      do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  if (!catMan) {
+    return;
+  }
+
+  static nsLiteralCString kCategory =
+      NS_LITERAL_CSTRING("Gecko-Content-Viewers");
+  static nsLiteralCString kContractId = NS_LITERAL_CSTRING(
+      "@mozilla.org/content/plugin/document-loader-factory;1");
+
+  if (cookie->mIsEnabled()) {
+    catMan->AddCategoryEntry(kCategory, cookie->mMimeType, kContractId,
+                             false /* aPersist */, true /* aReplace */);
+  } else {
+    catMan->DeleteCategoryEntry(
+        kCategory, cookie->mMimeType, false /* aPersist */
+    );
+  }
+}
 
 static bool sInitialized = false;
 nsresult mozilla::image::EnsureModuleInitialized() {
@@ -24,6 +54,17 @@ nsresult mozilla::image::EnsureModuleInitialized() {
   if (sInitialized) {
     return NS_OK;
   }
+
+  static ImageEnablementCookie kAVIFCookie = {
+      mozilla::StaticPrefs::image_avif_enabled,
+      NS_LITERAL_CSTRING("image/avif")};
+  static ImageEnablementCookie kWebPCookie = {
+      mozilla::StaticPrefs::image_webp_enabled,
+      NS_LITERAL_CSTRING("image/webp")};
+  Preferences::RegisterCallbackAndCall(UpdateContentViewerRegistration,
+                                       "image.avif.enabled", &kAVIFCookie);
+  Preferences::RegisterCallbackAndCall(UpdateContentViewerRegistration,
+                                       "image.webp.enabled", &kWebPCookie);
 
   mozilla::image::ShutdownTracker::Initialize();
   mozilla::image::ImageFactory::Initialize();
