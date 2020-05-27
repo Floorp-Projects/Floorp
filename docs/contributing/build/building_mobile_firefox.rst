@@ -5,15 +5,15 @@ We have several different mobile products aimed at different tasks,
 devices, and audiences:
 
 -  `Building Firefox for
-   Android <https://geckoview.dev/contributor/geckoview-quick-start>`.
+   Android <https://geckoview.dev/contributor/geckoview-quick-start>`_.
    (Codename: Fennec)
--  `Building Firefox for iOS <https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_for_iOS>`,
+-  `Building Firefox for iOS <https://developer.mozilla.org/docs/Mozilla/Firefox_for_iOS>`_,
    our general-purpose browser for iOS with desktop sync built-in.
 -  `Building Firefox
-   Focus <https://github.com/mozilla-mobile/focus>`, our
+   Focus <https://github.com/mozilla-mobile/focus>`_, our
    privacy-focused browser for
-   `iOS <https://github.com/mozilla-mobile/focus-ios>` and
-   `Android <https://github.com/mozilla-mobile/focus-android>`.
+   `iOS <https://github.com/mozilla-mobile/focus-ios>`_ and
+   `Android <https://github.com/mozilla-mobile/focus-android>`_.
 
 For both Desktop and Mobile development, please bear the following in
 mind:
