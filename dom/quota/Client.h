@@ -96,7 +96,7 @@ class Client {
                               const nsACString& aGroup,
                               const nsACString& aOrigin,
                               const AtomicBool& aCanceled,
-                              UsageInfo* aUsageInfo, bool aForGetUsage) = 0;
+                              UsageInfo* aUsageInfo) = 0;
 
   virtual nsresult GetUsageForOrigin(PersistenceType aPersistenceType,
                                      const nsACString& aGroup,
