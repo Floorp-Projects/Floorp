@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around ERROR_MESSAGES
+// Test the ResourceWatcher API around ERROR_MESSAGE
 // Reproduces assertions from devtools/shared/webconsole/test/chrome/test_page_errors.html
 
 const {
@@ -74,7 +74,7 @@ add_task(async function() {
     }
   };
 
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.ERROR_MESSAGES], {
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.ERROR_MESSAGE], {
     onAvailable,
   });
 
@@ -97,7 +97,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  info("Test ignoreExistingResources option for ERROR_MESSAGES");
+  info("Test ignoreExistingResources option for ERROR_MESSAGE");
 
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
@@ -117,7 +117,7 @@ add_task(async function() {
   await triggerErrors(tab);
 
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.ERROR_MESSAGES], {
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.ERROR_MESSAGE], {
     onAvailable: ({ resource }) => availableResources.push(resource),
     ignoreExistingResources: true,
   });

@@ -74,7 +74,7 @@ class FirefoxConnector {
     );
 
     await this.toolbox.resourceWatcher.watchResources(
-      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENTS],
+      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
     );
   }
@@ -93,7 +93,7 @@ class FirefoxConnector {
     );
 
     this.toolbox.resourceWatcher.unwatchResources(
-      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENTS],
+      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
     );
 
@@ -154,7 +154,7 @@ class FirefoxConnector {
   }
 
   async onResourceAvailable({ resourceType, targetFront, resource }) {
-    if (resourceType === this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENTS) {
+    if (resourceType === this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT) {
       this.onDocEvent(resource);
     }
   }

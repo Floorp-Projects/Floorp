@@ -77,7 +77,7 @@ async function generateConsoleApiStubs() {
     handleConsoleMessage(resource);
   };
   await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: onConsoleMessage,
     }
@@ -112,7 +112,7 @@ async function generateConsoleApiStubs() {
     await received;
   }
 
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.CONSOLE_MESSAGES], {
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.CONSOLE_MESSAGE], {
     onAvailable: onConsoleMessage,
   });
 
