@@ -88,7 +88,7 @@ async function updateTopSites(condition, searchShortcuts = false) {
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.openViewOnFocus", true],
+      ["browser.urlbar.suggest.topsites", true],
       ["browser.newtabpage.activity-stream.default.sites", EN_US_TOPSITES],
     ],
   });

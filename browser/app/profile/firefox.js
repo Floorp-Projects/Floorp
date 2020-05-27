@@ -335,8 +335,6 @@ pref("browser.urlbar.update1.interventions", true);
 // encouraging them to use the Urlbar.
 pref("browser.urlbar.update1.searchTips", true);
 
-pref("browser.urlbar.openViewOnFocus", true);
-
 // Whether we expand the font size when when the urlbar is
 // focused in design update 2.
 pref("browser.urlbar.update2.expandTextOnFocus", false);
