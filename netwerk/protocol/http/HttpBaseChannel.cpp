@@ -2166,7 +2166,9 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   if (mLoadInfo->GetExternalContentPolicyType() ==
           nsIContentPolicy::TYPE_DOCUMENT ||
       mLoadInfo->GetExternalContentPolicyType() ==
-          nsIContentPolicy::TYPE_SUBDOCUMENT) {
+          nsIContentPolicy::TYPE_SUBDOCUMENT ||
+      mLoadInfo->GetExternalContentPolicyType() ==
+          nsIContentPolicy::TYPE_WEBSOCKET) {
     return NS_OK;
   }
 
