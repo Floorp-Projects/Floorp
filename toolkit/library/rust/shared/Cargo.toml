@@ -50,7 +50,6 @@ wgpu_bindings = { path = "../../../../gfx/wgpu_bindings", optional = true }
 mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", tag = "v0.3.0" }
 remote = { path = "../../../../remote", optional = true }
 fog = { path = "../../../components/glean", optional = true }
-webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
 unic-langid = { version = "0.8", features = ["likelysubtags"] }
 unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
@@ -70,6 +69,7 @@ fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 [target.'cfg(not(target_os = "android"))'.dependencies]
 firefox-accounts-bridge = { path = "../../../../services/fxaccounts/rust-bridge/firefox-accounts-bridge" }
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "77a7f5eb12a8d93f2bd71bd4d844405e06743365"}
+webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
 [build-dependencies]
 rustc_version = "0.2"
