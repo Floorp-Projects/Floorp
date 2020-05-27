@@ -249,13 +249,21 @@ BridgedEngine.prototype = {
     return this._bridge.storageVersion;
   },
 
-  // Legacy engines allow sync to proceed if some records fail to upload. Since
-  // we've supported batch uploads on our server for a while, and we want to
-  // make them stricter (for example, failing the entire batch if a record can't
-  // be stored, instead of returning its ID in the `failed` response field), we
-  // require all bridged engines to opt out of partial syncs.
+  // Legacy engines allow sync to proceed if some records are too large to
+  // upload (eg, a payload that's bigger than the server's published limits).
+  // If this returns true, we will just skip the record without even attempting
+  // to upload. If this is false, we'll abort the entire batch.
+  // If the engine allows this, it will need to detect this scenario by noticing
+  // the ID is not in the 'success' records reported to `setUploaded`.
+  // (Note that this is not to be confused with the fact server's can currently
+  // reject records as part of a POST - but we hope to remove this ability from
+  // the server API. Note also that this is not bullet-proof - if the count of
+  // records is high, it's possible that we will have committed a previous
+  // batch before we hit the relevant limits, so things might have been written.
+  // We hope to fix this by ensuring batch limits are such that this is
+  // impossible)
   get allowSkippedRecord() {
-    return false;
+    return this._bridge.allowSkippedRecord;
   },
 
   /**

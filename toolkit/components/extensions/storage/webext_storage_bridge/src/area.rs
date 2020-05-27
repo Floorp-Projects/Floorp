@@ -298,6 +298,14 @@ impl StorageSyncArea {
         Ok(STORAGE_VERSION.try_into().unwrap())
     }
 
+    // It's possible that migration, or even merging, will result in records
+    // too large for the server. We tolerate that (and hope that the addons do
+    // too :)
+    xpcom_method!(get_allow_skipped_record => GetAllowSkippedRecord() -> bool);
+    fn get_allow_skipped_record(&self) -> Result<bool> {
+        Ok(true)
+    }
+
     xpcom_method!(
         get_last_sync => GetLastSync(
             callback: *const mozIBridgedSyncEngineCallback
