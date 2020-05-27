@@ -27,6 +27,7 @@ class AccessibleOrProxy {
   MOZ_IMPLICIT AccessibleOrProxy(ProxyAccessible* aProxy)
       : mBits(aProxy ? (reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY) : 0) {}
   MOZ_IMPLICIT AccessibleOrProxy(decltype(nullptr)) : mBits(0) {}
+  MOZ_IMPLICIT AccessibleOrProxy() : mBits(0) {}
 
   bool IsProxy() const { return mBits & IS_PROXY; }
   ProxyAccessible* AsProxy() const {

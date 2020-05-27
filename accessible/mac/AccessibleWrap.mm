@@ -43,8 +43,7 @@ mozAccessible* AccessibleWrap::GetNativeObject() {
     Accessible* parent = Parent();
     bool mustBePruned = parent && nsAccUtils::MustPrune(parent);
     if (!IsXULTooltip() && !IsDefunct() && !mustBePruned) {
-      uintptr_t accWrap = reinterpret_cast<uintptr_t>(this);
-      mNativeObject = [[GetNativeType() alloc] initWithAccessible:accWrap];
+      mNativeObject = [[GetNativeType() alloc] initWithAccessible:this];
     }
   }
 

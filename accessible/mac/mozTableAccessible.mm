@@ -38,8 +38,8 @@
 
   mChildren = [[NSMutableArray alloc] init];
 
-  if (AccessibleWrap* accWrap = [mParent getGeckoAccessible]) {
-    TableAccessible* table = accWrap->AsTable();
+  if (Accessible* acc = [mParent geckoAccessible].AsAccessible()) {
+    TableAccessible* table = acc->AsTable();
     NSAssert(table, @"Got null table when fetching column children!");
     uint32_t numRows = table->RowCount();
 
@@ -51,12 +51,12 @@
       }
     }
 
-  } else if (ProxyAccessible* proxy = [mParent getProxyAccessible]) {
+  } else if (ProxyAccessible* proxy = [mParent geckoAccessible].AsProxy()) {
     uint32_t numRows = proxy->TableRowCount();
 
     for (uint32_t j = 0; j < numRows; j++) {
       ProxyAccessible* cell = proxy->TableCellAt(j, mIndex);
-      mozAccessible* nativeCell = cell ? GetNativeFromProxy(cell) : nil;
+      mozAccessible* nativeCell = cell ? GetNativeFromGeckoAccessible(cell) : nil;
       if ([nativeCell isAccessibilityElement]) {
         [mChildren addObject:nativeCell];
       }
@@ -129,17 +129,17 @@
 
 - (BOOL)isLayoutTablePart;
 {
-  if (Accessible* accWrap = [self getGeckoAccessible]) {
-    while (accWrap) {
-      if (accWrap->IsTable()) {
-        return accWrap->AsTable()->IsProbablyLayoutTable();
+  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+    while (acc) {
+      if (acc->IsTable()) {
+        return acc->AsTable()->IsProbablyLayoutTable();
       }
-      accWrap = accWrap->Parent();
+      acc = acc->Parent();
     }
     return false;
   }
 
-  if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+  if (ProxyAccessible* proxy = mGeckoAccessible.AsProxy()) {
     while (proxy) {
       if (proxy->IsTable()) {
         return proxy->TableIsProbablyForLayout();
@@ -209,50 +209,29 @@
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    TableAccessible* table = accWrap->AsTable();
-    if ([attribute isEqualToString:NSAccessibilityRowCountAttribute]) return @(table->RowCount());
-    if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute])
-      return @(table->ColCount());
-    if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
-      // Create a new array with the list of table rows.
-      NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
-      uint32_t totalCount = accWrap->ChildCount();
-      for (uint32_t i = 0; i < totalCount; i++) {
-        if (accWrap->GetChildAt(i)->IsTableRow()) {
-          mozAccessible* curNative = GetNativeFromGeckoAccessible(accWrap->GetChildAt(i));
-          if ([curNative isAccessibilityElement]) {
-            [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
-          }
-        }
-      }
-      return nativeArray;
-    }
-    if ([attribute isEqualToString:NSAccessibilityColumnsAttribute]) {
-      return [self getColContainerList];
-    }
-  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    if ([attribute isEqualToString:NSAccessibilityRowCountAttribute])
-      return @(proxy->TableRowCount());
-    if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute])
-      return @(proxy->TableColumnCount());
-    if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
-      // Create a new array with the list of table rows.
-      NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
-      uint32_t totalCount = proxy->ChildrenCount();
-      for (uint32_t i = 0; i < totalCount; i++) {
-        if (proxy->ChildAt(i)->IsTableRow()) {
-          mozAccessible* curNative = GetNativeFromProxy(proxy->ChildAt(i));
-          if ([curNative isAccessibilityElement]) {
-            [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
-          }
-        }
-      }
-      return nativeArray;
-    }
-    if ([attribute isEqualToString:NSAccessibilityColumnsAttribute]) {
-      return [self getColContainerList];
-    }
+  if ([attribute isEqualToString:NSAccessibilityColumnsAttribute]) {
+    return [self getColContainerList];
+  }
+
+  if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
+    // Create a new array with the list of table rows.
+    return [[self children]
+        filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(mozAccessible* child,
+                                                                          NSDictionary* bindings) {
+          return [child isKindOfClass:[mozTableRowAccessible class]];
+        }]];
+  }
+
+  ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+  Accessible* acc = mGeckoAccessible.AsAccessible();
+  MOZ_ASSERT(!acc || acc->AsTable(), "Got null table from table accessible");
+
+  if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute]) {
+    return acc ? @(acc->AsTable()->ColCount()) : @(proxy->TableColumnCount());
+  }
+
+  if ([attribute isEqualToString:NSAccessibilityRowCountAttribute]) {
+    return acc ? @(acc->AsTable()->RowCount()) : @(proxy->TableRowCount());
   }
 
   return [super accessibilityAttributeValue:attribute];
@@ -274,10 +253,10 @@
   mColContainers = [[NSMutableArray alloc] init];
   uint32_t numCols = 0;
 
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    numCols = accWrap->AsTable()->ColCount();
-  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    numCols = proxy->TableColumnCount();
+  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+    numCols = acc->AsTable()->ColCount();
+  } else {
+    numCols = mGeckoAccessible.AsProxy()->TableColumnCount();
   }
 
   for (uint32_t i = 0; i < numCols; i++) {
@@ -324,23 +303,21 @@
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
+  if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
+    if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
       // Count the number of rows before that one to obtain the row index.
       uint32_t index = 0;
-      Accessible* parent = accWrap->Parent();
+      Accessible* parent = acc->Parent();
       if (parent) {
-        for (int32_t i = accWrap->IndexInParent() - 1; i >= 0; i--) {
+        for (int32_t i = acc->IndexInParent() - 1; i >= 0; i--) {
           if (parent->GetChildAt(i)->IsTableRow()) {
             index++;
           }
         }
       }
       return [NSNumber numberWithUnsignedInteger:index];
-    }
-  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
-      // Count the number of rows before that one to obtain the row index.
+    } else {
+      ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
       uint32_t index = 0;
       ProxyAccessible* parent = proxy->Parent();
       if (parent) {
@@ -384,36 +361,51 @@
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    TableCellAccessible* cell = accWrap->AsTableCell();
-    if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
+  if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute]) {
+    if (mGeckoAccessible.IsAccessible()) {
+      TableCellAccessible* cell = mGeckoAccessible.AsAccessible()->AsTableCell();
       return [NSValue valueWithRange:NSMakeRange(cell->RowIdx(), cell->RowExtent())];
-    if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
+    } else {
+      ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+      return [NSValue valueWithRange:NSMakeRange(proxy->RowIdx(), proxy->RowExtent())];
+    }
+  }
+
+  if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute]) {
+    if (mGeckoAccessible.IsAccessible()) {
+      TableCellAccessible* cell = mGeckoAccessible.AsAccessible()->AsTableCell();
       return [NSValue valueWithRange:NSMakeRange(cell->ColIdx(), cell->ColExtent())];
-    if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
+    } else {
+      ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+      return [NSValue valueWithRange:NSMakeRange(proxy->ColIdx(), proxy->ColExtent())];
+    }
+  }
+
+  if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
+    if (mGeckoAccessible.IsAccessible()) {
+      TableCellAccessible* cell = mGeckoAccessible.AsAccessible()->AsTableCell();
       AutoTArray<Accessible*, 10> headerCells;
       cell->RowHeaderCells(&headerCells);
-      return ConvertToNSArray(headerCells);
-    }
-    if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
-      AutoTArray<Accessible*, 10> headerCells;
-      cell->ColHeaderCells(&headerCells);
-      return ConvertToNSArray(headerCells);
-    }
-  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
-      return [NSValue valueWithRange:NSMakeRange(proxy->RowIdx(), proxy->RowExtent())];
-    if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
-      return [NSValue valueWithRange:NSMakeRange(proxy->ColIdx(), proxy->ColExtent())];
-    if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
+      return utils::ConvertToNSArray(headerCells);
+    } else {
+      ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
       nsTArray<ProxyAccessible*> headerCells;
       proxy->RowHeaderCells(&headerCells);
-      return ConvertToNSArray(headerCells);
+      return utils::ConvertToNSArray(headerCells);
     }
-    if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
+  }
+
+  if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
+    if (mGeckoAccessible.IsAccessible()) {
+      TableCellAccessible* cell = mGeckoAccessible.AsAccessible()->AsTableCell();
+      AutoTArray<Accessible*, 10> headerCells;
+      cell->ColHeaderCells(&headerCells);
+      return utils::ConvertToNSArray(headerCells);
+    } else {
+      ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
       nsTArray<ProxyAccessible*> headerCells;
       proxy->ColHeaderCells(&headerCells);
-      return ConvertToNSArray(headerCells);
+      return utils::ConvertToNSArray(headerCells);
     }
   }
 

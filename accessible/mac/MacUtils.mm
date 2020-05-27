@@ -15,6 +15,36 @@ namespace mozilla {
 namespace a11y {
 namespace utils {
 
+// convert an array of Gecko accessibles to an NSArray of native accessibles
+static inline NSMutableArray* ConvertToNSArray(nsTArray<Accessible*>& aArray) {
+  NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+
+  // iterate through the list, and get each native accessible.
+  size_t totalCount = aArray.Length();
+  for (size_t i = 0; i < totalCount; i++) {
+    Accessible* curAccessible = aArray.ElementAt(i);
+    mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
+    if (curNative) [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+  }
+
+  return nativeArray;
+}
+
+// convert an array of Gecko proxy accessibles to an NSArray of native accessibles
+static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray) {
+  NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+
+  // iterate through the list, and get each native accessible.
+  size_t totalCount = aArray.Length();
+  for (size_t i = 0; i < totalCount; i++) {
+    ProxyAccessible* curAccessible = aArray.ElementAt(i);
+    mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
+    if (curNative) [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+  }
+
+  return nativeArray;
+}
+
 /**
  * Get a localized string from the a11y string bundle.
  * Return nil if not found.
@@ -29,10 +59,10 @@ NSString* LocalizedString(const nsString& aString) {
 
 NSString* GetAccAttr(mozAccessible* aNativeAccessible, const char* aAttrName) {
   nsAutoString result;
-  if (AccessibleWrap* accWrap = [aNativeAccessible getGeckoAccessible]) {
-    nsCOMPtr<nsIPersistentProperties> attributes = accWrap->Attributes();
+  if (Accessible* acc = [aNativeAccessible geckoAccessible].AsAccessible()) {
+    nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
     attributes->GetStringProperty(nsCString(aAttrName), result);
-  } else if (ProxyAccessible* proxy = [aNativeAccessible getProxyAccessible]) {
+  } else if (ProxyAccessible* proxy = [aNativeAccessible geckoAccessible].AsProxy()) {
     AutoTArray<Attribute, 10> attrs;
     proxy->Attributes(&attrs);
     for (size_t i = 0; i < attrs.Length(); i++) {

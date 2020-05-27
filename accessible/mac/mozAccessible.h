@@ -5,6 +5,7 @@
 
 #include "AccessibleWrap.h"
 #include "ProxyAccessible.h"
+#include "AccessibleOrProxy.h"
 #include "Platform.h"
 
 #import <Cocoa/Cocoa.h>
@@ -35,27 +36,27 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
   return [aObject hasRepresentedView] ? [aObject representedView] : aObject;
 }
 
-inline mozAccessible* GetNativeFromGeckoAccessible(Accessible* aAccessible) {
-  mozAccessible* native = nil;
-  aAccessible->GetNativeInterface((void**)&native);
-  return native;
-}
+inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrProxy aAccOrProxy) {
+  MOZ_ASSERT(!aAccOrProxy.IsNull(), "Cannot get native from null accessible");
+  if (Accessible* acc = aAccOrProxy.AsAccessible()) {
+    mozAccessible* native = nil;
+    acc->GetNativeInterface((void**)&native);
+    return native;
+  }
 
-inline mozAccessible* GetNativeFromProxy(const ProxyAccessible* aProxy) {
-  return reinterpret_cast<mozAccessible*>(aProxy->GetWrapper());
+  ProxyAccessible* proxy = aAccOrProxy.AsProxy();
+  return reinterpret_cast<mozAccessible*>(proxy->GetWrapper());
 }
 
 }  // a11y
 }  // mozilla
 
-// This is OR'd with the Accessible owner to indicate the wrap-ee is a proxy.
-static const uintptr_t IS_PROXY = 1;
-
 @interface mozAccessible : NSObject <mozAccessible> {
   /**
-   * Weak reference; it owns us.
+   * Reference to the accessible we were created with;
+   * either a proxy accessible or an accessible wrap.
    */
-  uintptr_t mGeckoAccessible;
+  mozilla::a11y::AccessibleOrProxy mGeckoAccessible;
 
   /**
    * The role of our gecko accessible.
@@ -68,14 +69,11 @@ static const uintptr_t IS_PROXY = 1;
   uint64_t mCachedState;
 }
 
-// return the Accessible for this mozAccessible if it exists.
-- (mozilla::a11y::AccessibleWrap*)getGeckoAccessible;
+// inits with the given wrap or proxy accessible
+- (id)initWithAccessible:(mozilla::a11y::AccessibleOrProxy)aAccOrProxy;
 
-// return the ProxyAccessible for this mozAccessible if it exists.
-- (mozilla::a11y::ProxyAccessible*)getProxyAccessible;
-
-// inits with the gecko owner.
-- (id)initWithAccessible:(uintptr_t)aGeckoObj;
+// allows for gecko accessible access outside of the class
+- (mozilla::a11y::AccessibleOrProxy)geckoAccessible;
 
 // our accessible parent (AXParent)
 - (id<mozAccessible>)parent;
