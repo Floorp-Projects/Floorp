@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around DOCUMENT_EVENTS
+// Test the ResourceWatcher API around DOCUMENT_EVENT
 
 const { TargetList } = require("devtools/shared/resources/target-list");
 const {
@@ -11,7 +11,7 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 add_task(async function() {
-  info("Test ResourceWatcher for DOCUMENT_EVENTS");
+  info("Test ResourceWatcher for DOCUMENT_EVENT");
 
   // Open a test tab
   const tab = await addTab("data:text/html,Document Events");
@@ -33,12 +33,9 @@ add_task(async function() {
   const onLoadingAtInit = listener.once("dom-loading");
   const onInteractiveAtInit = listener.once("dom-interactive");
   const onCompleteAtInit = listener.once("dom-complete");
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.DOCUMENT_EVENTS],
-    {
-      onAvailable: parameters => listener.dispatch(parameters),
-    }
-  );
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
+    onAvailable: parameters => listener.dispatch(parameters),
+  });
   await assertPromises(onLoadingAtInit, onInteractiveAtInit, onCompleteAtInit);
   ok(
     true,
@@ -62,7 +59,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  info("Test ignoreExistingResources option for DOCUMENT_EVENTS");
+  info("Test ignoreExistingResources option for DOCUMENT_EVENT");
 
   const tab = await addTab("data:text/html,Document Events");
 
@@ -74,13 +71,10 @@ add_task(async function() {
 
   info("Check whether the existing document events will not be fired");
   const documentEvents = [];
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.DOCUMENT_EVENTS],
-    {
-      onAvailable: ({ resource }) => documentEvents.push(resource),
-      ignoreExistingResources: true,
-    }
-  );
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
+    onAvailable: ({ resource }) => documentEvents.push(resource),
+    ignoreExistingResources: true,
+  });
   is(documentEvents.length, 0, "Existing document events are not fired");
 
   info("Check whether the future document events are fired");

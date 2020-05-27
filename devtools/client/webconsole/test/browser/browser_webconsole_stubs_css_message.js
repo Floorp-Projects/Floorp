@@ -76,7 +76,7 @@ async function generateCssMessageStubs() {
   };
 
   /* CSS errors are considered as pageError on the server */
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGES], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
     onAvailable: onErrorMessageAvailable,
   });
 
@@ -101,7 +101,7 @@ async function generateCssMessageStubs() {
     await received;
   }
 
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.ERROR_MESSAGES], {
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
     onAvailable: onErrorMessageAvailable,
   });
 

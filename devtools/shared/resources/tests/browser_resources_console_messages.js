@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around CONSOLE_MESSAGES
+// Test the ResourceWatcher API around CONSOLE_MESSAGE
 //
 // Reproduces assertions from: devtools/shared/webconsole/test/chrome/test_cached_messages.html
 
@@ -29,7 +29,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  info("Test ignoreExistingResources option for CONSOLE_MESSAGES");
+  info("Test ignoreExistingResources option for CONSOLE_MESSAGE");
 
   const tab = await addTab("data:text/html,Console Messages");
 
@@ -46,7 +46,7 @@ add_task(async function() {
 
   const availableResources = [];
   await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGES],
+    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: ({ resource }) => availableResources.push(resource),
       ignoreExistingResources: true,
@@ -94,7 +94,7 @@ async function testMessages(browser, resourceWatcher) {
   const onAvailable = ({ resourceType, targetFront, resource }) => {
     is(
       resourceType,
-      ResourceWatcher.TYPES.CONSOLE_MESSAGES,
+      ResourceWatcher.TYPES.CONSOLE_MESSAGE,
       "Received a message"
     );
     ok(resource.message, "message is wrapped into a message attribute");
@@ -109,7 +109,7 @@ async function testMessages(browser, resourceWatcher) {
   };
 
   await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGES],
+    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable,
     }
