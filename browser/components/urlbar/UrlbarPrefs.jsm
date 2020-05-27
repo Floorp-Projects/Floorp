@@ -122,6 +122,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Results will include search suggestions when this is true.
   ["suggest.searches", false],
 
+  // Results will include Top Sites and the view will open on focus when this
+  // is true.
+  ["suggest.topsites", true],
+
   // When using switch to tabs, if set to true this will move the tab into the
   // active window.
   ["switchTabs.adoptIntoActiveWindow", false],

@@ -125,6 +125,7 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.bookmark", type: "bool" },
   { id: "browser.urlbar.suggest.history", type: "bool" },
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
+  { id: "browser.urlbar.suggest.topsites", type: "bool" },
 
   // History
   { id: "places.history.enabled", type: "bool" },

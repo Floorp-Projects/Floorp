@@ -400,7 +400,6 @@ class UrlbarView {
       if (
         // Do not show Top Sites in private windows.
         !this.input.isPrivate &&
-        this.input.openViewOnFocus &&
         !this.isOpen &&
         ["mousedown", "command"].includes(queryOptions.event.type)
       ) {
