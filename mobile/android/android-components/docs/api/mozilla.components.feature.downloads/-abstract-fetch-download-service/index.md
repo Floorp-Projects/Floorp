@@ -2,7 +2,7 @@
 
 # AbstractFetchDownloadService
 
-`abstract class AbstractFetchDownloadService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L72)
+`abstract class AbstractFetchDownloadService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L79)
 
 Service that performs downloads through a fetch [Client](../../mozilla.components.concept.fetch/-client/index.md) rather than through the native
 Android download manager.
@@ -42,10 +42,12 @@ To use this service, you must create a subclass in your application and add it t
 | Name | Summary |
 |---|---|
 | [ACTION_CANCEL](-a-c-t-i-o-n_-c-a-n-c-e-l.md) | `const val ACTION_CANCEL: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [ACTION_DISMISS](-a-c-t-i-o-n_-d-i-s-m-i-s-s.md) | `const val ACTION_DISMISS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [ACTION_OPEN](-a-c-t-i-o-n_-o-p-e-n.md) | `const val ACTION_OPEN: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [ACTION_PAUSE](-a-c-t-i-o-n_-p-a-u-s-e.md) | `const val ACTION_PAUSE: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [ACTION_RESUME](-a-c-t-i-o-n_-r-e-s-u-m-e.md) | `const val ACTION_RESUME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [ACTION_TRY_AGAIN](-a-c-t-i-o-n_-t-r-y_-a-g-a-i-n.md) | `const val ACTION_TRY_AGAIN: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [COMPAT_DEFAULT_FOREGROUND_ID](-c-o-m-p-a-t_-d-e-f-a-u-l-t_-f-o-r-e-g-r-o-u-n-d_-i-d.md) | `const val COMPAT_DEFAULT_FOREGROUND_ID: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [EXTRA_DOWNLOAD](-e-x-t-r-a_-d-o-w-n-l-o-a-d.md) | `const val EXTRA_DOWNLOAD: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [EXTRA_DOWNLOAD_STATUS](-e-x-t-r-a_-d-o-w-n-l-o-a-d_-s-t-a-t-u-s.md) | `const val EXTRA_DOWNLOAD_STATUS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
