@@ -28,6 +28,12 @@ public class VisibilityLifeCycleCallback implements Application.ActivityLifecycl
                 .finishAndRemoveTaskIfInBackground();
     }
 
+    /* package */ static boolean isInBackground(Context context) {
+        return ((FocusApplication) context.getApplicationContext())
+                .getVisibilityLifeCycleCallback()
+                .activitiesInStartedState == 0;
+    }
+
     private final Context context;
 
     /**

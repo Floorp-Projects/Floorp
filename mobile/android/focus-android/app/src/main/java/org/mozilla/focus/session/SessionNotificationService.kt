@@ -42,9 +42,17 @@ class SessionNotificationService : Service() {
                 TelemetryWrapper.eraseNotificationEvent()
                 shouldSendTaskRemovedTelemetry = false
 
-                components.sessionManager.removeAndCloseAllSessions()
+                if (VisibilityLifeCycleCallback.isInBackground(this)) {
+                    VisibilityLifeCycleCallback.finishAndRemoveTaskIfInBackground(this)
+                } else {
+                    val eraseIntent = Intent(this, MainActivity::class.java)
 
-                VisibilityLifeCycleCallback.finishAndRemoveTaskIfInBackground(this)
+                    eraseIntent.action = MainActivity.ACTION_ERASE
+                    eraseIntent.putExtra(MainActivity.EXTRA_NOTIFICATION, true)
+                    eraseIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+
+                    startActivity(eraseIntent)
+                }
             }
 
             else -> throw IllegalStateException("Unknown intent: $intent")
@@ -54,7 +62,6 @@ class SessionNotificationService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
-
         // Do not double send telemetry for notification erase event
         if (shouldSendTaskRemovedTelemetry) {
             TelemetryWrapper.eraseTaskRemoved()
