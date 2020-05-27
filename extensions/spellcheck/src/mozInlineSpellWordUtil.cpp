@@ -330,18 +330,17 @@ static void NormalizeWord(const nsAString& aInput, int32_t aPos, int32_t aLen,
 //    time. It would be better if the inline spellchecker didn't require a
 //    range unless the word was misspelled. This may or may not be possible.
 
-nsresult mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
-                                             NodeOffsetRange* aNodeOffsetRange,
-                                             bool* aSkipChecking) {
+bool mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
+                                         NodeOffsetRange* aNodeOffsetRange,
+                                         bool* aSkipChecking) {
 #ifdef DEBUG_SPELLCHECK
   printf("GetNextWord called; mNextWordIndex=%d\n", mNextWordIndex);
 #endif
 
   if (mNextWordIndex < 0 || mNextWordIndex >= int32_t(mRealWords.Length())) {
     mNextWordIndex = -1;
-    *aNodeOffsetRange = NodeOffsetRange();
     *aSkipChecking = true;
-    return NS_OK;
+    return false;
   }
 
   const RealWord& word = mRealWords[mNextWordIndex];
@@ -355,7 +354,7 @@ nsresult mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
          NS_ConvertUTF16toUTF8(aText).get(), *aSkipChecking);
 #endif
 
-  return NS_OK;
+  return true;
 }
 
 // mozInlineSpellWordUtil::MakeRange
