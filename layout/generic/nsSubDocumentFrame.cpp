@@ -431,12 +431,9 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   clipState.ClipContainingBlockDescendantsToContentBox(aBuilder, this);
 
   nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
-  bool constructResolutionItem =
-      subdocRootFrame && (presShell->GetResolution() != 1.0);
   bool constructZoomItem = subdocRootFrame && parentAPD != subdocAPD;
   bool needsOwnLayer = false;
-  if (constructResolutionItem || constructZoomItem ||
-      presContext->IsRootContentDocument() ||
+  if (constructZoomItem || presContext->IsRootContentDocument() ||
       (sf && sf->IsScrollingActive(aBuilder))) {
     needsOwnLayer = true;
   }
@@ -525,7 +522,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // becomes the topmost. We do this below.
   if (constructZoomItem) {
     nsDisplayOwnLayerFlags zoomFlags = flags;
-    if (ignoreViewportScrolling && !constructResolutionItem) {
+    if (ignoreViewportScrolling) {
       zoomFlags |= nsDisplayOwnLayerFlags::GenerateScrollableLayer;
     }
     childItems.AppendNewToTop<nsDisplayZoom>(aBuilder, subdocRootFrame, this,
@@ -539,12 +536,6 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // conversion.
   if (ignoreViewportScrolling) {
     flags |= nsDisplayOwnLayerFlags::GenerateScrollableLayer;
-  }
-  if (constructResolutionItem) {
-    childItems.AppendNewToTop<nsDisplayResolution>(aBuilder, subdocRootFrame,
-                                                   this, &childItems, flags);
-
-    needsOwnLayer = false;
   }
 
   // We always want top level content documents to be in their own layer.

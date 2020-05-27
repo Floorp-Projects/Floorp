@@ -6108,25 +6108,6 @@ class nsDisplaySubDocument : public nsDisplayOwnLayer {
 };
 
 /**
- * A display item for subdocuments to capture the resolution from the presShell
- * and ensure that it gets applied to all the right elements. This item creates
- * a container layer.
- */
-class nsDisplayResolution : public nsDisplaySubDocument {
- public:
-  nsDisplayResolution(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      nsSubDocumentFrame* aSubDocFrame, nsDisplayList* aList,
-                      nsDisplayOwnLayerFlags aFlags);
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayResolution)
-
-  NS_DISPLAY_DECL_NAME("Resolution", TYPE_RESOLUTION)
-
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-};
-
-/**
  * A display item used to represent sticky position elements. The contents
  * gets its own layer and creates a stacking context, and the layer will have
  * position-related metadata set on it.
