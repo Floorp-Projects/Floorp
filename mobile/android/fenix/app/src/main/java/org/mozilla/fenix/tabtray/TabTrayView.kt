@@ -57,6 +57,8 @@ class TabTrayView(
     private var tabsFeature: TabsFeature
     private var tabTrayItemMenu: TabTrayItemMenu
 
+    private var hasLoaded = false
+
     override val containerView: View?
         get() = container
 
@@ -98,8 +100,24 @@ class TabTrayView(
             { it.content.private == isPrivate },
             { })
 
+
+        val selectedBrowserTabIndex = if (isPrivate) {
+            view.context.components.core.store.state.privateTabs
+        } else {
+            view.context.components.core.store.state.normalTabs
+        }.indexOfFirst { it.id == view.context.components.core.store.state.selectedTabId }
+
+
         (view.tabsTray as? BrowserTabsTray)?.also { tray ->
             TabsTouchHelper(tray.tabsAdapter).attachToRecyclerView(tray)
+            (tray.tabsAdapter as? FenixTabsAdapter)?.also { adapter ->
+                adapter.onTabsUpdated = {
+                    if (!hasLoaded) {
+                        hasLoaded = true
+                        tray.layoutManager?.scrollToPosition(selectedBrowserTabIndex)
+                    }
+                }
+            }
         }
 
         tabTrayItemMenu = TabTrayItemMenu(view.context, { view.tab_layout.selectedTabPosition == 0 }) {
