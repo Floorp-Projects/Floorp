@@ -73,8 +73,12 @@ Maybe<RawId> WebGPUChild::AdapterRequestDevice(
 
 RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
                                       const dom::GPUBufferDescriptor& aDesc) {
+  ffi::WGPUBufferDescriptor desc = {};
+  desc.size = aDesc.mSize;
+  desc.usage = aDesc.mUsage;
+
   RawId id = ffi::wgpu_client_make_buffer_id(mClient, aSelfId);
-  if (!SendDeviceCreateBuffer(aSelfId, aDesc, id)) {
+  if (!SendDeviceCreateBuffer(aSelfId, desc, nsCString(), id)) {
     MOZ_CRASH("IPC failure");
   }
   return id;
@@ -115,28 +119,28 @@ UniquePtr<ffi::WGPUTextureViewDescriptor> WebGPUChild::GetDefaultViewDescriptor(
 
 RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
                                        const dom::GPUTextureDescriptor& aDesc) {
-  SerialTextureDescriptor desc = {};
+  ffi::WGPUTextureDescriptor desc = {};
   if (aDesc.mSize.IsUnsignedLongSequence()) {
     const auto& seq = aDesc.mSize.GetAsUnsignedLongSequence();
-    desc.mSize.width = seq.Length() > 0 ? seq[0] : 1;
-    desc.mSize.height = seq.Length() > 1 ? seq[1] : 1;
-    desc.mSize.depth = seq.Length() > 2 ? seq[2] : 1;
+    desc.size.width = seq.Length() > 0 ? seq[0] : 1;
+    desc.size.height = seq.Length() > 1 ? seq[1] : 1;
+    desc.size.depth = seq.Length() > 2 ? seq[2] : 1;
   } else if (aDesc.mSize.IsGPUExtent3DDict()) {
     const auto& dict = aDesc.mSize.GetAsGPUExtent3DDict();
-    desc.mSize.width = dict.mWidth;
-    desc.mSize.height = dict.mHeight;
-    desc.mSize.depth = dict.mDepth;
+    desc.size.width = dict.mWidth;
+    desc.size.height = dict.mHeight;
+    desc.size.depth = dict.mDepth;
   } else {
     MOZ_CRASH("Unexpected union");
   }
-  desc.mMipLevelCount = aDesc.mMipLevelCount;
-  desc.mSampleCount = aDesc.mSampleCount;
-  desc.mDimension = ffi::WGPUTextureDimension(aDesc.mDimension);
-  desc.mFormat = ffi::WGPUTextureFormat(aDesc.mFormat);
-  desc.mUsage = aDesc.mUsage;
+  desc.mip_level_count = aDesc.mMipLevelCount;
+  desc.sample_count = aDesc.mSampleCount;
+  desc.dimension = ffi::WGPUTextureDimension(aDesc.mDimension);
+  desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
+  desc.usage = aDesc.mUsage;
 
   RawId id = ffi::wgpu_client_make_texture_id(mClient, aSelfId);
-  if (!SendDeviceCreateTexture(aSelfId, desc, id)) {
+  if (!SendDeviceCreateTexture(aSelfId, desc, nsCString(), id)) {
     MOZ_CRASH("IPC failure");
   }
   return id;
@@ -165,7 +169,7 @@ RawId WebGPUChild::TextureCreateView(
           : aDefaultViewDesc.array_layer_count - aDesc.mBaseArrayLayer;
 
   RawId id = ffi::wgpu_client_make_texture_view_id(mClient, aSelfId);
-  if (!SendTextureCreateView(aSelfId, desc, id)) {
+  if (!SendTextureCreateView(aSelfId, desc, nsCString(), id)) {
     MOZ_CRASH("IPC failure");
   }
   return id;
@@ -189,7 +193,7 @@ RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
   }
 
   RawId id = ffi::wgpu_client_make_sampler_id(mClient, aSelfId);
-  if (!SendDeviceCreateSampler(aSelfId, desc, id)) {
+  if (!SendDeviceCreateSampler(aSelfId, desc, nsCString(), id)) {
     MOZ_CRASH("IPC failure");
   }
   return id;
@@ -236,7 +240,7 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
             : ffi::WGPUTextureFormat(0);
     entries.AppendElement(e);
   }
-  SerialBindGroupLayoutDescriptor desc = {std::move(entries)};
+  SerialBindGroupLayoutDescriptor desc = {nsCString(), std::move(entries)};
   if (!SendDeviceCreateBindGroupLayout(aSelfId, desc, id)) {
     MOZ_CRASH("IPC failure");
   }
