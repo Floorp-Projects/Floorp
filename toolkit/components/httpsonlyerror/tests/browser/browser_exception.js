@@ -20,14 +20,14 @@ const INSECURE_ROOT_PATH = ROOT_PATH.replace(
 
 // This is how this test works:
 //
-//    +-[REQUEST]  http://file_upgrade_insecure_server.sjs?content
-//    |            -> Internal HTTPS redirect
-//    |
-//    +>[RESPONSE] Expired Certificate Response
-//                 -> HTTPS-Only Mode Error Page shows up
-//                 -> Click exception button
-//
 // +----[REQUEST]  https://file_upgrade_insecure_server.sjs?queryresult
+// |
+// |  +-[REQUEST]  http://file_upgrade_insecure_server.sjs?content
+// |  |            -> Internal HTTPS redirect
+// |  |
+// |  +>[RESPONSE] Expired Certificate Response
+// |               -> HTTPS-Only Mode Error Page shows up
+// |               -> Click exception button
 // |
 // |  +-[REQUEST]  http://file_upgrade_insecure_server.sjs?content
 // |  |
@@ -50,6 +50,11 @@ add_task(async function() {
     "nestedimg",
   ]);
 
+  const filesLoaded = setupFileServer();
+  // Since we don't know when the server has saved all it's variables,
+  // let's wait a bit before reloading the page.
+  await new Promise(resolve => executeSoon(resolve));
+
   // Create new tab with sjs-file requesting content.
   // "supports-insecure.expired.example.com" responds to http and https but
   // with an expired certificate
@@ -65,11 +70,6 @@ add_task(async function() {
     true
   );
 
-  const filesLoaded = setupFileServer();
-  // Since we don't know when the server has saved all it's variables,
-  // let's wait a bit before reloading the page.
-  await new Promise(resolve => executeSoon(resolve));
-
   // click on exception-button and wait for page to load
   await SpecialPowers.spawn(browser, [], async function() {
     let openInsecureButton = content.document.getElementById("openInsecure");
@@ -84,7 +84,7 @@ add_task(async function() {
     let doc = content.document;
     ok(
       !doc.documentURI.startsWith("http://expired.example.com"),
-      "Page should load with after exception button was clicked."
+      "Page should load normally after exception button was clicked."
     );
   });
 

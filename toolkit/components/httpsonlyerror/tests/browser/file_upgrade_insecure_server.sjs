@@ -11,7 +11,7 @@ const CONTENT = path => `
     <meta charset='utf-8'>
   </head>
   <body>
-    <p>Nested insecure website</p>
+    <p>Insecure website</p>
     <script type="application/javascript">
       var myXHR = new XMLHttpRequest();
       myXHR.open("GET", "${path}file_upgrade_insecure_server.sjs?xhr");
@@ -29,7 +29,7 @@ const IFRAME_CONTENT = path => `
     <meta charset='utf-8'>
   </head>
   <body>
-    <p>Insecure website</p>
+    <p>Nested insecure website</p>
     <img src='${path}file_upgrade_insecure_server.sjs?nestedimg'></img>
   </body>
 </html>`;
