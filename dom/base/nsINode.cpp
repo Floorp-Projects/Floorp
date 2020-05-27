@@ -2025,6 +2025,35 @@ void nsINode::Append(const Sequence<OwningNodeOrString>& aNodes,
   AppendChild(*node, aRv);
 }
 
+// https://dom.spec.whatwg.org/#dom-parentnode-replacechildren
+void nsINode::ReplaceChildren(const Sequence<OwningNodeOrString>& aNodes,
+                              ErrorResult& aRv) {
+  nsCOMPtr<Document> doc = OwnerDoc();
+  nsCOMPtr<nsINode> node = ConvertNodesOrStringsIntoNode(aNodes, doc, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  EnsurePreInsertionValidity(*node, nullptr, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Needed when used in combination with contenteditable (maybe)
+  mozAutoDocUpdate updateBatch(doc, true);
+
+  nsAutoMutationBatch mb(this, true, false);
+
+  // Replace all with node within this.
+  while (mFirstChild) {
+    RemoveChildNode(mFirstChild, true);
+  }
+  mb.RemovalDone();
+
+  AppendChild(*node, aRv);
+  mb.NodesAdded();
+}
+
 void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify) {
   // NOTE: This function must not trigger any calls to
   // Document::GetRootElement() calls until *after* it has removed aKid from
