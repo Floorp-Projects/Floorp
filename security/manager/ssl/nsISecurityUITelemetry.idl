@@ -134,5 +134,5 @@ const uint32_t WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_TIME = 4;
 // const uint32_t WARNING_UNWANTED_PAGE_FRAME_IGNORE_WARNING = 99;
 
 // All the buckets are used so the safebrowsing-related buckets were
-// moved under URLCLASSIFIER_UI_EVENTS probe. See bug 1375277 for more information.
+// moved under PAGE_LOAD_ERROR probe. See bug 1636962 for more information.
 };

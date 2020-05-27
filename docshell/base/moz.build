@@ -93,6 +93,7 @@ UNIFIED_SOURCES += [
     'nsDocShellEditorData.cpp',
     'nsDocShellEnumerator.cpp',
     'nsDocShellLoadState.cpp',
+    'nsDocShellTelemetryUtils.cpp',
     'nsDocShellTreeOwner.cpp',
     'nsDSURIContentListener.cpp',
     'nsPingListener.cpp',
