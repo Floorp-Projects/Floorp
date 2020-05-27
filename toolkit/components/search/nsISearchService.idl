@@ -228,20 +228,14 @@ interface nsISearchService : nsISupports
    * immediately, if initialization has already been completed by some previous
    * call to this method.
    * This method should only be called when you need or want to wait for the
-   * full initialization of the search service, which may include waiting for
-   * outbound service requests.
-   *
-   * @param skipRegionCheck
-   *        Flag to avoid SearchService from waiting on the results
-   *        of the region lookups before completing initialisation.
-   *        Exposed for testing only.
+   * full initialization of the search service.
    */
-  Promise init([optional] in boolean skipRegionCheck);
+  Promise init();
 
   /**
    * Exposed for testing.
    */
-  void reInit([optional] in boolean skipRegionCheck);
+  void reInit();
   void reset();
   Promise makeEngineFromConfig(in jsval config);
   Promise ensureBuiltinExtension(in AString id,

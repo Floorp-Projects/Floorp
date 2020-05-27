@@ -9,6 +9,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
@@ -45,6 +46,7 @@ var XULRuntime = Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime);
 
 // Expand the amount of information available in error logs
 Services.prefs.setBoolPref("browser.search.log", true);
+Services.prefs.setBoolPref("browser.region.log", true);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -532,14 +534,12 @@ function installTestEngine() {
 }
 
 async function asyncReInit({ awaitRegionFetch = false } = {}) {
-  let promises = [SearchTestUtils.promiseSearchNotification("reinit-complete")];
-  if (awaitRegionFetch) {
-    promises.push(
-      SearchTestUtils.promiseSearchNotification("ensure-known-region-done")
-    );
-  }
+  let promises = [
+    SearchTestUtils.promiseSearchNotification("reinit-complete"),
+    SearchTestUtils.promiseSearchNotification("ensure-known-region-done"),
+  ];
 
-  Services.search.reInit(awaitRegionFetch);
+  Services.search.reInit();
 
   return Promise.all(promises);
 }
