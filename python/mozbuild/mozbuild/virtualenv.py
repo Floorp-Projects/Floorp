@@ -7,22 +7,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import distutils.sysconfig
 import os
 import shutil
 import subprocess
 import sys
 
-from distutils.version import LooseVersion
 
 IS_NATIVE_WIN = (sys.platform == 'win32' and os.sep == '\\')
 IS_CYGWIN = (sys.platform == 'cygwin')
-
-# Minimum versions of Python required to build.
-MINIMUM_PYTHON_VERSIONS = {
-    2: LooseVersion('2.7.3'),
-    3: LooseVersion('3.5.0')
-}
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -319,6 +311,8 @@ class VirtualenvManager(object):
         environment is not configured properly, packages could be installed
         into the wrong place. This is how virtualenv's work.
         """
+        import distutils.sysconfig
+
         packages = self.packages()
         python_lib = distutils.sysconfig.get_python_lib()
 
@@ -688,11 +682,14 @@ class VirtualenvManager(object):
 
 def verify_python_version(log_handle):
     """Ensure the current version of Python is sufficient."""
-    major, minor, micro = sys.version_info[:3]
+    from distutils.version import LooseVersion
 
+    major, minor, micro = sys.version_info[:3]
+    minimum_python_version = (
+        LooseVersion('3.5.0') if major == 3 else LooseVersion('2.7.3'))
     our = LooseVersion('%d.%d.%d' % (major, minor, micro))
 
-    if major not in MINIMUM_PYTHON_VERSIONS or our < MINIMUM_PYTHON_VERSIONS[major]:
+    if major not in (2, 3) or our < minimum_python_version:
         log_handle.write('One of the following Python versions are required to build:\n')
         for minver in MINIMUM_PYTHON_VERSIONS.values():
             log_handle.write('* Python %s or greater\n' % minver)
