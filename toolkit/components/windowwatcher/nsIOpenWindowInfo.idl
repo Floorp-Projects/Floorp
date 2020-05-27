@@ -19,6 +19,17 @@ class BrowserParent;
 [ref] native const_OriginAttributes(const mozilla::OriginAttributes);
 [ptr] native BrowserParent(mozilla::dom::BrowserParent);
 
+/*
+ * nsIBrowsingContextReadyCallback.browsingContextReady() is called within
+ * nsFrameLoader to indicate that the browsing context for a newly opened
+ * window/tab is ready.
+ */
+[uuid(0524ee06-7f4c-4cd3-ab80-084562745cad)]
+interface nsIBrowsingContextReadyCallback : nsISupports
+{
+  void browsingContextReady(in BrowsingContext bc);
+};
+
 /**
  * nsIOpenWindowInfo is a helper type which contains details used when opening
  * new content windows. This object is used to correctly create new initial
@@ -48,4 +59,8 @@ interface nsIOpenWindowInfo : nsISupports {
 
   [notxpcom, nostdcall, binaryname(GetOriginAttributes)]
   const_OriginAttributes binaryGetOriginAttributes();
+
+  /* Callback to invoke when the browsing context for a new window is ready. */
+  [notxpcom, nostdcall]
+  nsIBrowsingContextReadyCallback browsingContextReadyCallback();
 };

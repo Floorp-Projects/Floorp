@@ -275,8 +275,8 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   RefPtr<BrowsingContext> opener;
   if (aOpenWindowInfo && !aOpenWindowInfo->GetForceNoOpener()) {
     opener = aOpenWindowInfo->GetParent();
-    MOZ_ASSERT(opener->IsInProcess(),
-               "Must create BrowsingContext with opener in-process");
+    // Must create BrowsingContext with opener in-process.
+    MOZ_ASSERT_IF(opener, opener->IsInProcess());
   }
 
   RefPtr<nsGlobalWindowInner> parentInner =
@@ -2067,6 +2067,8 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   mPendingBrowsingContext->SetEmbedderElement(mOwnerContent);
   mPendingBrowsingContext->Embed();
 
+  InvokeBrowsingContextReadyCallback();
+
   mIsTopLevelContent = mPendingBrowsingContext->IsContent() &&
                        !mPendingBrowsingContext->GetParent();
   if (!mNetworkCreated && !mIsTopLevelContent) {
@@ -2588,6 +2590,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
                         mRemoteBrowser->GetBrowsingContext());
 
   mRemoteBrowser->GetBrowsingContext()->Embed();
+  InvokeBrowsingContextReadyCallback();
 
   // Grab the reference to the actor
   RefPtr<BrowserParent> browserParent = GetBrowserParent();
@@ -3553,4 +3556,13 @@ bool nsFrameLoader::EnsureBrowsingContextAttached() {
   // Finish attaching.
   mPendingBrowsingContext->EnsureAttached();
   return true;
+}
+
+void nsFrameLoader::InvokeBrowsingContextReadyCallback() {
+  if (mOpenWindowInfo) {
+    if (RefPtr<nsIBrowsingContextReadyCallback> callback =
+            mOpenWindowInfo->BrowsingContextReadyCallback()) {
+      callback->BrowsingContextReady(mPendingBrowsingContext);
+    }
+  }
 }
