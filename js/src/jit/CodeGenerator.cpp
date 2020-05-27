@@ -11501,14 +11501,27 @@ static void EmitLoadAndUnbox(MacroAssembler& masm, const T& src, MIRType type,
   if (fallible) {
     switch (type) {
       case MIRType::Int32:
-        masm.branchTestInt32(Assembler::NotEqual, src, fail);
+        masm.fallibleUnboxInt32(src, dest.gpr(), fail);
         break;
       case MIRType::Boolean:
-        masm.branchTestBoolean(Assembler::NotEqual, src, fail);
+        masm.fallibleUnboxBoolean(src, dest.gpr(), fail);
+        break;
+      case MIRType::Object:
+        masm.fallibleUnboxObject(src, dest.gpr(), fail);
+        break;
+      case MIRType::String:
+        masm.fallibleUnboxString(src, dest.gpr(), fail);
+        break;
+      case MIRType::Symbol:
+        masm.fallibleUnboxSymbol(src, dest.gpr(), fail);
+        break;
+      case MIRType::BigInt:
+        masm.fallibleUnboxBigInt(src, dest.gpr(), fail);
         break;
       default:
         MOZ_CRASH("Unexpected MIRType");
     }
+    return;
   }
   masm.loadUnboxedValue(src, type, dest);
 }
