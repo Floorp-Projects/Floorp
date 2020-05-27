@@ -220,6 +220,7 @@
 #include "URIUtils.h"
 
 #include "timeline/JavascriptTimelineMarker.h"
+#include "nsDocShellTelemetryUtils.h"
 
 #ifdef MOZ_PLACES
 #  include "nsIFaviconService.h"
@@ -3494,36 +3495,14 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       errorPage.Assign(alternateErrorPage);
     }
 
-    uint32_t bucketId;
-    bool sendTelemetry = false;
     if (NS_ERROR_PHISHING_URI == aError) {
-      sendTelemetry = true;
       error = "deceptiveBlocked";
-      bucketId = IsFrame()
-                     ? IUrlClassifierUITelemetry::WARNING_PHISHING_PAGE_FRAME
-                     : IUrlClassifierUITelemetry::WARNING_PHISHING_PAGE_TOP;
     } else if (NS_ERROR_MALWARE_URI == aError) {
-      sendTelemetry = true;
       error = "malwareBlocked";
-      bucketId = IsFrame()
-                     ? IUrlClassifierUITelemetry::WARNING_MALWARE_PAGE_FRAME
-                     : IUrlClassifierUITelemetry::WARNING_MALWARE_PAGE_TOP;
     } else if (NS_ERROR_UNWANTED_URI == aError) {
-      sendTelemetry = true;
       error = "unwantedBlocked";
-      bucketId = IsFrame()
-                     ? IUrlClassifierUITelemetry::WARNING_UNWANTED_PAGE_FRAME
-                     : IUrlClassifierUITelemetry::WARNING_UNWANTED_PAGE_TOP;
     } else if (NS_ERROR_HARMFUL_URI == aError) {
-      sendTelemetry = true;
       error = "harmfulBlocked";
-      bucketId = IsFrame()
-                     ? IUrlClassifierUITelemetry::WARNING_HARMFUL_PAGE_FRAME
-                     : IUrlClassifierUITelemetry::WARNING_HARMFUL_PAGE_TOP;
-    }
-
-    if (sendTelemetry && errorPage.EqualsIgnoreCase("blocked")) {
-      Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UI_EVENTS, bucketId);
     }
 
     cssClass.AssignLiteral("blacklist");
@@ -3685,6 +3664,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   if (!errorDescriptionID) {
     errorDescriptionID = error;
   }
+
+  Telemetry::AccumulateCategoricalKeyed(
+      IsFrame() ? NS_LITERAL_CSTRING("frame") : NS_LITERAL_CSTRING("top"),
+      mozilla::dom::LoadErrorToTelemetryLabel(aError));
 
   // Test if the error needs to be formatted
   if (!messageStr.IsEmpty()) {
