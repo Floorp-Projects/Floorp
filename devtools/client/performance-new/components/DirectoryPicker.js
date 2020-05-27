@@ -74,6 +74,7 @@ class DirectoryPicker extends PureComponent {
           className: "perf-settings-dir-list",
           size: 4,
           ref: this._takeListBoxRef,
+          key: "directory-picker-select",
         },
         dirs.map((fullPath, i) =>
           option(
@@ -87,7 +88,10 @@ class DirectoryPicker extends PureComponent {
         )
       ),
       div(
-        { className: "perf-settings-dir-list-button-group" },
+        {
+          className: "perf-settings-dir-list-button-group",
+          key: "directory-picker-div",
+        },
         input({
           type: "button",
           className: `perf-photon-button perf-photon-button-default perf-button`,
