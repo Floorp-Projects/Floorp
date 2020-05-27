@@ -17272,8 +17272,6 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     }
   }
 
-  const auto sqliteSuffix = kSQLiteSuffix;
-
   for (const auto& databaseEntry : databaseFilenames) {
     if (aCanceled) {
       break;
@@ -17302,7 +17300,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       return rv;
     }
 
-    rv = databaseFile->Append(databaseFilename + sqliteSuffix);
+    rv = databaseFile->Append(databaseFilename + kSQLiteSuffix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Append2);
       return rv;
@@ -17661,8 +17659,6 @@ nsresult QuotaClient::GetDatabaseFilenames(
     return rv;
   }
 
-  const auto sqliteSuffix = kSQLiteSuffix;
-
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
          file && !aCanceled) {
@@ -17717,7 +17713,7 @@ nsresult QuotaClient::GetDatabaseFilenames(
     }
 
     nsDependentSubstring leafNameBase;
-    if (!GetFilenameBase(leafName, sqliteSuffix, leafNameBase)) {
+    if (!GetFilenameBase(leafName, kSQLiteSuffix, leafNameBase)) {
       nsString path;
       MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
       MOZ_ASSERT(!path.IsEmpty());
