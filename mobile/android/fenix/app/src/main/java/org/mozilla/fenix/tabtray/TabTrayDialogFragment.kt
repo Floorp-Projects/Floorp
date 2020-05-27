@@ -15,6 +15,7 @@ import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
 import mozilla.components.concept.tabstray.Tab
+import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -25,6 +26,9 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     interface Interactor {
         fun onTabSelected(tab: Tab)
         fun onNewTabTapped(private: Boolean)
+        fun onShareTabsClicked(private: Boolean)
+        fun onSaveToCollectionClicked()
+        fun onCloseAllTabsClicked(private: Boolean)
     }
 
     private lateinit var tabTrayView: TabTrayView
@@ -49,7 +53,9 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             (activity as HomeActivity).browsingModeManager.mode.isPrivate
         )
 
-        tabLayout.setOnClickListener { dismissAllowingStateLoss() }
+        tabLayout.setOnClickListener {
+            dismissAllowingStateLoss()
+        }
 
         view.tabLayout.setOnApplyWindowInsetsListener { v, insets ->
             v.updatePadding(
@@ -64,6 +70,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
             insets
         }
+
+        consumeFrom(requireComponents.core.store) { tabTrayView.updateState(it) }
     }
 
     override fun onTabClosed(tab: Tab) {
@@ -106,6 +114,18 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
     override fun onTabTrayDismissed() {
         dismissAllowingStateLoss()
+    }
+
+    override fun onShareTabsClicked(private: Boolean) {
+        interactor?.onShareTabsClicked(private)
+    }
+
+    override fun onSaveToCollectionClicked() {
+        interactor?.onSaveToCollectionClicked()
+    }
+
+    override fun onCloseAllTabsClicked(private: Boolean) {
+        interactor?.onCloseAllTabsClicked(private)
     }
 
     companion object {

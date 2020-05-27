@@ -22,6 +22,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
+import kotlinx.android.synthetic.main.tab_header.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
@@ -71,6 +72,7 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
+import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
@@ -96,6 +98,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 
@@ -116,6 +119,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private var _browserToolbarView: BrowserToolbarView? = null
     protected val browserToolbarView: BrowserToolbarView
         get() = _browserToolbarView!!
+
+    private val sessionManager: SessionManager
+        get() = requireComponents.core.sessionManager
 
     protected val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
 
@@ -224,6 +230,75 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                             (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.fromBoolean(private)
                             tabTrayDialog.dismiss()
                             findNavController().navigate(BrowserFragmentDirections.actionGlobalHome())
+                        }
+
+                        override fun onShareTabsClicked(private: Boolean) {
+                            share(getListOfSessions(private))
+                        }
+
+                        override fun onCloseAllTabsClicked(private: Boolean) {
+                            val tabs = getListOfSessions(private)
+
+                            val selectedIndex = sessionManager
+                                .selectedSession?.let { sessionManager.sessions.indexOf(it) } ?: 0
+
+                            val snapshot = tabs
+                                .map(sessionManager::createSessionSnapshot)
+                                .map {
+                                    it.copy(engineSession = null, engineSessionState = it.engineSession?.saveState())
+                                }
+                                .let { SessionManager.Snapshot(it, selectedIndex) }
+
+                            tabs.forEach {
+                                sessionManager.remove(it)
+                            }
+
+                            val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
+                            val snackbarMessage = if (isPrivate) {
+                                getString(R.string.snackbar_private_tabs_closed)
+                            } else {
+                                getString(R.string.snackbar_tabs_closed)
+                            }
+
+                            viewLifecycleOwner.lifecycleScope.allowUndo(
+                                requireView(),
+                                snackbarMessage,
+                                getString(R.string.snackbar_deleted_undo),
+                                {
+                                    sessionManager.restore(snapshot)
+                                },
+                                operation = { },
+                                anchorView = view.tabs_header
+                            )
+                        }
+
+                        override fun onSaveToCollectionClicked() {
+                            val tabs = getListOfSessions(false)
+                            val tabIds = tabs.map { it.id }.toList().toTypedArray()
+                            val tabCollectionStorage = (activity as HomeActivity).components.core.tabCollectionStorage
+                            val navController = findNavController()
+
+                            val step = when {
+                                // Show the SelectTabs fragment if there are multiple opened tabs to select which tabs
+                                // you want to save to a collection.
+                                tabs.size > 1 -> SaveCollectionStep.SelectTabs
+                                // If there is an existing tab collection, show the SelectCollection fragment to save
+                                // the selected tab to a collection of your choice.
+                                tabCollectionStorage.cachedTabCollections.isNotEmpty() ->
+                                    SaveCollectionStep.SelectCollection
+                                // Show the NameCollection fragment to create a new collection for the selected tab.
+                                else -> SaveCollectionStep.NameCollection
+                            }
+
+                            if (navController.currentDestination?.id == R.id.collectionCreationFragment) return
+
+                            val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
+                                tabIds = tabIds,
+                                previousFragmentId = R.id.tabTrayFragment,
+                                saveCollectionStep = step,
+                                selectedTabIds = tabIds
+                            )
+                            navController.nav(R.id.browserFragment, directions)
                         }
                     }
                 }
@@ -963,6 +1038,23 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         if (!FeatureFlags.dynamicBottomToolbar) {
             updateLayoutMargins(inFullScreen)
         }
+    }
+
+    private fun share(tabs: List<Session>) {
+        val data = tabs.map {
+            ShareData(url = it.url, title = it.title)
+        }
+        val directions = BrowserFragmentDirections.actionGlobalShareFragment(
+            data = data.toTypedArray()
+        )
+        nav(R.id.browserFragment, directions)
+    }
+
+    private fun getListOfSessions(
+        private: Boolean = (activity as HomeActivity).browsingModeManager.mode.isPrivate
+    ): List<Session> {
+        return requireComponents.core.sessionManager.sessionsOfType(private = private)
+            .toList()
     }
 
     /*

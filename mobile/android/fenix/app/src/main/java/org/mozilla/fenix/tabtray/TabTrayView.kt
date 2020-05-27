@@ -4,15 +4,22 @@
 
 package org.mozilla.fenix.tabtray
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tabstray.*
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
+import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.tabstray.Tab
@@ -26,6 +33,9 @@ interface TabTrayInteractor {
     fun onTabSelected(tab: Tab)
     fun onNewTabTapped(private: Boolean)
     fun onTabTrayDismissed()
+    fun onShareTabsClicked(private: Boolean)
+    fun onSaveToCollectionClicked()
+    fun onCloseAllTabsClicked(private: Boolean)
 }
 /**
  * View that contains and configures the BrowserAwesomeBar
@@ -41,8 +51,11 @@ class TabTrayView(
     val view = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabstray, container, true)
 
+    val isPrivateModeSelected: Boolean get() = view.tab_layout.selectedTabPosition == PRIVATE_TAB_ID
+
     private val behavior = BottomSheetBehavior.from(view.tab_wrapper)
     private var tabsFeature: TabsFeature
+    private var tabTrayItemMenu: TabTrayItemMenu
 
     override val containerView: View?
         get() = container
@@ -89,8 +102,26 @@ class TabTrayView(
             TabsTouchHelper(tray.tabsAdapter).attachToRecyclerView(tray)
         }
 
+        tabTrayItemMenu = TabTrayItemMenu(view.context, { view.tab_layout.selectedTabPosition == 0 }) {
+            when (it) {
+                is TabTrayItemMenu.Item.ShareAllTabs -> interactor.onShareTabsClicked(
+                    isPrivateModeSelected
+                )
+                is TabTrayItemMenu.Item.SaveToCollection -> interactor.onSaveToCollectionClicked()
+                is TabTrayItemMenu.Item.CloseAllTabs -> interactor.onCloseAllTabsClicked(
+                    isPrivateModeSelected
+                )
+            }
+        }
+
+        view.tab_tray_overflow.setOnClickListener {
+            tabTrayItemMenu.menuBuilder
+                .build(view.context)
+                .show(anchor = it)
+        }
+
         fabView.new_tab_button.setOnClickListener {
-            interactor.onNewTabTapped(view.tab_layout.selectedTabPosition == 1)
+            interactor.onNewTabTapped(isPrivateModeSelected)
         }
 
         tabsTray.register(this)
@@ -109,6 +140,17 @@ class TabTrayView(
         }
 
         tabsFeature.filterTabs(filter)
+
+        updateState(view.context.components.core.store.state)
+    }
+
+    fun updateState(state: BrowserState) {
+        val shouldHide = if (isPrivateModeSelected) {
+            state.privateTabs.isEmpty()
+        } else {
+            state.normalTabs.isEmpty()
+        }
+        view?.tab_tray_overflow?.isVisible = !shouldHide
     }
 
     override fun onTabClosed(tab: Tab) {
@@ -122,5 +164,45 @@ class TabTrayView(
         private const val PRIVATE_TAB_ID = 1
         private const val SLIDE_OFFSET = 0
         private const val ELEVATION = 90f
+    }
+}
+
+class TabTrayItemMenu(
+    private val context: Context,
+    private val shouldShowSaveToCollection: () -> Boolean,
+    private val onItemTapped: (Item) -> Unit = {}
+) {
+
+    sealed class Item {
+        object ShareAllTabs : Item()
+        object SaveToCollection : Item()
+        object CloseAllTabs : Item()
+    }
+
+    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
+
+    private val menuItems by lazy {
+        listOf(
+            SimpleBrowserMenuItem(
+                context.getString(R.string.tab_tray_menu_item_save),
+                textColorResource = R.color.primary_text_normal_theme
+            ) {
+                onItemTapped.invoke(Item.SaveToCollection)
+            }.apply { visible = shouldShowSaveToCollection },
+
+            SimpleBrowserMenuItem(
+                context.getString(R.string.tab_tray_menu_item_share),
+                textColorResource = R.color.primary_text_normal_theme
+            ) {
+                onItemTapped.invoke(Item.ShareAllTabs)
+            },
+
+            SimpleBrowserMenuItem(
+                context.getString(R.string.tab_tray_menu_item_close),
+                textColorResource = R.color.primary_text_normal_theme
+            ) {
+                onItemTapped.invoke(Item.CloseAllTabs)
+            }
+        )
     }
 }

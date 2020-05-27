@@ -164,6 +164,9 @@
         <action
             android:id="@+id/action_browserFragment_to_tabsTrayFragment"
             app:destination="@+id/tabTrayFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_createCollectionFragment"
+            app:destination="@id/collectionCreationFragment" />
     </fragment>
 
     <fragment
