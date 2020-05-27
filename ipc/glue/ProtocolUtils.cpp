@@ -649,8 +649,7 @@ int32_t IToplevelProtocol::Register(IProtocol* aRouted) {
   // Inherit our event target from our manager.
   if (IProtocol* manager = aRouted->Manager()) {
     MutexAutoLock lock(mEventTargetMutex);
-    if (nsCOMPtr<nsIEventTarget> target =
-            mEventTargetMap.Lookup(manager->Id())) {
+    if (nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Get(manager->Id())) {
       MOZ_ASSERT(!mEventTargetMap.Contains(id),
                  "Don't insert with an existing ID");
       mEventTargetMap.Put(id, target);
@@ -668,9 +667,7 @@ int32_t IToplevelProtocol::RegisterID(IProtocol* aRouted, int32_t aId) {
   return aId;
 }
 
-IProtocol* IToplevelProtocol::Lookup(int32_t aId) {
-  return mActorMap.Lookup(aId);
-}
+IProtocol* IToplevelProtocol::Lookup(int32_t aId) { return mActorMap.Get(aId); }
 
 void IToplevelProtocol::Unregister(int32_t aId) {
   MOZ_ASSERT(mActorMap.Contains(aId),
@@ -717,7 +714,7 @@ Shmem::SharedMemory* IToplevelProtocol::CreateSharedMemory(
 }
 
 Shmem::SharedMemory* IToplevelProtocol::LookupSharedMemory(Shmem::id_t aId) {
-  return mShmemMap.Lookup(aId);
+  return mShmemMap.Get(aId);
 }
 
 bool IToplevelProtocol::IsTrackingSharedMemory(Shmem::SharedMemory* segment) {
@@ -797,7 +794,7 @@ already_AddRefed<nsIEventTarget> IToplevelProtocol::GetMessageEventTarget(
   Maybe<MutexAutoLock> lock;
   lock.emplace(mEventTargetMutex);
 
-  nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Lookup(route);
+  nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Get(route);
 
   if (aMsg.is_constructor()) {
     ActorHandle handle;
@@ -809,7 +806,7 @@ already_AddRefed<nsIEventTarget> IToplevelProtocol::GetMessageEventTarget(
 #ifdef DEBUG
     // If this function is called more than once for the same message, the actor
     // handle ID will already be in the map, but it should have the same target.
-    nsCOMPtr<nsIEventTarget> existingTgt = mEventTargetMap.Lookup(handle.mId);
+    nsCOMPtr<nsIEventTarget> existingTgt = mEventTargetMap.Get(handle.mId);
     MOZ_ASSERT(existingTgt == target || existingTgt == nullptr);
 #endif /* DEBUG */
 
@@ -825,7 +822,7 @@ already_AddRefed<nsIEventTarget> IToplevelProtocol::GetActorEventTarget(
                      aActor->Id() != kFreedActorId);
 
   MutexAutoLock lock(mEventTargetMutex);
-  nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Lookup(aActor->Id());
+  nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Get(aActor->Id());
   return target.forget();
 }
 
