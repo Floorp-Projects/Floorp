@@ -389,3 +389,9 @@ geckodriver
 ===========
 If non-empty, declares that the (toolchain) task is a `geckodriver`
 task that produces a binary that should be signed.
+
+rebuild-on-release
+==================
+If true, the digest for this task will also depend on if the branch is a
+release branch.  This will cause tasks like toolchains to be rebuilt as they
+move from e.g. autoland to mozilla-central.

@@ -21,6 +21,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_artifacts,
 )
 from taskgraph.util.hash import hash_paths
+from taskgraph.util.attributes import RELEASE_PROJECTS
 from taskgraph import GECKO
 import taskgraph
 
@@ -100,6 +101,10 @@ def get_digest_data(config, run, taskdesc):
     args = run.get('arguments')
     if args:
         data.extend(args)
+
+    if taskdesc['attributes'].get('rebuild-on-release'):
+        # Add whether this is a release branch or not
+        data.append(str(config.params['project'] in RELEASE_PROJECTS))
     return data
 
 
