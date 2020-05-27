@@ -215,7 +215,7 @@ async function listProcessTargets(args: Args): Promise<*> {
   // and if the browser toolbox fission pref is turned on.
   // Also note that the `ParentProcessTarget` actor is considered to be a FRAME and not a PROCESS.
   // But this is ok, as we expect to return only content processes here.
-  return targetList.getAllTargets(targetList.TYPES.PROCESS);
+  return targetList.getAllTargets([targetList.TYPES.PROCESS]);
 }
 
 export async function updateTargets(args: Args): Promise<*> {

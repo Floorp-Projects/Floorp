@@ -47,21 +47,21 @@ async function testBrowserWorkers(mainRoot) {
   const targetList = new TargetList(mainRoot, target);
   await targetList.startListening();
 
-  // Very naive sanity check against getAllTargets(workerType)
+  // Very naive sanity check against getAllTargets([workerType])
   info("Check that getAllTargets returned the expected targets");
-  const workers = await targetList.getAllTargets(TYPES.WORKER);
+  const workers = await targetList.getAllTargets([TYPES.WORKER]);
   const hasWorker = workers.find(workerTarget => {
     return workerTarget.url == CHROME_WORKER_URL + "#simple-worker";
   });
   ok(hasWorker, "retrieve the target for the worker");
 
-  const sharedWorkers = await targetList.getAllTargets(TYPES.SHARED_WORKER);
+  const sharedWorkers = await targetList.getAllTargets([TYPES.SHARED_WORKER]);
   const hasSharedWorker = sharedWorkers.find(workerTarget => {
     return workerTarget.url == CHROME_WORKER_URL + "#shared-worker";
   });
   ok(hasSharedWorker, "retrieve the target for the shared worker");
 
-  const serviceWorkers = await targetList.getAllTargets(TYPES.SERVICE_WORKER);
+  const serviceWorkers = await targetList.getAllTargets([TYPES.SERVICE_WORKER]);
   const hasServiceWorker = serviceWorkers.find(workerTarget => {
     return workerTarget.url == SERVICE_WORKER_URL;
   });
@@ -70,9 +70,11 @@ async function testBrowserWorkers(mainRoot) {
   info(
     "Check that calling getAllTargets again return the same target instances"
   );
-  const workers2 = await targetList.getAllTargets(TYPES.WORKER);
-  const sharedWorkers2 = await targetList.getAllTargets(TYPES.SHARED_WORKER);
-  const serviceWorkers2 = await targetList.getAllTargets(TYPES.SERVICE_WORKER);
+  const workers2 = await targetList.getAllTargets([TYPES.WORKER]);
+  const sharedWorkers2 = await targetList.getAllTargets([TYPES.SHARED_WORKER]);
+  const serviceWorkers2 = await targetList.getAllTargets([
+    TYPES.SERVICE_WORKER,
+  ]);
   is(workers2.length, workers.length, "retrieved the same number of workers");
   is(
     sharedWorkers2.length,
@@ -177,7 +179,7 @@ async function testBrowserWorkers(mainRoot) {
     "This worker target is about the new worker"
   );
 
-  const workers3 = await targetList.getAllTargets(TYPES.WORKER);
+  const workers3 = await targetList.getAllTargets([TYPES.WORKER]);
   const hasWorker2 = workers3.find(
     ({ url }) => url == `${CHROME_WORKER_URL}#second`
   );
@@ -206,8 +208,8 @@ async function testTabWorkers(mainRoot, tab) {
 
   await targetList.startListening();
 
-  // Check that calling getAllTargets(workers) return the same target instances
-  const workers = await targetList.getAllTargets(TYPES.WORKER);
+  // Check that calling getAllTargets([workers]) return the same target instances
+  const workers = await targetList.getAllTargets([TYPES.WORKER]);
   is(workers.length, 1, "retrieved the worker");
   is(workers[0].url, WORKER_URL, "The first worker is the page worker");
 

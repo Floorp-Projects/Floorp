@@ -367,16 +367,18 @@ class TargetList {
   /**
    * Retrieve all the current target fronts of a given type.
    *
-   * @param {String} type
-   *        The type of target to retrieve. Constant of TargetList.TYPES.
+   * @param {Array<String>} types
+   *        The types of target to retrieve. Array of TargetList.TYPES
+   * @return {Array<TargetFront>} Array of target fronts matching any of the
+   *         provided types.
    */
-  getAllTargets(type) {
-    if (!type) {
-      throw new Error("getAllTargets expects a 'type' argument");
+  getAllTargets(types) {
+    if (!types?.length) {
+      throw new Error("getAllTargets expects a non-empty array of types");
     }
 
     const targets = [...this._targets].filter(target =>
-      this._matchTargetType(type, target)
+      types.some(type => this._matchTargetType(type, target))
     );
 
     return targets;
@@ -392,7 +394,7 @@ class TargetList {
    */
   async getAllFronts(targetType, frontType) {
     const fronts = [];
-    const targets = this.getAllTargets(targetType);
+    const targets = this.getAllTargets([targetType]);
     for (const target of targets) {
       const front = await target.getFront(frontType);
       fronts.push(front);
