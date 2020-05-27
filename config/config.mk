@@ -372,7 +372,7 @@ include $(MOZILLA_DIR)/config/AB_rCD.mk
 # Many locales directories want this definition.
 ACDEFINES += -DAB_CD=$(AB_CD)
 
-EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(LOCALE_TOPDIR)/$(1)/en-US,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/$(subst /locales,,$(1)))
+EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(LOCALE_TOPDIR)/$(1)/en-US,$(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(1)))
 
 ifdef relativesrcdir
 LOCALE_RELATIVEDIR ?= $(relativesrcdir)
@@ -386,10 +386,7 @@ ifdef relativesrcdir
 MAKE_JARS_FLAGS += --relativesrcdir=$(LOCALE_RELATIVEDIR)
 ifneq (en-US,$(AB_CD))
 ifdef IS_LANGUAGE_REPACK
-MAKE_JARS_FLAGS += --locale-mergedir=$(REAL_LOCALE_MERGEDIR)
-endif
-ifdef IS_LANGUAGE_REPACK
-MAKE_JARS_FLAGS += --l10n-base=$(L10NBASEDIR)/$(AB_CD)
+MAKE_JARS_FLAGS += --l10n-base=$(REAL_LOCALE_MERGEDIR)
 endif
 else
 MAKE_JARS_FLAGS += -c $(LOCALE_SRCDIR)
@@ -398,26 +395,8 @@ else
 MAKE_JARS_FLAGS += -c $(LOCALE_SRCDIR)
 endif # ! relativesrcdir
 
-ifdef IS_LANGUAGE_REPACK
-MERGE_FILE = $(firstword \
-  $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(LOCALE_RELATIVEDIR))/$(1)) \
-  $(wildcard $(LOCALE_SRCDIR)/$(1)) \
-  $(srcdir)/en-US/$(1) )
-# Like MERGE_FILE, but with the specified relative source directory
-# $(2) replacing $(srcdir).  It's expected that $(2) will include
-# '/locales' but not '/locales/en-US'.
-#
-# MERGE_RELATIVE_FILE and MERGE_FILE could be -- ahem -- merged by
-# making the second argument optional, but that expression makes for
-# difficult to read Make.
-MERGE_RELATIVE_FILE = $(firstword \
-  $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(2))/$(1)) \
-  $(wildcard $(call EXPAND_LOCALE_SRCDIR,$(2))/$(1)) \
-  $(topsrcdir)/$(2)/en-US/$(1) )
-else
 MERGE_FILE = $(LOCALE_SRCDIR)/$(1)
 MERGE_RELATIVE_FILE = $(call EXPAND_LOCALE_SRCDIR,$(2))/$(1)
-endif
 
 ifneq (WINNT,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh

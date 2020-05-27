@@ -299,16 +299,9 @@ The process can be manually triggered via
     $> ./mach build merge-$AB_CD
 
 It creates another directory in the object dir, :file:`browser/locales/merge-dir/$AB_CD`, in
-which the modified files are stored. The actual repackaging process looks for
-the localized files in the merge dir first, then the localized file, and then
-in ``en-US``. Thus, for the ``de`` localization of
-:file:`browser/locales/en-US/chrome/browser/browser.dtd`, it checks
-
-1. :file:`$objdir/browser/locales/merge-de/browser/chrome/browser/browser.dtd`
-2. :file:`$(LOCALE_BASEDIR)/de/browser/chrome/browser/browser.dtd`
-3. :file:`browser/locales/en-US/chrome/browser/browser.dtd`
-
-and will include the first of those files it finds.
+which the sanitized files are stored. The actual repackaging process only looks
+in the merged directory, so the preparation steps of l10n-merge need to ensure
+that all files are generated or copied.
 
 l10n-merge modifies a file if it supports the particular file type, and there
 are missing strings which are not filtered out, or if an existing string
