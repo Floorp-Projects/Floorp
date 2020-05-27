@@ -283,6 +283,7 @@ impl GlyphCache {
         render_task_cache: &RenderTaskCache,
         glyph_rasterizer: &mut GlyphRasterizer,
     ) {
+        profile_scope!("begin_frame");
         self.current_frame = stamp.frame_id();
         self.clear_evicted(texture_cache, render_task_cache);
         self.prune_excess_usage(texture_cache, render_task_cache);

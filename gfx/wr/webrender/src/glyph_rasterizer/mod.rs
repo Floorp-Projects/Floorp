@@ -167,6 +167,7 @@ impl GlyphRasterizer {
             // spawn an async task to get off of the render backend thread as early as
             // possible and in that task use rayon's fork join dispatch to rasterize the
             // glyphs in the thread pool.
+            profile_scope!("spawning process_glyph jobs");
             self.workers.spawn(move || {
                 let jobs = glyphs
                     .par_iter()
@@ -187,6 +188,7 @@ impl GlyphRasterizer {
         _: &mut RenderTaskGraph,
         _: &mut TextureCacheProfileCounters,
     ) {
+        profile_scope!("resolve_glyphs");
         // Pull rasterized glyphs from the queue and update the caches.
         while self.pending_glyphs > 0 {
             self.pending_glyphs -= 1;
@@ -195,9 +197,13 @@ impl GlyphRasterizer {
             // we could try_recv and steal work from the thread pool to take advantage
             // of the fact that this thread is alive and we avoid the added latency
             // of blocking it.
-            let GlyphRasterJobs { font, mut jobs } = self.glyph_rx
+
+            let GlyphRasterJobs { font, mut jobs } = {
+                profile_scope!("blocking wait on glyph_rx");
+                self.glyph_rx
                 .recv()
-                .expect("BUG: Should be glyphs pending!");
+                .expect("BUG: Should be glyphs pending!")
+            };
 
             // Ensure that the glyphs are always processed in the same
             // order for a given text run (since iterating a hash set doesn't
@@ -982,6 +988,7 @@ impl GlyphRasterizer {
             return
         }
 
+        profile_scope!("remove_dead_fonts");
         let fonts_to_remove = mem::replace(&mut self.fonts_to_remove, Vec::new());
         let font_instances_to_remove = mem::replace(& mut self.font_instances_to_remove, Vec::new());
         self.font_contexts.async_for_each(move |mut context| {

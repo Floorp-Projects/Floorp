@@ -99,6 +99,7 @@ impl RenderTaskGraph {
         screen_size: DeviceIntSize,
         gpu_supports_fast_clears: bool,
     ) -> Vec<RenderPass> {
+        profile_scope!("generate_passes");
         let mut passes = Vec::new();
 
         if !self.cacheable_render_tasks.is_empty() {
@@ -353,6 +354,7 @@ impl RenderTaskGraph {
     }
 
     pub fn write_task_data(&mut self) {
+        profile_scope!("write_task_data");
         for task in &self.tasks {
             self.task_data.push(task.write_task_data());
         }

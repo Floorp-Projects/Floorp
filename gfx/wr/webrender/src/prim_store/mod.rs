@@ -1879,6 +1879,7 @@ impl PrimitiveStore {
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) -> Option<PictureRect> {
+        profile_scope!("update_visibility");
         let (mut prim_list, surface_index, apply_local_clip_rect, world_culling_rect, is_composite) = {
             let pic = &mut self.pictures[pic_index.0];
             let mut world_culling_rect = *world_culling_rect;
@@ -1943,6 +1944,7 @@ impl PrimitiveStore {
         let mut surface_rect = PictureRect::zero();
 
         for cluster in &mut prim_list.clusters {
+            profile_scope!("cluster");
             // Get the cluster and see if is visible
             if !cluster.flags.contains(ClusterFlags::IS_VISIBLE) {
                 // Each prim instance must have reset called each frame, to clear
@@ -2370,6 +2372,7 @@ impl PrimitiveStore {
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) {
+        profile_scope!("request_resources_for_prim");
         match prim_instance.kind {
             PrimitiveInstanceKind::TextRun { .. } => {
                 // Text runs can't request resources early here, as we don't
@@ -2646,6 +2649,7 @@ impl PrimitiveStore {
         scratch: &mut PrimitiveScratchBuffer,
         tile_cache_log: &mut TileCacheLogger,
     ) -> bool {
+        profile_scope!("prepare_prim_for_render");
         // If we have dependencies, we need to prepare them first, in order
         // to know the actual rect of this primitive.
         // For example, scrolling may affect the location of an item in
@@ -2788,7 +2792,9 @@ impl PrimitiveStore {
         scratch: &mut PrimitiveScratchBuffer,
         tile_cache_log: &mut TileCacheLogger,
     ) {
+        profile_scope!("prepare_primitives");
         for (cluster_index, cluster) in prim_list.clusters.iter_mut().enumerate() {
+            profile_scope!("cluster");
             pic_state.map_local_to_pic.set_target_spatial_node(
                 cluster.spatial_node_index,
                 frame_context.spatial_tree,
@@ -2860,6 +2866,7 @@ impl PrimitiveStore {
 
         match &mut prim_instance.kind {
             PrimitiveInstanceKind::LineDecoration { data_handle, ref mut cache_handle, .. } => {
+                profile_scope!("LineDecoration");
                 let prim_data = &mut data_stores.line_decoration[*data_handle];
                 let common_data = &mut prim_data.common;
                 let line_dec_data = &mut prim_data.kind;
@@ -2915,6 +2922,7 @@ impl PrimitiveStore {
                 }
             }
             PrimitiveInstanceKind::TextRun { run_index, data_handle, .. } => {
+                profile_scope!("TextRun");
                 let prim_data = &mut data_stores.text_run[*data_handle];
                 let run = &mut self.text_runs[*run_index];
 
@@ -2962,6 +2970,7 @@ impl PrimitiveStore {
                 prim_data.update(frame_state);
             }
             PrimitiveInstanceKind::Clear { data_handle, .. } => {
+                profile_scope!("Clear");
                 let prim_data = &mut data_stores.prim[*data_handle];
 
                 prim_data.common.may_need_repetition = false;
@@ -2971,6 +2980,7 @@ impl PrimitiveStore {
                 prim_data.update(frame_state, frame_context.scene_properties);
             }
             PrimitiveInstanceKind::NormalBorder { data_handle, ref mut cache_handles, .. } => {
+                profile_scope!("NormalBorder");
                 let prim_data = &mut data_stores.normal_border[*data_handle];
                 let common_data = &mut prim_data.common;
                 let border_data = &mut prim_data.kind;
@@ -3049,6 +3059,7 @@ impl PrimitiveStore {
                     .extend(handles);
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
+                profile_scope!("ImageBorder");
                 let prim_data = &mut data_stores.image_border[*data_handle];
 
                 // TODO: get access to the ninepatch and to check whwther we need support
@@ -3059,6 +3070,7 @@ impl PrimitiveStore {
                 prim_data.kind.update(&mut prim_data.common, frame_state);
             }
             PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, opacity_binding_index, color_binding_index, .. } => {
+                profile_scope!("Rectangle");
                 let prim_data = &mut data_stores.prim[*data_handle];
                 prim_data.common.may_need_repetition = false;
 
@@ -3110,6 +3122,7 @@ impl PrimitiveStore {
                 );
             }
             PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, .. } => {
+                profile_scope!("YuvImage");
                 let prim_data = &mut data_stores.yuv_image[*data_handle];
                 let common_data = &mut prim_data.common;
                 let yuv_image_data = &mut prim_data.kind;
@@ -3131,6 +3144,7 @@ impl PrimitiveStore {
                 );
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
+                profile_scope!("Image");
                 let prim_data = &mut data_stores.image[*data_handle];
                 let common_data = &mut prim_data.common;
                 let image_data = &mut prim_data.kind;
@@ -3164,6 +3178,7 @@ impl PrimitiveStore {
                 );
             }
             PrimitiveInstanceKind::LinearGradient { data_handle, gradient_index, .. } => {
+                profile_scope!("LinearGradient");
                 let prim_data = &mut data_stores.linear_grad[*data_handle];
                 let gradient = &mut self.linear_gradients[*gradient_index];
 
@@ -3488,6 +3503,7 @@ impl PrimitiveStore {
                 //           for gradient primitives.
             }
             PrimitiveInstanceKind::RadialGradient { data_handle, ref mut visible_tiles_range, .. } => {
+                profile_scope!("RadialGradient");
                 let prim_data = &mut data_stores.radial_grad[*data_handle];
 
                 if prim_data.stretch_size.width >= prim_data.common.prim_rect.size.width &&
@@ -3548,6 +3564,7 @@ impl PrimitiveStore {
                 //           for gradient primitives.
             }
             PrimitiveInstanceKind::ConicGradient { data_handle, ref mut visible_tiles_range, .. } => {
+                profile_scope!("ConicGradient");
                 let prim_data = &mut data_stores.conic_grad[*data_handle];
 
                 if prim_data.stretch_size.width >= prim_data.common.prim_rect.size.width &&
@@ -3608,6 +3625,7 @@ impl PrimitiveStore {
                 //           for gradient primitives.
             }
             PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
+                profile_scope!("Picture");
                 let pic = &mut self.pictures[pic_index.0];
                 let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
 
@@ -3655,6 +3673,7 @@ impl PrimitiveStore {
                 }
             }
             PrimitiveInstanceKind::Backdrop { data_handle } => {
+                profile_scope!("Backdrop");
                 let backdrop_pic_index = data_stores.backdrop[*data_handle].kind.pic_index;
 
                 // Setup a dependency on the backdrop picture to ensure it is rendered prior to rendering this primitive.

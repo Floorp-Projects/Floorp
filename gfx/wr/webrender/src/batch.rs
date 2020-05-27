@@ -704,6 +704,7 @@ impl BatchBuilder {
         composite_state: &mut CompositeState,
     ) {
         for cluster in &pic.prim_list.clusters {
+            profile_scope!("cluster");
             // Add each run in this picture to the batch.
             for prim_instance in &cluster.prim_instances {
                 self.add_prim_to_batch(

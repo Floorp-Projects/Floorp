@@ -1120,6 +1120,7 @@ impl ClipStore {
             Some(rect) => rect,
             None => return None,
         };
+        profile_scope!("build_clip_chain_instance");
         if is_chased {
             println!("\tbuilding clip chain instance with local rect {:?}", local_prim_rect);
         }
