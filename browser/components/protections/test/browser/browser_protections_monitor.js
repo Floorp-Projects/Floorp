@@ -8,6 +8,16 @@ const { AboutProtectionsParent } = ChromeUtils.import(
   "resource:///actors/AboutProtectionsParent.jsm"
 );
 
+const monitorErrorData = {
+  error: true,
+};
+
+const mockMonitorData = {
+  potentiallyBreachedLogins: 8,
+  numBreaches: 11,
+  numBreachesResolved: 0,
+};
+
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
@@ -23,7 +33,7 @@ add_task(async function() {
     "Check that the correct content is displayed for users with monitor data."
   );
   Services.logins.addLogin(TEST_LOGIN1);
-  AboutProtectionsParent.setTestOverride(mockGetMonitorData());
+  AboutProtectionsParent.setTestOverride(mockGetMonitorData(mockMonitorData));
   await reloadTab(tab);
 
   Assert.ok(
@@ -74,7 +84,7 @@ add_task(async function() {
   info(
     "Check that correct content is displayed when monitor data contains an error message."
   );
-  AboutProtectionsParent.setTestOverride(mockGetMonitorData(0, true));
+  AboutProtectionsParent.setTestOverride(mockGetMonitorData(monitorErrorData));
   await reloadTab(tab);
   await checkNoLoginsContentIsDisplayed(tab);
 

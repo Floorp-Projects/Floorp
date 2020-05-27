@@ -62,6 +62,7 @@ add_task(async function setup() {
       ["browser.contentblocking.report.lockwise.mobile-ios.url", ""],
       ["browser.contentblocking.report.mobile-ios.url", ""],
       ["browser.contentblocking.report.mobile-android.url", ""],
+      ["browser.contentblocking.report.monitor.home_page_url", ""],
     ],
   });
 
@@ -191,8 +192,8 @@ add_task(async function checkTelemetryClickEvents() {
       },
       "Manage passwords button exists"
     );
-    ContentTaskUtils.waitForCondition(
-      ContentTaskUtils.is_visible(managePasswordsButton),
+    await ContentTaskUtils.waitForCondition(
+      () => ContentTaskUtils.is_visible(managePasswordsButton),
       "manage passwords button is visible"
     );
     managePasswordsButton.click();
@@ -214,7 +215,13 @@ add_task(async function checkTelemetryClickEvents() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Add breached logins.
-  AboutProtectionsParent.setTestOverride(mockGetMonitorData(4));
+  AboutProtectionsParent.setTestOverride(
+    mockGetMonitorData({
+      potentiallyBreachedLogins: 4,
+      numBreaches: 5,
+      numBreachesResolved: 0,
+    })
+  );
   await reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const managePasswordsButton = await ContentTaskUtils.waitForCondition(
@@ -223,8 +230,8 @@ add_task(async function checkTelemetryClickEvents() {
       },
       "Manage passwords button exists"
     );
-    ContentTaskUtils.waitForCondition(
-      ContentTaskUtils.is_visible(managePasswordsButton),
+    await ContentTaskUtils.waitForCondition(
+      () => ContentTaskUtils.is_visible(managePasswordsButton),
       "manage passwords button is visible"
     );
     managePasswordsButton.click();
@@ -550,6 +557,136 @@ add_task(async function checkTelemetryClickEvents() {
   );
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
+  // Add breached logins and some resolved breaches.
+  AboutProtectionsParent.setTestOverride(
+    mockGetMonitorData({
+      potentiallyBreachedLogins: 4,
+      numBreaches: 3,
+      numBreachesResolved: 1,
+    })
+  );
+  await reloadTab(tab);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const resolveBreachesButton = await ContentTaskUtils.waitForCondition(
+      () => {
+        return content.document.getElementById("monitor-partial-breaches-link");
+      },
+      "Monitor resolve breaches button exists"
+    );
+
+    await ContentTaskUtils.waitForCondition(
+      () => ContentTaskUtils.is_visible(resolveBreachesButton),
+      "Resolve breaches button is visible"
+    );
+
+    resolveBreachesButton.click();
+  });
+
+  events = await waitForTelemetryEventCount(26);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mtr_report_link" &&
+      e[4] == "resolve_breaches"
+  );
+  is(events.length, 1, `recorded telemetry for resolve breaches button`);
+
+  // Add breached logins and no resolved breaches.
+  AboutProtectionsParent.setTestOverride(
+    mockGetMonitorData({
+      potentiallyBreachedLogins: 4,
+      numBreaches: 3,
+      numBreachesResolved: 0,
+    })
+  );
+  await reloadTab(tab);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const manageBreachesButton = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("monitor-breaches-link");
+    }, "Monitor manage breaches button exists");
+
+    await ContentTaskUtils.waitForCondition(
+      () => ContentTaskUtils.is_visible(manageBreachesButton),
+      "Manage breaches button is visible"
+    );
+
+    manageBreachesButton.click();
+  });
+
+  events = await waitForTelemetryEventCount(29);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mtr_report_link" &&
+      e[4] == "manage_breaches"
+  );
+  is(events.length, 1, `recorded telemetry for manage breaches button`);
+
+  // All breaches are resolved.
+  AboutProtectionsParent.setTestOverride(
+    mockGetMonitorData({
+      potentiallyBreachedLogins: 4,
+      numBreaches: 3,
+      numBreachesResolved: 3,
+    })
+  );
+  await reloadTab(tab);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const viewReportButton = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("monitor-breaches-link");
+    }, "Monitor view report button exists");
+    await ContentTaskUtils.waitForCondition(
+      () => ContentTaskUtils.is_visible(viewReportButton),
+      "View report button is visible"
+    );
+
+    viewReportButton.click();
+  });
+
+  events = await waitForTelemetryEventCount(32);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mtr_report_link" &&
+      e[4] == "view_report"
+  );
+  is(events.length, 1, `recorded telemetry for view report button`);
+
+  // No breaches are present.
+  AboutProtectionsParent.setTestOverride(
+    mockGetMonitorData({
+      potentiallyBreachedLogins: 4,
+      numBreaches: 0,
+      numBreachesResolved: 0,
+    })
+  );
+  await reloadTab(tab);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const viewReportButton = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("monitor-breaches-link");
+    }, "Monitor view report button exists");
+    await ContentTaskUtils.waitForCondition(
+      () => ContentTaskUtils.is_visible(viewReportButton),
+      "View report button is visible"
+    );
+
+    viewReportButton.click();
+  });
+
+  events = await waitForTelemetryEventCount(35);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mtr_report_link" &&
+      e[4] == "view_report"
+  );
+  is(events.length, 2, `recorded telemetry for view report button`);
+
+  AboutProtectionsParent.setTestOverride(null);
   await BrowserTestUtils.removeTab(tab);
 });
 
