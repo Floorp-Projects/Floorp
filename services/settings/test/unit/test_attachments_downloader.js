@@ -307,6 +307,50 @@ add_task(async function test_downloader_reports_offline_error() {
 });
 add_task(clear_state);
 
+// Common code for test_download_cache_hit and test_download_cache_corruption.
+async function doTestDownloadCacheImpl({ simulateCorruption }) {
+  let readCount = 0;
+  let writeCount = 0;
+  const cacheImpl = {
+    async get(attachmentId) {
+      Assert.equal(attachmentId, RECORD.id, "expected attachmentId");
+      ++readCount;
+      if (simulateCorruption) {
+        throw new Error("Simulation of corrupted cache (read)");
+      }
+    },
+    async set(attachmentId, attachment) {
+      Assert.equal(attachmentId, RECORD.id, "expected attachmentId");
+      Assert.deepEqual(attachment.record, RECORD, "expected record");
+      ++writeCount;
+      if (simulateCorruption) {
+        throw new Error("Simulation of corrupted cache (write)");
+      }
+    },
+    async delete(attachmentId) {},
+  };
+  Object.defineProperty(downloader, "cacheImpl", { value: cacheImpl });
+
+  let downloadResult = await downloader.download(RECORD, {
+    useCache: true,
+  });
+  Assert.equal(downloadResult._source, "remote_match", "expected source");
+  Assert.equal(downloadResult.buffer.byteLength, 1597, "expected result");
+  Assert.equal(readCount, 1, "expected cache read attempts");
+  Assert.equal(writeCount, 1, "expected cache write attempts");
+}
+
+add_task(async function test_download_cache_hit() {
+  await doTestDownloadCacheImpl({ simulateCorruption: false });
+});
+add_task(clear_state);
+
+// Verify that the downloader works despite a broken cache implementation.
+add_task(async function test_download_cache_corruption() {
+  await doTestDownloadCacheImpl({ simulateCorruption: true });
+});
+add_task(clear_state);
+
 add_task(async function test_download_cached() {
   const client = RemoteSettings("main", "some-collection");
   const attachmentId = "dummy filename";
