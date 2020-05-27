@@ -211,7 +211,6 @@ static uint32_t AvailableFeatures() {
   ProfilerFeature::ClearStackWalk(features);
 #endif
   ProfilerFeature::ClearTaskTracer(features);
-  ProfilerFeature::ClearTrackOptimizations(features);
   ProfilerFeature::ClearJSTracer(features);
 
   return features;

@@ -984,9 +984,6 @@ class ActivePS {
     uint32_t Flags = 0;
     Flags |=
         FeatureJS(aLock) ? uint32_t(JSInstrumentationFlags::StackSampling) : 0;
-    Flags |= FeatureTrackOptimizations(aLock)
-                 ? uint32_t(JSInstrumentationFlags::TrackOptimizations)
-                 : 0;
     Flags |= FeatureJSTracer(aLock)
                  ? uint32_t(JSInstrumentationFlags::TraceLogging)
                  : 0;

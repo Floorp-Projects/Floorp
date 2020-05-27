@@ -350,12 +350,6 @@ const featureDescriptions = [
     title: "Disable parallel traversal in styling.",
   },
   {
-    name: "JIT Optimizations",
-    value: "trackopts",
-    title: "Track JIT optimizations in the JS engine.",
-    experimental: true,
-  },
-  {
     name: "TaskTracer",
     value: "tasktracer",
     title: "Enable TaskTracer",
