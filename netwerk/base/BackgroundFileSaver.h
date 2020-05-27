@@ -23,7 +23,7 @@
 #include "nsString.h"
 
 class nsIAsyncInputStream;
-class nsIThread;
+class nsISerialEventTarget;
 
 namespace mozilla {
 namespace net {
@@ -72,7 +72,7 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
   /**
    * Thread to which the actual input/output is delegated.
    */
-  nsCOMPtr<nsIThread> mWorkerThread;
+  nsCOMPtr<nsISerialEventTarget> mBackgroundET;
 
   /**
    * Stream that receives data from derived classes.  The received data will be
