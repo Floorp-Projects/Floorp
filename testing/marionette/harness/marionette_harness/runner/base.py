@@ -1076,10 +1076,10 @@ class BaseMarionetteTestRunner(object):
     def run_test_sets(self):
         if len(self.tests) < 1:
             raise Exception('There are no tests to run.')
-        elif self.total_chunks > len(self.tests):
+        elif self.total_chunks is not None and self.total_chunks > len(self.tests):
             raise ValueError('Total number of chunks must be between 1 and {}.'
                              .format(len(self.tests)))
-        if self.total_chunks > 1:
+        if self.total_chunks is not None and self.total_chunks > 1:
             chunks = [[] for i in range(self.total_chunks)]
             for i, test in enumerate(self.tests):
                 target_chunk = i % self.total_chunks

@@ -4,14 +4,14 @@
 
 from __future__ import absolute_import
 
-import urllib
+from six.moves.urllib.parse import quote
 
 from marionette_harness import MarionetteTestCase
 
 def inline(doc, mime=None, charset=None):
     mime = 'html' if mime is None else mime
     charset = 'utf-8' if (charset is None) else charset
-    return "data:text/{};charset={},{}".format(mime, charset, urllib.quote(doc))
+    return "data:text/{};charset={},{}".format(mime, charset, quote(doc))
 
 class TestPageSource(MarionetteTestCase):
     def testShouldReturnTheSourceOfAPage(self):

@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 
 import os
-import urllib
+
+from six.moves.urllib.parse import quote
 
 from marionette_driver import By, errors
 from marionette_driver.marionette import Alert, HTMLElement
@@ -11,7 +12,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 def inline(doc):
-    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
+    return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
 
 elements = inline("<p>foo</p> <p>bar</p>")
@@ -164,7 +165,7 @@ class TestExecuteContent(MarionetteTestCase):
 
         # by default execute_script pass the name of the python file
         self.assertIn(os.path.relpath(__file__.replace(".pyc", ".py")), cm.exception.stacktrace)
-        self.assertIn("b is not defined", cm.exception.message)
+        self.assertIn("b is not defined", str(cm.exception))
 
     def test_permission(self):
         for sandbox in ["default", None]:

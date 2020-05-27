@@ -6,7 +6,10 @@ from __future__ import absolute_import
 
 import traceback
 
+import six
 
+
+@six.python_2_unicode_compatible
 class MarionetteException(Exception):
 
     """Raised when a generic non-recoverable exception has occured."""
@@ -29,14 +32,10 @@ class MarionetteException(Exception):
         """
         self.cause = cause
         self.stacktrace = stacktrace
-
-        super(MarionetteException, self).__init__(message)
+        self._message = six.text_type(message)
 
     def __str__(self):
-        return unicode(self).encode("utf-8")
-
-    def __unicode__(self):
-        msg = unicode(self.message)
+        msg = self.message
         tb = None
 
         if self.cause:
@@ -54,7 +53,11 @@ class MarionetteException(Exception):
         if tb:
             msg += u": " + u"".join(traceback.format_tb(tb))
 
-        return msg
+        return six.text_type(msg)
+
+    @property
+    def message(self):
+        return self._message
 
 
 class ElementNotSelectableException(MarionetteException):

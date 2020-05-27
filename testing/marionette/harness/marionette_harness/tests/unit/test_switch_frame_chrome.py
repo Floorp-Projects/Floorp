@@ -49,4 +49,4 @@ class TestSwitchFrameChrome(WindowManagerMixin, MarionetteTestCase):
         try:
             self.marionette.execute_async_script("foo();")
         except JavascriptException as e:
-            self.assertIn("foo", e.message)
+            self.assertIn("foo", str(e))

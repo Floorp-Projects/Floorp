@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 
-import urllib
+from six.moves.urllib.parse import quote
 
 from marionette_driver import By, errors
 from marionette_driver.marionette import Alert
@@ -16,7 +16,7 @@ from marionette_harness import (
 
 
 def inline(doc):
-    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
+    return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
 
 # The <a> element in the following HTML is not interactable because it
