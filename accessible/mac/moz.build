@@ -17,6 +17,7 @@ UNIFIED_SOURCES += [
     'AccessibleWrap.mm',
     'DocAccessibleWrap.mm',
     'MacUtils.mm',
+    'MOXAccessibleBase.mm',
     'mozAccessible.mm',
     'mozActionElements.mm',
     'mozHTMLAccessible.mm',

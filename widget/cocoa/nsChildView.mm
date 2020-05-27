@@ -4949,12 +4949,6 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
   return [[self accessible] isRoot];
 }
 
-#  ifdef DEBUG
-- (void)printHierarchy {
-  [[self accessible] printHierarchy];
-}
-#  endif
-
 #  pragma mark -
 
 // general

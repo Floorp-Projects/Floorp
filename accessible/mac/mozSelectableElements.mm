@@ -261,8 +261,8 @@
   return @"";
 }
 
-- (void)postNotification:(NSString*)notification {
-  [super postNotification:notification];
+- (void)moxPostNotification:(NSString*)notification {
+  [super moxPostNotification:notification];
 
   if ([notification isEqualToString:@"AXMenuOpened"]) {
     mIsOpened = YES;
@@ -275,7 +275,7 @@
   if (mIsOpened) {
     // VO needs to receive a menu closed event when the menu goes away.
     // If the menu is being destroyed, send a menu closed event first.
-    [self postNotification:@"AXMenuClosed"];
+    [self moxPostNotification:@"AXMenuClosed"];
   }
 
   [super expire];
@@ -339,7 +339,7 @@
     case nsIAccessibleEvent::EVENT_FOCUS:
       // Our focused state is equivelent to native selected states for menus.
       mozAccessible* parent = (mozAccessible*)[self parent];
-      [parent postNotification:NSAccessibilitySelectedChildrenChangedNotification];
+      [parent moxPostNotification:NSAccessibilitySelectedChildrenChangedNotification];
       break;
   }
 

@@ -6,11 +6,10 @@
 #include "AccessibleWrap.h"
 #include "ProxyAccessible.h"
 #include "AccessibleOrProxy.h"
-#include "Platform.h"
 
 #import <Cocoa/Cocoa.h>
 
-#import "mozAccessibleProtocol.h"
+#import "MOXAccessibleBase.h"
 
 @class mozRootAccessible;
 
@@ -23,18 +22,6 @@
 
 namespace mozilla {
 namespace a11y {
-
-inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
-  if (!ShouldA11yBeEnabled()) {
-    // If platform a11y is not enabled, don't return represented view.
-    // This is mostly for our mochitest environment because the represented
-    // ChildView checks `ShouldA11yBeEnabled` before proxying accessibility
-    // methods to mozAccessibles.
-    return aObject;
-  }
-
-  return [aObject hasRepresentedView] ? [aObject representedView] : aObject;
-}
 
 inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrProxy aAccOrProxy) {
   MOZ_ASSERT(!aAccOrProxy.IsNull(), "Cannot get native from null accessible");
@@ -51,7 +38,7 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 }  // a11y
 }  // mozilla
 
-@interface mozAccessible : NSObject <mozAccessible> {
+@interface mozAccessible : MOXAccessibleBase {
   /**
    * Reference to the accessible we were created with;
    * either a proxy accessible or an accessible wrap.
@@ -128,9 +115,6 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // system accessibility notification.
 - (void)handleAccessibleEvent:(uint32_t)eventType;
 
-// Post the given accessibility system notification
-- (void)postNotification:(NSString*)notification;
-
 // internal method to retrieve a child at a given index.
 - (id)childAt:(uint32_t)i;
 
@@ -164,24 +148,18 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 - (void)expire;
 - (BOOL)isExpired;
 
-#ifdef DEBUG
-- (void)printHierarchy;
-- (void)printHierarchyWithLevel:(unsigned)numSpaces;
+// ---- MOXAccessible methods ---- //
 
-- (void)sanityCheckChildren;
-- (void)sanityCheckChildren:(NSArray*)theChildren;
-#endif
+// called to determine the deepest child element under the mouse
+- (id)moxHitTest:(NSPoint)point;
+
+// returns the deepest unignored focused accessible element
+- (id)moxFocusedUIElement;
 
 // ---- NSAccessibility methods ---- //
 
 // whether to include this element in the platform's tree
 - (BOOL)isAccessibilityElement;
-
-// called by third-parties to determine the deepest child element under the mouse
-- (id)accessibilityHitTest:(NSPoint)point;
-
-// returns the deepest unignored focused accessible element
-- (id)accessibilityFocusedUIElement;
 
 // a mozAccessible needs to at least provide links to its parent and
 // children.

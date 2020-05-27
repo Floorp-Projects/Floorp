@@ -31,12 +31,6 @@
 - (BOOL)hasRepresentedView;
 - (id)representedView;
 
-#ifdef DEBUG
-// debug utility that will print the native accessibility tree, starting
-// at this node.
-- (void)printHierarchy;
-#endif
-
 /*** general ***/
 
 // returns the accessible at the specified point.

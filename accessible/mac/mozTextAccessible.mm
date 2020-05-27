@@ -183,7 +183,8 @@ inline NSString* ToNSString(id aValue) {
 #endif
                         nil];
   }
-  return supportedParametrizedAttributes;
+  return [supportedParametrizedAttributes
+      arrayByAddingObject:[super accessibilityParameterizedAttributeNames]];
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute forParameter:(id)parameter {
@@ -254,11 +255,7 @@ inline NSString* ToNSString(id aValue) {
     return [NSValue valueWithRect:nsCocoaUtils::GeckoRectToCocoaRect(bounds)];
   }
 
-#if DEBUG
-  NSLog(@"unhandled attribute:%@ forParameter:%@", attribute, parameter);
-#endif
-
-  return nil;
+  return [super accessibilityAttributeValue:attribute forParameter:parameter];
 }
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute {
@@ -545,11 +542,11 @@ inline NSString* ToNSString(id aValue) {
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
     case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
-      [self postNotification:NSAccessibilityValueChangedNotification];
+      [self moxPostNotification:NSAccessibilityValueChangedNotification];
       break;
     case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
     case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
-      [self postNotification:NSAccessibilitySelectedTextChangedNotification];
+      [self moxPostNotification:NSAccessibilitySelectedTextChangedNotification];
       break;
     default:
       [super handleAccessibleEvent:eventType];
