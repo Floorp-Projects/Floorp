@@ -3,7 +3,7 @@
 
 "use strict";
 
-function run_test() {
+add_task(async () => {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var expiry = (Date.now() + 1000) * 1000;
@@ -24,11 +24,9 @@ function run_test() {
   );
   Assert.equal(cm.countCookiesFromHost("a"), 1);
 
-  const uri = NetUtil.newURI("http://a");
-  const principal = Services.scriptSecurityManager.createContentPrincipal(
-    uri,
-    {}
+  CookieXPCShellUtils.createServer({ hosts: ["a"] });
+  const cookies = await CookieXPCShellUtils.getCookieStringFromDocument(
+    "http://a/"
   );
-
-  Assert.equal(cs.getCookieStringForPrincipal(principal), "foo=bar");
-}
+  Assert.equal(cookies, "foo=bar");
+});

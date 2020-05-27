@@ -34,13 +34,10 @@ add_task(async () => {
     {}
   );
 
-  let contentPage = await CookieXPCShellUtils.loadContentPage(uri.spec);
-  await contentPage.spawn(
-    null,
-    // eslint-disable-next-line no-undef
-    () => (content.document.cookie = "oh=hai; max-age=1000")
+  await CookieXPCShellUtils.setCookieToDocument(
+    uri.spec,
+    "oh=hai; max-age=1000"
   );
-  await contentPage.close();
 
   let cookies = Services.cookiemgr.cookies;
   Assert.ok(cookies.length == 1);
@@ -52,16 +49,20 @@ add_task(async () => {
   let promise = new _promise_observer("cookie-db-closed");
 
   // Check that the APIs behave appropriately.
-  Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
+  Assert.equal(
+    await CookieXPCShellUtils.getCookieStringFromDocument("http://foo.com/"),
+    ""
+  );
+
   Assert.equal(Services.cookies.getCookieStringFromHttp(uri, channel), "");
 
-  contentPage = await CookieXPCShellUtils.loadContentPage(uri.spec);
-  // eslint-disable-next-line no-undef
-  await contentPage.spawn(null, () => (content.document.cookie = "oh2=hai"));
-  await contentPage.close();
+  await CookieXPCShellUtils.setCookieToDocument(uri.spec, "oh2=hai");
 
   Services.cookies.setCookieStringFromHttp(uri, "oh3=hai", channel);
-  Assert.equal(Services.cookies.getCookieStringForPrincipal(principal), "");
+  Assert.equal(
+    await CookieXPCShellUtils.getCookieStringFromDocument("http://foo.com/"),
+    ""
+  );
 
   do_check_throws(function() {
     Services.cookiemgr.removeAll();

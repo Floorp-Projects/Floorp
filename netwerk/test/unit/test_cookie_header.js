@@ -102,13 +102,7 @@ async function run_test_continued() {
 
   var cookie2 = "C2=V2";
 
-  const contentPage = await CookieXPCShellUtils.loadContentPage(chan.URI.spec);
-  await contentPage.spawn(
-    cookie2,
-    // eslint-disable-next-line no-undef
-    cookie => (content.document.cookie = cookie)
-  );
-  await contentPage.close();
+  await CookieXPCShellUtils.setCookieToDocument(chan.URI.spec, cookie2);
 
   chan.setRequestHeader("Cookie", cookieVal, false);
 
