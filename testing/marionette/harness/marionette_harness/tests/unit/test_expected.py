@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 
-import urllib
+from six.moves.urllib.parse import quote
 
 from marionette_driver import expected
 from marionette_driver.by import By
@@ -13,7 +13,7 @@ from marionette_harness import marionette_test
 
 
 def inline(doc):
-    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
+    return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
 static_element = inline("""<p>foo</p>""")
 static_elements = static_element + static_element

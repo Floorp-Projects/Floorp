@@ -75,7 +75,7 @@ class TestSwitchFrame(MarionetteTestCase):
         try:
             self.marionette.execute_async_script("foo();")
         except JavascriptException as e:
-            self.assertTrue("foo" in e.message)
+            self.assertTrue("foo" in str(e))
 
     def test_should_be_able_to_carry_on_working_if_the_frame_is_deleted_from_under_us(self):
         test_html = self.marionette.absolute_url("deletingFrame.html")

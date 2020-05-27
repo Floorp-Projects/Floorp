@@ -6,7 +6,8 @@ from __future__ import absolute_import, print_function
 
 import contextlib
 import os
-import urllib
+
+from six.moves.urllib.parse import quote
 
 from marionette_driver import By, errors, expected, Wait
 from marionette_driver.keys import Keys
@@ -26,7 +27,7 @@ RED_PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEX/TQBcNTh/AAA
 
 
 def inline(doc):
-    return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
+    return "data:text/html;charset=utf-8,%s" % quote(doc)
 
 
 def inline_image(data):

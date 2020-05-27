@@ -6,7 +6,8 @@ from __future__ import absolute_import, print_function
 
 import sys
 import unittest
-import urllib
+
+from six.moves.urllib.parse import quote
 
 from marionette_driver import errors
 from marionette_driver.by import By
@@ -14,7 +15,7 @@ from marionette_harness import MarionetteTestCase
 
 
 def inline(doc):
-    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
+    return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
 
 class TestServerQuitApplication(MarionetteTestCase):

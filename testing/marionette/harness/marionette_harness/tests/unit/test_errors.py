@@ -6,6 +6,8 @@ from __future__ import absolute_import
 
 import sys
 
+import six
+
 from marionette_driver import errors
 
 from marionette_harness import marionette_test
@@ -27,7 +29,7 @@ class TestErrors(marionette_test.MarionetteTestCase):
 
     def test_defaults(self):
         exc = errors.MarionetteException()
-        self.assertIsNone(exc.message)
+        self.assertEquals(str(exc), 'None')
         self.assertIsNone(exc.cause)
         self.assertIsNone(exc.stacktrace)
 
@@ -49,7 +51,7 @@ class TestErrors(marionette_test.MarionetteTestCase):
     def test_unicode_message(self):
         exc = errors.MarionetteException(
             message=unicode_message, cause=cause, stacktrace=stacktrace)
-        r = unicode(exc)
+        r = six.text_type(exc)
         self.assertIn(unicode_message, r)
         self.assertIn(", caused by {0!r}".format(cause[0]), r)
         self.assertIn("\nstacktrace:\n\tfirst\n\tsecond", r)
@@ -58,7 +60,7 @@ class TestErrors(marionette_test.MarionetteTestCase):
         exc = errors.MarionetteException(
             message=unicode_message, cause=cause, stacktrace=stacktrace)
         r = str(exc)
-        self.assertIn(unicode_message.encode("utf-8"), r)
+        self.assertIn(six.ensure_str(unicode_message, encoding="utf-8"), r)
         self.assertIn(", caused by {0!r}".format(cause[0]), r)
         self.assertIn("\nstacktrace:\n\tfirst\n\tsecond", r)
 

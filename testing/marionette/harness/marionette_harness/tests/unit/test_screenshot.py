@@ -10,7 +10,9 @@ import imghdr
 import struct
 import tempfile
 import unittest
-import urllib
+
+import six
+from six.moves.urllib.parse import quote
 
 import mozinfo
 
@@ -24,7 +26,7 @@ from marionette_harness import (
 
 
 def inline(doc, mime="text/html;charset=utf-8"):
-    return "data:{0},{1}".format(mime, urllib.quote(doc))
+    return "data:{0},{1}".format(mime, quote(doc))
 
 
 box = inline("<body><div id='box'><p id='green' style='width: 50px; height: 50px; "
@@ -73,6 +75,8 @@ class ScreenCaptureTestCase(MarionetteTestCase):
 
     def assert_png(self, screenshot):
         """Test that screenshot is a Base64 encoded PNG file."""
+        if six.PY3 and not isinstance(screenshot, bytes):
+            screenshot = bytes(screenshot, encoding='utf-8')
         image = base64.decodestring(screenshot)
         self.assertEqual(imghdr.what("", image), "png")
 
@@ -81,7 +85,11 @@ class ScreenCaptureTestCase(MarionetteTestCase):
             element = self.document_element
 
         screenshot_default = self.marionette.screenshot(element=element)
+        if six.PY3 and not isinstance(screenshot_default, bytes):
+            screenshot_default = bytes(screenshot_default, encoding='utf-8')
         screenshot_image = self.marionette.screenshot(element=element, format="base64")
+        if six.PY3 and not isinstance(screenshot_image, bytes):
+            screenshot_image = bytes(screenshot_image, encoding='utf-8')
         binary1 = self.marionette.screenshot(element=element, format="binary")
         binary2 = self.marionette.screenshot(element=element, format="binary")
         hash1 = self.marionette.screenshot(element=element, format="hash")
@@ -108,6 +116,8 @@ class ScreenCaptureTestCase(MarionetteTestCase):
         return rect["width"], rect["height"]
 
     def get_image_dimensions(self, screenshot):
+        if six.PY3 and not isinstance(screenshot, bytes):
+            screenshot = bytes(screenshot, encoding='utf-8')
         self.assert_png(screenshot)
         image = base64.decodestring(screenshot)
         width, height = struct.unpack(">LL", image[16:24])
