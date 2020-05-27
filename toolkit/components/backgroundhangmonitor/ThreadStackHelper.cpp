@@ -142,8 +142,7 @@ void ThreadStackHelper::GetStack(HangStack& aStack, nsACString& aRunnableName,
 
   // XXX: We don't need to pass in ProfilerFeature::StackWalk to trigger
   // stackwalking, as that is instead controlled by the last argument.
-  profiler_suspend_and_sample_thread(mThreadId, ProfilerFeature::Privacy, *this,
-                                     aStackWalk);
+  profiler_suspend_and_sample_thread(mThreadId, 0, *this, aStackWalk);
 
   // Copy the name buffer allocation into the output string. We explicitly set
   // the last byte to null in case we read in some corrupted data without a null

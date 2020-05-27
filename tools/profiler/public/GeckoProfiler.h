@@ -163,43 +163,40 @@ class Vector;
     MACRO(6, "noiostacks", NoIOStacks,                                         \
           "File I/O markers do not capture stacks, to reduce overhead")        \
                                                                                \
-    MACRO(7, "privacy", Privacy,                                               \
-          "Do not include user-identifiable information")                      \
-                                                                               \
-    MACRO(8, "screenshots", Screenshots,                                       \
+    MACRO(7, "screenshots", Screenshots,                                       \
           "Take a snapshot of the window on every composition")                \
                                                                                \
-    MACRO(9, "seqstyle", SequentialStyle,                                      \
+    MACRO(8, "seqstyle", SequentialStyle,                                      \
           "Disable parallel traversal in styling")                             \
                                                                                \
-    MACRO(10, "stackwalk", StackWalk,                                          \
+    MACRO(9, "stackwalk", StackWalk,                                           \
           "Walk the C++ stack, not available on all platforms")                \
                                                                                \
-    MACRO(11, "tasktracer", TaskTracer,                                        \
+    MACRO(10, "tasktracer", TaskTracer,                                        \
           "Start profiling with feature TaskTracer")                           \
                                                                                \
-    MACRO(12, "threads", Threads, "Profile the registered secondary threads")  \
+    MACRO(11, "threads", Threads, "Profile the registered secondary threads")  \
                                                                                \
-    MACRO(13, "trackopts", TrackOptimizations,                                 \
+    MACRO(12, "trackopts", TrackOptimizations,                                 \
           "Have the JavaScript engine track JIT optimizations")                \
                                                                                \
-    MACRO(14, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
+    MACRO(13, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
                                                                                \
-    MACRO(15, "jsallocations", JSAllocations,                                  \
+    MACRO(14, "jsallocations", JSAllocations,                                  \
           "Have the JavaScript engine track allocations")                      \
                                                                                \
-    MACRO(16, "nostacksampling", NoStackSampling,                              \
+    MACRO(15, "nostacksampling", NoStackSampling,                              \
           "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
           "\"stackwalk\" and labels")                                          \
                                                                                \
-    MACRO(17, "preferencereads", PreferenceReads,                              \
+    MACRO(16, "preferencereads", PreferenceReads,                              \
           "Track when preferences are read")                                   \
                                                                                \
-    MACRO(18, "nativeallocations", NativeAllocations,                          \
+    MACRO(17, "nativeallocations", NativeAllocations,                          \
           "Collect the stacks from a smaller subset of all native "            \
           "allocations, biasing towards collecting larger allocations")        \
                                                                                \
-    MACRO(19, "ipcmessages", IPCMessages,                                      \
+    MACRO(18, "ipcmessages", IPCMessages,                                      \
           "Have the IPC layer track cross-process messages")
 
 struct ProfilerFeature {
@@ -268,14 +265,9 @@ class RacyFeatures {
     return (af & Active) && (af & aFeature);
   }
 
-  static bool IsActiveWithoutPrivacy() {
+  static bool IsActiveAndUnpaused() {
     uint32_t af = sActiveAndFeatures;  // copy it first
-    return (af & Active) && !(af & ProfilerFeature::Privacy);
-  }
-
-  static bool IsActiveAndUnpausedWithoutPrivacy() {
-    uint32_t af = sActiveAndFeatures;  // copy it first
-    return (af & Active) && !(af & (Paused | ProfilerFeature::Privacy));
+    return (af & Active) && !(af & Paused);
   }
 
  private:
@@ -534,8 +526,7 @@ inline bool profiler_is_active() {
 //     BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD(name, OTHER, expensivePayload);
 //   }
 inline bool profiler_can_accept_markers() {
-  return mozilla::profiler::detail::RacyFeatures::
-      IsActiveAndUnpausedWithoutPrivacy();
+  return mozilla::profiler::detail::RacyFeatures::IsActiveAndUnpaused();
 }
 
 // Is the profiler active, and is the current thread being profiled?
@@ -644,7 +635,7 @@ class ProfilerStackCollector {
 // This method suspends the thread identified by aThreadId, samples its
 // profiling stack, JS stack, and (optionally) native stack, passing the
 // collected frames into aCollector. aFeatures dictates which compiler features
-// are used. |Privacy| and |Leaf| are the only relevant ones.
+// are used. |Leaf| is the only relevant one.
 void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
                                         ProfilerStackCollector& aCollector,
                                         bool aSampleNative = true);
@@ -657,7 +648,7 @@ using UniqueProfilerBacktrace =
     mozilla::UniquePtr<ProfilerBacktrace, ProfilerBacktraceDestructor>;
 
 // Immediately capture the current thread's call stack and return it. A no-op
-// if the profiler is inactive or in privacy mode.
+// if the profiler is inactive.
 UniqueProfilerBacktrace profiler_get_backtrace();
 
 struct ProfilerStats {
@@ -836,8 +827,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // recorded in the profile buffer if a sample is collected while the label is
 // on the label stack, markers will always be recorded in the profile buffer.
 // aMarkerName is copied, so the caller does not need to ensure it lives for a
-// certain length of time. A no-op if the profiler is inactive or in privacy
-// mode.
+// certain length of time. A no-op if the profiler is inactive.
 
 #  define PROFILER_ADD_MARKER(markerName, categoryPair)                 \
     do {                                                                \
@@ -924,8 +914,7 @@ enum TracingKind {
 mozilla::Maybe<uint64_t> profiler_get_inner_window_id_from_docshell(
     nsIDocShell* aDocshell);
 
-// Adds a tracing marker to the profile. A no-op if the profiler is inactive or
-// in privacy mode.
+// Adds a tracing marker to the profile. A no-op if the profiler is inactive.
 
 #  define PROFILER_TRACING_MARKER(categoryString, markerName, categoryPair, \
                                   kind)                                     \

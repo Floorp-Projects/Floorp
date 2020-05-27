@@ -185,12 +185,6 @@ ProfilerBufferInfo ProfileBuffer::GetProfilerBufferInfo() const {
 
 /* ProfileBufferCollector */
 
-static bool IsChromeJSScript(JSScript* aScript) {
-  // WARNING: this function runs within the profiler's "critical section".
-  auto realm = js::GetScriptRealm(aScript);
-  return js::IsSystemRealm(realm);
-}
-
 void ProfileBufferCollector::CollectNativeLeafAddr(void* aAddr) {
   mBuf.AddEntry(ProfileBufferEntry::NativeLeafAddr(aAddr));
 }
@@ -212,7 +206,6 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
 
   const char* label = aFrame.label();
   const char* dynamicString = aFrame.dynamicString();
-  bool isChromeJSEntry = false;
   Maybe<uint32_t> line;
   Maybe<uint32_t> column;
 
@@ -230,7 +223,6 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
       // We call aFrame.script() repeatedly -- rather than storing the result in
       // a local variable in order -- to avoid rooting hazards.
       if (aFrame.script()) {
-        isChromeJSEntry = IsChromeJSScript(aFrame.script());
         if (aFrame.pc()) {
           unsigned col = 0;
           line = Some(JS_PCToLineNumber(aFrame.script(), aFrame.pc(), &col));
@@ -243,13 +235,6 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
     }
   } else {
     MOZ_ASSERT(aFrame.isLabelFrame());
-  }
-
-  if (dynamicString) {
-    // Adjust the dynamic string as necessary.
-    if (ProfilerFeature::HasPrivacy(mFeatures) && !isChromeJSEntry) {
-      dynamicString = "(private)";
-    }
   }
 
   mBuf.CollectCodeLocation(label, dynamicString, aFrame.flags(),

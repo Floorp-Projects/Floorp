@@ -96,7 +96,7 @@ static void InactiveFeaturesAndParamsCheck() {
 
   ASSERT_TRUE(!profiler_is_active());
   ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
-  ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
+  ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::NativeAllocations));
 
   profiler_get_start_params(&entries, &duration, &interval, &features, &filters,
                             &activeBrowsingContextID);
@@ -150,7 +150,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
 
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
+    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::IPCMessages));
 
     ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES.Value(),
                       PROFILER_DEFAULT_INTERVAL, features, filters,
@@ -165,7 +165,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
   // Try some different features and filters.
   {
     uint32_t features =
-        ProfilerFeature::MainThreadIO | ProfilerFeature::Privacy;
+        ProfilerFeature::MainThreadIO | ProfilerFeature::IPCMessages;
     const char* filters[] = {"GeckoMain", "Foo", "Bar"};
 
     // Testing with some arbitrary buffer size (as could be provided by
@@ -175,7 +175,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
 
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::MainThreadIO));
-    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::Privacy));
+    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::IPCMessages));
 
     // Profiler::Threads is added because filters has multiple entries.
     ActiveParamsCheck(PowerOfTwo32(999999).Value(), 3,
@@ -190,7 +190,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
   // Try with no duration
   {
     uint32_t features =
-        ProfilerFeature::MainThreadIO | ProfilerFeature::Privacy;
+        ProfilerFeature::MainThreadIO | ProfilerFeature::IPCMessages;
     const char* filters[] = {"GeckoMain", "Foo", "Bar"};
 
     profiler_start(PowerOfTwo32(999999), 3, features, filters,
@@ -198,7 +198,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
 
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::MainThreadIO));
-    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::Privacy));
+    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::IPCMessages));
 
     // Profiler::Threads is added because filters has multiple entries.
     ActiveParamsCheck(PowerOfTwo32(999999).Value(), 3,
@@ -220,7 +220,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
 
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::MainThreadIO));
-    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::Privacy));
+    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::IPCMessages));
 
     ActiveParamsCheck(PowerOfTwo32(88888).Value(), 10, availableFeatures,
                       filters, MOZ_ARRAY_LENGTH(filters), 0, Some(15.0));
@@ -240,7 +240,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
 
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
+    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::IPCMessages));
 
     // Entries and intervals go to defaults if 0 is specified.
     ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES.Value(),
@@ -367,7 +367,7 @@ TEST(GeckoProfiler, DifferentThreads)
 
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
+    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::IPCMessages));
 
     ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES.Value(),
                       PROFILER_DEFAULT_INTERVAL, features, filters,
@@ -397,7 +397,8 @@ TEST(GeckoProfiler, DifferentThreads)
               ASSERT_TRUE(profiler_is_active());
               ASSERT_TRUE(
                   !profiler_feature_active(ProfilerFeature::MainThreadIO));
-              ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
+              ASSERT_TRUE(
+                  !profiler_feature_active(ProfilerFeature::IPCMessages));
 
               ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES.Value(),
                                 PROFILER_DEFAULT_INTERVAL, features, filters,
@@ -443,19 +444,6 @@ TEST(GeckoProfiler, GetBacktrace)
       u[i] = profiler_get_backtrace();
       ASSERT_TRUE(u[i]);
     }
-
-    profiler_stop();
-  }
-
-  {
-    uint32_t features = ProfilerFeature::Privacy;
-    const char* filters[] = {"GeckoMain"};
-
-    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
-                   features, filters, MOZ_ARRAY_LENGTH(filters), 0);
-
-    // No backtraces obtained when ProfilerFeature::Privacy is set.
-    ASSERT_TRUE(!profiler_get_backtrace());
 
     profiler_stop();
   }
