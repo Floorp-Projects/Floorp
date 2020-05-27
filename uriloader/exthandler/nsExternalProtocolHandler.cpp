@@ -163,7 +163,9 @@ nsresult nsExtProtocolChannel::OpenURL() {
     if (NS_FAILED(rv)) {
       goto finish;
     }
-    rv = extProtService->LoadURI(mUrl, ctx);
+
+    RefPtr<nsIPrincipal> principal = mLoadInfo->TriggeringPrincipal();
+    rv = extProtService->LoadURI(mUrl, principal, ctx);
 
     if (NS_SUCCEEDED(rv) && mListener) {
       mStatus = NS_ERROR_NO_CONTENT;
