@@ -5494,6 +5494,10 @@ void nsGlobalWindowInner::SetCsp(nsIContentSecurityPolicy* aCsp) {
   mClientSource->SetCsp(aCsp);
   // Also cache the CSP within the document
   mDoc->SetCsp(aCsp);
+
+  if (mWindowGlobalChild) {
+    mWindowGlobalChild->SendSetClientInfo(mClientSource->Info().ToIPC());
+  }
 }
 
 void nsGlobalWindowInner::SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCsp) {
@@ -5503,6 +5507,10 @@ void nsGlobalWindowInner::SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCsp) {
   mClientSource->SetPreloadCsp(aPreloadCsp);
   // Also cache the preload CSP within the document
   mDoc->SetPreloadCsp(aPreloadCsp);
+
+  if (mWindowGlobalChild) {
+    mWindowGlobalChild->SendSetClientInfo(mClientSource->Info().ToIPC());
+  }
 }
 
 nsIContentSecurityPolicy* nsGlobalWindowInner::GetCsp() {
