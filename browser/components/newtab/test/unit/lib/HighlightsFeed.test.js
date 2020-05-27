@@ -240,6 +240,7 @@ describe("Highlights Feed", () => {
       sandbox.spy(feed.linksCache, "request");
       feed.store.state.TopSites.initialized = false;
       feed.store.state.Prefs.values["feeds.topsites"] = true;
+      feed.store.state.Prefs.values["feeds.system.topsites"] = true;
 
       // Initially TopSites is uninitialised and fetchHighlights should return.
       await feed.fetchHighlights();
@@ -251,6 +252,7 @@ describe("Highlights Feed", () => {
       sandbox.spy(feed.linksCache, "request");
       feed.store.state.TopSites.initialized = true;
       feed.store.state.Prefs.values["feeds.topsites"] = true;
+      feed.store.state.Prefs.values["feeds.system.topsites"] = true;
       feed.store.state.Sections = [];
 
       await feed.fetchHighlights();
@@ -320,6 +322,15 @@ describe("Highlights Feed", () => {
       });
     });
     it("should fetch Highlights if TopSites are not enabled", async () => {
+      sandbox.spy(feed.linksCache, "request");
+      feed.store.state.Prefs.values["feeds.system.topsites"] = false;
+
+      await feed.fetchHighlights();
+
+      assert.calledOnce(feed.linksCache.request);
+      assert.calledOnce(fakeNewTabUtils.activityStreamLinks.getHighlights);
+    });
+    it("should fetch Highlights if TopSites are not shown on NTP", async () => {
       sandbox.spy(feed.linksCache, "request");
       feed.store.state.Prefs.values["feeds.topsites"] = false;
 

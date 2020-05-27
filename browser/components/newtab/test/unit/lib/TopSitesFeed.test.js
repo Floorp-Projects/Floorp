@@ -26,6 +26,7 @@ const SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF =
   "improvesearch.topSiteSearchShortcuts.searchEngines";
 const SEARCH_SHORTCUTS_HAVE_PINNED_PREF =
   "improvesearch.topSiteSearchShortcuts.havePinned";
+const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
@@ -372,6 +373,7 @@ describe("Top Sites Feed", () => {
         assert.calledTwice(global.NewTabUtils.activityStreamLinks.getTopSites);
       });
       it("should migrate frecent screenshot data without getting screenshots again", async () => {
+        feed.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = true;
         stubFaviconsToUseScreenshots();
         await feed.getLinksWithDefaults();
         const { callCount } = fakeScreenshot.getScreenshotForURL;
@@ -485,6 +487,7 @@ describe("Top Sites Feed", () => {
           assert.calledOnce(global.NewTabUtils.activityStreamLinks.getTopSites);
         });
         it("should get screenshots once per link", async () => {
+          feed.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = true;
           await getTwice();
 
           assert.callCount(
@@ -493,6 +496,7 @@ describe("Top Sites Feed", () => {
           );
         });
         it("should dispatch once per link screenshot fetched", async () => {
+          feed.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = true;
           feed._requestRichIcon = sinon.stub();
           await getTwice();
 
@@ -712,7 +716,7 @@ describe("Top Sites Feed", () => {
 
       feed.onAction({
         type: at.UPDATE_SECTION_PREFS,
-        data: { id: "topsites" },
+        data: { id: "system.topsites" },
       });
 
       assert.calledOnce(feed.updateSectionPrefs);
@@ -784,12 +788,20 @@ describe("Top Sites Feed", () => {
       assert.notCalled(fakeScreenshot.getScreenshotForURL);
     });
     it("should get a screenshot if the link is missing it", () => {
+      feed.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = true;
       feed._fetchIcon(Object.assign({ __sharedCache: {} }, FAKE_LINKS[0]));
 
       assert.calledOnce(fakeScreenshot.getScreenshotForURL);
       assert.calledWith(fakeScreenshot.getScreenshotForURL, FAKE_LINKS[0].url);
     });
+    it("should not get a screenshot if the link is missing it but top sites aren't shown", () => {
+      feed.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = false;
+      feed._fetchIcon(Object.assign({ __sharedCache: {} }, FAKE_LINKS[0]));
+
+      assert.notCalled(fakeScreenshot.getScreenshotForURL);
+    });
     it("should update the link's cache with a screenshot", async () => {
+      feed.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = true;
       const updateLink = sandbox.stub();
       const link = { __sharedCache: { updateLink } };
 
@@ -838,6 +850,7 @@ describe("Top Sites Feed", () => {
   });
   describe("#_fetchScreenshot", () => {
     it("should call maybeCacheScreenshot", async () => {
+      feed.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = true;
       const updateLink = sinon.stub();
       const link = {
         customScreenshotURL: "custom",

@@ -170,6 +170,7 @@ this.HighlightsFeed = class HighlightsFeed {
     // state, so wait for postInit triggered by SectionsManager initializing.
     if (
       (!this.store.getState().TopSites.initialized &&
+        this.store.getState().Prefs.values["feeds.system.topsites"] &&
         this.store.getState().Prefs.values["feeds.topsites"]) ||
       !this.store.getState().Sections.length
     ) {

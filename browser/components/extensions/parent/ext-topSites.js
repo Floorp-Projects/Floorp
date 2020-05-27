@@ -15,13 +15,20 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const SHORTCUTS_PREF =
   "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts";
+const TOPSITES_FEED_PREF =
+  "browser.newtabpage.activity-stream.feeds.system.topsites";
 
 this.topSites = class extends ExtensionAPI {
   getAPI(context) {
     return {
       topSites: {
         get: async function(options) {
-          let links = options.newtab
+          // We fallback to newtab = false behavior if the user disabled their
+          // Top Sites feed.
+          let getNewtabSites =
+            options.newtab &&
+            Services.prefs.getBoolPref(TOPSITES_FEED_PREF, false);
+          let links = getNewtabSites
             ? AboutNewTab.getTopSites()
             : await NewTabUtils.activityStreamLinks.getTopSites({
                 ignoreBlocked: options.includeBlocked,
@@ -30,7 +37,7 @@ this.topSites = class extends ExtensionAPI {
                 includeFavicon: options.includeFavicon,
               });
 
-          if (options.includePinned && !options.newtab) {
+          if (options.includePinned && !getNewtabSites) {
             let pinnedLinks = NewTabUtils.pinnedLinks.links;
             if (options.includeFavicon) {
               pinnedLinks = NewTabUtils.activityStreamProvider._faviconBytesToDataURI(
@@ -61,7 +68,7 @@ this.topSites = class extends ExtensionAPI {
           if (
             options.includeSearchShortcuts &&
             Services.prefs.getBoolPref(SHORTCUTS_PREF, false) &&
-            !options.newtab
+            !getNewtabSites
           ) {
             // Pinned shortcuts are already returned as searchTopSite links,
             // with a proper label and url. But certain non-pinned links may

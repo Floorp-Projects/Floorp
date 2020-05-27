@@ -250,6 +250,13 @@ const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "feeds.topsites",
+    {
+      title: "Displays Top Sites on the New Tab Page",
+      value: true,
+    },
+  ],
+  [
     "showSponsored",
     {
       title:
@@ -653,7 +660,7 @@ const FEEDS_DATA = [
     value: true,
   },
   {
-    name: "topsites",
+    name: "system.topsites",
     factory: () => new TopSitesFeed(),
     title: "Queries places and gets metadata for Top Sites section",
     value: true,
