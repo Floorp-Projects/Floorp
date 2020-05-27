@@ -91,6 +91,37 @@ static void CheckDecoderResults(const ImageTestCase& aTestCase,
 }
 
 template <typename Func>
+void WithBadBufferDecode(const ImageTestCase& aTestCase,
+                         const Maybe<IntSize>& aOutputSize,
+                         Func aResultChecker) {
+  // Prepare a SourceBuffer with an error that will immediately move iterators
+  // to COMPLETE.
+  auto sourceBuffer = MakeNotNull<RefPtr<SourceBuffer>>();
+  sourceBuffer->ExpectLength(SIZE_MAX);
+
+  // Create a decoder.
+  DecoderType decoderType = DecoderFactory::GetDecoderType(aTestCase.mMimeType);
+  RefPtr<image::Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+      decoderType, sourceBuffer, aOutputSize, DecoderFlags::FIRST_FRAME_ONLY,
+      aTestCase.mSurfaceFlags);
+  ASSERT_TRUE(decoder != nullptr);
+  RefPtr<IDecodingTask> task =
+      new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
+
+  // Run the full decoder synchronously on the main thread.
+  task->Run();
+
+  // Call the lambda to verify the expected results.
+  aResultChecker(decoder);
+}
+
+static void CheckDecoderBadBuffer(const ImageTestCase& aTestCase) {
+  WithBadBufferDecode(aTestCase, Nothing(), [&](image::Decoder* aDecoder) {
+    CheckDecoderResults(aTestCase, aDecoder);
+  });
+}
+
+template <typename Func>
 void WithSingleChunkDecode(const ImageTestCase& aTestCase,
                            const Maybe<IntSize>& aOutputSize,
                            bool aUseDecodePool, Func aResultChecker) {
@@ -634,6 +665,11 @@ class ImageDecoders : public ::testing::Test {
   TEST_F(ImageDecoders, test_prefix##ForceSRGB) {                            \
     CheckDecoderSingleChunk(Green##test_prefix##TestCase().WithSurfaceFlags( \
         SurfaceFlags::TO_SRGB_COLORSPACE));                                  \
+  }                                                                          \
+                                                                             \
+  TEST_F(ImageDecoders, test_prefix##BadBuffer) {                            \
+    CheckDecoderBadBuffer(Green##test_prefix##TestCase().WithFlags(          \
+        TEST_CASE_HAS_ERROR | TEST_CASE_IGNORE_OUTPUT));                     \
   }
 
 IMAGE_GTEST_DECODER_BASE_F(PNG)
