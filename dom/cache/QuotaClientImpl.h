@@ -30,8 +30,7 @@ class CacheQuotaClient final : public quota::Client {
                               const nsACString& aGroup,
                               const nsACString& aOrigin,
                               const AtomicBool& aCanceled,
-                              UsageInfo* aUsageInfo,
-                              bool aForGetUsage) override;
+                              UsageInfo* aUsageInfo) override;
 
   virtual nsresult GetUsageForOrigin(PersistenceType aPersistenceType,
                                      const nsACString& aGroup,
