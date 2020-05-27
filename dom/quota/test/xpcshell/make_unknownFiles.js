@@ -14,10 +14,11 @@ async function testSteps() {
   let unknownFileCounter = 1;
   let unknownDirCounter = 1;
 
-  function createUnknownFileIn(dirRelativePath) {
-    const file = getRelativeFile(
-      dirRelativePath + "/foo" + unknownFileCounter + ".bar"
-    );
+  function createUnknownFileIn(dirRelativePath, recursive) {
+    const dir = getRelativeFile(dirRelativePath);
+
+    let file = dir.clone();
+    file.append("foo" + unknownFileCounter + ".bar");
 
     const ostream = Cc[
       "@mozilla.org/network/file-output-stream;1"
@@ -30,6 +31,15 @@ async function testSteps() {
     ostream.close();
 
     unknownFileCounter++;
+
+    if (recursive) {
+      const entries = dir.directoryEntries;
+      while ((file = entries.nextFile)) {
+        if (file.isDirectory()) {
+          createUnknownFileIn(dirRelativePath + "/" + file.leafName);
+        }
+      }
+    }
   }
 
   function createUnknownDirectoryIn(dirRelativePath) {
@@ -117,6 +127,10 @@ async function testSteps() {
     await promise;
 
     createUnknownFileIn(`${originRelativePath}/cache`);
+    createUnknownFileIn(
+      `${originRelativePath}/cache/morgue`,
+      /* recursive */ true
+    );
   }
 
   // Unknown file in sdb client directory
