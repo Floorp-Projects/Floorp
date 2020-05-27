@@ -282,6 +282,10 @@ function InitAndStartRefTests()
     } catch(e) {}
 
     try {
+        g.isCoverageBuild = prefs.getBoolPref("reftest.isCoverageBuild");
+    } catch(e) {}
+
+    try {
         g.compareRetainedDisplayLists = prefs.getBoolPref("reftest.compareRetainedDisplayLists");
     } catch (e) {}
 

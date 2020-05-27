@@ -69,6 +69,7 @@ for (let [key, val] of Object.entries({
     contentGfxInfo: null,
     focusFilterMode: "all",
     compareRetainedDisplayLists: false,
+    isCoverageBuild: false,
 
     browser: undefined,
     // Are we testing web content loaded in a separate process?
