@@ -17,9 +17,8 @@ const TRIGGER_MSG = "If you haven't seen ssl warnings yet, you won't";
 const TLS_1_0_URL = "https://tls1.example.com" + TEST_URI_PATH;
 
 const TLS_expected_message =
-  "This site uses a deprecated version of TLS that" +
-  " will be disabled in March 2020. Please upgrade" +
-  " to TLS 1.2 or 1.3.";
+  "This site uses a deprecated version of TLS. " +
+  "Please upgrade to TLS 1.2 or 1.3.";
 
 registerCleanupFunction(function() {
   // Set preferences back to their original values
