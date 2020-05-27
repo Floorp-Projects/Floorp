@@ -123,6 +123,7 @@ def main(args=sys.argv[1:]):
             cpu_test=args.cpu_test,
             memory_test=args.memory_test,
             live_sites=args.live_sites,
+            cold=args.cold,
             is_release_build=args.is_release_build,
             debug_mode=args.debug_mode,
             post_startup_delay=args.post_startup_delay,
