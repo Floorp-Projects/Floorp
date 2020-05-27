@@ -33,6 +33,10 @@ var flagInputs = [
     Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT,
 ];
 
+const kDefaultToSearch = Services.prefs.getBoolPref(
+  "browser.fixup.defaultToSearch",
+  true
+);
 /*
   The following properties are supported for these test cases:
   {
@@ -248,9 +252,9 @@ var testcases = [
     affectedByDNSForSingleWordHosts: true,
   },
   {
-    input: "host/foo.txt",
-    fixedURI: "http://host/foo.txt",
-    alternateURI: "http://www.host.com/foo.txt",
+    input: "whitelisted/foo.txt",
+    fixedURI: "http://whitelisted/foo.txt",
+    alternateURI: "http://www.whitelisted.com/foo.txt",
     protocolChange: true,
   },
   {
@@ -512,11 +516,12 @@ var testcases = [
     alternateURI: "http://www.'.com/?",
     keywordLookup: true,
     protocolChange: true,
+    affectedByDNSForSingleWordHosts: kDefaultToSearch,
   },
   {
-    input: "a?.com",
-    fixedURI: "http://a/?.com",
-    alternateURI: "http://www.a.com/?.com",
+    input: "whitelisted?.com",
+    fixedURI: "http://whitelisted/?.com",
+    alternateURI: "http://www.whitelisted.com/?.com",
     protocolChange: true,
   },
   {
@@ -554,12 +559,16 @@ var testcases = [
     fixedURI: "http://mozilla5/2",
     alternateURI: "http://www.mozilla5.com/2",
     protocolChange: true,
+    keywordLookup: kDefaultToSearch,
+    affectedByDNSForSingleWordHosts: kDefaultToSearch,
   },
   {
     input: "mozilla/foo",
     fixedURI: "http://mozilla/foo",
     alternateURI: "http://www.mozilla.com/foo",
     protocolChange: true,
+    keywordLookup: kDefaultToSearch,
+    affectedByDNSForSingleWordHosts: kDefaultToSearch,
   },
   {
     input: "mozilla\\",
@@ -584,6 +593,28 @@ var testcases = [
   {
     input: "plonk:8080",
     fixedURI: "http://plonk:8080/",
+    protocolChange: true,
+  },
+  {
+    input: "plonk:8080?test",
+    fixedURI: "http://plonk:8080/?test",
+    protocolChange: true,
+  },
+  {
+    input: "plonk:8080#test",
+    fixedURI: "http://plonk:8080/#test",
+    protocolChange: true,
+  },
+  {
+    input: "plonk/ #",
+    fixedURI: "http://plonk/%20#",
+    alternateURI: "http://www.plonk.com/%20#",
+    protocolChange: true,
+    keywordLookup: !kDefaultToSearch,
+  },
+  {
+    input: "blah.com.",
+    fixedURI: "http://blah.com./",
     protocolChange: true,
   },
   {
@@ -633,6 +664,16 @@ if (AppConstants.platform == "win") {
     alternateURI: "http://www.mozilla.com/",
     protocolChange: true,
   });
+  if (kDefaultToSearch) {
+    testcases.push({
+      input: "/a",
+      fixedURI: "http://a/",
+      alternateURI: "http://www.a.com/",
+      keywordLookup: true,
+      protocolChange: true,
+      affectedByDNSForSingleWordHosts: true,
+    });
+  }
 } else {
   testcases.push({
     input: "/some/file.txt",
@@ -642,6 +683,11 @@ if (AppConstants.platform == "win") {
   testcases.push({
     input: "//mozilla",
     fixedURI: "file:////mozilla",
+    protocolChange: true,
+  });
+  testcases.push({
+    input: "/a",
+    fixedURI: "file:///a",
     protocolChange: true,
   });
 }
