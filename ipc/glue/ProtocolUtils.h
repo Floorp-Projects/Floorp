@@ -216,8 +216,6 @@ class IProtocol : public HasResultCodes {
   void ReplaceEventTargetForActor(IProtocol* aActor,
                                   nsIEventTarget* aEventTarget);
 
-  void SetEventTargetForRoute(int32_t aRoute, nsIEventTarget* aEventTarget);
-
   nsIEventTarget* GetActorEventTarget();
   already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor);
 
@@ -414,7 +412,6 @@ class IToplevelProtocol : public IProtocol {
                                       nsIEventTarget* aEventTarget);
   void ReplaceEventTargetForActor(IProtocol* aActor,
                                   nsIEventTarget* aEventTarget);
-  void SetEventTargetForRoute(int32_t aRoute, nsIEventTarget* aEventTarget);
   nsIEventTarget* GetActorEventTarget();
   already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor);
 
