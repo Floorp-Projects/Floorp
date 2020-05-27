@@ -1072,7 +1072,15 @@ nscoord BlockReflowInput::ClearFloats(nscoord aBCoord, StyleClear aBreakType,
   nscoord newBCoord = aBCoord;
 
   if (aBreakType != StyleClear::None) {
-    newBCoord = FloatManager()->ClearFloats(newBCoord, aBreakType, aFlags);
+    if (!(aFlags & nsFloatManager::DONT_CLEAR_PUSHED_FLOATS) &&
+        FloatManager()->ClearContinues(aBreakType)) {
+      // FIXME bug 1574046. This makes no sense! we set aState.mBCoord from this
+      // result which will eventually make our parent's size nscoord_MAX!
+      // This is wallpapered over in nsBlockFrame::ComputeFinalSize for now...
+      newBCoord = nscoord_MAX;
+    } else {
+      newBCoord = FloatManager()->ClearFloats(newBCoord, aBreakType);
+    }
   }
 
   if (aReplacedBlock) {

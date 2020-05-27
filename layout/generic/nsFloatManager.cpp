@@ -453,14 +453,8 @@ nsresult nsFloatManager::List(FILE* out) const {
 }
 #endif
 
-nscoord nsFloatManager::ClearFloats(nscoord aBCoord, StyleClear aBreakType,
-                                    uint32_t aFlags) const {
-  if (!(aFlags & DONT_CLEAR_PUSHED_FLOATS) && ClearContinues(aBreakType)) {
-    // FIXME bug 1574046. This makes no sense! we set aState.mBCoord from this
-    // result which will eventually make our parent's size nscoord_MAX!
-    // This is wallpapered over in nsBlockFrame::ComputeFinalSize for now...
-    return nscoord_MAX;
-  }
+nscoord nsFloatManager::ClearFloats(nscoord aBCoord,
+                                    StyleClear aBreakType) const {
   if (!HasAnyFloats()) {
     return aBCoord;
   }
