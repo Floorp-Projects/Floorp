@@ -2085,6 +2085,10 @@ LayoutDeviceIntRect nsWindow::GetClientBounds() {
 void nsWindow::UpdateClientOffsetFromFrameExtents() {
   AUTO_PROFILER_LABEL("nsWindow::UpdateClientOffsetFromFrameExtents", OTHER);
 
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+    return;
+  }
+
   if (!mIsTopLevel || !mShell ||
       gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP) {
     mClientOffset = nsIntPoint(0, 0);
@@ -2965,16 +2969,6 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
     OnSizeAllocate(&allocation);
   }
 
-  // Client offset are updated by _NET_FRAME_EXTENTS on X11 when system titlebar
-  // is enabled. In ither cases (Wayland or system titlebar is off on X11)
-  // we don't get _NET_FRAME_EXTENTS X11 property notification so we derive
-  // it from mContainer position.
-  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
-    if (!mIsX11Display || (mIsX11Display && mDrawInTitlebar)) {
-      UpdateClientOffsetFromCSDWindow();
-    }
-  }
-
   return FALSE;
 }
 
@@ -2995,6 +2989,16 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
   LOG(("nsWindow::OnSizeAllocate [%p] %d,%d -> %d x %d\n", (void*)this,
        aAllocation->x, aAllocation->y, aAllocation->width,
        aAllocation->height));
+
+  // Client offset are updated by _NET_FRAME_EXTENTS on X11 when system titlebar
+  // is enabled. In either cases (Wayland or system titlebar is off on X11)
+  // we don't get _NET_FRAME_EXTENTS X11 property notification so we derive
+  // it from mContainer position.
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+    if (!mIsX11Display || (mIsX11Display && mDrawInTitlebar)) {
+      UpdateClientOffsetFromCSDWindow();
+    }
+  }
 
   mBoundsAreValid = true;
 
