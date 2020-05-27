@@ -30,7 +30,7 @@
           }));                                                            \
     } while (0)
 #else
-#  define PROFILER_MARKER(sample)
+#  define PROFILER_MARKER(tag, sample)
 #endif
 
 namespace mozilla {
