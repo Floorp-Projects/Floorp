@@ -504,7 +504,7 @@ const tests = [
     };
   },
 
-  // The URLs in the down arrow/openViewOnFocus tests must vary from test to test,
+  // The URLs in the down arrow/autoOpen tests must vary from test to test,
   // else  the first Top Site results will be a switch-to-tab result and a page
   // load will not occur.
   async function(win) {
@@ -565,16 +565,13 @@ const tests = [
     };
   },
 
-  // The URLs in the openViewOnFocus tests must vary from test to test, else
+  // The URLs in the autoOpen tests must vary from test to test, else
   // the first Top Site results will be a switch-to-tab result and a page load
   // will not occur.
   async function(win) {
     info(
-      "With pageproxystate=valid, open the panel with openViewOnFocus, select with DOWN, Enter."
+      "With pageproxystate=valid, autoopen the panel, select with DOWN, Enter."
     );
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.openViewOnFocus", true]],
-    });
     await addTopSite("http://example.org/");
     win.gURLBar.value = "";
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -603,13 +600,7 @@ const tests = [
   },
 
   async function(win) {
-    info(
-      "With pageproxystate=valid, open the panel with openViewOnFocus, click on entry."
-    );
-
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.openViewOnFocus", true]],
-    });
+    info("With pageproxystate=valid, autoopen the panel, click on entry.");
     await addTopSite("http://example.com/");
     win.gURLBar.value = "";
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -922,15 +913,11 @@ const tests = [
   },
 
   async function(win) {
-    info(
-      "With pageproxystate=valid, open the panel with openViewOnFocus, don't type, blur it."
-    );
+    info("With pageproxystate=valid, autoopen the panel, don't type, blur it.");
     win.gURLBar.value = "";
-    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
     win.gURLBar.blur();
     return {
       category: "urlbar",

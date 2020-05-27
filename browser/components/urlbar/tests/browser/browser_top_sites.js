@@ -58,7 +58,7 @@ async function checkDoesNotOpenOnFocus(win = window) {
 add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.openViewOnFocus", true],
+      ["browser.urlbar.suggest.topsites", true],
       ["browser.newtabpage.activity-stream.default.sites", EN_US_TOPSITES],
     ],
   });

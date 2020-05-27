@@ -91,9 +91,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // should be opened in new tabs by default.
   ["openintab", false],
 
-  // Whether to open the urlbar view when the input field is focused by the user.
-  ["openViewOnFocus", true],
-
   // When true, URLs in the user's history that look like search result pages
   // are styled to look like search engine results instead of the usual history
   // results.

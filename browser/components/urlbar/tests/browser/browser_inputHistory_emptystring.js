@@ -79,14 +79,11 @@ add_task(async function test_history_no_search_terms() {
       },
       async () => {
         info("Test opening panel on focus");
-        Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
         gURLBar.blur();
         EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {});
-        Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
       },
       async () => {
         info("Test opening panel on focus on a page");
-        Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
         let selectedBrowser = gBrowser.selectedBrowser;
         // A page other than TEST_URL must be loaded, or the first Top Site
         // result will be a switch-to-tab result and page won't be reloaded when
@@ -95,7 +92,6 @@ add_task(async function test_history_no_search_terms() {
         await BrowserTestUtils.browserLoaded(selectedBrowser);
         gURLBar.blur();
         EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {});
-        Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
       },
     ]) {
       await do_test(openFn, pickMethod);
