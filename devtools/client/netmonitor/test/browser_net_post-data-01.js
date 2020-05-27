@@ -68,7 +68,7 @@ add_task(async function() {
   );
 
   // Wait for all accordion items updated by react
-  const wait = waitForDOM(document, "#request-panel .accordion-item", 3);
+  const wait = waitForDOM(document, "#request-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
@@ -84,7 +84,7 @@ add_task(async function() {
   const waitForAccordionItems = waitForDOM(
     document,
     "#request-panel .accordion-item",
-    2
+    1
   );
   const waitForSourceEditor = waitForDOM(
     document,
@@ -104,11 +104,6 @@ add_task(async function() {
 
     function checkVisibility(box) {
       is(
-        !tabpanel.querySelector(".treeTable"),
-        !box.includes("request"),
-        "The request params doesn't have the intended visibility."
-      );
-      is(
         tabpanel.querySelector(".CodeMirror-code") === null,
         !box.includes("editor"),
         "The request post data doesn't have the intended visibility."
@@ -117,7 +112,7 @@ add_task(async function() {
 
     is(
       tabpanel.querySelectorAll(".accordion-item").length,
-      type == "urlencoded" ? 3 : 2,
+      type == "urlencoded" ? 2 : 1,
       "There should be correct number of accordion items displayed in this tabpanel."
     );
     is(
@@ -130,12 +125,6 @@ add_task(async function() {
 
     is(
       accordionItems[0].querySelector(".accordion-header-label").textContent,
-      L10N.getStr("paramsQueryString"),
-      "The query section doesn't have the correct title."
-    );
-
-    is(
-      accordionItems[1].querySelector(".accordion-header-label").textContent,
       L10N.getStr(
         type == "urlencoded" ? "paramsFormData" : "paramsPostPayload"
       ),
@@ -145,72 +134,35 @@ add_task(async function() {
     const labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
     const values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
 
-    is(
-      labels[0].textContent,
-      "foo",
-      "The first query param name was incorrect."
-    );
-    is(
-      values[0].textContent,
-      `"bar"`,
-      "The first query param value was incorrect."
-    );
-    is(
-      labels[1].textContent,
-      "baz",
-      "The second query param name was incorrect."
-    );
-    is(
-      values[1].textContent,
-      `"42"`,
-      "The second query param value was incorrect."
-    );
-    is(
-      labels[2].textContent,
-      "type",
-      "The third query param name was incorrect."
-    );
-    is(
-      values[2].textContent,
-      `"${type}"`,
-      "The third query param value was incorrect."
-    );
-
     if (type == "urlencoded") {
       checkVisibility("request");
       is(
         labels.length,
-        5,
-        "There should be 5 param values displayed in this tabpanel."
+        2,
+        "There should be 2 param values displayed in this tabpanel."
       );
       is(
-        labels[3].textContent,
+        labels[0].textContent,
         "foo",
         "The first post param name was incorrect."
       );
       is(
-        values[3].textContent,
+        values[0].textContent,
         `"bar"`,
         "The first post param value was incorrect."
       );
       is(
-        labels[4].textContent,
+        labels[1].textContent,
         "baz",
         "The second post param name was incorrect."
       );
       is(
-        values[4].textContent,
+        values[1].textContent,
         `"123"`,
         "The second post param value was incorrect."
       );
     } else {
       checkVisibility("request editor");
-
-      is(
-        labels.length,
-        3,
-        "There should be 3 param values displayed in this tabpanel."
-      );
 
       const text = getCodeMirrorValue(monitor);
 

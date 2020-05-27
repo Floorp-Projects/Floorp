@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * Tests if "+" is replaces with spaces in the Params panel.
+ * Tests if "+" is replaces with spaces in the headers panel.
  */
 add_task(async function() {
   const { tab, monitor } = await initNetMonitor(POST_RAW_URL_WITH_HASH, {
@@ -32,17 +32,6 @@ add_task(async function() {
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#request-tab")
-  );
-
-  // The Params panel should render the following:
-  // Query String:
-  // file    foo # bar
-  const keyValue = document.querySelectorAll(".treeTable .treeRow")[0];
-
-  is(
-    keyValue.innerText,
-    `file\n"foo # bar"`,
-    "'+' in params in correctly decoded."
   );
 
   return teardown(monitor);

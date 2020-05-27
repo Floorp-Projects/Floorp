@@ -17,8 +17,6 @@ const {
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   fetchNetworkUpdatePacket,
-  getUrlQuery,
-  parseQueryString,
   parseFormData,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const {
@@ -56,7 +54,6 @@ const REQUEST_EMPTY_TEXT = L10N.getStr("paramsEmptyText");
 const REQUEST_FILTER_TEXT = L10N.getStr("paramsFilterText");
 const REQUEST_FORM_DATA = L10N.getStr("paramsFormData");
 const REQUEST_POST_PAYLOAD = L10N.getStr("paramsPostPayload");
-const REQUEST_QUERY_STRING = L10N.getStr("paramsQueryString");
 const REQUEST_TRUNCATED = L10N.getStr("requestTruncated");
 
 /**
@@ -121,7 +118,7 @@ class RequestPanel extends Component {
    * This function is not sorting result properties since it can
    * results in unexpected order of params. See bug 1469533
    *
-   * @param {Object[]} arr - key-value pair array like query or form params
+   * @param {Object[]} arr - key-value pair array or form params
    * @returns {Object} Rep compatible object
    */
   getProperties(arr) {
@@ -151,36 +148,15 @@ class RequestPanel extends Component {
   render() {
     const { request, targetSearchResult } = this.props;
     const { filterText } = this.state;
-    const { formDataSections, mimeType, requestPostData, url } = request;
+    const { formDataSections, mimeType, requestPostData } = request;
     const postData = requestPostData ? requestPostData.postData.text : null;
-    const query = getUrlQuery(url);
 
-    if (
-      (!formDataSections || formDataSections.length === 0) &&
-      !postData &&
-      !query
-    ) {
+    if ((!formDataSections || formDataSections.length === 0) && !postData) {
       return div({ className: "empty-notice" }, REQUEST_EMPTY_TEXT);
     }
 
     let error;
     const items = [];
-
-    // Query String section
-    if (query) {
-      items.push({
-        component: PropertiesView,
-        componentProps: {
-          object: this.getProperties(parseQueryString(query)),
-          filterText,
-          targetSearchResult,
-        },
-        header: REQUEST_QUERY_STRING,
-        id: "requestQueryString",
-        opened: true,
-      });
-    }
-
     // Form Data section
     if (formDataSections && formDataSections.length > 0) {
       const sections = formDataSections.filter(str => /\S/.test(str)).join("&");
@@ -212,7 +188,6 @@ class RequestPanel extends Component {
     if (formDataSections && formDataSections.length === 0 && postData) {
       if (!error) {
         const json = this.parseJSON(postData);
-
         if (json) {
           items.push({
             component: PropertiesView,
