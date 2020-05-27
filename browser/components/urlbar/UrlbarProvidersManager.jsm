@@ -473,6 +473,18 @@ class Query {
       this._chunkTimer = null;
     }
 
+    // Before the muxer.sort call above, this.context.results should never be
+    // empty since this method is called when results are added.  But the muxer
+    // may have excluded one or more results from the final sorted list.  For
+    // example, it excludes the "Search in a Private Window" result if it's the
+    // only result that's been added so far.  We don't want to notify consumers
+    // if there are no results since they generally expect at least one result
+    // when notified, so bail, but only after nulling out the chunk timer above
+    // so that it will be restarted the next time results are added.
+    if (!this.context.results.length) {
+      return;
+    }
+
     // Crop results to the requested number, taking their result spans into
     // account.
     logger.debug(
