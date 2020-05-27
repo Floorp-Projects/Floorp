@@ -3548,8 +3548,8 @@ pub extern "C" fn wr_dp_start_item_group(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_cancel_item_group(state: &mut WrState) {
-    state.frame_builder.dl_builder.cancel_item_group();
+pub extern "C" fn wr_dp_cancel_item_group(state: &mut WrState, discard: bool) {
+    state.frame_builder.dl_builder.cancel_item_group(discard);
 }
 
 #[no_mangle]

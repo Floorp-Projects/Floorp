@@ -1890,21 +1890,24 @@ impl DisplayListBuilder {
         debug_assert!(self.writing_to_chunk);
         self.writing_to_chunk = false;
 
-        if self.pending_chunk.len() > 0 {
-            self.flush_pending_item_group(key);
-            true
-        } else {
-            debug_assert!(self.pending_chunk.is_empty());
-            false
+        if self.pending_chunk.is_empty() {
+            return false;
         }
+
+        self.flush_pending_item_group(key);
+        true
     }
 
-    pub fn cancel_item_group(&mut self) {
+    pub fn cancel_item_group(&mut self, discard: bool) {
         debug_assert!(self.writing_to_chunk);
         self.writing_to_chunk = false;
 
-        // Push pending chunk to data section.
-        self.data.append(&mut self.pending_chunk);
+        if discard {
+            self.pending_chunk.clear();
+        } else {
+            // Push pending chunk to data section.
+            self.data.append(&mut self.pending_chunk);
+        }
     }
 
     pub fn push_reuse_items(&mut self, key: di::ItemKey) {
