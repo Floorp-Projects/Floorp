@@ -234,7 +234,7 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
                 # initialize for the test
                 init_android_power_test(self)
 
-            if test.get("cold", False) is True:
+            if self.config.get("cold") or test.get("cold"):
                 self.__run_test_cold(test, timeout)
             else:
                 self.__run_test_warm(test, timeout)

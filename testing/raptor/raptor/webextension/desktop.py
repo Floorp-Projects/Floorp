@@ -95,7 +95,7 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
             )
             mozpower_measurer.initialize_power_measurements()
 
-        if test.get("cold", False) is True:
+        if self.config.get("cold") or test.get("cold"):
             self.__run_test_cold(test, timeout)
         else:
             self.__run_test_warm(test, timeout)
