@@ -29,3 +29,9 @@ add_task(async function test_contentscript_storage_local_idb_backend() {
     test_contentscript_storage("local")
   );
 });
+
+add_task(async function test_contentscript_storage_local_idb_no_bytes_in_use() {
+  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]], () =>
+    test_contentscript_storage_area_no_bytes_in_use("local")
+  );
+});

@@ -159,6 +159,10 @@ this.storage = class extends ExtensionAPI {
             enforceNoTemporaryAddon(extension.id);
             return extensionStorageSync.clear(extension, context);
           },
+          getBytesInUse(keys) {
+            enforceNoTemporaryAddon(extension.id);
+            return extensionStorageSync.getBytesInUse(extension, keys, context);
+          },
         },
 
         managed: {
