@@ -138,6 +138,12 @@ struct ImageTestCase {
     return self;
   }
 
+  ImageTestCase WithFlags(uint32_t aFlags) const {
+    ImageTestCase self = *this;
+    self.mFlags = aFlags;
+    return self;
+  }
+
   BGRAColor ChooseColor(const BGRAColor& aColor) const {
     // If we are forcing the output to be sRGB via the surface flag, or the
     // test case is marked as assuming sRGB (used when the image itself is not
