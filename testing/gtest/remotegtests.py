@@ -12,6 +12,7 @@ import glob
 import os
 import posixpath
 import shutil
+import six
 import sys
 import tempfile
 import time
@@ -102,6 +103,8 @@ class RemoteGTests(object):
             if not os.path.isdir(f):
                 self.device.push(f, self.remote_profile)
 
+        if test_filter is not None:
+            test_filter = six.ensure_text(test_filter)
         env = self.build_environment(shuffle, test_filter, enable_webrender)
         args = ["-unittest", "--gtest_death_test_style=threadsafe",
                 "-profile %s" % self.remote_profile]
@@ -301,6 +304,7 @@ class AppWaiter(object):
             return False
         if not new_content:
             return False
+        new_content = six.ensure_text(new_content)
         last_full_line_pos = new_content.rfind('\n')
         if last_full_line_pos <= 0:
             # wait for a full line
