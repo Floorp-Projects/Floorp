@@ -31,6 +31,30 @@ async function addTestVisits() {
   });
 }
 
+async function checkDoesNotOpenOnFocus(win = window) {
+  // The view should not open when the input is focused programmatically.
+  win.gURLBar.blur();
+  win.gURLBar.focus();
+  Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
+  win.gURLBar.blur();
+
+  // Check the keyboard shortcut.
+  win.document.getElementById("Browser:OpenLocation").doCommand();
+  // Because the panel opening may not be immediate, we must wait a bit.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 500));
+  Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
+  win.gURLBar.blur();
+
+  // Focus with the mouse.
+  EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {});
+  // Because the panel opening may not be immediate, we must wait a bit.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 500));
+  Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
+  win.gURLBar.blur();
+}
+
 add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -375,64 +399,10 @@ add_task(async function topSitesBookmarksAndTabsDisabled() {
 });
 
 add_task(async function topSitesDisabled() {
-  // Disable top sites.
+  // Disable Top Sites feed.
   await SpecialPowers.pushPrefEnv({
     set: [["browser.newtabpage.activity-stream.feeds.system.topsites", false]],
   });
-
-  // Add some visits.
-  let urlCount = 5;
-  for (let i = 0; i < urlCount; i++) {
-    await PlacesTestUtils.addVisits(`http://example.com/${i}`);
-  }
-
-  // Open the view.
-  await UrlbarTestUtils.promisePopupOpen(window, () => {
-    if (gURLBar.getAttribute("pageproxystate") == "invalid") {
-      gURLBar.handleRevert();
-    }
-    EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
-  });
-  Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
-  await UrlbarTestUtils.promiseSearchComplete(window);
-
-  // Check the results.  We should show the most frecent sites from history via
-  // the UnifiedComplete provider.
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    urlCount,
-    "The number of results should be the same as the number of URLs added"
-  );
-
-  for (let i = 0; i < urlCount; i++) {
-    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    Assert.equal(
-      result.url,
-      `http://example.com/${urlCount - i - 1}`,
-      `Expected URL at index ${i}`
-    );
-    Assert.equal(
-      result.source,
-      UrlbarUtils.RESULT_SOURCE.HISTORY,
-      "The result should be from history"
-    );
-    Assert.equal(
-      result.type,
-      UrlbarUtils.RESULT_TYPE.URL,
-      "The result should be a URL"
-    );
-    Assert.strictEqual(
-      result.heuristic,
-      false,
-      "The result should not be heuristic"
-    );
-  }
-
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    window.gURLBar.blur();
-  });
-
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesUtils.history.clear();
+  await checkDoesNotOpenOnFocus();
   await SpecialPowers.popPrefEnv();
 });

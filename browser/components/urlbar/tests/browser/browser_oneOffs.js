@@ -36,41 +36,6 @@ add_task(async function init() {
   await PlacesTestUtils.addVisits(visits);
 });
 
-// Keys up and down through the history panel, i.e., the panel that's shown when
-// there's no text in the textbox.
-add_task(async function history() {
-  // If this pref is true, we get the Top Sites view here. It does not show
-  // one-offs.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.openViewOnFocus", false]],
-  });
-  gURLBar.focus();
-  await UrlbarTestUtils.promisePopupOpen(window, () => {
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-  });
-  await UrlbarTestUtils.waitForAutocompleteResultAt(window, gMaxResults - 1);
-
-  assertState(-1, -1, "");
-
-  // Key down through each result.
-  for (let i = 0; i < gMaxResults; i++) {
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    assertState(
-      i,
-      -1,
-      "example.com/browser_urlbarOneOffs.js/?" + (gMaxResults - i - 1)
-    );
-  }
-
-  // Key down once more.  Nothing should be selected as one-off buttons
-  // should be hidden.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  assertState(-1, -1, "");
-
-  await hidePopup();
-  await SpecialPowers.popPrefEnv();
-});
-
 // Keys up and down through the non-history panel, i.e., the panel that's shown
 // when you type something in the textbox.
 add_task(async function() {

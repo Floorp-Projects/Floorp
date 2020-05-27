@@ -63,19 +63,38 @@ async function loadTipExtension(options = {}) {
   return ext;
 }
 
+/**
+ * Updates the Top Sites feed.
+ * @param {function} condition
+ *   A callback that returns true after Top Sites are successfully updated.
+ * @param {boolean} searchShortcuts
+ *   True if Top Sites search shortcuts should be enabled.
+ */
+async function updateTopSites(condition, searchShortcuts = false) {
+  // Toggle the pref to clear the feed cache and force an update.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.newtabpage.activity-stream.feeds.system.topsites", false],
+      ["browser.newtabpage.activity-stream.feeds.system.topsites", true],
+      [
+        "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
+        searchShortcuts,
+      ],
+    ],
+  });
+
+  // Wait for the feed to be updated.
+  await TestUtils.waitForCondition(() => {
+    let sites = AboutNewTab.getTopSites();
+    return condition(sites);
+  }, "Waiting for top sites to be updated");
+}
+
 add_task(async function setUp() {
   // Set the notification timeout to a really high value to avoid intermittent
   // failures due to the mock extensions not responding in time.
   let originalTimeout = UrlbarProviderExtension.notificationTimeout;
   UrlbarProviderExtension.notificationTimeout = 5000;
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
-        false,
-      ],
-    ],
-  });
   registerCleanupFunction(() => {
     UrlbarProviderExtension.notificationTimeout = originalTimeout;
   });
@@ -232,11 +251,6 @@ add_task(async function search() {
 
 // Tests the search function with an empty string.
 add_task(async function searchEmpty() {
-  // We need to disable UrlbarProviderTopSites for some subtests in this file
-  // until we figure out how two restricting providers should interact.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.openViewOnFocus", false]],
-  });
   gURLBar.blur();
 
   // Searching for an empty string shows the history view, but there may be no
@@ -290,9 +304,6 @@ add_task(async function searchEmpty() {
 
 // Tests the search function with `focus: false`.
 add_task(async function searchFocusFalse() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.openViewOnFocus", false]],
-  });
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.addVisits([
@@ -341,15 +352,12 @@ add_task(async function searchFocusFalse() {
 
 // Tests the search function with `focus: false` and an empty string.
 add_task(async function searchFocusFalseEmpty() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.openViewOnFocus", false]],
-  });
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.addVisits([
-    "http://example.com/test1",
-    "http://example.com/test2",
-  ]);
+  for (let i = 0; i < 5; i++) {
+    await PlacesTestUtils.addVisits(["http://example.com/test1"]);
+  }
+  await updateTopSites(sites => sites.length == 1);
   gURLBar.blur();
 
   let ext = ExtensionTestUtils.loadExtension({
@@ -370,13 +378,9 @@ add_task(async function searchFocusFalseEmpty() {
   Assert.ok(!gURLBar.hasAttribute("focused"));
 
   let resultCount = UrlbarTestUtils.getResultCount(window);
-  Assert.equal(resultCount, 2);
+  Assert.equal(resultCount, 1);
 
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
-  Assert.equal(result.url, "http://example.com/test2");
-
-  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
   Assert.equal(result.url, "http://example.com/test1");
 
