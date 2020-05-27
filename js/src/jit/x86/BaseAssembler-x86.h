@@ -163,18 +163,6 @@ class BaseAssemblerX86 : public BaseAssembler {
     twoByteOpSimd("vsubpd", VEX_PD, OP2_SUBPS_VpsWps, src1, src0, dst);
   }
 
-  void vpunpckldq_rr(XMMRegisterID src1, XMMRegisterID src0,
-                     XMMRegisterID dst) {
-    twoByteOpSimd("vpunpckldq", VEX_PD, OP2_PUNPCKLDQ, src1, src0, dst);
-  }
-  void vpunpckldq_mr(int32_t offset, RegisterID base, XMMRegisterID src0,
-                     XMMRegisterID dst) {
-    twoByteOpSimd("vpunpckldq", VEX_PD, OP2_PUNPCKLDQ, offset, base, src0, dst);
-  }
-  void vpunpckldq_mr(const void* addr, XMMRegisterID src0, XMMRegisterID dst) {
-    twoByteOpSimd("vpunpckldq", VEX_PD, OP2_PUNPCKLDQ, addr, src0, dst);
-  }
-
   void fild_m(int32_t offset, RegisterID base) {
     m_formatter.oneByteOp(OP_FILD, offset, base, FILD_OP_64);
   }

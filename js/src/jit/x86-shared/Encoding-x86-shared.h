@@ -159,7 +159,13 @@ enum OneByteOpcodeID {
   OP_GROUP5_Ev = 0xFF
 };
 
-enum class ShiftID { vpsrlx = 2, vpsrldq = 3, vpsrad = 4, vpsllx = 6 };
+enum class ShiftID {
+  vpsrlx = 2,
+  vpsrldq = 3,
+  vpsrad = 4,
+  vpsllx = 6,
+  vpslldq = 7
+};
 
 enum TwoByteOpcodeID {
   OP2_UD2 = 0x0B,
@@ -220,12 +226,16 @@ enum TwoByteOpcodeID {
   OP2_ORPD_VpdWpd = 0x56,
   OP2_XORPD_VpdWpd = 0x57,
   OP2_PUNPCKLBW_VdqWdq = 0x60,
-  OP2_PUNPCKLDQ = 0x62,
+  OP2_PUNPCKLWD_VdqWdq = 0x61,
+  OP2_PUNPCKLDQ_VdqWdq = 0x62,
   OP2_PACKSSWB_VdqWdq = 0x63,
   OP2_PCMPGTB_VdqWdq = 0x64,
   OP2_PCMPGTW_VdqWdq = 0x65,
   OP2_PCMPGTD_VdqWdq = 0x66,
   OP2_PACKUSWB_VdqWdq = 0x67,
+  OP2_PUNPCKHBW_VdqWdq = 0x68,
+  OP2_PUNPCKHWD_VdqWdq = 0x69,
+  OP2_PUNPCKHDQ_VdqWdq = 0x6A,
   OP2_PACKSSDW_VdqWdq = 0x6B,
   OP2_MOVD_VdEd = 0x6E,
   OP2_MOVDQ_VsdWsd = 0x6F,

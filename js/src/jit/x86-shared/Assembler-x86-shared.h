@@ -2177,6 +2177,10 @@ class AssemblerX86Shared : public AssemblerShared {
     MOZ_ASSERT(HasSSE2());
     masm.vpsrldq_ir(shift.value, src0.encoding(), dest.encoding());
   }
+  void vpslldq(Imm32 shift, FloatRegister src, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    masm.vpslldq_ir(shift.value, src.encoding(), dest.encoding());
+  }
   void vpsllq(Imm32 shift, FloatRegister src0, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());
     masm.vpsllq_ir(shift.value, src0.encoding(), dest.encoding());
@@ -3416,6 +3420,20 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
+  void vpunpcklbw(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    MOZ_ASSERT(src0.size() == 16);
+    MOZ_ASSERT(src1.size() == 16);
+    MOZ_ASSERT(dest.size() == 16);
+    masm.vpunpcklbw_rr(src1.encoding(), src0.encoding(), dest.encoding());
+  }
+  void vpunpckhbw(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    MOZ_ASSERT(src0.size() == 16);
+    MOZ_ASSERT(src1.size() == 16);
+    MOZ_ASSERT(dest.size() == 16);
+    masm.vpunpckhbw_rr(src1.encoding(), src0.encoding(), dest.encoding());
+  }
   void vpunpcklbw(const Operand& src1, FloatRegister src0, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());
     switch (src1.kind()) {
@@ -3426,6 +3444,51 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
+  void vpunpckldq(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    MOZ_ASSERT(src0.size() == 16);
+    MOZ_ASSERT(src1.size() == 16);
+    MOZ_ASSERT(dest.size() == 16);
+    masm.vpunpckldq_rr(src1.encoding(), src0.encoding(), dest.encoding());
+  }
+  void vpunpckldq(const Operand& src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    MOZ_ASSERT(src0.size() == 16);
+    MOZ_ASSERT(dest.size() == 16);
+    switch (src1.kind()) {
+      case Operand::MEM_REG_DISP:
+        masm.vpunpckldq_mr(src1.disp(), src1.base(), src0.encoding(),
+                           dest.encoding());
+        break;
+      case Operand::MEM_ADDRESS32:
+        masm.vpunpckldq_mr(src1.address(), src0.encoding(), dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+  void vpunpckhdq(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    MOZ_ASSERT(src0.size() == 16);
+    MOZ_ASSERT(src1.size() == 16);
+    MOZ_ASSERT(dest.size() == 16);
+    masm.vpunpckhdq_rr(src1.encoding(), src0.encoding(), dest.encoding());
+  }
+  void vpunpcklwd(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    MOZ_ASSERT(src0.size() == 16);
+    MOZ_ASSERT(src1.size() == 16);
+    MOZ_ASSERT(dest.size() == 16);
+    masm.vpunpcklwd_rr(src1.encoding(), src0.encoding(), dest.encoding());
+  }
+  void vpunpckhwd(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    MOZ_ASSERT(src0.size() == 16);
+    MOZ_ASSERT(src1.size() == 16);
+    MOZ_ASSERT(dest.size() == 16);
+    masm.vpunpckhwd_rr(src1.encoding(), src0.encoding(), dest.encoding());
+  }
+
   void vandps(const Operand& src1, FloatRegister src0, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());
     switch (src1.kind()) {
