@@ -827,10 +827,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void unboxInt32(const Address& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_INT32);
   }
+  void unboxInt32(const BaseIndex& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_INT32);
+  }
   void unboxBoolean(const ValueOperand& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_BOOLEAN);
   }
   void unboxBoolean(const Address& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_BOOLEAN);
+  }
+  void unboxBoolean(const BaseIndex& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_BOOLEAN);
   }
   void unboxString(const ValueOperand& src, Register dest) {

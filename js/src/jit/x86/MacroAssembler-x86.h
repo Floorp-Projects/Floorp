@@ -480,6 +480,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     cmp32(tagOf(address), ImmTag(JSVAL_TAG_STRING));
     return cond;
   }
+  Condition testSymbol(Condition cond, const Address& address) {
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    cmp32(tagOf(address), ImmTag(JSVAL_TAG_SYMBOL));
+    return cond;
+  }
   Condition testSymbol(Condition cond, const BaseIndex& address) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     cmp32(tagOf(address), ImmTag(JSVAL_TAG_SYMBOL));
@@ -742,10 +747,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   void unboxInt32(const Address& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_INT32);
   }
+  void unboxInt32(const BaseIndex& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_INT32);
+  }
   void unboxBoolean(const ValueOperand& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_BOOLEAN);
   }
   void unboxBoolean(const Address& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_BOOLEAN);
+  }
+  void unboxBoolean(const BaseIndex& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_BOOLEAN);
   }
   void unboxString(const ValueOperand& src, Register dest) {
