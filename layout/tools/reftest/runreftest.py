@@ -49,9 +49,13 @@ try:
     from marionette_driver.addons import Addons
     from marionette_harness import Marionette
 except ImportError as e:  # noqa
-    # Defer ImportError until attempt to use Marionette
+    # Defer ImportError until attempt to use Marionette.
+    # Python 3 deletes the exception once the except block
+    # is exited. Save a version to raise later.
+    e_save = ImportError(str(e))
+
     def reraise_(*args, **kwargs):
-        raise(e)  # noqa
+        raise(e_save)  # noqa
     Marionette = reraise_
 
 from output import OutputHandler, ReftestFormatter
@@ -234,7 +238,7 @@ class ReftestResolver(object):
                     manifests[manifest] = set()
                 manifests[manifest].add(filter_str)
         manifests_by_url = {}
-        for key in manifests.iterkeys():
+        for key in manifests.keys():
             id = os.path.relpath(os.path.abspath(os.path.dirname(key)), options.topsrcdir)
             id = id.replace(os.sep, posixpath.sep)
             if None in manifests[key]:

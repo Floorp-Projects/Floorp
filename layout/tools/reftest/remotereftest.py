@@ -13,8 +13,9 @@ import sys
 import tempfile
 import time
 import traceback
-import urllib2
 from contextlib import closing
+
+from six.moves.urllib_request import urlopen
 
 from mozdevice import ADBDevice, ADBTimeoutError
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
@@ -141,7 +142,7 @@ class ReftestServer:
     def stop(self):
         if hasattr(self, '_process'):
             try:
-                with closing(urllib2.urlopen(self.shutdownURL)) as c:
+                with closing(urlopen(self.shutdownURL)) as c:
                     c.read()
 
                 rtncode = self._process.poll()
