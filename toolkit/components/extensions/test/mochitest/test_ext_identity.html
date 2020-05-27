@@ -14,7 +14,13 @@
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.identity.redirectDomain", "example.com"]],
+    set: [
+      ["extensions.webextensions.identity.redirectDomain", "example.com"],
+      // Disable the network cache first-party partition during this
+      // test (TODO: look more closely to how that is affecting the intermittency
+      // of this test on MacOS, see Bug 1626482).
+      ["privacy.partition.network_state", false],
+    ],
   });
 });
 
@@ -204,7 +210,7 @@ function background_launchWebAuthFlow({
   if (params.post !== 303) {
     watchRedirectRequest = details => {
       if (details.url.startsWith(expected_redirect)) {
-        browser.test.fail(`onSendHeaders called for redirect url: ${JSON.stringify(details)}`);
+        browser.test.fail(`onBeforeRequest called for redirect url: ${JSON.stringify(details)}`);
       }
     };
 
