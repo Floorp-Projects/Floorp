@@ -47,6 +47,7 @@ def get_running_env(**kwargs):
     mach_cmd.topobjdir = config.topobjdir
     mach_cmd._mach_context = MagicMock()
     mach_cmd._mach_context.state_dir = tempfile.mkdtemp()
+    mach_cmd.run_process.return_value = 0
 
     mach_args = {
         "flavor": "script",
