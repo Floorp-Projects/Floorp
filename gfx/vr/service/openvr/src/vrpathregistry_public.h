@@ -22,7 +22,7 @@ public:
 	* Returns false if the path registry could not be read. Valid paths might still be returned based on environment variables. */
 	static bool GetPaths( std::string *psRuntimePath, std::string *psConfigPath, std::string *psLogPath, const char *pchConfigPathOverride, const char *pchLogPathOverride, std::vector<std::string> *pvecExternalDrivers = NULL );
 
-	bool BLoadFromFile();
+	bool BLoadFromFile( std::string *psError = nullptr );
 	bool BSaveToFile() const;
 
 	bool ToJsonString( std::string &sJsonString );

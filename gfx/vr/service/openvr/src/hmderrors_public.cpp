@@ -70,6 +70,7 @@ const char *GetEnglishStringForHmdError( vr::EVRInitError eError )
 	// case VRInitError_Driver_HmdDisplayNotFoundAfterFix:	return "HMD detected over USB, but Monitor not found after attempt to fix (210)"; // taken out upon Ben's request: He thinks that there is no need to separate that error from 208
 	case VRInitError_Driver_HmdDriverIdOutOfBounds:			return "Hmd DriverId is our of bounds (211)";
 	case VRInitError_Driver_HmdDisplayMirrored:				return "HMD detected over USB, but Monitor may be mirrored instead of extended (212)";
+	case VRInitError_Driver_HmdDisplayNotFoundLaptop:		return "On laptop, HMD detected over USB, but Monitor not found (213)";
 
 	case VRInitError_IPC_ServerInitFailed:						return "VR Server Init Failed (300)";
 	case VRInitError_IPC_ConnectFailed:							return "Connect to VR Server Failed (301)";
@@ -80,6 +81,8 @@ const char *GetEnglishStringForHmdError( vr::EVRInitError eError )
 	case VRInitError_IPC_CompositorConnectFailed:				return "Shared IPC Compositor Connect Failed (306)";
 	case VRInitError_IPC_CompositorInvalidConnectResponse:		return "Shared IPC Compositor Invalid Connect Response (307)";
 	case VRInitError_IPC_ConnectFailedAfterMultipleAttempts:	return "Shared IPC Connect Failed After Multiple Attempts (308)";
+	case VRInitError_IPC_ConnectFailedAfterTargetExited:		return "Shared IPC Connect Failed After Target Exited (309)";
+	case VRInitError_IPC_NamespaceUnavailable:					return "Shared IPC Namespace Unavailable (310)";
 
 	case VRInitError_Compositor_Failed:					return "Compositor failed to initialize (400)";
 	case VRInitError_Compositor_D3D11HardwareRequired:	return "Compositor failed to find DX11 hardware (401)";
@@ -90,6 +93,7 @@ const char *GetEnglishStringForHmdError( vr::EVRInitError eError )
 
 	// Oculus
 	case VRInitError_VendorSpecific_UnableToConnectToOculusRuntime:	return "Unable to connect to Oculus Runtime (1000)";
+	case VRInitError_VendorSpecific_OculusRuntimeBadInstall:		return "Unable to connect to Oculus Runtime, possible bad install (1114)";
 
 	// Lighthouse
 	case VRInitError_VendorSpecific_HmdFound_CantOpenDevice:				return "HMD found, but can not open device (1101)";
@@ -165,7 +169,11 @@ const char *GetIDForVRInitError( vr::EVRInitError eError )
 		RETURN_ENUM_AS_STRING( VRInitError_Init_USBServiceBusy );
 		RETURN_ENUM_AS_STRING( VRInitError_Init_VRWebHelperStartupFailed );
 		RETURN_ENUM_AS_STRING( VRInitError_Init_TrackerManagerInitFailed );
-
+		RETURN_ENUM_AS_STRING( VRInitError_Init_AlreadyRunning );
+		RETURN_ENUM_AS_STRING( VRInitError_Init_FailedForVrMonitor);
+		RETURN_ENUM_AS_STRING( VRInitError_Init_PropertyManagerInitFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Init_WebServerFailed );
+		
 		RETURN_ENUM_AS_STRING( VRInitError_Driver_Failed );
 		RETURN_ENUM_AS_STRING( VRInitError_Driver_Unknown );
 		RETURN_ENUM_AS_STRING( VRInitError_Driver_HmdUnknown);
@@ -179,6 +187,7 @@ const char *GetIDForVRInitError( vr::EVRInitError eError )
 		// RETURN_ENUM_AS_STRING( VRInitError_Driver_HmdDisplayNotFoundAfterFix );
 		RETURN_ENUM_AS_STRING( VRInitError_Driver_HmdDriverIdOutOfBounds );
 		RETURN_ENUM_AS_STRING( VRInitError_Driver_HmdDisplayMirrored );
+		RETURN_ENUM_AS_STRING( VRInitError_Driver_HmdDisplayNotFoundLaptop );
 
 		RETURN_ENUM_AS_STRING( VRInitError_IPC_ServerInitFailed);
 		RETURN_ENUM_AS_STRING( VRInitError_IPC_ConnectFailed);
@@ -188,7 +197,9 @@ const char *GetIDForVRInitError( vr::EVRInitError eError )
 		RETURN_ENUM_AS_STRING( VRInitError_IPC_Failed);
 		RETURN_ENUM_AS_STRING( VRInitError_IPC_CompositorConnectFailed);
 		RETURN_ENUM_AS_STRING( VRInitError_IPC_CompositorInvalidConnectResponse);
-		RETURN_ENUM_AS_STRING( VRInitError_IPC_ConnectFailedAfterMultipleAttempts);
+		RETURN_ENUM_AS_STRING( VRInitError_IPC_ConnectFailedAfterMultipleAttempts );
+		RETURN_ENUM_AS_STRING( VRInitError_IPC_ConnectFailedAfterTargetExited );
+		RETURN_ENUM_AS_STRING( VRInitError_IPC_NamespaceUnavailable );
 
 		RETURN_ENUM_AS_STRING( VRInitError_Compositor_Failed );
 		RETURN_ENUM_AS_STRING( VRInitError_Compositor_D3D11HardwareRequired );
@@ -196,10 +207,96 @@ const char *GetIDForVRInitError( vr::EVRInitError eError )
 		RETURN_ENUM_AS_STRING( VRInitError_Compositor_OverlayInitFailed );
 		RETURN_ENUM_AS_STRING( VRInitError_Compositor_ScreenshotsInitFailed );
 		RETURN_ENUM_AS_STRING( VRInitError_Compositor_UnableToCreateDevice );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_SharedStateIsNull );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_NotificationManagerIsNull );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_ResourceManagerClientIsNull );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_MessageOverlaySharedStateInitFailure );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_PropertiesInterfaceIsNull );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateFullscreenWindowFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_SettingsInterfaceIsNull );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToShowWindow );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_DistortInterfaceIsNull );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_DisplayFrequencyFailure );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_RendererInitializationFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_DXGIFactoryInterfaceIsNull );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_DXGIFactoryCreateFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_DXGIFactoryQueryFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_InvalidAdapterDesktop );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_InvalidHmdAttachment );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_InvalidOutputDesktop );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_InvalidDeviceProvided );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_D3D11RendererInitializationFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToFindDisplayMode );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToCreateSwapChain );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToGetBackBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToCreateRenderTarget );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToCreateDXGI2SwapChain );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedtoGetDXGI2BackBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToCreateDXGI2RenderTarget );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToGetDXGIDeviceInterface );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_SelectDisplayMode );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToCreateNvAPIRenderTargets );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_NvAPISetDisplayMode );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToCreateDirectModeDisplay );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_InvalidHmdPropertyContainer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_UpdateDisplayFrequency );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateRasterizerState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateWireframeRasterizerState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateSamplerState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateClampToBorderSamplerState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateAnisoSamplerState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateOverlaySamplerState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreatePanoramaSamplerState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateFontSamplerState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateNoBlendState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateBlendState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateAlphaBlendState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateBlendStateMaskR );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateBlendStateMaskG );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateBlendStateMaskB );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateDepthStencilState );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateDepthStencilStateNoWrite );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateDepthStencilStateNoDepth );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateFlushTexture );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateDistortionSurfaces );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateHmdPoseConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateHmdPoseStagingConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateSharedFrameInfoConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateOverlayConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateSceneTextureIndexConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateReadableSceneTextureIndexConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateLayerGraphicsTextureIndexConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateLayerComputeTextureIndexConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateLayerComputeSceneTextureIndexConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateComputeHmdPoseConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateGeomConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreatePanelMaskConstantBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreatePixelSimUBO );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateMSAARenderTextures );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateResolveRenderTextures );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateComputeResolveRenderTextures );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateDriverDirectModeResolveTextures );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_OpenDriverDirectModeResolveTextures );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateFallbackSyncTexture );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_ShareFallbackSyncTexture );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateOverlayIndexBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateOverlayVertexBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateTextVertexBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateTextIndexBuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateMirrorTextures );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateLastFrameRenderTexture );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateMirrorOverlay );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToCreateVirtualDisplayBackbuffer );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_DisplayModeNotSupported );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateOverlayInvalidCall );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_CreateOverlayAlreadyInitialized );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FailedToCreateMailbox );
 
 		// Vendor-specific errors
 		RETURN_ENUM_AS_STRING( VRInitError_VendorSpecific_UnableToConnectToOculusRuntime);
 		RETURN_ENUM_AS_STRING( VRInitError_VendorSpecific_WindowsNotInDevMode );
+		RETURN_ENUM_AS_STRING( VRInitError_VendorSpecific_OculusRuntimeBadInstall );
 
 		// Lighthouse
 		RETURN_ENUM_AS_STRING( VRInitError_VendorSpecific_HmdFound_CantOpenDevice);

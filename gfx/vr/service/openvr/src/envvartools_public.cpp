@@ -1,6 +1,9 @@
 //========= Copyright Valve Corporation ============//
 #include "envvartools_public.h"
+#include "strtools_public.h"
 #include <stdlib.h>
+#include <string>
+#include <cctype>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -30,6 +33,45 @@ std::string GetEnvironmentVariable( const char *pchVarName )
 #endif
 }
 
+bool GetEnvironmentVariableAsBool( const char *pchVarName, bool bDefault )
+{
+	std::string sValue = GetEnvironmentVariable( pchVarName );
+
+	if ( sValue.empty() )
+	{
+		return bDefault;
+	}
+
+	sValue = StringToLower( sValue );
+	std::string sYesValues[] = { "y", "yes", "true" };
+	std::string sNoValues[] = { "n", "no", "false" };
+
+	for ( std::string &sMatch : sYesValues )
+	{
+		if ( sMatch == sValue )
+		{
+			return true;
+		}
+	}
+
+	for ( std::string &sMatch : sNoValues )
+	{
+		if ( sMatch == sValue )
+		{
+			return false;
+		}
+	}
+
+	if ( std::isdigit( sValue.at(0) ) )
+	{
+		return atoi( sValue.c_str() ) != 0;
+	}
+
+	fprintf( stderr,
+			 "GetEnvironmentVariableAsBool(%s): Unable to parse value '%s', using default %d\n",
+			 pchVarName, sValue.c_str(), bDefault );
+	return bDefault;
+}
 
 bool SetEnvironmentVariable( const char *pchVarName, const char *pchVarValue )
 {
