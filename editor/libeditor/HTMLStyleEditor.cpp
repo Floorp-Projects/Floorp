@@ -375,7 +375,7 @@ bool HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
     if (element->IsHTMLElement(aProperty) &&
         IsOnlyAttribute(element, aAttribute) &&
         element->GetAttr(kNameSpaceID_None, aAttribute, attrValue) &&
-        attrValue.Equals(*aValue, nsCaseInsensitiveStringComparator())) {
+        attrValue.Equals(*aValue, nsCaseInsensitiveStringComparator)) {
       // This is not quite correct, because it excludes cases like
       // <font face=000> being the same as <font face=#000000>.
       // Property-specific handling is needed (bug 760211).

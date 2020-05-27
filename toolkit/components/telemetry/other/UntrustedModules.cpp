@@ -263,7 +263,7 @@ static bool SerializeEvent(JSContext* aCx, JS::MutableHandleValue aElement,
   // the associated module's mSanitizedDllName
   if (!aEvent.mRequestedDllName.IsEmpty() &&
       !aEvent.mRequestedDllName.Equals(aEvent.mModule->mSanitizedDllName,
-                                       nsCaseInsensitiveStringComparator())) {
+                                       nsCaseInsensitiveStringComparator)) {
     if (!AddLengthLimitedStringProp(aCx, obj, "requestedDllName",
                                     aEvent.mRequestedDllName)) {
       return false;

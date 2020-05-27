@@ -2270,7 +2270,7 @@ nsresult nsListControlFrame::KeyPress(dom::Event* aKeyEvent) {
     if (!StringBeginsWith(
             nsContentUtils::TrimWhitespace<
                 nsContentUtils::IsHTMLWhitespaceOrNBSP>(text, false),
-            incrementalString, nsCaseInsensitiveStringComparator())) {
+            incrementalString, nsCaseInsensitiveStringComparator)) {
       continue;
     }
 

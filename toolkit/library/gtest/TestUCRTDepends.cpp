@@ -81,7 +81,7 @@ TEST(TestUCRTDepends, AppDir)
       // Universal CRT files are not in Api Sets on Windows 8.
       EXPECT_TRUE(StringBeginsWith(nsDependentString(wfd.cFileName),
                                    NS_LITERAL_STRING("api-ms-win-crt-"),
-                                   nsCaseInsensitiveStringComparator()));
+                                   nsCaseInsensitiveStringComparator));
     } else {  // Windows 7
       // All files must not be in Api Sets on Windows 7.
       EXPECT_FALSE(inApiSets);

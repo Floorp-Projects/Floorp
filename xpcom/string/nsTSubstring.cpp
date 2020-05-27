@@ -958,7 +958,7 @@ bool nsTStringRepr<T>::Equals(const self_type& aStr) const {
 
 template <typename T>
 bool nsTStringRepr<T>::Equals(const self_type& aStr,
-                              const comparator_type& aComp) const {
+                              comparator_type aComp) const {
   return this->mLength == aStr.mLength &&
          aComp(this->mData, aStr.mData, this->mLength, aStr.mLength) == 0;
 }
@@ -970,7 +970,7 @@ bool nsTStringRepr<T>::Equals(const substring_tuple_type& aTuple) const {
 
 template <typename T>
 bool nsTStringRepr<T>::Equals(const substring_tuple_type& aTuple,
-                              const comparator_type& aComp) const {
+                              comparator_type aComp) const {
   return Equals(substring_type(aTuple), aComp);
 }
 
@@ -990,7 +990,7 @@ bool nsTStringRepr<T>::Equals(const char_type* aData) const {
 
 template <typename T>
 bool nsTStringRepr<T>::Equals(const char_type* aData,
-                              const comparator_type& aComp) const {
+                              comparator_type aComp) const {
   // unfortunately, some callers pass null :-(
   if (!aData) {
     MOZ_ASSERT_UNREACHABLE("null data pointer");

@@ -6810,9 +6810,9 @@ bool nsContentUtils::IsForbiddenRequestHeader(const nsACString& aHeader) {
   }
 
   return StringBeginsWith(aHeader, NS_LITERAL_CSTRING("proxy-"),
-                          nsCaseInsensitiveCStringComparator()) ||
+                          nsCaseInsensitiveCStringComparator) ||
          StringBeginsWith(aHeader, NS_LITERAL_CSTRING("sec-"),
-                          nsCaseInsensitiveCStringComparator());
+                          nsCaseInsensitiveCStringComparator);
 }
 
 // static

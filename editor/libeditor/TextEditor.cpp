@@ -241,7 +241,7 @@ bool TextEditor::UpdateMetaCharset(Document& aDocument,
     metaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, currentValue);
 
     if (!FindInReadable(NS_LITERAL_STRING("content-type"), currentValue,
-                        nsCaseInsensitiveStringComparator())) {
+                        nsCaseInsensitiveStringComparator)) {
       continue;
     }
 
@@ -252,7 +252,7 @@ bool TextEditor::UpdateMetaCharset(Document& aDocument,
     originalStart = currentValue.BeginReading(start);
     currentValue.EndReading(end);
     if (!FindInReadable(charsetEquals, start, end,
-                        nsCaseInsensitiveStringComparator())) {
+                        nsCaseInsensitiveStringComparator)) {
       continue;
     }
 

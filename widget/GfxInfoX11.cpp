@@ -545,7 +545,7 @@ bool GfxInfo::DoesWindowProtocolMatch(const nsAString& aBlocklistWindowProtocol,
   if (mIsWayland &&
       aBlocklistWindowProtocol.Equals(
           GfxDriverInfo::GetWindowProtocol(WindowProtocol::WaylandAll),
-          nsCaseInsensitiveStringComparator())) {
+          nsCaseInsensitiveStringComparator)) {
     return true;
   }
   return GfxInfoBase::DoesWindowProtocolMatch(aBlocklistWindowProtocol,
@@ -556,12 +556,12 @@ bool GfxInfo::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
                                     const nsAString& aDriverVendor) {
   if (mIsMesa && aBlocklistVendor.Equals(
                      GfxDriverInfo::GetDriverVendor(DriverVendor::MesaAll),
-                     nsCaseInsensitiveStringComparator())) {
+                     nsCaseInsensitiveStringComparator)) {
     return true;
   }
   if (!mIsMesa && aBlocklistVendor.Equals(
                       GfxDriverInfo::GetDriverVendor(DriverVendor::NonMesaAll),
-                      nsCaseInsensitiveStringComparator())) {
+                      nsCaseInsensitiveStringComparator)) {
     return true;
   }
   return GfxInfoBase::DoesDriverVendorMatch(aBlocklistVendor, aDriverVendor);

@@ -291,9 +291,10 @@ void ParseString(const nsACString& aSource, char aDelimiter,
   }
 }
 
-template <class StringT, class IteratorT, class Comparator>
-bool FindInReadable_Impl(const StringT& aPattern, IteratorT& aSearchStart,
-                         IteratorT& aSearchEnd, const Comparator& aCompare) {
+template <class StringT, class IteratorT>
+bool FindInReadable_Impl(
+    const StringT& aPattern, IteratorT& aSearchStart, IteratorT& aSearchEnd,
+    nsTStringComparator<typename StringT::char_type> aCompare) {
   bool found_it = false;
 
   // only bother searching at all if we're given a non-empty range to search
@@ -364,9 +365,10 @@ bool FindInReadable_Impl(const StringT& aPattern, IteratorT& aSearchStart,
  * This searches the entire string from right to left, and returns the first
  * match found, if any.
  */
-template <class StringT, class IteratorT, class Comparator>
-bool RFindInReadable_Impl(const StringT& aPattern, IteratorT& aSearchStart,
-                          IteratorT& aSearchEnd, const Comparator& aCompare) {
+template <class StringT, class IteratorT>
+bool RFindInReadable_Impl(
+    const StringT& aPattern, IteratorT& aSearchStart, IteratorT& aSearchEnd,
+    nsTStringComparator<typename StringT::char_type> aCompare) {
   IteratorT patternStart, patternEnd, searchEnd = aSearchEnd;
   aPattern.BeginReading(patternStart);
   aPattern.EndReading(patternEnd);
@@ -416,14 +418,14 @@ bool RFindInReadable_Impl(const StringT& aPattern, IteratorT& aSearchStart,
 bool FindInReadable(const nsAString& aPattern,
                     nsAString::const_iterator& aSearchStart,
                     nsAString::const_iterator& aSearchEnd,
-                    const nsStringComparator& aComparator) {
+                    nsStringComparator aComparator) {
   return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
 }
 
 bool FindInReadable(const nsACString& aPattern,
                     nsACString::const_iterator& aSearchStart,
                     nsACString::const_iterator& aSearchEnd,
-                    const nsCStringComparator& aComparator) {
+                    nsCStringComparator aComparator) {
   return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
 }
 
@@ -431,20 +433,20 @@ bool CaseInsensitiveFindInReadable(const nsACString& aPattern,
                                    nsACString::const_iterator& aSearchStart,
                                    nsACString::const_iterator& aSearchEnd) {
   return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd,
-                             nsCaseInsensitiveCStringComparator());
+                             nsCaseInsensitiveCStringComparator);
 }
 
 bool RFindInReadable(const nsAString& aPattern,
                      nsAString::const_iterator& aSearchStart,
                      nsAString::const_iterator& aSearchEnd,
-                     const nsStringComparator& aComparator) {
+                     const nsStringComparator aComparator) {
   return RFindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
 }
 
 bool RFindInReadable(const nsACString& aPattern,
                      nsACString::const_iterator& aSearchStart,
                      nsACString::const_iterator& aSearchEnd,
-                     const nsCStringComparator& aComparator) {
+                     const nsCStringComparator aComparator) {
   return RFindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
 }
 
@@ -488,7 +490,7 @@ bool StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring) {
 }
 
 bool StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring,
-                      const nsStringComparator& aComparator) {
+                      nsStringComparator aComparator) {
   nsAString::size_type src_len = aSource.Length(),
                        sub_len = aSubstring.Length();
   if (sub_len > src_len) {
@@ -507,7 +509,7 @@ bool StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring) {
 }
 
 bool StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring,
-                      const nsCStringComparator& aComparator) {
+                      nsCStringComparator aComparator) {
   nsACString::size_type src_len = aSource.Length(),
                         sub_len = aSubstring.Length();
   if (sub_len > src_len) {
@@ -526,7 +528,7 @@ bool StringEndsWith(const nsAString& aSource, const nsAString& aSubstring) {
 }
 
 bool StringEndsWith(const nsAString& aSource, const nsAString& aSubstring,
-                    const nsStringComparator& aComparator) {
+                    nsStringComparator aComparator) {
   nsAString::size_type src_len = aSource.Length(),
                        sub_len = aSubstring.Length();
   if (sub_len > src_len) {
@@ -546,7 +548,7 @@ bool StringEndsWith(const nsACString& aSource, const nsACString& aSubstring) {
 }
 
 bool StringEndsWith(const nsACString& aSource, const nsACString& aSubstring,
-                    const nsCStringComparator& aComparator) {
+                    nsCStringComparator aComparator) {
   nsACString::size_type src_len = aSource.Length(),
                         sub_len = aSubstring.Length();
   if (sub_len > src_len) {

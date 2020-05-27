@@ -786,9 +786,8 @@ bool nsPACMan::ProcessPending() {
           pacString))) {
     if (query->mFlags & nsIProtocolProxyService::RESOLVE_PREFER_SOCKS_PROXY &&
         query->mFlags & nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY) {
-      const nsCaseInsensitiveUTF8StringComparator comp;
       if (StringBeginsWith(pacString, nsDependentCString(kProxyType_DIRECT),
-                           comp)) {
+                           nsCaseInsensitiveUTF8StringComparator)) {
         // DIRECT indicates that system proxy settings are not configured to use
         // SOCKS proxy. Try https proxy as a secondary preferrable proxy. This
         // is mainly for websocket whose precedence is SOCKS > HTTPS > DIRECT.

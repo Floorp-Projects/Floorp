@@ -2464,7 +2464,7 @@ bool NS_SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI,
     return false;
   }
 
-  if (!targetHost.Equals(sourceHost, nsCaseInsensitiveCStringComparator())) {
+  if (!targetHost.Equals(sourceHost, nsCaseInsensitiveCStringComparator)) {
     return false;
   }
 

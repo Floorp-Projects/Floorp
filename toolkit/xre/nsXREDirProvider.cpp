@@ -1215,12 +1215,12 @@ nsresult nsXREDirProvider::GetLegacyInstallHash(nsAString& aPathHash) {
   if (SUCCEEDED(hres)) {
     nsDependentString strPathX86(pathX86);
     if (!StringBeginsWith(installPath, strPathX86,
-                          nsCaseInsensitiveStringComparator())) {
+                          nsCaseInsensitiveStringComparator)) {
       PWSTR path = nullptr;
       hres = SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, nullptr, &path);
       if (SUCCEEDED(hres)) {
         if (StringBeginsWith(installPath, nsDependentString(path),
-                             nsCaseInsensitiveStringComparator())) {
+                             nsCaseInsensitiveStringComparator)) {
           installPath.Replace(0, wcslen(path), strPathX86);
         }
       }

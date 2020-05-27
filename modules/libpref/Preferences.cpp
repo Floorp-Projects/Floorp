@@ -4254,7 +4254,7 @@ static nsresult pref_LoadPrefsInDir(nsIFile* aDir,
 
     // Skip non-js files.
     if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".js"),
-                       nsCaseInsensitiveCStringComparator())) {
+                       nsCaseInsensitiveCStringComparator)) {
       bool shouldParse = true;
 
       // Separate out special files.

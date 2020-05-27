@@ -632,7 +632,7 @@ nsGlyphTable* nsGlyphTableList::GetGlyphTableFor(const nsACString& aFamily) {
     primaryFontName.AppendToString(primaryFontNameStr);
     // TODO: would be nice to consider StripWhitespace and other aliasing
     if (primaryFontNameStr.Equals(aFamily,
-                                  nsCaseInsensitiveCStringComparator())) {
+                                  nsCaseInsensitiveCStringComparator)) {
       return glyphTable;
     }
   }

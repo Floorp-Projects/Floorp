@@ -2040,7 +2040,7 @@ void HTMLInputElement::MozSetFileNameArray(const Sequence<nsString>& aFileNames,
     nsCOMPtr<nsIFile> file;
 
     if (StringBeginsWith(aFileNames[i], NS_LITERAL_STRING("file:"),
-                         nsASCIICaseInsensitiveStringComparator())) {
+                         nsASCIICaseInsensitiveStringComparator)) {
       // Converts the URL string into the corresponding nsIFile if possible
       // A local file will be created if the URL string begins with file://
       NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(aFileNames[i]),

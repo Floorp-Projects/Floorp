@@ -308,7 +308,7 @@ static bool IsTypelibPreferred() {
   }
 
   return psClsid.Equals(kUniversalMarshalerClsid,
-                        nsCaseInsensitiveStringComparator());
+                        nsCaseInsensitiveStringComparator);
 }
 
 static bool IsIAccessibleTypelibRegistered() {

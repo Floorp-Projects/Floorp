@@ -720,7 +720,6 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
 
   // If we get here, check all the schemes can link to each other, from the top
   // down:
-  nsCaseInsensitiveCStringComparator stringComparator;
   nsCOMPtr<nsIURI> currentURI = sourceURI;
   nsCOMPtr<nsIURI> currentOtherURI = aTargetURI;
 
@@ -735,7 +734,8 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     currentURI->GetScheme(scheme);
     currentOtherURI->GetScheme(otherScheme);
 
-    bool schemesMatch = scheme.Equals(otherScheme, stringComparator);
+    bool schemesMatch =
+        scheme.Equals(otherScheme, nsCaseInsensitiveCStringComparator);
     bool isSamePage = false;
     // about: URIs are special snowflakes.
     if (scheme.EqualsLiteral("about") && schemesMatch) {

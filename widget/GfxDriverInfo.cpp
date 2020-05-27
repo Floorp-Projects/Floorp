@@ -121,7 +121,7 @@ void GfxDeviceFamily::AppendRange(int32_t aBeginDeviceId,
 
 nsresult GfxDeviceFamily::Contains(nsAString& aDeviceId) const {
   for (const auto& id : mIds) {
-    if (id.Equals(aDeviceId, nsCaseInsensitiveStringComparator())) {
+    if (id.Equals(aDeviceId, nsCaseInsensitiveStringComparator)) {
       return NS_OK;
     }
   }

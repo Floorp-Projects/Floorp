@@ -18,33 +18,6 @@
 template <typename T>
 class nsTSubstringTuple;
 
-// The base for string comparators
-template <typename T>
-class nsTStringComparator {
- public:
-  typedef T char_type;
-
-  nsTStringComparator() = default;
-
-  virtual int operator()(const char_type*, const char_type*, uint32_t,
-                         uint32_t) const = 0;
-};
-
-// The default string comparator (case-sensitive comparision)
-template <typename T>
-class nsTDefaultStringComparator : public nsTStringComparator<T> {
- public:
-  typedef T char_type;
-
-  nsTDefaultStringComparator() = default;
-
-  virtual int operator()(const char_type*, const char_type*, uint32_t,
-                         uint32_t) const override;
-};
-
-extern template class nsTDefaultStringComparator<char>;
-extern template class nsTDefaultStringComparator<char16_t>;
-
 namespace mozilla {
 
 // This is mainly intended to be used in the context of nsTStrings where
@@ -202,15 +175,15 @@ class nsTStringRepr {
 
   // Equality.
   bool NS_FASTCALL Equals(const self_type&) const;
-  bool NS_FASTCALL Equals(const self_type&, const comparator_type&) const;
+  bool NS_FASTCALL Equals(const self_type&, comparator_type) const;
 
   bool NS_FASTCALL Equals(const substring_tuple_type& aTuple) const;
   bool NS_FASTCALL Equals(const substring_tuple_type& aTuple,
-                          const comparator_type& aComp) const;
+                          comparator_type) const;
 
   bool NS_FASTCALL Equals(const char_type* aData) const;
   bool NS_FASTCALL Equals(const char_type* aData,
-                          const comparator_type& aComp) const;
+                          comparator_type) const;
 
   /**
    * Compares a given string to this string.
@@ -248,7 +221,7 @@ class nsTStringRepr {
   }
   template <typename Q = T, typename EnableIfChar16 = Char16OnlyT<Q>>
   bool NS_FASTCALL Equals(char16ptr_t aData,
-                          const comparator_type& aComp) const {
+                          comparator_type) const {
     return Equals(static_cast<const char16_t*>(aData), aComp);
   }
 #endif
@@ -346,20 +319,18 @@ extern template class nsTStringRepr<char16_t>;
 }  // namespace mozilla
 
 template <typename T>
-int NS_FASTCALL
-Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
-        const mozilla::detail::nsTStringRepr<T>& aRhs,
-        const nsTStringComparator<T>& = nsTDefaultStringComparator<T>());
+int NS_FASTCALL Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
+                        const mozilla::detail::nsTStringRepr<T>& aRhs,
+                        nsTStringComparator<T> = nsTDefaultStringComparator<T>);
 
-extern template int NS_FASTCALL
-Compare<char>(const mozilla::detail::nsTStringRepr<char>&,
-              const mozilla::detail::nsTStringRepr<char>&,
-              const nsTStringComparator<char>&);
+extern template int NS_FASTCALL Compare<char>(
+    const mozilla::detail::nsTStringRepr<char>&,
+    const mozilla::detail::nsTStringRepr<char>&, nsTStringComparator<char>);
 
 extern template int NS_FASTCALL
 Compare<char16_t>(const mozilla::detail::nsTStringRepr<char16_t>&,
                   const mozilla::detail::nsTStringRepr<char16_t>&,
-                  const nsTStringComparator<char16_t>&);
+                  nsTStringComparator<char16_t>);
 
 template <typename T>
 inline constexpr bool operator!=(

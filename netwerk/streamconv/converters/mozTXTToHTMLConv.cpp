@@ -20,6 +20,8 @@
 #endif
 
 using mozilla::IsAscii;
+using mozilla::IsAsciiAlpha;
+using mozilla::IsAsciiDigit;
 
 const double growthRate = 1.2;
 
@@ -568,7 +570,7 @@ bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
       !Substring(Substring(aInString, aInString + aInLength), ignoreLen,
                  aRepLen)
            .Equals(Substring(rep, rep + aRepLen),
-                   nsCaseInsensitiveStringComparator()))
+                   nsCaseInsensitiveStringComparator))
     return false;
 
   return true;
@@ -931,7 +933,7 @@ int32_t mozTXTToHTMLConv::CiteLevelTXT(const char16_t* line,
       uint32_t minlength = std::min(uint32_t(6), NS_strlen(indexString));
       if (Substring(indexString, indexString + minlength)
               .Equals(Substring(NS_LITERAL_STRING(">From "), 0, minlength),
-                      nsCaseInsensitiveStringComparator()))
+                      nsCaseInsensitiveStringComparator))
         // XXX RFC2646
         moreCites = false;
       else {
