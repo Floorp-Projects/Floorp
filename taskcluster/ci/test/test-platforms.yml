@@ -38,6 +38,7 @@ linux1804-64/debug:
     build-platform: linux64/debug
     test-sets:
         - linux1804-tests
+        - mochitest-webgpu
         - web-platform-tests
 
 linux1804-64-shippable/opt:
@@ -48,6 +49,7 @@ linux1804-64-shippable/opt:
         - linux1804-tests
         - marionette-headless
         - mochitest-headless
+        - mochitest-webgpu
         - web-platform-tests
         - web-platform-tests-wdspec-headless
 
@@ -62,6 +64,7 @@ linux1804-64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - linux1804-tests
+        - mochitest-webgpu
         - web-platform-tests
 
 linux1804-64-tsan/opt:
@@ -81,12 +84,14 @@ linux1804-64-shippable-qr/opt:
     test-sets:
         - awsy
         - linux1804-qr-tests
+        - mochitest-webgpu
         - web-platform-tests
 
 linux1804-64-qr/debug:
     build-platform: linux64/debug
     test-sets:
         - linux1804-qr-tests
+        - mochitest-webgpu
         - web-platform-tests
 
 linux1804-64-asan-qr/opt:
@@ -101,6 +106,7 @@ linux1804-64-ccov/opt:
         - linux1804-tests
         - web-platform-tests
         - ccov-code-coverage-tests
+        - mochitest-webgpu
 
 # Linux64 uses Ubuntu 16.04 and is run on hardware
 
@@ -160,6 +166,7 @@ windows7-32/debug:
         - windows-reftest-gpu
         - windows-tests
         - web-platform-tests
+        - mochitest-webgpu
 
 windows7-32/opt:
     build-platform: win32/opt
@@ -187,6 +194,7 @@ windows7-32-shippable/opt:
         - raptor-chromium
         - raptor-firefox
         - browsertime
+        - mochitest-webgpu
 
 windows7-32-devedition/opt:
     build-platform: win32-devedition/opt
@@ -195,6 +203,7 @@ windows7-32-devedition/opt:
         - windows-reftest-gpu
         - windows-tests
         - web-platform-tests
+        - mochitest-webgpu
 
 # win64
 windows10-64-ccov/opt:
@@ -208,11 +217,13 @@ windows10-64-ccov/opt:
         - windows-tests
         - web-platform-tests
         - ccov-code-coverage-tests
+        - mochitest-webgpu
 
 windows10-64/debug:
     build-platform: win64/debug
     test-sets:
         - marionette-gpu-tests
+        - mochitest-webgpu
         - windows-tests
         - web-platform-tests
 
@@ -256,6 +267,7 @@ windows10-64-shippable/opt:
         - browsertime
         - raptor-profiling
         - talos-profiling
+        - mochitest-webgpu
 
 windows10-64-devedition/opt:
     build-platform: win64-devedition/opt
@@ -264,16 +276,19 @@ windows10-64-devedition/opt:
         - marionette-gpu-tests
         - windows-tests
         - web-platform-tests
+        - mochitest-webgpu
 
 windows10-64-asan/opt:
     build-platform: win64-asan/opt
     test-sets:
         - windows-tests
+        - mochitest-webgpu
 
 # QR builds just run a subset right now.
 windows10-64-qr/debug:
     build-platform: win64/debug
     test-sets:
+        - mochitest-webgpu
         - windows-qr-tests
         - web-platform-tests
 
@@ -296,6 +311,7 @@ windows10-64-shippable-qr/opt:
         - raptor-firefox
         - browsertime
         - web-platform-tests
+        - mochitest-webgpu
 
 windows10-64-mingwclang/debug:
     build-platform: win64-mingwclang/debug

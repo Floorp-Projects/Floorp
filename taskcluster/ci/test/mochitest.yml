@@ -269,7 +269,7 @@ mochitest-media:
     run-on-projects:
         by-test-platform:
             android-hw-.*(?<!-shippable)/opt: []
-            android-hw-.*-api-16/(?:debug|pgo)?: [trunk', 'mozilla-beta', 'mozilla-release']
+            android-hw-.*-api-16/(?:debug|pgo)?: ['trunk', 'mozilla-beta', 'mozilla-release']
             android-hw-.*-api-16-shippable/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
             windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             default: built-projects
