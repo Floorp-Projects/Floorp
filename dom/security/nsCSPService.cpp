@@ -20,6 +20,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsNetUtil.h"
 #include "mozilla/net/DocumentLoadListener.h"
+#include "mozilla/net/DocumentChannel.h"
 
 using namespace mozilla;
 
@@ -249,6 +250,16 @@ CSPService::AsyncOnChannelRedirect(nsIChannel* oldChannel,
     if (parentChannel && !docListener) {
       return NS_OK;
     }
+  }
+
+  // Don't do these checks if we're switching from DocumentChannel
+  // to a real channel. In that case, we should already have done
+  // the checks in the parent process. AsyncOnChannelRedirect
+  // isn't called in the content process if we switch process,
+  // so checking here would just hide bugs in the process switch
+  // cases.
+  if (RefPtr<net::DocumentChannel> docChannel = do_QueryObject(oldChannel)) {
+    return NS_OK;
   }
 
   nsCOMPtr<nsIURI> newUri;
