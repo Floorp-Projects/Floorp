@@ -26,6 +26,9 @@ web-platform-tests:
 web-platform-tests-wdspec-headless:
     - web-platform-tests-wdspec-headless
 
+mochitest-webgpu:
+    - mochitest-webgpu
+
 talos:
     - talos-bcv
     - talos-chrome
@@ -370,7 +373,6 @@ linux1804-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    - mochitest-webgpu
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
@@ -396,7 +398,6 @@ linux1804-qr-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    - mochitest-webgpu
     - reftest
     - xpcshell
 
@@ -418,7 +419,6 @@ windows-qr-tests:
     - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl2-core
-    - mochitest-webgpu
     - reftest
 
 windows-reftest-gpu:
@@ -446,7 +446,6 @@ windows-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    - mochitest-webgpu
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
