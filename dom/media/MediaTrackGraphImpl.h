@@ -329,17 +329,6 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
       dom::AudioContextOperation aOperation,
       MozPromiseHolder<AudioContextOperationPromise>&& aHolder);
 
-  /**
-   * Increment suspend count on aTrack and move it to mSuspendedTracks if
-   * necessary.
-   */
-  void IncrementSuspendCount(MediaTrack* aTrack);
-  /**
-   * Increment suspend count on aTrack and move it to mTracks if
-   * necessary.
-   */
-  void DecrementSuspendCount(MediaTrack* aTrack);
-
   /*
    * Move tracks from mTracks to mSuspendedTracks if suspending/closing an
    * AudioContext, or the inverse when resuming an AudioContext.

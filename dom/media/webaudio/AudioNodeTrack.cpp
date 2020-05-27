@@ -348,7 +348,7 @@ class AudioNodeTrack::AdvanceAndResumeMessage final : public ControlMessage {
     auto ns = static_cast<AudioNodeTrack*>(mTrack);
     ns->mStartTime -= mAdvance;
     ns->mSegment->AppendNullData(mAdvance);
-    ns->GraphImpl()->DecrementSuspendCount(mTrack);
+    ns->DecrementSuspendCount();
   }
 
  private:
@@ -623,7 +623,7 @@ void AudioNodeTrack::SetActive() {
 
   mIsActive = true;
   if (!(mFlags & EXTERNAL_OUTPUT)) {
-    GraphImpl()->DecrementSuspendCount(this);
+    DecrementSuspendCount();
   }
   if (IsAudioParamTrack()) {
     // Consumers merely influence track order.
@@ -671,7 +671,7 @@ void AudioNodeTrack::CheckForInactive() {
     chunk.SetNull(WEBAUDIO_BLOCK_SIZE);
   }
   if (!(mFlags & EXTERNAL_OUTPUT)) {
-    GraphImpl()->IncrementSuspendCount(this);
+    IncrementSuspendCount();
   }
   if (IsAudioParamTrack()) {
     return;
