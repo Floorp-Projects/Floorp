@@ -322,12 +322,6 @@ const featureDescriptions = [
     recommended: true,
   },
   {
-    name: "Responsiveness",
-    value: "responsiveness",
-    title: "Collect thread responsiveness information.",
-    recommended: true,
-  },
-  {
     name: "Java",
     value: "java",
     title: "Profile Java code",
@@ -354,6 +348,7 @@ const featureDescriptions = [
     name: "Privacy",
     value: "privacy",
     title: "Remove some potentially user-identifiable information.",
+    experimental: true,
   },
   {
     name: "Sequential Styling",
@@ -364,11 +359,13 @@ const featureDescriptions = [
     name: "JIT Optimizations",
     value: "trackopts",
     title: "Track JIT optimizations in the JS engine.",
+    experimental: true,
   },
   {
     name: "TaskTracer",
     value: "tasktracer",
-    title: "Enable TaskTracer (Experimental.)",
+    title: "Enable TaskTracer",
+    experimental: true,
     disabledReason:
       "TaskTracer requires a custom build with the environment variable MOZ_TASK_TRACER set.",
   },
@@ -380,7 +377,8 @@ const featureDescriptions = [
   {
     name: "JSTracer",
     value: "jstracer",
-    title: "Trace JS engine (Experimental.)",
+    title: "Trace JS engine",
+    experimental: true,
     disabledReason:
       "JS Tracer is currently disabled due to crashes. See Bug 1565788.",
   },
@@ -397,12 +395,12 @@ const featureDescriptions = [
   {
     name: "JS Allocations",
     value: "jsallocations",
-    title: "Track JavaScript allocations (Experimental.)",
+    title: "Track JavaScript allocations",
   },
   {
     name: "Native Allocations",
     value: "nativeallocations",
-    title: "Track native allocations (Experimental.)",
+    title: "Track native allocations",
   },
 ];
 
