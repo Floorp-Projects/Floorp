@@ -132,7 +132,7 @@ enum CheckboxValue {
     // If the EXPANDED state is updated, fire AXMenu events on the
     // popups child which is the actual menu.
     if (mozAccessible* popup = (mozAccessible*)[self childAt:0]) {
-      [popup postNotification:(enabled ? @"AXMenuOpened" : @"AXMenuClosed")];
+      [popup moxPostNotification:(enabled ? @"AXMenuOpened" : @"AXMenuClosed")];
     }
   }
 }
@@ -288,7 +288,7 @@ enum CheckboxValue {
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
-      [self postNotification:NSAccessibilityValueChangedNotification];
+      [self moxPostNotification:NSAccessibilityValueChangedNotification];
       break;
     default:
       [super handleAccessibleEvent:eventType];
