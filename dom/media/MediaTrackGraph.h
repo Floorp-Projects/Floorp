@@ -482,8 +482,16 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   bool IsSuspended() const { return mSuspendedCount > 0; }
+  /**
+   * Increment suspend count and move it to mGraph->mSuspendedTracks if
+   * necessary.  Graph thread.
+   */
   void IncrementSuspendCount();
-  void DecrementSuspendCount();
+  /**
+   * Increment suspend count on aTrack and move it to mGraph->mTracks if
+   * necessary.  GraphThread.
+   */
+  virtual void DecrementSuspendCount();
 
  protected:
   // Called on graph thread before handing control to the main thread to
@@ -922,6 +930,7 @@ class ProcessedMediaTrack : public MediaTrack {
   void InputSuspended(MediaInputPort* aPort);
   void InputResumed(MediaInputPort* aPort);
   void DestroyImpl() override;
+  void DecrementSuspendCount() override;
   /**
    * This gets called after we've computed the blocking states for all
    * tracks (mBlocked is up to date up to mStateComputedTime).
