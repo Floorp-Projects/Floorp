@@ -86,7 +86,7 @@ void ClientWebGLContext::GetExtension(JSContext* cx, const nsAString& wideName,
   // step 1: figure what extension is wanted
   for (const auto extension : MakeEnumeratedRange(WebGLExtensionID::Max)) {
     const auto& curName = GetExtensionName(extension);
-    if (name.Equals(curName, nsCaseInsensitiveCStringComparator())) {
+    if (name.Equals(curName, nsCaseInsensitiveCStringComparator)) {
       ext = extension;
       break;
     }

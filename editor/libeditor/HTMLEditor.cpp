@@ -3952,7 +3952,7 @@ bool HTMLEditor::IsTextPropertySetByContent(nsINode* aNode, nsAtom* aProperty,
       if (!aValue) {
         return true;
       }
-      if (aValue->Equals(value, nsCaseInsensitiveStringComparator())) {
+      if (aValue->Equals(value, nsCaseInsensitiveStringComparator)) {
         return true;
       }
       // We found the prop with the attribute, but the value doesn't match.

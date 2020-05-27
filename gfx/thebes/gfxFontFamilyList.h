@@ -304,7 +304,7 @@ class FontFamilyList {
         continue;
       }
       nsDependentAtomString listname(name.mName);
-      if (listname.Equals(aFamilyName, nsCaseInsensitiveStringComparator())) {
+      if (listname.Equals(aFamilyName, nsCaseInsensitiveStringComparator)) {
         return true;
       }
     }

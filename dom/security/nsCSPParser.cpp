@@ -559,7 +559,7 @@ nsCSPNonceSrc* nsCSPParser::nonceSource() {
   // Check if mCurToken begins with "'nonce-" and ends with "'"
   if (!StringBeginsWith(mCurToken,
                         nsDependentString(CSP_EnumToUTF16Keyword(CSP_NONCE)),
-                        nsASCIICaseInsensitiveStringComparator()) ||
+                        nsASCIICaseInsensitiveStringComparator) ||
       mCurToken.Last() != SINGLEQUOTE) {
     return nullptr;
   }

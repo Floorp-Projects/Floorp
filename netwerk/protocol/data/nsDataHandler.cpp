@@ -133,12 +133,11 @@ nsDataHandler::AllowPort(int32_t port, const char* scheme, bool* _retval) {
  */
 static bool FindOffsetOf(const nsACString& aPattern, const nsACString& aSrc,
                          nsACString::size_type& aOffset) {
-  static const nsCaseInsensitiveCStringComparator kComparator;
-
   nsACString::const_iterator begin, end;
   aSrc.BeginReading(begin);
   aSrc.EndReading(end);
-  if (!RFindInReadable(aPattern, begin, end, kComparator)) {
+  if (!RFindInReadable(aPattern, begin, end,
+                       nsCaseInsensitiveCStringComparator)) {
     return false;
   }
 
@@ -219,8 +218,7 @@ nsresult nsDataHandler::ParsePathWithoutRef(
     }
 
     // Everything else is content type.
-    UniquePtr<CMimeType> parsed = CMimeType::Parse(mediaType);
-    if (parsed) {
+    if (mozilla::UniquePtr<CMimeType> parsed = CMimeType::Parse(mediaType)) {
       parsed->GetFullType(aContentType);
       if (aContentCharset) {
         parsed->GetParameterValue(kCharset, *aContentCharset);

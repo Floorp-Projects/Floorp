@@ -436,7 +436,8 @@ bool AppendUnicodeTo(const nsScannerIterator& aSrcStart,
 bool AppendUnicodeTo(const nsScannerIterator& aSrcStart,
                      const nsScannerIterator& aSrcEnd, nsAString& aDest) {
   const nsAString::size_type oldLength = aDest.Length();
-  CheckedInt<nsAString::size_type> newLen(Distance(aSrcStart, aSrcEnd));
+  mozilla::CheckedInt<nsAString::size_type> newLen(
+      Distance(aSrcStart, aSrcEnd));
   newLen += oldLength;
   if (!newLen.isValid()) {
     return false;  // overflow detected
@@ -476,7 +477,7 @@ bool FindCharInReadable(char16_t aChar, nsScannerIterator& aSearchStart,
 
 bool FindInReadable(const nsAString& aPattern, nsScannerIterator& aSearchStart,
                     nsScannerIterator& aSearchEnd,
-                    const nsStringComparator& compare) {
+                    const nsStringComparator compare) {
   bool found_it = false;
 
   // only bother searching at all if we're given a non-empty range to search
@@ -548,7 +549,7 @@ bool FindInReadable(const nsAString& aPattern, nsScannerIterator& aSearchStart,
  */
 bool RFindInReadable(const nsAString& aPattern, nsScannerIterator& aSearchStart,
                      nsScannerIterator& aSearchEnd,
-                     const nsStringComparator& aComparator) {
+                     const nsStringComparator aComparator) {
   bool found_it = false;
 
   nsScannerIterator savedSearchEnd(aSearchEnd);

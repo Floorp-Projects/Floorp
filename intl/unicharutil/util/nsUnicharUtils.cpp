@@ -193,23 +193,23 @@ void ToNaked(nsAString& aString) {
   }
 }
 
-int32_t nsCaseInsensitiveStringComparator::operator()(const char16_t* lhs,
-                                                      const char16_t* rhs,
-                                                      uint32_t lLength,
-                                                      uint32_t rLength) const {
+int32_t nsCaseInsensitiveStringComparator(const char16_t* lhs,
+                                          const char16_t* rhs, uint32_t lLength,
+                                          uint32_t rLength) {
   return (lLength == rLength) ? CaseInsensitiveCompare(lhs, rhs, lLength)
                               : (lLength > rLength) ? 1 : -1;
 }
 
-int32_t nsCaseInsensitiveUTF8StringComparator::operator()(
-    const char* lhs, const char* rhs, uint32_t lLength,
-    uint32_t rLength) const {
+int32_t nsCaseInsensitiveUTF8StringComparator(const char* lhs, const char* rhs,
+                                              uint32_t lLength,
+                                              uint32_t rLength) {
   return CaseInsensitiveCompare(lhs, rhs, lLength, rLength);
 }
 
-int32_t nsASCIICaseInsensitiveStringComparator::operator()(
-    const char16_t* lhs, const char16_t* rhs, uint32_t lLength,
-    uint32_t rLength) const {
+int32_t nsASCIICaseInsensitiveStringComparator(const char16_t* lhs,
+                                               const char16_t* rhs,
+                                               uint32_t lLength,
+                                               uint32_t rLength) {
   if (lLength != rLength) {
     if (lLength > rLength) return 1;
     return -1;

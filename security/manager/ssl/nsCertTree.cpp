@@ -1153,7 +1153,7 @@ int32_t nsCertTree::CmpByCrit(nsIX509Cert* a, CompareCacheHashEntry* ace,
 
   int32_t result;
   if (!str_a.IsVoid() && !str_b.IsVoid())
-    result = Compare(str_a, str_b, nsCaseInsensitiveStringComparator());
+    result = Compare(str_a, str_b, nsCaseInsensitiveStringComparator);
   else
     result = str_a.IsVoid() ? (str_b.IsVoid() ? 0 : -1) : 1;
 

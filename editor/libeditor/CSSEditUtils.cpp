@@ -1060,10 +1060,10 @@ bool CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
             htmlColor.Append(char16_t(')'));
           }
 
-          isSet = htmlColor.Equals(aValue, nsCaseInsensitiveStringComparator());
+          isSet = htmlColor.Equals(aValue, nsCaseInsensitiveStringComparator);
         } else {
-          isSet = htmlValueString.Equals(aValue,
-                                         nsCaseInsensitiveStringComparator());
+          isSet =
+              htmlValueString.Equals(aValue, nsCaseInsensitiveStringComparator);
         }
       }
     } else if (nsGkAtoms::tt == aHTMLProperty) {
@@ -1077,7 +1077,7 @@ bool CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
         nsAutoString valueStringNorm(aValue);
         valueStringNorm.ReplaceSubstring(commaSpace, comma);
         isSet = htmlValueString.Equals(valueStringNorm,
-                                       nsCaseInsensitiveStringComparator());
+                                       nsCaseInsensitiveStringComparator);
       } else {
         isSet = true;
       }
@@ -1089,7 +1089,7 @@ bool CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
     }
 
     if (!htmlValueString.IsEmpty() &&
-        htmlValueString.Equals(aValue, nsCaseInsensitiveStringComparator())) {
+        htmlValueString.Equals(aValue, nsCaseInsensitiveStringComparator)) {
       isSet = true;
     }
 

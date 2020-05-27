@@ -61,7 +61,7 @@ bool SVGTests::IsConditionalProcessingAttribute(
 
 int32_t SVGTests::GetBestLanguagePreferenceRank(
     const nsAString& aAcceptLangs) const {
-  const nsCaseInsensitiveStringComparator caseInsensitiveComparator;
+  auto caseInsensitiveComparator = nsCaseInsensitiveStringComparator;
 
   if (!mStringListAttributes[LANGUAGE].IsExplicitlySet()) {
     return -2;
@@ -147,14 +147,12 @@ bool SVGTests::PassesConditionalProcessingTests(
       return false;
     }
 
-    const nsCaseInsensitiveStringComparator caseInsensitiveComparator;
-
     for (uint32_t i = 0; i < mStringListAttributes[LANGUAGE].Length(); i++) {
       nsCharSeparatedTokenizer languageTokenizer(acceptLangs, ',');
       while (languageTokenizer.hasMoreTokens()) {
         if (nsStyleUtil::DashMatchCompare(mStringListAttributes[LANGUAGE][i],
                                           languageTokenizer.nextToken(),
-                                          caseInsensitiveComparator)) {
+                                          nsCaseInsensitiveStringComparator)) {
           return true;
         }
       }

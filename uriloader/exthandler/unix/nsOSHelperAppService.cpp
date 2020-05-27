@@ -358,7 +358,7 @@ nsresult nsOSHelperAppService::GetTypeAndDescriptionFromMimetypesFile(
             FindCharInReadable(',', iter, end);
             if (Substring(start, iter)
                     .Equals(aFileExtension,
-                            nsCaseInsensitiveStringComparator())) {
+                            nsCaseInsensitiveStringComparator)) {
               // it's a match.  Assign the type and description and run
               aMajorType.Assign(Substring(majorTypeStart, majorTypeEnd));
               aMinorType.Assign(Substring(minorTypeStart, minorTypeEnd));
@@ -500,9 +500,9 @@ nsresult nsOSHelperAppService::GetExtensionsAndDescriptionFromMimetypesFile(
 
         if (NS_SUCCEEDED(rv) &&
             Substring(majorTypeStart, majorTypeEnd)
-                .Equals(aMajorType, nsCaseInsensitiveStringComparator()) &&
+                .Equals(aMajorType, nsCaseInsensitiveStringComparator) &&
             Substring(minorTypeStart, minorTypeEnd)
-                .Equals(aMinorType, nsCaseInsensitiveStringComparator())) {
+                .Equals(aMinorType, nsCaseInsensitiveStringComparator)) {
           // it's a match
           aFileExtensions.Assign(extensions);
           aDescription.Assign(Substring(descriptionStart, descriptionEnd));
@@ -883,11 +883,10 @@ nsresult nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(
                              minorTypeStart, minorTypeEnd, semicolon_iter);
           if (NS_SUCCEEDED(rv) &&
               Substring(majorTypeStart, majorTypeEnd)
-                  .Equals(aMajorType, nsCaseInsensitiveStringComparator()) &&
+                  .Equals(aMajorType, nsCaseInsensitiveStringComparator) &&
               Substring(minorTypeStart, minorTypeEnd)
-                  .Equals(aMinorType,
-                          nsCaseInsensitiveStringComparator())) {  // we have a
-                                                                   // match
+                  .Equals(aMinorType, nsCaseInsensitiveStringComparator)) {
+            // we have a match
             bool match = true;
             ++semicolon_iter;  // point at the first char past the semicolon
             start_iter = semicolon_iter;  // handler string starts here

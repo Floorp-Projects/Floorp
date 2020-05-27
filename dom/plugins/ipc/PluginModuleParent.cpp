@@ -2035,7 +2035,7 @@ class nsCaseInsensitiveUTF8StringArrayComparator {
  public:
   template <class A, class B>
   bool Equals(const A& a, const B& b) const {
-    return a.Equals(b.get(), nsCaseInsensitiveUTF8StringComparator());
+    return a.Equals(b.get(), nsCaseInsensitiveUTF8StringComparator);
   }
 };
 

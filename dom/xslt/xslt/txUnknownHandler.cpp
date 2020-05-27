@@ -136,7 +136,7 @@ nsresult txUnknownHandler::startElement(nsAtom* aPrefix,
 
     bool htmlRoot = aNsID == kNameSpaceID_None && !aPrefix &&
                     aLocalName.Equals(NS_LITERAL_STRING("html"),
-                                      txCaseInsensitiveStringComparator());
+                                      nsCaseInsensitiveStringComparator);
     nsresult rv = createHandlerAndFlush(htmlRoot, aLocalName, aNsID);
     NS_ENSURE_SUCCESS(rv, rv);
   }

@@ -716,7 +716,7 @@ bool Gecko_MatchLang(const Element* aElement, nsAtom* aOverrideLang,
   if (auto* language = aHasOverrideLang ? aOverrideLang : aElement->GetLang()) {
     return nsStyleUtil::DashMatchCompare(
         nsDependentAtomString(language), nsDependentString(aValue),
-        nsASCIICaseInsensitiveStringComparator());
+        nsASCIICaseInsensitiveStringComparator);
   }
 
   // Try to get the language from the HTTP header or if this
@@ -729,8 +729,8 @@ bool Gecko_MatchLang(const Element* aElement, nsAtom* aOverrideLang,
   nsDependentString langString(aValue);
   language.StripWhitespace();
   for (auto const& lang : language.Split(char16_t(','))) {
-    if (nsStyleUtil::DashMatchCompare(
-            lang, langString, nsASCIICaseInsensitiveStringComparator())) {
+    if (nsStyleUtil::DashMatchCompare(lang, langString,
+                                      nsASCIICaseInsensitiveStringComparator)) {
       return true;
     }
   }
@@ -836,14 +836,10 @@ static bool AttrEquals(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
   return DoMatch(aElement, aNS, aName, match);
 }
 
-#define WITH_COMPARATOR(ignore_case_, c_, expr_)     \
-  if (ignore_case_) {                                \
-    const nsASCIICaseInsensitiveStringComparator c_; \
-    return expr_;                                    \
-  } else {                                           \
-    const nsDefaultStringComparator c_;              \
-    return expr_;                                    \
-  }
+#define WITH_COMPARATOR(ignore_case_, c_, expr_)                  \
+  auto c_ = ignore_case_ ? nsASCIICaseInsensitiveStringComparator \
+                         : nsTDefaultStringComparator<char16_t>;  \
+  return expr_;
 
 template <typename Implementor>
 static bool AttrDashEquals(Implementor* aElement, nsAtom* aNS, nsAtom* aName,

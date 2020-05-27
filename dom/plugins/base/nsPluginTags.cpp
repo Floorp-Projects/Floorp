@@ -60,7 +60,7 @@ static bool ExtensionInList(const nsCString& aExtensionList,
   nsCCharSeparatedTokenizer extensions(aExtensionList, ',');
   while (extensions.hasMoreTokens()) {
     const nsACString& extension = extensions.nextToken();
-    if (extension.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
+    if (extension.Equals(aExtension, nsCaseInsensitiveCStringComparator)) {
       return true;
     }
   }
