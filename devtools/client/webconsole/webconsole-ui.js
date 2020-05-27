@@ -197,7 +197,7 @@ class WebConsoleUI {
 
     // TODO: Re-enable as part of Bug 1627167.
     // const resourceWatcher = this.hud.resourceWatcher;
-    // resourceWatcher.unwatch(
+    // resourceWatcher.unwatchResources(
     //   [resourceWatcher.TYPES.CONSOLE_MESSAGES],
     //   this._onResourceAvailable
     // );
@@ -332,7 +332,7 @@ class WebConsoleUI {
     );
 
     const resourceWatcher = this.hud.resourceWatcher;
-    await resourceWatcher.watch(
+    await resourceWatcher.watchResources(
       [
         resourceWatcher.TYPES.CONSOLE_MESSAGES,
         resourceWatcher.TYPES.ERROR_MESSAGES,

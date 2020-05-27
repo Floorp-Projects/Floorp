@@ -68,7 +68,7 @@ class ResourceWatcher {
    *                                  If set to true, onAvailable won't be called with
    *                                  existing resources.
    */
-  async watch(resources, options) {
+  async watchResources(resources, options) {
     const { ignoreExistingResources = false } = options;
 
     // First ensuring enabling listening to targets.
@@ -93,9 +93,9 @@ class ResourceWatcher {
 
   /**
    * Stop watching for given type of resources.
-   * See `watch` for the arguments as both methods receive the same.
+   * See `watchResources` for the arguments as both methods receive the same.
    */
-  unwatch(resources, options) {
+  unwatchResources(resources, options) {
     const { onAvailable, onDestroyed } = options;
 
     for (const resource of resources) {
@@ -262,7 +262,7 @@ class ResourceWatcher {
 
       throw new Error(
         `The ResourceWatcher is already listening to "${resourceType}", ` +
-          "the client should call `watch` only once per resource type."
+          "the client should call `watchResources` only once per resource type."
       );
     }
 

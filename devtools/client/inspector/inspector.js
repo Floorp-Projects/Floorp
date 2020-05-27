@@ -201,7 +201,7 @@ Inspector.prototype = {
       this._onTargetDestroyed
     );
 
-    await this.toolbox.resourceWatcher.watch(
+    await this.toolbox.resourceWatcher.watchResources(
       [this.toolbox.resourceWatcher.TYPES.ROOT_NODE],
       { onAvailable: this.onResourceAvailable }
     );
