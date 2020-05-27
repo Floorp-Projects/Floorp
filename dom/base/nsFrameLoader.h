@@ -465,6 +465,10 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   bool EnsureBrowsingContextAttached();
 
+  // Invoke the callback from nsOpenWindowInfo to indicate that a
+  // browsing context for a newly opened tab/window is ready.
+  void InvokeBrowsingContextReadyCallback();
+
   RefPtr<mozilla::dom::BrowsingContext> mPendingBrowsingContext;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;

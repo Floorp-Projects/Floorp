@@ -41,3 +41,33 @@ const OriginAttributes& nsOpenWindowInfo::GetOriginAttributes() {
 BrowserParent* nsOpenWindowInfo::GetNextRemoteBrowser() {
   return mNextRemoteBrowser;
 }
+
+nsIBrowsingContextReadyCallback*
+nsOpenWindowInfo::BrowsingContextReadyCallback() {
+  return mBrowsingContextReadyCallback;
+}
+
+NS_IMPL_ISUPPORTS(nsBrowsingContextReadyCallback,
+                  nsIBrowsingContextReadyCallback)
+
+nsBrowsingContextReadyCallback::nsBrowsingContextReadyCallback(
+    RefPtr<BrowsingContextCallbackReceivedPromise::Private> aPromise)
+    : mPromise(std::move(aPromise)) {}
+
+nsBrowsingContextReadyCallback::~nsBrowsingContextReadyCallback() {
+  if (mPromise) {
+    mPromise->Reject(NS_ERROR_FAILURE, __func__);
+  }
+  mPromise = nullptr;
+}
+
+NS_IMETHODIMP nsBrowsingContextReadyCallback::BrowsingContextReady(
+    BrowsingContext* aBC) {
+  if (aBC) {
+    mPromise->Resolve(aBC, __func__);
+  } else {
+    mPromise->Reject(NS_ERROR_FAILURE, __func__);
+  }
+  mPromise = nullptr;
+  return NS_OK;
+}
