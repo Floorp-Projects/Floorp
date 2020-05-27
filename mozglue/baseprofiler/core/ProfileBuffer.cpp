@@ -203,18 +203,10 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
 
   const char* label = aFrame.label();
   const char* dynamicString = aFrame.dynamicString();
-  bool isChromeJSEntry = false;
   Maybe<uint32_t> line;
   Maybe<uint32_t> column;
 
   MOZ_ASSERT(aFrame.isLabelFrame());
-
-  if (dynamicString) {
-    // Adjust the dynamic string as necessary.
-    if (ProfilerFeature::HasPrivacy(mFeatures) && !isChromeJSEntry) {
-      dynamicString = "(private)";
-    }
-  }
 
   mBuf.CollectCodeLocation(label, dynamicString, aFrame.flags(),
                            aFrame.realmID(), line, column,

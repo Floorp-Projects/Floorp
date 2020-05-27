@@ -188,9 +188,8 @@ class ProfileBuffer final {
  */
 class ProfileBufferCollector final : public ProfilerStackCollector {
  public:
-  ProfileBufferCollector(ProfileBuffer& aBuf, uint32_t aFeatures,
-                         uint64_t aSamplePos)
-      : mBuf(aBuf), mSamplePositionInBuffer(aSamplePos), mFeatures(aFeatures) {}
+  ProfileBufferCollector(ProfileBuffer& aBuf, uint64_t aSamplePos)
+      : mBuf(aBuf), mSamplePositionInBuffer(aSamplePos) {}
 
   mozilla::Maybe<uint64_t> SamplePositionInBuffer() override {
     return mozilla::Some(mSamplePositionInBuffer);
@@ -209,7 +208,6 @@ class ProfileBufferCollector final : public ProfilerStackCollector {
  private:
   ProfileBuffer& mBuf;
   uint64_t mSamplePositionInBuffer;
-  uint32_t mFeatures;
 };
 
 #endif
