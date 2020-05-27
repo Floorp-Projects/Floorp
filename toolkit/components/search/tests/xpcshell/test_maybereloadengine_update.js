@@ -8,44 +8,27 @@ const SEARCH_SERVICE_TOPIC = "browser-search-service";
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
   await useTestEngines("data", "geolookup-extensions");
-  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
 });
 
 add_task(async function test_maybereloadengine_update() {
-  let reloadObserved = false;
-  let obs = (subject, topic, data) => {
-    if (data == "engines-reloaded") {
-      reloadObserved = true;
-    }
-  };
-  Services.obs.addObserver(obs, SEARCH_SERVICE_TOPIC);
+  await Services.search.init();
 
-  let initPromise = Services.search.init(false);
+  let defaultEngine = await Services.search.getDefault();
+  Assert.equal(
+    defaultEngine._shortName,
+    "multilocale-an",
+    "Should have update to the new engine with the same name"
+  );
 
-  async function cont(requests) {
-    await Promise.all([
-      initPromise,
-      SearchTestUtils.promiseSearchNotification("ensure-known-region-done"),
-      promiseAfterCache(),
-    ]);
+  let enginesReloaded = SearchTestUtils.promiseSearchNotification(
+    "engines-reloaded"
+  );
+  Region._setRegion("FR", true);
+  await enginesReloaded;
 
-    Assert.ok(
-      reloadObserved,
-      "Engines should be reloaded during test, because region fetch succeeded"
-    );
-
-    let defaultEngine = await Services.search.getDefault();
-    Assert.equal(
-      defaultEngine._shortName,
-      "multilocale-af",
-      "Should have update to the new engine with the same name"
-    );
-
-    Services.obs.removeObserver(obs, SEARCH_SERVICE_TOPIC);
-  }
-
-  await withGeoServer(cont, {
-    geoLookupData: { country_code: "FR" },
-    preGeolookupPromise: initPromise,
-  });
+  Assert.equal(
+    defaultEngine._shortName,
+    "multilocale-af",
+    "Should have update to the new engine with the same name"
+  );
 });
