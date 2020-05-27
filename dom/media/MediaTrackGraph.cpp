@@ -40,6 +40,7 @@
 #include "webaudio/blink/DenormalDisabler.h"
 #include "webaudio/blink/HRTFDatabaseLoader.h"
 
+using std::move;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -930,7 +931,7 @@ void MediaTrackGraphImpl::DeviceChanged() {
   // the graph, with the new info.
   RefPtr<MediaTrackGraphImpl> self = this;
   NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-      "MaxChannelCountUpdateOnBgThread", [self{std::move(self)}]() {
+      "MaxChannelCountUpdateOnBgThread", [self{move(self)}]() {
         uint32_t maxChannelCount = CubebUtils::MaxNumberOfChannels();
         self->Dispatch(NS_NewRunnableFunction(
             "MaxChannelCountUpdateToMainThread",
@@ -1047,7 +1048,7 @@ void MediaTrackGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate) {
         continue;
       }
       if (keptUpdateCount != i) {
-        mTrackUpdates[keptUpdateCount] = std::move(mTrackUpdates[i]);
+        mTrackUpdates[keptUpdateCount] = move(mTrackUpdates[i]);
         MOZ_ASSERT(!mTrackUpdates[i].mTrack);
       }
       ++keptUpdateCount;
@@ -1070,7 +1071,7 @@ void MediaTrackGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate) {
     }
     mNextMainThreadGraphTime = mProcessedTime;
     if (!mPendingUpdateRunnables.IsEmpty()) {
-      mUpdateRunnables.AppendElements(std::move(mPendingUpdateRunnables));
+      mUpdateRunnables.AppendElements(move(mPendingUpdateRunnables));
     }
   }
 
@@ -1139,7 +1140,7 @@ void MediaTrackGraphImpl::RunMessageAfterProcessing(
 
   // Only one block is used for messages from the graph thread.
   MOZ_ASSERT(mFrontMessageQueue.Length() == 1);
-  mFrontMessageQueue[0].mMessages.AppendElement(std::move(aMessage));
+  mFrontMessageQueue[0].mMessages.AppendElement(move(aMessage));
 }
 
 void MediaTrackGraphImpl::RunMessagesInQueue() {
@@ -1432,7 +1433,7 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
   }
 
   if (Switching()) {
-    RefPtr<GraphDriver> nextDriver = std::move(mNextDriver);
+    RefPtr<GraphDriver> nextDriver = move(mNextDriver);
     return IterationResult::CreateSwitchDriver(
         nextDriver, NewRunnableMethod<StoreRefPtrPassByPtr<GraphDriver>>(
                         "MediaTrackGraphImpl::SetCurrentDriver", this,
@@ -1769,8 +1770,7 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
       // held.
       for (uint32_t i = 0; i < mBackMessageQueue.Length(); ++i) {
         MessageBlock& mb = mBackMessageQueue[i];
-        controlMessagesToRunDuringShutdown.AppendElements(
-            std::move(mb.mMessages));
+        controlMessagesToRunDuringShutdown.AppendElements(move(mb.mMessages));
       }
       mBackMessageQueue.Clear();
       MOZ_ASSERT(mCurrentTaskMessageQueue.IsEmpty());
@@ -1866,12 +1866,12 @@ void MediaTrackGraphImpl::AppendMessage(UniquePtr<ControlMessage> aMessage) {
     return;
   }
 
-  mCurrentTaskMessageQueue.AppendElement(std::move(aMessage));
+  mCurrentTaskMessageQueue.AppendElement(move(aMessage));
   EnsureRunInStableState();
 }
 
 void MediaTrackGraphImpl::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) {
-  mAbstractMainThread->Dispatch(std::move(aRunnable));
+  mAbstractMainThread->Dispatch(move(aRunnable));
 }
 
 MediaTrack::MediaTrack(TrackRate aSampleRate, MediaSegment::Type aType,
@@ -2146,7 +2146,7 @@ void MediaTrack::Resume() {
 void MediaTrack::AddListenerImpl(
     already_AddRefed<MediaTrackListener> aListener) {
   RefPtr<MediaTrackListener> l(aListener);
-  mTrackListeners.AppendElement(std::move(l));
+  mTrackListeners.AppendElement(move(l));
 
   PrincipalHandle lastPrincipalHandle = mSegment->GetLastPrincipalHandle();
   mTrackListeners.LastElement()->NotifyPrincipalHandleChanged(
@@ -2202,7 +2202,7 @@ RefPtr<GenericPromise> MediaTrack::RemoveListener(
 
   UniquePtr<Message> message = MakeUnique<Message>(this, aListener);
   RefPtr<GenericPromise> p = message->mRemovedPromise.Ensure(__func__);
-  GraphImpl()->AppendMessage(std::move(message));
+  GraphImpl()->AppendMessage(move(message));
   return p;
 }
 
@@ -3212,7 +3212,7 @@ void MediaTrackGraphImpl::CollectSizesForMemoryReport(
 
     NS_IMETHOD Run() override {
       MediaTrackGraphImpl::FinishCollectReports(mHandleReport, mHandlerData,
-                                                std::move(mAudioTrackSizes));
+                                                move(mAudioTrackSizes));
       return NS_OK;
     }
 
@@ -3228,8 +3228,8 @@ void MediaTrackGraphImpl::CollectSizesForMemoryReport(
     RefPtr<nsISupports> mHandlerData;
   };
 
-  RefPtr<FinishCollectRunnable> runnable = new FinishCollectRunnable(
-      std::move(aHandleReport), std::move(aHandlerData));
+  RefPtr<FinishCollectRunnable> runnable =
+      new FinishCollectRunnable(move(aHandleReport), move(aHandlerData));
 
   auto audioTrackSizes = &runnable->mAudioTrackSizes;
 
@@ -3351,8 +3351,7 @@ auto MediaTrackGraph::NotifyWhenGraphStarted(MediaTrack* aTrack)
   MozPromiseHolder<GraphStartedPromise> h;
   RefPtr<GraphStartedPromise> p = h.Ensure(__func__);
   aTrack->GraphImpl()->NotifyWhenGraphStarted(
-      aTrack, std::move(h),
-      MediaTrackGraphImpl::ProcessingThread::FALLBACK_THREAD);
+      aTrack, move(h), MediaTrackGraphImpl::ProcessingThread::FALLBACK_THREAD);
   return p;
 }
 
@@ -3362,8 +3361,7 @@ auto MediaTrackGraph::NotifyWhenDeviceStarted(MediaTrack* aTrack)
   MozPromiseHolder<GraphStartedPromise> h;
   RefPtr<GraphStartedPromise> p = h.Ensure(__func__);
   aTrack->GraphImpl()->NotifyWhenGraphStarted(
-      aTrack, std::move(h),
-      MediaTrackGraphImpl::ProcessingThread::AUDIO_THREAD);
+      aTrack, move(h), MediaTrackGraphImpl::ProcessingThread::AUDIO_THREAD);
   return p;
 }
 
@@ -3381,8 +3379,8 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
         MozPromiseHolder<GraphStartedPromise>&& aHolder,
         ProcessingThread aProcessingThread)
         : ControlMessage(nullptr),
-          mMediaTrack(std::move(aTrack)),
-          mHolder(std::move(aHolder)),
+          mMediaTrack(move(aTrack)),
+          mHolder(move(aHolder)),
           mProcessingThread(aProcessingThread) {}
     void Run() override {
       // This runs on the graph thread, so when this runs, and the current
@@ -3397,7 +3395,7 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
         // Avoid Resolve's locking on the graph thread by doing it on main.
         graphImpl->Dispatch(NS_NewRunnableFunction(
             "MediaTrackGraphImpl::NotifyWhenGraphStarted::Resolver",
-            [holder = std::move(mHolder)]() mutable {
+            [holder = move(mHolder)]() mutable {
               holder.Resolve(true, __func__);
             }));
       } else {
@@ -3407,8 +3405,8 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
                 StoreCopyPassByRRef<MozPromiseHolder<GraphStartedPromise>>,
                 ProcessingThread>(
                 "MediaTrackGraphImpl::NotifyWhenGraphStarted", graphImpl,
-                &MediaTrackGraphImpl::NotifyWhenGraphStarted,
-                std::move(mMediaTrack), std::move(mHolder), mProcessingThread));
+                &MediaTrackGraphImpl::NotifyWhenGraphStarted, move(mMediaTrack),
+                move(mHolder), mProcessingThread));
       }
     }
     void RunDuringShutdown() override {
@@ -3423,7 +3421,7 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
 
   MediaTrackGraphImpl* graph = aTrack->GraphImpl();
   graph->AppendMessage(MakeUnique<GraphStartedNotificationControlMessage>(
-      std::move(aTrack), std::move(aHolder), aProcessingThread));
+      move(aTrack), move(aHolder), aProcessingThread));
 }
 
 void MediaTrackGraphImpl::SuspendOrResumeTracks(
@@ -3481,16 +3479,15 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
             AudioInputDevicePreference());
         SwitchAtNextIteration(driver);
       }
-      driver->EnqueueTrackAndPromiseForOperation(aDestinationTrack, aOperation,
-                                                 mAbstractMainThread,
-                                                 std::move(aHolder));
+      driver->EnqueueTrackAndPromiseForOperation(
+          aDestinationTrack, aOperation, mAbstractMainThread, move(aHolder));
     } else {
       // We are resuming a context, but we are already using an
       // AudioCallbackDriver, we can resolve the promise now. We do this on main
       // thread to avoid locking the holder's mutex on the graph thread.
       DispatchToMainThreadStableState(NS_NewRunnableFunction(
           "MediaTrackGraphImpl::ApplyAudioContextOperationImpl::Resolve1",
-          [holder = std::move(aHolder)]() mutable {
+          [holder = move(aHolder)]() mutable {
             holder.Resolve(AudioContextState::Running, __func__);
           }));
     }
@@ -3518,7 +3515,7 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
           ->AsAudioCallbackDriver()
           ->EnqueueTrackAndPromiseForOperation(aDestinationTrack, aOperation,
                                                mAbstractMainThread,
-                                               std::move(aHolder));
+                                               move(aHolder));
 
       SystemClockDriver* driver;
       if (!Switching()) {
@@ -3535,7 +3532,7 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
             ->AsAudioCallbackDriver()
             ->EnqueueTrackAndPromiseForOperation(aDestinationTrack, aOperation,
                                                  mAbstractMainThread,
-                                                 std::move(aHolder));
+                                                 move(aHolder));
       } else {
         // If this is not an AudioCallbackDriver, this means we failed opening
         // an AudioCallbackDriver in the past, and we're constantly trying to
@@ -3549,7 +3546,7 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
         // thread to avoid locking the holder's mutex on the graph thread.
         DispatchToMainThreadStableState(NS_NewRunnableFunction(
             "MediaTrackGraphImpl::ApplyAudioContextOperationImpl::Resolve2",
-            [holder = std::move(aHolder), state]() mutable {
+            [holder = move(aHolder), state]() mutable {
               holder.Resolve(state, __func__);
             }));
       }
@@ -3559,7 +3556,7 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
       // main thread to avoid locking the holder's mutex on the graph thread.
       DispatchToMainThreadStableState(NS_NewRunnableFunction(
           "MediaTrackGraphImpl::ApplyAudioContextOperationImpl::Resolve3",
-          [holder = std::move(aHolder), state]() mutable {
+          [holder = move(aHolder), state]() mutable {
             holder.Resolve(state, __func__);
           }));
     }
@@ -3578,10 +3575,10 @@ class AudioContextOperationControlMessage : public ControlMessage {
       : ControlMessage(aDestinationTrack),
         mTracks(aTracks.Clone()),
         mAudioContextOperation(aOperation),
-        mHolder(std::move(aHolder)) {}
+        mHolder(move(aHolder)) {}
   void Run() override {
     mTrack->GraphImpl()->ApplyAudioContextOperationImpl(
-        mTrack, mTracks, mAudioContextOperation, std::move(mHolder));
+        mTrack, mTracks, mAudioContextOperation, move(mHolder));
   }
   void RunDuringShutdown() override {
     MOZ_ASSERT(mAudioContextOperation == AudioContextOperation::Close,
@@ -3604,7 +3601,7 @@ auto MediaTrackGraph::ApplyAudioContextOperation(
   RefPtr<AudioContextOperationPromise> p = holder.Ensure(__func__);
   MediaTrackGraphImpl* graphImpl = static_cast<MediaTrackGraphImpl*>(this);
   graphImpl->AppendMessage(MakeUnique<AudioContextOperationControlMessage>(
-      aDestinationTrack, aTracks, aOperation, std::move(holder)));
+      aDestinationTrack, aTracks, aOperation, move(holder)));
   return p;
 }
 
@@ -3811,7 +3808,7 @@ void MediaTrackGraph::DispatchToMainThreadStableState(
     already_AddRefed<nsIRunnable> aRunnable) {
   AssertOnGraphThreadOrNotRunning();
   static_cast<MediaTrackGraphImpl*>(this)
-      ->mPendingUpdateRunnables.AppendElement(std::move(aRunnable));
+      ->mPendingUpdateRunnables.AppendElement(move(aRunnable));
 }
 
 Watchable<mozilla::GraphTime>& MediaTrackGraphImpl::CurrentTime() {
