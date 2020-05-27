@@ -34,6 +34,7 @@
 class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsITransfer;
+class nsIPrincipal;
 class MaybeCloseWindowHelper;
 
 /**
@@ -73,7 +74,7 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
                                bool* aResult) override;
   NS_IMETHOD GetProtocolHandlerInfo(const nsACString& aScheme,
                                     nsIHandlerInfo** aHandlerInfo) override;
-  NS_IMETHOD LoadURI(nsIURI* aURI,
+  NS_IMETHOD LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
                      mozilla::dom::BrowsingContext* aBrowsingContext) override;
   NS_IMETHOD SetProtocolHandlerDefaults(nsIHandlerInfo* aHandlerInfo,
                                         bool aOSHandlerExists) override;
