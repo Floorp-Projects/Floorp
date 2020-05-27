@@ -13314,6 +13314,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.aspect-ratio.enabled")) {
       "1/0",
       "0/1",
       "0 / 0",
+      "auto 1",
+      "0 auto",
     ],
     invalid_values: ["none", "1 test", "1 / auto", "auto / 1"],
   };

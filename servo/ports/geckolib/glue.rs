@@ -5220,13 +5220,9 @@ pub extern "C" fn Servo_DeclarationBlock_SetAspectRatio(
     height: f32,
 ) {
     use style::properties::PropertyDeclaration;
-    use style::values::generics::position::{AspectRatio, Ratio};
-    use style::values::specified::NonNegativeNumber;
+    use style::values::generics::position::AspectRatio;
 
-    let decl = PropertyDeclaration::AspectRatio(AspectRatio::Ratio(Ratio(
-        NonNegativeNumber::new(width),
-        NonNegativeNumber::new(height),
-    )));
+    let decl = PropertyDeclaration::AspectRatio(AspectRatio::from_mapped_ratio(width, height));
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(decl, Importance::Normal);
     })
