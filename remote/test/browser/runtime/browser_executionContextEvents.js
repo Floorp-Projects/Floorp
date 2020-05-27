@@ -301,12 +301,8 @@ function recordContextEvents(Runtime, total) {
 }
 
 async function assertEventOrder(options = {}) {
-  const {
-    history,
-    expectedEvents = [DESTROYED, CLEARED, CREATED],
-    timeout,
-  } = options;
-  const events = await history.record(timeout);
+  const { history, expectedEvents = [DESTROYED, CLEARED, CREATED] } = options;
+  const events = await history.record();
   const eventNames = events.map(item => item.eventName);
   info(`Expected events: ${expectedEvents}`);
   info(`Received events: ${eventNames}`);
