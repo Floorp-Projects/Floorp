@@ -791,14 +791,6 @@ already_AddRefed<nsIEventTarget> IToplevelProtocol::GetMessageEventTarget(
       return nullptr;
     }
 
-    // Normally a new actor inherits its event target from its manager. If the
-    // manager has no event target, we give the subclass a chance to make a new
-    // one.
-    if (!target) {
-      MutexAutoUnlock unlock(mEventTargetMutex);
-      target = GetConstructedEventTarget(aMsg);
-    }
-
 #ifdef DEBUG
     // If this function is called more than once for the same message,
     // the actor handle ID will already be in the map and the AddWithID
@@ -812,11 +804,6 @@ already_AddRefed<nsIEventTarget> IToplevelProtocol::GetMessageEventTarget(
 #endif /* DEBUG */
 
     mEventTargetMap.AddWithID(target, handle.mId);
-  } else if (!target) {
-    // We don't need the lock after this point.
-    lock.reset();
-
-    target = GetSpecificMessageEventTarget(aMsg);
   }
 
   return target.forget();

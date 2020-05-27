@@ -115,7 +115,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:SystemGroup::EventTargetFor\n"
          "race:SchedulerEventTarget::AddRef\n"
          "race:SchedulerEventTarget::Dispatch\n"
-         "race:ContentChild::GetSpecificMessageEventTarget\n"
          "race:MessageChannel::MessageTask::Post\n"
 
          // Bug 1600594
