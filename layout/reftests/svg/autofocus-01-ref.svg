@@ -1,0 +1,8 @@
+<svg width="400" height="110" xmlns="http://www.w3.org/2000/svg" onload="document.querySelector('a').focus();">
+  <a href="#">
+    <rect x="10" y="10" width="300" height="90" fill="lime"/>
+  </a>
+  <style>
+    a:focus { outline: 2px solid blue; }
+  </style>
+</svg> 

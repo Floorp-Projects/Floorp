@@ -11,6 +11,7 @@
 #include "mozilla/TextUtils.h"
 #include "nsIURI.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsContentUtils.h"
 #include "nsPresContext.h"
 

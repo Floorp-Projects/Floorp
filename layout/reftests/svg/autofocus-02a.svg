@@ -1,0 +1,8 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="lime"/>
+  <!-- need tabindex for autofocus to work -->
+  <rect x="10" y="10" width="300" height="90" fill="lime" autofocus="true"/>
+  <style>
+    rect:focus { outline: 2px solid blue; }
+  </style>
+</svg> 
