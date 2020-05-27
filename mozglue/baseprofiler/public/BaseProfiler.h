@@ -238,19 +238,19 @@ MFBT_API bool IsThreadBeingProfiled();
 //---------------------------------------------------------------------------
 
 static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_ENTRIES =
-#  if !defined(ARCH_ARMV6)
-    MakePowerOfTwo32<1u << 20>();  // 1'048'576 entries = 8MB
+#  if !defined(GP_PLAT_arm_android)
+    MakePowerOfTwo32<1024 * 1024>();  // 1M entries = 8MB
 #  else
-    MakePowerOfTwo32<1u << 17>();  // 131'072 entries = 1MB
+    MakePowerOfTwo32<128 * 1024>();  // 128k entries = 1MB
 #  endif
 
 // Startup profiling usually need to capture more data, especially on slow
 // systems.
 static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_STARTUP_ENTRIES =
-#  if !defined(ARCH_ARMV6)
-    MakePowerOfTwo32<1u << 22>();  // 4'194'304 entries = 32MB
+#  if !defined(GP_PLAT_arm_android)
+    MakePowerOfTwo32<4 * 1024 * 1024>();  // 4M entries = 32MB
 #  else
-    MakePowerOfTwo32<1u << 17>();  // 131'072 = 1MB
+    MakePowerOfTwo32<256 * 1024>();  // 256k entries = 2MB
 #  endif
 
 #  define BASE_PROFILER_DEFAULT_DURATION 20
