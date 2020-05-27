@@ -228,18 +228,18 @@ class BaseFile(object):
             return True
 
         src = self.open()
-        copy_content = b''
+        accumulated_src_content = []
         while True:
             dest_content = dest.read(32768)
             src_content = src.read(32768)
-            copy_content += src_content
+            accumulated_src_content.append(src_content)
             if len(dest_content) == len(src_content) == 0:
                 break
             # If the read content differs between origin and destination,
             # write what was read up to now, and copy the remainder.
             if (six.ensure_binary(dest_content) !=
                 six.ensure_binary(src_content)):
-                dest.write(copy_content)
+                dest.write(b''.join(accumulated_src_content))
                 shutil.copyfileobj(src, dest)
                 break
         if hasattr(self, 'path') and hasattr(dest, 'path'):
