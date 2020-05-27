@@ -226,6 +226,8 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void Destroy() override;
 
   virtual void Show(bool aState) override;
+  virtual bool NeedsRecreateToReshow() override;
+
   virtual nsIWidget* GetSheetWindowParent(void) override;
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;
@@ -401,6 +403,10 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   int32_t mNumModalDescendents;
   InputContext mInputContext;
   NSWindowAnimationBehavior mWindowAnimationBehavior;
+
+ private:
+  // true if Show() has been called.
+  bool mWasShown;
 };
 
 #endif  // nsCocoaWindow_h_
