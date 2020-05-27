@@ -11,31 +11,34 @@ import requests
 from redo import retry
 
 from taskgraph.optimize import OptimizationStrategy, register_strategy
+from taskgraph.util.attributes import match_run_on_projects
 
 logger = logging.getLogger(__name__)
 PUSH_ENDPOINT = "{head_repository}/json-pushes/?startID={push_id_start}&endID={push_id_end}"
 
 
-@register_strategy('backstop', args=(10, 60))
-@register_strategy("push-interval-10", args=(10, 0, False))
-@register_strategy("push-interval-25", args=(25, 0, False))
+@register_strategy('backstop', args=(10, 60, {'all'}))
+@register_strategy("push-interval-10", args=(10, 0, {'try'}))
+@register_strategy("push-interval-25", args=(25, 0, {'try'}))
 class Backstop(OptimizationStrategy):
     """Ensures that no task gets left behind.
 
-    Will schedule all tasks either every Nth push, or M minutes.
+    Will schedule all tasks either every Nth push, or M minutes. This behaviour
+    is only enabled on autoland. For all other projects, the
+    `remove_on_projects` flag determines what will happen.
 
     Args:
         push_interval (int): Number of pushes
         time_interval (int): Minutes between forced schedules.
                              Use 0 to disable.
-        test_optimization (bool): Boolean flag to indicate if the strategy is
-                              to be applied as part of the test optimization
-                              strategy.
+        remove_on_projects (set): For non-autoland projects, the task will
+            be removed if we're running on one of these projects, otherwise
+            it will be kept.
     """
-    def __init__(self, push_interval, time_interval, test_optimization=True):
+    def __init__(self, push_interval, time_interval, remove_on_projects):
         self.push_interval = push_interval
         self.time_interval = time_interval
-        self.test_optimization = test_optimization
+        self.remove_on_projects = remove_on_projects
 
         # cached push dates by project
         self.push_dates = defaultdict(dict)
@@ -47,16 +50,10 @@ class Backstop(OptimizationStrategy):
         pushid = int(params['pushlog_id'])
         pushdate = int(params['pushdate'])
 
+        # Scheduling on a backstop only makes sense on autoland. For other projects,
+        # remove the task if the project matches self.remove_on_projects.
         if project != 'autoland':
-            if self.test_optimization:
-                # When used as part of test optimization on
-                # non-autoland branches, we return True to make the
-                # Backstop strategy into a no-op.
-                return True
-            # When not used as part of test optimization, only enable
-            # the backstop on autoland since we always want the *real*
-            # optimized tasks on try and release branches.
-            return False
+            return match_run_on_projects(project, self.remove_on_projects)
 
         # On every Nth push, want to run all tasks.
         if pushid % self.push_interval == 0:
