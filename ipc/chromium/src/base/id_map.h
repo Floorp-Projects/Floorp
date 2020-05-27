@@ -38,10 +38,7 @@ class IDMap {
 
   bool Contains(int32_t id) { return data_.find(id) != data_.end(); }
 
-  void AddWithID(const T& data, int32_t id) {
-    MOZ_ASSERT(!Contains(id), "Don't insert with an existing ID");
-    data_[id] = data;
-  }
+  void Put(int32_t id, const T& data) { data_[id] = data; }
 
   void Remove(int32_t id) {
     iterator i = data_.find(id);
