@@ -6,7 +6,6 @@ package mozilla.components.lib.crash.service
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.io.Resources.getResource
-import mozilla.components.Build
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.crash.Breadcrumb
 import mozilla.components.support.test.any
@@ -14,11 +13,12 @@ import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import java.io.BufferedReader
@@ -61,7 +61,7 @@ class MozillaSocorroServiceTest {
     }
 
     @Test
-    fun `MozillaSocorroService send caught exception`() {
+    fun `MozillaSocorroService do not send caught exception`() {
         val service = spy(MozillaSocorroService(
                 testContext,
                 "Test App"
@@ -69,10 +69,11 @@ class MozillaSocorroServiceTest {
         doReturn("").`when`(service).sendReport(any(), any(), any(), anyBoolean(), anyBoolean(), any())
         val throwable = RuntimeException("Test")
         val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
-        service.report(throwable, breadcrumbs)
+        val id = service.report(throwable, breadcrumbs)
 
         verify(service).report(throwable, breadcrumbs)
-        verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
+        verify(service, never()).sendReport(any(), any(), any(), anyBoolean(), anyBoolean(), any())
+        assertNull(id)
     }
 
     @Test
@@ -218,212 +219,6 @@ class MozillaSocorroServiceTest {
 
             verify(service).report(crash)
             verify(service).sendReport(crash.throwable, null, null, false, true, crash.breadcrumbs)
-        } finally {
-            mockWebServer.shutdown()
-        }
-    }
-
-    @Test
-    fun `MozillaSocorroService caught exception request is correct`() {
-        val mockWebServer = MockWebServer()
-
-        try {
-            mockWebServer.enqueue(
-                MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
-            )
-            mockWebServer.start()
-            val serverUrl = mockWebServer.url("/")
-            val service = spy(
-                MozillaSocorroService(
-                    testContext,
-                    "Test App",
-                    serverUrl = serverUrl.toString()
-                )
-            )
-
-            val throwable = RuntimeException("Test")
-            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
-            service.report(throwable, breadcrumbs)
-
-            val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
-            val inputStream = GZIPInputStream(fileInputStream)
-            val reader = InputStreamReader(inputStream)
-            val bufferedReader = BufferedReader(reader)
-            val request = bufferedReader.readText()
-
-            assert(request.contains("name=JavaStackTrace\r\n\r\n$INFO_PREFIX java.lang.RuntimeException: Test"))
-            assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
-            assert(request.contains("name=ProductID\r\n\r\n{eeb82917-e434-4870-8148-5c03d4caa81b}"))
-            assert(request.contains("name=Vendor\r\n\r\nMozilla"))
-            assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
-            assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
-            assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
-            assert(request.contains("name=CrashType\r\n\r\n$CAUGHT_EXCEPTION_TYPE"))
-
-            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
-        } finally {
-            mockWebServer.shutdown()
-        }
-    }
-
-    @Test
-    fun `MozillaSocorroService caught exception request app details are correct`() {
-        val mockWebServer = MockWebServer()
-
-        try {
-            mockWebServer.enqueue(
-                MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
-            )
-            mockWebServer.start()
-            val serverUrl = mockWebServer.url("/")
-            val service = spy(
-                MozillaSocorroService(
-                    testContext,
-                    "Test App",
-                    "{1234-1234-1234}",
-                    "0.1",
-                    "1.0",
-                    "Mozilla Test",
-                    serverUrl = serverUrl.toString(),
-                    versionName = "1.0.0"
-                )
-            )
-
-            val throwable = RuntimeException("Test")
-            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
-            service.report(throwable, breadcrumbs)
-
-            val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
-            val inputStream = GZIPInputStream(fileInputStream)
-            val reader = InputStreamReader(inputStream)
-            val bufferedReader = BufferedReader(reader)
-            val request = bufferedReader.readText()
-
-            assert(request.contains("name=JavaStackTrace\r\n\r\n$INFO_PREFIX java.lang.RuntimeException: Test"))
-            assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
-            assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
-            assert(request.contains("name=Version\r\n\r\n1.0.0"))
-            assert(request.contains("name=GeckoViewVersion\r\n\r\n0.1"))
-            assert(request.contains("name=AndroidComponentVersion\r\n\r\n${Build.version}"))
-            assert(request.contains("name=GleanVersion\r\n\r\n${Build.gleanSdkVersion}"))
-            assert(request.contains("name=ApplicationServicesVersion\r\n\r\n${Build.applicationServicesVersion}"))
-            assert(request.contains("name=BuildID\r\n\r\n1.0"))
-            assert(request.contains("name=Vendor\r\n\r\nMozilla Test"))
-            assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
-            assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
-            assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
-            assert(request.contains("name=CrashType\r\n\r\n$CAUGHT_EXCEPTION_TYPE"))
-
-            verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
-        } finally {
-            mockWebServer.shutdown()
-        }
-    }
-
-    @Test
-    fun `MozillaSocorroService caught exception request with no app version`() {
-        val mockWebServer = MockWebServer()
-
-        try {
-            mockWebServer.enqueue(
-                MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
-            )
-            mockWebServer.start()
-            val serverUrl = mockWebServer.url("/")
-            val service = spy(
-                MozillaSocorroService(
-                    testContext,
-                    "Test App",
-                    "{1234-1234-1234}",
-                    "0.1",
-                    "1.0",
-                    "Mozilla Test",
-                    serverUrl = serverUrl.toString()
-                )
-            )
-
-            val throwable = RuntimeException("Test")
-            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
-            service.report(throwable, breadcrumbs)
-
-            val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
-            val inputStream = GZIPInputStream(fileInputStream)
-            val reader = InputStreamReader(inputStream)
-            val bufferedReader = BufferedReader(reader)
-            val request = bufferedReader.readText()
-
-            assert(request.contains("name=JavaStackTrace\r\n\r\n$INFO_PREFIX java.lang.RuntimeException: Test"))
-            assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
-            assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
-            assert(request.contains("name=Version\r\n\r\nN/A"))
-
-            verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
-        } finally {
-            mockWebServer.shutdown()
-        }
-    }
-
-    @Test
-    fun `MozillaSocorroService handles caught exception with no stacktrace correctly`() {
-        val mockWebServer = MockWebServer()
-
-        try {
-            mockWebServer.enqueue(
-                MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
-            )
-            mockWebServer.start()
-            val serverUrl = mockWebServer.url("/")
-            val service = spy(
-                MozillaSocorroService(
-                    testContext,
-                    "Test App",
-                    "{1234-1234-1234}",
-                    "0.1",
-                    "1.0",
-                    "Mozilla Test",
-                    serverUrl = serverUrl.toString(),
-                    versionName = "1.0.0"
-                )
-            )
-
-            val throwable = RuntimeException("Test")
-            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
-            throwable.stackTrace = emptyArray()
-            service.report(throwable, breadcrumbs)
-
-            val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
-            val inputStream = GZIPInputStream(fileInputStream)
-            val reader = InputStreamReader(inputStream)
-            val bufferedReader = BufferedReader(reader)
-            val request = bufferedReader.readText()
-
-            assertFalse(request.contains("name=JavaStackTrace"))
-            assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
-            assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
-            assert(request.contains("name=Version\r\n\r\n1.0.0"))
-            assert(request.contains("name=GeckoViewVersion\r\n\r\n0.1"))
-            assert(request.contains("name=AndroidComponentVersion\r\n\r\n${Build.version}"))
-            assert(request.contains("name=GleanVersion\r\n\r\n${Build.gleanSdkVersion}"))
-            assert(request.contains("name=ApplicationServicesVersion\r\n\r\n${Build.applicationServicesVersion}"))
-            assert(request.contains("name=BuildID\r\n\r\n1.0"))
-            assert(request.contains("name=Vendor\r\n\r\nMozilla Test"))
-            assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
-            assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
-            assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
-            assert(request.contains("name=CrashType\r\n\r\n$CAUGHT_EXCEPTION_TYPE"))
-
-            verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -598,110 +393,6 @@ class MozillaSocorroServiceTest {
     }
 
     @Test
-    fun `MozillaSocorroService reports specified parameter correctly`() {
-        val mockWebServer = MockWebServer()
-
-        try {
-            mockWebServer.enqueue(
-                MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
-            )
-            mockWebServer.start()
-            val serverUrl = mockWebServer.url("/")
-            val service = spy(
-                MozillaSocorroService(
-                    applicationContext = testContext,
-                    appName = "Test App",
-                    appId = "{1234-1234-1234}",
-                    version = "0.1",
-                    buildId = "1.0",
-                    vendor = "Mozilla Test",
-                    serverUrl = serverUrl.toString(),
-                    versionName = "0.0.1",
-                    releaseChannel = "test channel"
-                )
-            )
-
-            val throwable = RuntimeException("Test")
-            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
-            throwable.stackTrace = emptyArray()
-            service.report(throwable, breadcrumbs)
-
-            val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
-            val inputStream = GZIPInputStream(fileInputStream)
-            val reader = InputStreamReader(inputStream)
-            val bufferedReader = BufferedReader(reader)
-            val request = bufferedReader.readText()
-
-            assert(request.contains("name=ProductName\r\n\r\nTest App"))
-            assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
-            assert(request.contains("name=GeckoViewVersion\r\n\r\n0.1"))
-            assert(request.contains("name=BuildID\r\n\r\n1.0"))
-            assert(request.contains("name=Vendor\r\n\r\nMozilla Test"))
-            assert(request.contains("name=Version\r\n\r\n0.0.1"))
-            assert(request.contains("name=ReleaseChannel\r\n\r\ntest channel"))
-
-            verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
-        } finally {
-            mockWebServer.shutdown()
-        }
-    }
-
-    @Test
-    fun `Confirm MozillaSocorroService parameter order is correct`() {
-        val mockWebServer = MockWebServer()
-
-        try {
-            mockWebServer.enqueue(
-                MockResponse().setResponseCode(200)
-                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
-            )
-            mockWebServer.start()
-            val serverUrl = mockWebServer.url("/")
-            val service = spy(
-                MozillaSocorroService(
-                    testContext,
-                    "Test App",
-                    "{1234-1234-1234}",
-                    "0.1",
-                    "1.0",
-                    "Mozilla Test",
-                    serverUrl.toString(),
-                    "0.0.1",
-                    "test channel"
-                )
-            )
-
-            val throwable = RuntimeException("Test")
-            throwable.stackTrace = emptyArray()
-            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
-            service.report(throwable, breadcrumbs)
-
-            val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
-            val inputStream = GZIPInputStream(fileInputStream)
-            val reader = InputStreamReader(inputStream)
-            val bufferedReader = BufferedReader(reader)
-            val request = bufferedReader.readText()
-
-            assert(request.contains("name=ProductName\r\n\r\nTest App"))
-            assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
-            assert(request.contains("name=GeckoViewVersion\r\n\r\n0.1"))
-            assert(request.contains("name=BuildID\r\n\r\n1.0"))
-            assert(request.contains("name=Vendor\r\n\r\nMozilla Test"))
-            assert(request.contains("name=Version\r\n\r\n0.0.1"))
-            assert(request.contains("name=ReleaseChannel\r\n\r\ntest channel"))
-
-            verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
-        } finally {
-            mockWebServer.shutdown()
-        }
-    }
-
-    @Test
     fun `MozillaSocorroService returns crash id from Socorro`() {
         val mockWebServer = MockWebServer()
 
@@ -724,9 +415,14 @@ class MozillaSocorroServiceTest {
                 "test channel"
             )
 
-            val throwable = RuntimeException("Test")
-            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
-            val id = service.report(throwable, breadcrumbs)
+            val crash = Crash.NativeCodeCrash(
+                "dump.path",
+                true,
+                "extras.path",
+                isFatal = true,
+                breadcrumbs = arrayListOf()
+            )
+            val id = service.report(crash)
 
             assertEquals("bp-924121d3-4de3-4b32-ab12-026fc0190928", id)
         } finally {
