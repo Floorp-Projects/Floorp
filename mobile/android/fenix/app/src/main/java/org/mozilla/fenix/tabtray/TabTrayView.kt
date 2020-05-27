@@ -100,13 +100,18 @@ class TabTrayView(
             { it.content.private == isPrivate },
             { })
 
-
-        val selectedBrowserTabIndex = if (isPrivate) {
+        val tabs = if (isPrivate) {
             view.context.components.core.store.state.privateTabs
         } else {
             view.context.components.core.store.state.normalTabs
-        }.indexOfFirst { it.id == view.context.components.core.store.state.selectedTabId }
+        }
 
+        val selectedBrowserTabIndex = tabs
+            .indexOfFirst { it.id == view.context.components.core.store.state.selectedTabId }
+
+        if (tabs.size > EXPAND_AT_SIZE) {
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        }
 
         (view.tabsTray as? BrowserTabsTray)?.also { tray ->
             TabsTouchHelper(tray.tabsAdapter).attachToRecyclerView(tray)
@@ -192,6 +197,7 @@ class TabTrayView(
     companion object {
         private const val DEFAULT_TAB_ID = 0
         private const val PRIVATE_TAB_ID = 1
+        private const val EXPAND_AT_SIZE = 3
         private const val SLIDE_OFFSET = 0
         private const val ELEVATION = 90f
     }

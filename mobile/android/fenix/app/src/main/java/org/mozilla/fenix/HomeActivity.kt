@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
 import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
@@ -81,10 +80,8 @@ import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.RunWhenReadyQueue
 import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.browser.tabstray.TabsAdapter
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import org.mozilla.fenix.tabtray.FenixTabsAdapter
-import org.mozilla.fenix.tabtray.TabTrayViewHolder
 
 /**
  * The main activity of the application. The application is primarily a single Activity (this one)
