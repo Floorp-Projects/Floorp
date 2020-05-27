@@ -42,15 +42,6 @@ class IDMap {
 
   void Remove(int32_t id) {
     iterator i = data_.find(id);
-    if (i == data_.end()) {
-      NOTREACHED() << "Attempting to remove an item not in the list";
-      return;
-    }
-    data_.erase(i);
-  }
-
-  void RemoveIfPresent(int32_t id) {
-    iterator i = data_.find(id);
     if (i != data_.end()) {
       data_.erase(i);
     }

@@ -673,10 +673,12 @@ IProtocol* IToplevelProtocol::Lookup(int32_t aId) {
 }
 
 void IToplevelProtocol::Unregister(int32_t aId) {
+  MOZ_ASSERT(mActorMap.Contains(aId),
+             "Attempting to remove an ID not in the actor map");
   mActorMap.Remove(aId);
 
   MutexAutoLock lock(mEventTargetMutex);
-  mEventTargetMap.RemoveIfPresent(aId);
+  mEventTargetMap.Remove(aId);
 }
 
 Shmem::SharedMemory* IToplevelProtocol::CreateSharedMemory(
@@ -737,6 +739,8 @@ bool IToplevelProtocol::DestroySharedMemory(Shmem& shmem) {
   Message* descriptor =
       shmem.UnshareFrom(Shmem::PrivateIPDLCaller(), MSG_ROUTING_CONTROL);
 
+  MOZ_ASSERT(mShmemMap.Contains(aId),
+             "Attempting to remove an ID not in the shmem map");
   mShmemMap.Remove(aId);
   Shmem::Dealloc(Shmem::PrivateIPDLCaller(), segment);
 
@@ -778,6 +782,8 @@ bool IToplevelProtocol::ShmemDestroyed(const Message& aMsg) {
 
   Shmem::SharedMemory* rawmem = LookupSharedMemory(id);
   if (rawmem) {
+    MOZ_ASSERT(mShmemMap.Contains(id),
+               "Attempting to remove an ID not in the shmem map");
     mShmemMap.Remove(id);
     Shmem::Dealloc(Shmem::PrivateIPDLCaller(), rawmem);
   }
