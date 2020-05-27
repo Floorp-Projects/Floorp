@@ -51,19 +51,20 @@ const mockGetLoginDataWithSyncedDevices = (mobileDeviceConnected = false) => {
 };
 
 // Used to replace AboutProtectionsHandler.getMonitorData in front-end tests.
-const mockGetMonitorData = (potentiallyBreachedLogins = 0, error = false) => {
+const mockGetMonitorData = data => {
   return {
     getMonitorData: () => {
-      if (error) {
-        return { error };
+      if (data.error) {
+        return data;
       }
 
       return {
         monitoredEmails: 1,
-        numBreaches: 11,
+        numBreaches: data.numBreaches,
         passwords: 8,
-        potentiallyBreachedLogins,
-        error,
+        potentiallyBreachedLogins: data.potentiallyBreachedLogins,
+        numBreachesResolved: data.numBreachesResolved,
+        error: false,
       };
     },
   };

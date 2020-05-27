@@ -50,8 +50,32 @@ export default class MonitorClass {
     exposedPasswordsLink.href = MONITOR_HOME_PAGE_URL;
   }
 
-  onClickMonitorInfoBlock() {
+  onClickMonitorButton(evt) {
     RPMSendAsyncMessage("ClearMonitorCache");
+    switch (evt.target.id) {
+      case "monitor-partial-breaches-link":
+        this.doc.sendTelemetryEvent(
+          "click",
+          "mtr_report_link",
+          "resolve_breaches"
+        );
+        break;
+      case "monitor-breaches-link":
+        if (evt.target.classList.contains("no-breaches-resolved")) {
+          this.doc.sendTelemetryEvent(
+            "click",
+            "mtr_report_link",
+            "manage_breaches"
+          );
+        } else {
+          this.doc.sendTelemetryEvent(
+            "click",
+            "mtr_report_link",
+            "view_report"
+          );
+        }
+        break;
+    }
   }
 
   /**
@@ -201,6 +225,7 @@ export default class MonitorClass {
           "data-l10n-id",
           "monitor-manage-breaches-link"
         );
+        breachesLink.classList.add("no-breaches-resolved");
       } else if (numBreaches == numBreachesResolved) {
         partialBreachesWrapper.classList.add("hidden");
         breachesIcon.setAttribute(
@@ -285,7 +310,7 @@ export default class MonitorClass {
         partialBreachesLink.setAttribute("href", MONITOR_HOME_PAGE_URL);
         partialBreachesLink.addEventListener(
           "click",
-          this.onClickMonitorInfoBlock
+          this.onClickMonitorButton.bind(this)
         );
       }
     } else {
@@ -303,6 +328,9 @@ export default class MonitorClass {
     }
 
     breachesLink.setAttribute("href", MONITOR_HOME_PAGE_URL);
-    breachesLink.addEventListener("click", this.onClickMonitorInfoBlock);
+    breachesLink.addEventListener(
+      "click",
+      this.onClickMonitorButton.bind(this)
+    );
   }
 }
