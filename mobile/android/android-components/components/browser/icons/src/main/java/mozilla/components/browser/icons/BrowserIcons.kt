@@ -209,7 +209,25 @@ class BrowserIcons(
     }
 
     override fun onTrimMemory(level: Int) {
-        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+        val shouldClearMemoryCache = when (level) {
+            // Foreground: The device is running much lower on memory. The app is running and not killable, but the
+            // system wants us to release unused resources to improve system performance.
+            ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW,
+            // Foreground: The device is running extremely low on memory. The app is not yet considered a killable
+            // process, but the system will begin killing background processes if apps do not release resources.
+            ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> true
+
+            // Background: The system is running low on memory and our process is near the middle of the LRU list.
+            // If the system becomes further constrained for memory, there's a chance our process will be killed.
+            ComponentCallbacks2.TRIM_MEMORY_MODERATE,
+            // Background: The system is running low on memory and our process is one of the first to be killed
+            // if the system does not recover memory now.
+            ComponentCallbacks2.TRIM_MEMORY_COMPLETE -> true
+
+            else -> false
+        }
+
+        if (shouldClearMemoryCache) {
             sharedMemoryCache.clear()
         }
     }
