@@ -16,15 +16,15 @@
   (new Image()).src =
     "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg";
 
-  function runTest()
+  async function runTest()
   {
-    isSecurityState("broken", "(new Image()).src='http://...' changed to broken");
+    await isSecurityState("broken", "(new Image()).src='http://...' changed to broken");
     finish();
   }
 
-  function afterNavigationTest()
+  async function afterNavigationTest()
   {
-    isSecurityState("broken", "security broken after navigation");
+    await isSecurityState("broken", "security broken after navigation");
     finish();
   }
 

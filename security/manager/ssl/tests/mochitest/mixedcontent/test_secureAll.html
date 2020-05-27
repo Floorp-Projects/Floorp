@@ -19,15 +19,15 @@
   // Navigation test goes over an insecure page, test state leak
   navigateToInsecure = true;
 
-  function runTest()
+  async function runTest()
   {
-    isSecurityState("secure", "insecure <img> load breaks security");
+    await isSecurityState("secure", "insecure <img> load breaks security");
     finish();
   }
 
-  function afterNavigationTest()
+  async function afterNavigationTest()
   {
-    isSecurityState("secure", "security still broken after navigation");
+    await isSecurityState("secure", "security still broken after navigation");
     finish();
   }
 

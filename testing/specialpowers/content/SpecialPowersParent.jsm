@@ -1172,6 +1172,11 @@ class SpecialPowersParent extends JSWindowActorParent {
           });
       }
 
+      case "SecurityState": {
+        let { browsingContext } = aMessage.data;
+        return browsingContext.secureBrowserUI.state;
+      }
+
       case "ProxiedAssert": {
         let { taskId, data } = aMessage.data;
 

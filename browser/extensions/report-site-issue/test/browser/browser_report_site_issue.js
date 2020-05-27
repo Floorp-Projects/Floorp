@@ -86,16 +86,6 @@ add_task(async function test_opened_page() {
 
     let docShell = content.docShell;
     is(
-      typeof docShell.hasMixedActiveContentBlocked,
-      "boolean",
-      "docShell.hasMixedActiveContentBlocked is available"
-    );
-    is(
-      typeof docShell.hasMixedDisplayContentBlocked,
-      "boolean",
-      "docShell.hasMixedDisplayContentBlocked is available"
-    );
-    is(
       typeof docShell.getHasTrackingContentBlocked,
       "function",
       "docShell.hasTrackingContentBlocked is available"

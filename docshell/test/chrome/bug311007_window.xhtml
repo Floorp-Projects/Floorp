@@ -95,7 +95,8 @@ function step1B(aWebProgress, aRequest, aLocation, aFlags) {
      "This page is an error page.");
 
   ok(!(aWebProgress.QueryInterface(Ci.nsIDocShell)
-                   .securityUI.state &
+                   .browsingContext
+                   .secureBrowserUI.state &
        Ci.nsIWebProgressListener.STATE_IS_SECURE),
      "This is not a secure page (1)");
 
@@ -124,7 +125,8 @@ function step2B(aWebProgress, aRequest, aLocation, aFlags) {
      "This page is not an error page.");
 
   ok((aWebProgress.QueryInterface(Ci.nsIDocShell)
-                  .securityUI.state &
+                  .browsingContext
+                  .secureBrowserUI.state &
       Ci.nsIWebProgressListener.STATE_IS_SECURE),
      "This is a secure page (2)");
 
@@ -154,7 +156,8 @@ function step3B(aWebProgress, aRequest, aLocation, aFlags) {
      "This page is not an error page.");
 
   ok((aWebProgress.QueryInterface(Ci.nsIDocShell)
-                  .securityUI.state &
+                  .browsingContext
+                  .secureBrowserUI.state &
       Ci.nsIWebProgressListener.STATE_IS_SECURE),
      "This is a secure page (3)");
 
@@ -184,7 +187,8 @@ function step4B(aWebProgress, aRequest, aLocation, aFlags) {
      "This page is an error page.");
 
   ok(!(aWebProgress.QueryInterface(Ci.nsIDocShell)
-                   .securityUI.state &
+                   .browsingContext
+                   .secureBrowserUI.state &
        Ci.nsIWebProgressListener.STATE_IS_SECURE),
      "This is not a secure page (4)");
 

@@ -16,7 +16,7 @@
   // We don't want to go through the navigation back/forward test
   bypassNavigationTest = true;
 
-  function runTest() {
+  async function runTest() {
     let script = SpecialPowers.loadChromeScript(function() {
       const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
       // Force download to be w/o user assistance for our testing mime type
@@ -60,7 +60,7 @@
     });
   }
 
-  function afterNavigationTest() {}
+  async function afterNavigationTest() {}
 
   testCleanUp = function cleanup() {
     SpecialPowers.loadChromeScript(function() {
