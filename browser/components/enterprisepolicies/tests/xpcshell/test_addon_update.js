@@ -9,10 +9,14 @@ const { AddonTestUtils } = ChromeUtils.import(
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
+const { ExtensionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.appInfo = getAppInfo();
+ExtensionTestUtils.init(this);
 
 const server = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 const BASE_URL = `http://example.com/data`;
@@ -35,9 +39,9 @@ add_task(async function test_local_addon_update() {
     },
   });
   xpi1.copyTo(tmpDir, TEST_NAME);
-
+  let extension = ExtensionTestUtils.expectExtension(id);
   await Promise.all([
-    AddonTestUtils.promiseInstallEvent("onInstallEnded"),
+    extension.awaitStartup(),
     setupPolicyEngineWithJson({
       policies: {
         ExtensionSettings: {
@@ -64,8 +68,9 @@ add_task(async function test_local_addon_update() {
   // overwrite the test file
   xpi2.copyTo(tmpDir, TEST_NAME);
 
+  extension = ExtensionTestUtils.expectExtension(id);
   await Promise.all([
-    AddonTestUtils.promiseInstallEvent("onInstallEnded"),
+    extension.awaitStartup(),
     setupPolicyEngineWithJson({
       policies: {
         ExtensionSettings: {
@@ -111,8 +116,9 @@ add_task(async function test_newurl_addon_update() {
   });
   server.registerFile("/data/policy_test2.xpi", xpi2);
 
+  let extension = ExtensionTestUtils.expectExtension(id);
   await Promise.all([
-    AddonTestUtils.promiseInstallEvent("onInstallEnded"),
+    extension.awaitStartup(),
     setupPolicyEngineWithJson({
       policies: {
         ExtensionSettings: {
@@ -128,8 +134,9 @@ add_task(async function test_newurl_addon_update() {
   notEqual(addon, null, "Addon should not be null");
   equal(addon.version, "1.0", "Addon 1.0 installed");
 
+  extension = ExtensionTestUtils.expectExtension(id);
   await Promise.all([
-    AddonTestUtils.promiseInstallEvent("onInstallEnded"),
+    extension.awaitStartup(),
     setupPolicyEngineWithJson({
       policies: {
         ExtensionSettings: {
@@ -144,4 +151,6 @@ add_task(async function test_newurl_addon_update() {
 
   addon = await AddonManager.getAddonByID(id);
   equal(addon.version, "2.0", "Addon 2.0 installed");
+
+  await AddonTestUtils.promiseShutdownManager();
 });
