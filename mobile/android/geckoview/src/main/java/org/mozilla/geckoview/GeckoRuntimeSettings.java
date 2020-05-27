@@ -281,6 +281,20 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         /**
+         * Set whether login forms should be filled automatically if only one
+         * viable candidate is provided via
+         * {@link Autocomplete.LoginStorageDelegate.onLoginFetch onLoginFetch}.
+         *
+         * @param enabled A flag determining whether login autofill should be
+         *                enabled.
+         * @return The builder instance.
+         */
+        public @NonNull Builder loginAutofillEnabled(final boolean enabled) {
+            getSettings().setLoginAutofillEnabled(enabled);
+            return this;
+        }
+
+        /**
          * When set, the specified {@link android.app.Service} will be started by
          * an {@link android.content.Intent} with action {@link GeckoRuntime#ACTION_CRASHED} when
          * a crash is encountered. Crash details can be found in the Intent extras, such as
@@ -483,6 +497,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "browser.ui.zoom.force-user-scalable", false);
     /* package */ final Pref<Boolean> mUseMultiprocess = new Pref<>(
             "browser.tabs.remote.autostart", true);
+    /* package */ final Pref<Boolean> mAutofillLogins = new Pref<Boolean>(
+        "signon.autofillForms", true);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -1084,6 +1100,30 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public @NonNull GeckoRuntimeSettings setForceUserScalableEnabled(final boolean flag) {
         mForceUserScalable.commit(flag);
+        return this;
+    }
+
+    /**
+     * Get whether login form autofill is enabled.
+     *
+     * @return True if login autofill is enabled.
+     */
+    public boolean getLoginAutofillEnabled() {
+        return mAutofillLogins.get();
+    }
+
+    /**
+     * Set whether login forms should be filled automatically if only one
+     * viable candidate is provided via
+     * {@link Autocomplete.LoginStorageDelegate.onLoginFetch onLoginFetch}.
+     *
+     * @param enabled A flag determining whether login autofill should be
+     *                enabled.
+     * @return The builder instance.
+     */
+    public @NonNull GeckoRuntimeSettings setLoginAutofillEnabled(
+            final boolean enabled) {
+        mAutofillLogins.commit(enabled);
         return this;
     }
 

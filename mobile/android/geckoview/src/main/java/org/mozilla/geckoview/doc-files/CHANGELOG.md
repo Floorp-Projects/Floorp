@@ -35,6 +35,8 @@ exclude: true
   [`GeckoSession.PromptDelegate.onLoginSave`][78.9].
   Added [`GeckoSession.PromptDelegate.onLoginSelect`][78.10].
   ([bug 1618058]({{bugzilla}}1618058))
+- Added [`GeckoRuntimeSettings#setLoginAutofillEnabled`][78.11] to control
+  whether login forms should be automatically filled in suitable situations.
 
 [78.1]: {{javadoc_uri}}/WebExtensionController.html#installBuiltIn-java.lang.String-
 [78.2]: {{javadoc_uri}}/ContentBlocking.CookieBehavior.html#ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
@@ -46,6 +48,7 @@ exclude: true
 [78.8]: {{javadoc_uri}}/Autocomplete.LoginStorageDelegate.html
 [78.9]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onLoginSave-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest-
 [78.10]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onLoginSelect-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest-
+[78.11]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setLoginAutofillEnabled-boolean-
 
 ## v77
 - Added [`GeckoRuntime.appendAppNotesToCrashReport`][77.1] For adding app notes to the crash report.
@@ -709,4 +712,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 24f431aefa64871f57903a227441b231c35ff942
+[api-version]: f334c3c72b512156da2d96b2d2e7bbf4392c0b0e

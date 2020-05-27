@@ -422,8 +422,7 @@ class AutocompleteTest : BaseSessionTest() {
         sessionRule.waitForResult(saveHandled2)
     }
 
-    @Test
-    fun loginUsed() {
+    fun testLoginUsed(autofillEnabled: Boolean) {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 // Enable login management since it's disabled in automation.
                 "signon.rememberSignons" to true,
@@ -453,42 +452,59 @@ class AutocompleteTest : BaseSessionTest() {
                 .build()
         val savedLogins = mutableListOf<LoginEntry>(savedLogin)
 
-        sessionRule.addExternalDelegateUntilTestEnd(
-                LoginStorageDelegate::class, register, unregister,
-                object : LoginStorageDelegate {
-            @AssertCalled
-            override fun onLoginFetch(domain: String)
-                    : GeckoResult<Array<LoginEntry>>? {
-                assertThat("Domain should match", domain, equalTo("localhost"))
+        if (autofillEnabled) {
+            sessionRule.addExternalDelegateUntilTestEnd(
+                    LoginStorageDelegate::class, register, unregister,
+                    object : LoginStorageDelegate {
+                @AssertCalled
+                override fun onLoginFetch(domain: String)
+                        : GeckoResult<Array<LoginEntry>>? {
+                    assertThat("Domain should match", domain, equalTo("localhost"))
 
-                return GeckoResult.fromValue(savedLogins.toTypedArray())
-            }
+                    return GeckoResult.fromValue(savedLogins.toTypedArray())
+                }
 
-            @AssertCalled(count = 1)
-            override fun onLoginUsed(login: LoginEntry, usedFields: Int) {
-                assertThat(
-                    "Used fields should match",
-                    usedFields,
-                    equalTo(Autocomplete.UsedField.PASSWORD))
+                @AssertCalled(count = 1)
+                override fun onLoginUsed(login: LoginEntry, usedFields: Int) {
+                    assertThat(
+                        "Used fields should match",
+                        usedFields,
+                        equalTo(Autocomplete.UsedField.PASSWORD))
 
-                assertThat(
-                    "Username should match",
-                    login.username,
-                    equalTo(user1))
+                    assertThat(
+                        "Username should match",
+                        login.username,
+                        equalTo(user1))
 
-                assertThat(
-                    "Password should match",
-                    login.password,
-                    equalTo(pass1))
+                    assertThat(
+                        "Password should match",
+                        login.password,
+                        equalTo(pass1))
 
-                assertThat(
-                    "GUID should match",
-                    login.guid,
-                    equalTo(guid))
+                    assertThat(
+                        "GUID should match",
+                        login.guid,
+                        equalTo(guid))
 
-                usedHandled.complete(null)
-            }
-        })
+                    usedHandled.complete(null)
+                }
+            })
+        } else {
+            sessionRule.addExternalDelegateUntilTestEnd(
+                    LoginStorageDelegate::class, register, unregister,
+                    object : LoginStorageDelegate {
+                @AssertCalled
+                override fun onLoginFetch(domain: String)
+                        : GeckoResult<Array<LoginEntry>>? {
+                    assertThat("Domain should match", domain, equalTo("localhost"))
+
+                    return GeckoResult.fromValue(savedLogins.toTypedArray())
+                }
+
+                @AssertCalled(false)
+                override fun onLoginUsed(login: LoginEntry, usedFields: Int) {}
+            })
+        }
 
         sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
             @AssertCalled(false)
@@ -504,7 +520,23 @@ class AutocompleteTest : BaseSessionTest() {
         mainSession.waitForPageStop()
         mainSession.evaluateJS("document.querySelector('#form1').submit()")
 
-        sessionRule.waitForResult(usedHandled)
+        if (autofillEnabled) {
+            sessionRule.waitForResult(usedHandled)
+        } else {
+            mainSession.waitForPageStop()
+        }
+    }
+
+    @Test
+    fun loginUsed() {
+        testLoginUsed(true)
+    }
+
+    @Test
+    fun loginAutofillDisabled() {
+        sessionRule.runtime.settings.loginAutofillEnabled = false
+        testLoginUsed(false)
+        sessionRule.runtime.settings.loginAutofillEnabled = true
     }
 
     @Test
