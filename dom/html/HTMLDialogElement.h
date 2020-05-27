@@ -44,6 +44,8 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
   void ShowModal(ErrorResult& aError);
 
   bool IsInTopLayer() const;
+  void QueueCancelDialog();
+  void RunCancelDialogSteps();
 
   nsString mReturnValue;
 

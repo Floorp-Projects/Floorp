@@ -117,6 +117,7 @@
 #include "mozilla/dom/HTMLAllCollection.h"
 #include "mozilla/dom/HTMLMetaElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
+#include "mozilla/dom/HTMLDialogElement.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Performance.h"
@@ -12954,6 +12955,18 @@ size_t Document::CountFullscreenElements() const {
 
 void Document::SetFullscreenRoot(Document* aRoot) {
   mFullscreenRoot = do_GetWeakReference(aRoot);
+}
+
+void Document::TryCancelDialog() {
+  // Check if the document is blocked by modal dialog
+  for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
+    nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
+    if (HTMLDialogElement* dialog =
+            HTMLDialogElement::FromNodeOrNull(element)) {
+      dialog->QueueCancelDialog();
+      break;
+    }
+  }
 }
 
 already_AddRefed<Promise> Document::ExitFullscreen(ErrorResult& aRv) {
