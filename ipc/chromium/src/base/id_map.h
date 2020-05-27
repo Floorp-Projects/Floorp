@@ -66,13 +66,6 @@ class IDMap {
 
   void Clear() { data_.clear(); }
 
-  bool HasData(const T& data) const {
-    // XXX would like to use <algorithm> here ...
-    for (const_iterator it = begin(); it != end(); ++it)
-      if (data == it->second) return true;
-    return false;
-  }
-
   T Lookup(int32_t id) const {
     const_iterator i = data_.find(id);
     if (i == data_.end()) return T();
