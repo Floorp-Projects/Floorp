@@ -285,6 +285,13 @@ function waitForApzFlushedRepaints(aCallback) {
     .then(aCallback);
 }
 
+// Same as waitForApzFlushedRepaints, but in async form.
+async function promiseApzFlushedRepaints() {
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
+  await promiseAllPaintsDone();
+}
+
 // This function takes a set of subtests to run one at a time in new top-level
 // windows, and returns a Promise that is resolved once all the subtests are
 // done running.
