@@ -29,6 +29,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "SharedUtils",
+  "resource://services-settings/SharedUtils.jsm"
+);
+
 // Note: we currently only ever construct one instance of Worker.
 // If it stops being a singleton, the AsyncShutdown code at the bottom
 // of this file, as well as these globals, will need adjusting.
@@ -179,7 +185,9 @@ class Worker {
   }
 
   async checkContentHash(buffer, size, hash) {
-    return this._execute("checkContentHash", [buffer, size, hash]);
+    // The implementation does little work on the current thread, so run the
+    // task on the current thread instead of the worker thread.
+    return SharedUtils.checkContentHash(buffer, size, hash);
   }
 }
 
