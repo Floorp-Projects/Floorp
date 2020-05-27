@@ -807,12 +807,6 @@ static void FrameRatePrefChanged(const char* aPref, void*) {
   }
 }
 
-static void RecomputeBackdropFilterEnabledState() {
-  NS_DispatchToMainThread(NS_NewRunnableFunction("RecomputeEnabledState", [] {
-    nsCSSProps::RecomputeEnabledState("layout.css.backdrop-filter.enabled");
-  }));
-}
-
 void gfxPlatform::Init() {
   MOZ_RELEASE_ASSERT(!XRE_IsGPUProcess(), "GFX: Not allowed in GPU process.");
   MOZ_RELEASE_ASSERT(!XRE_IsRDDProcess(), "GFX: Not allowed in RDD process.");
@@ -1084,8 +1078,6 @@ void gfxPlatform::Init() {
   if (obs) {
     obs->NotifyObservers(nullptr, "gfx-features-ready", nullptr);
   }
-
-  RecomputeBackdropFilterEnabledState();
 }
 
 void gfxPlatform::ReportTelemetry() {
@@ -2693,6 +2685,11 @@ void gfxPlatform::InitWebRenderConfig() {
   bool prefEnabled = WebRenderPrefEnabled();
   bool envvarEnabled = WebRenderEnvvarEnabled();
 
+  // This would ideally be in the nsCSSProps code
+  // but nsCSSProps is initialized before gfxPlatform
+  // so it has to be done here.
+  gfxVars::AddReceiver(&nsCSSProps::GfxVarReceiver());
+
   // WR? WR+   => means WR was enabled via gfx.webrender.all.qualified on
   //              qualified hardware
   // WR! WR+   => means WR was enabled via gfx.webrender.{all,enabled} or
@@ -2707,6 +2704,9 @@ void gfxPlatform::InitWebRenderConfig() {
     // later in this function. For other processes we still want to report
     // the state of the feature for crash reports.
     if (gfxVars::UseWebRender()) {
+      // gfxVars doesn't notify receivers when initialized on content processes
+      // we need to explicitly recompute backdrop-filter's enabled state here.
+      nsCSSProps::RecomputeEnabledState("layout.css.backdrop-filter.enabled");
       reporter.SetSuccessful();
     }
     return;
@@ -3288,8 +3288,6 @@ void gfxPlatform::NotifyGPUProcessDisabled() {
             FeatureStatus::Unavailable, "GPU Process is disabled",
             NS_LITERAL_CSTRING("FEATURE_FAILURE_GPU_PROCESS_DISABLED"));
     gfxVars::SetUseWebRender(false);
-
-    RecomputeBackdropFilterEnabledState();
   }
   gfxVars::SetRemoteCanvasEnabled(false);
 }

@@ -22,7 +22,8 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/AnimationEffectBinding.h"  // for PlaybackDirection
 #include "mozilla/gfx/gfxVars.h"                 // for UseWebRender
-#include "mozilla/LookAndFeel.h"                 // for system colors
+#include "mozilla/gfx/gfxVarReceiver.h"
+#include "mozilla/LookAndFeel.h"  // for system colors
 
 #include "nsString.h"
 #include "nsStaticNameTable.h"
@@ -65,6 +66,7 @@ static nsStaticCaseInsensitiveNameTable* CreateStaticTable(
 }
 
 void nsCSSProps::RecomputeEnabledState(const char* aPref, void*) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   DebugOnly<bool> foundPref = false;
   for (const PropertyPref* pref = kPropertyPrefTable;
        pref->mPropID != eCSSProperty_UNKNOWN; pref++) {
@@ -73,7 +75,7 @@ void nsCSSProps::RecomputeEnabledState(const char* aPref, void*) {
       gPropertyEnabled[pref->mPropID] = Preferences::GetBool(pref->mPref);
       if (pref->mPropID == eCSSProperty_backdrop_filter) {
         gPropertyEnabled[pref->mPropID] &=
-            gfxPlatform::Initialized() && gfx::gfxVars::UseWebRender();
+            gfx::gfxVars::GetUseWebRenderOrDefault();
       }
     }
   }
@@ -213,5 +215,41 @@ bool nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
 
 #undef IS_ENABLED_BY_DEFAULT
 };
+
+/**
+ * A singleton class to register as a receiver for gfxVars.
+ * Updates the state of backdrop-filter's pref if the gfx
+ * WebRender var changes state.
+ */
+class nsCSSPropsGfxVarReceiver final : public gfx::gfxVarReceiver {
+  constexpr nsCSSPropsGfxVarReceiver() = default;
+
+  // WebRender's last known enabled state.
+  static bool sLastKnownUseWebRender;
+  static nsCSSPropsGfxVarReceiver sInstance;
+
+ public:
+  static gfx::gfxVarReceiver& GetInstance() { return sInstance; }
+
+  void OnVarChanged(const gfx::GfxVarUpdate&) override {
+    bool enabled = gfxVars::UseWebRender();
+    if (sLastKnownUseWebRender != enabled) {
+      sLastKnownUseWebRender = enabled;
+      nsCSSProps::RecomputeEnabledState("layout.css.backdrop-filter.enabled");
+    }
+  }
+};
+
+/* static */
+nsCSSPropsGfxVarReceiver nsCSSPropsGfxVarReceiver::sInstance =
+    nsCSSPropsGfxVarReceiver();
+
+/* static */
+bool nsCSSPropsGfxVarReceiver::sLastKnownUseWebRender = false;
+
+/* static */
+gfx::gfxVarReceiver& nsCSSProps::GfxVarReceiver() {
+  return nsCSSPropsGfxVarReceiver::GetInstance();
+}
 
 #include "nsCSSPropsGenerated.inc"
