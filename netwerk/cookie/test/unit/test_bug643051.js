@@ -31,16 +31,11 @@ add_task(async () => {
   let actual = cs.getCookieStringFromHttp(uri, channel);
   Assert.equal(actual, expected);
 
-  uri = NetUtil.newURI("http://example.net/");
-
-  const contentPage = await CookieXPCShellUtils.loadContentPage(uri.spec);
-  // eslint-disable-next-line no-undef
-  await contentPage.spawn(set, cookie => (content.document.cookie = cookie));
-  await contentPage.close();
+  await CookieXPCShellUtils.setCookieToDocument("http://example.net/", set);
+  actual = await CookieXPCShellUtils.getCookieStringFromDocument(
+    "http://example.net/"
+  );
 
   expected = "foo=bar";
-  actual = cs.getCookieStringForPrincipal(
-    Services.scriptSecurityManager.createContentPrincipal(uri, {})
-  );
   Assert.equal(actual, expected);
 });

@@ -30,17 +30,15 @@ add_task(async () => {
 
   // Try an expiration time before the epoch
 
-  const contentPage = await CookieXPCShellUtils.loadContentPage(uri.spec);
-  await contentPage.spawn(
-    null,
-    () =>
-      // eslint-disable-next-line no-undef
-      (content.document.cookie =
-        "test=test; path=/; domain=example.com; expires=Sun, 31-Dec-1899 16:00:00 GMT;")
+  await CookieXPCShellUtils.setCookieToDocument(
+    uri.spec,
+    "test=test; path=/; domain=example.com; expires=Sun, 31-Dec-1899 16:00:00 GMT;"
   );
-  await contentPage.close();
+  Assert.equal(
+    await CookieXPCShellUtils.getCookieStringFromDocument(uri.spec),
+    ""
+  );
 
-  Assert.equal(serv.getCookieStringForPrincipal(principal), "");
   // Now sanity check
   serv.setCookieStringFromHttp(
     uri,
@@ -48,5 +46,8 @@ add_task(async () => {
     channel
   );
 
-  Assert.equal(serv.getCookieStringForPrincipal(principal), "test2=test2");
+  Assert.equal(
+    await CookieXPCShellUtils.getCookieStringFromDocument(uri.spec),
+    "test2=test2"
+  );
 });
