@@ -94,7 +94,7 @@
 
 namespace mozilla {
 
-template <class>
+template <class, class = void>
 struct DefaultHasher;
 
 template <class, class>
@@ -744,7 +744,7 @@ struct PointerHasher {
 };
 
 // The default hash policy, which only works with integers.
-template <class Key>
+template <class Key, typename>
 struct DefaultHasher {
   using Lookup = Key;
 
@@ -758,6 +758,22 @@ struct DefaultHasher {
   static bool match(const Key& aKey, const Lookup& aLookup) {
     // Use builtin or overloaded operator==.
     return aKey == aLookup;
+  }
+
+  static void rekey(Key& aKey, const Key& aNewKey) { aKey = aNewKey; }
+};
+
+// A DefaultHasher specialization for enums.
+template <class T>
+struct DefaultHasher<T, std::enable_if_t<std::is_enum_v<T>>> {
+  using Key = T;
+  using Lookup = Key;
+
+  static HashNumber hash(const Lookup& aLookup) { return HashGeneric(aLookup); }
+
+  static bool match(const Key& aKey, const Lookup& aLookup) {
+    // Use builtin or overloaded operator==.
+    return aKey == static_cast<Key>(aLookup);
   }
 
   static void rekey(Key& aKey, const Key& aNewKey) { aKey = aNewKey; }
