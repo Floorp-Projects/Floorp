@@ -90,6 +90,12 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
   wgp->mDocumentURI = aInit.documentURI();
   wgp->mDocContentBlockingAllowListPrincipal =
       aInit.contentBlockingAllowListPrincipal();
+  wgp->mBlockAllMixedContent = aInit.blockAllMixedContent();
+  wgp->mUpgradeInsecureRequests = aInit.upgradeInsecureRequests();
+  wgp->mSandboxFlags = aInit.sandboxFlags();
+  wgp->mHttpsOnlyStatus = aInit.httpsOnlyStatus();
+  net::CookieJarSettings::Deserialize(aInit.cookieJarSettings(),
+                                      getter_AddRefs(wgp->mCookieJarSettings));
   MOZ_RELEASE_ASSERT(wgp->mDocumentPrincipal, "Must have a valid principal");
 
   return wgp.forget();
