@@ -29,6 +29,10 @@ UNIFIED_SOURCES += [
     'RootAccessibleWrap.mm',
 ]
 
+SOURCES += [
+    '!MacSelectorMap.mm',
+]
+
 LOCAL_INCLUDES += [
     '/accessible/base',
     '/accessible/generic',
@@ -41,6 +45,17 @@ LOCAL_INCLUDES += [
     '/widget',
     '/widget/cocoa',
 ]
+
+GENERATED_FILES += [
+    'MacSelectorMap.h',
+    'MacSelectorMap.mm',
+]
+
+GENERATED_FILES['MacSelectorMap.mm'].script = '/accessible/mac/SelectorMapGen.py:gen_mm'
+GENERATED_FILES['MacSelectorMap.mm'].inputs = ['MOXAccessibleProtocol.h']
+
+GENERATED_FILES['MacSelectorMap.h'].script = '/accessible/mac/SelectorMapGen.py:gen_h'
+GENERATED_FILES['MacSelectorMap.h'].inputs = ['MOXAccessibleProtocol.h']
 
 FINAL_LIBRARY = 'xul'
 
