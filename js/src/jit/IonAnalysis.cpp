@@ -4933,29 +4933,8 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
       // If this is a LoadElement that needs a hole check, we only support
       // folding it with a fallible unbox so that we can eliminate the hole
       // check.
-      if (load->isLoadElement() && load->toLoadElement()->needsHoleCheck()) {
-        if (!unbox->fallible()) {
-          continue;
-        }
-        // No matter what happens below, if the fallible unbox is the only use
-        // (including resume points!) we can now eliminate the hole check.
-        if (load->hasOneUse()) {
-          load->toLoadElement()->disableHoleCheck();
-        }
-      }
-
-      // For now only fold for types where we can do better than a separate load
-      // and unbox:
-      //
-      // * Int32 and Boolean: we can test the type tag and load the payload
-      //   without bitwise instructions on 64-bit platforms.
-      //
-      // * Double: we can load the double directly in a FP register.
-      //
-      // For other types we have to load the full Value anyway on 64-bit
-      // platforms so there's not much to gain.
-      if (unbox->type() != MIRType::Int32 && unbox->type() != MIRType::Double &&
-          unbox->type() != MIRType::Boolean) {
+      if (load->isLoadElement() && load->toLoadElement()->needsHoleCheck() &&
+          !unbox->fallible()) {
         continue;
       }
 

@@ -7558,8 +7558,6 @@ class MLoadElement : public MBinaryInstruction, public NoTypePolicy::Data {
   NAMED_OPERANDS((0, elements), (1, index))
 
   bool needsHoleCheck() const { return needsHoleCheck_; }
-  void disableHoleCheck() { needsHoleCheck_ = false; }
-
   bool loadDoubles() const { return loadDoubles_; }
   bool fallible() const { return needsHoleCheck(); }
 
