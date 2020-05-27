@@ -1,5 +1,5 @@
 load 0-timescale.html # bug 1229166
-skip-if(Android) load 459439-1.html # bug 888557
+skip-if(Android) pref(media.autoplay.default,0) load 459439-1.html # bug 888557
 load 466607-1.html
 load 466945-1.html
 load 468763-1.html
@@ -7,7 +7,7 @@ load 474744-1.html
 HTTP load 481136-1.html # needs to be HTTP to recognize the ogg as an audio file?
 load 492286-1.xhtml
 load 493915-1.html
-load 495794-1.html
+pref(media.autoplay.default,0) load 495794-1.html
 load 497734-1.xhtml
 load 497734-2.html
 load 576612-1.html
