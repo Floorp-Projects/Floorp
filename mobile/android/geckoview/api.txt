@@ -564,6 +564,7 @@ package org.mozilla.geckoview {
     method public boolean getInputAutoZoomEnabled();
     method public boolean getJavaScriptEnabled();
     method @Nullable public String[] getLocales();
+    method public boolean getLoginAutofillEnabled();
     method public boolean getPauseForDebuggerEnabled();
     method public int getPreferredColorScheme();
     method public boolean getRemoteDebuggingEnabled();
@@ -585,6 +586,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setInputAutoZoomEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setJavaScriptEnabled(boolean);
     method public void setLocales(@Nullable String[]);
+    method @NonNull public GeckoRuntimeSettings setLoginAutofillEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setPreferredColorScheme(int);
     method @NonNull public GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setWebFontsEnabled(boolean);
@@ -616,6 +618,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder inputAutoZoomEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder javaScriptEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder locales(@Nullable String[]);
+    method @NonNull public GeckoRuntimeSettings.Builder loginAutofillEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder pauseForDebugger(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder preferredColorScheme(int);
     method @NonNull public GeckoRuntimeSettings.Builder remoteDebuggingEnabled(boolean);
