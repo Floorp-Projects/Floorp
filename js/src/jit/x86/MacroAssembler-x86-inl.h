@@ -1044,6 +1044,43 @@ void MacroAssembler::truncateDoubleToUInt64(Address src, Address dest,
   bind(&done);
 }
 
+template <typename T>
+void MacroAssemblerX86::fallibleUnboxPtrImpl(const T& src, Register dest,
+                                             JSValueType type, Label* fail) {
+  switch (type) {
+    case JSVAL_TYPE_OBJECT:
+      asMasm().branchTestObject(Assembler::NotEqual, src, fail);
+      break;
+    case JSVAL_TYPE_STRING:
+      asMasm().branchTestString(Assembler::NotEqual, src, fail);
+      break;
+    case JSVAL_TYPE_SYMBOL:
+      asMasm().branchTestSymbol(Assembler::NotEqual, src, fail);
+      break;
+    case JSVAL_TYPE_BIGINT:
+      asMasm().branchTestBigInt(Assembler::NotEqual, src, fail);
+      break;
+    default:
+      MOZ_CRASH("Unexpected type");
+  }
+  unboxNonDouble(src, dest, type);
+}
+
+void MacroAssembler::fallibleUnboxPtr(const ValueOperand& src, Register dest,
+                                      JSValueType type, Label* fail) {
+  fallibleUnboxPtrImpl(src, dest, type, fail);
+}
+
+void MacroAssembler::fallibleUnboxPtr(const Address& src, Register dest,
+                                      JSValueType type, Label* fail) {
+  fallibleUnboxPtrImpl(src, dest, type, fail);
+}
+
+void MacroAssembler::fallibleUnboxPtr(const BaseIndex& src, Register dest,
+                                      JSValueType type, Label* fail) {
+  fallibleUnboxPtrImpl(src, dest, type, fail);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

@@ -785,6 +785,46 @@ template void MacroAssembler::storeFloat32(FloatRegister src,
 template void MacroAssembler::storeFloat32(FloatRegister src,
                                            const BaseIndex& dest);
 
+template <typename T>
+void MacroAssembler::fallibleUnboxInt32(const T& src, Register dest,
+                                        Label* fail) {
+  // Int32Value can be unboxed efficiently with unboxInt32, so use that.
+  branchTestInt32(Assembler::NotEqual, src, fail);
+  unboxInt32(src, dest);
+}
+
+template <typename T>
+void MacroAssembler::fallibleUnboxBoolean(const T& src, Register dest,
+                                          Label* fail) {
+  // BooleanValue can be unboxed efficiently with unboxBoolean, so use that.
+  branchTestBoolean(Assembler::NotEqual, src, fail);
+  unboxBoolean(src, dest);
+}
+
+template <typename T>
+void MacroAssembler::fallibleUnboxObject(const T& src, Register dest,
+                                         Label* fail) {
+  fallibleUnboxPtr(src, dest, JSVAL_TYPE_OBJECT, fail);
+}
+
+template <typename T>
+void MacroAssembler::fallibleUnboxString(const T& src, Register dest,
+                                         Label* fail) {
+  fallibleUnboxPtr(src, dest, JSVAL_TYPE_STRING, fail);
+}
+
+template <typename T>
+void MacroAssembler::fallibleUnboxSymbol(const T& src, Register dest,
+                                         Label* fail) {
+  fallibleUnboxPtr(src, dest, JSVAL_TYPE_SYMBOL, fail);
+}
+
+template <typename T>
+void MacroAssembler::fallibleUnboxBigInt(const T& src, Register dest,
+                                         Label* fail) {
+  fallibleUnboxPtr(src, dest, JSVAL_TYPE_BIGINT, fail);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

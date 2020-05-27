@@ -883,6 +883,38 @@ void MacroAssembler::truncateDoubleToUInt64(Address src, Address dest,
   bind(&done);
 }
 
+void MacroAssemblerX64::fallibleUnboxPtrImpl(const Operand& src, Register dest,
+                                             JSValueType type, Label* fail) {
+  MOZ_ASSERT(type == JSVAL_TYPE_OBJECT || type == JSVAL_TYPE_STRING ||
+             type == JSVAL_TYPE_SYMBOL || type == JSVAL_TYPE_BIGINT);
+  // dest := src XOR mask
+  // scratch := dest >> JSVAL_TAG_SHIFT
+  // fail if scratch != 0
+  //
+  // Note: src and dest can be the same register.
+  ScratchRegisterScope scratch(asMasm());
+  mov(ImmWord(JSVAL_TYPE_TO_SHIFTED_TAG(type)), scratch);
+  xorq(src, scratch);
+  mov(scratch, dest);
+  shrq(Imm32(JSVAL_TAG_SHIFT), scratch);
+  j(Assembler::NonZero, fail);
+}
+
+void MacroAssembler::fallibleUnboxPtr(const ValueOperand& src, Register dest,
+                                      JSValueType type, Label* fail) {
+  fallibleUnboxPtrImpl(Operand(src.valueReg()), dest, type, fail);
+}
+
+void MacroAssembler::fallibleUnboxPtr(const Address& src, Register dest,
+                                      JSValueType type, Label* fail) {
+  fallibleUnboxPtrImpl(Operand(src), dest, type, fail);
+}
+
+void MacroAssembler::fallibleUnboxPtr(const BaseIndex& src, Register dest,
+                                      JSValueType type, Label* fail) {
+  fallibleUnboxPtrImpl(Operand(src), dest, type, fail);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

@@ -871,6 +871,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     andq(src.valueReg(), dest);
   }
 
+  inline void fallibleUnboxPtrImpl(const Operand& src, Register dest,
+                                   JSValueType type, Label* fail);
+
   // Extended unboxing API. If the payload is already in a register, returns
   // that register. Otherwise, provides a move to the given scratch register,
   // and returns that.

@@ -892,6 +892,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
     as_eor(val.payloadReg(), val.payloadReg(), Imm8(1));
   }
 
+  template <typename T>
+  void fallibleUnboxPtrImpl(const T& src, Register dest, JSValueType type,
+                            Label* fail);
+
   // Boxing code.
   void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister);
   void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest);

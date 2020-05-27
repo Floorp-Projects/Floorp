@@ -1796,6 +1796,31 @@ void MacroAssembler::clampIntToUint8(Register reg) {
   Csel(reg32, reg32, scratch32, Assembler::LessThanOrEqual);
 }
 
+void MacroAssembler::fallibleUnboxPtr(const ValueOperand& src, Register dest,
+                                      JSValueType type, Label* fail) {
+  MOZ_ASSERT(type == JSVAL_TYPE_OBJECT || type == JSVAL_TYPE_STRING ||
+             type == JSVAL_TYPE_SYMBOL || type == JSVAL_TYPE_BIGINT);
+  // dest := src XOR mask
+  // fail if dest >> JSVAL_TAG_SHIFT != 0
+  const ARMRegister src64(src.valueReg(), 64);
+  const ARMRegister dest64(dest, 64);
+  Eor(dest64, src64, Operand(JSVAL_TYPE_TO_SHIFTED_TAG(type)));
+  Cmp(vixl::xzr, Operand(dest64, vixl::LSR, JSVAL_TAG_SHIFT));
+  j(Assembler::NotEqual, fail);
+}
+
+void MacroAssembler::fallibleUnboxPtr(const Address& src, Register dest,
+                                      JSValueType type, Label* fail) {
+  loadValue(src, ValueOperand(dest));
+  fallibleUnboxPtr(ValueOperand(dest), dest, type, fail);
+}
+
+void MacroAssembler::fallibleUnboxPtr(const BaseIndex& src, Register dest,
+                                      JSValueType type, Label* fail) {
+  loadValue(src, ValueOperand(dest));
+  fallibleUnboxPtr(ValueOperand(dest), dest, type, fail);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
