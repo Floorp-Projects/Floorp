@@ -365,7 +365,7 @@ panelview[id^=PanelUI-webext-] {
 }
 
 panelview:not([mainview]) .toolbarbutton-text,
-.cui-widget-panel toolbarbutton:not([wrap]) > .toolbarbutton-text,
+.cui-widget-panel .toolbarbutton-text,
 #overflowMenu-customize-button > .toolbarbutton-text {
   text-align: start;
   display: -moz-box;
@@ -1021,7 +1021,6 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   background-color: @appmenuWarningBackgroundColorActiveBrightText@;
 }
 
-#customization-palette .toolbarbutton-multiline-text,
 #customization-palette .toolbarbutton-text {
   display: none;
 }
@@ -1081,12 +1080,6 @@ panelview .toolbarbutton-1,
 .subviewbutton.restoreallitem > .toolbarbutton-text,
 .subviewbutton.bookmark-item > .toolbarbutton-text,
 .subviewbutton[checked="true"] > .toolbarbutton-text {
-  padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
-}
-
-.panel-banner-item > .toolbarbutton-multiline-text {
-  margin: 0;
-  padding: 0;
   padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
 }
 
@@ -1746,7 +1739,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 .subviewbutton-back > .toolbarbutton-text {
-  /* !important to override .cui-widget-panel toolbarbutton:not([wrap]) > .toolbarbutton-text
+  /* !important to override .cui-widget-panel .toolbarbutton-text
    * selector further down. */
   display: none !important;
 }
