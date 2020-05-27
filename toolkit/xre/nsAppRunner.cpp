@@ -101,6 +101,7 @@
 #  include <math.h>
 #  include "cairo/cairo-features.h"
 #  include "mozilla/WindowsDllBlocklist.h"
+#  include "mozilla/WindowsProcessMitigations.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
 #  include "mozilla/mscom/ProcessRuntime.h"
 #  include "mozilla/widget/AudioSession.h"
@@ -4764,7 +4765,12 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // this browser process fails to launch sandbox processes because we cannot
   // copy a modified IAT into a remote process (See SandboxBroker::LaunchApp).
   // To prevent that, we cache the intact IAT before COM initialization.
-  mozilla::ipc::GeckoChildProcessHost::CacheNtDllThunk();
+  // If EAF+ is enabled, CacheNtDllThunk() causes a crash, but EAF+ will
+  // also prevent an injected module from parsing the PE headers and modifying
+  // the IAT.  Therefore, we can skip CacheNtDllThunk().
+  if (!mozilla::IsEafPlusEnabled()) {
+    mozilla::ipc::GeckoChildProcessHost::CacheNtDllThunk();
+  }
 
   // Some COM settings are global to the process and must be set before any non-
   // trivial COM is run in the application. Since these settings may affect
