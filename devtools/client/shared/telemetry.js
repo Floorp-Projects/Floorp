@@ -770,6 +770,7 @@ function getChartsFromToolId(id) {
       countScalar = `devtools.${lowerCaseId}.opened_count`;
       break;
     case "ANIMATIONINSPECTOR":
+    case "COMPATIBILITYVIEW":
     case "COMPUTEDVIEW":
     case "FONTINSPECTOR":
     case "LAYOUTVIEW":
