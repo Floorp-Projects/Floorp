@@ -441,6 +441,7 @@ function BuildConditionSandbox(aURL) {
     var xr = Cc[NS_XREAPPINFO_CONTRACTID].getService(Ci.nsIXULRuntime);
     var appInfo = Cc[NS_XREAPPINFO_CONTRACTID].getService(Ci.nsIXULAppInfo);
     sandbox.isDebugBuild = g.debug.isDebugBuild;
+    sandbox.isCoverageBuild = g.isCoverageBuild;
     var prefs = Cc["@mozilla.org/preferences-service;1"].
                 getService(Ci.nsIPrefBranch);
     var env = Cc["@mozilla.org/process/environment;1"].

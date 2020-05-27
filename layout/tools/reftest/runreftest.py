@@ -395,6 +395,7 @@ class RefTest(object):
         prefs['gfx.font_rendering.ahem_antialias_none'] = True
         # Disable dark scrollbars because it's semi-transparent.
         prefs['widget.disable-dark-scrollbar'] = True
+        prefs['reftest.isCoverageBuild'] = mozinfo.info.get('ccov', False)
 
         # Set tests to run or manifests to parse.
         if tests:
