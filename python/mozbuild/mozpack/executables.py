@@ -95,7 +95,7 @@ def strip(path):
     '''
     from buildconfig import substs
     strip = substs['STRIP']
-    flags = substs['STRIP_FLAGS'].split() if 'STRIP_FLAGS' in substs else []
+    flags = substs.get('STRIP_FLAGS', [])
     cmd = [strip] + flags + [path]
     if subprocess.call(cmd) != 0:
         errors.fatal('Error executing ' + ' '.join(cmd))
