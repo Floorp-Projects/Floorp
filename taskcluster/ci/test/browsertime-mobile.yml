@@ -82,31 +82,31 @@ browsertime-tp6m:
             default:
                 - allrecipes
                 - amazon
-                - amazon-search
+                - [amazon-search, amazon-s]
                 - bbc
                 - bing
-                - bing-search-restaurants
+                - [bing-search-restaurants, bing-s-r]
                 - booking
                 - cnn
-                - cnn-ampstories
-                - ebay-kleinanzeigen
-                - ebay-kleinanzeigen-search
+                - [cnn-ampstories, cnn-amp]
+                - [ebay-kleinanzeigen, ebay-k]
+                - [ebay-kleinanzeigen-search, ebay-k-s]
                 - espn
                 - facebook
-                - facebook-cristiano
+                - [facebook-cristiano, fb-cris]
                 - google
-                - google-maps
-                - google-search-restaurants
+                - [google-maps, gmaps]
+                - [google-search-restaurants, gsearch-r]
                 - instagram
                 - imdb
                 - jianshu
-                - microsoft-support
+                - [microsoft-support, micros-sup]
                 - reddit
-                - stackoverflow
+                - [stackoverflow, stacko]
                 - web-de
                 - wikipedia
                 - youtube
-                - youtube-watch
+                - [youtube-watch, youtube-w]
     apps: ["geckoview", "fenix", "fennec", "chrome-m"]
     tier:
         by-raptor-test:
@@ -206,45 +206,45 @@ browsertime-tp6m-live:
     raptor-subtests:
         - allrecipes
         - amazon
-        - amazon-search
+        - [amazon-search, amazon-s]
         - bbc
         - bing
-        - bing-search-restaurants
+        - [bing-search-restaurants, bing-s-r]
         - booking
         - booking-sf
         - cnn
-        - cnn-ampstories
+        - [cnn-ampstories, cnn-amp]
         - discord
-        - ebay-kleinanzeigen
-        - ebay-kleinanzeigen-search
+        - [ebay-kleinanzeigen, ebay-k]
+        - [ebay-kleinanzeigen-search, ebay-k-s]
         - espn
         - expedia
         - facebook
-        - facebook-cristiano
-        - fashionbeans
+        - [facebook-cristiano, fb-cris]
+        - [fashionbeans, fashbea]
         - google
-        - google-accounts
-        - google-maps
-        - google-search-restaurants
+        - [google-accounts, gacc]
+        - [google-maps, gmaps]
+        - [google-search-restaurants, gsearch-r]
         - instagram
         - imdb
-        - imdb-firefox
+        - [imdb-firefox, imdb-f]
         - jianshu
-        - medium-article
-        - microsoft-support
+        - [medium-article, medium]
+        - [microsoft-support, micros-sup]
         - nytimes
-        - people-article
+        - [people-article, people]
         - reddit
-        - reddit-thread
+        - [reddit-thread, reddit-thr]
         - rumble-fox
-        - stackoverflow
-        - stackoverflow-question
-        - urbandictionary-define
+        - [stackoverflow, stacko]
+        - [stackoverflow-question, stack-q]
+        - [urbandictionary-define, urbict-def]
         - web-de
-        - wikia-marvel
+        - [wikia-marvel, wikia-m]
         - wikipedia
         - youtube
-        - youtube-watch
+        - [youtube-watch, youtube-w]
     apps: ["fenix", "chrome-m"]
     run-on-projects: []
     pageload: cold
