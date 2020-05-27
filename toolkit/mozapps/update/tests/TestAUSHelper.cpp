@@ -287,7 +287,7 @@ int NS_main(int argc, NS_tchar** argv) {
   }
 
   if (!NS_tstrcmp(argv[1], NS_T("wait-for-service-stop"))) {
-#ifdef XP_WIN
+#if defined(XP_WIN) && defined(MOZ_MAINTENANCE_SERVICE)
     const int maxWaitSeconds = NS_ttoi(argv[3]);
     LPCWSTR serviceName = argv[2];
     DWORD serviceState = WaitForServiceStop(serviceName, maxWaitSeconds);
@@ -320,18 +320,8 @@ int NS_main(int argc, NS_tchar** argv) {
 #endif
   }
 
-  if (!NS_tstrcmp(argv[1], NS_T("is-process-running"))) {
-#ifdef XP_WIN
-    LPCWSTR application = argv[2];
-    return (ERROR_NOT_FOUND == IsProcessRunning(application)) ? 0 : 1;
-#else
-    // Not implemented on non-Windows platforms
-    return 1;
-#endif
-  }
-
   if (!NS_tstrcmp(argv[1], NS_T("launch-service"))) {
-#ifdef XP_WIN
+#if defined(XP_WIN) && defined(MOZ_MAINTENANCE_SERVICE)
     DWORD ret =
         LaunchServiceSoftwareUpdateCommand(argc - 2, (LPCWSTR*)argv + 2);
     if (ret != ERROR_SUCCESS) {

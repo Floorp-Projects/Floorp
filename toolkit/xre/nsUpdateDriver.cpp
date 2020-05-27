@@ -784,8 +784,12 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aUseServiceOnFailure) {
                                     bool aUseServiceOnFailure,
                                     const nsAutoString& aInstallPath)
         : Runnable(aName),
-          mUseServiceOnFailure(aUseServiceOnFailure),
-          mState(State::Initializing) {
+          mState(State::Initializing)
+#  ifdef MOZ_MAINTENANCE_SERVICE
+          ,
+          mUseServiceOnFailure(aUseServiceOnFailure)
+#  endif
+    {
       size_t installPathSize = aInstallPath.Length() + 1;
       mInstallPath = mozilla::MakeUnique<wchar_t[]>(installPathSize);
       if (mInstallPath) {
@@ -798,6 +802,7 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aUseServiceOnFailure) {
     }
 
     NS_IMETHOD Run() override {
+#  ifdef MOZ_MAINTENANCE_SERVICE
       // These constants control how often and how many times we poll the
       // maintenance service to see if it has stopped. If there is no delay in
       // the event queue, this works out to 8 minutes of polling.
@@ -808,6 +813,7 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aUseServiceOnFailure) {
       // out to 5 seconds of polling.
       const unsigned int kMaxStartAttempts = 50;
       const unsigned int kStartAttemptIntervalMS = 100;
+#  endif
 
       if (mState == State::Initializing) {
         if (!mInstallPath) {
@@ -823,13 +829,20 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aUseServiceOnFailure) {
         if (SUCCEEDED(permResult)) {
           LOG(("Successfully fixed permissions from within Firefox\n"));
           return NS_OK;
-        } else if (!mUseServiceOnFailure) {
+        }
+#  ifdef MOZ_MAINTENANCE_SERVICE
+        else if (!mUseServiceOnFailure) {
           LOG(
               ("Error: Unable to fix permissions within Firefox and "
                "maintenance service is disabled\n"));
           return ReportUpdateError();
         }
+#  else
+        LOG(("Error: Unable to fix permissions\n"));
+        return ReportUpdateError();
+#  endif
 
+#  ifdef MOZ_MAINTENANCE_SERVICE
         SC_HANDLE serviceManager =
             OpenSCManager(nullptr, nullptr,
                           SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
@@ -867,7 +880,9 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aUseServiceOnFailure) {
 
         mState = State::WaitingToStart;
         mCurrentTry = 1;
+#  endif
       }
+#  ifdef MOZ_MAINTENANCE_SERVICE
       if (mState == State::WaitingToStart ||
           mState == State::WaitingForFinish) {
         SERVICE_STATUS_PROCESS ssp;
@@ -933,6 +948,7 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aUseServiceOnFailure) {
         }
         return RetryInMS(kStartAttemptIntervalMS);
       }
+#  endif
       // We should not have fallen through all three state checks above
       LOG(
           ("Error: Reached logically unreachable code when correcting update "
@@ -941,10 +957,11 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aUseServiceOnFailure) {
     }
 
    private:
-    bool mUseServiceOnFailure;
-    unsigned int mCurrentTry;
     State mState;
     mozilla::UniquePtr<wchar_t[]> mInstallPath;
+#  ifdef MOZ_MAINTENANCE_SERVICE
+    bool mUseServiceOnFailure;
+    unsigned int mCurrentTry;
     nsAutoServiceHandle mServiceManager;
     nsAutoServiceHandle mService;
     DWORD mStartServiceArgCount;
@@ -955,6 +972,7 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aUseServiceOnFailure) {
       nsCOMPtr<nsIRunnable> runnable(this);
       return NS_DelayedDispatchToCurrentThread(runnable.forget(), aDelayMS);
     }
+#  endif
     nsresult ReportUpdateError() {
       return NS_DispatchToMainThread(NS_NewRunnableFunction(
           "nsUpdateProcessor::FixUpdateDirectoryPerms::"
