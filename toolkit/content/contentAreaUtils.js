@@ -1107,6 +1107,29 @@ function validateFileName(aFileName) {
   return processed;
 }
 
+// This is the set of image extensions supported by extraMimeEntries in
+// nsExternalHelperAppService.
+const kImageExtensions = new Set([
+  "art",
+  "bmp",
+  "gif",
+  "ico",
+  "cur",
+  "jpeg",
+  "jpg",
+  "jfif",
+  "pjpeg",
+  "pjp",
+  "png",
+  "apng",
+  "tiff",
+  "tif",
+  "xbm",
+  "svg",
+  "webp",
+  "avif",
+]);
+
 function getNormalizedLeafName(aFile, aDefaultExtension) {
   if (!aDefaultExtension) {
     return aFile;
@@ -1120,9 +1143,19 @@ function getNormalizedLeafName(aFile, aDefaultExtension) {
   // Remove leading dots
   aFile = aFile.replace(/^\.+/, "");
 
-  // Fix up the file name we're saving to to include the default extension
+  // Include the default extension in the file name to which we're saving.
   var i = aFile.lastIndexOf(".");
-  if (aFile.substr(i + 1) != aDefaultExtension) {
+  let previousExtension = aFile.substr(i + 1);
+  if (previousExtension != aDefaultExtension) {
+    // Suffixing the extension is the safe bet - it preserves the previous
+    // extension in case that's meaningful (e.g. various text files served
+    // with text/plain will end up as `foo.cpp.txt`, in the worst case).
+    // However, for images, the extension derived from the URL should be
+    // replaced if the content type indicates a different filetype - this makes
+    // sure that we treat e.g. feature-tested webp/avif images correctly.
+    if (kImageExtensions.has(previousExtension)) {
+      return aFile.substr(0, i + 1) + aDefaultExtension;
+    }
     return aFile + "." + aDefaultExtension;
   }
 
