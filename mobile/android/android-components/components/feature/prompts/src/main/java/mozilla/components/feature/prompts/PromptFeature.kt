@@ -27,10 +27,14 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
 import mozilla.components.concept.engine.prompt.PromptRequest.Color
+import mozilla.components.concept.engine.prompt.PromptRequest.Confirm
+import mozilla.components.concept.engine.prompt.PromptRequest.Dismissible
 import mozilla.components.concept.engine.prompt.PromptRequest.File
-import mozilla.components.concept.engine.prompt.PromptRequest.LoginPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
+import mozilla.components.concept.engine.prompt.PromptRequest.Popup
+import mozilla.components.concept.engine.prompt.PromptRequest.SaveLoginPrompt
+import mozilla.components.concept.engine.prompt.PromptRequest.SelectLoginPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.Share
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
@@ -296,8 +300,8 @@ class PromptFeature private constructor(
     override fun onCancel(sessionId: String) {
         store.consumePromptFrom(sessionId, activePrompt) {
             when (it) {
-                is PromptRequest.Dismissible -> it.onDismiss()
-                is PromptRequest.Popup -> it.onDeny()
+                is Dismissible -> it.onDismiss()
+                is Popup -> it.onDeny()
             }
         }
     }
@@ -323,7 +327,7 @@ class PromptFeature private constructor(
                     }
                     is SingleChoice -> it.onConfirm(value as Choice)
                     is MenuChoice -> it.onConfirm(value as Choice)
-                    is PromptRequest.Popup -> it.onAllow()
+                    is Popup -> it.onAllow()
                     is MultipleChoice -> it.onConfirm(value as Array<Choice>)
 
                     is Authentication -> {
@@ -340,9 +344,9 @@ class PromptFeature private constructor(
 
                     is Share -> it.onSuccess()
 
-                    is LoginPrompt -> it.onConfirm(value as Login)
+                    is SaveLoginPrompt -> it.onConfirm(value as Login)
 
-                    is PromptRequest.Confirm -> {
+                    is Confirm -> {
                         val (isCheckBoxChecked, buttonType) =
                             value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
                         promptAbuserDetector.userWantsMoreDialogs(!isCheckBoxChecked)
@@ -410,12 +414,12 @@ class PromptFeature private constructor(
         // Requests that are handled with dialogs
         val dialog = when (promptRequest) {
 
-            is LoginPrompt -> {
+            is SaveLoginPrompt -> {
                 if (!isSaveLoginEnabled.invoke()) return
 
                 if (loginValidationDelegate == null) {
                     logger.debug(
-                        "Ignoring received LoginPrompt because PromptFeature." +
+                        "Ignoring received SaveLoginPrompt because PromptFeature." +
                                 "loginValidationDelegate is null. If you are trying to autofill logins, " +
                                 "try attaching a LoginValidationDelegate to PromptFeature"
                     )
@@ -429,6 +433,12 @@ class PromptFeature private constructor(
                     login = promptRequest.logins[0]
                 )
             }
+
+            /**
+             * This feature isn't implemented yet
+             * see https://github.com/mozilla-mobile/android-components/issues/7134
+             */
+            is SelectLoginPrompt -> return
 
             is SingleChoice -> ChoiceDialogFragment.newInstance(
                 promptRequest.choices,
@@ -505,7 +515,7 @@ class PromptFeature private constructor(
                 promptRequest.defaultColor
             )
 
-            is PromptRequest.Popup -> {
+            is Popup -> {
 
                 val title = container.getString(R.string.mozac_feature_prompts_popup_dialog_title)
                 val positiveLabel = container.getString(R.string.mozac_feature_prompts_allow)
@@ -520,7 +530,7 @@ class PromptFeature private constructor(
                 )
             }
 
-            is PromptRequest.Confirm -> {
+            is Confirm -> {
                 with(promptRequest) {
                     val positiveButton = if (positiveButtonTitle.isEmpty()) {
                         container.getString(R.string.mozac_feature_prompts_ok)
@@ -555,7 +565,7 @@ class PromptFeature private constructor(
             dialog.show(fragmentManager, FRAGMENT_TAG)
             activePrompt = WeakReference(dialog)
         } else {
-            (promptRequest as PromptRequest.Dismissible).onDismiss()
+            (promptRequest as Dismissible).onDismiss()
             store.dispatch(ContentAction.ConsumePromptRequestAction(session.id))
         }
         promptAbuserDetector.updateJSDialogAbusedState()
@@ -570,10 +580,11 @@ class PromptFeature private constructor(
             is File,
             is Color,
             is Authentication,
-            is PromptRequest.Popup,
-            is LoginPrompt,
+            is Popup,
+            is SaveLoginPrompt,
+            is SelectLoginPrompt,
             is Share -> true
-            is Alert, is TextPrompt, is PromptRequest.Confirm -> promptAbuserDetector.shouldShowMoreDialogs
+            is Alert, is TextPrompt, is Confirm -> promptAbuserDetector.shouldShowMoreDialogs
         }
     }
 }

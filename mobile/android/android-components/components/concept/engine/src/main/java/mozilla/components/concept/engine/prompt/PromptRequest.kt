@@ -54,14 +54,26 @@ sealed class PromptRequest {
     ) : PromptRequest(), Dismissible
 
     /**
-     * Value type that represents a request for an login prompt.
+     * Value type that represents a request for a save login prompt.
      * @property hint a value that helps to determine the appropriate prompting behavior.
      * @property logins a list of logins that are associated with the current domain.
      * @property onDismiss callback to let the page know the user dismissed the dialog.
      * @property onConfirm callback that is called when the user wants to save the login.
      */
-    data class LoginPrompt(
+    data class SaveLoginPrompt(
         val hint: Int,
+        val logins: List<Login>,
+        override val onDismiss: () -> Unit,
+        val onConfirm: (Login) -> Unit
+    ) : PromptRequest(), Dismissible
+
+    /**
+     * Value type that represents a request for a select login prompt.
+     * @property logins a list of logins that are associated with the current domain.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
+     * @property onConfirm callback that is called when the user wants to save the login.
+     */
+    data class SelectLoginPrompt(
         val logins: List<Login>,
         override val onDismiss: () -> Unit,
         val onConfirm: (Login) -> Unit

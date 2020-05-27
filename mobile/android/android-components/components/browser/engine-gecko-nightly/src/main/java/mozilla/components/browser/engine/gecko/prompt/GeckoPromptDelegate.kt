@@ -29,7 +29,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.MON
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.WEEK
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse
-import org.mozilla.geckoview.LoginStorage
+import org.mozilla.geckoview.Autocomplete
 import java.io.FileOutputStream
 import java.io.IOException
 import java.security.InvalidParameterException
@@ -56,31 +56,31 @@ typealias AC_FILE_FACING_MODE = PromptRequest.File.FacingMode
 internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSession) :
     PromptDelegate {
 
-    override fun onLoginStoragePrompt(
+    private fun Autocomplete.LoginEntry.toLogin() = Login(
+        guid = guid,
+        origin = origin,
+        formActionOrigin = formActionOrigin,
+        httpRealm = httpRealm,
+        username = username,
+        password = password
+    )
+
+    private fun Login.toLoginEntry() = Autocomplete.LoginEntry.Builder()
+        .guid(guid)
+        .origin(origin)
+        .formActionOrigin(formActionOrigin)
+        .httpRealm(httpRealm)
+        .username(username)
+        .password(password)
+        .build()
+
+    override fun onLoginSave(
         session: GeckoSession,
-        prompt: PromptDelegate.LoginStoragePrompt
+        prompt: PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>
     ): GeckoResult<PromptResponse>? {
-        fun LoginStorage.LoginEntry.toLogin() = Login(
-            guid = guid,
-            origin = origin,
-            formActionOrigin = formActionOrigin,
-            httpRealm = httpRealm,
-            username = username,
-            password = password
-        )
-
-        fun Login.toLoginEntry() = LoginStorage.LoginEntry.Builder()
-            .guid(guid)
-            .origin(origin)
-            .formActionOrigin(formActionOrigin)
-            .httpRealm(httpRealm)
-            .username(username)
-            .password(password)
-            .build()
-
         val geckoResult = GeckoResult<PromptResponse>()
         val onConfirmSave: (Login) -> Unit = { login ->
-            geckoResult.complete(prompt.confirm(login.toLoginEntry()))
+            geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
         }
         val onDismiss: () -> Unit = {
             geckoResult.complete(prompt.dismiss())
@@ -88,9 +88,33 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
-                PromptRequest.LoginPrompt(
-                    hint = prompt.hint,
-                    logins = prompt.logins.map { it.toLogin() },
+                PromptRequest.SaveLoginPrompt(
+                    hint = prompt.options[0].hint,
+                    logins = prompt.options.map { it.value.toLogin() },
+                    onConfirm = onConfirmSave,
+                    onDismiss = onDismiss
+                )
+            )
+        }
+        return geckoResult
+    }
+
+    override fun onLoginSelect(
+        session: GeckoSession,
+        prompt: PromptDelegate.AutocompleteRequest<Autocomplete.LoginSelectOption>
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val onConfirmSave: (Login) -> Unit = { login ->
+            geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
+        }
+        val onDismiss: () -> Unit = {
+            geckoResult.complete(prompt.dismiss())
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.SelectLoginPrompt(
+                    logins = prompt.options.map { it.value.toLogin() },
                     onConfirm = onConfirmSave,
                     onDismiss = onDismiss
                 )
