@@ -316,8 +316,7 @@ class nsFloatManager {
     // pushed to the next page/column.
     DONT_CLEAR_PUSHED_FLOATS = (1 << 0)
   };
-  nscoord ClearFloats(nscoord aBCoord, mozilla::StyleClear aBreakType,
-                      uint32_t aFlags = 0) const;
+  nscoord ClearFloats(nscoord aBCoord, mozilla::StyleClear aBreakType) const;
 
   /**
    * Checks if clear would pass into the floats' BFC's next-in-flow,
