@@ -70,14 +70,7 @@ class ProviderTopSites extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return (
-      UrlbarPrefs.get("openViewOnFocus") &&
-      !queryContext.searchString &&
-      Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.feeds.system.topsites",
-        true
-      )
-    );
+    return UrlbarPrefs.get("openViewOnFocus") && !queryContext.searchString;
   }
 
   /**
@@ -98,6 +91,23 @@ class ProviderTopSites extends UrlbarProvider {
    *       is done searching AND returning results.
    */
   async startQuery(queryContext, addCallback) {
+    // If system.topsites is disabled, we would get stale or empty Top Sites
+    // data. We check this condition here instead of in isActive because we
+    // still want this provider to be restricting even if this is not true. If
+    // it wasn't restricting, we would show the results from UnifiedComplete's
+    // empty search behaviour. We aren't interested in those since they are very
+    // similar to Top Sites and thus might be confusing, especially since users
+    // can configure Top Sites but cannot configure the default empty search
+    // results. See bug 1623666.
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.feeds.system.topsites",
+        false
+      )
+    ) {
+      return;
+    }
+
     let sites = AboutNewTab.getTopSites();
 
     let instance = {};
