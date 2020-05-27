@@ -6,23 +6,26 @@
 
 // Needed for CreateToolhelp32Snapshot
 #include <tlhelp32.h>
-#ifndef ONLY_SERVICE_LAUNCHING
 
-#  include <stdio.h>
-#  include <direct.h>
-#  include "mozilla/UniquePtr.h"
-#  include "pathhash.h"
-#  include "shlobj.h"
-#  include "registrycertificates.h"
-#  include "uachelper.h"
-#  include "updatehelper.h"
-#  include "updateutils_win.h"
+#include <stdio.h>
+#include <direct.h>
+#include "shlobj.h"
 
 // Needed for PathAppendW
-#  include <shlwapi.h>
+#include <shlwapi.h>
+
+#include "updatehelper.h"
+#include "updateutils_win.h"
+
+#ifdef MOZ_MAINTENANCE_SERVICE
+#  include "mozilla/UniquePtr.h"
+#  include "pathhash.h"
+#  include "registrycertificates.h"
+#  include "uachelper.h"
 
 using mozilla::MakeUnique;
 using mozilla::UniquePtr;
+#endif
 
 BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer, LPCWSTR siblingFilePath,
                             LPCWSTR newFileName);
@@ -31,7 +34,7 @@ BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer, LPCWSTR siblingFilePath,
  * Obtains the path of a file in the same directory as the specified file.
  *
  * @param  destinationBuffer A buffer of size MAX_PATH + 1 to store the result.
- * @param  siblingFIlePath   The path of another file in the same directory
+ * @param  siblingFilePath   The path of another file in the same directory
  * @param  newFileName       The filename of another file in the same directory
  * @return TRUE if successful
  */
@@ -251,6 +254,7 @@ void RemoveSecureOutputFiles(LPCWSTR patchDirPath) {
   }
 }
 
+#ifdef MOZ_MAINTENANCE_SERVICE
 /**
  * Starts the upgrade process for update of the service if it is
  * already installed.
@@ -353,8 +357,6 @@ BOOL StartServiceUpdate(LPCWSTR installDir) {
   return svcUpdateProcessStarted;
 }
 
-#endif
-
 /**
  * Executes a maintenance service command
  *
@@ -408,8 +410,6 @@ StartServiceCommand(int argc, LPCWSTR* argv) {
   CloseServiceHandle(serviceManager);
   return lastError;
 }
-
-#ifndef ONLY_SERVICE_LAUNCHING
 
 /**
  * Launch a service initiated action for a software update with the
@@ -479,8 +479,6 @@ BOOL WriteStatusFailure(LPCWSTR patchDirPath, int errorCode) {
 
   return TRUE;
 }
-
-#endif
 
 /**
  * Waits for a service to enter a stopped state.
@@ -610,8 +608,7 @@ WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds) {
   CloseServiceHandle(serviceManager);
   return lastServiceState;
 }
-
-#ifndef ONLY_SERVICE_LAUNCHING
+#endif
 
 /**
  * Determines if there is at least one process running for the specified
@@ -649,7 +646,7 @@ IsProcessRunning(LPCWSTR filename) {
 }
 
 /**
- * Waits for the specified applicaiton to exit.
+ * Waits for the specified application to exit.
  *
  * @param filename   The application to wait for.
  * @param maxSeconds The maximum amount of seconds to wait for all
@@ -676,6 +673,7 @@ WaitForProcessExit(LPCWSTR filename, DWORD maxSeconds) {
   return applicationRunningError;
 }
 
+#ifdef MOZ_MAINTENANCE_SERVICE
 /**
  *  Determines if the fallback key exists or not
  *
@@ -692,8 +690,6 @@ BOOL DoesFallbackKeyExist() {
   RegCloseKey(testOnlyFallbackKey);
   return TRUE;
 }
-
-#endif
 
 /**
  * Determines if the file system for the specified file handle is local
@@ -764,3 +760,4 @@ BOOL IsUnpromptedElevation(BOOL& isUnpromptedElevation) {
 
   return success;
 }
+#endif
