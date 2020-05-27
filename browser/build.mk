@@ -35,10 +35,8 @@ hg-bundle::
 wget-en-US:
 	@$(MAKE) -C browser/locales $@
 
-# make -j1 because dependencies in l10n build targets don't work
-# with parallel builds
 merge-% installers-% langpack-% chrome-%:
-	$(MAKE) -j1 -C browser/locales $@
+	$(MAKE) -C browser/locales $@
 
 ifdef ENABLE_TESTS
 # Implemented in testing/testsuite-targets.mk
