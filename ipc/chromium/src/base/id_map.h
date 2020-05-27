@@ -49,7 +49,7 @@ class IDMap {
 
   void Clear() { data_.clear(); }
 
-  T Lookup(int32_t id) const {
+  T Get(int32_t id) const {
     const_iterator i = data_.find(id);
     if (i == data_.end()) return T();
     return i->second;
