@@ -24,6 +24,7 @@ EXTRA_JS_MODULES['services-settings'] += [
     'RemoteSettingsComponents.jsm',
     'RemoteSettingsWorker.js',
     'RemoteSettingsWorker.jsm',
+    'SharedUtils.jsm',
     'Utils.jsm',
 ]
 

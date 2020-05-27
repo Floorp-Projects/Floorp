@@ -14,6 +14,7 @@ importScripts(
   "resource://gre/modules/workers/require.js",
   "resource://gre/modules/CanonicalJSON.jsm",
   "resource://services-settings/IDBHelpers.jsm",
+  "resource://services-settings/SharedUtils.jsm",
   "resource://gre/modules/third_party/jsesc/jsesc.js"
 );
 
@@ -89,28 +90,7 @@ const Agent = {
       return false;
     }
     const buffer = await resp.arrayBuffer();
-    return this.checkContentHash(buffer, size, hash);
-  },
-
-  /**
-   * Check that the specified content matches the expected size and SHA-256 hash.
-   * @param {ArrayBuffer} buffer binary content
-   * @param {Number} size expected file size
-   * @param {String} size expected file SHA-256 as hex string
-   * @returns {boolean}
-   */
-  async checkContentHash(buffer, size, hash) {
-    const bytes = new Uint8Array(buffer);
-    // Has expected size? (saves computing hash)
-    if (bytes.length !== size) {
-      return false;
-    }
-    // Has expected content?
-    const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
-    const hashBytes = new Uint8Array(hashBuffer);
-    const toHex = b => b.toString(16).padStart(2, "0");
-    const hashStr = Array.from(hashBytes, toHex).join("");
-    return hashStr == hash;
+    return SharedUtils.checkContentHash(buffer, size, hash);
   },
 
   async prepareShutdown() {
