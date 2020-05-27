@@ -905,6 +905,14 @@ class nsFrameSelection final {
                     mozilla::WidgetMouseEvent* aMouseEvent, bool aDragState,
                     mozilla::dom::Selection& aNormalSelection);
 
+    /**
+     * @return the closest inclusive table cell ancestor
+     *         (https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor) of
+     *         aContent, if it is actively editable.
+     */
+    static nsINode* IsContentInActivelyEditableTableCell(
+        nsPresContext* aContext, nsIContent* aContent);
+
     // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     nsresult SelectBlockOfCells(nsIContent* aStartCell, nsIContent* aEndCell,
