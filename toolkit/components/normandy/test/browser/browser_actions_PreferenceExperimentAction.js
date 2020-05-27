@@ -52,6 +52,7 @@ function argumentsFactory(args) {
     userFacingDescription:
       "Test experiment from browser_actions_PreferenceExperimentAction.",
     isHighPopulation: false,
+    isEnrollmentPaused: false,
     ...args,
     branches,
   };
