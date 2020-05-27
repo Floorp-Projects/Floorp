@@ -11972,76 +11972,77 @@ already_AddRefed<Document> Document::CreateStaticClone(
   SetProperty(nsGkAtoms::adoptedsheetclones, new AdoptedStyleSheetCloneCache(),
               nsINode::DeleteProperty<AdoptedStyleSheetCloneCache>);
 
+  auto raii = MakeScopeExit([&] {
+    RemoveProperty(nsGkAtoms::adoptedsheetclones);
+    mCreatingStaticClone = false;
+  });
+
   // Make document use different container during cloning.
   RefPtr<nsDocShell> originalShell = mDocumentContainer.get();
   SetContainer(static_cast<nsDocShell*>(aCloneContainer));
-  ErrorResult rv;
+  IgnoredErrorResult rv;
   nsCOMPtr<nsINode> clonedNode = this->CloneNode(true, rv);
   SetContainer(originalShell);
-
-  nsCOMPtr<Document> clonedDoc;
   if (rv.Failed()) {
-    // Don't return yet; we need to reset mCreatingStaticClone
-    rv.SuppressException();
-  } else {
-    clonedDoc = do_QueryInterface(clonedNode);
-    if (clonedDoc) {
-      if (IsStaticDocument()) {
-        clonedDoc->mOriginalDocument = mOriginalDocument;
-        mOriginalDocument->mLatestStaticClone = clonedDoc;
-      } else {
-        clonedDoc->mOriginalDocument = this;
-        mLatestStaticClone = clonedDoc;
-      }
-
-      clonedDoc->mOriginalDocument->mStaticCloneCount++;
-
-      size_t sheetsCount = SheetCount();
-      for (size_t i = 0; i < sheetsCount; ++i) {
-        RefPtr<StyleSheet> sheet = SheetAt(i);
-        if (sheet) {
-          if (sheet->IsApplicable()) {
-            RefPtr<StyleSheet> clonedSheet =
-                sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
-            NS_WARNING_ASSERTION(clonedSheet,
-                                 "Cloning a stylesheet didn't work!");
-            if (clonedSheet) {
-              clonedDoc->AddStyleSheet(clonedSheet);
-            }
-          }
-        }
-      }
-      clonedDoc->CloneAdoptedSheetsFrom(*this);
-
-      for (int t = 0; t < AdditionalSheetTypeCount; ++t) {
-        auto& sheets = mAdditionalSheets[additionalSheetType(t)];
-        for (StyleSheet* sheet : sheets) {
-          if (sheet->IsApplicable()) {
-            RefPtr<StyleSheet> clonedSheet =
-                sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
-            NS_WARNING_ASSERTION(clonedSheet,
-                                 "Cloning a stylesheet didn't work!");
-            if (clonedSheet) {
-              clonedDoc->AddAdditionalStyleSheet(additionalSheetType(t),
-                                                 clonedSheet);
-            }
-          }
-        }
-      }
-
-      // Font faces created with the JS API will not be reflected in the
-      // stylesheets and need to be copied over to the cloned document.
-      if (const FontFaceSet* set = GetFonts()) {
-        set->CopyNonRuleFacesTo(clonedDoc->Fonts());
-      }
-
-      clonedDoc->mReferrerInfo =
-          static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())->Clone();
-      clonedDoc->mPreloadReferrerInfo = clonedDoc->mReferrerInfo;
-    }
+    return nullptr;
   }
-  RemoveProperty(nsGkAtoms::adoptedsheetclones);
-  mCreatingStaticClone = false;
+
+  nsCOMPtr<Document> clonedDoc = do_QueryInterface(clonedNode);
+  if (clonedDoc) {
+    if (IsStaticDocument()) {
+      clonedDoc->mOriginalDocument = mOriginalDocument;
+      mOriginalDocument->mLatestStaticClone = clonedDoc;
+    } else {
+      clonedDoc->mOriginalDocument = this;
+      mLatestStaticClone = clonedDoc;
+    }
+
+    clonedDoc->mOriginalDocument->mStaticCloneCount++;
+
+    size_t sheetsCount = SheetCount();
+    for (size_t i = 0; i < sheetsCount; ++i) {
+      RefPtr<StyleSheet> sheet = SheetAt(i);
+      if (sheet) {
+        if (sheet->IsApplicable()) {
+          RefPtr<StyleSheet> clonedSheet =
+              sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
+          NS_WARNING_ASSERTION(clonedSheet,
+                               "Cloning a stylesheet didn't work!");
+          if (clonedSheet) {
+            clonedDoc->AddStyleSheet(clonedSheet);
+          }
+        }
+      }
+    }
+    clonedDoc->CloneAdoptedSheetsFrom(*this);
+
+    for (int t = 0; t < AdditionalSheetTypeCount; ++t) {
+      auto& sheets = mAdditionalSheets[additionalSheetType(t)];
+      for (StyleSheet* sheet : sheets) {
+        if (sheet->IsApplicable()) {
+          RefPtr<StyleSheet> clonedSheet =
+              sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
+          NS_WARNING_ASSERTION(clonedSheet,
+                               "Cloning a stylesheet didn't work!");
+          if (clonedSheet) {
+            clonedDoc->AddAdditionalStyleSheet(additionalSheetType(t),
+                                               clonedSheet);
+          }
+        }
+      }
+    }
+
+    // Font faces created with the JS API will not be reflected in the
+    // stylesheets and need to be copied over to the cloned document.
+    if (const FontFaceSet* set = GetFonts()) {
+      set->CopyNonRuleFacesTo(clonedDoc->Fonts());
+    }
+
+    clonedDoc->mReferrerInfo =
+        static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())->Clone();
+    clonedDoc->mPreloadReferrerInfo = clonedDoc->mReferrerInfo;
+  }
+
   return clonedDoc.forget();
 }
 
