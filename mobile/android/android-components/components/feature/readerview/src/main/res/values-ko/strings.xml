@@ -10,10 +10,10 @@
     <string name="mozac_feature_readerview_serif_font_desc">세리프 글꼴</string>
 
     <!-- Accessible description for decreasing the font size -->
-    <string name="mozac_feature_readerview_font_size_decrease_desc">글자 크기 작게</string>
+    <string name="mozac_feature_readerview_font_size_decrease_desc">글꼴 크기 작게</string>
 
     <!-- Accessible description for increasing the font size -->
-    <string name="mozac_feature_readerview_font_size_increase_desc">글자 크기 크게</string>
+    <string name="mozac_feature_readerview_font_size_increase_desc">글꼴 크기 크게</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">어둡게</string>
     <!-- Accessible description for the color option -->

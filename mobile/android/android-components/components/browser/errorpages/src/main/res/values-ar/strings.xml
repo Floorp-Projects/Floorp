@@ -98,4 +98,9 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">لم يُعثر على خادوم وسيط</string>
 
-    </resources>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>أُبلِغ عن أن الموقع %1$s موقع خطر محتمل و حُجِبَ بناء على تفضيلات الأمن.</p>]]></string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>أُبلِغ عن أن الموقع %1$s موقع مخادع و حُجِبَ بناء على تفضيلات الأمن.</p>]]></string>
+</resources>

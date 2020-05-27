@@ -10,6 +10,10 @@
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_failed_notification_text2">فشل التنزيل</string>
 
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">نزّل (%1$s)</string>
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">نزّل</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">ألغِ</string>
 

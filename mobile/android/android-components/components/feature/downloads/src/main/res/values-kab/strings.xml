@@ -23,6 +23,9 @@
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">Ur yezmir ara ad yeldi afaylu</string>
 
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported">Ulac asnas yettwafen i twaledyawt n yifuyla %1$s</string>
+
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Seṛǧu</string>
     <!-- Button that resumes the download when pressed -->

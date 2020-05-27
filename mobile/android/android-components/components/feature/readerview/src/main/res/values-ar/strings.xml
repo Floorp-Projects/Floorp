@@ -10,4 +10,6 @@
 
     <!-- Accessible description for increasing the font size -->
     <string name="mozac_feature_readerview_font_size_increase_desc">زيادة حجم الخط</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">داكنة</string>
     </resources>
