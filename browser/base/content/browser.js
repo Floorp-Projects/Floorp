@@ -2218,6 +2218,7 @@ var gBrowserInit = {
         //                 [8]: triggeringPrincipal (nsIPrincipal)
         //                 [9]: allowInheritPrincipal (bool)
         //                 [10]: csp (nsIContentSecurityPolicy)
+        //                 [11]: nsOpenWindowInfo
         let userContextId =
           window.arguments[5] != undefined
             ? window.arguments[5]
@@ -6106,7 +6107,7 @@ nsBrowserAccess.prototype = {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW:
         // FIXME: Bug 408379. So how come this doesn't send the
         // referrer like the other loads do?
-        var url = aURI ? aURI.spec : "about:blank";
+        var url = aURI && aURI.spec;
         let features = "all,dialog=no";
         if (isPrivate) {
           features += ",private";
@@ -6129,18 +6130,14 @@ nsBrowserAccess.prototype = {
             null,
             aTriggeringPrincipal,
             null,
-            aCsp
+            aCsp,
+            aOpenWindowInfo
           );
           // At this point, the new browser window is just starting to load, and
-          // hasn't created the content <browser> that we should return. So we
-          // can't actually return a valid BrowsingContext for this load without
-          // spinning the event loop.
-          //
-          // Fortunately, no current callers of this API who pass OPEN_NEWWINDOW
-          // actually use the return value, so we're safe returning null for
-          // now.
-          //
-          // Ideally this should be fixed.
+          // hasn't created the content <browser> that we should return.
+          // If the caller of this function is originating in C++, they can pass a
+          // callback in nsOpenWindowInfo and it will be invoked when the browsing
+          // context for a newly opened window is ready.
           browsingContext = null;
         } catch (ex) {
           Cu.reportError(ex);
@@ -6153,7 +6150,7 @@ nsBrowserAccess.prototype = {
         // we can hand back the nsIDOMWindow. The XULBrowserWindow.shouldLoadURI
         // will do the job of shuttling off the newly opened browser to run in
         // the right process once it starts loading a URI.
-        let forceNotRemote = aOpenWindowInfo && !aOpenWindowInfo.remote;
+        let forceNotRemote = aOpenWindowInfo && !aOpenWindowInfo.isRemote;
         let userContextId = aOpenWindowInfo
           ? aOpenWindowInfo.originAttributes.userContextId
           : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
@@ -6177,8 +6174,7 @@ nsBrowserAccess.prototype = {
         break;
       default:
         // OPEN_CURRENTWINDOW or an illegal value
-        browsingContext =
-          window.content && BrowsingContext.getFromWindow(window.content);
+        browsingContext = window.gBrowser.selectedBrowser.browsingContext;
         if (aURI) {
           let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
           if (isExternal) {

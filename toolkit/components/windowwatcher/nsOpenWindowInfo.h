@@ -11,6 +11,7 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/ClientOpenWindowUtils.h"
 
 class nsOpenWindowInfo : public nsIOpenWindowInfo {
  public:
@@ -19,12 +20,29 @@ class nsOpenWindowInfo : public nsIOpenWindowInfo {
 
   bool mForceNoOpener = false;
   bool mIsRemote = false;
-  RefPtr<BrowserParent> mNextRemoteBrowser;
-  OriginAttributes mOriginAttributes;
-  RefPtr<BrowsingContext> mParent;
+  RefPtr<mozilla::dom::BrowserParent> mNextRemoteBrowser;
+  mozilla::OriginAttributes mOriginAttributes;
+  RefPtr<mozilla::dom::BrowsingContext> mParent;
+  RefPtr<nsIBrowsingContextReadyCallback> mBrowsingContextReadyCallback;
 
  private:
   virtual ~nsOpenWindowInfo() = default;
+};
+
+class nsBrowsingContextReadyCallback : public nsIBrowsingContextReadyCallback {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIBROWSINGCONTEXTREADYCALLBACK
+
+  explicit nsBrowsingContextReadyCallback(
+      RefPtr<mozilla::dom::BrowsingContextCallbackReceivedPromise::Private>
+          aPromise);
+
+ private:
+  virtual ~nsBrowsingContextReadyCallback();
+
+  RefPtr<mozilla::dom::BrowsingContextCallbackReceivedPromise::Private>
+      mPromise;
 };
 
 #endif  // nsOpenWindowInfo_h

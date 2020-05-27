@@ -326,6 +326,10 @@
         .QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIAppWindow).initialOpenWindowInfo;
 
+      if (!openWindowInfo && window.arguments && window.arguments[11]) {
+        openWindowInfo = window.arguments[11];
+      }
+
       let tabArgument = gBrowserInit.getTabToAdopt();
 
       // We only need sameProcessAsFrameLoader in the case where we're passed a tab

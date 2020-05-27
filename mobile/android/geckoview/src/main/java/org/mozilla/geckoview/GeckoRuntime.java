@@ -48,7 +48,6 @@ import org.yaml.snakeyaml.error.YAMLException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -195,26 +194,24 @@ public final class GeckoRuntime implements Parcelable {
     /**
      * Called by mozilla::dom::ClientOpenWindow to retrieve the window id to use
      * for a ServiceWorkerClients.openWindow() request.
-     * @param baseUrl The base Url for the request.
-     * @param url Url being requested to be opened in a new window.
+     * @param url validated Url being requested to be opened in a new window.
      * @return SessionID to use for the request.
      */
     @WrapForJNI(calledFrom = "gecko")
-    private static @NonNull GeckoResult<String> serviceWorkerOpenWindow(final @NonNull String baseUrl, final @NonNull String url) {
+    private static @NonNull GeckoResult<String> serviceWorkerOpenWindow(final @NonNull String url) {
         if (sRuntime != null && sRuntime.mServiceWorkerDelegate != null) {
-            final URI actual = URI.create(baseUrl).resolve(url);
             GeckoResult<String> result = new GeckoResult<>();
             // perform the onOpenWindow call in the UI thread
             ThreadUtils.runOnUiThread(() -> {
                 sRuntime
                     .mServiceWorkerDelegate
-                    .onOpenWindow(actual.toString())
+                    .onOpenWindow(url)
                     .accept( session -> {
                         if (session != null) {
                             if (!session.isOpen()) {
                                 result.completeExceptionally(new RuntimeException("Returned GeckoSession must be open."));
                             } else {
-                                session.loadUri(actual.toString());
+                                session.loadUri(url);
                                 result.complete(session.getId());
                             }
                         } else {
