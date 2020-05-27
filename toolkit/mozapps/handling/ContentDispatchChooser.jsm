@@ -18,7 +18,7 @@ nsContentDispatchChooser.prototype = {
 
   // nsIContentDispatchChooser
 
-  ask: function ask(aHandler, aBrowsingContext, aURI, aReason) {
+  ask: function ask(aHandler, aURI, aPrincipal, aBrowsingContext, aReason) {
     let window = aBrowsingContext?.top?.embedderElement?.ownerGlobal || null;
 
     var bundle = Services.strings.createBundle(STRINGBUNDLE_URL);
