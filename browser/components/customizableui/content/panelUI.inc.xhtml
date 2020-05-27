@@ -31,25 +31,21 @@
   <menupopup id="customizationPanelItemContextMenu"
              onpopupshowing="gCustomizeMode.onPanelContextMenuShowing(event); ToolbarContextMenu.updateExtension(this)">
     <menuitem oncommand="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)"
-              accesskey="&customizeMenu.manageExtension.accesskey;"
-              label="&customizeMenu.manageExtension.label;"
+              data-lazy-l10n-id="toolbar-context-menu-manage-extension"
               contexttype="toolbaritem"
               class="customize-context-manageExtension"/>
     <menuitem oncommand="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)"
-              accesskey="&customizeMenu.removeExtension.accesskey;"
-              label="&customizeMenu.removeExtension.label;"
+              data-lazy-l10n-id="toolbar-context-menu-remove-extension"
               contexttype="toolbaritem"
               class="customize-context-removeExtension"/>
     <menuitem oncommand="ToolbarContextMenu.reportExtensionForContextAction(this.parentElement, 'toolbar_context_menu')"
-              accesskey="&customizeMenu.reportExtension.accesskey;"
-              label="&customizeMenu.reportExtension.label;"
+              data-lazy-l10n-id="toolbar-context-menu-report-extension"
               contexttype="toolbaritem"
               class="customize-context-reportExtension"/>
     <menuseparator/>
     <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
               id="customizationPanelItemContextMenuPin"
-              accesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
-              label="&customizeMenu.pinToOverflowMenu.label;"
+              data-lazy-l10n-id="toolbar-context-menu-pin-to-overflow-menu"
               closemenu="single"
               class="customize-context-moveToPanel"/>
     <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
@@ -61,13 +57,11 @@
     <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
               closemenu="single"
               class="customize-context-removeFromPanel"
-              accesskey="&customizeMenu.removeFromToolbar.accesskey;"
-              label="&customizeMenu.removeFromToolbar.label;"/>
+              data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"/>
     <menuseparator/>
     <menuitem command="cmd_CustomizeToolbars"
               class="viewCustomizeToolbar"
-              accesskey="&viewCustomizeToolbar.accesskey;"
-              label="&viewCustomizeToolbar.label;"/>
+              data-lazy-l10n-id="toolbar-context-menu-view-customize-toolbar"/>
   </menupopup>
 </panel>
 
@@ -374,7 +368,7 @@
                        />
         <toolbarbutton id="appMenu-customize-button"
                        class="subviewbutton subviewbutton-iconic"
-                       label="&viewCustomizeToolbar.label;"
+                       data-l10n-id="appmenuitem-customize-mode"
                        command="cmd_CustomizeToolbars"
                        />
         <toolbarseparator/>

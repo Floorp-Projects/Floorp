@@ -2581,6 +2581,14 @@ CustomizeMode.prototype = {
     doc.getElementById(
       "customizationPanelItemContextMenuPin"
     ).hidden = inPermanentArea;
+
+    doc.ownerGlobal.MozXULElement.insertFTLIfNeeded(
+      "browser/toolbarContextMenu.ftl"
+    );
+    event.target.querySelectorAll("[data-lazy-l10n-id]").forEach(el => {
+      el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
+      el.removeAttribute("data-lazy-l10n-id");
+    });
   },
 
   _checkForDownloadsClick(event) {

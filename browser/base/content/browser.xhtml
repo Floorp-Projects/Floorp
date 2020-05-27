@@ -396,35 +396,29 @@
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); ToolbarContextMenu.updateDownloadsAutoHide(this); ToolbarContextMenu.updateExtension(this)">
       <menuitem oncommand="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)"
-                accesskey="&customizeMenu.manageExtension.accesskey;"
-                label="&customizeMenu.manageExtension.label;"
+                data-lazy-l10n-id="toolbar-context-menu-manage-extension"
                 contexttype="toolbaritem"
                 class="customize-context-manageExtension"/>
       <menuitem oncommand="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)"
-                accesskey="&customizeMenu.removeExtension.accesskey;"
-                label="&customizeMenu.removeExtension.label;"
+                data-lazy-l10n-id="toolbar-context-menu-remove-extension"
                 contexttype="toolbaritem"
                 class="customize-context-removeExtension"/>
       <menuitem oncommand="ToolbarContextMenu.reportExtensionForContextAction(this.parentElement, 'toolbar_context_menu')"
-                accesskey="&customizeMenu.reportExtension.accesskey;"
-                label="&customizeMenu.reportExtension.label;"
+                data-lazy-l10n-id="toolbar-context-menu-report-extension"
                 contexttype="toolbaritem"
                 class="customize-context-reportExtension"/>
       <menuseparator/>
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
-                accesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
-                label="&customizeMenu.pinToOverflowMenu.label;"
+                data-lazy-l10n-id="toolbar-context-menu-pin-to-overflow-menu"
                 contexttype="toolbaritem"
                 class="customize-context-moveToPanel"/>
       <menuitem id="toolbar-context-autohide-downloads-button"
                 oncommand="ToolbarContextMenu.onDownloadsAutoHideChange(event);"
                 type="checkbox"
-                accesskey="&customizeMenu.autoHideDownloadsButton.accesskey;"
-                label="&customizeMenu.autoHideDownloadsButton.label;"
+                data-lazy-l10n-id="toolbar-context-menu-auto-hide-downloads-button"
                 contexttype="toolbaritem"/>
       <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
-                accesskey="&customizeMenu.removeFromToolbar.accesskey;"
-                label="&customizeMenu.removeFromToolbar.label;"
+                data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"
                 contexttype="toolbaritem"
                 class="customize-context-removeFromToolbar"/>
       <menuitem id="toolbar-context-reloadSelectedTab"
@@ -462,8 +456,7 @@
       <menuitem oncommand="gCustomizeMode.enter()"
                 observes="cmd_CustomizeToolbars"
                 class="viewCustomizeToolbar"
-                label="&viewCustomizeToolbar.label;"
-                accesskey="&viewCustomizeToolbar.accesskey;"/>
+                data-lazy-l10n-id="toolbar-context-menu-view-customize-toolbar"/>
     </menupopup>
 
     <menupopup id="blockedPopupOptions"
