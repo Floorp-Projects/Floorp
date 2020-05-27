@@ -219,9 +219,7 @@ static NSDictionary* gActionToMethodMap = @{
 NS_IMPL_ISUPPORTS(xpcAccessibleMacInterface, nsIAccessibleMacInterface)
 
 xpcAccessibleMacInterface::xpcAccessibleMacInterface(AccessibleOrProxy aObj) {
-  mNativeObject = aObj.IsProxy()
-                      ? GetNativeFromProxy(aObj.AsProxy())
-                      : static_cast<AccessibleWrap*>(aObj.AsAccessible())->GetNativeObject();
+  mNativeObject = GetNativeFromGeckoAccessible(aObj);
   [mNativeObject retain];
 }
 

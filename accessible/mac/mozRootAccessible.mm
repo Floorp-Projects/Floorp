@@ -25,14 +25,14 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
 
 @implementation mozRootAccessible
 
-- (id)initWithAccessible:(uintptr_t)aGeckoAccessible {
+- (id)initWithAccessible:(mozilla::a11y::AccessibleOrProxy)aAccOrProxy {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  NSAssert((aGeckoAccessible & IS_PROXY) == 0, @"mozRootAccessible is never a proxy");
+  MOZ_ASSERT(!aAccOrProxy.IsProxy(), "mozRootAccessible is never a proxy");
 
-  mParallelView = getNativeViewFromRootAccessible((Accessible*)aGeckoAccessible);
+  mParallelView = getNativeViewFromRootAccessible(aAccOrProxy.AsAccessible());
 
-  return [super initWithAccessible:aGeckoAccessible];
+  return [super initWithAccessible:aAccOrProxy];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -41,7 +41,9 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   // if we're expired, we don't support any attributes.
-  if (![self getGeckoAccessible]) return [NSArray array];
+  if ([self isExpired]) {
+    return @[];
+  }
 
   // standard attributes that are shared and supported by root accessible (AXMain) elements.
   static NSMutableArray* attributes = nil;
