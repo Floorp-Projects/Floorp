@@ -5,9 +5,8 @@
 #include "nsISupports.idl"
 
 interface nsIHandlerInfo;
-interface nsIHelperAppLauncher;
+interface nsIPrincipal;
 interface nsIURI;
-interface nsIInterfaceRequestor;
 webidl BrowsingContext;
 
 /**
@@ -28,16 +27,19 @@ interface nsIContentDispatchChooser : nsISupports {
   * @param aHander
   *        The interface describing the details of how this content should or
   *        can be handled.
-  * @param aBrowsingContext
-  *        The browsing context that's the parent for this chooser.
   * @param aURI
   *        The URI of the resource that we are asking about.
+  * @param aTriggeringPrincipal
+  *        The principal making the request.
+  * @param aBrowsingContext
+  *        The browsing context where the load should happen.
   * @param aReason
   *        The reason why we are asking (see above).
   */
   void ask(in nsIHandlerInfo aHandler,
-           in BrowsingContext aBrowsingContext,
            in nsIURI aURI,
+           in nsIPrincipal aTriggeringPrincipal,
+           in BrowsingContext aBrowsingContext,
            in unsigned long aReason);
 };
 

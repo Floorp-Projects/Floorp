@@ -8,6 +8,7 @@
 
 interface nsIURI;
 interface nsIFile;
+interface nsIPrincipal;
 interface nsIInterfaceRequestor;
 interface nsIHandlerInfo;
 
@@ -97,6 +98,9 @@ interface nsIExternalProtocolService : nsISupports
    * @param aURI
    *        The URI to load
    *
+   * @param aTriggeringPrincipal
+   *        The principal triggering this load.
+   *
    * @param aBrowsingContext
    *        The context to parent the dialog against, and, if a web handler
    *        is chosen, it is loaded in this window as well.  This parameter
@@ -110,6 +114,7 @@ interface nsIExternalProtocolService : nsISupports
    *        (bug 394479).
    */
   void loadURI(in nsIURI aURI,
+               [optional] in nsIPrincipal aTriggeringPrincipal,
                [optional] in BrowsingContext aBrowsingContext);
 
   /**
