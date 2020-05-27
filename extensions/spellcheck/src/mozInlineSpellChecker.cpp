@@ -1304,9 +1304,8 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
   // XXX Spellchecker API isn't async on chrome process.
   static const size_t requestChunkSize =
       XRE_IsContentProcess() ? INLINESPELL_MAXIMUM_CHUNKED_WORDS_PER_TASK : 1;
-  while (NS_SUCCEEDED(aWordUtil.GetNextWord(wordText, &wordNodeOffsetRange,
-                                            &dontCheckWord)) &&
-         !wordNodeOffsetRange.Empty()) {
+  while (
+      aWordUtil.GetNextWord(wordText, &wordNodeOffsetRange, &dontCheckWord)) {
     // get the range for the current word.
     nsINode* beginNode = wordNodeOffsetRange.Begin().Node();
     nsINode* endNode = wordNodeOffsetRange.End().Node();
@@ -1320,9 +1319,8 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
 #ifdef DEBUG_INLINESPELL
       printf("We have run out of the time, schedule next round.\n");
 #endif
-      CheckCurrentWordsNoSuggest(aSpellCheckSelection, words, checkRanges);
-      words.Clear();
-      checkRanges.Clear();
+      CheckCurrentWordsNoSuggest(aSpellCheckSelection, std::move(words),
+                                 std::move(checkRanges));
 
       // move the range to encompass the stuff that needs checking.
       nsresult rv = aStatus->mRange->SetStart(beginNode, beginOffset);
@@ -1385,13 +1383,17 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     checkRanges.AppendElement(wordNodeOffsetRange);
     wordsChecked++;
     if (words.Length() >= requestChunkSize) {
-      CheckCurrentWordsNoSuggest(aSpellCheckSelection, words, checkRanges);
-      words.Clear();
-      checkRanges.Clear();
+      CheckCurrentWordsNoSuggest(aSpellCheckSelection, std::move(words),
+                                 std::move(checkRanges));
+      // Set new empty data for spellcheck words and range in DOM to avoid
+      // clang-tidy detection.
+      words = nsTArray<nsString>();
+      checkRanges = nsTArray<NodeOffsetRange>();
     }
   }
 
-  CheckCurrentWordsNoSuggest(aSpellCheckSelection, words, checkRanges);
+  CheckCurrentWordsNoSuggest(aSpellCheckSelection, std::move(words),
+                             std::move(checkRanges));
 
   return NS_OK;
 }
@@ -1417,8 +1419,10 @@ class MOZ_RAII AutoChangeNumPendingSpellChecks final {
 };
 
 void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
-    Selection* aSpellCheckSelection, const nsTArray<nsString>& aWords,
-    const nsTArray<NodeOffsetRange>& aRanges) {
+    Selection* aSpellCheckSelection, nsTArray<nsString>&& aWords,
+    nsTArray<NodeOffsetRange>&& aRanges) {
+  MOZ_ASSERT(aWords.Length() == aRanges.Length());
+
   if (aWords.IsEmpty()) {
     return;
   }
@@ -1428,9 +1432,10 @@ void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
   RefPtr<mozInlineSpellChecker> self = this;
   RefPtr<Selection> spellCheckerSelection = aSpellCheckSelection;
   uint32_t token = mDisabledAsyncToken;
-  mSpellCheck->CheckCurrentWordsNoSuggest(aWords)->Then(
+  nsTArray<nsString> words = std::move(aWords);
+  mSpellCheck->CheckCurrentWordsNoSuggest(words)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self, spellCheckerSelection, ranges = aRanges.Clone(),
+      [self, spellCheckerSelection, ranges = std::move(aRanges),
        token](const nsTArray<bool>& aIsMisspelled) {
         if (token != self->mDisabledAsyncToken) {
           // This result is never used
