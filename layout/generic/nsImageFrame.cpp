@@ -481,7 +481,7 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
     return IntrinsicSize(edgeLengthToUse, edgeLengthToUse);
   }
 
-  if (aUseMappedRatio && !style.StylePosition()->mAspectRatio.IsAuto()) {
+  if (aUseMappedRatio && style.StylePosition()->mAspectRatio.HasRatio()) {
     return IntrinsicSize();
   }
 
@@ -521,14 +521,18 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
   if (style.StyleDisplay()->IsContainSize()) {
     return AspectRatio();
   }
+
+  const StyleAspectRatio& ratio = style.StylePosition()->mAspectRatio;
+  if (aUseMappedRatio && !ratio.auto_) {
+    return ratio.ratio.AsRatio().ToLayoutRatio();
+  }
   if (aImage) {
     if (Maybe<AspectRatio> fromImage = aImage->GetIntrinsicRatio()) {
       return *fromImage;
     }
   }
-  const StyleAspectRatio& ratio = style.StylePosition()->mAspectRatio;
-  if (aUseMappedRatio && !ratio.IsAuto()) {
-    return ratio.AsRatio().ToLayoutRatio();
+  if (aUseMappedRatio && ratio.HasMappedRatio()) {
+    return ratio.ratio.AsRatio().ToLayoutRatio();
   }
   if (aFrame.ShouldShowBrokenImageIcon()) {
     return AspectRatio(1.0f);
